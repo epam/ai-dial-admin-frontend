@@ -12,7 +12,7 @@
   "private": true,
   "lint-staged": {
     "*.{js,ts,tsx}": [
-      "yarn lint"
+      "npm run lint"
     ]
   },
   "dependencies": {
