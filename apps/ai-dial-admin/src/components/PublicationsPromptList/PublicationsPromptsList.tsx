@@ -1,0 +1,18 @@
+'use client';
+
+import { FC } from 'react';
+import { ApplicationRoute } from '@/src/types/routes';
+import { Publication } from '@/src/models/dial/publications';
+import BasePublicationsList from '@/src/components/PublicationsList/PublicationsList';
+
+interface Props {
+  data: Publication[];
+}
+
+const PublicationsPromptsList: FC<Props> = ({ data }) => {
+  return (
+    <BasePublicationsList data={data} route={ApplicationRoute.PromptPublications} dataTestId={'publication-list'} />
+  );
+};
+
+export default PublicationsPromptsList;

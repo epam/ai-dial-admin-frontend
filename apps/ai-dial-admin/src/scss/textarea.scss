@@ -1,0 +1,10 @@
+@layer components {
+  .textarea {
+    min-height: 72px;
+    @apply resize whitespace-normal overflow-auto;
+  }
+}
+
+textarea {
+  @apply input textarea;
+}
