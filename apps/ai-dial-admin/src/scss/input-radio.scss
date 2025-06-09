@@ -1,0 +1,32 @@
+@layer components {
+  .input-radio {
+    @apply relative cursor-pointer border rounded-full p-0 flex items-center justify-center;
+    @apply border-hover bg-transparent w-[18px] h-[18px];
+
+    appearance: none;
+    color: currentColor;
+    font: inherit;
+
+    &:checked {
+      @apply border-accent-primary;
+      &:after {
+        @apply bg-accent-primary w-[10px] h-[10px];
+        content: '';
+        border-radius: 18px;
+      }
+    }
+
+    &:hover,
+    &:focus {
+      @apply border bg-transparent border-accent-primary;
+    }
+
+    &:disabled {
+      @apply pointer-events-none;
+    }
+  }
+}
+
+input[type='radio'] {
+  @apply input-radio;
+}

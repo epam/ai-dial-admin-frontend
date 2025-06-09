@@ -1,0 +1,37 @@
+import { DialApplicationScheme } from '@/src/models/dial/application';
+import { PopUpState } from '@/src/types/pop-up';
+import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { fireEvent } from '@testing-library/dom';
+import DuplicateScheme from './DuplicateAppRunner';
+
+describe('Components :: DuplicateScheme', () => {
+  let scheme = {
+    'dial:applicationTypeDisplayName': 'name',
+    'dial:applicationTypeCompletionEndpoint': 'endpoint',
+    'dial:applicationTypeViewerUrl': 'url',
+    'dial:applicationTypeEditorUrl': 'url',
+    $id: 'id',
+  } as DialApplicationScheme;
+
+  const onDuplicate = (en: DialApplicationScheme) => {
+    scheme = en;
+  };
+
+  it('Should render successfully', () => {
+    const { baseElement, getByTestId } = renderWithContext(
+      <DuplicateScheme entity={scheme} onDuplicate={onDuplicate} onClose={jest.fn()} modalState={PopUpState.Opened} />,
+    );
+
+    expect(baseElement).toBeTruthy();
+
+    const id = getByTestId('id');
+    expect(scheme.$id).toBe('id');
+    fireEvent.change(id, { target: { value: 'New id' } });
+
+    fireEvent.click(getByTestId('duplicateBtn'));
+
+    expect(scheme.$id).toBe('New id');
+
+    fireEvent.click(getByTestId('cancelBtn'));
+  });
+});

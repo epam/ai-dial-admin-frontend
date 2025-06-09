@@ -1,0 +1,6 @@
+@use '@/src/scss/style.scss';
+
+html,
+body {
+  @apply h-full w-full bg-layer-1 text-primary body;
+}

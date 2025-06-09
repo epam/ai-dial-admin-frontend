@@ -1,0 +1,85 @@
+.react-datepicker-wrapper {
+  @apply w-full small text-secondary;
+
+  .react-datepicker__input-container {
+    @apply flex;
+    .react-datepicker__calendar-icon {
+      @apply flex text-icon-accent-primary w-auto h-auto right-0 m-0.5;
+    }
+
+    input {
+      @apply px-3 py-[11px] pr-9;
+    }
+  }
+}
+
+.react-datepicker-popper {
+  .react-datepicker__triangle {
+    @apply hidden;
+  }
+
+  .react-datepicker {
+    @apply bg-layer-0 text-secondary small rounded border-primary px-3 py-4;
+  }
+
+  .react-datepicker__header {
+    @apply bg-layer-0 border-b-primary p-0 pb-3;
+
+    .react-datepicker__current-month {
+      @apply mb-3 text-secondary;
+    }
+  }
+
+  .react-datepicker__navigation {
+    @apply top-3.5;
+
+    &--previous {
+      @apply left-3;
+    }
+
+    &--next {
+      @apply right-3;
+    }
+
+    .react-datepicker__navigation-icon {
+      @apply flex items-center justify-center w-full h-full text-primary hover:text-accent-primary;
+    }
+
+    .react-datepicker__navigation-icon:before {
+      @apply hidden;
+    }
+  }
+
+
+  .react-datepicker__month-container {
+    .react-datepicker__month {
+      @apply m-0;
+    }
+
+    .react-datepicker__day, .react-datepicker__time-name .react-datepicker__current-month {
+      @apply small text-secondary;
+    }
+
+    .react-datepicker__day {
+      @apply m-[1px] w-[30px] h-[30px] rounded-full border border-transparent items-center content-center hover:rounded-full hover:border-secondary hover:bg-accent-primary-alpha;
+
+
+      &--today {
+        @apply border-accent-primary hover:border-accent-primary;
+      }
+
+      &--selected {
+        @apply text-primary bg-accent-primary hover:bg-accent-primary hover:border-accent-primary;
+      }
+
+      &--in-range:not(&--selected) {
+        @apply bg-transparent;
+      }
+    }
+
+    .react-datepicker__day-name {
+      @apply tiny text-secondary ;
+    }
+  }
+}
+

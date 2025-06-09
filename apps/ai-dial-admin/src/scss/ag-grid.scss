@@ -1,0 +1,116 @@
+.ag-root-wrapper {
+  .ag-root-wrapper-body {
+    @apply h-auto;
+  }
+
+  .ag-filter-wrapper {
+    .ag-input-field-input.ag-text-field-input,
+    .ag-picker-field-wrapper.ag-picker-collapsed,
+    .ag-picker-field-wrapper.ag-picker-expanded {
+      @apply input;
+    }
+
+    .ag-input-field-input.ag-text-field-input {
+      @apply pl-5;
+    }
+
+    .ag-filter-apply-panel-button.ag-button {
+      @apply base-button;
+      &[data-ref='applyFilterButton'] {
+        @apply primary;
+      }
+
+      &[data-ref='resetFilterButton'] {
+        @apply secondary;
+      }
+    }
+  }
+
+  @apply overflow-x-auto;
+  .ag-header {
+    .ag-header-viewport,
+    .ag-pinned-left-header {
+      .ag-floating-filter {
+        input {
+          @apply input m-0 p-0 px-2;
+          height: 24px !important;
+        }
+      }
+    }
+  }
+
+  .ag-cell {
+    @apply flex items-center;
+    &.ag-grid-no-border,
+    &.ag-cell-focus {
+      @apply border-0;
+    }
+
+    &.align-right {
+      @apply justify-end;
+    }
+  }
+  .ag-error-row {
+    @apply bg-error;
+    #editable-cell-renderer {
+      @apply border-error;
+    }
+    &.ag-error-border {
+      @apply border border-error;
+    }
+  }
+  .ag-new-row {
+    @apply bg-success;
+    &.ag-new-border {
+      @apply border border-accent-secondary;
+    }
+  }
+  .ag-changed-row {
+    @apply bg-info;
+    &.ag-changed-border {
+      @apply border border-accent-primary;
+    }
+  }
+}
+
+.ag-grid-no-checkbox {
+  .ag-selection-checkbox {
+    @apply hidden;
+  }
+}
+
+.ag-selection-checkbox {
+  height: 100% !important;
+}
+
+.ag-checkbox-input-wrapper {
+  @apply block;
+  @apply w-[18px] h-[18px];
+  @apply border-hover shadow-none;
+  &::after {
+    @apply hidden;
+  }
+
+  &.ag-checked {
+    @apply border-accent-primary;
+    @apply bg-transparent bg-center bg-no-repeat;
+    background-image: url(/images/icons/checkmark.svg);
+  }
+
+  &.ag-indeterminate {
+    @apply border-accent-primary;
+    @apply bg-transparent bg-center bg-no-repeat;
+    background-image: url(/images/icons/indeterminate.svg);
+  }
+
+  &:where(:focus-within, :focus, :active) {
+    box-shadow: none !important;
+  }
+}
+
+.ag-layout-auto-height {
+  .ag-center-cols-container,
+  .ag-center-cols-viewport {
+    @apply min-h-0;
+  }
+}

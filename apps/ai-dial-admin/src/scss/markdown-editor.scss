@@ -1,0 +1,32 @@
+.react-mde {
+  @apply border-primary !important;
+  .mde-header {
+    @apply bg-layer-3 text-secondary;
+    @apply border-b-primary;
+    @apply h-[52px];
+    .mde-tabs button {
+      @apply text-primary;
+      @apply px-2;
+      &.selected {
+        @apply bg-layer-2;
+      }
+    }
+    .mde-header-group .mde-header-item button {
+      @apply text-primary;
+    }
+  }
+  .mde-preview {
+    @apply overflow-x-auto;
+    @apply min-h-[250px] !important;
+    @apply h-[250px];
+    ol, ul, {
+      list-style: unset;
+    }
+    .mde-preview-content pre {
+      background-color: unset;
+    }
+  }
+  .mde-text {
+    @apply min-h-[250px];
+  }
+}
