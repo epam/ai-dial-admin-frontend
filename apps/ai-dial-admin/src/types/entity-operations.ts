@@ -1,0 +1,15 @@
+export enum EntityOperation {
+  Delete = 'Delete',
+  Duplicate = 'Duplicate',
+  Open_in_new_tab = 'Open in a new tab',
+  Remove = 'Remove',
+  Reset_to_default_limits = 'Reset to default limits',
+  Set_no_limits = 'Set no limits',
+  Move = 'Move to another folders',
+  Publish = 'Publish',
+  Unpublish = 'Unpublish',
+  Decline = 'Decline',
+  Download = 'Download',
+  Preview = 'Preview',
+  Resource_rollback = 'Resource rollback',
+}

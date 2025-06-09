@@ -1,0 +1,85 @@
+'use client';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import { ColDef } from 'ag-grid-community';
+
+import NoDataContent from '@/src/components/Common/NoData/NoData';
+import { getDataWithoutItem } from '@/src/components/ExportConfig/Content/ConfigContent.utils';
+import { getActualColDefs, getEmptyDataTitleI18nKey } from '@/src/components/ExportConfig/ExportConfig.utils';
+import Grid from '@/src/components/Grid/Grid';
+import { ACTION_COLUMN_COMPONENTS } from '@/src/constants/ag-grid';
+import { useI18n } from '@/src/locales/client';
+import { EntitiesGridData } from '@/src/models/entities-grid-data';
+import { ExportComponentType } from '@/src/types/export';
+
+interface Props {
+  selectedTab: ExportComponentType;
+  tabData: Record<string, EntitiesGridData[]>;
+  isFull: boolean;
+  customExportData?: Record<string, EntitiesGridData[]>;
+  setCustomExportData?: Dispatch<SetStateAction<Record<string, EntitiesGridData[]>>>;
+}
+
+const ConfigContentGrid: FC<Props> = ({ selectedTab, tabData, isFull, customExportData, setCustomExportData }) => {
+  const t = useI18n() as (v: string) => string;
+
+  const [fullData, setFullData] = useState<EntitiesGridData[]>([]);
+  const [customData, setCustomData] = useState<EntitiesGridData[]>([]);
+  const [fullColDefs, setFullColDefs] = useState<ColDef[]>([]);
+  const [customColDefs, setCustomColDefs] = useState<ColDef[]>([]);
+
+  const customExportDataRef = useRef(customExportData?.[selectedTab]);
+
+  useEffect(() => {
+    customExportDataRef.current = customExportData?.[selectedTab];
+  }, [customExportData, selectedTab]);
+
+  const emptyDataTitleI18nkKey = useMemo(() => {
+    return getEmptyDataTitleI18nKey(selectedTab);
+  }, [selectedTab]);
+
+  const onRemove = useCallback(
+    (entity: EntitiesGridData) => {
+      if (customExportDataRef.current && setCustomExportData) {
+        const newData = getDataWithoutItem(customExportDataRef.current, entity, selectedTab);
+        setCustomExportData((prev) => {
+          return {
+            ...prev,
+            [selectedTab]: newData,
+          };
+        });
+      }
+    },
+    [selectedTab, setCustomExportData],
+  );
+
+  useEffect(() => {
+    if (selectedTab) {
+      if (isFull) {
+        setFullColDefs(getActualColDefs(selectedTab, t));
+        setFullData(tabData[selectedTab] || []);
+      } else {
+        setCustomColDefs(getActualColDefs(selectedTab, t, onRemove));
+        setCustomData(customExportData?.[selectedTab] || []);
+      }
+    } else {
+      setFullColDefs([]);
+      setFullData([]);
+      setCustomColDefs([]);
+      setCustomData([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTab, isFull, customExportData]);
+
+  return (isFull ? fullData.length === 0 : customData.length === 0) ? (
+    <NoDataContent emptyDataTitle={t(emptyDataTitleI18nkKey)} />
+  ) : (
+    <Grid
+      columnDefs={isFull ? fullColDefs : customColDefs}
+      rowData={isFull ? fullData : customData}
+      additionalGridOptions={{ ...ACTION_COLUMN_COMPONENTS }}
+    />
+  );
+};
+
+export default ConfigContentGrid;

@@ -1,0 +1,8 @@
+@layer components {
+  .important-text-part {
+    @apply text-primary;
+    @apply inline-block;
+    @apply rounded border border-solid border-icon-secondary;
+    @apply px-1 py-0.5;
+  }
+}

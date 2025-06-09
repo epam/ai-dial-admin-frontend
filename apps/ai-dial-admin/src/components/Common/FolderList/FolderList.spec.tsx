@@ -1,0 +1,30 @@
+import { Dispatch, SetStateAction } from 'react';
+
+import { FileFolderContextType } from '@/src/context/FileFolderContext';
+import { DialFile } from '@/src/models/dial/file';
+import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import FolderList from './FolderList';
+
+const fakeContext = () => ({
+  files: [],
+  expandedFolders: new Set<string>(),
+  filePath: '',
+  fetchedFoldersData: {},
+  fetchFiles: () => [],
+  toggleFolder: () => void 0,
+  data: [],
+  exportFoldersData: {} as Record<string, DialFile[]>,
+  setExportFoldersData: (() => void 0) as Dispatch<SetStateAction<Record<string, DialFile[]>>>,
+});
+
+describe('Common components - FolderList', () => {
+  it('Should render successfully', () => {
+    const context = fakeContext;
+    const { baseElement, getByTestId } = renderWithContext(
+      <FolderList context={context as () => FileFolderContextType} />,
+    );
+    expect(baseElement).toBeTruthy();
+    const list = getByTestId('folder-list');
+    expect(list).toBeTruthy();
+  });
+});

@@ -1,0 +1,25 @@
+@use 'tailwindcss/base';
+@use 'tailwindcss/components';
+@use 'tailwindcss/utilities';
+
+@use 'scroll.scss';
+@use 'fonts.scss';
+@use 'buttons.scss';
+@use 'input.scss';
+@use 'input-radio.scss';
+@use 'textarea.scss';
+@use 'ag-grid';
+@use 'input-range.scss';
+@use 'date-picker.scss';
+@use "markdown-editor.scss";
+@use "tag.scss";
+
+$base-padding: 0.25rem;
+$start: 1;
+$end: 30;
+
+@for $i from $start through $end {
+  .pl-#{$i*5} {
+    padding-left: $base-padding * $i * 5;
+  }
+}
