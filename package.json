@@ -7,6 +7,7 @@
     "test": "nx run-many -t test --runInBand",
     "build": "nx run-many -t build",
     "lint": "nx run-many -t lint",
+    "format": "nx run-many -t format",
     "prepare": "husky"
   },
   "private": true,
