@@ -1,3 +1,3 @@
 #!/bin/sh
 
-exec yarn start
+exec npm run start
