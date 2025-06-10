@@ -17,7 +17,7 @@ body:
     attributes:
       label: EPAM AI DIAL Admin version
       description: >
-        On what version of EPAM AI DIAL Admin are you currently experiencing the issue? You can try to find the version in the footer of page (e.g. "Version 0.5.3") or ask your administrator.
+        On what version of EPAM AI DIAL Admin are you currently experiencing the issue? You can try to find the version in the footer of page (e.g. "FE 0.5.3") or ask your administrator.
       placeholder: 0.5.3
   - type: textarea
     attributes:
