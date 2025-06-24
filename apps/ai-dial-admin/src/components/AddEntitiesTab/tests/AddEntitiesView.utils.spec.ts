@@ -7,6 +7,7 @@ import {
   getRelevantRolesForKey,
   getEntitiesForRole,
   getRelevantDataForAppRunner,
+  getRelevantModelsForAdapter,
 } from '../AddEntitiesView.utils';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { MenuI18nKey } from '@/src/constants/i18n';
@@ -150,5 +151,15 @@ describe('Add Entities tab :: getRelevantKeysForRole ', () => {
     expect(getRelevantKeysForRole({ grantedKeys: ['key', 'keyy'] }, keys)).toEqual([
       { name: 'key', type: MenuI18nKey.Keys, route: ApplicationRoute.Keys },
     ]);
+  });
+});
+
+describe('Add Entities tab :: getRelevantModelsForAdapter ', () => {
+  test('Should return empty array', () => {
+    expect(getRelevantModelsForAdapter({}, data)).toEqual([]);
+  });
+
+  test('Should return array with adapter', () => {
+    expect(getRelevantModelsForAdapter({ models: ['model'] }, data)).toEqual([data[0]]);
   });
 });

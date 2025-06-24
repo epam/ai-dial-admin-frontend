@@ -41,6 +41,8 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
   const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
+  const [contentJsonErrors, setContentJsonErrors] = useState<JSONEditorError[]>([]);
+
   const [key, setKey] = useState(0);
   const [addedVersions, setAddedVersions] = useState<string[]>([]);
 
@@ -132,6 +134,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
           jsonErrors={jsonErrors}
+          contentJsonErrors={contentJsonErrors}
           setErrorNotifications={setErrorNotifications}
         />
       </div>
@@ -155,6 +158,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
                 getPrompt={getPrompt}
                 addedVersions={addedVersions}
                 setAddedVersions={setAddedVersions}
+                setContentJsonErrors={setContentJsonErrors}
               />
             )}
           </>

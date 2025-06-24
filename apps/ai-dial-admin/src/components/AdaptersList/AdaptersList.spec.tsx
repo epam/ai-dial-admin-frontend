@@ -24,7 +24,7 @@ vi.mock('@/src/components/EntityListView/EntityListView', () => {
 
 vi.mock('@/src/constants/grid-columns/grid-columns', () => {
   return {
-    SIMPLE_NAME_COLUMNS: [
+    SIMPLE_DESCRIPTION_COLUMNS: [
       { field: 'id', headerName: 'ID' },
       { field: 'name', headerName: 'Name' },
     ],

@@ -92,6 +92,7 @@ const ImportFileTypeSelector: FC<Props> = ({
             emptyTitle={t(ImportI18nKey.DropAnyFile)}
             files={files}
             acceptTypes="/"
+            fileFormatError={t(ImportI18nKey.ImportFileErrorType)}
             onChangeFile={changeFile}
             isInvalid={isInvalid}
             dynamicIcon={getFileIcon}

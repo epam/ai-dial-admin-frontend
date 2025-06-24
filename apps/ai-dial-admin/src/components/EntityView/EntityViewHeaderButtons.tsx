@@ -46,6 +46,7 @@ interface Props<T> {
   removeEntity: (entity?: string) => Promise<ServerActionResponse>;
   toggleJsonEditor?: () => void;
   setErrorNotifications?: (notification: JSONEditorErrorNotification[]) => void;
+  contentJsonErrors?: JSONEditorError[] | null;
 }
 
 const EntityViewHeaderButtons = <T extends DialBaseEntity | DialKey>({
@@ -61,6 +62,7 @@ const EntityViewHeaderButtons = <T extends DialBaseEntity | DialKey>({
   setErrorNotifications,
   hideJsonEditor,
   children,
+  contentJsonErrors,
 }: Props<T>) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
   const router = useRouter();
@@ -111,14 +113,19 @@ const EntityViewHeaderButtons = <T extends DialBaseEntity | DialKey>({
   }, [jsonErrors]);
 
   const onTryToSave = useCallback(() => {
-    if (jsonErrors?.length) {
+    if (jsonErrors?.length || contentJsonErrors?.length) {
       setIsValidJSON(false);
-      const errorNotifications = showEditorErrorNotifications({ errors: jsonErrors, showNotification, t });
+      const errors = (jsonErrors?.length ? jsonErrors : contentJsonErrors) as JSONEditorError[];
+      const errorNotifications = showEditorErrorNotifications({
+        errors,
+        showNotification,
+        t,
+      });
       setErrorNotifications?.(errorNotifications);
     } else {
       onSave();
     }
-  }, [onSave, setErrorNotifications, showNotification, t, jsonErrors]);
+  }, [jsonErrors, contentJsonErrors, showNotification, t, setErrorNotifications, onSave]);
 
   useEffect(() => {
     setContainerClassNames(

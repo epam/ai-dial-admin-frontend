@@ -25,11 +25,17 @@ export default defineConfig(() => ({
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: ['**.config.ts'],
     reporters: ['default'],
-    setupFiles: './test-setup.tsx',
+    setupFiles: './test-setup.ts',
     coverage: {
-      reporter: ['html'],
+      reporter: ['text', 'html', 'clover', 'json'],
       reportsDirectory: '../../coverage/apps/ai-dial-admin',
       provider: 'v8' as const,
+      thresholds: {
+        branches: 38,
+        functions: 40,
+        lines: 48,
+        statements: 48,
+      },
     },
   },
 }));

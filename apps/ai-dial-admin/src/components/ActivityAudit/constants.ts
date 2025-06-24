@@ -6,7 +6,7 @@ import {
   KEY_ENTITY_COLUMNS,
   RUNNERS_COLUMNS,
   SIMPLE_ENTITY_COLUMNS,
-  SIMPLE_NAME_COLUMNS,
+  SIMPLE_DESCRIPTION_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
 
 export const SYSTEM_ROLLBACK_ID = 'system-rollback';
@@ -47,7 +47,7 @@ export const getSystemRollbackColumns = (
     case ActivityAuditResourceType.ADDON:
       return ENTITY_WITH_VERSION_COLUMNS(t, []);
     case ActivityAuditResourceType.ADAPTER:
-      return SIMPLE_NAME_COLUMNS;
+      return SIMPLE_DESCRIPTION_COLUMNS;
     case ActivityAuditResourceType.INTERCEPTOR:
     case ActivityAuditResourceType.ROLE:
     case ActivityAuditResourceType.ROUTE:

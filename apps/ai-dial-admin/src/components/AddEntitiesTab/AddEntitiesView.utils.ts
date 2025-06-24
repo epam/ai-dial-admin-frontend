@@ -18,6 +18,7 @@ import {
   getModelsForEntitiesGrid,
   getRolesForEntitiesGrid,
 } from '@/src/utils/entities/entities-list-view';
+import { DialAdapter } from '@/src/models/dial/adapter';
 
 export const ENTITY_COLUMNS = (t: (v: string) => string): ColDef[] => [
   ...ENTITY_BASE_COLUMNS,
@@ -189,6 +190,30 @@ export const getRelevantKeysForRole = (role: DialBaseEntity, allKeys: EntitiesGr
     const addedKey = allKeys.find((k) => k.name === key);
     if (addedKey) {
       data.push(addedKey);
+    }
+  });
+  return data;
+};
+
+/**
+ * Get models that are using the adpter
+ *
+ * @param {DialAdapter} adapter - adapter '/'
+ * @param {EntitiesGridData[]} allEntities - all available models in adapter  '/'
+ * @returns {EntitiesGridData[]} - array of relevant models
+ */
+export const getRelevantModelsForAdapter = (
+  adapter: DialAdapter,
+  allEntities: EntitiesGridData[],
+): EntitiesGridData[] => {
+  const data: EntitiesGridData[] = [];
+  if (!adapter.models) {
+    return data;
+  }
+  adapter.models.forEach((model) => {
+    const entity = allEntities.find((m) => m.name === model);
+    if (entity) {
+      data.push(entity as EntitiesGridData);
     }
   });
   return data;

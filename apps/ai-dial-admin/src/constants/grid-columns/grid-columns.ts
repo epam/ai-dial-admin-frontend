@@ -43,6 +43,12 @@ export const SIMPLE_NAME_COLUMNS: ColDef[] = [
   { field: 'version', headerName: 'Version' },
 ];
 
+export const SIMPLE_DESCRIPTION_COLUMNS: ColDef[] = [
+  { field: 'name', headerName: 'Name', sort: 'asc' },
+  { field: 'displayName', headerName: 'Display Name' },
+  { field: 'description', headerName: 'Description' },
+];
+
 export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [
   { field: 'name', headerName: 'Name', sort: 'asc' },
   { field: 'description', headerName: 'Description' },

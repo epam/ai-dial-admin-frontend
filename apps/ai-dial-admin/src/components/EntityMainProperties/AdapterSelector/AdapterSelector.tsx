@@ -18,7 +18,7 @@ const AdapterSelector: FC<Props> = ({ adapters, onChangeAdapter, model }) => {
 
   const items: DropdownItemsModel[] = adapters.map((adapter) => ({
     id: adapter.name as string,
-    name: adapter.name as string,
+    name: (adapter.displayName || adapter.name) as string,
   }));
 
   const onChange = useCallback(
