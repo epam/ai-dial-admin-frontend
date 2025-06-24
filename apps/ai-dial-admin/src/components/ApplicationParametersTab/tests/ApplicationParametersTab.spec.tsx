@@ -2,6 +2,12 @@ import { render } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import ApplicationParametersTab from '../ApplicationParametersTab';
 
+vi.mock('next-auth/react', () => ({
+  useSession: vi.fn(() => {
+    return { session: null };
+  }),
+}));
+
 describe('Applications - ApplicationParametersTab', () => {
   test('Should correctly render notification', () => {
     const { baseElement, getByTestId } = render(

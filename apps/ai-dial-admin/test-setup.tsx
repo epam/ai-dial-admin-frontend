@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/alt-text */
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
@@ -39,12 +40,20 @@ vi.mock('@/src/context/PromptFolderContext', () => ({
   usePromptFolder: () => vi.fn(),
 }));
 
-vi.mock('@/src/context/RuleFolderProvider', () => ({
+vi.mock('@/src/context/RuleFolderContext', () => ({
   useRuleFolder: () => vi.fn(),
 }));
 
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => vi.fn(),
+}));
+
+vi.mock('next/image', () => ({
+  __esModule: true,
+  default: (props: any) => {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img {...props} />;
+  },
 }));
 
 global.ResizeObserver = vi.fn(() => ({
