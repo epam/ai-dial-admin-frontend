@@ -1,7 +1,6 @@
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
-import { fireEvent, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { WelcomeViewI18nKey } from './i18n';
 import WelcomeView from './WelcomeView';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
@@ -18,7 +17,7 @@ describe('WelcomeView', () => {
   });
 
   test('renders and triggers actions without test ids', () => {
-    renderWithContext(<WelcomeView disableMenuItems={[]} dialLink="link" docLink="link" />);
+    render(<WelcomeView disableMenuItems={[]} dialLink="link" docLink="link" />);
 
     const documentationBtn = screen.getByText(WelcomeViewI18nKey.ViewDocumentation);
     const dialBtn = screen.getByText(WelcomeViewI18nKey.OpenDial);

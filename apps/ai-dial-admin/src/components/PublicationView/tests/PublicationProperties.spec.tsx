@@ -2,12 +2,12 @@ import PublicationProperties from '@/src/components/PublicationView/PublicationP
 import { Publication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
 import { publicationPrompt } from '@/src/utils/tests/mock/publication.mock';
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
 describe('Components - BasePublicationProperties', () => {
   test('Should correctly render BasePublicationProperties component', () => {
-    const { getByTestId } = renderWithContext(
+    const { getByTestId } = render(
       <PublicationProperties
         view={ApplicationRoute.PromptPublications}
         publication={publicationPrompt as Publication}
@@ -23,7 +23,7 @@ describe('Components - BasePublicationProperties', () => {
   });
 
   test('Should not render BasePublicationProperties component if view is incorrect', () => {
-    const { container } = renderWithContext(
+    const { container } = render(
       <PublicationProperties view={ApplicationRoute.Home} publication={publicationPrompt as Publication} />,
     );
 

@@ -1,5 +1,5 @@
 import SingleValueChart from '@/src/components/Charts/SingleValueChart/SingleValueChart';
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
 import { MONEY_QUERY } from '@/src/constants/telemetry';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { describe, expect, test } from 'vitest';
@@ -14,7 +14,7 @@ function getData(): Promise<ServerActionResponse> {
 
 describe('Components - SingleValueChart', () => {
   test('renders correctly', () => {
-    const { getByTestId } = renderWithContext(
+    const { getByTestId } = render(
       <SingleValueChart title={'Title'} getData={getData} query={MONEY_QUERY} unit={'$'} />,
     );
 

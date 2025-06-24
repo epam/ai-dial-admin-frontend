@@ -1,6 +1,6 @@
 import { getRules } from '@/src/app/[lang]/folders-storage/actions';
 import BasePublicationPermissions from '@/src/components/PublicationView/BasePublicationProperties/BasePublicationPermissions';
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
 import { fireEvent, waitFor } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
@@ -12,7 +12,7 @@ describe('Components - BasePublicationPermissions', () => {
     mockedGetRules.mockResolvedValue({
       id: [{ id: 'rule-1' }],
     });
-    const { getByTestId, findByTestId } = renderWithContext(
+    const { getByTestId, findByTestId } = render(
       <BasePublicationPermissions rules={[]} folderId={'id'} showCompare={true} />,
     );
     const reviewStructureButton = getByTestId('publication-permissions-review-structure-button');
@@ -26,7 +26,7 @@ describe('Components - BasePublicationPermissions', () => {
     mockedGetRules.mockResolvedValue({
       id: [],
     });
-    const { getByTestId, queryByTestId } = renderWithContext(
+    const { getByTestId, queryByTestId } = render(
       <BasePublicationPermissions rules={[]} folderId={'id'} showCompare={true} />,
     );
     const reviewStructureButton = getByTestId('publication-permissions-review-structure-button');
@@ -41,7 +41,7 @@ describe('Components - BasePublicationPermissions', () => {
     mockedGetRules.mockResolvedValue({
       id: [{ id: 'rule-1' }],
     });
-    const { getByTestId, queryByTestId } = renderWithContext(
+    const { getByTestId, queryByTestId } = render(
       <BasePublicationPermissions rules={[]} folderId={'id'} showCompare={false} />,
     );
     const reviewStructureButton = getByTestId('publication-permissions-review-structure-button');
@@ -53,7 +53,7 @@ describe('Components - BasePublicationPermissions', () => {
   });
 
   test('Should open structure modal', () => {
-    const { getByTestId } = renderWithContext(
+    const { getByTestId } = render(
       <BasePublicationPermissions rules={[]} folderId={'id'} showCompare={true} />,
     );
 
@@ -68,7 +68,7 @@ describe('Components - BasePublicationPermissions', () => {
     mockedGetRules.mockResolvedValue({
       id: [{ id: 'rule-1' }],
     });
-    const { getByTestId, findByTestId } = renderWithContext(
+    const { getByTestId, findByTestId } = render(
       <BasePublicationPermissions rules={[]} folderId={'id'} showCompare={true} />,
     );
 

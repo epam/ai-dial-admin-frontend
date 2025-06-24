@@ -1,5 +1,5 @@
 import { DialModel, DialModelType } from '@/src/models/dial/model';
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
 import { fireEvent } from '@testing-library/dom';
 import { describe, expect, test } from 'vitest';
 import ModelTypeProperties from './ModelTypeProperties';
@@ -10,7 +10,7 @@ describe('ModelProperties :: ModelTypeProperties', () => {
     const onChangeModel = (m: DialModel) => {
       model = m;
     };
-    const { baseElement, getByTestId } = renderWithContext(
+    const { baseElement, getByTestId } = render(
       <ModelTypeProperties model={model} onChangeModel={onChangeModel} />,
     );
 

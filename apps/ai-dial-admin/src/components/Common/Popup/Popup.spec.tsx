@@ -1,11 +1,11 @@
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
 import { fireEvent } from '@testing-library/dom';
 import Popup from './Popup';
 import { describe, expect, test, vi } from 'vitest';
 
 describe('Common components :: Popup', () => {
   test('Should render successfully', () => {
-    const { baseElement } = renderWithContext(
+    const { baseElement } = render(
       <Popup onClose={vi.fn()} portalId="popupId">
         <div></div>
         <div></div>
@@ -21,7 +21,7 @@ describe('Common components :: Popup', () => {
       isClose = true;
     };
 
-    const { baseElement, getByTestId } = renderWithContext(
+    const { baseElement, getByTestId } = render(
       <Popup onClose={onClose} portalId="popupId" heading={<span>heading</span>}>
         <div></div>
         <div></div>

@@ -1,4 +1,4 @@
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
 import TokenizerModelSwitch from './Tokenizer';
 import TokenizedModelsGrid from './TokenizedModelsGrid';
 import TokenizedModelsModal from './TokenizedModelsModal';
@@ -15,7 +15,7 @@ const mockFunction = vi.fn();
 
 describe('Tokenizer - Tokenizer Model Switch', () => {
   test('Should render successfully', () => {
-    const { baseElement } = renderWithContext(
+    const { baseElement } = render(
       <TokenizerModelSwitch model={{ tokenizerModel: 'tokenizerModel ' }} onChangeModel={mockFunction} />,
     );
     expect(baseElement).toBeTruthy();
@@ -24,7 +24,7 @@ describe('Tokenizer - Tokenizer Model Switch', () => {
 
 describe('Tokenizer - TokenizedModelsGrid', () => {
   test('Should render successfully', () => {
-    const { baseElement } = renderWithContext(
+    const { baseElement } = render(
       <TokenizedModelsGrid selectedModel="model" onSelectModelId={mockFunction} />,
     );
     expect(baseElement).toBeTruthy();
@@ -33,7 +33,7 @@ describe('Tokenizer - TokenizedModelsGrid', () => {
 
 describe('Tokenizer - TokenizedModelsModal', () => {
   test('Should render successfully', () => {
-    const { baseElement } = renderWithContext(
+    const { baseElement } = render(
       <TokenizedModelsModal
         model={{}}
         modalState={PopUpState.Opened}

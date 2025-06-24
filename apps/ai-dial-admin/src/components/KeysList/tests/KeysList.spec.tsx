@@ -1,4 +1,4 @@
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
 import { fireEvent } from '@testing-library/dom';
 import { DialKey } from '../../../models/dial/key';
 import KeyProperties from '../KeyProperties';
@@ -13,14 +13,14 @@ vi.mock('react-dnd', () => ({
 
 describe('KeysList - List view', () => {
   test('Should render successfully', () => {
-    const { baseElement } = renderWithContext(<KeysList data={[{ key: 'key', project: 'project', secured: false }]} />);
+    const { baseElement } = render(<KeysList data={[{ key: 'key', project: 'project', secured: false }]} />);
     expect(baseElement).toBeTruthy();
   });
 });
 
 describe('KeyView - view', () => {
   test('Should render successfully', () => {
-    const { baseElement } = renderWithContext(
+    const { baseElement } = render(
       <KeyView names={[]} originalKey={{ key: 'key', project: 'project', secured: false }} roles={[]} />,
     );
     expect(baseElement).toBeTruthy();
@@ -33,7 +33,7 @@ describe('KeyView - KeyProperties', () => {
     const onChangeKey = (key: DialKey) => {
       entity = { ...entity, ...key };
     };
-    const { baseElement, getByTestId } = renderWithContext(
+    const { baseElement, getByTestId } = render(
       <KeyProperties entity={entity} names={['key']} onChangeKey={onChangeKey} isKeyImmutable={false} />,
     );
     expect(baseElement).toBeTruthy();

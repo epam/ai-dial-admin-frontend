@@ -1,9 +1,8 @@
 import { ApplicationRoute } from '@/src/types/routes';
-import { screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { ColDef } from 'ag-grid-community';
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
-import AddonsList from './AddonsList';
 import { describe, expect, test, vi } from 'vitest';
+import AddonsList from './AddonsList';
 
 vi.mock('@/src/app/[lang]/addons/actions', () => ({
   createAddon: vi.fn(),
@@ -47,7 +46,7 @@ describe('AddonsList', () => {
       { id: '2', displayName: 'Addon Two', version: '2.0' },
       { id: '3', version: '3.0' },
     ];
-    renderWithContext(<AddonsList data={data} />);
+    render(<AddonsList data={data} />);
     expect(screen.getByText('BaseEntityListMock')).toBeInTheDocument();
     expect(screen.getByText('Addon One,Addon Two,')).toBeInTheDocument();
     expect(screen.getByText(ApplicationRoute.Addons)).toBeInTheDocument();
@@ -55,7 +54,7 @@ describe('AddonsList', () => {
   });
 
   test('renders with empty data', () => {
-    renderWithContext(<AddonsList data={[]} />);
+    render(<AddonsList data={[]} />);
     expect(screen.getByText('BaseEntityListMock')).toBeInTheDocument();
     expect(screen.getByText('/addons')).toBeInTheDocument();
   });

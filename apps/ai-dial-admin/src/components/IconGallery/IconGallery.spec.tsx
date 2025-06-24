@@ -1,4 +1,4 @@
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
 import IconGallery from '@/src/components/IconGallery/IconGallery';
 import { fireEvent, getByText } from '@testing-library/react';
 import { getIconPath } from '@/src/utils/themes/icon-path';
@@ -20,7 +20,7 @@ vi.mock('@/src/components/IconGallery/Icons.config', () => ({
 describe('Components - ItemGallery', () => {
   test('Should render icon successfully', () => {
     const setSelectedIcon = vi.fn();
-    const { baseElement } = renderWithContext(<IconGallery selectedIcon={''} setSelectedIcon={setSelectedIcon} />);
+    const { baseElement } = render(<IconGallery selectedIcon={''} setSelectedIcon={setSelectedIcon} />);
 
     expect(baseElement).toBeTruthy();
     const noneOption = baseElement.getElementsByTagName('i')[0];
@@ -35,7 +35,7 @@ describe('Components - ItemGallery', () => {
 
   test('Should select none icon successfully', () => {
     const setSelectedIcon = vi.fn();
-    const { baseElement } = renderWithContext(<IconGallery selectedIcon={''} setSelectedIcon={setSelectedIcon} />);
+    const { baseElement } = render(<IconGallery selectedIcon={''} setSelectedIcon={setSelectedIcon} />);
 
     expect(baseElement).toBeTruthy();
     const noneOption = baseElement.getElementsByTagName('button')[0];
@@ -45,7 +45,7 @@ describe('Components - ItemGallery', () => {
 
   test('Should select icon successfully', () => {
     const setSelectedIcon = vi.fn();
-    const { baseElement } = renderWithContext(<IconGallery selectedIcon={''} setSelectedIcon={setSelectedIcon} />);
+    const { baseElement } = render(<IconGallery selectedIcon={''} setSelectedIcon={setSelectedIcon} />);
 
     expect(baseElement).toBeTruthy();
     const iconOption = baseElement.getElementsByTagName('button')[1];

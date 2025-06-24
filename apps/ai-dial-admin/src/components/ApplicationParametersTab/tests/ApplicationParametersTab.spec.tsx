@@ -1,10 +1,10 @@
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
 import ApplicationParametersTab from '../ApplicationParametersTab';
 import { describe, expect, test, vi } from 'vitest';
 
 describe('Applications - ApplicationParametersTab', () => {
   test('Should correctly render notification', () => {
-    const { baseElement, getByTestId } = renderWithContext(
+    const { baseElement, getByTestId } = render(
       <ApplicationParametersTab
         entity={{ customAppSchemaId: 'scheme1' }}
         applicationSchemes={[

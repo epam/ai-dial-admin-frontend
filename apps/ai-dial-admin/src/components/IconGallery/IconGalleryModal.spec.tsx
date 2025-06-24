@@ -1,6 +1,6 @@
 import IconGalleryModal from '@/src/components/IconGallery/IconGalleryModal';
 import { PopUpState } from '@/src/types/pop-up';
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
 import { fireEvent, within } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
@@ -22,7 +22,7 @@ const onChange = vi.fn();
 
 describe('Components - ItemGallery', () => {
   test('Should render icon successfully', () => {
-    const { baseElement } = renderWithContext(
+    const { baseElement } = render(
       <IconGalleryModal modalState={PopUpState.Opened} onChange={onChange} onClose={onClose} selectedValue={''} />,
     );
 

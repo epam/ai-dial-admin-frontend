@@ -1,6 +1,6 @@
 import RolesList from './RolesList';
 import RolesView from './RolesView';
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 vi.mock('react-dnd', () => ({
@@ -10,14 +10,14 @@ vi.mock('react-dnd', () => ({
 
 describe('RolesList - List view', () => {
   test('Should render successfully', () => {
-    const { baseElement } = renderWithContext(<RolesList data={[{ name: '' }]} />);
+    const { baseElement } = render(<RolesList data={[{ name: '' }]} />);
     expect(baseElement).toBeTruthy();
   });
 });
 
 describe('RolesView - view', () => {
   test('Should render successfully', () => {
-    const { baseElement } = renderWithContext(
+    const { baseElement } = render(
       <RolesView names={[]} originalRole={{}} addons={[]} applications={[]} keys={[]} models={[]} />,
     );
     expect(baseElement).toBeTruthy();

@@ -1,4 +1,4 @@
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
 import PromptsProperties from '@/src/components/PublicationView/PromptProperties/PromptsProperties';
 import { fireEvent } from '@testing-library/react';
 import { ActionType } from '@/src/models/dial/publications';
@@ -17,7 +17,7 @@ describe('Components - PromptsProperties', () => {
   });
 
   test('Should correctly render PromptsList collapsed view', () => {
-    const { getByTestId } = renderWithContext(
+    const { getByTestId } = render(
       <PromptsProperties
         prompt={publicationPrompt.prompts[0]}
         collapsed={true}
@@ -31,7 +31,7 @@ describe('Components - PromptsProperties', () => {
   });
 
   test('Should correctly render PromptsList not collapsed view', () => {
-    const { getByTestId } = renderWithContext(
+    const { getByTestId } = render(
       <PromptsProperties
         prompt={publicationPrompt.prompts[0]}
         collapsed={false}
@@ -45,7 +45,7 @@ describe('Components - PromptsProperties', () => {
   });
 
   test('Should correctly change collapsed state', () => {
-    const { getByTestId } = renderWithContext(
+    const { getByTestId } = render(
       <PromptsProperties
         prompt={publicationPrompt.prompts[0]}
         collapsed={false}
@@ -62,7 +62,7 @@ describe('Components - PromptsProperties', () => {
   });
 
   test('Should correctly navigate to prompt', () => {
-    const { getByTestId } = renderWithContext(
+    const { getByTestId } = render(
       <PromptsProperties prompt={publicationPrompt.prompts[0]} collapsed={false} action={'delete' as ActionType} />,
     );
 

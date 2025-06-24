@@ -1,12 +1,12 @@
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import CreateEntity from './CreateEntity';
 
 describe('CreateEntity', () => {
   test('Should render successfully', () => {
-    const { baseElement } = renderWithContext(
+    const { baseElement } = render(
       <CreateEntity
         route={ApplicationRoute.Models}
         modalTitle="title"
@@ -20,7 +20,7 @@ describe('CreateEntity', () => {
   });
 
   test('Should render successfully Prompts', () => {
-    const { baseElement } = renderWithContext(
+    const { baseElement } = render(
       <CreateEntity
         route={ApplicationRoute.Prompts}
         modalTitle="title"
@@ -35,7 +35,7 @@ describe('CreateEntity', () => {
   });
 
   test('Should render successfully Keys', () => {
-    const { baseElement } = renderWithContext(
+    const { baseElement } = render(
       <CreateEntity
         route={ApplicationRoute.Keys}
         modalTitle="title"

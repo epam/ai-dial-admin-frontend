@@ -1,11 +1,11 @@
 import Notification from '@/src/components/Notification/Notification';
 import { NOTIFICATION } from '@/src/utils/tests/mock/notifications.mock';
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
 describe('Components - Notification', () => {
   test('Should correctly render notification', () => {
-    const { getByTestId } = renderWithContext(<Notification {...NOTIFICATION} />);
+    const { getByTestId } = render(<Notification {...NOTIFICATION} />);
     const title = getByTestId('notification-title');
     const description = getByTestId('notification-description');
     const icon = getByTestId('notification-icon');
