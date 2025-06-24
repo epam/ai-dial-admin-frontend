@@ -8,9 +8,9 @@ This project is a web application built using [Next.js](https://nextjs.org/), a 
 
 This project is managed by [NX](https://nextjs.org/).
 
-Before diving into the development environment, install Node.js (version >=20) and yarn (version >=1) on your system. If you don't already have them, follow the [instruction](https://nodejs.org/en/download/).
+Before diving into the development environment, install Node.js (version >=20) and npm on your system. If you don't already have them, follow the [instruction](https://nodejs.org/en/download/).
 
-Once you have Node.js and yarn installed, follow these steps to set up your developer environment:
+Once you have Node.js and npm installed, follow these steps to set up your developer environment:
 
 1. Clone the AI DIAL Admin repository:
 
@@ -21,12 +21,7 @@ Once you have Node.js and yarn installed, follow these steps to set up your deve
 2. Install project dependencies:
 
    ```bash
-   yarn
-   ```
-   or
-
-   ```bash
-   yarn install
+   npm install
    ```
 
 3. Create `.env.local` file in the `\apps\ai-dial-admin` project directory and add the required variables with appropriate values. These two are the only required environment variables.
@@ -38,7 +33,7 @@ Once you have Node.js and yarn installed, follow these steps to set up your deve
 4. To start the development server, run:
 
    ```bash
-   yarn start
+   npm start
    ```
 
 Once the server is up and running, open `http://localhost:4200` in your browser to view the AI DIAL Admin application.
@@ -46,7 +41,7 @@ Once the server is up and running, open `http://localhost:4200` in your browser 
 To run the optimized production build, execute this command:
 
 ```bash
-yarn start --configuration=production
+npm start --configuration=production
 ```
 
 This will start a production server on the default port 4200.
@@ -56,7 +51,7 @@ This will start a production server on the default port 4200.
 To create an optimized build of your application, run the following command:
 
 ```bash
-yarn build --configuration=production
+npm run build --configuration=production
 ```
 
 After running the command, you will see a `.dist` folder created in your project directory with the optimized output.
@@ -66,7 +61,7 @@ After running the command, you will see a `.dist` folder created in your project
 To run the unit tests suite for your application, execute the following command:
 
 ```bash
-yarn test
+npm run test
 ```
 
 ## Environment Variables
