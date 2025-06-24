@@ -27,6 +27,18 @@ vi.mock('@/src/context/NotificationContext', () => ({
   }),
 }));
 
+vi.mock('@/src/context/ThemeContext', () => ({
+  useTheme: () => vi.fn(),
+}));
+
+vi.mock('@/src/context/RuleFolderProvider', () => ({
+  useRuleFolder: () => vi.fn(),
+}));
+
+vi.mock('@/src/context/PromptFolderProvider', () => ({
+  usePromptFolder: () => vi.fn(),
+}));
+
 global.ResizeObserver = vi.fn(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
