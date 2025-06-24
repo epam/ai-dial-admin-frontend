@@ -20,9 +20,7 @@ const fakeContext = () => ({
 describe('Common components - FolderList', () => {
   test('Should render successfully', () => {
     const context = fakeContext;
-    const { baseElement, getByTestId } = render(
-      <FolderList context={context as () => FileFolderContextType} />,
-    );
+    const { baseElement, getByTestId } = render(<FolderList context={context as () => FileFolderContextType} />);
     expect(baseElement).toBeTruthy();
     const list = getByTestId('folder-list');
     expect(list).toBeTruthy();

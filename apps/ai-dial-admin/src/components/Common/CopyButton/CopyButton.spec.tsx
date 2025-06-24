@@ -8,12 +8,6 @@ Object.assign(navigator, {
   },
 });
 
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({
-    showNotification: vi.fn(),
-  }),
-}));
-
 describe('Common components :: CopyButton', () => {
   test('Should render button with icon and be accessible by role', () => {
     render(<CopyButton title="Copy this" field="value" />);

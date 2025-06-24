@@ -4,8 +4,7 @@ import {
   DYNAMIC_NOTIFICATION_COMPLETED,
   DYNAMIC_NOTIFICATION_EMPTY,
 } from '@/src/utils/tests/mock/notifications.mock';
-import { render } from '@testing-library/react';
-import { fireEvent } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
 describe('Components - DynamicNotification', () => {
@@ -31,9 +30,7 @@ describe('Components - DynamicNotification', () => {
   });
 
   test('Should correctly render all completed notification details', () => {
-    const { getByTestId, queryAllByTestId } = render(
-      <DynamicNotification {...DYNAMIC_NOTIFICATION_COMPLETED} />,
-    );
+    const { getByTestId, queryAllByTestId } = render(<DynamicNotification {...DYNAMIC_NOTIFICATION_COMPLETED} />);
     const showDetailsButton = getByTestId('show-details');
     const progress = queryAllByTestId('progress');
 
@@ -47,9 +44,7 @@ describe('Components - DynamicNotification', () => {
   });
 
   test('Should correctly render notification without file details', () => {
-    const { getByTestId, queryAllByTestId } = render(
-      <DynamicNotification {...DYNAMIC_NOTIFICATION_EMPTY} />,
-    );
+    const { getByTestId, queryAllByTestId } = render(<DynamicNotification {...DYNAMIC_NOTIFICATION_EMPTY} />);
     const showDetailsButton = getByTestId('show-details');
 
     fireEvent.click(showDetailsButton);

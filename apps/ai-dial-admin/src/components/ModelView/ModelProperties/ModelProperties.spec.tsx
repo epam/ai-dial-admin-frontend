@@ -10,9 +10,7 @@ describe('ModelProperties :: ModelTypeProperties', () => {
     const onChangeModel = (m: DialModel) => {
       model = m;
     };
-    const { baseElement, getByTestId } = render(
-      <ModelTypeProperties model={model} onChangeModel={onChangeModel} />,
-    );
+    const { baseElement, getByTestId } = render(<ModelTypeProperties model={model} onChangeModel={onChangeModel} />);
 
     expect(baseElement).toBeTruthy();
 

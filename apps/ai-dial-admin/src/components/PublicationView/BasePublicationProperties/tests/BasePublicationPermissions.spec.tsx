@@ -1,7 +1,6 @@
 import { getRules } from '@/src/app/[lang]/folders-storage/actions';
 import BasePublicationPermissions from '@/src/components/PublicationView/BasePublicationProperties/BasePublicationPermissions';
-import { render } from '@testing-library/react';
-import { fireEvent, waitFor } from '@testing-library/react';
+import { fireEvent, render, waitFor } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 vi.mock('@/src/app/[lang]/folders-storage/actions');
@@ -53,9 +52,7 @@ describe('Components - BasePublicationPermissions', () => {
   });
 
   test('Should open structure modal', () => {
-    const { getByTestId } = render(
-      <BasePublicationPermissions rules={[]} folderId={'id'} showCompare={true} />,
-    );
+    const { getByTestId } = render(<BasePublicationPermissions rules={[]} folderId={'id'} showCompare={true} />);
 
     const reviewStructureButton = getByTestId('publication-permissions-review-structure-button');
     fireEvent.click(reviewStructureButton);

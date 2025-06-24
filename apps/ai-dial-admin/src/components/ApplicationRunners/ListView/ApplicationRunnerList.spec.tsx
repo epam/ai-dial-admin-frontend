@@ -41,9 +41,7 @@ describe('Components - Parameters', () => {
       scheme = newScheme;
     };
 
-    const { baseElement, getByTestId } = render(
-      <Parameters scheme={scheme} onChangeScheme={onChangeScheme} />,
-    );
+    const { baseElement, getByTestId } = render(<Parameters scheme={scheme} onChangeScheme={onChangeScheme} />);
 
     expect(baseElement).toBeTruthy();
 
@@ -78,9 +76,7 @@ describe('Components - Properties', () => {
       scheme = newScheme;
     };
 
-    const { baseElement, getByTestId } = render(
-      <SchemeProperties entity={scheme} onChangeScheme={onChangeScheme} />,
-    );
+    const { baseElement, getByTestId } = render(<SchemeProperties entity={scheme} onChangeScheme={onChangeScheme} />);
 
     expect(baseElement).toBeTruthy();
 

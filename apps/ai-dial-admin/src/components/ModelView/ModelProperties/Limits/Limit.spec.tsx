@@ -17,9 +17,7 @@ describe('Limits', () => {
   });
 
   test('Should render successfully when LimitType.Total', () => {
-    const { baseElement } = render(
-      <Limits model={{ limits: { maxTotalTokens: 3 } }} onChangeModel={vi.fn()} />,
-    );
+    const { baseElement } = render(<Limits model={{ limits: { maxTotalTokens: 3 } }} onChangeModel={vi.fn()} />);
     expect(baseElement).toBeTruthy();
   });
 });

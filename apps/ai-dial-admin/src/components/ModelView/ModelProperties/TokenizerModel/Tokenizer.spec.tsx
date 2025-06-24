@@ -1,10 +1,9 @@
+import { PopUpState } from '@/src/types/pop-up';
 import { render } from '@testing-library/react';
-import TokenizerModelSwitch from './Tokenizer';
+import { describe, expect, test, vi } from 'vitest';
 import TokenizedModelsGrid from './TokenizedModelsGrid';
 import TokenizedModelsModal from './TokenizedModelsModal';
-import { PopUpState } from '@/src/types/pop-up';
-import fetch from 'vitest-fetch-mock';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import TokenizerModelSwitch from './Tokenizer';
 
 vi.mock('react-dnd', () => ({
   useDrag: () => [{ isDragging: false }, vi.fn()],
@@ -24,9 +23,7 @@ describe('Tokenizer - Tokenizer Model Switch', () => {
 
 describe('Tokenizer - TokenizedModelsGrid', () => {
   test('Should render successfully', () => {
-    const { baseElement } = render(
-      <TokenizedModelsGrid selectedModel="model" onSelectModelId={mockFunction} />,
-    );
+    const { baseElement } = render(<TokenizedModelsGrid selectedModel="model" onSelectModelId={mockFunction} />);
     expect(baseElement).toBeTruthy();
   });
 });

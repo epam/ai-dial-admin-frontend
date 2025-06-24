@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
 import ApplicationParametersTab from '../ApplicationParametersTab';
-import { describe, expect, test, vi } from 'vitest';
 
 describe('Applications - ApplicationParametersTab', () => {
   test('Should correctly render notification', () => {
