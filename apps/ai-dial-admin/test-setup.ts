@@ -21,6 +21,12 @@ vi.mock('next/navigation', () => ({
   usePathname: vi.fn(),
 }));
 
+vi.mock('@/src/context/NotificationContext', () => ({
+  useNotification: () => ({
+    showNotification: vi.fn(),
+  }),
+}));
+
 global.ResizeObserver = vi.fn(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
