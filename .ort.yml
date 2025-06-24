@@ -29,3 +29,11 @@ resolutions:
         'NPM::rslog:1\\.2\\.3'\\."
       reason: 'CANT_FIX_EXCEPTION'
       comment: 'The dependency has MIT license in github repo'
+    - message: "No license information is available for dependency \
+        'NPM::terser-webpack-plugin:5\\.3\\.14'\\."
+      reason: 'CANT_FIX_EXCEPTION'
+      comment: 'The dependency has MIT license in github repo'
+    - message: "No license information is available for dependency \
+        'NPM::@vitest:ui:3\\.2\\.4'\\."
+      reason: 'CANT_FIX_EXCEPTION'
+      comment: 'The dependency has MIT license in github repo'
