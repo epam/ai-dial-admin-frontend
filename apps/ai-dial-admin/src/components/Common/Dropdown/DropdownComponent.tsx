@@ -45,7 +45,7 @@ import {
 
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { DropdownType } from '@/src/types/dropdown-type';
-import { dropdownMenuClassNames, menuItemClassNames } from './dropdown-css';
+import { dropdownMenuClassNames, menuItemClassNames } from './constants';
 import DropdownSelectedItem from './DropdownSelectedValue';
 
 export const MenuContext = createContext<{

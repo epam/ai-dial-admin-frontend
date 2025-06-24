@@ -1,81 +1,129 @@
-import { fireEvent, render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { PopUpState } from '@/src/types/pop-up';
 import ConfirmationModal from './ConfirmationModal';
-
-const mockFunction = jest.fn();
+import { describe, expect, test, vi } from 'vitest';
 
 describe('Common :: ConfirmationModal', () => {
-  it('Should render successfully', () => {
-    let isClose = false;
-    const onClose = () => {
-      isClose = true;
-    };
-
-    let isConfirm = false;
-    const onConfirm = () => {
-      isConfirm = true;
-    };
-
-    const { baseElement, getByTestId } = render(
+  test('Should render successfully', async () => {
+    render(
       <ConfirmationModal
         modalState={PopUpState.Opened}
-        onConfirm={onConfirm}
-        onClose={onClose}
+        onConfirm={vi.fn()}
+        onClose={vi.fn()}
         description="description"
         heading="heading"
         confirmLabel="Confirm"
       />,
     );
-    expect(baseElement).toBeTruthy();
 
-    expect(isClose).toBeFalsy();
-    const closeBtn = getByTestId('modalCancel');
-    fireEvent.click(closeBtn);
-    expect(isClose).toBeTruthy();
-
-    expect(isConfirm).toBeFalsy();
-    const confirmBtn = getByTestId('modalConfirm');
-    fireEvent.click(confirmBtn);
-    expect(isConfirm).toBeTruthy();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByText('heading')).toBeInTheDocument();
+    expect(screen.getByText('description')).toBeInTheDocument();
   });
 
-  it('Should render successfully with loading', () => {
-    const { baseElement } = render(
+  test('Should render successfully with loading', () => {
+    render(
       <ConfirmationModal
         modalState={PopUpState.Opened}
-        onConfirm={mockFunction}
-        onCancel={mockFunction}
-        onClose={mockFunction}
+        onConfirm={vi.fn()}
+        onCancel={vi.fn()}
+        onClose={vi.fn()}
         isLoading={true}
         description="description"
         heading="heading"
         confirmLabel="Confirm"
       />,
     );
-    expect(baseElement).toBeTruthy();
+
+    expect(screen.queryByRole('button', { name: /confirm/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument();
   });
 
-  it('Should render successfully with cancel', () => {
-    let isClose = false;
-    const onClose = () => {
-      isClose = true;
-    };
+  test('Should handle confirm', async () => {
+    const user = userEvent.setup();
+    const onConfirm = vi.fn();
 
-    const { baseElement, getByTestId } = render(
+    render(
       <ConfirmationModal
         modalState={PopUpState.Opened}
-        onConfirm={mockFunction}
-        onCancel={onClose}
-        onClose={mockFunction}
+        onConfirm={onConfirm}
+        onClose={vi.fn()}
         description="description"
         heading="heading"
         confirmLabel="Confirm"
       />,
     );
-    expect(baseElement).toBeTruthy();
-    expect(isClose).toBeFalsy();
-    const closeBtn = getByTestId('modalCancel');
-    fireEvent.click(closeBtn);
-    expect(isClose).toBeTruthy();
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByText('heading')).toBeInTheDocument();
+    expect(screen.getByText('description')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /confirm/i }));
+    expect(onConfirm).toHaveBeenCalled();
+  });
+
+  test('Should handle close', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+
+    render(
+      <ConfirmationModal
+        modalState={PopUpState.Opened}
+        onConfirm={vi.fn()}
+        onClose={onClose}
+        description="description"
+        heading="heading"
+        confirmLabel="Confirm"
+      />,
+    );
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByText('heading')).toBeInTheDocument();
+    expect(screen.getByText('description')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /close/i }));
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  test('Should handle cancel', async () => {
+    const user = userEvent.setup();
+    const onCancel = vi.fn();
+
+    render(
+      <ConfirmationModal
+        modalState={PopUpState.Opened}
+        onConfirm={vi.fn()}
+        onCancel={onCancel}
+        onClose={vi.fn()}
+        description="description"
+        heading="heading"
+        confirmLabel="Confirm"
+      >
+        <div></div>
+      </ConfirmationModal>,
+    );
+
+    await user.click(screen.getByRole('button', { name: /cancel/i }));
+    expect(onCancel).toHaveBeenCalled();
+  });
+
+  test('Should handle cancel with close handler', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+
+    render(
+      <ConfirmationModal
+        modalState={PopUpState.Opened}
+        onConfirm={vi.fn()}
+        onClose={onClose}
+        description="description"
+        heading="heading"
+        confirmLabel="Confirm"
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /cancel/i }));
+    expect(onClose).toHaveBeenCalled();
   });
 });

@@ -1,23 +1,9 @@
 import { renderWithContext } from '@/src/utils/tests/renderWithContext';
 import ApplicationParametersTab from '../ApplicationParametersTab';
-
-jest.mock('next-auth/react', () => {
-  const originalModule = jest.requireActual('next-auth/react');
-  const mockSession = {
-    expires: new Date(Date.now() + 2 * 86400).toISOString(),
-    user: { username: 'admin' },
-    providerId: 'provider',
-  };
-  return {
-    ...originalModule,
-    useSession: jest.fn(() => {
-      return { data: mockSession, status: 'authenticated' };
-    }),
-  };
-});
+import { describe, expect, test, vi } from 'vitest';
 
 describe('Applications - ApplicationParametersTab', () => {
-  it('Should correctly render notification', () => {
+  test('Should correctly render notification', () => {
     const { baseElement, getByTestId } = renderWithContext(
       <ApplicationParametersTab
         entity={{ customAppSchemaId: 'scheme1' }}

@@ -1,12 +1,16 @@
-import fetch from 'jest-fetch-mock';
 import { createApplicationScheme, removeApplicationScheme, updateApplicationScheme } from './actions';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
+
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
 
 describe('Applications schemes :: server actions', () => {
   beforeEach(() => {
     fetch.resetMocks();
   });
 
-  it('Should call remove application scheme', async () => {
+  test('Should call remove application scheme', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     removeApplicationScheme('scheme').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -16,7 +20,7 @@ describe('Applications schemes :: server actions', () => {
     });
   });
 
-  it('Should call create application scheme', async () => {
+  test('Should call create application scheme', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     createApplicationScheme({ $id: 'scheme' }).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -26,7 +30,7 @@ describe('Applications schemes :: server actions', () => {
     });
   });
 
-  it('Should call update application scheme', async () => {
+  test('Should call update application scheme', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     updateApplicationScheme({}).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);

@@ -1,10 +1,11 @@
 import { JWT } from 'next-auth/jwt';
+import { expect, test, describe, vi, beforeEach } from 'vitest';
 
-import { createReadableStream, streamRequest } from '../create-stream-request';
+import { streamRequest } from '../create-stream-request';
 import { sendRequest } from '../send-request';
 
-jest.mock('../send-request', () => ({
-  sendRequest: jest.fn(),
+vi.mock('../send-request', () => ({
+  sendRequest: vi.fn(),
 }));
 
 describe('Utils :: api :: streamRequest', () => {
@@ -21,14 +22,14 @@ describe('Utils :: api :: streamRequest', () => {
     });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
-  it('should return a Response with streamed content and inline header', async () => {
+  test('should return a Response with streamed content and inline header', async () => {
     const mockStream = createMockReadableStream();
     const mockResponse = new Response(mockStream);
 
-    (sendRequest as jest.Mock).mockResolvedValue(mockResponse);
+    (sendRequest as vi.Mock).mockResolvedValue(mockResponse);
 
     const response = await streamRequest(mockUrl, mockFileName, mockToken, true);
 
@@ -38,11 +39,11 @@ describe('Utils :: api :: streamRequest', () => {
     expect(response.headers.get('Content-Disposition')).toBe('inline');
   });
 
-  it('should return a Response with streamed content and attachment header', async () => {
+  test('should return a Response with streamed content and attachment header', async () => {
     const mockStream = createMockReadableStream();
     const mockResponse = new Response(mockStream);
 
-    (sendRequest as jest.Mock).mockResolvedValue(mockResponse);
+    (sendRequest as vi.Mock).mockResolvedValue(mockResponse);
 
     const response = await streamRequest(mockUrl, mockFileName, mockToken, false);
 

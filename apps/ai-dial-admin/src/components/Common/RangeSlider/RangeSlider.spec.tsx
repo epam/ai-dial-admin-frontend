@@ -1,14 +1,15 @@
 import { fireEvent, render } from '@testing-library/react';
 import RangeSlider from './RangeSlider';
+import { describe, expect, test, vi } from 'vitest';
 
 describe('Common components :: RangeSlider', () => {
-  it('Should render successfully', () => {
-    const { baseElement } = render(<RangeSlider title="range" onChange={jest.fn()} />);
+  test('Should render successfully', () => {
+    const { baseElement } = render(<RangeSlider title="range" onChange={vi.fn()} />);
 
     expect(baseElement).toBeTruthy();
   });
 
-  it('Should render successfully with formatter', () => {
+  test('Should render successfully with formatter', () => {
     let rangeValue: number | null = null;
     const onChange = (v: number) => {
       rangeValue = v;

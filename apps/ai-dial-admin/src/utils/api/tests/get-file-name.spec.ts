@@ -1,12 +1,13 @@
 import { CONTENT_DISPOSITION_HEADER, getFileName } from '../get-file-name';
+import { expect, test, describe, vi, beforeEach } from 'vitest';
 
 describe('Utils :: getFileName', () => {
-  it('Should return undefined', () => {
+  test('Should return undefined', () => {
     const result = getFileName(new Response(null, { headers: { [CONTENT_DISPOSITION_HEADER]: 'test' } }));
     expect(result).toBeUndefined();
   });
 
-  it('Should return Undefined', () => {
+  test('Should return Undefined', () => {
     const result = getFileName(
       new Response(null, { headers: { [CONTENT_DISPOSITION_HEADER]: 'test filename="file.json"' } }),
     );

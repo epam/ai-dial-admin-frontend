@@ -3,8 +3,9 @@ import PromptsProperties from '@/src/components/PublicationView/PromptProperties
 import { fireEvent } from '@testing-library/react';
 import { ActionType } from '@/src/models/dial/publications';
 import { publicationPrompt } from '@/src/utils/tests/mock/publication.mock';
+import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 
-const mockWindowOpen = jest.fn();
+const mockWindowOpen = vi.fn();
 
 describe('Components - PromptsProperties', () => {
   beforeAll(() => {
@@ -12,10 +13,10 @@ describe('Components - PromptsProperties', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
-  it('Should correctly render PromptsList collapsed view', () => {
+  test('Should correctly render PromptsList collapsed view', () => {
     const { getByTestId } = renderWithContext(
       <PromptsProperties
         prompt={publicationPrompt.prompts[0]}
@@ -29,7 +30,7 @@ describe('Components - PromptsProperties', () => {
     expect(content.classList).toContain('hidden');
   });
 
-  it('Should correctly render PromptsList not collapsed view', () => {
+  test('Should correctly render PromptsList not collapsed view', () => {
     const { getByTestId } = renderWithContext(
       <PromptsProperties
         prompt={publicationPrompt.prompts[0]}
@@ -43,7 +44,7 @@ describe('Components - PromptsProperties', () => {
     expect(content.classList).not.toContain('hidden');
   });
 
-  it('Should correctly change collapsed state', () => {
+  test('Should correctly change collapsed state', () => {
     const { getByTestId } = renderWithContext(
       <PromptsProperties
         prompt={publicationPrompt.prompts[0]}
@@ -60,7 +61,7 @@ describe('Components - PromptsProperties', () => {
     expect(content.classList).toContain('hidden');
   });
 
-  it('Should correctly navigate to prompt', () => {
+  test('Should correctly navigate to prompt', () => {
     const { getByTestId } = renderWithContext(
       <PromptsProperties prompt={publicationPrompt.prompts[0]} collapsed={false} action={'delete' as ActionType} />,
     );

@@ -4,13 +4,11 @@ import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationV
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { renderWithContext } from '@/src/utils/tests/renderWithContext';
 import { fireEvent } from '@testing-library/dom';
+import { describe, expect, test } from 'vitest';
 import ApplicationRunnersList from './ApplicationRunnersList';
-import clearAllMocks = jest.clearAllMocks;
-
-afterAll(clearAllMocks);
 
 describe('Components - ApplicationRunnersList', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const { baseElement } = renderWithContext(
       <ApplicationRunnersList
         data={[{ 'dial:applicationTypeDisplayName': 'name' }, { 'dial:applicationTypeDisplayName': void 0 }]}
@@ -22,7 +20,7 @@ describe('Components - ApplicationRunnersList', () => {
 });
 
 describe('Components - ApplicationRunnersView', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const { baseElement } = renderWithContext(
       <ApplicationRunnersView originalScheme={{ 'dial:applicationTypeDisplayName': 'name' }} applications={[]} />,
     );
@@ -32,7 +30,7 @@ describe('Components - ApplicationRunnersView', () => {
 });
 
 describe('Components - Parameters', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     let scheme = {
       'dial:applicationTypeDisplayName': 'name',
       'dial:applicationTypeCompletionEndpoint': 'endpoint',
@@ -67,7 +65,7 @@ describe('Components - Parameters', () => {
 });
 
 describe('Components - Properties', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     let scheme = {
       $id: 'id',
       description: 'description',

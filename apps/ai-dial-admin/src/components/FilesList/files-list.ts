@@ -2,7 +2,7 @@ import { ColDef } from 'ag-grid-community';
 
 import { DialFile } from '@/src/models/dial/file';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
-import FileNameCellRenderer from '@/src/components/FileView/FileNameCellRenderer';
+import FileNameCellRenderer from '@/src/components/Grid/CellRenderers/FileNameCellRenderer';
 import { EntityOperationDeclaration } from '@/src/models/entity-operations';
 
 export const getNameExtensionFromFile = (input: string): { name: string; extension: string } => {

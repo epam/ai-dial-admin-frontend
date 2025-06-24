@@ -1,19 +1,23 @@
+import { describe, expect, test, vi } from 'vitest';
 import { getFromLocalStorage, setToLocalStorage } from '../local-storage';
 
 describe('Utils :: Local Storage settings and getters', () => {
-  const localStorageMock = {
-    getItem: jest.fn(),
-    setItem: jest.fn(),
+  global.localStorage = {
+    getItem: () => 'ls-value',
+    setItem: vi.fn(),
+    clear: vi.fn(),
+    removeItem: vi.fn(),
+    key: vi.fn(),
+    length: 0,
   };
-  global.localStorage = localStorageMock as any;
 
-  it('Should check empty key', () => {
+  test('Should check empty key', () => {
     const res = getFromLocalStorage();
 
     expect(res).toBe('');
   });
 
-  it('Should check set and get to local storage', () => {
+  test('Should check set and get to local storage', () => {
     setToLocalStorage('ls-key', 'ls-value');
 
     expect(getFromLocalStorage('ls-key')).toBe('ls-value');

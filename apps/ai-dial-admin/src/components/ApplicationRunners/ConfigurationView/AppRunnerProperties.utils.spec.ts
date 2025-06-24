@@ -1,8 +1,9 @@
 import { clearSchemeForEditor, getErrorForAppRunnerId } from './AppRunnerProperties.utils';
 import { ErrorType } from '@/src/types/error-type';
+import { describe, expect, test } from 'vitest';
 
 describe('ApplicationRunner :: clearSchemeForEditor', () => {
-  it('Should clear all field', () => {
+  test('Should clear all field', () => {
     const res = clearSchemeForEditor({
       $id: '$id',
       $schema: '$schema',
@@ -27,7 +28,7 @@ describe('ApplicationRunner :: clearSchemeForEditor', () => {
 });
 
 describe('ApplicationRunner :: getErrorForAppRunnerId', () => {
-  it('Should clear all field', () => {
+  test('Should clear all field', () => {
     const res = getErrorForAppRunnerId('id');
 
     expect(res).toEqual({
@@ -36,9 +37,9 @@ describe('ApplicationRunner :: getErrorForAppRunnerId', () => {
     });
   });
 
-  it('Should clear all field', () => {
+  test('Should clear all field', () => {
     const res = getErrorForAppRunnerId(
-      `https://ai-dial-everest-claims-test.imf-eid-another.projects.com${new Array(851).fill('a').join()}`,
+      `https://ai-dial-test.projects.com${new Array(851).fill('a').join()}`,
     );
 
     expect(res).toEqual({
@@ -47,8 +48,8 @@ describe('ApplicationRunner :: getErrorForAppRunnerId', () => {
     });
   });
 
-  it('Should clear all field', () => {
-    const res = getErrorForAppRunnerId('https://ai-dial-everest-claims-test.imf-eid-another.projects.com');
+  test('Should clear all field', () => {
+    const res = getErrorForAppRunnerId('https://ai-dial-test.projects.com');
 
     expect(res).toBeNull();
   });

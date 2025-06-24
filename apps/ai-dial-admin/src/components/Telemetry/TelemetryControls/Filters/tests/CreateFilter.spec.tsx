@@ -2,14 +2,14 @@ import { render } from '@testing-library/react';
 import { ApplicationRoute } from '@/src/types/routes';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 import CreateFilter from '@/src/components/Telemetry/TelemetryControls/Filters/CreateFilter';
-
-const setValue = jest.fn();
-const setCondition = jest.fn();
-const setType = jest.fn();
-const onClose = jest.fn();
+import { describe, expect, test, vi } from 'vitest';
+const setValue = vi.fn();
+const setCondition = vi.fn();
+const setType = vi.fn();
+const onClose = vi.fn();
 
 describe('Components - CreateFilter', () => {
-  it('renders correctly', () => {
+  test('renders correctly', () => {
     const filter = {
       condition: FILTER_OPERATOR.Equal,
       value: 'asd',

@@ -3,7 +3,7 @@
 import { FC } from 'react';
 
 import { createAdapter, removeAdapter } from '@/src/app/[lang]/adapters/actions';
-import { SIMPLE_NAME_COLUMNS } from '@/src/components/EntityListView/entity-list-view';
+import { SIMPLE_NAME_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { ApplicationRoute } from '@/src/types/routes';

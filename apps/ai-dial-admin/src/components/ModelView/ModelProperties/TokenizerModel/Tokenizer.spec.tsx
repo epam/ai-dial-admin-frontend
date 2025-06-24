@@ -3,17 +3,18 @@ import TokenizerModelSwitch from './Tokenizer';
 import TokenizedModelsGrid from './TokenizedModelsGrid';
 import TokenizedModelsModal from './TokenizedModelsModal';
 import { PopUpState } from '@/src/types/pop-up';
-import fetch from 'jest-fetch-mock';
+import fetch from 'vitest-fetch-mock';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-jest.mock('react-dnd', () => ({
-  useDrag: () => [{ isDragging: false }, jest.fn()],
-  useDrop: () => [{ isOver: false }, jest.fn()],
+vi.mock('react-dnd', () => ({
+  useDrag: () => [{ isDragging: false }, vi.fn()],
+  useDrop: () => [{ isOver: false }, vi.fn()],
 }));
 
-const mockFunction = jest.fn();
+const mockFunction = vi.fn();
 
 describe('Tokenizer - Tokenizer Model Switch', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const { baseElement } = renderWithContext(
       <TokenizerModelSwitch model={{ tokenizerModel: 'tokenizerModel ' }} onChangeModel={mockFunction} />,
     );
@@ -22,11 +23,7 @@ describe('Tokenizer - Tokenizer Model Switch', () => {
 });
 
 describe('Tokenizer - TokenizedModelsGrid', () => {
-  beforeEach(() => {
-    fetch.resetMocks();
-  });
-
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const { baseElement } = renderWithContext(
       <TokenizedModelsGrid selectedModel="model" onSelectModelId={mockFunction} />,
     );
@@ -35,11 +32,7 @@ describe('Tokenizer - TokenizedModelsGrid', () => {
 });
 
 describe('Tokenizer - TokenizedModelsModal', () => {
-  beforeEach(() => {
-    fetch.resetMocks();
-  });
-
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const { baseElement } = renderWithContext(
       <TokenizedModelsModal
         model={{}}

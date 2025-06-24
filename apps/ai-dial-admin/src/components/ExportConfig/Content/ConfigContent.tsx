@@ -10,7 +10,8 @@ import ConfigContentGrid from '@/src/components/ExportConfig/Content/ConfigConte
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportDependenciesConfig } from '@/src/models/export';
-import { ExportComponentType, ExportFormat, ExportType } from '@/src/types/export';
+import { ExportFormat, ExportType } from '@/src/types/export';
+import { EntityType } from '@/src/types/entity-type';
 
 interface Props {
   selectedExportFormat: ExportFormat;
@@ -72,7 +73,7 @@ const ConfigContent: FC<Props> = ({
               </h3>
               {selectedExportType === ExportType.Custom && (
                 <AddEntitiesButton
-                  selectedTab={selectedTab as ExportComponentType}
+                  selectedTab={selectedTab as EntityType}
                   tabData={tabData}
                   customExportData={customExportData}
                   setCustomExportData={setCustomExportData}
@@ -85,7 +86,7 @@ const ConfigContent: FC<Props> = ({
               <Loader size={50} />
             ) : (
               <ConfigContentGrid
-                selectedTab={selectedTab as ExportComponentType}
+                selectedTab={selectedTab as EntityType}
                 tabData={tabData}
                 isFull={selectedExportType === ExportType.Full}
                 customExportData={customExportData}

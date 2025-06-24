@@ -3,7 +3,7 @@ import { FC, useEffect, useRef, useState } from 'react';
 import { GridApi, GridReadyEvent } from 'ag-grid-community';
 
 import NoData from '@/src/components/Common/NoData/NoData';
-import { EXPORT_COLUMNS } from '@/src/components/EntityListView/entity-list-view';
+import { EXPORT_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { getGridFileData } from '@/src/components/FilesList/files-list';
 import Grid from '@/src/components/Grid/Grid';
 import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';

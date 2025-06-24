@@ -18,7 +18,7 @@ const Tag: FC<Props> = ({ tag, cssClass, remove }) => {
   );
 
   return (
-    <div key={tag} className={containerClass} data-testid="tag">
+    <div key={tag} className={containerClass}>
       <span>{tag}</span>
       {remove && (
         <button type="button" aria-label="button" onClick={remove}>

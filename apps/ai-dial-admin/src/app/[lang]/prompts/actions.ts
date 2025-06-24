@@ -6,7 +6,7 @@ import { promptsApi } from '@/src/app/api/api';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { ImportFileTypes } from '@/src/types/import';
+import { ImportFileType } from '@/src/types/import';
 
 export async function removePrompt(path?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -38,7 +38,7 @@ export async function movePrompts(paths: string[], newPath: string) {
   return promptsApi.movePrompts(token, paths, newPath);
 }
 
-export async function importPrompts(body: FormData, fileType: ImportFileTypes) {
+export async function importPrompts(body: FormData, fileType: ImportFileType) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return promptsApi.importPrompts(token, body, fileType);
 }

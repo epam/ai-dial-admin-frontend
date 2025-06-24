@@ -9,6 +9,7 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { logger } from '@/src/server/logger';
+import Page403 from '@/src/components/Page403/Page403';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,10 +22,13 @@ export default async function Page() {
     return redirect(SIGN_IN_LINK);
   }
 
-  let data: DialApplicationScheme[] = [];
+  let data: DialApplicationScheme[] | null = [];
 
   try {
-    data = (await applicationRunnersApi.getApplicationSchemesList(token)) || [];
+    data = await applicationRunnersApi.getApplicationSchemesList(token);
+    if (data === void 0) {
+      return <Page403 />;
+    }
   } catch (e) {
     logger.error('Getting application runners error', e);
   }

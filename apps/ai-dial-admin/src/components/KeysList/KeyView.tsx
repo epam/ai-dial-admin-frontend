@@ -15,7 +15,7 @@ import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import Button from '@/src/components/Common/Button/Button';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
-import { SIMPLE_ENTITY_COLUMNS } from '@/src/components/EntityListView/entity-list-view';
+import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntityViewTab, propertiesTabs, rolesTabs } from '@/src/components/EntityView/entity-view';
 import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';

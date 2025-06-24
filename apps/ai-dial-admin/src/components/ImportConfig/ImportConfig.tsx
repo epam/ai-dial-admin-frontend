@@ -1,48 +1,33 @@
 'use client';
 
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 
-import Json from '@/public/images/icons/file/json.svg';
-import Zip from '@/public/images/icons/file/zip.svg';
-import { importConfig, importZipConfig } from '@/src/app/[lang]/import-config/actions';
-import Button from '@/src/components/Common/Button/Button';
-import LoadFileAreaField from '@/src/components/Common/LoadFileArea/LoadFileAreaField';
-import RadioField from '@/src/components/Common/RadioField/RadioField';
-import { ButtonsI18nKey, ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
-import { IMPORT_RESOLUTIONS } from '@/src/constants/import';
-import { ConflictResolutionPolicy, ImportFileTypes } from '@/src/types/import';
-import { RadioFieldOrientation } from '@/src/types/radio-orientation';
-import { useNotification } from '@/src/context/NotificationContext';
-import { useI18n } from '@/src/locales/client';
+import { importJsonConfigs, importZipConfig } from '@/src/app/[lang]/import-config/actions';
+import { IMPORT_CONFIG_STEPS } from '@/src/constants/import';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { RadioButtonModel } from '@/src/models/radio-button';
-
-const IMPORT_FILE_TYPES = (t: (stringToTranslate: string) => string): RadioButtonModel[] => [
-  {
-    id: ImportFileTypes.ARCHIVE,
-    name: t(ImportI18nKey.DialArchive),
-    description: t(ImportI18nKey.DialArchiveDescription),
-  },
-  { id: ImportFileTypes.JSON, name: t(ImportI18nKey.SeparateJsonFiles) },
-];
+import { ImportI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
+import { ImportFileType, ImportSteps } from '@/src/types/import';
+import { useI18n } from '@/src/locales/client';
+import { Step, StepStatus } from '@/src/models/step';
+import { isLargeFile } from '@/src/components/EntityListView/Import/import';
+import Steps from '@/src/components/Common/Steps/Steps';
+import Files from './Files/Files';
+import ConfigurationPreview from './ConfigurationPreview/ConfigurationPreview';
 
 const ImportConfig: FC = () => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const { showNotification } = useNotification();
 
+  const [importBody, setImportBody] = useState<FormData>(new FormData());
   const [files, setFiles] = useState<File[]>([]);
-  const [activeResolution, setActiveResolution] = useState(ConflictResolutionPolicy.OVERRIDE);
-  const [fileType, setFileType] = useState(ImportFileTypes.ARCHIVE);
+  const [fileType, setFileType] = useState(ImportFileType.ARCHIVE);
+
+  const [steps, setSteps] = useState(IMPORT_CONFIG_STEPS(t));
+  const [currentStep, setCurrentStep] = useState<Step>(steps[0]);
 
   const onImportFile = useCallback(() => {
-    const body = new FormData();
-
-    files.forEach((file) => {
-      body.append('file', file);
-    });
-    body.append('resolutionPolicy', activeResolution.toUpperCase());
-
-    (fileType == ImportFileTypes.ARCHIVE ? importZipConfig(body) : importConfig(body)).then((res) => {
+    (fileType == ImportFileType.ARCHIVE ? importZipConfig(importBody) : importJsonConfigs(importBody)).then((res) => {
       if (res.success) {
         showNotification(
           getSuccessNotification(t(ImportI18nKey.ConfigImported), t(ImportI18nKey.ConfigImportedDescription)),
@@ -51,87 +36,82 @@ const ImportConfig: FC = () => {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [showNotification, fileType, t, activeResolution, files]);
+  }, [showNotification, fileType, t, importBody]);
 
-  const onChangeResolution = useCallback(
-    (value: string) => {
-      setActiveResolution(value as ConflictResolutionPolicy);
+  const setStepsState = useCallback(
+    (status: StepStatus) => {
+      setSteps((previousSteps) => {
+        const index = previousSteps.findIndex((step) => step.id === currentStep.id);
+        return previousSteps.map((item, stepPosition) => (stepPosition === index ? { ...item, status } : item));
+      });
+      setCurrentStep((previousCurrentStep) => {
+        return {
+          ...previousCurrentStep,
+          status,
+        };
+      });
     },
-    [setActiveResolution],
+    [currentStep.id],
   );
+
+  const isFilesValid = useCallback(() => {
+    return files?.length && files.every((file) => !isLargeFile(file));
+  }, [files]);
+
+  useEffect(() => {
+    if (isFilesValid()) {
+      setStepsState(StepStatus.VALID);
+    } else {
+      setCurrentStep((previousCurrentStep) => {
+        return {
+          ...previousCurrentStep,
+          status: StepStatus.INVALID,
+        };
+      });
+
+      setSteps((previousSteps) => {
+        return previousSteps.map((previousStep) => ({
+          ...previousStep,
+          status: StepStatus.INVALID,
+        }));
+      });
+    }
+  }, [files, setStepsState, isFilesValid]);
+
+  const onNextStep = useCallback(() => {
+    const stepIndex = steps.findIndex((step) => step.id === currentStep.id);
+    setCurrentStep(steps[stepIndex + 1]);
+  }, [steps, currentStep.id]);
 
   const onChangeFileType = useCallback(
     (value: string) => {
-      setFileType(value as ImportFileTypes);
+      setFileType(value as ImportFileType);
+      setFiles([]);
     },
-    [setFileType],
+    [setFileType, setFiles],
   );
 
-  const onChangeFile = useCallback(
-    (files: File[]) => {
-      setFiles(files);
-    },
-    [setFiles],
-  );
+  const onChangeImportBody = useCallback((importBody: FormData) => {
+    setImportBody(importBody);
+  }, []);
 
   return (
     <div className="flex flex-col w-full h-full rounded p-4 bg-layer-2">
-      <div className="mb-4 flex flex-row items-center justify-between">
-        <h1>{t(MenuI18nKey.ImportConfig)}</h1>
-
-        <Button cssClass="primary" title={t(ButtonsI18nKey.Import)} disable={!files} onClick={onImportFile} />
-      </div>
-      <div className="flex-1 min-h-0 gap-y-6 flex flex-col w-full">
-        <RadioField
-          radioButtons={IMPORT_RESOLUTIONS(t)}
-          activeRadioButton={activeResolution}
-          elementId="conflictResolution"
-          fieldTitle={t(ImportI18nKey.ConflictResolution)}
-          orientation={RadioFieldOrientation.Column}
-          onChange={onChangeResolution}
+      <Steps steps={steps} currentStep={currentStep} setCurrentStep={setCurrentStep} />
+      {currentStep.id === ImportSteps.FILES && (
+        <Files
+          files={files}
+          fileType={fileType}
+          isFilesValid={!!isFilesValid()}
+          onChangeFileType={onChangeFileType}
+          onChangeFiles={(files) => setFiles(files)}
+          onChangeImportBody={onChangeImportBody}
+          onNextStep={onNextStep}
         />
-
-        <RadioField
-          radioButtons={IMPORT_FILE_TYPES(t)}
-          activeRadioButton={fileType}
-          elementId="fileType"
-          fieldTitle={t(ImportI18nKey.FileType)}
-          orientation={RadioFieldOrientation.Column}
-          onChange={onChangeFileType}
-        />
-        <div className="flex-1 min-h-0">
-          {fileType === ImportFileTypes.ARCHIVE ? (
-            <LoadFileAreaField
-              elementId="localFile"
-              fieldTitle={t(ImportI18nKey.Files)}
-              emptyTitle={t(ImportI18nKey.DropZip)}
-              files={files.length === 0 ? files : [files[0]]}
-              isMultiple={false}
-              iconBeforeInput={
-                <i className="text-secondary">
-                  <Zip />
-                </i>
-              }
-              acceptTypes=".zip"
-              onChangeFile={onChangeFile}
-            />
-          ) : (
-            <LoadFileAreaField
-              elementId="localFile"
-              fieldTitle={t(ImportI18nKey.Files)}
-              emptyTitle={t(ImportI18nKey.DropFiles)}
-              files={files}
-              iconBeforeInput={
-                <i className="text-secondary">
-                  <Json />
-                </i>
-              }
-              acceptTypes="application/JSON"
-              onChangeFile={onChangeFile}
-            />
-          )}
-        </div>
-      </div>
+      )}
+      {currentStep.id === ImportSteps.CONFIGURATION && (
+        <ConfigurationPreview files={files} onImportFile={onImportFile} importBody={importBody} fileType={fileType} />
+      )}
     </div>
   );
 };

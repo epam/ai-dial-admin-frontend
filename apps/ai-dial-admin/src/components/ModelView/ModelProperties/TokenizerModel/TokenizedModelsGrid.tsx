@@ -1,21 +1,15 @@
 'use client';
 
-import { ColDef } from 'ag-grid-community';
 import { FC, useEffect, useRef, useState } from 'react';
-
 import { getModelsTokenizers } from '@/src/app/[lang]/models/actions';
 import Loader from '@/src/components/Common/Loader/Loader';
-import RadioButtonRenderer from '@/src/components/Grid/CellRenderer/RadioButtonRenderer';
+import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import Grid from '@/src/components/Grid/Grid';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
+import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useNotification } from '@/src/context/NotificationContext';
 import { DialTokenizer } from '@/src/models/dial/model';
 import { getErrorNotification } from '@/src/utils/notification';
-
-const columnDefs: ColDef[] = [
-  { field: 'name', headerName: 'Name', flex: 1 },
-  { field: 'description', headerName: 'Description', flex: 1 },
-];
 
 interface Props {
   selectedModel?: string;
@@ -47,7 +41,7 @@ const TokenizedModelsGrid: FC<Props> = ({ onSelectModelId, selectedModel }) => {
     <Loader size={40} />
   ) : (
     <Grid
-      columnDefs={columnDefs}
+      columnDefs={SIMPLE_ENTITY_COLUMNS}
       rowData={data}
       additionalGridOptions={{
         rowSelection: { mode: 'singleRow' },
@@ -65,7 +59,7 @@ const TokenizedModelsGrid: FC<Props> = ({ onSelectModelId, selectedModel }) => {
         },
         onGridReady: (event) => {
           event.api?.updateGridOptions({
-            columnDefs,
+            columnDefs: SIMPLE_ENTITY_COLUMNS,
             rowData: data,
           });
           event.api.forEachNode((node) => {

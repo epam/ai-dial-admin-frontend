@@ -3,11 +3,11 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import DuplicateEntityPopup from './DuplicateEntityPopup';
 import { DialBaseEntity, DialBaseNamedEntity } from '@/src/models/dial/base-entity';
-
-const mockFunction = jest.fn();
+import { describe, expect, test, vi } from 'vitest';
+const mockFunction = vi.fn();
 
 describe('EntityView :: DuplicateEntityPopup', () => {
-  it('Should render empty successfully', () => {
+  test('Should render empty successfully', () => {
     const { baseElement } = render(
       <DuplicateEntityPopup
         modalState={PopUpState.Opened}
@@ -19,7 +19,7 @@ describe('EntityView :: DuplicateEntityPopup', () => {
     );
     expect(baseElement).toBeTruthy();
   });
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     let entity = {
       name: 'deploymentId',
       displayVersion: 'displayVersion',

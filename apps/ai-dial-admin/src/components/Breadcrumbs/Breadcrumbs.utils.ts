@@ -1,9 +1,11 @@
-import { MenuI18nKey } from '@/src/constants/i18n';
+import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/constants';
+import { ActivityAuditI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { EmbeddedApp } from '@/src/context/AppContext';
 import { ApplicationRoute } from '@/src/types/routes';
 import { breadcrumbConfig } from './Breadcrumbs.config';
 
-const IGNORE_BREADCRUMBS = [ApplicationRoute.Home];
+const IGNORE_BREADCRUMBS = [ApplicationRoute.Home, ApplicationRoute.Forbidden];
+const TRANSLATE_BREADCRUMBS = { [SYSTEM_ROLLBACK_ID]: ActivityAuditI18nKey.RollbackSystem };
 
 export interface BreadcrumbConfig {
   segments: {
@@ -61,8 +63,9 @@ export function getBreadcrumbs(pathname: string, currentLocale: string, embedded
 
   return pathSegments.map((pathSegment, index) => {
     const configSegment = config.segments[index];
+    const translated = TRANSLATE_BREADCRUMBS[pathSegment as keyof typeof TRANSLATE_BREADCRUMBS];
     return {
-      key: configSegment.i18nKey,
+      key: translated ? (translated as unknown as MenuI18nKey) : configSegment.i18nKey,
       name: pathSegment,
       href:
         configSegment.href !== false

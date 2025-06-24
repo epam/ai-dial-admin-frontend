@@ -1,8 +1,9 @@
 import { handleRouteOutputChange, removeEmptyValues } from './routes';
 import { RouteOutput } from '@/src/models/dial/route';
+import { describe, expect, test } from 'vitest';
 
 describe('Routes :: removeEmptyValues', () => {
-  it('Should return same route', () => {
+  test('Should return same route', () => {
     const route = {
       paths: ['path1', 'path2'],
     };
@@ -12,7 +13,7 @@ describe('Routes :: removeEmptyValues', () => {
     });
   });
 
-  it('Should return route without empty path', () => {
+  test('Should return route without empty path', () => {
     const route = {
       paths: ['path1', ''],
     };
@@ -22,7 +23,7 @@ describe('Routes :: removeEmptyValues', () => {
     });
   });
 
-  it('Should return same route', () => {
+  test('Should return same route', () => {
     const route = {
       upstreams: [{ endpoint: 'path1' }, { endpoint: 'path2' }],
     };
@@ -32,7 +33,7 @@ describe('Routes :: removeEmptyValues', () => {
     });
   });
 
-  it('Should return route without empty endpoint', () => {
+  test('Should return route without empty endpoint', () => {
     const route = {
       upstreams: [{ endpoint: 'path1' }, { endpoint: '' }],
     };
@@ -44,7 +45,7 @@ describe('Routes :: removeEmptyValues', () => {
 });
 
 describe('Routes :: handleRouteOutputChange', () => {
-  it('Should return route without response', () => {
+  test('Should return route without response', () => {
     const route = {
       upstreams: [{ endpoint: 'path1' }, { endpoint: '' }],
       response: { body: 'body', key: 'key' },
@@ -56,7 +57,7 @@ describe('Routes :: handleRouteOutputChange', () => {
     });
   });
 
-  it('Should return route without upstreams', () => {
+  test('Should return route without upstreams', () => {
     const route = {
       upstreams: [{ endpoint: 'path1' }, { endpoint: '' }],
       response: { body: 'body', key: 'key' },

@@ -156,4 +156,7 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig> = {
       { name: 'Id', href: false },
     ],
   },
+  [ApplicationRoute.Forbidden]: {
+    segments: [{ name: 'Forbidden' }],
+  },
 };

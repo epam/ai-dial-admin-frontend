@@ -5,10 +5,12 @@ import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
 import { PageDto, SortDto, FilterDto } from '@/src/models/request';
+import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
+import { SortDirectionDto } from '@/src/types/request';
 
 export const ACTIVITIES_URL = `${API}/activities`;
 export const ACTIVITY_AUDIT_URL = `${API}/history/revisions`;
-export const ACTIVITY_AUDIT_QUERY_URL = `${ACTIVITY_AUDIT_URL}/query`;
+export const ACTIVITY_AUDIT_ROLLBACK_URL = `${API}/history/rollback`;
 
 export class ActivityAuditApi extends BaseApi {
   getActivitiesList(
@@ -36,5 +38,30 @@ export class ActivityAuditApi extends BaseApi {
 
   getRevisionDetails(url: string, token: JWT | null): Promise<ActivityAuditEntity | null> {
     return this.get(`${API}${url}`, token);
+  }
+
+  getRevisions(token: JWT | null): Promise<ActivityAuditRevision[] | null> {
+    return this.post(
+      `${ACTIVITY_AUDIT_URL}`,
+      {
+        pageNumber: 0,
+        pageSize: 20,
+        sorts: [
+          {
+            column: 'id',
+            direction: SortDirectionDto.DESC,
+          },
+        ],
+      },
+      token,
+    );
+  }
+
+  getEntitiesForRevision(url: string, token: JWT | null): Promise<ActivityAuditEntity[] | null> {
+    return this.get(`${API}${url}`, token);
+  }
+
+  rollbackToRevision(revisionNumber: number | undefined, token: JWT | null) {
+    return this.post(`${ACTIVITY_AUDIT_ROLLBACK_URL}`, { revisionNumber }, token);
   }
 }

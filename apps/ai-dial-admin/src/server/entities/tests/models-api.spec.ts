@@ -1,7 +1,11 @@
-import { ModelsApi } from '../models-api';
-import fetch from 'jest-fetch-mock';
-import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { DialModel } from '@/src/models/dial/model';
+import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
+import { ModelsApi } from '../models-api';
+
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
 
 describe('Server :: ModelsApi', () => {
   const instance = new ModelsApi({ host: TEST_URL });
@@ -14,7 +18,7 @@ describe('Server :: ModelsApi', () => {
     description: 'Test description',
   };
 
-  it('Should calls getModelsList', async () => {
+  test('Should calls getModelsList', async () => {
     fetch.mockResponseOnce(JSON.stringify([modelMock]));
 
     const result = await instance.getModelsList(TOKEN_MOCK);
@@ -23,7 +27,7 @@ describe('Server :: ModelsApi', () => {
     expect(result).toEqual(JSON.stringify([modelMock]));
   });
 
-  it('Should calls getModel', async () => {
+  test('Should calls getModel', async () => {
     fetch.mockResponseOnce(JSON.stringify(modelMock));
 
     const result = await instance.getModel('test-model', TOKEN_MOCK);
@@ -35,7 +39,7 @@ describe('Server :: ModelsApi', () => {
     expect(result).toEqual(JSON.stringify(modelMock));
   });
 
-  it('Should calls createModel', async () => {
+  test('Should calls createModel', async () => {
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
@@ -50,7 +54,7 @@ describe('Server :: ModelsApi', () => {
     );
   });
 
-  it('Should calls updateModel', async () => {
+  test('Should calls updateModel', async () => {
     const updatedModel = { ...modelMock, description: 'Updated' };
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
@@ -66,7 +70,7 @@ describe('Server :: ModelsApi', () => {
     );
   });
 
-  it('Should calls removeModel', async () => {
+  test('Should calls removeModel', async () => {
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
@@ -78,7 +82,7 @@ describe('Server :: ModelsApi', () => {
     );
   });
 
-  it('Should calls getModelsTopics', async () => {
+  test('Should calls getModelsTopics', async () => {
     const mockResponse = { success: true, data: ['topic1', 'topic2'] };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
@@ -87,7 +91,7 @@ describe('Server :: ModelsApi', () => {
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/topics'), expect.objectContaining({ method: 'GET' }));
   });
 
-  it('Should calls getModelsTokenizers', async () => {
+  test('Should calls getModelsTokenizers', async () => {
     const mockResponse = { success: true, data: ['tokenizer1'] };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 

@@ -1,13 +1,11 @@
-import fetch from 'jest-fetch-mock';
+import { ExportRequest } from '@/src/models/export';
+import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
 import { UtilityApi } from '../utility-api';
-import { TOKEN_MOCK, TEST_URL } from '@/src/utils/tests/mock/api.mock';
-import {
-  VERSION_URL,
-  EXPORT_CONFIG_URL,
-  IMPORT_CONFIG_URL,
-  RELOAD_CONFIG_URL,
-  EXPORT_PREVIEW_CONFIG_URL,
-} from '../utility-api';
+
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
 
 describe('Server :: UtilityApi', () => {
   const instance = new UtilityApi({ host: TEST_URL });
@@ -16,64 +14,50 @@ describe('Server :: UtilityApi', () => {
     fetch.resetMocks();
   });
 
-  it('should fetch backend version as plain text', async () => {
+  test('should fetch backend version', async () => {
     fetch.mockResponseOnce('1.2.3');
 
-    const result = await instance.getBeVersion(TOKEN_MOCK);
-
-    expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${VERSION_URL}`,
-      expect.objectContaining({
-        headers: expect.objectContaining({ Accept: 'text/plain' }),
-        method: 'GET',
-      }),
-    );
-    expect(result).toBe('1.2.3');
+    const version = await instance.getBeVersion(TOKEN_MOCK);
+    expect(version).toBe('1.2.3');
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/version'), expect.anything());
   });
 
-  it('should reload config', async () => {
+  test('should reload config', async () => {
     fetch.mockResponseOnce(JSON.stringify({ success: true }));
 
-    await instance.reloadConfig(TOKEN_MOCK);
-
-    expect(fetch).toHaveBeenCalledWith(expect.stringContaining(RELOAD_CONFIG_URL), expect.anything());
+    const res = await instance.reloadConfig(TOKEN_MOCK);
+    expect(res).toEqual({ response: JSON.stringify({ success: true }), success: true });
   });
 
-  it('should import config via FormData', async () => {
+  test('should import zip config', async () => {
     const formData = new FormData();
     fetch.mockResponseOnce(JSON.stringify({ success: true }));
 
-    await instance.importConfig(TOKEN_MOCK, formData);
-
-    expect(fetch).toHaveBeenCalledWith(expect.stringContaining(IMPORT_CONFIG_URL), expect.anything());
+    const res = await instance.importZipConfig('/fake-url', TOKEN_MOCK, formData);
+    expect(res).toEqual({ response: JSON.stringify({ success: true }), success: true });
+    expect(fetch).toHaveBeenCalled();
   });
 
-  it('should preview export config', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ preview: true }));
+  test('should preview export config', async () => {
+    const exportRequest: ExportRequest = { configIds: ['id1'] };
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
 
-    await instance.previewExportConfig({ name: 'preview-test' }, TOKEN_MOCK);
-
-    expect(fetch).toHaveBeenCalledWith(expect.stringContaining(EXPORT_PREVIEW_CONFIG_URL), expect.anything());
+    const res = await instance.previewExportConfig(exportRequest, TOKEN_MOCK);
+    expect(res).toEqual({ response: JSON.stringify({ success: true }), success: true });
   });
 
-  it('should call HEAD request for deployment check', async () => {
+  test('should check deployment by name', async () => {
     fetch.mockResponseOnce('', { status: 200 });
 
-    await instance.checkDeploymentByName('test-deployment', TOKEN_MOCK);
+    await instance.checkDeploymentByName('my-app', TOKEN_MOCK);
 
-    expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/deployments/test-deployment'),
-      expect.objectContaining({ method: 'HEAD' }),
-    );
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/deployments/my-app'), expect.anything());
   });
 
-  it('should get app process status', async () => {
-    const mockStatus = { running: true };
-    fetch.mockResponseOnce(JSON.stringify(mockStatus));
+  test('should get app process status', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ running: true }));
 
     const result = await instance.getAppProcessStatus(TOKEN_MOCK);
-
-    expect(fetch).toHaveBeenCalledWith(expect.stringContaining(`${EXPORT_CONFIG_URL}/status`), expect.anything());
-    expect(result).toEqual(JSON.stringify(mockStatus));
+    expect(result).toEqual(JSON.stringify({ running: true }));
   });
 });

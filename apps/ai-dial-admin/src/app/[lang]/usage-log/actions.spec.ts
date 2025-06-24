@@ -1,12 +1,12 @@
-import fetch from 'jest-fetch-mock';
+import { describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
 import { getUsageLog } from './actions';
 
-describe('Usage log :: server actions', () => {
-  beforeEach(() => {
-    fetch.resetMocks();
-  });
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
 
-  it('Should call get usage log', async () => {
+describe('Usage log :: server actions', () => {
+  test('Should call get usage log', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     getUsageLog().then(() => {
       expect(fetch.mock.calls.length).toEqual(1);

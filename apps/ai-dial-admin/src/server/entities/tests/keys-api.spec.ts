@@ -1,7 +1,11 @@
-import fetch from 'jest-fetch-mock';
-import { KeysApi, KEYS_URL, KEY_URL } from '../keys-api';
-import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { DialKey } from '@/src/models/dial/key';
+import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
+import { KEY_URL, KEYS_URL, KeysApi } from '../keys-api';
+
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
 
 describe('Server :: KeysApi', () => {
   const instance = new KeysApi({ host: TEST_URL });
@@ -15,7 +19,7 @@ describe('Server :: KeysApi', () => {
     fetch.resetMocks();
   });
 
-  it('Should fetch list of keys', async () => {
+  test('Should fetch list of keys', async () => {
     fetch.mockResponseOnce(JSON.stringify([mockKey]));
 
     const result = await instance.getKeysList(TOKEN_MOCK);
@@ -24,7 +28,7 @@ describe('Server :: KeysApi', () => {
     expect(result).toEqual(JSON.stringify([mockKey]));
   });
 
-  it('Should fetch a single key', async () => {
+  test('Should fetch a single key', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockKey));
 
     const result = await instance.getKey(mockKey.name, TOKEN_MOCK);
@@ -36,7 +40,7 @@ describe('Server :: KeysApi', () => {
     expect(result).toEqual(JSON.stringify(mockKey));
   });
 
-  it('Should create a key', async () => {
+  test('Should create a key', async () => {
     const response = { success: true };
     fetch.mockResponseOnce(JSON.stringify(response));
 
@@ -51,7 +55,7 @@ describe('Server :: KeysApi', () => {
     );
   });
 
-  it('Should update a key', async () => {
+  test('Should update a key', async () => {
     const response = { success: true };
     fetch.mockResponseOnce(JSON.stringify(response));
 
@@ -66,7 +70,7 @@ describe('Server :: KeysApi', () => {
     );
   });
 
-  it('Should delete a key', async () => {
+  test('Should delete a key', async () => {
     const response = { success: true };
     fetch.mockResponseOnce(JSON.stringify(response));
 

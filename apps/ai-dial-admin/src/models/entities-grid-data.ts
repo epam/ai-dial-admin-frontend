@@ -1,9 +1,10 @@
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
-import { ExportComponentType } from '@/src/types/export';
+import { DiffStatus } from '@/src/types/activity-audit';
+import { EntityType } from '@/src/types/entity-type';
 
 export interface EntitiesGridData extends DialBaseEntity {
-  type: string;
-  route: string;
+  type?: string;
+  route?: string;
   day?: string | null;
   minute?: string | null;
   month?: string | null;
@@ -12,5 +13,6 @@ export interface EntitiesGridData extends DialBaseEntity {
   key?: string;
   path?: string;
   $id?: string; // application runner
-  dependencies?: ExportComponentType[];
+  dependencies?: EntityType[];
+  status?: DiffStatus;
 }

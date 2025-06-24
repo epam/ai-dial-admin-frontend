@@ -8,14 +8,14 @@ import { GridFilter } from '@/src/models/grid-filter';
 import { FilterDto } from '@/src/models/request';
 import { TimeRange } from '@/src/models/time-range';
 import { FilterOperatorDto } from '@/src/types/request';
-import { getOpenInNewTabOperation } from '@/src/utils/entities/entity-operations';
+import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 
 export const getActivityAuditColumns = (
   open: (activity: DialActivity) => void,
   resourceRollback: (activity: DialActivity) => void,
 ): ColDef[] => {
-  const actions = [getResourceRollbackOperation(resourceRollback), getOpenInNewTabOperation(open)];
+  const actions = [getOpenInNewTabOperation(open), getResourceRollbackOperation(resourceRollback)];
   return [...ACTIVITY_AUDIT_COLUMNS, ACTION_COLUMN(actions)];
 };
 

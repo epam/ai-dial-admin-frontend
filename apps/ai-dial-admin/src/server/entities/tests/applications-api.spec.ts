@@ -1,7 +1,11 @@
-import fetch from 'jest-fetch-mock';
-import { ApplicationsApi, APPLICATIONS_URL, APPLICATION_URL } from '../applications-api';
-import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { DialApplication } from '@/src/models/dial/application';
+import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
+import { APPLICATIONS_URL, APPLICATION_URL, ApplicationsApi } from '../applications-api';
+
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
 
 describe('Server :: ApplicationsApi', () => {
   const instance = new ApplicationsApi({ host: TEST_URL });
@@ -15,7 +19,7 @@ describe('Server :: ApplicationsApi', () => {
     fetch.resetMocks();
   });
 
-  it('Should calls getApplicationsList and return list', async () => {
+  test('Should calls getApplicationsList and return list', async () => {
     fetch.mockResponseOnce(JSON.stringify([mockApp]));
 
     const result = await instance.getApplicationsList(TOKEN_MOCK);
@@ -24,7 +28,7 @@ describe('Server :: ApplicationsApi', () => {
     expect(result).toEqual(JSON.stringify([mockApp]));
   });
 
-  it('Should calls getApplication by name and return application', async () => {
+  test('Should calls getApplication by name and return application', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockApp));
 
     const result = await instance.getApplication(mockApp.name, TOKEN_MOCK);
@@ -36,7 +40,7 @@ describe('Server :: ApplicationsApi', () => {
     expect(result).toEqual(JSON.stringify(mockApp));
   });
 
-  it('Should calls createApplication with correct payload', async () => {
+  test('Should calls createApplication with correct payload', async () => {
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
@@ -51,7 +55,7 @@ describe('Server :: ApplicationsApi', () => {
     );
   });
 
-  it('Should calls updateApplication with correct payload', async () => {
+  test('Should calls updateApplication with correct payload', async () => {
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
@@ -66,7 +70,7 @@ describe('Server :: ApplicationsApi', () => {
     );
   });
 
-  it('Should calls removeApplication with DELETE method', async () => {
+  test('Should calls removeApplication with DELETE method', async () => {
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 

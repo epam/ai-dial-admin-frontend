@@ -3,7 +3,7 @@ import { JWT } from 'next-auth/jwt';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { ImportFileTypes } from '@/src/types/import';
+import { ImportFileType } from '@/src/types/import';
 import { getFileName } from '@/src/utils/api/get-file-name';
 import { changePath } from '@/src/utils/files/path';
 import { API } from '../api';
@@ -21,9 +21,9 @@ export const PROMPT_IMPORT_ZIP_URL = `${PROMPTS_URL}/import/zip`;
 export const PROMPT_IMPORT_JSON_URL = `${PROMPTS_URL}/import/json`;
 
 export class PromptsApi extends BaseApi {
-  getPromptsList(token: JWT | null, path: string): Promise<DialPrompt[] | null> {
-    return this.post(PROMPT_LIST_URL, { path }, token).then(
-      (response) => (response as { items: DialPrompt[] })?.items || [],
+  getPromptsList(token: JWT | null, path: string): Promise<DialPrompt[] | null | undefined> {
+    return this.post(PROMPT_LIST_URL, { path }, token).then((response) =>
+      response === void 0 ? void 0 : (response as { items: DialPrompt[] })?.items || [],
     );
   }
 
@@ -61,9 +61,9 @@ export class PromptsApi extends BaseApi {
     });
   }
 
-  importPrompts(token: JWT | null, body: FormData, fileType: ImportFileTypes): Promise<ServerActionResponse> {
+  importPrompts(token: JWT | null, body: FormData, fileType: ImportFileType): Promise<ServerActionResponse> {
     return this.postFiles(
-      fileType === ImportFileTypes.ARCHIVE ? PROMPT_IMPORT_ZIP_URL : PROMPT_IMPORT_JSON_URL,
+      fileType === ImportFileType.ARCHIVE ? PROMPT_IMPORT_ZIP_URL : PROMPT_IMPORT_JSON_URL,
       body,
       token,
     );

@@ -1,13 +1,16 @@
-import fetch from 'jest-fetch-mock';
 import { createInterceptor, removeInterceptor, updateInterceptor } from './actions';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
 
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
 
 describe('Interceptors :: server actions', () => {
   beforeEach(() => {
     fetch.resetMocks();
   });
 
-  it('Should call remove interceptor', async () => {
+  test('Should call remove interceptor', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     removeInterceptor('interceptor').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -18,7 +21,7 @@ describe('Interceptors :: server actions', () => {
     });
   });
 
-  it('Should call create interceptor', async () => {
+  test('Should call create interceptor', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     createInterceptor({ name: 'interceptor' }).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -28,7 +31,7 @@ describe('Interceptors :: server actions', () => {
     });
   });
 
-  it('Should call update interceptor', async () => {
+  test('Should call update interceptor', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     updateInterceptor({}).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);

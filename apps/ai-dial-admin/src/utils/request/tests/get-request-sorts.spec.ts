@@ -1,9 +1,10 @@
-import { getRequestSorts } from '../get-request-sorts';
-import { SortModelItem } from 'ag-grid-community';
 import { SortDirectionDto } from '@/src/types/request';
+import { SortModelItem } from 'ag-grid-community';
+import { describe, expect, test } from 'vitest';
+import { getRequestSorts } from '../get-request-sorts';
 
 describe('Request :: getRequestSorts', () => {
-  it('should convert a single sort item to SortDto', () => {
+  test('should convert a single sort item to SortDto', () => {
     const input: SortModelItem[] = [{ colId: 'name', sort: 'asc' }];
 
     const expected = [{ column: 'name', direction: SortDirectionDto.ASC }];
@@ -11,7 +12,7 @@ describe('Request :: getRequestSorts', () => {
     expect(getRequestSorts(input)).toEqual(expected);
   });
 
-  it('should convert multiple sort items to SortDto array', () => {
+  test('should convert multiple sort items to SortDto array', () => {
     const input: SortModelItem[] = [
       { colId: 'name', sort: 'asc' },
       { colId: 'age', sort: 'desc' },
@@ -25,7 +26,7 @@ describe('Request :: getRequestSorts', () => {
     expect(getRequestSorts(input)).toEqual(expected);
   });
 
-  it('should return an empty array when sortModel is empty', () => {
+  test('should return an empty array when sortModel is empty', () => {
     expect(getRequestSorts([])).toEqual([]);
   });
 });

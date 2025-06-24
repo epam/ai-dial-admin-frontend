@@ -1,12 +1,16 @@
-import fetch from 'jest-fetch-mock';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
 import { createKey, removeKey, updateKey } from './actions';
+
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
 
 describe('Keys :: server actions', () => {
   beforeEach(() => {
     fetch.resetMocks();
   });
 
-  it('Should call remove key', async () => {
+  test('Should call remove key', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     removeKey('key').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -17,7 +21,7 @@ describe('Keys :: server actions', () => {
     });
   });
 
-  it('Should call create key', async () => {
+  test('Should call create key', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     createKey({ key: 'key', project: 'project', secured: false }).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -28,7 +32,7 @@ describe('Keys :: server actions', () => {
     });
   });
 
-  it('Should call update key', async () => {
+  test('Should call update key', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     updateKey({ key: 'key', project: 'project', secured: false }).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);

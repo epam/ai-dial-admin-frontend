@@ -1,60 +1,45 @@
-import { fireEvent, getByText, render, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
 import ContextMenu from './ContextMenu';
 
-const menuItemClickHandler = jest.fn();
+describe('Common components :: ContextMenu', () => {
+  const contextMenuItems = [
+    { title: 'Item 1', onClick: vi.fn(), icon: <span>Icon1</span> },
+    { title: 'Item 2', onClick: vi.fn(), icon: <span>Icon2</span> },
+  ];
 
-const menuItems = [
-  {
-    title: 'Item 1',
-    onClick: menuItemClickHandler,
-    icon: <i></i>,
-  },
-];
-
-describe('Common components - ContextMenu', () => {
-  it('Should render successfully', () => {
-    const { baseElement } = render(
-      <ContextMenu contextMenuItems={menuItems}>
-        <div>children</div>
+  test('Should render children and open menu on click', () => {
+    render(
+      <ContextMenu contextMenuItems={contextMenuItems}>
+        <span>OpenMenu</span>
       </ContextMenu>,
     );
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
 
-    const button = baseElement.getElementsByTagName('button')[0];
+    fireEvent.click(screen.getByLabelText('context-menu'));
 
-    expect(baseElement).toBeTruthy();
-    expect(button).toBeTruthy();
-    const children = button.getElementsByTagName('div')[0];
-    expect(children).toBeTruthy();
-    expect(getByText(children, 'children')).toBeTruthy();
+    expect(screen.getByRole('menu')).toBeInTheDocument();
+    expect(screen.getByText('Item 1')).toBeInTheDocument();
+    expect(screen.getByText('Item 2')).toBeInTheDocument();
+    expect(screen.getByText('Icon1')).toBeInTheDocument();
+    expect(screen.getByText('Icon2')).toBeInTheDocument();
   });
 
-  it('Should render context menu on click', () => {
-    const { baseElement } = render(
-      <ContextMenu contextMenuItems={menuItems}>
-        <div>children</div>
+  test('Should call onClick and close menu when item is clicked', () => {
+    const onClick1 = vi.fn();
+    const items = [{ title: 'Item 1', onClick: onClick1, icon: <span>Icon1</span> }];
+    render(
+      <ContextMenu contextMenuItems={items}>
+        <span>OpenMenu</span>
       </ContextMenu>,
     );
-
-    const button = baseElement.getElementsByTagName('button')[0];
-
-    fireEvent.click(button);
-    const contextMenuButton = within(baseElement).getByText('Item 1');
-    expect(contextMenuButton).toBeTruthy();
-  });
-
-  it('Should handle context menu item click', () => {
-    const { baseElement } = render(
-      <ContextMenu contextMenuItems={menuItems}>
-        <div>children</div>
-      </ContextMenu>,
-    );
-
-    const button = baseElement.getElementsByTagName('button')[0];
-
-    fireEvent.click(button);
-    const contextMenuButton = within(baseElement).getByText('Item 1');
-
-    fireEvent.click(contextMenuButton);
-    expect(menuItemClickHandler).toHaveBeenCalled();
+    fireEvent.click(screen.getByLabelText('context-menu'));
+    const itemButton = screen.getByRole('menu').querySelector('button');
+    expect(itemButton).toBeInTheDocument();
+    if (itemButton) {
+      fireEvent.click(itemButton);
+    }
+    expect(onClick1).toHaveBeenCalled();
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 });

@@ -8,7 +8,7 @@ import {
 import { FileImportMap } from '@/src/models/file';
 import { ImportStatus } from '@/src/types/import';
 import { StepStatus } from '@/src/models/step';
-
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   changeFilesMap,
   generatePromptRowDataForImportGrid,
@@ -19,50 +19,50 @@ import {
   isInvalidJson,
 } from './import';
 
-jest.mock('@/src/components/PromptsList/prompts-list', () => ({
-  modifyNameVersionInPrompt: jest.fn(),
-  getNameExtensionFromFile: jest.fn(),
-  getNameVersionFromPrompt: jest.fn(),
-  getFolderNameAndPath: jest.fn(),
-  generateNameVersionForPrompt: jest.fn(),
+vi.mock('@/src/components/PromptsList/prompts-list', () => ({
+  modifyNameVersionInPrompt: vi.fn(),
+  getNameExtensionFromFile: vi.fn(),
+  getNameVersionFromPrompt: vi.fn(),
+  getFolderNameAndPath: vi.fn(),
+  generateNameVersionForPrompt: vi.fn(),
 }));
 
 describe('Import :: getImportResults', () => {
   const folderName = 'testFolder';
-  const mockT = jest.fn().mockReturnValue('Translated Text');
+  const mockT = vi.fn().mockReturnValue('Translated Text');
 
-  it('should call showNotification 1 time for success', () => {
+  test('should call showNotification 1 time for success', () => {
     const results = [{ status: ImportStatus.SUCCESS }];
-    const mockShowNotification = jest.fn();
+    const mockShowNotification = vi.fn();
 
     getImportResults(results, folderName, '', mockT, mockShowNotification);
 
     expect(mockShowNotification).toHaveBeenCalledTimes(1);
   });
 
-  it('should call showNotification 2 times for success and error', () => {
+  test('should call showNotification 2 times for success and error', () => {
     const results = [{ status: ImportStatus.SUCCESS }, { status: ImportStatus.ERROR, targetPath: 'path' }];
-    const mockShowNotification = jest.fn();
+    const mockShowNotification = vi.fn();
 
     getImportResults(results, folderName, '', mockT, mockShowNotification);
 
     expect(mockShowNotification).toHaveBeenCalledTimes(2);
   });
 
-  it('should call showNotification 3 times for success and error and skip', () => {
+  test('should call showNotification 3 times for success and error and skip', () => {
     const results = [
       { status: ImportStatus.SUCCESS },
       { status: ImportStatus.ERROR, targetPath: 'path' },
       { status: ImportStatus.SKIP, targetPath: 'path' },
     ];
-    const mockShowNotification = jest.fn();
+    const mockShowNotification = vi.fn();
 
     getImportResults(results, folderName, '', mockT, mockShowNotification);
 
     expect(mockShowNotification).toHaveBeenCalledTimes(3);
   });
 
-  it('should call showNotification 3 times for success and error and skip even if more than 1 item of each', () => {
+  test('should call showNotification 3 times for success and error and skip even if more than 1 item of each', () => {
     const results = [
       { status: ImportStatus.SUCCESS },
       { status: ImportStatus.SUCCESS },
@@ -71,7 +71,7 @@ describe('Import :: getImportResults', () => {
       { status: ImportStatus.SKIP, targetPath: 'path' },
       { status: ImportStatus.SKIP, targetPath: 'path2' },
     ];
-    const mockShowNotification = jest.fn();
+    const mockShowNotification = vi.fn();
 
     getImportResults(results, folderName, '', mockT, mockShowNotification);
 
@@ -80,14 +80,14 @@ describe('Import :: getImportResults', () => {
 });
 
 describe('Import :: getMultipleImportStatus', () => {
-  it('should return invalid status if no prompts in map', () => {
+  test('should return invalid status if no prompts in map', () => {
     const map = new Map();
     const result = getMultipleImportStatus(map as Map<string, FileImportMap>);
 
     expect(result).toEqual(StepStatus.INVALID);
   });
 
-  it('should return error status if some prompts in map are invalid', () => {
+  test('should return error status if some prompts in map are invalid', () => {
     const map = new Map();
     map.set('item1', {
       prompt: {},
@@ -98,7 +98,7 @@ describe('Import :: getMultipleImportStatus', () => {
     expect(result).toEqual(StepStatus.ERROR);
   });
 
-  it('should return valid status if all prompts in map are valid', () => {
+  test('should return valid status if all prompts in map are valid', () => {
     const map = new Map();
     map.set('item1', {
       prompt: {},
@@ -111,7 +111,7 @@ describe('Import :: getMultipleImportStatus', () => {
 });
 
 describe('Import :: generatePromptRowDataForImportGrid', () => {
-  it('convert to row data without existing prompts', () => {
+  test('convert to row data without existing prompts', () => {
     getFolderNameAndPath.mockReturnValue({ name: 'id_for_prompt__1.0.0' });
     getNameVersionFromPrompt.mockReturnValue({ name: 'id_for_prompt', version: '1.0.0' });
 
@@ -122,7 +122,7 @@ describe('Import :: generatePromptRowDataForImportGrid', () => {
           id: 'id_for_prompt__1.0.0',
         },
       ],
-      isInvalid: true,
+      isInvalid: false,
     });
 
     const result = generatePromptRowDataForImportGrid(map as Map<string, FileImportMap>);
@@ -133,16 +133,44 @@ describe('Import :: generatePromptRowDataForImportGrid', () => {
         name: 'item1',
         version: '1.0.0',
         promptName: 'id_for_prompt',
+        extension: '',
       },
     ]);
   });
 
-  it('convert to row data with existing prompts', () => {
+  test('convert to row data with existing prompts', () => {
     getFolderNameAndPath.mockReturnValue({ name: 'id_for_prompt__1.0.0' });
     getNameVersionFromPrompt.mockReturnValue({ name: 'id_for_prompt', version: '1.0.0' });
 
     const map = new Map();
     map.set('item1', {
+      files: [
+        {
+          id: 'id_for_prompt__1.0.0',
+        },
+      ],
+      isInvalid: false,
+    });
+
+    const result = generatePromptRowDataForImportGrid(map as Map<string, FileImportMap>, [{ path: 'somePath/folder' }]);
+
+    expect(result).toEqual([
+      {
+        index: 0,
+        name: 'item1',
+        version: '1.0.0',
+        promptName: 'id_for_prompt',
+        existingNames: ['folder'],
+        extension: '',
+      },
+    ]);
+  });
+  test('convert to row data invalid prompt', () => {
+    getFolderNameAndPath.mockReturnValue({ name: 'id_for_prompt__1.0.0' });
+    getNameVersionFromPrompt.mockReturnValue({ name: 'id_for_prompt', version: '1.0.0' });
+
+    const map = new Map();
+    map.set('item1.svg', {
       files: [
         {
           id: 'id_for_prompt__1.0.0',
@@ -156,17 +184,18 @@ describe('Import :: generatePromptRowDataForImportGrid', () => {
     expect(result).toEqual([
       {
         index: 0,
-        name: 'item1',
-        version: '1.0.0',
-        promptName: 'id_for_prompt',
-        existingNames: ['folder'],
+        name: 'item1.svg',
+        version: '',
+        promptName: '',
+        extension: '.svg',
+        invalid: true,
       },
     ]);
   });
 });
 
 describe('Import :: isErrorPromptNode', () => {
-  it('should return true', () => {
+  test('should return true', () => {
     generateNameVersionForPrompt.mockReturnValue('name__1.0.0');
 
     const data = {
@@ -179,7 +208,7 @@ describe('Import :: isErrorPromptNode', () => {
     expect(result).toBeTruthy();
   });
 
-  it('should return false', () => {
+  test('should return false', () => {
     generateNameVersionForPrompt.mockReturnValue('name__2.0.0');
 
     const data = {
@@ -194,7 +223,7 @@ describe('Import :: isErrorPromptNode', () => {
 });
 
 describe('Import :: isErrorFileNode', () => {
-  it('should return true', () => {
+  test('should return true', () => {
     const data = {
       fileName: 'file',
       extension: '.jpg',
@@ -205,7 +234,7 @@ describe('Import :: isErrorFileNode', () => {
     expect(result).toBeTruthy();
   });
 
-  it('should return false', () => {
+  test('should return false', () => {
     const data = {
       fileName: 'file',
       extension: '.jpg',
@@ -218,25 +247,25 @@ describe('Import :: isErrorFileNode', () => {
 });
 
 describe('Import :: isInvalidJson', () => {
-  it('should return true if prompts is undefined', () => {
+  test('should return true if prompts is undefined', () => {
     const parsedData = { prompts: undefined };
     const result = isInvalidJson(parsedData);
     expect(result).toBe(true);
   });
 
-  it('should return true if prompts is null', () => {
+  test('should return true if prompts is null', () => {
     const parsedData = { prompts: null };
     const result = isInvalidJson(parsedData);
     expect(result).toBe(true);
   });
 
-  it('should return true if prompts is an empty array', () => {
+  test('should return true if prompts is an empty array', () => {
     const parsedData = { prompts: [] };
     const result = isInvalidJson(parsedData);
     expect(result).toBe(true);
   });
 
-  it('should return true if the id of the first prompt does not match the regex', () => {
+  test('should return true if the id of the first prompt does not match the regex', () => {
     const parsedData = {
       prompts: [{ id: 'invalid_id' }],
     };
@@ -244,7 +273,7 @@ describe('Import :: isInvalidJson', () => {
     expect(result).toBe(true);
   });
 
-  it('should return false if the id of the first prompt matches the regex', () => {
+  test('should return false if the id of the first prompt matches the regex', () => {
     const parsedData = {
       prompts: [{ id: 'prompts/public/folder/subfolder/myPrompt__v1' }],
     };
@@ -271,7 +300,7 @@ describe('Import :: changeFilesMap', () => {
     ]);
   });
 
-  it('should update version in file id when field is "version"', () => {
+  test('should update version in file id when field is "version"', () => {
     modifyNameVersionInPrompt.mockReturnValue('newId');
 
     // Data object includes the index and name for the file to be updated
@@ -281,7 +310,7 @@ describe('Import :: changeFilesMap', () => {
     expect(result.get('key1').files[0].id).toBe('newId');
   });
 
-  it('should update promptName and file name when field is "promptName"', () => {
+  test('should update promptName and file name when field is "promptName"', () => {
     modifyNameVersionInPrompt.mockReturnValue('newId');
 
     const result = changeFilesMap(prevMap, { name: 'key1', index: 1 }, 'promptName', 'newPromptName');
@@ -291,7 +320,7 @@ describe('Import :: changeFilesMap', () => {
     expect(result.get('key1').files[1].name).toBe('newPromptName');
   });
 
-  it('should update file content when field is "fileName"', () => {
+  test('should update file content when field is "fileName"', () => {
     getNameExtensionFromFile.mockReturnValue({ extension: '.txt' });
 
     const result = changeFilesMap(prevMap, { name: 'key1', index: 1 }, 'fileName', 'newFileName');
@@ -300,7 +329,7 @@ describe('Import :: changeFilesMap', () => {
     expect(result.get('key1').files[1] instanceof File).toBe(true);
   });
 
-  it('should return a new map with updated file details', () => {
+  test('should return a new map with updated file details', () => {
     const newMap = changeFilesMap(prevMap, { name: 'key1', index: 0 }, 'version', 'v2');
 
     expect(newMap).not.toBe(prevMap);

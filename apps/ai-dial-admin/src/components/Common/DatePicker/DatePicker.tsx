@@ -28,7 +28,7 @@ const DatePicker: FC<Props> = ({ id, label, date, setDate, ...props }) => {
   );
 
   return (
-    <div className="mb-4">
+    <div className="mb-4 cursor-pointer">
       <label htmlFor={id}>
         <p className="tiny text-secondary mb-2">{label}</p>
       </label>

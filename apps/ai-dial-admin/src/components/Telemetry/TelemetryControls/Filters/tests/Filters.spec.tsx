@@ -2,12 +2,12 @@ import { render } from '@testing-library/react';
 import { ApplicationRoute } from '@/src/types/routes';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 import Filters from '@/src/components/Telemetry/TelemetryControls/Filters/Filters';
-
-const setFilters = jest.fn();
-const getData = jest.fn().mockReturnValue({ data: [] });
+import { describe, expect, test, vi } from 'vitest';
+const setFilters = vi.fn();
+const getData = vi.fn().mockReturnValue({ data: [] });
 
 describe('Components - Filters', () => {
-  it('renders correctly', () => {
+  test('renders correctly', () => {
     const filters = [
       {
         condition: FILTER_OPERATOR.Equal,
@@ -23,7 +23,7 @@ describe('Components - Filters', () => {
     expect(filter).toBeTruthy();
   });
 
-  it('user can aad new filter', () => {
+  test('user can aad new filter', () => {
     const filters = [
       {
         condition: FILTER_OPERATOR.Equal,

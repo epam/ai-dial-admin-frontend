@@ -78,6 +78,7 @@ const ExtraDataField: FC<Props> = ({ endpoint, fieldTitle, onChangeExtraData }) 
   }, []);
 
   const onChangeJsonValue = useCallback((v: string | undefined) => {
+    setIsValidJSON(true);
     setJsonValue(v);
   }, []);
 

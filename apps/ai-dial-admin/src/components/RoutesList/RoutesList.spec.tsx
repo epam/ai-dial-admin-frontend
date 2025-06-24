@@ -3,9 +3,10 @@ import { renderWithContext } from '@/src/utils/tests/renderWithContext';
 import { fireEvent } from '@testing-library/dom';
 import RouteProperties from './RouteProperties';
 import RoutesList from './RoutesList';
+import { describe, expect, test, vi } from 'vitest';
 
 describe('Routes :: RoutesList', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const { baseElement } = renderWithContext(<RoutesList data={[{ name: 'route' }, {}]} />);
 
     expect(baseElement).toBeTruthy();
@@ -13,15 +14,15 @@ describe('Routes :: RoutesList', () => {
 });
 
 describe('Routes :: RouteProperties', () => {
-  it('Should render successfully with response', () => {
+  test('Should render successfully with response', () => {
     const route = { description: 'description', name: 'name', response: { status: 200, body: 'str' } };
 
-    const { baseElement } = renderWithContext(<RouteProperties route={route} updateRoute={jest.fn()} />);
+    const { baseElement } = renderWithContext(<RouteProperties route={route} updateRoute={vi.fn()} />);
 
     expect(baseElement).toBeTruthy();
   });
 
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     let route = { description: 'description', name: 'name' } as DialRoute;
 
     const updateRoute = (r: DialRoute) => {

@@ -1,14 +1,15 @@
 import { fireEvent, render } from '@testing-library/react';
 import Switch from './Switch';
+import { describe, expect, test } from 'vitest';
 
 describe('Common components - Switch', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const { baseElement } = render(<Switch switchId="switch" title="AAA" isOn={true} />);
 
     expect(baseElement).toBeTruthy();
   });
 
-  it('Should check OnChange', () => {
+  test('Should check OnChange', () => {
     let value = false;
     const onChange = (v: boolean) => {
       value = v;

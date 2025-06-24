@@ -1,62 +1,57 @@
 import { getAvailableEntities } from '@/src/components/AddEntitiesTab/AddEntitiesView.utils';
 import { ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { ExportComponentType } from '@/src/types/export';
+import { EntityType } from '@/src/types/entity-type';
 
-export const getAllAvailableDependencies = (selectedTab?: ExportComponentType): ExportComponentType[] => {
-  if (selectedTab === ExportComponentType.ROLE) {
-    return [ExportComponentType.ENTITIES, ExportComponentType.APPLICATION_TYPE_SCHEMA, ExportComponentType.INTERCEPTOR];
+export const getAllAvailableDependencies = (selectedTab?: EntityType): EntityType[] => {
+  if (selectedTab === EntityType.ROLE) {
+    return [EntityType.ENTITIES, EntityType.APPLICATION_TYPE_SCHEMA, EntityType.INTERCEPTOR];
   }
-  if (selectedTab === ExportComponentType.KEY) {
-    return [
-      ExportComponentType.ROLE,
-      ExportComponentType.ENTITIES,
-      ExportComponentType.APPLICATION_TYPE_SCHEMA,
-      ExportComponentType.INTERCEPTOR,
-    ];
+  if (selectedTab === EntityType.KEY) {
+    return [EntityType.ROLE, EntityType.ENTITIES, EntityType.APPLICATION_TYPE_SCHEMA, EntityType.INTERCEPTOR];
   }
 
-  if (selectedTab === ExportComponentType.MODEL) {
-    return [ExportComponentType.INTERCEPTOR];
+  if (selectedTab === EntityType.MODEL) {
+    return [EntityType.INTERCEPTOR];
   }
 
-  if (selectedTab === ExportComponentType.APPLICATION) {
-    return [ExportComponentType.ENTITIES, ExportComponentType.APPLICATION_TYPE_SCHEMA, ExportComponentType.INTERCEPTOR];
+  if (selectedTab === EntityType.APPLICATION) {
+    return [EntityType.ENTITIES, EntityType.APPLICATION_TYPE_SCHEMA, EntityType.INTERCEPTOR];
   }
 
   return [];
 };
 
-export const getButtonTitle = (t: (v: string) => string, selectedTab?: ExportComponentType, full?: boolean) => {
+export const getButtonTitle = (t: (v: string) => string, selectedTab?: EntityType, full?: boolean) => {
   let entity = '';
-  if (selectedTab === ExportComponentType.ENTITIES) {
+  if (selectedTab === EntityType.ENTITIES) {
     entity = t(MenuI18nKey.Entities);
   }
-  if (selectedTab === ExportComponentType.ROLE) {
+  if (selectedTab === EntityType.ROLE) {
     entity = t(MenuI18nKey.Roles);
   }
-  if (selectedTab === ExportComponentType.KEY) {
+  if (selectedTab === EntityType.KEY) {
     entity = t(MenuI18nKey.Keys);
   }
-  if (selectedTab === ExportComponentType.APPLICATION_TYPE_SCHEMA) {
+  if (selectedTab === EntityType.APPLICATION_TYPE_SCHEMA) {
     entity = t(MenuI18nKey.ApplicationRunners);
   }
-  if (selectedTab === ExportComponentType.INTERCEPTOR) {
+  if (selectedTab === EntityType.INTERCEPTOR) {
     entity = t(MenuI18nKey.Interceptors);
   }
-  if (selectedTab === ExportComponentType.PROMPT) {
+  if (selectedTab === EntityType.PROMPT) {
     entity = t(MenuI18nKey.Prompts);
   }
-  if (selectedTab === ExportComponentType.FILE) {
+  if (selectedTab === EntityType.FILE) {
     entity = t(MenuI18nKey.Files);
   }
-  if (selectedTab === ExportComponentType.MODEL) {
+  if (selectedTab === EntityType.MODEL) {
     entity = t(MenuI18nKey.Models);
   }
-  if (selectedTab === ExportComponentType.APPLICATION) {
+  if (selectedTab === EntityType.APPLICATION) {
     entity = t(MenuI18nKey.Applications);
   }
-  if (selectedTab === ExportComponentType.ROUTE) {
+  if (selectedTab === EntityType.ROUTE) {
     entity = t(MenuI18nKey.Routes);
   }
 
@@ -71,15 +66,15 @@ export const getAvailableData = (
 ) => {
   let entityData = tabData[currentTab] || [];
   let existingData = customExportData[currentTab] || [];
-  if (id === ExportComponentType.MODEL) {
+  if (id === EntityType.MODEL) {
     entityData = entityData.filter((data) => data.type === MenuI18nKey.Models);
     existingData = existingData.filter((data) => data.type === MenuI18nKey.Models);
   }
-  if (id === ExportComponentType.APPLICATION) {
+  if (id === EntityType.APPLICATION) {
     entityData = entityData.filter((data) => data.type === MenuI18nKey.Applications);
     existingData = existingData.filter((data) => data.type === MenuI18nKey.Applications);
   }
-  if (id === ExportComponentType.ROUTE) {
+  if (id === EntityType.ROUTE) {
     entityData = entityData.filter((data) => data.type === MenuI18nKey.Routes);
     existingData = existingData.filter((data) => data.type === MenuI18nKey.Routes);
   }

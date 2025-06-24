@@ -1,34 +1,35 @@
 import { render } from '@testing-library/react';
 import Header from './Header';
 import UserMobile from './User/UserMobile';
+import { describe, expect, test, vi } from 'vitest';
 
-jest.mock('@/src/context/AppContext', () => ({
-  useAppContext: jest.fn(() => {
-    return { sidebarOpen: true, toggleSidebar: jest.fn(), userMenuOpen: true };
+vi.mock('@/src/context/AppContext', () => ({
+  useAppContext: vi.fn(() => {
+    return { sidebarOpen: true, toggleSidebar: vi.fn(), userMenuOpen: true };
   }),
 }));
 
-jest.mock('next-auth/react', () => ({
-  useSession: jest.fn(() => {
+vi.mock('next-auth/react', () => ({
+  useSession: vi.fn(() => {
     return { session: null };
   }),
 }));
 
-jest.mock('@/src/context/ThemeContext', () => ({
-  useTheme: jest.fn(() => {
-    return { themes: [], currentTheme: '', setTheme: jest.fn() };
+vi.mock('@/src/context/ThemeContext', () => ({
+  useTheme: vi.fn(() => {
+    return { themes: [], currentTheme: '', setTheme: vi.fn() };
   }),
 }));
 
 describe('Header', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const { baseElement } = render(<Header isEnableAuth={true} />);
     expect(baseElement).toBeTruthy();
   });
 });
 
 describe('Header :: UserMobile ', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const { baseElement } = render(<UserMobile isEnableAuth={true} />);
     expect(baseElement).toBeTruthy();
   });

@@ -6,7 +6,6 @@ import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialModel } from '@/src/models/dial/model';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
-import { createEndpoint, getModelAdapter } from '@/src/utils/adapter';
 
 interface Props {
   model: DialModel;
@@ -17,23 +16,21 @@ interface Props {
 const AdapterSelector: FC<Props> = ({ adapters, onChangeAdapter, model }) => {
   const t = useI18n();
 
-  const selectedAdapter = getModelAdapter(model, adapters);
-
   const items: DropdownItemsModel[] = adapters.map((adapter) => ({
-    id: adapter.baseEndpoint as string,
+    id: adapter.name as string,
     name: adapter.name as string,
   }));
 
   const onChange = useCallback(
-    (endpoint: string) => {
-      onChangeAdapter(createEndpoint(endpoint, model));
+    (adapter: string) => {
+      onChangeAdapter(adapter);
     },
-    [model, onChangeAdapter],
+    [onChangeAdapter],
   );
 
   return (
     <DropdownField
-      selectedValue={selectedAdapter?.baseEndpoint}
+      selectedValue={model?.adapter}
       elementId="adapter"
       items={items}
       fieldTitle={t(CreateI18nKey.AdapterTitle)}

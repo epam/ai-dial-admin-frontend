@@ -52,6 +52,7 @@ const borderColors = {
 
 const textColors = {
   transparent: 'transparent',
+  white: 'var(--text-white, #FFFFFF)',
   primary: 'var(--text-primary, #F3F4F6)',
   secondary: 'var(--text-secondary, #7F8792)',
   error: 'var(--text-error, #F76464)',

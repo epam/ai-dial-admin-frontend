@@ -7,16 +7,15 @@ import Field from '@/src/components/Common/Field/Field';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 // import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
-import { FILES_COLUMNS } from '@/src/components/EntityListView/entity-list-view';
+import { FILES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { getGridFileColumns, getGridFileData } from '@/src/components/FilesList/files-list';
 import Grid from '@/src/components/Grid/Grid';
-import { ACTION_COLUMN_COMPONENTS } from '@/src/constants/ag-grid';
 import { FILE_DOWNLOAD, FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
 import { BasicI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useFileFolder } from '@/src/context/FileFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
-import { getDownloadOperation, getPreviewOperation } from '@/src/utils/entities/entity-operations';
+import { getDownloadOperation, getPreviewOperation } from '@/src/constants/grid-columns/actions';
 
 interface Props {
   file: DialFile;
@@ -73,7 +72,7 @@ const FileProperties: FC<Props> = ({ file, onChangeFile }) => {
           </div>
           <div>
             <Field fieldTitle={t(BasicI18nKey.Source)} />
-            <Grid columnDefs={columnDefs} rowData={rowData} additionalGridOptions={{ ...ACTION_COLUMN_COMPONENTS }} />
+            <Grid columnDefs={columnDefs} rowData={rowData} />
           </div>
           <div className="lg:w-[35%]">
             <FilePath

@@ -11,4 +11,5 @@ export interface FileImportGridData {
   extension: string;
   existingNames?: string[];
   index: number;
+  invalid?: boolean;
 }

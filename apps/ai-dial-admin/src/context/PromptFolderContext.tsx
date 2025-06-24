@@ -12,7 +12,7 @@ export interface PromptFolderContextType {
   expandedFolders: Set<string>;
   filePath: string;
   toggleFolder: (folder: DialFile) => void;
-  data: DialPrompt[];
+  data: DialPrompt[] | null;
   fetchedFoldersData: Record<string, DialPrompt[]>;
   exportFoldersData: Record<string, DialPrompt[]>;
   setExportFoldersData: Dispatch<SetStateAction<Record<string, DialPrompt[]>>>;
@@ -28,7 +28,7 @@ export const PromptFolderProvider = ({ children }: { children: ReactNode }) => {
 
   const [fetchedFoldersData, setFetchedFoldersData] = useState<Record<string, DialPrompt[]>>({});
   const [exportFoldersData, setExportFoldersData] = useState<Record<string, DialPrompt[]>>({});
-  const [data, setData] = useState<DialPrompt[]>([]);
+  const [data, setData] = useState<DialPrompt[] | null>([]);
 
   const fetchFiles = (path: string, refreshData?: boolean) => {
     if (refreshData) {
@@ -36,6 +36,10 @@ export const PromptFolderProvider = ({ children }: { children: ReactNode }) => {
       setExpandedFolders(new Set());
     }
     getPrompts(path).then((files) => {
+      if (files === void 0) {
+        setData(null);
+        return;
+      }
       setFiles((prevFiles) => mergeFiles(prevFiles, files, path));
       const folderPrompts = files?.filter((f) => f.nodeType === DialFileNodeType.ITEM) as DialPrompt[];
       setData(folderPrompts);

@@ -1,8 +1,12 @@
 import { DialAddon } from '@/src/models/dial/addon';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import fetch from 'jest-fetch-mock';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
 import { AddonsApi } from '../addons-api';
+
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
 
 describe('Server :: AddonsApi', () => {
   const instance = new AddonsApi({ host: TEST_URL });
@@ -18,7 +22,7 @@ describe('Server :: AddonsApi', () => {
 
   const mockResponse: ServerActionResponse = { success: true };
 
-  it('Should calls getAddonsList and sends GET request and returns list of addons', async () => {
+  test('Should calls getAddonsList and sends GET request and returns list of addons', async () => {
     fetch.mockResponseOnce(JSON.stringify([addon]));
 
     const result = await instance.getAddonsList(TOKEN_MOCK);
@@ -27,7 +31,7 @@ describe('Server :: AddonsApi', () => {
     expect(result).toEqual(JSON.stringify([addon]));
   });
 
-  it('Should calls createAddon and sends POST request with addon and returns response', async () => {
+  test('Should calls createAddon and sends POST request with addon and returns response', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
     await instance.createAddon(addon, TOKEN_MOCK);
@@ -41,7 +45,7 @@ describe('Server :: AddonsApi', () => {
     );
   });
 
-  it('Should calls removeAddon and sends DELETE request and returns response', async () => {
+  test('Should calls removeAddon and sends DELETE request and returns response', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
     await instance.removeAddon(TOKEN_MOCK, addon.name);
@@ -52,7 +56,7 @@ describe('Server :: AddonsApi', () => {
     );
   });
 
-  it('Should calls getAddon and sends GET request for a single addon', async () => {
+  test('Should calls getAddon and sends GET request for a single addon', async () => {
     fetch.mockResponseOnce(JSON.stringify(addon));
 
     const result = await instance.getAddon(addon.name, TOKEN_MOCK);
@@ -64,7 +68,7 @@ describe('Server :: AddonsApi', () => {
     expect(result).toEqual(JSON.stringify(addon));
   });
 
-  it('Should calls updateAddon and sends PUT request with updated addon and returns response', async () => {
+  test('Should calls updateAddon and sends PUT request with updated addon and returns response', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
     await instance.updateAddon(addon, TOKEN_MOCK);

@@ -9,6 +9,7 @@ import { logger } from '@/src/server/logger';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { DialFileNodeType } from '@/src/models/dial/file';
+import Page403 from '@/src/components/Page403/Page403';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +27,9 @@ export default async function Page(params: {
     const name = decodeURIComponent((await params.params).id);
 
     prompt = await promptsApi.getPrompt(token, path);
+    if (prompt === void 0) {
+      return <Page403 />;
+    }
     prompts =
       (await promptsApi.getPromptsList(token, `${prompt?.folderId}/`))?.filter(
         (p) => p.nodeType === DialFileNodeType.ITEM && p.name === name,

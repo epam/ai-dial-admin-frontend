@@ -1,18 +1,24 @@
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
 import DraggableItem from './DraggableItem';
 
-jest.mock('react-dnd', () => ({
-  useDrag: () => [{ isDragging: false }, jest.fn(), jest.fn()],
-  useDrop: () => [{ isOver: false }, jest.fn()],
+vi.mock('react-dnd', () => ({
+  useDrag: () => [{ isDragging: true }, vi.fn(), vi.fn()],
+  useDrop: () => [vi.fn(), vi.fn()],
 }));
 
-describe('Common components - DraggableItem', () => {
-  it('Should render successfully', () => {
-    const { baseElement } = render(
-      <DraggableItem id="draggable">
-        <div></div>
+vi.mock('@tabler/icons-react', () => ({
+  IconGripVertical: () => <span>GripIcon</span>,
+}));
+
+describe('Common components :: DraggableItem', () => {
+  test('Should render children and grip icon', () => {
+    render(
+      <DraggableItem id="item-1">
+        <span>ChildContent</span>
       </DraggableItem>,
     );
-    expect(baseElement).toBeTruthy();
+    expect(screen.getByText('GripIcon')).toBeInTheDocument();
+    expect(screen.getByText('ChildContent')).toBeInTheDocument();
   });
 });

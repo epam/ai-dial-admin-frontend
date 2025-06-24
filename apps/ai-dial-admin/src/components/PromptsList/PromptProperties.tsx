@@ -1,30 +1,30 @@
 import { Dispatch, FC, SetStateAction, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { IconPlus } from '@tabler/icons-react';
-
-import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import { formatTimestampToDate } from '@/src/utils/formatting/date';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { BasicI18nKey, ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
-import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
-import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
-import Button from '@/src/components/Common/Button/Button';
-import { PopUpState } from '@/src/types/pop-up';
-import AddVersionModal from '@/src/components/Common/AddVersionModal/AddVersionModal';
-import { DialPrompt } from '@/src/models/dial/prompt';
-import { Publication } from '@/src/models/dial/publications';
-import { FieldError } from '@/src/models/error';
-import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import FilePath from '@/src/components/Common/FilePath/FilePath';
-import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import ReactMarkdown from 'react-markdown';
 import ReactMde from 'react-mde';
 import 'react-mde/lib/styles/css/react-mde-all.css';
+
+import { IconPlus } from '@tabler/icons-react';
+
+import AddVersionModal from '@/src/components/Common/AddVersionModal/AddVersionModal';
+import Button from '@/src/components/Common/Button/Button';
+import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
+import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
+import FilePath from '@/src/components/Common/FilePath/FilePath';
+import { TextInputField } from '@/src/components/Common/InputField/InputField';
+import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
 import Switch from '@/src/components/Common/Switch/Switch';
+import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
+import { BasicI18nKey, ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { usePromptFolder } from '@/src/context/PromptFolderContext';
+import { useI18n } from '@/src/locales/client';
+import { DialPrompt } from '@/src/models/dial/prompt';
+import { Publication } from '@/src/models/dial/publications';
+import { FieldError } from '@/src/models/error';
+import { PopUpState } from '@/src/types/pop-up';
+import { formatTimestampToDate } from '@/src/utils/formatting/date';
+import { getErrorForDescription } from '@/src/utils/validation/description-error';
 
 interface Props {
   prompt: DialPrompt;
@@ -53,10 +53,7 @@ const PromptProperties: FC<Props> = ({
   setAddedVersions,
 }) => {
   const t = useI18n() as (t: string) => string;
-  const versions: DropdownItemsModel[] | undefined = prompts?.map((prompt) => ({
-    id: prompt.version,
-    name: prompt.version,
-  }));
+  const versions: string[] = prompts?.map((prompt) => prompt.version) || [];
   const [modalState, setModalState] = useState(PopUpState.Closed);
 
   const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
@@ -165,7 +162,7 @@ const PromptProperties: FC<Props> = ({
                 elementCssClass="lg:w-[35%]"
                 selectedValue={prompt.version}
                 elementId="version"
-                items={[...(versions || []), ...addedVersions.map((v) => ({ id: v, name: v }))]}
+                items={[...new Set([...versions, ...addedVersions])].map((v) => ({ id: v, name: v }))}
                 fieldTitle={t(CreateI18nKey.VersionTitle)}
                 onChange={onChangeVersion}
               >
@@ -246,7 +243,7 @@ const PromptProperties: FC<Props> = ({
         createPortal(
           <AddVersionModal
             modalState={modalState}
-            existingVersions={[...(versions || []).map((v) => v.id), ...addedVersions]}
+            existingVersions={[...versions, ...addedVersions]}
             onClose={onCloseModal}
             onConfirm={onAddVersion}
           />,

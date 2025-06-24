@@ -3,7 +3,7 @@ import { FC } from 'react';
 
 import { DialAssistant } from '@/src/models/dial/assistant';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
-import { ENTITY_WITH_VERSION_COLUMNS } from '@/src/components/EntityListView/entity-list-view';
+import { ENTITY_WITH_VERSION_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ApplicationRoute } from '@/src/types/routes';
 import { createAssistant, removeAssistant } from '@/src/app/[lang]/assistants/actions';
 import { useI18n } from '@/src/locales/client';

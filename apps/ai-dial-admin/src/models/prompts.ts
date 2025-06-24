@@ -10,4 +10,6 @@ export interface PromptImportGridData {
   promptName: string;
   existingNames?: string[];
   index: number;
+  invalid?: boolean;
+  extension?: string;
 }

@@ -1,14 +1,15 @@
 import { EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
-import { ExportComponentType, ExportFormat, ExportType } from '@/src/types/export';
+import { ExportFormat, ExportType } from '@/src/types/export';
 import {
   getComponents,
   getComponentTypes,
-  getEmptyDataTitleI18nKey,
   isEntityWithDependency,
 } from '../ExportConfig.utils';
-
+import { EntityType } from '@/src/types/entity-type';
+import { getEmptyDataTitleI18nKey } from '@/src/utils/entities/get-empty-data-title';
+import { describe, expect, test } from 'vitest';
 describe('Export Config Utils :: getComponentTypes', () => {
-  it('Should return empty array', () => {
+  test('Should return empty array', () => {
     const res1 = getComponentTypes({}, ExportFormat.ADMIN, ExportType.Full);
     const res2 = getComponentTypes({}, ExportFormat.CORE, ExportType.Full);
     const res3 = getComponentTypes({}, ExportFormat.CORE, ExportType.Custom);
@@ -18,7 +19,7 @@ describe('Export Config Utils :: getComponentTypes', () => {
     expect(res3).toEqual([]);
   });
 
-  it('Should return tabs for full core config', () => {
+  test('Should return tabs for full core config', () => {
     const res = getComponentTypes(
       { entities: true, roles: true, keys: true, runners: true, interceptors: true, prompts: true, files: true },
       ExportFormat.ADMIN,
@@ -26,21 +27,21 @@ describe('Export Config Utils :: getComponentTypes', () => {
     );
 
     expect(res).toEqual([
-      ExportComponentType.APPLICATION,
-      ExportComponentType.MODEL,
-      ExportComponentType.ROUTE,
-      ExportComponentType.ROLE,
-      ExportComponentType.KEY,
-      ExportComponentType.APPLICATION_TYPE_SCHEMA,
-      ExportComponentType.INTERCEPTOR,
-      // ExportComponentType.PROMPT,
-      // ExportComponentType.FILE,
+      EntityType.APPLICATION,
+      EntityType.MODEL,
+      EntityType.ROUTE,
+      EntityType.ROLE,
+      EntityType.KEY,
+      EntityType.APPLICATION_TYPE_SCHEMA,
+      EntityType.INTERCEPTOR,
+      // EntityType.PROMPT,
+      // EntityType.FILE,
     ]);
   });
 });
 
 describe('Export Config Utils :: getComponents', () => {
-  it('Should return empty array', () => {
+  test('Should return empty array', () => {
     const res1 = getComponents(ExportType.Full, {});
     const res2 = getComponents(ExportType.Custom, {});
 
@@ -48,105 +49,105 @@ describe('Export Config Utils :: getComponents', () => {
     expect(res2).toEqual([]);
   });
 
-  it('Should return components for custom core config', () => {
+  test('Should return components for custom core config', () => {
     const res = getComponents(ExportType.Custom, {
-      [ExportComponentType.ENTITIES]: [
-        { name: 'Model', type: MenuI18nKey.Models, dependencies: [ExportComponentType.ROLE] },
-        { name: 'Application', type: MenuI18nKey.Applications, dependencies: [ExportComponentType.ROLE] },
-        { name: 'Route', type: MenuI18nKey.Routes, dependencies: [ExportComponentType.ROLE] },
+      [EntityType.ENTITIES]: [
+        { name: 'Model', type: MenuI18nKey.Models, dependencies: [EntityType.ROLE] },
+        { name: 'Application', type: MenuI18nKey.Applications, dependencies: [EntityType.ROLE] },
+        { name: 'Route', type: MenuI18nKey.Routes, dependencies: [EntityType.ROLE] },
       ],
-      [ExportComponentType.ROLE]: [{ name: 'role', type: MenuI18nKey.Roles }],
+      [EntityType.ROLE]: [{ name: 'role', type: MenuI18nKey.Roles }],
     });
 
     expect(res).toEqual([
-      { name: 'Model', type: ExportComponentType.MODEL, dependencies: [ExportComponentType.ROLE] },
-      { name: 'Application', type: ExportComponentType.APPLICATION, dependencies: [ExportComponentType.ROLE] },
-      { name: 'Route', type: ExportComponentType.ROUTE, dependencies: [ExportComponentType.ROLE] },
-      { name: 'role', type: ExportComponentType.ROLE, dependencies: [] },
+      { name: 'Model', type: EntityType.MODEL, dependencies: [EntityType.ROLE] },
+      { name: 'Application', type: EntityType.APPLICATION, dependencies: [EntityType.ROLE] },
+      { name: 'Route', type: EntityType.ROUTE, dependencies: [EntityType.ROLE] },
+      { name: 'role', type: EntityType.ROLE, dependencies: [] },
     ]);
   });
 
-  it('Should return tabs for custom core config with correct dependencies', () => {
+  test('Should return tabs for custom core config with correct dependencies', () => {
     const res = getComponents(ExportType.Custom, {
-      [ExportComponentType.ENTITIES]: [
-        { name: 'Model', type: MenuI18nKey.Models, dependencies: [ExportComponentType.ENTITIES] },
+      [EntityType.ENTITIES]: [
+        { name: 'Model', type: MenuI18nKey.Models, dependencies: [EntityType.ENTITIES] },
       ],
     });
 
     expect(res).toEqual([
       {
         name: 'Model',
-        type: ExportComponentType.MODEL,
-        dependencies: [ExportComponentType.APPLICATION, ExportComponentType.MODEL, ExportComponentType.ROUTE],
+        type: EntityType.MODEL,
+        dependencies: [EntityType.APPLICATION, EntityType.MODEL, EntityType.ROUTE],
       },
     ]);
   });
 });
 
 describe('Export Config Utils :: getEmptyDataTitleI18nKey', () => {
-  it('Should return key for roles', () => {
-    const res = getEmptyDataTitleI18nKey(ExportComponentType.ROLE);
+  test('Should return key for roles', () => {
+    const res = getEmptyDataTitleI18nKey(EntityType.ROLE);
 
     expect(res).toEqual(EntitiesI18nKey.NoRoles);
   });
 
-  it('Should return key for keys', () => {
-    const res = getEmptyDataTitleI18nKey(ExportComponentType.KEY);
+  test('Should return key for keys', () => {
+    const res = getEmptyDataTitleI18nKey(EntityType.KEY);
 
     expect(res).toEqual(EntitiesI18nKey.NoKeys);
   });
 
-  it('Should return key for runners', () => {
-    const res = getEmptyDataTitleI18nKey(ExportComponentType.APPLICATION_TYPE_SCHEMA);
+  test('Should return key for runners', () => {
+    const res = getEmptyDataTitleI18nKey(EntityType.APPLICATION_TYPE_SCHEMA);
 
     expect(res).toEqual(EntitiesI18nKey.NoApplicationRunners);
   });
 
-  it('Should return key for interceptors', () => {
-    const res = getEmptyDataTitleI18nKey(ExportComponentType.INTERCEPTOR);
+  test('Should return key for interceptors', () => {
+    const res = getEmptyDataTitleI18nKey(EntityType.INTERCEPTOR);
 
     expect(res).toEqual(EntitiesI18nKey.NoInterceptors);
   });
 
-  it('Should return key for prompts', () => {
-    const res = getEmptyDataTitleI18nKey(ExportComponentType.PROMPT);
+  test('Should return key for prompts', () => {
+    const res = getEmptyDataTitleI18nKey(EntityType.PROMPT);
 
     expect(res).toEqual(EntitiesI18nKey.NoPrompts);
   });
 
-  it('Should return key for files', () => {
-    const res = getEmptyDataTitleI18nKey(ExportComponentType.FILE);
+  test('Should return key for files', () => {
+    const res = getEmptyDataTitleI18nKey(EntityType.FILE);
 
     expect(res).toEqual(EntitiesI18nKey.NoFiles);
   });
 
-  it('Should return key for model', () => {
-    const res = getEmptyDataTitleI18nKey(ExportComponentType.MODEL);
+  test('Should return key for model', () => {
+    const res = getEmptyDataTitleI18nKey(EntityType.MODEL);
 
     expect(res).toEqual(EntitiesI18nKey.NoModels);
   });
 
-  it('Should return key for applications', () => {
-    const res = getEmptyDataTitleI18nKey(ExportComponentType.APPLICATION);
+  test('Should return key for applications', () => {
+    const res = getEmptyDataTitleI18nKey(EntityType.APPLICATION);
 
     expect(res).toEqual(EntitiesI18nKey.NoApplications);
   });
 
-  it('Should return key for routes', () => {
-    const res = getEmptyDataTitleI18nKey(ExportComponentType.ROUTE);
+  test('Should return key for routes', () => {
+    const res = getEmptyDataTitleI18nKey(EntityType.ROUTE);
 
     expect(res).toEqual(EntitiesI18nKey.NoRoutes);
   });
 });
 
 describe('Export Config Utils :: isEntityWithDependency', () => {
-  it('Should return true for roles', () => {
-    const res = isEntityWithDependency(ExportComponentType.ROLE);
+  test('Should return true for roles', () => {
+    const res = isEntityWithDependency(EntityType.ROLE);
 
     expect(res).toEqual(true);
   });
-  it('Should return false for app runner', () => {
-    const res = isEntityWithDependency(ExportComponentType.APPLICATION_TYPE_SCHEMA);
+  test('Should return false for app runner', () => {
+    const res = isEntityWithDependency(EntityType.APPLICATION_TYPE_SCHEMA);
 
     expect(res).toEqual(false);
   });

@@ -3,12 +3,12 @@ import Filter from '@/src/components/Telemetry/TelemetryControls/Filters/Filter'
 import { ApplicationRoute } from '@/src/types/routes';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 import * as hookModule from '@/src/hooks/use-is-mobile-screen';
-
-const onEdit = jest.fn();
-const onClose = jest.fn();
+import { describe, expect, test, vi } from 'vitest';
+const onEdit = vi.fn();
+const onClose = vi.fn();
 
 describe('Components - Filter', () => {
-  it('renders correctly', () => {
+  test('renders correctly', () => {
     const { getByTestId } = render(
       <Filter
         id={1}
@@ -28,8 +28,8 @@ describe('Components - Filter', () => {
     expect(filter).toBeTruthy();
   });
 
-  it('renders correctly in mobile', () => {
-    jest.spyOn(hookModule, 'useIsMobileScreen').mockReturnValue(true);
+  test('renders correctly in mobile', () => {
+    vi.spyOn(hookModule, 'useIsMobileScreen').mockReturnValue(true);
 
     const { getByTestId } = render(
       <Filter

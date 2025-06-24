@@ -1,11 +1,12 @@
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
-import { Publication } from '@/src/models/dial/publications';
-import { publicationPrompt } from '@/src/utils/tests/mock/publication.mock';
 import PublicationProperties from '@/src/components/PublicationView/PublicationProperties';
+import { Publication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
+import { publicationPrompt } from '@/src/utils/tests/mock/publication.mock';
+import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { describe, expect, test } from 'vitest';
 
 describe('Components - BasePublicationProperties', () => {
-  it('Should correctly render BasePublicationProperties component', () => {
+  test('Should correctly render BasePublicationProperties component', () => {
     const { getByTestId } = renderWithContext(
       <PublicationProperties
         view={ApplicationRoute.PromptPublications}
@@ -21,7 +22,7 @@ describe('Components - BasePublicationProperties', () => {
     expect(view).toBeTruthy();
   });
 
-  it('Should not render BasePublicationProperties component if view is incorrect', () => {
+  test('Should not render BasePublicationProperties component if view is incorrect', () => {
     const { container } = renderWithContext(
       <PublicationProperties view={ApplicationRoute.Home} publication={publicationPrompt as Publication} />,
     );

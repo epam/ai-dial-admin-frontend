@@ -1,6 +1,6 @@
 import { ColDef } from 'ag-grid-community';
 
-import { ENTITY_BASE_COLUMNS } from '@/src/components/EntityListView/entity-list-view';
+import { ENTITY_BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { LIMIT_COLUMNS } from '@/src/components/EntityView/Roles/roles-utils';
 import { NO_LIMITS_KEY } from '@/src/constants/role';
 import { DialAddon } from '@/src/models/dial/addon';
@@ -147,8 +147,10 @@ export const getEntitiesForRole = (role: DialRole, allEntities: EntitiesGridData
  * @returns {EntitiesGridData[]} - array of relevant entities
  */
 export const getAvailableEntities = (existingEntities: EntitiesGridData[], allEntities: EntitiesGridData[]) => {
-  const existingNames = existingEntities.map((entity) => entity.name || entity.key);
-  const filteredEntities = allEntities.filter((entity) => !existingNames.includes(entity.name || entity.key));
+  const existingNames = existingEntities.map((entity) => entity.name || entity.key || entity.$id);
+  const filteredEntities = allEntities.filter(
+    (entity) => !existingNames.includes(entity.name || entity.key || entity.$id),
+  );
   return filteredEntities;
 };
 

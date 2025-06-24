@@ -61,7 +61,9 @@ const Steps: FC<Props> = ({ steps, currentStep, setCurrentStep }) => {
   };
 
   const handleStepChange = (step: Step) => {
-    if (step.id !== currentStep.id && currentStep.status === StepStatus.VALID) {
+    const currentStepIndex = steps.findIndex((s) => s.id === currentStep.id);
+    const targetStepIndex = steps.findIndex((s) => s.id === step.id);
+    if ((step.id !== currentStep.id && currentStep.status === StepStatus.VALID) || targetStepIndex < currentStepIndex) {
       setCurrentStep(step);
     }
   };
@@ -79,12 +81,7 @@ const Steps: FC<Props> = ({ steps, currentStep, setCurrentStep }) => {
         }
 
         return (
-          <button
-            key={step.id}
-            className={`${stepClass} ${getStepClass(step)}`}
-            onClick={() => handleStepChange(step)}
-            disabled={step.status === StepStatus.ERROR}
-          >
+          <button key={step.id} className={`${stepClass} ${getStepClass(step)}`} onClick={() => handleStepChange(step)}>
             <span className={`${circleClass} ${getCircleClass(step)}`}>{content}</span>
             <span className="">{step.name}</span>
           </button>

@@ -46,11 +46,8 @@
       }
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "apps/ai-dial-admin/jest.config.ts"
-      }
+      "executor": "@nx/vite:test",
+      "outputs": ["{options.outputFile}"]
     },
     "lint": {
       "executor": "@nx/eslint:lint",

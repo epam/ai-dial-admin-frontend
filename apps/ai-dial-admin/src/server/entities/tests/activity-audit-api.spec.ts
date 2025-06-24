@@ -2,12 +2,12 @@ import { DialActivity } from '@/src/models/dial/activity-audit';
 import { FilterDto, PageDto, SortDto } from '@/src/models/request';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import fetch from 'jest-fetch-mock';
-import { ActivityAuditApi } from '../activity-audit-api';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
+import { ACTIVITY_AUDIT_ROLLBACK_URL, ACTIVITY_AUDIT_URL, ActivityAuditApi } from '../activity-audit-api';
 
-beforeEach(() => {
-  fetch.resetMocks();
-});
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
 
 describe('Server :: ActivityAuditApi', () => {
   const instance = new ActivityAuditApi({ host: TEST_URL });
@@ -25,7 +25,7 @@ describe('Server :: ActivityAuditApi', () => {
     fetch.resetMocks();
   });
 
-  it('Should calls getActivitiesList and sends POST request with correct body and returns response', async () => {
+  test('Should calls getActivitiesList and sends POST request with correct body and returns response', async () => {
     fetch.mockResponseOnce(mockPage);
 
     const result = await instance.getActivitiesList(10, 1, TOKEN_MOCK, sorts, filters);
@@ -41,7 +41,7 @@ describe('Server :: ActivityAuditApi', () => {
     expect(result).toEqual(mockPage);
   });
 
-  it('Should calls getActivityById and sends GET request and returns activity', async () => {
+  test('Should calls getActivityById and sends GET request and returns activity', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockActivity));
 
     const result = await instance.getActivityById('1', TOKEN_MOCK);
@@ -54,7 +54,7 @@ describe('Server :: ActivityAuditApi', () => {
     expect(result).toEqual(JSON.stringify(mockActivity));
   });
 
-  it('Should calls getRevisionDetails and sends GET request to full URL and returns details', async () => {
+  test('Should calls getRevisionDetails and sends GET request to full URL and returns details', async () => {
     const mockDetails: ActivityAuditEntity = { id: 'rev-1', entityName: 'Adapter' } as ActivityAuditEntity;
     fetch.mockResponseOnce(JSON.stringify(mockDetails));
 
@@ -63,6 +63,48 @@ describe('Server :: ActivityAuditApi', () => {
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/history/revisions/1'),
       expect.objectContaining({ method: 'GET' }),
+    );
+
+    expect(result).toEqual(JSON.stringify(mockDetails));
+  });
+
+  test('Should calls getRevisions and sends POST request to full URL and returns revisions', async () => {
+    const mockDetails: ActivityAuditEntity = { id: 'rev-1', entityName: 'Adapter' } as ActivityAuditEntity;
+    fetch.mockResponseOnce(JSON.stringify(mockDetails));
+
+    const result = await instance.getRevisions(TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(ACTIVITY_AUDIT_URL),
+      expect.objectContaining({ method: 'POST' }),
+    );
+
+    expect(result).toEqual(JSON.stringify(mockDetails));
+  });
+
+  test('Should calls getEntitiesForRevision and sends GET request to full URL and returns entities', async () => {
+    const mockDetails: ActivityAuditEntity = { id: 'rev-1', entityName: 'Adapter' } as ActivityAuditEntity;
+    fetch.mockResponseOnce(JSON.stringify(mockDetails));
+
+    const result = await instance.getEntitiesForRevision('/url', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`test/api/v1/url`),
+      expect.objectContaining({ method: 'GET' }),
+    );
+
+    expect(result).toEqual(JSON.stringify(mockDetails));
+  });
+
+  test('Should calls rollbackToRevision and sends POST request', async () => {
+    const mockDetails: ActivityAuditEntity = { id: 'rev-1', entityName: 'Adapter' } as ActivityAuditEntity;
+    fetch.mockResponseOnce(JSON.stringify(mockDetails));
+
+    const result = await instance.rollbackToRevision(5, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`test/${ACTIVITY_AUDIT_ROLLBACK_URL}`),
+      expect.objectContaining({ method: 'POST' }),
     );
 
     expect(result).toEqual(JSON.stringify(mockDetails));

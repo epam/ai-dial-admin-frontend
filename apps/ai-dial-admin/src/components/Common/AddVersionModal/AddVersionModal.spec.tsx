@@ -1,18 +1,13 @@
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
 import { PopUpState } from '@/src/types/pop-up';
-import AddVersionModal from './AddVersionModal';
-import { screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { describe, expect, test, vi } from 'vitest';
+import AddVersionModal from './AddVersionModal';
 
 describe('Common components - AddVersionModal', () => {
-  it('renders input and buttons', () => {
-    renderWithContext(
-      <AddVersionModal
-        existingVersions={[]}
-        modalState={PopUpState.Opened}
-        onClose={jest.fn()}
-        onConfirm={jest.fn()}
-      />,
+  test('renders input and buttons', () => {
+    render(
+      <AddVersionModal existingVersions={[]} modalState={PopUpState.Opened} onClose={vi.fn()} onConfirm={vi.fn()} />,
     );
 
     expect(screen.getByRole('textbox')).toBeInTheDocument();
@@ -20,12 +15,12 @@ describe('Common components - AddVersionModal', () => {
     expect(screen.getByRole('button', { name: 'Buttons.Create' })).toBeInTheDocument();
   });
 
-  it('handles close and confirm actions', async () => {
+  test('handles close and confirm actions', async () => {
     const user = userEvent.setup();
-    const onClose = jest.fn();
-    const onConfirm = jest.fn();
+    const onClose = vi.fn();
+    const onConfirm = vi.fn();
 
-    renderWithContext(
+    render(
       <AddVersionModal existingVersions={[]} modalState={PopUpState.Opened} onClose={onClose} onConfirm={onConfirm} />,
     );
 
@@ -40,15 +35,15 @@ describe('Common components - AddVersionModal', () => {
     expect(onConfirm).toHaveBeenCalledWith('3.0.0');
   });
 
-  it('renders provided versions and handles version change', async () => {
+  test('renders provided versions and handles version change', async () => {
     const user = userEvent.setup();
     const existingVersions = ['1.0.0', '2.0.0'];
-    renderWithContext(
+    render(
       <AddVersionModal
         existingVersions={existingVersions}
         modalState={PopUpState.Opened}
-        onClose={jest.fn()}
-        onConfirm={jest.fn()}
+        onClose={vi.fn()}
+        onConfirm={vi.fn()}
       />,
     );
 

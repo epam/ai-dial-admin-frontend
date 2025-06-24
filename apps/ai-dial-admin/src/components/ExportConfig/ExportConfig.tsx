@@ -2,7 +2,7 @@
 import { IconUpload } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { exportConfig } from '@/src/app/[lang]/export-config/actions';
+import { exportConfig, exportConfigMap } from '@/src/app/[lang]/export-config/actions';
 import Button from '@/src/components/Common/Button/Button';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
 import ConfigContent from '@/src/components/ExportConfig/Content/ConfigContent';
@@ -102,6 +102,26 @@ const ExportConfig: FC = () => {
     [exportRequest, showNotification, t],
   );
 
+  const onExportMap = useCallback(() => {
+    const type = t(BasicI18nKey.Config);
+    exportConfigMap()
+      .then(({ blob, fileName }) => {
+        showNotification(
+          getSuccessNotification(
+            t(ExportI18nKey.ExportSuccessTitle, { type }),
+            t(ExportI18nKey.ExportSuccessDescription),
+          ),
+        );
+
+        downloadFile(blob, fileName);
+      })
+      .catch(() => {
+        showNotification(
+          getErrorNotification(t(ExportI18nKey.ExportErrorTitle, { type }), t(ExportI18nKey.ExportErrorDescription)),
+        );
+      });
+  }, [showNotification, t]);
+
   useEffect(() => {
     if (exportRequest.$type === ExportType.Full) {
       setIsExportDisable(exportRequest.componentTypes.length === 0);
@@ -115,14 +135,21 @@ const ExportConfig: FC = () => {
       <div className="flex flex-col w-full h-full rounded p-4 bg-layer-2">
         <div className="mb-4 flex flex-row items-center justify-between">
           <h1>{t(MenuI18nKey.ExportConfig)}</h1>
-
-          <Button
-            cssClass="primary"
-            iconBefore={<IconUpload {...BASE_ICON_PROPS} />}
-            title={t(ButtonsI18nKey.Export)}
-            disable={isExportDisable}
-            onClick={() => setPreviewModalState(PopUpState.Opened)}
-          />
+          <div className="flex flex-row gap-4 items-center">
+            <Button
+              cssClass="secondary"
+              iconBefore={<IconUpload {...BASE_ICON_PROPS} />}
+              title={t(ButtonsI18nKey.ExportConfigMap)}
+              onClick={onExportMap}
+            />
+            <Button
+              cssClass="primary"
+              iconBefore={<IconUpload {...BASE_ICON_PROPS} />}
+              title={t(ButtonsI18nKey.Export)}
+              disable={isExportDisable}
+              onClick={() => setPreviewModalState(PopUpState.Opened)}
+            />
+          </div>
         </div>
         <div className="flex-1 min-h-0 gap-x-3 flex flex-row w-full">
           <div className="border border-primary p-4 rounded w-[240px] flex flex-col">

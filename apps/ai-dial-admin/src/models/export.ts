@@ -1,4 +1,5 @@
-import { ExportComponentType, ExportFormat, ExportType } from '@/src/types/export';
+import { ExportFormat, ExportType } from '@/src/types/export';
+import { EntityType } from '@/src/types/entity-type';
 
 export interface ExportDependenciesConfig {
   entities?: boolean;
@@ -14,12 +15,12 @@ export interface ExportRequest {
   $type: ExportType;
   exportFormat: ExportFormat;
   addSecrets?: boolean;
-  componentTypes: ExportComponentType[];
+  componentTypes: EntityType[];
   components: ExportRequestComponent[];
 }
 
 export interface ExportRequestComponent {
   name?: string;
   type: string;
-  dependencies: ExportComponentType[];
+  dependencies: EntityType[];
 }

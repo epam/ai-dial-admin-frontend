@@ -1,7 +1,8 @@
 import { clearSchemeForEditor } from './AppRunnerProperties.utils';
+import { describe, expect, test } from 'vitest';
 
 describe('ApplicationRunner :: clearSchemeForEditor', () => {
-  it('Should clear all field', () => {
+  test('Should clear all field', () => {
     const res = clearSchemeForEditor({
       $id: '$id',
       $schema: '$schema',

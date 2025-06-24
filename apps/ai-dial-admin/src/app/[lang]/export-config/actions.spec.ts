@@ -2,21 +2,22 @@ import { exportConfig, getEntities, previewExportConfig } from './actions';
 
 import * as api from '@/src/app/api/api';
 import { utilityApi } from '@/src/app/api/api';
-import { ExportComponentType } from '@/src/types/export';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import * as entityUtils from '@/src/utils/entities/entities-list-view';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { EntityType } from '@/src/types/entity-type';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-jest.mock('@/src/utils/auth/auth-request');
-jest.mock('@/src/app/api/api');
-jest.mock('@/src/utils/entities/entities-list-view');
+vi.mock('@/src/utils/auth/auth-request');
+vi.mock('@/src/app/api/api');
+vi.mock('@/src/utils/entities/entities-list-view');
 
 const mockedEntityData = [{ id: '1' }, { id: '2' }];
 
-jest.mock('@/src/utils/auth/auth-request');
-jest.mock('@/src/utils/env/get-auth-toggle');
-jest.mock('@/src/app/api/api');
+vi.mock('@/src/utils/auth/auth-request');
+vi.mock('@/src/utils/env/get-auth-toggle');
+vi.mock('@/src/app/api/api');
 
 describe('Export config :: actions :: exportConfig', () => {
   const fakeToken = 'mocked-token';
@@ -24,13 +25,13 @@ describe('Export config :: actions :: exportConfig', () => {
   const mockResponse = { success: true };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (getUserToken as jest.Mock).mockResolvedValue(fakeToken);
-    (getIsEnableAuthToggle as jest.Mock).mockReturnValue(true);
+    vi.clearAllMocks();
+    getUserToken.mockResolvedValue(fakeToken);
+    getIsEnableAuthToggle.mockReturnValue(true);
   });
 
-  it('should call utilityApi.exportConfig with token', async () => {
-    (utilityApi.exportConfig as jest.Mock).mockResolvedValue(mockResponse);
+  test('should call utilityApi.exportConfig with token', async () => {
+    utilityApi.exportConfig.mockResolvedValue(mockResponse);
 
     const result = await exportConfig(mockRequest as any);
     expect(getUserToken).toHaveBeenCalled();
@@ -38,8 +39,8 @@ describe('Export config :: actions :: exportConfig', () => {
     expect(result).toBe(mockResponse);
   });
 
-  it('should call utilityApi.previewExportConfig with token', async () => {
-    (utilityApi.previewExportConfig as jest.Mock).mockResolvedValue(mockResponse);
+  test('should call utilityApi.previewExportConfig with token', async () => {
+    utilityApi.previewExportConfig.mockResolvedValue(mockResponse);
 
     const result = await previewExportConfig(mockRequest as any);
     expect(getUserToken).toHaveBeenCalled();
@@ -50,56 +51,56 @@ describe('Export config :: actions :: exportConfig', () => {
 
 describe('Export config :: actions :: getEntities', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    (getUserToken as jest.Mock).mockResolvedValue(TOKEN_MOCK);
+    vi.clearAllMocks();
+    getUserToken.mockResolvedValue(TOKEN_MOCK);
   });
 
-  it('should return combined ENTITIES data', async () => {
-    (api.routesApi.getRoutesList as jest.Mock).mockResolvedValue(['route1']);
-    (api.applicationsApi.getApplicationsList as jest.Mock).mockResolvedValue(['app1']);
-    (api.modelsApi.getModelsList as jest.Mock).mockResolvedValue(['model1']);
+  test('should return combined ENTITIES data', async () => {
+    api.routesApi.getRoutesList.mockResolvedValue(['route1']);
+    api.applicationsApi.getApplicationsList.mockResolvedValue(['app1']);
+    api.modelsApi.getModelsList.mockResolvedValue(['model1']);
 
-    (entityUtils.getRoutesForEntitiesGrid as jest.Mock).mockReturnValue([{ id: 'route' }]);
-    (entityUtils.getApplicationsForEntitiesGrid as jest.Mock).mockReturnValue([{ id: 'app' }]);
-    (entityUtils.getModelsForEntitiesGrid as jest.Mock).mockReturnValue([{ id: 'model' }]);
+    entityUtils.getRoutesForEntitiesGrid.mockReturnValue([{ id: 'route' }]);
+    entityUtils.getApplicationsForEntitiesGrid.mockReturnValue([{ id: 'app' }]);
+    entityUtils.getModelsForEntitiesGrid.mockReturnValue([{ id: 'model' }]);
 
-    const result = await getEntities(ExportComponentType.ENTITIES);
+    const result = await getEntities(EntityType.ENTITIES);
     expect(result).toEqual([{ id: 'model' }, { id: 'app' }, { id: 'route' }]);
   });
 
-  it('should return ROLE entities', async () => {
-    (api.rolesApi.getRolesList as jest.Mock).mockResolvedValue(['role1']);
-    (entityUtils.getRolesForEntitiesGrid as jest.Mock).mockReturnValue(mockedEntityData);
+  test('should return ROLE entities', async () => {
+    api.rolesApi.getRolesList.mockResolvedValue(['role1']);
+    entityUtils.getRolesForEntitiesGrid.mockReturnValue(mockedEntityData);
 
-    const result = await getEntities(ExportComponentType.ROLE);
+    const result = await getEntities(EntityType.ROLE);
     expect(result).toEqual(mockedEntityData);
   });
 
-  it('should return KEY entities', async () => {
-    (api.keysApi.getKeysList as jest.Mock).mockResolvedValue(['key1']);
-    (entityUtils.getKeysForEntitiesGrid as jest.Mock).mockReturnValue(mockedEntityData);
+  test('should return KEY entities', async () => {
+    api.keysApi.getKeysList.mockResolvedValue(['key1']);
+    entityUtils.getKeysForEntitiesGrid.mockReturnValue(mockedEntityData);
 
-    const result = await getEntities(ExportComponentType.KEY);
+    const result = await getEntities(EntityType.KEY);
     expect(result).toEqual(mockedEntityData);
   });
 
-  it('should return APPLICATION_TYPE_SCHEMA entities', async () => {
-    (api.applicationRunnersApi.getApplicationSchemesList as jest.Mock).mockResolvedValue(['runner1']);
-    (entityUtils.getRunnersForEntitiesGrid as jest.Mock).mockReturnValue(mockedEntityData);
+  test('should return APPLICATION_TYPE_SCHEMA entities', async () => {
+    api.applicationRunnersApi.getApplicationSchemesList.mockResolvedValue(['runner1']);
+    entityUtils.getRunnersForEntitiesGrid.mockReturnValue(mockedEntityData);
 
-    const result = await getEntities(ExportComponentType.APPLICATION_TYPE_SCHEMA);
+    const result = await getEntities(EntityType.APPLICATION_TYPE_SCHEMA);
     expect(result).toEqual(mockedEntityData);
   });
 
-  it('should return INTERCEPTOR entities', async () => {
-    (api.interceptorsApi.getInterceptorsList as jest.Mock).mockResolvedValue(['int1']);
-    (entityUtils.getInterceptorsForEntitiesGrid as jest.Mock).mockReturnValue(mockedEntityData);
+  test('should return INTERCEPTOR entities', async () => {
+    api.interceptorsApi.getInterceptorsList.mockResolvedValue(['int1']);
+    entityUtils.getInterceptorsForEntitiesGrid.mockReturnValue(mockedEntityData);
 
-    const result = await getEntities(ExportComponentType.INTERCEPTOR);
+    const result = await getEntities(EntityType.INTERCEPTOR);
     expect(result).toEqual(mockedEntityData);
   });
 
-  it('should return empty array for unknown type', async () => {
+  test('should return empty array for unknown type', async () => {
     const result = await getEntities('UNKNOWN');
     expect(result).toEqual([]);
   });

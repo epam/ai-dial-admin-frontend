@@ -1,8 +1,9 @@
 import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { describe, expect, test } from 'vitest';
 import RangePicker from './RangePicker';
 
 describe('Common components - RangePicker', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const { baseElement } = renderWithContext(
       <RangePicker timeRange={{ endDate: new Date(), startDate: new Date() }} onChange={() => void 0} />,
     );
@@ -10,7 +11,7 @@ describe('Common components - RangePicker', () => {
     expect(baseElement).toBeTruthy();
   });
 
-  it('Should render successfully with empty time range', () => {
+  test('Should render successfully with empty time range', () => {
     const { baseElement } = renderWithContext(<RangePicker timeRange={null} onChange={() => void 0} />);
 
     expect(baseElement).toBeTruthy();

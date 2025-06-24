@@ -1,13 +1,14 @@
 import { render } from '@testing-library/react';
 import AddEntitiesView from '../AddEntitiesView';
+import { describe, expect, test, vi } from 'vitest';
 
-const mockFunction = jest.fn();
+const mockFunction = vi.fn();
 
 const formatEntity = () => {
   return [];
 };
 describe('RolesView - Entities', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const { baseElement } = render(
       <AddEntitiesView
         addons={[]}

@@ -10,21 +10,25 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { logger } from '@/src/server/logger';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import Page403 from '@/src/components/Page403/Page403';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page(params: { params: Promise<{ id: string }> }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
-  let assistants: DialAssistant[] = [];
+  let assistants: DialAssistant[] | null = [];
   let assistant: DialAssistant | null = null;
 
-  let roles: DialRole[] = [];
+  let roles: DialRole[] | null = [];
 
   try {
-    assistants = (await assistantsApi.getAssistantsList(token)) || [];
+    assistants = await assistantsApi.getAssistantsList(token);
     assistant = await assistantsApi.getAssistant(decodeURIComponent((await params.params).id), token);
-    roles = (await rolesApi.getRolesList(token)) || [];
+    roles = await rolesApi.getRolesList(token);
+    if (assistants === void 0 || assistants === void 0 || assistants === void 0) {
+      return <Page403 />;
+    }
   } catch (e) {
     logger.error('Getting assistant view data error', e);
   }
@@ -36,7 +40,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   return (
     <EntityView
       view={ApplicationRoute.Assistants}
-      names={assistants.map((model) => model.displayName || '')}
+      names={assistants?.map((model) => model.displayName || '') || []}
       roles={roles}
       originalEntity={assistant}
       removeEntity={removeAssistant}

@@ -1,4 +1,5 @@
-import fetch from 'jest-fetch-mock';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
 import {
   createModel,
   getModelsAdapters,
@@ -8,12 +9,15 @@ import {
   updateModel,
 } from './actions';
 
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
+
 describe('Models :: server actions', () => {
   beforeEach(() => {
     fetch.resetMocks();
   });
 
-  it('Should call get models topics', async () => {
+  test('Should call get models topics', async () => {
     fetch.mockResponseOnce(JSON.stringify({ data: 'response' }));
     getModelsTopics().then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -23,7 +27,7 @@ describe('Models :: server actions', () => {
     });
   });
 
-  it('Should call get models tokenizers', async () => {
+  test('Should call get models tokenizers', async () => {
     fetch.mockResponseOnce(JSON.stringify({ data: 'response' }));
     getModelsTokenizers().then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -33,7 +37,7 @@ describe('Models :: server actions', () => {
     });
   });
 
-  it('Should call get models adapters', async () => {
+  test('Should call get models adapters', async () => {
     fetch.mockResponseOnce(JSON.stringify({ data: 'response' }));
     getModelsAdapters().then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -43,7 +47,7 @@ describe('Models :: server actions', () => {
     });
   });
 
-  it('Should call remove model', async () => {
+  test('Should call remove model', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     removeModel('model').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -53,7 +57,7 @@ describe('Models :: server actions', () => {
     });
   });
 
-  it('Should call create model', async () => {
+  test('Should call create model', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     createModel({ name: 'model' }).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -63,7 +67,7 @@ describe('Models :: server actions', () => {
     });
   });
 
-  it('Should call update model', async () => {
+  test('Should call update model', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     updateModel({}).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);

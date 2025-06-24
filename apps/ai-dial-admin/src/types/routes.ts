@@ -20,4 +20,5 @@ export enum ApplicationRoute {
   ExportConfig = '/export-config',
   FoldersStorage = '/folders-storage',
   ActivityAudit = '/activity-audit',
+  Forbidden = '/forbidden',
 }

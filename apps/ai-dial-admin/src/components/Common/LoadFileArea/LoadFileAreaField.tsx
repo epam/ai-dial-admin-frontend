@@ -10,7 +10,6 @@ import LoadFileArea, { LoadFileAreaProps } from './LoadFileArea';
 
 interface LoadFileAreaFieldProps extends LoadFileAreaProps {
   fieldTitle: string;
-  isMultiple?: boolean;
   elementId: string;
 }
 
@@ -19,6 +18,9 @@ const LoadFileAreaField: FC<LoadFileAreaFieldProps> = ({
   fieldTitle,
   elementId,
   files,
+  maxFilesCount,
+  fileFormatError,
+  fileCountError,
   isMultiple = true,
   acceptTypes,
   ...props
@@ -32,22 +34,38 @@ const LoadFileAreaField: FC<LoadFileAreaFieldProps> = ({
     onChangeFile([]);
   };
 
+  const getIsFileFormatError = useCallback(
+    (fileItems: File[] | DataTransferItem[]) => {
+      return fileItems?.some(
+        (fileItem) =>
+          fileItem.type === '' ||
+          !(acceptTypes === '/' || acceptTypes?.toLowerCase()?.includes(fileItem?.type?.toLowerCase())),
+      );
+    },
+    [acceptTypes],
+  );
+
   const onFileChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
-      const selectedFiles = e.target.files;
-      if (selectedFiles && selectedFiles.length > 0) {
-        onChangeFile([...(files || []), ...Array.from(selectedFiles)]);
+      const filesList = e.target.files;
+      if (filesList && filesList.length > 0) {
+        const selectedFiles = Array.from(filesList);
+        const isFileFormatError = getIsFileFormatError(selectedFiles);
+
+        if (!isFileFormatError) {
+          onChangeFile([...(files || []), ...selectedFiles]);
+        }
       }
     },
-    [onChangeFile, files],
+    [onChangeFile, files, getIsFileFormatError],
   );
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex justify-between items-center pb-1">
+      <div className="flex justify-between items-center pb-1 min-h-[42px]">
         <Field fieldTitle={`${fieldTitle}: ${isMultiple ? files?.length || 0 : ''}`} htmlFor={elementId} />
         {isMultiple && !!files?.length && (
-          <div className="flex flex-row items-center gap-x-3">
+          <div className="flex flex-row items-center gap-x-2">
             <Button
               cssClass="tertiary text-error"
               iconBefore={<IconTrashX {...BASE_ICON_PROPS} />}
@@ -55,17 +73,39 @@ const LoadFileAreaField: FC<LoadFileAreaFieldProps> = ({
               onClick={onRemoveFiles}
             />
 
-            <Button
-              cssClass="tertiary"
-              iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-              title={t(ButtonsI18nKey.Add)}
-              onClick={onAddFiles}
-            />
+            {(maxFilesCount ? maxFilesCount > files?.length : true) && (
+              <Button
+                cssClass="tertiary"
+                iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+                title={t(ButtonsI18nKey.Add)}
+                onClick={onAddFiles}
+              />
+            )}
           </div>
         )}
       </div>
-      <input id="file" type="file" ref={fileInputRef} hidden accept={acceptTypes} onChange={onFileChange} />
-      <LoadFileArea files={files} onChangeFile={onChangeFile} acceptTypes={acceptTypes} {...props} />
+      {files && files.length > 0 && (
+        <input
+          id="file"
+          type="file"
+          multiple={isMultiple}
+          ref={fileInputRef}
+          hidden
+          accept={acceptTypes}
+          onChange={onFileChange}
+        />
+      )}
+      <LoadFileArea
+        files={files}
+        onChangeFile={onChangeFile}
+        acceptTypes={acceptTypes}
+        maxFilesCount={maxFilesCount}
+        isMultiple={isMultiple}
+        fileFormatError={fileFormatError}
+        fileCountError={fileCountError}
+        getIsFileFormatError={getIsFileFormatError}
+        {...props}
+      />
     </div>
   );
 };

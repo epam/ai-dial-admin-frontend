@@ -7,16 +7,3 @@ export enum ExportFormat {
   CORE = 'CORE',
   ADMIN = 'ADMIN',
 }
-
-export enum ExportComponentType {
-  ENTITIES = 'ENTITIES',
-  MODEL = 'MODEL',
-  APPLICATION = 'APPLICATION',
-  ROUTE = 'ROUTE',
-  ROLE = 'ROLE',
-  KEY = 'KEY',
-  INTERCEPTOR = 'INTERCEPTOR',
-  APPLICATION_TYPE_SCHEMA = 'APPLICATION_TYPE_SCHEMA',
-  PROMPT = 'PROMPT',
-  FILE = 'FILE',
-}

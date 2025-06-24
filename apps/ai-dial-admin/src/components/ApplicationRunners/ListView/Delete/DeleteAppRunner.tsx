@@ -2,7 +2,7 @@ import { FC, useEffect, useState } from 'react';
 
 import { getApplications } from '@/src/app/[lang]/applications/actions';
 import Loader from '@/src/components/Common/Loader/Loader';
-import { SIMPLE_VERSION_COLUMNS } from '@/src/components/EntityListView/entity-list-view';
+import { SIMPLE_VERSION_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import Grid from '@/src/components/Grid/Grid';
 import { DeleteI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';

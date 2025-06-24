@@ -1,5 +1,5 @@
 import { getNameExtensionFromFile } from '@/src/components/FilesList/files-list';
-import EditableCellRenderer from '@/src/components/Grid/CellRenderer/EditableCellRenderer';
+import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import {
   generateNameVersionForPrompt,
   getNameVersionFromPrompt,
@@ -11,13 +11,14 @@ import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { ImportResult } from '@/src/models/import';
-import { ImportStatus } from '@/src/types/import';
 import { Notification } from '@/src/models/notification';
 import { ParsedPrompts, PromptImportGridData } from '@/src/models/prompts';
 import { StepStatus } from '@/src/models/step';
+import { ImportStatus } from '@/src/types/import';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { ColDef } from 'ag-grid-community';
+import { ColDef, ICellRendererParams } from 'ag-grid-community';
+import FileNameCellRenderer from '@/src/components/Grid/CellRenderers/FileNameCellRenderer';
 
 /**
  * Generate notifications with results of JSON prompt results
@@ -102,22 +103,36 @@ export const getMultipleImportStatus = (map: Map<string, FileImportMap>): StepSt
 export const generatePromptRowDataForImportGrid = (
   editedFileMap: Map<string, FileImportMap>,
   existingPrompts?: DialPrompt[],
+  t?: (t: string) => string,
 ): PromptImportGridData[] => {
   const data: PromptImportGridData[] = [];
 
   editedFileMap.forEach((value, key) => {
-    value.files.forEach((file, index) => {
-      const fullName = getFolderNameAndPath(file.id as string).name;
-      const { name: promptName, version } = getNameVersionFromPrompt(fullName);
+    const { extension } = getNameExtensionFromFile(key);
+    if (!value.isInvalid) {
+      value.files.forEach((file, index) => {
+        const fullName = getFolderNameAndPath(file.id as string).name;
+        const { name: promptName, version } = getNameVersionFromPrompt(fullName);
 
-      data.push({
-        index,
-        name: key,
-        version,
-        promptName,
-        existingNames: existingPrompts?.map((p) => getFolderNameAndPath(p.path).name),
+        data.push({
+          index,
+          name: key,
+          version,
+          promptName,
+          existingNames: existingPrompts?.map((p) => getFolderNameAndPath(p.path).name),
+          extension,
+        });
       });
-    });
+    } else {
+      data.push({
+        index: 0,
+        name: key,
+        version: '',
+        promptName: t?.(ImportI18nKey.ImportPromptError) || '',
+        invalid: true,
+        extension,
+      });
+    }
   });
 
   return data;
@@ -133,21 +148,32 @@ export const generatePromptRowDataForImportGrid = (
 export const generateFileRowDataForImportGrid = (
   filesMap: Map<string, FileImportMap>,
   existingFiles?: DialFile[],
+  t?: (t: string) => string,
 ): FileImportGridData[] => {
   const data: FileImportGridData[] = [];
 
   filesMap.forEach((value, key) => {
-    value.files.forEach((file, index) => {
-      const name = file.name as string;
-      const { name: fileName, extension } = getNameExtensionFromFile(name);
-      data.push({
-        index,
-        name: key,
-        extension,
-        fileName: fileName,
-        existingNames: existingFiles?.map((f) => f.name as string),
+    if (!value.isInvalid) {
+      value.files.forEach((file, index) => {
+        const name = file.name as string;
+        const { name: fileName, extension } = getNameExtensionFromFile(name);
+        data.push({
+          index,
+          name: key,
+          extension,
+          fileName: fileName,
+          existingNames: existingFiles?.map((f) => f.name as string),
+        });
       });
-    });
+    } else {
+      data.push({
+        index: 0,
+        name: key,
+        fileName: t?.(ImportI18nKey.ImportFileError) || '',
+        invalid: true,
+        extension: '',
+      });
+    }
   });
   return data;
 };
@@ -160,13 +186,21 @@ export const generateFileRowDataForImportGrid = (
  */
 export const generatePromptColumnsForImportGrid = (
   onChange: (value: string, data: unknown, field: string) => void,
+  withIcon?: boolean,
+  readonly?: boolean,
 ): ColDef[] => {
   return [
     {
       headerName: 'Name',
       field: 'promptName',
       cellClass: NO_BORDER_CLASS,
-      cellRenderer: EditableCellRenderer,
+      cellRendererSelector: (params: ICellRendererParams) => {
+        if (!params.data.invalid && !readonly) {
+          return { component: EditableCellRenderer };
+        } else {
+          return void 0;
+        }
+      },
       cellRendererParams: {
         onChange,
       },
@@ -175,7 +209,13 @@ export const generatePromptColumnsForImportGrid = (
       headerName: 'Version',
       field: 'version',
       cellClass: NO_BORDER_CLASS,
-      cellRenderer: EditableCellRenderer,
+      cellRendererSelector: (params: ICellRendererParams) => {
+        if (!params.data.invalid && !readonly) {
+          return { component: EditableCellRenderer };
+        } else {
+          return void 0;
+        }
+      },
       cellRendererParams: {
         onChange,
       },
@@ -183,6 +223,13 @@ export const generatePromptColumnsForImportGrid = (
     {
       headerName: 'File',
       field: 'name',
+      cellRendererSelector: () => {
+        if (withIcon) {
+          return { component: FileNameCellRenderer };
+        } else {
+          return void 0;
+        }
+      },
     },
   ];
 };
@@ -195,13 +242,21 @@ export const generatePromptColumnsForImportGrid = (
  */
 export const generateFileColumnsForImportGrid = (
   onChange: (value: string, key: string, field: string) => void,
+  withIcon?: boolean,
+  readonly?: boolean,
 ): ColDef[] => {
   return [
     {
       headerName: 'Name',
       field: 'fileName',
       cellClass: NO_BORDER_CLASS,
-      cellRenderer: EditableCellRenderer,
+      cellRendererSelector: (params: ICellRendererParams) => {
+        if (!params.data.invalid && !readonly) {
+          return { component: EditableCellRenderer };
+        } else {
+          return void 0;
+        }
+      },
       cellRendererParams: {
         onChange,
       },
@@ -209,6 +264,13 @@ export const generateFileColumnsForImportGrid = (
     {
       headerName: 'File',
       field: 'name',
+      cellRendererSelector: () => {
+        if (withIcon) {
+          return { component: FileNameCellRenderer };
+        } else {
+          return void 0;
+        }
+      },
     },
   ];
 };

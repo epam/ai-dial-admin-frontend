@@ -4,7 +4,6 @@ import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 
 import FolderList from '@/src/components/Common/FolderList/FolderList';
 import GridWithColumnsPanel from '@/src/components/Grid/GridWithColumnsPanel/GridWithColumnsPanel';
-import { ACTION_COLUMN_COMPONENTS } from '@/src/constants/ag-grid';
 import { FileFolderContextType } from '@/src/context/FileFolderContext';
 import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -49,14 +48,13 @@ const ListView = <T extends object>({
       <div className="flex flex-1 min-h-0 gap-4">
         {showFolders && (
           <div className="w-[320px] bg-layer-3 rounded p-4 flex-shrink-0 flex">
-            <FolderList context={context} />
+            <FolderList context={context} view={view} />
           </div>
         )}
         <GridWithColumnsPanel
           columnDefs={columnDefs}
           data={data}
           additionalGridOptions={{
-            ...ACTION_COLUMN_COMPONENTS,
             ...additionalGridOptions,
           }}
           emptyDataTitle={emptyDataTitle}

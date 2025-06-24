@@ -21,3 +21,13 @@ export async function updateRules(targetFolder: string, rules: DialRule[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return foldersApi.updateRules(token, targetFolder, rules);
 }
+
+export async function createFolderWithFiles(body: FormData, type?: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return foldersApi.createFolder(token, body, type);
+}
+
+export async function previewPromptZip(body: FormData) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return foldersApi.previewPromptZipFiles(token, body);
+}

@@ -1,17 +1,17 @@
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { isMediumScreen, isOnlyMediumScreen, isSmallScreen } from '../mobile';
-
 describe('Utils :: window size', () => {
   let windowSpy;
 
   beforeEach(() => {
-    windowSpy = jest.spyOn(window, 'window', 'get');
+    windowSpy = vi.spyOn(window, 'window', 'get');
   });
 
   afterEach(() => {
     windowSpy.mockRestore();
   });
 
-  it('Should set is Small Screen true and is Medium false', () => {
+  test('Should set is Small Screen true and is Medium false', () => {
     windowSpy.mockImplementation(() => ({
       innerWidth: 300,
     }));
@@ -21,7 +21,7 @@ describe('Utils :: window size', () => {
     expect(isOnlyMediumScreen()).toBeFalsy();
   });
 
-  it('Should set is Small Screen false and is Medium true', () => {
+  test('Should set is Small Screen false and is Medium true', () => {
     windowSpy.mockImplementation(() => ({
       innerWidth: 700,
     }));
@@ -31,7 +31,7 @@ describe('Utils :: window size', () => {
     expect(isOnlyMediumScreen()).toBeTruthy();
   });
 
-  it('Should set is Small Screen false and is Medium false', () => {
+  test('Should set is Small Screen false and is Medium false', () => {
     windowSpy.mockImplementation(() => ({
       innerWidth: 1960,
     }));

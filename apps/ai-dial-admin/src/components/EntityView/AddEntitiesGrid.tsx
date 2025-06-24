@@ -10,6 +10,7 @@ import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
+import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props<T> {
   modalState: PopUpState;
@@ -21,13 +22,8 @@ interface Props<T> {
   onApply: (entities: T[]) => void;
 }
 
-const defaultColumnDefs: ColDef[] = [
-  { headerName: 'Name', field: 'name' },
-  { headerName: 'Description', field: 'description' },
-];
-
 const AddEntitiesGrid = <T extends object>({
-  columnDefs = defaultColumnDefs,
+  columnDefs = SIMPLE_ENTITY_COLUMNS,
   modalState,
   modalTitle,
   emptyTitle,

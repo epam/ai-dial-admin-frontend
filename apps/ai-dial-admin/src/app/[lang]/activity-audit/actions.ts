@@ -16,3 +16,13 @@ export async function getRevisionDetails(url: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return activityAuditApi.getRevisionDetails(url, token);
 }
+
+export async function getEntitiesForRevision(url: string, revision?: number) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return activityAuditApi.getEntitiesForRevision(`${url}${revision}`, token);
+}
+
+export async function systemRollbackToRevision(revision?: number) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return activityAuditApi.rollbackToRevision(revision, token);
+}

@@ -1,8 +1,8 @@
 import { FC, useCallback } from 'react';
 import { GridApi, IRowNode } from 'ag-grid-community';
-import { FILES_COLUMNS, getEntityPath } from '@/src/components/EntityListView/entity-list-view';
+import { getEntityPath } from '@/src/components/EntityListView/entity-list-view';
+import { FILES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { DialFile } from '@/src/models/dial/file';
-import { ACTION_COLUMN_COMPONENTS } from '@/src/constants/ag-grid';
 import { ActionType } from '@/src/models/dial/publications';
 import Grid from '@/src/components/Grid/Grid';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -12,7 +12,7 @@ import {
   getDownloadOperation,
   getOpenInNewTabOperation,
   getPreviewOperation,
-} from '@/src/utils/entities/entity-operations';
+} from '@/src/constants/grid-columns/actions';
 
 interface Props {
   files: Partial<DialFile>[];
@@ -52,13 +52,7 @@ const FilesList: FC<Props> = ({ files, action }) => {
 
   return (
     <div data-testid="publication-files-list-grid">
-      <Grid
-        columnDefs={columnDefs}
-        rowData={rowData}
-        additionalGridOptions={{
-          ...ACTION_COLUMN_COMPONENTS,
-        }}
-      />
+      <Grid columnDefs={columnDefs} rowData={rowData} />
     </div>
   );
 };

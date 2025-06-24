@@ -1,13 +1,13 @@
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { TabModel } from '@/src/models/tab';
-import { ExportComponentType } from '@/src/types/export';
 import {
   getApplicationsForEntitiesGrid,
   getModelsForEntitiesGrid,
   getRoutesForEntitiesGrid,
 } from '@/src/utils/entities/entities-list-view';
 import { DialModel } from '@/src/models/dial/model';
+import { EntityType } from '@/src/types/entity-type';
 
 /**
  * Get converted data and tabs for export preview
@@ -27,49 +27,49 @@ export const getPreviewTabs = (
   Object.keys(data).forEach((key) => {
     if (data[key].length > 0) {
       if (key === 'roles') {
-        convertedData[ExportComponentType.ROLE] = data[key];
+        convertedData[EntityType.ROLE] = data[key];
         tabs.push({
-          id: ExportComponentType.ROLE,
+          id: EntityType.ROLE,
           name: `${t(MenuI18nKey.Roles)}: ${data[key].length}`,
         });
       }
 
       if (key === 'keys') {
-        convertedData[ExportComponentType.KEY] = data[key];
+        convertedData[EntityType.KEY] = data[key];
         tabs.push({
-          id: ExportComponentType.KEY,
+          id: EntityType.KEY,
           name: `${t(MenuI18nKey.Keys)}: ${data[key].length}`,
         });
       }
 
       if (key === 'applicationRunners') {
-        convertedData[ExportComponentType.APPLICATION_TYPE_SCHEMA] = data[key];
+        convertedData[EntityType.APPLICATION_TYPE_SCHEMA] = data[key];
         tabs.push({
-          id: ExportComponentType.APPLICATION_TYPE_SCHEMA,
+          id: EntityType.APPLICATION_TYPE_SCHEMA,
           name: `${t(MenuI18nKey.ApplicationRunners)}: ${data[key].length}`,
         });
       }
 
       if (key === 'interceptors') {
-        convertedData[ExportComponentType.INTERCEPTOR] = data[key];
+        convertedData[EntityType.INTERCEPTOR] = data[key];
         tabs.push({
-          id: ExportComponentType.INTERCEPTOR,
+          id: EntityType.INTERCEPTOR,
           name: `${t(MenuI18nKey.Interceptors)}: ${data[key].length}`,
         });
       }
 
       if (key === 'prompts') {
-        convertedData[ExportComponentType.PROMPT] = data[key];
+        convertedData[EntityType.PROMPT] = data[key];
         tabs.push({
-          id: ExportComponentType.PROMPT,
+          id: EntityType.PROMPT,
           name: `${t(MenuI18nKey.Prompts)}: ${data[key].length}`,
         });
       }
 
       if (key === 'files') {
-        convertedData[ExportComponentType.FILE] = data[key];
+        convertedData[EntityType.FILE] = data[key];
         tabs.push({
-          id: ExportComponentType.FILE,
+          id: EntityType.FILE,
           name: `${t(MenuI18nKey.Files)}: ${data[key].length}`,
         });
       }
@@ -89,9 +89,9 @@ export const getPreviewTabs = (
   });
 
   if (allEntities.length > 0) {
-    convertedData[ExportComponentType.ENTITIES] = allEntities;
+    convertedData[EntityType.ENTITIES] = allEntities;
     tabs.unshift({
-      id: ExportComponentType.ENTITIES,
+      id: EntityType.ENTITIES,
       name: `${t(MenuI18nKey.Entities)}: ${allEntities.length}`,
     });
   }

@@ -2,7 +2,7 @@
 import { FC } from 'react';
 
 import { createKey, removeKey } from '@/src/app/[lang]/keys/actions';
-import { KEY_ENTITY_COLUMNS } from '@/src/components/EntityListView/entity-list-view';
+import { KEY_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { DialKey } from '@/src/models/dial/key';
 import { ApplicationRoute } from '@/src/types/routes';

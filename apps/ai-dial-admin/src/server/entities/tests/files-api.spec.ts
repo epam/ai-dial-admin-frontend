@@ -1,8 +1,12 @@
 import { DialFile } from '@/src/models/dial/file';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import fetch from 'jest-fetch-mock';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
 import { FILES_URL, FilesApi } from '../files-api';
+
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
 
 describe('Server :: FilesApi', () => {
   const instance = new FilesApi({ host: TEST_URL });
@@ -11,7 +15,7 @@ describe('Server :: FilesApi', () => {
     fetch.resetMocks();
   });
 
-  it('Should calls getFilesList and returns list of files', async () => {
+  test('Should calls getFilesList and returns list of files', async () => {
     const mockFiles: DialFile[] = [{ name: 'file1' }, { name: 'file2' }] as DialFile[];
 
     fetchMock.mockResponseOnce(JSON.stringify({ items: mockFiles }));
@@ -27,7 +31,7 @@ describe('Server :: FilesApi', () => {
     );
   });
 
-  it('Should calls removeFile and sends DELETE request and returns ServerActionResponse', async () => {
+  test('Should calls removeFile and sends DELETE request and returns ServerActionResponse', async () => {
     const mockResponse: ServerActionResponse = { success: true };
     fetchMock.mockResponseOnce(JSON.stringify(mockResponse));
 
@@ -39,7 +43,7 @@ describe('Server :: FilesApi', () => {
     );
   });
 
-  it('Should calls moveFiles and sends POST requests and returns ServerActionResponses', async () => {
+  test('Should calls moveFiles and sends POST requests and returns ServerActionResponses', async () => {
     const mockResponse: ServerActionResponse = { success: true };
     fetchMock.mockResponse(JSON.stringify(mockResponse));
 

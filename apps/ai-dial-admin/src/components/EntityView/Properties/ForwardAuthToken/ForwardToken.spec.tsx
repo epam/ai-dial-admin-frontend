@@ -1,17 +1,18 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { render } from '@testing-library/react';
 import ForwardAuthTokenField from './ForwardAuthTokenField';
+import { describe, expect, test, vi } from 'vitest';
 
-jest.mock('@/src/context/AppContext', () => ({
-  useAppContext: jest.fn(() => {
-    return { sidebarOpen: true, toggleSidebar: jest.fn() };
+vi.mock('@/src/context/AppContext', () => ({
+  useAppContext: vi.fn(() => {
+    return { sidebarOpen: true, toggleSidebar: vi.fn() };
   }),
 }));
 
-const mockFunction = jest.fn();
+const mockFunction = vi.fn();
 
 describe('ForwardToken :: ForwardAuthTokenField', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const { baseElement } = render(
       <ForwardAuthTokenField
         entity={{ name: 'entity', forwardAuthToken: true }}
@@ -22,7 +23,7 @@ describe('ForwardToken :: ForwardAuthTokenField', () => {
     expect(baseElement).toBeTruthy();
   });
 
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const { baseElement } = render(
       <ForwardAuthTokenField
         entity={{ name: 'entity', forwardAuthToken: true }}

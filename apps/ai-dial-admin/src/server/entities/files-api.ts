@@ -5,7 +5,7 @@ import { BaseApi } from '../base-api';
 import { DialFile } from '@/src/models/dial/file';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { changePath, getFolderNameAndPath } from '@/src/utils/files/path';
-import { ImportFileTypes } from '@/src/types/import';
+import { ImportFileType } from '@/src/types/import';
 import { getFileName } from '@/src/utils/api/get-file-name';
 
 export const FILES_URL = `${API}/files`;
@@ -16,8 +16,10 @@ export const FILE_IMPORT_URL = `${FILES_URL}/import`;
 export const FILE_IMPORT_ZIP_URL = `${FILE_IMPORT_URL}/zip`;
 
 export class FilesApi extends BaseApi {
-  getFilesList(token: JWT | null, path: string): Promise<DialFile[] | null> {
-    return this.post(FILES_URL, { path }, token).then((response) => (response as { items: DialFile[] })?.items || []);
+  getFilesList(token: JWT | null, path: string): Promise<DialFile[] | null | undefined> {
+    return this.post(FILES_URL, { path }, token).then((response) =>
+      response === void 0 ? void 0 : (response as { items: DialFile[] })?.items || [],
+    );
   }
 
   removeFile(token: JWT | null, path?: string): Promise<ServerActionResponse> {
@@ -46,8 +48,8 @@ export class FilesApi extends BaseApi {
     return this.streamRequest(`${FILE_DOWNLOAD_URL}?path=${path}`, filename, token, true);
   }
 
-  importFiles(token: JWT | null, body: FormData, fileType: ImportFileTypes): Promise<ServerActionResponse> {
-    return this.postFiles(fileType === ImportFileTypes.ARCHIVE ? FILE_IMPORT_ZIP_URL : FILE_IMPORT_URL, body, token);
+  importFiles(token: JWT | null, body: FormData, fileType: ImportFileType): Promise<ServerActionResponse> {
+    return this.postFiles(fileType === ImportFileType.ARCHIVE ? FILE_IMPORT_ZIP_URL : FILE_IMPORT_URL, body, token);
   }
 
   exportFiles(token: JWT | null, paths?: string[]): Promise<{ blob: Blob; fileName: string }> {

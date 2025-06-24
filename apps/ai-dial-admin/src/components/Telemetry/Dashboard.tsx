@@ -2,13 +2,8 @@ import React, { FC, useCallback, useState } from 'react';
 import LineChart from '@/src/components/Charts/LineChart/LineChart';
 import SingleValueChartsDashboard from '@/src/components/Charts/SingleValueChart/SingleValueChartsDashboard';
 import TelemetryGrid from '@/src/components/Telemetry/TelemetryGrid';
-import {
-  DEFAULT_REFRESH_TIME,
-  ENTITY_CONSUMPTION_QUERY,
-  PROJECT_CONSUMPTION_QUERY,
-  PROJECT_GRID_COLUMNS,
-  TELEMETRY_GRID_COLUMNS,
-} from '@/src/constants/telemetry';
+import { DEFAULT_REFRESH_TIME, ENTITY_CONSUMPTION_QUERY, PROJECT_CONSUMPTION_QUERY } from '@/src/constants/telemetry';
+import { PROJECT_GRID_COLUMNS, TELEMETRY_GRID_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
 import { TimeRange } from '@/src/models/time-range';

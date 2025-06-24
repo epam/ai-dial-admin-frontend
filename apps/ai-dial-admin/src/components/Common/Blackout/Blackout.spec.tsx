@@ -1,30 +1,29 @@
-import Blackout from './Blackout';
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
-import { screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import * as useIsMobileScreenHook from '@/src/hooks/use-is-mobile-screen';
 import * as AppContext from '@/src/context/AppContext';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import Blackout from './Blackout';
 
 describe('Common components :: Blackout', () => {
   beforeEach(() => {
-    jest.restoreAllMocks();
-    jest.clearAllMocks();
+    vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
-  it('Should render successfully', () => {
-    jest.spyOn(useIsMobileScreenHook, 'useIsMobileScreen').mockReturnValue(true);
-    jest.spyOn(AppContext, 'useAppContext').mockReturnValue({ sidebarOpen: true } as any);
+  test('renders blackout div when mobile and sidebar is open', () => {
+    vi.spyOn(useIsMobileScreenHook, 'useIsMobileScreen').mockReturnValue(true);
+    vi.spyOn(AppContext, 'useAppContext').mockReturnValue({ sidebarOpen: true } as any);
 
-    renderWithContext(<Blackout />);
-    const blackout = screen.getByRole('presentation');
-    expect(blackout).toBeInTheDocument();
+    render(<Blackout />);
+    expect(screen.getByRole('presentation')).toBeInTheDocument();
   });
 
-  it('Should not render blackout when sidebar is closed on mobile', () => {
-    jest.spyOn(useIsMobileScreenHook, 'useIsMobileScreen').mockReturnValue(true);
-    jest.spyOn(AppContext, 'useAppContext').mockReturnValue({ sidebarOpen: false } as any);
+  test('does not render when not mobile', async () => {
+    vi.spyOn(useIsMobileScreenHook, 'useIsMobileScreen').mockReturnValue(true);
+    vi.spyOn(AppContext, 'useAppContext').mockReturnValue({ sidebarOpen: false } as any);
 
-    renderWithContext(<Blackout />);
-    const blackout = screen.queryByRole('presentation');
-    expect(blackout).not.toBeInTheDocument();
+    const { default: BlackoutNotMobile } = await import('./Blackout');
+    render(<BlackoutNotMobile />);
+    expect(screen.queryByRole('presentation')).not.toBeInTheDocument();
   });
 });

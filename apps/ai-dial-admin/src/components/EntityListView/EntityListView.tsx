@@ -28,7 +28,8 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { prepareEntityForDuplicate } from '@/src/utils/entities/prepare-entity-for-duplicate';
 import { getListOfPathsToMove } from '@/src/utils/files/path';
 import { getErrorNotification } from '@/src/utils/notification';
-import { emptyDataTitleMap, ENTITIES_COLUMNS, getEntityPath, listViewTitleMap } from './entity-list-view';
+import { emptyDataTitleMap, getEntityPath, listViewTitleMap } from './entity-list-view';
+import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import EntityListModals, { ModalType } from './EntityListModals';
 import EntityListHeaderButtons from './HeaderButtons/EntityListHeaderButtons';
 

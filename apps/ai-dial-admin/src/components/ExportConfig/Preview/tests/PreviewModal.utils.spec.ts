@@ -1,23 +1,24 @@
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { ExportComponentType } from '@/src/types/export';
 import * as entitiesUtils from '@/src/utils/entities/entities-list-view';
 import { getPreviewTabs } from '../PreviewModal.utils';
+import { EntityType } from '@/src/types/entity-type';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-jest.mock('@/src/utils/entities/entities-list-view');
+vi.mock('@/src/utils/entities/entities-list-view');
 
 const t = (key: string) => `translated(${key})`;
 
 describe('Export Config Utils :: getPreviewTabs', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
-  it('should return tabs and convertedData correctly with roles, keys, applicationRunners, and models', () => {
+  test('should return tabs and convertedData correctly with roles, keys, applicationRunners, and models', () => {
     const mockEntities: EntitiesGridData[] = [{ id: 'e1' }, { id: 'e2' }] as any;
 
-    (entitiesUtils.getApplicationsForEntitiesGrid as jest.Mock).mockReturnValue([]);
-    (entitiesUtils.getModelsForEntitiesGrid as jest.Mock).mockReturnValue(mockEntities);
-    (entitiesUtils.getRoutesForEntitiesGrid as jest.Mock).mockReturnValue([]);
+    (entitiesUtils.getApplicationsForEntitiesGrid as vi.Mock).mockReturnValue([]);
+    (entitiesUtils.getModelsForEntitiesGrid as vi.Mock).mockReturnValue(mockEntities);
+    (entitiesUtils.getRoutesForEntitiesGrid as vi.Mock).mockReturnValue([]);
 
     const data = {
       roles: [{ id: 'role1' }],
@@ -33,35 +34,35 @@ describe('Export Config Utils :: getPreviewTabs', () => {
 
     expect(tabs).toEqual([
       {
-        id: ExportComponentType.ENTITIES,
+        id: EntityType.ENTITIES,
         name: 'translated(Menu.Entities): 2',
       },
       {
-        id: ExportComponentType.ROLE,
+        id: EntityType.ROLE,
         name: 'translated(Menu.Roles): 1',
       },
       {
-        id: ExportComponentType.KEY,
+        id: EntityType.KEY,
         name: 'translated(Menu.Keys): 2',
       },
       {
-        id: ExportComponentType.APPLICATION_TYPE_SCHEMA,
+        id: EntityType.APPLICATION_TYPE_SCHEMA,
         name: 'translated(Menu.ApplicationRunners): 1',
       },
       {
-        id: ExportComponentType.PROMPT,
+        id: EntityType.PROMPT,
         name: 'translated(Menu.Prompts): 1',
       },
     ]);
 
-    expect(convertedData[ExportComponentType.ROLE]).toHaveLength(1);
-    expect(convertedData[ExportComponentType.APPLICATION_TYPE_SCHEMA]).toHaveLength(1);
-    expect(convertedData[ExportComponentType.PROMPT]).toHaveLength(1);
-    expect(convertedData[ExportComponentType.KEY]).toHaveLength(2);
-    expect(convertedData[ExportComponentType.ENTITIES]).toEqual(mockEntities);
+    expect(convertedData[EntityType.ROLE]).toHaveLength(1);
+    expect(convertedData[EntityType.APPLICATION_TYPE_SCHEMA]).toHaveLength(1);
+    expect(convertedData[EntityType.PROMPT]).toHaveLength(1);
+    expect(convertedData[EntityType.KEY]).toHaveLength(2);
+    expect(convertedData[EntityType.ENTITIES]).toEqual(mockEntities);
   });
 
-  it('should not add tabs for empty categories', () => {
+  test('should not add tabs for empty categories', () => {
     const data = {
       roles: [],
       applications: [],
@@ -69,9 +70,9 @@ describe('Export Config Utils :: getPreviewTabs', () => {
       routes: [],
     };
 
-    (entitiesUtils.getApplicationsForEntitiesGrid as jest.Mock).mockReturnValue([]);
-    (entitiesUtils.getModelsForEntitiesGrid as jest.Mock).mockReturnValue([]);
-    (entitiesUtils.getRoutesForEntitiesGrid as jest.Mock).mockReturnValue([]);
+    entitiesUtils.getApplicationsForEntitiesGrid.mockReturnValue([]);
+    entitiesUtils.getModelsForEntitiesGrid.mockReturnValue([]);
+    entitiesUtils.getRoutesForEntitiesGrid.mockReturnValue([]);
 
     const { tabs, convertedData } = getPreviewTabs(data, t);
 
@@ -79,7 +80,7 @@ describe('Export Config Utils :: getPreviewTabs', () => {
     expect(Object.keys(convertedData)).toHaveLength(0);
   });
 
-  it('should handle interceptors and files correctly', () => {
+  test('should handle interceptors and files correctly', () => {
     const data = {
       interceptors: [{ id: 'int1' }],
       files: [{ id: 'file1' }],
@@ -89,16 +90,16 @@ describe('Export Config Utils :: getPreviewTabs', () => {
 
     expect(tabs).toEqual([
       {
-        id: ExportComponentType.INTERCEPTOR,
+        id: EntityType.INTERCEPTOR,
         name: 'translated(Menu.Interceptors): 1',
       },
       {
-        id: ExportComponentType.FILE,
+        id: EntityType.FILE,
         name: 'translated(Menu.Files): 1',
       },
     ]);
 
-    expect(convertedData[ExportComponentType.INTERCEPTOR]).toHaveLength(1);
-    expect(convertedData[ExportComponentType.FILE]).toHaveLength(1);
+    expect(convertedData[EntityType.INTERCEPTOR]).toHaveLength(1);
+    expect(convertedData[EntityType.FILE]).toHaveLength(1);
   });
 });

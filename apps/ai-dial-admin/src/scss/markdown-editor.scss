@@ -1,25 +1,32 @@
 .react-mde {
   @apply border-primary !important;
   .mde-header {
-    @apply bg-layer-3 text-secondary;
+    @apply bg-transparent text-secondary border-b-primary;
     @apply border-b-primary;
-    @apply h-[52px];
+    @apply min-h-[34px];
+
     .mde-tabs button {
-      @apply text-primary;
+      @apply h-[24px];
+      @apply text-primary small;
       @apply px-2;
       &.selected {
         @apply bg-layer-2;
       }
     }
-    .mde-header-group .mde-header-item button {
-      @apply text-primary;
+
+    .mde-header-group {
+      @apply p-0;
+      .mde-header-item button {
+        @apply text-secondary;
+      }
     }
   }
   .mde-preview {
     @apply overflow-x-auto;
     @apply min-h-[250px] !important;
     @apply h-[250px];
-    ol, ul, {
+    ol,
+    ul {
       list-style: unset;
     }
     .mde-preview-content pre {

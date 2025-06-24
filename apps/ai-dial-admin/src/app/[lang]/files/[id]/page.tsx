@@ -5,6 +5,7 @@ import { getFiles } from '@/src/app/[lang]/files/actions';
 import { addTrailingSlash, getFolderNameAndPath } from '@/src/utils/files/path';
 import FileView from '@/src/components/FileView/FileView';
 import { logger } from '@/src/server/logger';
+import Page403 from '@/src/components/Page403/Page403';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +16,9 @@ export default async function Page(params: { searchParams: Promise<{ path: strin
     const fullPath = decodeURIComponent((await params.searchParams).path);
     const { name, path } = getFolderNameAndPath(fullPath);
     const files = await getFiles(addTrailingSlash(path));
+    if (files === void 0) {
+      return <Page403 />;
+    }
     file = files?.find((f) => f.name === name) as DialFile;
   } catch (e) {
     logger.error('Getting file view data error', e);

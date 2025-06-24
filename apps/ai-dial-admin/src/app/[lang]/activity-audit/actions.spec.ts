@@ -1,35 +1,38 @@
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { getActivities, getRevisionDetails } from './actions';
+import { getActivities, getEntitiesForRevision, getRevisionDetails, systemRollbackToRevision } from './actions';
 import { activityAuditApi } from '@/src/app/api/api';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-jest.mock('@/src/app/api/api', () => ({
+vi.mock('@/src/app/api/api', () => ({
   activityAuditApi: {
-    getActivitiesList: jest.fn(),
-    getRevisionDetails: jest.fn(),
+    getActivitiesList: vi.fn(),
+    getRevisionDetails: vi.fn(),
+    getEntitiesForRevision: vi.fn(),
+    rollbackToRevision: vi.fn(),
   },
 }));
 
-jest.mock('@/src/utils/auth/auth-request', () => ({
-  getUserToken: jest.fn(),
+vi.mock('@/src/utils/auth/auth-request', () => ({
+  getUserToken: vi.fn(),
 }));
 
-jest.mock('@/src/utils/env/get-auth-toggle', () => ({
-  getIsEnableAuthToggle: jest.fn(),
+vi.mock('@/src/utils/env/get-auth-toggle', () => ({
+  getIsEnableAuthToggle: vi.fn(),
 }));
 
 describe('Activity API Service', () => {
   const mockToken = 'mock-token';
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     getIsEnableAuthToggle.mockReturnValue(true);
     getUserToken.mockResolvedValue(mockToken);
   });
 
   describe('getActivities', () => {
-    it('should fetch activities with correct params', async () => {
+    test('should fetch activities with correct params', async () => {
       const pageSize = 10;
       const pageNumber = 2;
       const sorts = [{ field: 'date', direction: 'desc' }];
@@ -46,7 +49,7 @@ describe('Activity API Service', () => {
   });
 
   describe('getRevisionDetails', () => {
-    it('should fetch revision details with correct params', async () => {
+    test('should fetch revision details with correct params', async () => {
       const url = '/revisions/123';
       const mockResponse = { data: 'revision' };
 
@@ -55,6 +58,33 @@ describe('Activity API Service', () => {
       const result = await getRevisionDetails(url);
 
       expect(activityAuditApi.getRevisionDetails).toHaveBeenCalledWith(url, mockToken);
+      expect(result).toEqual(mockResponse);
+    });
+  });
+
+  describe('getEntitiesForRevision', () => {
+    test('should fetch entities for revision', async () => {
+      const url = '/revisions/';
+      const mockResponse = { data: 'revision' };
+
+      activityAuditApi.getEntitiesForRevision.mockResolvedValue(mockResponse);
+
+      const result = await getEntitiesForRevision(url, 1);
+
+      expect(activityAuditApi.getEntitiesForRevision).toHaveBeenCalledWith(`${url}1`, mockToken);
+      expect(result).toEqual(mockResponse);
+    });
+  });
+
+  describe('systemRollbackToRevision', () => {
+    test('should call system rollback', async () => {
+      const mockResponse = { data: 'revision' };
+
+      activityAuditApi.rollbackToRevision.mockResolvedValue(mockResponse);
+
+      const result = await systemRollbackToRevision(1);
+
+      expect(activityAuditApi.rollbackToRevision).toHaveBeenCalledWith(1, mockToken);
       expect(result).toEqual(mockResponse);
     });
   });

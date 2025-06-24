@@ -32,9 +32,10 @@ import { AgGridReact } from 'ag-grid-react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { ApplicationRoute } from '@/src/types/routes';
-import { baseColumnComparator } from './base-column-comparator';
+import { baseColumnComparator } from './comparators/base-column-comparator';
 import { getColumnsStateFromStorage, GridModel, saveColumnsStateToStorage } from './grid-columns';
 import { getRowHeight } from './grid-rows';
+import FloatingFilter from './FloatingFilter/FloatingFilterComponent';
 
 interface Props<T> {
   columnDefs?: ColDef[];
@@ -157,6 +158,7 @@ const Grid = <T extends object>({
           minWidth: 150,
           flex: 1,
           floatingFilter: true,
+          floatingFilterComponent: FloatingFilter,
           resizable: true,
           filter: 'agTextColumnFilter',
           filterParams: {

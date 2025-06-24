@@ -1,7 +1,7 @@
 import { FC } from 'react';
 
 import { createInterceptor, removeInterceptor } from '@/src/app/[lang]/interceptors/actions';
-import { SIMPLE_ENTITY_COLUMNS } from '@/src/components/EntityListView/entity-list-view';
+import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';

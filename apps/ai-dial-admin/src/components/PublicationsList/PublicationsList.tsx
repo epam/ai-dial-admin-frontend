@@ -1,9 +1,4 @@
-import {
-  emptyDataTitleMap,
-  getEntityPath,
-  getPublicationColumns,
-  listViewTitleMap,
-} from '@/src/components/EntityListView/entity-list-view';
+import { emptyDataTitleMap, getEntityPath, listViewTitleMap } from '@/src/components/EntityListView/entity-list-view';
 import { ApplicationRoute } from '@/src/types/routes';
 import ListView from '@/src/components/ListView/ListView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
@@ -12,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { GridOptions } from 'ag-grid-community';
 import { Publication } from '@/src/models/dial/publications';
 import { useCallback } from 'react';
+import { getPublicationColumns } from '@/src/constants/grid-columns/grid-columns';
 
 interface BasePublicationsListProps<T> {
   data: T[];

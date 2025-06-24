@@ -1,12 +1,13 @@
 import { isValueTruthy } from '../types';
+import { describe, expect, test } from 'vitest';
 
 describe('Utils :: isValueTruthy', () => {
-  it('Should return true', () => {
+  test('Should return true', () => {
     const result = isValueTruthy('true');
     expect(result).toBeTruthy();
   });
 
-  it('Should return false', () => {
+  test('Should return false', () => {
     const result = isValueTruthy('false');
     expect(result).toBeFalsy();
   });

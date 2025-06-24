@@ -1,8 +1,8 @@
-import { Dispatch, SetStateAction } from 'react';
-
 import { FileFolderContextType } from '@/src/context/FileFolderContext';
 import { DialFile } from '@/src/models/dial/file';
 import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { Dispatch, SetStateAction } from 'react';
+import { describe, expect, test } from 'vitest';
 import FolderList from './FolderList';
 
 const fakeContext = () => ({
@@ -18,7 +18,7 @@ const fakeContext = () => ({
 });
 
 describe('Common components - FolderList', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const context = fakeContext;
     const { baseElement, getByTestId } = renderWithContext(
       <FolderList context={context as () => FileFolderContextType} />,

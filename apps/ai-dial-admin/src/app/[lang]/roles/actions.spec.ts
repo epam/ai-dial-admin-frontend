@@ -1,12 +1,16 @@
-import fetch from 'jest-fetch-mock';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
 import { createRole, removeRole, updateRole } from './actions';
+
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
 
 describe('Roles :: server actions', () => {
   beforeEach(() => {
     fetch.resetMocks();
   });
 
-  it('Should call remove role', async () => {
+  test('Should call remove role', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     removeRole('role').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -16,7 +20,7 @@ describe('Roles :: server actions', () => {
     });
   });
 
-  it('Should call create role', async () => {
+  test('Should call create role', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     createRole({ name: 'role' }).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -26,7 +30,7 @@ describe('Roles :: server actions', () => {
     });
   });
 
-  it('Should call update role', async () => {
+  test('Should call update role', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     updateRole({}).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);

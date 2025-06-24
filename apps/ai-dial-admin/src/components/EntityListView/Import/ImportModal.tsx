@@ -4,13 +4,12 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import classNames from 'classnames';
 
-import ErrorText from '@/src/components/Common/ErrorText/ErrorText';
 import Popup from '@/src/components/Common/Popup/Popup';
 import Steps from '@/src/components/Common/Steps/Steps';
 import { getMultipleImportStatus, isInvalidJson, isLargeFile } from '@/src/components/EntityListView/Import/import';
-import { FoldersI18nKey, ImportI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
+import { FoldersI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { IMPORT_FILE_TYPES, IMPORT_RESOLUTIONS, IMPORT_STEPS } from '@/src/constants/import';
-import { APPLICATION_JSON_TYPE, APPLICATION_ZIP_TYPE } from '@/src/constants/request-headers';
+import { APPLICATION_ZIP_TYPE } from '@/src/constants/request-headers';
 import { FileFolderContextType } from '@/src/context/FileFolderContext';
 import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
@@ -19,20 +18,21 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportMap } from '@/src/models/file';
 import { ParsedPrompts } from '@/src/models/prompts';
 import { Step, StepStatus } from '@/src/models/step';
-import { ConflictResolutionPolicy, ImportFileTypes } from '@/src/types/import';
+import { ConflictResolutionPolicy, ImportFileType as FileType, ImportSteps } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
-import { ImportSteps } from '@/src/types/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import ImportConflicts from './ImportConflicts';
-import ImportFileType from './ImportFileType';
+import ImportFileTypeSelector from './ImportFileType';
 import ImportModalButtons from './ImportModalButtons';
+
+const MAX_FILES_COUNT = 30;
 
 interface Props {
   modalState: PopUpState;
   route?: ApplicationRoute;
   context?: () => PromptFolderContextType | FileFolderContextType;
   onClose: () => void;
-  onApply?: (fileType: ImportFileTypes, file: File | File[] | ParsedPrompts, resolution: string, path: string) => void;
+  onApply?: (fileType: FileType, file: File | File[] | ParsedPrompts, resolution: string, path: string) => void;
 }
 
 const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }) => {
@@ -57,8 +57,6 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
   const [editedFileMap, setEditedFileMap] = useState(new Map<string, FileImportMap>());
 
   const [separateFileMap, setSeparateFileMap] = useState(new Map<string, FileImportMap>());
-
-  const [importError, setImportError] = useState('');
 
   const readJsonFile = useCallback((file: File | null, urlToRemove?: string) => {
     if (file) {
@@ -107,7 +105,7 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
       });
       setResolutions(IMPORT_RESOLUTIONS(t, type));
       setFileType(type);
-      if (type === ImportFileTypes.ARCHIVE) {
+      if (type === FileType.ARCHIVE) {
         setJsonFiles([]);
         setJsonFileMap(new Map());
         setSeparateFiles([]);
@@ -121,26 +119,20 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
 
   const changeFile = useCallback(
     (files: File[]) => {
-      if (fileType === ImportFileTypes.ARCHIVE) {
+      if (fileType === FileType.ARCHIVE) {
         if (files.length === 0 || files[0].type === APPLICATION_ZIP_TYPE) {
           setZipFile(files[0]);
-          setImportError('');
-        } else {
-          setImportError(t(ImportI18nKey.ImportFileErrorType));
         }
-      } else if (fileType === ImportFileTypes.JSON) {
-        if (!files.some((file) => file.type !== APPLICATION_JSON_TYPE)) {
-          files.forEach((file) => readJsonFile(file));
-          setJsonFiles(files);
-          setImportError('');
-          if (files.length === 0) {
-            setJsonFileMap(new Map());
-          }
-        } else {
-          setImportError(t(ImportI18nKey.ImportFileErrorType));
+      } else if (fileType === FileType.JSON) {
+        const sliced = files.slice(0, MAX_FILES_COUNT);
+        sliced.forEach((file) => readJsonFile(file));
+        setJsonFiles(sliced);
+        if (sliced.length === 0) {
+          setJsonFileMap(new Map());
         }
       } else {
-        files.forEach((file) => {
+        const sliced = files.slice(0, MAX_FILES_COUNT);
+        sliced.forEach((file) => {
           const isInvalid = isLargeFile(file);
           setSeparateFileMap((prev) => {
             const newMap = new Map(prev);
@@ -148,13 +140,13 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
             return newMap;
           });
         });
-        if (files.length === 0) {
+        if (sliced.length === 0) {
           setSeparateFileMap(new Map());
         }
-        setSeparateFiles(files);
+        setSeparateFiles(sliced);
       }
     },
-    [fileType, readJsonFile, t],
+    [fileType, readJsonFile],
   );
 
   const setStepsState = useCallback(
@@ -174,22 +166,22 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
   );
 
   const isInvalidFile = useCallback(
-    (id: string) => {
-      return !!(fileType === ImportFileTypes.JSON ? jsonFileMap : separateFileMap).get(id)?.isInvalid;
+    (file: File) => {
+      return !!(fileType === FileType.JSON ? jsonFileMap : separateFileMap).get(file?.name)?.isInvalid;
     },
     [jsonFileMap, separateFileMap, fileType],
   );
 
   const onFinishClick = () => {
-    if (fileType === ImportFileTypes.ARCHIVE) {
+    if (fileType === FileType.ARCHIVE) {
       onApply?.(fileType, zipFile as File, resolution, folderContext?.filePath as string);
-    } else if (fileType === ImportFileTypes.JSON) {
+    } else if (fileType === FileType.JSON) {
       const map = resolution === ConflictResolutionPolicy.MANUAL ? editedFileMap : jsonFileMap;
       const jsonFile = {
         prompts: Array.from(map.values()).flatMap((value) => value.files as DialPrompt[]),
       };
       onApply?.(fileType, jsonFile, resolution, folderContext?.filePath as string);
-    } else if (fileType === ImportFileTypes.FILES) {
+    } else if (fileType === FileType.FILES) {
       const map = resolution === ConflictResolutionPolicy.MANUAL ? editedFileMap : separateFileMap;
       onApply?.(
         fileType,
@@ -213,8 +205,8 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
   useEffect(() => {
     if (currentStep.id === ImportSteps.FILES) {
       const zipStatus = zipFile ? StepStatus.VALID : StepStatus.INVALID;
-      const filesStatus = getMultipleImportStatus(fileType === ImportFileTypes.JSON ? jsonFileMap : separateFileMap);
-      const status = fileType === ImportFileTypes.ARCHIVE ? zipStatus : filesStatus;
+      const filesStatus = getMultipleImportStatus(fileType === FileType.JSON ? jsonFileMap : separateFileMap);
+      const status = fileType === FileType.ARCHIVE ? zipStatus : filesStatus;
       setStepsState(status);
     }
   }, [zipFile, fileType, setStepsState, jsonFileMap, currentStep.id, separateFileMap]);
@@ -230,13 +222,13 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
       <div className="flex px-6 py-4 flex-1 flex-col min-h-0">
         <Steps steps={steps} currentStep={currentStep} setCurrentStep={setCurrentStep} />
         <div className={currentStep.id === ImportSteps.FILES ? 'flex flex-col flex-1 min-h-0' : 'hidden'}>
-          <ImportFileType
+          <ImportFileTypeSelector
             files={
-              fileType === ImportFileTypes.ARCHIVE
+              fileType === FileType.ARCHIVE
                 ? zipFile
                   ? [zipFile]
                   : []
-                : fileType === ImportFileTypes.JSON
+                : fileType === FileType.JSON
                   ? jsonFiles
                   : separateFiles
             }
@@ -245,14 +237,14 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
             changeFileType={changeFileType}
             changeFile={changeFile}
             isInvalid={isInvalidFile}
+            maxFilesCount={MAX_FILES_COUNT}
           />
-          <ErrorText errorText={importError} />
         </div>
         {currentStep.id === ImportSteps.PROPERTIES && (
           <ImportConflicts
             route={route}
-            existing={folderContext?.data}
-            filesMap={fileType === ImportFileTypes.JSON ? jsonFileMap : separateFileMap}
+            existing={folderContext?.data || []}
+            filesMap={fileType === FileType.JSON ? jsonFileMap : separateFileMap}
             setEditedFileMap={setEditedFileMap}
             resolutions={resolutions}
             resolution={resolution}

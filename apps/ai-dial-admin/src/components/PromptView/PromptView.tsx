@@ -86,7 +86,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
         if (isNeedToMove) {
           const responsePrompt = res.response as DialPrompt;
           getPrompts(addTrailingSlash(responsePrompt.folderId)).then((prompts) => {
-            const pathsToMove = getListOfPathsToMove(responsePrompt, null, prompts);
+            const pathsToMove = getListOfPathsToMove(responsePrompt, null, prompts || []);
             const newPath = removeTrailingSlash(selectedPrompt.folderId);
             movePrompts(pathsToMove, newPath).then((r) => {
               if (r.every((response) => response.success)) {

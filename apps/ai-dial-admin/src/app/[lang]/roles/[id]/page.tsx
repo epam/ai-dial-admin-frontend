@@ -12,28 +12,40 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { DialKey } from '@/src/models/dial/key';
 import { logger } from '@/src/server/logger';
+import Page403 from '@/src/components/Page403/Page403';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page(params: { params: Promise<{ id: string }> }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
-  let roles: DialRole[] = [];
+  let roles: DialRole[] | null = [];
   let role: DialRole | null = null;
 
-  let models: DialModel[] = [];
-  let addons: DialAddon[] = [];
-  let applications: DialApplication[] = [];
-  let keys: DialKey[] = [];
+  let models: DialModel[] | null = [];
+  let addons: DialAddon[] | null = [];
+  let applications: DialApplication[] | null = [];
+  let keys: DialKey[] | null = [];
 
   try {
-    roles = (await rolesApi.getRolesList(token)) || [];
-    models = (await modelsApi.getModelsList(token)) || [];
-    addons = (await addonsApi.getAddonsList(token)) || [];
-    keys = (await keysApi.getKeysList(token)) || [];
-    applications = (await applicationsApi.getApplicationsList(token)) || [];
+    roles = await rolesApi.getRolesList(token);
+    models = await modelsApi.getModelsList(token);
+    addons = await addonsApi.getAddonsList(token);
+    keys = await keysApi.getKeysList(token);
+    applications = await applicationsApi.getApplicationsList(token);
 
     role = await rolesApi.getRole(decodeURIComponent((await params.params).id), token);
+
+    if (
+      roles === void 0 ||
+      models === void 0 ||
+      addons === void 0 ||
+      keys === void 0 ||
+      applications === void 0 ||
+      role === void 0
+    ) {
+      return <Page403 />;
+    }
   } catch (e) {
     logger.error('Getting role view data error', e);
   }
@@ -44,12 +56,12 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   return (
     <RolesView
-      names={roles.map((role) => role.name || '')}
+      names={roles?.map((role) => role.name || '') || []}
       originalRole={role}
-      models={models}
-      applications={applications}
-      addons={addons}
-      keys={keys}
+      models={models || []}
+      applications={applications || []}
+      addons={addons || []}
+      keys={keys || []}
     />
   );
 }

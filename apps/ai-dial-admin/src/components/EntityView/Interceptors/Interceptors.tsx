@@ -12,8 +12,6 @@ import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import Button from '@/src/components/Common/Button/Button';
 import { getInterceptorsColumnDefs, getInterceptorsGridData } from './interceptors-utils';
 import { PopUpState } from '@/src/types/pop-up';
-import { ACTIONS_COLUMN_CELL_RENDERER_KEY } from '@/src/constants/ag-grid';
-import ActionColumn from '@/src/components/Grid/ActionColumn/ActionColumn';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -103,7 +101,6 @@ const EntityInterceptors: FC<Props> = ({ entity, interceptors, onChangeEntity })
           columnDefs={columns}
           rowData={rowData}
           additionalGridOptions={{
-            components: { [ACTIONS_COLUMN_CELL_RENDERER_KEY]: ActionColumn },
             rowDragManaged: true,
             onRowDragEnd: onRowDragEnd,
           }}

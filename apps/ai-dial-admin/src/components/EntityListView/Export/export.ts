@@ -61,19 +61,16 @@ export const changeExportData = <T extends DialFile | DialPrompt>(
 ): Record<string, T[]> => {
   const result: Record<string, T[]> = { ...exportedData };
 
-  if (!result[filePath]) {
-    result[filePath] = [];
-  }
-
   if (selectedItems.length) {
     const fetched: T[] = [];
+    const fetchedItems = fetchedFoldersData[filePath] || [];
     selectedItems.forEach((item) => {
-      const matches = finder(item, fetchedFoldersData[filePath]);
+      const matches = finder(item, fetchedItems);
       fetched.push(...matches);
     });
     result[filePath] = fetched;
   } else {
-    result[filePath] = [];
+    delete result[filePath];
   }
 
   return result;

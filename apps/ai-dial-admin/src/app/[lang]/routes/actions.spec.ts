@@ -1,12 +1,16 @@
-import fetch from 'jest-fetch-mock';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
 import { createRoute, removeRoute, updateRoute } from './actions';
+
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
 
 describe('Routes :: server actions', () => {
   beforeEach(() => {
     fetch.resetMocks();
   });
 
-  it('Should call remove route', async () => {
+  test('Should call remove route', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     removeRoute('route').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -16,7 +20,7 @@ describe('Routes :: server actions', () => {
     });
   });
 
-  it('Should call create route', async () => {
+  test('Should call create route', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     createRoute({ name: 'route' }).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -26,7 +30,7 @@ describe('Routes :: server actions', () => {
     });
   });
 
-  it('Should call update route', async () => {
+  test('Should call update route', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     updateRoute({}).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);

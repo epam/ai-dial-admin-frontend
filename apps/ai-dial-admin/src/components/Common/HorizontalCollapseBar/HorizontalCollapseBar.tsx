@@ -36,7 +36,6 @@ const HorizontalCollapseBar: FC<Props> = ({ children, width, title }) => {
         <Button
           onClick={changeVisibility}
           iconBefore={isOpened ? <IconChevronsLeft {...BASE_ICON_PROPS} /> : <IconChevronsRight {...BASE_ICON_PROPS} />}
-          dataTestId="visibility"
         />
       </div>
     </div>

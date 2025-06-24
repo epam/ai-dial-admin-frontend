@@ -25,7 +25,7 @@ import { DialKey } from '@/src/models/dial/key';
 import { ImportResult } from '@/src/models/import';
 import { ParsedPrompts } from '@/src/models/prompts';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { ImportFileTypes } from '@/src/types/import';
+import { ImportFileType } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { downloadFile } from '@/src/utils/download';
@@ -106,7 +106,7 @@ const EntityListHeaderButtons = <T extends DialBaseEntity | DialKey | DialApplic
 
   const onImport = useCallback(
     (
-      fileType: ImportFileTypes,
+      fileType: ImportFileType,
       file: File | File[] | ParsedPrompts,
       conflictResolutionStrategy: string,
       path: string,
@@ -127,9 +127,14 @@ const EntityListHeaderButtons = <T extends DialBaseEntity | DialKey | DialApplic
       importFunction(body, fileType).then((res) => {
         removeNotification(prepareNotificationId);
         if (res.success) {
-          const results = (res.response as { importResults: ImportResult[] }).importResults;
-          getImportResults(results, folderName, translatedType, t, showNotification);
-          folderContext?.fetchFiles(`${path}`);
+          const error = (res.response as { error: string })?.error;
+          if (error) {
+            showNotification(getErrorNotification(t(ImportI18nKey.ImportArchiveErrorTitle), error));
+          } else {
+            const results = (res.response as { importResults: ImportResult[] }).importResults;
+            getImportResults(results, folderName, translatedType, t, showNotification);
+            folderContext?.fetchFiles(`${path}`);
+          }
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
         }

@@ -4,21 +4,22 @@ import { DialKey } from '../../../models/dial/key';
 import KeyProperties from '../KeyProperties';
 import KeysList from '../KeysList';
 import KeyView from '../KeyView';
+import { describe, expect, test, vi } from 'vitest';
 
-jest.mock('react-dnd', () => ({
-  useDrag: () => [{ isDragging: false }, jest.fn()],
-  useDrop: () => [{ isOver: false }, jest.fn()],
+vi.mock('react-dnd', () => ({
+  useDrag: () => [{ isDragging: false }, vi.fn()],
+  useDrop: () => [{ isOver: false }, vi.fn()],
 }));
 
 describe('KeysList - List view', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const { baseElement } = renderWithContext(<KeysList data={[{ key: 'key', project: 'project', secured: false }]} />);
     expect(baseElement).toBeTruthy();
   });
 });
 
 describe('KeyView - view', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const { baseElement } = renderWithContext(
       <KeyView names={[]} originalKey={{ key: 'key', project: 'project', secured: false }} roles={[]} />,
     );
@@ -27,7 +28,7 @@ describe('KeyView - view', () => {
 });
 
 describe('KeyView - KeyProperties', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     let entity = { key: 'key', project: 'project', name: 'key', secured: true, description: 'description' };
     const onChangeKey = (key: DialKey) => {
       entity = { ...entity, ...key };
