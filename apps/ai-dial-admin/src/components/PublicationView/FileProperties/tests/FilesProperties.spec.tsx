@@ -1,9 +1,10 @@
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import FilesProperties from '@/src/components/PublicationView/FileProperties/FilesProperties';
 import { Publication } from '@/src/models/dial/publications';
 import { publicationPrompt } from '@/src/utils/tests/mock/publication.mock';
-import FilesProperties from '@/src/components/PublicationView/FileProperties/FilesProperties';
+import { render } from '@testing-library/react';
+import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 
-const mockWindowOpen = jest.fn();
+const mockWindowOpen = vi.fn();
 
 describe('Components - FilesProperties', () => {
   beforeAll(() => {
@@ -11,11 +12,11 @@ describe('Components - FilesProperties', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
-  it('Should correctly render', () => {
-    const { getByTestId } = renderWithContext(<FilesProperties publication={publicationPrompt as Publication} />);
+  test('Should correctly render', () => {
+    const { getByTestId } = render(<FilesProperties publication={publicationPrompt as Publication} />);
 
     const view = getByTestId('publication-file-view');
     expect(view).toBeTruthy();

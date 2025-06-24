@@ -1,14 +1,15 @@
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
+import { describe, expect, test } from 'vitest';
 import {
-  getInterceptorsForEntitiesGrid,
   getAddonsForEntitiesGrid,
+  getInterceptorsForEntitiesGrid,
   getRoutesForEntitiesGrid,
   getRunnersForEntitiesGrid,
 } from '../entities-list-view';
 
 describe('Utils :: getInterceptorsForEntitiesGrid', () => {
-  it('Should return empty array', () => {
+  test('Should return empty array', () => {
     const res1 = getInterceptorsForEntitiesGrid(null);
     const res2 = getInterceptorsForEntitiesGrid();
 
@@ -16,7 +17,7 @@ describe('Utils :: getInterceptorsForEntitiesGrid', () => {
     expect(res2).toEqual([]);
   });
 
-  it('Should return array with type and route', () => {
+  test('Should return array with type and route', () => {
     const res1 = getInterceptorsForEntitiesGrid([{ name: 'interceptor' }]);
 
     expect(res1).toEqual([
@@ -26,7 +27,7 @@ describe('Utils :: getInterceptorsForEntitiesGrid', () => {
 });
 
 describe('Utils :: getRunnersForEntitiesGrid', () => {
-  it('Should return empty array', () => {
+  test('Should return empty array', () => {
     const res1 = getRunnersForEntitiesGrid(null);
     const res2 = getRunnersForEntitiesGrid();
 
@@ -34,7 +35,7 @@ describe('Utils :: getRunnersForEntitiesGrid', () => {
     expect(res2).toEqual([]);
   });
 
-  it('Should return array with type and route', () => {
+  test('Should return array with type and route', () => {
     const res1 = getRunnersForEntitiesGrid([{ $id: 'runner' }]);
 
     expect(res1).toEqual([
@@ -44,7 +45,7 @@ describe('Utils :: getRunnersForEntitiesGrid', () => {
 });
 
 describe('Utils :: getAddonsForEntitiesGrid', () => {
-  it('Should return empty array', () => {
+  test('Should return empty array', () => {
     const res1 = getAddonsForEntitiesGrid(null);
     const res2 = getAddonsForEntitiesGrid();
 
@@ -52,7 +53,7 @@ describe('Utils :: getAddonsForEntitiesGrid', () => {
     expect(res2).toEqual([]);
   });
 
-  it('Should return array with type and route', () => {
+  test('Should return array with type and route', () => {
     const res1 = getAddonsForEntitiesGrid([{ name: 'addon' }]);
 
     expect(res1).toEqual([{ name: 'addon', type: MenuI18nKey.Addons, route: ApplicationRoute.Addons }]);
@@ -60,7 +61,7 @@ describe('Utils :: getAddonsForEntitiesGrid', () => {
 });
 
 describe('Utils :: getRoutesForEntitiesGrid', () => {
-  it('Should return empty array', () => {
+  test('Should return empty array', () => {
     const res1 = getRoutesForEntitiesGrid(null);
     const res2 = getRoutesForEntitiesGrid();
 
@@ -68,7 +69,7 @@ describe('Utils :: getRoutesForEntitiesGrid', () => {
     expect(res2).toEqual([]);
   });
 
-  it('Should return array with type and route', () => {
+  test('Should return array with type and route', () => {
     const res1 = getRoutesForEntitiesGrid([{ name: 'route' }]);
 
     expect(res1).toEqual([{ name: 'route', type: MenuI18nKey.Routes, route: ApplicationRoute.Routes }]);

@@ -30,7 +30,7 @@ import { DialRole } from '@/src/models/dial/role';
 import { TabModel } from '@/src/models/tab';
 import { ApplicationRoute } from '@/src/types/routes';
 import { DialKey } from '@/src/models/dial/key';
-import { KEY_ENTITY_COLUMNS } from '../EntityListView/entity-list-view';
+import { KEY_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { getErrorNotification } from '@/src/utils/notification';
 
 interface Props {

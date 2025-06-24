@@ -14,9 +14,10 @@ import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportRequest } from '@/src/models/export';
 import { TabModel } from '@/src/models/tab';
-import { ExportComponentType, ExportType } from '@/src/types/export';
+import { ExportType } from '@/src/types/export';
 import { PopUpState } from '@/src/types/pop-up';
 import { getErrorNotification } from '@/src/utils/notification';
+import { EntityType } from '@/src/types/entity-type';
 
 interface Props {
   exportRequest: Partial<ExportRequest>;
@@ -81,7 +82,7 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, modalState, onClose
               <div className="mb-3">
                 <Tabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
               </div>
-              <ConfigContentGrid selectedTab={selectedTab as ExportComponentType} tabData={data} isFull={true} />
+              <ConfigContentGrid selectedTab={selectedTab as EntityType} tabData={data} isFull={true} />
             </div>
           )}
         </div>

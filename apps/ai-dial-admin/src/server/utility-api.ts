@@ -11,8 +11,10 @@ export const VERSION_URL = `${API}/version`;
 const CONFIG_URL = `${API}/configs`;
 export const RELOAD_CONFIG_URL = `${CONFIG_URL}/reload`;
 export const IMPORT_CONFIG_URL = `${CONFIG_URL}/import`;
+export const PREVIEW_IMPORT_CONFIG_URL = `${IMPORT_CONFIG_URL}/preview`;
 export const IMPORT_ZIP_CONFIG_URL = `${IMPORT_CONFIG_URL}/zip`;
 export const EXPORT_CONFIG_URL = `${CONFIG_URL}/export`;
+export const EXPORT_CONFIG_MAP_URL = `${EXPORT_CONFIG_URL}/raw/core`;
 export const EXPORT_PREVIEW_CONFIG_URL = `${EXPORT_CONFIG_URL}/preview`;
 export const DEPLOYMENT_URL = (name: string) => `${API}/deployments/${name}`;
 
@@ -25,16 +27,21 @@ export class UtilityApi extends BaseApi {
     return this.getAction(RELOAD_CONFIG_URL, token);
   }
 
-  importConfig(token: JWT | null, file: FormData): Promise<ServerActionResponse> {
-    return this.postFiles(IMPORT_CONFIG_URL, file, token);
+  importJsonConfigs(url: string, token: JWT | null, file: FormData): Promise<ServerActionResponse> {
+    return this.postFiles(url, file, token);
   }
 
-  importZipConfig(token: JWT | null, file: FormData): Promise<ServerActionResponse> {
-    return this.postFiles(IMPORT_ZIP_CONFIG_URL, file, token);
+  importZipConfig(url: string, token: JWT | null, file: FormData): Promise<ServerActionResponse> {
+    return this.postFiles(url, file, token);
   }
 
   exportConfig(exportConfig: ExportRequest, token: JWT | null): Promise<{ blob: Blob; fileName: string }> {
     return this.sendRequest(EXPORT_CONFIG_URL, 'POST', exportConfig, token).then(async (res) => {
+      return { blob: await (res as Response)?.blob?.(), fileName: getFileName(res as Response) || '' };
+    });
+  }
+  exportConfigMap(token: JWT | null): Promise<{ blob: Blob; fileName: string }> {
+    return this.sendRequest(EXPORT_CONFIG_MAP_URL, 'POST', { addSecrets: true }, token).then(async (res) => {
       return { blob: await (res as Response)?.blob?.(), fileName: getFileName(res as Response) || '' };
     });
   }

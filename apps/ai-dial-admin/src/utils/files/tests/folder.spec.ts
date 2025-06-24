@@ -1,19 +1,20 @@
 import { DialFileNodeType } from '@/src/models/dial/file';
+import { describe, expect, test } from 'vitest';
 import { fillChildren, fillFolderRules, getFolderName, mergeFiles } from '../folder';
 
 describe('Context Utils :: getFolderName', () => {
-  it('Should return correct folder name with trailing slash', () => {
+  test('Should return correct folder name with trailing slash', () => {
     const res = getFolderName('public/folder1/');
     expect(res).toEqual('folder1');
   });
-  it('Should return correct folder name without trailing slash', () => {
+  test('Should return correct folder name without trailing slash', () => {
     const res = getFolderName('public/folder1');
     expect(res).toEqual('folder1');
   });
 });
 
 describe('Context Utils :: fillChildren', () => {
-  it('Should return correct folder array with names', () => {
+  test('Should return correct folder array with names', () => {
     const res = fillChildren([{ path: 'public/folder1' }, { path: 'public/folder2' }]);
     expect(res).toEqual([
       { path: 'public/folder1', name: 'folder1' },
@@ -23,7 +24,7 @@ describe('Context Utils :: fillChildren', () => {
 });
 
 describe('Context Utils :: mergeFiles', () => {
-  it('should create a new folder node if existingFiles is empty', () => {
+  test('should create a new folder node if existingFiles is empty', () => {
     const newFiles = [{ name: 'file1', path: 'somePath/folder/file1', nodeType: DialFileNodeType.ITEM }];
     const result = mergeFiles([], newFiles, 'somePath/folder');
 
@@ -36,7 +37,7 @@ describe('Context Utils :: mergeFiles', () => {
       },
     ]);
   });
-  it('should merge new files into the folder with matching path', () => {
+  test('should merge new files into the folder with matching path', () => {
     const existing = [
       {
         name: 'folder',
@@ -56,7 +57,7 @@ describe('Context Utils :: mergeFiles', () => {
     });
   });
 
-  it('should merge files into deeply nested folder', () => {
+  test('should merge files into deeply nested folder', () => {
     const existing = [
       {
         name: 'root',
@@ -89,7 +90,7 @@ describe('Context Utils :: mergeFiles', () => {
     ]);
   });
 
-  it('should not assign children if newFiles is null', () => {
+  test('should not assign children if newFiles is null', () => {
     const existing = [
       {
         name: 'folder',
@@ -105,7 +106,7 @@ describe('Context Utils :: mergeFiles', () => {
 });
 
 describe('Context Utils :: fillFolderRules', () => {
-  it('creates all folder levels when rules is empty', () => {
+  test('creates all folder levels when rules is empty', () => {
     const path = 'folder/folder2/lastFolder/';
     const rules = {};
 
@@ -118,7 +119,7 @@ describe('Context Utils :: fillFolderRules', () => {
     });
   });
 
-  it('preserves existing rules', () => {
+  test('preserves existing rules', () => {
     const path = 'folder/folder2/lastFolder/';
     const rules = {
       'folder/': [{ name: 'rule1' }],
@@ -134,7 +135,7 @@ describe('Context Utils :: fillFolderRules', () => {
     });
   });
 
-  it('does not override existing entries', () => {
+  test('does not override existing entries', () => {
     const path = 'folder/folder2/';
     const rules = {
       'folder/folder2/': [{ name: 'doNotOverride' }],
@@ -145,7 +146,7 @@ describe('Context Utils :: fillFolderRules', () => {
     expect(result['folder/folder2/']).toEqual([{ name: 'doNotOverride' }]);
   });
 
-  it('returns existing entries unchanged if all paths are present', () => {
+  test('returns existing entries unchanged if all paths are present', () => {
     const path = 'folder/folder2/';
     const rules = {
       'folder/': [],
@@ -157,7 +158,7 @@ describe('Context Utils :: fillFolderRules', () => {
     expect(result).toEqual(rules);
   });
 
-  it('returns existing entries unchanged if all paths are present', () => {
+  test('returns existing entries unchanged if all paths are present', () => {
     const path = 'folder/folder2/';
     const rules = {
       'folder/': [],

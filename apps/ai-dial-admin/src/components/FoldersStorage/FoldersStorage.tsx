@@ -8,7 +8,11 @@ import { useRuleFolder } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
 import FolderInfo from './FolderInfo';
 
-const FoldersStorage: FC = () => {
+interface Props {
+  initialPath?: string;
+}
+
+const FoldersStorage: FC<Props> = ({ initialPath }) => {
   const t = useI18n() as (t: string) => string;
 
   return (
@@ -16,7 +20,7 @@ const FoldersStorage: FC = () => {
       <h1>{t(MenuI18nKey.FoldersStorage)}</h1>
       <div className="flex flex-1 gap-4 pt-4 min-h-0">
         <div className="w-[480px] bg-layer-3 rounded p-4 flex-shrink-0 flex">
-          <FolderList context={useRuleFolder} />
+          <FolderList context={useRuleFolder} initialPath={initialPath} />
         </div>
         <FolderInfo isReadonly={false} />
       </div>

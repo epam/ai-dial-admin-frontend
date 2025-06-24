@@ -11,7 +11,7 @@ import { addTrailingSlash, getFolderNameAndPath, isFolder } from '@/src/utils/fi
 export interface RuleFolderContextType {
   fetchFiles: (path: string) => void;
   fetchRules?: (path: string) => void;
-  fetchFolderHierarchy?: (path: string) => void;
+  fetchFolderHierarchy?: (path: string, fullTree?: boolean) => void;
   files: DialFolder[];
   expandedFolders: Set<string>;
   filePath: string;
@@ -51,7 +51,7 @@ export const RuleFolderProvider = ({ children, attributes }: { children: ReactNo
     setExpandedFolders(newExpanded);
   };
 
-  const fetchFolderHierarchy = (fullPath?: string) => {
+  const fetchFolderHierarchy = (fullPath?: string, fullTree?: boolean) => {
     const pathParts = fullPath?.split('/').filter(Boolean);
     let currentPath = '';
     let index = 0;
@@ -100,10 +100,14 @@ export const RuleFolderProvider = ({ children, attributes }: { children: ReactNo
 
           if (folders && folders.length) {
             const file = folders?.find((f) => f.path === nextFolderPath);
-            if (file) {
+            const files = folders?.map((f) => ({ ...f, nodeType: DialFileNodeType.FOLDER }));
+            if (file && !fullTree) {
               const newFile = { ...file, nodeType: DialFileNodeType.FOLDER };
               tempFiles = mergeFiles(tempFiles, [newFile] as DialFile[], currentPath);
               tempFoldersData[currentPath] = [newFile];
+            } else if (files && fullTree) {
+              tempFiles = mergeFiles(tempFiles, files as DialFile[], currentPath);
+              tempFoldersData[currentPath] = files;
             } else {
               setTempFolder(pathParts[index], nextFolderPath);
             }

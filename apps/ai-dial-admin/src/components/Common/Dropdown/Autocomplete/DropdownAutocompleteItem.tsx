@@ -1,7 +1,7 @@
 import { ButtonHTMLAttributes, forwardRef } from 'react';
 
 import { useId, useListItem, useMergeRefs } from '@floating-ui/react';
-import { menuItemClassNames } from '../dropdown-css';
+import { menuItemClassNames } from '../constants';
 
 interface Props {
   label: string;

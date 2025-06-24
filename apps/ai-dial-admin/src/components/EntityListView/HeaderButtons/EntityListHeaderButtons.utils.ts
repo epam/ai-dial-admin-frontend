@@ -1,31 +1,32 @@
 import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
+import { DialRule } from '@/src/models/dial/rule';
 import { ParsedPrompts } from '@/src/models/prompts';
-import { ConflictResolutionPolicy, ImportFileTypes } from '@/src/types/import';
+import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 
 export const getFormDataForImport = (
   path: string,
   file: File | File[] | ParsedPrompts,
-  fileType: ImportFileTypes,
+  fileType: ImportFileType,
   resolutionStrategy: string,
+  rules?: DialRule[],
 ): FormData => {
-  const configBlob = new Blob(
-    [
-      JSON.stringify({
-        path,
-        conflictResolutionStrategy:
-          resolutionStrategy === ConflictResolutionPolicy.MANUAL ? ConflictResolutionPolicy.SKIP : resolutionStrategy,
-      }),
-    ],
-    {
-      type: APPLICATION_JSON_TYPE,
-    },
-  );
+  const config: { path: string; conflictResolutionStrategy: string; rules?: DialRule[] } = {
+    path,
+    conflictResolutionStrategy:
+      resolutionStrategy === ConflictResolutionPolicy.MANUAL ? ConflictResolutionPolicy.SKIP : resolutionStrategy,
+  };
+  if (rules) {
+    config.rules = rules;
+  }
+  const configBlob = new Blob([JSON.stringify(config)], {
+    type: APPLICATION_JSON_TYPE,
+  });
   const body = new FormData();
   body.append('config', configBlob, 'config.json');
 
-  if (fileType === ImportFileTypes.ARCHIVE) {
+  if (fileType === ImportFileType.ARCHIVE) {
     body.append('file', file as File);
-  } else if (fileType === ImportFileTypes.JSON) {
+  } else if (fileType === ImportFileType.JSON) {
     const fileBlob = new Blob([JSON.stringify(file)], {
       type: APPLICATION_JSON_TYPE,
     });

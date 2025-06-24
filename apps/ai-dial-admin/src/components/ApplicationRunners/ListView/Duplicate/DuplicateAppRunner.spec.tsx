@@ -1,8 +1,9 @@
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { PopUpState } from '@/src/types/pop-up';
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
 import { fireEvent } from '@testing-library/dom';
 import DuplicateScheme from './DuplicateAppRunner';
+import { describe, expect, test, vi } from 'vitest';
 
 describe('Components :: DuplicateScheme', () => {
   let scheme = {
@@ -17,9 +18,9 @@ describe('Components :: DuplicateScheme', () => {
     scheme = en;
   };
 
-  it('Should render successfully', () => {
-    const { baseElement, getByTestId } = renderWithContext(
-      <DuplicateScheme entity={scheme} onDuplicate={onDuplicate} onClose={jest.fn()} modalState={PopUpState.Opened} />,
+  test('Should render successfully', () => {
+    const { baseElement, getByTestId } = render(
+      <DuplicateScheme entity={scheme} onDuplicate={onDuplicate} onClose={vi.fn()} modalState={PopUpState.Opened} />,
     );
 
     expect(baseElement).toBeTruthy();

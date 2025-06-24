@@ -6,7 +6,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
 import NoDataContent from '@/src/components/Common/NoData/NoData';
-import { checkColDefsChanges } from '@/src/components/Grid/base-column-comparator';
+import { checkColDefsChanges } from '@/src/components/Grid/comparators/base-column-comparator';
 import ColumnsPanel from '@/src/components/Grid/ColumnsPanel/ColumnsPanel';
 import Grid from '@/src/components/Grid/Grid';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';

@@ -1,30 +1,31 @@
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { downloadFile } from '../download';
 
 const mockUrl = 'blob:http://example.com/fake-blob';
 describe('Utils :: downloadFile', () => {
-  let createObjectURLSpy: jest.SpyInstance;
-  let revokeObjectURLSpy: jest.SpyInstance;
+  let createObjectURLSpy: vi.SpyInstance;
+  let revokeObjectURLSpy: vi.SpyInstance;
 
   beforeEach(() => {
-    global.URL.createObjectURL = jest.fn(() => mockUrl);
-    global.URL.revokeObjectURL = jest.fn();
-    createObjectURLSpy = jest.spyOn(URL, 'createObjectURL').mockReturnValue(mockUrl);
-    revokeObjectURLSpy = jest.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    global.URL.createObjectURL = vi.fn(() => mockUrl);
+    global.URL.revokeObjectURL = vi.fn();
+    createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue(mockUrl);
+    revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
-  it('creates a download link, triggers click, and revokes URL', () => {
+  test('creates a download link, triggers click, and revokes URL', () => {
     const blob = new Blob(['test content'], { type: 'text/plain' });
 
     const link = document.createElement('a');
-    const clickSpy = jest.spyOn(link, 'click');
+    const clickSpy = vi.spyOn(link, 'click');
 
-    const createElementSpy = jest.spyOn(document, 'createElement').mockReturnValue(link);
-    const appendSpy = jest.spyOn(document.body, 'appendChild');
-    const removeSpy = jest.spyOn(document.body, 'removeChild');
+    const createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue(link);
+    const appendSpy = vi.spyOn(document.body, 'appendChild');
+    const removeSpy = vi.spyOn(document.body, 'removeChild');
 
     downloadFile(blob, 'example.txt');
 

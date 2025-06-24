@@ -1,11 +1,12 @@
 import { render } from '@testing-library/react';
 import InputModal from './InputModal';
 import { PopUpState } from '@/src/types/pop-up';
+import { describe, expect, test, vi } from 'vitest';
 
-const mockFunction = jest.fn();
+const mockFunction = vi.fn();
 
 describe('Common components - InputModal', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const { baseElement } = render(
       <InputModal modalState={PopUpState.Opened} onOpenModal={mockFunction}>
         <div></div>
@@ -14,7 +15,7 @@ describe('Common components - InputModal', () => {
     expect(baseElement).toBeTruthy();
   });
 
-  it('Should render with empty value successfully', () => {
+  test('Should render with empty value successfully', () => {
     const { baseElement } = render(
       <InputModal modalState={PopUpState.Opened} onOpenModal={mockFunction} selectedValue={''}>
         <div></div>

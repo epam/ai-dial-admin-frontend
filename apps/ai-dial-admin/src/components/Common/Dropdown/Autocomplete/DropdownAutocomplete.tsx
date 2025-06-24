@@ -16,7 +16,7 @@ import {
 } from '@floating-ui/react';
 import { useRef, useState } from 'react';
 import { DropdownProps } from '../DropdownComponent';
-import { dropdownMenuClassNames } from '../dropdown-css';
+import { dropdownMenuClassNames } from '../constants';
 import DropdownAutocompleteItem from './DropdownAutocompleteItem';
 import classNames from 'classnames';
 

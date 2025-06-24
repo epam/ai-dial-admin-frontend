@@ -1,7 +1,11 @@
-import { PublicationsApi } from '../publications-api';
-import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import fetch from 'jest-fetch-mock';
 import { Publication } from '@/src/models/dial/publications';
+import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
+import { PublicationsApi } from '../publications-api';
+
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
 
 describe('Server :: Publications', () => {
   const instance = new PublicationsApi({ host: TEST_URL });
@@ -10,7 +14,7 @@ describe('Server :: Publications', () => {
     fetch.resetMocks();
   });
 
-  it('Should calls publications prompts list', async () => {
+  test('Should calls publications prompts list', async () => {
     const mockPublications: Publication[] = [
       { id: '1', title: 'Test Prompt 1' },
       { id: '2', title: 'Test Prompt 2' },
@@ -25,7 +29,7 @@ describe('Server :: Publications', () => {
     );
   });
 
-  it('Should calls publications files list', async () => {
+  test('Should calls publications files list', async () => {
     const mockPublications: Publication[] = [
       { id: '10', title: 'File 1' },
       { id: '20', title: 'File 2' },
@@ -40,7 +44,7 @@ describe('Server :: Publications', () => {
     );
   });
 
-  it('Should calls getPublication', async () => {
+  test('Should calls getPublication', async () => {
     const mockPublication: Publication = { id: '123', title: 'Single Publication' };
     fetch.mockResponseOnce(JSON.stringify(mockPublication));
 
@@ -58,7 +62,7 @@ describe('Server :: Publications', () => {
     expect(result).toEqual(JSON.stringify(mockPublication));
   });
 
-  it('Should calls declinePublication', async () => {
+  test('Should calls declinePublication', async () => {
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
@@ -76,7 +80,7 @@ describe('Server :: Publications', () => {
     );
   });
 
-  it('Should calls approvePublication', async () => {
+  test('Should calls approvePublication', async () => {
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 

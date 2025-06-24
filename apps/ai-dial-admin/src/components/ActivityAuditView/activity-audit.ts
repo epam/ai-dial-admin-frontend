@@ -65,6 +65,7 @@ export enum EntityParameterKeys {
   DEFS = '$defs',
   KEYS = 'grantedKeys',
   PARAMETERS = 'parameters',
+  MODELS = 'models',
 }
 
 export enum ParameterNamesI18nKey {
@@ -141,4 +142,5 @@ export enum ParameterNamesI18nKey {
   secured = 'ParameterNames.secured',
   parameters = 'ParameterNames.parameters',
   extraData = 'ParameterNames.extraData',
+  models = 'ParameterNames.models',
 }

@@ -1,43 +1,43 @@
-import { ExportComponentType, ExportFormat, ExportType } from '@/src/types/export';
-import { ApplicationRoute } from '@/src/types/routes';
+import { ExportFormat, ExportType } from '@/src/types/export';
 import { getActualTabs, getDataWithoutItem } from '../ConfigContent.utils';
-
+import { EntityType } from '@/src/types/entity-type';
+import { describe, expect, test } from 'vitest';
 describe('Config content Utils :: getDataWithoutItem', () => {
-  it('Should remove data from ApplicationRunners', () => {
+  test('Should remove data from ApplicationRunners', () => {
     const result = getDataWithoutItem(
       [{ $id: 'runner1' }, { $id: 'runner2' }, { $id: 'runner3' }, { $id: 'runner4' }, { $id: 'runner5' }],
       { $id: 'runner3' },
-      ApplicationRoute.ApplicationRunners,
+      EntityType.APPLICATION_TYPE_SCHEMA,
     );
 
     expect(result).toEqual([{ $id: 'runner1' }, { $id: 'runner2' }, { $id: 'runner4' }, { $id: 'runner5' }]);
   });
 
-  it('Should remove data from Files', () => {
+  test('Should remove data from Files', () => {
     const result = getDataWithoutItem(
       [{ path: 'path1' }, { path: 'path2' }, { path: 'path3' }, { path: 'path4' }, { path: 'path5' }],
       { path: 'path4' },
-      ApplicationRoute.Files,
+      EntityType.FILE,
     );
 
     expect(result).toEqual([{ path: 'path1' }, { path: 'path2' }, { path: 'path3' }, { path: 'path5' }]);
   });
 
-  it('Should remove data from Prompts', () => {
+  test('Should remove data from Prompts', () => {
     const result = getDataWithoutItem(
       [{ path: 'path1' }, { path: 'path2' }, { path: 'path3' }, { path: 'path4' }, { path: 'path5' }],
       { path: 'path5' },
-      ApplicationRoute.Prompts,
+      EntityType.PROMPT,
     );
 
     expect(result).toEqual([{ path: 'path1' }, { path: 'path2' }, { path: 'path3' }, { path: 'path4' }]);
   });
 
-  it('Should remove data from Models', () => {
+  test('Should remove data from Models', () => {
     const result = getDataWithoutItem(
       [{ name: 'name1' }, { name: 'name2' }, { name: 'name3' }, { name: 'name4' }, { name: 'name5' }],
       { name: 'name5' },
-      ApplicationRoute.Models,
+      EntityType.MODEL,
     );
 
     expect(result).toEqual([{ name: 'name1' }, { name: 'name2' }, { name: 'name3' }, { name: 'name4' }]);
@@ -46,7 +46,7 @@ describe('Config content Utils :: getDataWithoutItem', () => {
 
 describe('Config content Utils :: getActualTabs', () => {
   const mockTranslate = (v) => v;
-  it('Should return empty tabs', () => {
+  test('Should return empty tabs', () => {
     const res1 = getActualTabs(ExportType.FULL, ExportFormat.CORE, {}, mockTranslate);
     const res2 = getActualTabs(ExportType.FULL, ExportFormat.ADMIN, {}, mockTranslate);
 
@@ -54,23 +54,23 @@ describe('Config content Utils :: getActualTabs', () => {
     expect(res2).toEqual([]);
   });
 
-  it('Should return tabs for full core config', () => {
+  test('Should return tabs for full core config', () => {
     const res = getActualTabs(ExportType.FULL, ExportFormat.CORE, { roles: true, files: true }, mockTranslate);
 
-    expect(res).toEqual([{ id: ExportComponentType.ROLE, name: 'Menu.Roles' }]);
+    expect(res).toEqual([{ id: EntityType.ROLE, name: 'Menu.Roles' }]);
   });
 
-  it('Should return tabs for custom admin config', () => {
+  test('Should return tabs for custom admin config', () => {
     const res = getActualTabs(ExportType.Custom, ExportFormat.ADMIN, { roles: true, files: true }, mockTranslate);
 
     expect(res).toEqual([
-      { id: ExportComponentType.ENTITIES, name: 'Menu.Entities' },
-      { id: ExportComponentType.ROLE, name: 'Menu.Roles' },
-      { id: ExportComponentType.KEY, name: 'Menu.Keys' },
-      { id: ExportComponentType.APPLICATION_TYPE_SCHEMA, name: 'Menu.ApplicationRunners' },
-      { id: ExportComponentType.INTERCEPTOR, name: 'Menu.Interceptors' },
-      // { id: ExportComponentType.PROMPT, name: 'Menu.Prompts' },
-      // { id: ExportComponentType.FILE, name: 'Menu.Files' },
+      { id: EntityType.ENTITIES, name: 'Menu.Entities' },
+      { id: EntityType.ROLE, name: 'Menu.Roles' },
+      { id: EntityType.KEY, name: 'Menu.Keys' },
+      { id: EntityType.APPLICATION_TYPE_SCHEMA, name: 'Menu.ApplicationRunners' },
+      { id: EntityType.INTERCEPTOR, name: 'Menu.Interceptors' },
+      // { id: EntityType.PROMPT, name: 'Menu.Prompts' },
+      // { id: EntityType.FILE, name: 'Menu.Files' },
     ]);
   });
 });

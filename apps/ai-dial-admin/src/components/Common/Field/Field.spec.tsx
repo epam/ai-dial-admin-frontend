@@ -1,29 +1,23 @@
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
 import Field from './Field';
 
-describe('Common components - Field', () => {
-  it('Should render successfully', () => {
-    const { baseElement } = render(<Field fieldTitle="Title" htmlFor="test id" />);
-
-    expect(baseElement).toBeTruthy();
-    const label = baseElement.getElementsByTagName('label')[0];
-    expect(label.htmlFor).toBe('test id');
+describe('Common components :: Field', () => {
+  test('Should render label with fieldTitle', () => {
+    render(<Field fieldTitle="My Field" htmlFor="input-id" />);
+    const label = screen.getByText('My Field');
+    expect(label).toBeInTheDocument();
+    expect(label.tagName.toLowerCase()).toBe('label');
+    expect(label).toHaveAttribute('for', 'input-id');
   });
 
-  it('Should set fieldTitle', () => {
-    const { baseElement } = render(<Field htmlFor="test id" fieldTitle="Title" />);
-
-    expect(baseElement).toBeTruthy();
-    const label = baseElement.getElementsByTagName('label')[0];
-    expect(label.innerHTML).toBe('Title');
+  test('Should render (Optional) when optional is true', () => {
+    render(<Field fieldTitle="My Field" optional />);
+    expect(screen.getByText('(Optional)')).toBeInTheDocument();
   });
 
-  it('Should set optional', () => {
-    const { baseElement } = render(<Field htmlFor="test id" fieldTitle="Title" optional={true} />);
-
-    expect(baseElement).toBeTruthy();
-    const label = baseElement.getElementsByTagName('label')[0];
-    const span = label.getElementsByTagName('span')[0];
-    expect(span.innerHTML).toBe('(Optional)');
+  test('Should render nothing when fieldTitle is not provided', () => {
+    const { container } = render(<Field />);
+    expect(container).toBeEmptyDOMElement();
   });
 });

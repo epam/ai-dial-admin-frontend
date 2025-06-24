@@ -7,7 +7,7 @@ import Button from '@/src/components/Common/Button/Button';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import Grid from '@/src/components/Grid/Grid';
-import { ACTION_COLUMN, ACTION_COLUMN_COMPONENTS } from '@/src/constants/ag-grid';
+import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -17,7 +17,7 @@ import { DialKey } from '@/src/models/dial/key';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
 import { PopUpState } from '@/src/types/pop-up';
-import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/utils/entities/entity-operations';
+import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import {
   ENTITY_COLUMNS,
   getAvailableEntities,
@@ -134,7 +134,7 @@ const AddEntitiesView: FC<Props> = ({
         {!data?.length ? (
           <NoDataContent emptyDataTitle={emptyDataTitle || t(EntitiesI18nKey.NoEntities)} />
         ) : (
-          <Grid additionalGridOptions={{ ...ACTION_COLUMN_COMPONENTS, onGridReady }} />
+          <Grid additionalGridOptions={{ onGridReady }} />
         )}
       </div>
       {modalState === PopUpState.Opened &&

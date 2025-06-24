@@ -47,4 +47,27 @@ export const EDITOR_THEMES_CONFIG: Record<EDITOR_THEMES, JSONEditorThemeConfig> 
       'scrollbarSlider.activeBackground': '#333942',
     },
   },
+  [EDITOR_THEMES['light-orange']]: {
+    base: 'vs',
+    inherit: false,
+    rules: [
+      { token: 'string.key.json', foreground: '#009D9F' },
+      { token: 'string.value.json', foreground: '#2764D9' },
+      { token: 'number', foreground: '#B25500' },
+      { token: 'keyword.json', foreground: '#3F3D25' },
+      { token: 'delimiter', foreground: '#141A23' },
+      { token: 'delimiter.bracket.json', foreground: '#843EF3' },
+      { token: 'delimiter.parenthesis', foreground: '#843EF3' },
+    ],
+    colors: {
+      'editor.foreground': '#AE2F2F',
+      'editor.background': '#F3F4F6',
+      'editorCursor.foreground': '#141A23',
+      'editor.selectionBackground': '#5C8DEA2B',
+      'editorLineNumber.foreground': '#333942',
+      'scrollbarSlider.background': '#333942',
+      'scrollbarSlider.hoverBackground': '#333942',
+      'scrollbarSlider.activeBackground': '#333942',
+    },
+  },
 };

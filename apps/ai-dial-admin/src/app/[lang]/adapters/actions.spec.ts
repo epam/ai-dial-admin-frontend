@@ -1,12 +1,15 @@
-import fetch from 'jest-fetch-mock';
 import { createAdapter, removeAdapter, updateAdapter } from './actions';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
 
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
 describe('Adapters :: server actions', () => {
   beforeEach(() => {
     fetch.resetMocks();
   });
 
-  it('Should call remove adapter', async () => {
+  test('Should call remove adapter', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     removeAdapter('adapter').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -16,7 +19,7 @@ describe('Adapters :: server actions', () => {
     });
   });
 
-  it('Should call create adapter', async () => {
+  test('Should call create adapter', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     createAdapter({ name: 'adapter' }).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -26,7 +29,7 @@ describe('Adapters :: server actions', () => {
     });
   });
 
-  it('Should call update adapter', async () => {
+  test('Should call update adapter', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     updateAdapter({}).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);

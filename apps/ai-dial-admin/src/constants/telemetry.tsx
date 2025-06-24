@@ -5,76 +5,8 @@ import StartsWith from '@/public/images/icons/filter/starts-with.svg';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
 import { TelemetryQuery } from '@/src/models/telemetry';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
-import { numberValueComparator, numberValueFormatter } from '@/src/utils/telemetry';
 import { IconEqual, IconEqualNot } from '@tabler/icons-react';
-import { ColDef } from 'ag-grid-community';
 import { BASE_ICON_PROPS } from './main-layout';
-
-export const TELEMETRY_GRID_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Deployment ID' },
-  {
-    field: 'requests',
-    headerName: 'Request Count',
-    cellClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
-  },
-  {
-    field: 'prompts',
-    headerName: 'Prompt Tokens',
-    cellClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
-  },
-  {
-    field: 'completions',
-    headerName: 'Completion tokens',
-    cellClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
-  },
-  {
-    field: 'cost',
-    headerName: 'Money',
-    sort: 'desc',
-    cellClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
-  },
-];
-
-export const PROJECT_GRID_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Project' },
-  {
-    field: 'requests',
-    headerName: 'Request Count',
-    cellClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
-  },
-  {
-    field: 'prompts',
-    headerName: 'Prompt Tokens',
-    cellClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
-  },
-  {
-    field: 'completions',
-    headerName: 'Completion tokens',
-    cellClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
-  },
-  {
-    field: 'cost',
-    headerName: 'Money',
-    sort: 'desc',
-    cellClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
-  },
-];
 
 export const DEFAULT_REFRESH_TIME = '1m';
 

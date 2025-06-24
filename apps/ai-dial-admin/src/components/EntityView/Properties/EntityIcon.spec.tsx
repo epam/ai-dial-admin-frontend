@@ -1,12 +1,12 @@
 import { fireEvent, within } from '@testing-library/react';
 import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
-
-const entityChangeHandler = jest.fn();
+import { render } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
+const entityChangeHandler = vi.fn();
 
 describe('Components - EntityViewIcon', () => {
-  it('Should render icon successfully', () => {
-    const { baseElement } = renderWithContext(
+  test('Should render icon successfully', () => {
+    const { baseElement } = render(
       <EntityIcon
         fieldTitle={'title'}
         elementId={'icon'}
@@ -24,8 +24,8 @@ describe('Components - EntityViewIcon', () => {
     expect(title).toBeTruthy();
   });
 
-  it('Should not render icon', () => {
-    const { baseElement } = renderWithContext(
+  test('Should not render icon', () => {
+    const { baseElement } = render(
       <EntityIcon
         fieldTitle={'title'}
         elementId={'icon'}
@@ -41,8 +41,8 @@ describe('Components - EntityViewIcon', () => {
     expect(button).toBeTruthy();
   });
 
-  it('Should handle icon change', () => {
-    const { baseElement } = renderWithContext(
+  test('Should handle icon change', () => {
+    const { baseElement } = render(
       <EntityIcon
         fieldTitle={'title'}
         elementId={'icon'}

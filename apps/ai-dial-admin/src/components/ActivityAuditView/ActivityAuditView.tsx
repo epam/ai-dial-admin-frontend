@@ -18,7 +18,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { rollbackEntityPerRevision } from '@/src/utils/audit/get-rollback-request';
 import { formatTimestampToDate } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import ActivityAuditEntityDiff from './ActivityAuditViewDiff/ActivityAuditEntityDiff';
 import ActivityAuditViewHeader from './ActivityAuditViewHeader/ActivityAuditViewHeader';
 import { generateCurrentResource } from './activity-audit.utils';

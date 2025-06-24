@@ -13,6 +13,8 @@ import { FC, FormHTMLAttributes, MouseEvent, ReactNode, useCallback } from 'reac
 
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import { PopUpState } from '@/src/types/pop-up';
+import { useI18n } from '@/src/locales/client';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 
 interface Props extends FormHTMLAttributes<HTMLFormElement> {
   heading?: string | ReactNode;
@@ -39,6 +41,7 @@ const PopupView: FC<Props> = ({
   dividers = true,
   dataTestId,
 }) => {
+  const t = useI18n();
   const { refs, context } = useFloating({
     open: state !== PopUpState.Closed && !!state,
     onOpenChange: onClose,
@@ -89,7 +92,7 @@ const PopupView: FC<Props> = ({
                     ))}
                   <button
                     type="button"
-                    aria-label="button"
+                    aria-label={t(ButtonsI18nKey.Close)}
                     data-testid="modalClose"
                     className="text-secondary hover:text-accent-primary"
                     onClick={handleClose}

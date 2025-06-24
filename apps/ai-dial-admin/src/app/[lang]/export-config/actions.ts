@@ -23,13 +23,18 @@ import {
 } from '@/src/utils/entities/entities-list-view';
 import { ExportRequest } from '@/src/models/export';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { ExportComponentType } from '@/src/types/export';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { EntityType } from '@/src/types/entity-type';
 
 export async function exportConfig(exportConfig: ExportRequest) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return await utilityApi.exportConfig(exportConfig, token);
+}
+
+export async function exportConfigMap() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return await utilityApi.exportConfigMap(token);
 }
 
 export async function previewExportConfig(exportConfig: ExportRequest) {
@@ -40,7 +45,7 @@ export async function previewExportConfig(exportConfig: ExportRequest) {
 
 export async function getEntities(type: string): Promise<EntitiesGridData[]> {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  if (type === ExportComponentType.ENTITIES) {
+  if (type === EntityType.ENTITIES) {
     const [routes, applications, models] = await Promise.all([
       routesApi.getRoutesList(token),
       applicationsApi.getApplicationsList(token),
@@ -52,19 +57,19 @@ export async function getEntities(type: string): Promise<EntitiesGridData[]> {
       ...getRoutesForEntitiesGrid(routes),
     ];
   }
-  if (type === ExportComponentType.ROLE) {
+  if (type === EntityType.ROLE) {
     const roles = await rolesApi.getRolesList(token);
     return getRolesForEntitiesGrid(roles);
   }
-  if (type === ExportComponentType.KEY) {
+  if (type === EntityType.KEY) {
     const keys = await keysApi.getKeysList(token);
     return getKeysForEntitiesGrid(keys);
   }
-  if (type === ExportComponentType.APPLICATION_TYPE_SCHEMA) {
+  if (type === EntityType.APPLICATION_TYPE_SCHEMA) {
     const runners = await applicationRunnersApi.getApplicationSchemesList(token);
     return getRunnersForEntitiesGrid(runners);
   }
-  if (type === ExportComponentType.INTERCEPTOR) {
+  if (type === EntityType.INTERCEPTOR) {
     const interceptors = await interceptorsApi.getInterceptorsList(token);
     return getInterceptorsForEntitiesGrid(interceptors);
   }

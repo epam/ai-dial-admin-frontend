@@ -1,9 +1,10 @@
 import { ErrorType } from '@/src/types/error-type';
 import { getErrorForName } from '../name-error';
+import { describe, expect, test, vi } from 'vitest';
 
 describe('Utils :: validations :: getErrorForName', () => {
-  const mockT = jest.fn().mockReturnValue('Translated Text');
-  it('Should return translated error', () => {
+  const mockT = vi.fn().mockReturnValue('Translated Text');
+  test('Should return translated error', () => {
     const res = getErrorForName('name', ['name'], mockT);
 
     expect(res).toEqual({
@@ -11,7 +12,7 @@ describe('Utils :: validations :: getErrorForName', () => {
       text: 'Translated Text',
     });
   });
-  it('Should return translated error', () => {
+  test('Should return translated error', () => {
     const res = getErrorForName('n', ['name'], mockT);
 
     expect(res).toEqual({
@@ -20,7 +21,7 @@ describe('Utils :: validations :: getErrorForName', () => {
     });
   });
 
-  it('Should return empty error', () => {
+  test('Should return empty error', () => {
     const res = getErrorForName('n', ['name']);
 
     expect(res).toEqual({
@@ -29,13 +30,13 @@ describe('Utils :: validations :: getErrorForName', () => {
     });
   });
 
-  it('Should return empty', () => {
+  test('Should return empty', () => {
     const res = getErrorForName('name', ['names'], mockT);
 
     expect(res).toBeNull();
   });
 
-  it('Should return translated error for not unique name', () => {
+  test('Should return translated error for not unique name', () => {
     const res = getErrorForName(void 0, void 0, mockT, true);
 
     expect(res).toEqual({

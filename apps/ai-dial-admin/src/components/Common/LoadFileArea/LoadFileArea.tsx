@@ -12,10 +12,15 @@ export interface LoadFileAreaProps {
   emptyTitle: string;
   files?: File[];
   acceptTypes: string;
+  maxFilesCount?: number;
+  isMultiple?: boolean;
+  fileFormatError?: string;
+  fileCountError?: string;
   dynamicIcon?: (name: string) => ReactNode;
   iconBeforeInput?: ReactNode;
   onChangeFile: (files: File[]) => void;
-  isInvalid?: (id: string) => boolean;
+  getIsFileFormatError?: (fileItems: File[] | DataTransferItem[]) => boolean;
+  isInvalid?: (file: File) => boolean;
   errorText?: string;
 }
 
@@ -23,11 +28,16 @@ const LoadFileArea: FC<LoadFileAreaProps> = ({
   acceptTypes,
   emptyTitle,
   files,
+  maxFilesCount,
+  isMultiple,
+  fileFormatError,
+  fileCountError,
   iconBeforeInput,
   dynamicIcon,
   onChangeFile,
   isInvalid,
   errorText,
+  getIsFileFormatError,
 }) => {
   const removeClick = (e: MouseEvent, fileUrl: string) => {
     e.stopPropagation();
@@ -46,7 +56,16 @@ const LoadFileArea: FC<LoadFileAreaProps> = ({
 
   return !files || files.length === 0 ? (
     <DndProvider backend={HTML5Backend}>
-      <EmptyFileArea onChange={onChange} acceptTypes={acceptTypes} emptyTitle={emptyTitle} />
+      <EmptyFileArea
+        onChange={onChange}
+        acceptTypes={acceptTypes}
+        emptyTitle={emptyTitle}
+        maxFilesCount={maxFilesCount}
+        isMultiple={isMultiple}
+        fileFormatError={fileFormatError}
+        fileCountError={fileCountError}
+        getIsFileFormatError={getIsFileFormatError}
+      />
     </DndProvider>
   ) : (
     <div className="flex-1 min-h-0 border border-solid border-primary rounded">
@@ -59,7 +78,7 @@ const LoadFileArea: FC<LoadFileAreaProps> = ({
               value={file.name}
               iconAfterInput={removeFile(file.name)}
               iconBeforeInput={iconBeforeInput || dynamicIcon?.(file.name)}
-              isInvalid={isInvalid?.(file.name)}
+              isInvalid={isInvalid?.(file)}
               errorText={errorText}
             />
           ))}

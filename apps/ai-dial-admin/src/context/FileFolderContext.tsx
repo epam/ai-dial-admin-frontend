@@ -11,7 +11,7 @@ export interface FileFolderContextType {
   expandedFolders: Set<string>;
   filePath: string;
   toggleFolder: (folder: DialFile) => void;
-  data: DialFile[];
+  data: DialFile[] | null;
   fetchedFoldersData: Record<string, DialFile[]>;
   exportFoldersData: Record<string, DialFile[]>;
   setExportFoldersData: Dispatch<SetStateAction<Record<string, DialFile[]>>>;
@@ -27,7 +27,7 @@ export const FileFolderProvider = ({ children }: { children: ReactNode }) => {
 
   const [fetchedFoldersData, setFetchedFoldersData] = useState<Record<string, DialFile[]>>({});
   const [exportFoldersData, setExportFoldersData] = useState<Record<string, DialFile[]>>({});
-  const [data, setData] = useState<DialFile[]>([]);
+  const [data, setData] = useState<DialFile[] | null>([]);
 
   const fetchFiles = (path: string, refreshData?: boolean) => {
     if (refreshData) {
@@ -35,6 +35,10 @@ export const FileFolderProvider = ({ children }: { children: ReactNode }) => {
       setExpandedFolders(new Set());
     }
     getFiles(path).then((files) => {
+      if (files === void 0) {
+        setData(null);
+        return;
+      }
       setFiles((prevFiles) => mergeFiles(prevFiles, files as DialFile[], path));
       const folderFiles = files?.filter((f) => f.nodeType === DialFileNodeType.ITEM) as DialFile[];
       setData(folderFiles);

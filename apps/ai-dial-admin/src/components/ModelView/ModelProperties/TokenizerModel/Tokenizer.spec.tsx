@@ -1,20 +1,20 @@
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
-import TokenizerModelSwitch from './Tokenizer';
+import { PopUpState } from '@/src/types/pop-up';
+import { render } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
 import TokenizedModelsGrid from './TokenizedModelsGrid';
 import TokenizedModelsModal from './TokenizedModelsModal';
-import { PopUpState } from '@/src/types/pop-up';
-import fetch from 'jest-fetch-mock';
+import TokenizerModelSwitch from './Tokenizer';
 
-jest.mock('react-dnd', () => ({
-  useDrag: () => [{ isDragging: false }, jest.fn()],
-  useDrop: () => [{ isOver: false }, jest.fn()],
+vi.mock('react-dnd', () => ({
+  useDrag: () => [{ isDragging: false }, vi.fn()],
+  useDrop: () => [{ isOver: false }, vi.fn()],
 }));
 
-const mockFunction = jest.fn();
+const mockFunction = vi.fn();
 
 describe('Tokenizer - Tokenizer Model Switch', () => {
-  it('Should render successfully', () => {
-    const { baseElement } = renderWithContext(
+  test('Should render successfully', () => {
+    const { baseElement } = render(
       <TokenizerModelSwitch model={{ tokenizerModel: 'tokenizerModel ' }} onChangeModel={mockFunction} />,
     );
     expect(baseElement).toBeTruthy();
@@ -22,25 +22,15 @@ describe('Tokenizer - Tokenizer Model Switch', () => {
 });
 
 describe('Tokenizer - TokenizedModelsGrid', () => {
-  beforeEach(() => {
-    fetch.resetMocks();
-  });
-
-  it('Should render successfully', () => {
-    const { baseElement } = renderWithContext(
-      <TokenizedModelsGrid selectedModel="model" onSelectModelId={mockFunction} />,
-    );
+  test('Should render successfully', () => {
+    const { baseElement } = render(<TokenizedModelsGrid selectedModel="model" onSelectModelId={mockFunction} />);
     expect(baseElement).toBeTruthy();
   });
 });
 
 describe('Tokenizer - TokenizedModelsModal', () => {
-  beforeEach(() => {
-    fetch.resetMocks();
-  });
-
-  it('Should render successfully', () => {
-    const { baseElement } = renderWithContext(
+  test('Should render successfully', () => {
+    const { baseElement } = render(
       <TokenizedModelsModal
         model={{}}
         modalState={PopUpState.Opened}

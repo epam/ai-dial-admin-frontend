@@ -4,28 +4,28 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportDependenciesConfig } from '@/src/models/export';
 import { TabModel } from '@/src/models/tab';
-import { ExportComponentType, ExportFormat, ExportType } from '@/src/types/export';
-import { ApplicationRoute } from '@/src/types/routes';
+import { ExportFormat, ExportType } from '@/src/types/export';
+import { EntityType } from '@/src/types/entity-type';
 
 /**
  * Correctly remove item from EntitiesGridData based on type
  *
  * @param {EntitiesGridData[]} data - EntitiesGridData array
  * @param {EntitiesGridData} itemToDelete - item which need to remove
- * @param {string} currentTab - ExportComponentType
+ * @param {EntityType} currentTab - EntityType
  * @returns {EntitiesGridData[]} - filtered EntitiesGridData array
  */
 export const getDataWithoutItem = (
   data: EntitiesGridData[],
   itemToDelete: EntitiesGridData,
-  currentTab: string,
+  currentTab: EntityType,
 ): EntitiesGridData[] => {
   switch (currentTab) {
-    case ApplicationRoute.ApplicationRunners:
+    case EntityType.APPLICATION_TYPE_SCHEMA:
       return data.filter((d) => (d as DialApplicationScheme).$id !== (itemToDelete as DialApplicationScheme).$id);
 
-    case ApplicationRoute.Prompts:
-    case ApplicationRoute.Files:
+    case EntityType.PROMPT:
+    case EntityType.FILE:
       return data.filter((d) => d.path !== itemToDelete.path);
 
     default:
@@ -52,32 +52,32 @@ export const getActualTabs = (
   const isCoreFormat = selectedFormat === ExportFormat.CORE;
   const tabs: TabModel[] = [];
   if (dependencies.entities) {
-    tabs.push({ id: ExportComponentType.ENTITIES, name: t(MenuI18nKey.Entities) });
+    tabs.push({ id: EntityType.ENTITIES, name: t(MenuI18nKey.Entities) });
   }
 
   if (dependencies.roles) {
-    tabs.push({ id: ExportComponentType.ROLE, name: t(MenuI18nKey.Roles) });
+    tabs.push({ id: EntityType.ROLE, name: t(MenuI18nKey.Roles) });
   }
 
   if (dependencies.keys) {
-    tabs.push({ id: ExportComponentType.KEY, name: t(MenuI18nKey.Keys) });
+    tabs.push({ id: EntityType.KEY, name: t(MenuI18nKey.Keys) });
   }
 
   if (dependencies.runners) {
-    tabs.push({ id: ExportComponentType.APPLICATION_TYPE_SCHEMA, name: t(MenuI18nKey.ApplicationRunners) });
+    tabs.push({ id: EntityType.APPLICATION_TYPE_SCHEMA, name: t(MenuI18nKey.ApplicationRunners) });
   }
 
   if (dependencies.interceptors) {
-    tabs.push({ id: ExportComponentType.INTERCEPTOR, name: t(MenuI18nKey.Interceptors) });
+    tabs.push({ id: EntityType.INTERCEPTOR, name: t(MenuI18nKey.Interceptors) });
   }
 
   // until BE implement
   if (!isCoreFormat) {
     // if (dependencies.prompts) {
-    //   tabs.push({ id: ExportComponentType.PROMPT, name: t(MenuI18nKey.Prompts) });
+    //   tabs.push({ id: EntityType.PROMPT, name: t(MenuI18nKey.Prompts) });
     // }
     // if (dependencies.files) {
-    //   tabs.push({ id: ExportComponentType.FILE, name: t(MenuI18nKey.Files) });
+    //   tabs.push({ id: EntityType.FILE, name: t(MenuI18nKey.Files) });
     // }
   }
 

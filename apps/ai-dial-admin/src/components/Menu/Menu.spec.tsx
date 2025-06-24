@@ -1,14 +1,15 @@
 import Menu from './Menu';
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
 
-jest.mock('next/navigation', () => ({
+vi.mock('next/navigation', () => ({
   usePathname: () => 'en',
   useRouter: () => [],
 }));
 
 describe('Menu', () => {
-  it('Should render successfully', () => {
-    const { baseElement } = renderWithContext(<Menu disableMenuItems={[]} />);
+  test('Should render successfully', () => {
+    const { baseElement } = render(<Menu disableMenuItems={[]} />);
     expect(baseElement).toBeTruthy();
   });
 });

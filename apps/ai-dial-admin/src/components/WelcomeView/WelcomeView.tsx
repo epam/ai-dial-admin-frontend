@@ -41,7 +41,6 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
           {docLink && (
             <div>
               <Button
-                dataTestId="documentation-btn"
                 iconBefore={<Doc />}
                 cssClass="primary"
                 title={t(WelcomeViewI18nKey.ViewDocumentation)}
@@ -61,7 +60,6 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
         <div className="flex flex-row gap-x-3">
           <Button
             iconBefore={<IconDownload {...BASE_ICON_PROPS} widths={24} height={24} />}
-            dataTestId="import-btn"
             cssClass="secondary p-4 lg:px-3 lg:py-2 h-[56px] w-[56px] lg:h-[42px] lg:w-auto"
             title={isTabletScreen ? '' : t(MenuI18nKey.ImportConfig)}
             onClick={() => {
@@ -70,7 +68,6 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
           />
           <Button
             iconBefore={<IconUpload {...BASE_ICON_PROPS} widths={24} height={24} />}
-            dataTestId="export-btn"
             cssClass="secondary p-4 lg:px-3 lg:py-2 h-[56px] w-[56px] lg:h-[42px] lg:w-auto"
             title={isTabletScreen ? '' : t(MenuI18nKey.ExportConfig)}
             onClick={() => {
@@ -79,7 +76,6 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
           />
           {dialLink && (
             <Button
-              dataTestId="dial-btn"
               iconBefore={<IconExternalLink {...BASE_ICON_PROPS} widths={24} height={24} />}
               cssClass="secondary p-4 lg:px-3 lg:py-2 h-[56px] lg:h-[42px]"
               title={dialButtonName || t(WelcomeViewI18nKey.OpenDial)}

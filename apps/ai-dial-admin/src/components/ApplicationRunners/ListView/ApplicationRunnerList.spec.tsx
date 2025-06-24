@@ -2,16 +2,14 @@ import ApplicationRunnersView from '@/src/components/ApplicationRunners/Applicat
 import Parameters from '@/src/components/ApplicationRunners/ConfigurationView/AppRunnerParameters';
 import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationView/AppRunnerProperties';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
 import { fireEvent } from '@testing-library/dom';
+import { describe, expect, test } from 'vitest';
 import ApplicationRunnersList from './ApplicationRunnersList';
-import clearAllMocks = jest.clearAllMocks;
-
-afterAll(clearAllMocks);
 
 describe('Components - ApplicationRunnersList', () => {
-  it('Should render successfully', () => {
-    const { baseElement } = renderWithContext(
+  test('Should render successfully', () => {
+    const { baseElement } = render(
       <ApplicationRunnersList
         data={[{ 'dial:applicationTypeDisplayName': 'name' }, { 'dial:applicationTypeDisplayName': void 0 }]}
       />,
@@ -22,8 +20,8 @@ describe('Components - ApplicationRunnersList', () => {
 });
 
 describe('Components - ApplicationRunnersView', () => {
-  it('Should render successfully', () => {
-    const { baseElement } = renderWithContext(
+  test('Should render successfully', () => {
+    const { baseElement } = render(
       <ApplicationRunnersView originalScheme={{ 'dial:applicationTypeDisplayName': 'name' }} applications={[]} />,
     );
 
@@ -32,7 +30,7 @@ describe('Components - ApplicationRunnersView', () => {
 });
 
 describe('Components - Parameters', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     let scheme = {
       'dial:applicationTypeDisplayName': 'name',
       'dial:applicationTypeCompletionEndpoint': 'endpoint',
@@ -43,9 +41,7 @@ describe('Components - Parameters', () => {
       scheme = newScheme;
     };
 
-    const { baseElement, getByTestId } = renderWithContext(
-      <Parameters scheme={scheme} onChangeScheme={onChangeScheme} />,
-    );
+    const { baseElement, getByTestId } = render(<Parameters scheme={scheme} onChangeScheme={onChangeScheme} />);
 
     expect(baseElement).toBeTruthy();
 
@@ -67,7 +63,7 @@ describe('Components - Parameters', () => {
 });
 
 describe('Components - Properties', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     let scheme = {
       $id: 'id',
       description: 'description',
@@ -80,9 +76,7 @@ describe('Components - Properties', () => {
       scheme = newScheme;
     };
 
-    const { baseElement, getByTestId } = renderWithContext(
-      <SchemeProperties entity={scheme} onChangeScheme={onChangeScheme} />,
-    );
+    const { baseElement, getByTestId } = render(<SchemeProperties entity={scheme} onChangeScheme={onChangeScheme} />);
 
     expect(baseElement).toBeTruthy();
 

@@ -5,9 +5,8 @@ import { Dispatch, FC, ReactNode, SetStateAction, useCallback, useEffect, useRef
 import classNames from 'classnames';
 
 import { DialRule } from '@/src/models/dial/rule';
+import RulesItemBody from './RulesItemBody';
 import RulesItemHeader from './RulesItemHeader';
-import RulesItemOperator from './RulesItemOperator';
-import RulesValueList from './RulesValueList';
 
 interface Props {
   children?: ReactNode;
@@ -38,7 +37,6 @@ const RulesItem: FC<Props> = ({
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [isCollapsed, setIsCollapsed] = useState(!isAlwaysToggled ? !setLastRuleHeight : false);
-  const [lastValueHeight, setLastValueHeight] = useState<number>(0);
 
   const toggleCollapse = useCallback(() => {
     setIsCollapsed((prev) => !prev);
@@ -68,8 +66,6 @@ const RulesItem: FC<Props> = ({
     isAlwaysToggled && folderName && 'bg-layer-3',
   );
   const ruleContainerClass = classNames('flex flex-col h-full', isCollapsed && 'hidden');
-  const ruleClass = classNames('relative flex flex-row');
-  const lineVerticalClass = classNames('w-[1px] ml-1 bg-accent-primary');
 
   return (
     <div ref={ref} className={itemClass}>
@@ -86,21 +82,15 @@ const RulesItem: FC<Props> = ({
           {children}
         </RulesItemHeader>
         <div className={ruleContainerClass}>
-          <RulesItemOperator folderName={folderName} isEmpty={!rules.length} isReadonly={!setLastRuleHeight} />
-          <div className={ruleClass}>
-            <div
-              style={{ height: `calc(100% - ${setLastRuleHeight ? 19 : lastValueHeight / 2}px)` }}
-              className={lineVerticalClass}
-            ></div>
-            <RulesValueList
-              rules={rules}
-              rulesToInclude={rulesToInclude}
-              rulesToExclude={rulesToExclude}
-              setLastValueHeight={setLastValueHeight}
-              isReadonly={isReadonly || !setLastRuleHeight}
-              onChange={onChange}
-            />
-          </div>
+          <RulesItemBody
+            rules={rules}
+            rulesToExclude={rulesToExclude}
+            rulesToInclude={rulesToInclude}
+            folderName={folderName}
+            isReadonly={isReadonly}
+            isLast={!!setLastRuleHeight}
+            onChange={onChange}
+          />
         </div>
       </div>
     </div>

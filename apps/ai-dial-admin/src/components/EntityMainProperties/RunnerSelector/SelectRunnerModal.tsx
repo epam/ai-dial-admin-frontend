@@ -2,8 +2,8 @@ import { FC, useState } from 'react';
 
 import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
-import { RUNNERS_COLUMNS } from '@/src/components/EntityListView/entity-list-view';
-import RadioButtonRenderer from '@/src/components/Grid/CellRenderer/RadioButtonRenderer';
+import { RUNNERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import Grid from '@/src/components/Grid/Grid';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
 import { BasicI18nKey, ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';

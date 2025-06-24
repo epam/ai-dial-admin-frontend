@@ -1,8 +1,8 @@
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
 import IconGallery from '@/src/components/IconGallery/IconGallery';
 import { fireEvent, getByText } from '@testing-library/react';
-import clearAllMocks = jest.clearAllMocks;
 import { getIconPath } from '@/src/utils/themes/icon-path';
+import { describe, expect, test, vi } from 'vitest';
 
 const icons = [
   {
@@ -11,18 +11,16 @@ const icons = [
   },
 ];
 
-jest.mock('@/src/components/IconGallery/Icons.config', () => ({
-  getIconsConfig: jest.fn(() => {
+vi.mock('@/src/components/IconGallery/Icons.config', () => ({
+  getIconsConfig: vi.fn(() => {
     return icons;
   }),
 }));
 
-afterAll(clearAllMocks);
-
 describe('Components - ItemGallery', () => {
-  it('Should render icon successfully', () => {
-    const setSelectedIcon = jest.fn();
-    const { baseElement } = renderWithContext(<IconGallery selectedIcon={''} setSelectedIcon={setSelectedIcon} />);
+  test('Should render icon successfully', () => {
+    const setSelectedIcon = vi.fn();
+    const { baseElement } = render(<IconGallery selectedIcon={''} setSelectedIcon={setSelectedIcon} />);
 
     expect(baseElement).toBeTruthy();
     const noneOption = baseElement.getElementsByTagName('i')[0];
@@ -35,9 +33,9 @@ describe('Components - ItemGallery', () => {
     expect(alt).toBe(icons[0].name);
   });
 
-  it('Should select none icon successfully', () => {
-    const setSelectedIcon = jest.fn();
-    const { baseElement } = renderWithContext(<IconGallery selectedIcon={''} setSelectedIcon={setSelectedIcon} />);
+  test('Should select none icon successfully', () => {
+    const setSelectedIcon = vi.fn();
+    const { baseElement } = render(<IconGallery selectedIcon={''} setSelectedIcon={setSelectedIcon} />);
 
     expect(baseElement).toBeTruthy();
     const noneOption = baseElement.getElementsByTagName('button')[0];
@@ -45,9 +43,9 @@ describe('Components - ItemGallery', () => {
     expect(setSelectedIcon).toHaveBeenCalledWith('');
   });
 
-  it('Should select icon successfully', () => {
-    const setSelectedIcon = jest.fn();
-    const { baseElement } = renderWithContext(<IconGallery selectedIcon={''} setSelectedIcon={setSelectedIcon} />);
+  test('Should select icon successfully', () => {
+    const setSelectedIcon = vi.fn();
+    const { baseElement } = render(<IconGallery selectedIcon={''} setSelectedIcon={setSelectedIcon} />);
 
     expect(baseElement).toBeTruthy();
     const iconOption = baseElement.getElementsByTagName('button')[1];

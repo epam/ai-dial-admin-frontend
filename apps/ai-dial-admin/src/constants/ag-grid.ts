@@ -1,4 +1,4 @@
-import { ColDef, GridOptions } from 'ag-grid-community';
+import { ColDef } from 'ag-grid-community';
 
 import ActionColumn from '@/src/components/Grid/ActionColumn/ActionColumn';
 import { EntityOperationDeclaration } from '@/src/models/entity-operations';
@@ -33,7 +33,7 @@ export const UTILITY_COLUMN: ColDef = {
 export const ACTION_COLUMN = <T>(items: EntityOperationDeclaration<T>[]): ColDef => ({
   ...UTILITY_COLUMN,
   field: ACTIONS_COLUMN_CEL_ID,
-  cellRenderer: ACTIONS_COLUMN_CELL_RENDERER_KEY,
+  cellRenderer: ActionColumn,
   cellRendererParams: { items },
   cellClass: 'relative',
   pinned: 'right',
@@ -67,8 +67,4 @@ export const DRAGGABLE_COL_DEF: ColDef = {
   colId: DRAGGABLE_COLUMN_CEL_ID,
   cellClass: NO_BORDER_CLASS,
   rowDrag: true,
-};
-
-export const ACTION_COLUMN_COMPONENTS: Partial<GridOptions> = {
-  components: { [ACTIONS_COLUMN_CELL_RENDERER_KEY]: ActionColumn },
 };

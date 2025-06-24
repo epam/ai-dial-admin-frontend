@@ -18,7 +18,6 @@ import { DialApplication, DialApplicationScheme } from '@/src/models/dial/applic
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { FieldError } from '@/src/models/error';
 import { ApplicationRoute } from '@/src/types/routes';
-import { updateEndPoint } from '@/src/utils/adapter';
 import { getErrorNotification } from '@/src/utils/notification';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
 import { getErrorForName } from '@/src/utils/validation/name-error';
@@ -83,13 +82,10 @@ const EntityMainProperties: FC<Props> = ({
   const onChangeDeploymentId = useCallback(
     (deploymentId: string) => {
       const newEntity = { ...entity, name: deploymentId };
-      if (view === ApplicationRoute.Models) {
-        newEntity.endpoint = updateEndPoint(newEntity, adapters);
-      }
       setNameError(getErrorForName(deploymentId, void 0, t));
       onChangeEntity(newEntity);
     },
-    [entity, view, adapters, onChangeEntity, t],
+    [entity, onChangeEntity, t],
   );
 
   const onChangeDisplayName = useCallback(
@@ -131,6 +127,13 @@ const EntityMainProperties: FC<Props> = ({
   );
 
   const onChangeAdapter = useCallback(
+    (adapter: string) => {
+      onChangeEntity({ ...entity, adapter });
+    },
+    [entity, onChangeEntity],
+  );
+
+  const onChangeEndpoint = useCallback(
     (endpoint: string) => {
       onChangeEntity({ ...entity, endpoint });
     },
@@ -218,7 +221,7 @@ const EntityMainProperties: FC<Props> = ({
             fieldTitle={t(EntitiesI18nKey.Endpoint)}
             placeholder={t(EntitiesI18nKey.EndpointPlaceholder)}
             value={entity.endpoint}
-            onChange={onChangeAdapter}
+            onChange={onChangeEndpoint}
           />
         )
       )}

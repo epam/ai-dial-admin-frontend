@@ -1,16 +1,17 @@
 import { render } from '@testing-library/react';
 import RadioField from './RadioField';
 import { RadioFieldOrientation } from '@/src/types/radio-orientation';
+import { describe, expect, test, vi } from 'vitest';
 
 describe('Common components - RadioField', () => {
-  it('Should render column orientation successfully', () => {
+  test('Should render column orientation successfully', () => {
     const { baseElement } = render(
       <RadioField
         elementId="radio"
         radioButtons={[]}
         activeRadioButton="1"
         fieldTitle="fieldTitle"
-        onChange={jest.fn()}
+        onChange={vi.fn()}
         orientation={RadioFieldOrientation.Column}
       />,
     );
@@ -18,14 +19,14 @@ describe('Common components - RadioField', () => {
     expect(baseElement).toBeTruthy();
   });
 
-  it('Should render row orientation successfully', () => {
+  test('Should render row orientation successfully', () => {
     const { baseElement } = render(
       <RadioField
         fieldTitle="fieldTitle"
         elementId="radio"
         radioButtons={[]}
         activeRadioButton="1"
-        onChange={jest.fn()}
+        onChange={vi.fn()}
         orientation={RadioFieldOrientation.Row}
       />,
     );

@@ -2,8 +2,9 @@ import { render } from '@testing-library/react';
 import RadioGroupModal from './RadioGroupModal';
 import { PopUpState } from '@/src/types/pop-up';
 import RadioGroupModalField from './RadioGroupModalField';
+import { describe, expect, test, vi } from 'vitest';
 
-const mockFunction = jest.fn();
+const mockFunction = vi.fn();
 
 const radioButtons = [
   { id: 'id1', name: 'ID 1', content: 'content1' },
@@ -11,7 +12,7 @@ const radioButtons = [
 ];
 
 describe('RadioGroupModalField :: RadioGroupModal', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const { baseElement } = render(
       <RadioGroupModal
         modalState={PopUpState.Opened}
@@ -31,7 +32,7 @@ describe('RadioGroupModalField :: RadioGroupModal', () => {
 });
 
 describe('RadioGroupModalField :: RadioGroupModalField', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const { baseElement } = render(
       <RadioGroupModalField
         title="title"

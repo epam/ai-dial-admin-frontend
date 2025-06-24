@@ -14,7 +14,7 @@ import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { ParsedPrompts } from '@/src/models/prompts';
-import { ImportFileTypes } from '@/src/types/import';
+import { ImportFileType } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { deleteModalTitleMap } from './entity-list-view';
@@ -39,7 +39,7 @@ interface Props {
   createModal?: ReactNode;
   duplicateModal?: ReactNode;
   handleImport?: (
-    fileType: ImportFileTypes,
+    fileType: ImportFileType,
     file: File | File[] | ParsedPrompts,
     resolution: string,
     path: string,

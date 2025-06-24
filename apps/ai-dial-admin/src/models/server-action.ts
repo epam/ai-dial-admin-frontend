@@ -3,4 +3,5 @@ export interface ServerActionResponse {
   response?: unknown;
   errorHeader?: string;
   errorMessage?: string;
+  status?: number;
 }

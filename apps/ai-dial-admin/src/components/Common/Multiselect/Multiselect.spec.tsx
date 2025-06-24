@@ -1,13 +1,14 @@
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
 import Multiselect from './Multiselect';
 import MultiselectModal from './MultiselectModal';
 import NewItemInput from './NewItemInput';
 import { PopUpState } from '@/src/types/pop-up';
+import { describe, expect, test, vi } from 'vitest';
 
 describe('Common components - Multiselect', () => {
-  it('Should render successfully', () => {
-    const { baseElement } = renderWithContext(
-      <Multiselect elementId="test" heading="title" title="title" onChangeItems={jest.fn()} />,
+  test('Should render successfully', () => {
+    const { baseElement } = render(
+      <Multiselect elementId="test" heading="title" title="title" onChangeItems={vi.fn()} />,
     );
 
     expect(baseElement).toBeTruthy();
@@ -15,14 +16,14 @@ describe('Common components - Multiselect', () => {
 });
 
 describe('Common components - MultiselectModal', () => {
-  it('Should render successfully', () => {
-    const { baseElement } = renderWithContext(
+  test('Should render successfully', () => {
+    const { baseElement } = render(
       <MultiselectModal
         heading="title"
         allItems={[]}
         modalState={PopUpState.Opened}
-        onClose={jest.fn()}
-        onSelectItems={jest.fn()}
+        onClose={vi.fn()}
+        onSelectItems={vi.fn()}
         addTitle="title"
       />,
     );
@@ -32,9 +33,9 @@ describe('Common components - MultiselectModal', () => {
 });
 
 describe('Common components - NewItemInput', () => {
-  it('Should render successfully', () => {
-    const { baseElement } = renderWithContext(
-      <NewItemInput index={0} value="test" onChangeItem={jest.fn()} onRemoveItem={jest.fn()} placeholder="test" />,
+  test('Should render successfully', () => {
+    const { baseElement } = render(
+      <NewItemInput index={0} value="test" onChangeItem={vi.fn()} onRemoveItem={vi.fn()} placeholder="test" />,
     );
 
     expect(baseElement).toBeTruthy();

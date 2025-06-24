@@ -66,14 +66,13 @@ export const isValidEntity = (
   const isWrongLengthForModel =
     isWrongLength(view, (entity as DialModel).displayName) || isWrongLength(view, (entity as DialModel).displayVersion);
 
-  const baseEntityValidation =
-    isValidNames && !!baseEntity.endpoint && !getErrorForDescription(entity.description) && !isWrongLengthForModel;
+  const baseEntityValidation = isValidNames && !getErrorForDescription(entity.description) && !isWrongLengthForModel;
 
   if (view === ApplicationRoute.Models) {
-    return baseEntityValidation && isValidUpstreams((entity as DialModel).upstreams);
+    return baseEntityValidation && !!baseEntity.adapter && isValidUpstreams((entity as DialModel).upstreams);
   }
 
-  return baseEntityValidation;
+  return baseEntityValidation && !!baseEntity.endpoint;
 };
 
 const getIsValidSimpleEntity = (entity: DialBaseNamedEntity, withVersion?: boolean, names?: string[]) => {
@@ -111,7 +110,7 @@ export const isValidAdapter = (entity: DialAdapter, names?: string[]) => {
 const isValidRouteStatus = (route: DialRoute): boolean => {
   if (route.response) {
     const status = route.response?.status;
-    return !!status && +status >= 100 && +status <= 900;
+    return !!status && +status >= 100 && +status <= 999;
   }
 
   return true;

@@ -1,6 +1,6 @@
 import { ColDef } from 'ag-grid-community';
 
-import { ENTITY_BASE_COLUMNS } from '@/src/components/EntityListView/entity-list-view';
+import { ENTITY_BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { LIMIT_COLUMNS } from '@/src/components/EntityView/Roles/roles-utils';
 import { NO_LIMITS_KEY } from '@/src/constants/role';
 import { DialAddon } from '@/src/models/dial/addon';
@@ -18,6 +18,7 @@ import {
   getModelsForEntitiesGrid,
   getRolesForEntitiesGrid,
 } from '@/src/utils/entities/entities-list-view';
+import { DialAdapter } from '@/src/models/dial/adapter';
 
 export const ENTITY_COLUMNS = (t: (v: string) => string): ColDef[] => [
   ...ENTITY_BASE_COLUMNS,
@@ -147,8 +148,10 @@ export const getEntitiesForRole = (role: DialRole, allEntities: EntitiesGridData
  * @returns {EntitiesGridData[]} - array of relevant entities
  */
 export const getAvailableEntities = (existingEntities: EntitiesGridData[], allEntities: EntitiesGridData[]) => {
-  const existingNames = existingEntities.map((entity) => entity.name || entity.key);
-  const filteredEntities = allEntities.filter((entity) => !existingNames.includes(entity.name || entity.key));
+  const existingNames = existingEntities.map((entity) => entity.name || entity.key || entity.$id);
+  const filteredEntities = allEntities.filter(
+    (entity) => !existingNames.includes(entity.name || entity.key || entity.$id),
+  );
   return filteredEntities;
 };
 
@@ -187,6 +190,30 @@ export const getRelevantKeysForRole = (role: DialBaseEntity, allKeys: EntitiesGr
     const addedKey = allKeys.find((k) => k.name === key);
     if (addedKey) {
       data.push(addedKey);
+    }
+  });
+  return data;
+};
+
+/**
+ * Get models that are using the adpter
+ *
+ * @param {DialAdapter} adapter - adapter '/'
+ * @param {EntitiesGridData[]} allEntities - all available models in adapter  '/'
+ * @returns {EntitiesGridData[]} - array of relevant models
+ */
+export const getRelevantModelsForAdapter = (
+  adapter: DialAdapter,
+  allEntities: EntitiesGridData[],
+): EntitiesGridData[] => {
+  const data: EntitiesGridData[] = [];
+  if (!adapter.models) {
+    return data;
+  }
+  adapter.models.forEach((model) => {
+    const entity = allEntities.find((m) => m.name === model);
+    if (entity) {
+      data.push(entity as EntitiesGridData);
     }
   });
   return data;

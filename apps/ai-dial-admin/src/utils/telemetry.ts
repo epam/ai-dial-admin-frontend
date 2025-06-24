@@ -1,57 +1,17 @@
-import Big from 'big.js';
+import { lineChartDefaultOptions } from '@/src/components/Charts/LineChart/line-chart-config';
 import {
   filterConditionConfig,
   filterOperatorConfig,
   filterTypeConfig,
   TELEMETRY_GRID_HEADERS_MAP,
 } from '@/src/constants/telemetry';
-import { TimeRange } from '@/src/models/time-range';
-import { TelemetryData, FilterData } from '@/src/models/telemetry';
-import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
-import { IRowNode, ValueFormatterParams } from 'ag-grid-community';
-import { EChartsOption } from 'echarts-for-react/src/types';
-import { lineChartDefaultOptions } from '@/src/components/Charts/LineChart/line-chart-config';
+import { FilterData, TelemetryData } from '@/src/models/telemetry';
+import { TimeRange } from '@/src/models/time-range';
+import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 import { formatDateToLocalTime } from '@/src/utils/formatting/date';
-import { formatNumberByDelimiter } from './formatting/number-formatting';
-
-export const numberValueFormatter = (params: ValueFormatterParams) => {
-  let number = '';
-
-  try {
-    number = formatNumberByDelimiter(params.data[params?.colDef?.field as string]);
-  } catch (e) {
-    if (e) {
-      number = '';
-    }
-  }
-
-  return number;
-};
-
-export const numberValueComparator = (
-  a: string | number | undefined,
-  b: string | number | undefined,
-  _nodeA: IRowNode,
-  _nodeB: IRowNode,
-  isInverted: boolean,
-): number => {
-  const aNumber = typeof a === 'string' ? new Big(a).toNumber() : a;
-  const bNumber = typeof b === 'string' ? new Big(b).toNumber() : b;
-  if (aNumber === bNumber) {
-    return 0;
-  }
-
-  if (aNumber === undefined) {
-    return !isInverted ? 1 : -1;
-  }
-
-  if (bNumber === undefined) {
-    return !isInverted ? -1 : 1;
-  }
-
-  return aNumber > bNumber ? 1 : -1;
-};
+import Big from 'big.js';
+import { EChartsOption } from 'echarts-for-react/src/types';
 
 export const getGridData = (data: TelemetryData): Record<string, string>[] => {
   return data.data.map((row) => {

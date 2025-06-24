@@ -1,50 +1,29 @@
-import { fireEvent, render } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
 import Button from './Button';
 
-describe('Common components - Button', () => {
-  it('Should render successfully', () => {
-    const { baseElement } = render(<Button cssClass="primary" />);
-
-    expect(baseElement).toBeTruthy();
+describe('Common components :: Button', () => {
+  test('Should render with title and be accessible by role', () => {
+    render(<Button title="Click me" />);
+    expect(screen.getByRole('button', { name: 'Click me' })).toBeInTheDocument();
+    expect(screen.getByText('Click me')).toBeInTheDocument();
   });
 
-  it('Should check title ', () => {
-    const { baseElement } = render(<Button cssClass="primary" title="button title" />);
-
-    expect(baseElement).toBeTruthy();
-    const button = baseElement.getElementsByTagName('button')[0];
-    const spans = button.getElementsByTagName('span');
-
-    expect(spans.length).toBeTruthy();
-    expect(spans[0].innerHTML).toBe('button title');
+  test('Should call onClick when clicked', () => {
+    const onClick = vi.fn();
+    render(<Button title="Click me" onClick={onClick} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Click me' }));
+    expect(onClick).toHaveBeenCalled();
   });
 
-  it('Should check icon', () => {
-    const { baseElement } = render(<Button cssClass="primary" iconBefore={<div>icon</div>} title="button title" />);
-
-    expect(baseElement).toBeTruthy();
-    const button = baseElement.getElementsByTagName('button')[0];
-    const divs = button.getElementsByTagName('div');
-
-    expect(divs.length).toBeTruthy();
-    expect(divs[0].innerHTML).toBe('icon');
-
-    const spans = button.getElementsByTagName('span');
-
-    expect(spans.length).toBeTruthy();
-    expect(spans[0].classList.contains('ml-2')).toBeTruthy();
+  test('Should be disabled when disable prop is true', () => {
+    render(<Button title="Disabled" disable hideTitleOnMobile />);
+    expect(screen.getByRole('button', { name: 'Disabled' })).toBeDisabled();
   });
 
-  it('Should check click', () => {
-    let buttonClick = false;
-    const onClick = () => {
-      buttonClick = true;
-    };
-    const { baseElement } = render(<Button cssClass="primary" onClick={onClick} />);
-
-    expect(baseElement).toBeTruthy();
-    const button = baseElement.getElementsByTagName('button')[0];
-    fireEvent.click(button);
-    expect(buttonClick).toBeTruthy();
+  test('Should render iconBefore and iconAfter', () => {
+    render(<Button title="With Icons" iconBefore={<span>Before</span>} iconAfter={<span>After</span>} />);
+    expect(screen.getByText('Before')).toBeInTheDocument();
+    expect(screen.getByText('After')).toBeInTheDocument();
   });
 });

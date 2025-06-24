@@ -1,7 +1,11 @@
-import fetch from 'jest-fetch-mock';
-import { ApplicationRunnersApi, APPLICATION_SCHEMES_URL, APPLICATION_SCHEME_URL } from '../application-runners-api';
-import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
+import { APPLICATION_SCHEMES_URL, APPLICATION_SCHEME_URL, ApplicationRunnersApi } from '../application-runners-api';
+
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
 
 describe('Server :: ApplicationRunnersApi', () => {
   const instance = new ApplicationRunnersApi({ host: TEST_URL });
@@ -19,7 +23,7 @@ describe('Server :: ApplicationRunnersApi', () => {
     fetch.resetMocks();
   });
 
-  it('Should fetch application schemes list', async () => {
+  test('Should fetch application schemes list', async () => {
     fetch.mockResponseOnce(JSON.stringify([mockScheme]));
 
     const result = await instance.getApplicationSchemesList(TOKEN_MOCK);
@@ -31,7 +35,7 @@ describe('Server :: ApplicationRunnersApi', () => {
     expect(result).toEqual(JSON.stringify([mockScheme]));
   });
 
-  it('Should fetch a single application scheme by id', async () => {
+  test('Should fetch a single application scheme by id', async () => {
     fetch.mockResponseOnce(JSON.stringify([mockScheme]));
 
     await instance.getApplicationScheme(mockScheme.$id, TOKEN_MOCK);
@@ -42,7 +46,7 @@ describe('Server :: ApplicationRunnersApi', () => {
     );
   });
 
-  it('Should calls createApplicationScheme with correct data', async () => {
+  test('Should calls createApplicationScheme with correct data', async () => {
     const response = { success: true };
     fetch.mockResponseOnce(JSON.stringify(response));
 
@@ -57,7 +61,7 @@ describe('Server :: ApplicationRunnersApi', () => {
     );
   });
 
-  it('Should calls updateApplicationScheme with correct data', async () => {
+  test('Should calls updateApplicationScheme with correct data', async () => {
     const response = { success: true };
     fetch.mockResponseOnce(JSON.stringify(response));
 
@@ -72,7 +76,7 @@ describe('Server :: ApplicationRunnersApi', () => {
     );
   });
 
-  it('Should calls removeApplicationScheme with DELETE method', async () => {
+  test('Should calls removeApplicationScheme with DELETE method', async () => {
     const response = { success: true };
     fetch.mockResponseOnce(JSON.stringify(response));
 

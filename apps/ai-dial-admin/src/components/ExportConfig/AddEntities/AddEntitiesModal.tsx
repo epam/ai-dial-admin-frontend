@@ -12,29 +12,29 @@ import {
   getAllAvailableDependencies,
   getButtonTitle,
 } from '@/src/components/ExportConfig/AddEntities/AddEntities.utils';
-import { getEmptyDataTitleI18nKey } from '@/src/components/ExportConfig/ExportConfig.utils';
 import Grid from '@/src/components/Grid/Grid';
 import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey, ExportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { ExportComponentType } from '@/src/types/export';
 import { PopUpState } from '@/src/types/pop-up';
+import { EntityType } from '@/src/types/entity-type';
+import { getEmptyDataTitleI18nKey } from '@/src/utils/entities/get-empty-data-title';
 
 interface Props {
   modalState: PopUpState;
-  selectedTab?: ExportComponentType;
+  selectedTab?: EntityType;
   entities: EntitiesGridData[];
   columnDefs?: ColDef[];
   onClose: () => void;
-  onApply: (entities: EntitiesGridData[], dependencies?: ExportComponentType[]) => void;
+  onApply: (entities: EntitiesGridData[], dependencies?: EntityType[]) => void;
 }
 
 const AddEntitiesModal: FC<Props> = ({ modalState, selectedTab, entities, columnDefs, onClose, onApply }) => {
   const t = useI18n() as (v: string) => string;
   const [selectedEntities, setSelectedEntities] = useState<EntitiesGridData[]>([]);
-  const [selectedDependencies, setSelectedDependencies] = useState<ExportComponentType[]>([]);
-  const [allDependencies, setAllDependencies] = useState<ExportComponentType[]>([]);
+  const [selectedDependencies, setSelectedDependencies] = useState<EntityType[]>([]);
+  const [allDependencies, setAllDependencies] = useState<EntityType[]>([]);
   const [includeDependencies, setIncludeDependencies] = useState(false);
 
   const emptyTitle = useMemo(() => {
@@ -77,7 +77,7 @@ const AddEntitiesModal: FC<Props> = ({ modalState, selectedTab, entities, column
     [selectedTab],
   );
 
-  const onChangeSelectedDependencies = useCallback((value: boolean, key: ExportComponentType) => {
+  const onChangeSelectedDependencies = useCallback((value: boolean, key: EntityType) => {
     if (value) {
       setSelectedDependencies((prev) => [...prev, key]);
     } else {

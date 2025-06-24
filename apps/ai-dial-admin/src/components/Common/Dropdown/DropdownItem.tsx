@@ -4,8 +4,8 @@ import { ButtonHTMLAttributes, FocusEvent, forwardRef, MouseEvent, ReactNode, us
 
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { MenuContext } from './DropdownComponent';
-import { menuItemClassNames } from './dropdown-css';
-import { isChecked, isIndeterminate, isMultiSelectClickAvailable } from './dropdown.utils';
+import { menuItemClassNames } from './constants';
+import { isChecked, isIndeterminate, isMultiSelectClickAvailable } from './utils';
 
 interface DropdownMenuItemProps {
   dropdownItem?: DropdownItemsModel;

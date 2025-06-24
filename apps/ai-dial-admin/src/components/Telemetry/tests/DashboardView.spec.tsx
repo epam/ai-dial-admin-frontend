@@ -1,11 +1,11 @@
 import { render } from '@testing-library/react';
-
+import { describe, expect, test, vi } from 'vitest';
 import DashboardView from '@/src/components/Telemetry/DashboardView';
 import * as telemetryUtils from '@/src/utils/telemetry';
 
-jest.spyOn(telemetryUtils, 'getLineChartData').mockReturnValue([{ time: '2025-04-06T10:57:00Z', requests: '1' }]);
-jest.spyOn(telemetryUtils, 'getSingleValueChartData').mockReturnValue(1);
-jest.spyOn(telemetryUtils, 'getGridData').mockReturnValue([
+vi.spyOn(telemetryUtils, 'getLineChartData').mockReturnValue([{ time: '2025-04-06T10:57:00Z', requests: '1' }]);
+vi.spyOn(telemetryUtils, 'getSingleValueChartData').mockReturnValue(1);
+vi.spyOn(telemetryUtils, 'getGridData').mockReturnValue([
   {
     name: 'name',
     requests: '1',
@@ -16,7 +16,7 @@ jest.spyOn(telemetryUtils, 'getGridData').mockReturnValue([
 ]);
 
 describe('Components - DashboardView', () => {
-  it('should render correctly', () => {
+  test('should render correctly', () => {
     const { getByTestId } = render(<DashboardView />);
 
     const view = getByTestId('dashboard-view');
@@ -26,7 +26,7 @@ describe('Components - DashboardView', () => {
     expect(heading).toBeTruthy();
   });
 
-  it('should render grafanaLink', () => {
+  test('should render grafanaLink', () => {
     const { getByRole } = render(<DashboardView grafanaLink={'http://localhost'} />);
 
     const link = getByRole('link');

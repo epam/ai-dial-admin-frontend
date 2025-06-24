@@ -1,25 +1,23 @@
 import { render } from '@testing-library/react';
 import ProfileButton from './ProfileButton';
+import { describe, expect, test, vi } from 'vitest';
 
-jest.mock('@/src/context/AppContext', () => ({
-  useAppContext: jest.fn(() => {
-    return { toggleUserMenu: jest.fn(), userMenuOpen: false };
+vi.mock('@/src/context/AppContext', () => ({
+  useAppContext: vi.fn(() => {
+    return { toggleUserMenu: vi.fn(), userMenuOpen: false };
   }),
 }));
 
-jest.mock('next-auth/react', () => {
-  const originalModule = jest.requireActual('next-auth/react');
-
+vi.mock('next-auth/react', () => {
   return {
-    ...originalModule,
-    useSession: jest.fn(() => {
+    useSession: vi.fn(() => {
       return { data: { session: { user: { image: 'image ' } } } };
     }),
   };
 });
 
 describe('Header :: ProfileButton', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const { baseElement } = render(<ProfileButton />);
     expect(baseElement).toBeTruthy();
   });

@@ -42,12 +42,7 @@ const SettingsModal: FC<Props> = ({ onConfirm, modalState, onClose }) => {
         />
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <Button
-          dataTestId="settingsConfirm"
-          cssClass="primary"
-          title={t(ButtonsI18nKey.Save)}
-          onClick={() => onConfirm(settings)}
-        />
+        <Button cssClass="primary" title={t(ButtonsI18nKey.Save)} onClick={() => onConfirm(settings)} />
       </div>
     </Popup>
   );

@@ -1,24 +1,21 @@
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
 import Breadcrumbs from '@/src/components/Breadcrumbs/Breadcrumbs';
 import { MenuI18nKey } from '@/src/constants/i18n';
-import clearAllMocks = jest.clearAllMocks;
+import { describe, expect, test, vi } from 'vitest';
 
-const mockUsePathname = jest.fn();
+const mockUsePathname = vi.fn();
 
-jest.mock('next/navigation', () => ({
-  ...jest.requireActual('next/navigation'),
-  useRouter: jest.fn(),
+vi.mock('next/navigation', () => ({
+  useRouter: vi.fn(),
   usePathname() {
     return mockUsePathname();
   },
 }));
 
-afterAll(clearAllMocks);
-
 describe('Components - Breadcrumbs', () => {
-  it('Should render successfully single breadcrumb', () => {
+  test('Should render successfully single breadcrumb', () => {
     mockUsePathname.mockImplementation(() => '/en/models');
-    const { baseElement } = renderWithContext(<Breadcrumbs mobile={false} />);
+    const { baseElement } = render(<Breadcrumbs mobile={false} />);
     const list = baseElement.getElementsByTagName('ol');
     const listItems = baseElement.getElementsByTagName('li');
 
@@ -28,9 +25,9 @@ describe('Components - Breadcrumbs', () => {
     expect(listItems[0].textContent).toBe(MenuI18nKey.Models);
   });
 
-  it('Should render successfully single mobile breadcrumb', () => {
+  test('Should render successfully single mobile breadcrumb', () => {
     mockUsePathname.mockImplementation(() => '/en/models');
-    const { baseElement } = renderWithContext(<Breadcrumbs mobile={true} />);
+    const { baseElement } = render(<Breadcrumbs mobile={true} />);
     const list = baseElement.getElementsByTagName('ol');
     const listItems = baseElement.getElementsByTagName('li');
 
@@ -40,9 +37,9 @@ describe('Components - Breadcrumbs', () => {
     expect(listItems[0].textContent).toBe(MenuI18nKey.Models);
   });
 
-  it('Should render successfully multiple breadcrumbs', () => {
+  test('Should render successfully multiple breadcrumbs', () => {
     mockUsePathname.mockImplementation(() => '/en/applications/applicationId');
-    const { baseElement } = renderWithContext(<Breadcrumbs mobile={false} />);
+    const { baseElement } = render(<Breadcrumbs mobile={false} />);
     const list = baseElement.getElementsByTagName('ol');
     const listItems = baseElement.getElementsByTagName('li');
     const icon = baseElement.getElementsByTagName('svg');
@@ -54,17 +51,17 @@ describe('Components - Breadcrumbs', () => {
     expect(listItems[0].textContent).toBe(MenuI18nKey.Applications);
   });
 
-  it('Should render nothing if there is no path', () => {
+  test('Should render nothing if there is no path', () => {
     mockUsePathname.mockImplementation(() => null);
-    const { baseElement } = renderWithContext(<Breadcrumbs mobile={false} />);
+    const { baseElement } = render(<Breadcrumbs mobile={false} />);
     const list = baseElement.getElementsByTagName('ol');
 
     expect(list.length).toBe(0);
   });
 
-  it('Should render successfully path not from config', () => {
+  test('Should render successfully path not from config', () => {
     mockUsePathname.mockImplementation(() => '/en/unknown');
-    const { baseElement } = renderWithContext(<Breadcrumbs mobile={false} />);
+    const { baseElement } = render(<Breadcrumbs mobile={false} />);
     const list = baseElement.getElementsByTagName('ol');
     const listItems = baseElement.getElementsByTagName('li');
 

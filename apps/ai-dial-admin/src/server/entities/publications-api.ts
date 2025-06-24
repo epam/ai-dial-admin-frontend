@@ -12,15 +12,15 @@ export const PUBLICATION_REJECT_URL = `${PUBLICATIONS_BASE_URL}/reject`;
 export const PUBLICATION_APPROVE_URL = `${PUBLICATIONS_BASE_URL}/approve`;
 
 export class PublicationsApi extends BaseApi {
-  getPublicationsPromptsList(token: JWT | null): Promise<Publication[]> {
-    return this.get(PUBLICATIONS_PROMPTS_URL, token).then(
-      (data) => (data as { publications: Publication[] }).publications,
+  getPublicationsPromptsList(token: JWT | null): Promise<Publication[] | undefined> {
+    return this.get(PUBLICATIONS_PROMPTS_URL, token).then((data) =>
+      data ? (data as { publications: Publication[] }).publications : void 0,
     );
   }
 
-  getPublicationsFilesList(token: JWT | null): Promise<Publication[]> {
-    return this.get(PUBLICATIONS_FILES_URL, token).then(
-      (data) => (data as { publications: Publication[] }).publications,
+  getPublicationsFilesList(token: JWT | null): Promise<Publication[] | undefined> {
+    return this.get(PUBLICATIONS_FILES_URL, token).then((data) =>
+      data ? (data as { publications: Publication[] }).publications : void 0,
     );
   }
 

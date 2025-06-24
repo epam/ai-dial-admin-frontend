@@ -1,12 +1,16 @@
-import fetch from 'jest-fetch-mock';
 import { createAssistant, removeAssistant, updateAssistant } from './actions';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
+
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
 
 describe('Assistants :: server actions', () => {
   beforeEach(() => {
     fetch.resetMocks();
   });
 
-  it('Should call remove assistant', async () => {
+  test('Should call remove assistant', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     removeAssistant('assistant').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -16,7 +20,7 @@ describe('Assistants :: server actions', () => {
     });
   });
 
-  it('Should call create assistant', async () => {
+  test('Should call create assistant', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     createAssistant({ name: 'assistant' }).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -26,7 +30,7 @@ describe('Assistants :: server actions', () => {
     });
   });
 
-  it('Should call update assistant', async () => {
+  test('Should call update assistant', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     updateAssistant({}).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);

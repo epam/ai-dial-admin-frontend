@@ -1,35 +1,36 @@
-import { fireEvent } from '@testing-library/react';
-import WelcomeView from './WelcomeView';
+import { MenuI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { WelcomeViewI18nKey } from './i18n';
+import WelcomeView from './WelcomeView';
+import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 const router: ApplicationRoute[] = [];
-jest.mock('next/navigation', () => ({
+vi.mock('next/navigation', () => ({
   useRouter: () => router,
-  usePathname: jest.fn(),
+  usePathname: vi.fn(),
 }));
 
 describe('WelcomeView', () => {
   beforeAll(() => {
-    global.window.open = jest.fn();
+    global.window.open = vi.fn();
   });
 
-  it('Should render successfully', () => {
-    const { baseElement, getByTestId } = renderWithContext(
-      <WelcomeView availableMenuItems={[]} disableMenuItems={[]} dialLink="link" docLink="link" />,
-    );
-    expect(baseElement).toBeTruthy();
+  test('renders and triggers actions without test ids', () => {
+    render(<WelcomeView disableMenuItems={[]} dialLink="link" docLink="link" />);
 
-    const documentation = getByTestId('documentation-btn');
-    const dial = getByTestId('dial-btn');
-    const importBtn = getByTestId('import-btn');
-    const exportBtn = getByTestId('export-btn');
+    const documentationBtn = screen.getByText(WelcomeViewI18nKey.ViewDocumentation);
+    const dialBtn = screen.getByText(WelcomeViewI18nKey.OpenDial);
+    const importBtn = screen.getByText(MenuI18nKey.ImportConfig);
+    const exportBtn = screen.getByText(MenuI18nKey.ExportConfig);
 
-    fireEvent.click(documentation);
-    fireEvent.click(dial);
+    fireEvent.click(documentationBtn);
+    fireEvent.click(dialBtn);
     fireEvent.click(importBtn);
     fireEvent.click(exportBtn);
 
+    expect(global.window.open).toHaveBeenCalledWith('link', '_blank');
     expect(router).toEqual([ApplicationRoute.ImportConfig, ApplicationRoute.ExportConfig]);
+    expect(screen.getByText(WelcomeViewI18nKey.QuickActions)).toBeInTheDocument();
   });
 });

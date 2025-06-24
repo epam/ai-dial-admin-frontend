@@ -14,6 +14,7 @@ const RangePicker: FC<Props> = ({ onChange, timeRange }) => {
   const t = useI18n();
   const [startDate, setStartDate] = useState<Date | null>(timeRange?.startDate || null);
   const [endDate, setEndDate] = useState<Date | null>(timeRange?.endDate || null);
+
   const onClick = useCallback(() => {
     if (startDate && endDate) {
       onChange({ startDate, endDate });
@@ -22,6 +23,10 @@ const RangePicker: FC<Props> = ({ onChange, timeRange }) => {
 
   const onStartDateChange = useCallback((startDate: Date | null) => {
     if (startDate) {
+      // reset hours, minutes, seconds, milliseconds to 0
+      startDate.setHours(0);
+      startDate.setMinutes(0);
+      startDate.setSeconds(0);
       startDate.setMilliseconds(0);
       setStartDate(startDate);
     }
@@ -29,6 +34,9 @@ const RangePicker: FC<Props> = ({ onChange, timeRange }) => {
 
   const onEndDateChange = useCallback((endDate: Date | null) => {
     if (endDate) {
+      endDate.setHours(12);
+      endDate.setMinutes(59);
+      endDate.setSeconds(59);
       endDate.setMilliseconds(0);
       setEndDate(endDate);
     }

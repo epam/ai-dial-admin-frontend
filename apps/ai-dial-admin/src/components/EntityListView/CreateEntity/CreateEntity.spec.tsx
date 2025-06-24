@@ -1,16 +1,17 @@
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
-import CreateEntity from './CreateEntity';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
+import { render } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
+import CreateEntity from './CreateEntity';
 
 describe('CreateEntity', () => {
-  it('Should render successfully', () => {
-    const { baseElement } = renderWithContext(
+  test('Should render successfully', () => {
+    const { baseElement } = render(
       <CreateEntity
         route={ApplicationRoute.Models}
         modalTitle="title"
-        createEntity={jest.fn()}
-        onClose={jest.fn()}
+        createEntity={vi.fn()}
+        onClose={vi.fn()}
         names={[]}
         modalState={PopUpState.Opened}
       />,
@@ -18,13 +19,13 @@ describe('CreateEntity', () => {
     expect(baseElement).toBeTruthy();
   });
 
-  it('Should render successfully Prompts', () => {
-    const { baseElement } = renderWithContext(
+  test('Should render successfully Prompts', () => {
+    const { baseElement } = render(
       <CreateEntity
         route={ApplicationRoute.Prompts}
         modalTitle="title"
-        createEntity={jest.fn()}
-        onClose={jest.fn()}
+        createEntity={vi.fn()}
+        onClose={vi.fn()}
         names={[]}
         versionsMap={{}}
         modalState={PopUpState.Opened}
@@ -33,13 +34,13 @@ describe('CreateEntity', () => {
     expect(baseElement).toBeTruthy();
   });
 
-  it('Should render successfully Keys', () => {
-    const { baseElement } = renderWithContext(
+  test('Should render successfully Keys', () => {
+    const { baseElement } = render(
       <CreateEntity
         route={ApplicationRoute.Keys}
         modalTitle="title"
-        createEntity={jest.fn()}
-        onClose={jest.fn()}
+        createEntity={vi.fn()}
+        onClose={vi.fn()}
         names={[]}
         versionsMap={{}}
         modalState={PopUpState.Opened}

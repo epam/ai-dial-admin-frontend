@@ -5,15 +5,15 @@ import { ColDef } from 'ag-grid-community';
 
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import { getDataWithoutItem } from '@/src/components/ExportConfig/Content/ConfigContent.utils';
-import { getActualColDefs, getEmptyDataTitleI18nKey } from '@/src/components/ExportConfig/ExportConfig.utils';
+import { getActualColDefs } from '@/src/components/ExportConfig/ExportConfig.utils';
 import Grid from '@/src/components/Grid/Grid';
-import { ACTION_COLUMN_COMPONENTS } from '@/src/constants/ag-grid';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { ExportComponentType } from '@/src/types/export';
+import { EntityType } from '@/src/types/entity-type';
+import { getEmptyDataTitleI18nKey } from '@/src/utils/entities/get-empty-data-title';
 
 interface Props {
-  selectedTab: ExportComponentType;
+  selectedTab: EntityType;
   tabData: Record<string, EntitiesGridData[]>;
   isFull: boolean;
   customExportData?: Record<string, EntitiesGridData[]>;
@@ -74,11 +74,7 @@ const ConfigContentGrid: FC<Props> = ({ selectedTab, tabData, isFull, customExpo
   return (isFull ? fullData.length === 0 : customData.length === 0) ? (
     <NoDataContent emptyDataTitle={t(emptyDataTitleI18nkKey)} />
   ) : (
-    <Grid
-      columnDefs={isFull ? fullColDefs : customColDefs}
-      rowData={isFull ? fullData : customData}
-      additionalGridOptions={{ ...ACTION_COLUMN_COMPONENTS }}
-    />
+    <Grid columnDefs={isFull ? fullColDefs : customColDefs} rowData={isFull ? fullData : customData} />
   );
 };
 

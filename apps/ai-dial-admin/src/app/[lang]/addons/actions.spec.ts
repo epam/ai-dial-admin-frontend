@@ -1,12 +1,16 @@
-import fetch from 'jest-fetch-mock';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
 import { createAddon, removeAddon, updateAddon } from './actions';
+
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
 
 describe('Addons :: server actions', () => {
   beforeEach(() => {
     fetch.resetMocks();
   });
 
-  it('Should call remove addon', async () => {
+  test('Should call remove addon', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     removeAddon('addon').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -16,7 +20,7 @@ describe('Addons :: server actions', () => {
     });
   });
 
-  it('Should call create addon', async () => {
+  test('Should call create addon', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     createAddon({ name: 'addon' }).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -26,7 +30,7 @@ describe('Addons :: server actions', () => {
     });
   });
 
-  it('Should call update addon', async () => {
+  test('Should call update addon', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     updateAddon({}).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);

@@ -14,20 +14,18 @@ import { TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
-import { DialModel } from '@/src/models/dial/model';
 import { TabModel } from '@/src/models/tab';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
+import AdapterModels from './AdapterModels';
 import AdapterProperties from './AdapterProperties';
-import AdapterModelsGrid from './AdapterModelsGrid';
 
 interface Props {
   originalAdapter: DialAdapter;
-  models: DialModel[];
 }
 
-const AdapterView: FC<Props> = ({ originalAdapter, models }) => {
+const AdapterView: FC<Props> = ({ originalAdapter }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -41,9 +39,6 @@ const AdapterView: FC<Props> = ({ originalAdapter, models }) => {
   const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
-
-  const modelsSet = new Set(originalAdapter.models);
-  const relatedModels = models.filter((model) => modelsSet.has(model.name as string));
 
   useEffect(() => {
     setSelectedAdapter(cloneDeep(originalAdapter));
@@ -137,7 +132,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, models }) => {
             )}
             {activeTab === EntityViewTab.Models && (
               <div className="w-full h-full">
-                <AdapterModelsGrid models={relatedModels} />
+                <AdapterModels adapter={selectedAdapter} onChangeAdapter={onChangeAdapter} />
               </div>
             )}
           </>

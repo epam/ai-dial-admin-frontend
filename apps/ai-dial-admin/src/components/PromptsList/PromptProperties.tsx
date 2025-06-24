@@ -1,30 +1,32 @@
-import { Dispatch, FC, SetStateAction, useCallback, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { IconPlus } from '@tabler/icons-react';
-
-import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import { formatTimestampToDate } from '@/src/utils/formatting/date';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { BasicI18nKey, ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
-import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
-import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
-import Button from '@/src/components/Common/Button/Button';
-import { PopUpState } from '@/src/types/pop-up';
-import AddVersionModal from '@/src/components/Common/AddVersionModal/AddVersionModal';
-import { DialPrompt } from '@/src/models/dial/prompt';
-import { Publication } from '@/src/models/dial/publications';
-import { FieldError } from '@/src/models/error';
-import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import FilePath from '@/src/components/Common/FilePath/FilePath';
-import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import ReactMarkdown from 'react-markdown';
 import ReactMde from 'react-mde';
 import 'react-mde/lib/styles/css/react-mde-all.css';
+
+import { IconPlus } from '@tabler/icons-react';
+
+import AddVersionModal from '@/src/components/Common/AddVersionModal/AddVersionModal';
+import Button from '@/src/components/Common/Button/Button';
+import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
+import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
+import FilePath from '@/src/components/Common/FilePath/FilePath';
+import { TextInputField } from '@/src/components/Common/InputField/InputField';
+import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
+import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
 import Switch from '@/src/components/Common/Switch/Switch';
+import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
+import { BasicI18nKey, ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { usePromptFolder } from '@/src/context/PromptFolderContext';
+import { useI18n } from '@/src/locales/client';
+import { DialPrompt } from '@/src/models/dial/prompt';
+import { Publication } from '@/src/models/dial/publications';
+import { FieldError } from '@/src/models/error';
+import { JSONEditorError } from '@/src/types/editor';
+import { PopUpState } from '@/src/types/pop-up';
+import { formatTimestampToDate } from '@/src/utils/formatting/date';
+import { getErrorForDescription } from '@/src/utils/validation/description-error';
 
 interface Props {
   prompt: DialPrompt;
@@ -35,6 +37,7 @@ interface Props {
   publication?: Publication;
   addedVersions: string[];
   setAddedVersions: Dispatch<SetStateAction<string[]>>;
+  setContentJsonErrors: Dispatch<SetStateAction<JSONEditorError[]>>;
 }
 
 enum SelectedContentView {
@@ -51,17 +54,16 @@ const PromptProperties: FC<Props> = ({
   publication,
   addedVersions,
   setAddedVersions,
+  setContentJsonErrors,
 }) => {
   const t = useI18n() as (t: string) => string;
-  const versions: DropdownItemsModel[] | undefined = prompts?.map((prompt) => ({
-    id: prompt.version,
-    name: prompt.version,
-  }));
+  const versions: string[] = prompts?.map((prompt) => prompt.version) || [];
   const [modalState, setModalState] = useState(PopUpState.Closed);
 
   const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
   const [selectedTab, setSelectedTab] = useState(SelectedContentView.WRITE);
   const [isJSONContentMode, setJSONContentMode] = useState(false);
+  const [jsonValue, setJsonValue] = useState<string | undefined>(undefined);
 
   const onChangeDescription = useCallback(
     (description: string) => {
@@ -123,6 +125,43 @@ const PromptProperties: FC<Props> = ({
     [onChangeVersion, setAddedVersions],
   );
 
+  const onChangeContentMode = useCallback(
+    (value: boolean) => {
+      setJSONContentMode(value);
+      if (!value) {
+        setContentJsonErrors([]);
+      }
+    },
+    [setContentJsonErrors],
+  );
+
+  const onChangeJsonValue = useCallback(
+    (v: string | undefined) => {
+      setJsonValue(v);
+      onChangePrompt?.({ ...prompt, content: v as string });
+    },
+    [onChangePrompt, prompt],
+  );
+
+  const onValidateJSON = useCallback(
+    (errors?: JSONEditorError[]) => {
+      setContentJsonErrors(errors || []);
+    },
+    [setContentJsonErrors],
+  );
+
+  useEffect(() => {
+    try {
+      const parsed = JSON.parse(prompt.content);
+
+      if (typeof parsed === 'object') {
+        setJsonValue(JSON.stringify(parsed, null, 2));
+      }
+    } catch {
+      setJsonValue(prompt.content);
+    }
+  }, [isJSONContentMode, prompt.content]);
+
   return (
     <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full">
       <div className="flex flex-row gap-10">
@@ -165,7 +204,7 @@ const PromptProperties: FC<Props> = ({
                 elementCssClass="lg:w-[35%]"
                 selectedValue={prompt.version}
                 elementId="version"
-                items={[...(versions || []), ...addedVersions.map((v) => ({ id: v, name: v }))]}
+                items={[...new Set([...versions, ...addedVersions])].map((v) => ({ id: v, name: v }))}
                 fieldTitle={t(CreateI18nKey.VersionTitle)}
                 onChange={onChangeVersion}
               >
@@ -197,18 +236,13 @@ const PromptProperties: FC<Props> = ({
                 isOn={isJSONContentMode}
                 title="JSON"
                 switchId="content_json_mode"
-                onChange={(value) => setJSONContentMode(value)}
+                onChange={onChangeContentMode}
               />
             </div>
             {isJSONContentMode ? (
-              <TextAreaField
-                elementId="content"
-                placeholder={t(CreateI18nKey.ContentPlaceholder)}
-                value={prompt.content}
-                onChange={onChangeContent}
-                elementCssClass="resize-y w-full min-h-[300px]"
-                disabled={isImmutable}
-              />
+              <div className="h-[300px] border border-primary rounded">
+                <JsonEditorBase value={jsonValue} onChange={onChangeJsonValue} onValidateJSON={onValidateJSON} />
+              </div>
             ) : (
               <ReactMde
                 value={prompt.content}
@@ -246,7 +280,7 @@ const PromptProperties: FC<Props> = ({
         createPortal(
           <AddVersionModal
             modalState={modalState}
-            existingVersions={[...(versions || []).map((v) => v.id), ...addedVersions]}
+            existingVersions={[...versions, ...addedVersions]}
             onClose={onCloseModal}
             onConfirm={onAddVersion}
           />,

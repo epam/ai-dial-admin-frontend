@@ -1,7 +1,8 @@
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
 import IconGalleryModal from '@/src/components/IconGallery/IconGalleryModal';
-import { fireEvent, within } from '@testing-library/react';
 import { PopUpState } from '@/src/types/pop-up';
+import { render } from '@testing-library/react';
+import { fireEvent, within } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
 
 const icons = [
   {
@@ -10,18 +11,18 @@ const icons = [
   },
 ];
 
-jest.mock('@/src/components/IconGallery/Icons.config', () => ({
-  getIconsConfig: jest.fn(() => {
+vi.mock('@/src/components/IconGallery/Icons.config', () => ({
+  getIconsConfig: vi.fn(() => {
     return icons;
   }),
 }));
 
-const onClose = jest.fn();
-const onChange = jest.fn();
+const onClose = vi.fn();
+const onChange = vi.fn();
 
 describe('Components - ItemGallery', () => {
-  it('Should render icon successfully', () => {
-    const { baseElement } = renderWithContext(
+  test('Should render icon successfully', () => {
+    const { baseElement } = render(
       <IconGalleryModal modalState={PopUpState.Opened} onChange={onChange} onClose={onClose} selectedValue={''} />,
     );
 

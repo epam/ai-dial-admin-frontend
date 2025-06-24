@@ -1,21 +1,15 @@
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
 import ErrorText from './ErrorText';
 
-describe('Common components - ErrorText', () => {
-  it('Should render successfully', () => {
-    const { baseElement } = render(<ErrorText />);
-
-    const span = baseElement.getElementsByTagName('span');
-    expect(baseElement).toBeTruthy();
-    expect(span.length).toBe(0);
+describe('Common components :: ErrorText', () => {
+  test('Should render error text when provided', () => {
+    render(<ErrorText errorText="This is an error" />);
+    expect(screen.getByText('This is an error')).toBeInTheDocument();
   });
 
-  it('Should set error text', () => {
-    const { baseElement } = render(<ErrorText errorText="error text" />);
-
-    const span = baseElement.getElementsByTagName('span');
-    expect(baseElement).toBeTruthy();
-    expect(span.length).toBe(1);
-    expect(span[0].innerHTML).toBe('error text');
+  test('Should render nothing when errorText is not provided', () => {
+    const { container } = render(<ErrorText />);
+    expect(container).toBeEmptyDOMElement();
   });
 });

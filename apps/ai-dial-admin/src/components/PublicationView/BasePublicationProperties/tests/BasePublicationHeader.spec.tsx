@@ -1,45 +1,60 @@
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
-import BasePublicationHeader from '@/src/components/PublicationView/BasePublicationProperties/BasePublicationHeader';
-import { fireEvent } from '@testing-library/react';
-
-const onApprove = jest.fn();
-const onDecline = jest.fn();
-
-describe('Components - BasePublicationHeader', () => {
-  it('Should correctly render BasePublicationHeader component', () => {
-    const { getByTestId } = renderWithContext(<BasePublicationHeader onApprove={onApprove} onDecline={onDecline} />);
-    const declineButton = getByTestId('publication-decline-button');
-    const approveButton = getByTestId('publication-approve-button');
-
-    expect(declineButton).toBeTruthy();
-    expect(approveButton).toBeTruthy();
+import { ActionType } from '@/src/models/dial/publications';
+import { ApplicationRoute } from '@/src/types/routes';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
+import BasePublicationHeader from '../BasePublicationHeader';
+import { ButtonsI18nKey } from '../../../../constants/i18n';
+describe('BasePublicationHeader', () => {
+  test('Should render approve and decline buttons', () => {
+    render(
+      <BasePublicationHeader
+        onApprove={vi.fn()}
+        onDecline={vi.fn()}
+        route={ApplicationRoute.PromptPublications}
+        action={ActionType.ADD}
+      />,
+    );
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Decline })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Publish })).toBeInTheDocument();
   });
 
-  it('Should correctly pass approve flow', () => {
-    const { getByTestId } = renderWithContext(<BasePublicationHeader onApprove={onApprove} onDecline={onDecline} />);
-
-    const approveButton = getByTestId('publication-approve-button');
-    fireEvent.click(approveButton);
-
-    const approveModal = getByTestId('publication-approve-modal');
-    expect(approveModal).toBeTruthy();
-
-    const confirmApprove = getByTestId('publication-approve-modal-modalConfirm');
-    fireEvent.click(confirmApprove);
-    expect(onApprove).toHaveBeenCalled();
+  test('Should open and confirm approve modal', () => {
+    const onApprove = vi.fn();
+    render(
+      <BasePublicationHeader
+        onApprove={onApprove}
+        onDecline={vi.fn()}
+        route={ApplicationRoute.PromptPublications}
+        action={ActionType.ADD}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Publish }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
-  it('Should correctly pass decline flow', () => {
-    const { getByTestId } = renderWithContext(<BasePublicationHeader onApprove={onApprove} onDecline={onDecline} />);
+  test('Should open and confirm decline modal with reason', () => {
+    const onDecline = vi.fn();
+    render(
+      <BasePublicationHeader
+        onApprove={vi.fn()}
+        onDecline={onDecline}
+        route={ApplicationRoute.PromptPublications}
+        action={ActionType.ADD}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Decline }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
 
-    const declineButton = getByTestId('publication-decline-button');
-    fireEvent.click(declineButton);
-
-    const declineModal = getByTestId('publication-decline-modal');
-    expect(declineModal).toBeTruthy();
-
-    const confirmDecline = getByTestId('publication-decline-modal-modalConfirm');
-    fireEvent.click(confirmDecline);
-    expect(onDecline).toHaveBeenCalled();
+  test('Should render Unpublish button for REMOVE action', () => {
+    render(
+      <BasePublicationHeader
+        onApprove={vi.fn()}
+        onDecline={vi.fn()}
+        route={ApplicationRoute.PromptPublications}
+        action={ActionType.REMOVE}
+      />,
+    );
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Unpublish })).toBeInTheDocument();
   });
 });

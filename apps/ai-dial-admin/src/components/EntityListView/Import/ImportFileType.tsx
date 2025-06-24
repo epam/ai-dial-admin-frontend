@@ -9,7 +9,7 @@ import { getNameExtensionFromFile } from '@/src/components/FilesList/files-list'
 import { ImportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { RadioButtonModel } from '@/src/models/radio-button';
-import { ImportFileTypes } from '@/src/types/import';
+import { ImportFileType } from '@/src/types/import';
 import { getIcon } from '@/src/utils/files/icon';
 
 interface Props {
@@ -18,10 +18,19 @@ interface Props {
   fileType: string;
   fileTypes: RadioButtonModel[];
   changeFileType: (type: string) => void;
-  isInvalid?: (id: string) => boolean;
+  isInvalid?: (file: File) => boolean;
+  maxFilesCount?: number;
 }
 
-const ImportFileType: FC<Props> = ({ files, changeFile, fileTypes, fileType, changeFileType, isInvalid }) => {
+const ImportFileTypeSelector: FC<Props> = ({
+  files,
+  changeFile,
+  fileTypes,
+  fileType,
+  changeFileType,
+  isInvalid,
+  maxFilesCount,
+}) => {
   const t = useI18n();
 
   const getFileIcon = (name: string) => {
@@ -42,19 +51,22 @@ const ImportFileType: FC<Props> = ({ files, changeFile, fileTypes, fileType, cha
         />
       ))}
       <div className="mt-6 flex-1 min-h-0">
-        {fileType === ImportFileTypes.ARCHIVE && (
+        {fileType === ImportFileType.ARCHIVE && (
           <LoadFileAreaField
             elementId="importArchive"
             files={files?.[0] ? [files[0]] : []}
             fieldTitle={t(ImportI18nKey.File)}
             emptyTitle={t(ImportI18nKey.DropAnyFile)}
-            iconBeforeInput={<IconFileTypeZip width={18} height={18} className="text-secondary" />}
-            acceptTypes="application/zip, .zip"
-            onChangeFile={changeFile}
+            maxFilesCount={1}
             isMultiple={false}
+            iconBeforeInput={<IconFileTypeZip width={18} height={18} className="text-secondary" />}
+            fileFormatError={t(ImportI18nKey.ImportArchiveFileFormatError)}
+            fileCountError={t(ImportI18nKey.ImportArchiveDescription)}
+            acceptTypes="application/zip, .zip, application/x-zip-compressed"
+            onChangeFile={changeFile}
           />
         )}
-        {fileType === ImportFileTypes.JSON && (
+        {fileType === ImportFileType.JSON && (
           <LoadFileAreaField
             elementId="importJSON"
             fieldTitle={t(ImportI18nKey.Files)}
@@ -66,22 +78,26 @@ const ImportFileType: FC<Props> = ({ files, changeFile, fileTypes, fileType, cha
               </i>
             }
             acceptTypes="application/json"
-            onChangeFile={changeFile}
+            fileFormatError={t(ImportI18nKey.ImportJsonFileFormatError)}
             isInvalid={isInvalid}
             errorText={t(ImportI18nKey.ImportPromptError)}
+            onChangeFile={changeFile}
+            maxFilesCount={maxFilesCount}
           />
         )}
-        {fileType === ImportFileTypes.FILES && (
+        {fileType === ImportFileType.FILES && (
           <LoadFileAreaField
             elementId="importFiles"
             fieldTitle={t(ImportI18nKey.ImportFiles)}
             emptyTitle={t(ImportI18nKey.DropAnyFile)}
             files={files}
             acceptTypes="/"
+            fileFormatError={t(ImportI18nKey.ImportFileErrorType)}
             onChangeFile={changeFile}
             isInvalid={isInvalid}
             dynamicIcon={getFileIcon}
             errorText={t(ImportI18nKey.ImportFileError)}
+            maxFilesCount={maxFilesCount}
           />
         )}
       </div>
@@ -89,4 +105,4 @@ const ImportFileType: FC<Props> = ({ files, changeFile, fileTypes, fileType, cha
   );
 };
 
-export default ImportFileType;
+export default ImportFileTypeSelector;

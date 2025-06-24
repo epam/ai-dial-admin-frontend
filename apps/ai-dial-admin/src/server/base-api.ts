@@ -45,10 +45,15 @@ export class BaseApi {
     return this.sendActionRequest<T>(url, 'POST', token, dto, initHeaders);
   }
 
-  protected async postFiles(url: string, dto: FormData, token?: JWT | null): Promise<ServerActionResponse> {
-    return fileRequest(`${this.config.host}${url}`, getAuthorizationHeader(token), dto).then((res) =>
-      this.handleResponse(res, 'POST'),
-    );
+  protected async postFiles(
+    url: string,
+    dto: FormData,
+    token?: JWT | null,
+    method?: string,
+  ): Promise<ServerActionResponse> {
+    return fileRequest(`${this.config.host || ''}${url}`, getAuthorizationHeader(token), dto, method).then((res) => {
+      return this.handleResponse(res, method || 'POST');
+    });
   }
 
   protected get<R extends object>(url: string, token?: JWT | null, headers?: HeadersInit): Promise<R | null> {
@@ -64,7 +69,7 @@ export class BaseApi {
   }
 
   protected streamRequest(url: string, fileName: string, token?: JWT | null, isPreview?: boolean): Promise<Response> {
-    return streamRequest(`${this.config.host}${url}`, fileName, token, isPreview);
+    return streamRequest(`${this.config.host || ''}${url}`, fileName, token, isPreview);
   }
 
   protected sendActionRequest<T extends object>(
@@ -74,7 +79,7 @@ export class BaseApi {
     dto?: T,
     initHeaders?: HeadersInit,
   ): Promise<ServerActionResponse> {
-    return sendRequest(`${this.config.host}${url}`, type, { ...getApiHeaders(token), ...initHeaders }, dto).then(
+    return sendRequest(`${this.config.host || ''}${url}`, type, { ...getApiHeaders(token), ...initHeaders }, dto).then(
       (res) => this.handleResponse(res, type),
     );
   }
@@ -85,13 +90,17 @@ export class BaseApi {
     dto?: T,
     token?: JWT | null,
     initHeaders?: HeadersInit,
-  ): Promise<Response | R | null> {
-    return sendRequest(`${this.config.host}${url}`, type, { ...getApiHeaders(token), ...initHeaders }, dto).then(
+  ): Promise<Response | R | null | undefined> {
+    return sendRequest(`${this.config.host || ''}${url}`, type, { ...getApiHeaders(token), ...initHeaders }, dto).then(
       (res) => {
         if (isFailedRequest(res)) {
           logger.error(`Request error ${res}`);
           logger.error(`Request status ${res.status}`);
           logger.error(`Request error Url  ${res.url}`);
+
+          if (res.status === 403) {
+            return void 0;
+          }
 
           return res.text().then((error) => {
             logger.error(`Request error ${res.status} ${error}`);
@@ -123,6 +132,7 @@ export class BaseApi {
           success: false,
           errorMessage: getErrorMessage(errObject, res.status),
           errorHeader: getError(errObject),
+          status: res.status,
         };
       });
     }

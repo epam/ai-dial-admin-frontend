@@ -46,6 +46,7 @@ const RadioField: FC<Props> = ({
             disabled={disabled}
             cssClass={radioCssClass}
             title={radio.name}
+            description={radio.description}
             checked={radio.id === activeRadioButton}
             onChange={() => onChange(radio.id)}
           />

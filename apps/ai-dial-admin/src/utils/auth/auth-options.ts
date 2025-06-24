@@ -15,7 +15,6 @@ function defaultCookies(useSecureCookies: boolean, sameSite = 'lax'): CookiesOpt
         sameSite,
         path: '/',
         secure: useSecureCookies,
-        domain: process.env.COOKIE_DOMAIN || undefined,
       },
     },
     callbackUrl: {
@@ -25,7 +24,6 @@ function defaultCookies(useSecureCookies: boolean, sameSite = 'lax'): CookiesOpt
         sameSite,
         path: '/',
         secure: useSecureCookies,
-        domain: process.env.COOKIE_DOMAIN || undefined,
       },
     },
     csrfToken: {

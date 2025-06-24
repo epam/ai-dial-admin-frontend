@@ -8,6 +8,7 @@ import { approvePrompt, declinePrompt } from '@/src/app/[lang]/publications-prom
 import { publicationsApi } from '@/src/app/api/api';
 import { Publication } from '@/src/models/dial/publications';
 import { logger } from '@/src/server/logger';
+import Page403 from '@/src/components/Page403/Page403';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +19,9 @@ export default async function Page(params: { searchParams: Promise<{ path: strin
 
   try {
     data = await publicationsApi.getPublication(token, (await params.searchParams).path);
+    if (data === void 0) {
+      return <Page403 />;
+    }
   } catch (e) {
     logger.error('Getting prompt view data error', e);
   }

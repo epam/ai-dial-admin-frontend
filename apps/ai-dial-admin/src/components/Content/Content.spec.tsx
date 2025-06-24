@@ -1,10 +1,11 @@
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
 import Content from './Content';
+import { describe, expect, test } from 'vitest';
 
 describe('Components - Content', () => {
-  it('Should render successfully', () => {
-    const { baseElement } = renderWithContext(
-      <Content isEnableAuth={true} beVersion={'1.0.0'} feVersion={'1.0.0'}>
+  test('Should render successfully', () => {
+    const { baseElement } = render(
+      <Content isEnableAuth={true} beVersion={'1.0.0'}>
         <div>content</div>
       </Content>,
     );

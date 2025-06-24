@@ -66,6 +66,8 @@ const FrameRenderer = forwardRef<HTMLDivElement, Props>(
           hostDomain: window.location.origin,
           visualizerName: name || '',
         });
+
+        (visualizerRef.current as unknown as { iframe: HTMLIFrameElement }).iframe.sandbox.add('clipboard-write');
         setVisualizerConnector?.(visualizerRef.current);
 
         return () => {

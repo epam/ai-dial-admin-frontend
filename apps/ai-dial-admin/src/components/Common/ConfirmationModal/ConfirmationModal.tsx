@@ -63,17 +63,11 @@ const ConfirmationModal: FC<Props> = ({
         <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
           <Button
             cssClass="secondary"
-            dataTestId={dataTestId ? `${dataTestId}-modalCancel` : 'modalCancel'}
             title={cancelLabel || t(ButtonsI18nKey.Cancel)}
             onClick={() => (onCancel ? onCancel() : onClose())}
           />
 
-          <Button
-            dataTestId={dataTestId ? `${dataTestId}-modalConfirm` : 'modalConfirm'}
-            cssClass={`primary ${confirmClassName || ''}`}
-            title={confirmLabel}
-            onClick={() => onConfirm()}
-          />
+          <Button cssClass={`primary ${confirmClassName || ''}`} title={confirmLabel} onClick={() => onConfirm()} />
         </div>
       )}
     </Popup>

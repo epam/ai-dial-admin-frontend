@@ -1,16 +1,18 @@
-import EditableCellRenderer from '@/src/components/Grid/CellRenderer/EditableCellRenderer';
+import { ColDef, GridApi, IRowNode } from 'ag-grid-community';
+import { isEqual } from 'lodash';
+
+import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
-import { DialBaseEntity, DialRoleLimits, DialRoleLimitsMap } from '@/src/models/dial/base-entity';
-import { DialRole } from '@/src/models/dial/role';
 import {
   getOpenInNewTabOperation,
   getRemoveOperation,
   getResetOperation,
   getSetNoLimitsOperation,
-} from '@/src/utils/entities/entity-operations';
-import { ColDef, GridApi, IRowNode } from 'ag-grid-community';
+} from '@/src/constants/grid-columns/actions';
+import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { NO_LIMITS_KEY } from '@/src/constants/role';
-import { isEqual } from 'lodash';
+import { DialBaseEntity, DialRoleLimits, DialRoleLimitsMap } from '@/src/models/dial/base-entity';
+import { DialRole } from '@/src/models/dial/role';
 
 export interface RolesGridData extends DialRoleLimits {
   name?: string;
@@ -132,12 +134,7 @@ export const getRolesColumnDefs = (
     actions.push(getRemoveOperation(remove));
   }
 
-  return [
-    { headerName: 'Name', field: 'name' },
-    { headerName: 'Description', field: 'description' },
-    ...LIMIT_COLUMNS(entity.defaultRoleLimit, onChangeLimits),
-    ACTION_COLUMN(actions),
-  ];
+  return [...SIMPLE_ENTITY_COLUMNS, ...LIMIT_COLUMNS(entity.defaultRoleLimit, onChangeLimits), ACTION_COLUMN(actions)];
 };
 
 export const limitValueFormatter = (value: string) => {

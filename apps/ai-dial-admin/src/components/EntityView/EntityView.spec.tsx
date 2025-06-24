@@ -1,11 +1,12 @@
 import { render } from '@testing-library/react';
 import AddEntitiesGrid from './AddEntitiesGrid';
 import { PopUpState } from '../../types/pop-up';
+import { describe, expect, test, vi } from 'vitest';
 
-const mockFunction = jest.fn();
+const mockFunction = vi.fn();
 
 describe('EntityView - AddEntitiesGrid', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const { baseElement } = render(
       <AddEntitiesGrid
         entities={[]}

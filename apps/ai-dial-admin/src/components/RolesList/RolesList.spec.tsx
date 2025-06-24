@@ -1,22 +1,23 @@
 import RolesList from './RolesList';
 import RolesView from './RolesView';
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
+import { render } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
 
-jest.mock('react-dnd', () => ({
-  useDrag: () => [{ isDragging: false }, jest.fn()],
-  useDrop: () => [{ isOver: false }, jest.fn()],
+vi.mock('react-dnd', () => ({
+  useDrag: () => [{ isDragging: false }, vi.fn()],
+  useDrop: () => [{ isOver: false }, vi.fn()],
 }));
 
 describe('RolesList - List view', () => {
-  it('Should render successfully', () => {
-    const { baseElement } = renderWithContext(<RolesList data={[{ name: '' }]} />);
+  test('Should render successfully', () => {
+    const { baseElement } = render(<RolesList data={[{ name: '' }]} />);
     expect(baseElement).toBeTruthy();
   });
 });
 
 describe('RolesView - view', () => {
-  it('Should render successfully', () => {
-    const { baseElement } = renderWithContext(
+  test('Should render successfully', () => {
+    const { baseElement } = render(
       <RolesView names={[]} originalRole={{}} addons={[]} applications={[]} keys={[]} models={[]} />,
     );
     expect(baseElement).toBeTruthy();

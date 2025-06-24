@@ -1,19 +1,20 @@
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 
+import { getEntityPath } from '@/src/components/EntityListView/entity-list-view';
 import {
-  ENTITY_BASE_COLUMNS,
-  getEntityPath,
   KEY_ENTITY_COLUMNS,
+  ENTITY_BASE_COLUMNS,
   RUNNERS_COLUMNS,
   SIMPLE_ENTITY_COLUMNS,
-} from '@/src/components/EntityListView/entity-list-view';
+} from '@/src/constants/grid-columns/grid-columns';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
-import { BasicI18nKey, EntitiesI18nKey, ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportDependenciesConfig, ExportRequestComponent } from '@/src/models/export';
-import { ExportComponentType, ExportFormat, ExportType } from '@/src/types/export';
+import { ExportFormat, ExportType } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/utils/entities/entity-operations';
+import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
+import { EntityType } from '@/src/types/entity-type';
 
 // until BE implement
 export const fulDependenciesConfig = {
@@ -27,59 +28,9 @@ export const fulDependenciesConfig = {
 };
 
 /**
- * Generate title key for empty grid of each ExportComponentType
+ * Generate column definitions for each EntityType
  *
- * @param {?ExportComponentType} [selectedTab] - current component type
- * @returns {string} - key string for translate
- */
-export const getEmptyDataTitleI18nKey = (selectedTab?: ExportComponentType): string => {
-  if (selectedTab === ExportComponentType.ROLE) {
-    return EntitiesI18nKey.NoRoles;
-  }
-
-  if (selectedTab === ExportComponentType.KEY) {
-    return EntitiesI18nKey.NoKeys;
-  }
-
-  if (selectedTab === ExportComponentType.APPLICATION_TYPE_SCHEMA) {
-    return EntitiesI18nKey.NoApplicationRunners;
-  }
-
-  if (selectedTab === ExportComponentType.INTERCEPTOR) {
-    return EntitiesI18nKey.NoInterceptors;
-  }
-
-  if (selectedTab === ExportComponentType.PROMPT) {
-    return EntitiesI18nKey.NoPrompts;
-  }
-
-  if (selectedTab === ExportComponentType.FILE) {
-    return EntitiesI18nKey.NoFiles;
-  }
-
-  if (selectedTab === ExportComponentType.MODEL) {
-    return EntitiesI18nKey.NoModels;
-  }
-
-  if (selectedTab === ExportComponentType.APPLICATION) {
-    return EntitiesI18nKey.NoApplications;
-  }
-
-  if (selectedTab === ExportComponentType.ROUTE) {
-    return EntitiesI18nKey.NoRoutes;
-  }
-
-  if (selectedTab === ExportComponentType.ENTITIES) {
-    return EntitiesI18nKey.NoEntities;
-  }
-
-  return BasicI18nKey.NoData;
-};
-
-/**
- * Generate column definitions for each ExportComponentType
- *
- * @param {string} type - ExportComponentType
+ * @param {string} type - EntityType
  * @param {(v: string) => string} t - translate function
  * @param {?(entity: EntitiesGridData) => void} [remove] - remove action
  * @returns {ColDef[]} - column definitions
@@ -90,7 +41,7 @@ export const getActualColDefs = (
   remove?: (entity: EntitiesGridData) => void,
 ): ColDef[] => {
   let columns: ColDef[] = [...ENTITY_BASE_COLUMNS];
-  if (type === ExportComponentType.ENTITIES) {
+  if (type === EntityType.ENTITIES) {
     columns = [
       {
         field: 'type',
@@ -101,13 +52,13 @@ export const getActualColDefs = (
       ...ENTITY_BASE_COLUMNS,
     ];
   }
-  if (type === ExportComponentType.ROLE || type === ExportComponentType.INTERCEPTOR) {
+  if (type === EntityType.ROLE || type === EntityType.INTERCEPTOR) {
     columns = [...SIMPLE_ENTITY_COLUMNS];
   }
-  if (type === ExportComponentType.KEY) {
+  if (type === EntityType.KEY) {
     columns = [...KEY_ENTITY_COLUMNS];
   }
-  if (type === ExportComponentType.APPLICATION_TYPE_SCHEMA) {
+  if (type === EntityType.APPLICATION_TYPE_SCHEMA) {
     columns = [...RUNNERS_COLUMNS];
   }
   if (remove && isEntityWithDependency(type)) {
@@ -142,7 +93,7 @@ const openInNewTab = (row: EntitiesGridData) => {
  * Generate components for export
  *
  * @param {ExportType} selectedExportType - selected export type
- * @param {Record<string, EntitiesGridData[]>} data - ExportComponentType data map
+ * @param {Record<string, EntitiesGridData[]>} data - EntityType data map
  * @returns {ExportRequestComponent[]} - correct component data with dependencies
  */
 export const getComponents = (
@@ -159,9 +110,7 @@ export const getComponents = (
     data.forEach((entity) => {
       const dependencies =
         entity.dependencies?.flatMap((d) =>
-          d === ExportComponentType.ENTITIES
-            ? [ExportComponentType.APPLICATION, ExportComponentType.MODEL, ExportComponentType.ROUTE]
-            : [d],
+          d === EntityType.ENTITIES ? [EntityType.APPLICATION, EntityType.MODEL, EntityType.ROUTE] : [d],
         ) || [];
       components.push({
         dependencies,
@@ -182,13 +131,13 @@ export const getComponents = (
  */
 const getComponentKey = (data: EntitiesGridData, key: string): string => {
   if (data.type === MenuI18nKey.Models) {
-    return ExportComponentType.MODEL;
+    return EntityType.MODEL;
   }
   if (data.type === MenuI18nKey.Applications) {
-    return ExportComponentType.APPLICATION;
+    return EntityType.APPLICATION;
   }
   if (data.type === MenuI18nKey.Routes) {
-    return ExportComponentType.ROUTE;
+    return EntityType.ROUTE;
   }
 
   return key;
@@ -200,44 +149,44 @@ const getComponentKey = (data: EntitiesGridData, key: string): string => {
  * @param {ExportDependenciesConfig} config - dependencies config
  * @param {ExportFormat} selectedFormat - export format
  * @param {ExportType} selectedExportType - export type
- * @returns {ExportComponentType[]} - correct ExportComponentType array
+ * @returns {EntityType[]} - correct EntityType array
  */
 export const getComponentTypes = (
   config: ExportDependenciesConfig,
   selectedFormat: ExportFormat,
   selectedExportType: ExportType,
-): ExportComponentType[] => {
+): EntityType[] => {
   if (selectedExportType === ExportType.Custom) {
     return [];
   }
   const isCoreFormat = selectedFormat === ExportFormat.CORE;
-  const types: ExportComponentType[] = [];
+  const types: EntityType[] = [];
   if (config.entities) {
-    types.push(...[ExportComponentType.APPLICATION, ExportComponentType.MODEL, ExportComponentType.ROUTE]);
+    types.push(...[EntityType.APPLICATION, EntityType.MODEL, EntityType.ROUTE]);
   }
 
   if (config.roles) {
-    types.push(ExportComponentType.ROLE);
+    types.push(EntityType.ROLE);
   }
 
   if (config.keys) {
-    types.push(ExportComponentType.KEY);
+    types.push(EntityType.KEY);
   }
 
   if (config.runners) {
-    types.push(ExportComponentType.APPLICATION_TYPE_SCHEMA);
+    types.push(EntityType.APPLICATION_TYPE_SCHEMA);
   }
 
   if (config.interceptors) {
-    types.push(ExportComponentType.INTERCEPTOR);
+    types.push(EntityType.INTERCEPTOR);
   }
   // until BE implement
   if (!isCoreFormat) {
     // if (config.prompts) {
-    //   types.push(ExportComponentType.PROMPT);
+    //   types.push(EntityType.PROMPT);
     // }
     // if (config.files) {
-    //   types.push(ExportComponentType.FILE);
+    //   types.push(EntityType.FILE);
     // }
   }
 
@@ -247,11 +196,9 @@ export const getComponentTypes = (
 /**
  * Check if entity can be exported with dependencies
  *
- * @param {string} entity - ExportComponentType
- * @returns {boolean} - true if ExportComponentType have dependencies
+ * @param {string} entity - EntityType
+ * @returns {boolean} - true if EntityType have dependencies
  */
 export const isEntityWithDependency = (entity: string): boolean => {
-  return (
-    entity === ExportComponentType.ENTITIES || entity === ExportComponentType.ROLE || entity === ExportComponentType.KEY
-  );
+  return entity === EntityType.ENTITIES || entity === EntityType.ROLE || entity === EntityType.KEY;
 };

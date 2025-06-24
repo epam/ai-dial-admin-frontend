@@ -1,9 +1,10 @@
-import { getRequestFilters } from '../get-request-filters';
-import { FilterOperatorDto, GridFilter, FilterDto } from '@/src/types/request';
 import { GridFilterType } from '@/src/types/grid-filter';
+import { FilterDto, FilterOperatorDto, GridFilter } from '@/src/types/request';
+import { describe, expect, test } from 'vitest';
+import { getRequestFilters } from '../get-request-filters';
 
 describe('getRequestFilters', () => {
-  it('converts grid filters to request filters correctly', () => {
+  test('converts grid filters to request filters correctly', () => {
     const gridFilters: Record<string, GridFilter> = {
       name: { type: GridFilterType.CONTAINS, filter: 'John' },
       surname: { type: GridFilterType.NOT_CONTAINS, filter: 'Smith' },
@@ -21,7 +22,7 @@ describe('getRequestFilters', () => {
     expect(getRequestFilters(gridFilters)).toEqual(expected);
   });
 
-  it('ignores filters with unknown types', () => {
+  test('ignores filters with unknown types', () => {
     const gridFilters: Record<string, GridFilter> = {
       name: { type: 'invalid' as GridFilterType, filter: 'test' },
       age: { type: GridFilterType.EQUALS, filter: '25' },
@@ -32,7 +33,7 @@ describe('getRequestFilters', () => {
     expect(getRequestFilters(gridFilters)).toEqual(expected);
   });
 
-  it('returns empty array for empty input', () => {
+  test('returns empty array for empty input', () => {
     expect(getRequestFilters({})).toEqual([]);
   });
 });

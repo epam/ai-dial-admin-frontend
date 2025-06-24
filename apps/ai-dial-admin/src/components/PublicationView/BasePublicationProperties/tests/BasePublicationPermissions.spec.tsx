@@ -1,17 +1,17 @@
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
-import BasePublicationPermissions from '@/src/components/PublicationView/BasePublicationProperties/BasePublicationPermissions';
-import { fireEvent, waitFor } from '@testing-library/react';
 import { getRules } from '@/src/app/[lang]/folders-storage/actions';
+import BasePublicationPermissions from '@/src/components/PublicationView/BasePublicationProperties/BasePublicationPermissions';
+import { fireEvent, render, waitFor } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
 
-jest.mock('@/src/app/[lang]/folders-storage/actions');
-const mockedGetRules = getRules as jest.Mock;
+vi.mock('@/src/app/[lang]/folders-storage/actions');
+const mockedGetRules = getRules;
 
 describe('Components - BasePublicationPermissions', () => {
-  it('Should correctly render BasePublicationPermissions component', async () => {
+  test('Should correctly render BasePublicationPermissions component', async () => {
     mockedGetRules.mockResolvedValue({
       id: [{ id: 'rule-1' }],
     });
-    const { getByTestId, findByTestId } = renderWithContext(
+    const { getByTestId, findByTestId } = render(
       <BasePublicationPermissions rules={[]} folderId={'id'} showCompare={true} />,
     );
     const reviewStructureButton = getByTestId('publication-permissions-review-structure-button');
@@ -21,11 +21,11 @@ describe('Components - BasePublicationPermissions', () => {
     expect(compareChangesButton).toBeTruthy();
   });
 
-  it('Should not render compare button inside BasePublicationPermissions component if rules same', async () => {
+  test('Should not render compare button inside BasePublicationPermissions component if rules same', async () => {
     mockedGetRules.mockResolvedValue({
       id: [],
     });
-    const { getByTestId, queryByTestId } = renderWithContext(
+    const { getByTestId, queryByTestId } = render(
       <BasePublicationPermissions rules={[]} folderId={'id'} showCompare={true} />,
     );
     const reviewStructureButton = getByTestId('publication-permissions-review-structure-button');
@@ -36,11 +36,11 @@ describe('Components - BasePublicationPermissions', () => {
     });
   });
 
-  it('Should not render compare button inside BasePublicationPermissions component if props are invalid', async () => {
+  test('Should not render compare button inside BasePublicationPermissions component if props are invalid', async () => {
     mockedGetRules.mockResolvedValue({
       id: [{ id: 'rule-1' }],
     });
-    const { getByTestId, queryByTestId } = renderWithContext(
+    const { getByTestId, queryByTestId } = render(
       <BasePublicationPermissions rules={[]} folderId={'id'} showCompare={false} />,
     );
     const reviewStructureButton = getByTestId('publication-permissions-review-structure-button');
@@ -51,10 +51,8 @@ describe('Components - BasePublicationPermissions', () => {
     });
   });
 
-  it('Should open structure modal', () => {
-    const { getByTestId } = renderWithContext(
-      <BasePublicationPermissions rules={[]} folderId={'id'} showCompare={true} />,
-    );
+  test('Should open structure modal', () => {
+    const { getByTestId } = render(<BasePublicationPermissions rules={[]} folderId={'id'} showCompare={true} />);
 
     const reviewStructureButton = getByTestId('publication-permissions-review-structure-button');
     fireEvent.click(reviewStructureButton);
@@ -63,11 +61,11 @@ describe('Components - BasePublicationPermissions', () => {
     expect(structureModal).toBeTruthy();
   });
 
-  it('Should open compare modal', async () => {
+  test('Should open compare modal', async () => {
     mockedGetRules.mockResolvedValue({
       id: [{ id: 'rule-1' }],
     });
-    const { getByTestId, findByTestId } = renderWithContext(
+    const { getByTestId, findByTestId } = render(
       <BasePublicationPermissions rules={[]} folderId={'id'} showCompare={true} />,
     );
 

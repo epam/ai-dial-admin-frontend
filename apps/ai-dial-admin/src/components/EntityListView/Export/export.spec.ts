@@ -1,12 +1,13 @@
+import { describe, expect, test } from 'vitest';
 import {
-  generatePromptRowDataForExportGrid,
   changeExportFileData,
   changeExportPromptData,
   generateExportList,
+  generatePromptRowDataForExportGrid,
 } from './export';
 
 describe('Prompts list :: generatePromptRowDataForExportGrid', () => {
-  it('Should return similar data', () => {
+  test('Should return similar data', () => {
     const prompts = [
       { name: 'name1', version: '1.0.0' },
       { name: 'name2', version: '1.0.0' },
@@ -18,7 +19,7 @@ describe('Prompts list :: generatePromptRowDataForExportGrid', () => {
       { name: 'name2', version: '1.0.0', versions: ['1.0.0'] },
     ]);
   });
-  it('Should return merged data', () => {
+  test('Should return merged data', () => {
     const prompts = [
       { name: 'name1', version: '1.0.0' },
       { name: 'name1', version: '2.0.0' },
@@ -33,7 +34,7 @@ describe('Prompts list :: generatePromptRowDataForExportGrid', () => {
     ]);
   });
 
-  it('Should return merged data with versions if it already exported', () => {
+  test('Should return merged data with versions if it already exported', () => {
     const prompts = [
       { name: 'name1', version: '1.0.0' },
       { name: 'name1', version: '2.0.0' },
@@ -53,15 +54,15 @@ describe('Prompts list :: generatePromptRowDataForExportGrid', () => {
 });
 
 describe('Prompts list :: changeExportFileData', () => {
-  it('Should return object with new filePath if not exist', () => {
+  test('Should return object with new filePath if not exist', () => {
     const selected = [];
     const fetched = {};
     const exported = {};
     const filePath = 'filePath';
     const res = changeExportFileData(selected, fetched, filePath, exported);
-    expect(res).toEqual({ filePath: [] });
+    expect(res).toEqual({});
   });
-  it('Should return object with new filled data for filePath', () => {
+  test('Should return object with new filled data for filePath', () => {
     const selected = [{ name: 'name1', extension: '.jpg' }];
     const fetched = { filePath: [{ name: 'name1.jpg' }] };
     const exported = {};
@@ -72,15 +73,15 @@ describe('Prompts list :: changeExportFileData', () => {
 });
 
 describe('Prompts list :: changeExportPromptData', () => {
-  it('Should return object with new filePath if not exist', () => {
+  test('Should return object with new filePath if not exist', () => {
     const selected = [];
     const fetched = {};
     const exported = {};
     const filePath = 'filePath';
     const res = changeExportPromptData(selected, fetched, filePath, exported);
-    expect(res).toEqual({ filePath: [] });
+    expect(res).toEqual({});
   });
-  it('Should return object with new filled data for filePath', () => {
+  test('Should return object with new filled data for filePath', () => {
     const selected = [{ name: 'name1', version: '1.0.0' }];
     const fetched = { filePath: [{ name: 'name1', version: '1.0.0' }] };
     const exported = {};
@@ -88,7 +89,7 @@ describe('Prompts list :: changeExportPromptData', () => {
     const res = changeExportPromptData(selected, fetched, filePath, exported);
     expect(res).toEqual({ filePath: [{ name: 'name1', version: '1.0.0' }] });
   });
-  it('Should return filtered object with data for filePath', () => {
+  test('Should return filtered object with data for filePath', () => {
     const selected = [{ name: 'name1', version: '1.0.0, 2.0.0, 3.0.0' }];
     const fetched = {
       filePath: [
@@ -112,7 +113,7 @@ describe('Prompts list :: changeExportPromptData', () => {
 });
 
 describe('Prompts list :: generateExportList', () => {
-  it('Should convert object of folders into array of paths', () => {
+  test('Should convert object of folders into array of paths', () => {
     const res = generateExportList({
       folder1: [{ path: 'path1' }, { path: 'path2' }],
       folder2: [{ path: 'path12' }, { path: 'path24' }],

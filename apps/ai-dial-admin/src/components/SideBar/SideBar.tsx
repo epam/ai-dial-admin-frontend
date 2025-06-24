@@ -10,7 +10,7 @@ import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storag
 import { isMediumScreen, isSmallScreen } from '@/src/utils/mobile';
 import { Resizable, ResizableProps, ResizeCallback } from 're-resizable';
 import { LeftSideBarResizeIcon, RightSideBarResizeIcon } from './ResizeIcons';
-import { MOBILE_SIDEBAR_MIN_WIDTH, SIDEBAR_DEFAULT_WIDTH, SIDEBAR_HEIGHT, SIDEBAR_MIN_WIDTH } from './side-bar.utils';
+import { MOBILE_SIDEBAR_MIN_WIDTH, SIDEBAR_DEFAULT_WIDTH, SIDEBAR_HEIGHT, SIDEBAR_MIN_WIDTH } from './constants';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 

@@ -3,6 +3,7 @@
 import classNames from 'classnames';
 import { ChangeEvent, FC, useCallback } from 'react';
 import CheckboxFilled from '@/public/images/icons/checkbox-filled.svg';
+import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 
 interface Props {
   id: string;
@@ -28,7 +29,11 @@ const Checkbox: FC<Props> = ({ label, id, checked, onChange }) => {
   return (
     <label className={checkboxClassNames} htmlFor={id}>
       {checked && <CheckboxFilled className="mr-2" />}
-      {label && <p className="text-primary">{label}</p>}
+      {label && (
+        <Tooltip triggerClassName="flex-1 min-w-0" contentClassName="truncate" tooltip={label}>
+          <p className="text-primary flex-1 min-w-0 truncate">{label}</p>
+        </Tooltip>
+      )}
       <input type="checkbox" onChange={handleChange} id={id} checked={checked} className="invisible w-0 h-0" />
     </label>
   );

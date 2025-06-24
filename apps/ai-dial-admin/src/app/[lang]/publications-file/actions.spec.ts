@@ -1,12 +1,15 @@
-import fetch from 'jest-fetch-mock';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
 import { approveFile, declineFile } from './actions';
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
 
 describe('Publication Files :: server actions', () => {
   beforeEach(() => {
     fetch.resetMocks();
   });
 
-  it('Should call approve prompt', async () => {
+  test('Should call approve prompt', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     approveFile('path').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
@@ -16,7 +19,7 @@ describe('Publication Files :: server actions', () => {
     });
   });
 
-  it('Should call decline prompt', async () => {
+  test('Should call decline prompt', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     declineFile('path', 'comment').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);

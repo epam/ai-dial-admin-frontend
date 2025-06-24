@@ -1,10 +1,11 @@
 'use client';
 
-import { IconRefresh } from '@tabler/icons-react';
-import { GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
+
+import { IconRefresh, IconRestore } from '@tabler/icons-react';
+import { GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
 
 import { getActivities } from '@/src/app/[lang]/activity-audit/actions';
 import Button from '@/src/components/Common/Button/Button';
@@ -27,6 +28,7 @@ import { formatTimestampToDate } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
+import { SYSTEM_ROLLBACK_ID } from './constants';
 import { getActivityAuditColumns, getGridFilters } from './utils';
 
 const ActivityAuditList: FC = () => {
@@ -38,7 +40,7 @@ const ActivityAuditList: FC = () => {
   const [modalState, setModalState] = useState(PopUpState.Closed);
   const [isLoading, setIsLoading] = useState(false);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
-  const [timePeriod, setTimePeriod] = useState(DEFAULT_TIME_PERIOD);
+  const [timePeriod, setTimePeriod] = useState<string | null>(DEFAULT_TIME_PERIOD);
   const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
 
   const [currentActivity, setCurrentActivity] = useState<DialActivity | undefined>(void 0);
@@ -55,7 +57,7 @@ const ActivityAuditList: FC = () => {
   const gridDataSource: IDatasource = useMemo(
     () => ({
       getRows: (params: IGetRowsParams) => {
-        const actualTimeRange = getTimeRangeById(timePeriod);
+        const actualTimeRange = timePeriod ? getTimeRangeById(timePeriod) : timeRange;
         gridApi?.setGridOption('loading', true);
         const page = Math.floor(params.startRow / PAGE_SIZE);
         const sorts = getRequestSorts(params.sortModel);
@@ -63,7 +65,9 @@ const ActivityAuditList: FC = () => {
 
         getActivities(PAGE_SIZE, page, sorts, filters)
           .then((res) => {
-            if (res == null || res.data.length === 0) {
+            if (res === void 0) {
+              router.push(ApplicationRoute.Forbidden);
+            } else if (res == null || res.data.length === 0) {
               params.successCallback([], 0);
             } else {
               params.successCallback(res.data || [], page + 1 === res.totalPages ? res.total : void 0);
@@ -76,7 +80,7 @@ const ActivityAuditList: FC = () => {
           });
       },
     }),
-    [gridApi, timePeriod],
+    [gridApi, timePeriod, timeRange, router],
   );
 
   useEffect(() => {
@@ -114,15 +118,6 @@ const ActivityAuditList: FC = () => {
 
   const columnDefs = getActivityAuditColumns(openInNewTab, onOpenConfirmationModal);
 
-  const onTimePeriodChange = useCallback((period: string) => {
-    setTimePeriod(period);
-    setTimeRange(getTimeRangeById(period));
-  }, []);
-
-  const onTimeRangeChange = useCallback((range: TimeRange) => {
-    setTimeRange(range);
-  }, []);
-
   const onRefresh = useCallback(() => {
     if (gridApi) {
       gridApi.setGridOption('loading', true);
@@ -130,6 +125,23 @@ const ActivityAuditList: FC = () => {
       gridApi.setGridOption('datasource', gridDataSource);
     }
   }, [gridApi, gridDataSource]);
+
+  const onTimePeriodChange = useCallback(
+    (period: string) => {
+      setTimePeriod(period);
+      onRefresh();
+    },
+    [onRefresh],
+  );
+
+  const onTimeRangeChange = useCallback(
+    (range: TimeRange) => {
+      setTimePeriod(null);
+      setTimeRange(range);
+      onRefresh();
+    },
+    [onRefresh],
+  );
 
   const resourceRollback = useCallback(() => {
     if (currentActivity) {
@@ -158,6 +170,10 @@ const ActivityAuditList: FC = () => {
     }
   }, [onCloseModal, showNotification, currentActivity, t, onRefresh]);
 
+  const systemRollback = useCallback(() => {
+    router.push(`${ApplicationRoute.ActivityAudit}/${SYSTEM_ROLLBACK_ID}`);
+  }, [router]);
+
   return (
     <>
       <ListView
@@ -170,7 +186,7 @@ const ActivityAuditList: FC = () => {
       >
         <div className="flex gap-4 justify-end">
           <TimeFilter
-            timePeriod={timePeriod}
+            timePeriod={timePeriod as string}
             onTimePeriodChange={onTimePeriodChange}
             timeRange={timeRange}
             onTimeRangeChange={onTimeRangeChange}
@@ -180,6 +196,12 @@ const ActivityAuditList: FC = () => {
             title={t(ButtonsI18nKey.Refresh)}
             iconBefore={<IconRefresh {...BASE_ICON_PROPS} />}
             onClick={onRefresh}
+          />
+          <Button
+            iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
+            cssClass="secondary"
+            title={t(ActivityAuditI18nKey.RollbackSystem)}
+            onClick={systemRollback}
           />
         </div>
       </ListView>

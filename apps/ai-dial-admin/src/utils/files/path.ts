@@ -47,3 +47,14 @@ export const getListOfPathsToMove = (
       .map((p) => p.path) || []
   );
 };
+
+export const getPathSegments = (fullPath: string): string[] => {
+  const parts = fullPath.split('/').filter(Boolean);
+  const paths: string[] = [];
+
+  for (let i = 0; i < parts.length; i++) {
+    paths.push(parts.slice(0, i + 1).join('/') + '/');
+  }
+
+  return paths;
+};

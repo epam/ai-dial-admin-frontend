@@ -1,8 +1,9 @@
 import { fireEvent, render } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
 import { NumberInputField } from './InputField';
 
 describe('Common components - NumberInputField', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     let value = 1;
     const onChange = (v: number) => {
       value = v;

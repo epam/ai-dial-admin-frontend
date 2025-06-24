@@ -1,7 +1,11 @@
-import { RolesApi } from '../roles-api';
-import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import fetch from 'jest-fetch-mock';
 import { DialRole } from '@/src/models/dial/role';
+import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
+import { RolesApi } from '../roles-api';
+
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
 
 describe('Server :: RolesApi', () => {
   const instance = new RolesApi({ host: TEST_URL });
@@ -15,7 +19,7 @@ describe('Server :: RolesApi', () => {
     description: 'Administrator role',
   };
 
-  it('Should calls getRolesList', async () => {
+  test('Should calls getRolesList', async () => {
     fetch.mockResponseOnce(JSON.stringify([exampleRole]));
 
     const result = await instance.getRolesList(TOKEN_MOCK);
@@ -24,7 +28,7 @@ describe('Server :: RolesApi', () => {
     expect(result).toEqual(JSON.stringify([exampleRole]));
   });
 
-  it('Should calls a single role by name', async () => {
+  test('Should calls a single role by name', async () => {
     fetch.mockResponseOnce(JSON.stringify(exampleRole));
 
     const result = await instance.getRole('admin', TOKEN_MOCK);
@@ -36,7 +40,7 @@ describe('Server :: RolesApi', () => {
     expect(result).toEqual(JSON.stringify(exampleRole));
   });
 
-  it('Should create a new role', async () => {
+  test('Should create a new role', async () => {
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
@@ -51,7 +55,7 @@ describe('Server :: RolesApi', () => {
     );
   });
 
-  it('Should update an existing role', async () => {
+  test('Should update an existing role', async () => {
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
@@ -67,7 +71,7 @@ describe('Server :: RolesApi', () => {
     );
   });
 
-  it('Should delete a role by name', async () => {
+  test('Should delete a role by name', async () => {
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 

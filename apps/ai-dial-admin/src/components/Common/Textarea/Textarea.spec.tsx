@@ -1,27 +1,28 @@
 import { fireEvent, render } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
 import Textarea from './Textarea';
 
 describe('Common components :: Textarea', () => {
-  it('Should render successfully', () => {
+  test('Should render successfully', () => {
     const { baseElement } = render(<Textarea textareaId="testArea" />);
     expect(baseElement).toBeTruthy();
   });
 
-  it('Should set string value', () => {
+  test('Should set string value', () => {
     const res = render(<Textarea textareaId="testArea" value="str" />);
     const input = res.getByDisplayValue('str');
     expect(input).toBeTruthy();
     expect(input.id).toBe('testArea');
   });
 
-  it('Should check invalid true', () => {
+  test('Should check invalid true', () => {
     const res = render(<Textarea textareaId="testArea" value="str" invalid={true} />);
     const input = res.getByDisplayValue('str');
     expect(input).toBeTruthy();
     expect(input.className).toBe('input-error');
   });
 
-  it('Should check OnChange', () => {
+  test('Should check OnChange', () => {
     let value = 1;
     const onChange = (v: string) => {
       value = Number(v);

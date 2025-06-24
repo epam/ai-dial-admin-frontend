@@ -1,23 +1,24 @@
-import { reloadConfig, checkIsUniqueDeploymentName, getAppProcessStatus } from './actions';
+import { utilityApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { utilityApi } from '@/src/app/api/api';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { checkIsUniqueDeploymentName, getAppProcessStatus, reloadConfig } from './actions';
 
-jest.mock('@/src/utils/auth/auth-request');
-jest.mock('@/src/utils/env/get-auth-toggle');
-jest.mock('@/src/app/api/api');
+vi.mock('@/src/utils/auth/auth-request');
+vi.mock('@/src/utils/env/get-auth-toggle');
+vi.mock('@/src/app/api/api');
 
-describe('utility server functions', () => {
+describe('Server actions', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    (getUserToken as jest.Mock).mockResolvedValue(TOKEN_MOCK);
-    (getIsEnableAuthToggle as jest.Mock).mockReturnValue(true);
+    vi.clearAllMocks();
+    getUserToken.mockResolvedValue(TOKEN_MOCK);
+    getIsEnableAuthToggle.mockReturnValue(true);
   });
 
-  it('reloadConfig should call utilityApi.reloadConfig with token', async () => {
+  test('reloadConfig should call utilityApi.reloadConfig with token', async () => {
     const mockResponse = { success: true };
-    (utilityApi.reloadConfig as jest.Mock).mockResolvedValue(mockResponse);
+    utilityApi.reloadConfig.mockResolvedValue(mockResponse);
 
     const result = await reloadConfig();
 
@@ -26,8 +27,8 @@ describe('utility server functions', () => {
     expect(result).toBe(mockResponse);
   });
 
-  it('checkIsUniqueDeploymentName should return true when response is null', async () => {
-    (utilityApi.checkDeploymentByName as jest.Mock).mockResolvedValue(null);
+  test('checkIsUniqueDeploymentName should return true when response is null', async () => {
+    utilityApi.checkDeploymentByName.mockResolvedValue(null);
 
     const result = await checkIsUniqueDeploymentName('my-deployment');
 
@@ -36,17 +37,17 @@ describe('utility server functions', () => {
     expect(result).toBe(true);
   });
 
-  it('checkIsUniqueDeploymentName should return false when response is not null', async () => {
-    (utilityApi.checkDeploymentByName as jest.Mock).mockResolvedValue({ status: 200 });
+  test('checkIsUniqueDeploymentName should return false when response is not null', async () => {
+    utilityApi.checkDeploymentByName.mockResolvedValue({ status: 200 });
 
     const result = await checkIsUniqueDeploymentName('existing-deployment');
 
     expect(result).toBe(false);
   });
 
-  it('getAppProcessStatus should return status data', async () => {
+  test('getAppProcessStatus should return status data', async () => {
     const mockStatus = { status: 'IDLE' };
-    (utilityApi.getAppProcessStatus as jest.Mock).mockResolvedValue(mockStatus);
+    utilityApi.getAppProcessStatus.mockResolvedValue(mockStatus);
 
     const result = await getAppProcessStatus();
 

@@ -88,6 +88,7 @@ export enum BasicI18nKey {
   After = 'Basic.After',
   CopiedSuccessfully = 'Basic.CopiedSuccessfully',
   ServerError = 'Basic.ServerError',
+  Search = 'Basic.Search',
 }
 
 export enum CommonControlsI18nKey {
@@ -191,6 +192,7 @@ export enum ButtonsI18nKey {
   ContinueEditing = 'Buttons.ContinueEditing',
   Import = 'Buttons.Import',
   Export = 'Buttons.Export',
+  ExportConfigMap = 'Buttons.ExportConfigMap',
   OpenWithoutSave = 'Buttons.OpenWithoutSave',
   LeaveWithoutSave = 'Buttons.LeaveWithoutSave',
   Next = 'Buttons.Next',
@@ -203,6 +205,8 @@ export enum ButtonsI18nKey {
   CompareChanges = 'Buttons.CompareChanges',
   Refresh = 'Buttons.Refresh',
   Rollback = 'Buttons.Rollback',
+  Back = 'Buttons.Back',
+  Close = 'Buttons.Close',
 }
 
 export enum CreateI18nKey {
@@ -504,6 +508,8 @@ export enum ImportI18nKey {
   ConfigImportedDescription = 'Import.ConfigImportedDescription',
   Override = 'Import.Override',
   Skip = 'Import.Skip',
+  Update = 'Import.Update',
+  Create = 'Import.Create',
   EditManually = 'Import.EditManually',
   Files = 'Import.Files',
   DropFiles = 'Import.DropFiles',
@@ -512,11 +518,15 @@ export enum ImportI18nKey {
   DropFile = 'Import.DropFile',
   ImportFiles = 'Import.ImportFiles',
   ImportProperties = 'Import.ImportProperties',
+  ImportConfiguration = 'Import.ImportConfiguration',
+  ConfigurationParsing = 'Import.ConfigurationParsing',
   FileType = 'Import.FileType',
   SeparateJsonFiles = 'Import.SeparateJsonFiles',
   DialArchive = 'Import.DialArchive',
   DialArchiveDescription = 'Import.DialArchiveDescription',
   ImportArchiveDescription = 'Import.ImportArchiveDescription',
+  ImportJsonFileFormatError = 'Import.ImportJsonFileFormatError',
+  ImportArchiveFileFormatError = 'Import.ImportArchiveFileFormatError',
   ImportJsonDescription = 'Import.ImportJsonDescription',
   ImportSeparateFiles = 'Import.ImportSeparateFiles',
   ImportSeparateFilesDescription = 'Import.ImportSeparateFilesDescription',
@@ -532,6 +542,7 @@ export enum ImportI18nKey {
   ImportPromptError = 'Import.ImportPromptError',
   ImportFileError = 'Import.ImportFileError',
   ImportFileErrorType = 'Import.ImportFileErrorType',
+  ImportArchiveErrorTitle = 'Import.ImportArchiveErrorTitle',
 }
 
 export enum ExportI18nKey {
@@ -583,12 +594,23 @@ export enum FoldersI18nKey {
   Role = 'Folder.Attribute.Role',
   DialRoles = 'Folder.Attribute.DialRoles',
   Groups = 'Folder.Attribute.Groups',
+  FolderSetup = 'Folder.FolderSetup',
+  FileReview = 'Folder.FileReview',
+  FolderCreate = 'Folder.FolderCreate',
+  FolderCreatePlaceholder = 'Folder.FolderCreatePlaceholder',
+  FolderCreateSuccess = 'Folder.FolderCreateSuccess',
 }
 
 export enum ActivityAuditI18nKey {
   ResourceDiff = 'ActivityAudit.ResourceDiff',
   RollbackResource = 'ActivityAudit.RollbackResource',
+  RollbackSystem = 'ActivityAudit.RollbackSystem',
   ConfirmRollback = 'ActivityAudit.ConfirmRollback',
+  ConfirmSystemRollback = 'ActivityAudit.ConfirmSystemRollback',
+  ConfirmSystemRollbackDescription = 'ActivityAudit.ConfirmSystemRollbackDescription',
+  ConfirmSystemRollbackAlert = 'ActivityAudit.ConfirmSystemRollbackAlert',
+  ConfirmSystemRollbackLabel = 'ActivityAudit.ConfirmSystemRollbackLabel',
+  ConfirmSystemRollbackPlaceholder = 'ActivityAudit.ConfirmSystemRollbackPlaceholder',
   ConfirmRollbackDescriptionPart1 = 'ActivityAudit.ConfirmRollbackDescription.Part1',
   ConfirmRollbackDescriptionPart2 = 'ActivityAudit.ConfirmRollbackDescription.Part2',
   ConfirmRollbackDescriptionPart3 = 'ActivityAudit.ConfirmRollbackDescription.Part3',
@@ -605,6 +627,8 @@ export enum ActivityAuditI18nKey {
   ResourceId = 'ActivityAudit.ResourceId',
   Time = 'ActivityAudit.Time',
   Initiated = 'ActivityAudit.Initiated',
+  CurrentState = 'ActivityAudit.CurrentState',
+  RollbackState = 'ActivityAudit.RollbackState',
 }
 
 export enum ErrorI18nKey {

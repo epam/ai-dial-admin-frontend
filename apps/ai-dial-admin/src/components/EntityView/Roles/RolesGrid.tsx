@@ -12,7 +12,6 @@ import { useI18n } from '@/src/locales/client';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { getRolesColumnDefs, getRolesGridData, isResetAvailable } from './roles-utils';
 import { DialRole } from '@/src/models/dial/role';
-import { ACTION_COLUMN_COMPONENTS } from '@/src/constants/ag-grid';
 import Switch from '@/src/components/Common/Switch/Switch';
 
 interface Props {
@@ -123,7 +122,7 @@ const RolesGrid: FC<Props> = ({
       {!data.length ? (
         <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoRoles)} />
       ) : (
-        <Grid additionalGridOptions={{ ...ACTION_COLUMN_COMPONENTS, onGridReady }} />
+        <Grid additionalGridOptions={{ onGridReady }} />
       )}
     </div>
   );

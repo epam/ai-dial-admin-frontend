@@ -35,6 +35,7 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
       });
     };
 
+    checkAppStatus();
     intervalRef.current = setInterval(() => {
       checkAppStatus();
     }, CHECK_STATUS_INTERVAL);
@@ -50,7 +51,7 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
     <div className="flex-1 min-h-0 min-w-0 relative">
       <Blackout />
       <UserMobile isEnableAuth={isEnableAuth} />
-      <div className="h-full w-full lg:p-4 py-4 md:px-6 px-4 flex flex-col">
+      <div className="h-full w-full lg:p-4 py-4 md:px-6 px-0 flex flex-col">
         {isTabletScreen && <Breadcrumbs mobile={true} />}
         {children}
       </div>

@@ -1,14 +1,15 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
 import { saveColumnVisibilityToStorage, getColumnVisibilityFromStorage } from './grid-columns';
+import { describe, expect, test, vi } from 'vitest';
 
-jest.mock('@/src/utils/local-storage', () => ({
-  setToLocalStorage: jest.fn(() => void 0),
-  getFromLocalStorage: jest.fn(() => JSON.stringify('')),
+vi.mock('@/src/utils/local-storage', () => ({
+  setToLocalStorage: vi.fn(() => void 0),
+  getFromLocalStorage: vi.fn(() => JSON.stringify('')),
 }));
 
 describe('Grid :: Store columns into local storage', () => {
-  it('Should call setLocalStorage on save', () => {
+  test('Should call setLocalStorage on save', () => {
     const cols = [
       { field: 'field', hide: true, description: 'desc' },
       { field: 'field1', hide: false, description: 'desc2' },
@@ -17,7 +18,7 @@ describe('Grid :: Store columns into local storage', () => {
     expect(setToLocalStorage).toHaveBeenCalled();
   });
 
-  it('Should call getlocalStorage on save', () => {
+  test('Should call getlocalStorage on save', () => {
     const cols = [
       { field: 'field', hide: true, description: 'desc' },
       { field: 'field1', hide: false, description: 'desc2' },

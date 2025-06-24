@@ -64,10 +64,6 @@ const TagInput: FC<Props> = ({
   };
 
   useEffect(() => {
-    setTags(initialTags);
-  }, [initialTags]);
-
-  useEffect(() => {
     const observer = new ResizeObserver(() => {
       if (containerRef.current) {
         const hasWrapped = containerRef.current.scrollHeight > containerRef.current.clientHeight + 10;
@@ -91,7 +87,6 @@ const TagInput: FC<Props> = ({
           ))}
 
           <input
-            data-testid="tag-input"
             ref={inputRef}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}

@@ -7,7 +7,7 @@ import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { useI18n } from '@/src/locales/client';
-import { ENTITY_WITH_VERSION_COLUMNS } from '@/src/components/EntityListView/entity-list-view';
+import { ENTITY_WITH_VERSION_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { DialAdapter } from '@/src/models/dial/adapter';
 
 interface Props {

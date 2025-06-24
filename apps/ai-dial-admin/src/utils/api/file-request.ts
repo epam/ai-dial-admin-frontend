@@ -1,11 +1,16 @@
 import { logger } from '@/src/server/logger';
 import { CACHE } from './send-request';
 
-export const fileRequest = async (url: string, headers?: HeadersInit, dto?: FormData): Promise<Response> => {
+export const fileRequest = async (
+  url: string,
+  headers?: HeadersInit,
+  dto?: FormData,
+  method?: string,
+): Promise<Response> => {
   try {
     return fetch(url, {
       body: dto as FormData,
-      method: 'POST',
+      method: method || 'POST',
       ...CACHE,
       headers,
     });

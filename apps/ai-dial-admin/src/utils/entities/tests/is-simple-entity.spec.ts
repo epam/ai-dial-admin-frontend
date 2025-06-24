@@ -1,8 +1,9 @@
-import { isSimpleEntity } from '../is-simple-entity';
 import { ApplicationRoute } from '@/src/types/routes';
+import { describe, expect, test } from 'vitest';
+import { isSimpleEntity } from '../is-simple-entity';
 
 describe('Utils :: isSimpleEntity', () => {
-  it('Should check complex entity', () => {
+  test('Should check complex entity', () => {
     const res1 = isSimpleEntity(ApplicationRoute.Models);
     const res2 = isSimpleEntity(ApplicationRoute.Applications);
     const res3 = isSimpleEntity(ApplicationRoute.Assistants);
@@ -12,7 +13,7 @@ describe('Utils :: isSimpleEntity', () => {
     expect(res3).toBeFalsy();
   });
 
-  it('Should check simple entity', () => {
+  test('Should check simple entity', () => {
     const res1 = isSimpleEntity(ApplicationRoute.Roles);
 
     expect(res1).toBeTruthy();

@@ -1,15 +1,15 @@
-import { renderWithContext } from '@/src/utils/tests/renderWithContext';
 import DynamicNotification from '@/src/components/Notification/DynamicNotification';
-import { fireEvent } from '@testing-library/react';
 import {
   DYNAMIC_NOTIFICATION,
   DYNAMIC_NOTIFICATION_COMPLETED,
   DYNAMIC_NOTIFICATION_EMPTY,
 } from '@/src/utils/tests/mock/notifications.mock';
+import { fireEvent, render } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
 
 describe('Components - DynamicNotification', () => {
-  it('Should correctly render notification', () => {
-    const { baseElement, getByTestId } = renderWithContext(<DynamicNotification {...DYNAMIC_NOTIFICATION} />);
+  test('Should correctly render notification', () => {
+    const { baseElement, getByTestId } = render(<DynamicNotification {...DYNAMIC_NOTIFICATION} />);
     const title = baseElement.getElementsByTagName('p')[0];
     const progress = getByTestId('progress');
 
@@ -18,8 +18,8 @@ describe('Components - DynamicNotification', () => {
     expect(progress).toBeTruthy();
   });
 
-  it('Should correctly render notification details', () => {
-    const { getByTestId, queryAllByTestId } = renderWithContext(<DynamicNotification {...DYNAMIC_NOTIFICATION} />);
+  test('Should correctly render notification details', () => {
+    const { getByTestId, queryAllByTestId } = render(<DynamicNotification {...DYNAMIC_NOTIFICATION} />);
     const showDetailsButton = getByTestId('show-details');
 
     fireEvent.click(showDetailsButton);
@@ -29,10 +29,8 @@ describe('Components - DynamicNotification', () => {
     expect(files?.length).toBe(3);
   });
 
-  it('Should correctly render all completed notification details', () => {
-    const { getByTestId, queryAllByTestId } = renderWithContext(
-      <DynamicNotification {...DYNAMIC_NOTIFICATION_COMPLETED} />,
-    );
+  test('Should correctly render all completed notification details', () => {
+    const { getByTestId, queryAllByTestId } = render(<DynamicNotification {...DYNAMIC_NOTIFICATION_COMPLETED} />);
     const showDetailsButton = getByTestId('show-details');
     const progress = queryAllByTestId('progress');
 
@@ -45,10 +43,8 @@ describe('Components - DynamicNotification', () => {
     expect(files?.length).toBe(1);
   });
 
-  it('Should correctly render notification without file details', () => {
-    const { getByTestId, queryAllByTestId } = renderWithContext(
-      <DynamicNotification {...DYNAMIC_NOTIFICATION_EMPTY} />,
-    );
+  test('Should correctly render notification without file details', () => {
+    const { getByTestId, queryAllByTestId } = render(<DynamicNotification {...DYNAMIC_NOTIFICATION_EMPTY} />);
     const showDetailsButton = getByTestId('show-details');
 
     fireEvent.click(showDetailsButton);

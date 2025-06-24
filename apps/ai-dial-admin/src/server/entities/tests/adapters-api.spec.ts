@@ -1,8 +1,13 @@
-import fetch from 'jest-fetch-mock';
-import { AdaptersApi } from '../adapters-api';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import createFetchMock from 'vitest-fetch-mock';
+import { AdaptersApi } from '../adapters-api';
+
+const fetch = createFetchMock(vi);
+fetch.enableMocks();
+
 
 const adapter: DialAdapter = {
   name: 'test-adapter',
@@ -15,7 +20,7 @@ describe('Server :: Adapters', () => {
   beforeEach(() => {
     fetch.resetMocks();
   });
-  it('Should calls getAdaptersList with list of adapters', async () => {
+  test('Should calls getAdaptersList with list of adapters', async () => {
     fetch.mockResponseOnce(JSON.stringify([adapter]));
 
     const result = await instance.getAdaptersList(TOKEN_MOCK);
@@ -27,7 +32,7 @@ describe('Server :: Adapters', () => {
     expect(result).toEqual(JSON.stringify([adapter]));
   });
 
-  it('Should calls getAdaptersListAction returns server action response', async () => {
+  test('Should calls getAdaptersListAction returns server action response', async () => {
     const mockResponse: ServerActionResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
@@ -39,7 +44,7 @@ describe('Server :: Adapters', () => {
     );
   });
 
-  it('Should calls createAdapter and posts new adapter', async () => {
+  test('Should calls createAdapter and posts new adapter', async () => {
     const mockResponse: ServerActionResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
@@ -51,7 +56,7 @@ describe('Server :: Adapters', () => {
     );
   });
 
-  it('Should calls removeAdapter and deletes the adapter', async () => {
+  test('Should calls removeAdapter and deletes the adapter', async () => {
     const mockResponse: ServerActionResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
@@ -63,7 +68,7 @@ describe('Server :: Adapters', () => {
     );
   });
 
-  it('Should calls getAdapter and fetches a specific adapter', async () => {
+  test('Should calls getAdapter and fetches a specific adapter', async () => {
     fetch.mockResponseOnce(JSON.stringify(adapter));
 
     const result = await instance.getAdapter(adapter.name, TOKEN_MOCK);
@@ -75,7 +80,7 @@ describe('Server :: Adapters', () => {
     expect(result).toEqual(JSON.stringify(adapter));
   });
 
-  it('Should calls updateAdapter and sends updated data via PUT', async () => {
+  test('Should calls updateAdapter and sends updated data via PUT', async () => {
     const mockResponse: ServerActionResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 

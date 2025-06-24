@@ -5,6 +5,7 @@ import { NO_LIMITS_KEY } from '@/src/constants/role';
 import { ActivityAuditDiff, ActivityAuditDiffSection, ActivityAuditSection } from '@/src/models/dial/activity-audit';
 import { DialRoleLimits } from '@/src/models/dial/base-entity';
 import { DialModelEndpoint } from '@/src/models/dial/model';
+import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus } from '@/src/types/activity-audit';
 import { formatTimestampToDate } from '@/src/utils/formatting/date';
 import {
@@ -37,12 +38,13 @@ const separateObjectParameterKeys = [
   EntityParameterKeys.ENTITIES,
   EntityParameterKeys.KEYS,
   EntityParameterKeys.ROLES,
+  EntityParameterKeys.MODELS,
 ];
 
 export const getColumnsByParameter = (
-  parameter: string,
-  index: number,
-  t: (stringToTranslate: string) => string,
+  parameter?: string,
+  index?: number,
+  t?: (stringToTranslate: string) => string,
   type?: ActivityAuditResourceType,
 ): ColDef[] => {
   if (parameter === EntityParameterKeys.ROLES && (index === 1 || type === ActivityAuditResourceType.ROLE)) {
@@ -59,13 +61,13 @@ export const getColumnsByParameter = (
   ) {
     return ENTITIES_DIFF_COLUMNS;
   }
-  return RESOURCE_DIFF_COLUMNS(t);
+  return RESOURCE_DIFF_COLUMNS(t as (stringToTranslate: string) => string);
 };
 
 export const getRowDataByParameter = (
-  data: ActivityAuditDiff[],
-  parameter: string,
-  index: number,
+  data?: ActivityAuditDiff[],
+  parameter?: string,
+  index?: number,
   type?: ActivityAuditResourceType,
 ) => {
   if (parameter === EntityParameterKeys.ROLES && (index === 1 || type === ActivityAuditResourceType.ROLE)) {
@@ -382,7 +384,8 @@ export const compareSeparateObjects = (
     key === EntityParameterKeys.APPLICATIONS ||
     key === EntityParameterKeys.ENTITIES ||
     key === EntityParameterKeys.KEYS ||
-    key === EntityParameterKeys.ROLES
+    key === EntityParameterKeys.ROLES ||
+    key === EntityParameterKeys.MODELS
   ) {
     compareEntities(diffs, val1 as string[], val2 as string[], isCurrent);
   }
@@ -746,6 +749,7 @@ export const createSectionFromDiffs = (
     EntityParameterKeys.ENTITIES,
     EntityParameterKeys.KEYS,
     EntityParameterKeys.PARAMETERS,
+    EntityParameterKeys.MODELS,
   ];
   const sections: ActivityAuditSection = {};
   sectionNames.forEach((name) => {
@@ -904,4 +908,56 @@ export const sortKeys = (a: string, b: string): number => {
   if (aIndex === -1) return 1;
   if (bIndex === -1) return -1;
   return aIndex - bIndex;
+};
+
+/**
+ * Generate map with entity status
+ *
+ * @param {Map<ActivityAuditResourceType, ActivityAuditEntity[] | null>} current - current state map
+ * @param {Map<ActivityAuditResourceType, ActivityAuditEntity[] | null>} previous - previous state map
+ * @param {?boolean} [isCurrent] - flag for correct coloring
+ * @returns {Map<ActivityAuditResourceType, EntitiesGridData[]>} - map for each entity type with statuses
+ */
+export const mergeEntityMaps = (
+  current: Map<ActivityAuditResourceType, ActivityAuditEntity[] | null>,
+  previous: Map<ActivityAuditResourceType, ActivityAuditEntity[] | null>,
+  isCurrent?: boolean,
+): Map<ActivityAuditResourceType, EntitiesGridData[]> => {
+  const result = new Map<ActivityAuditResourceType, EntitiesGridData[]>();
+
+  for (const resourceType of current.keys()) {
+    const currentEntities = current.get(resourceType) || [];
+    const previousEntities = previous.get(resourceType) || [];
+
+    const currentMap = new Map(currentEntities.map((e) => [e.name || e.$id, e]));
+    const previousMap = new Map(previousEntities.map((e) => [e.name || e.$id, e]));
+
+    const allNames = Array.from(new Set([...currentMap.keys(), ...previousMap.keys()])).sort();
+
+    const mergedEntities: EntitiesGridData[] = allNames.map((name) => {
+      const currentEntity = currentMap.get(name);
+      const previousEntity = previousMap.get(name);
+
+      if (currentEntity && !previousEntity) {
+        return { ...currentEntity, status: isCurrent ? DiffStatus.ADDED : DiffStatus.REMOVED };
+      }
+
+      if (!currentEntity && previousEntity) {
+        return { status: void 0 };
+      }
+
+      if (currentEntity && previousEntity) {
+        if (isEqual(currentEntity, previousEntity)) {
+          return currentEntity as unknown as EntitiesGridData;
+        } else {
+          return { ...currentEntity, status: DiffStatus.CHANGED };
+        }
+      }
+
+      return {} as EntitiesGridData;
+    });
+
+    result.set(resourceType, mergedEntities);
+  }
+  return result;
 };

@@ -70,7 +70,6 @@ const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action 
             cssClass={classNames(`secondary ${buttonsClassNames}`)}
             title={t(ButtonsI18nKey.Decline)}
             onClick={() => setIsOpenDeclineModal(PopUpState.Opened)}
-            dataTestId={'publication-decline-button'}
             iconBefore={<IconCircleX {...BASE_ICON_PROPS} />}
           />
           {action === ActionType.ADD ? (
@@ -78,7 +77,6 @@ const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action 
               cssClass={`primary ${buttonsClassNames} ${approveButtonClassNames}`}
               title={t(ButtonsI18nKey.Publish)}
               onClick={() => setIsOpenApproveModal(PopUpState.Opened)}
-              dataTestId={'publication-approve-button'}
               iconBefore={<IconWorldShare {...BASE_ICON_PROPS} />}
             />
           ) : (
@@ -86,7 +84,6 @@ const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action 
               cssClass={`primary ${buttonsClassNames} ${approveButtonClassNames}`}
               title={t(ButtonsI18nKey.Unpublish)}
               onClick={() => setIsOpenApproveModal(PopUpState.Opened)}
-              dataTestId={'publication-approve-button'}
               iconBefore={<IconWorldOff {...BASE_ICON_PROPS} />}
             />
           )}
@@ -95,7 +92,6 @@ const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action 
       {approveModalState === PopUpState.Opened &&
         createPortal(
           <ConfirmationModal
-            dataTestId={'publication-approve-modal'}
             heading={t(keys.ApproveModalTitle)}
             onConfirm={approve}
             modalState={approveModalState}
@@ -111,7 +107,6 @@ const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action 
       {declineModalState === PopUpState.Opened &&
         createPortal(
           <ConfirmationModal
-            dataTestId={'publication-decline-modal'}
             heading={t(keys.DeclineModalTitle)}
             onConfirm={decline}
             modalState={declineModalState}

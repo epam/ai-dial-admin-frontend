@@ -2,7 +2,7 @@
 import { FC } from 'react';
 
 import { createApplication, removeApplication } from '@/src/app/[lang]/applications/actions';
-import { ENTITY_WITH_VERSION_COLUMNS } from '@/src/components/EntityListView/entity-list-view';
+import { ENTITY_WITH_VERSION_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';

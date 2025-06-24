@@ -17,7 +17,7 @@ const DashboardView: FC<Props> = ({ grafanaLink }) => {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 relative" data-testid={'dashboard-view'}>
-      <div className="flex flex-row mb-3 py-1.5 justify-between">
+      <div className="flex flex-row mb-3 py-1.5 justify-between items-center">
         <h1 className="truncate" data-testid="dashboard-view-heading">
           {t(MenuI18nKey.Dashboard)}
         </h1>

@@ -1,7 +1,7 @@
-import { isResetAvailable, getRolesGridData } from './roles-utils';
-
+import { describe, expect, test } from 'vitest';
+import { getRolesGridData, isResetAvailable } from './roles-utils';
 describe('Roles View :: isResetAvailable', () => {
-  it('Should return true', () => {
+  test('Should return true', () => {
     const res = isResetAvailable({
       defaultRoleLimit: { day: '2', minute: '2' },
       roleLimits: { limit: { day: '1', minute: '1' } },
@@ -9,7 +9,7 @@ describe('Roles View :: isResetAvailable', () => {
     expect(res).toBeTruthy();
   });
 
-  it('Should return true', () => {
+  test('Should return true', () => {
     const res = isResetAvailable({
       defaultRoleLimit: { day: '1', minute: '2' },
       roleLimits: { limit: { day: '1', minute: '1' } },
@@ -19,7 +19,7 @@ describe('Roles View :: isResetAvailable', () => {
 });
 
 describe('Roles View :: getRolesGridData', () => {
-  it('Should return role for isPublic true', () => {
+  test('Should return role for isPublic true', () => {
     const res = getRolesGridData(
       {
         isPublic: true,
@@ -39,7 +39,7 @@ describe('Roles View :: getRolesGridData', () => {
     ]);
   });
 
-  it('Should return role for isPublic false', () => {
+  test('Should return role for isPublic false', () => {
     const res = getRolesGridData(
       {
         isPublic: false,
@@ -51,7 +51,7 @@ describe('Roles View :: getRolesGridData', () => {
     expect(res).toEqual([{ name: 'limit', day: '1', minute: '1' }]);
   });
 
-  it('Should return empty array for isPublic false', () => {
+  test('Should return empty array for isPublic false', () => {
     const res = getRolesGridData(
       {
         isPublic: false,
