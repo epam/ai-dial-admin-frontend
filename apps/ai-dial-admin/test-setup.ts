@@ -35,8 +35,16 @@ vi.mock('@/src/context/RuleFolderProvider', () => ({
   useRuleFolder: () => vi.fn(),
 }));
 
-vi.mock('@/src/context/PromptFolderProvider', () => ({
+vi.mock('@/src/context/PromptFolderContext', () => ({
   usePromptFolder: () => vi.fn(),
+}));
+
+vi.mock('@/src/context/RuleFolderProvider', () => ({
+  useRuleFolder: () => vi.fn(),
+}));
+
+vi.mock('@/src/context/AppContext', () => ({
+  useAppContext: () => vi.fn(),
 }));
 
 global.ResizeObserver = vi.fn(() => ({
