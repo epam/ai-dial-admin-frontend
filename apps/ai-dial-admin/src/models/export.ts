@@ -9,6 +9,7 @@ export interface ExportDependenciesConfig {
   interceptors?: boolean;
   prompts?: boolean;
   files?: boolean;
+  adapters?: boolean;
 }
 
 export interface ExportRequest {

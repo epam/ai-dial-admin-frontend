@@ -3,6 +3,7 @@
 import { cookies, headers } from 'next/headers';
 
 import {
+  adaptersApi,
   applicationRunnersApi,
   applicationsApi,
   interceptorsApi,
@@ -12,7 +13,12 @@ import {
   routesApi,
   utilityApi,
 } from '@/src/app/api/api';
+import { EntitiesGridData } from '@/src/models/entities-grid-data';
+import { ExportRequest } from '@/src/models/export';
+import { EntityType } from '@/src/types/entity-type';
+import { getUserToken } from '@/src/utils/auth/auth-request';
 import {
+  getAdaptersForEntitiesGrid,
   getApplicationsForEntitiesGrid,
   getInterceptorsForEntitiesGrid,
   getKeysForEntitiesGrid,
@@ -21,11 +27,7 @@ import {
   getRoutesForEntitiesGrid,
   getRunnersForEntitiesGrid,
 } from '@/src/utils/entities/entities-list-view';
-import { ExportRequest } from '@/src/models/export';
-import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { EntityType } from '@/src/types/entity-type';
 
 export async function exportConfig(exportConfig: ExportRequest) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -72,6 +74,10 @@ export async function getEntities(type: string): Promise<EntitiesGridData[]> {
   if (type === EntityType.INTERCEPTOR) {
     const interceptors = await interceptorsApi.getInterceptorsList(token);
     return getInterceptorsForEntitiesGrid(interceptors);
+  }
+  if (type === EntityType.ADAPTER) {
+    const adapters = await adaptersApi.getAdaptersList(token);
+    return getAdaptersForEntitiesGrid(adapters);
   }
   return [];
 }

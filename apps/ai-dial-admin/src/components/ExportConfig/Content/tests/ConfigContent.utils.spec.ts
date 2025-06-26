@@ -1,7 +1,10 @@
+import { MenuI18nKey } from '@/src/constants/i18n';
+import { EntityType } from '@/src/types/entity-type';
 import { ExportFormat, ExportType } from '@/src/types/export';
 import { getActualTabs, getDataWithoutItem } from '../ConfigContent.utils';
-import { EntityType } from '@/src/types/entity-type';
+
 import { describe, expect, test } from 'vitest';
+
 describe('Config content Utils :: getDataWithoutItem', () => {
   test('Should remove data from ApplicationRunners', () => {
     const result = getDataWithoutItem(
@@ -45,7 +48,8 @@ describe('Config content Utils :: getDataWithoutItem', () => {
 });
 
 describe('Config content Utils :: getActualTabs', () => {
-  const mockTranslate = (v) => v;
+  const mockTranslate = (v: string) => v;
+
   test('Should return empty tabs', () => {
     const res1 = getActualTabs(ExportType.FULL, ExportFormat.CORE, {}, mockTranslate);
     const res2 = getActualTabs(ExportType.FULL, ExportFormat.ADMIN, {}, mockTranslate);
@@ -57,20 +61,56 @@ describe('Config content Utils :: getActualTabs', () => {
   test('Should return tabs for full core config', () => {
     const res = getActualTabs(ExportType.FULL, ExportFormat.CORE, { roles: true, files: true }, mockTranslate);
 
-    expect(res).toEqual([{ id: EntityType.ROLE, name: 'Menu.Roles' }]);
+    expect(res).toEqual([{ id: EntityType.ROLE, name: MenuI18nKey.Roles }]);
   });
 
   test('Should return tabs for custom admin config', () => {
     const res = getActualTabs(ExportType.Custom, ExportFormat.ADMIN, { roles: true, files: true }, mockTranslate);
 
     expect(res).toEqual([
-      { id: EntityType.ENTITIES, name: 'Menu.Entities' },
-      { id: EntityType.ROLE, name: 'Menu.Roles' },
-      { id: EntityType.KEY, name: 'Menu.Keys' },
-      { id: EntityType.APPLICATION_TYPE_SCHEMA, name: 'Menu.ApplicationRunners' },
-      { id: EntityType.INTERCEPTOR, name: 'Menu.Interceptors' },
-      // { id: EntityType.PROMPT, name: 'Menu.Prompts' },
-      // { id: EntityType.FILE, name: 'Menu.Files' },
+      { id: EntityType.ENTITIES, name: MenuI18nKey.Entities },
+      { id: EntityType.ROLE, name: MenuI18nKey.Roles },
+      { id: EntityType.KEY, name: MenuI18nKey.Keys },
+      { id: EntityType.APPLICATION_TYPE_SCHEMA, name: MenuI18nKey.ApplicationRunners },
+      { id: EntityType.INTERCEPTOR, name: MenuI18nKey.Interceptors },
+      { id: EntityType.ADAPTER, name: MenuI18nKey.Adapters },
+    ]);
+  });
+
+  test('Should include ADAPTER tab for non-core formats', () => {
+    const res = getActualTabs(ExportType.FULL, ExportFormat.ADMIN, { adapters: true }, mockTranslate);
+
+    expect(res).toEqual([{ id: EntityType.ADAPTER, name: MenuI18nKey.Adapters }]);
+  });
+
+  test('Should not include ADAPTER tab for CORE format', () => {
+    const res = getActualTabs(ExportType.FULL, ExportFormat.CORE, { adapters: true }, mockTranslate);
+
+    expect(res).toEqual([]);
+  });
+
+  test('Should return all tabs if all flags set and format is ADMIN', () => {
+    const res = getActualTabs(
+      ExportType.FULL,
+      ExportFormat.ADMIN,
+      {
+        entities: true,
+        roles: true,
+        keys: true,
+        runners: true,
+        interceptors: true,
+        adapters: true,
+      },
+      mockTranslate,
+    );
+
+    expect(res).toEqual([
+      { id: EntityType.ENTITIES, name: MenuI18nKey.Entities },
+      { id: EntityType.ROLE, name: MenuI18nKey.Roles },
+      { id: EntityType.KEY, name: MenuI18nKey.Keys },
+      { id: EntityType.APPLICATION_TYPE_SCHEMA, name: MenuI18nKey.ApplicationRunners },
+      { id: EntityType.INTERCEPTOR, name: MenuI18nKey.Interceptors },
+      { id: EntityType.ADAPTER, name: MenuI18nKey.Adapters },
     ]);
   });
 });

@@ -179,7 +179,10 @@ const EntityView: FC<Props> = ({
   }, [selectedEntity, updateEntity, router, showNotification]);
 
   const onTryToSave = useCallback(() => {
-    if (view === ApplicationRoute.Models && !Object.keys(selectedEntity.roleLimits || {}).length) {
+    if (
+      (view === ApplicationRoute.Models || view === ApplicationRoute.Applications) &&
+      !Object.keys(selectedEntity.roleLimits || {}).length
+    ) {
       handleModalOpen(ModalType.emptyRoles);
     } else {
       onSave();

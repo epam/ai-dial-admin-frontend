@@ -80,7 +80,7 @@ const RolesGrid: FC<Props> = ({
 
   const onSwitchSpecificRoles = useCallback(
     (isPublic: boolean) => {
-      onChangeEntity({ ...entity, isPublic: !isPublic }, false);
+      onChangeEntity({ ...entity, isPublic: !isPublic, roleLimits: {} }, false);
     },
     [onChangeEntity, entity],
   );

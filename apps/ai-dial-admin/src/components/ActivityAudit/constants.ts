@@ -8,6 +8,7 @@ import {
   SIMPLE_ENTITY_COLUMNS,
   SIMPLE_DESCRIPTION_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
+import { SortDirectionDto } from '@/src/types/request';
 
 export const SYSTEM_ROLLBACK_ID = 'system-rollback';
 export const SYSTEM_ROLLBACK_ENTITIES = [
@@ -60,3 +61,10 @@ export const getSystemRollbackColumns = (
       return [];
   }
 };
+
+export const sorts = [
+  {
+    column: 'id',
+    direction: SortDirectionDto.DESC,
+  },
+];

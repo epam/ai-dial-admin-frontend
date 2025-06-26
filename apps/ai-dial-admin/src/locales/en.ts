@@ -41,7 +41,7 @@ export default {
     SaveParametersTitle: 'Save Parameters',
     SaveParametersDescription: 'Save changes in parameters before leaving the tab. All unsaved changes will be lost.',
     SaveWithEmptyRolesTitle: 'Roles Are Not Assigned',
-    SaveWithEmptyRolesDescription: 'Model without assigned roles will not be available to end-users.',
+    SaveWithEmptyRolesDescription: 'Entity without assigned roles will not be available to end-users.',
     SaveProceedWithConfiguration: 'Are you sure you want to proceed with this configuration?',
     Source: 'Source',
     Config: 'Config',
@@ -625,7 +625,7 @@ export default {
   },
   Export: {
     Structure: 'Structure',
-    ExportType: 'Export type',
+    ExportType: 'Type',
     ExportFormat: 'Format',
     FullConfig: 'Full config',
     Custom: 'Custom',
@@ -713,6 +713,7 @@ export default {
     ResourceRollbackErrorDescription: 'Error occurred while reverting, please try again',
     CurrentState: 'Current state',
     RollbackState: 'Rollback state',
+    RollbackRevision: 'Rollback revision',
   },
   ParameterNames: {
     roleLimits: 'Role limits',

@@ -6,6 +6,7 @@ import {
   ENTITY_BASE_COLUMNS,
   RUNNERS_COLUMNS,
   SIMPLE_ENTITY_COLUMNS,
+  SIMPLE_DESCRIPTION_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
@@ -25,6 +26,7 @@ export const fulDependenciesConfig = {
   keys: true,
   // prompts: true,
   runners: true,
+  adapters: true,
 };
 
 /**
@@ -60,6 +62,9 @@ export const getActualColDefs = (
   }
   if (type === EntityType.APPLICATION_TYPE_SCHEMA) {
     columns = [...RUNNERS_COLUMNS];
+  }
+  if (type === EntityType.ADAPTER) {
+    columns = [...SIMPLE_DESCRIPTION_COLUMNS];
   }
   if (remove && isEntityWithDependency(type)) {
     columns.push({
@@ -180,8 +185,12 @@ export const getComponentTypes = (
   if (config.interceptors) {
     types.push(EntityType.INTERCEPTOR);
   }
-  // until BE implement
   if (!isCoreFormat) {
+    if (config.adapters) {
+      types.push(EntityType.ADAPTER);
+    }
+    // until BE implement
+
     // if (config.prompts) {
     //   types.push(EntityType.PROMPT);
     // }

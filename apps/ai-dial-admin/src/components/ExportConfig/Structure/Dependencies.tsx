@@ -31,13 +31,14 @@ const ExportDependencies: FC<Props> = ({ selectedExportFormat, dependencies, onC
     ];
 
     if (selectedExportFormat === ExportFormat.ADMIN) {
-      // TODO: add after implementation api
-      // res.push(
-      //   ...([
-      //     { key: 'prompts', label: MenuI18nKey.Prompts },
-      //     { key: 'files', label: MenuI18nKey.Files },
-      //   ] as SwitcherData[]),
-      // );
+      res.push(
+        ...([
+          { key: 'adapters', label: MenuI18nKey.Adapters },
+          // TODO: add after implementation api
+          // { key: 'prompts', label: MenuI18nKey.Prompts },
+          // { key: 'files', label: MenuI18nKey.Files },
+        ] as SwitcherData[]),
+      );
     }
     return res;
   }, [selectedExportFormat]);

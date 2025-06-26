@@ -71,8 +71,13 @@ export const getActualTabs = (
     tabs.push({ id: EntityType.INTERCEPTOR, name: t(MenuI18nKey.Interceptors) });
   }
 
-  // until BE implement
   if (!isCoreFormat) {
+    if (dependencies.adapters) {
+      tabs.push({ id: EntityType.ADAPTER, name: t(MenuI18nKey.Adapters) });
+    }
+
+    //todo when BE implement
+
     // if (dependencies.prompts) {
     //   tabs.push({ id: EntityType.PROMPT, name: t(MenuI18nKey.Prompts) });
     // }
