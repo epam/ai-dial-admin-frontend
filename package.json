@@ -121,5 +121,14 @@
     "koa": "3.0.0",
     "react": "19.1.0",
     "react-dom": "19.1.0"
+  },
+  "engines": {
+    "node": ">=22.2.0",
+    "npm": ">=10.7.0"
+  },
+  "browser": {
+    "fs": false,
+    "net": false,
+    "tls": false
   }
 }
