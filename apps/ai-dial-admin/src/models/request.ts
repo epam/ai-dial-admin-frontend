@@ -13,6 +13,6 @@ export interface SortDto {
 
 export interface FilterDto {
   column: string;
-  value: string;
+  value: string | number;
   operator: FilterOperatorDto;
 }

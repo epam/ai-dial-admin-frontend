@@ -6,7 +6,6 @@ import { API } from '../api';
 import { BaseApi } from '../base-api';
 import { PageDto, SortDto, FilterDto } from '@/src/models/request';
 import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
-import { SortDirectionDto } from '@/src/types/request';
 
 export const ACTIVITIES_URL = `${API}/activities`;
 export const ACTIVITY_AUDIT_URL = `${API}/history/revisions`;
@@ -40,18 +39,20 @@ export class ActivityAuditApi extends BaseApi {
     return this.get(`${API}${url}`, token);
   }
 
-  getRevisions(token: JWT | null): Promise<ActivityAuditRevision[] | null> {
+  getRevisions(
+    pageSize: number,
+    pageNumber: number,
+    token: JWT | null,
+    sorts: SortDto[],
+    filters: FilterDto[],
+  ): Promise<ActivityAuditRevision[] | null> {
     return this.post(
       `${ACTIVITY_AUDIT_URL}`,
       {
-        pageNumber: 0,
-        pageSize: 20,
-        sorts: [
-          {
-            column: 'id',
-            direction: SortDirectionDto.DESC,
-          },
-        ],
+        pageSize,
+        pageNumber,
+        sorts,
+        filters,
       },
       token,
     );

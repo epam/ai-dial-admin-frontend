@@ -54,6 +54,9 @@ export const getButtonTitle = (t: (v: string) => string, selectedTab?: EntityTyp
   if (selectedTab === EntityType.ROUTE) {
     entity = t(MenuI18nKey.Routes);
   }
+  if (selectedTab === EntityType.ADAPTER) {
+    entity = t(MenuI18nKey.Adapters);
+  }
 
   return full ? `${t(ButtonsI18nKey.Add)} ${entity.toLowerCase()}` : entity;
 };

@@ -1,4 +1,5 @@
 import { MenuI18nKey } from '@/src/constants/i18n';
+import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialAddon } from '@/src/models/dial/addon';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -41,7 +42,9 @@ export const getApplicationsForEntitiesGrid = (applications?: DialApplication[] 
  */
 export const getAddonsForEntitiesGrid = (addons?: DialAddon[] | null): EntitiesGridData[] => {
   return [...(addons || [])].map((addon) => ({ ...addon, type: MenuI18nKey.Addons, route: ApplicationRoute.Addons }));
-}; /**
+};
+
+/**
  * Get list of DialRoute with type and route for entities view
  *
  * @param {?(DialRoute[] | null)} [routes] - DialRoute array
@@ -96,5 +99,19 @@ export const getInterceptorsForEntitiesGrid = (interceptors?: DialInterceptor[] 
     ...interceptor,
     type: MenuI18nKey.Interceptors,
     route: ApplicationRoute.Interceptors,
+  }));
+};
+
+/**
+ * Get list of DialAdapter with type and route for entities view
+ *
+ * @param {?(DialInterceptor[] | null)} [interceptors] - DialInterceptor array
+ * @returns {EntitiesGridData[]} - EntitiesGridData array
+ */
+export const getAdaptersForEntitiesGrid = (adapters?: DialAdapter[] | null): EntitiesGridData[] => {
+  return [...(adapters || [])].map((adapter) => ({
+    ...adapter,
+    type: MenuI18nKey.Adapters,
+    route: ApplicationRoute.Adapters,
   }));
 };

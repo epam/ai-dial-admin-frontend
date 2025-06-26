@@ -12,10 +12,13 @@ interface Props extends PickerProps {
   id: string;
   label: string;
   date: Date | null;
+  dateFormat?: string;
+  placeholder?: string;
+  showTimeInput?: boolean;
   setDate: (date: Date | null) => void;
 }
 
-const DatePicker: FC<Props> = ({ id, label, date, setDate, ...props }) => {
+const DatePicker: FC<Props> = ({ id, label, date, dateFormat, placeholder, showTimeInput, setDate, ...props }) => {
   const customWeekdayFormat = (day: string) => {
     return day.slice(0, 3);
   };
@@ -34,14 +37,16 @@ const DatePicker: FC<Props> = ({ id, label, date, setDate, ...props }) => {
       </label>
       <ReactDatePicker
         id={id}
-        placeholderText="MM-DD-YYYY"
-        dateFormat="MM-dd-yyyy"
+        placeholderText={placeholder || 'MM-DD-YYYY'}
+        dateFormat={dateFormat || 'MM-dd-yyyy'}
         calendarStartDay={1}
         selected={date}
         onChange={onChange}
         previousMonthButtonLabel={<IconChevronLeft {...BASE_ICON_PROPS} />}
         nextMonthButtonLabel={<IconChevronRight {...BASE_ICON_PROPS} />}
         formatWeekDay={customWeekdayFormat}
+        showTimeInput={showTimeInput}
+        timeInputLabel=""
         shouldCloseOnSelect={true}
         showIcon
         icon={

@@ -85,6 +85,7 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
         onChange={onChangeDisplayName}
         invalid={!isValidDisplayName}
         items={uniq(names)}
+        optional={true}
       />
 
       <TextAreaField

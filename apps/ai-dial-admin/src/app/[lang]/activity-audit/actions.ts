@@ -26,3 +26,8 @@ export async function systemRollbackToRevision(revision?: number) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return activityAuditApi.rollbackToRevision(revision, token);
 }
+
+export async function getRevisions(pageSize: number, pageNumber: number, sorts: SortDto[], filters: FilterDto[]) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return activityAuditApi.getRevisions(pageSize, pageNumber, token, sorts, filters);
+}

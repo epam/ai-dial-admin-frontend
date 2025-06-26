@@ -629,6 +629,7 @@ export enum ActivityAuditI18nKey {
   Initiated = 'ActivityAudit.Initiated',
   CurrentState = 'ActivityAudit.CurrentState',
   RollbackState = 'ActivityAudit.RollbackState',
+  RollbackRevision = 'ActivityAudit.RollbackRevision',
 }
 
 export enum ErrorI18nKey {

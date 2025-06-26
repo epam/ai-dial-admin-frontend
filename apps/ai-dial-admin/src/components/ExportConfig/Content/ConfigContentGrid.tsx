@@ -1,7 +1,7 @@
 'use client';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { ColDef } from 'ag-grid-community';
+import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import { getDataWithoutItem } from '@/src/components/ExportConfig/Content/ConfigContent.utils';
@@ -22,6 +22,8 @@ interface Props {
 
 const ConfigContentGrid: FC<Props> = ({ selectedTab, tabData, isFull, customExportData, setCustomExportData }) => {
   const t = useI18n() as (v: string) => string;
+
+  const [gridApi, setGridApi] = useState<GridApi>();
 
   const [fullData, setFullData] = useState<EntitiesGridData[]>([]);
   const [customData, setCustomData] = useState<EntitiesGridData[]>([]);
@@ -55,26 +57,49 @@ const ConfigContentGrid: FC<Props> = ({ selectedTab, tabData, isFull, customExpo
 
   useEffect(() => {
     if (selectedTab) {
+      const columnDefs = isFull ? getActualColDefs(selectedTab, t) : getActualColDefs(selectedTab, t, onRemove);
+      const rowData = isFull ? tabData[selectedTab] || [] : customExportData?.[selectedTab] || [];
+
       if (isFull) {
-        setFullColDefs(getActualColDefs(selectedTab, t));
-        setFullData(tabData[selectedTab] || []);
+        setFullColDefs(columnDefs);
+        setFullData(rowData);
       } else {
-        setCustomColDefs(getActualColDefs(selectedTab, t, onRemove));
-        setCustomData(customExportData?.[selectedTab] || []);
+        setCustomColDefs(columnDefs);
+        setCustomData(rowData);
       }
+      gridApi?.setFilterModel(null);
+      gridApi?.refreshHeader();
+      gridApi?.updateGridOptions({
+        rowData,
+        columnDefs,
+      });
     } else {
       setFullColDefs([]);
       setFullData([]);
       setCustomColDefs([]);
       setCustomData([]);
     }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTab, isFull, customExportData]);
+
+  const onGridReady = (event: GridReadyEvent) => {
+    setGridApi(event.api);
+
+    event.api?.updateGridOptions({
+      columnDefs: isFull ? fullColDefs : customColDefs,
+      rowData: isFull ? fullData : customData,
+    });
+  };
 
   return (isFull ? fullData.length === 0 : customData.length === 0) ? (
     <NoDataContent emptyDataTitle={t(emptyDataTitleI18nkKey)} />
   ) : (
-    <Grid columnDefs={isFull ? fullColDefs : customColDefs} rowData={isFull ? fullData : customData} />
+    <Grid
+      additionalGridOptions={{
+        onGridReady,
+      }}
+    />
   );
 };
 

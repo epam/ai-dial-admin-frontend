@@ -1,5 +1,5 @@
 import { getButtonTitle, getAllAvailableDependencies, getAvailableData } from '../AddEntities.utils';
-import { MenuI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import * as AddEntitiesUtils from '@/src/components/AddEntitiesTab/AddEntitiesView.utils';
 import { EntityType } from '@/src/types/entity-type';
@@ -9,71 +9,71 @@ vi.mock('@/src/components/AddEntitiesTab/AddEntitiesView.utils');
 const mockGetAvailableEntities = AddEntitiesUtils.getAvailableEntities;
 
 describe('Export Config Utils :: getButtonTitle', () => {
-  const mockTranslate = (t: string) => t;
-  test('Should return title for entities', () => {
+  const mockTranslate = (v: string) => v;
+
+  test('Should return title for entities (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.ENTITIES, true);
-
-    expect(res).toBe('Buttons.Add menu.entities');
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Entities.toLowerCase()}`);
   });
 
-  test('Should return title for key', () => {
+  test('Should return title for key (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.KEY, true);
-
-    expect(res).toBe('Buttons.Add menu.keys');
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Keys.toLowerCase()}`);
   });
 
-  test('Should return title for prompts', () => {
+  test('Should return title for prompts (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.PROMPT, true);
-
-    expect(res).toBe('Buttons.Add menu.prompts');
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Prompts.toLowerCase()}`);
   });
 
-  test('Should return title for roles', () => {
+  test('Should return title for roles (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.ROLE, true);
-
-    expect(res).toBe('Buttons.Add menu.roles');
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Roles.toLowerCase()}`);
   });
 
-  test('Should return title for runners', () => {
+  test('Should return title for application runners (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.APPLICATION_TYPE_SCHEMA, true);
-
-    expect(res).toBe('Buttons.Add menu.applicationrunners');
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.ApplicationRunners.toLowerCase()}`);
   });
 
-  test('Should return title for files', () => {
+  test('Should return title for files (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.FILE, true);
-
-    expect(res).toBe('Buttons.Add menu.files');
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Files.toLowerCase()}`);
   });
 
-  test('Should return title for models', () => {
+  test('Should return title for models (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.MODEL, true);
-
-    expect(res).toBe('Buttons.Add menu.models');
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Models.toLowerCase()}`);
   });
 
-  test('Should return title for applications', () => {
+  test('Should return title for applications (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.APPLICATION, true);
-
-    expect(res).toBe('Buttons.Add menu.applications');
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Applications.toLowerCase()}`);
   });
 
-  test('Should return title for routes', () => {
+  test('Should return title for routes (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.ROUTE, true);
-
-    expect(res).toBe('Buttons.Add menu.routes');
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Routes.toLowerCase()}`);
   });
 
-  test('Should return title for interceptors', () => {
+  test('Should return title for interceptors (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.INTERCEPTOR, true);
-
-    expect(res).toBe('Buttons.Add menu.interceptors');
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Interceptors.toLowerCase()}`);
   });
 
-  test('Should return title for interceptors', () => {
+  test('Should return only label (not full) for interceptors', () => {
     const res = getButtonTitle(mockTranslate, EntityType.INTERCEPTOR, false);
+    expect(res).toBe(MenuI18nKey.Interceptors);
+  });
 
-    expect(res).toBe('Menu.Interceptors');
+  test('Should return empty string for undefined tab', () => {
+    const res = getButtonTitle(mockTranslate, undefined, true);
+    expect(res).toBe(`${ButtonsI18nKey.Add} `);
+  });
+
+  test('Should return empty string if no selected tab and not full', () => {
+    const res = getButtonTitle(mockTranslate, undefined, false);
+    expect(res).toBe('');
   });
 });
 

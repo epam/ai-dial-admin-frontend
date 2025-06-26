@@ -27,8 +27,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   try {
     const auditViewId = decodeURIComponent((await params.params).id);
     if (auditViewId === SYSTEM_ROLLBACK_ID) {
-      const revisions = await activityAuditApi.getRevisions(token);
-      return <SystemRollback revisions={revisions} />;
+      return <SystemRollback />;
     }
     activity = await activityAuditApi.getActivityById(auditViewId, token);
     if (activity === void 0) {

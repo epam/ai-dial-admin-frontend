@@ -58,6 +58,14 @@ export const getPreviewTabs = (
         });
       }
 
+      if (key === 'adapters') {
+        convertedData[EntityType.ADAPTER] = data[key];
+        tabs.push({
+          id: EntityType.ADAPTER,
+          name: `${t(MenuI18nKey.Adapters)}: ${data[key].length}`,
+        });
+      }
+
       if (key === 'prompts') {
         convertedData[EntityType.PROMPT] = data[key];
         tabs.push({
