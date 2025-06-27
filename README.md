@@ -4,6 +4,8 @@
 
 This project is a web application built using [Next.js](https://nextjs.org/), a React framework with server-rendering capabilities. It can be easily customized and adapted to your needs by following the steps mentioned below.
 
+> Refer to [User Guide](https://docs.dialx.ai/platform/admin-panel/home) for administrators to learn about features of DIAL Admin.
+
 ## Set Up Developer Environment
 
 This project is managed by [NX](https://nextjs.org/).
