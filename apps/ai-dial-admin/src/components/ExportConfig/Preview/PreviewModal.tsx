@@ -82,7 +82,9 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, modalState, onClose
               <div className="mb-3">
                 <Tabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
               </div>
-              <ConfigContentGrid selectedTab={selectedTab as EntityType} tabData={data} isFull={true} />
+              <div className="flex-1 min-h-0">
+                <ConfigContentGrid selectedTab={selectedTab as EntityType} tabData={data} isFull={true} />
+              </div>
             </div>
           )}
         </div>
