@@ -5,13 +5,23 @@ on:
   registry_package:
 
 jobs:
-  gitlab-dev-deploy:
+  trigger:
     if: |
       github.event_name == 'workflow_dispatch' ||
       github.event.registry_package.package_version.container_metadata.tag.name == 'development'
-    uses: epam/ai-dial-ci/.github/workflows/deploy-development.yml@2.3.0
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - environment-name: "development"
+            gitlab-project-id: "2630"
+          - environment-name: "tst"
+            gitlab-project-id: "2617"
+    name: Deploy to ${{ matrix.environment-name }}
+    uses: epam/ai-dial-ci/.github/workflows/deploy-development.yml@main
     with:
-      gitlab-project-id: "2630"
+      gitlab-project-id: ${{ matrix.gitlab-project-id }}
+      environment-name: ${{ matrix.environment-name }}
     secrets:
       DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
       DEPLOY_ACCESS_TOKEN: ${{ secrets.DEPLOY_ACCESS_TOKEN }}
