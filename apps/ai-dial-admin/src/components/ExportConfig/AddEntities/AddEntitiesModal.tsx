@@ -135,7 +135,7 @@ const AddEntitiesModal: FC<Props> = ({ modalState, selectedTab, entities, column
         <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         <Button
           cssClass="primary"
-          title={t(ButtonsI18nKey.Apply)}
+          title={t(ButtonsI18nKey.Add)}
           onClick={() => onApply(selectedEntities, includeDependencies ? selectedDependencies : void 0)}
           disable={!selectedEntities.length}
         />
