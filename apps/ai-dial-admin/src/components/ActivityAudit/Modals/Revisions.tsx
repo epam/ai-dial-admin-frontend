@@ -117,7 +117,7 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, moda
             minDate={startDate === null ? void 0 : startDate}
           />
         </div>
-        <div className="px-6 py-4 h-[600px] w-full min-h-0 flex flex-col">
+        <div className="px-6 py-4 h-[600px] w-full min-h-0 flex flex-col overflow-auto">
           {isLoading ? (
             <Loader size={40} />
           ) : (
