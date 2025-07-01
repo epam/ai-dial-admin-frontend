@@ -48,6 +48,7 @@ const MultiselectModal: FC<Props> = ({
   const [selectedItems, setSelectedItems] = useState<string[]>(initSelectedItems || []);
   const [items, setItems] = useState<string[]>([]);
   const [newItems, setNewItems] = useState<string[]>([]);
+  const newItemsContainer = useRef<HTMLDivElement | null>(null);
 
   const onApply = useCallback(() => {
     onSelectItems([...selectedItems, ...newItems].filter((t) => t !== ''));
@@ -107,6 +108,16 @@ const MultiselectModal: FC<Props> = ({
     }
   }, [setItems, getItems, allItems]);
 
+  useEffect(() => {
+    const container = newItemsContainer.current;
+    if (container && container.scrollHeight > container.clientHeight) {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
+  }, [newItems.length]);
+
   return (
     <Popup onClose={onClose} heading={heading} portalId="itemsMultiSelect" state={modalState}>
       <div className="flex flex-col overflow-auto px-6 py-4">
@@ -114,7 +125,7 @@ const MultiselectModal: FC<Props> = ({
           <Loader size={40} />
         ) : (
           <>
-            <div className="flex flex-col gap-y-2 overflow-auto">
+            <div className="flex flex-col gap-y-2 overflow-auto" ref={newItemsContainer}>
               {items.map((item, index) => {
                 return (
                   <Checkbox
