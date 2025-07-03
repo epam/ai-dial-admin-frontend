@@ -89,7 +89,8 @@ const EntityMainProperties: FC<Props> = ({
   );
 
   const onChangeDisplayName = useCallback(
-    (displayName: string) => {
+    (name: string) => {
+      const displayName = name.trim();
       const isIncludesDisplayName = names.includes(displayName);
       setIsVersionOptional(!isIncludesDisplayName);
       setIsValidDisplayName(
