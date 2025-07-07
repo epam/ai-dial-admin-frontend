@@ -1,5 +1,10 @@
 import { utilityApi } from '@/src/app/api/api';
-import { IMPORT_CONFIG_URL, PREVIEW_IMPORT_CONFIG_URL } from '@/src/server/utility-api';
+import {
+  IMPORT_CONFIG_URL,
+  IMPORT_ZIP_CONFIG_URL,
+  PREVIEW_IMPORT_CONFIG_URL,
+  PREVIEW_IMPORT_ZIP_CONFIG_URL,
+} from '@/src/server/utility-api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -47,7 +52,7 @@ describe('Import Config :: server actions', () => {
     utilityApi.importZipConfig.mockResolvedValue('zip-result');
     const result = await importZipConfig(mockFormData);
     expect(getUserToken).toHaveBeenCalled();
-    expect(utilityApi.importZipConfig).toHaveBeenCalledWith(IMPORT_CONFIG_URL, TOKEN_MOCK, mockFormData);
+    expect(utilityApi.importZipConfig).toHaveBeenCalledWith(IMPORT_ZIP_CONFIG_URL, TOKEN_MOCK, mockFormData);
     expect(result).toBe('zip-result');
   });
 
@@ -63,7 +68,7 @@ describe('Import Config :: server actions', () => {
     utilityApi.importZipConfig.mockResolvedValue('preview-zip-result');
     const result = await previewZipConfig(mockFormData);
     expect(getUserToken).toHaveBeenCalled();
-    expect(utilityApi.importZipConfig).toHaveBeenCalledWith(PREVIEW_IMPORT_CONFIG_URL, TOKEN_MOCK, mockFormData);
+    expect(utilityApi.importZipConfig).toHaveBeenCalledWith(PREVIEW_IMPORT_ZIP_CONFIG_URL, TOKEN_MOCK, mockFormData);
     expect(result).toBe('preview-zip-result');
   });
 });

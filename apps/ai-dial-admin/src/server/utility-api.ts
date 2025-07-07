@@ -13,6 +13,7 @@ export const RELOAD_CONFIG_URL = `${CONFIG_URL}/reload`;
 export const IMPORT_CONFIG_URL = `${CONFIG_URL}/import`;
 export const PREVIEW_IMPORT_CONFIG_URL = `${IMPORT_CONFIG_URL}/preview`;
 export const IMPORT_ZIP_CONFIG_URL = `${IMPORT_CONFIG_URL}/zip`;
+export const PREVIEW_IMPORT_ZIP_CONFIG_URL = `${IMPORT_ZIP_CONFIG_URL}/preview`;
 export const EXPORT_CONFIG_URL = `${CONFIG_URL}/export`;
 export const EXPORT_CONFIG_MAP_URL = `${EXPORT_CONFIG_URL}/raw/core`;
 export const EXPORT_PREVIEW_CONFIG_URL = `${EXPORT_CONFIG_URL}/preview`;
