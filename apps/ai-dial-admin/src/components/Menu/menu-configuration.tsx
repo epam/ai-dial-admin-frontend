@@ -37,8 +37,6 @@ export const MENU_CONFIGURATION = (iconSize: number): MenuGroupConfiguration[] =
         key: MenuI18nKey.Applications,
         href: ApplicationRoute.Applications,
       },
-      // { key: MenuI18nKey.Assistants, href: ApplicationRoute.Assistants },
-      // { key: MenuI18nKey.Addons, href: ApplicationRoute.Addons },
       {
         key: MenuI18nKey.Routes,
         href: ApplicationRoute.Routes,
@@ -143,10 +141,6 @@ export const MENU_CONFIGURATION = (iconSize: number): MenuGroupConfiguration[] =
         key: MenuI18nKey.Dashboard,
         href: ApplicationRoute.Dashboard,
       },
-      // {
-      //   key: MenuI18nKey.UsageLog,
-      //   href: ApplicationRoute.UsageLog,
-      // },
       {
         key: MenuI18nKey.ActivityAudit,
         href: ApplicationRoute.ActivityAudit,
