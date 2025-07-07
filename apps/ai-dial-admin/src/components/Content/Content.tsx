@@ -1,5 +1,5 @@
 'use client';
-import { FC, ReactNode, useEffect, useRef } from 'react';
+import { FC, ReactNode, useCallback, useEffect, useRef } from 'react';
 import UserMobile from '@/src/components/Header/User/UserMobile';
 import Breadcrumbs from '@/src/components/Breadcrumbs/Breadcrumbs';
 import Footer from '@/src/components/Footer/Footer';
@@ -26,15 +26,15 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const t = useI18n();
 
-  useEffect(() => {
-    const checkAppStatus = (): void => {
-      getAppProcessStatus().then((response) => {
-        if (!response?.success && response?.errorMessage) {
-          showNotificationRef.current(getErrorNotification(t(BasicI18nKey.ServerError), response?.errorMessage));
-        }
-      });
-    };
+  const checkAppStatus = useCallback((): void => {
+    getAppProcessStatus().then((response) => {
+      if (!response?.success && response?.errorMessage) {
+        showNotificationRef.current(getErrorNotification(t(BasicI18nKey.ServerError), response?.errorMessage));
+      }
+    });
+  }, [t]);
 
+  useEffect(() => {
     checkAppStatus();
     intervalRef.current = setInterval(() => {
       checkAppStatus();
@@ -45,7 +45,7 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
         clearInterval(intervalRef.current);
       }
     };
-  }, [t, showNotification]);
+  }, [checkAppStatus]);
 
   return (
     <div className="flex-1 min-h-0 min-w-0 relative">
