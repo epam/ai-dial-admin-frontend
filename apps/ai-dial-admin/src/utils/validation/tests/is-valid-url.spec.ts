@@ -20,7 +20,7 @@ describe('isValidEndpoint', () => {
     expect(isValidEndpoint('http://example.com')).toBe(true);
     expect(isValidEndpoint('https://example.com')).toBe(true);
     expect(isValidEndpoint('https://sub.domain.com/path?query=1')).toBe(true);
-    expect(isValidEndpoint('http://ai-dial-fnol-backend:50/')).toBe(true);
+    expect(isValidEndpoint('http://ab-cdef-ghij-backend:50/')).toBe(true);
     expect(isValidEndpoint('http://localhost')).toBe(true);
     expect(isValidEndpoint('http://localhost:3000/path')).toBe(true);
   });
