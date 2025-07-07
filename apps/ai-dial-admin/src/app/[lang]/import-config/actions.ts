@@ -5,7 +5,7 @@ import { cookies, headers } from 'next/headers';
 import { utilityApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { IMPORT_CONFIG_URL, PREVIEW_IMPORT_CONFIG_URL } from '@/src/server/utility-api';
+import { IMPORT_CONFIG_URL, PREVIEW_IMPORT_CONFIG_URL, PREVIEW_IMPORT_ZIP_CONFIG_URL } from '@/src/server/utility-api';
 
 export async function importJsonConfigs(file: FormData) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -24,5 +24,5 @@ export async function previewJsonConfigs(file: FormData) {
 
 export async function previewZipConfig(file: FormData) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return utilityApi.importZipConfig(PREVIEW_IMPORT_CONFIG_URL, token, file);
+  return utilityApi.importZipConfig(PREVIEW_IMPORT_ZIP_CONFIG_URL, token, file);
 }
