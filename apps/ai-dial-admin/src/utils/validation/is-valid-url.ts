@@ -1,5 +1,6 @@
 const ENDPOINT_REGEX =
-  /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/;
+  /^https?:\/\/[-a-zA-Z0-9@:%._+~#=]{1,256}(\.[a-zA-Z0-9()]{1,6})?\b(:[0-9]{1,5})?([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/;
+
 const WARNING_ENDPOINT_REGEX = /^http:\/\//;
 
 export const isValidHttpUrl = (value: string) => {
