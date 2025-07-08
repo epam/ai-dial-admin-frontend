@@ -32,7 +32,10 @@ const BasePublicationProperties: FC<Props> = ({ publication, children }) => {
           </p>
         </LabeledText>
         <LabeledText label={t(PublicationsI18nKey.Author)} text={publication.author} />
-        <LabeledText label={t(PublicationsI18nKey.CreatedAt)} text={formatDateTimeToLocalString(publication.createdAt)} />
+        <LabeledText
+          label={t(PublicationsI18nKey.CreatedAt)}
+          text={formatDateTimeToLocalString(publication.createdAt)}
+        />
         <LabeledText label={t(PublicationsI18nKey.FolderStorage)} text={removeTrailingSlash(publication.folderId)} />
       </div>
       <div className="mt-8 pt-8" data-testid={'publication-content'}>
