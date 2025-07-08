@@ -88,6 +88,8 @@ describe('Activity Audit List utils :: getGridFilters', () => {
 describe('Activity Audit List utils :: groupByDay', () => {
   test('groups revisions correctly and uses "Today" for current date', () => {
     const mockToday = new Date('2024-06-25T12:00:00');
+    const clonedDate = new Date(mockToday.getTime());
+    clonedDate.setDate(mockToday.getDate() - 1); // Set to yesterday for testing
     vi.useFakeTimers();
     vi.setSystemTime(mockToday);
 
@@ -98,11 +100,11 @@ describe('Activity Audit List utils :: groupByDay', () => {
     ];
 
     const grouped = groupByDay(revisions);
-
+    console.log(grouped);
     expect(Object.keys(grouped)).toContain('Today');
-    expect(Object.keys(grouped)).toContain('06.24.2024');
+    expect(Object.keys(grouped)).toContain(clonedDate.toLocaleDateString());
     expect(grouped['Today']).toHaveLength(2);
-    expect(grouped['06.24.2024']).toHaveLength(1);
+    expect(grouped[clonedDate.toLocaleDateString()]).toHaveLength(1);
 
     vi.useRealTimers();
   });

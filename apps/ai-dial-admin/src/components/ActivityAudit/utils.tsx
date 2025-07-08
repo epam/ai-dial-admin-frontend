@@ -53,14 +53,6 @@ export const getGridFilters = (gridFilter: Record<string, GridFilter>, timeRange
 };
 
 /**
- * Generate two digits number, adding start 0 if it < 10
- *
- * @param {number} num - number
- * @returns {string} - two digits string
- */
-const sliceTwoDigits = (num: number): string => String(num).padStart(2, '0');
-
-/**
  * Group revisions by date
  *
  * @param {ActivityAuditRevision[]} revisions - array of revisions
@@ -71,8 +63,7 @@ export const groupByDay = (revisions: ActivityAuditRevision[]): Record<string, A
 
   return revisions.reduce(
     (acc, obj) => {
-      const d = new Date(obj.timestamp);
-      const key = `${sliceTwoDigits(d.getMonth() + 1)}.${sliceTwoDigits(d.getDate())}.${d.getFullYear()}`;
+      const key = new Date(obj.timestamp).toLocaleDateString();
 
       const groupKey = key === todayKey ? 'Today' : key;
 
