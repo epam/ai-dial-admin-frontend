@@ -1,11 +1,5 @@
 import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
-import {
-  formatTimestamp,
-  getActivityAuditColumns,
-  getGridFilters,
-  getTodayKey,
-  groupByDay,
-} from '@/src/components/ActivityAudit/utils';
+import { getActivityAuditColumns, getGridFilters, groupByDay } from '@/src/components/ActivityAudit/utils';
 import { GridFilterType } from '@/src/types/grid-filter';
 import { FilterOperatorDto } from '@/src/types/request';
 import { describe, expect, test, vi } from 'vitest';
@@ -94,6 +88,8 @@ describe('Activity Audit List utils :: getGridFilters', () => {
 describe('Activity Audit List utils :: groupByDay', () => {
   test('groups revisions correctly and uses "Today" for current date', () => {
     const mockToday = new Date('2024-06-25T12:00:00');
+    const clonedDate = new Date(mockToday.getTime());
+    clonedDate.setDate(mockToday.getDate() - 1); // Set to yesterday for testing
     vi.useFakeTimers();
     vi.setSystemTime(mockToday);
 
@@ -106,47 +102,9 @@ describe('Activity Audit List utils :: groupByDay', () => {
     const grouped = groupByDay(revisions);
 
     expect(Object.keys(grouped)).toContain('Today');
-    expect(Object.keys(grouped)).toContain('06.24.2024');
+    expect(Object.keys(grouped)).toContain(clonedDate.toLocaleDateString());
     expect(grouped['Today']).toHaveLength(2);
-    expect(grouped['06.24.2024']).toHaveLength(1);
-
-    vi.useRealTimers();
-  });
-});
-
-describe('Activity Audit List utils :: formatTimestamp', () => {
-  test('formats a known timestamp to MM.DD.YYYY HH:MM:SS', () => {
-    const timestamp = new Date('2024-03-15T08:05:09').getTime();
-    const result = formatTimestamp(timestamp);
-    expect(result).toBe('03.15.2024 08:05:09');
-  });
-
-  test('pads single digit values with zero', () => {
-    const timestamp = new Date('2024-01-02T04:03:05').getTime();
-    const result = formatTimestamp(timestamp);
-    expect(result).toBe('01.02.2024 04:03:05');
-  });
-});
-
-describe('Activity Audit List utils :: getTodayKey', () => {
-  test('returns the formatted date in MM.DD.YYYY format', () => {
-    const mockDate = new Date('2023-12-25T12:00:00Z');
-    vi.useFakeTimers();
-    vi.setSystemTime(mockDate);
-
-    const result = getTodayKey();
-    expect(result).toBe('12.25.2023');
-
-    vi.useRealTimers();
-  });
-
-  test('pads single digit month and day with zero', () => {
-    const mockDate = new Date('2023-01-07T08:00:00Z');
-    vi.useFakeTimers();
-    vi.setSystemTime(mockDate);
-
-    const result = getTodayKey();
-    expect(result).toBe('01.07.2023');
+    expect(grouped[clonedDate.toLocaleDateString()]).toHaveLength(1);
 
     vi.useRealTimers();
   });

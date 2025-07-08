@@ -9,7 +9,7 @@ import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { FilterData, TelemetryData } from '@/src/models/telemetry';
 import { TimeRange } from '@/src/models/time-range';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
-import { formatDateToLocalTime } from '@/src/utils/formatting/date';
+import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import Big from 'big.js';
 import { EChartsOption } from 'echarts-for-react/src/types';
 
@@ -98,7 +98,7 @@ export const getDefaultFilterValue = (
 
 export function prepareChartData(data: Record<string, string>[]): EChartsOption {
   const config = { ...lineChartDefaultOptions };
-  const xData = data.map((item) => formatDateToLocalTime(item.time));
+  const xData = data.map((item) => formatDateTimeToLocalString(item.time));
   const yData = data.map((item) => item.requests);
 
   (config.xAxis as unknown as { data: string[] }).data = xData;

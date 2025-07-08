@@ -11,6 +11,7 @@ import { FilterOperatorDto } from '@/src/types/request';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { ActivityAuditRevision } from './models';
+import { formatDateToLocalString } from '@/src/utils/formatting/date';
 
 /**
  * Generate columns with actions for activity audit grid
@@ -52,26 +53,17 @@ export const getGridFilters = (gridFilter: Record<string, GridFilter>, timeRange
 };
 
 /**
- * Generate two digits number, adding start 0 if it < 10
- *
- * @param {number} num - number
- * @returns {string} - two digits string
- */
-const sliceTwoDigits = (num: number): string => String(num).padStart(2, '0');
-
-/**
  * Group revisions by date
  *
  * @param {ActivityAuditRevision[]} revisions - array of revisions
  * @returns {Record<string, ActivityAuditRevision[]>} - map of grouped revisions by date
  */
 export const groupByDay = (revisions: ActivityAuditRevision[]): Record<string, ActivityAuditRevision[]> => {
-  const todayKey = getTodayKey();
+  const todayKey = formatDateToLocalString(new Date().getTime());
 
   return revisions.reduce(
     (acc, obj) => {
-      const d = new Date(obj.timestamp);
-      const key = `${sliceTwoDigits(d.getMonth() + 1)}.${sliceTwoDigits(d.getDate())}.${d.getFullYear()}`;
+      const key = new Date(obj.timestamp).toLocaleDateString();
 
       const groupKey = key === todayKey ? 'Today' : key;
 
@@ -82,25 +74,4 @@ export const groupByDay = (revisions: ActivityAuditRevision[]): Record<string, A
     },
     {} as Record<string, ActivityAuditRevision[]>,
   );
-};
-
-/**
- * Generate dateTime from timestamp
- *
- * @param {number} ts - timestamp
- * @returns {string} - formatted string
- */
-export const formatTimestamp = (ts: number): string => {
-  const d = new Date(ts);
-  return `${sliceTwoDigits(d.getMonth() + 1)}.${sliceTwoDigits(d.getDate())}.${d.getFullYear()} ${sliceTwoDigits(d.getHours())}:${sliceTwoDigits(d.getMinutes())}:${sliceTwoDigits(d.getSeconds())}`;
-};
-
-/**
- * Description placeholder
- *
- * @returns {string} - today date in given format
- */
-export const getTodayKey = () => {
-  const d = new Date();
-  return `${sliceTwoDigits(d.getMonth() + 1)}.${sliceTwoDigits(d.getDate())}.${d.getFullYear()}`;
 };

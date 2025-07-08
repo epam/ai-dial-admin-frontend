@@ -24,7 +24,7 @@ import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ActivityAuditEntity, ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { PopUpState } from '@/src/types/pop-up';
 import { getRevisionRouteForAllEntities } from '@/src/utils/audit/get-revision-route';
-import { formatTimestampToDate } from '@/src/utils/formatting/date';
+import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import ConfirmationRollback from './Modals/Confirmation';
 import RollbackRevisions from './Modals/Revisions';
 import { getSystemRollbackColumns, sorts, SYSTEM_ROLLBACK_ENTITIES, SYSTEM_ROLLBACK_TAB_NAME } from './constants';
@@ -127,7 +127,7 @@ const SystemRollback: FC = () => {
             onClick={() => setRevisionsModalState(PopUpState.Opened)}
           >
             <span>{t(ActivityAuditI18nKey.RollbackRevision)}</span>
-            <span>: {formatTimestampToDate(rollbackRevision?.timestamp)}</span>
+            <span>: {formatDateTimeToLocalString(rollbackRevision?.timestamp)}</span>
             <div className="pl-1">
               <OpenPopup />
             </div>
@@ -177,7 +177,7 @@ const SystemRollback: FC = () => {
       {rollBackModalState === PopUpState.Opened &&
         createPortal(
           <ConfirmationRollback
-            revisionDate={formatTimestampToDate(rollbackRevision?.timestamp)}
+            revisionDate={formatDateTimeToLocalString(rollbackRevision?.timestamp)}
             modalState={rollBackModalState}
             onConfirm={systemRollback}
             onClose={() => setRollBackModalState(PopUpState.Closed)}

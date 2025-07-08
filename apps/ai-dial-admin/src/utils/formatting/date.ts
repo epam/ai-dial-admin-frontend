@@ -1,35 +1,29 @@
 /**
- * Format date to MM.DD.YYYY HH:mm
+ * Format date time to user local time format.
  *
- * @param {?number} [timestamp] - date in milliseconds
- * @returns {string} - formatted string
+ * @param {?number | string} [value] - datetime in milliseconds and iso string
+ * @returns {string} - formatted datetime string
  */
-export const formatTimestampToDate = (timestamp?: number): string => {
-  if (!timestamp) {
+export const formatDateTimeToLocalString = (value?: number | string): string => {
+  if (!value) {
     return '';
   }
-  const date = new Date(timestamp);
+  const date = new Date(value);
 
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const year = date.getFullYear();
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-
-  return `${month}.${day}.${year} ${hours}:${minutes}`;
+  return date.toLocaleString();
 };
 
 /**
- * Returns the sum of two numbers.
- * @param {string} date - Date in UTC format: '1970-01-01T00:00:00Z'.
- * @returns {string} Date string in format: 'DD/MM HH:mm'.
+ * Format date to user local time format.
+ *
+ * @param {?number | string} [value] - datetime in milliseconds and iso string
+ * @returns {string} - formatted date string
  */
-export const formatDateToLocalTime = (date: string): string => {
-  return new Date(date).toLocaleString(undefined, {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
+export const formatDateToLocalString = (value?: number | string): string => {
+  if (!value) {
+    return '';
+  }
+  const date = new Date(value);
+
+  return date.toLocaleDateString();
 };
