@@ -100,7 +100,7 @@ describe('Activity Audit List utils :: groupByDay', () => {
     ];
 
     const grouped = groupByDay(revisions);
-    console.log(grouped);
+
     expect(Object.keys(grouped)).toContain('Today');
     expect(Object.keys(grouped)).toContain(clonedDate.toLocaleDateString());
     expect(grouped['Today']).toHaveLength(2);
