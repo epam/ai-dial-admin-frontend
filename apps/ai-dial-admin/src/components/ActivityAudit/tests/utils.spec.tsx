@@ -1,5 +1,5 @@
 import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
-import { getActivityAuditColumns, getGridFilters, getTodayKey, groupByDay } from '@/src/components/ActivityAudit/utils';
+import { getActivityAuditColumns, getGridFilters, groupByDay } from '@/src/components/ActivityAudit/utils';
 import { GridFilterType } from '@/src/types/grid-filter';
 import { FilterOperatorDto } from '@/src/types/request';
 import { describe, expect, test, vi } from 'vitest';
