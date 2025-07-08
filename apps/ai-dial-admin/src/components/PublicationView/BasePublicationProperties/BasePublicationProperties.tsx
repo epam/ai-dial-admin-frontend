@@ -37,7 +37,10 @@ const BasePublicationProperties: FC<Props> = ({ publication, children }) => {
           <LabeledText label={t(PublicationsI18nKey.Author)} text={publication.author} />
         </div>
         <div className="flex flex-col sm:flex-row gap-8">
-          <LabeledText label={t(PublicationsI18nKey.CreatedAt)} text={formatDateTimeToLocalString(publication.createdAt)} />
+          <LabeledText
+            label={t(PublicationsI18nKey.CreatedAt)}
+            text={formatDateTimeToLocalString(publication.createdAt)}
+          />
           <LabeledText
             label={t(PublicationsI18nKey.FolderStorage)}
             text={removeTrailingSlash(decodeURIComponent(publication.folderId))}

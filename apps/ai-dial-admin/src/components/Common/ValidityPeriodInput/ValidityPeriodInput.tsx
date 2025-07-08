@@ -71,7 +71,9 @@ const ValidityPeriodInput: FC<Props> = ({ onChange }) => {
         </div>
       </div>
       <LabeledText label={t(KeysI18nKey.ExpirationTime)}>
-        <div className="flex flex-1 items-center">{expirationTime ? formatDateTimeToLocalString(expirationTime) : ''}</div>
+        <div className="flex flex-1 items-center">
+          {expirationTime ? formatDateTimeToLocalString(expirationTime) : ''}
+        </div>
       </LabeledText>
     </div>
   );

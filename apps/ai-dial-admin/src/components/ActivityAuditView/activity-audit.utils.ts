@@ -186,7 +186,10 @@ export const compareSimpleTypes = (
  */
 export const fillSimpleTypes = (diffs: ActivityAuditDiff[], key: string, value?: string | boolean | number): void => {
   const isTime = dateKeys.includes(key);
-  diffs.push({ parameter: key, value: isTime ? formatDateTimeToLocalString(value as number) : value?.toString() || '' });
+  diffs.push({
+    parameter: key,
+    value: isTime ? formatDateTimeToLocalString(value as number) : value?.toString() || '',
+  });
 };
 
 /**
