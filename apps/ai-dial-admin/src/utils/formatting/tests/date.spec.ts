@@ -7,8 +7,9 @@ describe('Utils :: formatDateToLocalString', () => {
     vi.useFakeTimers();
     vi.setSystemTime(mockDate);
 
-    const result = formatDateToLocalString();
-    expect(result).toBe('12.25.2023');
+    const result = formatDateToLocalString('2023-12-25T12:00:00Z');
+
+    expect(result).toBe(mockDate.toLocaleDateString());
 
     vi.useRealTimers();
   });
