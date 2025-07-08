@@ -1,6 +1,6 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { MenuI18nKey } from '@/src/constants/i18n';
-import { BreadcrumbConfig } from '@/src/components/Breadcrumbs/Breadcrumbs.utils';
+import { BreadcrumbConfig } from '@/src/components/Breadcrumbs/models';
 
 export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig> = {
   [ApplicationRoute.Home]: {

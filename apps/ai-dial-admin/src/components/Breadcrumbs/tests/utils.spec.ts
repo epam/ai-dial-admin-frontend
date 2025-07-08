@@ -1,4 +1,4 @@
-import { getBreadcrumbs } from '@/src/components/Breadcrumbs/Breadcrumbs.utils';
+import { getBreadcrumbs } from '@/src/components/Breadcrumbs/utils';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { describe, expect, test } from 'vitest';
 

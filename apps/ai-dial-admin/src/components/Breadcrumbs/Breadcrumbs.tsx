@@ -6,7 +6,8 @@ import { usePathname } from 'next/navigation';
 import { useI18n, useCurrentLocale } from '@/src/locales/client';
 import { IconChevronRight } from '@tabler/icons-react';
 import Link from 'next/link';
-import { Breadcrumb, getBreadcrumbs } from '@/src/components/Breadcrumbs/Breadcrumbs.utils';
+import { getBreadcrumbs } from '@/src/components/Breadcrumbs/utils';
+import { Breadcrumb } from '@/src/components/Breadcrumbs/models';
 import { useAppContext } from '@/src/context/AppContext';
 interface Props {
   mobile: boolean;

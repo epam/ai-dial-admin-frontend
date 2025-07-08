@@ -2,24 +2,11 @@ import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/constants';
 import { ActivityAuditI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { EmbeddedApp } from '@/src/context/AppContext';
 import { ApplicationRoute } from '@/src/types/routes';
-import { breadcrumbConfig } from './Breadcrumbs.config';
+import { breadcrumbConfig } from './constants';
+import { BreadcrumbConfig, Breadcrumb } from './models';
 
 const IGNORE_BREADCRUMBS = [ApplicationRoute.Home, ApplicationRoute.Forbidden];
 const TRANSLATE_BREADCRUMBS = { [SYSTEM_ROLLBACK_ID]: ActivityAuditI18nKey.RollbackSystem };
-
-export interface BreadcrumbConfig {
-  segments: {
-    name: string;
-    i18nKey?: MenuI18nKey;
-    href?: boolean;
-  }[];
-}
-
-export interface Breadcrumb {
-  key?: MenuI18nKey;
-  name: string;
-  href: string;
-}
 
 const getEmbeddedPluginBreadcrumb = (route: ApplicationRoute, apps?: EmbeddedApp[]): BreadcrumbConfig | null => {
   const app = apps?.find((a) => a.slug === route);
@@ -50,15 +37,8 @@ export function getBreadcrumbs(pathname: string, currentLocale: string, embedded
   const rootSegment = `/${pathSegments[0]}`;
   const config = getBreadcrumbConfig(rootSegment as ApplicationRoute, embeddedApps);
 
-  if (IGNORE_BREADCRUMBS.includes(rootSegment as ApplicationRoute)) {
+  if (IGNORE_BREADCRUMBS.includes(rootSegment as ApplicationRoute) || !config) {
     return [];
-  }
-
-  if (!config) {
-    return pathSegments.map((segment, index) => ({
-      name: segment,
-      href: `/${[locale, ...pathSegments.slice(0, index + 1)].filter(Boolean).join('/')}`,
-    }));
   }
 
   return pathSegments.map((pathSegment, index) => {
