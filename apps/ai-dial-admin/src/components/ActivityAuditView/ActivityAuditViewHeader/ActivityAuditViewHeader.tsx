@@ -8,7 +8,7 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/dial/activity-audit';
 import { ActivityAuditType } from '@/src/types/activity-audit';
-import { formatTimestampToDate } from '@/src/utils/formatting/date';
+import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { auditResourceRoute } from './ActivityAuditViewHeader.utils';
 import { getFormattedResourceType } from '@/src/constants/grid-columns/formatters';
 
@@ -43,7 +43,7 @@ const ActivityAuditViewHeader: FC<Props> = ({ activity }) => {
           )}
         </div>
       </LabeledText>
-      <LabeledText label={t(ActivityAuditI18nKey.Time)} text={formatTimestampToDate(activity.epochTimestampMs)} />
+      <LabeledText label={t(ActivityAuditI18nKey.Time)} text={formatDateTimeToLocalString(activity.epochTimestampMs)} />
       <LabeledText label={t(ActivityAuditI18nKey.Initiated)} text={activity.initiatedEmail} />
     </div>
   );

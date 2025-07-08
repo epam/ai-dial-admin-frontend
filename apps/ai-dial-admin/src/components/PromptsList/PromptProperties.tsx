@@ -25,7 +25,7 @@ import { Publication } from '@/src/models/dial/publications';
 import { FieldError } from '@/src/models/error';
 import { JSONEditorError } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
-import { formatTimestampToDate } from '@/src/utils/formatting/date';
+import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
 
 interface Props {
@@ -169,12 +169,12 @@ const PromptProperties: FC<Props> = ({
         {publication ? (
           <>
             {/* <LabeledText label="Author" text={publication.author} /> */}
-            <LabeledText label="Created At" text={formatTimestampToDate(publication.createdAt)} />
+            <LabeledText label="Created At" text={formatDateTimeToLocalString(publication.createdAt)} />
           </>
         ) : (
           <>
             {/* <LabeledText label="Author" text={prompt.author} /> */}
-            <LabeledText label="Update Time" text={formatTimestampToDate(prompt.updateTime)} />
+            <LabeledText label="Update Time" text={formatDateTimeToLocalString(prompt.updateTime)} />
           </>
         )}
       </div>

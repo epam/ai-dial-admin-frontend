@@ -14,7 +14,7 @@ import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { GridFilterType } from '@/src/types/grid-filter';
 import { ApplicationRoute } from '@/src/types/routes';
-import { formatTimestampToDate } from '@/src/utils/formatting/date';
+import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
 import { Publication } from '@/src/models/dial/publications';
 import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
@@ -113,8 +113,8 @@ export const ACTIVITY_AUDIT_COLUMNS: ColDef[] = [
     field: 'epochTimestampMs',
     headerName: 'Time',
     sort: 'desc',
-    valueFormatter: ({ value }) => formatTimestampToDate(value),
-    tooltipValueGetter: ({ value }) => formatTimestampToDate(value),
+    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
+    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
     floatingFilter: false,
     filter: false,
   },
@@ -128,22 +128,22 @@ export const KEY_ENTITY_COLUMNS: ColDef[] = [
   {
     field: 'createdAt',
     headerName: 'Creation time',
-    valueFormatter: ({ value }) => formatTimestampToDate(value),
-    tooltipValueGetter: ({ value }) => formatTimestampToDate(value),
+    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
+    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
     hide: true,
   },
   {
     field: 'keyGeneratedAt',
     headerName: 'Key generation time',
-    valueFormatter: ({ value }) => formatTimestampToDate(value),
-    tooltipValueGetter: ({ value }) => formatTimestampToDate(value),
+    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
+    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
     hide: false,
   },
   {
     field: 'expiresAt',
     headerName: 'Expiration time',
-    valueFormatter: ({ value }) => formatTimestampToDate(value),
-    tooltipValueGetter: ({ value }) => formatTimestampToDate(value),
+    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
+    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
     hide: false,
   },
   {
@@ -190,8 +190,8 @@ export const PROMPTS_COLUMNS: ColDef[] = [
   {
     field: 'updateTime',
     headerName: 'Update time',
-    valueFormatter: ({ value }) => formatTimestampToDate(value),
-    tooltipValueGetter: ({ value }) => formatTimestampToDate(value),
+    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
+    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
   },
 ];
 
@@ -225,8 +225,8 @@ export const EXPORT_COLUMNS = (onChange: (value: string, name: string) => void, 
   {
     field: 'updateTime',
     headerName: 'Update time',
-    valueFormatter: ({ value }) => formatTimestampToDate(value),
-    tooltipValueGetter: ({ value }) => formatTimestampToDate(value),
+    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
+    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
   },
 ];
 
@@ -237,8 +237,8 @@ export const PUBLICATION_COLUMNS: ColDef[] = [
     field: 'createdAt',
     headerName: 'Created at',
     sort: 'asc',
-    valueFormatter: ({ value }) => formatTimestampToDate(value),
-    tooltipValueGetter: ({ value }) => formatTimestampToDate(value),
+    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
+    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
   },
 ];
 

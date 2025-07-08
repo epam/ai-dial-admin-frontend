@@ -7,7 +7,7 @@ import { DialRoleLimits } from '@/src/models/dial/base-entity';
 import { DialModelEndpoint } from '@/src/models/dial/model';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus } from '@/src/types/activity-audit';
-import { formatTimestampToDate } from '@/src/utils/formatting/date';
+import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import {
   ENTITIES_DIFF_COLUMNS,
   EntityParameterKeys,
@@ -160,19 +160,19 @@ export const compareSimpleTypes = (
   } else if (isSimpleValueAddedOrRemoved(val2, val1)) {
     diffs.push({
       parameter: key,
-      value: isTime ? formatTimestampToDate(val2 as number) : val2?.toString() || '',
+      value: isTime ? formatDateTimeToLocalString(val2 as number) : val2?.toString() || '',
       status: isCurrent ? void 0 : DiffStatus.ADDED,
     });
   } else if (isSimpleValueChanged(val1, val2)) {
     diffs.push({
       parameter: key,
-      value: isTime ? formatTimestampToDate(val2 as number) : val2?.toString() || '',
+      value: isTime ? formatDateTimeToLocalString(val2 as number) : val2?.toString() || '',
       status: DiffStatus.CHANGED,
     });
   } else {
     diffs.push({
       parameter: key,
-      value: isTime ? formatTimestampToDate(val1 as number) : val1?.toString() || '',
+      value: isTime ? formatDateTimeToLocalString(val1 as number) : val1?.toString() || '',
     });
   }
 };
@@ -186,7 +186,10 @@ export const compareSimpleTypes = (
  */
 export const fillSimpleTypes = (diffs: ActivityAuditDiff[], key: string, value?: string | boolean | number): void => {
   const isTime = dateKeys.includes(key);
-  diffs.push({ parameter: key, value: isTime ? formatTimestampToDate(value as number) : value?.toString() || '' });
+  diffs.push({
+    parameter: key,
+    value: isTime ? formatDateTimeToLocalString(value as number) : value?.toString() || '',
+  });
 };
 
 /**
