@@ -16,7 +16,7 @@ import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { rollbackEntityPerRevision } from '@/src/utils/audit/get-rollback-request';
-import { formatTimestampToDate } from '@/src/utils/formatting/date';
+import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { useRouter } from 'next/navigation';
 import ActivityAuditEntityDiff from './ActivityAuditViewDiff/ActivityAuditEntityDiff';
@@ -110,7 +110,7 @@ const ActivityAuditView: FC<Props> = ({ activity, activityRevision, previousRevi
             <div className="text-secondary small-150 px-6 py-4">
               <p>
                 <span>{t(ActivityAuditI18nKey.ConfirmSelectionRollbackDescription)}</span>
-                <span className="important-text-part">{formatTimestampToDate(activity?.epochTimestampMs)}</span>
+                <span className="important-text-part">{formatDateTimeToLocalString(activity?.epochTimestampMs)}</span>
               </p>
               <p>{t(ActivityAuditI18nKey.ConfirmRollbackAsking)}</p>
             </div>

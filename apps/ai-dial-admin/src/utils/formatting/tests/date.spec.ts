@@ -1,19 +1,15 @@
-import { formatDateToLocalTime, formatTimestampToDate } from '@/src/utils/formatting/date';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
+import { formatDateToLocalString } from '@/src/utils/formatting/date';
 
-describe('Utils :: date :: formatDateToLocalTime', () => {
-  // TODO: fake timezone to 'America/New_York'
-  test.skip('Should correctly handle thousands number', () => {
-    const date = formatDateToLocalTime('1970-01-01T05:00:00Z');
+describe('Utils :: formatDateToLocalString', () => {
+  test('returns the formatted date in MM.DD.YYYY format', () => {
+    const mockDate = new Date('2023-12-25T12:00:00Z');
+    vi.useFakeTimers();
+    vi.setSystemTime(mockDate);
 
-    expect(date).toBe('01/01, 00:00');
-  });
-});
+    const result = formatDateToLocalString();
+    expect(result).toBe('12.25.2023');
 
-describe('Utils :: date :: formatTimestampToDate', () => {
-  test.skip('Should correctly formatted timestamp', () => {
-    const date = formatTimestampToDate(1741349487370, 'UTC');
-
-    expect(date).toBe('03.07.2025 13:11');
+    vi.useRealTimers();
   });
 });

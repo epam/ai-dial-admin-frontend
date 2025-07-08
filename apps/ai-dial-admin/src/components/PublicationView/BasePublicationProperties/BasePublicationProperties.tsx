@@ -7,7 +7,7 @@ import { PublicationsI18nKey } from '@/src/constants/i18n';
 import { ACTION_I18N_KEYS } from '@/src/constants/publications';
 import { useI18n } from '@/src/locales/client';
 import { ActionType, Publication } from '@/src/models/dial/publications';
-import { formatTimestampToDate } from '@/src/utils/formatting/date';
+import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { removeTrailingSlash } from '@/src/utils/files/path';
 import { getActionClass } from '@/src/utils/publications';
 import BasePublicationPermissions from './BasePublicationPermissions';
@@ -37,7 +37,7 @@ const BasePublicationProperties: FC<Props> = ({ publication, children }) => {
           <LabeledText label={t(PublicationsI18nKey.Author)} text={publication.author} />
         </div>
         <div className="flex flex-col sm:flex-row gap-8">
-          <LabeledText label={t(PublicationsI18nKey.CreatedAt)} text={formatTimestampToDate(publication.createdAt)} />
+          <LabeledText label={t(PublicationsI18nKey.CreatedAt)} text={formatDateTimeToLocalString(publication.createdAt)} />
           <LabeledText
             label={t(PublicationsI18nKey.FolderStorage)}
             text={removeTrailingSlash(decodeURIComponent(publication.folderId))}

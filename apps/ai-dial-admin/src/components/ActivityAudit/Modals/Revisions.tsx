@@ -6,7 +6,7 @@ import classNames from 'classnames';
 import { getRevisions } from '@/src/app/[lang]/activity-audit/actions';
 import { sorts } from '@/src/components/ActivityAudit/constants';
 import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
-import { formatTimestamp, groupByDay } from '@/src/components/ActivityAudit/utils';
+import { groupByDay } from '@/src/components/ActivityAudit/utils';
 import Button from '@/src/components/Common/Button/Button';
 import DatePicker from '@/src/components/Common/DatePicker/DatePicker';
 import Loader from '@/src/components/Common/Loader/Loader';
@@ -15,6 +15,7 @@ import { ActivityAuditI18nKey, BasicI18nKey, ButtonsI18nKey } from '@/src/consta
 import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
 import { FilterOperatorDto } from '@/src/types/request';
+import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 
 interface Props {
   initialRevisions: ActivityAuditRevision[];
@@ -149,7 +150,7 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, moda
                           )}
                           onClick={() => setSelectedRevision(value)}
                         >
-                          {formatTimestamp(value.timestamp)}
+                          {formatDateTimeToLocalString(value.timestamp)}
                         </li>
                       ))}
                     </ul>

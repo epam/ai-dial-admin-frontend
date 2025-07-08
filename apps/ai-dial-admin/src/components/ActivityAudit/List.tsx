@@ -24,7 +24,7 @@ import { TimeRange } from '@/src/models/time-range';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { rollbackEntityPerType } from '@/src/utils/audit/get-rollback-request';
-import { formatTimestampToDate } from '@/src/utils/formatting/date';
+import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
@@ -222,7 +222,9 @@ const ActivityAuditList: FC = () => {
                 <span>{t(ActivityAuditI18nKey.ConfirmRollbackDescriptionPart2)}</span>
                 <span className="important-text-part mx-1">{currentActivity?.resourceId}</span>
                 <span>{t(ActivityAuditI18nKey.ConfirmRollbackDescriptionPart3)}</span>
-                <span className="important-text-part">{formatTimestampToDate(currentActivity?.epochTimestampMs)}</span>
+                <span className="important-text-part">
+                  {formatDateTimeToLocalString(currentActivity?.epochTimestampMs)}
+                </span>
               </p>
               <p>{t(ActivityAuditI18nKey.ConfirmRollbackAsking)}</p>
             </div>

@@ -10,7 +10,7 @@ import { CreateI18nKey, KeysI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ValidityPeriods } from '@/src/types/key';
-import { formatTimestampToDate } from '@/src/utils/formatting/date';
+import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { calculateExpirationDate } from '@/src/utils/keys';
 
 export interface Props {
@@ -71,7 +71,7 @@ const ValidityPeriodInput: FC<Props> = ({ onChange }) => {
         </div>
       </div>
       <LabeledText label={t(KeysI18nKey.ExpirationTime)}>
-        <div className="flex flex-1 items-center">{expirationTime ? formatTimestampToDate(expirationTime) : ''}</div>
+        <div className="flex flex-1 items-center">{expirationTime ? formatDateTimeToLocalString(expirationTime) : ''}</div>
       </LabeledText>
     </div>
   );
