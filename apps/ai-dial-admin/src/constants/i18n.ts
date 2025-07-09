@@ -43,6 +43,7 @@ export enum MenuI18nKey {
   MLOps = 'Menu.MLOps',
   MCPServers = 'Menu.MCPServers',
   MCPInstances = 'Menu.MCPInstances',
+  InterceptorDeployments = 'Menu.InterceptorDeployments',
   ActivityAudit = 'Menu.ActivityAudit',
 }
 
