@@ -87,7 +87,7 @@ export const filterLatestVersions = (data: DialPrompt[]) => {
 
   data?.forEach((item) => {
     const name = item.name as string;
-    if (!latestVersions[name] || compareVersions(item.version, latestVersions[name].version) > 0) {
+    if (!latestVersions[name] || item.updateTime > latestVersions[name].updateTime) {
       latestVersions[name] = item;
     }
   });
