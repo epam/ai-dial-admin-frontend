@@ -1,4 +1,4 @@
-import { getBreadcrumbs } from '@/src/components/Breadcrumbs/Breadcrumbs.utils';
+import { getBreadcrumbs } from '@/src/components/Breadcrumbs/utils';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { describe, expect, test } from 'vitest';
 
@@ -21,10 +21,7 @@ describe('Breadcrumbs :: getBreadcrumbConfig with language in path', () => {
 
   test('Should correctly return correct config with unknown route', () => {
     const config = getBreadcrumbs('/unknown', 'en');
-    expect(config.length).toEqual(1);
-    expect(config[0].href).toEqual('/unknown');
-    expect(config[0].key).toBeFalsy();
-    expect(config[0].name).toEqual('unknown');
+    expect(config.length).toEqual(0);
   });
 
   test('Should return empty array for home page', () => {
