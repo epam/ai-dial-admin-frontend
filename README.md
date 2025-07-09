@@ -83,7 +83,7 @@ AI DIAL Admin uses environment variables for configuration. All environment vari
 | `DIAL_ADMIN_DOCUMENTATION` |    No    | Link to DIAL Admin documentation application                                                                                                            | Any string       |
 | `PUBLICATION_FILTERS`      |    No    | Defines types of publications that can be retrieved from the database                                                                                   | Any string       | `title,role`    |
 | `EMBEDDED_APPS`            |    No    | Defines integrated plugins                                                                                                                              | JSON             |                 |
-| `COOKIE_DOMAIN`            |    No    | Domain for auth cookie cookie (need for plugin authentication)                                                                                          | Any string       |                 |
+
 
 ### Environment Variables for the Configuration of Auth Providers
 
