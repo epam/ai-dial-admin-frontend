@@ -16,7 +16,14 @@ const compat = new FlatCompat({
 });
 
 export default defineConfig([
-  globalIgnores(['**/node_modules', '**/**.config.js', '**/**.config.mjs', '**/jest.config.ts', '**/**.spec.ts']),
+  globalIgnores([
+    '**/node_modules',
+    '**/next',
+    '**/**.config.js',
+    '**/**.config.mjs',
+    '**/jest.config.ts',
+    '**/**.spec.ts',
+  ]),
   {
     extends: compat.extends('eslint:recommended', 'prettier', 'next'),
 
