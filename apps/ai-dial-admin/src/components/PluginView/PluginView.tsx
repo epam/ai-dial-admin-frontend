@@ -10,9 +10,9 @@ import { useTheme } from '@/src/context/ThemeContext';
 import { FrameConfig } from '@/src/components/ApplicationParametersTab/ApplicationParametersTab';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
-import { usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { VisualizerConnectorEvents, VisualizerConnectorRequest } from '@epam/ai-dial-shared';
-import { useRouter } from 'next/navigation';
+
 interface Props {
   slug: string;
 }
@@ -23,6 +23,7 @@ const PluginView: FC<Props> = ({ slug }) => {
   const { currentTheme } = useTheme();
   const { embeddedApps } = useAppContext();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
 
   const session = data as UserSession;
@@ -61,7 +62,7 @@ const PluginView: FC<Props> = ({ slug }) => {
     });
   }, [currentTheme, plugin, session]);
 
-  function extractCorrectRoute(slug: string, path: string): string {
+  function extractRoute(slug: string, path: string): string {
     const index = path.indexOf(slug);
     if (index !== -1) {
       return path.slice(index);
@@ -70,16 +71,29 @@ const PluginView: FC<Props> = ({ slug }) => {
   }
 
   const generateTargetUrl = useCallback(() => {
-    const correctRoute = extractCorrectRoute(slug, pathname);
+    let route = extractRoute(slug, pathname);
+
+    const params = Array.from(searchParams.entries());
+    if (params.length) {
+      const searchString = params
+        .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+        .join('&');
+      route += `?${searchString}`;
+    }
+
     try {
-      const iframeUrl = `${frameConfig?.host}?authProvider=${frameConfig?.providerId}&theme=${frameConfig?.theme}&route=${correctRoute}`;
-      return new URL(iframeUrl);
+      const baseUrl = new URL(frameConfig?.host ?? '');
+      baseUrl.searchParams.set('authProvider', frameConfig?.providerId ?? '');
+      baseUrl.searchParams.set('theme', frameConfig?.theme ?? '');
+      baseUrl.searchParams.set('route', route);
+
+      return baseUrl;
     } catch (error) {
       if (error) {
         setError(true);
       }
     }
-  }, [frameConfig?.host, frameConfig?.providerId, frameConfig?.theme, pathname, slug]);
+  }, [frameConfig?.host, frameConfig?.providerId, frameConfig?.theme, pathname, searchParams, slug]);
 
   return (
     <div className="flex flex-col bg-layer-2 rounded p-4 flex-1 min-h-0">

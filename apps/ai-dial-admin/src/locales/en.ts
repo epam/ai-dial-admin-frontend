@@ -108,6 +108,7 @@ export default {
     MLOps: 'ML Ops',
     MCPServers: 'MCP Servers',
     MCPInstances: 'MCP Instances',
+    InterceptorDeployments: 'Interceptor deployments',
 
     EntitiesDescription: 'Centralized space to configure and oversee key components of your AI ecosystem.',
     AccessManagementDescription:
