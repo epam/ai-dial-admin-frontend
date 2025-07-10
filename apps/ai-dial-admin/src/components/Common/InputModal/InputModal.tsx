@@ -37,9 +37,9 @@ const InputModal: FC<Props> = ({
         <button type="button" className="w-full" onClick={onOpenModal} aria-label="open-popup">
           <div
             className={classNames(
+              readonly ? 'border-0 p-0 body' : '',
               'input input-field flex flex-row items-center w-full justify-between',
               inputCssClasses,
-              readonly ? 'border-0 p-0 body' : '',
             )}
           >
             <span className={valueCssClasses}>{value}</span>
@@ -54,7 +54,7 @@ const InputModal: FC<Props> = ({
               readonly ? 'border-0 p-0' : '',
             )}
           >
-            <AutocompleteInputValue readonly={readonly} selectedItems={value as string[]} />
+            <AutocompleteInputValue selectedItems={value as string[]} />
             {!readonly && (
               <div className="ml-1">
                 <OpenPopup />
