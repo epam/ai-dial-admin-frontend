@@ -44,6 +44,7 @@ export enum MenuI18nKey {
   MCPServers = 'Menu.MCPServers',
   MCPInstances = 'Menu.MCPInstances',
   InterceptorDeployments = 'Menu.InterceptorDeployments',
+  InterceptorTemplates = 'Menu.InterceptorTemplates',
   ActivityAudit = 'Menu.ActivityAudit',
 }
 
@@ -123,6 +124,7 @@ export enum EntitiesI18nKey {
   NoActivityAudit = 'Entities.NoActivityAudit',
   NoFolders = 'Entities.NoFolders',
   NoResource = 'Entities.NoResource',
+  NoInterceptorTemplates = 'Entities.NoInterceptorTemplates',
   Icon = 'Entities.Icon',
   Endpoint = 'Entities.Endpoint',
   EndpointBase = 'Entities.EndpointBase',
@@ -152,6 +154,10 @@ export enum DeleteI18nKey {
   Route = 'DeleteEntity.Route',
   Prompt = 'DeleteEntity.Prompt',
   File = 'DeleteEntity.File',
+  InterceptorTemplateTitle = 'DeleteEntity.InterceptorTemplate.Title',
+  InterceptorTemplateDescriptionWarning = 'DeleteEntity.InterceptorTemplate.DescriptionWarning',
+  InterceptorTemplateInterceptorsTitle = 'DeleteEntity.InterceptorTemplate.InterceptorsTitle',
+  InterceptorTemplateNoInterceptorsTitle = 'DeleteEntity.InterceptorTemplate.NoInterceptorsTitle',
 }
 
 export enum DuplicateI18nKey {
@@ -170,6 +176,7 @@ export enum DuplicateI18nKey {
   PromptHeader = 'DuplicateEntity.Prompt.Header',
   InterceptorHeader = 'DuplicateEntity.Interceptor.Header',
   AdapterHeader = 'DuplicateEntity.Adapter.Header',
+  InterceptorTemplate = 'DuplicateEntity.InterceptorTemplate.Header',
 }
 
 export enum ButtonsI18nKey {
@@ -276,6 +283,7 @@ export enum CreateI18nKey {
   NameVersionCombinationError = 'CreateEntity.nameVersionCombinationError',
   SchemeTitle = 'CreateEntity.Scheme',
   ErrorUnique = 'CreateEntity.ErrorUnique',
+  InterceptorTemplate = 'CreateEntity.InterceptorTemplate',
 }
 
 export enum UpstreamEndpointsI18nKey {

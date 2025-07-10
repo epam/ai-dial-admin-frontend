@@ -13,6 +13,7 @@ import { PromptsApi } from '@/src/server/entities/prompts-api';
 import { PublicationsApi } from '@/src/server/entities/publications-api';
 import { RolesApi } from '@/src/server/entities/roles-api';
 import { RoutesApi } from '@/src/server/entities/routes-api';
+import { InterceptorTemplatesApi } from '@/src/server/entities/interceptor-templates-api';
 import { TelemetryApi } from '@/src/server/telemetry-api';
 import { ThemesApi } from '@/src/server/themes-api';
 import { UtilityApi } from '@/src/server/utility-api';
@@ -84,5 +85,9 @@ export const utilityApi = new UtilityApi({
 export const themesApi = new ThemesApi();
 
 export const activityAuditApi = new ActivityAuditApi({
+  host: process.env.DIAL_ADMIN_API_URL,
+});
+
+export const interceptorTemplatesApi = new InterceptorTemplatesApi({
   host: process.env.DIAL_ADMIN_API_URL,
 });

@@ -12,6 +12,7 @@ export const duplicateModalTitleMap: Record<string, DuplicateI18nKey> = {
   [ApplicationRoute.Assistants]: DuplicateI18nKey.AssistantHeader,
   [ApplicationRoute.Prompts]: DuplicateI18nKey.PromptHeader,
   [ApplicationRoute.Adapters]: DuplicateI18nKey.AdapterHeader,
+  [ApplicationRoute.InterceptorTemplates]: DuplicateI18nKey.InterceptorTemplate,
 };
 
 export const duplicateModalDescriptionMap: Record<string, DuplicateI18nKey> = {

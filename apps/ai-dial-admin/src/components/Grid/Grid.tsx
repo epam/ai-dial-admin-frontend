@@ -145,7 +145,7 @@ const Grid = <T extends object>({
   }, [columnDefs, gridApi, rowData]);
 
   return (
-    <div className="ag-theme-balham-dark h-full overflow-x-auto">
+    <div className="ag-theme-balham-dark h-full overflow-x-auto" role='table'>
       <AgGridReact
         rowModelType="clientSide"
         headerHeight={30}

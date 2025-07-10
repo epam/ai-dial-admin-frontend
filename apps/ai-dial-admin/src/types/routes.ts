@@ -21,4 +21,5 @@ export enum ApplicationRoute {
   FoldersStorage = '/folders-storage',
   ActivityAudit = '/activity-audit',
   Forbidden = '/forbidden',
+  InterceptorTemplates = '/interceptor-templates',
 }
