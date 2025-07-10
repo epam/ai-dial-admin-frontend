@@ -1,21 +1,22 @@
+'use client';
+import { GridOptions } from 'ag-grid-community';
+import { useRouter } from 'next/navigation';
+import { useCallback } from 'react';
+
 import { emptyDataTitleMap, getEntityPath, listViewTitleMap } from '@/src/components/EntityListView/entity-list-view';
-import { ApplicationRoute } from '@/src/types/routes';
 import ListView from '@/src/components/ListView/ListView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
-import { useI18n } from '@/src/locales/client';
-import { useRouter } from 'next/navigation';
-import { GridOptions } from 'ag-grid-community';
-import { Publication } from '@/src/models/dial/publications';
-import { useCallback } from 'react';
 import { getPublicationColumns } from '@/src/constants/grid-columns/grid-columns';
+import { useI18n } from '@/src/locales/client';
+import { Publication } from '@/src/models/dial/publications';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface BasePublicationsListProps<T> {
   data: T[];
   route: ApplicationRoute;
-  dataTestId: string;
 }
 
-const BasePublicationsList = <T extends Publication>({ data, route, dataTestId }: BasePublicationsListProps<T>) => {
+const BasePublicationsList = <T extends Publication>({ data, route }: BasePublicationsListProps<T>) => {
   const t = useI18n();
   const router = useRouter();
 
@@ -44,7 +45,6 @@ const BasePublicationsList = <T extends Publication>({ data, route, dataTestId }
       title={t(listViewTitleMap[route])}
       emptyDataTitle={t(emptyDataTitleMap[route])}
       view={route}
-      dataTestId={dataTestId}
     />
   );
 };

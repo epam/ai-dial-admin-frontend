@@ -26,13 +26,14 @@ export default async function Page() {
   let data: Publication[] | undefined = [];
 
   try {
-    data = await publicationsApi.getPublicationsPromptsList(token);
+    data = await publicationsApi.getApplicationPublicationsList(token);
+
     if (data === void 0) {
       return <Page403 />;
     }
   } catch (e) {
-    logger.error('Getting publications prompt error', e);
+    logger.error('Getting application publications error', e);
   }
 
-  return <BasePublicationsList data={data || []} route={ApplicationRoute.PromptPublications} />;
+  return <BasePublicationsList data={data || []} route={ApplicationRoute.ApplicationPublications} />;
 }

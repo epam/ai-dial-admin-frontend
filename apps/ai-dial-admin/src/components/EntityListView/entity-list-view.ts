@@ -21,6 +21,7 @@ export const listViewTitleMap: Record<string, MenuI18nKey> = {
   [ApplicationRoute.Routes]: MenuI18nKey.Routes,
   [ApplicationRoute.PromptPublications]: MenuI18nKey.PromptPublications,
   [ApplicationRoute.FilePublications]: MenuI18nKey.FilePublications,
+  [ApplicationRoute.ApplicationPublications]: MenuI18nKey.ApplicationPublications,
   [ApplicationRoute.ActivityAudit]: MenuI18nKey.ActivityAudit,
 };
 
@@ -39,6 +40,7 @@ export const emptyDataTitleMap: Record<string, EntitiesI18nKey> = {
   [ApplicationRoute.Files]: EntitiesI18nKey.NoFiles,
   [ApplicationRoute.PromptPublications]: EntitiesI18nKey.NoPublications,
   [ApplicationRoute.FilePublications]: EntitiesI18nKey.NoPublications,
+  [ApplicationRoute.ApplicationPublications]: EntitiesI18nKey.NoPublications,
   [ApplicationRoute.ActivityAudit]: EntitiesI18nKey.NoActivityAudit,
 };
 
@@ -84,6 +86,7 @@ export const getEntityPath = (route: ApplicationRoute, data: unknown, forRemove?
 
     case ApplicationRoute.PromptPublications:
     case ApplicationRoute.FilePublications:
+    case ApplicationRoute.ApplicationPublications:
       return `${encodeURIComponent((data as Publication).requestName)}?path=${(data as DialPrompt).path}`;
 
     case ApplicationRoute.ActivityAudit:

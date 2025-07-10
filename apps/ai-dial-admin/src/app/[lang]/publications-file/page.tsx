@@ -2,7 +2,6 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { publicationsApi } from '@/src/app/api/api';
-import PublicationsFileList from '@/src/components/PublicationsFileList/PublicationsFileList';
 import { Publication } from '@/src/models/dial/publications';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
@@ -10,6 +9,8 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { logger } from '@/src/server/logger';
 import Page403 from '@/src/components/Page403/Page403';
+import { ApplicationRoute } from '@/src/types/routes';
+import BasePublicationsList from '@/src/components/PublicationsList/PublicationsList';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,8 +31,8 @@ export default async function Page() {
       return <Page403 />;
     }
   } catch (e) {
-    logger.error('Getting publications files error', e);
+    logger.error('Getting file publications error', e);
   }
 
-  return <PublicationsFileList data={data || []} />;
+  return <BasePublicationsList data={data || []} route={ApplicationRoute.FilePublications} />;
 }
