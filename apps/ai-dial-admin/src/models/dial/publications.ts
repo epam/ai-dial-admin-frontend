@@ -10,9 +10,19 @@ export interface Publication {
   status: string;
   action: ActionType;
   folderId: string;
-  prompts?: Partial<DialPrompt>[];
-  files?: Partial<DialFile>[];
   rules?: DialRule[];
+}
+
+export interface PromptPublication extends Publication {
+  prompts?: Partial<DialPrompt>[];
+}
+
+export interface FilePublication extends Publication {
+  files?: Partial<DialFile>[];
+}
+
+export interface ApplicationPublication extends Publication {
+  files?: Partial<DialFile>[];
 }
 
 export enum ActionType {

@@ -1,18 +1,18 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { approvePrompt, declinePrompt } from './actions';
+import { approvePublication, declinePublication } from '../publications';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
 
-describe('Publication Prompts :: server actions', () => {
+describe('Publications :: server actions', () => {
   beforeEach(() => {
     fetch.resetMocks();
   });
 
-  test('Should call approve prompt', async () => {
+  test('Should call approve publication', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    approvePrompt('path').then(() => {
+    approvePublication('path').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];
@@ -20,9 +20,9 @@ describe('Publication Prompts :: server actions', () => {
     });
   });
 
-  test('Should call decline prompt', async () => {
+  test('Should call decline publication', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    declinePrompt('path', 'comment').then(() => {
+    declinePublication('path', 'comment').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];
@@ -30,9 +30,9 @@ describe('Publication Prompts :: server actions', () => {
     });
   });
 
-  test('Should call decline prompt with empty comment', async () => {
+  test('Should call decline publication with empty comment', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    declinePrompt('path').then(() => {
+    declinePublication('path').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];

@@ -47,4 +47,22 @@ describe('getModalsTranslations', () => {
       ApproveDescription: PublicationsI18nKey.FileUnpublishApproveDescription,
     });
   });
+
+  test('returns application publication approve translations', () => {
+    const result = getModalsTranslations(ApplicationRoute.ApplicationPublications, ActionType.ADD);
+    expect(result).toEqual({
+      ApproveModalTitle: PublicationsI18nKey.ApplicationPublishApproveModalTitle,
+      DeclineModalTitle: PublicationsI18nKey.ApplicationPublishDeclineModalTitle,
+      ApproveDescription: PublicationsI18nKey.ApplicationPublishApproveDescription,
+    });
+  });
+
+  test('returns application publication unpublish translations', () => {
+    const result = getModalsTranslations(ApplicationRoute.ApplicationPublications, ActionType.REMOVE);
+    expect(result).toEqual({
+      ApproveModalTitle: PublicationsI18nKey.ApplicationUnpublishApproveModalTitle,
+      DeclineModalTitle: PublicationsI18nKey.ApplicationUnpublishDeclineModalTitle,
+      ApproveDescription: PublicationsI18nKey.ApplicationUnpublishApproveDescription,
+    });
+  });
 });

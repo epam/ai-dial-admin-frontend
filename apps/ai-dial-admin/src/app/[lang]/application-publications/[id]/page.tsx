@@ -23,17 +23,17 @@ export default async function Page(params: { searchParams: Promise<{ path: strin
       return <Page403 />;
     }
   } catch (e) {
-    logger.error('Getting publication prompt view data error', e);
+    logger.error('Getting application publication view data error', e);
   }
 
   if (data == null) {
-    redirect(ApplicationRoute.PromptPublications);
+    redirect(ApplicationRoute.ApplicationPublications);
   }
 
   return (
     <PublicationView
       publication={data as Publication}
-      view={ApplicationRoute.PromptPublications}
+      view={ApplicationRoute.ApplicationPublications}
       approvePublication={approvePublication}
       declinePublication={declinePublication}
     />
