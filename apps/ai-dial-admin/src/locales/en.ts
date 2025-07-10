@@ -101,6 +101,7 @@ export default {
     ActivityAudit: 'Activity Audit',
 
     PromptPublications: 'Prompt Publications',
+    ApplicationPublications: 'Application Publications',
     FilePublications: 'File Publications',
     ImportConfig: 'Import Config',
     ExportConfig: 'Export Config',
