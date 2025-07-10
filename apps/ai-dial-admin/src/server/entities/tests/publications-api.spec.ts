@@ -29,6 +29,21 @@ describe('Server :: Publications', () => {
     );
   });
 
+    test('Should calls application publications  list', async () => {
+    const mockPublications: Publication[] = [
+      { id: '10', title: 'App 1' },
+      { id: '20', title: 'App 2' },
+    ];
+    fetch.mockResponseOnce(JSON.stringify({ publications: mockPublications }));
+
+    await instance.getApplicationPublicationsList(TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/publications?type=application'),
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
   test('Should calls publications files list', async () => {
     const mockPublications: Publication[] = [
       { id: '10', title: 'File 1' },

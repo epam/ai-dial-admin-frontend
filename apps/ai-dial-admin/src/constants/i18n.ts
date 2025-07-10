@@ -34,6 +34,7 @@ export enum MenuI18nKey {
   Tools = 'Menu.Tools',
   ToolsDescription = 'Menu.ToolsDescription',
   PromptPublications = 'Menu.PromptPublications',
+  ApplicationPublications = 'Menu.ApplicationPublications',
   FilePublications = 'Menu.FilePublications',
   ImportConfig = 'Menu.ImportConfig',
   ExportConfig = 'Menu.ExportConfig',

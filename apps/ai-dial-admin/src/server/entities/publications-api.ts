@@ -7,21 +7,26 @@ import { ServerActionResponse } from '@/src/models/server-action';
 export const PUBLICATIONS_BASE_URL = `${API}/publications`;
 export const PUBLICATIONS_PROMPTS_URL = `${PUBLICATIONS_BASE_URL}?type=prompt`;
 export const PUBLICATIONS_FILES_URL = `${PUBLICATIONS_BASE_URL}?type=file`;
+export const PUBLICATIONS_APPLICATION_URL = `${PUBLICATIONS_BASE_URL}?type=application`;
 export const PUBLICATION_GET_URL = `${PUBLICATIONS_BASE_URL}/get`;
 export const PUBLICATION_REJECT_URL = `${PUBLICATIONS_BASE_URL}/reject`;
 export const PUBLICATION_APPROVE_URL = `${PUBLICATIONS_BASE_URL}/approve`;
 
 export class PublicationsApi extends BaseApi {
+  getApplicationPublicationsList(token: JWT | null): Promise<Publication[] | undefined> {
+    return this.getPublicationsList(PUBLICATIONS_APPLICATION_URL, token);
+  }
+
   getPublicationsPromptsList(token: JWT | null): Promise<Publication[] | undefined> {
-    return this.get(PUBLICATIONS_PROMPTS_URL, token).then((data) =>
-      data ? (data as { publications: Publication[] }).publications : void 0,
-    );
+    return this.getPublicationsList(PUBLICATIONS_PROMPTS_URL, token);
   }
 
   getPublicationsFilesList(token: JWT | null): Promise<Publication[] | undefined> {
-    return this.get(PUBLICATIONS_FILES_URL, token).then((data) =>
-      data ? (data as { publications: Publication[] }).publications : void 0,
-    );
+    return this.getPublicationsList(PUBLICATIONS_FILES_URL, token);
+  }
+
+  getPublicationsList(url: string, token: JWT | null): Promise<Publication[] | undefined> {
+    return this.get<{ publications: Publication[] }>(url, token).then((data) => (data ? data.publications : void 0));
   }
 
   getPublication(token: JWT | null, path: string): Promise<Publication | null> {

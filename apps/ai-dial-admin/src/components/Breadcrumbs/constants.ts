@@ -101,7 +101,7 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig> = {
   },
   [ApplicationRoute.PromptPublications]: {
     segments: [
-      { name: 'Keys', i18nKey: MenuI18nKey.PromptPublications },
+      { name: 'PromptPublications', i18nKey: MenuI18nKey.PromptPublications },
       {
         name: 'Id',
         href: false,
@@ -110,7 +110,16 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig> = {
   },
   [ApplicationRoute.FilePublications]: {
     segments: [
-      { name: 'Keys', i18nKey: MenuI18nKey.FilePublications },
+      { name: 'FilePublications', i18nKey: MenuI18nKey.FilePublications },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
+  [ApplicationRoute.ApplicationPublications]: {
+    segments: [
+      { name: 'ApplicationPublications', i18nKey: MenuI18nKey.ApplicationPublications },
       {
         name: 'Id',
         href: false,
