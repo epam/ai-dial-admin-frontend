@@ -37,7 +37,7 @@ const InputModal: FC<Props> = ({
         <button type="button" className="w-full" onClick={onOpenModal} aria-label="open-popup">
           <div
             className={classNames(
-              readonly ? 'border-0 p-0 body' : '',
+              readonly ? 'border-0 p-0 !body' : '',
               'input input-field flex flex-row items-center w-full justify-between',
               inputCssClasses,
             )}
