@@ -17,7 +17,6 @@ interface Props {
   isImmutable?: boolean;
 }
 
-
 const BaseProperties: FC<Props> = ({ template, setTemplate, names, isImmutable }) => {
   const t = useI18n() as (t: string) => string;
 

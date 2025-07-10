@@ -1,10 +1,9 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useState } from 'react';
 
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { DeleteI18nKey } from '@/src/constants/i18n';
 import { SIMPLE_VERSION_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useI18n } from '@/src/locales/client';
-import { getInterceptorsList } from '@/src/app/[lang]/interceptors/actions';
 
 import Loader from '@/src/components/Common/Loader/Loader';
 import Grid from '@/src/components/Grid/Grid';
