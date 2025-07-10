@@ -8,15 +8,19 @@ import InputModal from '@/src/components/Common/InputModal/InputModal';
 import { PopUpState } from '@/src/types/pop-up';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { useAppContext } from '@/src/context/AppContext';
+import { BasicI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
   fieldTitle: string;
   entity: DialBaseEntity;
   elementId: string;
-  onChangeEntity: (entity: DialBaseEntity) => void;
+  readonly?: boolean;
+  onChangeEntity?: (entity: DialBaseEntity) => void;
 }
 
-const EntityIcon: FC<Props> = ({ fieldTitle, elementId, entity, onChangeEntity }) => {
+const EntityIcon: FC<Props> = ({ fieldTitle, elementId, entity, readonly, onChangeEntity }) => {
+  const t = useI18n();
   const { themeUrl } = useAppContext();
   const value = entity.iconUrl
     ? entity.iconUrl.startsWith('https://')
@@ -27,7 +31,7 @@ const EntityIcon: FC<Props> = ({ fieldTitle, elementId, entity, onChangeEntity }
 
   const onChangeIcon = useCallback(
     (url: string) => {
-      onChangeEntity({ ...entity, iconUrl: url });
+      onChangeEntity?.({ ...entity, iconUrl: url });
     },
     [entity, onChangeEntity],
   );
@@ -44,16 +48,20 @@ const EntityIcon: FC<Props> = ({ fieldTitle, elementId, entity, onChangeEntity }
     <div className="flex flex-col md:max-w-[180px]">
       <Field fieldTitle={fieldTitle} htmlFor={elementId} />
       {value.length === 0 ? (
-        <InputModal modalState={modalState} selectedValue={value} onOpenModal={onOpenModal}>
-          <IconGalleryModal
-            modalState={modalState}
-            selectedValue={value}
-            onClose={onCloseModal}
-            onChange={onChangeIcon}
-          />
-        </InputModal>
+        readonly ? (
+          t(BasicI18nKey.None)
+        ) : (
+          <InputModal modalState={modalState} selectedValue={value} onOpenModal={onOpenModal}>
+            <IconGalleryModal
+              modalState={modalState}
+              selectedValue={value}
+              onClose={onCloseModal}
+              onChange={onChangeIcon}
+            />
+          </InputModal>
+        )
       ) : (
-        <FilledIcon fileUrl={value} onChange={onChangeIcon} />
+        <FilledIcon fileUrl={value} onChange={onChangeIcon} readonly={readonly} />
       )}
     </div>
   );

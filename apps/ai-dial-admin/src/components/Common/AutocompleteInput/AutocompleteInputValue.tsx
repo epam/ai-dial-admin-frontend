@@ -4,6 +4,7 @@ import { FC } from 'react';
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 
 interface Props {
+  readonly?: boolean;
   selectedItems?: string[];
 }
 
