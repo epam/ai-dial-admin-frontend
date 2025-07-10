@@ -11,18 +11,18 @@ const mockData: Publication[] = [
     requestName: 'Publication 1',
     author: 'author1',
     createdAt: 1000,
-    status: 'path1',
+    status: 'status1',
     action: ActionType.ADD,
-    folderId: 'Publication 1',
+    folderId: 'folderId 1',
   },
   {
     path: 'path2',
     requestName: 'Publication 2',
     author: 'author2',
     createdAt: 1000,
-    status: 'path2',
+    status: 'status2',
     action: ActionType.ADD,
-    folderId: 'Publication 2',
+    folderId: 'folderId 2',
   },
 ];
 
