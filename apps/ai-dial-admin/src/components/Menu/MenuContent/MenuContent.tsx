@@ -1,32 +1,34 @@
 'use client';
 
-import { IconDownload, IconRefresh, IconUpload } from '@tabler/icons-react';
-import { usePathname, useRouter } from 'next/navigation';
 import { FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { usePathname, useRouter } from 'next/navigation';
+import { IconDownload, IconRefresh, IconUpload } from '@tabler/icons-react';
 
-import { reloadConfig } from '@/src/app/actions';
-import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import { MenuI18nKey, ReloadConfigI18nKey } from '@/src/constants/i18n';
+import { ApplicationRoute } from '@/src/types/routes';
+import { PopUpState } from '@/src/types/pop-up';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { useI18n } from '@/src/locales/client';
+import { reloadConfig } from '@/src/app/actions';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
-import { useI18n } from '@/src/locales/client';
-import { PopUpState } from '@/src/types/pop-up';
-import { ApplicationRoute } from '@/src/types/routes';
 import { getActualMenuItems } from '@/src/utils/env/get-menu-items';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import MenuItem from '../MenuItem/MenuItem';
 import { MENU_CONFIGURATION } from '../menu-configuration';
+
+import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
+import MenuItem from '../MenuItem/MenuItem';
 import MenuAction from './MenuAction';
 
 interface Props {
   disableMenuItems: string[];
+  isSidebarOpen: boolean;
 }
-const MenuContent: FC<Props> = ({ disableMenuItems }) => {
+const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   const t = useI18n();
   const router = useRouter();
-  const { sidebarOpen, embeddedApps } = useAppContext();
+  const { embeddedApps } = useAppContext();
 
   // pathname - /en/models/[id]
   // 0 - empty ''
@@ -80,13 +82,14 @@ const MenuContent: FC<Props> = ({ disableMenuItems }) => {
                 config={config}
                 activeMenuItem={pathname}
                 isOpenByDefault={activeMenuGroup?.key === config.key}
+                isSidebarOpen={isSidebarOpen}
               />
             ))}
           </ul>
         </nav>
 
         <div className="px-3 py-2 text-secondary flex flex-row gap-3 items-center">
-          {sidebarOpen && (
+          {isSidebarOpen && (
             <MenuAction
               tooltip={t(ReloadConfigI18nKey.ReloadTitle)}
               icon={<IconRefresh {...BASE_ICON_PROPS} widths={24} height={24} />}
@@ -101,7 +104,7 @@ const MenuContent: FC<Props> = ({ disableMenuItems }) => {
               router.push(ApplicationRoute.ImportConfig);
             }}
           />
-          {sidebarOpen && (
+          {isSidebarOpen && (
             <MenuAction
               tooltip={t(MenuI18nKey.ExportConfig)}
               icon={<IconUpload {...BASE_ICON_PROPS} widths={24} height={24} />}
