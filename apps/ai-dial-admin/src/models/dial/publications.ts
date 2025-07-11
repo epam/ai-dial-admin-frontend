@@ -1,7 +1,7 @@
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { DialRule } from '@/src/models/dial/rule';
-import { DialApplication } from './application';
+import { DialApplicationResource } from '@/src/models/dial/application-resource';
 
 export interface Publication {
   path: string;
@@ -23,7 +23,7 @@ export interface FilePublication extends Publication {
 }
 
 export interface ApplicationPublication extends Publication {
-  applicationResources?: Partial<DialApplication>[]; // TODO: check type
+  applicationResources?: DialApplicationResource[];
 }
 
 export enum ActionType {
