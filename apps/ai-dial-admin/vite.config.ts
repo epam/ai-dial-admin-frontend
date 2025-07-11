@@ -23,7 +23,7 @@ export default defineConfig(() => ({
   test: {
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    exclude: ['**.config.ts'],
+    exclude: ['**.config.{ts,js}', 'test-setup.tsx'],
     reporters: ['default'],
     setupFiles: './test-setup.tsx',
     coverage: {
@@ -31,10 +31,10 @@ export default defineConfig(() => ({
       reportsDirectory: '../../coverage/apps/ai-dial-admin',
       provider: 'v8' as const,
       thresholds: {
-        branches: 38,
-        functions: 40,
-        lines: 48,
-        statements: 48,
+        branches: 50,
+        functions: 50,
+        lines: 50,
+        statements: 50,
       },
     },
   },
