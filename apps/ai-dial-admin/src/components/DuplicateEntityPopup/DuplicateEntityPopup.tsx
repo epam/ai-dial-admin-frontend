@@ -20,7 +20,7 @@ interface Props {
 }
 
 const DuplicateEntityPopup: FC<Props> = ({ onDuplicate, view, modalState, onClose, entity }) => {
-  const t = useI18n();
+  const t = useI18n() as (t: string) => string;
   const isSimple = isSimpleEntity(view);
 
   const [clonedEntity, setEntity] = useState<DialBaseEntity | DialBaseNamedEntity>(

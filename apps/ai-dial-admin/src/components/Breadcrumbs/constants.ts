@@ -168,4 +168,13 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig> = {
   [ApplicationRoute.Forbidden]: {
     segments: [{ name: 'Forbidden' }],
   },
+  [ApplicationRoute.InterceptorTemplates]: {
+    segments: [
+      {
+        name: 'InterceptorTemplates',
+        i18nKey: MenuI18nKey.InterceptorTemplates,
+      },
+      { name: 'Id', href: false },
+    ],
+  },
 };
