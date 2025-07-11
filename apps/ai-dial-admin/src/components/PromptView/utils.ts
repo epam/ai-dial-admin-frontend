@@ -7,6 +7,6 @@ export const getIsNeedToMove = (entity: DialPrompt, initialEntity?: DialPrompt) 
 export const getEntityForUpdate = (entity: DialPrompt, initialEntity?: DialPrompt) => {
   return {
     ...entity,
-    folderId: (initialEntity as DialPrompt).folderId,
+    folderId: (initialEntity as DialPrompt)?.folderId,
   };
 };

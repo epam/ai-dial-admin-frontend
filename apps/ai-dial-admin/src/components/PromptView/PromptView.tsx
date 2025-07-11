@@ -11,8 +11,8 @@ import { getEntityPath } from '@/src/components/EntityListView/entity-list-view'
 import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/entity-view';
 import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
-import PromptProperties from '@/src/components/PromptsList/PromptProperties';
-import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/PromptView/update-prompt';
+import PromptProperties from '@/src/components/PromptView/PromptProperties';
+import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/PromptView/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
