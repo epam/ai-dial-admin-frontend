@@ -22,6 +22,20 @@ export function getModalsTranslations(route: ApplicationRoute, action: ActionTyp
         ApproveDescription: PublicationsI18nKey.PromptUnpublishApproveDescription,
       };
     }
+  } else if (route === ApplicationRoute.ApplicationPublications) {
+    if (action === ActionType.ADD) {
+      return {
+        ApproveModalTitle: PublicationsI18nKey.ApplicationPublishApproveModalTitle,
+        DeclineModalTitle: PublicationsI18nKey.ApplicationPublishDeclineModalTitle,
+        ApproveDescription: PublicationsI18nKey.ApplicationPublishApproveDescription,
+      };
+    } else {
+      return {
+        ApproveModalTitle: PublicationsI18nKey.ApplicationUnpublishApproveModalTitle,
+        DeclineModalTitle: PublicationsI18nKey.ApplicationUnpublishDeclineModalTitle,
+        ApproveDescription: PublicationsI18nKey.ApplicationUnpublishApproveDescription,
+      };
+    }
   } else {
     if (action === ActionType.ADD) {
       return {

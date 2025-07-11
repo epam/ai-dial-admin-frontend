@@ -18,12 +18,12 @@ import { uniq } from 'lodash';
 interface Props {
   initSelectedItems?: string[];
   modalState: PopUpState;
-  heading: string;
+  heading?: string;
   addTitle?: string;
   addPlaceholder?: string;
   allItems?: string[];
   onClose: () => void;
-  onSelectItems: (items: string[]) => void;
+  onSelectItems?: (items: string[]) => void;
   getItems?: () => Promise<ServerActionResponse>;
 }
 
@@ -51,7 +51,7 @@ const MultiselectModal: FC<Props> = ({
   const newItemsContainer = useRef<HTMLDivElement | null>(null);
 
   const onApply = useCallback(() => {
-    onSelectItems([...selectedItems, ...newItems].filter((t) => t !== ''));
+    onSelectItems?.([...selectedItems, ...newItems].filter((t) => t !== ''));
     onClose();
   }, [onSelectItems, selectedItems, newItems, onClose]);
 

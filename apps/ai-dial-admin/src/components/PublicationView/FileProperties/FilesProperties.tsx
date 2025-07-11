@@ -1,11 +1,11 @@
 import { FC } from 'react';
 import { useI18n } from '@/src/locales/client';
 import { PublicationsI18nKey } from '@/src/constants/i18n';
-import { Publication } from '@/src/models/dial/publications';
+import { FilePublication } from '@/src/models/dial/publications';
 import FilesList from '@/src/components/PublicationView/FileProperties/FilesList';
 
 interface Props {
-  publication: Publication;
+  publication: FilePublication;
 }
 
 const FilesProperties: FC<Props> = ({ publication }) => {
