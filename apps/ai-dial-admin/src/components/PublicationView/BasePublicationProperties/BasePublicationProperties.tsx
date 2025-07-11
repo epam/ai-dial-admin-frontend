@@ -34,15 +34,7 @@ const BasePublicationProperties: FC<Props> = ({ publication, children }) => {
         <div className="flex flex-row gap-8">
           {applicationResource ? (
             <LabeledText label={t(PublicationsI18nKey.Runner)}>
-              <p
-                className="flex items-center cursor-pointer"
-                onClick={() =>
-                  window.open(
-                    `${ApplicationRoute.ApplicationRunners}/${encodeURIComponent(applicationResource.displayName)}`,
-                    '_blank',
-                  )
-                }
-              >
+              <p className="flex items-center cursor-pointer">
                 <span> {applicationResource.displayName}</span>
                 <IconExternalLink width={16} height={16} className="ml-2 text-secondary" />
               </p>
