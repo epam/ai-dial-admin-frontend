@@ -559,6 +559,7 @@ export default {
     ActionUnpublish: 'Unpublish',
     Action: 'Action',
     Author: 'Author',
+    Runner: 'Runner',
     CreatedAt: 'Created At',
     FolderStorage: 'Folder Storage',
   },
