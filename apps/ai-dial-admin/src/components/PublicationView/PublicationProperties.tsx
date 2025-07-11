@@ -2,8 +2,9 @@ import { FC } from 'react';
 import { ApplicationRoute } from '@/src/types/routes';
 import { Publication } from '@/src/models/dial/publications';
 import BasePublicationProperties from '@/src/components/PublicationView/BasePublicationProperties/BasePublicationProperties';
-import PromptsList from '@/src/components/PublicationView/PromptProperties/PromptsList';
+import PromptsPropertiesList from '@/src/components/PublicationView/PromptProperties/PromptsPropertiesList';
 import FilesProperties from '@/src/components/PublicationView/FileProperties/FilesProperties';
+import ApplicationProperties from '@/src/components/PublicationView/ApplicationProperties/ApplicationProperties';
 
 interface Props {
   view: ApplicationRoute;
@@ -14,7 +15,7 @@ const PublicationProperties: FC<Props> = ({ view, publication }) => {
   if (view === ApplicationRoute.PromptPublications) {
     return (
       <BasePublicationProperties publication={publication}>
-        <PromptsList publication={publication} />
+        <PromptsPropertiesList publication={publication} />
       </BasePublicationProperties>
     );
   }
@@ -22,6 +23,14 @@ const PublicationProperties: FC<Props> = ({ view, publication }) => {
     return (
       <BasePublicationProperties publication={publication}>
         <FilesProperties publication={publication} />
+      </BasePublicationProperties>
+    );
+  }
+
+  if (view === ApplicationRoute.ApplicationPublications) {
+    return (
+      <BasePublicationProperties publication={publication}>
+        <ApplicationProperties publication={publication} />
       </BasePublicationProperties>
     );
   }

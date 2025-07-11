@@ -5,12 +5,12 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { cookies, headers } from 'next/headers';
 
-export async function declinePrompt(path: string, comment = ''): Promise<ServerActionResponse> {
+export async function declinePublication(path: string, comment = ''): Promise<ServerActionResponse> {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return publicationsApi.declinePublication(token, path, comment);
 }
 
-export async function approvePrompt(path: string): Promise<ServerActionResponse> {
+export async function approvePublication(path: string): Promise<ServerActionResponse> {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return publicationsApi.approvePublication(token, path);
 }

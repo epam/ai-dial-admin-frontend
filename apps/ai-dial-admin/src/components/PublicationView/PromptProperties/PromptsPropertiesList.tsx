@@ -1,11 +1,11 @@
-import { Publication } from '@/src/models/dial/publications';
+import { PromptPublication } from '@/src/models/dial/publications';
 import PromptsProperties from '@/src/components/PublicationView/PromptProperties/PromptsProperties';
 
 interface Props {
-  publication: Publication;
+  publication: PromptPublication;
 }
 
-const PromptsList = ({ publication }: Props) => {
+const PromptsPropertiesList = ({ publication }: Props) => {
   return (
     <>
       {publication?.prompts?.map((prompt, index) => (
@@ -20,4 +20,4 @@ const PromptsList = ({ publication }: Props) => {
   );
 };
 
-export default PromptsList;
+export default PromptsPropertiesList;

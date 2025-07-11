@@ -4,7 +4,7 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { redirect } from 'next/navigation';
 import { ApplicationRoute } from '@/src/types/routes';
 import PublicationView from '@/src/components/PublicationView/PublicationView';
-import { approvePrompt, declinePrompt } from '@/src/app/[lang]/publications-prompt/actions';
+import { approvePublication, declinePublication } from '@/src/app/actions/publications';
 import { publicationsApi } from '@/src/app/api/api';
 import { Publication } from '@/src/models/dial/publications';
 import { logger } from '@/src/server/logger';
@@ -23,7 +23,7 @@ export default async function Page(params: { searchParams: Promise<{ path: strin
       return <Page403 />;
     }
   } catch (e) {
-    logger.error('Getting prompt view data error', e);
+    logger.error('Getting file publication view data error', e);
   }
 
   if (data == null) {
@@ -34,8 +34,8 @@ export default async function Page(params: { searchParams: Promise<{ path: strin
     <PublicationView
       publication={data as Publication}
       view={ApplicationRoute.FilePublications}
-      approvePublication={approvePrompt}
-      declinePublication={declinePrompt}
+      approvePublication={approvePublication}
+      declinePublication={declinePublication}
     />
   );
 }
