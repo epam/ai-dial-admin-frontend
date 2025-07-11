@@ -15,10 +15,10 @@ export const saveColumnsStateToStorage = (entityType: ApplicationRoute, model: G
   setToLocalStorage(`${GRID_COLUMNS_KEY}${entityType}`, JSON.stringify(model));
 };
 
-export const getColumnsStateFromStorage = (entityType: ApplicationRoute): GridModel => {
+export const getColumnsStateFromStorage = (entityType: ApplicationRoute, defaultSorts: ColumnState[]): GridModel => {
   const model = getFromLocalStorage(`${GRID_COLUMNS_KEY}${entityType}`) || '{}';
   const parsed = JSON.parse(model);
-  return parsed;
+  return Object.values(parsed).length > 0 ? parsed : { columns: defaultSorts, filters: [] };
 };
 
 export const saveColumnVisibilityToStorage = (colDefs: ColDef[], entityType: ApplicationRoute) => {
