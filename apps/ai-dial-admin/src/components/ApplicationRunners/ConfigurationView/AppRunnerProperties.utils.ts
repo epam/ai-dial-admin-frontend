@@ -2,7 +2,7 @@ import { CreateI18nKey } from '@/src/constants/i18n';
 import { MAX_RUNNER_ID_SYMBOLS } from '@/src/constants/validation';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ErrorType } from '@/src/types/error-type';
-import { isValidHttpUrl } from '@/src/utils/validation/is-valid-url';
+import { isValidHttpUrl } from '@/src/utils/validation/url-error';
 import { cloneDeep } from 'lodash';
 
 export const clearSchemeForEditor = (scheme: DialApplicationScheme) => {
@@ -23,7 +23,7 @@ export const getErrorForAppRunnerId = (id?: string, t?: (str: string, param?: Re
   const isWrongLength = !!id && id?.length > MAX_RUNNER_ID_SYMBOLS;
   if (isWrongId) {
     return {
-      type: ErrorType.ID_URL,
+      type: ErrorType.INVALID,
       text: t ? t(CreateI18nKey.IdUrlError) : '',
     };
   }

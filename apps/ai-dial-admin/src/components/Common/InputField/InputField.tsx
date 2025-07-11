@@ -2,10 +2,12 @@
 
 import { FC, ReactNode } from 'react';
 
+import { FieldControlProps } from '@/src/models/field-control-props';
+
 import ErrorText from '@/src/components/Common/ErrorText/ErrorText';
 import Field from '@/src/components/Common/Field/Field';
 import InputWithIcon from '@/src/components/Common/Input/InputWithIcon';
-import { FieldControlProps } from '@/src/models/field-control-props';
+import InputWithText from '@/src/components/Common/Input/InputWithText';
 
 export interface InputFieldBaseProps extends FieldControlProps {
   placeholder?: string;
@@ -18,6 +20,7 @@ export interface InputFieldBaseProps extends FieldControlProps {
   errorText?: string;
   iconAfterInput?: ReactNode;
   iconBeforeInput?: ReactNode;
+  textBeforeInput?: string;
 }
 
 export interface InputFieldProps extends InputFieldBaseProps {
@@ -32,12 +35,23 @@ const InputField: FC<InputFieldProps> = ({
   elementCssClass,
   elementId,
   containerCssClass,
+  textBeforeInput,
   ...props
 }) => {
   return (
     <div className={`flex flex-col ${containerCssClass || ''}`}>
       <Field fieldTitle={fieldTitle} optional={optional} htmlFor={elementId} />
-      <InputWithIcon inputId={elementId} cssClass={elementCssClass} invalid={errorText != null} {...props} />
+      {textBeforeInput ? (
+        <InputWithText
+          textBeforeInput={textBeforeInput}
+          inputId={elementId}
+          cssClass={elementCssClass}
+          invalid={errorText != null}
+          {...props}
+        />
+      ) : (
+        <InputWithIcon inputId={elementId} cssClass={elementCssClass} invalid={errorText != null} {...props} />
+      )}
       <ErrorText errorText={errorText} />
     </div>
   );

@@ -331,6 +331,10 @@ export default {
       title: 'Completion endpoint',
       placeholder: 'Enter Completion endpoint',
     },
+    configurationEndpoint: {
+      title: 'Configuration endpoint',
+      placeholder: 'Enter Configuration endpoint',
+    },
     editorUrl: {
       title: 'Editor URL',
       placeholder: 'Enter Editor URL',
@@ -459,8 +463,6 @@ export default {
     URLAttachments: 'URL Attachments',
     FolderAttachments: 'Folder Attachments',
     ExposedToUser: 'Exposed to user',
-    ConfigurationEndpoint: 'Configuration endpoint',
-    ConfigurationEndpointPlaceholder: 'Enter configuration endpoint',
     RateEndpoint: 'Rate endpoint',
     RateEndpointPlaceholder: 'Enter rate endpoint',
     TokenizeEndpoint: 'Tokenize endpoint',

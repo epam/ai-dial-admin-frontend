@@ -33,14 +33,12 @@ describe('ApplicationRunner :: getErrorForAppRunnerId', () => {
 
     expect(res).toEqual({
       text: '',
-      type: ErrorType.ID_URL,
+      type: ErrorType.INVALID,
     });
   });
 
   test('Should clear all field', () => {
-    const res = getErrorForAppRunnerId(
-      `https://ai-dial-test.projects.com${new Array(851).fill('a').join()}`,
-    );
+    const res = getErrorForAppRunnerId(`https://ai-dial-test.projects.com${new Array(851).fill('a').join()}`);
 
     expect(res).toEqual({
       text: '',

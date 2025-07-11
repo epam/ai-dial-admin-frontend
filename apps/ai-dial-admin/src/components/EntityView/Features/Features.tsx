@@ -1,7 +1,7 @@
 import { FC, useCallback } from 'react';
 
 import Switch from '@/src/components/Common/Switch/Switch';
-import { FeaturesI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, FeaturesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseEntity, DialFeatures } from '@/src/models/dial/base-entity';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
@@ -171,9 +171,9 @@ const EntityFeatures: FC<Props> = ({ entity, onChangeEntity }) => {
       />
 
       <TextInputField
-        fieldTitle={t(FeaturesI18nKey.ConfigurationEndpoint)}
+        fieldTitle={t(CreateI18nKey.ConfigurationEndpointTitle)}
         elementId="configurationEndpoint"
-        placeholder={t(FeaturesI18nKey.ConfigurationEndpointPlaceholder)}
+        placeholder={t(CreateI18nKey.ConfigurationEndpointPlaceholder)}
         value={entity.features?.configurationEndpoint}
         onChange={onChangeConfigurationEndpoint}
       />
