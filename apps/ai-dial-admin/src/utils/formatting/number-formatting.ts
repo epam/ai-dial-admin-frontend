@@ -68,12 +68,5 @@ const getIntegerPart = (integerPart: string): string => {
 };
 
 function formatInt(value: string | number, delimiter: string): string {
-  if (value == null || isNaN(+value)) {
-    return '';
-  }
   return (value + '').replace(/(\d)(?=(\d\d\d)+(?!\d))/g, '$1' + delimiter);
-}
-
-export function roundFractionalPart(fractionalPart: string, precisionNum: number): string {
-  return fractionalPart.substring(0, precisionNum);
 }

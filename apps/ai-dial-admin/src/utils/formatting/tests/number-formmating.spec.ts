@@ -29,6 +29,16 @@ describe('Utils ::formatting :: formatNumberByDelimiter', () => {
     expect(result2).toBe('');
   });
 
+  test('Should return formatted number without fractional', () => {
+    const result = formatNumberByDelimiter(4444444, ' ');
+    expect(result).toBe('4 444 444');
+  });
+
+  test('Should return formatted number with precision', () => {
+    const result = formatNumberByDelimiter(4444444.9998321, ' ', '0');
+    expect(result).toBe('4 444 445');
+  });
+
   test('Should return formatted number', () => {
     const result = formatNumberByDelimiter(4444444.9998321, ' ');
     expect(result).toBe('4 444 445.00');
@@ -39,9 +49,13 @@ describe('Utils ::formatting :: formatNumberByDelimiter', () => {
     expect(result).toBe('-4 444 445.00');
   });
 
-
   test('Should return formatted string', () => {
     const result = formatNumberByDelimiter('4444444.2228321');
     expect(result).toBe('4,444,444.22');
+  });
+
+    test('Should return formatted string', () => {
+    const result = formatNumberByDelimiter('rherger');
+    expect(result).toBe('');
   });
 });
