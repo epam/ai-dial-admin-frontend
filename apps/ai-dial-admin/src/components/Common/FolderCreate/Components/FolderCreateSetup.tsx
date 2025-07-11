@@ -8,7 +8,7 @@ import { CreateFolderSteps } from '@/src/components/Common/FolderCreate/constant
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import LoadFileAreaField from '@/src/components/Common/LoadFileArea/LoadFileAreaField';
 import RadioButton from '@/src/components/Common/RadioButton/RadioButton';
-import { getNameExtensionFromFile } from '@/src/components/FilesList/files-list';
+import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { CreateI18nKey, FoldersI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_ZIP_TYPE } from '@/src/constants/request-headers';
 import { useI18n } from '@/src/locales/client';

@@ -12,6 +12,7 @@ import ListView from '@/src/components/ListView/ListView';
 import DuplicatePrompt from '@/src/components/PromptsList/DuplicatePrompt';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { ROOT_FOLDER } from '@/src/constants/file';
+import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { FileFolderContextType } from '@/src/context/FileFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
@@ -27,9 +28,9 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { prepareEntityForDuplicate } from '@/src/utils/entities/prepare-entity-for-duplicate';
 import { getListOfPathsToMove } from '@/src/utils/files/path';
+import { isAssetView } from '@/src/utils/is-asset-view';
 import { getErrorNotification } from '@/src/utils/notification';
 import { emptyDataTitleMap, getEntityPath, listViewTitleMap } from './entity-list-view';
-import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import EntityListModals, { ModalType } from './EntityListModals';
 import EntityListHeaderButtons from './HeaderButtons/EntityListHeaderButtons';
 
@@ -132,7 +133,7 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
       if (res.success) {
         handleModalClose();
         setCurrentEntity(void 0);
-        if (route === ApplicationRoute.Prompts || route === ApplicationRoute.Files) {
+        if (isAssetView(route)) {
           folderContext?.fetchFiles?.(folderContext?.filePath);
         }
         router.refresh();

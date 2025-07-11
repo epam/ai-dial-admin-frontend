@@ -5,7 +5,7 @@ import { IconFileTypeZip } from '@tabler/icons-react';
 import Json from '@/public/images/icons/file/json.svg';
 import LoadFileAreaField from '@/src/components/Common/LoadFileArea/LoadFileAreaField';
 import RadioButton from '@/src/components/Common/RadioButton/RadioButton';
-import { getNameExtensionFromFile } from '@/src/components/FilesList/files-list';
+import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { ImportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { RadioButtonModel } from '@/src/models/radio-button';

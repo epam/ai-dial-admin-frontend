@@ -497,6 +497,7 @@ export enum PublicationsI18nKey {
   ActionUnpublish = 'Publications.ActionUnpublish',
   Action = 'Publications.Action',
   Author = 'Publications.Author',
+  Runner = 'Publications.Runner',
   CreatedAt = 'Publications.CreatedAt',
   FolderStorage = 'Publications.FolderStorage',
   FilesListTitle = 'Publications.Files.FilesListTitle',

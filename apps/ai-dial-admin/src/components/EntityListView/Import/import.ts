@@ -1,4 +1,4 @@
-import { getNameExtensionFromFile } from '@/src/components/FilesList/files-list';
+import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import {
   generateNameVersionForPrompt,

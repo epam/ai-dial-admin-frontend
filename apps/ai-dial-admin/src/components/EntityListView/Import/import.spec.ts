@@ -1,10 +1,10 @@
 import {
   generateNameVersionForPrompt,
   getFolderNameAndPath,
-  getNameExtensionFromFile,
   getNameVersionFromPrompt,
   modifyNameVersionInPrompt,
 } from '@/src/components/PromptsList/prompts-list';
+import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { FileImportMap } from '@/src/models/file';
 import { ImportStatus } from '@/src/types/import';
 import { StepStatus } from '@/src/models/step';
