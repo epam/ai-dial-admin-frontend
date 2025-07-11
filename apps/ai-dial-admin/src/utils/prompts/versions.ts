@@ -62,7 +62,7 @@ export const checkNameVersionCombination = (
   return versionsPerName[name] && versionsPerName[name].includes(version);
 };
 
-const compareVersions = (version1: string, version2: string) => {
+export const compareVersions = (version1: string, version2: string) => {
   const v1Parts = version1.split('.').map(Number);
   const v2Parts = version2.split('.').map(Number);
 

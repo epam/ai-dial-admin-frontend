@@ -1,4 +1,5 @@
 import { DialPrompt } from '@/src/models/dial/prompt';
+import { compareVersions } from '@/src/utils/prompts/versions';
 
 export const filterLatestVersions = (data: DialPrompt[]) => {
   const latestVersions: Record<string, DialPrompt> = {};
