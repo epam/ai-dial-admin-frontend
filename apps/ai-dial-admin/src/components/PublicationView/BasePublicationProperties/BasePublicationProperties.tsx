@@ -12,7 +12,6 @@ import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { removeTrailingSlash } from '@/src/utils/files/path';
 import { getActionClass } from '@/src/utils/publications';
 import BasePublicationPermissions from './BasePublicationPermissions';
-import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   publication: Publication;
