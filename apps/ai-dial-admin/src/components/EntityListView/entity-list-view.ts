@@ -24,6 +24,7 @@ export const listViewTitleMap: Record<string, MenuI18nKey> = {
   [ApplicationRoute.FilePublications]: MenuI18nKey.FilePublications,
   [ApplicationRoute.ApplicationPublications]: MenuI18nKey.ApplicationPublications,
   [ApplicationRoute.ActivityAudit]: MenuI18nKey.ActivityAudit,
+  [ApplicationRoute.InterceptorTemplates]: MenuI18nKey.InterceptorTemplates,
 };
 
 export const emptyDataTitleMap: Record<string, EntitiesI18nKey> = {
@@ -44,6 +45,7 @@ export const emptyDataTitleMap: Record<string, EntitiesI18nKey> = {
   [ApplicationRoute.FilePublications]: EntitiesI18nKey.NoPublications,
   [ApplicationRoute.ApplicationPublications]: EntitiesI18nKey.NoPublications,
   [ApplicationRoute.ActivityAudit]: EntitiesI18nKey.NoActivityAudit,
+  [ApplicationRoute.InterceptorTemplates]: EntitiesI18nKey.NoInterceptorTemplates,
 };
 
 export const deleteModalTitleMap: Record<string, DeleteI18nKey> = {
@@ -60,6 +62,7 @@ export const deleteModalTitleMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.AssetsApplications]: DeleteI18nKey.Application,
   [ApplicationRoute.Routes]: DeleteI18nKey.Route,
   [ApplicationRoute.Adapters]: DeleteI18nKey.AdapterTitle,
+  [ApplicationRoute.InterceptorTemplates]: DeleteI18nKey.InterceptorTemplateTitle,
 };
 
 export const createModalTitleMap: Record<string, CreateI18nKey> = {
@@ -74,6 +77,7 @@ export const createModalTitleMap: Record<string, CreateI18nKey> = {
   [ApplicationRoute.Prompts]: CreateI18nKey.Prompt,
   [ApplicationRoute.Routes]: CreateI18nKey.Route,
   [ApplicationRoute.Adapters]: CreateI18nKey.Adapter,
+  [ApplicationRoute.InterceptorTemplates]: CreateI18nKey.InterceptorTemplate,
 };
 
 export const getEntityPath = (route: ApplicationRoute, data: unknown, forRemove?: boolean) => {

@@ -33,6 +33,8 @@ import { getErrorNotification } from '@/src/utils/notification';
 import { emptyDataTitleMap, getEntityPath, listViewTitleMap } from './entity-list-view';
 import EntityListModals, { ModalType } from './EntityListModals';
 import EntityListHeaderButtons from './HeaderButtons/EntityListHeaderButtons';
+import DuplicateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Duplicate';
+import { InterceptorTemplate } from '@/src/models/interceptor-template';
 
 interface Props<T> {
   data: T[];
@@ -218,6 +220,17 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
       );
     }
 
+    if (route === ApplicationRoute.InterceptorTemplates) {
+      return (
+        <DuplicateInterceptorTemplate
+          onDuplicate={onDuplicate as (template: InterceptorTemplate) => Promise<ServerActionResponse>}
+          modalState={modalState}
+          names={names}
+          template={currentEntity as InterceptorTemplate}
+          onClose={handleModalClose}
+        />
+      );
+    }
     if (route === ApplicationRoute.Adapters) {
       return (
         <DuplicateAdapter

@@ -19,6 +19,7 @@ export default defineConfig([
   globalIgnores([
     '**/node_modules',
     '**/next',
+    '**/.next',
     '**/**.config.js',
     '**/**.config.mjs',
     '**/jest.config.ts',

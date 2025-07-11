@@ -110,6 +110,7 @@ export default {
     MCPServers: 'MCP Servers',
     MCPInstances: 'MCP Instances',
     InterceptorDeployments: 'Interceptor deployments',
+    InterceptorTemplates: 'Interceptor Templates',
 
     EntitiesDescription: 'Centralized space to configure and oversee key components of your AI ecosystem.',
     AccessManagementDescription:
@@ -146,6 +147,7 @@ export default {
     NoActivityAudit: 'No Activities',
     NoFolders: 'No Folders',
     NoResource: 'Resource does not exist',
+    NoInterceptorTemplates: 'No Interceptor Templates',
     // base fields
     Icon: 'Icon',
     Endpoint: 'Endpoint',
@@ -172,6 +174,12 @@ export default {
       DescriptionWarning: 'This Application Runner and all related Applications will be deleted permanently.',
       ApplicationsTitle: 'Related Applications',
       NoApplicationsTitle: 'No related Applications',
+    },
+    InterceptorTemplate: {
+      Title: 'Interceptor Template',
+      DescriptionWarning: 'This Interceptor Template and all related Interceptors will be deleted permanently.',
+      InterceptorsTitle: 'Related Interceptors',
+      NoInterceptorsTitle: 'No related Interceptors',
     },
     Adapter: {
       Title: 'Adapter',
@@ -219,6 +227,9 @@ export default {
     Adapter: {
       Header: 'Duplicate Adapter',
     },
+    InterceptorTemplate: {
+      Header: 'Duplicate Interceptor Template',
+    },
   },
   CreateEntity: {
     errorLength: 'User can add any characters, but not more than {number}.',
@@ -234,6 +245,7 @@ export default {
     Route: 'Create Route',
     Adapter: 'Create Adapter',
     Scheme: 'Scheme',
+    InterceptorTemplate: 'Create Interceptor Template',
     ErrorUnique: 'This field must be unique.',
     deploymentId: {
       title: 'Deployment ID',
@@ -559,6 +571,7 @@ export default {
     ActionUnpublish: 'Unpublish',
     Action: 'Action',
     Author: 'Author',
+    Runner: 'Runner',
     CreatedAt: 'Created At',
     FolderStorage: 'Folder Storage',
   },

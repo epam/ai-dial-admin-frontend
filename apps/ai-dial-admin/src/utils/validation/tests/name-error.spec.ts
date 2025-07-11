@@ -5,11 +5,17 @@ import { describe, expect, test, vi } from 'vitest';
 describe('Utils :: validations :: getErrorForName', () => {
   const mockT = vi.fn().mockReturnValue('Translated Text');
   test('Should return translated error', () => {
-    const res = getErrorForName('name', ['name'], mockT);
+    const res1 = getErrorForName('name', ['name'], mockT);
+    const res2 = getErrorForName('name', ['name']);
 
-    expect(res).toEqual({
+    expect(res1).toEqual({
       type: ErrorType.EXISTING,
       text: 'Translated Text',
+    });
+
+    expect(res2).toEqual({
+      type: ErrorType.EXISTING,
+      text: '',
     });
   });
   test('Should return translated error', () => {
@@ -37,11 +43,17 @@ describe('Utils :: validations :: getErrorForName', () => {
   });
 
   test('Should return translated error for not unique name', () => {
-    const res = getErrorForName(void 0, void 0, mockT, true);
+    const res1 = getErrorForName(void 0, void 0, mockT, true);
+    const res2 = getErrorForName(void 0, void 0, void 0, true);
 
-    expect(res).toEqual({
+    expect(res1).toEqual({
       type: ErrorType.EXISTING,
       text: 'Translated Text',
+    });
+
+    expect(res2).toEqual({
+      type: ErrorType.EXISTING,
+      text: '',
     });
   });
 });

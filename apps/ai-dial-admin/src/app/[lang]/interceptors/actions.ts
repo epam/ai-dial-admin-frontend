@@ -6,6 +6,11 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
+export async function getInterceptorsList() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return interceptorsApi.getInterceptorsList(token);
+}
+
 export async function removeInterceptor(name?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return interceptorsApi.removeInterceptor(token, name);
