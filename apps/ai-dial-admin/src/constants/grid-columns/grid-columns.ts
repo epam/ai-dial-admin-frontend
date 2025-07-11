@@ -55,7 +55,7 @@ export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [
 ];
 
 export const ENTITY_BASE_COLUMNS: ColDef[] = [
-  { field: 'displayName', colId: 'displayName', headerName: 'Display Name', hide: false },
+  { field: 'displayName', colId: 'displayName', headerName: 'Display Name', sort: 'asc', hide: false },
   { field: 'displayVersion', colId: 'displayVersion', headerName: 'Version', hide: false },
   { field: 'description', colId: 'description', headerName: 'Description', hide: false },
   { field: 'name', colId: 'name', headerName: 'Deployment ID', hide: false },
