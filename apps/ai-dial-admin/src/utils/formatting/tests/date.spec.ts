@@ -15,7 +15,7 @@ describe('Utils :: formatDateTimeToLocalString', () => {
 
     const result = formatDateTimeToLocalString('2023-12-25T12:00:00Z');
 
-    expect(result).toBe(mockDate.toLocaleDateString());
+    expect(result).toBe(mockDate.toLocaleString());
 
     vi.useRealTimers();
   });
