@@ -183,6 +183,12 @@ export const RUNNERS_COLUMNS: ColDef[] = [
   },
 ];
 
+export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [
+  { field: 'displayName', headerName: 'Display name', sort: 'asc' },
+  { field: 'name', headerName: 'ID' },
+  { field: 'description', headerName: 'Description' },
+];
+
 export const PROMPTS_COLUMNS: ColDef[] = [
   { field: 'name', headerName: 'Name', sort: 'asc' },
   { field: 'version', headerName: 'Version' },

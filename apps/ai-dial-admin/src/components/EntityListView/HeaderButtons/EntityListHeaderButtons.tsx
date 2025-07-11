@@ -35,6 +35,7 @@ import CreateEntity from '../CreateEntity/CreateEntity';
 import { createModalTitleMap } from '../entity-list-view';
 import EntityListModals, { ModalType } from '../EntityListModals';
 import { getFormDataForImport } from './EntityListHeaderButtons.utils';
+import CreateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Create';
 
 interface Props<T> {
   names?: string[];
@@ -158,6 +159,16 @@ const EntityListHeaderButtons = <T extends DialBaseEntity | DialKey | DialApplic
       return <CreateScheme modalState={modalState} onClose={handleModalClose} route={route} />;
     }
 
+    if (route === ApplicationRoute.InterceptorTemplates) {
+      return (
+        <CreateInterceptorTemplate
+          modalState={modalState}
+          onClose={handleModalClose}
+          route={route}
+          names={names || []}
+        />
+      );
+    }
     if (route === ApplicationRoute.Adapters) {
       return <CreateAdapter modalState={modalState} onClose={handleModalClose} route={route} names={names || []} />;
     }
