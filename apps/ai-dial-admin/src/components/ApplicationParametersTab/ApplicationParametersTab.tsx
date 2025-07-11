@@ -3,23 +3,18 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { useTheme } from '@/src/context/ThemeContext';
-import { getFrameConfig } from '@/src/components/ApplicationParametersTab/get-frame-config';
+import { getFrameConfig } from '@/src/components/ApplicationParametersTab/utils';
 import FrameRenderer from '@/src/components/FrameRenderer/FrameRenderer';
 import NoData from '@/src/components/Common/NoData/NoData';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { useSession } from 'next-auth/react';
 import { UserSession } from '@/src/models/auth';
-
-export interface FrameConfig {
-  theme: string;
-  providerId?: string;
-  host?: string;
-  name?: string;
-}
+import { FrameConfig } from '@/src/models/frame-config';
+import { DialApplicationResource } from '@/src/models/dial/application-resource';
 
 interface Props {
-  entity: DialApplication;
+  entity?: DialApplication | DialApplicationResource;
   applicationSchemes?: DialApplicationScheme[] | null;
   jsonEditorEnabled?: boolean;
 }
@@ -30,7 +25,9 @@ const ApplicationParametersTab: FC<Props> = ({ entity, applicationSchemes, jsonE
   const { currentTheme } = useTheme();
   const [error, setError] = useState(false);
   const [frameConfig, setFrameConfig] = useState<FrameConfig | null>(null);
-  const scheme = applicationSchemes?.find((scheme) => scheme.$id === entity.customAppSchemaId);
+  const scheme = applicationSchemes
+    ? applicationSchemes?.find((scheme) => scheme.$id === (entity as DialApplication)?.customAppSchemaId)
+    : (entity as DialApplicationResource);
 
   useEffect(() => {
     if (scheme) {
@@ -50,7 +47,7 @@ const ApplicationParametersTab: FC<Props> = ({ entity, applicationSchemes, jsonE
   }, [frameConfig]);
 
   return (
-    <div data-testid={scheme?.$id} className="flex w-full h-full">
+    <div className="flex w-full h-full">
       {error || !frameConfig ? (
         <NoData emptyDataTitle={t(BasicI18nKey.NoData)} />
       ) : (
