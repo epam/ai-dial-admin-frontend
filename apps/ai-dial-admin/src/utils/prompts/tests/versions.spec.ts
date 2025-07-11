@@ -1,23 +1,20 @@
-import { DialPrompt } from '../../models/dial/prompt';
 import {
   checkNameVersionCombination,
-  getVersionsPerName,
-  filterLatestVersions,
   getInitialVersion,
   generateNameVersionForPrompt,
   getNameVersionFromPrompt,
   modifyNameVersionInPrompt,
-} from './prompts-list';
+} from '../versions';
 import { describe, expect, test } from 'vitest';
 
-describe('Prompts list :: generateNameVersionForPrompt', () => {
+describe('Prompts utils :: generateNameVersionForPrompt', () => {
   test('Should return name + version', () => {
     const res = generateNameVersionForPrompt('prompt', '1.0.0');
     expect(res).toEqual('prompt__1.0.0');
   });
 });
 
-describe('Prompts list :: getNameVersionFromPrompt', () => {
+describe('Prompts utils :: getNameVersionFromPrompt', () => {
   test('Should return name and version', () => {
     const res = getNameVersionFromPrompt('prompt__1.0.0');
     expect(res).toEqual({ name: 'prompt', version: '1.0.0' });
@@ -29,7 +26,7 @@ describe('Prompts list :: getNameVersionFromPrompt', () => {
   });
 });
 
-describe('Prompts list :: modifyNameVersionInPrompt', () => {
+describe('Prompts utils :: modifyNameVersionInPrompt', () => {
   test('Should return name and changed version', () => {
     const res = modifyNameVersionInPrompt('prompt__1.0.0', void 0, '2.0.0');
     expect(res).toEqual('prompt__2.0.0');
@@ -81,14 +78,14 @@ describe('Prompts list :: modifyNameVersionInPrompt', () => {
   });
 });
 
-describe('Prompts list :: getInitialVersion', () => {
+describe('Prompts utils :: getInitialVersion', () => {
   test('Should return latest version + 1', () => {
     const res = getInitialVersion({ versions: ['1.0.1', '1.0.2', '1.0.3'] }, 'versions');
     expect(res).toEqual('1.0.4');
   });
 });
 
-describe('Prompts list :: checkNameVersionCombination', () => {
+describe('Prompts utils :: checkNameVersionCombination', () => {
   test('Should return false if no such prompt name', () => {
     const res = checkNameVersionCombination({ prompt: ['1', '2'] }, 'name', '1');
     expect(res).toBeFalsy();
@@ -96,50 +93,5 @@ describe('Prompts list :: checkNameVersionCombination', () => {
   test('Should return false if no such version for existed name', () => {
     const res = checkNameVersionCombination({ name: ['1', '2'] }, 'name', '3');
     expect(res).toBeFalsy();
-  });
-});
-
-describe('Prompts list :: getVersionsPerName', () => {
-  test('Should return correct map', () => {
-    const res = getVersionsPerName([
-      { name: 'prompts', version: '1' },
-      { name: 'prompts', version: '2' },
-    ] as DialPrompt[]);
-    expect(res).toEqual({
-      prompts: ['1', '2'],
-    });
-  });
-  test('Should return correct map', () => {
-    const res = getVersionsPerName([
-      { name: 'prompts', version: '7' },
-      { name: 'prompts', version: '4' },
-      { name: 'addon', version: '3' },
-      { name: 'addon', version: '1' },
-      { name: 'model', version: '1' },
-      { name: 'prompts', version: '1' },
-    ] as DialPrompt[]);
-    expect(res).toEqual({
-      prompts: ['1', '4', '7'],
-      addon: ['1', '3'],
-      model: ['1'],
-    });
-  });
-});
-
-describe('Prompts list :: filterLatestVersions', () => {
-  test('Should return only latest versions', () => {
-    const res = filterLatestVersions([
-      { name: 'prompts', version: '7' },
-      { name: 'prompts', version: '4' },
-      { name: 'addon', version: '3' },
-      { name: 'addon', version: '1' },
-      { name: 'model', version: '1' },
-      { name: 'prompts', version: '1' },
-    ] as DialPrompt[]);
-    expect(res).toEqual([
-      { name: 'prompts', version: '7' },
-      { name: 'addon', version: '3' },
-      { name: 'model', version: '1' },
-    ]);
   });
 });

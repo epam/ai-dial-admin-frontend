@@ -9,7 +9,7 @@ import DuplicateScheme from '@/src/components/ApplicationRunners/ListView/Duplic
 import DuplicateEntityPopup from '@/src/components/DuplicateEntityPopup/DuplicateEntityPopup';
 import DuplicateKey from '@/src/components/KeysList/Popup/DuplicateKey';
 import ListView from '@/src/components/ListView/ListView';
-import DuplicatePrompt from '@/src/components/PromptsList/DuplicatePrompt';
+import DuplicatePrompt from '@/src/components/PromptView/Modals/DuplicatePrompt';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';

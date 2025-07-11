@@ -4,7 +4,7 @@ import {
   generateNameVersionForPrompt,
   getNameVersionFromPrompt,
   modifyNameVersionInPrompt,
-} from '@/src/components/PromptsList/prompts-list';
+} from '@/src/utils/prompts/versions';
 import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import { ImportI18nKey } from '@/src/constants/i18n';
 import { DialFile } from '@/src/models/dial/file';

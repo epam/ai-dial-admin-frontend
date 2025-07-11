@@ -3,7 +3,7 @@ import {
   getFolderNameAndPath,
   getNameVersionFromPrompt,
   modifyNameVersionInPrompt,
-} from '@/src/components/PromptsList/prompts-list';
+} from '@/src/utils/prompts/versions';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { FileImportMap } from '@/src/models/file';
 import { ImportStatus } from '@/src/types/import';
@@ -18,14 +18,6 @@ import {
   isErrorPromptNode,
   isInvalidJson,
 } from './import';
-
-vi.mock('@/src/components/PromptsList/prompts-list', () => ({
-  modifyNameVersionInPrompt: vi.fn(),
-  getNameExtensionFromFile: vi.fn(),
-  getNameVersionFromPrompt: vi.fn(),
-  getFolderNameAndPath: vi.fn(),
-  generateNameVersionForPrompt: vi.fn(),
-}));
 
 describe('Import :: getImportResults', () => {
   const folderName = 'testFolder';
