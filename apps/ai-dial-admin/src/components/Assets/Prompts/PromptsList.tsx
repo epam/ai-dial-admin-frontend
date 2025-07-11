@@ -8,7 +8,7 @@ import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import Page403 from '@/src/components/Page403/Page403';
 import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import { ApplicationRoute } from '@/src/types/routes';
-import { filterLatestVersions, getVersionsPerName } from './prompts-list';
+import { filterLatestVersions, getVersionsPerName } from '../../PromptsList/prompts-list';
 
 const PromptsList: FC = () => {
   const { data } = usePromptFolder();

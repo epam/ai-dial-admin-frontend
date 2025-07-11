@@ -21,6 +21,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getMenuItems } from '@/src/utils/env/get-menu-items';
+import { AssetsEntityProvider } from '../../context/AssetsContext';
 
 export default async function Layout({ children, params }: { children: ReactNode; params: Promise<{ lang: string }> }) {
   const { lang } = await params;
@@ -50,25 +51,27 @@ export default async function Layout({ children, params }: { children: ReactNode
       >
         <ThemeProvider themesConfiguration={themesConfiguration} themeImages={process.env.THEMES_CONFIG_IMAGES}>
           <RuleFolderProvider attributes={process.env.PUBLICATION_FILTERS}>
-            <FileFolderProvider>
-              <PromptFolderProvider>
-                <I18nProvider locale={lang}>
-                  <NotificationProvider>
-                    <div className={classNames('flex flex-col h-full w-full')}>
-                      <Header isEnableAuth={isEnableAuth} />
-                      <div className="flex-1 min-h-0">
-                        <div className="flex flex-row h-full relative">
-                          <Menu disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)} />
-                          <Content isEnableAuth={isEnableAuth} beVersion={beVersion}>
-                            {children}
-                          </Content>
+            <AssetsEntityProvider>
+              <FileFolderProvider>
+                <PromptFolderProvider>
+                  <I18nProvider locale={lang}>
+                    <NotificationProvider>
+                      <div className={classNames('flex flex-col h-full w-full')}>
+                        <Header isEnableAuth={isEnableAuth} />
+                        <div className="flex-1 min-h-0">
+                          <div className="flex flex-row h-full relative">
+                            <Menu disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)} />
+                            <Content isEnableAuth={isEnableAuth} beVersion={beVersion}>
+                              {children}
+                            </Content>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </NotificationProvider>
-                </I18nProvider>
-              </PromptFolderProvider>
-            </FileFolderProvider>
+                    </NotificationProvider>
+                  </I18nProvider>
+                </PromptFolderProvider>
+              </FileFolderProvider>
+            </AssetsEntityProvider>
           </RuleFolderProvider>
         </ThemeProvider>
       </AppContextProvider>

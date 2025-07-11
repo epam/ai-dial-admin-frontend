@@ -1,7 +1,7 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import PromptsList from '@/src/components/Assets/Prompts/PromptsList';
+import ApplicationList from '@/src/components/Assets/Applications/ApplicationList';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -18,5 +18,5 @@ export default async function Page() {
     return redirect(SIGN_IN_LINK);
   }
 
-  return <PromptsList />;
+  return <ApplicationList />;
 }
