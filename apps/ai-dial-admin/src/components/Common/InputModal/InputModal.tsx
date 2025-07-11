@@ -13,6 +13,7 @@ interface Props {
   selectedValue?: string | string[];
   children: ReactNode;
   onOpenModal: () => void;
+  readonly?: boolean;
   valueCssClasses?: string;
   inputCssClasses?: string;
 }
@@ -20,6 +21,7 @@ interface Props {
 const InputModal: FC<Props> = ({
   children,
   modalState,
+  readonly,
   selectedValue,
   valueCssClasses,
   inputCssClasses,
@@ -35,21 +37,29 @@ const InputModal: FC<Props> = ({
         <button type="button" className="w-full" onClick={onOpenModal} aria-label="open-popup">
           <div
             className={classNames(
+              readonly ? 'border-0 p-0 !body' : '',
               'input input-field flex flex-row items-center w-full justify-between',
               inputCssClasses,
             )}
           >
             <span className={valueCssClasses}>{value}</span>
-            <OpenPopup />
+            {!readonly && <OpenPopup />}
           </div>
         </button>
       ) : (
         <div className="w-full" onClick={onOpenModal}>
-          <div className="input flex flex-row items-center w-full justify-between truncate">
+          <div
+            className={classNames(
+              'input flex flex-row items-center w-full justify-between truncate',
+              readonly ? 'border-0 p-0' : '',
+            )}
+          >
             <AutocompleteInputValue selectedItems={value as string[]} />
-            <div className="ml-1">
-              <OpenPopup />
-            </div>
+            {!readonly && (
+              <div className="ml-1">
+                <OpenPopup />
+              </div>
+            )}
           </div>
         </div>
       )}
