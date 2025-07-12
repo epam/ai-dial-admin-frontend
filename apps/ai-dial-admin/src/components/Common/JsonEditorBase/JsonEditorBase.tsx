@@ -20,9 +20,22 @@ const JsonEditorBase: FC<Props> = ({ value, onChange, onValidateJSON, options })
   function handleBeforeMount(monaco: Monaco) {
     monaco?.editor?.defineTheme(currentTheme, EDITOR_THEMES_CONFIG[currentTheme as EDITOR_THEMES]);
     monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+      validate: true,
       enableSchemaRequest: false,
+      schemas: [
+        {
+          uri: 'http://custom-schema/object-required.json',
+          fileMatch: ['*'],
+          schema: {
+            type: 'object',
+            description: 'Top-level value must be an object',
+            additionalProperties: true,
+          },
+        },
+      ],
     });
   }
+
   return (
     <Editor
       beforeMount={handleBeforeMount}
