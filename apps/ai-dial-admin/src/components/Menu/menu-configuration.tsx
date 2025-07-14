@@ -105,6 +105,10 @@ export const MENU_CONFIGURATION = (iconSize: number): MenuGroupConfiguration[] =
     icon: <Approvals width={iconSize} height={iconSize} />,
     items: [
       {
+        key: MenuI18nKey.ApplicationPublications,
+        href: ApplicationRoute.ApplicationPublications,
+      },
+      {
         key: MenuI18nKey.PromptPublications,
         href: ApplicationRoute.PromptPublications,
       },

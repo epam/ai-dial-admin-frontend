@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
 import ApplicationParametersTab from '@/src/components/ApplicationParametersTab/ApplicationParametersTab';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
@@ -24,10 +24,19 @@ const ApplicationProperties: FC<Props> = ({ publication }) => {
   const application = publication.applicationResources?.[0];
   const [selectedTab, setSelectedTab] = useState(tabs[0].id);
 
+  useEffect(() => {
+    const permissionContent = document.getElementById('publication-permissions');
+    if (selectedTab === ApplicationPublicationTab.Properties) {
+      permissionContent?.classList.remove('hidden');
+    } else {
+      permissionContent?.classList.add('hidden');
+    }
+  }, [selectedTab]);
+
   return application ? (
-    <div className="flex flex-col gap-y-6">
+    <div className="flex flex-col gap-y-6 h-full">
       <Tabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab as ApplicationPublicationTab)} />
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 pt-[25px]">
         {selectedTab === ApplicationPublicationTab.Properties && <ApplicationInfo application={application} />}
         {selectedTab === ApplicationPublicationTab.Parameters && <ApplicationParametersTab entity={application} />}
       </div>
