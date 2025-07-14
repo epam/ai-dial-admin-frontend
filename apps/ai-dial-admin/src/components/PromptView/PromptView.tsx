@@ -32,7 +32,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const tabs = [propertiesTabs(t)];
   const router = useRouter();
-  const { fetchFiles } = usePromptFolder();
+  const { fetchFiles, filePath } = usePromptFolder();
   const { showNotification } = useNotification();
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -100,6 +100,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
             });
           });
         } else {
+          fetchFiles(filePath);
           router.push(`${ApplicationRoute.Prompts}/${getEntityPath(ApplicationRoute.Prompts, res.response)}`);
         }
         router.refresh();
@@ -107,7 +108,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [showNotification, originalPrompt, selectedPrompt, router, fetchFiles]);
+  }, [selectedPrompt, originalPrompt, router, fetchFiles, filePath, showNotification]);
 
   const onChangeEntity = useCallback(
     (entity: DialPrompt) => {
