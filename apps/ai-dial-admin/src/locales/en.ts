@@ -441,6 +441,7 @@ export default {
     Applications: 'Applications',
     Dashboard: 'Dashboard',
     Models: 'Models',
+    Files: 'Files',
   },
   ForwardToken: {
     ForwardToken: 'Forward auth token',
