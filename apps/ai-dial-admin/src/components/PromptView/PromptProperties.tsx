@@ -157,6 +157,7 @@ const PromptProperties: FC<Props> = ({
       if (typeof parsed === 'object') {
         setJsonValue(JSON.stringify(parsed, null, 2));
       }
+      setJsonValue(prompt.content);
     } catch {
       setJsonValue(prompt.content);
     }
