@@ -8,6 +8,7 @@ describe('FilesList', () => {
       { name: 'file1.txt', path: '/path/file1.txt', extension: 'txt' },
       { name: 'file2.pdf', path: '/path/file2.pdf', extension: 'pdf' },
     ];
+
     render(<FilesList files={files} action={'download'} />);
     expect(screen.getByRole('table')).toBeInTheDocument();
   });
