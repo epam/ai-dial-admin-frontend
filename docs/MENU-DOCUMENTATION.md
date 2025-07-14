@@ -57,6 +57,9 @@ This documentation describes the structure and contents of the menu items array 
 ### 5. **Approvals**
 - **Description**: A section for managing prompt and file approvals.
 - **Items**:
+  - **Application Publications**
+    - **Key**: `ApplicationPublications`
+    - **Description**: Navigate to the application publications page to review and approve application submissions.
   - **Prompt Publications**
     - **Key**: `PromptPublications`
     - **Description**: Navigate to the prompt publications page to review and approve prompt submissions.
