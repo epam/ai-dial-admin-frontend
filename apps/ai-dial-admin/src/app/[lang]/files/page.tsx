@@ -5,7 +5,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
-import FilesList from '@/src/components/FilesList/FilesList';
+import FilesList from '@/src/components/Assets/Files/FilesList';
 
 export const dynamic = 'force-dynamic';
 

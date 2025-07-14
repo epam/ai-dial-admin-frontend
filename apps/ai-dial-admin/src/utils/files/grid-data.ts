@@ -4,19 +4,7 @@ import { DialFile } from '@/src/models/dial/file';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import FileNameCellRenderer from '@/src/components/Grid/CellRenderers/FileNameCellRenderer';
 import { EntityOperationDeclaration } from '@/src/models/entity-operations';
-
-export const getNameExtensionFromFile = (input: string): { name: string; extension: string } => {
-  const lastUnderscoreIndex = input.lastIndexOf('.');
-
-  if (lastUnderscoreIndex === -1) {
-    return { name: input, extension: '' };
-  }
-
-  const name = input.substring(0, lastUnderscoreIndex);
-  const extension = input.substring(lastUnderscoreIndex);
-
-  return { name, extension };
-};
+import { getNameExtensionFromFile } from './get-extension';
 
 export const getGridFileData = (files: DialFile[]) => {
   return files.map((file) => {

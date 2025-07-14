@@ -4,7 +4,7 @@ import { GridApi, GridReadyEvent } from 'ag-grid-community';
 
 import NoData from '@/src/components/Common/NoData/NoData';
 import { EXPORT_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { getGridFileData } from '@/src/components/FilesList/files-list';
+import { getGridFileData } from '@/src/utils/files/grid-data';
 import Grid from '@/src/components/Grid/Grid';
 import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
 import { ALL_ID } from '@/src/constants/dial-base-entity';

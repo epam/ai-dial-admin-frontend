@@ -141,7 +141,7 @@ const SystemRollback: FC = () => {
         </div>
       </div>
       <div className="flex flex-col min-h-0 flex-1 relative">
-        <div className=" pt-6 pb-4">
+        <div className="pt-6 pb-4">
           <Tabs
             tabs={tabs}
             activeTab={selectedTab}

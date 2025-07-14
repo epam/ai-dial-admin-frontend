@@ -8,7 +8,7 @@ import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import Page403 from '@/src/components/Page403/Page403';
 import { useFileFolder } from '@/src/context/FileFolderContext';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getGridFileData } from './files-list';
+import { getGridFileData } from '@/src/utils/files/grid-data';
 
 const FilesList: FC = () => {
   const { data } = useFileFolder();

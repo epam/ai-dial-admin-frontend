@@ -8,7 +8,7 @@ import FilePath from '@/src/components/Common/FilePath/FilePath';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 // import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
 import { FILES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { getGridFileColumns, getGridFileData } from '@/src/components/FilesList/files-list';
+import { getGridFileColumns, getGridFileData } from '@/src/utils/files/grid-data';
 import Grid from '@/src/components/Grid/Grid';
 import { FILE_DOWNLOAD, FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
 import { BasicI18nKey, CreateI18nKey } from '@/src/constants/i18n';

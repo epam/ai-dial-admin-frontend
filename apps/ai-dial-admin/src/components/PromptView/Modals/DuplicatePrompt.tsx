@@ -6,7 +6,7 @@ import { BasicI18nKey, ButtonsI18nKey, CreateI18nKey, DuplicateI18nKey, PromptsI
 import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { checkNameVersionCombination, getInitialVersion } from './prompts-list';
+import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/prompts/versions';
 import { RadioButtonModel } from '@/src/models/radio-button';
 import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { DuplicationTypes } from '@/src/types/prompt';

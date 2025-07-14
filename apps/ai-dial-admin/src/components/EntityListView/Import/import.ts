@@ -1,10 +1,10 @@
-import { getNameExtensionFromFile } from '@/src/components/FilesList/files-list';
+import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import {
   generateNameVersionForPrompt,
   getNameVersionFromPrompt,
   modifyNameVersionInPrompt,
-} from '@/src/components/PromptsList/prompts-list';
+} from '@/src/utils/prompts/versions';
 import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import { ImportI18nKey } from '@/src/constants/i18n';
 import { DialFile } from '@/src/models/dial/file';

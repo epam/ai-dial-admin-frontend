@@ -17,6 +17,7 @@ export const listViewTitleMap: Record<string, MenuI18nKey> = {
   [ApplicationRoute.ApplicationRunners]: MenuI18nKey.ApplicationRunners,
   [ApplicationRoute.Prompts]: MenuI18nKey.Prompts,
   [ApplicationRoute.Files]: MenuI18nKey.Files,
+  [ApplicationRoute.AssetsApplications]: MenuI18nKey.Applications,
   [ApplicationRoute.Addons]: MenuI18nKey.Addons,
   [ApplicationRoute.Routes]: MenuI18nKey.Routes,
   [ApplicationRoute.PromptPublications]: MenuI18nKey.PromptPublications,
@@ -39,6 +40,7 @@ export const emptyDataTitleMap: Record<string, EntitiesI18nKey> = {
   [ApplicationRoute.Routes]: EntitiesI18nKey.NoRoutes,
   [ApplicationRoute.Prompts]: EntitiesI18nKey.NoPrompts,
   [ApplicationRoute.Files]: EntitiesI18nKey.NoFiles,
+  [ApplicationRoute.AssetsApplications]: EntitiesI18nKey.NoApplications,
   [ApplicationRoute.PromptPublications]: EntitiesI18nKey.NoPublications,
   [ApplicationRoute.FilePublications]: EntitiesI18nKey.NoPublications,
   [ApplicationRoute.ApplicationPublications]: EntitiesI18nKey.NoPublications,
@@ -57,6 +59,7 @@ export const deleteModalTitleMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.Assistants]: DeleteI18nKey.Model,
   [ApplicationRoute.Prompts]: DeleteI18nKey.Prompt,
   [ApplicationRoute.Files]: DeleteI18nKey.File,
+  [ApplicationRoute.AssetsApplications]: DeleteI18nKey.Application,
   [ApplicationRoute.Routes]: DeleteI18nKey.Route,
   [ApplicationRoute.Adapters]: DeleteI18nKey.AdapterTitle,
   [ApplicationRoute.InterceptorTemplates]: DeleteI18nKey.InterceptorTemplateTitle,
@@ -84,6 +87,7 @@ export const getEntityPath = (route: ApplicationRoute, data: unknown, forRemove?
 
     case ApplicationRoute.Prompts:
     case ApplicationRoute.Files:
+    case ApplicationRoute.AssetsApplications:
       return forRemove
         ? decodeURIComponent((data as DialPrompt).path)
         : `${encodeURIComponent((data as DialPrompt).name as string)}?path=${encodeURIComponent((data as DialPrompt).path)}`;
