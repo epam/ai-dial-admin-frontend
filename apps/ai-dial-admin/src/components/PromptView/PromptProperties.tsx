@@ -24,7 +24,7 @@ import { JSONEditorError } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import MdEditor from '../Common/MdEditor/MdEditor';
+import MdEditor from '@/src/components/Common/MdEditor/MdEditor';
 
 interface Props {
   prompt: DialPrompt;
