@@ -732,6 +732,7 @@ export default {
     ResourceId: 'Resource Identifier',
     Time: 'Time',
     Initiated: 'Initiated',
+    UserId: 'User ID',
     ResourceRollback: 'Resource rolled back successfully',
     ResourceRollbackDescription: 'Changes have been delivered to the system',
     ResourceRollbackErrorTitle: 'Resource rollback failed',
