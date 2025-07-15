@@ -6,8 +6,8 @@ export interface DialBaseNamedEntity {
 
 export interface DialBaseEntity extends DialBaseNamedEntity {
   endpoint?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt?: number;
+  updatedAt?: number;
   adapter?: string;
   baseEndpoint?: string;
   displayName?: string;

@@ -38,7 +38,6 @@ import EntityRoles from './Roles/Roles';
 import EntityDashboard from '@/src/components/EntityView/Dashboard/Dashboard';
 import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { DialAttachmentData } from '@/src/models/attachment-data';
-import EntityHeader from './Header/Header';
 
 interface Props {
   view: ApplicationRoute;
@@ -299,11 +298,12 @@ const EntityView: FC<Props> = ({
             />
           ) : (
             <>
-              {view === ApplicationRoute.Models ||
+              {/* TODO: waiting for Be fix */}
+              {/* {view === ApplicationRoute.Models ||
               view === ApplicationRoute.Applications ||
               view === ApplicationRoute.Interceptors ? (
                 <EntityHeader entity={selectedEntity} />
-              ) : null}
+              ) : null} */}
               {activeTab === EntityViewTab.Properties && getPropertiesView()}
               {activeTab === EntityViewTab.Features && (
                 <EntityFeatures entity={selectedEntity} onChangeEntity={onChangeEntity} />
