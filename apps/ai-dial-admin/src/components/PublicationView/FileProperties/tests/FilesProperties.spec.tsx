@@ -1,24 +1,29 @@
-import FilesProperties from '@/src/components/PublicationView/FileProperties/FilesProperties';
-import { Publication } from '@/src/models/dial/publications';
-import { publicationPrompt } from '@/src/utils/tests/mock/publication.mock';
-import { render } from '@testing-library/react';
-import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
+import { EntitiesI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
+import FilesProperties from '../FilesProperties';
 
-const mockWindowOpen = vi.fn();
+describe('FilesProperties', () => {
+  test('renders files list title and files', () => {
+    const publication = {
+      files: [{ name: 'file1.txt' }, { name: 'file2.txt' }],
+      action: 'download',
+    };
 
-describe('Components - FilesProperties', () => {
-  beforeAll(() => {
-    global.window.open = mockWindowOpen;
+    render(<FilesProperties publication={publication} />);
+
+    expect(screen.getByText(PublicationsI18nKey.FilesListTitle)).toBeInTheDocument();
+    expect(screen.getByRole('table')).toBeInTheDocument();
   });
 
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
+  test('renders files list title with empty files', () => {
+    const publication = {
+      files: [],
+      action: 'none',
+    };
 
-  test('Should correctly render', () => {
-    const { getByTestId } = render(<FilesProperties publication={publicationPrompt as Publication} />);
-
-    const view = getByTestId('publication-file-view');
-    expect(view).toBeTruthy();
+    render(<FilesProperties publication={publication} />);
+    expect(screen.getByText(PublicationsI18nKey.FilesListTitle)).toBeInTheDocument();
+    expect(screen.getByText(EntitiesI18nKey.NoFiles)).toBeInTheDocument();
   });
 });

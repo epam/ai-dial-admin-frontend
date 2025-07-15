@@ -414,6 +414,7 @@ export enum TabsI18nKey {
   Applications = 'Tabs.Applications',
   Models = 'Tabs.Models',
   Dashboard = 'Tabs.Dashboard',
+  Files = 'Tabs.Files',
 }
 
 export enum EditorI18nKey {
