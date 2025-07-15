@@ -1,13 +1,15 @@
-import FilesList from '@/src/components/PublicationView/FileProperties/FilesList';
-import { publicationPrompt } from '@/src/utils/tests/mock/publication.mock';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
+import FilesList from '../FilesList';
 
-describe('Components - FilesList', () => {
-  test('Should correctly render PromptsList component', () => {
-    const { getAllByTestId } = render(<FilesList files={publicationPrompt?.files} />);
+describe('FilesList', () => {
+  test('renders grid with files', () => {
+    const files = [
+      { name: 'file1.txt', path: '/path/file1.txt', extension: 'txt' },
+      { name: 'file2.pdf', path: '/path/file2.pdf', extension: 'pdf' },
+    ];
 
-    const view = getAllByTestId('publication-files-list-grid');
-    expect(view).toBeTruthy();
+    render(<FilesList files={files} action={'download'} />);
+    expect(screen.getByRole('table')).toBeInTheDocument();
   });
 });

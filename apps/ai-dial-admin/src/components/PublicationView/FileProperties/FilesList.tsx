@@ -50,11 +50,7 @@ const FilesList: FC<Props> = ({ files, action }) => {
 
   const columnDefs = getGridFileColumns(FILES_COLUMNS, actions);
 
-  return (
-    <div data-testid="publication-files-list-grid">
-      <Grid columnDefs={columnDefs} rowData={rowData} />
-    </div>
-  );
+  return <Grid columnDefs={columnDefs} rowData={rowData} />;
 };
 
 export default FilesList;
