@@ -6,8 +6,8 @@ import { EntitiesI18nKey } from '@/src/constants/i18n';
 
 describe('EntityHeader', () => {
   test('renders header with entity and route', () => {
-    const updatedAt = new Date();
-    const createdAt = new Date();
+    const updatedAt = new Date('2020-12-12T12:00:00Z');
+    const createdAt = new Date('2020-11-12T12:00:00Z');
     const entity = { name: 'Test Entity', id: '123', updatedAt, createdAt };
 
     render(<EntityHeader entity={entity} />);
