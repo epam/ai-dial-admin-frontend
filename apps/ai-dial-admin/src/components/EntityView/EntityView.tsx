@@ -299,7 +299,11 @@ const EntityView: FC<Props> = ({
             />
           ) : (
             <>
-              <EntityHeader entity={selectedEntity} />
+              {view === ApplicationRoute.Models ||
+              view === ApplicationRoute.Applications ||
+              view === ApplicationRoute.Interceptors ? (
+                <EntityHeader entity={selectedEntity} />
+              ) : null}
               {activeTab === EntityViewTab.Properties && getPropertiesView()}
               {activeTab === EntityViewTab.Features && (
                 <EntityFeatures entity={selectedEntity} onChangeEntity={onChangeEntity} />
