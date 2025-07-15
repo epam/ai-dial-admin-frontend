@@ -298,7 +298,7 @@ const EntityView: FC<Props> = ({
             />
           ) : (
             <>
-              {/* TODO: waiting for Be fix */}
+              {/* TODO: waiting for BE fix - https://github.com/epam/ai-dial-admin-backend/issues/79 */}
               {/* {view === ApplicationRoute.Models ||
               view === ApplicationRoute.Applications ||
               view === ApplicationRoute.Interceptors ? (
