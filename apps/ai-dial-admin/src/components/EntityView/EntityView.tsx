@@ -38,6 +38,7 @@ import EntityRoles from './Roles/Roles';
 import EntityDashboard from '@/src/components/EntityView/Dashboard/Dashboard';
 import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { DialAttachmentData } from '@/src/models/attachment-data';
+import EntityHeader from './Header/Header';
 
 interface Props {
   view: ApplicationRoute;
@@ -285,6 +286,7 @@ const EntityView: FC<Props> = ({
             setErrorNotifications={setErrorNotifications}
           />
         </div>
+
         <div className="flex-1 overflow-auto mt-3 min-h-0">
           {jsonEditorEnabled && activeTab !== EntityViewTab.Parameters ? (
             <JSONEditor
@@ -297,6 +299,7 @@ const EntityView: FC<Props> = ({
             />
           ) : (
             <>
+              <EntityHeader entity={selectedEntity} />
               {activeTab === EntityViewTab.Properties && getPropertiesView()}
               {activeTab === EntityViewTab.Features && (
                 <EntityFeatures entity={selectedEntity} onChangeEntity={onChangeEntity} />

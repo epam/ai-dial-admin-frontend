@@ -155,6 +155,8 @@ export default {
     EndpointPlaceholder: 'Enter endpoint',
     AddEntities: 'Add Entities',
     MaxRetryAttempts: 'Max retry attempts',
+    CreatedAt: 'Created At',
+    UpdatedAt: 'Updated At',
   },
   DeleteEntity: {
     Title: 'Confirm Deleting ',
@@ -573,7 +575,6 @@ export default {
     Action: 'Action',
     Author: 'Author',
     Runner: 'Runner',
-    CreatedAt: 'Created At',
     FolderStorage: 'Folder Storage',
   },
   Prompts: {

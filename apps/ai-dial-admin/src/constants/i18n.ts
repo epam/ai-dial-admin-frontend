@@ -132,6 +132,8 @@ export enum EntitiesI18nKey {
   EndpointPlaceholder = 'Entities.EndpointPlaceholder',
   AddEntities = 'Entities.AddEntities',
   MaxRetryAttempts = 'Entities.MaxRetryAttempts',
+  CreatedAt = 'Entities.CreatedAt',
+  UpdatedAt = 'Entities.UpdatedAt',
 }
 
 export enum DeleteI18nKey {
@@ -507,7 +509,6 @@ export enum PublicationsI18nKey {
   Action = 'Publications.Action',
   Runner = 'Publications.Runner',
   Author = 'Publications.Author',
-  CreatedAt = 'Publications.CreatedAt',
   FolderStorage = 'Publications.FolderStorage',
   FilesListTitle = 'Publications.Files.FilesListTitle',
 }
