@@ -645,6 +645,7 @@ export enum ActivityAuditI18nKey {
   ResourceId = 'ActivityAudit.ResourceId',
   Time = 'ActivityAudit.Time',
   Initiated = 'ActivityAudit.Initiated',
+  UserId = 'ActivityAudit.UserId',
   CurrentState = 'ActivityAudit.CurrentState',
   RollbackState = 'ActivityAudit.RollbackState',
   RollbackRevision = 'ActivityAudit.RollbackRevision',
