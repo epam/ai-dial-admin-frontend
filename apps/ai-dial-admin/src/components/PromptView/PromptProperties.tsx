@@ -1,8 +1,5 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import ReactMarkdown from 'react-markdown';
-import ReactMde from 'react-mde';
-import 'react-mde/lib/styles/css/react-mde-all.css';
 
 import { IconPlus } from '@tabler/icons-react';
 
@@ -27,6 +24,7 @@ import { JSONEditorError } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
+import MdEditor from '@/src/components/Common/MdEditor/MdEditor';
 
 interface Props {
   prompt: DialPrompt;
@@ -38,11 +36,6 @@ interface Props {
   addedVersions: string[];
   setAddedVersions: Dispatch<SetStateAction<string[]>>;
   setContentJsonErrors: Dispatch<SetStateAction<JSONEditorError[]>>;
-}
-
-enum SelectedContentView {
-  WRITE = 'write',
-  PREVIEW = 'preview',
 }
 
 const PromptProperties: FC<Props> = ({
@@ -61,7 +54,6 @@ const PromptProperties: FC<Props> = ({
   const [modalState, setModalState] = useState(PopUpState.Closed);
 
   const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
-  const [selectedTab, setSelectedTab] = useState(SelectedContentView.WRITE);
   const [isJSONContentMode, setJSONContentMode] = useState(false);
   const [jsonValue, setJsonValue] = useState<string | undefined>(undefined);
 
@@ -245,15 +237,7 @@ const PromptProperties: FC<Props> = ({
                 <JsonEditorBase value={jsonValue} onChange={onChangeJsonValue} onValidateJSON={onValidateJSON} />
               </div>
             ) : (
-              <ReactMde
-                value={prompt.content}
-                onChange={onChangeContent}
-                selectedTab={selectedTab}
-                onTabChange={(tab) => setSelectedTab(tab as SelectedContentView)}
-                generateMarkdownPreview={(markdown: string) =>
-                  Promise.resolve(<ReactMarkdown>{markdown}</ReactMarkdown>)
-                }
-              />
+              <MdEditor content={prompt.content} onChangeContent={onChangeContent} />
             )}
           </div>
           <div className="lg:w-[35%]">
