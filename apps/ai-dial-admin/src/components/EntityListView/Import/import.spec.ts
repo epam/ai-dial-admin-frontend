@@ -1,10 +1,10 @@
 import {
   generateNameVersionForPrompt,
   getFolderNameAndPath,
-  getNameExtensionFromFile,
   getNameVersionFromPrompt,
   modifyNameVersionInPrompt,
-} from '@/src/components/PromptsList/prompts-list';
+} from '@/src/utils/prompts/versions';
+import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { FileImportMap } from '@/src/models/file';
 import { ImportStatus } from '@/src/types/import';
 import { StepStatus } from '@/src/models/step';
@@ -18,14 +18,6 @@ import {
   isErrorPromptNode,
   isInvalidJson,
 } from './import';
-
-vi.mock('@/src/components/PromptsList/prompts-list', () => ({
-  modifyNameVersionInPrompt: vi.fn(),
-  getNameExtensionFromFile: vi.fn(),
-  getNameVersionFromPrompt: vi.fn(),
-  getFolderNameAndPath: vi.fn(),
-  generateNameVersionForPrompt: vi.fn(),
-}));
 
 describe('Import :: getImportResults', () => {
   const folderName = 'testFolder';
@@ -112,9 +104,6 @@ describe('Import :: getMultipleImportStatus', () => {
 
 describe('Import :: generatePromptRowDataForImportGrid', () => {
   test('convert to row data without existing prompts', () => {
-    getFolderNameAndPath.mockReturnValue({ name: 'id_for_prompt__1.0.0' });
-    getNameVersionFromPrompt.mockReturnValue({ name: 'id_for_prompt', version: '1.0.0' });
-
     const map = new Map();
     map.set('item1', {
       files: [
@@ -139,9 +128,6 @@ describe('Import :: generatePromptRowDataForImportGrid', () => {
   });
 
   test('convert to row data with existing prompts', () => {
-    getFolderNameAndPath.mockReturnValue({ name: 'id_for_prompt__1.0.0' });
-    getNameVersionFromPrompt.mockReturnValue({ name: 'id_for_prompt', version: '1.0.0' });
-
     const map = new Map();
     map.set('item1', {
       files: [
@@ -166,9 +152,6 @@ describe('Import :: generatePromptRowDataForImportGrid', () => {
     ]);
   });
   test('convert to row data invalid prompt', () => {
-    getFolderNameAndPath.mockReturnValue({ name: 'id_for_prompt__1.0.0' });
-    getNameVersionFromPrompt.mockReturnValue({ name: 'id_for_prompt', version: '1.0.0' });
-
     const map = new Map();
     map.set('item1.svg', {
       files: [
@@ -196,8 +179,6 @@ describe('Import :: generatePromptRowDataForImportGrid', () => {
 
 describe('Import :: isErrorPromptNode', () => {
   test('should return true', () => {
-    generateNameVersionForPrompt.mockReturnValue('name__1.0.0');
-
     const data = {
       version: '1.0.0',
       promptName: 'name',
@@ -209,8 +190,6 @@ describe('Import :: isErrorPromptNode', () => {
   });
 
   test('should return false', () => {
-    generateNameVersionForPrompt.mockReturnValue('name__2.0.0');
-
     const data = {
       version: '2.0.0',
       promptName: 'name',
@@ -301,28 +280,19 @@ describe('Import :: changeFilesMap', () => {
   });
 
   test('should update version in file id when field is "version"', () => {
-    modifyNameVersionInPrompt.mockReturnValue('newId');
-
-    // Data object includes the index and name for the file to be updated
     const result = changeFilesMap(prevMap, { name: 'key1', index: 0 }, 'version', 'v2');
 
-    expect(modifyNameVersionInPrompt).toHaveBeenCalledWith('123', undefined, 'v2');
-    expect(result.get('key1').files[0].id).toBe('newId');
+    expect(result.get('key1').files[0].id).toBe('123__v2');
   });
 
   test('should update promptName and file name when field is "promptName"', () => {
-    modifyNameVersionInPrompt.mockReturnValue('newId');
-
     const result = changeFilesMap(prevMap, { name: 'key1', index: 1 }, 'promptName', 'newPromptName');
 
-    expect(modifyNameVersionInPrompt).toHaveBeenCalledWith('456', 'newPromptName');
-    expect(result.get('key1').files[1].id).toBe('newId');
+    expect(result.get('key1').files[1].id).toBe('newPromptName');
     expect(result.get('key1').files[1].name).toBe('newPromptName');
   });
 
   test('should update file content when field is "fileName"', () => {
-    getNameExtensionFromFile.mockReturnValue({ extension: '.txt' });
-
     const result = changeFilesMap(prevMap, { name: 'key1', index: 1 }, 'fileName', 'newFileName');
 
     expect(result.get('key1').files[1].name).toBe('newFileName');
@@ -333,6 +303,6 @@ describe('Import :: changeFilesMap', () => {
     const newMap = changeFilesMap(prevMap, { name: 'key1', index: 0 }, 'version', 'v2');
 
     expect(newMap).not.toBe(prevMap);
-    expect(newMap.get('key1').files[0].id).toBe('newId');
+    expect(newMap.get('key1').files[0].id).toBe('123__v2');
   });
 });

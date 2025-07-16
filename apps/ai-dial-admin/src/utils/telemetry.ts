@@ -14,16 +14,21 @@ import Big from 'big.js';
 import { EChartsOption } from 'echarts-for-react/src/types';
 
 export const getGridData = (data: TelemetryData): Record<string, string>[] => {
-  return data.data.map((row) => {
-    return (row as string[]).reduce((acc: Record<string, string>, value, index) => {
-      acc[TELEMETRY_GRID_HEADERS_MAP[data.headers[index]]] = value;
-      return acc;
-    }, {});
-  });
+  return (
+    data.data?.map((row) => {
+      return (row as string[]).reduce((acc: Record<string, string>, value, index) => {
+        acc[TELEMETRY_GRID_HEADERS_MAP[data.headers[index]]] = value;
+        return acc;
+      }, {});
+    }) || []
+  );
 };
 
 export const getSingleValueChartData = (data: TelemetryData): number => {
   const rawData = data.data;
+  if (!rawData) {
+    return 0;
+  }
   const arr = (Array.isArray(rawData[0]) ? rawData[0] : rawData) as string[];
   return arr.map((value) => new Big(value).toNumber()).reduce((acc, curr) => acc + curr, 0);
 };
@@ -73,12 +78,14 @@ const getFormattedTimeFilter = (timePeriod: TimeRange) => {
 };
 
 export const getLineChartData = (data: TelemetryData): Record<string, string>[] => {
-  return data.data.map((row) => {
-    return (row as string[]).reduce((acc: Record<string, string>, value, index) => {
-      acc[data.headers[index]] = value;
-      return acc;
-    }, {});
-  });
+  return (
+    data.data?.map((row) => {
+      return (row as string[]).reduce((acc: Record<string, string>, value, index) => {
+        acc[data.headers[index]] = value;
+        return acc;
+      }, {});
+    }) || []
+  );
 };
 
 export const getDefaultFilterValue = (

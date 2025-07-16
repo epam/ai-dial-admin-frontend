@@ -45,6 +45,7 @@ const ActivityAuditViewHeader: FC<Props> = ({ activity }) => {
       </LabeledText>
       <LabeledText label={t(ActivityAuditI18nKey.Time)} text={formatDateTimeToLocalString(activity.epochTimestampMs)} />
       <LabeledText label={t(ActivityAuditI18nKey.Initiated)} text={activity.initiatedEmail} />
+      <LabeledText label={t(ActivityAuditI18nKey.UserId)} text={activity.initiatedAuthor} />
     </div>
   );
 };

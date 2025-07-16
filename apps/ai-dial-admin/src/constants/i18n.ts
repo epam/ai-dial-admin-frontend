@@ -132,6 +132,8 @@ export enum EntitiesI18nKey {
   EndpointPlaceholder = 'Entities.EndpointPlaceholder',
   AddEntities = 'Entities.AddEntities',
   MaxRetryAttempts = 'Entities.MaxRetryAttempts',
+  CreatedAt = 'Entities.CreatedAt',
+  UpdatedAt = 'Entities.UpdatedAt',
 }
 
 export enum DeleteI18nKey {
@@ -382,19 +384,25 @@ export enum ForwardTokenI18nKey {
 }
 
 export enum FeaturesI18nKey {
-  Tools = 'Features.Tools',
-  SystemPrompt = 'Features.SystemPrompt',
-  Seed = 'Features.Seed',
-  URLAttachments = 'Features.URLAttachments',
-  FolderAttachments = 'Features.FolderAttachments',
-  ExposedToUser = 'Features.ExposedToUser',
-  RateEndpoint = 'Features.RateEndpoint',
-  RateEndpointPlaceholder = 'Features.RateEndpointPlaceholder',
-  TokenizeEndpoint = 'Features.TokenizeEndpoint',
-  TokenizeEndpointPlaceholder = 'Features.TokenizeEndpointPlaceholder',
-  TruncatePromptEndpoint = 'Features.TruncatePromptEndpoint',
-  TruncatePromptEndpointPlaceholder = 'Features.TruncatePromptEndpointPlaceholder',
-  Temperature = 'Features.Temperature',
+  toolsSupported = 'Features.toolsSupported',
+  systemPromptSupported = 'Features.systemPromptSupported',
+  seedSupported = 'Features.seedSupported',
+  cacheSupported = 'Features.cacheSupported',
+  autoCachingSupported = 'Features.autoCachingSupported',
+  contentPartsSupported = 'Features.contentPartsSupported',
+  parallelToolCallsSupported = 'Features.parallelToolCallsSupported',
+  consentRequired = 'Features.consentRequired',
+  urlAttachmentsSupported = 'Features.urlAttachmentsSupported',
+  folderAttachmentsSupported = 'Features.folderAttachmentsSupported',
+  accessibleByPerRequestKey = 'Features.accessibleByPerRequestKey',
+  configurationEndpoint = 'Features.configurationEndpoint',
+  configurationEndpointPlaceholder = 'Features.configurationEndpointPlaceholder',
+  rateEndpoint = 'Features.rateEndpoint',
+  rateEndpointPlaceholder = 'Features.rateEndpointPlaceholder',
+  tokenizeEndpoint = 'Features.tokenizeEndpoint',
+  tokenizeEndpointPlaceholder = 'Features.tokenizeEndpointPlaceholder',
+  truncatePromptEndpoint = 'Features.truncatePromptEndpoint',
+  truncatePromptEndpointPlaceholder = 'Features.truncatePromptEndpointPlaceholder',
 }
 
 export enum TopicsI18nKey {
@@ -414,6 +422,7 @@ export enum TabsI18nKey {
   Applications = 'Tabs.Applications',
   Models = 'Tabs.Models',
   Dashboard = 'Tabs.Dashboard',
+  Files = 'Tabs.Files',
 }
 
 export enum EditorI18nKey {
@@ -490,6 +499,12 @@ export enum PublicationsI18nKey {
   FileUnpublishDeclineModalTitle = 'Publications.Files.UnpublishDeclineModalTitle',
   FilePublishApproveDescription = 'Publications.Files.PublishApproveDescription',
   FileUnpublishApproveDescription = 'Publications.Files.UnpublishApproveDescription',
+  ApplicationPublishApproveModalTitle = 'Publications.Applications.PublishApproveModalTitle',
+  ApplicationPublishDeclineModalTitle = 'Publications.Applications.PublishDeclineModalTitle',
+  ApplicationUnpublishApproveModalTitle = 'Publications.Applications.UnpublishApproveModalTitle',
+  ApplicationUnpublishDeclineModalTitle = 'Publications.Applications.UnpublishDeclineModalTitle',
+  ApplicationPublishApproveDescription = 'Publications.Applications.PublishApproveDescription',
+  ApplicationUnpublishApproveDescription = 'Publications.Applications.UnpublishApproveDescription',
   OpenPrompt = 'Publications.Prompt.OpenPrompt',
   TestPrompt = 'Publications.Prompt.TestPrompt',
   Version = 'Publications.Prompt.Version',
@@ -498,8 +513,8 @@ export enum PublicationsI18nKey {
   ActionPublish = 'Publications.ActionPublish',
   ActionUnpublish = 'Publications.ActionUnpublish',
   Action = 'Publications.Action',
+  Runner = 'Publications.Runner',
   Author = 'Publications.Author',
-  CreatedAt = 'Publications.CreatedAt',
   FolderStorage = 'Publications.FolderStorage',
   FilesListTitle = 'Publications.Files.FilesListTitle',
 }
@@ -637,6 +652,7 @@ export enum ActivityAuditI18nKey {
   ResourceId = 'ActivityAudit.ResourceId',
   Time = 'ActivityAudit.Time',
   Initiated = 'ActivityAudit.Initiated',
+  UserId = 'ActivityAudit.UserId',
   CurrentState = 'ActivityAudit.CurrentState',
   RollbackState = 'ActivityAudit.RollbackState',
   RollbackRevision = 'ActivityAudit.RollbackRevision',

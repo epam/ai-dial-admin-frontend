@@ -1,13 +1,12 @@
 'use client';
 
-import { FC } from 'react';
-import dynamic from 'next/dynamic';
+import { FC, useEffect, useState } from 'react';
 
-import MenuContent from './MenuContent/MenuContent';
 import { SideBarOrientation } from '@/src/types/side-bar';
 import { useAppContext } from '@/src/context/AppContext';
 
-const Sidebar = dynamic(() => import('@/src/components/SideBar/SideBar'), { ssr: false });
+import MenuContent from '@/src/components/Menu/MenuContent/MenuContent';
+import Sidebar from '@/src/components/SideBar/SideBar';
 
 interface Props {
   disableMenuItems: string[];
@@ -15,7 +14,19 @@ interface Props {
 const Menu: FC<Props> = ({ ...props }) => {
   const { sidebarOpen } = useAppContext();
 
-  return <Sidebar side={SideBarOrientation.Left} isOpen={sidebarOpen} itemComponent={<MenuContent {...props} />} />;
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    setIsSidebarOpen(sidebarOpen);
+  }, [sidebarOpen]);
+
+  return (
+    <Sidebar
+      side={SideBarOrientation.Left}
+      isSidebarOpen={isSidebarOpen}
+      itemComponent={<MenuContent {...props} isSidebarOpen={isSidebarOpen} />}
+    />
+  );
 };
 
 export default Menu;

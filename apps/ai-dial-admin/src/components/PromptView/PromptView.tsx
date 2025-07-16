@@ -11,8 +11,8 @@ import { getEntityPath } from '@/src/components/EntityListView/entity-list-view'
 import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/entity-view';
 import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
-import PromptProperties from '@/src/components/PromptsList/PromptProperties';
-import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/PromptView/update-prompt';
+import PromptProperties from '@/src/components/PromptView/PromptProperties';
+import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/PromptView/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -32,7 +32,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const tabs = [propertiesTabs(t)];
   const router = useRouter();
-  const { fetchFiles } = usePromptFolder();
+  const { fetchFiles, filePath } = usePromptFolder();
   const { showNotification } = useNotification();
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -100,6 +100,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
             });
           });
         } else {
+          fetchFiles(filePath);
           router.push(`${ApplicationRoute.Prompts}/${getEntityPath(ApplicationRoute.Prompts, res.response)}`);
         }
         router.refresh();
@@ -107,7 +108,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [showNotification, originalPrompt, selectedPrompt, router, fetchFiles]);
+  }, [selectedPrompt, originalPrompt, router, fetchFiles, filePath, showNotification]);
 
   const onChangeEntity = useCallback(
     (entity: DialPrompt) => {

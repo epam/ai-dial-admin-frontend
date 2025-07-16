@@ -7,7 +7,7 @@ import FrameRenderer from '@/src/components/FrameRenderer/FrameRenderer';
 import { useSession } from 'next-auth/react';
 import { UserSession } from '@/src/models/auth';
 import { useTheme } from '@/src/context/ThemeContext';
-import { FrameConfig } from '@/src/components/ApplicationParametersTab/ApplicationParametersTab';
+import { FrameConfig } from '@/src/models/frame-config';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';

@@ -15,12 +15,12 @@ import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 
 interface Props {
-  isOpen: boolean;
+  isSidebarOpen: boolean;
   side: SideBarOrientation;
   itemComponent: ReactNode;
 }
 
-const Sidebar: FC<Props> = ({ isOpen, side, itemComponent }) => {
+const Sidebar: FC<Props> = ({ isSidebarOpen, side, itemComponent }) => {
   const sidebarMinWidth = isSmallScreen() ? MOBILE_SIDEBAR_MIN_WIDTH : SIDEBAR_MIN_WIDTH;
   const savedWidth = getFromLocalStorage(LOCAL_STORAGE_CENTRAL_WINDOW_KEY);
 
@@ -144,7 +144,7 @@ const Sidebar: FC<Props> = ({ isOpen, side, itemComponent }) => {
 
   const menuClassNames = `flex max-w-[95%] border-tertiary md:max-w-[45%], ${isMobile ? 'absolute z-[51]' : ''}`;
 
-  return isOpen ? (
+  return isSidebarOpen ? (
     <Resizable ref={sideBarElementRef} {...resizeSettings} className={menuClassNames}>
       <SidebarContent itemComponent={itemComponent} resizable={true} />
     </Resizable>

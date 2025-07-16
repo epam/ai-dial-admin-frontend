@@ -6,7 +6,7 @@ import { CreateI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
-import { checkNameVersionCombination } from '@/src/components/PromptsList/prompts-list';
+import { checkNameVersionCombination } from '@/src/utils/prompts/versions';
 import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
 import { FieldError } from '@/src/models/error';

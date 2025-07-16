@@ -58,7 +58,7 @@ const Dashboard: FC<Props> = ({ route, entity }) => {
   }, []);
 
   return (
-    <div data-testid="dashboards" className="flex flex-1 flex-col min-h-0 overflow-auto">
+    <div data-testid="dashboards" role="dashboards" className="flex flex-1 flex-col min-h-0 overflow-auto">
       <div className="flex w-full mb-6">
         <TelemetryControls
           selectedRefreshValue={refreshTime}

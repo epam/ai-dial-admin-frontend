@@ -30,7 +30,7 @@ describe('Components - BasePublicationsList', () => {
   test('Should render list view with data and titles', () => {
     render(<BasePublicationsList data={mockData} route={ApplicationRoute.PromptPublications} />);
     expect(screen.getByText(MenuI18nKey.PromptPublications)).toBeInTheDocument();
-    expect(screen.getAllByRole('presentation').length).not.toBe(0); // grid container
+    expect(screen.getByRole('table')).toBeInTheDocument();
   });
 
   test('Should render empty list view', () => {

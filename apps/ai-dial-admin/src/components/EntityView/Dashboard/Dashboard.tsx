@@ -11,10 +11,7 @@ interface Props {
 
 const EntityDashboard: FC<Props> = ({ entity, view }) => {
   return (
-    <div
-      className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 relative"
-      data-testid={'entity-dashboard'}
-    >
+    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 relative">
       <Dashboard entity={entity} route={view} />
     </div>
   );

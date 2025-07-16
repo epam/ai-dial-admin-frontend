@@ -7,7 +7,7 @@ import { ActionType } from '@/src/models/dial/publications';
 import Grid from '@/src/components/Grid/Grid';
 import { ApplicationRoute } from '@/src/types/routes';
 import { FILE_DOWNLOAD, FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
-import { getGridFileColumns, getGridFileData } from '@/src/components/FilesList/files-list';
+import { getGridFileColumns, getGridFileData } from '@/src/utils/files/grid-data';
 import {
   getDownloadOperation,
   getOpenInNewTabOperation,
@@ -50,11 +50,7 @@ const FilesList: FC<Props> = ({ files, action }) => {
 
   const columnDefs = getGridFileColumns(FILES_COLUMNS, actions);
 
-  return (
-    <div data-testid="publication-files-list-grid">
-      <Grid columnDefs={columnDefs} rowData={rowData} />
-    </div>
-  );
+  return <Grid columnDefs={columnDefs} rowData={rowData} />;
 };
 
 export default FilesList;

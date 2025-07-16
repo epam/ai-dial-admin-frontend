@@ -10,7 +10,7 @@ import { ButtonsI18nKey, EntitiesI18nKey, InterceptorsI18nKey, TabsI18nKey } fro
 import { useI18n } from '@/src/locales/client';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import Button from '@/src/components/Common/Button/Button';
-import { getInterceptorsColumnDefs, getInterceptorsGridData } from './interceptors-utils';
+import { getInterceptorsColumnDefs, getInterceptorsGridData } from './utils';
 import { PopUpState } from '@/src/types/pop-up';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import { ApplicationRoute } from '@/src/types/routes';

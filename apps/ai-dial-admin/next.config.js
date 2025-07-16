@@ -19,6 +19,11 @@ const nextConfig = {
     // See: https://github.com/gregberge/svgr
     svgr: false,
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '15mb',
+    },
+  },
   env: {
     NEXT_PUBLIC_APP_VERSION: packageJson.version,
   },

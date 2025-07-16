@@ -3,12 +3,12 @@ import { FC, ReactNode } from 'react';
 import classNames from 'classnames';
 
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
-import { PublicationsI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import { ACTION_I18N_KEYS } from '@/src/constants/publications';
 import { useI18n } from '@/src/locales/client';
 import { ActionType, Publication } from '@/src/models/dial/publications';
-import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { removeTrailingSlash } from '@/src/utils/files/path';
+import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getActionClass } from '@/src/utils/publications';
 import BasePublicationPermissions from './BasePublicationPermissions';
 
@@ -37,20 +37,17 @@ const BasePublicationProperties: FC<Props> = ({ publication, children }) => {
           <LabeledText label={t(PublicationsI18nKey.Author)} text={publication.author} />
         </div>
         <div className="flex flex-col sm:flex-row gap-8">
-          <LabeledText
-            label={t(PublicationsI18nKey.CreatedAt)}
-            text={formatDateTimeToLocalString(publication.createdAt)}
-          />
+          <LabeledText label={t(EntitiesI18nKey.CreatedAt)} text={formatDateTimeToLocalString(publication.createdAt)} />
           <LabeledText
             label={t(PublicationsI18nKey.FolderStorage)}
             text={removeTrailingSlash(decodeURIComponent(publication.folderId))}
           />
         </div>
       </div>
-      <div className="mt-8 pt-8" data-testid={'publication-content'}>
-        <div className="flex flex-col gap-6">{children}</div>
+      <div className="flex-1 min-h-0 mt-8 pt-8 relative" data-testid={'publication-content'}>
+        <div className="flex flex-col gap-6 h-full">{children}</div>
       </div>
-      <div className="mt-8 pt-8" data-testid={'publication-permissions'}>
+      <div className="mt-8 pt-8" id="publication-permissions">
         <BasePublicationPermissions
           rules={publication.rules || []}
           folderId={decodeURIComponent(publication.folderId)}

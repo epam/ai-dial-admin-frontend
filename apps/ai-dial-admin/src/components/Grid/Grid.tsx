@@ -27,6 +27,7 @@ import {
   InfiniteRowModelModule,
   themeBalham,
   TooltipModule,
+  ColumnState,
 } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
 import { useCallback, useEffect, useState } from 'react';
@@ -116,13 +117,11 @@ const Grid = <T extends object>({
     [setRowHeight],
   );
 
-  const setGridColumnsState = (e: GridReadyEvent) => {
+  const setGridColumnsState = (e: GridReadyEvent, defaultSorts: ColumnState[]) => {
     if (view) {
-      const model = getColumnsStateFromStorage(view);
+      const model = getColumnsStateFromStorage(view, defaultSorts);
       e.api.setFilterModel(model.filters);
-      e.api.applyColumnState({
-        state: model.columns,
-      });
+      e.api.applyColumnState({ state: model.columns });
     }
   };
 
@@ -130,18 +129,24 @@ const Grid = <T extends object>({
     setGridApi(e.api);
     gridReadyCb?.(e.api);
     e.api.sizeColumnsToFit();
-    e.api?.updateGridOptions({
-      columnDefs,
-      rowData,
-    });
-    setGridColumnsState(e);
+    const defaultSorts =
+      columnDefs
+        ?.filter((col) => col.sort)
+        .map(
+          (col) =>
+            ({
+              colId: col.field,
+              sort: col.sort,
+            }) as ColumnState,
+        ) || [];
+    const columns = columnDefs?.map((col) => ({ ...col, sort: undefined }));
+    e.api?.updateGridOptions({ columnDefs: columns, rowData });
+    setGridColumnsState(e, defaultSorts);
   };
 
   useEffect(() => {
-    gridApi?.updateGridOptions({
-      columnDefs,
-      rowData,
-    });
+    const columns = columnDefs?.map((col) => ({ ...col, sort: undefined }));
+    gridApi?.updateGridOptions({ columnDefs: columns, rowData });
   }, [columnDefs, gridApi, rowData]);
 
   return (

@@ -4,22 +4,23 @@ import { FC, useCallback, useState } from 'react';
 import classNames from 'classnames';
 import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
-import { useI18n } from '@/src/locales/client';
 import { MenuGroupConfiguration } from '../menu-configuration';
-import MenuItemContent from './MenuItemContent';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { useAppContext } from '@/src/context/AppContext';
+import { useI18n } from '@/src/locales/client';
+
+import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
+import MenuItemContent from './MenuItemContent';
 
 interface Props {
   config: MenuGroupConfiguration;
   activeMenuItem: string;
   isOpenByDefault: boolean;
+  isSidebarOpen: boolean;
 }
 
-const MenuItem: FC<Props> = ({ config, activeMenuItem, isOpenByDefault = false }) => {
+const MenuItem: FC<Props> = ({ config, activeMenuItem, isOpenByDefault = false, isSidebarOpen }) => {
   const t = useI18n();
-  const { sidebarOpen } = useAppContext();
+
   const [isOpen, setIsOpen] = useState(isOpenByDefault);
 
   const onClick = useCallback(() => {
@@ -46,7 +47,7 @@ const MenuItem: FC<Props> = ({ config, activeMenuItem, isOpenByDefault = false }
             <div className={classNames('mr-4', iconClassNames)}>{config.icon}</div>
             <span className="flex-1 min-w-0 text-left truncate"> {t(config.key) ?? ''}</span>
           </div>
-          {sidebarOpen && (
+          {isSidebarOpen && (
             <div className={classNames('ml-4', iconClassNames)}>
               {isOpen ? <IconChevronUp {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
             </div>
@@ -58,7 +59,12 @@ const MenuItem: FC<Props> = ({ config, activeMenuItem, isOpenByDefault = false }
           <div className="bg-layer-4 w-[1px] absolute left-[23px] top-[12px] bottom-[12px]"></div>
           <div className="flex flex-col flex-1 min-w-0 gap-0.5 ">
             {config.items.map((menuItem) => (
-              <MenuItemContent key={menuItem.key} menuItem={menuItem} isActive={activeMenuItem === menuItem.href} />
+              <MenuItemContent
+                key={menuItem.key}
+                menuItem={menuItem}
+                isActive={activeMenuItem === menuItem.href}
+                isSidebarOpen={isSidebarOpen}
+              />
             ))}
           </div>
         </div>

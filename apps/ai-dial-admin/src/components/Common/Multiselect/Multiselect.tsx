@@ -9,12 +9,13 @@ import MultiselectModal from './MultiselectModal';
 interface Props {
   elementId: string;
   title: string;
+  readonly?: boolean;
   selectedItems?: string[];
-  heading: string;
+  heading?: string;
   addTitle?: string;
   addPlaceholder?: string;
   allItems?: string[];
-  onChangeItems: (items: string[]) => void;
+  onChangeItems?: (items: string[]) => void;
   getItems?: () => Promise<ServerActionResponse>;
 }
 
@@ -24,6 +25,7 @@ const Multiselect: FC<Props> = ({
   getItems,
   selectedItems,
   title,
+  readonly,
   heading,
   addTitle,
   addPlaceholder,
@@ -42,7 +44,7 @@ const Multiselect: FC<Props> = ({
   return (
     <div className="flex flex-col">
       <Field fieldTitle={title} htmlFor={elementId} />
-      <InputModal modalState={modalState} selectedValue={selectedItems} onOpenModal={onOpenModal}>
+      <InputModal modalState={modalState} readonly={readonly} selectedValue={selectedItems} onOpenModal={onOpenModal}>
         <MultiselectModal
           initSelectedItems={selectedItems}
           onSelectItems={onChangeItems}

@@ -1,16 +1,17 @@
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import ApplicationParametersTab from '../ApplicationParametersTab';
+import { BasicI18nKey } from '@/src/constants/i18n';
 
 vi.mock('next-auth/react', () => ({
   useSession: vi.fn(() => {
-    return { session: null };
+    return { session: { providerId: 'provider' } };
   }),
 }));
 
 describe('Applications - ApplicationParametersTab', () => {
   test('Should correctly render notification', () => {
-    const { baseElement, getByTestId } = render(
+    render(
       <ApplicationParametersTab
         entity={{ customAppSchemaId: 'scheme1' }}
         applicationSchemes={[
@@ -36,9 +37,12 @@ describe('Applications - ApplicationParametersTab', () => {
       />,
     );
 
-    const progress = getByTestId('scheme1');
+    expect(screen.getByText(BasicI18nKey.NoData)).toBeInTheDocument();
+  });
 
-    expect(baseElement).toBeTruthy();
-    expect(progress).toBeTruthy();
+  test('Should correctly render notification', () => {
+    render(<ApplicationParametersTab entity={{ editorUrl: 'editorUrl' }} />);
+
+    expect(screen.getByText(BasicI18nKey.NoData)).toBeInTheDocument();
   });
 });

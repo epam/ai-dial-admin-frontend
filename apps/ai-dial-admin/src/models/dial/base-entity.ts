@@ -6,6 +6,8 @@ export interface DialBaseNamedEntity {
 
 export interface DialBaseEntity extends DialBaseNamedEntity {
   endpoint?: string;
+  createdAt?: number;
+  updatedAt?: number;
   adapter?: string;
   baseEndpoint?: string;
   displayName?: string;
@@ -42,5 +44,12 @@ export interface DialFeatures {
   folderAttachmentsSupported: boolean;
   seedSupported: boolean;
   allowResume: boolean;
+  addonsSupported: boolean;
   temperatureSupported: boolean;
+  accessibleByPerRequestKey: boolean;
+  parallelToolCallsSupported: boolean;
+  contentPartsSupported: boolean;
+  cacheSupported: boolean;
+  autoCachingSupported: boolean;
+  consentRequired: boolean;
 }

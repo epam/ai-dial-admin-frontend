@@ -17,7 +17,7 @@ import { moveFiles, removeFile } from '@/src/app/[lang]/files/actions';
 import { addTrailingSlash, changePath } from '@/src/utils/files/path';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { getEntityPath } from '@/src/components/EntityListView/entity-list-view';
-import { getNameExtensionFromFile } from '@/src/components/FilesList/files-list';
+import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 
 interface Props {
   originalFile: DialFile;
