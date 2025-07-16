@@ -464,6 +464,7 @@ export default {
     accessibleByPerRequestKey: 'Accessible by request key',
     contentPartsSupported: 'Content parts',
     cacheSupported: 'Cache',
+    consentRequired: 'Consent required',
     autoCachingSupported: 'Auto caching ',
     parallelToolCallsSupported: 'Parallel tool calls',
     configurationEndpoint: 'Configuration endpoint',

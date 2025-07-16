@@ -51,4 +51,5 @@ export interface DialFeatures {
   contentPartsSupported: boolean;
   cacheSupported: boolean;
   autoCachingSupported: boolean;
+  consentRequired: boolean;
 }

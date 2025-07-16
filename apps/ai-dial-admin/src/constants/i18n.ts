@@ -389,6 +389,7 @@ export enum FeaturesI18nKey {
   autoCachingSupported = 'Features.autoCachingSupported',
   contentPartsSupported = 'Features.contentPartsSupported',
   parallelToolCallsSupported = 'Features.parallelToolCallsSupported',
+  consentRequired = 'Features.consentRequired',
   urlAttachmentsSupported = 'Features.urlAttachmentsSupported',
   folderAttachmentsSupported = 'Features.folderAttachmentsSupported',
   accessibleByPerRequestKey = 'Features.accessibleByPerRequestKey',

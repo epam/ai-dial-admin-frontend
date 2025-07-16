@@ -29,5 +29,5 @@ export const applicationSwitchFeatures: (keyof DialFeatures)[] = [
   'folderAttachmentsSupported',
   'accessibleByPerRequestKey',
   'contentPartsSupported',
-  // concent required
+  'consentRequired',
 ];
