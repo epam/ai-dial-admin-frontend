@@ -3,7 +3,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { createApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationView/Properties';
-import { getErrorForAppRunnerId } from '@/src/components/ApplicationRunners/ConfigurationView/AppRunnerProperties.utils';
+import { getErrorForAppRunnerId } from '@/src/components/ApplicationRunners/ConfigurationView/utils';
 import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';

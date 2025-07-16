@@ -3,9 +3,10 @@ import { FC, useCallback } from 'react';
 import { getModelsTopics } from '@/src/app/[lang]/models/actions';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
-import { CreateI18nKey, EntitiesI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, EntitiesI18nKey, FeaturesI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import Switch from '@/src/components/Common/Switch/Switch';
 
 interface Props {
   runner: DialApplicationScheme;
@@ -25,20 +26,6 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
   const onChangeCompletionEndPoint = useCallback(
     (endpoint: string) => {
       onChangeRunner({ ...runner, 'dial:applicationTypeCompletionEndpoint': endpoint });
-    },
-    [runner, onChangeRunner],
-  );
-
-  const onChangeViewerUrl = useCallback(
-    (url: string) => {
-      onChangeRunner({ ...runner, 'dial:applicationTypeViewerUrl': url });
-    },
-    [runner, onChangeRunner],
-  );
-
-  const onChangeEditorUrl = useCallback(
-    (url: string) => {
-      onChangeRunner({ ...runner, 'dial:applicationTypeEditorUrl': url });
     },
     [runner, onChangeRunner],
   );
@@ -66,7 +53,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
 
       <TextInputField
         elementId="configurationEndPoint"
-        fieldTitle={t(CreateI18nKey.CompletionEndpointTitle)}
+        fieldTitle={t(FeaturesI18nKey.configurationEndpoint)}
         placeholder={t(EntitiesI18nKey.EndpointPlaceholder)}
         value={runner['dial:applicationTypeConfigurationEndpoint']}
         optional={true}
@@ -76,7 +63,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
       />
       <TextInputField
         elementId="rateEndpoint"
-        fieldTitle={t(CreateI18nKey.CompletionEndpointTitle)}
+        fieldTitle={t(FeaturesI18nKey.rateEndpoint)}
         placeholder={t(EntitiesI18nKey.EndpointPlaceholder)}
         value={runner['dial:applicationTypeRateEndpoint']}
         optional={true}
@@ -84,9 +71,10 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
           onChangeRunner({ ...runner, 'dial:applicationTypeRateEndpoint': url });
         }}
       />
+
       <TextInputField
         elementId="promptEndpoint"
-        fieldTitle={t(CreateI18nKey.CompletionEndpointTitle)}
+        fieldTitle={t(FeaturesI18nKey.truncatePromptEndpoint)}
         placeholder={t(EntitiesI18nKey.EndpointPlaceholder)}
         value={runner['dial:applicationTypeTruncatePromptEndpoint']}
         optional={true}
@@ -97,7 +85,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
 
       <TextInputField
         elementId="tokenizeEndpoint"
-        fieldTitle={t(CreateI18nKey.CompletionEndpointTitle)}
+        fieldTitle={t(FeaturesI18nKey.tokenizeEndpoint)}
         placeholder={t(EntitiesI18nKey.EndpointPlaceholder)}
         value={runner['dial:applicationTypeTokenizeEndpoint']}
         optional={true}
@@ -112,14 +100,28 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
         placeholder={t(CreateI18nKey.ViewerUrlPlaceholder)}
         value={runner['dial:applicationTypeViewerUrl']}
         optional={true}
-        onChange={onChangeViewerUrl}
+        onChange={(url: string) => {
+          onChangeRunner({ ...runner, 'dial:applicationTypeViewerUrl': url });
+        }}
       />
+
       <TextInputField
         elementId="editorUrl"
         fieldTitle={t(CreateI18nKey.EditorUrlTitle)}
         placeholder={t(CreateI18nKey.EditorUrlPlaceholder)}
         value={runner['dial:applicationTypeEditorUrl']}
-        onChange={onChangeEditorUrl}
+        onChange={(url: string) => {
+          onChangeRunner({ ...runner, 'dial:applicationTypeEditorUrl': url });
+        }}
+      />
+
+      <Switch
+        isOn={runner['dial:appendApplicationPropertiesHeader']}
+        title={t(CreateI18nKey.ApplicationPropertiesHeader)}
+        switchId="appendApplicationPropertiesHeader"
+        onChange={(value: boolean) => {
+          onChangeRunner({ ...runner, 'dial:appendApplicationPropertiesHeader': value });
+        }}
       />
     </div>
   );
