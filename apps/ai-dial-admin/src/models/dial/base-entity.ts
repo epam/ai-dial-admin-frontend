@@ -44,5 +44,11 @@ export interface DialFeatures {
   folderAttachmentsSupported: boolean;
   seedSupported: boolean;
   allowResume: boolean;
+  addonsSupported: boolean;
   temperatureSupported: boolean;
+  accessibleByPerRequestKey: boolean;
+  parallelToolCallsSupported: boolean;
+  contentPartsSupported: boolean;
+  cacheSupported: boolean;
+  autoCachingSupported: boolean;
 }
