@@ -306,7 +306,7 @@ const EntityView: FC<Props> = ({
               ) : null} */}
               {activeTab === EntityViewTab.Properties && getPropertiesView()}
               {activeTab === EntityViewTab.Features && (
-                <EntityFeatures entity={selectedEntity} onChangeEntity={onChangeEntity} />
+                <EntityFeatures entity={selectedEntity} onChangeEntity={onChangeEntity} view={view} />
               )}
               {activeTab === EntityViewTab.Parameters && (
                 <ApplicationParametersTab
