@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
+import { ErrorType } from '@/src/types/error-type';
 import { getErrorForPath } from '../path-error';
-import { ErrorType } from '../../../types/error-type';
 
 describe('Utils :: validations :: getErrorForPath', () => {
   const mockT = vi.fn().mockReturnValue('Translated Text');
