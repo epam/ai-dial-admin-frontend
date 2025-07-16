@@ -14,7 +14,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { RadioButtonModel } from '@/src/models/radio-button';
 import InputWithReadonlyParts from '@/src/components/Common/Input/InputWithReadonlyParts';
-import { splitEndpoint } from './utils';
+import { splitEndpoint } from '@/src/components/ModelView/ModelProperties/utils';
 
 interface Props {
   model: DialModel;
