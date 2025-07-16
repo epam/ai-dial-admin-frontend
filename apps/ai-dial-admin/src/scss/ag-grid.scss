@@ -28,6 +28,11 @@
 
   @apply overflow-x-auto;
   .ag-header {
+    .ag-header-cell.align-right {
+      .ag-header-cell-label {
+        @apply justify-end;
+      }
+    }
     .ag-header-viewport,
     .ag-pinned-left-header {
       .ag-floating-filter {

@@ -2,7 +2,7 @@ import { FILTER_OPERATOR, FILTER_TYPE, FilterQuery } from '@/src/types/telemetry
 
 export interface TelemetryData {
   headers: string[];
-  data: string[][] | string[];
+  data?: string[][] | string[];
 }
 
 export interface TelemetryQuery {

@@ -285,6 +285,7 @@ const EntityView: FC<Props> = ({
             setErrorNotifications={setErrorNotifications}
           />
         </div>
+
         <div className="flex-1 overflow-auto mt-3 min-h-0">
           {jsonEditorEnabled && activeTab !== EntityViewTab.Parameters ? (
             <JSONEditor
@@ -297,9 +298,15 @@ const EntityView: FC<Props> = ({
             />
           ) : (
             <>
+              {/* TODO: waiting for BE fix - https://github.com/epam/ai-dial-admin-backend/issues/79 */}
+              {/* {view === ApplicationRoute.Models ||
+              view === ApplicationRoute.Applications ||
+              view === ApplicationRoute.Interceptors ? (
+                <EntityHeader entity={selectedEntity} />
+              ) : null} */}
               {activeTab === EntityViewTab.Properties && getPropertiesView()}
               {activeTab === EntityViewTab.Features && (
-                <EntityFeatures entity={selectedEntity} onChangeEntity={onChangeEntity} />
+                <EntityFeatures entity={selectedEntity} onChangeEntity={onChangeEntity} view={view} />
               )}
               {activeTab === EntityViewTab.Parameters && (
                 <ApplicationParametersTab

@@ -3,7 +3,7 @@ import { FC, ReactNode } from 'react';
 import classNames from 'classnames';
 
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
-import { PublicationsI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import { ACTION_I18N_KEYS } from '@/src/constants/publications';
 import { useI18n } from '@/src/locales/client';
 import { ActionType, Publication } from '@/src/models/dial/publications';
@@ -37,10 +37,7 @@ const BasePublicationProperties: FC<Props> = ({ publication, children }) => {
           <LabeledText label={t(PublicationsI18nKey.Author)} text={publication.author} />
         </div>
         <div className="flex flex-col sm:flex-row gap-8">
-          <LabeledText
-            label={t(PublicationsI18nKey.CreatedAt)}
-            text={formatDateTimeToLocalString(publication.createdAt)}
-          />
+          <LabeledText label={t(EntitiesI18nKey.CreatedAt)} text={formatDateTimeToLocalString(publication.createdAt)} />
           <LabeledText
             label={t(PublicationsI18nKey.FolderStorage)}
             text={removeTrailingSlash(decodeURIComponent(publication.folderId))}
