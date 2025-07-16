@@ -1,6 +1,6 @@
 import ApplicationRunnersView from '@/src/components/ApplicationRunners/ApplicationRunnersView';
-import Parameters from '@/src/components/ApplicationRunners/ConfigurationView/AppRunnerParameters';
-import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationView/AppRunnerProperties';
+import Parameters from '@/src/components/ApplicationRunners/ConfigurationView/Parameters';
+import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationView/Properties';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { render } from '@testing-library/react';
 import { fireEvent } from '@testing-library/dom';
@@ -76,7 +76,7 @@ describe('Components - Properties', () => {
       scheme = newScheme;
     };
 
-    const { baseElement, getByTestId } = render(<SchemeProperties entity={scheme} onChangeScheme={onChangeScheme} />);
+    const { baseElement, getByTestId } = render(<SchemeProperties runner={scheme} onChangeRunner={onChangeScheme} />);
 
     expect(baseElement).toBeTruthy();
 
