@@ -2,7 +2,7 @@ import { FC, useCallback } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Switch from '@/src/components/Common/Switch/Switch';
-import { CreateI18nKey, FeaturesI18nKey } from '@/src/constants/i18n';
+import { FeaturesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseEntity, DialFeatures } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';

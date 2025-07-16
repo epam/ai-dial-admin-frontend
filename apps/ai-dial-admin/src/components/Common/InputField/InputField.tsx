@@ -11,8 +11,6 @@ import Field from '@/src/components/Common/Field/Field';
 import InputWithIcon from '@/src/components/Common/Input/InputWithIcon';
 import InputWithText from '@/src/components/Common/Input/InputWithText';
 
-
-
 export interface InputFieldBaseProps extends FieldControlProps {
   placeholder?: string;
   value?: string | number;

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
+import { ErrorType } from '@/src/types/error-type';
 import { isDangerEndpoint, isValidEndpoint, isValidHttpUrl, getUrlError } from '../url-error';
-import { ErrorType } from '../../../types/error-type';
 
 describe('isValidHttpUrl', () => {
   test('returns true for valid http and https URLs', () => {

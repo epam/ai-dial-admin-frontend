@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
+import { ErrorType } from '@/src/types/error-type';
 import { getErrorForName } from '../name-error';
-import { ErrorType } from '../../../types/error-type';
 
 describe('Utils :: validations :: getErrorForName', () => {
   const mockT = vi.fn().mockReturnValue('Translated Text');
