@@ -1,7 +1,9 @@
-import { PopUpState } from '@/src/types/pop-up';
+import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+
+import { PopUpState } from '@/src/types/pop-up';
+
 import AddVersionModal from './AddVersionModal';
 
 describe('Common components - AddVersionModal', () => {
