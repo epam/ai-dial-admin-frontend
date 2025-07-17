@@ -1,4 +1,4 @@
-import { clearSchemeForEditor } from './AppRunnerProperties.utils';
+import { clearSchemeForEditor } from '../utils';
 import { describe, expect, test } from 'vitest';
 
 describe('ApplicationRunner :: clearSchemeForEditor', () => {

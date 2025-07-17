@@ -1,6 +1,5 @@
 import ApplicationRunnersView from '@/src/components/ApplicationRunners/ApplicationRunnersView';
-import Parameters from '@/src/components/ApplicationRunners/ConfigurationView/AppRunnerParameters';
-import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationView/AppRunnerProperties';
+import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationView/Properties';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { render } from '@testing-library/react';
 import { fireEvent } from '@testing-library/dom';
@@ -29,39 +28,6 @@ describe('Components - ApplicationRunnersView', () => {
   });
 });
 
-describe('Components - Parameters', () => {
-  test('Should render successfully', () => {
-    let scheme = {
-      'dial:applicationTypeDisplayName': 'name',
-      'dial:applicationTypeCompletionEndpoint': 'endpoint',
-      'dial:applicationTypeViewerUrl': 'url',
-      'dial:applicationTypeEditorUrl': 'url',
-    } as DialApplicationScheme;
-    const onChangeScheme = (newScheme: DialApplicationScheme) => {
-      scheme = newScheme;
-    };
-
-    const { baseElement, getByTestId } = render(<Parameters scheme={scheme} onChangeScheme={onChangeScheme} />);
-
-    expect(baseElement).toBeTruthy();
-
-    const endpointControl = getByTestId('completionEndPoint');
-    expect(scheme['dial:applicationTypeCompletionEndpoint']).toBe('endpoint');
-    fireEvent.change(endpointControl, { target: { value: 'New endpoint' } });
-    expect(scheme['dial:applicationTypeCompletionEndpoint']).toBe('New endpoint');
-
-    const viewerUrlControl = getByTestId('viewerUrl');
-    expect(scheme['dial:applicationTypeViewerUrl']).toBe('url');
-    fireEvent.change(viewerUrlControl, { target: { value: 'New url' } });
-    expect(scheme['dial:applicationTypeViewerUrl']).toBe('New url');
-
-    const editorUrlControl = getByTestId('editorUrl');
-    expect(scheme['dial:applicationTypeEditorUrl']).toBe('url');
-    fireEvent.change(editorUrlControl, { target: { value: 'New url' } });
-    expect(scheme['dial:applicationTypeEditorUrl']).toBe('New url');
-  });
-});
-
 describe('Components - Properties', () => {
   test('Should render successfully', () => {
     let scheme = {
@@ -76,7 +42,7 @@ describe('Components - Properties', () => {
       scheme = newScheme;
     };
 
-    const { baseElement, getByTestId } = render(<SchemeProperties entity={scheme} onChangeScheme={onChangeScheme} />);
+    const { baseElement, getByTestId } = render(<SchemeProperties runner={scheme} onChangeRunner={onChangeScheme} />);
 
     expect(baseElement).toBeTruthy();
 

@@ -13,6 +13,11 @@ export interface DialApplicationScheme {
   'dial:applicationTypeViewerUrl'?: string;
   'dial:applicationTypeDisplayName'?: string;
   'dial:applicationTypeCompletionEndpoint'?: string;
+  'dial:applicationTypeConfigurationEndpoint'?: string;
+  'dial:applicationTypeRateEndpoint'?: string;
+  'dial:applicationTypeTokenizeEndpoint'?: string;
+  'dial:applicationTypeTruncatePromptEndpoint'?: string;
+  'dial:appendApplicationPropertiesHeader'?: boolean;
   properties?: Record<string, unknown>;
   applications?: string[];
   topics?: string[];
