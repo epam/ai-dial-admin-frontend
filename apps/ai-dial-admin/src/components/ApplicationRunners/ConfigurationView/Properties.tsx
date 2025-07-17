@@ -1,24 +1,23 @@
 import { FC, useCallback, useState } from 'react';
 
-import { getModelsTopics } from '@/src/app/[lang]/models/actions';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import { CreateI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { FieldError } from '@/src/models/error';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import { getErrorForAppRunnerId } from './AppRunnerProperties.utils';
+import { getErrorForAppRunnerId } from './utils';
+import AppRunnerExtendedProperties from './ExtendedProperties';
 
 interface Props {
-  entity: DialApplicationScheme;
+  runner: DialApplicationScheme;
   isImmutable?: boolean;
-  onChangeScheme: (entity: DialApplicationScheme) => void;
+  onChangeRunner: (entity: DialApplicationScheme) => void;
 }
 
-const SchemeProperties: FC<Props> = ({ entity, isImmutable, onChangeScheme }) => {
+const SchemeProperties: FC<Props> = ({ runner, isImmutable, onChangeRunner }) => {
   const t = useI18n() as (t: string) => string;
 
   const [idError, setIdError] = useState<FieldError | null>(null);
@@ -27,34 +26,27 @@ const SchemeProperties: FC<Props> = ({ entity, isImmutable, onChangeScheme }) =>
   const onChangeId = useCallback(
     (id: string) => {
       setIdError(getErrorForAppRunnerId(id, t));
-      onChangeScheme({
-        ...entity,
+      onChangeRunner({
+        ...runner,
         $id: id.trim(),
       });
     },
-    [onChangeScheme, entity, t],
+    [onChangeRunner, runner, t],
   );
 
   const onChangeDescription = useCallback(
     (description: string) => {
       setDescriptionError(getErrorForDescription(description, t));
-      onChangeScheme({ ...entity, description });
+      onChangeRunner({ ...runner, description });
     },
-    [entity, onChangeScheme, t],
+    [runner, onChangeRunner, t],
   );
 
   const onChangeName = useCallback(
     (name: string) => {
-      onChangeScheme({ ...entity, 'dial:applicationTypeDisplayName': name });
+      onChangeRunner({ ...runner, 'dial:applicationTypeDisplayName': name });
     },
-    [entity, onChangeScheme],
-  );
-
-  const onChangeTopics = useCallback(
-    (topics: string[]) => {
-      onChangeScheme({ ...entity, topics });
-    },
-    [entity, onChangeScheme],
+    [runner, onChangeRunner],
   );
 
   return (
@@ -63,19 +55,19 @@ const SchemeProperties: FC<Props> = ({ entity, isImmutable, onChangeScheme }) =>
         elementId="id"
         fieldTitle={t(CreateI18nKey.IdTitle)}
         placeholder={t(CreateI18nKey.IdPlaceholder)}
-        value={entity.$id}
+        value={runner.$id}
         errorText={idError?.text}
         invalid={!!idError}
         onChange={onChangeId}
         disabled={isImmutable}
-        iconAfterInput={isImmutable && <CopyButton field={entity.$id} title={t(CreateI18nKey.IdTitle)} />}
+        iconAfterInput={isImmutable && <CopyButton field={runner.$id} title={t(CreateI18nKey.IdTitle)} />}
       />
 
       <TextInputField
         elementId="name"
         fieldTitle={t(CreateI18nKey.NameTitle)}
         placeholder={t(CreateI18nKey.NamePlaceholder)}
-        value={entity['dial:applicationTypeDisplayName']}
+        value={runner['dial:applicationTypeDisplayName']}
         onChange={onChangeName}
       />
 
@@ -86,22 +78,11 @@ const SchemeProperties: FC<Props> = ({ entity, isImmutable, onChangeScheme }) =>
         optional={true}
         errorText={descriptionError?.text}
         invalid={!!descriptionError}
-        value={entity.description}
+        value={runner.description}
         onChange={onChangeDescription}
       />
 
-      {isImmutable && (
-        <Multiselect
-          elementId="topics"
-          selectedItems={entity.topics}
-          getItems={getModelsTopics}
-          onChangeItems={onChangeTopics}
-          heading={t(TopicsI18nKey.Topics)}
-          title={t(TopicsI18nKey.Topics)}
-          addPlaceholder={t(TopicsI18nKey.AddTopicPlaceholder)}
-          addTitle={t(TopicsI18nKey.AddTopic)}
-        />
-      )}
+      {isImmutable && <AppRunnerExtendedProperties runner={runner} onChangeRunner={onChangeRunner} />}
     </div>
   );
 };

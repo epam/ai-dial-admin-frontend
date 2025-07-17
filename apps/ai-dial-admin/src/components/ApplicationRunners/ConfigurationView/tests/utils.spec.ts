@@ -1,4 +1,4 @@
-import { clearSchemeForEditor, getErrorForAppRunnerId } from './AppRunnerProperties.utils';
+import { clearSchemeForEditor, getErrorForAppRunnerId } from '../utils';
 import { ErrorType } from '@/src/types/error-type';
 import { describe, expect, test } from 'vitest';
 

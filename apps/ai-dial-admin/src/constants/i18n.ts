@@ -287,6 +287,7 @@ export enum CreateI18nKey {
   SchemeTitle = 'CreateEntity.Scheme',
   ErrorUnique = 'CreateEntity.ErrorUnique',
   InterceptorTemplate = 'CreateEntity.InterceptorTemplate',
+  ApplicationPropertiesHeader = 'CreateEntity.ApplicationPropertiesHeader',
 }
 
 export enum UpstreamEndpointsI18nKey {
