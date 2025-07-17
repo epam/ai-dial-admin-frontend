@@ -249,6 +249,7 @@ export default {
     Scheme: 'Scheme',
     InterceptorTemplate: 'Create Interceptor Template',
     ErrorUnique: 'This field must be unique.',
+    ApplicationPropertiesHeader: 'Application properties header',
     deploymentId: {
       title: 'Deployment ID',
       placeholder: 'Enter deployment ID',

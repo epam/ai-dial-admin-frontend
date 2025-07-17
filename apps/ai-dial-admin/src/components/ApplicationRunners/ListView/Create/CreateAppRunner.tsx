@@ -2,8 +2,8 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import { createApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
-import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationView/AppRunnerProperties';
-import { getErrorForAppRunnerId } from '@/src/components/ApplicationRunners/ConfigurationView/AppRunnerProperties.utils';
+import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationView/Properties';
+import { getErrorForAppRunnerId } from '@/src/components/ApplicationRunners/ConfigurationView/utils';
 import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
@@ -65,7 +65,7 @@ const CreateScheme: FC<Props> = ({ modalState, onClose, route }) => {
   return (
     <Popup onClose={onClose} heading={t(CreateI18nKey.ApplicationRunner)} portalId="CreateRunner" state={modalState}>
       <div className="flex flex-col px-6 py-4">
-        <SchemeProperties entity={currentScheme} onChangeScheme={onChangeScheme} />
+        <SchemeProperties runner={currentScheme} onChangeRunner={onChangeScheme} />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
         <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />

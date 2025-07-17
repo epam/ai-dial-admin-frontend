@@ -18,9 +18,9 @@ import { TabModel } from '@/src/models/tab';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
-import AppRunnerApplications from './ConfigurationView/AppRunnerApplications';
-import SchemeParameters from './ConfigurationView/AppRunnerParameters';
-import SchemeProperties from './ConfigurationView/AppRunnerProperties';
+import AppRunnerApplications from './ConfigurationView/Applications';
+import SchemeParameters from './ConfigurationView/Parameters';
+import SchemeProperties from './ConfigurationView/Properties';
 
 interface Props {
   originalScheme: DialApplicationScheme;
@@ -128,7 +128,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
           <>
             {activeTab === EntityViewTab.Properties && (
               <div className="pt-3 w-full lg:w-[35%]">
-                <SchemeProperties entity={selectedScheme} isImmutable={true} onChangeScheme={onChangeScheme} />
+                <SchemeProperties runner={selectedScheme} isImmutable={true} onChangeRunner={onChangeScheme} />
               </div>
             )}
 
