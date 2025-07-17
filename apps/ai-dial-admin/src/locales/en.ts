@@ -157,6 +157,8 @@ export default {
     MaxRetryAttempts: 'Max retry attempts',
     CreatedAt: 'Created At',
     UpdatedAt: 'Updated At',
+    Maintainer: 'Maintainer',
+    MaintainerPlaceholder: 'Enter maintainer',
   },
   DeleteEntity: {
     Title: 'Confirm Deleting ',

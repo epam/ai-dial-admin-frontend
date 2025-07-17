@@ -14,7 +14,7 @@ export interface DialFile {
   name?: string;
   folderId: string;
   updateTime: number;
-  author: string;
+  author?: string;
   nextToken?: string;
   extension?: string;
   id?: string;

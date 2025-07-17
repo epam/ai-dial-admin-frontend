@@ -9,6 +9,7 @@ export interface DialBaseEntity extends DialBaseNamedEntity {
   createdAt?: number;
   updatedAt?: number;
   adapter?: string;
+  author?: string;
   baseEndpoint?: string;
   displayName?: string;
   iconUrl?: string;
