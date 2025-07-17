@@ -334,6 +334,10 @@ export default {
       title: 'Completion endpoint',
       placeholder: 'Enter Completion endpoint',
     },
+    configurationEndpoint: {
+      title: 'Configuration endpoint',
+      placeholder: 'Enter Configuration endpoint',
+    },
     editorUrl: {
       title: 'Editor URL',
       placeholder: 'Enter Editor URL',

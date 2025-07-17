@@ -13,7 +13,7 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { DialEndpointExtraData, DialModelEndpoint } from '@/src/models/dial/model';
-import { isDangerEndpoint, isValidEndpoint } from '@/src/utils/validation/is-valid-url';
+import { isDangerEndpoint, isValidEndpoint } from '@/src/utils/validation/url-error';
 import ExtraDataField from './ExtraData/ExtraDataField';
 
 interface Props {

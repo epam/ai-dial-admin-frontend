@@ -9,7 +9,7 @@ import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import { isValidEndpoint } from '@/src/utils/validation/is-valid-url';
+import { isValidEndpoint } from '@/src/utils/validation/url-error';
 import { getErrorForName } from '@/src/utils/validation/name-error';
 import { isValidAllRoutePaths } from '@/src/utils/validation/path-error';
 
