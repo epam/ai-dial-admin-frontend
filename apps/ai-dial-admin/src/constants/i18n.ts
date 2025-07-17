@@ -283,6 +283,8 @@ export enum CreateI18nKey {
   EditorUrlPlaceholder = 'CreateEntity.editorUrl.placeholder',
   CompletionEndpointTitle = 'CreateEntity.completionEndpoint.title',
   CompletionEndpointPlaceholder = 'CreateEntity.completionEndpoint.placeholder',
+  ConfigurationEndpointTitle = 'CreateEntity.configurationEndpoint.title',
+  ConfigurationEndpointPlaceholder = 'CreateEntity.configurationEndpoint.placeholder',
   RunnerName = 'CreateEntity.runner.title',
   RunnerPlaceholder = 'CreateEntity.runner.placeholder',
   NameVersionCombinationError = 'CreateEntity.nameVersionCombinationError',

@@ -1,5 +1,5 @@
-import { ErrorType } from '@/src/types/error-type';
 import { describe, expect, test, vi } from 'vitest';
+import { ErrorType } from '@/src/types/error-type';
 import { getErrorForPath } from '../path-error';
 
 describe('Utils :: validations :: getErrorForPath', () => {

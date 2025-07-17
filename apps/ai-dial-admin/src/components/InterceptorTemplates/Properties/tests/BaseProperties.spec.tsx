@@ -2,13 +2,19 @@ import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import BaseProperties from './BaseProperties';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { InterceptorTemplate } from '@/src/models/interceptor-template';
+
+import BaseProperties from '../BaseProperties';
 
 describe('Interceptor Template BaseProperties', () => {
-  const template = {
+  const template: InterceptorTemplate = {
     name: 'test-template',
     displayName: 'Test Template',
-    description: 'desc',
+    description: 'Test description',
+    source: SOURCE_TYPE.EXTERNAL_ENDPOINT,
+    completionEndpoint: 'https://example.com/completion',
+    configurationEndpoint: 'https://example.com/configuration',
   };
   const names = ['test-template', 'other-template'];
 
