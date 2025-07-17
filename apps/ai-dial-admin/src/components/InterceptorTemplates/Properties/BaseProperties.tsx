@@ -13,7 +13,7 @@ import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 interface Props {
   template: InterceptorTemplate;
   setTemplate: (template: InterceptorTemplate) => void;
-  names: string[];
+  names?: string[];
   isImmutable?: boolean;
 }
 

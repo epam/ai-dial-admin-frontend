@@ -53,7 +53,7 @@ interface Props<T> {
   context?: () => PromptFolderContextType | FileFolderContextType;
 }
 
-const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationScheme>({
+const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationScheme | InterceptorTemplate>({
   data,
   baseColumns,
   names,
@@ -223,11 +223,11 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
     if (route === ApplicationRoute.InterceptorTemplates) {
       return (
         <DuplicateInterceptorTemplate
+          template={currentEntity as InterceptorTemplate}
           onDuplicate={onDuplicate as (template: InterceptorTemplate) => Promise<ServerActionResponse>}
           modalState={modalState}
-          names={names}
-          template={currentEntity as InterceptorTemplate}
           onClose={handleModalClose}
+          names={names}
         />
       );
     }
