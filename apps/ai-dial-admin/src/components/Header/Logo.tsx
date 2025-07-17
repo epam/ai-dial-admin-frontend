@@ -11,17 +11,17 @@ const Logo: FC = () => {
   const { currentThemeLogo } = useTheme();
 
   return (
-    <div className="flex flex-row text-primary items-center flex-1 lg:flex-none min-w-0 py-3 px-4 justify-center lg:justify-start">
+    <div className="absolute left-1/2 lg:left-[120px] top-0 flex h-full -translate-x-1/2 justify-center text-primary">
       {currentThemeLogo ? (
         <Link
           href="/"
           aria-label="Admin logo"
-          style={{ backgroundImage: `url(${getIconPath(currentThemeLogo)})` }}
-          className="bg-right bg-no-repeat min-w-[110px] h-full"
+          style={{ backgroundImage: `url(/images/logo-dark-theme.png)` }}
+          className="bg-right bg-no-repeat min-w-[110px] h-full bg-contain"
         ></Link>
       ) : null}
-      <Link href="/" aria-label="Admin title">
-        <h2 className="ml-2 mt-[-1.22px]">{t('Admin')}</h2>
+      <Link className="relative" href="/" aria-label="Admin title">
+        <h2 className="ml-2 absolute top-[10px]">{t('Admin')}</h2>
       </Link>
     </div>
   );
