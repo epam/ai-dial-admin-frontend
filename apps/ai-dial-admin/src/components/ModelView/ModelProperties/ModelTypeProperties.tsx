@@ -53,7 +53,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
 
   const onChangeEndpoint = useCallback(
     (value: string) => {
-      onChangeModel({ ...model, alias: value });
+      onChangeModel({ ...model, endpointDeploymentName: value });
     },
     [model, onChangeModel],
   );
@@ -73,7 +73,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
 
       <InputWithReadonlyParts
         inputId="endpoint"
-        value={model.alias || endpoint}
+        value={model.endpointDeploymentName || endpoint}
         fullValue={model.endpoint}
         title={t(EntitiesI18nKey.Endpoint)}
         postfixPart={postfixPart}

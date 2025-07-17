@@ -2,7 +2,7 @@ import { DialBaseEntity } from './base-entity';
 
 export interface DialModel extends DialBaseEntity {
   type?: DialModelType;
-  alias?: string;
+  endpointDeploymentName?: string;
   upstreams?: DialModelEndpoint[];
   tokenizerModel?: string;
   overrideName?: string;
