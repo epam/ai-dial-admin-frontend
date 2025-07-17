@@ -25,7 +25,7 @@ const Header: FC<Props> = ({ isEnableAuth }) => {
   }, [sidebarOpen]);
 
   return (
-    <header className={classNames('z-40 flex w-full border-b border-tertiary bg-layer-3')}>
+    <header className={classNames('z-40 flex w-full border-b border-tertiary bg-layer-3 relative justify-between')}>
       <div className="flex">
         <Button
           cssClass="py-3 px-5 border-r border-r-tertiary focus-within:outline-offset-[-1px] focus:text-accent-primary hover:text-accent-primary"
