@@ -134,6 +134,8 @@ export enum EntitiesI18nKey {
   MaxRetryAttempts = 'Entities.MaxRetryAttempts',
   CreatedAt = 'Entities.CreatedAt',
   UpdatedAt = 'Entities.UpdatedAt',
+  Maintainer = 'Entities.Maintainer',
+  MaintainerPlaceholder = 'Entities.MaintainerPlaceholder',
 }
 
 export enum DeleteI18nKey {

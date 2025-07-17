@@ -1,27 +1,22 @@
 'use client';
 
 import { uniq } from 'lodash';
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 
-import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/AutocompleteField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import { CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey } from '@/src/constants/i18n';
 import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
-import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialAdapter } from '@/src/models/dial/adapter';
-import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
+import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { FieldError } from '@/src/models/error';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getErrorNotification } from '@/src/utils/notification';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
 import { getErrorForName } from '@/src/utils/validation/name-error';
-import AdapterSelector from './AdapterSelector/AdapterSelector';
+import AdditionalProperties from './AdditionalProperties';
 import { getDisplayNameErrorKeyPerView, getVersionErrorKeyPerView, isWrongLength } from './error-title';
 import RunnerSelector from './RunnerSelector/RunnerSelector';
 
@@ -45,10 +40,7 @@ const EntityMainProperties: FC<Props> = ({
   isEntityImmutable = false,
 }) => {
   const t = useI18n() as (str: string, param?: Record<string, number>) => string;
-  const { showNotification } = useNotification();
-  const showNotificationRef = useRef(showNotification);
 
-  const [adapters, setAdapters] = useState<DialAdapter[]>([]);
   const [isVersionOptional, setIsVersionOptional] = useState(true);
 
   const [nameError, setNameError] = useState<FieldError | null>(null);
@@ -59,19 +51,6 @@ const EntityMainProperties: FC<Props> = ({
 
   const [isValidVersion, setIsValidVersion] = useState(true);
   const [versionError, setVersionError] = useState<string | undefined>(void 0);
-
-  const applicationRunner = runners?.find((runner) => runner.$id === (entity as DialApplication).customAppSchemaId);
-
-  const isShowCompletionEndpoint = view === ApplicationRoute.Applications && !!applicationRunner;
-  useEffect(() => {
-    getModelsAdapters().then((res) => {
-      if (res.success) {
-        setAdapters((res.response as DialAdapter[]) || []);
-      } else {
-        showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage));
-      }
-    });
-  }, [setAdapters]);
 
   useEffect(() => {
     if (isUniqueNameError) {
@@ -125,20 +104,6 @@ const EntityMainProperties: FC<Props> = ({
       }
     },
     [entity, onChangeEntity, displayNameError, t, view, isVersionOptional, isValidDisplayName, setIsValidDisplayName],
-  );
-
-  const onChangeAdapter = useCallback(
-    (adapter: string) => {
-      onChangeEntity({ ...entity, adapter });
-    },
-    [entity, onChangeEntity],
-  );
-
-  const onChangeEndpoint = useCallback(
-    (endpoint: string) => {
-      onChangeEntity({ ...entity, endpoint });
-    },
-    [entity, onChangeEntity],
   );
 
   const onChangeDescription = useCallback(
@@ -206,26 +171,13 @@ const EntityMainProperties: FC<Props> = ({
         elementCssClass="w-full"
       />
 
-      {isShowCompletionEndpoint ? (
-        isEntityImmutable && (
-          <ReadonlyField
-            value={applicationRunner['dial:applicationTypeCompletionEndpoint']}
-            title={t(CreateI18nKey.CompletionEndpointTitle)}
-          />
-        )
-      ) : view === ApplicationRoute.Models ? (
-        <AdapterSelector adapters={adapters} onChangeAdapter={onChangeAdapter} model={entity} />
-      ) : (
-        view !== ApplicationRoute.Assistants && (
-          <TextInputField
-            elementId="adapter"
-            fieldTitle={t(EntitiesI18nKey.Endpoint)}
-            placeholder={t(EntitiesI18nKey.EndpointPlaceholder)}
-            value={entity.endpoint}
-            onChange={onChangeEndpoint}
-          />
-        )
-      )}
+      <AdditionalProperties
+        entity={entity}
+        onChangeEntity={onChangeEntity}
+        view={view}
+        isEntityImmutable={isEntityImmutable}
+        runners={runners}
+      />
     </div>
   );
 };
