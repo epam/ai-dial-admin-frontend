@@ -11,6 +11,7 @@ import { logger } from '@/src/server/logger';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 
 import InterceptorTemplateView from '@/src/components/InterceptorTemplates/View/View';
+import Page403 from '@/src/components/Page403/Page403';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +28,9 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   try {
     interceptorTemplate = await getInterceptorTemplate((await params.params).id);
+    if (interceptorTemplate === void 0) {
+      return <Page403 />;
+    }
   } catch (e) {
     logger.error('Getting interceptor template view data error', e);
   }
