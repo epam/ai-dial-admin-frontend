@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { isDangerEndpoint, isValidEndpoint, isValidHttpUrl } from '../is-valid-url';
+import { ErrorType } from '@/src/types/error-type';
+import { isDangerEndpoint, isValidEndpoint, isValidHttpUrl, getUrlError } from '../url-error';
 
 describe('isValidHttpUrl', () => {
   test('returns true for valid http and https URLs', () => {
@@ -43,5 +44,23 @@ describe('isDangerEndpoint', () => {
     expect(isDangerEndpoint('https://example.com')).toBe(false);
     expect(isDangerEndpoint('ftp://example.com')).toBe(false);
     expect(isDangerEndpoint('')).toBe(false);
+  });
+});
+
+describe('getUrlError', () => {
+  test('returns an error for invalid url', () => {
+    const url = 'invalid-url';
+    const t = (str: string) => str; // Mock translation function
+    const error = getUrlError(url, t);
+
+    expect(error.type).toEqual(ErrorType.INVALID);
+    expect(error.text).toEqual('CreateEntity.id.UrlError');
+  });
+  test('returns null for valid url', () => {
+    const url = 'https://example.com';
+    const t = (str: string) => str; // Mock translation function
+    const error = getUrlError(url, t);
+
+    expect(error).toBeNull();
   });
 });

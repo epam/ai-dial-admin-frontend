@@ -16,6 +16,7 @@ import { getErrorForName } from '@/src/utils/validation/name-error';
 import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 import BaseProperties from '@/src/components/InterceptorTemplates/Properties/BaseProperties';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 
 interface Props {
   route: ApplicationRoute;
@@ -33,6 +34,7 @@ const Create: FC<Props> = ({ route, onClose, modalState, names }) => {
     name: '',
     displayName: '',
     description: '',
+    source: SOURCE_TYPE.EXTERNAL_ENDPOINT,
   });
   const [isValid, setIsValid] = useState(false);
 
