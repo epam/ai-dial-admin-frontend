@@ -4,4 +4,5 @@ export interface DropdownItemsModel {
   id: string;
   name: string;
   icon?: ReactNode;
+  description?: string;
 }
