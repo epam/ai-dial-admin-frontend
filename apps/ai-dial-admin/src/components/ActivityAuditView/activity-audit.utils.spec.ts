@@ -2,7 +2,7 @@ import { ActivityAuditDiff } from '@/src/models/dial/activity-audit';
 import { DialRoleLimits } from '@/src/models/dial/base-entity';
 import { describe, expect, test } from 'vitest';
 import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus } from '@/src/types/activity-audit';
-import { EntityParameterKeys } from './activity-audit';
+import { EntityParameterKeys } from './utils';
 import {
   compareInterceptors,
   compareRoleLimits,

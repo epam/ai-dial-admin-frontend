@@ -1,6 +1,7 @@
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import PasswordCellRenderer from './CellRenderer/PasswordCellRenderer';
 import ExtraDataCellRenderer from './CellRenderer/ExtraDataCellRenderer';
+import { FeaturesI18nKey } from '@/src/constants/i18n';
 
 export const INTERCEPTORS_DIFF_COLUMNS = [
   { field: 'parameter', headerName: 'Order', width: 90, maxWidth: 90 },
@@ -41,8 +42,16 @@ export const RESOURCE_DIFF_COLUMNS = (t: (stringToTranslate: string) => string):
 ];
 
 export const formatParameter = (value: string, t: (stringToTranslate: string) => string) => {
-  const key = ParameterNamesI18nKey[value as keyof typeof ParameterNamesI18nKey];
-  return key ? t(key) : value;
+  const parametersKey = ParameterNamesI18nKey[value as keyof typeof ParameterNamesI18nKey];
+  if (parametersKey) {
+    return t(parametersKey);
+  }
+  const featuresKey = FeaturesI18nKey[value as keyof typeof FeaturesI18nKey];
+
+  if (featuresKey) {
+    return t(featuresKey);
+  }
+  return value;
 };
 
 export enum EntityParameterKeys {
@@ -73,27 +82,15 @@ export enum ParameterNamesI18nKey {
   isPublic = 'ParameterNames.isPublic',
   defaultRoleLimit = 'ParameterNames.defaultRoleLimit',
   name = 'ParameterNames.name',
+  author = 'ParameterNames.author',
   endpoint = 'ParameterNames.endpoint',
   displayName = 'ParameterNames.displayName',
   displayVersion = 'ParameterNames.displayVersion',
+  adapter = 'ParameterNames.adapter',
   iconUrl = 'ParameterNames.iconUrl',
   description = 'ParameterNames.description',
   forwardAuthToken = 'ParameterNames.forwardAuthToken',
   features = 'ParameterNames.features',
-  rateEndpoint = 'ParameterNames.rateEndpoint',
-  tokenizeEndpoint = 'ParameterNames.tokenizeEndpoint',
-  truncatePromptEndpoint = 'ParameterNames.truncatePromptEndpoint',
-  configurationEndpoint = 'ParameterNames.configurationEndpoint',
-  systemPromptSupported = 'ParameterNames.systemPromptSupported',
-  toolsSupported = 'ParameterNames.toolsSupported',
-  seedSupported = 'ParameterNames.seedSupported',
-  urlAttachmentsSupported = 'ParameterNames.urlAttachmentsSupported',
-  folderAttachmentsSupported = 'ParameterNames.folderAttachmentsSupported',
-  allowResume = 'ParameterNames.allowResume',
-  accessibleByPerRequestKey = 'ParameterNames.accessibleByPerRequestKey',
-  contentPartsSupported = 'ParameterNames.contentPartsSupported',
-  temperatureSupported = 'ParameterNames.temperatureSupported',
-  addonsSupported = 'ParameterNames.addonsSupported',
   inputAttachmentTypes = 'ParameterNames.inputAttachmentTypes',
   maxInputAttachments = 'ParameterNames.maxInputAttachments',
   defaults = 'ParameterNames.defaults',
@@ -133,6 +130,11 @@ export enum ParameterNamesI18nKey {
   'dial:applicationTypeDisplayName' = 'ParameterNames.applicationTypeDisplayName',
   'dial:applicationTypeEditorUrl' = 'ParameterNames.applicationTypeEditorUrl',
   'dial:applicationTypeViewerUrl' = 'ParameterNames.applicationTypeViewerUrl',
+  'dial:applicationTypeConfigurationEndpoint' = 'ParameterNames.applicationTypeConfigurationEndpoint',
+  'dial:applicationTypeRateEndpoint' = 'ParameterNames.applicationTypeRateEndpoint',
+  'dial:applicationTypeTokenizeEndpoint' = 'ParameterNames.applicationTypeTokenizeEndpoint',
+  'dial:applicationTypeTruncatePromptEndpoint' = 'ParameterNames.applicationTypeTruncatePromptEndpoint',
+  'dial:appendApplicationPropertiesHeader' = 'ParameterNames.appendApplicationPropertiesHeader',
   grantedKeys = 'ParameterNames.grantedKeys',
   createdAt = 'ParameterNames.createdAt',
   expiresAt = 'ParameterNames.expiresAt',

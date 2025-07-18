@@ -14,7 +14,7 @@ import {
   INTERCEPTORS_DIFF_COLUMNS,
   RESOURCE_DIFF_COLUMNS,
   ROLE_LIMITS_DIFF_COLUMNS,
-} from './activity-audit';
+} from './utils';
 
 const roleLimitsKeys = ['minute', 'day', 'week', 'month'];
 const dateKeys = ['expiresAt', 'keyGeneratedAt', 'createdAt'];

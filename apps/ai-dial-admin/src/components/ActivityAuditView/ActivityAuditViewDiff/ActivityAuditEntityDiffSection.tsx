@@ -2,7 +2,7 @@ import { FC, useCallback, useState } from 'react';
 
 import classNames from 'classnames';
 
-import { ParameterNamesI18nKey } from '@/src/components/ActivityAuditView/activity-audit';
+import { ParameterNamesI18nKey } from '@/src/components/ActivityAuditView/utils';
 import { getDiffCount } from '@/src/components/ActivityAuditView/activity-audit.utils';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
