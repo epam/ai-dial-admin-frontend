@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { getModelsTopics } from '@/src/app/[lang]/models/actions';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
@@ -10,11 +10,15 @@ import EntityAttachments from '@/src/components/EntityView/Properties/EntityAtta
 import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
 import { EntitiesI18nKey, ModelViewI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
 import { RadioFieldOrientation } from '@/src/types/radio-orientation';
+import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import { useI18n } from '@/src/locales/client';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { RadioButtonModel } from '@/src/models/radio-button';
 import InputWithReadonlyParts from '@/src/components/Common/Input/InputWithReadonlyParts';
 import { splitEndpoint } from '@/src/components/ModelView/ModelProperties/utils';
+import { DialAdapter } from '@/src/models/dial/adapter';
+import { useNotification } from '@/src/context/NotificationContext';
+import { getErrorNotification } from '@/src/utils/notification';
 
 interface Props {
   model: DialModel;
@@ -23,12 +27,30 @@ interface Props {
 
 const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
   const t = useI18n();
-  const [prefixPart, postfixPart] = splitEndpoint(model);
+  const { showNotification } = useNotification();
+  const showNotificationRef = useRef(showNotification);
+
+  const [adapters, setAdapters] = useState<DialAdapter[]>([]);
+
+  const [prefixPart, postfixPart] = useMemo(() => {
+    const [prefix, postfix] = splitEndpoint(model, adapters);
+    return [prefix, postfix];
+  }, [model, adapters]);
 
   const modelTypeRadio: RadioButtonModel[] = [
     { id: DialModelType.Chat, name: t(ModelViewI18nKey.Chat) },
     { id: DialModelType.Embedding, name: t(ModelViewI18nKey.Embedding) },
   ];
+
+  useEffect(() => {
+    getModelsAdapters().then((res) => {
+      if (res.success) {
+        setAdapters((res.response as DialAdapter[]) || []);
+      } else {
+        showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage));
+      }
+    });
+  }, [setAdapters]);
 
   const onChangeType = useCallback(
     (type: string) => {
