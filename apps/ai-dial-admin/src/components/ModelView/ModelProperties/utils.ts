@@ -1,10 +1,10 @@
 import { DialModel, DialModelType } from '@/src/models/dial/model';
+import { DialAdapter } from '@/src/models/dial/adapter';
 
-const deploymentsPrefix = '/deployments/';
-
-export const splitEndpoint = (model: DialModel): [string, string] => {
+export const splitEndpoint = (model: DialModel, adapters: DialAdapter[]): [string, string] => {
   const postfix = model.type === DialModelType.Chat ? '/chat/completions' : '/embeddings';
-  const prefix = `${model.endpoint?.split(deploymentsPrefix)[0] || ''}${deploymentsPrefix}`;
+  const endpoint = model.endpoint?.split(postfix)[0];
+  const adapter = adapters.find((a) => endpoint?.startsWith(a.baseEndpoint || ''));
 
-  return [prefix, postfix];
+  return [adapter?.baseEndpoint || '', postfix];
 };
