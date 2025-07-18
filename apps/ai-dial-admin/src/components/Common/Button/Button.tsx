@@ -13,6 +13,7 @@ interface Props {
   ref?: Ref<HTMLButtonElement>;
   dataTestId?: string;
   hideTitleOnMobile?: boolean;
+  ariaLabel?: string;
 }
 
 const Button: FC<Props> = ({
@@ -25,6 +26,7 @@ const Button: FC<Props> = ({
   iconAfter,
   iconBefore,
   hideTitleOnMobile,
+  ariaLabel,
 }) => {
   const btnTextClassNames = classNames(
     'small-text-semi',
@@ -42,7 +44,7 @@ const Button: FC<Props> = ({
       className={btnClassNames}
       onClick={(e) => onClick?.(e)}
       disabled={disable}
-      aria-label={title}
+      aria-label={title || ariaLabel}
     >
       {iconBefore}
       {title && <span className={btnTextClassNames}>{title}</span>}

@@ -1,5 +1,5 @@
 import { IconChevronDown } from '@tabler/icons-react';
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import Dropdown from '@/src/components/Common/Dropdown/Dropdown';
@@ -40,6 +40,19 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
     }
     setLogoutConfirmationState(PopUpState.Opened);
   };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const timeoutId = window.setTimeout(() => {
+      const guards = document.querySelectorAll('[data-floating-ui-focus-guard]');
+      guards.forEach((guard) => {
+        guard.setAttribute('tabindex', '-1');
+      });
+    }, 10);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isOpen]);
 
   return (
     <>
