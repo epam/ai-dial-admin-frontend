@@ -23,7 +23,7 @@ interface Props {
 
 const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
   const t = useI18n();
-  const [prefixPart, endpoint, postfixPart] = splitEndpoint(model);
+  const [prefixPart, postfixPart] = splitEndpoint(model);
 
   const modelTypeRadio: RadioButtonModel[] = [
     { id: DialModelType.Chat, name: t(ModelViewI18nKey.Chat) },
@@ -73,7 +73,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
 
       <InputWithReadonlyParts
         inputId="endpoint"
-        value={model.endpointDeploymentName || endpoint}
+        value={model.endpointDeploymentName}
         fullValue={model.endpoint}
         title={t(EntitiesI18nKey.Endpoint)}
         postfixPart={postfixPart}
