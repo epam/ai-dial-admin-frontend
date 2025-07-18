@@ -21,7 +21,7 @@ const Logo: FC = () => {
         ></Link>
       ) : null}
       <Link className="relative" href="/" aria-label="Admin title">
-        <h2 className="ml-2 absolute top-[10px]">{t('Admin')}</h2>
+        <h2 className="ml-2 absolute top-[12px]">{t('Admin')}</h2>
       </Link>
     </div>
   );
