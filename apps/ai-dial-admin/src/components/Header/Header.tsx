@@ -34,7 +34,7 @@ const Header: FC<Props> = ({ isEnableAuth }) => {
         />
       </div>
       <Logo />
-      <div className="lg:flex-1 lg:min-w-0 lg:flex lg:flex-row lg:items-center">
+      <div className="lg:flex-1 lg:min-w-0 lg:flex lg:flex-row lg:items-center lg:pl-[200px]">
         {!isTabletScreen && <Breadcrumbs mobile={false} />}
       </div>
 
