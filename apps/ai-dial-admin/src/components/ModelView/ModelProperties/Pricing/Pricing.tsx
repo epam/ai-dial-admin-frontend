@@ -25,6 +25,7 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
     {
       id: PricingType.Token,
       name: t(ModelViewI18nKey.Tokens),
+      description: t(ModelViewI18nKey.PerMillion),
     },
     {
       id: PricingType.CharWithoutWhitespace,
@@ -33,6 +34,8 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
   ];
 
   const activeType = model.pricing?.unit || BasicI18nKey.None;
+  const isTokenType = activeType === PricingType.Token;
+
   const pricingContainerClasses = classNames(
     'flex flex-col gap-y-4 justify-center rounded border border-primary p-3 mb-4',
     'lg:w-[50%] lg:border-none lg:p-0 lg:flex-row lg:gap-x-2 lg:items-center lg:mb-0',
@@ -53,16 +56,18 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
 
   const onChangeCompletion = useCallback(
     (completion: number | string) => {
-      onChangeModel({ ...model, pricing: { ...model.pricing, completion: completion.toString() } });
+      const value = (isTokenType ? +completion / 1000000 : completion).toString();
+      onChangeModel({ ...model, pricing: { ...model.pricing, completion: value } });
     },
-    [onChangeModel, model],
+    [isTokenType, onChangeModel, model],
   );
 
   const onChangePrompt = useCallback(
     (prompt: number | string) => {
-      onChangeModel({ ...model, pricing: { ...model.pricing, prompt: prompt.toString() } });
+      const value = (isTokenType ? +prompt / 1000000 : prompt).toString();
+      onChangeModel({ ...model, pricing: { ...model.pricing, prompt: value } });
     },
-    [onChangeModel, model],
+    [isTokenType, onChangeModel, model],
   );
 
   return (
@@ -78,7 +83,7 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
       <NumberInputField
         elementId="promptsPrice"
         fieldTitle={t(ModelViewI18nKey.PromptPrice)}
-        value={model.pricing?.prompt}
+        value={isTokenType ? Number(model.pricing?.prompt) * 1000000 : model.pricing?.prompt}
         containerCssClass="w-[120px] lg:w-auto"
         onChange={onChangePrompt}
         iconBeforeInput={
@@ -99,7 +104,7 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
         containerCssClass="w-[120px] lg:w-auto"
         disabled={activeType === BasicI18nKey.None}
         onChange={onChangeCompletion}
-        value={model.pricing?.completion}
+        value={isTokenType ? Number(model.pricing?.completion) * 1000000 : model.pricing?.completion}
       />
     </div>
   );
