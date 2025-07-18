@@ -33,8 +33,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
   const [adapters, setAdapters] = useState<DialAdapter[]>([]);
 
   const [prefixPart, postfixPart] = useMemo(() => {
-    const [prefix, postfix] = splitEndpoint(model, adapters);
-    return [prefix, postfix];
+    return splitEndpoint(model, adapters);
   }, [model, adapters]);
 
   const modelTypeRadio: RadioButtonModel[] = [
