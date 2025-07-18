@@ -107,8 +107,7 @@ export default {
     ExportConfig: 'Export Config',
 
     MLOps: 'ML Ops',
-    MCPServers: 'MCP Servers',
-    MCPInstances: 'MCP Instances',
+    MCPDeployments: 'MCP deployments',
     InterceptorDeployments: 'Interceptor deployments',
     InterceptorTemplates: 'Interceptor Templates',
 
