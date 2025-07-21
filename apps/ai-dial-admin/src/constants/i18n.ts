@@ -534,6 +534,7 @@ export enum PromptsI18nKey {
   Import = 'Prompts.Import',
   NewVersionCreate = 'Prompts.NewVersionCreate',
   NewVersionSave = 'Prompts.NewVersionSave',
+  NewVersionSaveDescription = 'Prompts.NewVersionSaveDescription',
 }
 
 export enum ImportI18nKey {

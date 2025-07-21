@@ -600,6 +600,7 @@ export default {
     Import: 'Import prompts',
     NewVersionCreate: 'Create new version',
     NewVersionSave: 'Save as New Version',
+    NewVersionSaveDescription: 'Create a new version to save changes.',
   },
   Keys: {
     SaveWithoutRoles: 'Save without adding Roles',
