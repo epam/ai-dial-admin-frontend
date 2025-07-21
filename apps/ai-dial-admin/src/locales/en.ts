@@ -353,6 +353,7 @@ export default {
     Create: 'Create',
     Update: 'Update',
     Save: 'Save',
+    SaveAsNewVersion: 'Save as new version',
     Discard: 'Discard',
     Apply: 'Apply',
     Import: 'Import',
@@ -597,6 +598,8 @@ export default {
     DuplicationType: 'Duplication type',
     Export: 'Export prompts',
     Import: 'Import prompts',
+    NewVersionCreate: 'Create new version',
+    NewVersionSave: 'Save as New Version',
   },
   Keys: {
     SaveWithoutRoles: 'Save without adding Roles',
