@@ -410,6 +410,12 @@ export enum FeaturesI18nKey {
   truncatePromptEndpointPlaceholder = 'Features.truncatePromptEndpointPlaceholder',
 }
 
+export enum HashingOrderI18nKey {
+  HashingOrder = 'HashingOrder.HashingOrder',
+  HashingOrderPlaceholder = 'HashingOrder.HashingOrderPlaceholder',
+  Add = 'HashingOrder.Add',
+}
+
 export enum TopicsI18nKey {
   Topics = 'Topics.Topics',
   AddTopic = 'Topics.AddTopic',

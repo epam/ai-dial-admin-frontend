@@ -490,6 +490,11 @@ export default {
     AddTopic: 'Add Topic',
     AddTopicPlaceholder: 'Enter topic name',
   },
+  HashingOrder: {
+    HashingOrder: 'Hashing Order',
+    HashingOrderPlaceholder: 'Enter value',
+    Add: 'Add field',
+  },
   Editor: {
     ErrorLine: 'The error line is {line}',
   },
