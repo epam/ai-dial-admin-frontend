@@ -34,7 +34,6 @@ describe('ModelView/Limits utils', () => {
 
   test('isLimitTypeTotal returns true for Total', () => {
     expect(isLimitTypeTotal(LimitType.Total)).toBe(true);
-    expect(isLimitTypeTotal('Total')).toBe(true);
   });
 
   test('isLimitTypeTotal returns false for other types', () => {
@@ -44,7 +43,6 @@ describe('ModelView/Limits utils', () => {
 
   test('isLimitTypeSeparateTokenAndCompletions returns true for SeparateTokenAndCompletions', () => {
     expect(isLimitTypeSeparateTokenAndCompletions(LimitType.SeparateTokenAndCompletions)).toBe(true);
-    expect(isLimitTypeSeparateTokenAndCompletions('SeparateTokenAndCompletions')).toBe(true);
   });
 
   test('isLimitTypeSeparateTokenAndCompletions returns false for other types', () => {

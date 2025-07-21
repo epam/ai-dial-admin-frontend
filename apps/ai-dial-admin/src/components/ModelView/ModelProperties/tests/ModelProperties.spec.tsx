@@ -2,7 +2,7 @@ import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { render } from '@testing-library/react';
 import { fireEvent } from '@testing-library/dom';
 import { describe, expect, test } from 'vitest';
-import ModelTypeProperties from './ModelTypeProperties';
+import ModelTypeProperties from '../ModelTypeProperties';
 
 describe('ModelProperties :: ModelTypeProperties', () => {
   test('Should render successfully', () => {
