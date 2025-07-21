@@ -1,4 +1,6 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 import Button from '@/src/components/Common/Button/Button';
 import Loader from '@/src/components/Common/Loader/Loader';
@@ -80,13 +82,15 @@ const MultiselectModal: FC<Props> = ({
         {isLoading ? (
           <Loader size={40} />
         ) : (
-          <MultiselectContentModal
-            items={items}
-            selectedItems={selectedItems}
-            setSelectedItems={setSelectedItems}
-            setNewItems={setNewItems}
-            {...props}
-          />
+          <DndProvider backend={HTML5Backend}>
+            <MultiselectContentModal
+              items={items}
+              selectedItems={selectedItems}
+              setSelectedItems={setSelectedItems}
+              setNewItems={setNewItems}
+              {...props}
+            />
+          </DndProvider>
         )}
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
