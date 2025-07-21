@@ -11,9 +11,10 @@ import FilePath from '@/src/components/Common/FilePath/FilePath';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
+import MdEditor from '@/src/components/Common/MdEditor/MdEditor';
 import Switch from '@/src/components/Common/Switch/Switch';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import { BasicI18nKey, ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, CreateI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
@@ -23,8 +24,8 @@ import { FieldError } from '@/src/models/error';
 import { JSONEditorError } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
+import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import MdEditor from '@/src/components/Common/MdEditor/MdEditor';
 
 interface Props {
   prompt: DialPrompt;
@@ -83,17 +84,21 @@ const PromptProperties: FC<Props> = ({
     async (version: string) => {
       const found = await getPrompt?.(prompt.folderId as string, prompt.name as string, version);
       if (found) {
+        const path = modifyNameVersionInPrompt(found.path, void 0, version);
         onChangePrompt?.({
           ...prompt,
           description: found.description,
           content: found.content,
           folderId: found.folderId,
           version,
+          path,
         });
       } else {
+        const path = modifyNameVersionInPrompt(prompt.path, void 0, version);
         onChangePrompt?.({
           ...prompt,
           version,
+          path,
         });
       }
     },
@@ -264,6 +269,7 @@ const PromptProperties: FC<Props> = ({
       {modalState === PopUpState.Opened &&
         createPortal(
           <AddVersionModal
+            heading={t(PromptsI18nKey.NewVersionCreate)}
             modalState={modalState}
             existingVersions={[...versions, ...addedVersions]}
             onClose={onCloseModal}

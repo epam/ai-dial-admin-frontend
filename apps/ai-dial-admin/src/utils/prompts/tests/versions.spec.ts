@@ -1,6 +1,7 @@
 import {
   checkNameVersionCombination,
   getInitialVersion,
+  generateNewInitialVersion,
   generateNameVersionForPrompt,
   getNameVersionFromPrompt,
   modifyNameVersionInPrompt,
@@ -82,6 +83,17 @@ describe('Prompts utils :: getInitialVersion', () => {
   test('Should return latest version + 1', () => {
     const res = getInitialVersion({ versions: ['1.0.1', '1.0.2', '1.0.3'] }, 'versions');
     expect(res).toEqual('1.0.4');
+  });
+});
+
+describe('Prompts utils :: generateNewInitialVersion', () => {
+  test('Should return version + 1', () => {
+    const res = generateNewInitialVersion('1.0.1');
+    expect(res).toEqual('1.0.2');
+  });
+   test('Should return unchanged version', () => {
+    const res = generateNewInitialVersion('someVersion');
+    expect(res).toEqual('someVersion');
   });
 });
 
