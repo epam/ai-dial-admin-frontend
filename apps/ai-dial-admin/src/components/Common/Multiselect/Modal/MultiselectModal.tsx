@@ -36,6 +36,7 @@ const MultiselectModal: FC<Props> = ({
   onClose,
   onSelectItems,
   getItems,
+  draggable,
   ...props
 }) => {
   const t = useI18n();
@@ -50,10 +51,13 @@ const MultiselectModal: FC<Props> = ({
   const [newItems, setNewItems] = useState<string[]>([]);
 
   const onApply = useCallback(() => {
-    onSelectItems?.([...selectedItems, ...newItems].filter((t) => t !== ''));
+    if (draggable) {
+      onSelectItems?.([...newItems].filter((t) => t !== ''));
+    } else {
+      onSelectItems?.([...selectedItems, ...newItems].filter((t) => t !== ''));
+    }
     onClose();
-  }, [onSelectItems, selectedItems, newItems, onClose]);
-
+  }, [selectedItems, newItems, draggable, onClose, onSelectItems]);
   useEffect(() => {
     const filtered = newItems.filter((v) => v !== '');
     setIsValid(!!items.length || !!filtered.length);
@@ -88,6 +92,7 @@ const MultiselectModal: FC<Props> = ({
               selectedItems={selectedItems}
               setSelectedItems={setSelectedItems}
               setNewItems={setNewItems}
+              draggable={draggable}
               {...props}
             />
           </DndProvider>

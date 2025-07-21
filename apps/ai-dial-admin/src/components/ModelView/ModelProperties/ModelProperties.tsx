@@ -64,7 +64,6 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, updateModel }) => {
           <Multiselect
             elementId="order"
             draggable={true}
-            editMode={true}
             selectedItems={model.fieldsHashingOrder || []}
             allItems={model.fieldsHashingOrder || []}
             onChangeItems={(fieldsHashingOrder) => {

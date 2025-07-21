@@ -48,7 +48,7 @@ const NewItemInput: FC<Props> = ({
   };
 
   return draggable ? (
-    <DraggableItem id={index.toString()} findItem={onFindItem} moveItem={onMoveItem}>
+    <DraggableItem id={value} findItem={onFindItem} moveItem={onMoveItem}>
       {getItemContent()}
     </DraggableItem>
   ) : (

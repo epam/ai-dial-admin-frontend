@@ -1,11 +1,11 @@
 import { IconPlus } from '@tabler/icons-react';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
+import { useDrop } from 'react-dnd';
 
 import Button from '@/src/components/Common/Button/Button';
 import Checkbox from '@/src/components/Common/Checkbox/Checkbox';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import NewItemInput from './NewItemInput';
-import { useDrop } from 'react-dnd';
 
 interface Props {
   addTitle?: string;
@@ -13,7 +13,6 @@ interface Props {
   items: string[];
   selectedItems: string[];
   draggable?: boolean;
-  editMode?: boolean;
   setSelectedItems: Dispatch<SetStateAction<string[]>>;
   setNewItems: Dispatch<SetStateAction<string[]>>;
 }
@@ -22,7 +21,6 @@ const MultiselectContentModal: FC<Props> = ({
   addTitle,
   selectedItems,
   draggable,
-  editMode,
   addPlaceholder,
   items,
   setSelectedItems,
@@ -38,6 +36,12 @@ const MultiselectContentModal: FC<Props> = ({
     setNewItems(newItems);
   }, [setNewItems, newItems]);
 
+  useEffect(() => {
+    if ((!newItems || !newItems.length) && draggable) {
+      setItems(items);
+    }
+  }, [setItems, newItems, draggable, items]);
+
   const onChangeSelectedItems = useCallback(
     (topic: string, value?: boolean) => {
       if (value) {
@@ -49,14 +53,6 @@ const MultiselectContentModal: FC<Props> = ({
     [setSelectedItems, selectedItems],
   );
 
-  const onChangeItem = useCallback(
-    (topic: string, index: number) => {
-      items[index] = topic.trimStart();
-      setSelectedItems([...items]);
-    },
-    [setSelectedItems, items],
-  );
-
   const onChangeNewItem = useCallback(
     (topic: string, index: number) => {
       newItems[index] = topic.trimStart();
@@ -65,7 +61,7 @@ const MultiselectContentModal: FC<Props> = ({
     [setItems, newItems],
   );
 
-  const onRemoveItem = useCallback(
+  const onRemoveNewItem = useCallback(
     (index: number) => {
       newItems.splice(index, 1);
       setItems([...newItems]);
@@ -87,44 +83,34 @@ const MultiselectContentModal: FC<Props> = ({
     }
   }, [newItems.length]);
 
-  const findItem = useCallback((field?: string) => Number(field), []);
+  const findItem = useCallback((field?: string) => newItems.findIndex((c) => c === field), [newItems]);
 
   const moveItem = useCallback(
     (field: string, atIndex: number) => {
       const newIndex = findItem(field);
-      const updatedItems = [...items];
-      const [removedItem] = updatedItems.splice(newIndex, 1);
-      updatedItems.splice(atIndex, 0, removedItem);
+      const updateItems = [...newItems];
+      const [removedItem] = updateItems.splice(newIndex, 1);
+      updateItems.splice(atIndex, 0, removedItem);
 
-      setItems(updatedItems);
+      setItems(updateItems);
     },
-    [items, findItem, setItems],
+    [findItem, newItems],
   );
 
   return (
     <>
       <div className="flex flex-col gap-y-2 overflow-auto" ref={newItemsContainer}>
         {items.map((item, index) => {
-          return editMode ? (
-            <NewItemInput
-              key={index}
-              value={item}
-              draggable={draggable}
-              onChangeItem={onChangeItem}
-              onRemoveItem={onRemoveItem}
-              index={index}
-              placeholder={addPlaceholder}
-              onFindItem={findItem}
-              onMoveItem={moveItem}
-            />
-          ) : (
-            <Checkbox
-              key={index}
-              checked={selectedItems.includes(item)}
-              id={index.toString()}
-              label={item}
-              onChange={(v) => onChangeSelectedItems(item, v)}
-            />
+          return (
+            !draggable && (
+              <Checkbox
+                key={index}
+                checked={selectedItems.includes(item)}
+                id={index.toString()}
+                label={item}
+                onChange={(v) => onChangeSelectedItems(item, v)}
+              />
+            )
           );
         })}
 
@@ -135,9 +121,11 @@ const MultiselectContentModal: FC<Props> = ({
               value={item}
               draggable={draggable}
               onChangeItem={onChangeNewItem}
-              onRemoveItem={onRemoveItem}
+              onRemoveItem={onRemoveNewItem}
               index={index}
               placeholder={addPlaceholder}
+              onFindItem={findItem}
+              onMoveItem={moveItem}
             />
           );
         })}
