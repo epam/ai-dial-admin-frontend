@@ -412,6 +412,7 @@ export default {
       Completion: 'Completion price',
       Tokens: 'Tokens',
       CharWithoutWhitespace: 'Char without whitespace',
+      PerMillion: 'per million',
     },
     OverrideName: 'Override Name',
     OverrideNamePlaceholder: 'Enter override name',

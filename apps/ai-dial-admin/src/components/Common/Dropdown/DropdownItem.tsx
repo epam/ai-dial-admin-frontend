@@ -110,16 +110,23 @@ const DropdownMenuItem = forwardRef<HTMLButtonElement, DropdownMenuItemProps & B
               ) : (
                 <></>
               )}
-              <span
-                className={classNames(
-                  'inline-block truncate small',
-                  multipleValues &&
-                    (allItemsCount === 1 || isChecked(multipleValues, dropdownItem?.id, allItemsCount)) &&
-                    'pointer-events-none opacity-60',
-                )}
-              >
-                {dropdownItem.name}
-              </span>
+              {!dropdownItem.description ? (
+                <span
+                  className={classNames(
+                    'inline-block truncate small',
+                    multipleValues &&
+                      (allItemsCount === 1 || isChecked(multipleValues, dropdownItem?.id, allItemsCount)) &&
+                      'pointer-events-none opacity-60',
+                  )}
+                >
+                  {dropdownItem.name}
+                </span>
+              ) : (
+                <div className="w-full flex justify-between items-center small">
+                  <span className="truncate">{dropdownItem.name}</span>
+                  <span className="text-secondary">{dropdownItem.description}</span>
+                </div>
+              )}
             </>
           )}
         </button>

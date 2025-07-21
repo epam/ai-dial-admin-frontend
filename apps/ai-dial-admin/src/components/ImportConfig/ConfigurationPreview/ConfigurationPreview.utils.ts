@@ -64,6 +64,10 @@ export const getConfigurationPreview = (configuration: FileConfiguration, t: (v:
         previewData[EntityType.MODEL] = configurationItems;
       }
 
+      if (configurationKey === 'adapters') {
+        previewData[EntityType.ADAPTER] = configurationItems;
+      }
+
       if (configurationKey === 'applications') {
         previewData[EntityType.APPLICATION] = configurationItems;
       }

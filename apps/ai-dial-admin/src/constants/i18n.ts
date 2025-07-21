@@ -332,6 +332,7 @@ export enum ModelViewI18nKey {
   CompletionPrice = 'ModelView.Pricing.Completion',
   Tokens = 'ModelView.Pricing.Tokens',
   CharWithoutWhitespace = 'ModelView.Pricing.CharWithoutWhitespace',
+  PerMillion = 'ModelView.Pricing.PerMillion',
 }
 
 export enum AttachmentsI18nKey {
