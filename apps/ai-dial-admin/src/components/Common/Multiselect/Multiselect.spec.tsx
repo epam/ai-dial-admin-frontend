@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import Multiselect from './Multiselect';
-import MultiselectModal from './MultiselectModal';
-import NewItemInput from './NewItemInput';
+import MultiselectModal from './Modal/MultiselectModal';
+import NewItemInput from './Modal/NewItemInput';
 import { PopUpState } from '@/src/types/pop-up';
 import { describe, expect, test, vi } from 'vitest';
 
