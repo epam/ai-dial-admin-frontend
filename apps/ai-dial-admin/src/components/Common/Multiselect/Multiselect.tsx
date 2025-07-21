@@ -4,7 +4,7 @@ import Field from '@/src/components/Common/Field/Field';
 import InputModal from '@/src/components/Common/InputModal/InputModal';
 import { PopUpState } from '@/src/types/pop-up';
 import { ServerActionResponse } from '@/src/models/server-action';
-import MultiselectModal from './MultiselectModal';
+import MultiselectModal from './Modal/MultiselectModal';
 
 interface Props {
   elementId: string;
@@ -16,22 +16,12 @@ interface Props {
   addPlaceholder?: string;
   allItems?: string[];
   draggable?: boolean;
+  editMode?: boolean;
   onChangeItems?: (items: string[]) => void;
   getItems?: () => Promise<ServerActionResponse>;
 }
 
-const Multiselect: FC<Props> = ({
-  onChangeItems,
-  elementId,
-  getItems,
-  selectedItems,
-  title,
-  readonly,
-  heading,
-  addTitle,
-  addPlaceholder,
-  allItems,
-}) => {
+const Multiselect: FC<Props> = ({ onChangeItems, elementId, selectedItems, title, readonly, ...props }) => {
   const [modalState, setIsModalState] = useState(PopUpState.Closed);
 
   const onOpenModal = useCallback(() => {
@@ -51,11 +41,7 @@ const Multiselect: FC<Props> = ({
           onSelectItems={onChangeItems}
           modalState={modalState}
           onClose={onCloseModal}
-          heading={heading}
-          addTitle={addTitle}
-          addPlaceholder={addPlaceholder}
-          getItems={getItems}
-          allItems={allItems}
+          {...props}
         />
       </InputModal>
     </div>
