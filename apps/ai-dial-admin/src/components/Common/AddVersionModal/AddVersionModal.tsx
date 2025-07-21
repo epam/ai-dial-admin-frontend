@@ -1,26 +1,36 @@
 import { FC, useState } from 'react';
 
 import Button from '@/src/components/Common/Button/Button';
+import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Popup from '@/src/components/Common/Popup/Popup';
-import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, CreateI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 
 interface Props {
+  heading: string;
   modalState: PopUpState;
   existingVersions: string[];
+  prefilledVersion?: string;
   onClose: () => void;
   onConfirm: (version: string) => void;
 }
 
-const AddVersionModal: FC<Props> = ({ modalState, existingVersions, onConfirm, onClose }) => {
+const AddVersionModal: FC<Props> = ({
+  heading,
+  modalState,
+  existingVersions,
+  prefilledVersion,
+  onConfirm,
+  onClose,
+}) => {
   const t = useI18n();
-  const [version, setVersion] = useState<string>('');
+  const [version, setVersion] = useState<string>(prefilledVersion || '');
 
   return (
-    <Popup onClose={onClose} heading={'Create new version'} portalId="ConfirmationModal" state={modalState}>
-      <div className="text-primary small px-6 py-4">
+    <Popup onClose={onClose} heading={heading} portalId="newVersionModal" state={modalState}>
+      <div className=" flex flex-col gap-4 text-primary small px-6 py-4">
+        {prefilledVersion && <div className="text-secondary">{t(PromptsI18nKey.NewVersionSaveDescription)}</div>}
         <TextInputField
           elementId="name"
           fieldTitle={t(CreateI18nKey.VersionTitle)}
