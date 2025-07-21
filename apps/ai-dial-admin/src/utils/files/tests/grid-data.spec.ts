@@ -18,9 +18,9 @@ describe('Files list :: getGridFileDataFromString', () => {
     const result = getGridFileDataFromString(files);
 
     expect(result).toEqual([
-      { name: 'folder/file1', extension: 'txt', path: 'folder/file1.txt' },
-      { name: 'file2', extension: 'pdf', path: 'file2.pdf' },
-      { name: 'archive.tar', extension: 'gz', path: 'archive.tar.gz' },
+      { name: 'folder/file1', extension: '.txt', path: 'folder/file1.txt' },
+      { name: 'file2', extension: '.pdf', path: 'file2.pdf' },
+      { name: 'archive.tar', extension: '.gz', path: 'archive.tar.gz' },
       { name: 'noextensionfile', extension: '', path: 'noextensionfile' },
     ]);
   });
