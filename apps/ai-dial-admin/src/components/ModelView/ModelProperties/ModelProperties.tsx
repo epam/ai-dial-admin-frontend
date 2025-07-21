@@ -6,10 +6,10 @@ import ForwardAuthTokenField from '@/src/components/EntityView/Properties/Forwar
 import MaxRetryAttempts from '@/src/components/MaxRetryAttempts/MaxRetryAttempts';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
-import Limits from './Limits/Limits';
+import Limits from '../Limits/Limits';
 import ModelTypeProperties from './ModelTypeProperties';
-import Pricing from './Pricing/Pricing';
-import TokenizerModelSwitch from './TokenizerModel/Tokenizer';
+import Pricing from '../Pricing/Pricing';
+import TokenizerModelSwitch from '../TokenizerModel/Tokenizer';
 
 interface Props {
   model: DialModel;

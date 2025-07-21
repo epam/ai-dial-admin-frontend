@@ -6,7 +6,8 @@ import { BasicI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModel } from '@/src/models/dial/model';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
-import { getActiveLimitType, isLimitTypeSeparateTokenAndCompletions, isLimitTypeTotal, LimitType } from './limit';
+import { getActiveLimitType, isLimitTypeSeparateTokenAndCompletions, isLimitTypeTotal } from './utils';
+import { LimitType } from './constants';
 
 interface Props {
   model: DialModel;
