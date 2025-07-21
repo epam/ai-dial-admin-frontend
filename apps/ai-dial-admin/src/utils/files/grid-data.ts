@@ -6,6 +6,17 @@ import FileNameCellRenderer from '@/src/components/Grid/CellRenderers/FileNameCe
 import { EntityOperationDeclaration } from '@/src/models/entity-operations';
 import { getNameExtensionFromFile } from './get-extension';
 
+export const getGridFileDataFromString = (files: string[]) => {
+  return files.map((file) => {
+    const { name, extension } = getNameExtensionFromFile(file);
+    return {
+      name,
+      extension,
+      path: file,
+    };
+  });
+};
+
 export const getGridFileData = (files: DialFile[]) => {
   return files.map((file) => {
     const { name, extension } = getNameExtensionFromFile(file.name as string);
