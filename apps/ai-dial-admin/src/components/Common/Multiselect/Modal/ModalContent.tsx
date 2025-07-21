@@ -5,6 +5,7 @@ import Button from '@/src/components/Common/Button/Button';
 import Checkbox from '@/src/components/Common/Checkbox/Checkbox';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import NewItemInput from './NewItemInput';
+import { useDrop } from 'react-dnd';
 
 interface Props {
   addTitle?: string;
@@ -29,6 +30,9 @@ const MultiselectContentModal: FC<Props> = ({
 }) => {
   const [newItems, setItems] = useState<string[]>([]);
   const newItemsContainer = useRef<HTMLDivElement | null>(null);
+  const [, drop] = useDrop(() => ({ accept: 'column' }));
+
+  drop(newItemsContainer);
 
   useEffect(() => {
     setNewItems(newItems);
@@ -83,6 +87,20 @@ const MultiselectContentModal: FC<Props> = ({
     }
   }, [newItems.length]);
 
+  const findItem = useCallback((field?: string) => Number(field), []);
+
+  const moveItem = useCallback(
+    (field: string, atIndex: number) => {
+      const newIndex = findItem(field);
+      const updatedItems = [...items];
+      const [removedItem] = updatedItems.splice(newIndex, 1);
+      updatedItems.splice(atIndex, 0, removedItem);
+
+      setItems(updatedItems);
+    },
+    [items, findItem, setItems],
+  );
+
   return (
     <>
       <div className="flex flex-col gap-y-2 overflow-auto" ref={newItemsContainer}>
@@ -91,10 +109,13 @@ const MultiselectContentModal: FC<Props> = ({
             <NewItemInput
               key={index}
               value={item}
+              draggable={draggable}
               onChangeItem={onChangeItem}
               onRemoveItem={onRemoveItem}
               index={index}
               placeholder={addPlaceholder}
+              onFindItem={findItem}
+              onMoveItem={moveItem}
             />
           ) : (
             <Checkbox
@@ -112,6 +133,7 @@ const MultiselectContentModal: FC<Props> = ({
             <NewItemInput
               key={index}
               value={item}
+              draggable={draggable}
               onChangeItem={onChangeNewItem}
               onRemoveItem={onRemoveItem}
               index={index}
