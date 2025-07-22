@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react';
-import AddEntitiesGrid from './AddEntitiesGrid';
-import { PopUpState } from '../../types/pop-up';
+import AddEntitiesGrid from '../AddEntitiesGrid';
+import { PopUpState } from '../../../types/pop-up';
 import { describe, expect, test, vi } from 'vitest';
 
 const mockFunction = vi.fn();

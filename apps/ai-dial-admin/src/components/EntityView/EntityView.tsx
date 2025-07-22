@@ -31,11 +31,12 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { EntityViewTab, getViewTabs } from './entity-view';
 import EntityViewHeaderButtons from './EntityViewHeaderButtons';
-import EntityViewModals, { ModalType } from './EntityViewModals';
+import EntityViewModals from './Modals/EntityViewModals';
+import { ModalType } from './Modals/constants';
 import EntityFeatures from './Features/Features';
 import EntityInterceptors from './Interceptors/Interceptors';
 import EntityRoles from './Roles/Roles';
-import EntityDashboard from '@/src/components/EntityView/Dashboard/Dashboard';
+import EntityAudit from '@/src/components/EntityView/Dashboard/EntityAudit';
 import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { DialAttachmentData } from '@/src/models/attachment-data';
 
@@ -61,13 +62,13 @@ const EntityView: FC<Props> = ({
   removeEntity,
 }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
-  const { featureFlags } = useAppContext();
+
   const isParametersTabAvailable =
     !!(originalEntity as DialApplication).customAppSchemaId &&
     !!applicationSchemes?.find((s) => s.$id === (originalEntity as DialApplication).customAppSchemaId)?.[
       'dial:applicationTypeEditorUrl'
     ];
-  const tabs = getViewTabs(t, view, isParametersTabAvailable, featureFlags);
+  const tabs = getViewTabs(t, view, isParametersTabAvailable);
   const router = useRouter();
   const { showNotification } = useNotification();
 
@@ -331,7 +332,7 @@ const EntityView: FC<Props> = ({
                   onChangeEntity={onChangeEntity}
                 />
               )}
-              {activeTab === EntityViewTab.Dashboard && <EntityDashboard entity={selectedEntity} view={view} />}
+              {activeTab === EntityViewTab.Audit && <EntityAudit entity={selectedEntity} view={view} />}
             </>
           )}
         </div>
