@@ -1,15 +1,18 @@
 import { FC, useCallback } from 'react';
 
+import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import UpstreamEndpoints from '@/src/components/Endpoints/UpstreamEndpoints';
 import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMainProperties';
 import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
 import MaxRetryAttempts from '@/src/components/MaxRetryAttempts/MaxRetryAttempts';
+import Limits from '@/src/components/ModelView/Limits/Limits';
+import Pricing from '@/src/components/ModelView/Pricing/Pricing';
+import TokenizerModelSwitch from '@/src/components/ModelView/TokenizerModel/Tokenizer';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
-import Limits from './Limits/Limits';
 import ModelTypeProperties from './ModelTypeProperties';
-import Pricing from './Pricing/Pricing';
-import TokenizerModelSwitch from './TokenizerModel/Tokenizer';
+import { HashingOrderI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
   model: DialModel;
@@ -18,6 +21,8 @@ interface Props {
 }
 
 const ModelProperties: FC<Props> = ({ model, modelsNames, updateModel }) => {
+  const t = useI18n();
+
   const onChangeMaxRetryAttempts = useCallback(
     (maxRetryAttempts?: number) => {
       updateModel({ ...model, maxRetryAttempts });
@@ -55,6 +60,21 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, updateModel }) => {
           onChangeMaxRetryAttempts={onChangeMaxRetryAttempts}
         />
         <Pricing model={model} onChangeModel={updateModel} />
+        <div className="w-full lg:w-[35%]">
+          <Multiselect
+            elementId="order"
+            draggable={true}
+            selectedItems={model.fieldsHashingOrder || []}
+            allItems={model.fieldsHashingOrder || []}
+            onChangeItems={(fieldsHashingOrder) => {
+              updateModel({ ...model, fieldsHashingOrder });
+            }}
+            heading={t(HashingOrderI18nKey.HashingOrder)}
+            title={t(HashingOrderI18nKey.HashingOrder)}
+            addPlaceholder={t(HashingOrderI18nKey.HashingOrderPlaceholder)}
+            addTitle={t(HashingOrderI18nKey.Add)}
+          />
+        </div>
       </div>
     </div>
   );

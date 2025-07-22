@@ -1,10 +1,5 @@
 import { DialModel } from '@/src/models/dial/model';
-
-export enum LimitType {
-  None = 'none',
-  Total = 'total',
-  SeparateTokenAndCompletions = 'separateToken&Completions',
-}
+import { LimitType } from './constants';
 
 export const getActiveLimitType = (model: DialModel) => {
   const limits = model.limits;

@@ -22,9 +22,12 @@ const DraggableItem: FC<Props> = ({ children, id, findItem, moveItem }: Props) =
     () => ({
       type: 'column',
       item: { id, originalIndex },
-      collect: (monitor) => ({
-        isDragging: monitor.isDragging(),
-      }),
+      collect: (monitor) => {
+        const item = monitor.getItem();
+        return {
+          isDragging: monitor.isDragging() && item?.id === id,
+        };
+      },
       end: (item, monitor) => {
         const { id: droppedId, originalIndex } = item;
         const didDrop = monitor.didDrop();

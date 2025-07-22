@@ -20,6 +20,7 @@ export interface DialBaseEntity extends DialBaseNamedEntity {
   forwardAuthToken?: boolean;
   inputAttachmentTypes?: string[];
   topics?: string[];
+  fieldsHashingOrder?: string[];
   maxInputAttachments?: number | string;
   interceptors?: string[];
   features?: DialFeatures;
