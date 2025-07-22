@@ -3,7 +3,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';
-import { INTERCEPTORS_COLUMNS } from '@/src/components/InterceptorTemplates/constants';
+import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useI18n } from '@/src/locales/client';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
@@ -29,7 +29,7 @@ const Interceptors: FC<Props> = ({ interceptorList }) => {
     window.open(`${ApplicationRoute.Interceptors}/${interceptor.name}`, '_blank');
   }, []);
 
-  const colDefs = [...INTERCEPTORS_COLUMNS, ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTab)])];
+  const colDefs = [...SIMPLE_ENTITY_COLUMNS, ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTab)])];
 
   useEffect(() => {
     const fetchInterceptors = async () => {
