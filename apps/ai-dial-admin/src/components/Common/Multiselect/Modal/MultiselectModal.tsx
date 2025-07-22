@@ -22,7 +22,6 @@ interface Props {
   addPlaceholder?: string;
   allItems?: string[];
   draggable?: boolean;
-  editMode?: boolean;
   onClose: () => void;
   onSelectItems?: (items: string[]) => void;
   getItems?: () => Promise<ServerActionResponse>;
