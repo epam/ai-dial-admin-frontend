@@ -54,6 +54,14 @@ export const getInitialVersion = (versionsPerName: Record<string, string[]>, nam
   return latest?.join('.') || '';
 };
 
+export const generateNewInitialVersion = (version?: string) => {
+  const parts = version?.split('.');
+  if (parts && parts[2]) {
+    parts[2] = `${+parts[2] + 1}`;
+  }
+  return parts?.join('.') || '';
+};
+
 export const checkNameVersionCombination = (
   versionsPerName: Record<string, string[]>,
   name: string,

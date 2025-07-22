@@ -7,7 +7,7 @@ import { ActionType } from '@/src/models/dial/publications';
 import Grid from '@/src/components/Grid/Grid';
 import { ApplicationRoute } from '@/src/types/routes';
 import { FILE_DOWNLOAD, FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
-import { getGridFileColumns, getGridFileData } from '@/src/utils/files/grid-data';
+import { getGridFileColumns, getGridFileData, getGridFileDataFromString } from '@/src/utils/files/grid-data';
 import {
   getDownloadOperation,
   getOpenInNewTabOperation,
@@ -15,7 +15,7 @@ import {
 } from '@/src/constants/grid-columns/actions';
 
 interface Props {
-  files: Partial<DialFile>[];
+  files: Partial<DialFile | string>[];
   action: ActionType;
 }
 
@@ -40,7 +40,8 @@ const FilesList: FC<Props> = ({ files, action }) => {
     return action === ActionType.ADD;
   };
 
-  const rowData = getGridFileData(files as DialFile[]);
+  const rowData =
+    typeof files[0] === 'string' ? getGridFileDataFromString(files as string[]) : getGridFileData(files as DialFile[]);
 
   const actions = [
     getPreviewOperation(preview, isPreviewActionHidden),

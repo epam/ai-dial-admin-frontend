@@ -9,13 +9,14 @@ import { useRouter } from 'next/navigation';
 
 import DeleteAdapter from '@/src/components/AdaptersList/Delete/DeleteAdapter';
 import DeleteScheme from '@/src/components/ApplicationRunners/ListView/Delete/DeleteAppRunner';
+import AddVersionModal from '@/src/components/Common/AddVersionModal/AddVersionModal';
 import Button from '@/src/components/Common/Button/Button';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import Switch from '@/src/components/Common/Switch/Switch';
 import { isValidEntity } from '@/src/components/EntityListView/CreateEntity/validation';
 import { deleteModalTitleMap, getEntityPath } from '@/src/components/EntityListView/entity-list-view';
 import { showEditorErrorNotifications } from '@/src/components/JSONEditor/JSONEditor.utils';
-import { ButtonsI18nKey, DeleteI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, DeleteI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { usePromptFolder } from '@/src/context/PromptFolderContext';
@@ -32,6 +33,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { getErrorNotification } from '@/src/utils/notification';
+import { generateNewInitialVersion } from '@/src/utils/prompts/versions';
 
 interface Props<T> {
   view: ApplicationRoute;
@@ -42,11 +44,12 @@ interface Props<T> {
   hideJsonEditor?: boolean;
   children?: ReactNode;
   onDiscard: () => void;
-  onSave: () => void;
+  onSave: (newVersion?: string) => void;
   removeEntity: (entity?: string) => Promise<ServerActionResponse>;
   toggleJsonEditor?: () => void;
   setErrorNotifications?: (notification: JSONEditorErrorNotification[]) => void;
   contentJsonErrors?: JSONEditorError[] | null;
+  promptVersions?: string[];
 }
 
 const EntityViewHeaderButtons = <T extends DialBaseEntity | DialKey>({
@@ -63,6 +66,7 @@ const EntityViewHeaderButtons = <T extends DialBaseEntity | DialKey>({
   hideJsonEditor,
   children,
   contentJsonErrors,
+  promptVersions,
 }: Props<T>) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
   const router = useRouter();
@@ -71,6 +75,7 @@ const EntityViewHeaderButtons = <T extends DialBaseEntity | DialKey>({
   const { fetchFiles, filePath } = usePromptFolder();
 
   const [modalState, setIsOpenModal] = useState(PopUpState.Closed);
+  const [versionModalState, setVersionModalState] = useState(PopUpState.Closed);
   const [isValidJSON, setIsValidJSON] = useState<boolean>(true);
 
   const staticContainerClassnames = 'flex flex-row gap-3 divide-x divide-primary lg:h-[35px]';
@@ -112,20 +117,26 @@ const EntityViewHeaderButtons = <T extends DialBaseEntity | DialKey>({
     setIsValidJSON(!jsonErrors?.length);
   }, [jsonErrors]);
 
-  const onTryToSave = useCallback(() => {
-    if (jsonErrors?.length || contentJsonErrors?.length) {
-      setIsValidJSON(false);
-      const errors = (jsonErrors?.length ? jsonErrors : contentJsonErrors) as JSONEditorError[];
-      const errorNotifications = showEditorErrorNotifications({
-        errors,
-        showNotification,
-        t,
-      });
-      setErrorNotifications?.(errorNotifications);
-    } else {
-      onSave();
-    }
-  }, [jsonErrors, contentJsonErrors, showNotification, t, setErrorNotifications, onSave]);
+  const onTryToSave = useCallback(
+    (newVersion?: string) => {
+      if (newVersion) {
+        setVersionModalState(PopUpState.Closed);
+      }
+      if (jsonErrors?.length || contentJsonErrors?.length) {
+        setIsValidJSON(false);
+        const errors = (jsonErrors?.length ? jsonErrors : contentJsonErrors) as JSONEditorError[];
+        const errorNotifications = showEditorErrorNotifications({
+          errors,
+          showNotification,
+          t,
+        });
+        setErrorNotifications?.(errorNotifications);
+      } else {
+        onSave(newVersion);
+      }
+    },
+    [jsonErrors, contentJsonErrors, showNotification, t, setErrorNotifications, onSave],
+  );
 
   useEffect(() => {
     setContainerClassNames(
@@ -153,10 +164,18 @@ const EntityViewHeaderButtons = <T extends DialBaseEntity | DialKey>({
               title={t(ButtonsI18nKey.Discard)}
               onClick={onDiscard}
             />
+            {view === ApplicationRoute.Prompts && (
+              <Button
+                cssClass={`secondary ${buttonsClassNames}`}
+                title={t(ButtonsI18nKey.SaveAsNewVersion)}
+                onClick={() => setVersionModalState(PopUpState.Opened)}
+                disable={(jsonEditorEnabled && !isValidJSON) || !isValidEntity(view, entity)}
+              />
+            )}
             <Button
               cssClass={`primary ${buttonsClassNames}`}
               title={t(ButtonsI18nKey.Save)}
-              onClick={onTryToSave}
+              onClick={() => onTryToSave()}
               disable={(jsonEditorEnabled && !isValidJSON) || !isValidEntity(view, entity)}
             />
           </div>
@@ -202,6 +221,18 @@ const EntityViewHeaderButtons = <T extends DialBaseEntity | DialKey>({
               <DeleteAdapter entity={entity as DialAdapter} isEntityView={true} />
             ) : null}
           </ConfirmationModal>,
+          document.body,
+        )}
+      {versionModalState === PopUpState.Opened &&
+        createPortal(
+          <AddVersionModal
+            heading={t(PromptsI18nKey.NewVersionSave)}
+            modalState={versionModalState}
+            prefilledVersion={generateNewInitialVersion(entity.version)}
+            existingVersions={promptVersions || []}
+            onClose={() => setVersionModalState(PopUpState.Closed)}
+            onConfirm={onTryToSave}
+          />,
           document.body,
         )}
     </>

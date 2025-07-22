@@ -192,6 +192,7 @@ export enum ButtonsI18nKey {
   DeleteAll = 'Buttons.DeleteAll',
   Duplicate = 'Buttons.Duplicate',
   Save = 'Buttons.Save',
+  SaveAsNewVersion = 'Buttons.SaveAsNewVersion',
   Apply = 'Buttons.Apply',
   Discard = 'Buttons.Discard',
   Add = 'Buttons.Add',
@@ -537,6 +538,9 @@ export enum PromptsI18nKey {
   DuplicationType = 'Prompts.DuplicationType',
   Export = 'Prompts.Export',
   Import = 'Prompts.Import',
+  NewVersionCreate = 'Prompts.NewVersionCreate',
+  NewVersionSave = 'Prompts.NewVersionSave',
+  NewVersionSaveDescription = 'Prompts.NewVersionSaveDescription',
 }
 
 export enum ImportI18nKey {

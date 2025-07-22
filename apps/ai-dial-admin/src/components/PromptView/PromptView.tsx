@@ -12,16 +12,16 @@ import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/entit
 import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import PromptProperties from '@/src/components/PromptView/PromptProperties';
-import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/PromptView/utils';
+import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/PromptView/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
+import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
+import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { getErrorNotification } from '@/src/utils/notification';
-import { addTrailingSlash, getListOfPathsToMove, changePath, removeTrailingSlash } from '@/src/utils/files/path';
 
 interface Props {
   originalPrompt: DialPrompt;
@@ -32,7 +32,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const tabs = [propertiesTabs(t)];
   const router = useRouter();
-  const { fetchFiles, filePath } = usePromptFolder();
+  const { fetchFiles } = usePromptFolder();
   const { showNotification } = useNotification();
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -79,36 +79,42 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
     setAddedVersions([]);
   }, [setSelectedPrompt, originalPrompt, jsonEditorEnabled]);
 
-  const onSave = useCallback(() => {
-    const isNeedToMove = getIsNeedToMove(selectedPrompt, originalPrompt);
-    const updatedEntity = getEntityForUpdate(selectedPrompt, originalPrompt);
+  const onSave = useCallback(
+    (newVersion?: string) => {
+      const isNeedToMove = getIsNeedToMove(selectedPrompt, originalPrompt);
+      let updatedEntity = getEntityForUpdate(selectedPrompt, originalPrompt);
 
-    createPrompt(updatedEntity).then((res) => {
-      if (res.success) {
-        if (isNeedToMove) {
-          const responsePrompt = res.response as DialPrompt;
-          getPrompts(addTrailingSlash(responsePrompt.folderId)).then((prompts) => {
-            const pathsToMove = getListOfPathsToMove(responsePrompt, null, prompts || []);
-            const newPath = removeTrailingSlash(selectedPrompt.folderId);
-            movePrompts(pathsToMove, newPath).then((r) => {
-              if (r.every((response) => response.success)) {
-                router.push(
-                  `${ApplicationRoute.Prompts}/${getEntityPath(ApplicationRoute.Prompts, { name: (res.response as DialPrompt).name, path: changePath((res.response as DialPrompt).path, newPath) })}`,
-                );
-                fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
-              }
-            });
-          });
-        } else {
-          fetchFiles(filePath);
-          router.push(`${ApplicationRoute.Prompts}/${getEntityPath(ApplicationRoute.Prompts, res.response)}`);
-        }
-        router.refresh();
-      } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+      if (newVersion) {
+        updatedEntity = addNewVersion(updatedEntity, newVersion);
       }
-    });
-  }, [selectedPrompt, originalPrompt, router, fetchFiles, filePath, showNotification]);
+      createPrompt(updatedEntity).then((res) => {
+        if (res.success) {
+          if (isNeedToMove) {
+            const responsePrompt = res.response as DialPrompt;
+            getPrompts(addTrailingSlash(responsePrompt.folderId)).then((prompts) => {
+              const pathsToMove = getListOfPathsToMove(responsePrompt, null, prompts || []);
+              const newPath = removeTrailingSlash(selectedPrompt.folderId);
+              movePrompts(pathsToMove, newPath).then((r) => {
+                if (r.every((response) => response.success)) {
+                  router.push(
+                    `${ApplicationRoute.Prompts}/${getEntityPath(ApplicationRoute.Prompts, { name: (res.response as DialPrompt).name, path: changePath((res.response as DialPrompt).path, newPath) })}`,
+                  );
+                  fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
+                }
+              });
+            });
+          } else {
+            fetchFiles(updatedEntity.folderId);
+            router.push(`${ApplicationRoute.Prompts}/${getEntityPath(ApplicationRoute.Prompts, res.response)}`);
+          }
+          router.refresh();
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        }
+      });
+    },
+    [selectedPrompt, originalPrompt, router, fetchFiles, showNotification],
+  );
 
   const onChangeEntity = useCallback(
     (entity: DialPrompt) => {
@@ -137,6 +143,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
           jsonErrors={jsonErrors}
           contentJsonErrors={contentJsonErrors}
           setErrorNotifications={setErrorNotifications}
+          promptVersions={prompts?.map((prompt) => prompt.version) || []}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
