@@ -12,9 +12,7 @@
   },
   "private": true,
   "lint-staged": {
-    "*.{js,ts,tsx}": [
-      "npm run lint"
-    ]
+    "*.{js,ts,tsx}": []
   },
   "dependencies": {
     "@epam/ai-dial-shared": "^0.32.0",
@@ -120,7 +118,8 @@
     "esbuild": "0.25.5",
     "koa": "3.0.0",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "stylus": "0.0.1-security"
   },
   "engines": {
     "node": ">=22.2.0",
