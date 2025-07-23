@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { ApplicationRoute } from '@/src/types/routes';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { useI18n } from '@/src/locales/client';
-import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/entity-view';
+import { EntityViewTab, interceptorsTabs, propertiesTabs } from '@/src/components/EntityView/entity-view';
 import { deleteInterceptorTemplate, updateInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { getErrorNotification } from '@/src/utils/notification';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -15,6 +15,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import ExtendedProperties from '@/src/components/InterceptorTemplates/Properties/ExtendedProperties';
+import Interceptors from '@/src/components/InterceptorTemplates/View/Interceptors/Interceptors';
 
 interface Props {
   route: ApplicationRoute;
@@ -30,7 +31,7 @@ const View: FC<Props> = ({ route, template }) => {
   const [isChanged, setIsChanged] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(cloneDeep(template));
 
-  const tabs = [propertiesTabs(t)];
+  const tabs = [propertiesTabs(t), interceptorsTabs(t)];
 
   const onChangeActiveTab = useCallback(
     (tab: string) => {
@@ -81,6 +82,7 @@ const View: FC<Props> = ({ route, template }) => {
         {activeTab === EntityViewTab.Properties && (
           <ExtendedProperties template={selectedTemplate} onChange={onChange} />
         )}
+        {activeTab === EntityViewTab.Interceptors && <Interceptors interceptorList={selectedTemplate.interceptors} />}
       </div>
     </div>
   );
