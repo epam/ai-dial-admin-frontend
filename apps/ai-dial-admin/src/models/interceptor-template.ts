@@ -6,4 +6,5 @@ export interface InterceptorTemplate {
   interceptorContainerId?: string;
   completionEndpoint?: string;
   configurationEndpoint?: string;
+  interceptors?: string[];
 }
