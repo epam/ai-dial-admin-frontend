@@ -4,12 +4,7 @@ import { createPortal } from 'react-dom';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-
-export enum ModalType {
-  entity = 'saveEntity',
-  parameters = 'saveParameters',
-  emptyRoles = 'emptyRoles',
-}
+import { ModalType } from './constants';
 
 interface Props {
   modalState: PopUpState;
