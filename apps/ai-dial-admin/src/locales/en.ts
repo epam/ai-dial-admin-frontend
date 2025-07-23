@@ -685,7 +685,7 @@ export default {
     IncludeSecrets: 'Include secrets',
     IncludeDependencies: 'Include related dependencies',
     ExportSuccessTitle: '{type} exported successfully',
-    ExportSuccessDescription: 'You can now see them in you local storage',
+    ExportSuccessDescription: 'You can now see them in local storage',
     ExportErrorTitle: '{type} export failed',
     ExportErrorDescription: 'Error occurred while exporting, please try again',
     Included: 'Included',
