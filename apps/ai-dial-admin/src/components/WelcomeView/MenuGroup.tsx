@@ -15,7 +15,7 @@ const iconColors: Record<string, string> = {
   [MenuI18nKey.MLOps]: 'text-icon-accent-primary',
   [MenuI18nKey.AccessManagement]: 'text-icon-accent-secondary',
   [MenuI18nKey.Approvals]: 'text-icon-accent-tertiary',
-  [MenuI18nKey.Telemetry]: 'text-icon-accent-primary',
+  [MenuI18nKey.Audit]: 'text-icon-accent-primary',
 };
 
 const MenuGroup: FC<{ menuGroup: MenuGroupConfiguration }> = ({ menuGroup }) => {

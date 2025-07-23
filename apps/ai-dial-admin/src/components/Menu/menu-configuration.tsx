@@ -38,6 +38,10 @@ export const MENU_CONFIGURATION = (iconSize: number): MenuGroupConfiguration[] =
         href: ApplicationRoute.Applications,
       },
       {
+        key: MenuI18nKey.Interceptors,
+        href: ApplicationRoute.Interceptors,
+      },
+      {
         key: MenuI18nKey.Routes,
         href: ApplicationRoute.Routes,
       },
@@ -52,10 +56,7 @@ export const MENU_CONFIGURATION = (iconSize: number): MenuGroupConfiguration[] =
         key: MenuI18nKey.ApplicationRunners,
         href: ApplicationRoute.ApplicationRunners,
       },
-      {
-        key: MenuI18nKey.Interceptors,
-        href: ApplicationRoute.Interceptors,
-      },
+
       {
         key: MenuI18nKey.Adapters,
         href: ApplicationRoute.Adapters,
@@ -137,8 +138,8 @@ export const MENU_CONFIGURATION = (iconSize: number): MenuGroupConfiguration[] =
     items: [],
   },
   {
-    key: MenuI18nKey.Telemetry,
-    descriptionKey: MenuI18nKey.TelemetryDescription,
+    key: MenuI18nKey.Audit,
+    descriptionKey: MenuI18nKey.AuditDescription,
     icon: <Telemetry width={iconSize} height={iconSize} />,
     items: [
       {

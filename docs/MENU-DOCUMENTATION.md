@@ -14,6 +14,9 @@ This documentation describes the structure and contents of the menu items array 
   - **Applications**
     - **Key**: `Applications`
     - **Description**: Navigate to the applications page to manage and view all applications.
+  - **Interceptors**
+    - **Key**: `Interceptors`
+    - **Description**: View and configure interceptors that modify application behavior.
   - **Routes**
     - **Key**: `Routes`
     - **Description**: Navigate to the routes page to manage the routes in the system.
@@ -24,9 +27,6 @@ This documentation describes the structure and contents of the menu items array 
   - **Application Runners**
     - **Key**: `ApplicationRunners`
     - **Description**: Navigate to the page for managing and running applications.
-  - **Interceptors**
-    - **Key**: `Interceptors`
-    - **Description**: View and configure interceptors that modify application behavior.
   - **Adapters**
     - **Key**: `Adapters`
     - **Description**: Navigate to the adapters page to configure integrations and connectors.
@@ -67,8 +67,8 @@ This documentation describes the structure and contents of the menu items array 
     - **Key**: `FilePublications`
     - **Description**: Navigate to the file publications page to review and approve files before they are shared.
 
-### 6. **Telemetry**
-- **Description**: A section for accessing telemetry data and logs.
+### 6. **Audit**
+- **Description**: A section for accessing telemetry data, logs and audit.
 - **Items**:
   - **Dashboard**
     - **Key**: `Dashboard`
