@@ -120,7 +120,8 @@
     "esbuild": "0.25.5",
     "koa": "3.0.0",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "stylus": "0.0.1-security"
   },
   "engines": {
     "node": ">=22.2.0",
