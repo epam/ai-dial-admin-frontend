@@ -10,6 +10,7 @@ interface Props {
   elementId: string;
   title: string;
   readonly?: boolean;
+  optional?: boolean;
   selectedItems?: string[];
   heading?: string;
   addTitle?: string;
@@ -20,7 +21,7 @@ interface Props {
   getItems?: () => Promise<ServerActionResponse>;
 }
 
-const Multiselect: FC<Props> = ({ onChangeItems, elementId, selectedItems, title, readonly, ...props }) => {
+const Multiselect: FC<Props> = ({ onChangeItems, elementId, selectedItems, title, readonly, optional, ...props }) => {
   const [modalState, setIsModalState] = useState(PopUpState.Closed);
 
   const onOpenModal = useCallback(() => {
@@ -33,7 +34,7 @@ const Multiselect: FC<Props> = ({ onChangeItems, elementId, selectedItems, title
 
   return (
     <div className="flex flex-col">
-      <Field fieldTitle={title} htmlFor={elementId} />
+      <Field fieldTitle={title} htmlFor={elementId} optional={optional} />
       <InputModal modalState={modalState} readonly={readonly} selectedValue={selectedItems} onOpenModal={onOpenModal}>
         <MultiselectModal
           initSelectedItems={selectedItems}
