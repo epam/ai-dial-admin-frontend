@@ -4,4 +4,5 @@ export interface DialInterceptor extends DialBaseNamedEntity {
   endpoint?: string;
   forwardAuthToken?: boolean;
   entities?: string[];
+  author?: string;
 }
