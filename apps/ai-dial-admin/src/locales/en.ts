@@ -77,7 +77,7 @@ export default {
     Playground: 'Playground',
     Deployments: 'Deployments',
     Evaluation: 'Evaluation',
-    Telemetry: 'Telemetry',
+    Audit: 'Audit',
     Home: 'Home',
     Homepage: 'Homepage',
 
@@ -98,7 +98,7 @@ export default {
 
     Dashboard: 'Dashboard',
     UsageLog: 'Usage Log',
-    ActivityAudit: 'Activity Audit',
+    ActivityAudit: 'Activities',
 
     PromptPublications: 'Prompt Publications',
     ApplicationPublications: 'Application Publications',
@@ -106,9 +106,9 @@ export default {
     ImportConfig: 'Import Config',
     ExportConfig: 'Export Config',
 
-    MLOps: 'ML Ops',
-    MCPDeployments: 'MCP deployments',
-    InterceptorDeployments: 'Interceptor deployments',
+    MLOps: 'Deployments',
+    MCPDeployments: 'MCP Deployments',
+    InterceptorDeployments: 'Interceptor Deployments',
     InterceptorTemplates: 'Interceptor Templates',
 
     EntitiesDescription: 'Centralized space to configure and oversee key components of your AI ecosystem.',
@@ -117,7 +117,7 @@ export default {
     ToolsDescription:
       'Essential utilities to optimize and refine your AI applications. All in one place to streamline development and execution.',
     ApprovalsDescription: 'Oversee the approval process to maintain control and compliance across deployments.',
-    TelemetryDescription:
+    AuditDescription:
       'Track key metrics on the Dashboard and review detailed Usage Logs to ensure optimal performance, reliability, and efficiency.',
     MCPDescription: 'MCP plugin',
     EvaluationDescription:
