@@ -123,6 +123,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
               selectedItems={model.topics}
               getItems={getModelsTopics}
               allItems={model.topics}
+              optional={true}
               onChangeItems={onChangeItems}
               heading={t(TopicsI18nKey.Topics)}
               title={t(TopicsI18nKey.Topics)}
