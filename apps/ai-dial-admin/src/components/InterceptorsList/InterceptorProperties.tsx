@@ -42,6 +42,15 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
         placeholder={t(EntitiesI18nKey.EndpointPlaceholder)}
       />
 
+      <TextInputField
+        elementId="author"
+        fieldTitle={t(EntitiesI18nKey.Maintainer)}
+        placeholder={t(EntitiesI18nKey.MaintainerPlaceholder)}
+        value={selectedInterceptor.author}
+        optional={true}
+        onChange={(author) => onChangeInterceptor({ ...selectedInterceptor, author })}
+      />
+
       <div className="w-full">
         <ForwardAuthTokenField
           view={ApplicationRoute.Interceptors}
