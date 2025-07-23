@@ -450,6 +450,7 @@ export default {
     Parameters: 'Parameters',
     Applications: 'Applications',
     Dashboard: 'Dashboard',
+    Audit: 'Audit',
     Models: 'Models',
     Files: 'Files',
   },

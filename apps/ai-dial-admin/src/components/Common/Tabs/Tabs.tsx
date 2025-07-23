@@ -7,16 +7,24 @@ import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { TabModel } from '@/src/models/tab';
 import classNames from 'classnames';
 import TabContent from './Tab';
+import { TabOrientation } from '@/src/types/tab';
 
 interface Props {
   tabs: TabModel[];
   activeTab: string;
   onClick: (id: string) => void;
   jsonEditorEnabled?: boolean;
+  orientation?: TabOrientation;
 }
 
-const Tabs: FC<Props> = ({ tabs, activeTab, onClick, jsonEditorEnabled }) => {
-  const staticTabsClassnames = classNames('flex flex-row gap-3', jsonEditorEnabled ? 'hidden' : '');
+const Tabs: FC<Props> = ({ tabs, activeTab, onClick, jsonEditorEnabled, orientation = TabOrientation.Horizontal }) => {
+  const isHorizontal = orientation === TabOrientation.Horizontal;
+  const staticTabsClassnames = classNames(
+    'flex gap-3',
+    isHorizontal ? 'flex-row' : 'flex-col',
+    jsonEditorEnabled ? 'hidden' : '',
+  );
+
   const staticDropDownContainerClassNames = classNames(
     'absolute top-0 right-0 left-0 h-[44px] flex items-center bg-layer-3',
     jsonEditorEnabled ? 'hidden' : '',
@@ -38,7 +46,13 @@ const Tabs: FC<Props> = ({ tabs, activeTab, onClick, jsonEditorEnabled }) => {
     <>
       <div className={tabsClassNames}>
         {tabs.map((tab) => (
-          <TabContent key={tab.id} tab={tab} isActive={activeTab == tab.id} onClick={onClick} />
+          <TabContent
+            key={tab.id}
+            tab={tab}
+            isActive={activeTab == tab.id}
+            onClick={onClick}
+            isHorizontal={isHorizontal}
+          />
         ))}
       </div>
 
