@@ -1,0 +1,46 @@
+import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { FC, useState } from 'react';
+
+import Dashboard from '@/src/components/Telemetry/Dashboard';
+import { TabsI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getAuditTabs } from './utils';
+import { useAppContext } from '@/src/context/AppContext';
+import Tabs from '@/src/components/Common/Tabs/Tabs';
+import { EntityViewTab } from '@/src/components/EntityView/entity-view';
+import { TabOrientation } from '@/src/types/tab';
+
+interface Props {
+  entity: DialBaseEntity;
+  view: ApplicationRoute;
+}
+
+const EntityAudit: FC<Props> = ({ entity, view }) => {
+  const t = useI18n() as (str: string) => string;
+
+  const { featureFlags } = useAppContext();
+  const tabs = getAuditTabs(t, featureFlags);
+  const [activeTab, setActiveTab] = useState(tabs[0].id);
+
+  return (
+    <div className="flex flex-row h-full w-full">
+      <div className="bg-layer-3 h-full w-[296px] p-4">
+        <h1 className="mb-4">{t(TabsI18nKey.Audit)}</h1>
+        <div className="flex-1 min-h-0">
+          <Tabs
+            activeTab={activeTab}
+            tabs={tabs}
+            onClick={(tab) => setActiveTab(tab)}
+            orientation={TabOrientation.Vertical}
+          />
+        </div>
+      </div>
+      <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 relative">
+        {activeTab === EntityViewTab.Dashboard && <Dashboard entity={entity} route={view} />}
+      </div>
+    </div>
+  );
+};
+
+export default EntityAudit;
