@@ -20,6 +20,7 @@ const TabContent: FC<Props> = ({ tab, isActive, disabled, invalid, onClick, isHo
   let tabClassNames = classNames(
     'rounded px-3 py-2 flex flex-row gap-2 h-[32px]',
     'cursor-pointer small hover:text-accent-primary',
+    isHorizontal && 'bg-layer-4',
   );
 
   if (disabled) {
@@ -31,7 +32,7 @@ const TabContent: FC<Props> = ({ tab, isActive, disabled, invalid, onClick, isHo
       isHorizontal ? 'border-b-2 border-b-accent-primary' : 'border-l-2 border-l-accent-primary',
     );
   } else {
-    tabClassNames = classNames(tabClassNames, 'bg-layer-4 text-primary');
+    tabClassNames = classNames(tabClassNames, 'text-primary');
   }
 
   return (

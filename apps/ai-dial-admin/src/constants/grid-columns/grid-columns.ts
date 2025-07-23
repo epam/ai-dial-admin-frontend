@@ -99,28 +99,36 @@ export const ENTITY_WITH_VERSION_COLUMNS = (
   { field: 'pricing.completion', headerName: 'Completion price', hide: true },
 ];
 
-export const ACTIVITY_AUDIT_COLUMNS: ColDef[] = [
-  { field: 'activityType', headerName: 'Activity type', ...stringFilter },
-  {
-    field: 'resourceType',
-    headerName: 'Resource type',
-    valueFormatter: ({ value }) => getFormattedResourceType(value),
-    tooltipValueGetter: ({ value }) => getFormattedResourceType(value),
-    ...stringFilter,
-  },
-  { field: 'resourceId', headerName: 'Resource identifier', ...stringFilter },
-  {
-    field: 'epochTimestampMs',
-    headerName: 'Time',
-    sort: 'desc',
-    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
-    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
-    floatingFilter: false,
-    filter: false,
-  },
-  { field: 'initiatedEmail', headerName: 'Initiated', ...stringFilter },
-  { field: 'activityId', headerName: 'Activity ID', ...stringFilter },
-];
+export const ACTIVITY_AUDIT_COLUMNS = (isSingleEntity?: boolean): ColDef[] => {
+  const columns: ColDef[] = [
+    { field: 'activityType', headerName: 'Activity type', ...stringFilter },
+    {
+      field: 'resourceType',
+      headerName: 'Resource type',
+      valueFormatter: ({ value }) => getFormattedResourceType(value),
+      tooltipValueGetter: ({ value }) => getFormattedResourceType(value),
+      ...stringFilter,
+    },
+    { field: 'resourceId', headerName: 'Resource identifier', ...stringFilter },
+    {
+      field: 'epochTimestampMs',
+      headerName: 'Time',
+      sort: 'desc',
+      valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
+      tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
+      floatingFilter: false,
+      filter: false,
+    },
+    { field: 'initiatedEmail', headerName: 'Initiated', ...stringFilter },
+    { field: 'activityId', headerName: 'Activity ID', ...stringFilter },
+  ];
+
+  if (isSingleEntity) {
+    return [columns[0], ...columns.slice(3)];
+  }
+
+  return columns;
+};
 
 export const KEY_ENTITY_COLUMNS: ColDef[] = [
   { field: 'name', headerName: 'Name', sort: 'asc', hide: false },

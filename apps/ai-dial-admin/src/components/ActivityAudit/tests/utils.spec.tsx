@@ -14,7 +14,7 @@ vi.mock('@/src/constants/grid-columns/actions', () => ({
 }));
 
 vi.mock('@/src/constants/grid-columns/grid-columns', () => ({
-  ACTIVITY_AUDIT_COLUMNS: [{ colId: 'a' }, { colId: 'b' }],
+  ACTIVITY_AUDIT_COLUMNS: vi.fn(() => [{ colId: 'a' }, { colId: 'b' }]),
 }));
 
 describe('Activity Audit List utils :: getActivityAuditColumns', () => {
