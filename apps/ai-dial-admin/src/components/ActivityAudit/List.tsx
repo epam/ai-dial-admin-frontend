@@ -32,6 +32,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 import { SYSTEM_ROLLBACK_ID } from './constants';
+import ActivityDetails from './Modals/Details';
 import { getActivityAuditColumns, getGridFilters } from './utils';
 
 interface Props {
@@ -44,7 +45,9 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
 
   const { showNotification } = useNotification();
 
-  const [modalState, setModalState] = useState(PopUpState.Closed);
+  const [rollbackModalState, setRollbackModalState] = useState(PopUpState.Closed);
+  const [detailsModalState, setDetailsModalState] = useState(PopUpState.Closed);
+
   const [isLoading, setIsLoading] = useState(false);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [timePeriod, setTimePeriod] = useState<string | null>(DEFAULT_TIME_PERIOD);
@@ -52,14 +55,11 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
 
   const [currentActivity, setCurrentActivity] = useState<DialActivity | undefined>(void 0);
 
-  const onOpenModal = useCallback(() => {
-    setModalState(PopUpState.Opened);
-  }, [setModalState]);
-
   const onCloseModal = useCallback(() => {
-    setModalState(PopUpState.Closed);
+    setRollbackModalState(PopUpState.Closed);
+    setDetailsModalState(PopUpState.Closed);
     setCurrentActivity(void 0);
-  }, [setModalState]);
+  }, [setRollbackModalState]);
 
   const gridDataSource: IDatasource = useMemo(
     () => ({
@@ -112,7 +112,7 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
     cacheBlockSize: PAGE_SIZE,
     blockLoadDebounceMillis: 200,
     maxBlocksInCache: Math.floor(CACHE_LIMIT / PAGE_SIZE),
-    onCellClicked: entity
+    onCellClicked: !entity
       ? (e) => {
           if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
             router.push(`${ApplicationRoute.ActivityAudit}/${getEntityPath(ApplicationRoute.ActivityAudit, e.data)}`);
@@ -128,17 +128,19 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
     );
   }, []);
 
-  const onOpenConfirmationModal = useCallback(
-    (activity: DialActivity) => {
-      onOpenModal();
-      setCurrentActivity(activity);
-    },
-    [onOpenModal],
-  );
+  const onOpenConfirmationModal = useCallback((activity: DialActivity) => {
+    setRollbackModalState(PopUpState.Opened);
+    setCurrentActivity(activity);
+  }, []);
+
+  const onOpenDetailsModal = useCallback((activity: DialActivity) => {
+    setDetailsModalState(PopUpState.Opened);
+    setCurrentActivity(activity);
+  }, []);
 
   const columnDefs = entity
-    ? getActivityAuditColumns(void 0, void 0, true)
-    : getActivityAuditColumns(openInNewTab, onOpenConfirmationModal);
+    ? getActivityAuditColumns(void 0, onOpenConfirmationModal, onOpenDetailsModal, true)
+    : getActivityAuditColumns(openInNewTab, onOpenConfirmationModal, void 0);
 
   const onRefresh = useCallback(() => {
     if (gridApi) {
@@ -178,7 +180,11 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
             ),
           );
           onCloseModal();
-          onRefresh();
+          if (entity) {
+            router.refresh();
+          } else {
+            onRefresh();
+          }
         })
         .catch(() => {
           setIsLoading(false);
@@ -190,7 +196,7 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
           );
         });
     }
-  }, [onCloseModal, showNotification, currentActivity, t, onRefresh]);
+  }, [currentActivity, showNotification, t, onCloseModal, entity, router, onRefresh]);
 
   const systemRollback = useCallback(() => {
     router.push(`${ApplicationRoute.ActivityAudit}/${SYSTEM_ROLLBACK_ID}`);
@@ -229,13 +235,13 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
           )}
         </div>
       </ListView>
-      {modalState === PopUpState.Opened &&
+      {rollbackModalState === PopUpState.Opened &&
         createPortal(
           <ConfirmationModal
             isLoading={isLoading}
             heading={t(ActivityAuditI18nKey.ConfirmRollback)}
             onConfirm={resourceRollback}
-            modalState={modalState}
+            modalState={rollbackModalState}
             confirmLabel={t(ButtonsI18nKey.Rollback)}
             onClose={onCloseModal}
           >
@@ -253,6 +259,15 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
               <p>{t(ActivityAuditI18nKey.ConfirmRollbackAsking)}</p>
             </div>
           </ConfirmationModal>,
+          document.body,
+        )}
+      {detailsModalState === PopUpState.Opened &&
+        createPortal(
+          <ActivityDetails
+            auditViewId={currentActivity?.activityId}
+            modalState={detailsModalState}
+            onClose={onCloseModal}
+          />,
           document.body,
         )}
     </>

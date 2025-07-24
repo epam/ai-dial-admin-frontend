@@ -31,3 +31,8 @@ export async function getRevisions(pageSize: number, pageNumber: number, sorts: 
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return activityAuditApi.getRevisions(pageSize, pageNumber, token, sorts, filters);
 }
+
+export async function getActivityById(id: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return activityAuditApi.getActivityById(id, token);
+}

@@ -671,9 +671,11 @@ export enum ActivityAuditI18nKey {
   Time = 'ActivityAudit.Time',
   Initiated = 'ActivityAudit.Initiated',
   UserId = 'ActivityAudit.UserId',
+  ActivityId = 'ActivityAudit.ActivityId',
   CurrentState = 'ActivityAudit.CurrentState',
   RollbackState = 'ActivityAudit.RollbackState',
   RollbackRevision = 'ActivityAudit.RollbackRevision',
+  ActivityDetails = 'ActivityAudit.ActivityDetails',
 }
 
 export enum ErrorI18nKey {

@@ -122,6 +122,8 @@ const Grid = <T extends object>({
       const model = getColumnsStateFromStorage(view, defaultSorts);
       e.api.setFilterModel(model.filters);
       e.api.applyColumnState({ state: model.columns });
+    } else {
+      e.api.applyColumnState({ state: defaultSorts });
     }
   };
 
