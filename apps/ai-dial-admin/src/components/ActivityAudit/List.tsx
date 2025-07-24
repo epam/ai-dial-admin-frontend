@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom';
 
 import { IconRefresh, IconRestore } from '@tabler/icons-react';
 import { GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
+import classNames from 'classnames';
 
 import { getActivities } from '@/src/app/[lang]/activity-audit/actions';
 import Button from '@/src/components/Common/Button/Button';
@@ -20,6 +21,8 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/dial/activity-audit';
+import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { FilterDto } from '@/src/models/request';
 import { TimeRange } from '@/src/models/time-range';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -31,7 +34,11 @@ import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 import { SYSTEM_ROLLBACK_ID } from './constants';
 import { getActivityAuditColumns, getGridFilters } from './utils';
 
-const ActivityAuditList: FC = () => {
+interface Props {
+  entity?: DialBaseEntity;
+}
+
+const ActivityAuditList: FC<Props> = ({ entity }) => {
   const t = useI18n();
   const router = useRouter();
 
@@ -61,7 +68,18 @@ const ActivityAuditList: FC = () => {
         gridApi?.setGridOption('loading', true);
         const page = Math.floor(params.startRow / PAGE_SIZE);
         const sorts = getRequestSorts(params.sortModel);
-        const filters = getGridFilters(params.filterModel, actualTimeRange);
+        const filters = [
+          ...(entity
+            ? [
+                {
+                  column: 'resourceId',
+                  value: entity.name,
+                  operator: 'eq',
+                } as FilterDto,
+              ]
+            : []),
+          ...getGridFilters(params.filterModel, actualTimeRange),
+        ];
 
         getActivities(PAGE_SIZE, page, sorts, filters)
           .then((res) => {
@@ -80,7 +98,7 @@ const ActivityAuditList: FC = () => {
           });
       },
     }),
-    [gridApi, timePeriod, timeRange, router],
+    [timePeriod, timeRange, gridApi, entity, router],
   );
 
   useEffect(() => {
@@ -94,11 +112,13 @@ const ActivityAuditList: FC = () => {
     cacheBlockSize: PAGE_SIZE,
     blockLoadDebounceMillis: 200,
     maxBlocksInCache: Math.floor(CACHE_LIMIT / PAGE_SIZE),
-    onCellClicked: (e) => {
-      if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
-        router.push(`${ApplicationRoute.ActivityAudit}/${getEntityPath(ApplicationRoute.ActivityAudit, e.data)}`);
-      }
-    },
+    onCellClicked: entity
+      ? (e) => {
+          if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
+            router.push(`${ApplicationRoute.ActivityAudit}/${getEntityPath(ApplicationRoute.ActivityAudit, e.data)}`);
+          }
+        }
+      : void 0,
   };
 
   const openInNewTab = useCallback((activity: DialActivity) => {
@@ -116,7 +136,9 @@ const ActivityAuditList: FC = () => {
     [onOpenModal],
   );
 
-  const columnDefs = getActivityAuditColumns(openInNewTab, onOpenConfirmationModal);
+  const columnDefs = entity
+    ? getActivityAuditColumns(void 0, void 0, true)
+    : getActivityAuditColumns(openInNewTab, onOpenConfirmationModal);
 
   const onRefresh = useCallback(() => {
     if (gridApi) {
@@ -179,12 +201,12 @@ const ActivityAuditList: FC = () => {
       <ListView
         additionalGridOptions={gridOptions}
         columnDefs={columnDefs}
-        title={t(listViewTitleMap[ApplicationRoute.ActivityAudit])}
+        title={!entity ? t(listViewTitleMap[ApplicationRoute.ActivityAudit]) : void 0}
         emptyDataTitle={t(emptyDataTitleMap[ApplicationRoute.ActivityAudit])}
         onGridReady={setGridApi}
-        view={ApplicationRoute.ActivityAudit}
+        view={!entity ? ApplicationRoute.ActivityAudit : void 0}
       >
-        <div className="flex gap-4 justify-end">
+        <div className={classNames('flex gap-4', entity ? 'flex-1 justify-between' : 'justify-end')}>
           <TimeFilter
             timePeriod={timePeriod as string}
             onTimePeriodChange={onTimePeriodChange}
@@ -197,12 +219,14 @@ const ActivityAuditList: FC = () => {
             iconBefore={<IconRefresh {...BASE_ICON_PROPS} />}
             onClick={onRefresh}
           />
-          <Button
-            iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
-            cssClass="secondary"
-            title={t(ActivityAuditI18nKey.RollbackSystem)}
-            onClick={systemRollback}
-          />
+          {!entity && (
+            <Button
+              iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
+              cssClass="secondary"
+              title={t(ActivityAuditI18nKey.RollbackSystem)}
+              onClick={systemRollback}
+            />
+          )}
         </div>
       </ListView>
       {modalState === PopUpState.Opened &&

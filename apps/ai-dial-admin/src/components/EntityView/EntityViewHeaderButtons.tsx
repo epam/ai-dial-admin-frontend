@@ -154,6 +154,13 @@ const EntityViewHeaderButtons = <T extends DialBaseEntity | DialKey>({
     );
   }, [isTablet, isMobile]);
 
+  const deleteModalContent =
+    view === ApplicationRoute.ApplicationRunners ? (
+      <DeleteScheme entity={entity as DialApplicationScheme} isEntityView={true} />
+    ) : view === ApplicationRoute.Adapters ? (
+      <DeleteAdapter entity={entity as DialAdapter} isEntityView={true} />
+    ) : null;
+
   return (
     <>
       <div className={containerClassNames}>
@@ -213,13 +220,7 @@ const EntityViewHeaderButtons = <T extends DialBaseEntity | DialKey>({
             onClose={onCloseModal}
             confirmLabel={t(ButtonsI18nKey.Delete)}
           >
-            {view === ApplicationRoute.ApplicationRunners ? (
-              <DeleteScheme entity={entity as DialApplicationScheme} isEntityView={true} />
-            ) : null}
-
-            {view === ApplicationRoute.Adapters ? (
-              <DeleteAdapter entity={entity as DialAdapter} isEntityView={true} />
-            ) : null}
+            {deleteModalContent}
           </ConfirmationModal>,
           document.body,
         )}

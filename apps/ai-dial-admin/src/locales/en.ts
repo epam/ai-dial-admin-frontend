@@ -453,6 +453,7 @@ export default {
     Audit: 'Audit',
     Models: 'Models',
     Files: 'Files',
+    Activities: 'Activities',
   },
   ForwardToken: {
     ForwardToken: 'Forward auth token',
