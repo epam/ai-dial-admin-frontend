@@ -1,17 +1,20 @@
 import { ColDef } from 'ag-grid-community';
 
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
-import { getResourceRollbackOperation } from '@/src/constants/grid-columns/actions';
+import {
+  getOpenInNewTabOperation,
+  getResourceRollbackOperation,
+  getViewDetailsOperation,
+} from '@/src/constants/grid-columns/actions';
 import { ACTIVITY_AUDIT_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { DialActivity } from '@/src/models/dial/activity-audit';
 import { GridFilter } from '@/src/models/grid-filter';
 import { FilterDto } from '@/src/models/request';
 import { TimeRange } from '@/src/models/time-range';
 import { FilterOperatorDto } from '@/src/types/request';
-import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
+import { formatDateToLocalString } from '@/src/utils/formatting/date';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { ActivityAuditRevision } from './models';
-import { formatDateToLocalString } from '@/src/utils/formatting/date';
 
 /**
  * Generate columns with actions for activity audit grid
@@ -23,11 +26,15 @@ import { formatDateToLocalString } from '@/src/utils/formatting/date';
 export const getActivityAuditColumns = (
   open?: (activity: DialActivity) => void,
   resourceRollback?: (activity: DialActivity) => void,
+  viewDetails?: (activity: DialActivity) => void,
   isSingleEntity?: boolean,
 ): ColDef[] => {
   const actions = [];
   if (open) {
     actions.push(getOpenInNewTabOperation(open));
+  }
+  if (viewDetails) {
+    actions.push(getViewDetailsOperation(viewDetails));
   }
   if (resourceRollback) {
     actions.push(getResourceRollbackOperation(resourceRollback));

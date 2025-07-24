@@ -4,6 +4,8 @@ import { IconRestore } from '@tabler/icons-react';
 import { FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import classNames from 'classnames';
+
 import Button from '@/src/components/Common/Button/Button';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
@@ -27,9 +29,10 @@ interface Props {
   activity: DialActivity;
   activityRevision: ActivityAuditEntity | null;
   previousRevision: ActivityAuditEntity | null;
+  isModalView?: boolean;
 }
 
-const ActivityAuditView: FC<Props> = ({ activity, activityRevision, previousRevision }) => {
+const ActivityAuditView: FC<Props> = ({ activity, activityRevision, previousRevision, isModalView }) => {
   const t = useI18n();
   const router = useRouter();
 
@@ -76,20 +79,27 @@ const ActivityAuditView: FC<Props> = ({ activity, activityRevision, previousRevi
 
   return (
     <>
-      <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4">
-        <div className="flex flex-row justify-between mb-6">
-          <h1 className="flex flex-row items-center gap-x-3">
-            {activity.activityId} <CopyButton field={activity.activityId} title={t(CreateI18nKey.IdTitle)} />
-          </h1>
-          <Button
-            iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
-            cssClass="secondary"
-            title={t(ActivityAuditI18nKey.RollbackResource)}
-            onClick={onOpenModal}
-          />
-        </div>
+      <div
+        className={classNames(
+          'flex flex-col flex-1 min-h-0 w-full rounded p-4 pb-14 lg:pb-4',
+          isModalView ? 'h-full bg-layer-3' : 'bg-layer-2',
+        )}
+      >
+        {!isModalView && (
+          <div className="flex flex-row justify-between mb-6">
+            <h1 className="flex flex-row items-center gap-x-3">
+              {activity.activityId} <CopyButton field={activity.activityId} title={t(CreateI18nKey.IdTitle)} />
+            </h1>
+            <Button
+              iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
+              cssClass="secondary"
+              title={t(ActivityAuditI18nKey.RollbackResource)}
+              onClick={onOpenModal}
+            />
+          </div>
+        )}
         <div className="flex-1 flex flex-col relative divide-y divide-primary min-h-0">
-          <ActivityAuditViewHeader activity={activity} />
+          <ActivityAuditViewHeader activity={activity} isModalView={isModalView} />
           <ActivityAuditEntityDiff
             currentEntity={currentEntity}
             compareEntity={compareEntity}

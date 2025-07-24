@@ -1,6 +1,12 @@
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { getActivities, getEntitiesForRevision, getRevisionDetails, systemRollbackToRevision } from './actions';
+import {
+  getActivities,
+  getEntitiesForRevision,
+  getRevisionDetails,
+  systemRollbackToRevision,
+  getActivityById,
+} from './actions';
 import { activityAuditApi } from '@/src/app/api/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -10,6 +16,7 @@ vi.mock('@/src/app/api/api', () => ({
     getRevisionDetails: vi.fn(),
     getEntitiesForRevision: vi.fn(),
     rollbackToRevision: vi.fn(),
+    getActivityById: vi.fn(),
   },
 }));
 
@@ -85,6 +92,19 @@ describe('Activity API Service', () => {
       const result = await systemRollbackToRevision(1);
 
       expect(activityAuditApi.rollbackToRevision).toHaveBeenCalledWith(1, mockToken);
+      expect(result).toEqual(mockResponse);
+    });
+  });
+
+  describe('getActivityById', () => {
+    test('should call system rollback', async () => {
+      const mockResponse = { data: 'revision' };
+
+      activityAuditApi.getActivityById.mockResolvedValue(mockResponse);
+
+      const result = await getActivityById('id');
+
+      expect(activityAuditApi.getActivityById).toHaveBeenCalledWith('id', mockToken);
       expect(result).toEqual(mockResponse);
     });
   });

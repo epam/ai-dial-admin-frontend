@@ -12,4 +12,5 @@ export enum EntityOperation {
   Download = 'Download',
   Preview = 'Preview',
   Resource_rollback = 'Resource rollback',
+  View_details = 'View details',
 }
