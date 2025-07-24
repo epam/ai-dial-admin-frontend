@@ -29,7 +29,7 @@ const EntityRoles: FC<Props> = ({ entity, roles, onChangeEntity, isSkipRefresh }
   const entityRef = useRef(entity);
 
   useEffect(() => {
-    const roleLimits = [...Object.keys(entity?.roleLimits || {}), 'default'];
+    const roleLimits = [...Object.keys(entity?.roleLimits || {})];
     setAvailableRoles(roles.filter((role) => !roleLimits.includes(role.name as string)));
   }, [entity, roles]);
 
