@@ -436,6 +436,7 @@ export enum TabsI18nKey {
   Models = 'Tabs.Models',
   Dashboard = 'Tabs.Dashboard',
   Audit = 'Tabs.Audit',
+  Activities = 'Tabs.Activities',
   Files = 'Tabs.Files',
 }
 

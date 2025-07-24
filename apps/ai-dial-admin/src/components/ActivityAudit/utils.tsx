@@ -21,11 +21,19 @@ import { formatDateToLocalString } from '@/src/utils/formatting/date';
  * @returns {ColDef[]} - columns
  */
 export const getActivityAuditColumns = (
-  open: (activity: DialActivity) => void,
-  resourceRollback: (activity: DialActivity) => void,
+  open?: (activity: DialActivity) => void,
+  resourceRollback?: (activity: DialActivity) => void,
+  isSingleEntity?: boolean,
 ): ColDef[] => {
-  const actions = [getOpenInNewTabOperation(open), getResourceRollbackOperation(resourceRollback)];
-  return [...ACTIVITY_AUDIT_COLUMNS, ACTION_COLUMN(actions)];
+  const actions = [];
+  if (open) {
+    actions.push(getOpenInNewTabOperation(open));
+  }
+  if (resourceRollback) {
+    actions.push(getResourceRollbackOperation(resourceRollback));
+  }
+
+  return [...ACTIVITY_AUDIT_COLUMNS(isSingleEntity), ACTION_COLUMN(actions)];
 };
 
 /**

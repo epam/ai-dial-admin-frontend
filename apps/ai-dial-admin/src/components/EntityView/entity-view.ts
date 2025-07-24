@@ -13,6 +13,7 @@ export enum EntityViewTab {
   Applications = 'Applications',
   Models = 'Models',
   Audit = 'Audit',
+  Activities = 'Activities',
   Dashboard = 'Dashboard',
 }
 
@@ -49,6 +50,16 @@ export const auditTabs = (t: (stringToTranslate: string) => string) => ({
 export const modelsTabs = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Models,
   name: t(TabsI18nKey.Models),
+});
+
+export const dashboardTabs = (t: (stringToTranslate: string) => string) => ({
+  id: EntityViewTab.Dashboard,
+  name: t(TabsI18nKey.Dashboard),
+});
+
+export const activitiesTabs = (t: (stringToTranslate: string) => string) => ({
+  id: EntityViewTab.Activities,
+  name: t(TabsI18nKey.Activities),
 });
 
 export const getViewTabs = (

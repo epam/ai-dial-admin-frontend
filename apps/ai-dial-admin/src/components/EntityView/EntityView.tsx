@@ -6,9 +6,11 @@ import EntityProperties from '@/src/components/EntityProperties/EntityProperties
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import ModelProperties from '@/src/components/ModelView/ModelProperties/ModelProperties';
 import RouteProperties from '@/src/components/RoutesList/RouteProperties';
+import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
+import { DialAttachmentData } from '@/src/models/attachment-data';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -29,16 +31,14 @@ import classNames from 'classnames';
 import { cloneDeep, isEqual } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
+import EntityAudit from './Audit/EntityAudit';
 import { EntityViewTab, getViewTabs } from './entity-view';
 import EntityViewHeaderButtons from './EntityViewHeaderButtons';
-import EntityViewModals from './Modals/EntityViewModals';
-import { ModalType } from './Modals/constants';
 import EntityFeatures from './Features/Features';
 import EntityInterceptors from './Interceptors/Interceptors';
+import { ModalType } from './Modals/constants';
+import EntityViewModals from './Modals/EntityViewModals';
 import EntityRoles from './Roles/Roles';
-import EntityAudit from '@/src/components/EntityView/Dashboard/EntityAudit';
-import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
-import { DialAttachmentData } from '@/src/models/attachment-data';
 
 interface Props {
   view: ApplicationRoute;
