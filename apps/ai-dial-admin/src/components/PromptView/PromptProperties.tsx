@@ -2,6 +2,7 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from '
 import { createPortal } from 'react-dom';
 
 import { IconPlus } from '@tabler/icons-react';
+import { useRouter } from 'next/navigation';
 
 import AddVersionModal from '@/src/components/Common/AddVersionModal/AddVersionModal';
 import Button from '@/src/components/Common/Button/Button';
@@ -23,6 +24,7 @@ import { Publication } from '@/src/models/dial/publications';
 import { FieldError } from '@/src/models/error';
 import { JSONEditorError } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
+import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
@@ -37,6 +39,7 @@ interface Props {
   addedVersions: string[];
   setAddedVersions: Dispatch<SetStateAction<string[]>>;
   setContentJsonErrors: Dispatch<SetStateAction<JSONEditorError[]>>;
+  setSelectedPrompt: Dispatch<SetStateAction<DialPrompt>>;
 }
 
 const PromptProperties: FC<Props> = ({
@@ -49,8 +52,11 @@ const PromptProperties: FC<Props> = ({
   addedVersions,
   setAddedVersions,
   setContentJsonErrors,
+  setSelectedPrompt,
 }) => {
   const t = useI18n() as (t: string) => string;
+  const router = useRouter();
+
   const versions: string[] = prompts?.map((prompt) => prompt.version) || [];
   const [modalState, setModalState] = useState(PopUpState.Closed);
 
@@ -84,15 +90,10 @@ const PromptProperties: FC<Props> = ({
     async (version: string) => {
       const found = await getPrompt?.(prompt.folderId as string, prompt.name as string, version);
       if (found) {
-        const path = modifyNameVersionInPrompt(found.path, void 0, version);
-        onChangePrompt?.({
-          ...prompt,
-          description: found.description,
-          content: found.content,
-          folderId: found.folderId,
-          version,
-          path,
-        });
+        setSelectedPrompt({} as DialPrompt);
+        router.push(
+          `${ApplicationRoute.Prompts}/${`${encodeURIComponent((found as DialPrompt).name as string)}?path=${encodeURIComponent((found as DialPrompt).path)}`}`,
+        );
       } else {
         const path = modifyNameVersionInPrompt(prompt.path, void 0, version);
         onChangePrompt?.({
@@ -102,7 +103,7 @@ const PromptProperties: FC<Props> = ({
         });
       }
     },
-    [prompt, getPrompt, onChangePrompt],
+    [getPrompt, prompt, setSelectedPrompt, router, onChangePrompt],
   );
 
   const onOpenModal = useCallback(() => {
