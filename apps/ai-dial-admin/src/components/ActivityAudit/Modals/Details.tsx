@@ -31,12 +31,18 @@ const ActivityDetails: FC<Props> = ({ auditViewId, modalState, onClose }) => {
   useEffect(() => {
     if (!auditViewId) return;
     getActivityById(auditViewId as string)
-      .then((a) => {
-        if (!a) return;
-        setActivity(a);
-        const route = getRevisionRouteForEntityType(a?.resourceType, decodeURIComponent(a?.resourceId as string));
+      .then((activityDetails) => {
+        if (!activityDetails) return;
+        setActivity(activityDetails);
+        const route = getRevisionRouteForEntityType(
+          activityDetails?.resourceType,
+          decodeURIComponent(activityDetails?.resourceId as string),
+        );
         if (!route) return;
-        Promise.all([getRevisionDetails(`${route}${a.revision}`), getRevisionDetails(`${route}${a.revision - 1}`)])
+        Promise.all([
+          getRevisionDetails(`${route}${activityDetails.revision}`),
+          getRevisionDetails(`${route}${activityDetails.revision - 1}`),
+        ])
           .then(([revision, prevRevision]) => {
             setActivityRevision(revision);
             setPreviousRevision(prevRevision);
