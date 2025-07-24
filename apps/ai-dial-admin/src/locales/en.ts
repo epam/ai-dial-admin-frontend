@@ -758,6 +758,7 @@ export default {
     Time: 'Time',
     Initiated: 'Initiated',
     UserId: 'User ID',
+    ActivityId: 'Activity ID',
     ResourceRollback: 'Resource rolled back successfully',
     ResourceRollbackDescription: 'Changes have been delivered to the system',
     ResourceRollbackErrorTitle: 'Resource rollback failed',
@@ -765,6 +766,7 @@ export default {
     CurrentState: 'Current state',
     RollbackState: 'Rollback state',
     RollbackRevision: 'Rollback revision',
+    ActivityDetails: 'Activity details',
   },
   ParameterNames: {
     roleLimits: 'Role limits',

@@ -1,4 +1,6 @@
 import Reset from '@/public/images/icons/reset.svg';
+import OpenPopup from '@/public/images/icons/open-pop-up.svg';
+
 import {
   IconCopy,
   IconExternalLink,
@@ -21,6 +23,7 @@ import {
   getResetOperation,
   getResourceRollbackOperation,
   getSetNoLimitsOperation,
+  getViewDetailsOperation,
 } from '../actions';
 
 const CLICK = vi.fn();
@@ -79,6 +82,13 @@ describe('Actions :: getResourceRollbackOperation', () => {
     const res = getMoveOperation(CLICK);
     expect(res.id).toBe(EntityOperation.Move);
     expect(res.icon).toEqual(<IconFolderShare {...BASE_ICON_PROPS} />);
+    expect(res.onClick).toEqual(CLICK);
+  });
+
+  test('Should set VIEW_DETAILS_OPERATION', () => {
+    const res = getViewDetailsOperation(CLICK);
+    expect(res.id).toBe(EntityOperation.View_details);
+    expect(res.icon).toEqual(<OpenPopup {...BASE_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
   });
 });

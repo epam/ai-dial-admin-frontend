@@ -12,6 +12,7 @@ import {
 import { GridApi, IRowNode } from 'ag-grid-community';
 
 import Reset from '@/public/images/icons/reset.svg';
+import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { EntityOperationDeclaration } from '@/src/models/entity-operations';
 import { EntityOperation } from '@/src/types/entity-operations';
@@ -79,6 +80,18 @@ export function getOpenInNewTabOperation<T>(
   return {
     icon: <IconExternalLink {...BASE_ICON_PROPS} />,
     id: EntityOperation.Open_in_new_tab,
+    onClick,
+    hidden,
+  };
+}
+
+export function getViewDetailsOperation<T>(
+  onClick: (entity: T) => void,
+  hidden?: (api: GridApi, node: IRowNode) => boolean,
+): EntityOperationDeclaration<T> {
+  return {
+    icon: <OpenPopup {...BASE_ICON_PROPS} />,
+    id: EntityOperation.View_details,
     onClick,
     hidden,
   };
