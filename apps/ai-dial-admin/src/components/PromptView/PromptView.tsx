@@ -56,7 +56,9 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
   );
 
   useEffect(() => {
-    setIsChanged(!isEqual(originalPrompt, selectedPrompt));
+    if (Object.keys(selectedPrompt).length && originalPrompt) {
+      setIsChanged(!isEqual(originalPrompt, selectedPrompt));
+    }
   }, [selectedPrompt, originalPrompt]);
 
   const onChangeActiveTab = useCallback(
@@ -167,6 +169,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
                 addedVersions={addedVersions}
                 setAddedVersions={setAddedVersions}
                 setContentJsonErrors={setContentJsonErrors}
+                setSelectedPrompt={setSelectedPrompt}
               />
             )}
           </>
