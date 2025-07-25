@@ -47,7 +47,7 @@ const InputModal: FC<Props> = ({
           </div>
         </button>
       ) : (
-        <div className="w-full" onClick={onOpenModal}>
+        <div className="w-full" onClick={readonly ? void 0 : onOpenModal}>
           <div
             className={classNames(
               'input flex flex-row items-center w-full justify-between truncate',
