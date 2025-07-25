@@ -86,7 +86,7 @@ export enum BasicI18nKey {
   SaveProceedWithConfiguration = 'Basic.SaveProceedWithConfiguration',
   Source = 'Basic.Source',
   Config = 'Basic.Config',
-  Show = 'Basic.Show',
+  View = 'Basic.View',
   Before = 'Basic.Before',
   After = 'Basic.After',
   CopiedSuccessfully = 'Basic.CopiedSuccessfully',

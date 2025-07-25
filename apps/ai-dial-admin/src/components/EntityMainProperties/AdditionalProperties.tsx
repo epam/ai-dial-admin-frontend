@@ -80,11 +80,11 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
         />
       ) : null}
 
-      {view === ApplicationRoute.Models && !isEntityImmutable ? (
+      {view === ApplicationRoute.Models ? (
         <AdapterSelector adapters={adapters} onChangeAdapter={onChangeAdapter} model={entity} />
       ) : null}
 
-      {view !== ApplicationRoute.Assistants && !isEntityImmutable ? (
+      {view !== ApplicationRoute.Assistants && view !== ApplicationRoute.Models && !isEntityImmutable ? (
         <TextInputField
           elementId="endpoint"
           fieldTitle={t(EntitiesI18nKey.Endpoint)}

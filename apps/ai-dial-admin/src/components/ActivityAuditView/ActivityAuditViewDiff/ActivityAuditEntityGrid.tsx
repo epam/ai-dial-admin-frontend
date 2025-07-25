@@ -9,7 +9,7 @@ import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ActivityAuditDiff } from '@/src/models/dial/activity-audit';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { ActivityAuditResourceType, DiffStatus } from '@/src/types/activity-audit';
+import { ActivityAuditResourceType, DiffStatus, DiffView } from '@/src/types/activity-audit';
 
 interface Props {
   data?: ActivityAuditDiff[];
@@ -18,14 +18,15 @@ interface Props {
   type?: ActivityAuditResourceType;
   rows?: EntitiesGridData[];
   columns?: ColDef[];
+  diffView?: DiffView;
 }
 
-const ActivityAuditEntityGrid: FC<Props> = ({ data, parameter, index, type, rows, columns }) => {
+const ActivityAuditEntityGrid: FC<Props> = ({ data, parameter, index, type, rows, columns, diffView }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const [gridApi, setGridApi] = useState<GridApi>();
   const columnDefs = columns || getColumnsByParameter(parameter, index, t, type);
-  const rowData = (rows as ActivityAuditDiff[]) || getRowDataByParameter(data, parameter, index, type);
-
+  const gridData = (rows as ActivityAuditDiff[]) || getRowDataByParameter(data, parameter, index, type);
+  const rowData = diffView === DiffView.ALL ? gridData : gridData?.filter((data) => data.status);
   const rowClassRules: RowClassRules = {
     'ag-error-row ag-error-border': (params) => {
       return (params.data as ActivityAuditDiff).status === DiffStatus.REMOVED;
@@ -53,9 +54,9 @@ const ActivityAuditEntityGrid: FC<Props> = ({ data, parameter, index, type, rows
       rowData,
       columnDefs,
     });
-  }, [rowData, columns, gridApi, columnDefs]);
+  }, [rowData, columns, gridApi, columnDefs, diffView]);
 
-  return !data?.length && !rows?.length ? (
+  return !rowData?.length ? (
     <div className="rounded border border-secondary h-full">
       <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoResource)} />
     </div>

@@ -14,7 +14,7 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/dial/activity-audit';
-import { ActivityAuditEntity } from '@/src/types/activity-audit';
+import { ActivityAuditEntity, DiffView } from '@/src/types/activity-audit';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { rollbackEntityPerRevision } from '@/src/utils/audit/get-rollback-request';
@@ -24,6 +24,7 @@ import { useRouter } from 'next/navigation';
 import ActivityAuditEntityDiff from './ActivityAuditViewDiff/ActivityAuditEntityDiff';
 import ActivityAuditViewHeader from './ActivityAuditViewHeader/ActivityAuditViewHeader';
 import { generateCurrentResource } from './activity-audit.utils';
+import ActivityAuditEntityDiffFilter from './ActivityAuditViewDiff/ActivityAuditEntityDiffFilter';
 
 interface Props {
   activity: DialActivity;
@@ -40,6 +41,7 @@ const ActivityAuditView: FC<Props> = ({ activity, activityRevision, previousRevi
 
   const [modalState, setModalState] = useState(PopUpState.Closed);
   const [isLoading, setIsLoading] = useState(false);
+  const [diffView, setDiffView] = useState(DiffView.ALL);
 
   const currentEntity = generateCurrentResource(activityRevision, previousRevision, activity.resourceType, true);
   const compareEntity = generateCurrentResource(previousRevision, activityRevision, activity.resourceType);
@@ -75,7 +77,7 @@ const ActivityAuditView: FC<Props> = ({ activity, activityRevision, previousRevi
           ),
         );
       });
-  }, [onCloseModal, showNotification, activity, router, activityRevision, previousRevision, t]);
+  }, [setIsLoading, activity, activityRevision, previousRevision, showNotification, t, onCloseModal, router]);
 
   return (
     <>
@@ -90,20 +92,26 @@ const ActivityAuditView: FC<Props> = ({ activity, activityRevision, previousRevi
             <h1 className="flex flex-row items-center gap-x-3">
               {activity.activityId} <CopyButton field={activity.activityId} title={t(CreateI18nKey.IdTitle)} />
             </h1>
-            <Button
-              iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
-              cssClass="secondary"
-              title={t(ActivityAuditI18nKey.RollbackResource)}
-              onClick={onOpenModal}
-            />
+            <div className="flex flex-row items-center gap-4">
+              <ActivityAuditEntityDiffFilter diffView={diffView} setDiffView={setDiffView} />
+              <Button
+                iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
+                cssClass="secondary"
+                title={t(ActivityAuditI18nKey.RollbackResource)}
+                onClick={onOpenModal}
+              />
+            </div>
           </div>
         )}
         <div className="flex-1 flex flex-col relative divide-y divide-primary min-h-0">
-          <ActivityAuditViewHeader activity={activity} isModalView={isModalView} />
+          <ActivityAuditViewHeader activity={activity} isModalView={isModalView}>
+            {isModalView && <ActivityAuditEntityDiffFilter diffView={diffView} setDiffView={setDiffView} />}
+          </ActivityAuditViewHeader>
           <ActivityAuditEntityDiff
             currentEntity={currentEntity}
             compareEntity={compareEntity}
             type={activity.resourceType}
+            diffView={diffView}
           />
         </div>
       </div>
