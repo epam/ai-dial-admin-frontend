@@ -44,6 +44,7 @@ export enum MenuI18nKey {
   MLOps = 'Menu.MLOps',
   MCPDeployments = 'Menu.MCPDeployments',
   InterceptorDeployments = 'Menu.InterceptorDeployments',
+  ModelDeployments = 'Menu.ModelDeployments',
   InterceptorTemplates = 'Menu.InterceptorTemplates',
   ActivityAudit = 'Menu.ActivityAudit',
 }
