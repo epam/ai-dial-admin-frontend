@@ -4,6 +4,7 @@ export enum DiffStatus {
   ADDED = 'added',
   REMOVED = 'removed',
   CHANGED = 'changed',
+  MIRROR = 'mirror',
 }
 
 export enum DiffView {

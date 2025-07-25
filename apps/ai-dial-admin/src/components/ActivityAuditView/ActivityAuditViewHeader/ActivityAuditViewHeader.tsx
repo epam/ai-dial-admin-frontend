@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 
 import { IconExternalLink } from '@tabler/icons-react';
 
@@ -17,8 +17,9 @@ import { auditResourceRoute } from './ActivityAuditViewHeader.utils';
 interface Props {
   activity: DialActivity;
   isModalView?: boolean;
+  children?: ReactNode;
 }
-const ActivityAuditViewHeader: FC<Props> = ({ activity, isModalView }) => {
+const ActivityAuditViewHeader: FC<Props> = ({ activity, isModalView, children }) => {
   const t = useI18n();
   const currentLocale = useCurrentLocale();
 
@@ -37,39 +38,45 @@ const ActivityAuditViewHeader: FC<Props> = ({ activity, isModalView }) => {
   };
 
   return (
-    <div className="flex flex-row gap-10 w-full">
-      <LabeledText label={t(ActivityAuditI18nKey.ActivityType)} text={activity.activityType} />
-      {!isModalView && (
+    <div className="flex flex-row w-full justify-between">
+      <div className="flex flex-row gap-10 w-full">
+        <LabeledText label={t(ActivityAuditI18nKey.ActivityType)} text={activity.activityType} />
+        {!isModalView && (
+          <LabeledText
+            label={t(ActivityAuditI18nKey.ResourceType)}
+            text={getFormattedResourceType(activity.resourceType)}
+          />
+        )}
+        {!isModalView && (
+          <LabeledText label={t(ActivityAuditI18nKey.ResourceId)}>
+            <div className="flex flex-row gap-1 items-center">
+              <div>{activity.resourceId}</div>
+              {activity.activityType != ActivityAuditType.Delete && (
+                <button onClick={() => openInNewTab(activity)} className="text-secondary">
+                  <IconExternalLink {...BASE_ICON_PROPS} />
+                </button>
+              )}
+            </div>
+          </LabeledText>
+        )}
         <LabeledText
-          label={t(ActivityAuditI18nKey.ResourceType)}
-          text={getFormattedResourceType(activity.resourceType)}
+          label={t(ActivityAuditI18nKey.Time)}
+          text={formatDateTimeToLocalString(activity.epochTimestampMs)}
         />
-      )}
-      {!isModalView && (
-        <LabeledText label={t(ActivityAuditI18nKey.ResourceId)}>
-          <div className="flex flex-row gap-1 items-center">
-            <div>{activity.resourceId}</div>
-            {activity.activityType != ActivityAuditType.Delete && (
+        <LabeledText label={t(ActivityAuditI18nKey.Initiated)} text={activity.initiatedEmail} />
+        {!isModalView && <LabeledText label={t(ActivityAuditI18nKey.UserId)} text={activity.initiatedAuthor} />}
+        {isModalView && (
+          <LabeledText label={t(ActivityAuditI18nKey.ActivityId)}>
+            <div className="flex flex-row gap-1 items-center">
+              <div>{activity.activityId}</div>
               <button onClick={() => openInNewTab(activity)} className="text-secondary">
                 <IconExternalLink {...BASE_ICON_PROPS} />
               </button>
-            )}
-          </div>
-        </LabeledText>
-      )}
-      <LabeledText label={t(ActivityAuditI18nKey.Time)} text={formatDateTimeToLocalString(activity.epochTimestampMs)} />
-      <LabeledText label={t(ActivityAuditI18nKey.Initiated)} text={activity.initiatedEmail} />
-      {!isModalView && <LabeledText label={t(ActivityAuditI18nKey.UserId)} text={activity.initiatedAuthor} />}
-      {isModalView && (
-        <LabeledText label={t(ActivityAuditI18nKey.ActivityId)}>
-          <div className="flex flex-row gap-1 items-center">
-            <div>{activity.activityId}</div>
-            <button onClick={() => openInNewTab(activity)} className="text-secondary">
-              <IconExternalLink {...BASE_ICON_PROPS} />
-            </button>
-          </div>
-        </LabeledText>
-      )}
+            </div>
+          </LabeledText>
+        )}
+      </div>
+      {children}
     </div>
   );
 };
