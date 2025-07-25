@@ -156,12 +156,12 @@ export const compareSimpleTypes = (
 ): void => {
   const isTime = dateKeys.includes(key);
   if (isSimpleValueAddedOrRemoved(val1, val2)) {
-    diffs.push({ parameter: key, value: '', status: isCurrent ? void 0 : DiffStatus.REMOVED });
+    diffs.push({ parameter: key, value: '', status: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED });
   } else if (isSimpleValueAddedOrRemoved(val2, val1)) {
     diffs.push({
       parameter: key,
       value: isTime ? formatDateTimeToLocalString(val2 as number) : val2?.toString() || '',
-      status: isCurrent ? void 0 : DiffStatus.ADDED,
+      status: isCurrent ? DiffStatus.MIRROR : DiffStatus.ADDED,
     });
   } else if (isSimpleValueChanged(val1, val2)) {
     diffs.push({
@@ -471,9 +471,13 @@ export const compareEntities = (diffs: ActivityAuditDiff[], val1: string[], val2
     const value2 = val2?.[i];
 
     if (value1 != null && value2 == null) {
-      diffs.push({ parameter: '', value: '', status: isCurrent ? void 0 : DiffStatus.REMOVED });
+      diffs.push({ parameter: '', value: '', status: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED });
     } else if (value1 == null && value2 != null) {
-      diffs.push({ parameter: value2 || '', value: value2 || '', status: isCurrent ? void 0 : DiffStatus.ADDED });
+      diffs.push({
+        parameter: value2 || '',
+        value: value2 || '',
+        status: isCurrent ? DiffStatus.MIRROR : DiffStatus.ADDED,
+      });
     } else if (value1 != null && value2 != null && value1 !== value2) {
       diffs.push({ parameter: value2 || '', value: value2 || '', status: DiffStatus.CHANGED });
     } else {
@@ -516,9 +520,9 @@ export const compareInterceptors = (
     const parameter = i.toString();
 
     if (value1 != null && value2 == null) {
-      diffs.push({ parameter, value: '', status: isCurrent ? void 0 : DiffStatus.REMOVED });
+      diffs.push({ parameter, value: '', status: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED });
     } else if (value1 == null && value2 != null) {
-      diffs.push({ parameter, value: value2 || '', status: isCurrent ? void 0 : DiffStatus.ADDED });
+      diffs.push({ parameter, value: value2 || '', status: isCurrent ? DiffStatus.MIRROR : DiffStatus.ADDED });
     } else if (value1 != null && value2 != null && value1 !== value2) {
       diffs.push({ parameter, value: value2 || '', status: DiffStatus.CHANGED });
     } else {
@@ -559,12 +563,12 @@ export const compareRoleLimits = (
     const value1 = val1?.[key as keyof typeof val1];
     const value2 = val2?.[key as keyof typeof val2];
     if (value1 != null && value2 == null) {
-      diffs.push({ parameter: '', value: '', status: isCurrent ? void 0 : DiffStatus.REMOVED });
+      diffs.push({ parameter: '', value: '', status: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED });
     } else if (value1 == null && value2 != null) {
       diffs.push({
         parameter: key,
         value: convertRoleLimitsIntoString(value2),
-        status: isCurrent ? void 0 : DiffStatus.ADDED,
+        status: isCurrent ? DiffStatus.MIRROR : DiffStatus.ADDED,
       });
     } else if (value1 != null && value2 != null && !isEqual(value1, value2)) {
       diffs.push({ parameter: key, value: convertRoleLimitsIntoString(value2), status: DiffStatus.CHANGED });
