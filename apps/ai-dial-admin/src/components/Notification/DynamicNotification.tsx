@@ -69,9 +69,7 @@ const DynamicNotification: FC<NotificationConfig> = ({ type, title, onClose, dow
       )}
       {detailsShown && files && (
         <div className="max-h-[360px] overflow-y-scroll px-4">
-          {files?.map((file) => (
-            <File key={file.id} {...file} />
-          ))}
+          {files?.map((file) => <File key={file.id} {...file} />)}
         </div>
       )}
     </div>

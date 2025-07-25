@@ -752,6 +752,7 @@ export default {
     },
     ConfirmRollbackAsking: 'This action will overwrite the current configuration. Are you sure you want to continue?',
     AllParameters: 'All parameters',
+    AllResources: 'All resources',
     Differences: 'Changes only',
     ActivityType: 'Activity type',
     ResourceType: 'Resource type',

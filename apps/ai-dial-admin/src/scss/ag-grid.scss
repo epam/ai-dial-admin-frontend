@@ -62,18 +62,35 @@
     }
     &.ag-error-border {
       @apply border border-error;
+      @apply cursor-pointer;
+    }
+    &.ag-row-hover:not(.ag-full-width-row):before {
+      @apply bg-transparent;
     }
   }
   .ag-new-row {
     @apply bg-success;
     &.ag-new-border {
       @apply border border-accent-secondary;
+      @apply cursor-pointer;
+    }
+    &.ag-row-hover:not(.ag-full-width-row):before {
+      @apply bg-transparent;
     }
   }
   .ag-changed-row {
     @apply bg-info;
     &.ag-changed-border {
       @apply border border-accent-primary;
+      @apply cursor-pointer;
+    }
+    &.ag-row-hover:not(.ag-full-width-row):before {
+      @apply bg-transparent;
+    }
+  }
+  .ag-empty-row {
+    &.ag-row-hover:not(.ag-full-width-row):before {
+      @apply bg-transparent;
     }
   }
 }

@@ -665,6 +665,7 @@ export enum ActivityAuditI18nKey {
   ResourceRollbackErrorTitle = 'ActivityAudit.ResourceRollbackErrorTitle',
   ResourceRollbackErrorDescription = 'ActivityAudit.ResourceRollbackErrorDescription',
   AllParameters = 'ActivityAudit.AllParameters',
+  AllResources = 'ActivityAudit.AllResources',
   Differences = 'ActivityAudit.Differences',
   ActivityType = 'ActivityAudit.ActivityType',
   ResourceType = 'ActivityAudit.ResourceType',
