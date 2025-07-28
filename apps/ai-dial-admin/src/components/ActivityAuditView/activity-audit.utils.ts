@@ -6,7 +6,7 @@ import { ActivityAuditDiff, ActivityAuditDiffSection, ActivityAuditSection } fro
 import { DialRoleLimits } from '@/src/models/dial/base-entity';
 import { DialModelEndpoint } from '@/src/models/dial/model';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus } from '@/src/types/activity-audit';
+import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus, DiffView } from '@/src/types/activity-audit';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import {
   ENTITIES_DIFF_COLUMNS,
@@ -858,7 +858,7 @@ export const isSimpleValueAddedOrRemoved = (
   value1?: string | boolean | number,
   value2?: string | boolean | number,
 ): boolean => {
-  return value1 !== '' && value1! != null && (value2 === '' || value2 == null);
+  return value1 !== '' && value1 != null && (value2 === '' || value2 == null);
 };
 
 /**
@@ -967,4 +967,39 @@ export const mergeEntityMaps = (
     result.set(resourceType, mergedEntities);
   }
   return result;
+};
+
+/**
+ * Filter compare section to return section if it has any data
+ *
+ * @param {ActivityAuditDiffSection[]} sections - initial sections
+ * @param {string} name - section title
+ * @param {?DiffView} [diffView] - variable to control showing only changes or all values
+ * @param {?ActivityAuditResourceType} [type] - resource type
+ * @returns {*} - sections data compare and current with index
+ */
+export const filterNotEmptySections = (
+  sections: ActivityAuditDiffSection[],
+  name: string,
+  diffView?: DiffView,
+  type?: ActivityAuditResourceType,
+) => {
+  return sections.reduce<{ index: number; currentData?: ActivityAuditDiff[]; compareData?: ActivityAuditDiff[] }[]>(
+    (acc, item, index) => {
+      const current = getRowDataByParameter(item.current, name, index, type);
+      const compare = getRowDataByParameter(item.compare, name, index, type);
+
+      const currentData = diffView === DiffView.ALL ? current : current?.filter((d) => d.status);
+      const compareData = diffView === DiffView.ALL ? compare : compare?.filter((d) => d.status);
+
+      const hasData = (currentData && currentData.length > 0) || (compareData && compareData.length > 0);
+
+      if (hasData) {
+        acc.push({ index, currentData, compareData });
+      }
+
+      return acc;
+    },
+    [],
+  );
 };

@@ -1,15 +1,15 @@
 import { FC, useCallback, useState } from 'react';
 
+import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import { getDiffCount } from '@/src/components/ActivityAuditView/activity-audit.utils';
+import { filterNotEmptySections, getDiffCount } from '@/src/components/ActivityAuditView/activity-audit.utils';
 import { ParameterNamesI18nKey } from '@/src/components/ActivityAuditView/utils';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { ActivityAuditDiffSection } from '@/src/models/dial/activity-audit';
 import { ActivityAuditResourceType, CompareView, DiffStatus, DiffView } from '@/src/types/activity-audit';
-import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import ActivityAuditEntityDiffLegend from './ActivityAuditEntityDiffLegend';
 import ActivityAuditEntityGrid from './ActivityAuditEntityGrid';
 
@@ -34,6 +34,10 @@ const ActivityAuditEntityDiffSection: FC<Props> = ({ sections, name, type, diffV
   const changed = getDiffCount(sections, DiffStatus.CHANGED);
   const removed = getDiffCount(sections, DiffStatus.REMOVED);
 
+  const validSections = filterNotEmptySections(sections, name, diffView, type);
+
+  if (validSections.length === 0) return null;
+
   return (
     <div className="flex flex-col rounded border border-primary bg-layer-3 p-4">
       <button className="flex items-center justify-between" onClick={toggleCollapse}>
@@ -41,17 +45,17 @@ const ActivityAuditEntityDiffSection: FC<Props> = ({ sections, name, type, diffV
           <i className="text-icon-secondary">
             {isCollapsed ? <IconChevronRight {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
           </i>
-          <h3 className="mx-2"> {t(ParameterNamesI18nKey[name as keyof typeof ParameterNamesI18nKey])} </h3>
+          <h3 className="mx-2">{t(ParameterNamesI18nKey[name as keyof typeof ParameterNamesI18nKey])}</h3>
         </div>
         <ActivityAuditEntityDiffLegend added={added} changed={changed} removed={removed} />
       </button>
       <div className={classNames('flex flex-col gap-6 px-6 py-4', isCollapsed && 'hidden')}>
-        {sections.map((item, index) => (
+        {validSections.map(({ index, currentData, compareData }) => (
           <div key={index} className="flex flex-row gap-8">
             <div className="flex flex-col flex-1">
               <h4 className="mb-2 text-secondary">{t(BasicI18nKey.Before)}</h4>
               <ActivityAuditEntityGrid
-                data={item.current}
+                data={currentData}
                 parameter={name}
                 type={type}
                 index={index}
@@ -63,7 +67,7 @@ const ActivityAuditEntityDiffSection: FC<Props> = ({ sections, name, type, diffV
                 {compareView === CompareView.CURRENT ? t(BasicI18nKey.Current) : t(BasicI18nKey.After)}
               </h4>
               <ActivityAuditEntityGrid
-                data={item.compare}
+                data={compareData}
                 parameter={name}
                 type={type}
                 index={index}

@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { CellClickedEvent, ColDef, GridApi, GridReadyEvent, RowClassRules } from 'ag-grid-community';
 
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
-import { getColumnsByParameter, getRowDataByParameter } from '@/src/components/ActivityAuditView/activity-audit.utils';
+import { getColumnsByParameter } from '@/src/components/ActivityAuditView/activity-audit.utils';
 import { getCurrentAndRollbackEntities } from '@/src/components/ActivityAuditView/utils';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Grid from '@/src/components/Grid/Grid';
@@ -20,7 +20,6 @@ interface Props {
   parameter?: string;
   index?: number;
   type?: ActivityAuditResourceType;
-  rows?: EntitiesGridData[];
   columns?: ColDef[];
   diffView?: DiffView;
   rollbackRows?: EntitiesGridData[];
@@ -33,7 +32,6 @@ const ActivityAuditEntityGrid: FC<Props> = ({
   parameter,
   index,
   type,
-  rows,
   columns,
   diffView,
   rollbackRows,
@@ -51,8 +49,6 @@ const ActivityAuditEntityGrid: FC<Props> = ({
     ...c,
     sort: void 0,
   }));
-  const gridData = (rows as ActivityAuditDiff[]) || getRowDataByParameter(data, parameter, index, type);
-  const rowData = diffView === DiffView.ALL ? gridData : gridData?.filter((data) => data.status);
   const rowClassRules: RowClassRules = {
     'ag-error-row ag-error-border': (params) => {
       return (params.data as ActivityAuditDiff).status === DiffStatus.REMOVED;
@@ -83,19 +79,19 @@ const ActivityAuditEntityGrid: FC<Props> = ({
 
     event.api?.updateGridOptions({
       columnDefs,
-      rowData,
+      rowData: data,
       rowClassRules,
     });
   };
 
   useEffect(() => {
     gridApi?.updateGridOptions({
-      rowData,
+      rowData: data,
       columnDefs,
     });
-  }, [rowData, columns, gridApi, columnDefs, diffView]);
+  }, [columns, gridApi, columnDefs, diffView, data]);
 
-  return !rowData?.length ? (
+  return !data?.length ? (
     <div className="rounded border border-secondary h-full">
       <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoResource)} />
     </div>

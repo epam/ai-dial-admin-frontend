@@ -21,7 +21,7 @@ import Tabs from '@/src/components/Common/Tabs/Tabs';
 import { ActivityAuditI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { DialActivity } from '@/src/models/dial/activity-audit';
+import { ActivityAuditDiff, DialActivity } from '@/src/models/dial/activity-audit';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ActivityAuditEntity, ActivityAuditResourceType, DiffView } from '@/src/types/activity-audit';
 import { PopUpState } from '@/src/types/pop-up';
@@ -42,8 +42,12 @@ const SystemRollback: FC = () => {
 
   const [selectedTab, setSelectedTab] = useState(tabs[0].id);
   const [columns, setColumns] = useState<ColDef[]>([]);
+
   const [currentState, setCurrentState] = useState<Map<ActivityAuditResourceType, EntitiesGridData[]>>();
   const [rollbackState, setRollbackState] = useState<Map<ActivityAuditResourceType, EntitiesGridData[]>>();
+
+  const [currentRows, setCurrentRows] = useState<ActivityAuditDiff[]>();
+  const [rollbackRows, setRollbackRows] = useState<ActivityAuditDiff[]>();
 
   const [revisionsModalState, setRevisionsModalState] = useState(PopUpState.Closed);
   const [rollBackModalState, setRollBackModalState] = useState(PopUpState.Closed);
@@ -123,6 +127,23 @@ const SystemRollback: FC = () => {
     setActivity({ resourceType: selectedTab } as DialActivity);
   }, [selectedTab, t]);
 
+  useEffect(() => {
+    setCurrentRows(
+      (diffView === DiffView.ALL
+        ? currentState?.get(selectedTab as ActivityAuditResourceType)
+        : currentState
+            ?.get(selectedTab as ActivityAuditResourceType)
+            ?.filter((data) => data.status)) as ActivityAuditDiff[],
+    );
+    setRollbackRows(
+      (diffView === DiffView.ALL
+        ? rollbackState?.get(selectedTab as ActivityAuditResourceType)
+        : rollbackState
+            ?.get(selectedTab as ActivityAuditResourceType)
+            ?.filter((data) => data.status)) as ActivityAuditDiff[],
+    );
+  }, [currentState, diffView, rollbackState, selectedTab]);
+
   return (
     <div className="flex flex-col bg-layer-2 rounded p-4 flex-1 min-h-0">
       <div className="flex flex-row justify-between mb-3">
@@ -164,20 +185,20 @@ const SystemRollback: FC = () => {
                 <div className="flex flex-col flex-1">
                   <h3 className="mb-4 text-primary">{t(ActivityAuditI18nKey.CurrentState)}</h3>
                   <ActivityAuditEntityGrid
-                    rows={currentState?.get(selectedTab as ActivityAuditResourceType)}
+                    data={currentRows}
                     columns={columns}
                     diffView={diffView}
-                    rollbackRows={rollbackState?.get(selectedTab as ActivityAuditResourceType)}
+                    rollbackRows={rollbackRows}
                     activity={activity}
                   />
                 </div>
                 <div className="flex flex-col flex-1">
                   <h3 className="mb-4 text-primary">{t(ActivityAuditI18nKey.RollbackState)}</h3>
                   <ActivityAuditEntityGrid
-                    rows={rollbackState?.get(selectedTab as ActivityAuditResourceType)}
+                    data={rollbackRows}
                     columns={columns}
                     diffView={diffView}
-                    currentRows={currentState?.get(selectedTab as ActivityAuditResourceType)}
+                    currentRows={currentRows}
                     activity={activity}
                   />
                 </div>
