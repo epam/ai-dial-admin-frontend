@@ -51,6 +51,8 @@ export default {
     CopiedSuccessfully: 'copied successfully',
     ServerError: 'Server Error',
     Search: 'Search',
+    Comparison: 'Comparison',
+    Current: 'Current state',
   },
   CommonControls: {
     DnDIconFile: 'Drop image file here',
@@ -109,6 +111,7 @@ export default {
     MLOps: 'Deployments',
     MCPDeployments: 'MCP Deployments',
     InterceptorDeployments: 'Interceptor Deployments',
+    ModelDeployments: 'Model Deployments',
     InterceptorTemplates: 'Interceptor Templates',
 
     EntitiesDescription: 'Centralized space to configure and oversee key components of your AI ecosystem.',
@@ -751,6 +754,7 @@ export default {
     },
     ConfirmRollbackAsking: 'This action will overwrite the current configuration. Are you sure you want to continue?',
     AllParameters: 'All parameters',
+    AllResources: 'All resources',
     Differences: 'Changes only',
     ActivityType: 'Activity type',
     ResourceType: 'Resource type',
@@ -767,6 +771,8 @@ export default {
     RollbackState: 'Rollback state',
     RollbackRevision: 'Rollback revision',
     ActivityDetails: 'Activity details',
+    BeforeAfter: 'Before/After',
+    BeforeCurrent: 'Before/Current state',
   },
   ParameterNames: {
     roleLimits: 'Role limits',

@@ -1,15 +1,19 @@
 import { FC, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
-import { ColDef, GridApi, GridReadyEvent, RowClassRules } from 'ag-grid-community';
+import { CellClickedEvent, ColDef, GridApi, GridReadyEvent, RowClassRules } from 'ag-grid-community';
 
+import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
 import { getColumnsByParameter, getRowDataByParameter } from '@/src/components/ActivityAuditView/activity-audit.utils';
+import { getCurrentAndRollbackEntities } from '@/src/components/ActivityAuditView/utils';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Grid from '@/src/components/Grid/Grid';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { ActivityAuditDiff } from '@/src/models/dial/activity-audit';
+import { ActivityAuditDiff, DialActivity } from '@/src/models/dial/activity-audit';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { ActivityAuditResourceType, DiffStatus, DiffView } from '@/src/types/activity-audit';
+import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus, DiffView } from '@/src/types/activity-audit';
+import { PopUpState } from '@/src/types/pop-up';
 
 interface Props {
   data?: ActivityAuditDiff[];
@@ -19,12 +23,34 @@ interface Props {
   rows?: EntitiesGridData[];
   columns?: ColDef[];
   diffView?: DiffView;
+  rollbackRows?: EntitiesGridData[];
+  currentRows?: EntitiesGridData[];
+  activity?: DialActivity;
 }
 
-const ActivityAuditEntityGrid: FC<Props> = ({ data, parameter, index, type, rows, columns, diffView }) => {
+const ActivityAuditEntityGrid: FC<Props> = ({
+  data,
+  parameter,
+  index,
+  type,
+  rows,
+  columns,
+  diffView,
+  rollbackRows,
+  currentRows,
+  activity,
+}) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const [gridApi, setGridApi] = useState<GridApi>();
-  const columnDefs = columns || getColumnsByParameter(parameter, index, t, type);
+  const [detailsModalState, setDetailsModalState] = useState(PopUpState.Closed);
+  const [resourceId, setResourceId] = useState('');
+  const [currentState, setCurrentState] = useState<ActivityAuditEntity | undefined>(void 0);
+  const [rollbackState, setRollbackState] = useState<ActivityAuditEntity | undefined>(void 0);
+
+  const columnDefs = (columns || getColumnsByParameter(parameter, index, t, type)).map((c) => ({
+    ...c,
+    sort: void 0,
+  }));
   const gridData = (rows as ActivityAuditDiff[]) || getRowDataByParameter(data, parameter, index, type);
   const rowData = diffView === DiffView.ALL ? gridData : gridData?.filter((data) => data.status);
   const rowClassRules: RowClassRules = {
@@ -37,6 +63,19 @@ const ActivityAuditEntityGrid: FC<Props> = ({ data, parameter, index, type, rows
     'ag-changed-row ag-changed-border': (params) => {
       return (params.data as ActivityAuditDiff).status === DiffStatus.CHANGED;
     },
+    'ag-empty-row': (params) => {
+      return (params.data as ActivityAuditDiff).status === DiffStatus.MIRROR;
+    },
+  };
+
+  const onRowClicked = (e: CellClickedEvent) => {
+    if (!e.data.status || e.data.status === DiffStatus.MIRROR) return;
+    const id = e.data.name || e.data.key || e.data.$id;
+    setResourceId(id);
+    const { current, rollback } = getCurrentAndRollbackEntities(e.data, id, rollbackRows, currentRows);
+    setCurrentState(current);
+    setRollbackState(rollback);
+    setDetailsModalState(PopUpState.Opened);
   };
 
   const onGridReady = (event: GridReadyEvent) => {
@@ -66,8 +105,21 @@ const ActivityAuditEntityGrid: FC<Props> = ({ data, parameter, index, type, rows
         additionalGridOptions={{
           domLayout: 'autoHeight',
           onGridReady,
+          onCellClicked: activity && onRowClicked,
         }}
       />
+      {detailsModalState === PopUpState.Opened &&
+        createPortal(
+          <ActivityDetails
+            auditViewId={void 0}
+            modalState={detailsModalState}
+            onClose={() => setDetailsModalState(PopUpState.Closed)}
+            partialActivity={{ ...activity, resourceId } as DialActivity}
+            currentState={currentState}
+            rollBackState={rollbackState}
+          />,
+          document.body,
+        )}
     </div>
   );
 };

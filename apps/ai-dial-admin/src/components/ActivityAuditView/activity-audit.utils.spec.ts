@@ -674,7 +674,7 @@ describe('Activity audit :: mergeEntityMaps', () => {
     const output = result.get(ActivityAuditResourceType.MODEL)!;
 
     expect(output).toHaveLength(1);
-    expect(output[0]).toEqual({ status: undefined });
+    expect(output[0]).toEqual({ status: DiffStatus.MIRROR });
   });
 
   test('should mark entity as changed when values differ', () => {

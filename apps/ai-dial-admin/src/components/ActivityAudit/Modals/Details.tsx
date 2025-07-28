@@ -9,6 +9,7 @@ import Popup from '@/src/components/Common/Popup/Popup';
 import { ActivityAuditI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/dial/activity-audit';
+import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { PopUpState } from '@/src/types/pop-up';
 import { getRevisionRouteForEntityType } from '@/src/utils/audit/get-revision-route';
@@ -17,23 +18,41 @@ interface Props {
   auditViewId?: string;
   modalState: PopUpState;
   onClose: () => void;
+  partialActivity?: DialActivity;
+  currentState?: ActivityAuditEntity;
+  rollBackState?: ActivityAuditEntity;
+  entity?: DialBaseEntity;
 }
 
-const ActivityDetails: FC<Props> = ({ auditViewId, modalState, onClose }) => {
+const ActivityDetails: FC<Props> = ({
+  auditViewId,
+  modalState,
+  onClose,
+  partialActivity,
+  currentState,
+  rollBackState,
+  entity,
+}) => {
   const t = useI18n();
 
-  const [loading, setLoading] = useState(true);
-  const [activity, setActivity] = useState<DialActivity | null>(null);
-  const [activityRevision, setActivityRevision] = useState<ActivityAuditEntity | null>(null);
-  const [previousRevision, setPreviousRevision] = useState<ActivityAuditEntity | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [activity, setActivity] = useState<DialActivity | null>(partialActivity || null);
+  const [activityRevision, setActivityRevision] = useState<ActivityAuditEntity | null>(currentState || null);
+  const [previousRevision, setPreviousRevision] = useState<ActivityAuditEntity | null>(rollBackState || null);
 
   const containerClassName = classNames('h-[800px] lg:max-w-[75%] md:max-w-[90%]');
   useEffect(() => {
     if (!auditViewId) return;
+    setLoading(true);
     getActivityById(auditViewId as string)
       .then((activityDetails) => {
         if (!activityDetails) return;
-        setActivity(activityDetails);
+        setActivity({
+          activityId: activityDetails.activityId,
+          epochTimestampMs: activityDetails.epochTimestampMs,
+          initiatedEmail: activityDetails.initiatedEmail,
+          activityType: activityDetails.activityType,
+        } as DialActivity);
         const route = getRevisionRouteForEntityType(
           activityDetails?.resourceType,
           decodeURIComponent(activityDetails?.resourceId as string),
@@ -77,6 +96,8 @@ const ActivityDetails: FC<Props> = ({ auditViewId, modalState, onClose }) => {
             activityRevision={activityRevision}
             previousRevision={previousRevision}
             isModalView={true}
+            hideComparator={!auditViewId}
+            entity={entity}
           />
         )}
       </div>

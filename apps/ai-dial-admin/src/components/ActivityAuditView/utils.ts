@@ -1,7 +1,9 @@
-import { ColDef, ICellRendererParams } from 'ag-grid-community';
-import PasswordCellRenderer from './CellRenderer/PasswordCellRenderer';
-import ExtraDataCellRenderer from './CellRenderer/ExtraDataCellRenderer';
 import { FeaturesI18nKey } from '@/src/constants/i18n';
+import { EntitiesGridData } from '@/src/models/entities-grid-data';
+import { ActivityAuditEntity } from '@/src/types/activity-audit';
+import { ColDef, ICellRendererParams } from 'ag-grid-community';
+import ExtraDataCellRenderer from './CellRenderer/ExtraDataCellRenderer';
+import PasswordCellRenderer from './CellRenderer/PasswordCellRenderer';
 
 export const INTERCEPTORS_DIFF_COLUMNS = [
   { field: 'parameter', headerName: 'Order', width: 90, maxWidth: 90 },
@@ -52,6 +54,27 @@ export const formatParameter = (value: string, t: (stringToTranslate: string) =>
     return t(featuresKey);
   }
   return value;
+};
+
+export const getCurrentAndRollbackEntities = (
+  entity: EntitiesGridData,
+  id: string,
+  currentEntities?: EntitiesGridData[],
+  rollbackEntities?: EntitiesGridData[],
+): { current: ActivityAuditEntity | undefined; rollback: ActivityAuditEntity | undefined } => {
+  const resolveEntityById = (
+    fallback: EntitiesGridData,
+    entities?: EntitiesGridData[],
+  ): EntitiesGridData | undefined => {
+    if (!entities) return fallback;
+
+    return entities.find((item) => item && (item.name === id || item.key === id || item.$id === id));
+  };
+
+  return {
+    current: resolveEntityById(entity, currentEntities) as ActivityAuditEntity,
+    rollback: resolveEntityById(entity, rollbackEntities) as ActivityAuditEntity,
+  };
 };
 
 export enum EntityParameterKeys {
