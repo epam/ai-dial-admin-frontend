@@ -1,4 +1,5 @@
-import { defineConfig } from 'vite';
+import { configDefaults, defineConfig, coverageConfigDefaults } from 'vitest/config';
+
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
@@ -23,7 +24,7 @@ export default defineConfig(() => ({
   test: {
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    exclude: ['**.config.{ts,js}', 'test-setup.tsx'],
+    exclude: [...configDefaults.exclude, '**/.next/**'],
     reporters: ['default'],
     setupFiles: './test-setup.tsx',
     coverage: {
@@ -36,6 +37,7 @@ export default defineConfig(() => ({
         lines: 50,
         statements: 50,
       },
+      exclude: [...coverageConfigDefaults.exclude, '*.config.{ts,js}', 'test-setup.tsx'],
     },
   },
 }));
