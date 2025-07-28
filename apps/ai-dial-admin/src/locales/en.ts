@@ -772,7 +772,7 @@ export default {
     RollbackRevision: 'Rollback revision',
     ActivityDetails: 'Activity details',
     BeforeAfter: 'Before/After',
-    BeforeCurrent: 'Before/Current',
+    BeforeCurrent: 'Before/Current state',
   },
   ParameterNames: {
     roleLimits: 'Role limits',

@@ -34,7 +34,7 @@ const ActivityAuditEntityDiffCompare: FC<Props> = ({ compareView, setCompareView
   );
 
   return (
-    <div className="w-[230px]">
+    <div className="w-fit">
       <Dropdown
         selectedClassName="flex items-center my-[5px] mr-2 px-1.5 py-1 small text-primary rounded bg-layer-4 cursor-pointer"
         selectedValue={items.find((item) => item.id === compareView)}
