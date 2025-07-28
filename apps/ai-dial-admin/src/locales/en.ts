@@ -51,6 +51,8 @@ export default {
     CopiedSuccessfully: 'copied successfully',
     ServerError: 'Server Error',
     Search: 'Search',
+    Comparison: 'Comparison',
+    Current: 'Current state',
   },
   CommonControls: {
     DnDIconFile: 'Drop image file here',
@@ -769,6 +771,8 @@ export default {
     RollbackState: 'Rollback state',
     RollbackRevision: 'Rollback revision',
     ActivityDetails: 'Activity details',
+    BeforeAfter: 'Before/After',
+    BeforeCurrent: 'Before/Current',
   },
   ParameterNames: {
     roleLimits: 'Role limits',

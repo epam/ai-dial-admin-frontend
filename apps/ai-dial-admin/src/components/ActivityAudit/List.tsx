@@ -53,12 +53,12 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
   const [timePeriod, setTimePeriod] = useState<string | null>(DEFAULT_TIME_PERIOD);
   const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
 
-  const [currentActivity, setCurrentActivity] = useState<DialActivity | undefined>(void 0);
+  const [selectedActivity, setSelectedActivity] = useState<DialActivity | undefined>(void 0);
 
   const onCloseModal = useCallback(() => {
     setRollbackModalState(PopUpState.Closed);
     setDetailsModalState(PopUpState.Closed);
-    setCurrentActivity(void 0);
+    setSelectedActivity(void 0);
   }, [setRollbackModalState]);
 
   const gridDataSource: IDatasource = useMemo(
@@ -130,12 +130,12 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
 
   const onOpenConfirmationModal = useCallback((activity: DialActivity) => {
     setRollbackModalState(PopUpState.Opened);
-    setCurrentActivity(activity);
+    setSelectedActivity(activity);
   }, []);
 
   const onOpenDetailsModal = useCallback((activity: DialActivity) => {
     setDetailsModalState(PopUpState.Opened);
-    setCurrentActivity(activity);
+    setSelectedActivity(activity);
   }, []);
 
   const columnDefs = entity
@@ -168,9 +168,9 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
   );
 
   const resourceRollback = useCallback(() => {
-    if (currentActivity) {
+    if (selectedActivity) {
       setIsLoading(true);
-      rollbackEntityPerType(currentActivity)
+      rollbackEntityPerType(selectedActivity)
         .then(() => {
           setIsLoading(false);
           showNotification(
@@ -196,7 +196,7 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
           );
         });
     }
-  }, [currentActivity, showNotification, t, onCloseModal, entity, router, onRefresh]);
+  }, [selectedActivity, showNotification, t, onCloseModal, entity, router, onRefresh]);
 
   const systemRollback = useCallback(() => {
     router.push(`${ApplicationRoute.ActivityAudit}/${SYSTEM_ROLLBACK_ID}`);
@@ -248,12 +248,12 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
             <div className="text-secondary small-150 px-6 py-4">
               <p>
                 <span>{t(ActivityAuditI18nKey.ConfirmRollbackDescriptionPart1)}</span>
-                <span className="important-text-part mx-1">{currentActivity?.activityType}</span>
+                <span className="important-text-part mx-1">{selectedActivity?.activityType}</span>
                 <span>{t(ActivityAuditI18nKey.ConfirmRollbackDescriptionPart2)}</span>
-                <span className="important-text-part mx-1">{currentActivity?.resourceId}</span>
+                <span className="important-text-part mx-1">{selectedActivity?.resourceId}</span>
                 <span>{t(ActivityAuditI18nKey.ConfirmRollbackDescriptionPart3)}</span>
                 <span className="important-text-part">
-                  {formatDateTimeToLocalString(currentActivity?.epochTimestampMs)}
+                  {formatDateTimeToLocalString(selectedActivity?.epochTimestampMs)}
                 </span>
               </p>
               <p>{t(ActivityAuditI18nKey.ConfirmRollbackAsking)}</p>
@@ -264,7 +264,8 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
       {detailsModalState === PopUpState.Opened &&
         createPortal(
           <ActivityDetails
-            auditViewId={currentActivity?.activityId}
+            entity={entity}
+            auditViewId={selectedActivity?.activityId}
             modalState={detailsModalState}
             onClose={onCloseModal}
           />,

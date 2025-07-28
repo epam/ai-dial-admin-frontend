@@ -9,6 +9,7 @@ import Popup from '@/src/components/Common/Popup/Popup';
 import { ActivityAuditI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/dial/activity-audit';
+import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { PopUpState } from '@/src/types/pop-up';
 import { getRevisionRouteForEntityType } from '@/src/utils/audit/get-revision-route';
@@ -20,6 +21,7 @@ interface Props {
   partialActivity?: DialActivity;
   currentState?: ActivityAuditEntity;
   rollBackState?: ActivityAuditEntity;
+  entity?: DialBaseEntity;
 }
 
 const ActivityDetails: FC<Props> = ({
@@ -29,6 +31,7 @@ const ActivityDetails: FC<Props> = ({
   partialActivity,
   currentState,
   rollBackState,
+  entity,
 }) => {
   const t = useI18n();
 
@@ -93,6 +96,8 @@ const ActivityDetails: FC<Props> = ({
             activityRevision={activityRevision}
             previousRevision={previousRevision}
             isModalView={true}
+            hideComparator={!auditViewId}
+            entity={entity}
           />
         )}
       </div>
