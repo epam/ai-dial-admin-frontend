@@ -12,6 +12,11 @@ export enum DiffView {
   DIFF = 'diff',
 }
 
+export enum CompareView {
+  NEXT = 'next',
+  CURRENT = 'current',
+}
+
 export enum ActivityAuditType {
   Create = 'Create',
   Update = 'Update',
