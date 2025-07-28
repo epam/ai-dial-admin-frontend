@@ -10,10 +10,17 @@ export const clearSchemeForEditor = (scheme: DialApplicationScheme) => {
   delete clonedScheme.$id;
   delete clonedScheme.$schema;
   delete clonedScheme.description;
+  delete clonedScheme.applications;
+  delete clonedScheme.topics;
   delete clonedScheme['dial:applicationTypeCompletionEndpoint'];
   delete clonedScheme['dial:applicationTypeViewerUrl'];
   delete clonedScheme['dial:applicationTypeEditorUrl'];
   delete clonedScheme['dial:applicationTypeDisplayName'];
+  delete clonedScheme['dial:applicationTypeConfigurationEndpoint'];
+  delete clonedScheme['dial:applicationTypeRateEndpoint'];
+  delete clonedScheme['dial:applicationTypeTokenizeEndpoint'];
+  delete clonedScheme['dial:applicationTypeTruncatePromptEndpoint'];
+  delete clonedScheme['dial:appendApplicationPropertiesHeader'];
 
   return clonedScheme;
 };
