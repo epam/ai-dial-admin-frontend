@@ -950,7 +950,7 @@ export const mergeEntityMaps = (
       }
 
       if (!currentEntity && previousEntity) {
-        return { status: void 0 };
+        return { status: DiffStatus.MIRROR };
       }
 
       if (currentEntity && previousEntity) {

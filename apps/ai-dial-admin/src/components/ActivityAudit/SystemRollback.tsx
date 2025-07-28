@@ -11,6 +11,7 @@ import {
   getRevisions,
   systemRollbackToRevision,
 } from '@/src/app/[lang]/activity-audit/actions';
+import ActivityAuditEntityDiffFilter from '@/src/components/ActivityAuditView/ActivityAuditViewDiff/ActivityAuditEntityDiffFilter';
 import ActivityAuditEntityDiffLegend from '@/src/components/ActivityAuditView/ActivityAuditViewDiff/ActivityAuditEntityDiffLegend';
 import ActivityAuditEntityGrid from '@/src/components/ActivityAuditView/ActivityAuditViewDiff/ActivityAuditEntityGrid';
 import { mergeEntityMaps } from '@/src/components/ActivityAuditView/activity-audit.utils';
@@ -20,8 +21,9 @@ import Tabs from '@/src/components/Common/Tabs/Tabs';
 import { ActivityAuditI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
+import { DialActivity } from '@/src/models/dial/activity-audit';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { ActivityAuditEntity, ActivityAuditResourceType } from '@/src/types/activity-audit';
+import { ActivityAuditEntity, ActivityAuditResourceType, DiffView } from '@/src/types/activity-audit';
 import { PopUpState } from '@/src/types/pop-up';
 import { getRevisionRouteForAllEntities } from '@/src/utils/audit/get-revision-route';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
@@ -50,6 +52,9 @@ const SystemRollback: FC = () => {
   const [revisions, setRevisions] = useState<ActivityAuditRevision[] | null>();
   const [currentRevision, setCurrentRevision] = useState<ActivityAuditRevision | null>();
   const [rollbackRevision, setRollbackRevision] = useState<ActivityAuditRevision | null>();
+
+  const [diffView, setDiffView] = useState(DiffView.ALL);
+  const [activity, setActivity] = useState<DialActivity | undefined>(void 0);
 
   const systemRollback = useCallback(() => {
     systemRollbackToRevision(rollbackRevision?.id);
@@ -115,6 +120,7 @@ const SystemRollback: FC = () => {
 
   useEffect(() => {
     setColumns(getSystemRollbackColumns(selectedTab, t));
+    setActivity({ resourceType: selectedTab } as DialActivity);
   }, [selectedTab, t]);
 
   return (
@@ -122,6 +128,7 @@ const SystemRollback: FC = () => {
       <div className="flex flex-row justify-between mb-3">
         <h1>{t(ActivityAuditI18nKey.RollbackSystem)}</h1>
         <div className="flex flex-row gap-3 items-center">
+          <ActivityAuditEntityDiffFilter diffView={diffView} setDiffView={setDiffView} isResources={true} />
           <div
             className="flex flex-row items-center small bg-layer-3 rounded h-6 p-2 cursor-pointer"
             onClick={() => setRevisionsModalState(PopUpState.Opened)}
@@ -159,6 +166,9 @@ const SystemRollback: FC = () => {
                   <ActivityAuditEntityGrid
                     rows={currentState?.get(selectedTab as ActivityAuditResourceType)}
                     columns={columns}
+                    diffView={diffView}
+                    rollbackRows={rollbackState?.get(selectedTab as ActivityAuditResourceType)}
+                    activity={activity}
                   />
                 </div>
                 <div className="flex flex-col flex-1">
@@ -166,6 +176,9 @@ const SystemRollback: FC = () => {
                   <ActivityAuditEntityGrid
                     rows={rollbackState?.get(selectedTab as ActivityAuditResourceType)}
                     columns={columns}
+                    diffView={diffView}
+                    currentRows={currentState?.get(selectedTab as ActivityAuditResourceType)}
+                    activity={activity}
                   />
                 </div>
               </div>

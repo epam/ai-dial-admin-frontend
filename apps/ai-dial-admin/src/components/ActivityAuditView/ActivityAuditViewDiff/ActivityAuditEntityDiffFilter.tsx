@@ -10,15 +10,16 @@ import { DiffView } from '@/src/types/activity-audit';
 interface Props {
   diffView: string;
   setDiffView: Dispatch<SetStateAction<DiffView>>;
+  isResources?: boolean;
 }
 
-const ActivityAuditEntityDiffFilter: FC<Props> = ({ diffView, setDiffView }) => {
+const ActivityAuditEntityDiffFilter: FC<Props> = ({ diffView, setDiffView, isResources }) => {
   const t = useI18n();
 
   const items: DropdownItemsModel[] = [
     {
       id: DiffView.ALL,
-      name: t(ActivityAuditI18nKey.AllParameters),
+      name: isResources ? t(ActivityAuditI18nKey.AllResources) : t(ActivityAuditI18nKey.AllParameters),
     },
     {
       id: DiffView.DIFF,
