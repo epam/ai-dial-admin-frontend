@@ -5,41 +5,40 @@ import DropdownMenuItem from '@/src/components/Common/Dropdown/DropdownItem';
 import { ActivityAuditI18nKey, BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
-import { DiffView } from '@/src/types/activity-audit';
+import { CompareView } from '@/src/types/activity-audit';
 
 interface Props {
-  diffView: string;
-  setDiffView: Dispatch<SetStateAction<DiffView>>;
-  isResources?: boolean;
+  compareView: string;
+  setCompareView: Dispatch<SetStateAction<CompareView>>;
 }
 
-const ActivityAuditEntityDiffFilter: FC<Props> = ({ diffView, setDiffView, isResources }) => {
+const ActivityAuditEntityDiffCompare: FC<Props> = ({ compareView, setCompareView }) => {
   const t = useI18n();
 
   const items: DropdownItemsModel[] = [
     {
-      id: DiffView.ALL,
-      name: isResources ? t(ActivityAuditI18nKey.AllResources) : t(ActivityAuditI18nKey.AllParameters),
+      id: CompareView.NEXT,
+      name: t(ActivityAuditI18nKey.BeforeAfter),
     },
     {
-      id: DiffView.DIFF,
-      name: t(ActivityAuditI18nKey.Differences),
+      id: CompareView.CURRENT,
+      name: t(ActivityAuditI18nKey.BeforeCurrent),
     },
   ];
 
   const onChange = useCallback(
     (value: string) => {
-      setDiffView(value as DiffView);
+      setCompareView(value as CompareView);
     },
-    [setDiffView],
+    [setCompareView],
   );
 
   return (
     <div className="w-fit">
       <Dropdown
         selectedClassName="flex items-center my-[5px] mr-2 px-1.5 py-1 small text-primary rounded bg-layer-4 cursor-pointer"
-        selectedValue={items.find((item) => item.id === diffView)}
-        prefix={`${t(BasicI18nKey.View)}: `}
+        selectedValue={items.find((item) => item.id === compareView)}
+        prefix={`${t(BasicI18nKey.Comparison)}: `}
       >
         {items.map((item, i) => (
           <DropdownMenuItem className="gap-0" key={i} dropdownItem={item} onClick={() => onChange(item.id)} />
@@ -49,4 +48,4 @@ const ActivityAuditEntityDiffFilter: FC<Props> = ({ diffView, setDiffView, isRes
   );
 };
 
-export default ActivityAuditEntityDiffFilter;
+export default ActivityAuditEntityDiffCompare;

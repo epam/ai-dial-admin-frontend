@@ -92,6 +92,8 @@ export enum BasicI18nKey {
   CopiedSuccessfully = 'Basic.CopiedSuccessfully',
   ServerError = 'Basic.ServerError',
   Search = 'Basic.Search',
+  Comparison = 'Basic.Comparison',
+  Current = 'Basic.Current',
 }
 
 export enum CommonControlsI18nKey {
@@ -678,6 +680,8 @@ export enum ActivityAuditI18nKey {
   RollbackState = 'ActivityAudit.RollbackState',
   RollbackRevision = 'ActivityAudit.RollbackRevision',
   ActivityDetails = 'ActivityAudit.ActivityDetails',
+  BeforeAfter = 'ActivityAudit.BeforeAfter',
+  BeforeCurrent = 'ActivityAudit.BeforeCurrent',
 }
 
 export enum ErrorI18nKey {

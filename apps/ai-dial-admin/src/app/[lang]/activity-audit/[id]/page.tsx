@@ -9,8 +9,11 @@ import SystemRollback from '@/src/components/ActivityAudit/SystemRollback';
 import ActivityAuditView from '@/src/components/ActivityAuditView/ActivityAuditView';
 import Page403 from '@/src/components/Page403/Page403';
 import { DialActivity } from '@/src/models/dial/activity-audit';
+import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { FilterDto, PageDto } from '@/src/models/request';
 import { logger } from '@/src/server/logger';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
+import { SortDirectionDto } from '@/src/types/request';
 import { getRevisionRouteForEntityType } from '@/src/utils/audit/get-revision-route';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -23,6 +26,8 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   let activity: DialActivity | null = null;
   let activityRevision: ActivityAuditEntity | null = null;
   let previousRevision: ActivityAuditEntity | null = null;
+  let activities: PageDto<DialActivity> | null = null;
+  let entity: DialBaseEntity | undefined = void 0;
 
   try {
     const auditViewId = decodeURIComponent((await params.params).id);
@@ -33,10 +38,36 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     if (activity === void 0) {
       return <Page403 />;
     }
+    activities = await activityAuditApi.getActivitiesList(
+      1,
+      0,
+      token,
+      [
+        {
+          column: 'epochTimestampMs',
+          direction: SortDirectionDto.DESC,
+        },
+      ],
+      [
+        {
+          column: 'resourceId',
+          value: activity?.resourceId,
+          operator: 'eq',
+        } as FilterDto,
+      ],
+    );
     const route = getRevisionRouteForEntityType(
       activity?.resourceType,
       decodeURIComponent(activity?.resourceId as string),
     );
+
+    if (activities && activities.data && route) {
+      entity = (await activityAuditApi.getRevisionDetails(
+        `${route}${activities.data?.[0].revision}`,
+        token,
+      )) as DialBaseEntity;
+    }
+
     if (activity && route) {
       activityRevision = await activityAuditApi.getRevisionDetails(`${route}${activity.revision}`, token);
       previousRevision = await activityAuditApi.getRevisionDetails(`${route}${activity.revision - 1}`, token);
@@ -50,6 +81,11 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   }
 
   return (
-    <ActivityAuditView activity={activity} activityRevision={activityRevision} previousRevision={previousRevision} />
+    <ActivityAuditView
+      activity={activity}
+      activityRevision={activityRevision}
+      previousRevision={previousRevision}
+      entity={entity}
+    />
   );
 }

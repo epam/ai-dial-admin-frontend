@@ -13,27 +13,38 @@ import { ActivityAuditI18nKey, ButtonsI18nKey, CreateI18nKey } from '@/src/const
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialActivity } from '@/src/models/dial/activity-audit';
-import { ActivityAuditEntity, DiffView } from '@/src/types/activity-audit';
+import { ActivityAuditDiff, DialActivity } from '@/src/models/dial/activity-audit';
+import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { ActivityAuditEntity, CompareView, DiffView } from '@/src/types/activity-audit';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { rollbackEntityPerRevision } from '@/src/utils/audit/get-rollback-request';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { useRouter } from 'next/navigation';
-import ActivityAuditEntityDiff from './ActivityAuditViewDiff/ActivityAuditEntityDiff';
-import ActivityAuditViewHeader from './ActivityAuditViewHeader/ActivityAuditViewHeader';
 import { generateCurrentResource } from './activity-audit.utils';
+import ActivityAuditEntityDiff from './ActivityAuditViewDiff/ActivityAuditEntityDiff';
+import ActivityAuditEntityDiffCompare from './ActivityAuditViewDiff/ActivityAuditEntityDiffCompare';
 import ActivityAuditEntityDiffFilter from './ActivityAuditViewDiff/ActivityAuditEntityDiffFilter';
+import ActivityAuditViewHeader from './ActivityAuditViewHeader/ActivityAuditViewHeader';
 
 interface Props {
   activity: DialActivity;
   activityRevision: ActivityAuditEntity | null;
   previousRevision: ActivityAuditEntity | null;
   isModalView?: boolean;
+  hideComparator?: boolean;
+  entity?: DialBaseEntity;
 }
 
-const ActivityAuditView: FC<Props> = ({ activity, activityRevision, previousRevision, isModalView }) => {
+const ActivityAuditView: FC<Props> = ({
+  activity,
+  activityRevision,
+  previousRevision,
+  isModalView,
+  hideComparator,
+  entity,
+}) => {
   const t = useI18n();
   const router = useRouter();
 
@@ -42,9 +53,15 @@ const ActivityAuditView: FC<Props> = ({ activity, activityRevision, previousRevi
   const [modalState, setModalState] = useState(PopUpState.Closed);
   const [isLoading, setIsLoading] = useState(false);
   const [diffView, setDiffView] = useState(DiffView.ALL);
+  const [compareView, setCompareView] = useState(CompareView.NEXT);
 
-  const currentEntity = generateCurrentResource(activityRevision, previousRevision, activity.resourceType, true);
-  const compareEntity = generateCurrentResource(previousRevision, activityRevision, activity.resourceType);
+  const before = generateCurrentResource(activityRevision, previousRevision, activity.resourceType, true);
+  const after = generateCurrentResource(previousRevision, activityRevision, activity.resourceType);
+  const current: Record<string, ActivityAuditDiff[]> | undefined = generateCurrentResource(
+    previousRevision,
+    entity as ActivityAuditEntity,
+    activity.resourceType,
+  );
 
   const onOpenModal = useCallback(() => {
     setModalState(PopUpState.Opened);
@@ -93,6 +110,7 @@ const ActivityAuditView: FC<Props> = ({ activity, activityRevision, previousRevi
               {activity.activityId} <CopyButton field={activity.activityId} title={t(CreateI18nKey.IdTitle)} />
             </h1>
             <div className="flex flex-row items-center gap-4">
+              <ActivityAuditEntityDiffCompare compareView={compareView} setCompareView={setCompareView} />
               <ActivityAuditEntityDiffFilter diffView={diffView} setDiffView={setDiffView} />
               <Button
                 iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
@@ -105,13 +123,21 @@ const ActivityAuditView: FC<Props> = ({ activity, activityRevision, previousRevi
         )}
         <div className="flex-1 flex flex-col relative divide-y divide-primary min-h-0">
           <ActivityAuditViewHeader activity={activity} isModalView={isModalView}>
-            {isModalView && <ActivityAuditEntityDiffFilter diffView={diffView} setDiffView={setDiffView} />}
+            {isModalView && (
+              <div className="flex flex-row gap-3">
+                {!hideComparator && (
+                  <ActivityAuditEntityDiffCompare compareView={compareView} setCompareView={setCompareView} />
+                )}
+                <ActivityAuditEntityDiffFilter diffView={diffView} setDiffView={setDiffView} />
+              </div>
+            )}
           </ActivityAuditViewHeader>
           <ActivityAuditEntityDiff
-            currentEntity={currentEntity}
-            compareEntity={compareEntity}
+            currentEntity={before}
+            compareEntity={compareView === CompareView.NEXT ? after : current}
             type={activity.resourceType}
             diffView={diffView}
+            compareView={compareView}
           />
         </div>
       </div>
