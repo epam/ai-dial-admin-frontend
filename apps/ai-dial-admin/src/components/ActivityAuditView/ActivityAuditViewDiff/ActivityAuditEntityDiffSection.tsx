@@ -24,7 +24,7 @@ interface Props {
 const ActivityAuditEntityDiffSection: FC<Props> = ({ sections, name, type, diffView, compareView }) => {
   const t = useI18n();
 
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   const toggleCollapse = useCallback(() => {
     setIsCollapsed((prev) => !prev);
