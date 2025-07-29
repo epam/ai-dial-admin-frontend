@@ -13,7 +13,7 @@ import { ActivityAuditI18nKey, ButtonsI18nKey, CreateI18nKey } from '@/src/const
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { ActivityAuditDiff, DialActivity } from '@/src/models/dial/activity-audit';
+import { DialActivity } from '@/src/models/dial/activity-audit';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { ActivityAuditEntity, CompareView, DiffView } from '@/src/types/activity-audit';
 import { PopUpState } from '@/src/types/pop-up';
@@ -55,11 +55,15 @@ const ActivityAuditView: FC<Props> = ({
   const [diffView, setDiffView] = useState(DiffView.ALL);
   const [compareView, setCompareView] = useState(CompareView.NEXT);
 
-  const before = generateCurrentResource(activityRevision, previousRevision, activity.resourceType, true);
-  const after = generateCurrentResource(previousRevision, activityRevision, activity.resourceType);
-  const current: Record<string, ActivityAuditDiff[]> | undefined = generateCurrentResource(
+  const before = generateCurrentResource(
+    compareView === CompareView.NEXT ? activityRevision : (entity as ActivityAuditEntity),
     previousRevision,
-    entity as ActivityAuditEntity,
+    activity.resourceType,
+    true,
+  );
+  const after = generateCurrentResource(
+    previousRevision,
+    compareView === CompareView.NEXT ? activityRevision : (entity as ActivityAuditEntity),
     activity.resourceType,
   );
 
@@ -134,7 +138,7 @@ const ActivityAuditView: FC<Props> = ({
           </ActivityAuditViewHeader>
           <ActivityAuditEntityDiff
             currentEntity={before}
-            compareEntity={compareView === CompareView.NEXT ? after : current}
+            compareEntity={after}
             type={activity.resourceType}
             diffView={diffView}
             compareView={compareView}
