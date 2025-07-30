@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback } from 'react';
+import { FC } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
@@ -18,13 +18,6 @@ interface Props {
 const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChangeInterceptor }) => {
   const t = useI18n();
 
-  const onChangeEndpoint = useCallback(
-    (endpoint: string) => {
-      onChangeInterceptor({ ...selectedInterceptor, endpoint });
-    },
-    [selectedInterceptor, onChangeInterceptor],
-  );
-
   return (
     <div className="h-full lg:w-[35%] flex flex-col gap-6 mt-3">
       <SimpleEntityProperties
@@ -32,14 +25,7 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
         onChangeEntity={onChangeInterceptor}
         names={names}
         isEntityImmutable={true}
-      />
-
-      <TextInputField
-        elementId="interceptorEndpoint"
-        value={selectedInterceptor.endpoint}
-        onChange={onChangeEndpoint}
-        fieldTitle={t(EntitiesI18nKey.Endpoint)}
-        placeholder={t(EntitiesI18nKey.EndpointPlaceholder)}
+        view={ApplicationRoute.Interceptors}
       />
 
       <TextInputField
