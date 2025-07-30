@@ -26,7 +26,10 @@ const ApplicationParametersTab: FC<Props> = ({ entity, applicationSchemes, jsonE
   const [error, setError] = useState(false);
   const [frameConfig, setFrameConfig] = useState<FrameConfig | null>(null);
   const scheme = applicationSchemes
-    ? applicationSchemes?.find((scheme) => scheme.$id === (entity as DialApplication)?.customAppSchemaId)
+    ? applicationSchemes?.find((scheme) => scheme.$id === (entity as DialApplication)?.customAppSchemaId) ||
+      applicationSchemes?.find(
+        (scheme) => scheme['dial:applicationTypeEditorUrl'] === (entity as DialApplication)?.editorUrl,
+      )
     : (entity as DialApplicationResource);
 
   useEffect(() => {
@@ -49,7 +52,7 @@ const ApplicationParametersTab: FC<Props> = ({ entity, applicationSchemes, jsonE
   return (
     <div className="flex w-full h-full">
       {error || !frameConfig ? (
-        <NoData emptyDataTitle={t(BasicI18nKey.NoData)} />
+        <NoData emptyDataTitle={t(BasicI18nKey.NoParameters)} />
       ) : (
         <FrameRenderer
           iframeUrl={generateTargetUrl()?.href ?? ''}

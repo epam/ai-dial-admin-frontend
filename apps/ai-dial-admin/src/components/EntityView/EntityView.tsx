@@ -64,10 +64,11 @@ const EntityView: FC<Props> = ({
   const t = useI18n() as (stringToTranslate: string) => string;
 
   const isParametersTabAvailable =
-    !!(originalEntity as DialApplication).customAppSchemaId &&
-    !!applicationSchemes?.find((s) => s.$id === (originalEntity as DialApplication).customAppSchemaId)?.[
-      'dial:applicationTypeEditorUrl'
-    ];
+    (!!(originalEntity as DialApplication).customAppSchemaId &&
+      !!applicationSchemes?.find((s) => s.$id === (originalEntity as DialApplication).customAppSchemaId)?.[
+        'dial:applicationTypeEditorUrl'
+      ]) ||
+    !!(originalEntity as DialApplication).editorUrl;
   const tabs = getViewTabs(t, view, isParametersTabAvailable);
   const router = useRouter();
   const { showNotification } = useNotification();
