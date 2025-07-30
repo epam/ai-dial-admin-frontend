@@ -3,6 +3,8 @@ import { DialBaseEntity } from './base-entity';
 export interface DialApplication extends DialBaseEntity {
   customAppSchemaId?: string;
   maxRetryAttempts?: number;
+  viewerUrl?: string;
+  editorUrl?: string;
 }
 
 export interface DialApplicationScheme {

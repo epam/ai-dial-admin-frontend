@@ -3,6 +3,7 @@
 import { uniq } from 'lodash';
 import { FC, useCallback, useEffect, useState } from 'react';
 
+import ApplicationSource from '@/src/components/ApplicationSource/ApplicationSource';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/AutocompleteField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
@@ -18,7 +19,6 @@ import { getErrorForDescription } from '@/src/utils/validation/description-error
 import { getErrorForName } from '@/src/utils/validation/name-error';
 import AdditionalProperties from './AdditionalProperties';
 import { getDisplayNameErrorKeyPerView, getVersionErrorKeyPerView, isWrongLength } from './error-title';
-import RunnerSelector from './RunnerSelector/RunnerSelector';
 
 interface Props {
   view: ApplicationRoute;
@@ -151,11 +151,11 @@ const EntityMainProperties: FC<Props> = ({
         />
       )}
 
-      {view === ApplicationRoute.Applications && (
-        <RunnerSelector
+      {view === ApplicationRoute.Applications && !isEntityImmutable && (
+        <ApplicationSource
           entity={entity}
           runners={runners}
-          isEditEntityView={isEntityImmutable}
+          isEntityImmutable={isEntityImmutable}
           onChangeEntity={onChangeEntity}
         />
       )}

@@ -26,6 +26,7 @@ export default {
     Enabled: 'Enabled',
     Disabled: 'Disabled',
     NoData: 'No Data',
+    NoParameters: 'No Parameters',
     Value: 'Value',
     Settings: 'Settings',
     Theme: 'Theme',
@@ -161,6 +162,9 @@ export default {
     UpdatedAt: 'Updated At',
     Maintainer: 'Maintainer',
     MaintainerPlaceholder: 'Enter maintainer',
+    SourceType: 'Source type',
+    Endpoints: 'Endpoints',
+    AppRunner: 'Application runner',
   },
   DeleteEntity: {
     Title: 'Confirm Deleting ',
@@ -384,6 +388,7 @@ export default {
     Refresh: 'Refresh',
     Back: 'Back',
     Close: 'Close',
+    OpenAppRunner: 'Open application runner',
   },
   UpstreamEndpoints: {
     Upstream: 'Upstream',
@@ -845,6 +850,7 @@ export default {
   },
   Error: {
     EmptyField: 'This field could not be empty',
+    RequiredField: 'This field is required',
     PageNotFound: 'Page Not Found',
     ResourceNotFound: 'Resource not found or no longer available.',
     CheckUrl: 'Please check the URL or go back to the',

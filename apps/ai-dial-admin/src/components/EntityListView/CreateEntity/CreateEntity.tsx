@@ -63,7 +63,6 @@ const CreateEntity: FC<Props> = ({
           name: '',
           description: '',
           displayVersion: '',
-          endpoint: '',
         },
   );
   const [isValid, setIsValid] = useState(false);

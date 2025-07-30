@@ -37,12 +37,12 @@ describe('Applications - ApplicationParametersTab', () => {
       />,
     );
 
-    expect(screen.getByText(BasicI18nKey.NoData)).toBeInTheDocument();
+    expect(screen.getByText(BasicI18nKey.NoParameters)).toBeInTheDocument();
   });
 
   test('Should correctly render notification', () => {
     render(<ApplicationParametersTab entity={{ editorUrl: 'editorUrl' }} />);
 
-    expect(screen.getByText(BasicI18nKey.NoData)).toBeInTheDocument();
+    expect(screen.getByText(BasicI18nKey.NoParameters)).toBeInTheDocument();
   });
 });

@@ -53,13 +53,6 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
     [entity, onChangeEntity],
   );
 
-  const onChangeEndpoint = useCallback(
-    (endpoint: string) => {
-      onChangeEntity({ ...entity, endpoint });
-    },
-    [entity, onChangeEntity],
-  );
-
   return (
     <div className="w-full flex flex-col gap-6">
       {isEntityImmutable && isShowMaintainer ? (
@@ -82,16 +75,6 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
 
       {view === ApplicationRoute.Models ? (
         <AdapterSelector adapters={adapters} onChangeAdapter={onChangeAdapter} model={entity} />
-      ) : null}
-
-      {view !== ApplicationRoute.Assistants && view !== ApplicationRoute.Models && !isEntityImmutable ? (
-        <TextInputField
-          elementId="endpoint"
-          fieldTitle={t(EntitiesI18nKey.Endpoint)}
-          placeholder={t(EntitiesI18nKey.EndpointPlaceholder)}
-          value={entity.endpoint}
-          onChange={onChangeEndpoint}
-        />
       ) : null}
     </div>
   );

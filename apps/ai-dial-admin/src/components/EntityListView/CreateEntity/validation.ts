@@ -46,6 +46,10 @@ export const isValidEntity = (
       );
     }
 
+    if (view === ApplicationRoute.Interceptors) {
+      return isValidSimpleEntity && !!entity.endpoint;
+    }
+
     return isValidSimpleEntity;
   }
   const baseEntity = entity as DialBaseEntity;
