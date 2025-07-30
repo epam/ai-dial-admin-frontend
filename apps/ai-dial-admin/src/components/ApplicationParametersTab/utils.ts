@@ -1,4 +1,4 @@
-import { DialApplicationScheme } from '@/src/models/dial/application';
+import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { UserSession } from '@/src/models/auth';
 import { DialApplicationResource } from '@/src/models/dial/application-resource';
 
@@ -17,4 +17,14 @@ export const getFrameConfig = (
       (scheme as DialApplicationScheme)?.['dial:applicationTypeDisplayName'] ||
       (scheme as DialApplicationResource)?.name,
   };
+};
+
+export const getScheme = (
+  entity: DialApplication,
+  applicationSchemes?: DialApplicationScheme[] | null,
+): DialApplicationScheme | undefined => {
+  return applicationSchemes
+    ? applicationSchemes?.find((scheme) => scheme.$id === entity?.customAppSchemaId) ||
+        applicationSchemes?.find((scheme) => scheme['dial:applicationTypeEditorUrl'] === entity?.editorUrl)
+    : (entity as DialApplicationScheme);
 };
