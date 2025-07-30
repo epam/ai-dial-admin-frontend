@@ -67,6 +67,7 @@ export enum BasicI18nKey {
   Enabled = 'Basic.Enabled',
   Disabled = 'Basic.Disabled',
   NoData = 'Basic.NoData',
+  NoParameters = 'Basic.NoParameters',
   Value = 'Basic.Value',
   Settings = 'Basic.Settings',
   Theme = 'Basic.Theme',
@@ -138,6 +139,9 @@ export enum EntitiesI18nKey {
   UpdatedAt = 'Entities.UpdatedAt',
   Maintainer = 'Entities.Maintainer',
   MaintainerPlaceholder = 'Entities.MaintainerPlaceholder',
+  SourceType = 'Entities.SourceType',
+  Endpoints = 'Entities.Endpoints',
+  AppRunner = 'Entities.AppRunner',
 }
 
 export enum DeleteI18nKey {
@@ -223,6 +227,7 @@ export enum ButtonsI18nKey {
   Rollback = 'Buttons.Rollback',
   Back = 'Buttons.Back',
   Close = 'Buttons.Close',
+  OpenAppRunner = 'Buttons.OpenAppRunner',
 }
 
 export enum CreateI18nKey {
@@ -686,6 +691,7 @@ export enum ActivityAuditI18nKey {
 
 export enum ErrorI18nKey {
   EmptyField = 'Error.EmptyField',
+  RequiredField = 'Error.RequiredField',
   PageNotFound = 'Error.PageNotFound',
   ResourceNotFound = 'Error.ResourceNotFound',
   CheckUrl = 'Error.CheckUrl',

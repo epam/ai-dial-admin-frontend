@@ -3,9 +3,10 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
+import ErrorText from '@/src/components/Common/ErrorText/ErrorText';
 import Field from '@/src/components/Common/Field/Field';
 import InputModal from '@/src/components/Common/InputModal/InputModal';
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
@@ -18,14 +19,16 @@ interface Props {
   runners?: DialApplicationScheme[];
   isEditEntityView?: boolean;
   onChangeEntity: (entity: DialBaseEntity) => void;
+  required?: boolean;
 }
 
-const RunnerSelector: FC<Props> = ({ entity, runners, onChangeEntity, isEditEntityView = false }) => {
+const RunnerSelector: FC<Props> = ({ entity, runners, onChangeEntity, isEditEntityView = false, required }) => {
   const t = useI18n();
 
   const customAppSchemaId = (entity as DialApplication)?.customAppSchemaId;
   const [modalState, setIsModalState] = useState(PopUpState.Closed);
   const [runnerTitle, setRunnerTitle] = useState('');
+  const [errorText, setErrorText] = useState('');
 
   const onOpenModal = useCallback(() => {
     setIsModalState(PopUpState.Opened);
@@ -45,8 +48,11 @@ const RunnerSelector: FC<Props> = ({ entity, runners, onChangeEntity, isEditEnti
     (customAppSchemaId?: string) => {
       onChangeEntity({ ...entity, customAppSchemaId, endpoint: void 0 } as DialApplication);
       onCloseModal();
+      if (required) {
+        setErrorText(customAppSchemaId ? '' : t(ErrorI18nKey.RequiredField));
+      }
     },
-    [entity, onChangeEntity, onCloseModal],
+    [entity, onChangeEntity, onCloseModal, required, t],
   );
 
   useEffect(() => {
@@ -58,7 +64,12 @@ const RunnerSelector: FC<Props> = ({ entity, runners, onChangeEntity, isEditEnti
   return isEditEntityView ? (
     <div className="flex flex-col">
       <Field fieldTitle={t(CreateI18nKey.RunnerName)} htmlFor="runner" />
-      <InputModal modalState={modalState} selectedValue={runnerTitle} onOpenModal={onOpenModal}>
+      <InputModal
+        modalState={modalState}
+        selectedValue={runnerTitle}
+        onOpenModal={onOpenModal}
+        inputCssClasses={errorText && 'input-error'}
+      >
         <SelectRunnerModal
           selectedId={customAppSchemaId}
           onApply={onChangeRunner}
@@ -67,6 +78,7 @@ const RunnerSelector: FC<Props> = ({ entity, runners, onChangeEntity, isEditEnti
           runners={runners}
         />
       </InputModal>
+      <ErrorText errorText={errorText} />
     </div>
   ) : (
     <DropdownField
