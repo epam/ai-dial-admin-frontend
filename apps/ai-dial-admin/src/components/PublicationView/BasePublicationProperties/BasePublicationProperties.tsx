@@ -6,34 +6,45 @@ import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
 import { EntitiesI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import { ACTION_I18N_KEYS } from '@/src/constants/publications';
 import { useI18n } from '@/src/locales/client';
-import { ActionType, Publication } from '@/src/models/dial/publications';
+import { ActionType, ApplicationPublication, Publication } from '@/src/models/dial/publications';
 import { removeTrailingSlash } from '@/src/utils/files/path';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getActionClass } from '@/src/utils/publications';
 import BasePublicationPermissions from './BasePublicationPermissions';
+import { DialApplicationScheme } from '@/src/models/dial/application';
 
 interface Props {
   publication: Publication;
+  applicationSchemes?: DialApplicationScheme[] | null;
   children: ReactNode;
 }
 
-const BasePublicationProperties: FC<Props> = ({ publication, children }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+const BasePublicationProperties: FC<Props> = ({ publication, children, applicationSchemes }) => {
+  const t = useI18n() as (str: string) => string;
   const indicatorClassNames = classNames(
     'flex w-2 h-2 mr-1 rounded no-user-select',
     getActionClass(publication.action),
   );
 
+  const runnerId = (publication as ApplicationPublication).applicationResources?.[0]?.applicationTypeSchemaId;
+  const runner = applicationSchemes?.find((app) => app.$id === runnerId);
+
   return (
     <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full" data-testid={'publication-header'}>
       <div className="flex flex-col sm:flex-row gap-8">
         <div className="flex flex-row gap-8">
-          <LabeledText label={t(PublicationsI18nKey.Action)}>
-            <p className="flex items-center">
-              <span className={indicatorClassNames} />
-              {t(ACTION_I18N_KEYS[publication.action])}
-            </p>
-          </LabeledText>
+          {!runnerId ? (
+            <LabeledText label={t(PublicationsI18nKey.Action)}>
+              <p className="flex items-center">
+                <span className={indicatorClassNames} />
+                {t(ACTION_I18N_KEYS[publication.action])}
+              </p>
+            </LabeledText>
+          ) : (
+            <LabeledText label={t(PublicationsI18nKey.Runner)}>
+              <p className="flex items-center">{runner?.['dial:applicationTypeDisplayName']}</p>
+            </LabeledText>
+          )}
           <LabeledText label={t(PublicationsI18nKey.Author)} text={publication.author} />
         </div>
         <div className="flex flex-col sm:flex-row gap-8">

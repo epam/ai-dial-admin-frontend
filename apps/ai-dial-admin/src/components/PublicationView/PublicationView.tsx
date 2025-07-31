@@ -9,10 +9,12 @@ import { Publication } from '@/src/models/dial/publications';
 import { useRouter } from 'next/navigation';
 import { getErrorNotification } from '@/src/utils/notification';
 import { useNotification } from '@/src/context/NotificationContext';
+import { DialApplicationScheme } from '@/src/models/dial/application';
 
 interface PublicationViewProps<T> {
   view: ApplicationRoute;
   publication: T;
+  applicationSchemes?: DialApplicationScheme[] | null;
   approvePublication: (path: string) => Promise<ServerActionResponse>;
   declinePublication: (path: string, comment: string) => Promise<ServerActionResponse>;
 }
@@ -21,6 +23,7 @@ const PublicationView = <T extends Publication>({
   view,
   publication,
   approvePublication,
+  applicationSchemes,
   declinePublication,
 }: PublicationViewProps<T>) => {
   const router = useRouter();
@@ -61,7 +64,7 @@ const PublicationView = <T extends Publication>({
         <BasePublicationHeader onApprove={onApprove} onDecline={onDecline} action={publication.action} route={view} />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
-        <PublicationProperties view={view} publication={publication} />
+        <PublicationProperties view={view} publication={publication} applicationSchemes={applicationSchemes} />
       </div>
     </div>
   );
