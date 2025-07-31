@@ -1,4 +1,5 @@
 export interface DialApplicationResource {
+  applicationTypeSchemaId: string;
   descriptionKeywords: string[];
   inputAttachmentTypes: string[];
   dependencies: string[];
