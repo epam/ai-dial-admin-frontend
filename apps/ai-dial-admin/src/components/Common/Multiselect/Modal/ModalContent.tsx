@@ -41,8 +41,9 @@ const MultiselectContentModal: FC<Props> = ({
   }, [setFilteredItems, items]);
 
   useEffect(() => {
+    setNewItems(newItems);
     setFilteredNewItems(newItems);
-  }, [setNewItems, newItems]);
+  }, [newItems, setNewItems]);
 
   useEffect(() => {
     if ((!newItems || !newItems.length) && draggable) {
