@@ -29,6 +29,7 @@ const MultiselectContentModal: FC<Props> = ({
 }) => {
   const [newItems, setItems] = useState<string[]>([]);
   const [filteredItems, setFilteredItems] = useState<string[]>(items);
+  const [filteredNewItems, setFilteredNewItems] = useState<string[]>([]);
 
   const newItemsContainer = useRef<HTMLDivElement | null>(null);
   const [, drop] = useDrop(() => ({ accept: 'column' }));
@@ -40,12 +41,13 @@ const MultiselectContentModal: FC<Props> = ({
   }, [setFilteredItems, items]);
 
   useEffect(() => {
-    setNewItems(newItems);
+    setFilteredNewItems(newItems);
   }, [setNewItems, newItems]);
 
   useEffect(() => {
     if ((!newItems || !newItems.length) && draggable) {
       setItems(items);
+      setFilteredNewItems(items);
     }
   }, [setItems, newItems, draggable, items]);
 
@@ -79,8 +81,9 @@ const MultiselectContentModal: FC<Props> = ({
   const onFilterItems = useCallback(
     (pattern: string) => {
       setFilteredItems(items.filter((item) => item.toLowerCase().includes(pattern.toLowerCase())));
+      setFilteredNewItems(newItems.filter((item) => item.toLowerCase().includes(pattern.toLowerCase())));
     },
-    [items],
+    [items, newItems],
   );
 
   const onAddItem = useCallback(() => {
@@ -129,7 +132,7 @@ const MultiselectContentModal: FC<Props> = ({
               )
             );
           })}
-          {newItems.map((item, index) => {
+          {filteredNewItems.map((item, index) => {
             return (
               <NewItemInput
                 key={index}
