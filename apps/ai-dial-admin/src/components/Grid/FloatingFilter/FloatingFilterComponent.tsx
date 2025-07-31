@@ -1,15 +1,16 @@
 import React from 'react';
 
 import { IconSearch } from '@tabler/icons-react';
-import { IFloatingFilterParams } from 'ag-grid-community';
+import { IFloatingFilterParams, IFloatingFilterParent } from 'ag-grid-community';
 
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 const FloatingFilter = (props: IFloatingFilterParams) => {
   const t = useI18n();
+
   const onInputChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
-    props.parentFilterInstance((instance: any) => {
+    props.parentFilterInstance((instance: IFloatingFilterParent) => {
       instance.onFloatingFilterChanged('contains', e.target.value);
     });
   };
@@ -20,6 +21,7 @@ const FloatingFilter = (props: IFloatingFilterParams) => {
       <input
         type="text"
         className="w-full border-0 tiny"
+        value={props.currentParentModel()?.filter || ''}
         onChange={onInputChanged}
         placeholder={t(BasicI18nKey.Search)}
       />

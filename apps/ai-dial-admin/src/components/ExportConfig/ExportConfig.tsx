@@ -13,7 +13,7 @@ import {
 } from '@/src/components/ExportConfig/ExportConfig.utils';
 import PreviewModal from '@/src/components/ExportConfig/Preview/PreviewModal';
 import ExportDependencies from '@/src/components/ExportConfig/Structure/Dependencies';
-import { BasicI18nKey, ButtonsI18nKey, ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, ExportI18nKey, ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -51,11 +51,11 @@ const ExportConfig: FC = () => {
   const exportFormats: RadioButtonModel[] = [
     {
       id: ExportFormat.ADMIN,
-      name: t(ExportI18nKey.AdminFormat),
+      name: t(ImportI18nKey.DialArchive),
     },
     {
       id: ExportFormat.CORE,
-      name: t(ExportI18nKey.CoreFormat),
+      name: t(ImportI18nKey.DialCore),
     },
   ];
 
