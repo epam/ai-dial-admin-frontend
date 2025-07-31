@@ -22,7 +22,6 @@ interface Props {
   setJsonErrors?: Dispatch<SetStateAction<JSONEditorError[]>>;
 }
 
-// TODO: Translations
 const JSONEditor: FC<Props> = ({ model, errorNotifications, setSelectedEntity, setIsChanged, setJsonErrors }) => {
   const { removeNotification } = useNotification();
   const [entityModel, setEntityModel] = useState<string>('');
@@ -50,8 +49,10 @@ const JSONEditor: FC<Props> = ({ model, errorNotifications, setSelectedEntity, s
 
   const onValidateJSON = useCallback(
     (errors?: JSONEditorError[]) => {
-      clearResolvedErrors({ errorNotifications, errors, removeNotification });
-      setJsonErrors?.(errors ?? []);
+      // 768 - validation $schema field. $schema uses in App Runner and it'e not real JSON scheme
+      const filteredErrors = errors?.filter((error) => error.code !== '768');
+      clearResolvedErrors({ errorNotifications, errors: filteredErrors, removeNotification });
+      setJsonErrors?.(filteredErrors ?? []);
     },
     [setJsonErrors, errorNotifications, removeNotification],
   );
