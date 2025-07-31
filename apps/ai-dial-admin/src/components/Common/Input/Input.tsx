@@ -1,7 +1,7 @@
 'use client';
 
 import classNames from 'classnames';
-import { FC } from 'react';
+import { FC, WheelEvent } from 'react';
 
 export interface InputProps {
   type?: string;
@@ -25,7 +25,7 @@ const Input: FC<InputProps> = ({
   invalid,
   onChange,
 }) => {
-  const handleWheel = (e) => e.target.blur();
+  const handleWheel = (e: WheelEvent<HTMLInputElement>) => (e.target as HTMLInputElement).blur();
 
   return (
     <input
