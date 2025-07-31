@@ -6,6 +6,7 @@ import Button from '@/src/components/Common/Button/Button';
 import Checkbox from '@/src/components/Common/Checkbox/Checkbox';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import NewItemInput from './NewItemInput';
+import Search from '@/src/components/Common/Search/Search';
 
 interface Props {
   addTitle?: string;
@@ -27,18 +28,27 @@ const MultiselectContentModal: FC<Props> = ({
   setNewItems,
 }) => {
   const [newItems, setItems] = useState<string[]>([]);
+  const [filteredItems, setFilteredItems] = useState<string[]>(items);
+  const [filteredNewItems, setFilteredNewItems] = useState<string[]>([]);
+
   const newItemsContainer = useRef<HTMLDivElement | null>(null);
   const [, drop] = useDrop(() => ({ accept: 'column' }));
 
   drop(newItemsContainer);
 
   useEffect(() => {
+    setFilteredItems(items);
+  }, [setFilteredItems, items]);
+
+  useEffect(() => {
     setNewItems(newItems);
-  }, [setNewItems, newItems]);
+    setFilteredNewItems(newItems);
+  }, [newItems, setNewItems]);
 
   useEffect(() => {
     if ((!newItems || !newItems.length) && draggable) {
       setItems(items);
+      setFilteredNewItems(items);
     }
   }, [setItems, newItems, draggable, items]);
 
@@ -67,6 +77,14 @@ const MultiselectContentModal: FC<Props> = ({
       setItems([...newItems]);
     },
     [setItems, newItems],
+  );
+
+  const onFilterItems = useCallback(
+    (pattern: string) => {
+      setFilteredItems(items.filter((item) => item.toLowerCase().includes(pattern.toLowerCase())));
+      setFilteredNewItems(newItems.filter((item) => item.toLowerCase().includes(pattern.toLowerCase())));
+    },
+    [items, newItems],
   );
 
   const onAddItem = useCallback(() => {
@@ -99,36 +117,38 @@ const MultiselectContentModal: FC<Props> = ({
 
   return (
     <>
-      <div className="flex flex-col gap-y-2 overflow-auto" ref={newItemsContainer}>
-        {items.map((item, index) => {
-          return (
-            !draggable && (
-              <Checkbox
+      <div className="flex flex-col gap-y-2 overflow-auto max-h-[464px]" ref={newItemsContainer}>
+        {items.length > 10 ? <Search onChange={onFilterItems} /> : null}
+        <div className="flex flex-col gap-y-2 overflow-auto flex-1 min-h-0">
+          {filteredItems.map((item, index) => {
+            return (
+              !draggable && (
+                <Checkbox
+                  key={index}
+                  checked={selectedItems.includes(item)}
+                  id={index.toString()}
+                  label={item}
+                  onChange={(v) => onChangeSelectedItems(item, v)}
+                />
+              )
+            );
+          })}
+          {filteredNewItems.map((item, index) => {
+            return (
+              <NewItemInput
                 key={index}
-                checked={selectedItems.includes(item)}
-                id={index.toString()}
-                label={item}
-                onChange={(v) => onChangeSelectedItems(item, v)}
+                value={item}
+                draggable={draggable}
+                onChangeItem={onChangeNewItem}
+                onRemoveItem={onRemoveNewItem}
+                index={index}
+                placeholder={addPlaceholder}
+                onFindItem={findItem}
+                onMoveItem={moveItem}
               />
-            )
-          );
-        })}
-
-        {newItems.map((item, index) => {
-          return (
-            <NewItemInput
-              key={index}
-              value={item}
-              draggable={draggable}
-              onChangeItem={onChangeNewItem}
-              onRemoveItem={onRemoveNewItem}
-              index={index}
-              placeholder={addPlaceholder}
-              onFindItem={findItem}
-              onMoveItem={moveItem}
-            />
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
       {addTitle && (
         <div>
