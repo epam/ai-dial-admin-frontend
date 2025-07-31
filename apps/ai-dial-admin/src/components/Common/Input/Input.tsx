@@ -25,10 +25,12 @@ const Input: FC<InputProps> = ({
   invalid,
   onChange,
 }) => {
+  const handleWheel = (e) => e.target.blur();
+
   return (
     <input
       type={type}
-      autoComplete="new-password"
+      autoComplete="off"
       id={inputId}
       data-testid={inputId}
       placeholder={placeholder}
@@ -37,6 +39,7 @@ const Input: FC<InputProps> = ({
       disabled={disabled}
       className={classNames(invalid ? 'input-error' : '', cssClass)}
       onChange={(event) => onChange?.(event.currentTarget.value)}
+      onWheel={handleWheel}
     />
   );
 };
