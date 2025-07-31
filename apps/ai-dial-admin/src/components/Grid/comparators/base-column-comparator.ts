@@ -3,9 +3,9 @@ import { ColDef, IRowNode } from 'ag-grid-community';
 export const baseColumnComparator = (
   a: string | number | undefined,
   b: string | number | undefined,
-  _nodeA: IRowNode,
-  _nodeB: IRowNode,
-  isInverted: boolean,
+  _nodeA?: IRowNode,
+  _nodeB?: IRowNode,
+  isInverted?: boolean,
 ): number => {
   const aLower = typeof a === 'string' ? a.toLowerCase() : a;
   const bLower = typeof b === 'string' ? b.toLowerCase() : b;

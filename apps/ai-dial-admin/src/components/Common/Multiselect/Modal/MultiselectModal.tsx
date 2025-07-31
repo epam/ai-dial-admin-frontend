@@ -13,6 +13,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { getErrorNotification } from '@/src/utils/notification';
 import { uniq } from 'lodash';
 import MultiselectContentModal from './ModalContent';
+import { baseColumnComparator } from '@/src/components/Grid/comparators/base-column-comparator';
 
 interface Props {
   initSelectedItems?: string[];
@@ -57,6 +58,7 @@ const MultiselectModal: FC<Props> = ({
     }
     onClose();
   }, [selectedItems, newItems, draggable, onClose, onSelectItems]);
+
   useEffect(() => {
     const filtered = newItems.filter((v) => v !== '');
     setIsValid(!!items.length || !!filtered.length);
@@ -67,7 +69,9 @@ const MultiselectModal: FC<Props> = ({
       setIsLoading(true);
       getItems().then((res) => {
         if (res.success) {
-          setItems(uniq([...((res.response as string[]) || []), ...(allItems || [])]));
+          const items = uniq([...((res.response as string[]) || []), ...(allItems || [])]);
+
+          setItems(items.sort(baseColumnComparator));
           setIsLoading(false);
         } else {
           showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage));
