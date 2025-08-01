@@ -23,7 +23,7 @@ const IMPORT_FILE_TYPES = (t: (str: string) => string): RadioButtonModel[] => [
     name: t(ImportI18nKey.DialArchive),
     description: t(ImportI18nKey.DialArchiveDescription),
   },
-  { id: ImportFileType.JSON, name: t(ImportI18nKey.DialCore) },
+  { id: ImportFileType.JSON, name: t(ImportI18nKey.DialCoreFiles) },
 ];
 
 interface Props {
