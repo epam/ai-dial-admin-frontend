@@ -37,6 +37,7 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, modalState, onClose
   const [data, setData] = useState<Record<string, EntitiesGridData[]>>({});
   const [selectedTab, setSelectedTab] = useState('');
   const [isLoadingData, setIsLoadingData] = useState(false);
+
   const toggleIncludeSecret = useCallback(() => {
     setIsIncludeSecret((prev) => !prev);
   }, [setIsIncludeSecret]);
@@ -54,7 +55,7 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, modalState, onClose
       setIsLoadingData(false);
       if (res.success) {
         const data = res.response as Record<string, EntitiesGridData[]>;
-        const { convertedData, tabs } = getPreviewTabs(data, t);
+        const { convertedData, tabs } = getPreviewTabs(data, isIncludeSecret, t);
 
         setData(convertedData);
         setTabs(tabs);
