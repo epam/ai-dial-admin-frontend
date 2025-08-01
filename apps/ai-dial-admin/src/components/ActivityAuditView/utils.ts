@@ -79,6 +79,7 @@ export const getCurrentAndRollbackEntities = (
 
 export enum EntityParameterKeys {
   TOPICS = 'topics',
+  HASHING_ORDER = 'fieldsHashingOrder',
   LIMITS = 'limits',
   PRICING = 'pricing',
   INTERCEPTORS = 'interceptors',
@@ -104,6 +105,8 @@ export enum ParameterNamesI18nKey {
   roleLimits = 'ParameterNames.roleLimits',
   isPublic = 'ParameterNames.isPublic',
   defaultRoleLimit = 'ParameterNames.defaultRoleLimit',
+  fieldsHashingOrder = 'ParameterNames.fieldsHashingOrder',
+  endpointDeploymentName = 'ParameterNames.endpointDeploymentName',
   name = 'ParameterNames.name',
   author = 'ParameterNames.author',
   endpoint = 'ParameterNames.endpoint',

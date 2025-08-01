@@ -26,7 +26,12 @@ const appRunnerParameterKeys = [
   '$defs',
 ];
 
-const arrayParameterKeys = [EntityParameterKeys.TOPICS, EntityParameterKeys.PATHS, EntityParameterKeys.METHODS];
+const arrayParameterKeys = [
+  EntityParameterKeys.TOPICS,
+  EntityParameterKeys.HASHING_ORDER,
+  EntityParameterKeys.PATHS,
+  EntityParameterKeys.METHODS,
+];
 const arrayStringParameterKeys = [EntityParameterKeys.PRICING, EntityParameterKeys.RESPONSE];
 const arrayObjectParameterKeys = [EntityParameterKeys.UPSTREAMS];
 const separateObjectParameterKeys = [
@@ -50,9 +55,11 @@ export const getColumnsByParameter = (
   if (parameter === EntityParameterKeys.ROLES && (index === 1 || type === ActivityAuditResourceType.ROLE)) {
     return ROLE_LIMITS_DIFF_COLUMNS;
   }
+
   if (parameter === EntityParameterKeys.INTERCEPTORS) {
     return INTERCEPTORS_DIFF_COLUMNS;
   }
+
   if (
     parameter === EntityParameterKeys.APPLICATIONS ||
     parameter === EntityParameterKeys.ENTITIES ||
