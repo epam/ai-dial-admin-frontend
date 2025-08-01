@@ -44,7 +44,7 @@ export const IMPORT_FILE_TYPES = (
       ...buttons,
       {
         id: ImportFileType.JSON,
-        name: t(ImportI18nKey.DialCore),
+        name: t(ImportI18nKey.DialCoreFiles),
         description: t(ImportI18nKey.ImportJsonDescription),
       },
     ];
