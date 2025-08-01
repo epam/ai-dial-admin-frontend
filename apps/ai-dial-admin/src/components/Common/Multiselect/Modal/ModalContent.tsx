@@ -94,9 +94,11 @@ const MultiselectContentModal: FC<Props> = ({
   useEffect(() => {
     const container = newItemsContainer.current;
     if (container && container.scrollHeight > container.clientHeight) {
-      container.scrollTo({
-        top: container.scrollHeight,
-        behavior: 'smooth',
+      setTimeout(() => {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth',
+        });
       });
     }
   }, [newItems.length]);
@@ -117,9 +119,9 @@ const MultiselectContentModal: FC<Props> = ({
 
   return (
     <>
-      <div className="flex flex-col gap-y-2 overflow-auto max-h-[464px]" ref={newItemsContainer}>
+      <div className="flex flex-col gap-y-2 overflow-auto max-h-[464px]">
         {items.length > 10 ? <Search onChange={onFilterItems} /> : null}
-        <div className="flex flex-col gap-y-2 overflow-auto flex-1 min-h-0">
+        <div className="flex flex-col gap-y-2 overflow-auto flex-1 min-h-0" ref={newItemsContainer}>
           {filteredItems.map((item, index) => {
             return (
               !draggable && (
