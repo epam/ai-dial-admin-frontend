@@ -2,7 +2,7 @@ import { Column, GridApi, IRowNode } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
+import { NumberInputField, TextInputField } from '@/src/components/Common/InputField/InputField';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import { BasicI18nKey, EntitiesI18nKey, PlaceholderI18nKey, RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -38,7 +38,7 @@ const EntityRoles: FC<Props> = ({ entity, roles, onChangeEntity, isSkipRefresh }
   }, [entity]);
 
   const onChangeDefaultLimit = useCallback(
-    (value: string, key: keyof DialRoleLimits) => {
+    (value: number | string, key: keyof DialRoleLimits) => {
       onChangeEntity({
         ...entity,
         defaultRoleLimit: { ...entity.defaultRoleLimit, [key]: value },
@@ -48,28 +48,28 @@ const EntityRoles: FC<Props> = ({ entity, roles, onChangeEntity, isSkipRefresh }
   );
 
   const onChangeDayDefaultLimit = useCallback(
-    (day: string) => {
+    (day: number | string) => {
       onChangeDefaultLimit(day, 'day');
     },
     [onChangeDefaultLimit],
   );
 
   const onChangeWeekDefaultLimit = useCallback(
-    (week: string) => {
+    (week: number | string) => {
       onChangeDefaultLimit(week, 'week');
     },
     [onChangeDefaultLimit],
   );
 
   const onChangeMonthDefaultLimit = useCallback(
-    (month: string) => {
+    (month: number | string) => {
       onChangeDefaultLimit(month, 'month');
     },
     [onChangeDefaultLimit],
   );
 
   const onChangeMinuteDefaultLimit = useCallback(
-    (minute: string) => {
+    (minute: number | string) => {
       onChangeDefaultLimit(minute, 'minute');
     },
     [onChangeDefaultLimit],
@@ -233,28 +233,28 @@ const EntityRoles: FC<Props> = ({ entity, roles, onChangeEntity, isSkipRefresh }
       <div className="flex flex-col mb-8">
         <h1 className="mb-4">{t(BasicI18nKey.Settings)}</h1>
         <div className="flex flex-row gap-x-3">
-          <TextInputField
+          <NumberInputField
             elementId="minute"
             value={entity.defaultRoleLimit?.minute || void 0}
             placeholder={t(PlaceholderI18nKey.NoLimits)}
             fieldTitle={t(RolesI18nKey.TokensPerMinute)}
             onChange={onChangeMinuteDefaultLimit}
           />
-          <TextInputField
+          <NumberInputField
             elementId="day"
             placeholder={t(PlaceholderI18nKey.NoLimits)}
             value={entity.defaultRoleLimit?.day || void 0}
             fieldTitle={t(RolesI18nKey.TokensPerDay)}
             onChange={onChangeDayDefaultLimit}
           />
-          <TextInputField
+          <NumberInputField
             elementId="week"
             placeholder={t(PlaceholderI18nKey.NoLimits)}
             value={entity.defaultRoleLimit?.week || void 0}
             fieldTitle={t(RolesI18nKey.TokensPerWeek)}
             onChange={onChangeWeekDefaultLimit}
           />
-          <TextInputField
+          <NumberInputField
             elementId="month"
             placeholder={t(PlaceholderI18nKey.NoLimits)}
             value={entity.defaultRoleLimit?.month || void 0}
