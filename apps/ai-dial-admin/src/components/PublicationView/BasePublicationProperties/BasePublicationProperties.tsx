@@ -26,7 +26,8 @@ const BasePublicationProperties: FC<Props> = ({ publication, children, applicati
     getActionClass(publication.action),
   );
 
-  const runnerId = (publication as ApplicationPublication).applicationResources?.[0]?.applicationTypeSchemaId;
+  const application = (publication as ApplicationPublication).applicationResources?.[0];
+  const runnerId = application?.applicationTypeSchemaId;
   const runner = applicationSchemes?.find((app) => app.$id === runnerId);
 
   return (
@@ -40,9 +41,9 @@ const BasePublicationProperties: FC<Props> = ({ publication, children, applicati
                 {t(ACTION_I18N_KEYS[publication.action])}
               </p>
             </LabeledText>
-          ) : (
+          ) : application != null ? null : (
             <LabeledText label={t(PublicationsI18nKey.Runner)}>
-              <p className="flex items-center">{runner?.['dial:applicationTypeDisplayName']}</p>
+              <p className="flex items-center">{runner?.['dial:applicationTypeDisplayName'] || runnerId}</p>
             </LabeledText>
           )}
           <LabeledText label={t(PublicationsI18nKey.Author)} text={publication.author} />
@@ -56,7 +57,7 @@ const BasePublicationProperties: FC<Props> = ({ publication, children, applicati
         </div>
       </div>
       <div className="flex-1 min-h-0 mt-8 pt-8 relative" data-testid={'publication-content'}>
-        <div className="flex flex-col gap-6 h-full">{children}</div>
+        <div className="flex flex-col gap-6 h-full overflow-auto">{children}</div>
       </div>
       <div className="mt-8 pt-8" id="publication-permissions">
         <BasePublicationPermissions
