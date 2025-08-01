@@ -55,7 +55,7 @@ const ExportConfig: FC = () => {
     },
     {
       id: ExportFormat.CORE,
-      name: t(ImportI18nKey.DialCore),
+      name: t(ImportI18nKey.DialCoreFile),
     },
   ];
 
