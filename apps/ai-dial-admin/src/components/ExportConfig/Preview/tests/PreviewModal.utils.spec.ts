@@ -27,7 +27,7 @@ describe('Export Config Utils :: getPreviewTabs', () => {
       routes: [{ id: 'route1' }],
     };
 
-    const { tabs, convertedData } = getPreviewTabs(data, t);
+    const { tabs, convertedData } = getPreviewTabs(data, true, t);
 
     expect(tabs).toEqual([
       { id: 'ENTITIES', name: 'translated(Menu.Entities): 2' },
@@ -56,7 +56,7 @@ describe('Export Config Utils :: getPreviewTabs', () => {
       routes: [],
     };
 
-    const { tabs, convertedData } = getPreviewTabs(data, t);
+    const { tabs, convertedData } = getPreviewTabs(data, false, t);
 
     expect(tabs).toHaveLength(0);
     expect(Object.keys(convertedData)).toHaveLength(0);
@@ -68,7 +68,7 @@ describe('Export Config Utils :: getPreviewTabs', () => {
       files: [{ id: 'file1' }],
     };
 
-    const { tabs, convertedData } = getPreviewTabs(data, t);
+    const { tabs, convertedData } = getPreviewTabs(data, false, t);
 
     expect(tabs).toEqual([
       { id: 'INTERCEPTOR', name: 'translated(Menu.Interceptors): 1' },
@@ -84,7 +84,7 @@ describe('Export Config Utils :: getPreviewTabs', () => {
       adapters: [{ id: 'adapter1' }],
     };
 
-    const { tabs, convertedData } = getPreviewTabs(data, t);
+    const { tabs, convertedData } = getPreviewTabs(data, false, t);
 
     expect(tabs).toEqual([{ id: 'ADAPTER', name: 'translated(Menu.Adapters): 1' }]);
 
@@ -103,7 +103,7 @@ describe('Export Config Utils :: getPreviewTabs', () => {
       routes: [{ id: 'route1' }],
     };
 
-    const { tabs, convertedData } = getPreviewTabs(data, t);
+    const { tabs, convertedData } = getPreviewTabs(data, false, t);
 
     expect(tabs).toEqual([{ id: 'ENTITIES', name: 'translated(Menu.Entities): 2' }]);
 
