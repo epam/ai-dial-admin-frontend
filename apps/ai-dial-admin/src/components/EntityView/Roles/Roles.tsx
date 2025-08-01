@@ -2,7 +2,7 @@ import { Column, GridApi, IRowNode } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { NumberInputField, TextInputField } from '@/src/components/Common/InputField/InputField';
+import { NumberInputField } from '@/src/components/Common/InputField/InputField';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import { BasicI18nKey, EntitiesI18nKey, PlaceholderI18nKey, RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
