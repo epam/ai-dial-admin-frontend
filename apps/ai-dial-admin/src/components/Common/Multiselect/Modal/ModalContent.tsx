@@ -94,9 +94,11 @@ const MultiselectContentModal: FC<Props> = ({
   useEffect(() => {
     const container = newItemsContainer.current;
     if (container && container.scrollHeight > container.clientHeight) {
-      container.scrollTo({
-        top: container.scrollHeight,
-        behavior: 'smooth',
+      setTimeout(() => {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth',
+        });
       });
     }
   }, [newItems.length]);
