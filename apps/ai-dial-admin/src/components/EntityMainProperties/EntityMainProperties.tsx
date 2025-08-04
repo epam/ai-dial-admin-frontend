@@ -16,7 +16,7 @@ import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { FieldError } from '@/src/models/error';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import { getErrorForName, isWrongLengthWithView, isWrongFieldLength } from '@/src/utils/validation/name-error';
+import { getErrorForName, isWrongLengthWithView } from '@/src/utils/validation/name-error';
 import AdditionalProperties from './AdditionalProperties';
 import { getDisplayNameErrorKeyPerView, getVersionErrorKeyPerView } from './utils';
 
