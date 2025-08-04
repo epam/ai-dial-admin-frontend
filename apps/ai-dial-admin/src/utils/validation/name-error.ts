@@ -36,9 +36,11 @@ export const getErrorForName = (
 };
 
 export const isWrongLengthWithView = (view: ApplicationRoute, value?: string): boolean => {
-  return (
-    (view === ApplicationRoute.Applications || view === ApplicationRoute.Models) && isWrongFieldLength(value || '')
-  );
+  if (view === ApplicationRoute.Applications || view === ApplicationRoute.Models) {
+    return value ? isWrongFieldLength(value) : false;
+  }
+
+  return false;
 };
 
 export const isWrongFieldLength = (value: string): boolean => {
