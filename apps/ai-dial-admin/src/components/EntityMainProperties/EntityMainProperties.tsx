@@ -74,7 +74,7 @@ const EntityMainProperties: FC<Props> = ({
       setIsVersionOptional(!isIncludesDisplayName);
       setIsValidDisplayName(
         (!isIncludesDisplayName || (isIncludesDisplayName && !!entity.displayVersion)) &&
-          isWrongLengthWithView(view, displayName),
+          !isWrongLengthWithView(view, displayName),
       );
       onChangeEntity({ ...entity, displayName });
     },
