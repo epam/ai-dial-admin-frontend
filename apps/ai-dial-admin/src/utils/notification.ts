@@ -28,7 +28,7 @@ export const getNotification = (
   type: NotificationType,
   title?: string,
   description?: string,
-  duration: number | null = null,
+  duration?: number | null,
 ): Notification => {
   return {
     type,
