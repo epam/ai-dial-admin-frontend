@@ -10,7 +10,7 @@ export const getErrorForName = (
   isUniqueError?: boolean,
 ) => {
   const isIncludesName = name && names?.includes(name);
-  const isWrongLength = isWrongNameLength(name);
+  const isWrongLength = isWrongFieldLength(name || '');
 
   if (isIncludesName) {
     return {
@@ -35,10 +35,10 @@ export const getErrorForName = (
   return null;
 };
 
-export const isWrongLengthWithView = (view: ApplicationRoute, value?: string): boolean => {
-  return (view === ApplicationRoute.Applications || view === ApplicationRoute.Models) && isWrongNameLength(value);
+export const isWrongLengthWithView = (view: ApplicationRoute, value: string): boolean => {
+  return (view === ApplicationRoute.Applications || view === ApplicationRoute.Models) && isWrongFieldLength(value);
 };
 
-export const isWrongNameLength = (value?: string): boolean => {
-  return value ? value.length < MIN_NAME_SYMBOLS || value.length > MAX_NAME_SYMBOLS : false;
+export const isWrongFieldLength = (value: string): boolean => {
+  return value.length < MIN_NAME_SYMBOLS || value.length > MAX_NAME_SYMBOLS;
 };

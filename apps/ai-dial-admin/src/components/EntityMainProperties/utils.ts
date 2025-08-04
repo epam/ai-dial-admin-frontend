@@ -3,8 +3,9 @@ import { ApplicationRoute } from '@/src/types/routes';
 
 export const getDisplayNameErrorKeyPerView = (view: ApplicationRoute, wrongLength?: boolean) => {
   if (wrongLength) {
-    return CreateI18nKey.ErrorLength;
+    return CreateI18nKey.LengthError;
   }
+
   switch (view) {
     case ApplicationRoute.Models:
       return CreateI18nKey.DisplayNameErrorModel;
