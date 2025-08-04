@@ -1,13 +1,5 @@
 import { CreateI18nKey } from '@/src/constants/i18n';
-import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
 import { ApplicationRoute } from '@/src/types/routes';
-
-export const isWrongLength = (view: ApplicationRoute, field?: string): boolean => {
-  return (
-    (view === ApplicationRoute.Applications || view === ApplicationRoute.Models) &&
-    (field ? field.length > MAX_NAME_SYMBOLS : false)
-  );
-};
 
 export const getDisplayNameErrorKeyPerView = (view: ApplicationRoute, wrongLength?: boolean) => {
   if (wrongLength) {
