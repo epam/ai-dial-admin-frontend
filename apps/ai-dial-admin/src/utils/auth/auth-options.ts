@@ -3,12 +3,12 @@ import { authProviders } from './auth-providers';
 import { callbacks } from './auth-callbacks';
 
 // https://github.com/nextauthjs/next-auth/blob/a8dfc8ebb11ccb96fd694db888e52f0d20395e64/packages/core/src/lib/cookie.ts#L53
-function defaultCookies(useSecureCookies: boolean, sameSite = 'lax', prefix?: string): CookiesOptions {
-  const securePrefix = useSecureCookies ? '__Secure-' : '';
-  const hostPrefix = useSecureCookies ? '__Host-' : '';
-  const cookiePrefix = prefix ? `${securePrefix}-${prefix}` : securePrefix;
-  const csrfPrefix = prefix ? `${hostPrefix}-${prefix}` : hostPrefix;
-
+function defaultCookies(
+  useSecureCookies: boolean,
+  sameSite = 'lax',
+  cookiePrefix: string,
+  csrfPrefix: string,
+): CookiesOptions {
   return {
     // default cookie options
     sessionToken: {
@@ -73,11 +73,18 @@ function defaultCookies(useSecureCookies: boolean, sameSite = 'lax', prefix?: st
 }
 
 const isSecure = !!process.env.NEXTAUTH_URL && process.env.NEXTAUTH_URL.startsWith('https:');
+
+const getCustomCookiePrefix = (firstPrefix?: string | boolean, secondPrefix?: string): string => {
+  const prefix = [firstPrefix, secondPrefix].filter(Boolean).join('-');
+  return prefix ? `${prefix}.` : '';
+};
 const cookiePrefix = process.env.NEXTAUTH_COOKIE_PREFIX;
+const customCookiePrefix = getCustomCookiePrefix(isSecure && '__Secure-', cookiePrefix);
+const csrfPrefix = getCustomCookiePrefix(isSecure && '__Host-', cookiePrefix);
 
 export const authOptions = {
   providers: authProviders,
-  cookies: defaultCookies(isSecure, isSecure ? 'none' : 'lax', cookiePrefix),
+  cookies: defaultCookies(isSecure, isSecure ? 'none' : 'lax', customCookiePrefix, csrfPrefix),
   callbacks,
   session: {
     strategy: 'jwt',
