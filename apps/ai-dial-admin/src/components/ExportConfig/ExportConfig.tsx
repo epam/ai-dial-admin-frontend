@@ -26,7 +26,11 @@ import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { downloadFile } from '@/src/utils/download';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 
-const ExportConfig: FC = () => {
+interface Props {
+  enableExportConfigMap?: boolean;
+}
+
+const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
   const t = useI18n();
 
   const { showNotification } = useNotification();
@@ -136,12 +140,14 @@ const ExportConfig: FC = () => {
         <div className="mb-4 flex flex-row items-center justify-between">
           <h1>{t(MenuI18nKey.ExportConfig)}</h1>
           <div className="flex flex-row gap-4 items-center">
-            <Button
-              cssClass="secondary"
-              iconBefore={<IconUpload {...BASE_ICON_PROPS} />}
-              title={t(ButtonsI18nKey.ExportConfigMap)}
-              onClick={onExportMap}
-            />
+            {enableExportConfigMap ? (
+              <Button
+                cssClass="secondary"
+                iconBefore={<IconUpload {...BASE_ICON_PROPS} />}
+                title={t(ButtonsI18nKey.ExportConfigMap)}
+                onClick={onExportMap}
+              />
+            ) : null}
             <Button
               cssClass="primary"
               iconBefore={<IconUpload {...BASE_ICON_PROPS} />}

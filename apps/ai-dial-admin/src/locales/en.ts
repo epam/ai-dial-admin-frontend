@@ -365,7 +365,7 @@ export default {
     Apply: 'Apply',
     Import: 'Import',
     Export: 'Export',
-    ExportConfigMap: 'Export Config Map',
+    ExportConfigMap: 'Export Active Configuration',
     Add: 'Add',
     Columns: 'Columns',
     Reset: 'Reset',

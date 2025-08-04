@@ -83,6 +83,7 @@ AI DIAL Admin uses environment variables for configuration. All environment vari
 | `DIAL_ADMIN_DOCUMENTATION` |    No    | Link to DIAL Admin documentation application                                                                                                            | Any string       |
 | `PUBLICATION_FILTERS`      |    No    | Defines types of publications that can be retrieved from the database                                                                                   | Any string       | `title,role`    |
 | `EMBEDDED_APPS`            |    No    | Defines integrated plugins                                                                                                                              | JSON             |                 |
+| `ENABLE_EXPORT_CONFIG_MAP`            |    No    | Available on the **Export config** page to export configuration from Kubernetes ConfigMap.                                                                                                                              | JSON             |                 |
 
 
 ### Environment Variables for the Configuration of Auth Providers
