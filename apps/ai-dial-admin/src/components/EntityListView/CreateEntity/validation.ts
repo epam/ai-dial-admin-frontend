@@ -68,7 +68,8 @@ export const isValidEntity = (
   }
 
   const isWrongLengthForModel =
-    isWrongLengthWithView(view, (entity as DialModel).displayName) || isWrongLengthWithView(view, (entity as DialModel).displayVersion);
+    isWrongLengthWithView(view, (entity as DialModel).displayName) ||
+    isWrongLengthWithView(view, (entity as DialModel).displayVersion);
 
   const baseEntityValidation = isValidNames && !getErrorForDescription(entity.description) && !isWrongLengthForModel;
 
