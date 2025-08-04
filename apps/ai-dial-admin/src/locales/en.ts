@@ -158,7 +158,7 @@ export default {
     EndpointPlaceholder: 'Enter endpoint',
     AddEntities: 'Add Entities',
     MaxRetryAttempts: 'Max retry attempts',
-    CreatedAt: 'Created At',
+    CreatedAt: 'Create Time',
     UpdatedAt: 'Updated At',
     Maintainer: 'Maintainer',
     MaintainerPlaceholder: 'Enter maintainer',
