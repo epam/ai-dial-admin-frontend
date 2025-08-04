@@ -782,6 +782,8 @@ export default {
     roleLimits: 'Role limits',
     isPublic: 'Is Public',
     defaultRoleLimit: 'Default role limit',
+    fieldsHashingOrder: 'Hashing order',
+    endpointDeploymentName: 'Endpoint deployment name',
     name: 'Name',
     endpoint: 'Endpoint',
     displayName: 'Display name',
