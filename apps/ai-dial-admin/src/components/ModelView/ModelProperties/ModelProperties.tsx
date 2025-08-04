@@ -73,6 +73,7 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, updateModel }) => {
             title={t(HashingOrderI18nKey.HashingOrder)}
             addPlaceholder={t(HashingOrderI18nKey.HashingOrderPlaceholder)}
             addTitle={t(HashingOrderI18nKey.Add)}
+            optional={true}
           />
         </div>
       </div>
