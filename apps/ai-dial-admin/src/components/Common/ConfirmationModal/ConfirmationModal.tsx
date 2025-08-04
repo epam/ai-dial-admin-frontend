@@ -6,6 +6,7 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
 import Loader from '@/src/components/Common/Loader/Loader';
+import classNames from 'classnames';
 
 interface Props {
   heading: string;
@@ -15,11 +16,11 @@ interface Props {
   confirmLabel: string;
   cancelLabel?: string;
   isLoading?: boolean;
+  disableConfirmButton?: boolean;
   onClose: () => void;
   onConfirm: () => void;
   onCancel?: () => void;
   children?: ReactNode;
-  dataTestId?: string;
   containerClassName?: string;
 }
 
@@ -35,14 +36,13 @@ const ConfirmationModal: FC<Props> = ({
   cancelLabel,
   isLoading = false,
   children,
-  dataTestId,
   containerClassName,
+  disableConfirmButton,
 }) => {
   const t = useI18n();
 
   return (
     <Popup
-      dataTestId={dataTestId}
       onClose={onClose}
       heading={heading}
       portalId="ConfirmationModal"
@@ -67,7 +67,12 @@ const ConfirmationModal: FC<Props> = ({
             onClick={() => (onCancel ? onCancel() : onClose())}
           />
 
-          <Button cssClass={`primary ${confirmClassName || ''}`} title={confirmLabel} onClick={() => onConfirm()} />
+          <Button
+            cssClass={classNames('primary', confirmClassName)}
+            title={confirmLabel}
+            disable={disableConfirmButton}
+            onClick={() => onConfirm()}
+          />
         </div>
       )}
     </Popup>
