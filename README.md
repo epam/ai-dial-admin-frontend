@@ -32,6 +32,7 @@ Once you have Node.js and npm installed, follow these steps to set up your devel
    DIAL_ADMIN_API_URL="ADD_VALUE_HERE"
    NEXTAUTH_SECRET="ADD_VALUE_HERE"
    ```
+
 4. To start the development server, run:
 
    ```bash
@@ -70,21 +71,20 @@ npm run test
 
 AI DIAL Admin uses environment variables for configuration. All environment variables that can be used to configure settings and behavior of the application are included in the `.env` file.
 
-| Variable                   | Required | Description                                                                                                                                             | Available Values | Default values  |
-|----------------------------|:--------:|---------------------------------------------------------------------------------------------------------------------------------------------------------|------------------|-----------------|
-| `DIAL_ADMIN_API_URL`       |   Yes    | AI DIAL Admin Backend API url.<br />Refer to [AI DIAL Admin Backend](https://github.com/epam/ai-dial-admin-backend.git). | Any string       |                 |
-| `THEMES_CONFIG_URL`        |    No    | The host URL for a custom themes configuration.<br />Can lead to public and private resource.<br />                                                     | Any string       |
-| `THEMES_CONFIG_IMAGES`     |    No    | List of images file names available in theme, comma separated.                                                                                          | Any string       |
-| `DISABLE_MENU_ITEMS`       |    No    | List of menu items to hide in the application                                                                                                           | Any string       |
-| `GRAFANA_LINK`             |    No    | Link to Grafana UI application   [Menu Documentation](https://github.com/epam/ai-dial-admin-front/-/blob/development/docs/MENU-DOCUMENTATION.md)                                                                                                                       | Any string       |
-| `APP_NAME`                 |    No    | Application name                                                                                                                                        | Any string       | `AI Dial Admin` |
-| `DIAL_LINK`                |    No    | Link to DIAL application                                                                                                                                | Any string       |
-| `DIAL_LINK_BUTTON_NAME`    |    No    | The name of the `Open Dial` button on the Home page application                                                                                         | Any string       |
-| `DIAL_ADMIN_DOCUMENTATION` |    No    | Link to DIAL Admin documentation application                                                                                                            | Any string       |
-| `PUBLICATION_FILTERS`      |    No    | Defines types of publications that can be retrieved from the database                                                                                   | Any string       | `title,role`    |
-| `EMBEDDED_APPS`            |    No    | Defines integrated plugins                                                                                                                              | JSON             |                 |
+| Variable                   | Required | Description                                                                                                                                    | Available Values | Default values  |
+| -------------------------- | :------: | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | --------------- |
+| `DIAL_ADMIN_API_URL`       |   Yes    | AI DIAL Admin Backend API url.<br />Refer to [AI DIAL Admin Backend](https://github.com/epam/ai-dial-admin-backend.git).                       | Any string       |                 |
+| `THEMES_CONFIG_URL`        |    No    | The host URL for a custom themes configuration.<br />Can lead to public and private resource.<br />                                            | Any string       |
+| `THEMES_CONFIG_IMAGES`     |    No    | List of images file names available in theme, comma separated.                                                                                 | Any string       |
+| `DISABLE_MENU_ITEMS`       |    No    | List of menu items to hide in the application                                                                                                  | Any string       |
+| `GRAFANA_LINK`             |    No    | Link to Grafana UI application [Menu Documentation](https://github.com/epam/ai-dial-admin-front/-/blob/development/docs/MENU-DOCUMENTATION.md) | Any string       |
+| `APP_NAME`                 |    No    | Application name                                                                                                                               | Any string       | `AI Dial Admin` |
+| `DIAL_LINK`                |    No    | Link to DIAL application                                                                                                                       | Any string       |
+| `DIAL_LINK_BUTTON_NAME`    |    No    | The name of the `Open Dial` button on the Home page application                                                                                | Any string       |
+| `DIAL_ADMIN_DOCUMENTATION` |    No    | Link to DIAL Admin documentation application                                                                                                   | Any string       |
+| `PUBLICATION_FILTERS`      |    No    | Defines types of publications that can be retrieved from the database                                                                          | Any string       | `title,role`    |
+| `EMBEDDED_APPS`            |    No    | Defines integrated plugins                                                                                                                     | JSON             |                 |
 | `ENABLE_EXPORT_CONFIG_MAP`            |    No    | Available on the **Export config** page to export configuration from Kubernetes ConfigMap.                                                                                                                              | JSON             |      false           |
-
 
 ### Environment Variables for the Configuration of Auth Providers
 
@@ -93,9 +93,10 @@ The table below presents a list of environment variables you can use to configur
 > **NOTE**: to test the AI DIAL Admin application in an **unauthenticated** mode, do not provide any of these variables. The only required variable to launch the application is `NEXTAUTH_SECRET`.
 
 | Variable                         |                         Required                         | Description                                                                                                                                                                                                                                        | Available Values                                                                                                                | Default values                                  |
-|----------------------------------|:--------------------------------------------------------:|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------|
+| -------------------------------- | :------------------------------------------------------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
 | `NEXTAUTH_URL`                   | Optional.<br /> Required for **production** deployments. | NextAuth URL                                                                                                                                                                                                                                       | Any string                                                                                                                      |                                                 |
 | `NEXTAUTH_SECRET`                |                           Yes                            | NextAuth Secret (generate by `openssl rand -base64 32` for example)                                                                                                                                                                                | Any string                                                                                                                      |                                                 |
+| `NEXTAUTH_COOKIE_PREFIX`         |                            No                            | Custom prefix for next auth cookie names Yes                                                                                                                                                                                                       | Any string                                                                                                                      |                                                 |
 | `ADMIN_ROLE_NAMES`               |                            No                            | Defines default administrator role names                                                                                                                                                                                                           | Any string. Values must be separated by a comma.                                                                                | `admin`                                         |
 | `DIAL_ROLES_FIELD`               |                            No                            | Defines the path of the roles field in JWT token                                                                                                                                                                                                   | Any string. Value can be dot-separated. E.g. path `realm_access.roles` if there is a claim `realm_access: { roles: ['admin'] }` | `dial_roles`                                    |
 | `AUTH_AUTH0_AUDIENCE`            |                            No                            | Auth0 Audience                                                                                                                                                                                                                                     | Any string                                                                                                                      |                                                 |
@@ -156,7 +157,6 @@ The table below presents a list of environment variables you can use to configur
 
 All standard env variables you could find in the official [opentelemetry documentation](https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/).
 If no value set for the **OTEL_METRICS_EXPORTER** then [OpenTelemetry Prometheus Metric Exporter](https://www.npmjs.com/package/@opentelemetry/exporter-prometheus) will be used. If value set to _"otlp"_ the [OpenTelemetry Collector Metrics Exporter for web and node](https://www.npmjs.com/package/@opentelemetry/exporter-metrics-otlp-http) will be used.
-
 
 ### Using Telemetry locally
 
