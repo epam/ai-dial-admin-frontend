@@ -1,6 +1,7 @@
 import * as entitiesUtils from '@/src/utils/entities/entities-list-view';
 import { getPreviewTabs } from '../PreviewModal.utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { ExportFormat } from '@/src/types/export';
 
 vi.mock('@/src/utils/entities/entities-list-view');
 
@@ -27,7 +28,7 @@ describe('Export Config Utils :: getPreviewTabs', () => {
       routes: [{ id: 'route1' }],
     };
 
-    const { tabs, convertedData } = getPreviewTabs(data, true, t);
+    const { tabs, convertedData } = getPreviewTabs(data, true, ExportFormat.CORE, t);
 
     expect(tabs).toEqual([
       { id: 'ENTITIES', name: 'translated(Menu.Entities): 2' },
@@ -56,7 +57,7 @@ describe('Export Config Utils :: getPreviewTabs', () => {
       routes: [],
     };
 
-    const { tabs, convertedData } = getPreviewTabs(data, false, t);
+    const { tabs, convertedData } = getPreviewTabs(data, false, ExportFormat.ADMIN, t);
 
     expect(tabs).toHaveLength(0);
     expect(Object.keys(convertedData)).toHaveLength(0);
@@ -68,7 +69,7 @@ describe('Export Config Utils :: getPreviewTabs', () => {
       files: [{ id: 'file1' }],
     };
 
-    const { tabs, convertedData } = getPreviewTabs(data, false, t);
+    const { tabs, convertedData } = getPreviewTabs(data, false, ExportFormat.ADMIN, t);
 
     expect(tabs).toEqual([
       { id: 'INTERCEPTOR', name: 'translated(Menu.Interceptors): 1' },
@@ -84,7 +85,7 @@ describe('Export Config Utils :: getPreviewTabs', () => {
       adapters: [{ id: 'adapter1' }],
     };
 
-    const { tabs, convertedData } = getPreviewTabs(data, false, t);
+    const { tabs, convertedData } = getPreviewTabs(data, false, ExportFormat.ADMIN, t);
 
     expect(tabs).toEqual([{ id: 'ADAPTER', name: 'translated(Menu.Adapters): 1' }]);
 
@@ -103,7 +104,7 @@ describe('Export Config Utils :: getPreviewTabs', () => {
       routes: [{ id: 'route1' }],
     };
 
-    const { tabs, convertedData } = getPreviewTabs(data, false, t);
+    const { tabs, convertedData } = getPreviewTabs(data, false, ExportFormat.ADMIN, t);
 
     expect(tabs).toEqual([{ id: 'ENTITIES', name: 'translated(Menu.Entities): 2' }]);
 

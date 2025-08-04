@@ -55,7 +55,7 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, modalState, onClose
       setIsLoadingData(false);
       if (res.success) {
         const data = res.response as Record<string, EntitiesGridData[]>;
-        const { convertedData, tabs } = getPreviewTabs(data, isIncludeSecret, t);
+        const { convertedData, tabs } = getPreviewTabs(data, isIncludeSecret, exportRequest.exportFormat, t);
 
         setData(convertedData);
         setTabs(tabs);
