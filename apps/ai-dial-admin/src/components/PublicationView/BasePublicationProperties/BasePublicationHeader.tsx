@@ -110,6 +110,7 @@ const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action 
             heading={t(keys.DeclineModalTitle)}
             onConfirm={decline}
             modalState={declineModalState}
+            disableConfirmButton={!declineReason}
             onClose={() => {
               setIsOpenDeclineModal(PopUpState.Closed);
             }}

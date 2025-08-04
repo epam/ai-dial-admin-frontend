@@ -41,11 +41,11 @@ const BasePublicationProperties: FC<Props> = ({ publication, children, applicati
                 {t(ACTION_I18N_KEYS[publication.action])}
               </p>
             </LabeledText>
-          ) : application != null ? null : (
+          ) : application ? (
             <LabeledText label={t(PublicationsI18nKey.Runner)}>
               <p className="flex items-center">{runner?.['dial:applicationTypeDisplayName'] || runnerId}</p>
             </LabeledText>
-          )}
+          ) : null}
           <LabeledText label={t(PublicationsI18nKey.Author)} text={publication.author} />
         </div>
         <div className="flex flex-col sm:flex-row gap-8">
