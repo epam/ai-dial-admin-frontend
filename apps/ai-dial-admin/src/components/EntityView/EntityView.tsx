@@ -301,9 +301,10 @@ const EntityView: FC<Props> = ({
             />
           ) : (
             <>
-              {view === ApplicationRoute.Models ||
-              view === ApplicationRoute.Applications ||
-              view === ApplicationRoute.Interceptors ? (
+              {(view === ApplicationRoute.Models ||
+                view === ApplicationRoute.Applications ||
+                view === ApplicationRoute.Interceptors) &&
+              activeTab === EntityViewTab.Properties ? (
                 <EntityHeader entity={selectedEntity} />
               ) : null}
               {activeTab === EntityViewTab.Properties && getPropertiesView()}
