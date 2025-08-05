@@ -10,7 +10,7 @@ import Grid from '@/src/components/Grid/Grid';
 import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
-import { getRolesColumnDefs, getRolesGridData, isResetAvailable } from './roles-utils';
+import { getRolesColumnDefs, getRolesGridData, isResetAvailable } from './utils';
 import { DialRole } from '@/src/models/dial/role';
 import Switch from '@/src/components/Common/Switch/Switch';
 
