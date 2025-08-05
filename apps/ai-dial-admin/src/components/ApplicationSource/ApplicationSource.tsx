@@ -9,11 +9,12 @@ import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import RunnerSelector from '@/src/components/EntityMainProperties/RunnerSelector/RunnerSelector';
 import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { useCurrentLocale, useI18n } from '@/src/locales/client';
+import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ApplicationRoute } from '@/src/types/routes';
 import { SourceTypes } from './constants';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   entity: DialApplication;
@@ -24,7 +25,6 @@ interface Props {
 
 const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntityImmutable }) => {
   const t = useI18n();
-  const currentLocale = useCurrentLocale();
   const sources: DropdownItemsModel[] = useMemo(
     () => [
       {
@@ -69,11 +69,8 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
   );
 
   const openInNewTab = useCallback(() => {
-    window.open(
-      `/${currentLocale}${ApplicationRoute.ApplicationRunners}/${encodeURIComponent(`${entity.customAppSchemaId}`)}`,
-      '_blank',
-    );
-  }, [currentLocale, entity.customAppSchemaId]);
+    onOpenInNewTab(ApplicationRoute.ApplicationRunners, entity);
+  }, [entity]);
 
   return (
     <div className="h-full flex flex-col gap-4">

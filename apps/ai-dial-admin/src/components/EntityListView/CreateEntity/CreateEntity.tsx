@@ -4,7 +4,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
-import { getEntityPath } from '@/src/components/EntityListView/entity-list-view';
+import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMainProperties';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
 import { ButtonsI18nKey } from '@/src/constants/i18n';

@@ -16,7 +16,7 @@ import FileProperties from './FileProperties';
 import { moveFiles, removeFile } from '@/src/app/[lang]/files/actions';
 import { addTrailingSlash, changePath } from '@/src/utils/files/path';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { getEntityPath } from '@/src/components/EntityListView/entity-list-view';
+import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 
 interface Props {

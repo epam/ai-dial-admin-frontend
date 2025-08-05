@@ -32,7 +32,7 @@ import { downloadFile } from '@/src/utils/download';
 import { getFolderName } from '@/src/utils/files/folder';
 import { getErrorNotification, getPrepareNotification, getSuccessNotification } from '@/src/utils/notification';
 import CreateEntity from '../CreateEntity/CreateEntity';
-import { createModalTitleMap } from '../entity-list-view';
+import { createModalTitleMap } from '../constants';
 import EntityListModals, { ModalType } from '../EntityListModals';
 import { getFormDataForImport } from './EntityListHeaderButtons.utils';
 import CreateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Create';

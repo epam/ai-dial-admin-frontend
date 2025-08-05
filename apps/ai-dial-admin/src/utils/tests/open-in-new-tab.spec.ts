@@ -1,6 +1,6 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
-import { getEntityPath } from './entity-list-view';
+import { getEntityPath } from '@/src/utils/open-in-new-tab';
 
 describe('Entity list view :: getEntityPath', () => {
   const data = {

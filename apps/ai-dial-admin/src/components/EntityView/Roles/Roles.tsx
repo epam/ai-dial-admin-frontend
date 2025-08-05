@@ -11,6 +11,7 @@ import { DialRole } from '@/src/models/dial/role';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import RolesGrid from './RolesGrid';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   view: ApplicationRoute;
@@ -190,8 +191,8 @@ const EntityRoles: FC<Props> = ({ entity, roles, onChangeEntity, isSkipRefresh }
     setAddModalState(PopUpState.Closed);
   }, [setAddModalState]);
 
-  const onOpenInNewTab = (role: DialRole) => {
-    window.open(`${ApplicationRoute.Roles}/${role.name}`, '_blank');
+  const onOpen = (role: DialRole) => {
+    onOpenInNewTab(ApplicationRoute.Roles, role);
   };
 
   const isResetToDefaultHidden = (api: GridApi, node: IRowNode) => {
@@ -271,7 +272,7 @@ const EntityRoles: FC<Props> = ({ entity, roles, onChangeEntity, isSkipRefresh }
           onChangeEntity={onChangeEntity}
           onChangeTokensValue={onChangeRoleToken}
           onOpenAddModal={onOpenAddModal}
-          onOpenInNewTab={onOpenInNewTab}
+          onOpenInNewTab={onOpen}
           onRemoveRole={onRemoveRole}
           onResetToDefaultRole={onResetToDefaultRole}
           onResetAllRolesToDefault={onResetAllRolesToDefault}

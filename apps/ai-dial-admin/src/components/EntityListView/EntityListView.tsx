@@ -30,11 +30,12 @@ import { prepareEntityForDuplicate } from '@/src/utils/entities/prepare-entity-f
 import { getListOfPathsToMove } from '@/src/utils/files/path';
 import { isAssetView } from '@/src/utils/is-asset-view';
 import { getErrorNotification } from '@/src/utils/notification';
-import { emptyDataTitleMap, getEntityPath, listViewTitleMap } from './entity-list-view';
+import { emptyDataTitleMap, listViewTitleMap } from './constants';
 import EntityListModals, { ModalType } from './EntityListModals';
 import EntityListHeaderButtons from './HeaderButtons/EntityListHeaderButtons';
 import DuplicateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Duplicate';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
+import { onOpenInNewTab, getEntityPath } from '@/src/utils/open-in-new-tab';
 
 interface Props<T> {
   data: T[];
@@ -182,8 +183,7 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
 
   const openInNewTab = useCallback(
     (entity: T) => {
-      const originalRoute = route.split('/')[1];
-      window.open(`${originalRoute}/${getEntityPath(route, entity)}`, '_blank');
+      onOpenInNewTab(route, entity);
     },
     [route],
   );

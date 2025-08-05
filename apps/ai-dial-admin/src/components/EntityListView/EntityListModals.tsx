@@ -18,7 +18,7 @@ import { ImportFileType } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { deleteModalTitleMap } from './entity-list-view';
+import { deleteModalTitleMap } from './constants';
 import ExportModal from './Export/ExportModal';
 import ImportModal from './Import/ImportModal';
 import DeleteInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Delete';

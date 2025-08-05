@@ -7,7 +7,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { createPrompt, getPrompt, getPrompts, movePrompts, removePrompt } from '@/src/app/[lang]/prompts/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
-import { getEntityPath } from '@/src/components/EntityListView/entity-list-view';
+import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/entity-view';
 import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';

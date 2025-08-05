@@ -1,6 +1,5 @@
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 
-import { getEntityPath } from '@/src/components/EntityListView/entity-list-view';
 import {
   KEY_ENTITY_COLUMNS,
   ENTITY_BASE_COLUMNS,
@@ -13,9 +12,9 @@ import { ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportDependenciesConfig, ExportRequestComponent } from '@/src/models/export';
 import { ExportFormat, ExportType } from '@/src/types/export';
-import { ApplicationRoute } from '@/src/types/routes';
 import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { EntityType } from '@/src/types/entity-type';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 // until BE implement
 export const fulDependenciesConfig = {
@@ -91,7 +90,7 @@ export const getActualColDefs = (
  * @param {EntitiesGridData} row - row related to selected entity
  */
 const openInNewTab = (row: EntitiesGridData) => {
-  window.open(`${row.route}/${getEntityPath(row.route as ApplicationRoute, row)}`, '_blank');
+  onOpenInNewTab(row.route, row);
 };
 
 /**

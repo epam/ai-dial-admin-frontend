@@ -1,9 +1,4 @@
 import { CreateI18nKey, DeleteI18nKey, EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
-import { DialActivity } from '@/src/models/dial/activity-audit';
-import { DialApplicationScheme } from '@/src/models/dial/application';
-import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
-import { DialPrompt } from '@/src/models/dial/prompt';
-import { Publication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export const listViewTitleMap: Record<string, MenuI18nKey> = {
@@ -78,29 +73,4 @@ export const createModalTitleMap: Record<string, CreateI18nKey> = {
   [ApplicationRoute.Routes]: CreateI18nKey.Route,
   [ApplicationRoute.Adapters]: CreateI18nKey.Adapter,
   [ApplicationRoute.InterceptorTemplates]: CreateI18nKey.InterceptorTemplate,
-};
-
-export const getEntityPath = (route: ApplicationRoute, data: unknown, forRemove?: boolean) => {
-  switch (route) {
-    case ApplicationRoute.ApplicationRunners:
-      return encodeURIComponent(`${(data as DialApplicationScheme).$id}`);
-
-    case ApplicationRoute.Prompts:
-    case ApplicationRoute.Files:
-    case ApplicationRoute.AssetsApplications:
-      return forRemove
-        ? decodeURIComponent((data as DialPrompt).path)
-        : `${encodeURIComponent((data as DialPrompt).name as string)}?path=${encodeURIComponent((data as DialPrompt).path)}`;
-
-    case ApplicationRoute.PromptPublications:
-    case ApplicationRoute.FilePublications:
-    case ApplicationRoute.ApplicationPublications:
-      return `${encodeURIComponent((data as Publication).requestName)}?path=${(data as DialPrompt).path}`;
-
-    case ApplicationRoute.ActivityAudit:
-      return (data as DialActivity).activityId;
-
-    default:
-      return encodeURIComponent((data as DialBaseNamedEntity).name || '');
-  }
 };
