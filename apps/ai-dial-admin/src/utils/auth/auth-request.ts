@@ -3,7 +3,7 @@ import { getToken, GetTokenParams, JWT } from 'next-auth/jwt';
 import { NextApiRequestCookies } from 'next/dist/server/api-utils';
 import { authOptions } from './auth-options';
 
-export const getTokenRequest = async (
+export const getTokenRequestParams = async (
   headers: Promise<Headers>,
   cookies: Promise<unknown>,
 ): Promise<GetTokenParams> => {
@@ -15,6 +15,8 @@ export const getTokenRequest = async (
       cookies: NextApiRequestCookies;
     },
     ...(authOptions as Partial<GetTokenParams>),
+    cookieName: authOptions.cookies?.sessionToken?.name,
+    secureCookie: authOptions.cookies?.sessionToken?.options?.secure,
   };
 };
 
@@ -23,5 +25,6 @@ export const getUserToken = async (
   headers: Promise<Headers>,
   cookies: Promise<unknown>,
 ): Promise<JWT | null> => {
-  return isEnableAuth ? await getToken(await getTokenRequest(headers, cookies)) : null;
+  const params = await getTokenRequestParams(headers, cookies);
+  return isEnableAuth ? await getToken(params) : null;
 };

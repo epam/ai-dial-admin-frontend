@@ -35,7 +35,7 @@ describe('Utils :: getErrorNotification', () => {
 });
 
 describe('Utils :: getPrepareNotification', () => {
-  test('Should return success notification', () => {
+  test('Should return error notification', () => {
     const result = getPrepareNotification('header', 'description', null);
     expect(result).toEqual({
       type: NotificationType.prepare,
@@ -45,7 +45,7 @@ describe('Utils :: getPrepareNotification', () => {
     });
   });
 
-  test('Should return empty success notification with duration 12', () => {
+  test('Should return empty error notification with duration 12', () => {
     const result = getPrepareNotification(void 0, void 0, 12);
     expect(result).toEqual({
       type: NotificationType.prepare,
@@ -55,7 +55,7 @@ describe('Utils :: getPrepareNotification', () => {
     });
   });
 
-  test('Should return empty success notification with duration 12', () => {
+  test('Should return empty error notification', () => {
     const result = getPrepareNotification();
     expect(result).toEqual({
       type: NotificationType.prepare,
@@ -87,7 +87,7 @@ describe('Utils :: getSuccessNotification', () => {
     });
   });
 
-  test('Should return empty success notification with duration 12', () => {
+  test('Should return empty success notification', () => {
     const result = getSuccessNotification(void 0, void 0, null);
     expect(result).toEqual({
       type: NotificationType.success,
@@ -99,13 +99,12 @@ describe('Utils :: getSuccessNotification', () => {
 });
 
 describe('Utils :: getNotification', () => {
-  test('Should return empty success notification with duration 12', () => {
+  test('Should return empty notification', () => {
     const result = getNotification(NotificationType.success);
     expect(result).toEqual({
       type: NotificationType.success,
       title: '',
       description: '',
-      duration: null,
     });
   });
 });

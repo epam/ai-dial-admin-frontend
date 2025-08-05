@@ -8,18 +8,21 @@ import {
 } from '@/src/utils/entities/entities-list-view';
 import { DialModel } from '@/src/models/dial/model';
 import { EntityType } from '@/src/types/entity-type';
+import { ExportFormat } from '@/src/types/export';
 
 /**
  * Get converted data and tabs for export preview
  *
  * @param {Record<string, EntitiesGridData[]>} data - preview data from server '/'
  * @param {boolean} isIncludeSecret - is include secret data in export'
+ * @param {ExportFormat} exportFormat - is export format - core or admin'
  * @param {(t: string) => string} t - function for translate
  * @returns { tabs: TabModel[]; convertedData: Record<string, EntitiesGridData[]> } result - array of data and tabs
  */
 export const getPreviewTabs = (
   data: Record<string, EntitiesGridData[]>,
   isIncludeSecret: boolean,
+  exportFormat: ExportFormat | undefined,
   t: (v: string) => string,
 ): { tabs: TabModel[]; convertedData: Record<string, EntitiesGridData[]> } => {
   const tabs: TabModel[] = [];
@@ -36,7 +39,7 @@ export const getPreviewTabs = (
         });
       }
 
-      if (key === 'keys' && isIncludeSecret) {
+      if (key === 'keys' && (exportFormat === ExportFormat.ADMIN || isIncludeSecret)) {
         convertedData[EntityType.KEY] = data[key];
         tabs.push({
           id: EntityType.KEY,

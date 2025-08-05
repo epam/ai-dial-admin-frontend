@@ -39,6 +39,7 @@ import EntityInterceptors from './Interceptors/Interceptors';
 import { ModalType } from './Modals/constants';
 import EntityViewModals from './Modals/EntityViewModals';
 import EntityRoles from './Roles/Roles';
+import EntityHeader from './Header/Header';
 
 interface Props {
   view: ApplicationRoute;
@@ -300,12 +301,12 @@ const EntityView: FC<Props> = ({
             />
           ) : (
             <>
-              {/* TODO: waiting for BE fix - https://github.com/epam/ai-dial-admin-backend/issues/79 */}
-              {/* {view === ApplicationRoute.Models ||
-              view === ApplicationRoute.Applications ||
-              view === ApplicationRoute.Interceptors ? (
+              {(view === ApplicationRoute.Models ||
+                view === ApplicationRoute.Applications ||
+                view === ApplicationRoute.Interceptors) &&
+              activeTab === EntityViewTab.Properties ? (
                 <EntityHeader entity={selectedEntity} />
-              ) : null} */}
+              ) : null}
               {activeTab === EntityViewTab.Properties && getPropertiesView()}
               {activeTab === EntityViewTab.Features && (
                 <EntityFeatures entity={selectedEntity} onChangeEntity={onChangeEntity} view={view} />

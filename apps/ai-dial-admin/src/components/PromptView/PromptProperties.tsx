@@ -168,7 +168,7 @@ const PromptProperties: FC<Props> = ({
         {publication ? (
           <>
             {/* <LabeledText label="Author" text={publication.author} /> */}
-            <LabeledText label="Created At" text={formatDateTimeToLocalString(publication.createdAt)} />
+            <LabeledText label="Create Time" text={formatDateTimeToLocalString(publication.createdAt)} />
           </>
         ) : (
           <>
