@@ -239,7 +239,7 @@ const EntityRoles: FC<Props> = ({ entity, roles, onChangeEntity, isSkipRefresh }
           <div className="flex flex-row gap-x-3">
             <NumberInputField
               elementId="minute"
-              value={entity.defaultRoleLimit?.minute || void 0}
+              value={entity.defaultRoleLimit?.minute}
               placeholder={t(PlaceholderI18nKey.NoLimits)}
               fieldTitle={t(RolesI18nKey.TokensPerMinute)}
               onChange={onChangeMinuteDefaultLimit}
@@ -247,21 +247,21 @@ const EntityRoles: FC<Props> = ({ entity, roles, onChangeEntity, isSkipRefresh }
             <NumberInputField
               elementId="day"
               placeholder={t(PlaceholderI18nKey.NoLimits)}
-              value={entity.defaultRoleLimit?.day || void 0}
+              value={entity.defaultRoleLimit?.day}
               fieldTitle={t(RolesI18nKey.TokensPerDay)}
               onChange={onChangeDayDefaultLimit}
             />
             <NumberInputField
               elementId="week"
               placeholder={t(PlaceholderI18nKey.NoLimits)}
-              value={entity.defaultRoleLimit?.week || void 0}
+              value={entity.defaultRoleLimit?.week}
               fieldTitle={t(RolesI18nKey.TokensPerWeek)}
               onChange={onChangeWeekDefaultLimit}
             />
             <NumberInputField
               elementId="month"
               placeholder={t(PlaceholderI18nKey.NoLimits)}
-              value={entity.defaultRoleLimit?.month || void 0}
+              value={entity.defaultRoleLimit?.month}
               fieldTitle={t(RolesI18nKey.TokensPerMonth)}
               onChange={onChangeMonthDefaultLimit}
             />
@@ -286,7 +286,7 @@ const EntityRoles: FC<Props> = ({ entity, roles, onChangeEntity, isSkipRefresh }
           />
         </div>
       </div>
-      {isDisableRole(entity) && <AlertInfo text="This model will not be available to any end-users." />}
+      {isDisableRole(entity) && <AlertInfo text={RolesI18nKey.NotAvailableModel} />}
       {addModalState === PopUpState.Opened &&
         createPortal(
           <AddEntitiesGrid

@@ -439,6 +439,7 @@ export default {
     ResetToDefaultLimits: 'Reset to default limits',
     SetNoLimits: 'Set no limits',
     AvailableSpecificRoles: 'Make available to specific roles',
+    NotAvailableModel: 'This model will not be available to any end-users.',
   },
   Attachments: {
     Attachments: 'Attachments',

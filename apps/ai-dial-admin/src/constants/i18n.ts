@@ -383,6 +383,7 @@ export enum RolesI18nKey {
   SpecificLimitsResetTitle = 'Roles.SpecificLimitsResetTitle',
   SpecificLimitsResetDescription = 'Roles.SpecificLimitsResetDescription',
   ResetToDefaultLimits = 'Roles.ResetToDefaultLimits',
+  NotAvailableModel = 'Roles.NotAvailableModel',
 }
 
 export enum ForwardTokenI18nKey {
