@@ -6,6 +6,7 @@ import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import ExportConfig from '@/src/components/ExportConfig/ExportConfig';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
+import { isValueTruthy } from '@/src/utils/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,5 +19,5 @@ export default async function Page() {
     return redirect(SIGN_IN_LINK);
   }
 
-  return <ExportConfig />;
+  return <ExportConfig enableExportConfigMap={isValueTruthy(process.env.ENABLE_EXPORT_CONFIG_MAP)} />;
 }
