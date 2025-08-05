@@ -18,9 +18,9 @@ import { ImportFileType } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { deleteModalTitleMap } from './constants';
-import ExportModal from './Export/ExportModal';
-import ImportModal from './Import/ImportModal';
+import { deleteModalTitleMap } from '@/src/components/EntityListView/constants';
+import ExportModal from '@/src/components/EntityListView/Export/ExportModal';
+import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
 import DeleteInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Delete';
 
 export enum ModalType {

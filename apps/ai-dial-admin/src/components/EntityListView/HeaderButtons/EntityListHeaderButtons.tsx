@@ -31,9 +31,9 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { downloadFile } from '@/src/utils/download';
 import { getFolderName } from '@/src/utils/files/folder';
 import { getErrorNotification, getPrepareNotification, getSuccessNotification } from '@/src/utils/notification';
-import CreateEntity from '../CreateEntity/CreateEntity';
-import { createModalTitleMap } from '../constants';
-import EntityListModals, { ModalType } from '../EntityListModals';
+import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
+import { createModalTitleMap } from '@/src/components/EntityListView/constants';
+import EntityListModals, { ModalType } from '@/src/components/EntityListView/EntityListModals';
 import { getFormDataForImport } from './EntityListHeaderButtons.utils';
 import CreateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Create';
 
