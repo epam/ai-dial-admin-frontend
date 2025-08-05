@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { getRolesGridData, isResetAvailable } from './roles-utils';
+import { getRolesGridData, isResetAvailable } from '../utils';
 describe('Roles View :: isResetAvailable', () => {
   test('Should return true', () => {
     const res = isResetAvailable({

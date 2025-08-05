@@ -8,6 +8,7 @@ import Triangle from '@/public/images/icons/cell-triangle.svg';
 interface EditableCellRendererParams extends ICellRendererParams {
   placeholder?: string;
   defaultValue?: number;
+  inputType?: 'text' | 'number';
   valueFormatter?: (value: number | string) => string;
   onChange?: (value: number | string, data: unknown, column: string, index?: number) => void;
 }
@@ -39,7 +40,7 @@ const EditableCellRenderer = (params: EditableCellRendererParams) => {
     <>
       <input
         id="editable-cell-renderer"
-        type="text"
+        type={params.inputType || 'text'}
         value={value == null ? '' : value}
         placeholder={translatedPlaceholder}
         onChange={handleChange}

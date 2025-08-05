@@ -1,3 +1,6 @@
+import { RolesGridData } from '@/src/components/EntityView/Roles/models';
+import { DialBaseEntity, DialRoleLimitsMap } from '@/src/models/dial/base-entity';
+import { DialRole } from '@/src/models/dial/role';
 import { ColDef, GridApi, IRowNode } from 'ag-grid-community';
 import { isEqual } from 'lodash';
 
@@ -10,13 +13,9 @@ import {
   getSetNoLimitsOperation,
 } from '@/src/constants/grid-columns/actions';
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { NO_LIMITS_KEY } from '@/src/constants/role';
-import { DialBaseEntity, DialRoleLimits, DialRoleLimitsMap } from '@/src/models/dial/base-entity';
-import { DialRole } from '@/src/models/dial/role';
 
-export interface RolesGridData extends DialRoleLimits {
-  name?: string;
-}
+import { DialRoleLimits } from '@/src/models/dial/base-entity';
+import { cellRenderParams } from './constants';
 
 export const getRolesGridData = (entity: DialBaseEntity, roles: DialRole[]): RolesGridData[] => {
   if (entity.isPublic) {
@@ -70,9 +69,8 @@ export const LIMIT_COLUMNS = (
     cellClass: NO_BORDER_CLASS,
     cellRenderer: EditableCellRenderer,
     cellRendererParams: {
-      placeholder: NO_LIMITS_KEY,
+      ...cellRenderParams,
       defaultValue: defaultValues?.minute,
-      valueFormatter: limitValueFormatter,
       onChange,
     },
   },
@@ -82,9 +80,8 @@ export const LIMIT_COLUMNS = (
     cellClass: NO_BORDER_CLASS,
     cellRenderer: EditableCellRenderer,
     cellRendererParams: {
-      placeholder: NO_LIMITS_KEY,
+      ...cellRenderParams,
       defaultValue: defaultValues?.day,
-      valueFormatter: limitValueFormatter,
       onChange,
     },
   },
@@ -94,9 +91,8 @@ export const LIMIT_COLUMNS = (
     cellClass: NO_BORDER_CLASS,
     cellRenderer: EditableCellRenderer,
     cellRendererParams: {
-      placeholder: NO_LIMITS_KEY,
+      ...cellRenderParams,
       defaultValue: defaultValues?.week,
-      valueFormatter: limitValueFormatter,
       onChange,
     },
   },
@@ -106,9 +102,8 @@ export const LIMIT_COLUMNS = (
     cellClass: NO_BORDER_CLASS,
     cellRenderer: EditableCellRenderer,
     cellRendererParams: {
-      placeholder: NO_LIMITS_KEY,
+      ...cellRenderParams,
       defaultValue: defaultValues?.month,
-      valueFormatter: limitValueFormatter,
       onChange,
     },
   },
@@ -135,12 +130,6 @@ export const getRolesColumnDefs = (
   }
 
   return [...SIMPLE_ENTITY_COLUMNS, ...LIMIT_COLUMNS(entity.defaultRoleLimit, onChangeLimits), ACTION_COLUMN(actions)];
-};
-
-export const limitValueFormatter = (value: string) => {
-  if (/^\d*$/.test(value)) {
-    return value;
-  }
 };
 
 export const isResetAvailable = (entity: DialBaseEntity): boolean => {
