@@ -3,13 +3,14 @@ import { GridOptions } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
 
-import { emptyDataTitleMap, getEntityPath, listViewTitleMap } from '@/src/components/EntityListView/entity-list-view';
+import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/EntityListView/constants';
 import ListView from '@/src/components/ListView/ListView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { getPublicationColumns } from '@/src/constants/grid-columns/grid-columns';
 import { useI18n } from '@/src/locales/client';
 import { Publication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
+import { onOpenInNewTab, getEntityPath } from '@/src/utils/open-in-new-tab';
 
 interface BasePublicationsListProps<T> {
   data: T[];
@@ -22,7 +23,7 @@ const BasePublicationsList = <T extends Publication>({ data, route }: BasePublic
 
   const openInNewTab = useCallback(
     (publication: Publication) => {
-      window.open(`${route}/${getEntityPath(route, publication)}`, '_blank');
+      onOpenInNewTab(route, publication);
     },
     [route],
   );

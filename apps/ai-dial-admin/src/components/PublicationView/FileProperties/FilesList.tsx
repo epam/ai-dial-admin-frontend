@@ -1,6 +1,5 @@
 import { FC, useCallback } from 'react';
 import { GridApi, IRowNode } from 'ag-grid-community';
-import { getEntityPath } from '@/src/components/EntityListView/entity-list-view';
 import { FILES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { DialFile } from '@/src/models/dial/file';
 import { ActionType } from '@/src/models/dial/publications';
@@ -13,6 +12,7 @@ import {
   getOpenInNewTabOperation,
   getPreviewOperation,
 } from '@/src/constants/grid-columns/actions';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   files: Partial<DialFile | string>[];
@@ -25,7 +25,7 @@ const FilesList: FC<Props> = ({ files, action }) => {
   }, []);
 
   const openInNewTab = useCallback((file: DialFile) => {
-    window.open(`${ApplicationRoute.Files}/${getEntityPath(ApplicationRoute.Files, file)}`, '_blank');
+    onOpenInNewTab(ApplicationRoute.Files, file);
   }, []);
 
   const preview = useCallback(async (file: DialFile) => {

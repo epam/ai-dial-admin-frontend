@@ -10,10 +10,10 @@ import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { getInterceptorsList } from '@/src/app/[lang]/interceptors/actions';
 import { getErrorNotification } from '@/src/utils/notification';
 import { useNotification } from '@/src/context/NotificationContext';
-
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Grid from '@/src/components/Grid/Grid';
 import Page403 from '@/src/components/Page403/Page403';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   interceptorList?: string[];
@@ -25,11 +25,11 @@ const Interceptors: FC<Props> = ({ interceptorList }) => {
 
   const [interceptors, setInterceptors] = useState<DialBaseEntity[]>([]);
 
-  const onOpenInNewTab = useCallback((interceptor: DialBaseEntity) => {
-    window.open(`${ApplicationRoute.Interceptors}/${interceptor.name}`, '_blank');
+  const onOpen = useCallback((interceptor: DialBaseEntity) => {
+    onOpenInNewTab(ApplicationRoute.Interceptors, interceptor);
   }, []);
 
-  const colDefs = [...SIMPLE_ENTITY_COLUMNS, ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTab)])];
+  const colDefs = [...SIMPLE_ENTITY_COLUMNS, ACTION_COLUMN([getOpenInNewTabOperation(onOpen)])];
 
   useEffect(() => {
     const fetchInterceptors = async () => {

@@ -9,6 +9,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   models: DialModel[];
@@ -17,12 +18,12 @@ interface Props {
 const AdapterModelsGrid: FC<Props> = ({ models }) => {
   const t = useI18n() as (t: string) => string;
 
-  const onOpenInNewTab = (model: DialModel) => {
-    window.open(`${ApplicationRoute.Models}/${model.name}`, '_blank');
+  const open = (model: DialModel) => {
+    onOpenInNewTab(ApplicationRoute.Models, model.name);
   };
 
   const rowData = models || [];
-  const columnDefs = [...ENTITY_BASE_COLUMNS, ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTab)])];
+  const columnDefs = [...ENTITY_BASE_COLUMNS, ACTION_COLUMN([getOpenInNewTabOperation(open)])];
 
   return (
     <div className="h-full flex flex-col pt-3">

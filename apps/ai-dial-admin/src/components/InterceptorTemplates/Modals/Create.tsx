@@ -6,7 +6,7 @@ import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { PopUpState } from '@/src/types/pop-up';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { useI18n } from '@/src/locales/client';
-import { getEntityPath } from '@/src/components/EntityListView/entity-list-view';
+import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getErrorNotification } from '@/src/utils/notification';
 import { createInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { useNotification } from '@/src/context/NotificationContext';

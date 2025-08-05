@@ -7,13 +7,13 @@ import { IconChevronDown, IconChevronRight, IconExternalLink } from '@tabler/ico
 import Button from '@/src/components/Common/Button/Button';
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
-import { getEntityPath } from '@/src/components/EntityListView/entity-list-view';
 import { PublicationsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ActionType } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 function formatPromptText(input: string): ReactNode {
   const parts = input.split(/({{.*?}})/);
@@ -44,7 +44,7 @@ const PromptsProperties: FC<Props> = ({ prompt, action, collapsed }) => {
   }, []);
 
   const openPrompt = useCallback(() => {
-    window.open(`${ApplicationRoute.Prompts}/${getEntityPath(ApplicationRoute.Prompts, prompt)}`, '_blank');
+    onOpenInNewTab(ApplicationRoute.Prompts, prompt);
   }, [prompt]);
 
   return (

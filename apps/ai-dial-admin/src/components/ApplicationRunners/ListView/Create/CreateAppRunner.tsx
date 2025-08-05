@@ -14,7 +14,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import { getEntityPath } from '@/src/components/EntityListView/entity-list-view';
+import { getEntityPath } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   modalState: PopUpState;

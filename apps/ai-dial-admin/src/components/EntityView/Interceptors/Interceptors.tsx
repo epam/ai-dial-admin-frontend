@@ -14,6 +14,7 @@ import { getInterceptorsColumnDefs, getInterceptorsGridData } from './utils';
 import { PopUpState } from '@/src/types/pop-up';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import { ApplicationRoute } from '@/src/types/routes';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   entity: DialBaseEntity;
@@ -75,11 +76,11 @@ const EntityInterceptors: FC<Props> = ({ entity, interceptors, onChangeEntity })
     setAddModalState(PopUpState.Closed);
   }, [setAddModalState]);
 
-  const onOpenInNewTab = (interceptor: DialBaseEntity) => {
-    window.open(`${ApplicationRoute.Interceptors}/${interceptor.name}`, '_blank');
+  const onOpen = (interceptor: DialBaseEntity) => {
+    onOpenInNewTab(ApplicationRoute.Interceptors, interceptor);
   };
 
-  const columns = getInterceptorsColumnDefs(onRemoveInterceptor, onOpenInNewTab);
+  const columns = getInterceptorsColumnDefs(onRemoveInterceptor, onOpen);
 
   return (
     <div className="h-full flex flex-col pt-3">

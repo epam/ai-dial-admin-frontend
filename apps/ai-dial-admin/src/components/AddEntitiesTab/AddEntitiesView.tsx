@@ -24,6 +24,7 @@ import {
   getEntitiesGridData,
 } from '@/src/components/AddEntitiesTab/AddEntitiesView.utils';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   viewTitle?: string;
@@ -81,8 +82,8 @@ const AddEntitiesView: FC<Props> = ({
     [onAdd, onCloseModal],
   );
 
-  const onOpenInNewTab = useCallback((row: EntitiesGridData) => {
-    window.open(`${row.route}/${row.name || row.key}`, '_blank');
+  const onOpen = useCallback((row: EntitiesGridData) => {
+    onOpenInNewTab(row.route, row);
   }, []);
 
   const onRemoveEntity = useCallback(
@@ -94,8 +95,8 @@ const AddEntitiesView: FC<Props> = ({
 
   const columns: ColDef[] = customColumns || ENTITY_COLUMNS(t);
   const columnDefs = useMemo<ColDef[]>(
-    () => [...columns, ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTab), getRemoveOperation(onRemoveEntity)])],
-    [columns, onOpenInNewTab, onRemoveEntity],
+    () => [...columns, ACTION_COLUMN([getOpenInNewTabOperation(onOpen), getRemoveOperation(onRemoveEntity)])],
+    [columns, onOpen, onRemoveEntity],
   );
 
   const onGridReady = (event: GridReadyEvent) => {
