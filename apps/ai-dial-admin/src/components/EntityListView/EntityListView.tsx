@@ -269,6 +269,7 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
     return (
       <DuplicateEntityPopup
         view={route}
+        names={names || []}
         entity={currentEntity}
         onDuplicate={onDuplicate as (entity: DialBaseEntity) => Promise<ServerActionResponse>}
         modalState={modalState}
