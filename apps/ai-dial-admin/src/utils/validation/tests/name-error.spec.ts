@@ -28,9 +28,15 @@ describe('Utils :: validations :: getErrorForName', () => {
   });
 
   test('Should return empty error', () => {
-    const res = getErrorForName('n', ['name']);
+    const res1 = getErrorForName('n', ['name']);
+    const res2 = getErrorForName(void 0, ['name']);
 
-    expect(res).toEqual({
+    expect(res1).toEqual({
+      type: ErrorType.LENGTH,
+      text: '',
+    });
+
+    expect(res2).toEqual({
       type: ErrorType.LENGTH,
       text: '',
     });
@@ -43,8 +49,8 @@ describe('Utils :: validations :: getErrorForName', () => {
   });
 
   test('Should return translated error for not unique name', () => {
-    const res1 = getErrorForName(void 0, void 0, mockT, true);
-    const res2 = getErrorForName(void 0, void 0, void 0, true);
+    const res1 = getErrorForName('name', ['names'], mockT, true);
+    const res2 = getErrorForName('name', ['names'], void 0, true);
 
     expect(res1).toEqual({
       type: ErrorType.EXISTING,
