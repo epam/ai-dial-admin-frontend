@@ -1,4 +1,4 @@
-import { isWrongLength } from '@/src/components/EntityMainProperties/error-title';
+import { isWrongLengthWithView } from '@/src/utils/validation/name-error';
 import { MAX_NAME_SYMBOLS, MAX_RUNNER_ID_SYMBOLS } from '@/src/constants/validation';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
@@ -58,8 +58,8 @@ export const isValidEntity = (
   if (view === ApplicationRoute.Applications) {
     return (
       isValidApplication(entity, isValidNames) &&
-      !isWrongLength(view, (entity as DialApplication).displayName) &&
-      !isWrongLength(view, (entity as DialApplication).displayVersion)
+      !isWrongLengthWithView(view, (entity as DialApplication).displayName) &&
+      !isWrongLengthWithView(view, (entity as DialApplication).displayVersion)
     );
   }
 
@@ -68,7 +68,8 @@ export const isValidEntity = (
   }
 
   const isWrongLengthForModel =
-    isWrongLength(view, (entity as DialModel).displayName) || isWrongLength(view, (entity as DialModel).displayVersion);
+    isWrongLengthWithView(view, (entity as DialModel).displayName) ||
+    isWrongLengthWithView(view, (entity as DialModel).displayVersion);
 
   const baseEntityValidation = isValidNames && !getErrorForDescription(entity.description) && !isWrongLengthForModel;
 
