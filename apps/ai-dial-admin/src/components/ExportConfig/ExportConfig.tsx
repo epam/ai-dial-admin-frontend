@@ -140,14 +140,14 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
         <div className="mb-4 flex flex-row items-center justify-between">
           <h1>{t(MenuI18nKey.ExportConfig)}</h1>
           <div className="flex flex-row gap-4 items-center">
-            {enableExportConfigMap ? (
+            {enableExportConfigMap && (
               <Button
                 cssClass="secondary"
                 iconBefore={<IconUpload {...BASE_ICON_PROPS} />}
                 title={t(ButtonsI18nKey.ExportConfigMap)}
                 onClick={onExportMap}
               />
-            ) : null}
+            )}
             <Button
               cssClass="primary"
               iconBefore={<IconUpload {...BASE_ICON_PROPS} />}
