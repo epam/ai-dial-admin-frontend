@@ -16,9 +16,9 @@ import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { FieldError } from '@/src/models/error';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import { getErrorForName } from '@/src/utils/validation/name-error';
+import { getErrorForName, isWrongLengthWithView } from '@/src/utils/validation/name-error';
 import AdditionalProperties from './AdditionalProperties';
-import { getDisplayNameErrorKeyPerView, getVersionErrorKeyPerView, isWrongLength } from './error-title';
+import { getDisplayNameErrorKeyPerView, getVersionErrorKeyPerView } from './utils';
 
 interface Props {
   view: ApplicationRoute;
@@ -74,9 +74,7 @@ const EntityMainProperties: FC<Props> = ({
       setIsVersionOptional(!isIncludesDisplayName);
       setIsValidDisplayName(
         (!isIncludesDisplayName || (isIncludesDisplayName && !!entity.displayVersion)) &&
-          (view === ApplicationRoute.Applications || view === ApplicationRoute.Models
-            ? displayName.length <= MAX_NAME_SYMBOLS
-            : true),
+          !isWrongLengthWithView(view, displayName),
       );
       onChangeEntity({ ...entity, displayName });
     },
@@ -84,7 +82,7 @@ const EntityMainProperties: FC<Props> = ({
   );
 
   useEffect(() => {
-    const errorKey = getDisplayNameErrorKeyPerView(view, isWrongLength(view, entity.displayName));
+    const errorKey = getDisplayNameErrorKeyPerView(view, isWrongLengthWithView(view, entity.displayName));
 
     setDisplayNameError(isValidDisplayName ? void 0 : errorKey ? t(errorKey, { number: MAX_NAME_SYMBOLS }) : '');
   }, [entity.displayName, isValidDisplayName, t, view]);
@@ -98,7 +96,7 @@ const EntityMainProperties: FC<Props> = ({
         const errorKey = getVersionErrorKeyPerView(view);
         setVersionError(!displayVersion ? (errorKey ? t(errorKey) : '') : void 0);
       } else {
-        const isLengthError = isWrongLength(view, displayVersion);
+        const isLengthError = displayVersion != null ? isWrongLengthWithView(view, displayVersion) : false;
         setIsValidVersion(!isLengthError);
         setVersionError(isLengthError ? t(CreateI18nKey.ErrorLength) : '');
       }

@@ -1,6 +1,7 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
 import { isValidEntity } from './validation';
+
 describe('Utils :: isValidEntity', () => {
   test('Should check entity with version', () => {
     const res1 = isValidEntity(ApplicationRoute.Models, {});
@@ -10,13 +11,16 @@ describe('Utils :: isValidEntity', () => {
       displayName: 'displayName',
       name: 'name',
       adapter: 'adapter',
+      displayVersion: '1.0.0',
     });
+
     const res5 = isValidEntity(
       ApplicationRoute.Models,
       {
         displayName: 'displayName',
         name: 'name',
         endpoint: 'endpoint',
+        displayVersion: '1.0.0',
       },
       void 0,
       ['name'],
@@ -27,6 +31,7 @@ describe('Utils :: isValidEntity', () => {
         displayName: 'displayName',
         name: 'name',
         adapter: 'adapter',
+        displayVersion: '1.0.0',
       },
       void 0,
       ['name2'],

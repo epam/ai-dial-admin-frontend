@@ -6,26 +6,30 @@ import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseEntity, DialBaseNamedEntity } from '@/src/models/dial/base-entity';
+import { FieldError } from '@/src/models/error';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
+import { getErrorForName } from '@/src/utils/validation/name-error';
 import { duplicateModalDescriptionMap, duplicateModalTitleMap } from './titles';
 
 interface Props {
   view: ApplicationRoute;
   modalState: PopUpState;
-  onClose: () => void;
+  names: string[];
   entity?: DialBaseEntity | DialBaseNamedEntity;
+  onClose: () => void;
   onDuplicate: (entity: DialBaseEntity | DialBaseNamedEntity) => void;
 }
 
-const DuplicateEntityPopup: FC<Props> = ({ onDuplicate, view, modalState, onClose, entity }) => {
+const DuplicateEntityPopup: FC<Props> = ({ onDuplicate, names, view, modalState, onClose, entity }) => {
   const t = useI18n() as (t: string) => string;
   const isSimple = isSimpleEntity(view);
 
   const [clonedEntity, setEntity] = useState<DialBaseEntity | DialBaseNamedEntity>(
     isSimple ? { ...entity, name: '' } : { ...entity, name: '', displayVersion: '', displayName: '' },
   );
+  const [nameError, setNameError] = useState<FieldError | null>(null);
   const [isValid, setIsValid] = useState(false);
   const heading = duplicateModalTitleMap[view as string];
 
@@ -43,8 +47,9 @@ const DuplicateEntityPopup: FC<Props> = ({ onDuplicate, view, modalState, onClos
   const onChangeName = useCallback(
     (name: string) => {
       setEntity({ ...clonedEntity, name });
+      setNameError(getErrorForName(name, names, t));
     },
-    [setEntity, clonedEntity],
+    [clonedEntity, names, t],
   );
 
   const onChangeDisplayName = useCallback(
@@ -64,6 +69,8 @@ const DuplicateEntityPopup: FC<Props> = ({ onDuplicate, view, modalState, onClos
               elementId="name"
               placeholder={t(CreateI18nKey.NamePlaceholder)}
               value={clonedEntity.name}
+              errorText={nameError?.text}
+              invalid={!!nameError}
               onChange={onChangeName}
             />
           </div>
@@ -76,6 +83,8 @@ const DuplicateEntityPopup: FC<Props> = ({ onDuplicate, view, modalState, onClos
                 elementId="deploymentId"
                 placeholder={t(CreateI18nKey.DeploymentIdPlaceholder)}
                 value={clonedEntity.name}
+                errorText={nameError?.text}
+                invalid={!!nameError}
                 onChange={onChangeName}
               />
 
