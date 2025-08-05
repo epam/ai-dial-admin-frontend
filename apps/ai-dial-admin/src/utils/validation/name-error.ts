@@ -12,6 +12,13 @@ export const getErrorForName = (
   const isIncludesName = name && names?.includes(name);
   const isWrongLength = isWrongFieldLength(name || '');
 
+  if (isUniqueError) {
+    return {
+      type: ErrorType.EXISTING,
+      text: t ? t(CreateI18nKey.ErrorUnique) : '',
+    };
+  }
+
   if (isIncludesName) {
     return {
       type: ErrorType.EXISTING,
@@ -26,12 +33,6 @@ export const getErrorForName = (
     };
   }
 
-  if (isUniqueError) {
-    return {
-      type: ErrorType.EXISTING,
-      text: t ? t(CreateI18nKey.ErrorUnique) : '',
-    };
-  }
   return null;
 };
 
