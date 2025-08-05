@@ -7,7 +7,7 @@ import { Publication } from '@/src/models/dial/publications';
 
 export const onOpenInNewTab = (route?: ApplicationRoute, entity?: unknown) => {
   const path = getEntityPath(route, entity);
-  const originalRoute = route?.split('/')[1];
+  const originalRoute = route?.split('/')?.[1];
   window.open(`/${originalRoute}/${path}`, '_blank');
 };
 
