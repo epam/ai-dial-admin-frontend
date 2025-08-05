@@ -96,7 +96,7 @@ const EntityMainProperties: FC<Props> = ({
         const errorKey = getVersionErrorKeyPerView(view);
         setVersionError(!displayVersion ? (errorKey ? t(errorKey) : '') : void 0);
       } else {
-        const isLengthError = isWrongLengthWithView(view, displayVersion);
+        const isLengthError = displayVersion != null ? isWrongLengthWithView(view, displayVersion) : false;
         setIsValidVersion(!isLengthError);
         setVersionError(isLengthError ? t(CreateI18nKey.ErrorLength) : '');
       }
