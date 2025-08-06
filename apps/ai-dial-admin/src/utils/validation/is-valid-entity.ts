@@ -37,7 +37,7 @@ export const isValidEntity = (
     const isValidSimpleEntity = getIsValidSimpleEntity(entity, withVersion, names);
 
     if (view === ApplicationRoute.Routes) {
-      return isValidRoute(entity as DialRoute);
+      return isValidRoute(entity as DialRoute, isValidSimpleEntity);
     }
 
     if (view === ApplicationRoute.Interceptors) {
