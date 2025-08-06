@@ -20,20 +20,16 @@ export const SYSTEM_ROLLBACK_ENTITIES = [
   ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA,
   ActivityAuditResourceType.INTERCEPTOR,
   ActivityAuditResourceType.ADAPTER,
-  // ActivityAuditResourceType.ASSISTANT,
-  // ActivityAuditResourceType.ADDON,
 ];
 
 export const SYSTEM_ROLLBACK_TAB_NAME: Record<ActivityAuditResourceType, string> = {
   [ActivityAuditResourceType.MODEL]: 'Models',
   [ActivityAuditResourceType.APPLICATION]: 'Applications',
   [ActivityAuditResourceType.ADAPTER]: 'Adapters',
-  [ActivityAuditResourceType.ASSISTANT]: 'Assistants',
   [ActivityAuditResourceType.INTERCEPTOR]: 'Interceptors',
   [ActivityAuditResourceType.KEY]: 'Keys',
   [ActivityAuditResourceType.ROLE]: 'Roles',
   [ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA]: 'ApplicationRunners',
-  [ActivityAuditResourceType.ADDON]: 'Addons',
   [ActivityAuditResourceType.ROUTE]: 'Routes',
 };
 
@@ -44,8 +40,6 @@ export const getSystemRollbackColumns = (
   switch (type) {
     case ActivityAuditResourceType.MODEL:
     case ActivityAuditResourceType.APPLICATION:
-    case ActivityAuditResourceType.ASSISTANT:
-    case ActivityAuditResourceType.ADDON:
       return ENTITY_WITH_VERSION_COLUMNS(t, []);
     case ActivityAuditResourceType.ADAPTER:
       return SIMPLE_DESCRIPTION_COLUMNS;

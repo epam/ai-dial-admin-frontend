@@ -17,9 +17,7 @@ describe('RolesList - List view', () => {
 
 describe('RolesView - view', () => {
   test('Should render successfully', () => {
-    const { baseElement } = render(
-      <RolesView names={[]} originalRole={{}} addons={[]} applications={[]} keys={[]} models={[]} />,
-    );
+    const { baseElement } = render(<RolesView names={[]} originalRole={{}} applications={[]} keys={[]} models={[]} />);
     expect(baseElement).toBeTruthy();
   });
 });

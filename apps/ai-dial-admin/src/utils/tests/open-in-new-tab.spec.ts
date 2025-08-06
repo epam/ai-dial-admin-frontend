@@ -26,11 +26,6 @@ describe('Entity list view :: getEntityPath', () => {
     expect(result).toEqual('path');
   });
 
-  test('Should return name field for other entities', () => {
-    const result = getEntityPath(ApplicationRoute.Addon, data, true);
-    expect(result).toEqual('name');
-  });
-
   test('Should return name field for prompt publication', () => {
     const result = getEntityPath(ApplicationRoute.PromptPublications, { ...data, requestName: 'requestName' }, true);
     expect(result).toEqual('requestName?path=path');

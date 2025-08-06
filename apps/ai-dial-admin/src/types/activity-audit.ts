@@ -27,11 +27,9 @@ export enum ActivityAuditResourceType {
   MODEL = 'Model',
   APPLICATION = 'Application',
   ADAPTER = 'Adapter',
-  ASSISTANT = 'Assistant',
   INTERCEPTOR = 'Interceptor',
   KEY = 'Key',
   ROLE = 'Role',
   ROUTE = 'Route',
   APPLICATION_TYPE_SCHEMA = 'ApplicationTypeSchema',
-  ADDON = 'Addon',
 }

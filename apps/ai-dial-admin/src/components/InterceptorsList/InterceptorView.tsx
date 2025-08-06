@@ -16,7 +16,6 @@ import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialAddon } from '@/src/models/dial/addon';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
@@ -31,10 +30,9 @@ interface Props {
   names: string[];
   models: DialModel[];
   applications: DialApplication[];
-  addons: DialAddon[];
 }
 
-const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, addons, applications }) => {
+const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applications }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -164,7 +162,6 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, addons
               <AddEntitiesView
                 models={models}
                 applications={applications}
-                addons={addons}
                 onAdd={onAddEntities}
                 getRelevantDataForEntity={getRelevantDataForInterceptor.bind(this, selectedInterceptor)}
                 onRemove={onRemoveEntity}

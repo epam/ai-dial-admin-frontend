@@ -3,7 +3,6 @@ import { ColDef } from 'ag-grid-community';
 import { ENTITY_BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { LIMIT_COLUMNS } from '@/src/components/EntityView/Roles/utils';
 import { NO_LIMITS_KEY } from '@/src/constants/role';
-import { DialAddon } from '@/src/models/dial/addon';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -12,7 +11,6 @@ import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import {
-  getAddonsForEntitiesGrid,
   getApplicationsForEntitiesGrid,
   getKeysForEntitiesGrid,
   getModelsForEntitiesGrid,
@@ -40,7 +38,6 @@ export const ROLES_ENTITIES_COLUMNS = (
  *
  * @param {DialModel[]} models - all dial models '/'
  * @param {DialApplication[]} applications - all dial applications '/'
- * @param {DialAddon[]} addons - all dial addons '/'
  * @param {DialRole[]} roles - all dial roles '/'
  * @param {DialKey[]} keys - all dial keys '/'
  * @returns {EntitiesGridData[]} - array of all entities
@@ -48,7 +45,6 @@ export const ROLES_ENTITIES_COLUMNS = (
 export const getEntitiesGridData = (
   models?: DialModel[],
   applications?: DialApplication[],
-  addons?: DialAddon[],
   roles?: DialRole[],
   keys?: DialKey[],
 ): EntitiesGridData[] => {
@@ -56,7 +52,6 @@ export const getEntitiesGridData = (
 
   data.push(...getModelsForEntitiesGrid(models));
   data.push(...getApplicationsForEntitiesGrid(applications));
-  data.push(...getAddonsForEntitiesGrid(addons));
   data.push(...getRolesForEntitiesGrid(roles));
   data.push(...getKeysForEntitiesGrid(keys));
 

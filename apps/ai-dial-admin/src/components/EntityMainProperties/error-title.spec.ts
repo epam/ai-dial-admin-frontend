@@ -16,12 +16,6 @@ describe('EntityMainProperties :: errors :: getDisplayNameErrorKeyPerView', () =
     expect(res).toBe(CreateI18nKey.DisplayNameErrorApplication);
   });
 
-  test('Should return key for addon', () => {
-    const res = getDisplayNameErrorKeyPerView(ApplicationRoute.Addons);
-
-    expect(res).toBe(CreateI18nKey.DisplayNameErrorAddon);
-  });
-
   test('Should return empty string', () => {
     const res = getDisplayNameErrorKeyPerView(ApplicationRoute.Keys);
 
@@ -40,12 +34,6 @@ describe('EntityMainProperties :: errors :: getVersionErrorKeyPerView', () => {
     const res = getVersionErrorKeyPerView(ApplicationRoute.Applications);
 
     expect(res).toBe(CreateI18nKey.VersionErrorApplication);
-  });
-
-  test('Should return key for addon', () => {
-    const res = getVersionErrorKeyPerView(ApplicationRoute.Addons);
-
-    expect(res).toBe(CreateI18nKey.VersionErrorAddon);
   });
 
   test('Should return empty string', () => {
