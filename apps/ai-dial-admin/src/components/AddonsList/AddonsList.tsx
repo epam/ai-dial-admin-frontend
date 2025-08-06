@@ -3,24 +3,15 @@
 import { FC } from 'react';
 
 import { createAddon, removeAddon } from '@/src/app/[lang]/addons/actions';
-import { DialModel } from '@/src/models/dial/model';
+import { DialAddon } from '@/src/models/dial/addon';
 import { ApplicationRoute } from '@/src/types/routes';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { useI18n } from '@/src/locales/client';
 import { ENTITY_WITH_VERSION_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
-  data: DialModel[];
+  data: DialAddon[];
 }
-
-const hiddenFields = [
-  'type',
-  'overrideName',
-  'tokenizerModel',
-  'limits.maxTotalTokens',
-  'pricing.prompt',
-  'pricing.completion',
-];
 
 const AddonsList: FC<Props> = ({ data }) => {
   const names = data.map((entity) => entity.displayName || '');
@@ -29,7 +20,7 @@ const AddonsList: FC<Props> = ({ data }) => {
   return (
     <BaseEntityList
       names={names}
-      baseColumns={ENTITY_WITH_VERSION_COLUMNS(t).filter((c) => !hiddenFields?.includes(c.field as string))}
+      baseColumns={ENTITY_WITH_VERSION_COLUMNS(t)}
       data={data}
       route={ApplicationRoute.Addons}
       createEntity={createAddon}

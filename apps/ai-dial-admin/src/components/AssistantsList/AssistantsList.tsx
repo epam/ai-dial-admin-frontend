@@ -12,16 +12,6 @@ interface Props {
   data: DialAssistant[];
 }
 
-const hiddenFields = [
-  'endpoint',
-  'type',
-  'displayVersion',
-  'overrideName',
-  'tokenizerModel',
-  'pricing.prompt',
-  'pricing.completion',
-];
-
 const AssistantsList: FC<Props> = ({ data }) => {
   const names = data.map((entity) => entity.displayName || '');
   const t = useI18n() as (stringToTranslate: string) => string;
@@ -30,7 +20,7 @@ const AssistantsList: FC<Props> = ({ data }) => {
     <BaseEntityList
       data={data}
       names={names}
-      baseColumns={ENTITY_WITH_VERSION_COLUMNS(t).filter((c) => !hiddenFields?.includes(c.field as string))}
+      baseColumns={ENTITY_WITH_VERSION_COLUMNS(t)}
       route={ApplicationRoute.Assistants}
       createEntity={createAssistant}
       removeEntity={removeAssistant}

@@ -24,8 +24,6 @@ const DeleteAdapter: FC<Props> = ({ entity, isEntityView }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [rowData, setRowData] = useState<GridData[]>([]);
 
-  const columnDefs = SIMPLE_VERSION_COLUMNS.map((col) => ({ ...col, resizable: false }));
-
   useEffect(() => {
     setIsLoading(true);
     getModels().then((res) => {
@@ -61,7 +59,11 @@ const DeleteAdapter: FC<Props> = ({ entity, isEntityView }) => {
               <p>{t(DeleteI18nKey.AdapterNoModelsTitle)}</p>
             ) : (
               <div className="flex-1 min-h-0 mt-2">
-                <Grid rowData={rowData} columnDefs={columnDefs} />
+                <Grid
+                  rowData={rowData}
+                  columnDefs={SIMPLE_VERSION_COLUMNS}
+                  additionalGridOptions={{ defaultColDef: { resizable: false } }}
+                />
               </div>
             )}
           </>

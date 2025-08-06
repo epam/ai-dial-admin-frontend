@@ -17,14 +17,11 @@ export default {
     ModalDescription: 'Are you sure that you want to log out?',
   },
   Placeholder: {
-    NoLimits: 'No Limits',
-    TagsInput: 'Enter tags...',
+    TagsInput: 'Enter tags...', // move
   },
   Basic: {
     None: '- None -',
     Failed: 'Failed',
-    Enabled: 'Enabled',
-    Disabled: 'Disabled',
     NoData: 'No Data',
     NoParameters: 'No Parameters',
     Value: 'Value',
@@ -32,11 +29,12 @@ export default {
     Theme: 'Theme',
     From: 'From',
     To: 'To',
-    Browse: 'Browse',
-    Move: 'Move',
-    MoveToFolder: 'Move to another folder',
+    Browse: 'Browse', // button
+    Move: 'Move', // button
+    MoveToFolder: 'Move to another folder', // modal
     Selected: 'selected',
     SelectAll: 'Select All',
+    // entity
     SaveChangesTitle: 'Save Changes',
     SaveChangesDescription: 'Save changes before opening the parameters tab. All unsaved changes will be lost.',
     SaveParametersTitle: 'Save Parameters',
@@ -44,16 +42,16 @@ export default {
     SaveWithEmptyRolesTitle: 'Roles Are Not Assigned',
     SaveWithEmptyRolesDescription: 'Entity without assigned roles will not be available to end-users.',
     SaveProceedWithConfiguration: 'Are you sure you want to proceed with this configuration?',
+    // ------------------
     Source: 'Source',
-    Config: 'Config',
+    Config: 'Config', // duplicate
     View: 'View',
     Before: 'Before',
     After: 'After',
     CopiedSuccessfully: 'copied successfully',
-    ServerError: 'Server Error',
     Search: 'Search',
-    Comparison: 'Comparison',
-    Current: 'Current state',
+    Comparison: 'Comparison', // compare
+    Current: 'Current state', // compare
   },
   CommonControls: {
     DnDIconFile: 'Drop image file here',
@@ -151,7 +149,7 @@ export default {
     NoFolders: 'No Folders',
     NoResource: 'Resource does not exist',
     NoInterceptorTemplates: 'No Interceptor Templates',
-    // base fields
+    // base fields // STOP
     Icon: 'Icon',
     Endpoint: 'Endpoint',
     EndpointBase: 'Base endpoint',
@@ -259,8 +257,8 @@ export default {
     ErrorUnique: 'This field must be unique.',
     ApplicationPropertiesHeader: 'Application properties header',
     deploymentId: {
-      title: 'Deployment ID',
-      placeholder: 'Enter deployment ID',
+      title: 'ID',
+      placeholder: 'Enter ID',
     },
     runner: {
       title: 'Application Runner',
@@ -435,6 +433,7 @@ export default {
     TokensPerMinute: 'Default tokens per minute',
     TokensPerWeek: 'Default tokens per week',
     TokensPerMonth: 'Default tokens per month',
+    NoLimits: 'No Limits',
     AddRoles: 'Add Roles',
     ResetToDefaultLimits: 'Reset to default limits',
     SetNoLimits: 'Set no limits',
@@ -851,6 +850,7 @@ export default {
     models: 'Models',
   },
   Error: {
+    ServerError: 'Server Error',
     EmptyField: 'This field could not be empty',
     RequiredField: 'This field is required',
     PageNotFound: 'Page Not Found',

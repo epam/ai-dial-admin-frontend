@@ -32,39 +32,66 @@ const stringFilter: Partial<ColDef> = {
   } as ITextFilterParams,
 };
 
-export const SIMPLE_VERSION_COLUMNS: ColDef[] = [
-  { field: 'displayName', headerName: 'Display Name', sort: 'asc' },
-  { field: 'version', headerName: 'Version' },
-];
+const DESCRIPTION_COLUMN: ColDef = {
+  field: 'description',
+  colId: 'description',
+  headerName: 'Description',
+  hide: false,
+};
 
-export const SIMPLE_NAME_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Name', sort: 'asc' },
-  { field: 'displayName', headerName: 'Display Name' },
-  { field: 'version', headerName: 'Version' },
-];
+const VERSION_COLUMN: ColDef = { field: 'version', colId: 'version', headerName: 'Version' };
+const DISPLAY_NAME_COLUMN: ColDef = { field: 'displayName', colId: 'displayName', headerName: 'Display Name' };
+const DISPLAY_NAME_COLUMN_WITH_SORT: ColDef = { ...DISPLAY_NAME_COLUMN, sort: 'asc' };
+const NAME_COLUMN: ColDef = { field: 'name', colId: 'name', headerName: 'ID' };
+const NAME_COLUMN_WITH_SORT: ColDef = { ...NAME_COLUMN, sort: 'asc' };
 
-export const SIMPLE_DESCRIPTION_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Name', sort: 'asc' },
-  { field: 'displayName', headerName: 'Display Name' },
-  { field: 'description', headerName: 'Description' },
-];
+export const SIMPLE_VERSION_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, VERSION_COLUMN];
 
-export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Name', sort: 'asc' },
-  { field: 'description', headerName: 'Description' },
-];
+export const SIMPLE_DESCRIPTION_COLUMNS: ColDef[] = [NAME_COLUMN_WITH_SORT, DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN];
+
+export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN];
 
 export const ENTITY_BASE_COLUMNS: ColDef[] = [
-  { field: 'displayName', colId: 'displayName', headerName: 'Display Name', sort: 'asc', hide: false },
-  { field: 'displayVersion', colId: 'displayVersion', headerName: 'Version', hide: false },
-  { field: 'description', colId: 'description', headerName: 'Description', hide: false },
-  { field: 'name', colId: 'name', headerName: 'Deployment ID', hide: false },
+  { ...DISPLAY_NAME_COLUMN_WITH_SORT, hide: false },
+  // { field: 'displayVersion', colId: 'displayVersion', headerName: 'Version', hide: false },
+  { ...DESCRIPTION_COLUMN, hide: false },
+  { ...NAME_COLUMN, hide: false },
 ];
 
-export const ENTITY_WITH_VERSION_COLUMNS = (
-  t: (stringToTranslate: string) => string,
-  adapters: DialAdapter[] = [],
-): ColDef[] => [
+export const MODELS_COLUMNS = (t: (str: string) => string, adapters: DialAdapter[] = []): ColDef[] => [
+  ...ENTITY_BASE_COLUMNS,
+  {
+    field: 'adapter',
+    headerName: 'Adapter',
+    hide: false,
+  },
+  { field: 'type', headerName: 'Type', hide: true },
+  { field: 'overrideName', headerName: 'Override Name', hide: true },
+  {
+    field: 'topics',
+    headerName: 'Topics',
+    hide: true,
+    cellRenderer: TopicsCellRenderer,
+    cellRendererParams: (params: { data?: DialBaseNamedEntity & { topics: string[] } }) => ({
+      topics: params.data?.topics || [],
+    }),
+  },
+  {
+    field: 'inputAttachmentTypes',
+    headerName: 'Attachment types',
+    hide: true,
+    valueFormatter: ({ value }) => formatAttachment(value, t),
+    tooltipValueGetter: ({ value }) => formatAttachment(value, t),
+  },
+  { field: 'maxInputAttachments', headerName: 'Max attachment number', hide: true },
+  { field: 'tokenizerModel', headerName: 'Tokenizer model', hide: true },
+  { field: 'forwardAuthToken', headerName: 'Forward auth token', hide: true },
+  { field: 'limits.maxTotalTokens', headerName: 'Interaction limit', hide: true },
+  { field: 'pricing.prompt', headerName: 'Prompt price', hide: true },
+  { field: 'pricing.completion', headerName: 'Completion price', hide: true },
+];
+
+export const ENTITY_WITH_VERSION_COLUMNS = (t: (str: string) => string, adapters: DialAdapter[] = []): ColDef[] => [
   ...ENTITY_BASE_COLUMNS,
   adapters.length
     ? {

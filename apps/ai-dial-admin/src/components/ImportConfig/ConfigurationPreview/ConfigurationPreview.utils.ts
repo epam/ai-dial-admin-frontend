@@ -10,9 +10,9 @@ import {
   RUNNERS_COLUMNS,
   ENTITY_BASE_COLUMNS,
   SIMPLE_ENTITY_COLUMNS,
+  MODELS_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
 import StatusCellRenderer from '@/src/components/Grid/CellRenderers/StatusCellRenderer';
-import { DialAdapter } from '@/src/models/dial/adapter';
 import { EntityType } from '@/src/types/entity-type';
 import { getEntitiesList } from '@/src/utils/entities/get-entities-list';
 
@@ -128,9 +128,9 @@ const getComponentActionColumn = (): ColDef => {
   };
 };
 
-export const getComponentColDefs = (type: string, adapters: DialAdapter[], t: (v: string) => string): ColDef[] => {
+export const getComponentColDefs = (type: string, t: (v: string) => string): ColDef[] => {
   if (type === EntityType.MODEL) {
-    return [getComponentActionColumn(), ...ENTITY_WITH_VERSION_COLUMNS(t, adapters)];
+    return [getComponentActionColumn(), ...MODELS_COLUMNS(t)];
   }
 
   if (type === EntityType.APPLICATION) {

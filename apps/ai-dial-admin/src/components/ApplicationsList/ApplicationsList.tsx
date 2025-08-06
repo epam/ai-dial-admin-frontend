@@ -13,15 +13,6 @@ interface Props {
   runners: DialApplicationScheme[];
 }
 
-const hiddenFields = [
-  'type',
-  'overrideName',
-  'tokenizerModel',
-  'limits.maxTotalTokens',
-  'pricing.prompt',
-  'pricing.completion',
-];
-
 const ApplicationsList: FC<Props> = ({ data, runners }) => {
   const names = data.map((entity) => entity.displayName || '');
   const t = useI18n() as (stringToTranslate: string) => string;
@@ -31,7 +22,7 @@ const ApplicationsList: FC<Props> = ({ data, runners }) => {
       data={data}
       runners={runners}
       names={names}
-      baseColumns={ENTITY_WITH_VERSION_COLUMNS(t).filter((c) => !hiddenFields?.includes(c.field as string))}
+      baseColumns={ENTITY_WITH_VERSION_COLUMNS(t)}
       route={ApplicationRoute.Applications}
       createEntity={createApplication}
       removeEntity={removeApplication}

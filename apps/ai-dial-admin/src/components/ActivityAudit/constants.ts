@@ -7,6 +7,7 @@ import {
   RUNNERS_COLUMNS,
   SIMPLE_ENTITY_COLUMNS,
   SIMPLE_DESCRIPTION_COLUMNS,
+  MODELS_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
 import { SortDirectionDto } from '@/src/types/request';
 
@@ -43,10 +44,11 @@ export const getSystemRollbackColumns = (
 ): ColDef[] => {
   switch (type) {
     case ActivityAuditResourceType.MODEL:
+      return MODELS_COLUMNS(t);
     case ActivityAuditResourceType.APPLICATION:
     case ActivityAuditResourceType.ASSISTANT:
     case ActivityAuditResourceType.ADDON:
-      return ENTITY_WITH_VERSION_COLUMNS(t, []);
+      return ENTITY_WITH_VERSION_COLUMNS(t);
     case ActivityAuditResourceType.ADAPTER:
       return SIMPLE_DESCRIPTION_COLUMNS;
     case ActivityAuditResourceType.INTERCEPTOR:
