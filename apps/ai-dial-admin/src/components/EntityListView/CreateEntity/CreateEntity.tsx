@@ -32,13 +32,7 @@ interface Props {
   onClose: () => void;
 }
 
-const RoutesForCheckingUniqueName = [
-  ApplicationRoute.Models,
-  ApplicationRoute.Applications,
-  ApplicationRoute.Assistants,
-  ApplicationRoute.Addons,
-  ApplicationRoute.Routes,
-];
+const RoutesForCheckingUniqueName = [ApplicationRoute.Models, ApplicationRoute.Applications, ApplicationRoute.Routes];
 
 const CreateEntity: FC<Props> = ({
   modalTitle,

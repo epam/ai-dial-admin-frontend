@@ -23,7 +23,6 @@ import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import { EntitiesI18nKey, KeysI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRoleLimits, DialRoleLimitsMap } from '@/src/models/dial/base-entity';
-import { DialAddon } from '@/src/models/dial/addon';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
@@ -38,11 +37,10 @@ interface Props {
   names: string[];
   models: DialModel[];
   applications: DialApplication[];
-  addons: DialAddon[];
   keys: DialKey[];
 }
 
-const RolesView: FC<Props> = ({ originalRole, names, models, addons, applications, keys }) => {
+const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys }) => {
   const t = useI18n() as (str: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -234,7 +232,6 @@ const RolesView: FC<Props> = ({ originalRole, names, models, addons, application
           <AddEntitiesView
             models={models}
             applications={applications}
-            addons={addons}
             onAdd={onAddEntities}
             onRemove={onRemoveEntity}
             customColumns={ROLES_ENTITIES_COLUMNS(t, onChangeRoleToken)}

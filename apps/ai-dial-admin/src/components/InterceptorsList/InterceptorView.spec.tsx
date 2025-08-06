@@ -8,7 +8,6 @@ describe('Interceptor View', () => {
       <InterceptorView
         names={[]}
         originalInterceptor={{ name: 'interceptor' }}
-        addons={[]}
         applications={[]}
         models={[]}
       />,

@@ -1,13 +1,11 @@
 import { getRevisionDetails } from '@/src/app/[lang]/activity-audit/actions';
 import { createAdapter, removeAdapter, updateAdapter } from '@/src/app/[lang]/adapters/actions';
-import { createAddon, removeAddon, updateAddon } from '@/src/app/[lang]/addons/actions';
 import {
   createApplicationScheme,
   removeApplicationScheme,
   updateApplicationScheme,
 } from '@/src/app/[lang]/application-runners/actions';
 import { createApplication, removeApplication, updateApplication } from '@/src/app/[lang]/applications/actions';
-import { createAssistant, removeAssistant, updateAssistant } from '@/src/app/[lang]/assistants/actions';
 import { createInterceptor, removeInterceptor, updateInterceptor } from '@/src/app/[lang]/interceptors/actions';
 import { createKey, removeKey, updateKey } from '@/src/app/[lang]/keys/actions';
 import { createModel, removeModel, updateModel } from '@/src/app/[lang]/models/actions';
@@ -59,8 +57,6 @@ export const getUpdateAction = (type?: ActivityAuditResourceType) => {
       return updateApplication;
     case ActivityAuditResourceType.ADAPTER:
       return updateAdapter;
-    case ActivityAuditResourceType.ASSISTANT:
-      return updateAssistant;
     case ActivityAuditResourceType.INTERCEPTOR:
       return updateInterceptor;
     case ActivityAuditResourceType.KEY:
@@ -71,8 +67,6 @@ export const getUpdateAction = (type?: ActivityAuditResourceType) => {
       return updateRoute;
     case ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA:
       return updateApplicationScheme;
-    case ActivityAuditResourceType.ADDON:
-      return updateAddon;
     default:
       return null;
   }
@@ -86,8 +80,6 @@ export const getCreateAction = (type?: ActivityAuditResourceType) => {
       return createApplication;
     case ActivityAuditResourceType.ADAPTER:
       return createAdapter;
-    case ActivityAuditResourceType.ASSISTANT:
-      return createAssistant;
     case ActivityAuditResourceType.INTERCEPTOR:
       return createInterceptor;
     case ActivityAuditResourceType.KEY:
@@ -98,8 +90,6 @@ export const getCreateAction = (type?: ActivityAuditResourceType) => {
       return createRoute;
     case ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA:
       return createApplicationScheme;
-    case ActivityAuditResourceType.ADDON:
-      return createAddon;
     default:
       return null;
   }
@@ -113,8 +103,6 @@ export const getDeleteAction = (type?: ActivityAuditResourceType) => {
       return removeApplication;
     case ActivityAuditResourceType.ADAPTER:
       return removeAdapter;
-    case ActivityAuditResourceType.ASSISTANT:
-      return removeAssistant;
     case ActivityAuditResourceType.INTERCEPTOR:
       return removeInterceptor;
     case ActivityAuditResourceType.KEY:
@@ -125,8 +113,6 @@ export const getDeleteAction = (type?: ActivityAuditResourceType) => {
       return removeRoute;
     case ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA:
       return removeApplicationScheme;
-    case ActivityAuditResourceType.ADDON:
-      return removeAddon;
     default:
       return null;
   }

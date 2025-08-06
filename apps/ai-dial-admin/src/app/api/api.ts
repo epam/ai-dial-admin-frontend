@@ -1,9 +1,7 @@
 import { ActivityAuditApi } from '@/src/server/entities/activity-audit-api';
 import { AdaptersApi } from '@/src/server/entities/adapters-api';
-import { AddonsApi } from '@/src/server/entities/addons-api';
 import { ApplicationRunnersApi } from '@/src/server/entities/application-runners-api';
 import { ApplicationsApi } from '@/src/server/entities/applications-api';
-import { AssistantsApi } from '@/src/server/entities/assistants-api';
 import { FilesApi } from '@/src/server/entities/files-api';
 import { FoldersApi } from '@/src/server/entities/folders-api';
 import { InterceptorsApi } from '@/src/server/entities/interceptors-api';
@@ -43,14 +41,6 @@ export const interceptorsApi = new InterceptorsApi({
 });
 
 export const adaptersApi = new AdaptersApi({
-  host: process.env.DIAL_ADMIN_API_URL,
-});
-
-export const addonsApi = new AddonsApi({
-  host: process.env.DIAL_ADMIN_API_URL,
-});
-
-export const assistantsApi = new AssistantsApi({
   host: process.env.DIAL_ADMIN_API_URL,
 });
 
