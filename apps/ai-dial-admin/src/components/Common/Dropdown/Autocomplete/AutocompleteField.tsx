@@ -12,12 +12,12 @@ interface Props extends InputFieldBaseProps {
   onChange: (value: string) => void;
 }
 
-const AutocompleteField: FC<Props> = ({ fieldTitle, elementId, optional, onChange, errorText, ...props }) => {
+const AutocompleteField: FC<Props> = ({ fieldTitle, elementId, optional, onChange, errorText, value, ...props }) => {
   return (
     <div className="flex flex-col">
       <Field fieldTitle={fieldTitle} optional={optional} htmlFor={elementId} />
 
-      <DropdownAutocomplete inputId={elementId} onSelectItem={onChange} {...props} />
+      <DropdownAutocomplete inputId={elementId} onSelectItem={onChange} autocompleteValue={value} {...props} />
       <ErrorText errorText={errorText} />
     </div>
   );

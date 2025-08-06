@@ -13,7 +13,7 @@ import InputWithText from '@/src/components/Common/Input/InputWithText';
 
 export interface InputFieldBaseProps extends FieldControlProps {
   placeholder?: string;
-  value?: string | number;
+  value?: string | number | null;
   elementId: string;
   elementCssClass?: string;
   containerCssClass?: string;
