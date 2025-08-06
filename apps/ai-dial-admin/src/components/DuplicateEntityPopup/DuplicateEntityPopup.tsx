@@ -79,9 +79,9 @@ const DuplicateEntityPopup: FC<Props> = ({ onDuplicate, names, view, modalState,
             <div className="text-secondary small mb-4">{t(duplicateModalDescriptionMap[view])}</div>
             <div className="flex flex-col gap-3">
               <TextInputField
-                fieldTitle={t(CreateI18nKey.DeploymentIdTitle)}
+                fieldTitle={t(CreateI18nKey.IdTitle)}
                 elementId="deploymentId"
-                placeholder={t(CreateI18nKey.DeploymentIdPlaceholder)}
+                placeholder={t(CreateI18nKey.IdPlaceholder)}
                 value={clonedEntity.name}
                 errorText={nameError?.text}
                 invalid={!!nameError}

@@ -7,22 +7,20 @@ import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { useI18n } from '@/src/locales/client';
-import { ENTITY_WITH_VERSION_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { DialAdapter } from '@/src/models/dial/adapter';
+import { MODELS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
   data: DialModel[];
-  adapters: DialAdapter[];
 }
 
-const ModelsList: FC<Props> = ({ data, adapters }) => {
+const ModelsList: FC<Props> = ({ data }) => {
   const names = data.map((entity) => entity.displayName || '');
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n() as (str: string) => string;
 
   return (
     <BaseEntityList
       names={names}
-      baseColumns={ENTITY_WITH_VERSION_COLUMNS(t, adapters)}
+      baseColumns={MODELS_COLUMNS(t)}
       data={data}
       route={ApplicationRoute.Models}
       createEntity={createModel}

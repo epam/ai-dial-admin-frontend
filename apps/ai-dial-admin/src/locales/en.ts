@@ -240,10 +240,6 @@ export default {
     InterceptorTemplate: 'Create Interceptor Template',
     ErrorUnique: 'This field must be unique.',
     ApplicationPropertiesHeader: 'Application properties header',
-    deploymentId: {
-      title: 'ID',
-      placeholder: 'Enter ID',
-    },
     runner: {
       title: 'Application Runner',
       placeholder: 'Select Application Runner',

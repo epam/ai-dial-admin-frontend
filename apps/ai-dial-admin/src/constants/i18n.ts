@@ -227,8 +227,6 @@ export enum CreateI18nKey {
   Prompt = 'CreateEntity.Prompt',
   Route = 'CreateEntity.Route',
   Interceptor = 'CreateEntity.Interceptor',
-  DeploymentIdTitle = 'CreateEntity.deploymentId.title',
-  DeploymentIdPlaceholder = 'CreateEntity.deploymentId.placeholder',
   NameTitle = 'CreateEntity.name.title',
   NamePlaceholder = 'CreateEntity.name.placeholder',
   IdTitle = 'CreateEntity.id.title',
