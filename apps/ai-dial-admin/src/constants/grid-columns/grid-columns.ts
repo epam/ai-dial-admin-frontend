@@ -58,7 +58,7 @@ export const ENTITY_BASE_COLUMNS: ColDef[] = [
   { ...NAME_COLUMN, hide: false },
 ];
 
-export const MODELS_COLUMNS = (t: (str: string) => string, adapters: DialAdapter[] = []): ColDef[] => [
+export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   ...ENTITY_BASE_COLUMNS,
   {
     field: 'adapter',
