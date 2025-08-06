@@ -12,6 +12,7 @@ describe('Utils :: isValidEntity', () => {
       name: 'name',
       adapter: 'adapter',
       displayVersion: '1.0.0',
+      endpointDeploymentName: 'endpointDeploymentName',
     });
 
     const res5 = isValidEntity(
@@ -21,6 +22,7 @@ describe('Utils :: isValidEntity', () => {
         name: 'name',
         endpoint: 'endpoint',
         displayVersion: '1.0.0',
+        endpointDeploymentName: 'endpointDeploymentName',
       },
       void 0,
       ['name'],
@@ -32,6 +34,7 @@ describe('Utils :: isValidEntity', () => {
         name: 'name',
         adapter: 'adapter',
         displayVersion: '1.0.0',
+        endpointDeploymentName: 'endpointDeploymentName',
       },
       void 0,
       ['name2'],
