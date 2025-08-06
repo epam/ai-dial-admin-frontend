@@ -702,5 +702,6 @@ export enum ErrorI18nKey {
   SystemUnavailable = 'Error.SystemUnavailable',
   TryAgainLater = 'Error.TryAgainLater',
   IncorrectEndpoint = 'Error.IncorrectEndpoint',
+  IncorrectModelEndpointAlias = 'Error.IncorrectModelEndpointAlias',
   WarningEndpoint = 'Error.WarningEndpoint',
 }

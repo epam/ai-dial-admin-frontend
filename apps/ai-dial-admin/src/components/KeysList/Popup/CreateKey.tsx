@@ -12,7 +12,7 @@ import { DialKey } from '@/src/models/dial/key';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
-import { isValidKey } from '@/src/components/EntityListView/CreateEntity/validation';
+import { isValidKey } from '@/src/utils/validation/is-valid-key';
 
 interface Props {
   modalState: PopUpState;

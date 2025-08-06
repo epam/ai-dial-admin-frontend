@@ -9,25 +9,37 @@ import { IconCopy } from '@tabler/icons-react';
 import Button from '@/src/components/Common/Button/Button';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import ErrorText from '../ErrorText/ErrorText';
 
 interface Props extends InputProps {
   title: string;
+  errorText?: string;
   fullValue?: string;
   prefixPart?: string;
   postfixPart?: string;
 }
 
-const InputWithReadonlyParts: FC<Props> = ({ prefixPart, fullValue, postfixPart, cssClass, title, ...props }) => {
+const InputWithReadonlyParts: FC<Props> = ({
+  prefixPart,
+  fullValue,
+  errorText,
+  postfixPart,
+  cssClass,
+  title,
+  invalid,
+  ...props
+}) => {
   const t = useI18n();
 
   return (
     <div className="flex flex-col">
       <Field fieldTitle={title} htmlFor={props.inputId} />
-      <div className="flex flex-row ">
+      <div className="flex flex-row">
         <div
           className={classNames(
             'input-field flex flex-row items-center p-0 input max-w-full',
             postfixPart ? 'pr-2' : '',
+            invalid ? 'input-error' : '',
           )}
         >
           <Input
@@ -46,6 +58,7 @@ const InputWithReadonlyParts: FC<Props> = ({ prefixPart, fullValue, postfixPart,
           onClick={() => navigator.clipboard.writeText(fullValue || '')}
         />
       </div>
+      {invalid && <ErrorText errorText={errorText} />}
     </div>
   );
 };

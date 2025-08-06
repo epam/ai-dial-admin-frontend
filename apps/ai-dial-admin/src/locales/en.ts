@@ -864,5 +864,6 @@ export default {
     TryAgainLater: 'Please try again later.',
     IncorrectEndpoint: 'Endpoint must be a valid url starting with http:// or https://',
     WarningEndpoint: 'The endpoint uses HTTP instead of HTTPS. This may expose data to security risks.',
+    IncorrectModelEndpointAlias: 'This endpoint alias could not be empty',
   },
 } as const;

@@ -1,6 +1,6 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
-import { isValidEntity } from './validation';
+import { isValidEntity } from '@/src/utils/validation/is-valid-entity';
 
 describe('Utils :: isValidEntity', () => {
   test('Should check entity with version', () => {
@@ -12,6 +12,7 @@ describe('Utils :: isValidEntity', () => {
       name: 'name',
       adapter: 'adapter',
       displayVersion: '1.0.0',
+      endpointDeploymentName: 'endpointDeploymentName',
     });
 
     const res5 = isValidEntity(
@@ -21,6 +22,7 @@ describe('Utils :: isValidEntity', () => {
         name: 'name',
         endpoint: 'endpoint',
         displayVersion: '1.0.0',
+        endpointDeploymentName: 'endpointDeploymentName',
       },
       void 0,
       ['name'],
@@ -32,6 +34,7 @@ describe('Utils :: isValidEntity', () => {
         name: 'name',
         adapter: 'adapter',
         displayVersion: '1.0.0',
+        endpointDeploymentName: 'endpointDeploymentName',
       },
       void 0,
       ['name2'],
