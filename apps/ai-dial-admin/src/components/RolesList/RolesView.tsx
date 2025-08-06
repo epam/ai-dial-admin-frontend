@@ -29,7 +29,7 @@ import { DialRole } from '@/src/models/dial/role';
 import { TabModel } from '@/src/models/tab';
 import { ApplicationRoute } from '@/src/types/routes';
 import { DialKey } from '@/src/models/dial/key';
-import { KEY_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { KEYS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { getErrorNotification } from '@/src/utils/notification';
 
 interface Props {
@@ -242,7 +242,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
         {activeTab === EntityViewTab.Keys && (
           <AddEntitiesView
             viewTitle={t(TabsI18nKey.Keys)}
-            customColumns={KEY_ENTITY_COLUMNS}
+            customColumns={KEYS_COLUMNS}
             modalTitle={t(KeysI18nKey.AddKeys)}
             emptyDataTitle={t(EntitiesI18nKey.NoKeys)}
             keys={keys}

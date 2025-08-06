@@ -2,42 +2,36 @@ import { FC, useEffect, useState } from 'react';
 
 import { getModels } from '@/src/app/[lang]/models/actions';
 import Loader from '@/src/components/Common/Loader/Loader';
-import { SIMPLE_VERSION_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import Grid from '@/src/components/Grid/Grid';
+import { DISPLAY_NAME_COLUMN, NAME_COLUMN, VERSION_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { DeleteI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
+import { DialModel } from '@/src/models/dial/model';
 
 interface Props {
   entity: DialAdapter;
   isEntityView?: boolean;
 }
 
-interface GridData {
-  displayName?: string;
-  version?: string;
-}
-
 const DeleteAdapter: FC<Props> = ({ entity, isEntityView }) => {
   const t = useI18n();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [rowData, setRowData] = useState<GridData[]>([]);
+  const [models, setModels] = useState<DialModel[]>([]);
 
   useEffect(() => {
     setIsLoading(true);
     getModels().then((res) => {
-      const apps = res?.reduce((acc, curr) => {
+      const models = res?.reduce((acc, curr) => {
         if (entity.models?.includes(curr.name as string)) {
-          acc.push({
-            displayName: curr.displayName,
-            version: curr.displayVersion,
-          });
+          acc.push(curr);
         }
         return acc;
-      }, [] as GridData[]);
+      }, [] as DialModel[]);
+      setModels(models || []);
+
       setIsLoading(false);
-      setRowData(apps || []);
     });
   }, [entity]);
 
@@ -55,15 +49,11 @@ const DeleteAdapter: FC<Props> = ({ entity, isEntityView }) => {
         ) : (
           <>
             <h3 className="text-primary mb-1">{t(DeleteI18nKey.AdapterModelsTitle)}</h3>
-            {rowData?.length === 0 ? (
+            {models?.length === 0 ? (
               <p>{t(DeleteI18nKey.AdapterNoModelsTitle)}</p>
             ) : (
               <div className="flex-1 min-h-0 mt-2">
-                <Grid
-                  rowData={rowData}
-                  columnDefs={SIMPLE_VERSION_COLUMNS}
-                  additionalGridOptions={{ defaultColDef: { resizable: false } }}
-                />
+                <Grid rowData={models} columnDefs={[DISPLAY_NAME_COLUMN, NAME_COLUMN, VERSION_COLUMN]} />
               </div>
             )}
           </>

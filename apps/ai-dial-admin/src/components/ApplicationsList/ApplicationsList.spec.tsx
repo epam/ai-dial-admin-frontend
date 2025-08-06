@@ -29,10 +29,9 @@ vi.mock('@/src/constants/grid-columns/grid-columns', () => {
     { field: 'id', headerName: 'ID' },
     { field: 'displayName', headerName: 'Name' },
     { field: 'type', headerName: 'Type' },
-    { field: 'version', headerName: 'Version' },
   ];
   return {
-    ENTITY_WITH_VERSION_COLUMNS: () => mockColumns,
+    APPLICATIONS_COLUMNS: () => mockColumns,
     ENTITIES_COLUMNS: () => mockColumns,
     listViewTitleMap: { '/applications': 'Applications Title' },
     emptyDataTitleMap: { '/applications': '' },
