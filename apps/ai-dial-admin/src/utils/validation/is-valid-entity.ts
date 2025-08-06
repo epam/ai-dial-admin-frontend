@@ -52,10 +52,6 @@ export const isValidEntity = (
   const isWrongLengthForModel =
     isWrongLengthWithView(view, baseEntity.displayName) || isWrongLengthWithView(view, baseEntity.displayVersion);
 
-  if (view === ApplicationRoute.Assistants) {
-    return isValidNames && !getErrorForDescription(entity.description);
-  }
-
   const baseEntityValidation = isValidNames && !getErrorForDescription(entity.description) && !isWrongLengthForModel;
 
   if (view === ApplicationRoute.Applications) {

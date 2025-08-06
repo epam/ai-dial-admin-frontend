@@ -34,14 +34,14 @@ const BasePublicationProperties: FC<Props> = ({ publication, children, applicati
     <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full" data-testid={'publication-header'}>
       <div className="flex flex-col sm:flex-row gap-8">
         <div className="flex flex-row gap-8">
-          {!runnerId ? (
+          {!application ? (
             <LabeledText label={t(PublicationsI18nKey.Action)}>
               <p className="flex items-center">
                 <span className={indicatorClassNames} />
                 {t(ACTION_I18N_KEYS[publication.action])}
               </p>
             </LabeledText>
-          ) : application ? (
+          ) : runnerId ? (
             <LabeledText label={t(PublicationsI18nKey.Runner)}>
               <p className="flex items-center">{runner?.['dial:applicationTypeDisplayName'] || runnerId}</p>
             </LabeledText>

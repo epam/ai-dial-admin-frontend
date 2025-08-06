@@ -286,7 +286,7 @@ const EntityRoles: FC<Props> = ({ entity, roles, onChangeEntity, isSkipRefresh }
           />
         </div>
       </div>
-      {isDisableRole(entity) && <AlertInfo text={RolesI18nKey.NotAvailableModel} />}
+      {isDisableRole(entity) && <AlertInfo text={t(RolesI18nKey.NotAvailableModel)} />}
       {addModalState === PopUpState.Opened &&
         createPortal(
           <AddEntitiesGrid

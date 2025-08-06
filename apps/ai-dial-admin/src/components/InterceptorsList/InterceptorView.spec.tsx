@@ -5,13 +5,7 @@ import InterceptorView from './InterceptorView';
 describe('Interceptor View', () => {
   test('Should render successfully', () => {
     const { baseElement } = render(
-      <InterceptorView
-        names={[]}
-        originalInterceptor={{ name: 'interceptor' }}
-        addons={[]}
-        applications={[]}
-        models={[]}
-      />,
+      <InterceptorView names={[]} originalInterceptor={{ name: 'interceptor' }} applications={[]} models={[]} />,
     );
     expect(baseElement).toBeTruthy();
   });

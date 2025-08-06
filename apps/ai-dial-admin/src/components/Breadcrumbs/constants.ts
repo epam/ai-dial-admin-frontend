@@ -24,15 +24,6 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig> = {
       { name: 'Id', href: false },
     ],
   },
-  [ApplicationRoute.Assistants]: {
-    segments: [
-      { name: 'Assistants', i18nKey: MenuI18nKey.Assistants },
-      {
-        name: 'Id',
-        href: false,
-      },
-    ],
-  },
   [ApplicationRoute.Adapters]: {
     segments: [
       { name: 'Adapters', i18nKey: MenuI18nKey.Adapters },
@@ -47,15 +38,6 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig> = {
       {
         name: 'Interceptors',
         i18nKey: MenuI18nKey.Interceptors,
-      },
-      { name: 'Id', href: false },
-    ],
-  },
-  [ApplicationRoute.Addons]: {
-    segments: [
-      {
-        name: 'Addons',
-        i18nKey: MenuI18nKey.Addons,
       },
       { name: 'Id', href: false },
     ],

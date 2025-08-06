@@ -20,9 +20,6 @@ export const getAlertTitlePerView = (view: ApplicationRoute): string => {
     case ApplicationRoute.Applications:
       return ForwardTokenI18nKey.UseForThisApplication;
 
-    case ApplicationRoute.Addons:
-      return ForwardTokenI18nKey.UseForThisAddon;
-
     case ApplicationRoute.Interceptors:
       return ForwardTokenI18nKey.UseForThisInterceptor;
 
@@ -38,9 +35,6 @@ export const getDisplayNamePerView = (view: ApplicationRoute): string => {
 
     case ApplicationRoute.Applications:
       return CreateI18nKey.ApplicationDisplayName;
-
-    case ApplicationRoute.Addons:
-      return CreateI18nKey.AddonsDisplayName;
 
     case ApplicationRoute.Interceptors:
       return CreateI18nKey.InterceptorName;

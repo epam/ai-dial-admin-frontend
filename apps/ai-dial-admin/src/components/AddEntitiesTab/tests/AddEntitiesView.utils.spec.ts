@@ -16,7 +16,6 @@ import { describe, expect, test } from 'vitest';
 const data = [
   { name: 'model', type: MenuI18nKey.Models, route: ApplicationRoute.Models },
   { name: 'application', type: MenuI18nKey.Applications, route: ApplicationRoute.Applications },
-  { name: 'addon', type: MenuI18nKey.Addons, route: ApplicationRoute.Addons },
   { name: 'role', type: MenuI18nKey.Roles, route: ApplicationRoute.Roles },
   { name: 'key', type: MenuI18nKey.Keys, route: ApplicationRoute.Keys },
 ];
@@ -29,7 +28,6 @@ describe('Add Entities tab :: getEntitiesGridData', () => {
       getEntitiesGridData(
         [{ name: 'model' }],
         [{ name: 'application' }],
-        [{ name: 'addon' }],
         [{ name: 'role' }],
         [{ name: 'key' }],
       ),
@@ -102,7 +100,6 @@ describe('Add Entities tab :: getAvailableEntities ', () => {
     const result = getAvailableEntities(existing, data);
     expect(result).toEqual([
       { name: 'application', type: MenuI18nKey.Applications, route: ApplicationRoute.Applications },
-      { name: 'addon', type: MenuI18nKey.Addons, route: ApplicationRoute.Addons },
       { name: 'role', type: MenuI18nKey.Roles, route: ApplicationRoute.Roles },
       { name: 'key', type: MenuI18nKey.Keys, route: ApplicationRoute.Keys },
     ]);
@@ -113,14 +110,12 @@ describe('Add Entities tab :: getAvailableEntities ', () => {
     const result = getAvailableEntities(existing, [
       { name: 'model', type: MenuI18nKey.Models, route: ApplicationRoute.Models },
       { name: 'application', type: MenuI18nKey.Applications, route: ApplicationRoute.Applications },
-      { name: 'addon', type: MenuI18nKey.Addons, route: ApplicationRoute.Addons },
       { name: 'role', type: MenuI18nKey.Roles, route: ApplicationRoute.Roles },
       { key: 'key', type: MenuI18nKey.Keys, route: ApplicationRoute.Keys },
     ] as EntitiesGridData[]);
     expect(result).toEqual([
       { name: 'model', type: MenuI18nKey.Models, route: ApplicationRoute.Models },
       { name: 'application', type: MenuI18nKey.Applications, route: ApplicationRoute.Applications },
-      { name: 'addon', type: MenuI18nKey.Addons, route: ApplicationRoute.Addons },
       { name: 'role', type: MenuI18nKey.Roles, route: ApplicationRoute.Roles },
     ]);
   });

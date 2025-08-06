@@ -48,22 +48,6 @@ describe('Utils :: isValidEntity', () => {
     expect(res6).toBeTruthy();
   });
 
-  test('Should check Assistants', () => {
-    const res1 = isValidEntity(ApplicationRoute.Assistants, {});
-    const res2 = isValidEntity(ApplicationRoute.Assistants, { name: 'name', displayName: 'displayName' });
-    const res3 = isValidEntity(ApplicationRoute.Assistants, { name: 'name', displayName: 'displayName' }, void 0, [
-      'name',
-    ]);
-    const res4 = isValidEntity(ApplicationRoute.Assistants, { name: 'name', displayName: 'displayName' }, void 0, [
-      'name2',
-    ]);
-
-    expect(res1).toBeFalsy();
-    expect(res2).toBeTruthy();
-    expect(res3).toBeFalsy();
-    expect(res4).toBeTruthy();
-  });
-
   test('Should check Routes', () => {
     const res1 = isValidEntity(ApplicationRoute.Routes, {});
     const res2 = isValidEntity(ApplicationRoute.Routes, { name: 'name', displayName: 'displayName' });

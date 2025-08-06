@@ -11,7 +11,6 @@ describe('RolesView - Entities', () => {
   test('Should render successfully', () => {
     const { baseElement } = render(
       <AddEntitiesView
-        addons={[]}
         applications={[]}
         models={[]}
         getRelevantDataForEntity={formatEntity}
