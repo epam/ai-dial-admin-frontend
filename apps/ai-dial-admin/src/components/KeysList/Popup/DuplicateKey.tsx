@@ -4,7 +4,7 @@ import Button from '@/src/components/Common/Button/Button';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Popup from '@/src/components/Common/Popup/Popup';
 import ValidityPeriodInput from '@/src/components/Common/ValidityPeriodInput/ValidityPeriodInput';
-import { isValidKey } from '@/src/components/EntityListView/CreateEntity/validation';
+import { isValidKey } from '@/src/utils/validation/is-valid-key';
 import { ButtonsI18nKey, CreateI18nKey, DuplicateI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';

@@ -1,6 +1,6 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
-import { isValidEntity } from './validation';
+import { isValidEntity } from '@/src/utils/validation/is-valid-entity';
 
 describe('Utils :: isValidEntity', () => {
   test('Should check entity with version', () => {

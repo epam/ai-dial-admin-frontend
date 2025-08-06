@@ -18,7 +18,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { getErrorNotification } from '@/src/utils/notification';
-import { isValidEntity } from './validation';
+import { isValidEntity } from './utils';
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 
 interface Props {
