@@ -14,7 +14,7 @@ interface Props {
 }
 
 const SourceField: FC<Props> = ({ template, onChange }) => {
-  const [source, setSource] = useState(template.source || SOURCE_ITEMS[0].id);
+  const [source, setSource] = useState(SOURCE_ITEMS[0].id);
 
   return (
     <div className="flex flex-col gap-6 mt-3">
@@ -22,8 +22,7 @@ const SourceField: FC<Props> = ({ template, onChange }) => {
         <DropdownField
           items={SOURCE_ITEMS}
           onChange={(source) => {
-            setSource(source);
-            onChange({ ...template, source });
+            setSource(source as SOURCE_TYPE);
           }}
           elementId={'sourceType'}
           selectedValue={source}
