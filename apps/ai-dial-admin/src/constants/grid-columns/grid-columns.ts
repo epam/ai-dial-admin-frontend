@@ -249,7 +249,7 @@ export const PUBLICATION_COLUMNS: ColDef[] = [
   { field: 'author', headerName: 'Author' },
   {
     field: 'createdAt',
-    headerName: 'Created at',
+    headerName: 'Creation time',
     sort: 'asc',
     valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
     tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
