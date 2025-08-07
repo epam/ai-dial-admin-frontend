@@ -1,10 +1,9 @@
 'use client';
 
 import { FC, useCallback, useEffect, useState } from 'react';
-import { IconArrowNarrowRight } from '@tabler/icons-react';
+import { IconArrowNarrowRight, IconZip } from '@tabler/icons-react';
 
 import Json from '@/public/images/icons/file/json.svg';
-import Zip from '@/public/images/icons/file/zip.svg';
 import Button from '@/src/components/Common/Button/Button';
 import LoadFileAreaField from '@/src/components/Common/LoadFileArea/LoadFileAreaField';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
@@ -114,11 +113,7 @@ const Files: FC<Props> = ({
               isMultiple={false}
               fileFormatError={t(ImportI18nKey.ImportArchiveFileFormatError)}
               fileCountError={t(ImportI18nKey.ImportArchiveDescription)}
-              iconBeforeInput={
-                <i className="text-secondary">
-                  <Zip />
-                </i>
-              }
+              iconBeforeInput={<IconZip className="text-secondary" {...BASE_ICON_PROPS} />}
               acceptTypes=".zip, application/x-zip-compressed"
               onChangeFile={onChangeFile}
             />

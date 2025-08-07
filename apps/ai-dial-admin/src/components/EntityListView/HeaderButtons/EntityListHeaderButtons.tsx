@@ -2,9 +2,8 @@
 
 import { MouseEvent, useCallback, useState } from 'react';
 
-import { IconFileArrowLeft, IconFileArrowRight, IconPlus } from '@tabler/icons-react';
+import { IconFileArrowLeft, IconFileArrowRight, IconPlus, IconColumns2 } from '@tabler/icons-react';
 
-import Columns from '@/public/images/icons/columns.svg';
 import { exportFiles, importFiles } from '@/src/app/[lang]/files/actions';
 import { exportPrompts, importPrompts } from '@/src/app/[lang]/prompts/actions';
 import CreateAdapter from '@/src/components/AdaptersList/Create/CreateAdapter';
@@ -196,7 +195,7 @@ const EntityListHeaderButtons = <T extends DialBaseEntity | DialKey | DialApplic
         <Button
           cssClass="tertiary"
           title={t(ButtonsI18nKey.Columns)}
-          iconBefore={<Columns />}
+          iconBefore={<IconColumns2 {...BASE_ICON_PROPS} />}
           onClick={onToggleColumnsPanel}
         />
       )}
