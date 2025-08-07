@@ -17,7 +17,7 @@ export default {
     ModalDescription: 'Are you sure that you want to log out?',
   },
   Placeholder: {
-    TagsInput: 'Enter tags...', // move
+    TagsInput: 'Enter tags...',
   },
   Basic: {
     None: '- None -',
@@ -29,12 +29,11 @@ export default {
     Theme: 'Theme',
     From: 'From',
     To: 'To',
-    Browse: 'Browse', // button
-    Move: 'Move', // button
-    MoveToFolder: 'Move to another folder', // modal
+    Browse: 'Browse',
+    Move: 'Move',
+    MoveToFolder: 'Move to another folder',
     Selected: 'selected',
     SelectAll: 'Select All',
-    // entity
     SaveChangesTitle: 'Save Changes',
     SaveChangesDescription: 'Save changes before opening the parameters tab. All unsaved changes will be lost.',
     SaveParametersTitle: 'Save Parameters',
@@ -42,16 +41,15 @@ export default {
     SaveWithEmptyRolesTitle: 'Roles Are Not Assigned',
     SaveWithEmptyRolesDescription: 'Entity without assigned roles will not be available to end-users.',
     SaveProceedWithConfiguration: 'Are you sure you want to proceed with this configuration?',
-    // ------------------
     Source: 'Source',
-    Config: 'Config', // duplicate
+    Config: 'Config',
     View: 'View',
     Before: 'Before',
     After: 'After',
     CopiedSuccessfully: 'copied successfully',
     Search: 'Search',
-    Comparison: 'Comparison', // compare
-    Current: 'Current state', // compare
+    Comparison: 'Comparison',
+    Current: 'Current state',
   },
   CommonControls: {
     DnDIconFile: 'Drop image file here',
@@ -145,7 +143,7 @@ export default {
     NoFolders: 'No Folders',
     NoResource: 'Resource does not exist',
     NoInterceptorTemplates: 'No Interceptor Templates',
-    // base fields // STOP
+    // base fields
     Icon: 'Icon',
     Endpoint: 'Endpoint',
     EndpointBase: 'Base endpoint',
