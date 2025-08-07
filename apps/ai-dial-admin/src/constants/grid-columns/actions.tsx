@@ -6,12 +6,12 @@ import {
   IconFolderShare,
   IconInfinity,
   IconRefresh,
+  IconReload,
   IconTrash,
   IconTrashX,
 } from '@tabler/icons-react';
 import { GridApi, IRowNode } from 'ag-grid-community';
 
-import Reset from '@/public/images/icons/reset.svg';
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { EntityOperationDeclaration } from '@/src/models/entity-operations';
@@ -46,7 +46,7 @@ export function getResetOperation<T>(
   hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): EntityOperationDeclaration<T> {
   return {
-    icon: <Reset />,
+    icon: <IconReload {...BASE_ICON_PROPS} />,
     id: EntityOperation.Reset_to_default_limits,
     hidden,
     onClick,

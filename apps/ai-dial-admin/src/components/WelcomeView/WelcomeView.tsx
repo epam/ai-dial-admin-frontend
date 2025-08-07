@@ -1,10 +1,9 @@
 'use client';
 
-import { IconDownload, IconExternalLink, IconUpload } from '@tabler/icons-react';
+import { IconDownload, IconFileDescription, IconExternalLink, IconUpload } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { FC } from 'react';
 
-import Doc from '@/public/images/icons/doc.svg';
 import HeaderIcon from '@/public/images/icons/welcome-page/header-icon.svg';
 import Button from '@/src/components/Common/Button/Button';
 import { MENU_CONFIGURATION } from '@/src/components/Menu/menu-configuration';
@@ -41,7 +40,7 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
           {docLink && (
             <div>
               <Button
-                iconBefore={<Doc />}
+                iconBefore={<IconFileDescription {...BASE_ICON_PROPS} />}
                 cssClass="primary"
                 title={t(WelcomeViewI18nKey.ViewDocumentation)}
                 onClick={() => {

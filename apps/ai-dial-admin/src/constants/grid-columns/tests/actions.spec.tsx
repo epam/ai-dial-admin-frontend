@@ -1,4 +1,3 @@
-import Reset from '@/public/images/icons/reset.svg';
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 
 import {
@@ -7,6 +6,7 @@ import {
   IconFolderShare,
   IconInfinity,
   IconRefresh,
+  IconReload,
   IconTrash,
   IconTrashX,
 } from '@tabler/icons-react';
@@ -67,7 +67,7 @@ describe('Actions :: getResourceRollbackOperation', () => {
   test('Should set RESET_TO_DEFAULT_OPERATION', () => {
     const res = getResetOperation(CLICK);
     expect(res.id).toBe(EntityOperation.Reset_to_default_limits);
-    expect(res.icon).toEqual(<Reset />);
+    expect(res.icon).toEqual(<IconReload {...BASE_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
   });
 

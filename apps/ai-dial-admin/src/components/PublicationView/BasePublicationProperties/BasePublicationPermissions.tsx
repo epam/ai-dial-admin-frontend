@@ -1,10 +1,9 @@
 import { FC, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { IconReplace } from '@tabler/icons-react';
+import { IconReplace, IconBrandStackshare } from '@tabler/icons-react';
 import { isEqual } from 'lodash';
 
-import Structure from '@/public/images/icons/structure.svg';
 import { getRules } from '@/src/app/[lang]/folders-storage/actions';
 import Button from '@/src/components/Common/Button/Button';
 import RulesCompare from '@/src/components/PublicationView/Popup/RulesCompare';
@@ -59,7 +58,7 @@ const BasePublicationPermissions: FC<Props> = ({ rules, folderId, showCompare })
           <Button
             cssClass="secondary"
             title={t(ButtonsI18nKey.ReviewStructure)}
-            iconBefore={<Structure {...BASE_ICON_PROPS} />}
+            iconBefore={<IconBrandStackshare {...BASE_ICON_PROPS} />}
             onClick={() => setStructureModalState(PopUpState.Opened)}
             dataTestId={'publication-permissions-review-structure-button'}
           />
