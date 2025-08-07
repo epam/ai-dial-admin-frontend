@@ -3,7 +3,6 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
 import {
   getAdaptersForEntitiesGrid,
-  getAddonsForEntitiesGrid,
   getApplicationsForEntitiesGrid,
   getInterceptorsForEntitiesGrid,
   getKeysForEntitiesGrid,
@@ -80,22 +79,6 @@ describe('Utils :: getRunnersForEntitiesGrid', () => {
     expect(res1).toEqual([
       { $id: 'runner', type: MenuI18nKey.ApplicationRunners, route: ApplicationRoute.ApplicationRunners },
     ]);
-  });
-});
-
-describe('Utils :: getAddonsForEntitiesGrid', () => {
-  test('Should return empty array', () => {
-    const res1 = getAddonsForEntitiesGrid(null);
-    const res2 = getAddonsForEntitiesGrid();
-
-    expect(res1).toEqual([]);
-    expect(res2).toEqual([]);
-  });
-
-  test('Should return array with type and route', () => {
-    const res1 = getAddonsForEntitiesGrid([{ name: 'addon' }]);
-
-    expect(res1).toEqual([{ name: 'addon', type: MenuI18nKey.Addons, route: ApplicationRoute.Addons }]);
   });
 });
 

@@ -10,8 +10,10 @@ import { DialBaseEntity, DialRoleLimits, DialRoleLimitsMap } from '@/src/models/
 import { DialRole } from '@/src/models/dial/role';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
-import RolesGrid from './RolesGrid';
+import RolesGrid from '@/src/components/EntityView/Roles/RolesGrid';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import AlertInfo from '@/src/components/Common/Alerts/AlertInfo';
+import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
 
 interface Props {
   view: ApplicationRoute;
@@ -230,59 +232,61 @@ const EntityRoles: FC<Props> = ({ entity, roles, onChangeEntity, isSkipRefresh }
   };
 
   return (
-    <div className="h-full flex flex-col pt-3 divide-y divide-primary">
-      <div className="flex flex-col mb-8">
-        <h1 className="mb-4">{t(BasicI18nKey.Settings)}</h1>
-        <div className="flex flex-row gap-x-3">
-          <NumberInputField
-            elementId="minute"
-            value={entity.defaultRoleLimit?.minute || void 0}
-            placeholder={t(PlaceholderI18nKey.NoLimits)}
-            fieldTitle={t(RolesI18nKey.TokensPerMinute)}
-            onChange={onChangeMinuteDefaultLimit}
-          />
-          <NumberInputField
-            elementId="day"
-            placeholder={t(PlaceholderI18nKey.NoLimits)}
-            value={entity.defaultRoleLimit?.day || void 0}
-            fieldTitle={t(RolesI18nKey.TokensPerDay)}
-            onChange={onChangeDayDefaultLimit}
-          />
-          <NumberInputField
-            elementId="week"
-            placeholder={t(PlaceholderI18nKey.NoLimits)}
-            value={entity.defaultRoleLimit?.week || void 0}
-            fieldTitle={t(RolesI18nKey.TokensPerWeek)}
-            onChange={onChangeWeekDefaultLimit}
-          />
-          <NumberInputField
-            elementId="month"
-            placeholder={t(PlaceholderI18nKey.NoLimits)}
-            value={entity.defaultRoleLimit?.month || void 0}
-            fieldTitle={t(RolesI18nKey.TokensPerMonth)}
-            onChange={onChangeMonthDefaultLimit}
+    <div className="h-full flex flex-col pt-3">
+      <div className="flex flex-col flex-1 min-h-0 divide-y divide-primary">
+        <div className="flex flex-col mb-8">
+          <h1 className="mb-4">{t(BasicI18nKey.Settings)}</h1>
+          <div className="flex flex-row gap-x-3">
+            <NumberInputField
+              elementId="minute"
+              value={entity.defaultRoleLimit?.minute}
+              placeholder={t(PlaceholderI18nKey.NoLimits)}
+              fieldTitle={t(RolesI18nKey.TokensPerMinute)}
+              onChange={onChangeMinuteDefaultLimit}
+            />
+            <NumberInputField
+              elementId="day"
+              placeholder={t(PlaceholderI18nKey.NoLimits)}
+              value={entity.defaultRoleLimit?.day}
+              fieldTitle={t(RolesI18nKey.TokensPerDay)}
+              onChange={onChangeDayDefaultLimit}
+            />
+            <NumberInputField
+              elementId="week"
+              placeholder={t(PlaceholderI18nKey.NoLimits)}
+              value={entity.defaultRoleLimit?.week}
+              fieldTitle={t(RolesI18nKey.TokensPerWeek)}
+              onChange={onChangeWeekDefaultLimit}
+            />
+            <NumberInputField
+              elementId="month"
+              placeholder={t(PlaceholderI18nKey.NoLimits)}
+              value={entity.defaultRoleLimit?.month}
+              fieldTitle={t(RolesI18nKey.TokensPerMonth)}
+              onChange={onChangeMonthDefaultLimit}
+            />
+          </div>
+        </div>
+
+        <div className="flex-1 min-h-0 pt-8 mb-4">
+          <RolesGrid
+            entity={entity}
+            roles={roles}
+            onChangeEntity={onChangeEntity}
+            onChangeTokensValue={onChangeRoleToken}
+            onOpenAddModal={onOpenAddModal}
+            onOpenInNewTab={onOpen}
+            onRemoveRole={onRemoveRole}
+            onResetToDefaultRole={onResetToDefaultRole}
+            onResetAllRolesToDefault={onResetAllRolesToDefault}
+            onSetNoLimits={onSetNoLimits}
+            isResetToDefaultHidden={isResetToDefaultHidden}
+            isSetNoLimitsHidden={isSetNoLimitsHidden}
+            isSkipRefresh={isSkipRefresh}
           />
         </div>
       </div>
-
-      <div className="flex-1 min-h-0 pt-8">
-        <RolesGrid
-          entity={entity}
-          roles={roles}
-          onChangeEntity={onChangeEntity}
-          onChangeTokensValue={onChangeRoleToken}
-          onOpenAddModal={onOpenAddModal}
-          onOpenInNewTab={onOpen}
-          onRemoveRole={onRemoveRole}
-          onResetToDefaultRole={onResetToDefaultRole}
-          onResetAllRolesToDefault={onResetAllRolesToDefault}
-          onSetNoLimits={onSetNoLimits}
-          isResetToDefaultHidden={isResetToDefaultHidden}
-          isSetNoLimitsHidden={isSetNoLimitsHidden}
-          isSkipRefresh={isSkipRefresh}
-        />
-      </div>
-
+      {isDisableRole(entity) && <AlertInfo text={t(RolesI18nKey.NotAvailableModel)} />}
       {addModalState === PopUpState.Opened &&
         createPortal(
           <AddEntitiesGrid

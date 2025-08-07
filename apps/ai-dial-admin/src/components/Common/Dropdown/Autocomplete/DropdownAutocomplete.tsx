@@ -23,12 +23,16 @@ import classNames from 'classnames';
 export interface DropdownAutocompleteProps extends DropdownProps {
   inputId: string;
   items: string[];
+  autocompleteValue?: string | number | null;
   invalid?: boolean;
   onSelectItem?: (value: string) => void;
 }
 
 const DropdownAutocomplete = forwardRef<HTMLDivElement, DropdownAutocompleteProps & HTMLProps<HTMLButtonElement>>(
-  function DropdownAutocomplete({ items, value, invalid, style, placeholder, onSelectItem, disabled, inputId }, _) {
+  function DropdownAutocomplete(
+    { items, autocompleteValue, invalid, style, placeholder, onSelectItem, disabled, inputId },
+    _,
+  ) {
     const [open, setOpen] = useState(false);
     const [inputValue, setInputValue] = useState('');
     const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -82,9 +86,9 @@ const DropdownAutocomplete = forwardRef<HTMLDivElement, DropdownAutocompleteProp
     );
 
     useEffect(() => {
-      const defaultValue = typeof value === 'string' ? value : '';
+      const defaultValue = typeof autocompleteValue === 'string' ? autocompleteValue : '';
       setInputValue(defaultValue);
-    }, [value]);
+    }, [autocompleteValue]);
 
     const filteredItems = items.filter((item) => item.toLowerCase().startsWith(inputValue.toLowerCase()));
 

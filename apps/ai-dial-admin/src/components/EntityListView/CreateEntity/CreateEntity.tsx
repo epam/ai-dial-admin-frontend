@@ -18,7 +18,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { getErrorNotification } from '@/src/utils/notification';
-import { isValidEntity } from './validation';
+import { isValidEntity } from '@/src/utils/validation/is-valid-entity';
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 
 interface Props {
@@ -32,13 +32,7 @@ interface Props {
   onClose: () => void;
 }
 
-const RoutesForCheckingUniqueName = [
-  ApplicationRoute.Models,
-  ApplicationRoute.Applications,
-  ApplicationRoute.Assistants,
-  ApplicationRoute.Addons,
-  ApplicationRoute.Routes,
-];
+const RoutesForCheckingUniqueName = [ApplicationRoute.Models, ApplicationRoute.Applications, ApplicationRoute.Routes];
 
 const CreateEntity: FC<Props> = ({
   modalTitle,

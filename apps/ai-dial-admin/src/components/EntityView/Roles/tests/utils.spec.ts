@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { getRolesGridData, isResetAvailable } from '@/src/components/EntityView/Roles/utils';
+import { getRolesGridData, isResetAvailable, isDisableRole } from '@/src/components/EntityView/Roles/utils';
 
 describe('Roles View :: isResetAvailable', () => {
   test('Should return true', () => {
@@ -16,6 +16,33 @@ describe('Roles View :: isResetAvailable', () => {
       roleLimits: { limit: { day: '1', minute: '1' } },
     });
     expect(res).toBeTruthy();
+  });
+});
+
+describe('Roles View :: isDisableRole', () => {
+  test('returns true if roleLimits is empty object and isPublic is falsy', () => {
+    const entity = { roleLimits: {}, isPublic: false };
+    expect(isDisableRole(entity)).toBe(true);
+  });
+
+  test('returns true if roleLimits is undefined and isPublic is falsy', () => {
+    const entity = { isPublic: false };
+    expect(isDisableRole(entity)).toBe(true);
+  });
+
+  test('returns false if roleLimits is not empty and isPublic is falsy', () => {
+    const entity = { roleLimits: { admin: { minute: 1 } }, isPublic: false };
+    expect(isDisableRole(entity)).toBe(false);
+  });
+
+  test('returns false if isPublic is true, even if roleLimits is empty', () => {
+    const entity = { roleLimits: {}, isPublic: true };
+    expect(isDisableRole(entity)).toBe(false);
+  });
+
+  test('returns false if isPublic is true and roleLimits is not empty', () => {
+    const entity = { roleLimits: { admin: { minute: 1 } }, isPublic: true };
+    expect(isDisableRole(entity)).toBe(false);
   });
 });
 

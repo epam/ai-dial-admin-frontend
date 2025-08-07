@@ -17,6 +17,10 @@ import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns
 import { DialRoleLimits } from '@/src/models/dial/base-entity';
 import { cellRenderParams } from './constants';
 
+export const isDisableRole = (entity: DialBaseEntity) => {
+  return !Object.keys(entity.roleLimits || {}).length && !entity.isPublic;
+};
+
 export const getRolesGridData = (entity: DialBaseEntity, roles: DialRole[]): RolesGridData[] => {
   if (entity.isPublic) {
     return getAllRolesWithLimits(roles, entity);

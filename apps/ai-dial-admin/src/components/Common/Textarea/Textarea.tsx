@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { FC } from 'react';
 
 interface Props {
-  value?: string | number;
+  value?: string | number | null;
   placeholder?: string;
   textareaId: string;
   cssClass?: string;
@@ -19,7 +19,7 @@ const Textarea: FC<Props> = ({ value, textareaId, placeholder, cssClass = '', di
       id={textareaId}
       data-testid={textareaId}
       placeholder={placeholder}
-      value={value}
+      value={value || void 0}
       disabled={disabled}
       className={classNames(invalid ? 'input-error' : '', cssClass)}
       onChange={(event) => onChange?.(event.currentTarget.value)}
