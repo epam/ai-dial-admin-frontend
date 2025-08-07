@@ -3,7 +3,7 @@ import { FC } from 'react';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 
 import BaseProperties from '@/src/components/InterceptorTemplates/Properties/BaseProperties';
-import SourceField from '@/src/components/SourceField/SourceField';
+import ExternalEndpoint from '@/src/components/SourceField/ExternalEndpoint/ExternalEndpoint';
 
 interface Props {
   template: InterceptorTemplate;
@@ -16,7 +16,7 @@ const ExtendedProperties: FC<Props> = ({ template, onChange }) => {
       <div className="lg:w-[35%]  ">
         <BaseProperties template={template} setTemplate={onChange} isImmutable={true} />
       </div>
-      <SourceField template={template} onChange={onChange} />
+      <ExternalEndpoint template={template} onChange={onChange} />
     </div>
   );
 };
