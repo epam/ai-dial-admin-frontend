@@ -19,6 +19,7 @@ import { getErrorForDescription } from '@/src/utils/validation/description-error
 import { getErrorForName, isWrongLengthWithView } from '@/src/utils/validation/name-error';
 import AdditionalProperties from './AdditionalProperties';
 import { getDisplayNameErrorKeyPerView, getVersionErrorKeyPerView } from './utils';
+import { DialModel } from '@/src/models/dial/model';
 
 interface Props {
   view: ApplicationRoute;
@@ -61,10 +62,13 @@ const EntityMainProperties: FC<Props> = ({
   const onChangeDeploymentId = useCallback(
     (deploymentId: string) => {
       const newEntity = { ...entity, name: deploymentId };
+      if (view === ApplicationRoute.Models) {
+        (newEntity as DialModel).endpointDeploymentName = deploymentId;
+      }
       setNameError(getErrorForName(deploymentId, void 0, t));
       onChangeEntity(newEntity);
     },
-    [entity, onChangeEntity, t],
+    [entity, onChangeEntity, view, t],
   );
 
   const onChangeDisplayName = useCallback(
