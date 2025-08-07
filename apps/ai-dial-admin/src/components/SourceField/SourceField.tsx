@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -19,7 +19,11 @@ interface Props {
 }
 
 const SourceField: FC<Props> = ({ interceptor, onChange, getContainers, getRunners }) => {
-  const [source, setSource] = useState(interceptor.source?.$type || SOURCE_ITEMS[0].id);
+  const [source, setSource] = useState(SOURCE_ITEMS[0].id);
+
+  useEffect(() => {
+    setSource(interceptor.source?.$type || SOURCE_ITEMS[0].id);
+  }, [interceptor]);
 
   return (
     <div className="flex flex-col gap-6 mt-3">

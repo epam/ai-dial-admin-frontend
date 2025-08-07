@@ -691,3 +691,8 @@ export enum ErrorI18nKey {
   IncorrectModelEndpointAlias = 'Error.IncorrectModelEndpointAlias',
   WarningEndpoint = 'Error.WarningEndpoint',
 }
+
+export enum SourceI18nKey {
+  OpenTemplate = 'Source.OpenTemplate',
+  OpenContainer = 'Source.OpenContainer',
+}

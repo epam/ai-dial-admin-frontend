@@ -849,4 +849,8 @@ export default {
     WarningEndpoint: 'The endpoint uses HTTP instead of HTTPS. This may expose data to security risks.',
     IncorrectModelEndpointAlias: 'This endpoint alias could not be empty',
   },
+  Source: {
+    OpenTemplate: 'Open template',
+    OpenContainer: 'Open container',
+  },
 } as const;

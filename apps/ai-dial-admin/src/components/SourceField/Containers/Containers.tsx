@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { PopUpState } from '@/src/types/pop-up';
 import { FieldError } from '@/src/models/error';
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { Container } from '@/src/models/deployments';
@@ -59,6 +59,10 @@ const Containers: FC<Props> = ({ entity, onChange, getContainers }) => {
     [entity, onChange, onCloseModal],
   );
 
+  const openContainer = useCallback(() => {
+    window.open(`/interceptor-deployments/${selectedContainer}?entityType=containers`, '_blank');
+  }, [selectedContainer]);
+
   useEffect(() => {
     const fetchContainers = async () => {
       const containers = await getContainers();
@@ -94,7 +98,8 @@ const Containers: FC<Props> = ({ entity, onChange, getContainers }) => {
           <Button
             iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
             cssClass="secondary"
-            title={'Open container'}
+            title={t(SourceI18nKey.OpenContainer)}
+            onClick={() => openContainer()}
           />
         )}
       </div>
