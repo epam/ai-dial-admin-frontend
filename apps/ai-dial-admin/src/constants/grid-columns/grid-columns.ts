@@ -238,7 +238,7 @@ export const PUBLICATION_COLUMNS: ColDef[] = [
   { field: 'author', headerName: 'Author' },
   {
     field: 'createdAt',
-    headerName: 'Created at',
+    headerName: 'Creation time',
     sort: 'asc',
     ...dateTimeColumn,
   },
