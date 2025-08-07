@@ -36,6 +36,12 @@ const dateTimeColumn: Partial<ColDef> = {
   tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
 };
 
+const CREATE_AT_COLUMN: ColDef = {
+  field: 'createdAt',
+  headerName: 'Creation time',
+  ...dateTimeColumn,
+};
+
 const DESCRIPTION_COLUMN: ColDef = {
   field: 'description',
   colId: 'description',
@@ -44,6 +50,7 @@ const DESCRIPTION_COLUMN: ColDef = {
 };
 
 export const VERSION_COLUMN: ColDef = { field: 'version', colId: 'version', headerName: 'Version' };
+export const AUTHOR_COLUMN: ColDef = { field: 'author', colId: 'author', headerName: 'Author' };
 export const DISPLAY_NAME_COLUMN: ColDef = { field: 'displayName', colId: 'displayName', headerName: 'Display Name' };
 const DISPLAY_NAME_COLUMN_WITH_SORT: ColDef = { ...DISPLAY_NAME_COLUMN, sort: 'asc' };
 export const NAME_COLUMN: ColDef = { field: 'name', colId: 'name', headerName: 'ID' };
@@ -138,9 +145,7 @@ export const KEYS_COLUMNS: ColDef[] = [
   NAME_COLUMN_WITH_SORT,
   DESCRIPTION_COLUMN,
   {
-    field: 'createdAt',
-    headerName: 'Creation time',
-    ...dateTimeColumn,
+    ...CREATE_AT_COLUMN,
     hide: true,
   },
   {
@@ -182,16 +187,12 @@ export const RUNNERS_COLUMNS: ColDef[] = [
   TOPIC_COLUMN,
 ];
 
-export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [
-  { field: 'displayName', headerName: 'Display name', sort: 'asc' },
-  { field: 'name', headerName: 'ID' },
-  { field: 'description', headerName: 'Description' },
-];
+export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, NAME_COLUMN, DESCRIPTION_COLUMN];
 
 export const PROMPTS_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Name', sort: 'asc' },
+  NAME_COLUMN_WITH_SORT,
   { field: 'version', headerName: 'Version' },
-  { field: 'author', headerName: 'Author' },
+  AUTHOR_COLUMN,
   {
     field: 'updateTime',
     headerName: 'Update time',
@@ -200,13 +201,13 @@ export const PROMPTS_COLUMNS: ColDef[] = [
 ];
 
 export const FILES_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Name', sort: 'asc' },
+  NAME_COLUMN_WITH_SORT,
   { field: 'extension', headerName: 'Extension' },
-  { field: 'author', headerName: 'Author' },
+  AUTHOR_COLUMN,
 ];
 
 export const EXPORT_COLUMNS = (onChange: (value: string, name: string) => void, route?: ApplicationRoute): ColDef[] => [
-  { field: 'name', headerName: 'Name', sort: 'asc' },
+  NAME_COLUMN_WITH_SORT,
   route === ApplicationRoute.Prompts
     ? {
         headerName: 'Version',
@@ -225,7 +226,7 @@ export const EXPORT_COLUMNS = (onChange: (value: string, name: string) => void, 
         headerName: 'Extension',
         field: 'extension',
       },
-  { field: 'author', headerName: 'Author' },
+  AUTHOR_COLUMN,
   {
     field: 'updateTime',
     headerName: 'Update time',
@@ -235,13 +236,8 @@ export const EXPORT_COLUMNS = (onChange: (value: string, name: string) => void, 
 
 export const PUBLICATION_COLUMNS: ColDef[] = [
   { field: 'requestName', headerName: 'Name' },
-  { field: 'author', headerName: 'Author' },
-  {
-    field: 'createdAt',
-    headerName: 'Creation time',
-    sort: 'asc',
-    ...dateTimeColumn,
-  },
+  AUTHOR_COLUMN,
+  { ...CREATE_AT_COLUMN, sort: 'asc' },
 ];
 
 export const getPublicationColumns = (open: (publication: Publication) => void): ColDef[] => {
@@ -273,8 +269,7 @@ export const ENTITIES_COLUMNS = <T>(
   return [...columns, ACTION_COLUMN(actions)];
 };
 
-export const TELEMETRY_GRID_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Deployment ID' },
+export const TELEMETRY_COLUMNS: ColDef[] = [
   {
     field: 'requests',
     headerName: 'Request Count',
@@ -310,39 +305,6 @@ export const TELEMETRY_GRID_COLUMNS: ColDef[] = [
   },
 ];
 
-export const PROJECT_GRID_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Project' },
-  {
-    field: 'requests',
-    headerName: 'Request Count',
-    cellClass: 'align-right',
-    headerClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
-  },
-  {
-    field: 'prompts',
-    headerName: 'Prompt Tokens',
-    cellClass: 'align-right',
-    headerClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
-  },
-  {
-    field: 'completions',
-    headerName: 'Completion tokens',
-    cellClass: 'align-right',
-    headerClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
-  },
-  {
-    field: 'cost',
-    headerName: 'Money',
-    sort: 'desc',
-    cellClass: 'align-right',
-    headerClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
-  },
-];
+export const TELEMETRY_GRID_COLUMNS: ColDef[] = [NAME_COLUMN, ...TELEMETRY_COLUMNS];
+
+export const PROJECT_GRID_COLUMNS: ColDef[] = [{ field: 'name', headerName: 'Project' }, ...TELEMETRY_COLUMNS];
