@@ -13,7 +13,7 @@ import { DialAdapter } from '@/src/models/dial/adapter';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
-import { isValidAdapter } from '@/src/components/EntityListView/CreateEntity/validation';
+import { isValidAdapter } from '@/src/utils/validation/is-valid-adapter';
 
 interface Props {
   modalState: PopUpState;

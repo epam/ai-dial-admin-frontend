@@ -1,6 +1,5 @@
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { DialAdapter } from '@/src/models/dial/adapter';
-import { DialAddon } from '@/src/models/dial/addon';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialKey } from '@/src/models/dial/key';
@@ -32,16 +31,6 @@ export const getApplicationsForEntitiesGrid = (applications?: DialApplication[] 
     type: MenuI18nKey.Applications,
     route: ApplicationRoute.Applications,
   }));
-};
-
-/**
- * Get list of DialAddon with type and route for entities view
- *
- * @param {?(DialAddon[] | null)} [addons] - DialAddon array
- * @returns {EntitiesGridData[]} - EntitiesGridData array
- */
-export const getAddonsForEntitiesGrid = (addons?: DialAddon[] | null): EntitiesGridData[] => {
-  return [...(addons || [])].map((addon) => ({ ...addon, type: MenuI18nKey.Addons, route: ApplicationRoute.Addons }));
 };
 
 /**

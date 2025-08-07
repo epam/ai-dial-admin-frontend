@@ -39,15 +39,4 @@ describe('Utils :: prepareEntityForDuplicate', () => {
       roles: [],
     });
   });
-
-  test('Should return same entity', () => {
-    const result = prepareEntityForDuplicate(ApplicationRoute.Addon, entity);
-    expect(result).toEqual({
-      name: 'n',
-      description: 'd',
-      version: 'v',
-      entities: ['entities'],
-      roles: ['roles'],
-    });
-  });
 });

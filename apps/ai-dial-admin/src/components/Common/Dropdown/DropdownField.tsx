@@ -25,6 +25,8 @@ const DropdownField: FC<Props> = ({
   onChange,
   selectedValue,
   children,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  value,
   ...props
 }) => {
   return (

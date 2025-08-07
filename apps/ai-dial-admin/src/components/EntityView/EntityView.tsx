@@ -32,14 +32,15 @@ import { cloneDeep, isEqual } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 import EntityAudit from './Audit/EntityAudit';
-import { EntityViewTab, getViewTabs } from './entity-view';
-import EntityViewHeaderButtons from './EntityViewHeaderButtons';
-import EntityFeatures from './Features/Features';
-import EntityInterceptors from './Interceptors/Interceptors';
-import { ModalType } from './Modals/constants';
-import EntityViewModals from './Modals/EntityViewModals';
-import EntityRoles from './Roles/Roles';
-import EntityHeader from './Header/Header';
+import { EntityViewTab, getViewTabs } from '@/src/components/EntityView/entity-view';
+import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
+import EntityFeatures from '@/src/components/EntityView/Features/Features';
+import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
+import { ModalType } from '@/src/components/EntityView/Modals/constants';
+import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
+import EntityRoles from '@/src/components/EntityView/Roles/Roles';
+import EntityHeader from '@/src/components/EntityView/Header/Header';
+import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
 
 interface Props {
   view: ApplicationRoute;
@@ -182,10 +183,7 @@ const EntityView: FC<Props> = ({
   }, [selectedEntity, updateEntity, router, showNotification]);
 
   const onTryToSave = useCallback(() => {
-    if (
-      (view === ApplicationRoute.Models || view === ApplicationRoute.Applications) &&
-      !Object.keys(selectedEntity.roleLimits || {}).length
-    ) {
+    if ((view === ApplicationRoute.Models || view === ApplicationRoute.Applications) && isDisableRole(selectedEntity)) {
       handleModalOpen(ModalType.emptyRoles);
     } else {
       onSave();

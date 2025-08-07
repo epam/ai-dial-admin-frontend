@@ -136,7 +136,7 @@ const EntityMainProperties: FC<Props> = ({
         items={uniq(names)}
       />
 
-      {view !== ApplicationRoute.Assistants && (
+      {view === ApplicationRoute.Models && (
         <TextInputField
           elementId="displayVersion"
           fieldTitle={t(CreateI18nKey.VersionTitle)}

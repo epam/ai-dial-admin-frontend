@@ -6,7 +6,7 @@ This documentation describes the structure and contents of the menu items array 
 ## Menu Sections
 
 ### 1. **Entities**
-- **Description**: A section that manages entities like models, applications, assistants, addons, and routes.
+- **Description**: A section that manages entities like models, applications, and routes.
 - **Items**:
   - **Models**
     - **Key**: `Models`

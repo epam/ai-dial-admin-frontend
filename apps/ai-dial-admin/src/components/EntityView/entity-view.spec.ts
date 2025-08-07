@@ -35,16 +35,6 @@ describe('Entity View :: getViewTabs', () => {
     ]);
   });
 
-  test('Should return tabs for addon', () => {
-    const res = getViewTabs(t, ApplicationRoute.Addons, true);
-    expect(res).toEqual([propertiesTabs(t), rolesTabs(t)]);
-  });
-
-  test('Should return tabs for assistant', () => {
-    const res = getViewTabs(t, ApplicationRoute.Assistants, true);
-    expect(res).toEqual([propertiesTabs(t), rolesTabs(t)]);
-  });
-
   test('Should return tabs for routes', () => {
     const res = getViewTabs(t, ApplicationRoute.Routes, true);
     expect(res).toEqual([propertiesTabs(t), rolesTabs(t)]);

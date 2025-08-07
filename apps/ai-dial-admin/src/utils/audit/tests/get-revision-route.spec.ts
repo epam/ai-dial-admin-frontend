@@ -19,10 +19,6 @@ describe('Audit :: getRevisionRouteForEntityType', () => {
     expect(getRevisionRouteForEntityType(ActivityAuditResourceType.ADAPTER, id)).toBe(`/adapters/${id}/revision/`);
   });
 
-  test('returns correct route for ASSISTANT', () => {
-    expect(getRevisionRouteForEntityType(ActivityAuditResourceType.ASSISTANT, id)).toBe(`/assistants/${id}/revision/`);
-  });
-
   test('returns correct route for INTERCEPTOR', () => {
     expect(getRevisionRouteForEntityType(ActivityAuditResourceType.INTERCEPTOR, id)).toBe(
       `/interceptors/${id}/revision/`,
@@ -45,10 +41,6 @@ describe('Audit :: getRevisionRouteForEntityType', () => {
     expect(getRevisionRouteForEntityType(ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA, id)).toBe(
       `/applicationTypeSchemas/snapshot?id=${id}&revision=`,
     );
-  });
-
-  test('returns correct route for ADDON', () => {
-    expect(getRevisionRouteForEntityType(ActivityAuditResourceType.ADDON, id)).toBe(`/addons/${id}/revision/`);
   });
 
   test('returns null for unknown type', () => {
@@ -75,10 +67,6 @@ describe('Audit :: getRevisionRouteForAllEntities', () => {
     expect(getRevisionRouteForAllEntities(ActivityAuditResourceType.ADAPTER)).toBe(`/adapters/revision/`);
   });
 
-  test('returns correct route for ASSISTANT', () => {
-    expect(getRevisionRouteForAllEntities(ActivityAuditResourceType.ASSISTANT)).toBe(`/assistants/revision/`);
-  });
-
   test('returns correct route for INTERCEPTOR', () => {
     expect(getRevisionRouteForAllEntities(ActivityAuditResourceType.INTERCEPTOR)).toBe(`/interceptors/revision/`);
   });
@@ -99,10 +87,6 @@ describe('Audit :: getRevisionRouteForAllEntities', () => {
     expect(getRevisionRouteForAllEntities(ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA)).toBe(
       `/applicationTypeSchemas/revision/`,
     );
-  });
-
-  test('returns correct route for ADDON', () => {
-    expect(getRevisionRouteForAllEntities(ActivityAuditResourceType.ADDON)).toBe(`/addons/revision/`);
   });
 
   test('returns null for unknown type', () => {

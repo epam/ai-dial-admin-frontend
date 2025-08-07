@@ -2,7 +2,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { render } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
-import CreateEntity from './CreateEntity';
+import CreateEntity from '../CreateEntity';
 
 describe('CreateEntity', () => {
   test('Should render successfully', () => {

@@ -23,12 +23,6 @@ describe('EntityProperties :: ForwardAuthToken :: getAlertTitlePerView', () => {
     expect(res).toBe(ForwardTokenI18nKey.UseForThisApplication);
   });
 
-  test('Should return key for addon', () => {
-    const res = getAlertTitlePerView(ApplicationRoute.Addons);
-
-    expect(res).toBe(ForwardTokenI18nKey.UseForThisAddon);
-  });
-
   test('Should return key for Interceptor', () => {
     const res = getAlertTitlePerView(ApplicationRoute.Interceptors);
 
@@ -53,12 +47,6 @@ describe('EntityProperties :: ForwardAuthToken :: getDisplayNamePerView', () => 
     const res = getDisplayNamePerView(ApplicationRoute.Applications);
 
     expect(res).toBe(CreateI18nKey.ApplicationDisplayName);
-  });
-
-  test('Should return key for addon', () => {
-    const res = getDisplayNamePerView(ApplicationRoute.Addons);
-
-    expect(res).toBe(CreateI18nKey.AddonsDisplayName);
   });
 
   test('Should return key for interceptor', () => {

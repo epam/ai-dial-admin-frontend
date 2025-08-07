@@ -87,10 +87,8 @@ export default {
     Adapters: 'Adapters',
     Applications: 'Applications',
     ApplicationRunners: 'Application Runners',
-    Assistants: 'Assistants',
     Interceptors: 'Interceptors',
     Models: 'Models',
-    Addons: 'Addons',
     Routes: 'Routes',
 
     Roles: 'Roles',
@@ -132,12 +130,10 @@ export default {
   Entities: {
     // no data
     NoApplications: 'No Applications',
-    NoAssistants: 'No Assistants',
     NoInterceptors: 'No Interceptors',
     NoEntities: 'No Entities',
     NoAdapters: 'No Adapters',
     NoModels: 'No Models',
-    NoAddons: 'No Addons',
     NoRoles: 'No Roles',
     NoKeys: 'No Keys',
     NoApplicationRunners: 'No Application Runners',
@@ -170,7 +166,6 @@ export default {
     Title: 'Confirm Deleting ',
     Confirming: 'Are you sure that you want to delete ',
     Model: 'Model',
-    Addons: 'Addons',
     Application: 'Application',
     Role: 'Role',
     Key: 'Key',
@@ -178,7 +173,6 @@ export default {
     File: 'File',
     Route: 'Route',
     Interceptor: 'Interceptor',
-    Assistant: 'Assistant',
     ApplicationRunner: {
       Title: 'Application Runner',
       DescriptionWarning: 'This Application Runner and all related Applications will be deleted permanently.',
@@ -203,10 +197,6 @@ export default {
       Header: 'Duplicate Model',
       Description: 'Enter name and version to duplicate Model.',
     },
-    Addons: {
-      Header: 'Duplicate Addons',
-      Description: 'Enter name and version to duplicate Addons.',
-    },
     Application: {
       Header: 'Duplicate Application',
       Description: 'Enter name and version to duplicate Application.',
@@ -214,10 +204,6 @@ export default {
     ApplicationRunner: {
       Header: 'Duplicate Application Runner',
       Description: 'Enter name and version to duplicate Application.',
-    },
-    Assistant: {
-      Header: 'Duplicate Assistant',
-      Description: 'Enter name and version to duplicate Assistant.',
     },
     Key: {
       Header: 'Duplicate Key',
@@ -244,13 +230,11 @@ export default {
   CreateEntity: {
     errorLength: 'User can add any characters, but not more than {number}.',
     Model: 'Create Model',
-    Addons: 'Create Addons',
     Application: 'Create Application',
     ApplicationRunner: 'Create Application Runner',
     Role: 'Create Role',
     Interceptor: 'Create Interceptor',
     Key: 'Create Key',
-    Assistant: 'Create Assistant',
     Prompt: 'Create Prompt',
     Route: 'Create Route',
     Adapter: 'Create Adapter',
@@ -292,21 +276,17 @@ export default {
       title: 'Display name',
       placeholder: 'Enter display name',
       ModelDisplayName: 'Model display name',
-      AddonsDisplayName: 'Addons display name',
       ApplicationDisplayName: 'Application display name',
       errorApplication:
         'This name is used by versionless application. Specify version for application with this display name to group applications.',
       errorModel:
         'This name is used by versionless model. Specify version for model with this display name to group models.',
-      errorAddon:
-        'This name is used by versionless addon. Specify version for addon with this display name to group addons.',
     },
     version: {
       title: 'Version',
       placeholder: 'Enter version',
       errorModel: 'For a model with this Display name, specifying a version is mandatory.',
       errorApplication: 'For an application with this Display name, specifying a version is mandatory.',
-      errorAddon: 'For a addon with this Display name, specifying a version is mandatory.',
     },
     nameVersionCombinationError: 'This combination of name and version already exists. Specify another',
     description: {
@@ -443,6 +423,7 @@ export default {
     ResetToDefaultLimits: 'Reset to default limits',
     SetNoLimits: 'Set no limits',
     AvailableSpecificRoles: 'Make available to specific roles',
+    NotAvailableModel: 'This model will not be available to any end-users.',
   },
   Attachments: {
     Attachments: 'Attachments',
@@ -471,7 +452,6 @@ export default {
     ForwardToken: 'Forward auth token',
     ForwardTokenModalTitle: 'Forward Auth Token',
     UseForThisModel: 'Use for this model',
-    UseForThisAddon: 'Use for this addon',
     UseForThisInterceptor: 'Use for this interceptor',
     UseForThisApplication: 'Use for this application',
     ForwardTokenModalAlert:
@@ -867,5 +847,6 @@ export default {
     TryAgainLater: 'Please try again later.',
     IncorrectEndpoint: 'Endpoint must be a valid url starting with http:// or https://',
     WarningEndpoint: 'The endpoint uses HTTP instead of HTTPS. This may expose data to security risks.',
+    IncorrectModelEndpointAlias: 'This endpoint alias could not be empty',
   },
 } as const;
