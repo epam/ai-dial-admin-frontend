@@ -298,7 +298,9 @@ export enum CreateI18nKey {
   NameVersionCombinationError = 'CreateEntity.nameVersionCombinationError',
   SchemeTitle = 'CreateEntity.Scheme',
   ErrorUnique = 'CreateEntity.ErrorUnique',
-  InterceptorTemplate = 'CreateEntity.InterceptorTemplate',
+  CreateInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Create',
+  SelectInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Select',
+  InterceptorContainer = 'CreateEntity.InterceptorContainer',
   ApplicationPropertiesHeader = 'CreateEntity.ApplicationPropertiesHeader',
 }
 

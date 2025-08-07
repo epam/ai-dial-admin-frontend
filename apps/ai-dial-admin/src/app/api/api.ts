@@ -17,6 +17,7 @@ import { InterceptorTemplatesApi } from '@/src/server/entities/interceptor-templ
 import { TelemetryApi } from '@/src/server/telemetry-api';
 import { ThemesApi } from '@/src/server/themes-api';
 import { UtilityApi } from '@/src/server/utility-api';
+import { DeploymentsApi } from '@/src/server/deployments-api';
 
 export const modelsApi = new ModelsApi({
   host: process.env.DIAL_ADMIN_API_URL,
@@ -90,4 +91,8 @@ export const activityAuditApi = new ActivityAuditApi({
 
 export const interceptorTemplatesApi = new InterceptorTemplatesApi({
   host: process.env.DIAL_ADMIN_API_URL,
+});
+
+export const deploymentsApi = new DeploymentsApi({
+  host: process.env.DIAL_DEPLOYMENTS_API_URL,
 });

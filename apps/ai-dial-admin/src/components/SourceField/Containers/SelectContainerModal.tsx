@@ -2,9 +2,10 @@ import { FC, useState } from 'react';
 
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { PopUpState } from '@/src/types/pop-up';
+import { Container } from '@/src/models/deployments';
 import { useI18n } from '@/src/locales/client';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
-import { INTERCEPTOR_CONTAINER_COLUMNS } from '@/src/components/SourceField/constants';
+import { SOURCE_CONTAINERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 import Grid from '@/src/components/Grid/Grid';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
@@ -13,13 +14,13 @@ import Popup from '@/src/components/Common/Popup/Popup';
 
 interface Props {
   selectedId?: string;
-  interceptorContainers?: { id: string; name: string; image: string }[];
+  interceptorContainers?: Container[];
   modalState: PopUpState;
   onClose: () => void;
   onApply: (id?: string) => void;
 }
 
-const SelectedContainerModal: FC<Props> = ({ selectedId, interceptorContainers, modalState, onClose, onApply }) => {
+const SelectContainerModal: FC<Props> = ({ selectedId, interceptorContainers, modalState, onClose, onApply }) => {
   const t = useI18n();
 
   const [selectedContainer, setSelectedContainer] = useState(selectedId);
@@ -27,14 +28,14 @@ const SelectedContainerModal: FC<Props> = ({ selectedId, interceptorContainers, 
   return (
     <Popup
       onClose={onClose}
-      heading={t(CreateI18nKey.RunnerName)}
+      heading={t(CreateI18nKey.InterceptorContainer)}
       portalId="entityNameToken"
       state={modalState}
       containerClassName={'h-[750px] lg:max-w-[65%]'}
     >
       <div className="flex flex-col px-6 py-4 flex-1 min-h-0">
         <Grid
-          columnDefs={INTERCEPTOR_CONTAINER_COLUMNS}
+          columnDefs={SOURCE_CONTAINERS_COLUMNS}
           additionalGridOptions={{
             rowSelection: { mode: 'singleRow', enableClickSelection: true },
             selectionColumnDef: {
@@ -53,7 +54,7 @@ const SelectedContainerModal: FC<Props> = ({ selectedId, interceptorContainers, 
             },
             onGridReady: (event) => {
               event.api?.updateGridOptions({
-                columnDefs: INTERCEPTOR_CONTAINER_COLUMNS,
+                columnDefs: SOURCE_CONTAINERS_COLUMNS,
                 rowData: interceptorContainers,
               });
               event.api.forEachNode((node) => {
@@ -67,10 +68,15 @@ const SelectedContainerModal: FC<Props> = ({ selectedId, interceptorContainers, 
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
         <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <Button cssClass="primary" title={t(ButtonsI18nKey.Apply)} onClick={() => onApply(selectedContainer)} />
+        <Button
+          cssClass="primary"
+          title={t(ButtonsI18nKey.Apply)}
+          disable={!selectedContainer}
+          onClick={() => onApply(selectedContainer)}
+        />
       </div>
     </Popup>
   );
 };
 
-export default SelectedContainerModal;
+export default SelectContainerModal;

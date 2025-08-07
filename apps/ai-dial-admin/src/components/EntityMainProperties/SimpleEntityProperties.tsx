@@ -3,7 +3,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import { CreateI18nKey, EntitiesI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialRoute } from '@/src/models/dial/route';
@@ -85,13 +85,6 @@ const SimpleEntityProperties: FC<Props> = ({
     [entity, onChangeEntity, t],
   );
 
-  const onChangeEndpoint = useCallback(
-    (endpoint: string) => {
-      onChangeEntity({ ...entity, endpoint });
-    },
-    [entity, onChangeEntity],
-  );
-
   return (
     <div className="flex flex-col gap-6">
       <TextInputField
@@ -138,16 +131,6 @@ const SimpleEntityProperties: FC<Props> = ({
           errorText={pathError?.text}
           invalid={!!pathError}
           onChange={onChangePath}
-        />
-      )}
-
-      {view === ApplicationRoute.Interceptors && (
-        <TextInputField
-          elementId="endpoint"
-          fieldTitle={t(EntitiesI18nKey.Endpoint)}
-          placeholder={t(EntitiesI18nKey.EndpointPlaceholder)}
-          value={entity.endpoint}
-          onChange={onChangeEndpoint}
         />
       )}
     </div>

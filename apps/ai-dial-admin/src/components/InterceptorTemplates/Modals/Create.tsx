@@ -16,7 +16,6 @@ import { getErrorForName } from '@/src/utils/validation/name-error';
 import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 import BaseProperties from '@/src/components/InterceptorTemplates/Properties/BaseProperties';
-import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 
 interface Props {
   route: ApplicationRoute;
@@ -34,7 +33,6 @@ const Create: FC<Props> = ({ route, onClose, modalState, names }) => {
     name: '',
     displayName: '',
     description: '',
-    source: SOURCE_TYPE.EXTERNAL_ENDPOINT,
   });
   const [isValid, setIsValid] = useState(false);
 
@@ -58,7 +56,12 @@ const Create: FC<Props> = ({ route, onClose, modalState, names }) => {
   }, [template, t, names]);
 
   return (
-    <Popup onClose={onClose} heading={t(CreateI18nKey.InterceptorTemplate)} portalId="CreateRunner" state={modalState}>
+    <Popup
+      onClose={onClose}
+      heading={t(CreateI18nKey.CreateInterceptorTemplate)}
+      portalId="CreateRunner"
+      state={modalState}
+    >
       <div className="flex flex-col px-6 py-4">
         <BaseProperties template={template} setTemplate={setTemplate} names={names} />
       </div>

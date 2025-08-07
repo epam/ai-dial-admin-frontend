@@ -1,4 +1,4 @@
-import { isWrongLengthWithView } from '@/src/utils/validation/name-error';
+import { getErrorForName, isWrongLengthWithView } from '@/src/utils/validation/name-error';
 import { MAX_NAME_SYMBOLS, MAX_RUNNER_ID_SYMBOLS } from '@/src/constants/validation';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
@@ -7,10 +7,11 @@ import { DialKey } from '@/src/models/dial/key';
 import { DialModel, DialModelEndpoint } from '@/src/models/dial/model';
 import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
 import { isValidEndpoint } from '@/src/utils/validation/url-error';
-import { getErrorForName } from '@/src/utils/validation/name-error';
 import { isValidAllRoutePaths } from '@/src/utils/validation/path-error';
 
 export const isValidEntity = (
@@ -47,7 +48,16 @@ export const isValidEntity = (
     }
 
     if (view === ApplicationRoute.Interceptors) {
-      return isValidSimpleEntity && !!entity.endpoint;
+      const interceptor = entity as DialInterceptor;
+
+      return (
+        isValidSimpleEntity &&
+        ((interceptor.source?.$type === SOURCE_TYPE.ENDPOINTS && !!entity.endpoint) ||
+          (interceptor.source?.$type === SOURCE_TYPE.CONTAINER &&
+            !!interceptor.source.containerId &&
+            !!interceptor.source.completionEndpointPath) ||
+          (interceptor.source?.$type === SOURCE_TYPE.RUNNER && !!interceptor.source.runnerName))
+      );
     }
 
     return isValidSimpleEntity;

@@ -255,7 +255,11 @@ export default {
     Route: 'Create Route',
     Adapter: 'Create Adapter',
     Scheme: 'Scheme',
-    InterceptorTemplate: 'Create Interceptor Template',
+    InterceptorTemplate: {
+      Create: 'Create Interceptor Template',
+      Select: 'Select Interceptor Template',
+    },
+    InterceptorContainer: 'Select Interceptor Container',
     ErrorUnique: 'This field must be unique.',
     ApplicationPropertiesHeader: 'Application properties header',
     deploymentId: {
