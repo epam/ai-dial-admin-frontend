@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import ModelsList from './ModelsList';
 import { ColDef } from 'ag-grid-community';
-import { DialAdapter } from '@/src/models/dial/adapter';
 import { describe, expect, test, vi } from 'vitest';
 
 vi.mock('@/src/app/[lang]/models/actions', () => ({
@@ -31,7 +30,7 @@ vi.mock('@/src/constants/grid-columns/grid-columns', () => {
     { field: 'version', headerName: 'Version' },
   ];
   return {
-    MODELS_COLUMNS: (t: (str: string) => string) => [
+    MODELS_COLUMNS: () => [
       { field: 'id', headerName: 'ID' },
       { field: 'displayName', headerName: 'Name' },
       { field: 'type', headerName: 'Type' },
