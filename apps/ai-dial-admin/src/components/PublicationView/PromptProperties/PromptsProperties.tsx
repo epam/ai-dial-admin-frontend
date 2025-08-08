@@ -1,8 +1,7 @@
 import classNames from 'classnames';
 import { FC, ReactNode, useCallback, useState } from 'react';
 
-import Playground from '@/public/images/icons/menu/playground.svg';
-import { IconChevronDown, IconChevronRight, IconExternalLink } from '@tabler/icons-react';
+import { IconChevronDown, IconChevronRight, IconExternalLink, IconMessages } from '@tabler/icons-react';
 
 import Button from '@/src/components/Common/Button/Button';
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
@@ -72,9 +71,9 @@ const PromptsProperties: FC<Props> = ({ prompt, action, collapsed }) => {
             />
           )}
           <Button
-            cssClass={`secondary `}
+            cssClass="secondary"
             title={t(PublicationsI18nKey.TestPrompt)}
-            iconBefore={<Playground width={18} height={18} />}
+            iconBefore={<IconMessages width={18} height={18} />}
             onClick={() => void 0}
             hideTitleOnMobile={true}
           />

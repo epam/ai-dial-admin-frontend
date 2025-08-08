@@ -1,16 +1,17 @@
 import { JSX } from 'react';
+import {
+  IconDashboard,
+  IconFlask,
+  IconFolders,
+  IconHammer,
+  IconMessages,
+  IconRocket,
+  IconSettings2,
+  IconShieldCog,
+  IconTools,
+} from '@tabler/icons-react';
 
-import AccessManagement from '@/public/images/icons/menu/access-management.svg';
 import Approvals from '@/public/images/icons/menu/approvals.svg';
-import Assets from '@/public/images/icons/menu/assets.svg';
-import Builders from '@/public/images/icons/menu/builders.svg';
-import Deployments from '@/public/images/icons/menu/deployments.svg';
-import Entities from '@/public/images/icons/menu/entities.svg';
-import Evaluation from '@/public/images/icons/menu/evaluation.svg';
-import Playground from '@/public/images/icons/menu/playground.svg';
-import Telemetry from '@/public/images/icons/menu/telemetry.svg';
-import Tools from '@/public/images/icons/menu/tools.svg';
-import MlOps from '@/public/images/icons/menu/ml-ops.svg';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -30,7 +31,7 @@ export const MENU_CONFIGURATION = (iconSize: number): MenuGroupConfiguration[] =
   {
     key: MenuI18nKey.Entities,
     descriptionKey: MenuI18nKey.EntitiesDescription,
-    icon: <Entities width={iconSize} height={iconSize} />,
+    icon: <IconSettings2 width={iconSize} height={iconSize} />,
     items: [
       { key: MenuI18nKey.Models, href: ApplicationRoute.Models },
       {
@@ -50,7 +51,7 @@ export const MENU_CONFIGURATION = (iconSize: number): MenuGroupConfiguration[] =
   {
     key: MenuI18nKey.Builders,
     descriptionKey: MenuI18nKey.BuildersDescription,
-    icon: <Builders width={iconSize} height={iconSize} />,
+    icon: <IconHammer width={iconSize} height={iconSize} />,
     items: [
       {
         key: MenuI18nKey.ApplicationRunners,
@@ -66,7 +67,7 @@ export const MENU_CONFIGURATION = (iconSize: number): MenuGroupConfiguration[] =
   {
     key: MenuI18nKey.Assets,
     descriptionKey: MenuI18nKey.AssetsDescription,
-    icon: <Assets width={iconSize} height={iconSize} />,
+    icon: <IconFolders width={iconSize} height={iconSize} />,
     items: [
       {
         key: MenuI18nKey.Prompts,
@@ -81,13 +82,13 @@ export const MENU_CONFIGURATION = (iconSize: number): MenuGroupConfiguration[] =
   {
     key: MenuI18nKey.MLOps,
     descriptionKey: MenuI18nKey.MCPDescription,
-    icon: <MlOps width={iconSize} height={iconSize} />,
+    icon: <IconTools width={iconSize} height={iconSize} />,
     items: [],
   },
   {
     key: MenuI18nKey.AccessManagement,
     descriptionKey: MenuI18nKey.AccessManagementDescription,
-    icon: <AccessManagement width={iconSize} height={iconSize} />,
+    icon: <IconShieldCog width={iconSize} height={iconSize} />,
     items: [
       { key: MenuI18nKey.Roles, href: ApplicationRoute.Roles },
       { key: MenuI18nKey.Keys, href: ApplicationRoute.Keys },
@@ -97,7 +98,7 @@ export const MENU_CONFIGURATION = (iconSize: number): MenuGroupConfiguration[] =
   {
     key: MenuI18nKey.Tools,
     descriptionKey: MenuI18nKey.ToolsDescription,
-    icon: <Tools width={iconSize} height={iconSize} />,
+    icon: <IconTools width={iconSize} height={iconSize} />,
     items: [],
   },
   {
@@ -122,25 +123,25 @@ export const MENU_CONFIGURATION = (iconSize: number): MenuGroupConfiguration[] =
   {
     key: MenuI18nKey.Playground,
     descriptionKey: MenuI18nKey.AccessManagementDescription,
-    icon: <Playground width={iconSize} height={iconSize} />,
+    icon: <IconMessages width={iconSize} height={iconSize} />,
     items: [],
   },
   {
     key: MenuI18nKey.Deployments,
     descriptionKey: MenuI18nKey.DeploymentsDescription,
-    icon: <Deployments width={iconSize} height={iconSize} />,
+    icon: <IconRocket width={iconSize} height={iconSize} />,
     items: [],
   },
   {
     key: MenuI18nKey.Evaluation,
     descriptionKey: MenuI18nKey.EvaluationDescription,
-    icon: <Evaluation width={iconSize} height={iconSize} />,
+    icon: <IconFlask width={iconSize} height={iconSize} />,
     items: [],
   },
   {
     key: MenuI18nKey.Audit,
     descriptionKey: MenuI18nKey.AuditDescription,
-    icon: <Telemetry width={iconSize} height={iconSize} />,
+    icon: <IconDashboard width={iconSize} height={iconSize} />,
     items: [
       {
         key: MenuI18nKey.Dashboard,
