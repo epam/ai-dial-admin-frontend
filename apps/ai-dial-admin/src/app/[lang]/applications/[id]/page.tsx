@@ -27,7 +27,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   try {
     applications = await applicationsApi.getApplicationsList(token);
-    application = await applicationsApi.getApplication(decodeURIComponent((await params.params).id), token);
+    application = await applicationsApi.getApplication((await params.params).id, token);
     applicationSchemes = await applicationRunnersApi.getApplicationSchemesList(token);
     roles = await rolesApi.getRolesList(token);
     interceptors = await interceptorsApi.getInterceptorsList(token);

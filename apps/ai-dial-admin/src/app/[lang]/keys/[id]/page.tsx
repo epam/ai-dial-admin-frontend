@@ -21,7 +21,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   let roles: DialRole[] | null = [];
   try {
     keys = await keysApi.getKeysList(token);
-    key = await keysApi.getKey(decodeURIComponent((await params.params).id), token);
+    key = await keysApi.getKey((await params.params).id, token);
     roles = await rolesApi.getRolesList(token);
     if (keys === void 0 || key === void 0 || roles === void 0) {
       return <Page403 />;

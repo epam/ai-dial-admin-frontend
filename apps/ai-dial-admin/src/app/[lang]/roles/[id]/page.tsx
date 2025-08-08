@@ -31,7 +31,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     keys = await keysApi.getKeysList(token);
     applications = await applicationsApi.getApplicationsList(token);
 
-    role = await rolesApi.getRole(decodeURIComponent((await params.params).id), token);
+    role = await rolesApi.getRole((await params.params).id, token);
 
     if (roles === void 0 || models === void 0 || keys === void 0 || applications === void 0 || role === void 0) {
       return <Page403 />;

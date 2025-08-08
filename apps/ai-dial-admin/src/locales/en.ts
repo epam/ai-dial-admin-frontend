@@ -256,8 +256,9 @@ export default {
       title: 'Name',
       placeholder: 'Enter name',
       error: 'This name already exists.',
-      length: 'User can add any characters, but not less than 2 and not more than 255.',
+      length: 'User can add any allowed characters, but not less than 2 and not more than 255.',
       interceptor: 'Interceptor Name',
+      forbiddenChars: 'Name must not contain forbidden characters: {list}',
     },
     key: {
       title: 'Key value',

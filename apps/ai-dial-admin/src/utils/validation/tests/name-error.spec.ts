@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { ErrorType } from '@/src/types/error-type';
-import { getErrorForName } from '../name-error';
+import { getErrorForName, forbiddenNameSymbols } from '../name-error';
 
 describe('Utils :: validations :: getErrorForName', () => {
   const mockT = vi.fn().mockReturnValue('Translated Text');
@@ -61,5 +61,26 @@ describe('Utils :: validations :: getErrorForName', () => {
       type: ErrorType.EXISTING,
       text: '',
     });
+  });
+
+  forbiddenNameSymbols.forEach((symbol) => {
+    test(`Should return forbidden chars error for symbol: ${symbol}`, () => {
+      const nameWithSymbol = `name${symbol}`;
+      const res2 = getErrorForName(nameWithSymbol, ['names']);
+
+      expect(res2).toEqual({
+        type: ErrorType.FORBIDDEN_CHARS,
+        text: '',
+      });
+    });
+  });
+
+  test('Should allow forbidden symbols when checkForbiddenChars is false', () => {
+    const nameWithForbiddenSymbol = 'name%';
+    const res1 = getErrorForName(nameWithForbiddenSymbol, ['names'], mockT, false, false);
+    const res2 = getErrorForName(nameWithForbiddenSymbol, ['names'], undefined, false, false);
+
+    expect(res1).toBeNull();
+    expect(res2).toBeNull();
   });
 });
