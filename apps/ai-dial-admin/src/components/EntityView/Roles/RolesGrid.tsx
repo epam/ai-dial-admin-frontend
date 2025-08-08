@@ -1,8 +1,7 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { GridApi, GridReadyEvent, IRowNode } from 'ag-grid-community';
-import { IconPlus } from '@tabler/icons-react';
+import { IconPlus, IconReload } from '@tabler/icons-react';
 
-import Reset from '@/public/images/icons/reset.svg';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import Button from '@/src/components/Common/Button/Button';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
@@ -104,7 +103,7 @@ const RolesGrid: FC<Props> = ({
           {isResetAvailable(entity) && (
             <Button
               cssClass="tertiary"
-              iconBefore={<Reset />}
+              iconBefore={<IconReload {...BASE_ICON_PROPS} />}
               title={t(RolesI18nKey.ResetToDefaultLimits)}
               onClick={onResetAllRolesToDefault}
             />

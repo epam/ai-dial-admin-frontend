@@ -1,8 +1,7 @@
-import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
+import { IconChevronLeft, IconChevronRight, IconCalendarEvent } from '@tabler/icons-react';
 import { FC, useCallback } from 'react';
 import ReactDatePicker, { DatePickerProps } from 'react-datepicker';
 
-import CalendarIcon from '@/public/images/icons/calendar.svg';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import 'react-datepicker/dist/react-datepicker.css';
 
@@ -49,11 +48,7 @@ const DatePicker: FC<Props> = ({ id, label, date, dateFormat, placeholder, showT
         timeInputLabel=""
         shouldCloseOnSelect={true}
         showIcon
-        icon={
-          <i>
-            <CalendarIcon />
-          </i>
-        }
+        icon={<IconCalendarEvent {...BASE_ICON_PROPS} />}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         {...(props as any)}
       />

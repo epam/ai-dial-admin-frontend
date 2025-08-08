@@ -1,13 +1,14 @@
 import { FC, useCallback } from 'react';
 
 import classNames from 'classnames';
-import Dollar from '@/public/images/icons/currency-dollar.svg';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { NumberInputField } from '@/src/components/Common/InputField/InputField';
 import { BasicI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModel, PricingType } from '@/src/models/dial/model';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
+import { IconCurrencyDollar } from '@tabler/icons-react';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
 interface Props {
   model: DialModel;
@@ -86,20 +87,12 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
         value={isTokenType ? Number(model.pricing?.prompt) * 1000000 : model.pricing?.prompt}
         containerCssClass="w-[120px] lg:w-auto"
         onChange={onChangePrompt}
-        iconBeforeInput={
-          <i className="text-secondary">
-            <Dollar />
-          </i>
-        }
+        iconBeforeInput={<IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} />}
         disabled={activeType === BasicI18nKey.None}
       />
       <NumberInputField
         elementId="completionsPrice"
-        iconBeforeInput={
-          <i className="text-secondary">
-            <Dollar />
-          </i>
-        }
+        iconBeforeInput={<IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} />}
         fieldTitle={t(ModelViewI18nKey.CompletionPrice)}
         containerCssClass="w-[120px] lg:w-auto"
         disabled={activeType === BasicI18nKey.None}

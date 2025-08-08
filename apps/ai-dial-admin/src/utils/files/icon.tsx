@@ -1,12 +1,12 @@
 import Cpp from '@/public/images/icons/file/cpp.svg';
 import C from '@/public/images/icons/file/c.svg';
 import Cs from '@/public/images/icons/file/cs.svg';
-import File from '@/public/images/icons/file/file.svg';
 import Ini from '@/public/images/icons/file/ini.svg';
 import Json from '@/public/images/icons/file/json.svg';
 import Md from '@/public/images/icons/file/md.svg';
 import Py from '@/public/images/icons/file/py.svg';
 import {
+  IconFile,
   IconFileTypeBmp,
   IconFileTypeCss,
   IconFileTypeCsv,
@@ -31,11 +31,12 @@ import {
   IconFileTypeXml,
   IconFileTypeZip,
 } from '@tabler/icons-react';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
 export const getIcon = (extension: string) => {
   switch (extension) {
     case '.bmp':
-      return <IconFileTypeBmp width={18} height={18} />;
+      return <IconFileTypeBmp {...BASE_ICON_PROPS} />;
     case '.cpp':
       return <Cpp />;
     case '.c':
@@ -43,58 +44,58 @@ export const getIcon = (extension: string) => {
     case '.cs':
       return <Cs />;
     case '.css':
-      return <IconFileTypeCss width={18} height={18} />;
+      return <IconFileTypeCss {...BASE_ICON_PROPS} />;
     case '.csv':
-      return <IconFileTypeCsv width={18} height={18} />;
+      return <IconFileTypeCsv {...BASE_ICON_PROPS} />;
     case '.doc':
-      return <IconFileTypeDoc width={18} height={18} />;
+      return <IconFileTypeDoc {...BASE_ICON_PROPS} />;
     case '.docx':
-      return <IconFileTypeDocx width={18} height={18} />;
+      return <IconFileTypeDocx {...BASE_ICON_PROPS} />;
     case '.html':
-      return <IconFileTypeHtml width={18} height={18} />;
+      return <IconFileTypeHtml {...BASE_ICON_PROPS} />;
     case '.ini':
       return <Ini />;
     case '.jpg':
-      return <IconFileTypeJpg width={18} height={18} />;
+      return <IconFileTypeJpg {...BASE_ICON_PROPS} />;
     case '.js':
-      return <IconFileTypeJs width={18} height={18} />;
+      return <IconFileTypeJs {...BASE_ICON_PROPS} />;
     case '.json':
       return <Json />;
     case '.jsx':
-      return <IconFileTypeJsx width={18} height={18} />;
+      return <IconFileTypeJsx {...BASE_ICON_PROPS} />;
     case '.md':
       return <Md />;
     case '.pdf':
-      return <IconFileTypePdf width={18} height={18} />;
+      return <IconFileTypePdf {...BASE_ICON_PROPS} />;
     case '.php':
-      return <IconFileTypePhp width={18} height={18} />;
+      return <IconFileTypePhp {...BASE_ICON_PROPS} />;
     case '.png':
-      return <IconFileTypePng width={18} height={18} />;
+      return <IconFileTypePng {...BASE_ICON_PROPS} />;
     case '.ppt':
-      return <IconFileTypePpt width={18} height={18} />;
+      return <IconFileTypePpt {...BASE_ICON_PROPS} />;
     case '.py':
       return <Py />;
     case '.rs':
-      return <IconFileTypeRs width={18} height={18} />;
+      return <IconFileTypeRs {...BASE_ICON_PROPS} />;
     case '.sql':
-      return <IconFileTypeSql width={18} height={18} />;
+      return <IconFileTypeSql {...BASE_ICON_PROPS} />;
     case '.svg':
-      return <IconFileTypeSvg width={18} height={18} />;
+      return <IconFileTypeSvg {...BASE_ICON_PROPS} />;
     case '.ts':
-      return <IconFileTypeTs width={18} height={18} />;
+      return <IconFileTypeTs {...BASE_ICON_PROPS} />;
     case '.tsx':
-      return <IconFileTypeTsx width={18} height={18} />;
+      return <IconFileTypeTsx {...BASE_ICON_PROPS} />;
     case '.txt':
-      return <IconFileTypeTxt width={18} height={18} />;
+      return <IconFileTypeTxt {...BASE_ICON_PROPS} />;
     case '.vue':
-      return <IconFileTypeVue width={18} height={18} />;
+      return <IconFileTypeVue {...BASE_ICON_PROPS} />;
     case '.xls':
-      return <IconFileTypeXls width={18} height={18} />;
+      return <IconFileTypeXls {...BASE_ICON_PROPS} />;
     case '.xml':
-      return <IconFileTypeXml width={18} height={18} />;
+      return <IconFileTypeXml {...BASE_ICON_PROPS} />;
     case '.zip':
-      return <IconFileTypeZip width={18} height={18} />;
+      return <IconFileTypeZip {...BASE_ICON_PROPS} />;
     default:
-      return <File />;
+      return <IconFile {...BASE_ICON_PROPS} />;
   }
 };
