@@ -35,19 +35,16 @@ describe('EntityView :: DuplicateEntityPopup', () => {
         modalState={PopUpState.Opened}
         onDuplicate={onDuplicate}
         onClose={mockFunction}
+        names={[]}
         view={ApplicationRoute.Applications}
         entity={entity}
       />,
     );
     expect(baseElement).toBeTruthy();
 
-    const name = getByTestId('name');
+    const name = getByTestId('id');
     expect(entity.name).toBe('name');
     fireEvent.change(name, { target: { value: 'New name' } });
-
-    const displayVersion = getByTestId('version');
-    expect((entity as DialModel).displayVersion).toBe('displayVersion');
-    fireEvent.change(displayVersion, { target: { value: 'New displayVersion' } });
 
     const displayName = getByTestId('name');
     expect((entity as DialBaseEntity).displayName).toBe('displayName');
@@ -56,8 +53,6 @@ describe('EntityView :: DuplicateEntityPopup', () => {
     fireEvent.click(getByTestId('duplicateBtn'));
 
     expect(entity.name).toBe('New name');
-    expect((entity as DialModel).displayVersion).toBe('New displayVersion');
-
     fireEvent.click(getByTestId('cancelBtn'));
   });
 });

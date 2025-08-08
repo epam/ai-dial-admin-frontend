@@ -68,7 +68,7 @@ const DuplicateEntityPopup: FC<Props> = ({ onDuplicate, names, view, modalState,
         <div className="flex flex-col gap-3">
           <TextInputField
             fieldTitle={t(CreateI18nKey.IdTitle)}
-            elementId="name"
+            elementId="id"
             placeholder={t(CreateI18nKey.IdPlaceholder)}
             value={clonedEntity.name}
             errorText={nameError?.text}

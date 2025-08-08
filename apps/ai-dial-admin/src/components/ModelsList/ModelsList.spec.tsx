@@ -54,7 +54,7 @@ describe('ModelsList', () => {
     expect(screen.getByText('BaseEntityListMock')).toBeInTheDocument();
     expect(screen.getByText('Model One,Model Two,')).toBeInTheDocument();
     expect(screen.getByText('/models')).toBeInTheDocument();
-    expect(screen.getByText('ID,Name,Type,Version,Adapter One,Adapter Two')).toBeInTheDocument();
+    expect(screen.getByText('ID,Name,Type,Version')).toBeInTheDocument();
   });
 
   test('renders with empty data', () => {

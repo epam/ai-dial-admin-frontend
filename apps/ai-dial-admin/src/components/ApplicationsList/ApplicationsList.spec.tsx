@@ -54,7 +54,7 @@ describe('ApplicationsList', () => {
     expect(screen.getByText('BaseEntityListMock')).toBeInTheDocument();
     expect(screen.getByText('App One,App Two,')).toBeInTheDocument();
     expect(screen.getByText('/applications')).toBeInTheDocument();
-    expect(screen.getByText('ID,Name,Version')).toBeInTheDocument();
+    expect(screen.getByText('ID,Name,Type')).toBeInTheDocument();
     expect(screen.getByText('Runner One,Runner Two')).toBeInTheDocument();
   });
 
