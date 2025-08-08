@@ -28,7 +28,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     models = await modelsApi.getModelsList(token);
     applications = await applicationsApi.getApplicationsList(token);
 
-    interceptor = await interceptorsApi.getInterceptor(decodeURIComponent((await params.params).id), token);
+    interceptor = await interceptorsApi.getInterceptor((await params.params).id, token);
 
     if (interceptors === void 0 || models === void 0 || applications === void 0 || interceptor === void 0) {
       return <Page403 />;

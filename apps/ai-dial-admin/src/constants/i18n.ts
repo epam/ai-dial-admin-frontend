@@ -239,6 +239,7 @@ export enum CreateI18nKey {
   LengthError = 'CreateEntity.name.length',
   ErrorLength = 'CreateEntity.errorLength',
   InterceptorName = 'CreateEntity.name.interceptor',
+  ForbiddenCharsError = 'CreateEntity.name.forbiddenChars',
   DisplayNameTitle = 'CreateEntity.displayName.title',
   DisplayNameErrorApplication = 'CreateEntity.displayName.errorApplication',
   DisplayNameErrorModel = 'CreateEntity.displayName.errorModel',
