@@ -1,4 +1,10 @@
 .react-mde {
+  // fix locking scroll
+  .CodeMirror-scroll {
+    overscroll-behavior: contain;
+    touch-action: auto;
+  }
+
   @apply border-primary !important;
   .mde-header {
     @apply bg-transparent text-secondary border-b-primary;
