@@ -4,7 +4,6 @@ import { ApplicationRoute } from '@/src/types/routes';
 import DuplicateEntityPopup from './DuplicateEntityPopup';
 import { DialBaseEntity, DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { describe, expect, test, vi } from 'vitest';
-import { DialModel } from '../../models/dial/model';
 const mockFunction = vi.fn();
 
 describe('EntityView :: DuplicateEntityPopup', () => {
