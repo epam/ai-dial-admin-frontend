@@ -3,15 +3,15 @@ import { MAX_NAME_SYMBOLS, MIN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { ErrorType } from '@/src/types/error-type';
 import { ApplicationRoute } from '@/src/types/routes';
 
+export const forbiddenNameSymbols = ['%', '/', '\\', ';'];
+
 export const getErrorForName = (
   name?: string,
   names?: string[],
   t?: (str: string) => string,
   isUniqueError?: boolean,
+  checkForbiddenChars = true,
 ) => {
-  const isIncludesName = name && names?.includes(name);
-  const isWrongLength = isWrongFieldLength(name || '');
-
   if (isUniqueError) {
     return {
       type: ErrorType.EXISTING,
@@ -19,6 +19,7 @@ export const getErrorForName = (
     };
   }
 
+  const isIncludesName = name && names?.includes(name);
   if (isIncludesName) {
     return {
       type: ErrorType.EXISTING,
@@ -26,11 +27,23 @@ export const getErrorForName = (
     };
   }
 
+  const isWrongLength = isWrongFieldLength(name || '');
   if (isWrongLength) {
     return {
       type: ErrorType.LENGTH,
       text: t ? t(CreateI18nKey.LengthError) : '',
     };
+  }
+
+  if (checkForbiddenChars) {
+    const hasForbiddenChars = hasInvalidCharacters(name);
+    if (hasForbiddenChars) {
+      const tWithArgs = t as (str: string, options?: Record<string, string | number>) => string;
+      return {
+        type: ErrorType.FORBIDDEN_CHARS,
+        text: t ? tWithArgs(CreateI18nKey.ForbiddenCharsError, { list: forbiddenNameSymbols.join(' ') }) : '',
+      };
+    }
   }
 
   return null;
@@ -46,4 +59,10 @@ export const isWrongLengthWithView = (view: ApplicationRoute, value?: string): b
 
 export const isWrongFieldLength = (value: string): boolean => {
   return value.length < MIN_NAME_SYMBOLS || value.length > MAX_NAME_SYMBOLS;
+};
+
+export const hasInvalidCharacters = (value?: string): boolean => {
+  if (!value) return false;
+
+  return forbiddenNameSymbols.some((symbol) => value.includes(symbol));
 };

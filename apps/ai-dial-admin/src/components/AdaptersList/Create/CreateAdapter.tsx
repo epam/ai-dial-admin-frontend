@@ -5,7 +5,6 @@ import { createAdapter } from '@/src/app/[lang]/adapters/actions';
 import AdapterProperties from '@/src/components/AdaptersView/AdapterProperties';
 import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -13,6 +12,7 @@ import { DialAdapter } from '@/src/models/dial/adapter';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
+import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { isValidAdapter } from '@/src/utils/validation/is-valid-adapter';
 
 interface Props {

@@ -22,7 +22,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   let roles: DialRole[] | null = [];
   try {
     routes = (await routesApi.getRoutesList(token)) || [];
-    route = await routesApi.getRoute(decodeURIComponent((await params.params).id), token);
+    route = await routesApi.getRoute((await params.params).id, token);
     roles = (await rolesApi.getRolesList(token)) || [];
 
     if (routes === void 0 || route === void 0 || roles === void 0) {
