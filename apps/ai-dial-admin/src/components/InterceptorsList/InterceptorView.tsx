@@ -24,6 +24,7 @@ import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import InterceptorProperties from './InterceptorProperties';
+import EntityHeader from '@/src/components/EntityView/Header/Header';
 
 interface Props {
   originalInterceptor: DialInterceptor;
@@ -151,11 +152,16 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
         ) : (
           <>
             {activeTab === EntityViewTab.Properties && (
-              <InterceptorProperties
-                selectedInterceptor={selectedInterceptor}
-                onChangeInterceptor={onChangeInterceptor}
-                names={names}
-              />
+              <>
+                <EntityHeader entity={selectedInterceptor} />
+                <div className="flex-1 min-h-0">
+                  <InterceptorProperties
+                    selectedInterceptor={selectedInterceptor}
+                    onChangeInterceptor={onChangeInterceptor}
+                    names={names}
+                  />
+                </div>
+              </>
             )}
 
             {activeTab === EntityViewTab.Entities && (

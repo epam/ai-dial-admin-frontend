@@ -31,6 +31,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { DialKey } from '@/src/models/dial/key';
 import { KEY_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { getErrorNotification } from '@/src/utils/notification';
+import EntityHeader from '@/src/components/EntityView/Header/Header';
 
 interface Props {
   originalRole: DialRole;
@@ -218,12 +219,15 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
           <>
             {activeTab === EntityViewTab.Properties && (
               <div className="h-full lg:w-[35%] mt-3">
-                <SimpleEntityProperties
-                  entity={selectedRole}
-                  onChangeEntity={onChangeRole}
-                  names={names}
-                  isEntityImmutable={true}
-                />
+                <EntityHeader entity={selectedRole} />
+                <div className="flex-1 min-h-0">
+                  <SimpleEntityProperties
+                    entity={selectedRole}
+                    onChangeEntity={onChangeRole}
+                    names={names}
+                    isEntityImmutable={true}
+                  />
+                </div>
               </div>
             )}
           </>

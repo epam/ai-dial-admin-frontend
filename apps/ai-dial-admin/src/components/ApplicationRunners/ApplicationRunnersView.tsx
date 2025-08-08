@@ -21,6 +21,7 @@ import { getErrorNotification } from '@/src/utils/notification';
 import AppRunnerApplications from './ConfigurationView/Applications';
 import SchemeParameters from './ConfigurationView/Parameters';
 import SchemeProperties from './ConfigurationView/Properties';
+import EntityHeader from '@/src/components/EntityView/Header/Header';
 
 interface Props {
   originalScheme: DialApplicationScheme;
@@ -128,7 +129,10 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
           <>
             {activeTab === EntityViewTab.Properties && (
               <div className="pt-3 w-full lg:w-[35%]">
-                <SchemeProperties runner={selectedScheme} isImmutable={true} onChangeRunner={onChangeScheme} />
+                <EntityHeader entity={selectedScheme} />
+                <div className="flex-1 min-h-0">
+                  <SchemeProperties runner={selectedScheme} isImmutable={true} onChangeRunner={onChangeScheme} />
+                </div>
               </div>
             )}
 
