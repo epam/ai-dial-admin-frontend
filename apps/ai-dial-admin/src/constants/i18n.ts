@@ -278,7 +278,9 @@ export enum CreateI18nKey {
   NameVersionCombinationError = 'CreateEntity.nameVersionCombinationError',
   SchemeTitle = 'CreateEntity.Scheme',
   ErrorUnique = 'CreateEntity.ErrorUnique',
-  InterceptorTemplate = 'CreateEntity.InterceptorTemplate',
+  CreateInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Create',
+  SelectInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Select',
+  InterceptorContainer = 'CreateEntity.InterceptorContainer',
   ApplicationPropertiesHeader = 'CreateEntity.ApplicationPropertiesHeader',
 }
 
@@ -687,4 +689,9 @@ export enum ErrorI18nKey {
   IncorrectModelEndpointAlias = 'Error.IncorrectModelEndpointAlias',
   WarningEndpoint = 'Error.WarningEndpoint',
   ServerError = 'Error.ServerError',
+}
+
+export enum SourceI18nKey {
+  OpenTemplate = 'Source.OpenTemplate',
+  OpenContainer = 'Source.OpenContainer',
 }

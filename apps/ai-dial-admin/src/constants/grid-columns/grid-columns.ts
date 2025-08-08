@@ -36,9 +36,15 @@ const dateTimeColumn: Partial<ColDef> = {
   tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
 };
 
-const CREATE_AT_COLUMN: ColDef = {
+const CREATED_AT_COLUMN: ColDef = {
   field: 'createdAt',
   headerName: 'Creation time',
+  ...dateTimeColumn,
+};
+
+const UPDATED_AT_COLUMN: ColDef = {
+  field: 'updateTime',
+  headerName: 'Updated time',
   ...dateTimeColumn,
 };
 
@@ -145,7 +151,7 @@ export const KEYS_COLUMNS: ColDef[] = [
   NAME_COLUMN_WITH_SORT,
   DESCRIPTION_COLUMN,
   {
-    ...CREATE_AT_COLUMN,
+    ...CREATED_AT_COLUMN,
     hide: true,
   },
   {
@@ -193,11 +199,7 @@ export const PROMPTS_COLUMNS: ColDef[] = [
   NAME_COLUMN_WITH_SORT,
   { field: 'version', headerName: 'Version' },
   AUTHOR_COLUMN,
-  {
-    field: 'updateTime',
-    headerName: 'Update time',
-    ...dateTimeColumn,
-  },
+  UPDATED_AT_COLUMN,
 ];
 
 export const FILES_COLUMNS: ColDef[] = [
@@ -227,17 +229,13 @@ export const EXPORT_COLUMNS = (onChange: (value: string, name: string) => void, 
         field: 'extension',
       },
   AUTHOR_COLUMN,
-  {
-    field: 'updateTime',
-    headerName: 'Update time',
-    ...dateTimeColumn,
-  },
+  UPDATED_AT_COLUMN,
 ];
 
 export const PUBLICATION_COLUMNS: ColDef[] = [
   { field: 'requestName', headerName: 'Name' },
   AUTHOR_COLUMN,
-  { ...CREATE_AT_COLUMN, sort: 'asc' },
+  { ...CREATED_AT_COLUMN, sort: 'asc' },
 ];
 
 export const getPublicationColumns = (open: (publication: Publication) => void): ColDef[] => {
@@ -308,3 +306,11 @@ export const TELEMETRY_COLUMNS: ColDef[] = [
 export const TELEMETRY_GRID_COLUMNS: ColDef[] = [NAME_COLUMN, ...TELEMETRY_COLUMNS];
 
 export const PROJECT_GRID_COLUMNS: ColDef[] = [{ field: 'name', headerName: 'Project' }, ...TELEMETRY_COLUMNS];
+
+export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
+  NAME_COLUMN_WITH_SORT,
+  DESCRIPTION_COLUMN,
+  { field: 'image', headerName: 'Interceptor Image' },
+];
+
+export const SOURCE_RUNNERS_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, NAME_COLUMN, DESCRIPTION_COLUMN];

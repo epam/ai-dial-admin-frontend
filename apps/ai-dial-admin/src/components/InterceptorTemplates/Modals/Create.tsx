@@ -56,7 +56,12 @@ const Create: FC<Props> = ({ route, onClose, modalState, names }) => {
   }, [template, t, names]);
 
   return (
-    <Popup onClose={onClose} heading={t(CreateI18nKey.InterceptorTemplate)} portalId="CreateRunner" state={modalState}>
+    <Popup
+      onClose={onClose}
+      heading={t(CreateI18nKey.CreateInterceptorTemplate)}
+      portalId="CreateRunner"
+      state={modalState}
+    >
       <div className="flex flex-col px-6 py-4">
         <BaseProperties template={template} setTemplate={setTemplate} names={names} />
       </div>

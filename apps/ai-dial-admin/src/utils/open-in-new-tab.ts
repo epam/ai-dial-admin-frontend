@@ -4,14 +4,20 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 
-export const onOpenInNewTab = (route?: ApplicationRoute, entity?: unknown) => {
-  const path = getEntityPath(route, entity);
+export const onOpenInNewTab = (route?: ApplicationRoute, entity?: unknown, entityType?: DEPLOYMENT_ENTITY) => {
+  const path = getEntityPath(route, entity, false, entityType);
   const originalRoute = route?.split('/')?.[1];
   window.open(`/${originalRoute}/${path}`, '_blank');
 };
 
-export const getEntityPath = (route: ApplicationRoute | undefined, data: unknown, forRemove?: boolean) => {
+export const getEntityPath = (
+  route: ApplicationRoute | undefined,
+  data: unknown,
+  forRemove?: boolean,
+  entityType?: DEPLOYMENT_ENTITY,
+) => {
   switch (route) {
     case ApplicationRoute.ApplicationRunners:
       return encodeURIComponent(`${(data as DialApplicationScheme).$id}`);
@@ -30,6 +36,9 @@ export const getEntityPath = (route: ApplicationRoute | undefined, data: unknown
 
     case ApplicationRoute.ActivityAudit:
       return (data as DialActivity).activityId;
+
+    case ApplicationRoute.InterceptorDeployments:
+      return `${encodeURIComponent(data as string)}?entityType=${entityType || ''}`;
 
     default:
       return encodeURIComponent((data as DialBaseNamedEntity).name || '');
