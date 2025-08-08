@@ -3,7 +3,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import { getApplications } from '@/src/app/[lang]/applications/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import { getRelevantDataForAppRunner } from '@/src/components/AddEntitiesTab/AddEntitiesView.utils';
-import { ENTITY_BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { APPLICATIONS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
@@ -57,7 +57,7 @@ const AppRunnerApplications: FC<Props> = ({ appRunner, onChangeAppRunner }) => {
       getRelevantDataForEntity={getRelevantDataForAppRunner.bind(this, appRunner)}
       onAdd={onAddApplications}
       onRemove={onRemoveApplication}
-      customColumns={ENTITY_BASE_COLUMNS}
+      customColumns={APPLICATIONS_COLUMNS}
     />
   );
 };

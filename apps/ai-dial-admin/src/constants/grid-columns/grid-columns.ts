@@ -85,6 +85,7 @@ const ATTACHMENT_COLUMN = (t: (str: string) => string): ColDef => {
 export const SIMPLE_DESCRIPTION_COLUMNS: ColDef[] = [NAME_COLUMN_WITH_SORT, DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN];
 export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN];
 
+export const ENTITY_BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
 export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   DISPLAY_NAME_COLUMN_WITH_SORT,
   { field: 'displayVersion', colId: 'displayVersion', headerName: 'Version' },

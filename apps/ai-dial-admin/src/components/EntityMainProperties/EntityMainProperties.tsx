@@ -58,13 +58,13 @@ const EntityMainProperties: FC<Props> = ({
     }
   }, [isUniqueNameError, t]);
 
-  const onChangeDeploymentId = useCallback(
-    (deploymentId: string) => {
-      const newEntity = { ...entity, name: deploymentId };
+  const onChangeName = useCallback(
+    (name: string) => {
+      const newEntity = { ...entity, name };
       if (view === ApplicationRoute.Models) {
-        (newEntity as DialModel).endpointDeploymentName = deploymentId;
+        (newEntity as DialModel).endpointDeploymentName = name;
       }
-      setNameError(getErrorForName(deploymentId, void 0, t));
+      setNameError(getErrorForName(name, void 0, t));
       onChangeEntity(newEntity);
     },
     [entity, onChangeEntity, view, t],
@@ -123,7 +123,7 @@ const EntityMainProperties: FC<Props> = ({
           elementId="id"
           placeholder={t(CreateI18nKey.IdTitle)}
           value={entity.name}
-          onChange={onChangeDeploymentId}
+          onChange={onChangeName}
           errorText={nameError?.text}
           invalid={!!nameError}
         />

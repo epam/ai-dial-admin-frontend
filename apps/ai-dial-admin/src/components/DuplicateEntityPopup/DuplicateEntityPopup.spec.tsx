@@ -4,6 +4,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import DuplicateEntityPopup from './DuplicateEntityPopup';
 import { DialBaseEntity, DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { describe, expect, test, vi } from 'vitest';
+import { DialModel } from '../../models/dial/model';
 const mockFunction = vi.fn();
 
 describe('EntityView :: DuplicateEntityPopup', () => {
@@ -21,7 +22,7 @@ describe('EntityView :: DuplicateEntityPopup', () => {
   });
   test('Should render successfully', () => {
     let entity = {
-      name: 'deploymentId',
+      name: 'name',
       displayVersion: 'displayVersion',
       displayName: 'displayName',
     } as DialBaseEntity | DialBaseNamedEntity;
@@ -40,12 +41,12 @@ describe('EntityView :: DuplicateEntityPopup', () => {
     );
     expect(baseElement).toBeTruthy();
 
-    const deploymentId = getByTestId('deploymentId');
-    expect(entity.name).toBe('deploymentId');
-    fireEvent.change(deploymentId, { target: { value: 'New deploymentId' } });
+    const name = getByTestId('name');
+    expect(entity.name).toBe('name');
+    fireEvent.change(name, { target: { value: 'New name' } });
 
     const displayVersion = getByTestId('version');
-    expect((entity as DialBaseEntity).displayVersion).toBe('displayVersion');
+    expect((entity as DialModel).displayVersion).toBe('displayVersion');
     fireEvent.change(displayVersion, { target: { value: 'New displayVersion' } });
 
     const displayName = getByTestId('name');
@@ -54,8 +55,8 @@ describe('EntityView :: DuplicateEntityPopup', () => {
 
     fireEvent.click(getByTestId('duplicateBtn'));
 
-    expect(entity.name).toBe('New deploymentId');
-    expect((entity as DialBaseEntity).displayVersion).toBe('New displayVersion');
+    expect(entity.name).toBe('New name');
+    expect((entity as DialModel).displayVersion).toBe('New displayVersion');
 
     fireEvent.click(getByTestId('cancelBtn'));
   });
