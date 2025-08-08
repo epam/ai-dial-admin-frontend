@@ -345,6 +345,8 @@ export enum KeysI18nKey {
   NoRoles = 'Keys.Status.NoRoles',
   Expired = 'Keys.Status.Expired',
   AlmostExpired = 'Keys.Status.AlmostExpired',
+  KeyGenerationTime = 'Keys.KeyGenerationTime',
+  StatusTitle = 'Keys.StatusTitle',
   ExpirationTime = 'Keys.ExpirationTime',
   Valid = 'Keys.Status.Valid',
   PeriodDay = 'Keys.Period.Day',
