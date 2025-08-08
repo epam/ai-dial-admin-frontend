@@ -3,7 +3,6 @@ import { render, screen } from '@testing-library/react';
 
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ApplicationRoute } from '@/src/types/routes';
-import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 
 import View from './View';
 
@@ -11,7 +10,6 @@ const template: InterceptorTemplate = {
   name: 'test-template',
   displayName: 'Test Template',
   description: 'Test description',
-  source: SOURCE_TYPE.EXTERNAL_ENDPOINT,
   completionEndpoint: 'https://example.com/completion',
   configurationEndpoint: 'https://example.com/configuration',
 };

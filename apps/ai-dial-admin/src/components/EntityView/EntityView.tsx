@@ -299,13 +299,12 @@ const EntityView: FC<Props> = ({
             />
           ) : (
             <>
-              {(view === ApplicationRoute.Models ||
-                view === ApplicationRoute.Applications ||
-                view === ApplicationRoute.Interceptors) &&
-              activeTab === EntityViewTab.Properties ? (
-                <EntityHeader entity={selectedEntity} />
-              ) : null}
-              {activeTab === EntityViewTab.Properties && getPropertiesView()}
+              {activeTab === EntityViewTab.Properties && (
+                <div className="flex flex-col h-full w-full">
+                  <EntityHeader entity={selectedEntity} />
+                  <div className="flex-1 min-h-0">{getPropertiesView()}</div>
+                </div>
+              )}
               {activeTab === EntityViewTab.Features && (
                 <EntityFeatures entity={selectedEntity} onChangeEntity={onChangeEntity} view={view} />
               )}

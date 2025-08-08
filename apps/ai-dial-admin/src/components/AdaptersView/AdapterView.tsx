@@ -20,6 +20,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import AdapterModels from './AdapterModels';
 import AdapterProperties from './AdapterProperties';
+import EntityHeader from '@/src/components/EntityView/Header/Header';
 
 interface Props {
   originalAdapter: DialAdapter;
@@ -123,11 +124,14 @@ const AdapterView: FC<Props> = ({ originalAdapter }) => {
           <>
             {activeTab === EntityViewTab.Properties && (
               <div className="lg:w-[35%] flex flex-col gap-6 mt-3">
-                <AdapterProperties
-                  entity={selectedAdapter}
-                  onChangeAdapter={onChangeAdapter}
-                  isEntityImmutable={true}
-                />
+                <EntityHeader entity={selectedAdapter} />
+                <div className="flex-1 min-h-0">
+                  <AdapterProperties
+                    entity={selectedAdapter}
+                    onChangeAdapter={onChangeAdapter}
+                    isEntityImmutable={true}
+                  />
+                </div>
               </div>
             )}
             {activeTab === EntityViewTab.Models && (
