@@ -2,6 +2,7 @@
 
 import { FC } from 'react';
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
+import classNames from 'classnames';
 
 interface Props {
   selectedItems?: string[];
@@ -9,7 +10,12 @@ interface Props {
 
 const AutocompleteInputValue: FC<Props> = ({ selectedItems }) => {
   return (
-    <ul className="flex flex-row items-center gap-x-2 gap-y-1 truncate flex-wrap">
+    <ul
+      className={classNames(
+        'flex-row items-center truncate flex-wrap',
+        selectedItems && selectedItems.length && 'flex gap-x-2 gap-y-1',
+      )}
+    >
       {selectedItems?.map((selectedItem) => (
         <li key={selectedItem} className="tiny bg-layer-3 rounded p-1 border border-primary max-w-[200px] truncate">
           <Tooltip triggerClassName="flex-1 min-w-0" contentClassName="truncate" tooltip={selectedItem}>
