@@ -225,6 +225,7 @@ export default {
   },
   CreateEntity: {
     errorLength: 'User can add any characters, but not more than {number}.',
+    minMaxLength: 'User can add any allowed characters, but not less than {min} and not more than {max}.',
     Model: 'Create Model',
     Application: 'Create Application',
     ApplicationRunner: 'Create Application Runner',
@@ -256,7 +257,6 @@ export default {
       title: 'Name',
       placeholder: 'Enter name',
       error: 'This name already exists.',
-      length: 'User can add any allowed characters, but not less than 2 and not more than 255.',
       interceptor: 'Interceptor Name',
       forbiddenChars: 'Name must not contain forbidden characters: {list}',
     },
