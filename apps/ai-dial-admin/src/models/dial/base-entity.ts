@@ -14,7 +14,6 @@ export interface DialBaseEntity extends DialBaseNamedEntity {
   displayName?: string;
   iconUrl?: string;
   isPublic?: boolean;
-  displayVersion?: string;
   roleLimits?: DialRoleLimitsMap;
   defaultRoleLimit?: DialRoleLimits;
   forwardAuthToken?: boolean;

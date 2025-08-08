@@ -4,7 +4,6 @@ import { uniq } from 'lodash';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import ApplicationSource from '@/src/components/ApplicationSource/ApplicationSource';
-import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/AutocompleteField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
@@ -77,7 +76,7 @@ const EntityMainProperties: FC<Props> = ({
       const isIncludesDisplayName = names.includes(displayName);
       setIsVersionOptional(!isIncludesDisplayName);
       setIsValidDisplayName(
-        (!isIncludesDisplayName || (isIncludesDisplayName && !!entity.displayVersion)) &&
+        (!isIncludesDisplayName || (isIncludesDisplayName && !!(entity as DialModel).displayVersion)) &&
           !isWrongLengthWithView(view, displayName),
       );
       onChangeEntity({ ...entity, displayName });
@@ -93,7 +92,7 @@ const EntityMainProperties: FC<Props> = ({
 
   const onChangeVersion = useCallback(
     (displayVersion: string) => {
-      onChangeEntity({ ...entity, displayVersion });
+      onChangeEntity({ ...entity, displayVersion } as DialModel);
       if (!isVersionOptional && !isValidDisplayName && !!displayNameError) {
         setIsValidDisplayName(!!displayVersion);
       } else if (!isVersionOptional) {
@@ -118,17 +117,17 @@ const EntityMainProperties: FC<Props> = ({
 
   return (
     <div className="w-full flex flex-col gap-6">
-      <TextInputField
-        fieldTitle={t(CreateI18nKey.DeploymentIdTitle)}
-        elementId="deploymentId"
-        placeholder={t(CreateI18nKey.DeploymentIdPlaceholder)}
-        value={entity.name}
-        disabled={isEntityImmutable}
-        onChange={onChangeDeploymentId}
-        errorText={nameError?.text}
-        invalid={!!nameError}
-        iconAfterInput={isEntityImmutable && <CopyButton field={entity.name} title={t(CreateI18nKey.IdTitle)} />}
-      />
+      {!isEntityImmutable && (
+        <TextInputField
+          fieldTitle={t(CreateI18nKey.IdTitle)}
+          elementId="id"
+          placeholder={t(CreateI18nKey.IdTitle)}
+          value={entity.name}
+          onChange={onChangeDeploymentId}
+          errorText={nameError?.text}
+          invalid={!!nameError}
+        />
+      )}
       <AutocompleteField
         elementId="displayName"
         fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
@@ -146,7 +145,7 @@ const EntityMainProperties: FC<Props> = ({
           fieldTitle={t(CreateI18nKey.VersionTitle)}
           placeholder={t(CreateI18nKey.VersionPlaceholder)}
           optional={isVersionOptional}
-          value={entity.displayVersion}
+          value={(entity as DialModel).displayVersion}
           onChange={onChangeVersion}
           invalid={!isValidVersion}
           errorText={versionError}
