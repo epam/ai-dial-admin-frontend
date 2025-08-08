@@ -13,8 +13,6 @@ import { isValidKey } from '@/src/utils/validation/is-valid-key';
 import { isValidModel } from '@/src/utils/validation/is-valid-model';
 import { getErrorForName, isWrongLengthWithView } from '@/src/utils/validation/name-error';
 import { isValidRoute } from '@/src/utils/validation/is-valid-route';
-import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 
 export const isValidEntity = (
   view: ApplicationRoute,
@@ -43,16 +41,7 @@ export const isValidEntity = (
     }
 
     if (view === ApplicationRoute.Interceptors) {
-      const interceptor = entity as DialInterceptor;
-
-      return (
-        isValidSimpleEntity &&
-        ((interceptor.source?.$type === SOURCE_TYPE.ENDPOINTS && !!entity.endpoint) ||
-          (interceptor.source?.$type === SOURCE_TYPE.CONTAINER &&
-            !!interceptor.source.containerId &&
-            !!interceptor.source.completionEndpointPath) ||
-          (interceptor.source?.$type === SOURCE_TYPE.RUNNER && !!interceptor.source.runnerName))
-      );
+      return isValidSimpleEntity;
     }
 
     return isValidSimpleEntity;
