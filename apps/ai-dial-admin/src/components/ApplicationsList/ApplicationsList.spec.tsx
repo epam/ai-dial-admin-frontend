@@ -29,10 +29,9 @@ vi.mock('@/src/constants/grid-columns/grid-columns', () => {
     { field: 'id', headerName: 'ID' },
     { field: 'displayName', headerName: 'Name' },
     { field: 'type', headerName: 'Type' },
-    { field: 'version', headerName: 'Version' },
   ];
   return {
-    ENTITY_WITH_VERSION_COLUMNS: () => mockColumns,
+    APPLICATIONS_COLUMNS: () => mockColumns,
     ENTITIES_COLUMNS: () => mockColumns,
     listViewTitleMap: { '/applications': 'Applications Title' },
     emptyDataTitleMap: { '/applications': '' },
@@ -55,7 +54,7 @@ describe('ApplicationsList', () => {
     expect(screen.getByText('BaseEntityListMock')).toBeInTheDocument();
     expect(screen.getByText('App One,App Two,')).toBeInTheDocument();
     expect(screen.getByText('/applications')).toBeInTheDocument();
-    expect(screen.getByText('ID,Name,Version')).toBeInTheDocument();
+    expect(screen.getByText('ID,Name,Type')).toBeInTheDocument();
     expect(screen.getByText('Runner One,Runner Two')).toBeInTheDocument();
   });
 

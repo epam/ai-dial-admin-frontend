@@ -2,7 +2,7 @@
 import { FC } from 'react';
 
 import { createKey, removeKey } from '@/src/app/[lang]/keys/actions';
-import { KEY_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { KEYS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { DialKey } from '@/src/models/dial/key';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -17,7 +17,7 @@ const KeysList: FC<Props> = ({ data }) => {
 
   return (
     <BaseEntityList
-      baseColumns={KEY_ENTITY_COLUMNS}
+      baseColumns={KEYS_COLUMNS}
       names={names}
       keys={keys}
       data={data}

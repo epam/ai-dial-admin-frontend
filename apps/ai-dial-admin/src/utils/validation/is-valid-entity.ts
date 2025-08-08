@@ -60,18 +60,18 @@ export const isValidEntity = (
 
   const baseEntity = entity as DialBaseEntity;
   const isValidNames = !!baseEntity.displayName && !!baseEntity.name && !getErrorForName(baseEntity.name, names);
-  const isWrongLengthForModel =
-    isWrongLengthWithView(view, baseEntity.displayName) ||
-    (baseEntity.displayVersion && isWrongLengthWithView(view, baseEntity.displayVersion));
-
-  const baseEntityValidation = isValidNames && !getErrorForDescription(entity.description) && !isWrongLengthForModel;
+  const isWrongLength = isWrongLengthWithView(view, baseEntity.displayName);
+  const baseEntityValidation = isValidNames && !getErrorForDescription(entity.description) && !isWrongLength;
 
   if (view === ApplicationRoute.Applications) {
     return baseEntityValidation && isValidApplication(entity);
   }
 
   if (view === ApplicationRoute.Models) {
-    return baseEntityValidation && isValidModel(entity as DialModel);
+    return (
+      (baseEntityValidation && isValidModel(entity as DialModel)) ||
+      (!!(entity as DialModel).displayVersion && isWrongLengthWithView(view, (entity as DialModel).displayVersion))
+    );
   }
 
   return baseEntityValidation && !!baseEntity.endpoint;

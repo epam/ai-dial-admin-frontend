@@ -8,11 +8,15 @@ interface Props {
 
 const LabeledText: FC<Props> = ({ label, text, children }) => {
   return (
-    <div className="flex flex-col">
-      <label className="tiny mb-2 text-secondary" htmlFor="fileInputButton">
-        {label}
-      </label>
-      {children ? children : <p className="flex-inline truncate">{text}</p>}
+    <div className="flex flex-col max-w-[200px]">
+      <label className="tiny mb-2 text-secondary">{label}</label>
+      {children ? (
+        children
+      ) : (
+        <p className="flex-inline truncate" title={text}>
+          {text}
+        </p>
+      )}
     </div>
   );
 };

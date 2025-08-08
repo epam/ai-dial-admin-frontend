@@ -21,7 +21,7 @@ describe('EntityView :: DuplicateEntityPopup', () => {
   });
   test('Should render successfully', () => {
     let entity = {
-      name: 'deploymentId',
+      name: 'name',
       displayVersion: 'displayVersion',
       displayName: 'displayName',
     } as DialBaseEntity | DialBaseNamedEntity;
@@ -34,19 +34,16 @@ describe('EntityView :: DuplicateEntityPopup', () => {
         modalState={PopUpState.Opened}
         onDuplicate={onDuplicate}
         onClose={mockFunction}
+        names={[]}
         view={ApplicationRoute.Applications}
         entity={entity}
       />,
     );
     expect(baseElement).toBeTruthy();
 
-    const deploymentId = getByTestId('deploymentId');
-    expect(entity.name).toBe('deploymentId');
-    fireEvent.change(deploymentId, { target: { value: 'New deploymentId' } });
-
-    const displayVersion = getByTestId('version');
-    expect((entity as DialBaseEntity).displayVersion).toBe('displayVersion');
-    fireEvent.change(displayVersion, { target: { value: 'New displayVersion' } });
+    const name = getByTestId('id');
+    expect(entity.name).toBe('name');
+    fireEvent.change(name, { target: { value: 'New name' } });
 
     const displayName = getByTestId('name');
     expect((entity as DialBaseEntity).displayName).toBe('displayName');
@@ -54,9 +51,7 @@ describe('EntityView :: DuplicateEntityPopup', () => {
 
     fireEvent.click(getByTestId('duplicateBtn'));
 
-    expect(entity.name).toBe('New deploymentId');
-    expect((entity as DialBaseEntity).displayVersion).toBe('New displayVersion');
-
+    expect(entity.name).toBe('New name');
     fireEvent.click(getByTestId('cancelBtn'));
   });
 });

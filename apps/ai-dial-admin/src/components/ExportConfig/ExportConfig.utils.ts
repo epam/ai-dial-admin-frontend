@@ -1,7 +1,7 @@
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 
 import {
-  KEY_ENTITY_COLUMNS,
+  KEYS_COLUMNS,
   ENTITY_BASE_COLUMNS,
   RUNNERS_COLUMNS,
   SIMPLE_ENTITY_COLUMNS,
@@ -57,7 +57,7 @@ export const getActualColDefs = (
     columns = [...SIMPLE_ENTITY_COLUMNS];
   }
   if (type === EntityType.KEY) {
-    columns = [...KEY_ENTITY_COLUMNS];
+    columns = [...KEYS_COLUMNS];
   }
   if (type === EntityType.APPLICATION_TYPE_SCHEMA) {
     columns = [...RUNNERS_COLUMNS];

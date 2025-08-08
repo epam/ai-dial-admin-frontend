@@ -1,23 +1,22 @@
 import { ColDef, ITextFilterParams } from 'ag-grid-community';
 
+import KeyStatusCellRenderer from '@/src/components/Grid/CellRenderers/KeyStatusCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import TopicsCellRenderer from '@/src/components/Grid/CellRenderers/TopicCellRenderer';
-import KeyStatusCellRenderer from '@/src/components/Grid/CellRenderers/KeyStatusCellRenderer';
+import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
 import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import {
   formatAttachment,
   getFormattedResourceType,
   numberValueFormatter,
 } from '@/src/constants/grid-columns/formatters';
-import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';
+import { Publication } from '@/src/models/dial/publications';
 import { GridFilterType } from '@/src/types/grid-filter';
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
-import { Publication } from '@/src/models/dial/publications';
-import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
 
 const stringFilter: Partial<ColDef> = {
   filterParams: {
@@ -32,71 +31,91 @@ const stringFilter: Partial<ColDef> = {
   } as ITextFilterParams,
 };
 
-export const SIMPLE_VERSION_COLUMNS: ColDef[] = [
-  { field: 'displayName', headerName: 'Display Name', sort: 'asc' },
-  { field: 'version', headerName: 'Version' },
-];
+const dateTimeColumn: Partial<ColDef> = {
+  valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
+  tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
+};
 
-export const SIMPLE_NAME_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Name', sort: 'asc' },
-  { field: 'displayName', headerName: 'Display Name' },
-  { field: 'version', headerName: 'Version' },
-];
+const CREATED_AT_COLUMN: ColDef = {
+  field: 'createdAt',
+  headerName: 'Creation time',
+  ...dateTimeColumn,
+};
 
-export const SIMPLE_DESCRIPTION_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Name', sort: 'asc' },
-  { field: 'displayName', headerName: 'Display Name' },
-  { field: 'description', headerName: 'Description' },
-];
+const UPDATED_AT_COLUMN: ColDef = {
+  field: 'updateTime',
+  headerName: 'Updated time',
+  ...dateTimeColumn,
+};
 
-export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Name', sort: 'asc' },
-  { field: 'description', headerName: 'Description' },
-];
+const DESCRIPTION_COLUMN: ColDef = {
+  field: 'description',
+  colId: 'description',
+  headerName: 'Description',
+  hide: false,
+};
 
-export const ENTITY_BASE_COLUMNS: ColDef[] = [
-  { field: 'displayName', colId: 'displayName', headerName: 'Display Name', sort: 'asc', hide: false },
-  { field: 'displayVersion', colId: 'displayVersion', headerName: 'Version', hide: false },
-  { field: 'description', colId: 'description', headerName: 'Description', hide: false },
-  { field: 'name', colId: 'name', headerName: 'Deployment ID', hide: false },
-];
+export const VERSION_COLUMN: ColDef = { field: 'version', colId: 'version', headerName: 'Version' };
+export const AUTHOR_COLUMN: ColDef = { field: 'author', colId: 'author', headerName: 'Author' };
+export const DISPLAY_NAME_COLUMN: ColDef = { field: 'displayName', colId: 'displayName', headerName: 'Display Name' };
+const DISPLAY_NAME_COLUMN_WITH_SORT: ColDef = { ...DISPLAY_NAME_COLUMN, sort: 'asc' };
+export const NAME_COLUMN: ColDef = { field: 'name', colId: 'name', headerName: 'ID' };
+const NAME_COLUMN_WITH_SORT: ColDef = { ...NAME_COLUMN, sort: 'asc' };
 
-export const ENTITY_WITH_VERSION_COLUMNS = (
-  t: (stringToTranslate: string) => string,
-  adapters: DialAdapter[] = [],
-): ColDef[] => [
-  ...ENTITY_BASE_COLUMNS,
-  adapters.length
-    ? {
-        field: 'adapter',
-        headerName: 'Adapter',
-        hide: false,
-      }
-    : { field: 'endpoint', headerName: 'Endpoint', hide: false },
-  { field: 'type', headerName: 'Type', hide: true },
-  { field: 'overrideName', headerName: 'Override Name', hide: true },
-  {
-    field: 'topics',
-    headerName: 'Topics',
-    hide: true,
-    cellRenderer: TopicsCellRenderer,
-    cellRendererParams: (params: { data?: DialBaseNamedEntity & { topics: string[] } }) => ({
-      topics: params.data?.topics || [],
-    }),
-  },
-  {
+const TOPIC_COLUMN: ColDef = {
+  field: 'topics',
+  colId: 'topics',
+  headerName: 'Topics',
+  cellRenderer: TopicsCellRenderer,
+  cellRendererParams: (params: { data?: DialBaseNamedEntity & { topics: string[] } }) => ({
+    topics: params.data?.topics || [],
+  }),
+};
+
+const ATTACHMENT_COLUMN = (t: (str: string) => string): ColDef => {
+  return {
     field: 'inputAttachmentTypes',
     headerName: 'Attachment types',
     hide: true,
     valueFormatter: ({ value }) => formatAttachment(value, t),
     tooltipValueGetter: ({ value }) => formatAttachment(value, t),
+  };
+};
+
+export const SIMPLE_DESCRIPTION_COLUMNS: ColDef[] = [NAME_COLUMN_WITH_SORT, DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN];
+export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN];
+
+export const ENTITY_BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
+export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
+  DISPLAY_NAME_COLUMN_WITH_SORT,
+  { field: 'displayVersion', colId: 'displayVersion', headerName: 'Version' },
+  DESCRIPTION_COLUMN,
+  NAME_COLUMN,
+  {
+    field: 'adapter',
+    headerName: 'Adapter',
   },
+  { field: 'type', headerName: 'Type', hide: true },
+  { field: 'overrideName', headerName: 'Override Name', hide: true },
+  TOPIC_COLUMN,
+  ATTACHMENT_COLUMN(t),
   { field: 'maxInputAttachments', headerName: 'Max attachment number', hide: true },
   { field: 'tokenizerModel', headerName: 'Tokenizer model', hide: true },
   { field: 'forwardAuthToken', headerName: 'Forward auth token', hide: true },
   { field: 'limits.maxTotalTokens', headerName: 'Interaction limit', hide: true },
   { field: 'pricing.prompt', headerName: 'Prompt price', hide: true },
   { field: 'pricing.completion', headerName: 'Completion price', hide: true },
+];
+
+export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
+  DISPLAY_NAME_COLUMN_WITH_SORT,
+  DESCRIPTION_COLUMN,
+  NAME_COLUMN,
+  { field: 'endpoint', headerName: 'Endpoint' },
+  TOPIC_COLUMN,
+  ATTACHMENT_COLUMN(t),
+  { field: 'maxInputAttachments', headerName: 'Max attachment number', hide: true },
+  { field: 'forwardAuthToken', headerName: 'Forward auth token', hide: true },
 ];
 
 export const ACTIVITY_AUDIT_COLUMNS = (isSingleEntity?: boolean): ColDef[] => {
@@ -114,8 +133,7 @@ export const ACTIVITY_AUDIT_COLUMNS = (isSingleEntity?: boolean): ColDef[] => {
       field: 'epochTimestampMs',
       headerName: 'Time',
       sort: 'desc',
-      valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
-      tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
+      ...dateTimeColumn,
       floatingFilter: false,
       filter: false,
     },
@@ -130,35 +148,27 @@ export const ACTIVITY_AUDIT_COLUMNS = (isSingleEntity?: boolean): ColDef[] => {
   return columns;
 };
 
-export const KEY_ENTITY_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Name', sort: 'asc', hide: false },
-  { field: 'description', headerName: 'Description', hide: false },
+export const KEYS_COLUMNS: ColDef[] = [
+  NAME_COLUMN_WITH_SORT,
+  DESCRIPTION_COLUMN,
   {
-    field: 'createdAt',
-    headerName: 'Creation time',
-    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
-    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
+    ...CREATED_AT_COLUMN,
     hide: true,
   },
   {
     field: 'keyGeneratedAt',
     headerName: 'Key generation time',
-    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
-    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
-    hide: false,
+    ...dateTimeColumn,
   },
   {
     field: 'expiresAt',
     headerName: 'Expiration time',
-    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
-    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
-    hide: false,
+    ...dateTimeColumn,
   },
   {
     headerName: 'Status',
     field: 'status',
     cellRenderer: KeyStatusCellRenderer,
-    hide: false,
   },
   {
     headerName: 'Project',
@@ -180,43 +190,27 @@ export const KEY_ENTITY_COLUMNS: ColDef[] = [
 export const RUNNERS_COLUMNS: ColDef[] = [
   { field: 'dial:applicationTypeDisplayName', headerName: 'Display Name', sort: 'asc' },
   { field: '$id', headerName: 'ID' },
-  { field: 'description', headerName: 'Description' },
-  {
-    field: 'topics',
-    headerName: 'Topics',
-    cellRenderer: TopicsCellRenderer,
-    cellRendererParams: (params: { data?: DialBaseNamedEntity & { topics: string[] } }) => ({
-      topics: params.data?.topics || [],
-    }),
-  },
+  DESCRIPTION_COLUMN,
+  TOPIC_COLUMN,
 ];
 
-export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [
-  { field: 'displayName', headerName: 'Display name', sort: 'asc' },
-  { field: 'name', headerName: 'ID' },
-  { field: 'description', headerName: 'Description' },
-];
+export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, NAME_COLUMN, DESCRIPTION_COLUMN];
 
 export const PROMPTS_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Name', sort: 'asc' },
+  NAME_COLUMN_WITH_SORT,
   { field: 'version', headerName: 'Version' },
-  { field: 'author', headerName: 'Author' },
-  {
-    field: 'updateTime',
-    headerName: 'Update time',
-    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
-    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
-  },
+  AUTHOR_COLUMN,
+  UPDATED_AT_COLUMN,
 ];
 
 export const FILES_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Name', sort: 'asc' },
+  NAME_COLUMN_WITH_SORT,
   { field: 'extension', headerName: 'Extension' },
-  { field: 'author', headerName: 'Author' },
+  AUTHOR_COLUMN,
 ];
 
 export const EXPORT_COLUMNS = (onChange: (value: string, name: string) => void, route?: ApplicationRoute): ColDef[] => [
-  { field: 'name', headerName: 'Name', sort: 'asc' },
+  NAME_COLUMN_WITH_SORT,
   route === ApplicationRoute.Prompts
     ? {
         headerName: 'Version',
@@ -235,25 +229,14 @@ export const EXPORT_COLUMNS = (onChange: (value: string, name: string) => void, 
         headerName: 'Extension',
         field: 'extension',
       },
-  { field: 'author', headerName: 'Author' },
-  {
-    field: 'updateTime',
-    headerName: 'Update time',
-    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
-    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
-  },
+  AUTHOR_COLUMN,
+  UPDATED_AT_COLUMN,
 ];
 
 export const PUBLICATION_COLUMNS: ColDef[] = [
   { field: 'requestName', headerName: 'Name' },
-  { field: 'author', headerName: 'Author' },
-  {
-    field: 'createdAt',
-    headerName: 'Creation time',
-    sort: 'asc',
-    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
-    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
-  },
+  AUTHOR_COLUMN,
+  { ...CREATED_AT_COLUMN, sort: 'asc' },
 ];
 
 export const getPublicationColumns = (open: (publication: Publication) => void): ColDef[] => {
@@ -285,8 +268,7 @@ export const ENTITIES_COLUMNS = <T>(
   return [...columns, ACTION_COLUMN(actions)];
 };
 
-export const TELEMETRY_GRID_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Deployment ID' },
+export const TELEMETRY_COLUMNS: ColDef[] = [
   {
     field: 'requests',
     headerName: 'Request Count',
@@ -322,51 +304,14 @@ export const TELEMETRY_GRID_COLUMNS: ColDef[] = [
   },
 ];
 
-export const PROJECT_GRID_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Project' },
-  {
-    field: 'requests',
-    headerName: 'Request Count',
-    cellClass: 'align-right',
-    headerClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
-  },
-  {
-    field: 'prompts',
-    headerName: 'Prompt Tokens',
-    cellClass: 'align-right',
-    headerClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
-  },
-  {
-    field: 'completions',
-    headerName: 'Completion tokens',
-    cellClass: 'align-right',
-    headerClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
-  },
-  {
-    field: 'cost',
-    headerName: 'Money',
-    sort: 'desc',
-    cellClass: 'align-right',
-    headerClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
-  },
-];
+export const TELEMETRY_GRID_COLUMNS: ColDef[] = [NAME_COLUMN, ...TELEMETRY_COLUMNS];
+
+export const PROJECT_GRID_COLUMNS: ColDef[] = [{ field: 'name', headerName: 'Project' }, ...TELEMETRY_COLUMNS];
 
 export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Name', sort: 'asc' },
-  { field: 'description', headerName: 'Description' },
+  NAME_COLUMN_WITH_SORT,
+  DESCRIPTION_COLUMN,
   { field: 'image', headerName: 'Interceptor Image' },
 ];
 
-export const SOURCE_RUNNERS_COLUMNS: ColDef[] = [
-  { field: 'displayName', headerName: 'Display Name', sort: 'asc' },
-  { field: 'name', headerName: 'ID' },
-  { field: 'description', headerName: 'Description' },
-];
+export const SOURCE_RUNNERS_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, NAME_COLUMN, DESCRIPTION_COLUMN];
