@@ -8,7 +8,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { SourceI18nKey } from '@/src/constants/i18n';
 import { getErrorNotification } from '@/src/utils/notification';
 import { useNotification } from '@/src/context/NotificationContext';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { useI18n } from '@/src/locales/client';
 import { IconExternalLink } from '@tabler/icons-react';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -57,10 +57,7 @@ const Templates: FC<Props> = ({ entity, onChange, getRunners }) => {
   );
 
   const openTemplate = useCallback(() => {
-    window.open(
-      `${ApplicationRoute.InterceptorTemplates}/${getEntityPath(ApplicationRoute.InterceptorTemplates, selectedRunner)}`,
-      '_blank',
-    );
+    onOpenInNewTab(ApplicationRoute.InterceptorTemplates, selectedRunner);
   }, [selectedRunner]);
 
   useEffect(() => {

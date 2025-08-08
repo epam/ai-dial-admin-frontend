@@ -5,13 +5,15 @@ import { FieldError } from '@/src/models/error';
 import { CreateI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { Container } from '@/src/models/deployments';
+import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { ApplicationRoute } from '@/src/types/routes';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { IconExternalLink } from '@tabler/icons-react';
 import { getUrlError } from '@/src/utils/validation/url-error';
 import { getErrorNotification } from '@/src/utils/notification';
 import { useNotification } from '@/src/context/NotificationContext';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import InputModal from '@/src/components/Common/InputModal/InputModal';
@@ -60,7 +62,7 @@ const Containers: FC<Props> = ({ entity, onChange, getContainers }) => {
   );
 
   const openContainer = useCallback(() => {
-    window.open(`/interceptor-deployments/${selectedContainer}?entityType=containers`, '_blank');
+    onOpenInNewTab(ApplicationRoute.InterceptorDeployments, selectedContainer, DEPLOYMENT_ENTITY.containers);
   }, [selectedContainer]);
 
   useEffect(() => {

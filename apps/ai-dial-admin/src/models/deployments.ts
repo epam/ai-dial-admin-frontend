@@ -6,3 +6,8 @@ export interface Container {
   url?: string;
   status?: string;
 }
+
+export enum DEPLOYMENT_ENTITY {
+  images = 'images',
+  containers = 'containers',
+}
