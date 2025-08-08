@@ -57,7 +57,10 @@ export const MENU_CONFIGURATION = (iconSize: number): MenuGroupConfiguration[] =
         key: MenuI18nKey.ApplicationRunners,
         href: ApplicationRoute.ApplicationRunners,
       },
-
+      {
+        key: MenuI18nKey.InterceptorTemplates,
+        href: ApplicationRoute.InterceptorTemplates,
+      },
       {
         key: MenuI18nKey.Adapters,
         href: ApplicationRoute.Adapters,
