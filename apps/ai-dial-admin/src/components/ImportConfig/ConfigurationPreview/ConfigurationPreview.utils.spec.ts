@@ -39,39 +39,39 @@ describe('ConfigurationPreview.utils', () => {
   });
 
   test('getComponentColDefs returns correct columns for MODEL', () => {
-    const cols = getComponentColDefs(EntityType.MODEL, [], t);
+    const cols = getComponentColDefs(EntityType.MODEL, t);
     expect(cols[0].field).toBe('action');
     expect(cols[1].field).toBe('displayName');
   });
 
   test('getComponentColDefs returns correct columns for APPLICATION', () => {
-    const cols = getComponentColDefs(EntityType.APPLICATION, [], t);
+    const cols = getComponentColDefs(EntityType.APPLICATION, t);
     expect(cols[0].field).toBe('action');
     expect(cols[1].field).toBe('displayName');
   });
 
   test('getComponentColDefs returns correct columns for ROUTE/ROLE/INTERCEPTOR', () => {
     ['ROUTE', 'ROLE', 'INTERCEPTOR'].forEach((type) => {
-      const cols = getComponentColDefs(type, [], t);
+      const cols = getComponentColDefs(type, t);
       expect(cols[0].field).toBe('action');
       expect(cols[1].field).toBe('name');
     });
   });
 
   test('getComponentColDefs returns correct columns for APPLICATION_TYPE_SCHEMA', () => {
-    const cols = getComponentColDefs(EntityType.APPLICATION_TYPE_SCHEMA, [], t);
+    const cols = getComponentColDefs(EntityType.APPLICATION_TYPE_SCHEMA, t);
     expect(cols[0].field).toBe('action');
     expect(cols[1].field).toBe('dial:applicationTypeDisplayName');
   });
 
   test('getComponentColDefs returns correct columns for KEY', () => {
-    const cols = getComponentColDefs(EntityType.KEY, [], t);
+    const cols = getComponentColDefs(EntityType.KEY, t);
     expect(cols[0].field).toBe('action');
     expect(cols[1].field).toBe('name');
   });
 
   test('getComponentColDefs returns ENTITY_BASE_COLUMNS for unknown type', () => {
-    const cols = getComponentColDefs('UNKNOWN', [], t);
+    const cols = getComponentColDefs('UNKNOWN', t);
     expect(cols[0].field).toBe('action');
     expect(cols[1].field).toBe('displayName');
   });
