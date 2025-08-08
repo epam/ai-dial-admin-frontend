@@ -70,7 +70,7 @@ export const isValidEntity = (
   if (view === ApplicationRoute.Models) {
     return (
       (baseEntityValidation && isValidModel(entity as DialModel)) ||
-      ((entity as DialModel).displayVersion && isWrongLengthWithView(view, (entity as DialModel).displayVersion))
+      (!!(entity as DialModel).displayVersion && isWrongLengthWithView(view, (entity as DialModel).displayVersion))
     );
   }
 
