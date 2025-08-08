@@ -2,11 +2,12 @@ import { ColDef } from 'ag-grid-community';
 
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import {
-  ENTITY_WITH_VERSION_COLUMNS,
-  KEY_ENTITY_COLUMNS,
+  APPLICATIONS_COLUMNS,
+  KEYS_COLUMNS,
   RUNNERS_COLUMNS,
   SIMPLE_ENTITY_COLUMNS,
   SIMPLE_DESCRIPTION_COLUMNS,
+  MODELS_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
 import { SortDirectionDto } from '@/src/types/request';
 
@@ -39,8 +40,9 @@ export const getSystemRollbackColumns = (
 ): ColDef[] => {
   switch (type) {
     case ActivityAuditResourceType.MODEL:
+      return MODELS_COLUMNS(t);
     case ActivityAuditResourceType.APPLICATION:
-      return ENTITY_WITH_VERSION_COLUMNS(t, []);
+      return APPLICATIONS_COLUMNS(t);
     case ActivityAuditResourceType.ADAPTER:
       return SIMPLE_DESCRIPTION_COLUMNS;
     case ActivityAuditResourceType.INTERCEPTOR:
@@ -48,7 +50,7 @@ export const getSystemRollbackColumns = (
     case ActivityAuditResourceType.ROUTE:
       return SIMPLE_ENTITY_COLUMNS;
     case ActivityAuditResourceType.KEY:
-      return KEY_ENTITY_COLUMNS;
+      return KEYS_COLUMNS;
     case ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA:
       return RUNNERS_COLUMNS;
     default:

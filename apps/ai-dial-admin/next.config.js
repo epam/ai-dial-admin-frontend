@@ -14,6 +14,20 @@ try {
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
 const nextConfig = {
+  async redirects() {
+    return [
+      {
+        source: '/:prefix/publications-file',
+        destination: '/file-publications',
+        permanent: true, // 308 Permanent Redirect (good for SEO)
+      },
+      {
+        source: '/:prefix/publications-prompt',
+        destination: '/prompt-publications',
+        permanent: true, // 308 Permanent Redirect (good for SEO)
+      },
+    ];
+  },
   nx: {
     // Set this to true if you would like to use SVGR
     // See: https://github.com/gregberge/svgr
@@ -27,6 +41,7 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_APP_VERSION: packageJson.version,
   },
+
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/,

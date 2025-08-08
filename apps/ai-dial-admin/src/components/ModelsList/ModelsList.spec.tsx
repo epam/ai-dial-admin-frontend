@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import ModelsList from './ModelsList';
 import { ColDef } from 'ag-grid-community';
-import { DialAdapter } from '../../models/dial/adapter';
 import { describe, expect, test, vi } from 'vitest';
 
 vi.mock('@/src/app/[lang]/models/actions', () => ({
@@ -31,12 +30,11 @@ vi.mock('@/src/constants/grid-columns/grid-columns', () => {
     { field: 'version', headerName: 'Version' },
   ];
   return {
-    ENTITY_WITH_VERSION_COLUMNS: (t: (str: string) => string, adapters: DialAdapter[]) => [
+    MODELS_COLUMNS: () => [
       { field: 'id', headerName: 'ID' },
       { field: 'displayName', headerName: 'Name' },
       { field: 'type', headerName: 'Type' },
       { field: 'version', headerName: 'Version' },
-      ...(adapters ? adapters.map((a) => ({ field: a.name, headerName: a.name })) : []),
     ],
     listViewTitleMap: { '/models': 'Models Title' },
     ENTITIES_COLUMNS: () => mockColumns,
@@ -52,19 +50,15 @@ describe('ModelsList', () => {
       { id: '2', displayName: 'Model Two', version: '2.0' },
       { id: '3', version: '3.0' },
     ];
-    const adapters = [
-      { id: 'a1', name: 'Adapter One' },
-      { id: 'a2', name: 'Adapter Two' },
-    ];
-    render(<ModelsList data={data} adapters={adapters} />);
+    render(<ModelsList data={data} />);
     expect(screen.getByText('BaseEntityListMock')).toBeInTheDocument();
     expect(screen.getByText('Model One,Model Two,')).toBeInTheDocument();
     expect(screen.getByText('/models')).toBeInTheDocument();
-    expect(screen.getByText('ID,Name,Type,Version,Adapter One,Adapter Two')).toBeInTheDocument();
+    expect(screen.getByText('ID,Name,Type,Version')).toBeInTheDocument();
   });
 
-  test('renders with empty data and adapters', () => {
-    render(<ModelsList data={[]} adapters={[]} />);
+  test('renders with empty data', () => {
+    render(<ModelsList data={[]} />);
     expect(screen.getByText('BaseEntityListMock')).toBeInTheDocument();
     expect(screen.getByText('/models')).toBeInTheDocument();
   });

@@ -1,10 +1,8 @@
 'use client';
 
 import { FC, useCallback, useState } from 'react';
-
 import { uniq } from 'lodash';
 
-import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/AutocompleteField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
@@ -22,6 +20,7 @@ interface Props {
   isEntityImmutable?: boolean;
   onChangeAdapter: (adapter: DialAdapter) => void;
 }
+
 const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntityImmutable }) => {
   const t = useI18n() as (t: string, props?: Record<string, number>) => string;
   const [isValidDisplayName, setIsValidDisplayName] = useState(true);
@@ -64,18 +63,19 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
   );
 
   return (
-    <div className="h-full flex flex-col gap-6 mt-3">
-      <TextInputField
-        elementId="name"
-        fieldTitle={t(CreateI18nKey.NameTitle)}
-        placeholder={t(CreateI18nKey.NamePlaceholder)}
-        value={entity.name}
-        disabled={isEntityImmutable}
-        errorText={nameError?.text}
-        invalid={!!nameError}
-        onChange={onChangeName}
-        iconAfterInput={isEntityImmutable && <CopyButton field={entity.name} />}
-      />
+    <div className="h-full flex flex-col gap-6">
+      {!isEntityImmutable && (
+        <TextInputField
+          elementId="name"
+          fieldTitle={t(CreateI18nKey.IdTitle)}
+          placeholder={t(CreateI18nKey.IdPlaceholder)}
+          value={entity.name}
+          errorText={nameError?.text}
+          invalid={!!nameError}
+          onChange={onChangeName}
+        />
+      )}
+
       <AutocompleteField
         elementId="displayName"
         fieldTitle={t(CreateI18nKey.DisplayNameTitle)}

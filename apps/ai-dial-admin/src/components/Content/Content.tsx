@@ -8,7 +8,7 @@ import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useNotification } from '@/src/context/NotificationContext';
 import { getAppProcessStatus } from '@/src/app/actions';
 import { getErrorNotification } from '@/src/utils/notification';
-import { BasicI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -29,7 +29,7 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
   const checkAppStatus = useCallback((): void => {
     getAppProcessStatus().then((response) => {
       if (!response?.success && response?.errorMessage) {
-        showNotificationRef.current(getErrorNotification(t(BasicI18nKey.ServerError), response?.errorMessage));
+        showNotificationRef.current(getErrorNotification(t(ErrorI18nKey.ServerError), response?.errorMessage));
       }
     });
   }, [t]);

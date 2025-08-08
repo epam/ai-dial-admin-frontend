@@ -123,7 +123,7 @@ const AdapterView: FC<Props> = ({ originalAdapter }) => {
         ) : (
           <>
             {activeTab === EntityViewTab.Properties && (
-              <div className="lg:w-[35%] flex flex-col gap-6 mt-3">
+              <div className="lg:w-[35%] flex flex-col mt-3">
                 <EntityHeader entity={selectedAdapter} />
                 <div className="flex-1 min-h-0">
                   <AdapterProperties

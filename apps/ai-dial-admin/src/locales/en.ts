@@ -17,14 +17,11 @@ export default {
     ModalDescription: 'Are you sure that you want to log out?',
   },
   Placeholder: {
-    NoLimits: 'No Limits',
     TagsInput: 'Enter tags...',
   },
   Basic: {
     None: '- None -',
     Failed: 'Failed',
-    Enabled: 'Enabled',
-    Disabled: 'Disabled',
     NoData: 'No Data',
     NoParameters: 'No Parameters',
     Value: 'Value',
@@ -50,7 +47,6 @@ export default {
     Before: 'Before',
     After: 'After',
     CopiedSuccessfully: 'copied successfully',
-    ServerError: 'Server Error',
     Search: 'Search',
     Comparison: 'Comparison',
     Current: 'Current state',
@@ -246,10 +242,6 @@ export default {
     InterceptorContainer: 'Select Interceptor Container',
     ErrorUnique: 'This field must be unique.',
     ApplicationPropertiesHeader: 'Application properties header',
-    deploymentId: {
-      title: 'Deployment ID',
-      placeholder: 'Enter deployment ID',
-    },
     runner: {
       title: 'Application Runner',
       placeholder: 'Select Application Runner',
@@ -264,8 +256,9 @@ export default {
       title: 'Name',
       placeholder: 'Enter name',
       error: 'This name already exists.',
-      length: 'User can add any characters, but not less than 2 and not more than 255.',
+      length: 'User can add any allowed characters, but not less than 2 and not more than 255.',
       interceptor: 'Interceptor Name',
+      forbiddenChars: 'Name must not contain forbidden characters: {list}',
     },
     key: {
       title: 'Key value',
@@ -419,6 +412,7 @@ export default {
     TokensPerMinute: 'Default tokens per minute',
     TokensPerWeek: 'Default tokens per week',
     TokensPerMonth: 'Default tokens per month',
+    NoLimits: 'No Limits',
     AddRoles: 'Add Roles',
     ResetToDefaultLimits: 'Reset to default limits',
     SetNoLimits: 'Set no limits',
@@ -836,6 +830,7 @@ export default {
     models: 'Models',
   },
   Error: {
+    ServerError: 'Server Error',
     EmptyField: 'This field could not be empty',
     RequiredField: 'This field is required',
     PageNotFound: 'Page Not Found',

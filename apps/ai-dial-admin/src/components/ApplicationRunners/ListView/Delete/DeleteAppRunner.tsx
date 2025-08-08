@@ -2,44 +2,34 @@ import { FC, useEffect, useState } from 'react';
 
 import { getApplications } from '@/src/app/[lang]/applications/actions';
 import Loader from '@/src/components/Common/Loader/Loader';
-import { SIMPLE_VERSION_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { DISPLAY_NAME_COLUMN, NAME_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import Grid from '@/src/components/Grid/Grid';
 import { DeleteI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialApplicationScheme } from '@/src/models/dial/application';
+import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 
 interface Props {
   entity: DialApplicationScheme;
   isEntityView?: boolean;
 }
 
-interface GridData {
-  displayName?: string;
-  version?: string;
-}
-
 const DeleteScheme: FC<Props> = ({ entity, isEntityView }) => {
   const t = useI18n();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [rowData, setRowData] = useState<GridData[]>([]);
-
-  const columnDefs = SIMPLE_VERSION_COLUMNS.map((col) => ({ ...col, resizable: false }));
+  const [applications, setApplications] = useState<DialApplication[]>([]);
 
   useEffect(() => {
     setIsLoading(true);
     getApplications().then((res) => {
       const apps = res?.reduce((acc, curr) => {
         if (entity.applications?.includes(curr.name as string)) {
-          acc.push({
-            displayName: curr.displayName,
-            version: curr.displayVersion,
-          });
+          acc.push(curr);
         }
         return acc;
-      }, [] as GridData[]);
+      }, [] as DialApplication[]);
       setIsLoading(false);
-      setRowData(apps || []);
+      setApplications(apps || []);
     });
   }, [entity]);
 
@@ -59,11 +49,11 @@ const DeleteScheme: FC<Props> = ({ entity, isEntityView }) => {
         ) : (
           <>
             <h3 className="text-primary mb-1">{t(DeleteI18nKey.ApplicationRunnerApplicationsTitle)}</h3>
-            {rowData?.length === 0 ? (
+            {applications?.length === 0 ? (
               <p>{t(DeleteI18nKey.ApplicationRunnerNoApplicationsTitle)}</p>
             ) : (
               <div className="flex-1 min-h-0 mt-2">
-                <Grid rowData={rowData} columnDefs={columnDefs} />
+                <Grid rowData={applications} columnDefs={[DISPLAY_NAME_COLUMN, NAME_COLUMN]} />
               </div>
             )}
           </>

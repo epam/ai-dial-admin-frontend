@@ -9,6 +9,7 @@ export interface DialModel extends DialBaseEntity {
   limits?: DialModelLimit;
   pricing?: DialModelPricing;
   maxRetryAttempts?: number;
+  displayVersion?: string;
 }
 
 export interface DialTokenizer {

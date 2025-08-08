@@ -18,8 +18,6 @@ import { getConfigurationPreview } from '@/src/components/ImportConfig/Configura
 import { FileConfiguration } from '@/src/models/import';
 import ConfigurationGrid from '@/src/components/ImportConfig/ConfigurationPreview/ConfigurationGrid';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
-import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
-import { DialAdapter } from '@/src/models/dial/adapter';
 import { EntityType } from '@/src/types/entity-type';
 
 interface Props {
@@ -38,16 +36,6 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
   const [selectedTab, setSelectedTab] = useState('');
   const [data, setData] = useState<Record<string, DialBaseEntity[]>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [adapters, setAdapters] = useState<DialAdapter[]>([]);
-
-  const getAdapters = async () => {
-    const adaptersResponse = await getModelsAdapters();
-    if (adaptersResponse.success) {
-      setAdapters((adaptersResponse.response as DialAdapter[]) || []);
-    } else {
-      showNotificationRef.current(getErrorNotification(adaptersResponse.errorHeader, adaptersResponse.errorMessage));
-    }
-  };
 
   useEffect(() => {
     setIsLoading(true);
@@ -56,7 +44,6 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
       if (res.success) {
         const fileConfiguration = res.response as FileConfiguration;
         const { previewData, tabs } = getConfigurationPreview(fileConfiguration, t);
-        getAdapters();
 
         setData(previewData);
         setTabs(tabs);
@@ -90,7 +77,7 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
             <div className="mb-3">
               <Tabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
             </div>
-            <ConfigurationGrid selectedTab={selectedTab as EntityType} tabData={data} adapters={adapters} />
+            <ConfigurationGrid selectedTab={selectedTab as EntityType} tabData={data} />
           </div>
         )}
       </div>

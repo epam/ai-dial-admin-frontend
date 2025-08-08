@@ -1,6 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 import { CreateI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
@@ -87,17 +86,17 @@ const SimpleEntityProperties: FC<Props> = ({
 
   return (
     <div className="flex flex-col gap-6">
-      <TextInputField
-        elementId="name"
-        fieldTitle={t(CreateI18nKey.NameTitle)}
-        placeholder={t(CreateI18nKey.NamePlaceholder)}
-        value={entity.name}
-        disabled={isEntityImmutable}
-        errorText={nameError?.text}
-        invalid={!!nameError}
-        onChange={onChangeName}
-        iconAfterInput={isEntityImmutable && <CopyButton field={entity.name} />}
-      />
+      {!isEntityImmutable && (
+        <TextInputField
+          elementId="name"
+          fieldTitle={t(CreateI18nKey.IdTitle)}
+          placeholder={t(CreateI18nKey.IdPlaceholder)}
+          value={entity.name}
+          errorText={nameError?.text}
+          invalid={!!nameError}
+          onChange={onChangeName}
+        />
+      )}
       {versionsMap && (
         <TextInputField
           elementId="version"

@@ -12,21 +12,23 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { getErrorForName } from '@/src/utils/validation/name-error';
 import { duplicateModalDescriptionMap, duplicateModalTitleMap } from './titles';
+import { DialModel } from '@/src/models/dial/model';
 
+type ClonedEntity = DialBaseEntity | DialBaseNamedEntity | DialModel;
 interface Props {
   view: ApplicationRoute;
   modalState: PopUpState;
   names: string[];
-  entity?: DialBaseEntity | DialBaseNamedEntity;
+  entity?: ClonedEntity;
   onClose: () => void;
-  onDuplicate: (entity: DialBaseEntity | DialBaseNamedEntity) => void;
+  onDuplicate: (entity: ClonedEntity) => void;
 }
 
 const DuplicateEntityPopup: FC<Props> = ({ onDuplicate, names, view, modalState, onClose, entity }) => {
   const t = useI18n() as (t: string) => string;
   const isSimple = isSimpleEntity(view);
 
-  const [clonedEntity, setEntity] = useState<DialBaseEntity | DialBaseNamedEntity>(
+  const [clonedEntity, setEntity] = useState<ClonedEntity>(
     isSimple ? { ...entity, name: '' } : { ...entity, name: '', displayVersion: '', displayName: '' },
   );
   const [nameError, setNameError] = useState<FieldError | null>(null);
@@ -39,7 +41,7 @@ const DuplicateEntityPopup: FC<Props> = ({ onDuplicate, names, view, modalState,
 
   const onChangeVersion = useCallback(
     (displayVersion: string) => {
-      setEntity({ ...(clonedEntity as DialBaseEntity), displayVersion });
+      setEntity({ ...(clonedEntity as DialModel), displayVersion });
     },
     [setEntity, clonedEntity],
   );
@@ -62,32 +64,19 @@ const DuplicateEntityPopup: FC<Props> = ({ onDuplicate, names, view, modalState,
   return (
     <Popup onClose={onClose} heading={t(heading)} portalId="DeleteEntity" state={modalState}>
       <div className="flex flex-col px-6 py-4">
-        {isSimple ? (
-          <div className="flex flex-col gap-3">
-            <TextInputField
-              fieldTitle={t(CreateI18nKey.NameTitle)}
-              elementId="name"
-              placeholder={t(CreateI18nKey.NamePlaceholder)}
-              value={clonedEntity.name}
-              errorText={nameError?.text}
-              invalid={!!nameError}
-              onChange={onChangeName}
-            />
-          </div>
-        ) : (
-          <>
-            <div className="text-secondary small mb-4">{t(duplicateModalDescriptionMap[view])}</div>
-            <div className="flex flex-col gap-3">
-              <TextInputField
-                fieldTitle={t(CreateI18nKey.DeploymentIdTitle)}
-                elementId="deploymentId"
-                placeholder={t(CreateI18nKey.DeploymentIdPlaceholder)}
-                value={clonedEntity.name}
-                errorText={nameError?.text}
-                invalid={!!nameError}
-                onChange={onChangeName}
-              />
-
+        {!isSimple && <div className="text-secondary small mb-4">{t(duplicateModalDescriptionMap[view])}</div>}
+        <div className="flex flex-col gap-3">
+          <TextInputField
+            fieldTitle={t(CreateI18nKey.IdTitle)}
+            elementId="id"
+            placeholder={t(CreateI18nKey.IdPlaceholder)}
+            value={clonedEntity.name}
+            errorText={nameError?.text}
+            invalid={!!nameError}
+            onChange={onChangeName}
+          />
+          {!isSimple && (
+            <>
               <TextInputField
                 fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
                 elementId="name"
@@ -96,16 +85,18 @@ const DuplicateEntityPopup: FC<Props> = ({ onDuplicate, names, view, modalState,
                 onChange={onChangeDisplayName}
               />
 
-              <TextInputField
-                fieldTitle={t(CreateI18nKey.VersionTitle)}
-                elementId="version"
-                placeholder={t(CreateI18nKey.VersionPlaceholder)}
-                value={(clonedEntity as DialBaseEntity).displayVersion}
-                onChange={onChangeVersion}
-              />
-            </div>
-          </>
-        )}
+              {view === ApplicationRoute.Models && (
+                <TextInputField
+                  fieldTitle={t(CreateI18nKey.VersionTitle)}
+                  elementId="version"
+                  placeholder={t(CreateI18nKey.VersionPlaceholder)}
+                  value={(clonedEntity as DialModel).displayVersion}
+                  onChange={onChangeVersion}
+                />
+              )}
+            </>
+          )}
+        </div>
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
         <Button

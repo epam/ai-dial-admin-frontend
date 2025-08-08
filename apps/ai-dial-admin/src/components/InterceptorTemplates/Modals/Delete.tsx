@@ -2,7 +2,7 @@ import { FC, useState } from 'react';
 
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { DeleteI18nKey } from '@/src/constants/i18n';
-import { SIMPLE_VERSION_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useI18n } from '@/src/locales/client';
 
 import Loader from '@/src/components/Common/Loader/Loader';
@@ -23,8 +23,6 @@ const Delete: FC<Props> = ({ template }) => {
   const [isLoading, __setIsLoading] = useState(false);
   const [rowData, __setRowData] = useState<GridData[]>([]);
 
-  const columnDefs = SIMPLE_VERSION_COLUMNS.map((col) => ({ ...col, resizable: false }));
-
   return (
     <div className="flex flex-col text-secondary small-150 px-6 max-h-[300px]">
       <p>
@@ -43,7 +41,7 @@ const Delete: FC<Props> = ({ template }) => {
               <p>{t(DeleteI18nKey.InterceptorTemplateNoInterceptorsTitle)}</p>
             ) : (
               <div className="flex-1 min-h-0 mt-2">
-                <Grid rowData={rowData} columnDefs={columnDefs} />
+                <Grid rowData={rowData} columnDefs={SIMPLE_ENTITY_COLUMNS} />
               </div>
             )}
           </>

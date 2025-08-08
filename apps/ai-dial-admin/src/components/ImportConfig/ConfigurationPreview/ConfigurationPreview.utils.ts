@@ -5,14 +5,14 @@ import { FileComponentItem, FileConfiguration } from '@/src/models/import';
 import { ImportConfigurationAction } from '@/src/types/import';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import {
-  ENTITY_WITH_VERSION_COLUMNS,
-  KEY_ENTITY_COLUMNS,
+  KEYS_COLUMNS,
   RUNNERS_COLUMNS,
-  ENTITY_BASE_COLUMNS,
+  MODELS_COLUMNS,
+  APPLICATIONS_COLUMNS,
+  SIMPLE_DESCRIPTION_COLUMNS,
   SIMPLE_ENTITY_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
 import StatusCellRenderer from '@/src/components/Grid/CellRenderers/StatusCellRenderer';
-import { DialAdapter } from '@/src/models/dial/adapter';
 import { EntityType } from '@/src/types/entity-type';
 import { getEntitiesList } from '@/src/utils/entities/get-entities-list';
 
@@ -128,13 +128,13 @@ const getComponentActionColumn = (): ColDef => {
   };
 };
 
-export const getComponentColDefs = (type: string, adapters: DialAdapter[], t: (v: string) => string): ColDef[] => {
+export const getComponentColDefs = (type: string, t: (v: string) => string): ColDef[] => {
   if (type === EntityType.MODEL) {
-    return [getComponentActionColumn(), ...ENTITY_WITH_VERSION_COLUMNS(t, adapters)];
+    return [getComponentActionColumn(), ...MODELS_COLUMNS(t)];
   }
 
   if (type === EntityType.APPLICATION) {
-    return [getComponentActionColumn(), ...ENTITY_WITH_VERSION_COLUMNS(t)];
+    return [getComponentActionColumn(), ...APPLICATIONS_COLUMNS(t)];
   }
 
   if (type === EntityType.ROUTE || type === EntityType.ROLE || type === EntityType.INTERCEPTOR) {
@@ -146,8 +146,8 @@ export const getComponentColDefs = (type: string, adapters: DialAdapter[], t: (v
   }
 
   if (type === EntityType.KEY) {
-    return [getComponentActionColumn(), ...KEY_ENTITY_COLUMNS];
+    return [getComponentActionColumn(), ...KEYS_COLUMNS];
   }
 
-  return [getComponentActionColumn(), ...ENTITY_BASE_COLUMNS];
+  return [getComponentActionColumn(), ...SIMPLE_DESCRIPTION_COLUMNS];
 };

@@ -3,4 +3,5 @@ export enum ErrorType {
   LENGTH = 'length',
   EMPTY = 'empty',
   INVALID = 'invalid',
+  FORBIDDEN_CHARS = 'forbidden_chars',
 }

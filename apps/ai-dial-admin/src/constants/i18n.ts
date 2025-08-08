@@ -48,7 +48,6 @@ export enum MenuI18nKey {
 }
 
 export enum PlaceholderI18nKey {
-  NoLimits = 'Placeholder.NoLimits',
   TagsInput = 'Placeholder.TagsInput',
 }
 
@@ -62,8 +61,6 @@ export enum AuthI18nKey {
 export enum BasicI18nKey {
   None = 'Basic.None',
   Failed = 'Basic.Failed',
-  Enabled = 'Basic.Enabled',
-  Disabled = 'Basic.Disabled',
   NoData = 'Basic.NoData',
   NoParameters = 'Basic.NoParameters',
   Value = 'Basic.Value',
@@ -89,7 +86,7 @@ export enum BasicI18nKey {
   Before = 'Basic.Before',
   After = 'Basic.After',
   CopiedSuccessfully = 'Basic.CopiedSuccessfully',
-  ServerError = 'Basic.ServerError',
+
   Search = 'Basic.Search',
   Comparison = 'Basic.Comparison',
   Current = 'Basic.Current',
@@ -230,8 +227,6 @@ export enum CreateI18nKey {
   Prompt = 'CreateEntity.Prompt',
   Route = 'CreateEntity.Route',
   Interceptor = 'CreateEntity.Interceptor',
-  DeploymentIdTitle = 'CreateEntity.deploymentId.title',
-  DeploymentIdPlaceholder = 'CreateEntity.deploymentId.placeholder',
   NameTitle = 'CreateEntity.name.title',
   NamePlaceholder = 'CreateEntity.name.placeholder',
   IdTitle = 'CreateEntity.id.title',
@@ -244,6 +239,7 @@ export enum CreateI18nKey {
   LengthError = 'CreateEntity.name.length',
   ErrorLength = 'CreateEntity.errorLength',
   InterceptorName = 'CreateEntity.name.interceptor',
+  ForbiddenCharsError = 'CreateEntity.name.forbiddenChars',
   DisplayNameTitle = 'CreateEntity.displayName.title',
   DisplayNameErrorApplication = 'CreateEntity.displayName.errorApplication',
   DisplayNameErrorModel = 'CreateEntity.displayName.errorModel',
@@ -367,6 +363,7 @@ export enum RolesI18nKey {
   TokensPerMinute = 'Roles.TokensPerMinute',
   TokensPerWeek = 'Roles.TokensPerWeek',
   TokensPerMonth = 'Roles.TokensPerMonth',
+  NoLimits = 'Roles.NoLimits',
   AddRoles = 'Roles.AddRoles',
   AvailableSpecificRoles = 'Roles.AvailableSpecificRoles',
   SpecificLimitsResetTitle = 'Roles.SpecificLimitsResetTitle',
@@ -692,6 +689,7 @@ export enum ErrorI18nKey {
   IncorrectEndpoint = 'Error.IncorrectEndpoint',
   IncorrectModelEndpointAlias = 'Error.IncorrectModelEndpointAlias',
   WarningEndpoint = 'Error.WarningEndpoint',
+  ServerError = 'Error.ServerError',
 }
 
 export enum SourceI18nKey {
