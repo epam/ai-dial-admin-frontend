@@ -362,7 +362,7 @@ export enum RolesI18nKey {
   TokensPerMinute = 'Roles.TokensPerMinute',
   TokensPerWeek = 'Roles.TokensPerWeek',
   TokensPerMonth = 'Roles.TokensPerMonth',
-  NoLimits = 'Placeholder.NoLimits',
+  NoLimits = 'Roles.NoLimits',
   AddRoles = 'Roles.AddRoles',
   AvailableSpecificRoles = 'Roles.AvailableSpecificRoles',
   SpecificLimitsResetTitle = 'Roles.SpecificLimitsResetTitle',
