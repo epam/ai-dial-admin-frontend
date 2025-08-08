@@ -239,7 +239,11 @@ export default {
     Route: 'Create Route',
     Adapter: 'Create Adapter',
     Scheme: 'Scheme',
-    InterceptorTemplate: 'Create Interceptor Template',
+    InterceptorTemplate: {
+      Create: 'Create Interceptor Template',
+      Select: 'Select Interceptor Template',
+    },
+    InterceptorContainer: 'Select Interceptor Container',
     ErrorUnique: 'This field must be unique.',
     ApplicationPropertiesHeader: 'Application properties header',
     deploymentId: {
@@ -846,5 +850,9 @@ export default {
     IncorrectEndpoint: 'Endpoint must be a valid url starting with http:// or https://',
     WarningEndpoint: 'The endpoint uses HTTP instead of HTTPS. This may expose data to security risks.',
     IncorrectModelEndpointAlias: 'This endpoint alias could not be empty',
+  },
+  Source: {
+    OpenTemplate: 'Open template',
+    OpenContainer: 'Open container',
   },
 } as const;

@@ -358,3 +358,15 @@ export const PROJECT_GRID_COLUMNS: ColDef[] = [
     valueFormatter: (params) => numberValueFormatter(params),
   },
 ];
+
+export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
+  { field: 'name', headerName: 'Name', sort: 'asc' },
+  { field: 'description', headerName: 'Description' },
+  { field: 'image', headerName: 'Interceptor Image' },
+];
+
+export const SOURCE_RUNNERS_COLUMNS: ColDef[] = [
+  { field: 'displayName', headerName: 'Display Name', sort: 'asc' },
+  { field: 'name', headerName: 'ID' },
+  { field: 'description', headerName: 'Description' },
+];

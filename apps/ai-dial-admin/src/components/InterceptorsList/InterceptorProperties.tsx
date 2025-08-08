@@ -2,13 +2,19 @@
 
 import { FC } from 'react';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
+import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
+import { getInterceptorContainers } from '@/src/app/[lang]/interceptors/actions';
+import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
+import { useI18n } from '@/src/locales/client';
+
+import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
+import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
+import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
+import SourceField from '@/src/components/SourceField/SourceField';
 
 interface Props {
   selectedInterceptor: DialInterceptor;
@@ -19,29 +25,49 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
   const t = useI18n();
 
   return (
-    <div className="h-full lg:w-[35%] flex flex-col gap-6 mt-3">
-      <SimpleEntityProperties
-        entity={selectedInterceptor}
-        onChangeEntity={onChangeInterceptor}
-        names={names}
-        isEntityImmutable={true}
-        view={ApplicationRoute.Interceptors}
-      />
-
-      <TextInputField
-        elementId="author"
-        fieldTitle={t(EntitiesI18nKey.Maintainer)}
-        placeholder={t(EntitiesI18nKey.MaintainerPlaceholder)}
-        value={selectedInterceptor.author}
-        optional={true}
-        onChange={(author) => onChangeInterceptor({ ...selectedInterceptor, author })}
-      />
-
-      <div className="w-full">
-        <ForwardAuthTokenField
-          view={ApplicationRoute.Interceptors}
-          entity={selectedInterceptor}
-          onChangeEntity={onChangeInterceptor}
+    <div className="h-full flex flex-col pt-3 gap-10 divide-y divide-primary w-full">
+      <div className="flex flex-row gap-10">
+        <LabeledText
+          label={t(EntitiesI18nKey.CreatedAt)}
+          text={formatDateTimeToLocalString(selectedInterceptor.createdAt)}
+        />
+        <LabeledText
+          label={t(EntitiesI18nKey.UpdatedAt)}
+          text={formatDateTimeToLocalString(selectedInterceptor.updatedAt)}
+        />
+      </div>
+      <div className="flex">
+        <div className="lg:w-[35%] flex flex-col gap-6 mt-3">
+          <SimpleEntityProperties
+            entity={selectedInterceptor}
+            onChangeEntity={onChangeInterceptor}
+            names={names}
+            isEntityImmutable={true}
+            view={ApplicationRoute.Interceptors}
+          />
+          <TextInputField
+            elementId="author"
+            fieldTitle={t(EntitiesI18nKey.Maintainer)}
+            placeholder={t(EntitiesI18nKey.MaintainerPlaceholder)}
+            value={selectedInterceptor.author}
+            optional={true}
+            onChange={(author) => onChangeInterceptor({ ...selectedInterceptor, author })}
+          />
+          <div className="w-full">
+            <ForwardAuthTokenField
+              view={ApplicationRoute.Interceptors}
+              entity={selectedInterceptor}
+              onChangeEntity={onChangeInterceptor}
+            />
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-col pt-3 w-full">
+        <SourceField
+          interceptor={selectedInterceptor}
+          onChange={onChangeInterceptor}
+          getContainers={getInterceptorContainers}
+          getRunners={getInterceptorTemplatesList}
         />
       </div>
     </div>

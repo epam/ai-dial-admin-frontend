@@ -22,4 +22,5 @@ export enum ApplicationRoute {
   ActivityAudit = '/activity-audit',
   Forbidden = '/forbidden',
   InterceptorTemplates = '/interceptor-templates',
+  InterceptorDeployments = '/interceptor-deployments',
 }

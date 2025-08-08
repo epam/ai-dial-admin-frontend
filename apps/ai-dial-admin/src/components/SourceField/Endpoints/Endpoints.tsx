@@ -1,17 +1,19 @@
 import { FC, useState } from 'react';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
+
 import { CreateI18nKey } from '@/src/constants/i18n';
-import { getUrlError } from '@/src/utils/validation/url-error';
-import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { getUrlError } from '@/src/utils/validation/url-error';
+import { useI18n } from '@/src/locales/client';
+
+import { TextInputField } from '@/src/components/Common/InputField/InputField';
 
 interface Props {
-  template: InterceptorTemplate;
-  onChange: (template: InterceptorTemplate) => void;
+  entity: DialInterceptor;
+  onChange: (entity: DialInterceptor) => void;
 }
 
-const ExternalEndpoint: FC<Props> = ({ template, onChange }) => {
+const Endpoints: FC<Props> = ({ entity, onChange }) => {
   const t = useI18n() as (key: string) => string;
 
   const [completionEndpointError, setCompletionEndpointError] = useState<FieldError | null>(null);
@@ -23,28 +25,28 @@ const ExternalEndpoint: FC<Props> = ({ template, onChange }) => {
         elementId="completionEndpoint"
         fieldTitle={t(CreateI18nKey.CompletionEndpointTitle)}
         placeholder={t(CreateI18nKey.CompletionEndpointPlaceholder)}
-        value={template.completionEndpoint}
+        value={entity.endpoint}
         errorText={completionEndpointError?.text}
         invalid={!!completionEndpointError}
-        onChange={(completionEndpoint) => {
-          setCompletionEndpointError(getUrlError(completionEndpoint, t));
-          onChange({ ...template, completionEndpoint });
+        onChange={(endpoint) => {
+          setCompletionEndpointError(getUrlError(endpoint, t));
+          onChange({ ...entity, endpoint });
         }}
       />
       <TextInputField
         elementId="configurationEndpoint"
         fieldTitle={t(CreateI18nKey.ConfigurationEndpointTitle)}
         placeholder={t(CreateI18nKey.ConfigurationEndpointPlaceholder)}
-        value={template.configurationEndpoint}
+        value={entity.configurationEndpoint}
         errorText={configurationEndpointError?.text}
         invalid={!!configurationEndpointError}
         onChange={(configurationEndpoint) => {
           setConfigurationEndpointError(getUrlError(configurationEndpoint, t));
-          onChange({ ...template, configurationEndpoint });
+          onChange({ ...entity, configurationEndpoint });
         }}
       />
     </div>
   );
 };
 
-export default ExternalEndpoint;
+export default Endpoints;
