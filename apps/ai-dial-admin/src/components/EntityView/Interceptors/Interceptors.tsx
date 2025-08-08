@@ -29,9 +29,7 @@ const EntityInterceptors: FC<Props> = ({ entity, interceptors, onChangeEntity })
   const [addModalState, setAddModalState] = useState(PopUpState.Closed);
 
   useEffect(() => {
-    setAvailableInterceptors(
-      interceptors.filter((interceptor) => !entity.interceptors?.includes(interceptor.name as string)),
-    );
+    setAvailableInterceptors(interceptors);
   }, [entity, interceptors]);
 
   const onAddInterceptors = useCallback(
