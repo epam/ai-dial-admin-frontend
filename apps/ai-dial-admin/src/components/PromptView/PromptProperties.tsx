@@ -15,7 +15,7 @@ import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
 import MdEditor from '@/src/components/Common/MdEditor/MdEditor';
 import Switch from '@/src/components/Common/Switch/Switch';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import { BasicI18nKey, ButtonsI18nKey, CreateI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
@@ -168,12 +168,15 @@ const PromptProperties: FC<Props> = ({
         {publication ? (
           <>
             {/* <LabeledText label="Author" text={publication.author} /> */}
-            <LabeledText label="Create Time" text={formatDateTimeToLocalString(publication.createdAt)} />
+            <LabeledText
+              label={t(EntitiesI18nKey.CreatedAt)}
+              text={formatDateTimeToLocalString(publication.createdAt)}
+            />
           </>
         ) : (
           <>
             {/* <LabeledText label="Author" text={prompt.author} /> */}
-            <LabeledText label="Update Time" text={formatDateTimeToLocalString(prompt.updateTime)} />
+            <LabeledText label={t(EntitiesI18nKey.UpdatedAt)} text={formatDateTimeToLocalString(prompt.updateTime)} />
           </>
         )}
       </div>
