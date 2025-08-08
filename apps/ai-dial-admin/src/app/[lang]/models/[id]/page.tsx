@@ -25,7 +25,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   try {
     models = await modelsApi.getModelsList(token);
-    model = await modelsApi.getModel(decodeURIComponent((await params.params).id), token);
+    model = await modelsApi.getModel((await params.params).id, token);
     roles = await rolesApi.getRolesList(token);
     interceptors = await interceptorsApi.getInterceptorsList(token);
     if (models === void 0 || model === void 0 || roles === void 0 || interceptors === void 0) {

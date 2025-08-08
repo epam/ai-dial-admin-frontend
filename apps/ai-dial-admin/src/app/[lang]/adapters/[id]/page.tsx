@@ -17,7 +17,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   let adapter: DialAdapter | null = null;
 
   try {
-    adapter = await adaptersApi.getAdapter(decodeURIComponent((await params.params).id), token);
+    adapter = await adaptersApi.getAdapter((await params.params).id, token);
   } catch (e) {
     logger.error('Getting adapter view data error', e);
   }
