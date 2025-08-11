@@ -40,7 +40,13 @@ export const PromptFolderProvider = ({ children }: { children: ReactNode }) => {
         setData(null);
         return;
       }
-      setFiles((prevFiles) => mergeFiles(prevFiles, files, path));
+      setFiles((prevFiles) => {
+        const newFiles = mergeFiles(prevFiles, files, path) as DialPrompt[];
+        if (prevFiles.length === 0) {
+          toggleFolder(newFiles[0], true);
+        }
+        return newFiles;
+      });
       const folderPrompts = files?.filter((f) => f.nodeType === DialFileNodeType.ITEM) as DialPrompt[];
       setData(folderPrompts);
       setFetchedFoldersData((prev) => ({
@@ -53,7 +59,7 @@ export const PromptFolderProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const toggleFolder = (folder: DialFile) => {
+  const toggleFolder = (folder: DialFile, skipFetch?: boolean) => {
     const folderPath = folder.path;
     const newExpanded = new Set(expandedFolders);
     setFilePath(folderPath);
@@ -62,7 +68,7 @@ export const PromptFolderProvider = ({ children }: { children: ReactNode }) => {
       setData(fetchedFoldersData[folderPath]);
     } else {
       newExpanded.add(folderPath);
-      if (!fetchedFoldersData[folderPath]) {
+      if (!fetchedFoldersData[folderPath] && !skipFetch) {
         fetchFiles(folderPath);
       } else {
         setData(fetchedFoldersData[folderPath]);
