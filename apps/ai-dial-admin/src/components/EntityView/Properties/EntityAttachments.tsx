@@ -44,7 +44,7 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
         onChangeEntity({
           ...entity,
           maxInputAttachments: void 0,
-          inputAttachmentTypes: [],
+          inputAttachmentTypes: void 0,
         });
       } else if (key === AttachmentsI18nKey.AllAttachments) {
         onChangeEntity({ ...entity, inputAttachmentTypes: [ALL_ATTACHMENTS] });
