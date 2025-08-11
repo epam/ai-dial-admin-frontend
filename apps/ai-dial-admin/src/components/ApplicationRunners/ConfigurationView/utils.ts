@@ -27,7 +27,7 @@ export const clearSchemeForEditor = (scheme: DialApplicationScheme) => {
   const clonedScheme = cloneDeep(scheme);
 
   fields.forEach((field) => {
-    if (!clonedScheme[field]) {
+    if (clonedScheme[field]) {
       delete clonedScheme[field];
     }
   });
