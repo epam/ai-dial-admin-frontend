@@ -30,6 +30,6 @@ export interface DialApplicationScheme {
 }
 
 export enum TypeEntity {
-  OBJECT = 'OBJECT',
-  BOOLEAN = 'BOOLEAN',
+  OBJECT = 'object',
+  BOOLEAN = 'boolean',
 }
