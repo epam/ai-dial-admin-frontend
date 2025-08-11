@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 
 import AddVersionModal from '@/src/components/Common/AddVersionModal/AddVersionModal';
 import Button from '@/src/components/Common/Button/Button';
-import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
