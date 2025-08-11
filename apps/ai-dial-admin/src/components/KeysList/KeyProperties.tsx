@@ -1,6 +1,5 @@
 import { FC, useCallback, useState } from 'react';
 
-import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Switch from '@/src/components/Common/Switch/Switch';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
@@ -83,17 +82,17 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
 
   return (
     <div className="flex flex-col gap-6 h-full">
-      <TextInputField
-        elementId="name"
-        fieldTitle={t(CreateI18nKey.NameTitle)}
-        placeholder={t(CreateI18nKey.NamePlaceholder)}
-        value={entity.name}
-        errorText={nameError?.text}
-        invalid={!!nameError}
-        onChange={onChangeName}
-        disabled={isKeyImmutable}
-        iconAfterInput={isKeyImmutable && <CopyButton field={entity.name} />}
-      />
+      {!isKeyImmutable && (
+        <TextInputField
+          elementId="name"
+          fieldTitle={t(CreateI18nKey.IdTitle)}
+          placeholder={t(CreateI18nKey.IdPlaceholder)}
+          value={entity.name}
+          errorText={nameError?.text}
+          invalid={!!nameError}
+          onChange={onChangeName}
+        />
+      )}
       <TextAreaField
         elementId="description"
         fieldTitle={t(CreateI18nKey.DescriptionTitle)}
