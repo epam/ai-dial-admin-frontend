@@ -33,7 +33,7 @@ export function getDeleteOperation<T>(onClick: (entity: T) => void): EntityOpera
   };
 }
 
-export function getRemoveOperation<T>(onClick: (entity: T) => void): EntityOperationDeclaration<T> {
+export function getRemoveOperation<T>(onClick: (entity: T, index: number) => void): EntityOperationDeclaration<T> {
   return {
     icon: <IconTrash {...BASE_ICON_PROPS} />,
     id: EntityOperation.Remove,
