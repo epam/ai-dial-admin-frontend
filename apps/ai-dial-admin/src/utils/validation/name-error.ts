@@ -27,18 +27,18 @@ export const getErrorForName = (
     };
   }
 
+  const tWithArgs = t as (str: string, args?: Record<string, string | number>) => string;
   const isWrongLength = isWrongFieldLength(name || '');
   if (isWrongLength) {
     return {
       type: ErrorType.LENGTH,
-      text: t ? t(CreateI18nKey.LengthError) : '',
+      text: t ? tWithArgs(CreateI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS }) : '',
     };
   }
 
   if (checkForbiddenChars) {
     const hasForbiddenChars = hasInvalidCharacters(name);
     if (hasForbiddenChars) {
-      const tWithArgs = t as (str: string, options?: Record<string, string | number>) => string;
       return {
         type: ErrorType.FORBIDDEN_CHARS,
         text: t ? tWithArgs(CreateI18nKey.ForbiddenCharsError, { list: forbiddenNameSymbols.join(' ') }) : '',
