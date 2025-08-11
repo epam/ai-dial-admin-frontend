@@ -1,10 +1,11 @@
 import { ColDef } from 'ag-grid-community';
 import { isEqual } from 'lodash';
 
+import { ModelViewI18nKey } from '@/src/constants/i18n';
 import { NO_LIMITS_KEY } from '@/src/constants/role';
 import { ActivityAuditDiff, ActivityAuditDiffSection, ActivityAuditSection } from '@/src/models/dial/activity-audit';
 import { DialRoleLimits } from '@/src/models/dial/base-entity';
-import { DialModelEndpoint } from '@/src/models/dial/model';
+import { DialModelEndpoint, DialModelPricing, PricingType } from '@/src/models/dial/model';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus, DiffView } from '@/src/types/activity-audit';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
@@ -17,7 +18,7 @@ import {
 } from './utils';
 
 const roleLimitsKeys = ['minute', 'day', 'week', 'month'];
-const dateKeys = ['expiresAt', 'keyGeneratedAt', 'createdAt'];
+const dateKeys = ['expiresAt', 'keyGeneratedAt', 'createdAt', 'updatedAt'];
 const appRunnerParameterKeys = [
   'properties',
   'dial:applicationTypeEditorUrl',
@@ -113,6 +114,7 @@ export const generateCurrentResource = (
   compare: ActivityAuditEntity | null,
   type?: ActivityAuditResourceType,
   isCurrent?: boolean,
+  t?: (str: string) => string,
 ): Record<string, ActivityAuditDiff[]> => {
   const result: Record<string, ActivityAuditDiff[]> = {
     properties: [],
@@ -127,7 +129,7 @@ export const generateCurrentResource = (
       if (!isObject && !isAppRunnerParameter(key, type)) {
         compareSimpleTypes(result.properties, key, val1, val2, isCurrent);
       } else {
-        compareObjectTypes(result, key as EntityParameterKeys, val1 as object, val2 as object, type, isCurrent);
+        compareObjectTypes(result, key as EntityParameterKeys, val1 as object, val2 as object, type, isCurrent, t);
       }
     });
   }
@@ -138,7 +140,7 @@ export const generateCurrentResource = (
       if (!isObject && !isAppRunnerParameter(key, type)) {
         fillSimpleTypes(result.properties, key, value);
       } else {
-        fillObjectTypes(result, key as EntityParameterKeys, value as object, type);
+        fillObjectTypes(result, key as EntityParameterKeys, value as object, type, t);
       }
     });
   }
@@ -214,6 +216,7 @@ export const compareObjectTypes = (
   val2: object,
   type?: ActivityAuditResourceType,
   isCurrent?: boolean,
+  t?: (str: string) => string,
 ): void => {
   if (isAppRunnerParameter(key, type)) {
     if (!diffMap.parameters) {
@@ -232,7 +235,7 @@ export const compareObjectTypes = (
     arrayStringParameterKeys.includes(key) ||
     (key === EntityParameterKeys.LIMITS && type === ActivityAuditResourceType.MODEL)
   ) {
-    compareStringArray(diffMap.properties, key, val1, val2, isCurrent);
+    compareStringArray(diffMap.properties, key, val1, val2, isCurrent, t);
   } else if (arrayObjectParameterKeys.includes(key)) {
     compareObjectArray(diffMap, key, val1 as object[], val2 as object[], isCurrent);
   } else if (
@@ -257,6 +260,7 @@ export const fillObjectTypes = (
   key: EntityParameterKeys,
   value: object,
   type?: ActivityAuditResourceType,
+  t?: (str: string) => string,
 ) => {
   if (isAppRunnerParameter(key, type)) {
     if (!diffMap.parameters) {
@@ -269,7 +273,7 @@ export const fillObjectTypes = (
     arrayStringParameterKeys.includes(key) ||
     (key === EntityParameterKeys.LIMITS && type === ActivityAuditResourceType.MODEL)
   ) {
-    fillStringArray(diffMap.properties, key, value);
+    fillStringArray(diffMap.properties, key, value, t);
   } else if (arrayObjectParameterKeys.includes(key)) {
     fillObjectArray(diffMap, key, value as object[]);
   } else if (
@@ -299,7 +303,11 @@ export const compareSimpleObjects = (
   allKeys.forEach((key) => {
     const value1 = val1?.[key as keyof typeof val1];
     const value2 = val2?.[key as keyof typeof val2];
-    compareSimpleTypes(diffs, key, value1 as string, value2 as string, isCurrent);
+    if (typeof value1 === 'object' || typeof value2 === 'object') {
+      compareStringArray(diffs, key, value1, value2, isCurrent);
+    } else {
+      compareSimpleTypes(diffs, key, value1 as string, value2 as string, isCurrent);
+    }
   });
 };
 
@@ -331,9 +339,10 @@ export const compareStringArray = (
   val1?: object,
   val2?: object,
   isCurrent?: boolean,
+  t?: (str: string) => string,
 ) => {
-  const value1 = generateStringFromObject(val1);
-  const value2 = generateStringFromObject(val2);
+  const value1 = generateStringFromObject(val1, key === EntityParameterKeys.PRICING ? t : void 0);
+  const value2 = generateStringFromObject(val2, key === EntityParameterKeys.PRICING ? t : void 0);
   compareSimpleTypes(diffs, key, value1, value2, isCurrent);
 };
 
@@ -344,8 +353,13 @@ export const compareStringArray = (
  * @param {string} key - resource key
  * @param {object} value - value to fill
  */
-export const fillStringArray = (diffs: ActivityAuditDiff[], key: string, value: object) => {
-  const val = generateStringFromObject(value);
+export const fillStringArray = (
+  diffs: ActivityAuditDiff[],
+  key: string,
+  value: object,
+  t?: (str: string) => string,
+) => {
+  const val = generateStringFromObject(value, key === EntityParameterKeys.PRICING ? t : void 0);
   fillSimpleTypes(diffs, key, val);
 };
 
@@ -355,12 +369,35 @@ export const fillStringArray = (diffs: ActivityAuditDiff[], key: string, value: 
  * @param {object} value - initial object
  * @returns {string} - result string
  */
-export const generateStringFromObject = (value?: object): string => {
+export const generateStringFromObject = (value?: object, t?: (str: string) => string): string => {
+  if (t) {
+    return convertPricing(value as DialModelPricing, t);
+  }
   return value
     ? Object.entries(value)
         .map(([key, value]) => `${key}: ${value}`)
         .join(', ')
     : '';
+};
+
+/**
+ * Helper to create correct pricing string
+ *
+ * @param {DialModelPricing} value - pricing object
+ * @param {(str: string) => string} t - translation
+ * @returns {string} - string with values and translation
+ */
+export const convertPricing = (value: DialModelPricing, t: (str: string) => string): string => {
+  const isToken = value.unit === PricingType.Token;
+  return Object.entries(value)
+    .map(([key, value]) => {
+      return key === EntityParameterKeys.UNIT
+        ? value === PricingType.Token
+          ? `${t?.(ModelViewI18nKey.Tokens)} ${t?.(ModelViewI18nKey.PerMillion)}`
+          : `${t?.(ModelViewI18nKey.CharWithoutWhitespace)}`
+        : `${key}: ${isToken ? value * 1000000 : value}`;
+    })
+    .join(', ');
 };
 
 /**
