@@ -11,6 +11,8 @@ export interface DialApplicationScheme {
   $schema?: string;
   $id?: string;
   description?: string;
+  title?: string;
+  type?: TypeEntity;
   'dial:applicationTypeEditorUrl'?: string;
   'dial:applicationTypeViewerUrl'?: string;
   'dial:applicationTypeDisplayName'?: string;
@@ -22,5 +24,12 @@ export interface DialApplicationScheme {
   'dial:appendApplicationPropertiesHeader'?: boolean;
   properties?: Record<string, unknown>;
   applications?: string[];
+  createdAt?: number;
+  updatedAt?: number;
   topics?: string[];
+}
+
+export enum TypeEntity {
+  OBJECT = 'OBJECT',
+  BOOLEAN = 'BOOLEAN',
 }

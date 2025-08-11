@@ -135,6 +135,12 @@ export enum EntitiesI18nKey {
   SourceType = 'Entities.SourceType',
   Endpoints = 'Entities.Endpoints',
   AppRunner = 'Entities.AppRunner',
+  Type = 'Entities.Type',
+  TypePlaceholder = 'Entities.TypePlaceholder',
+  Title = 'Entities.Title',
+  TitlePlaceholder = 'Entities.TitlePlaceholder',
+  ObjectType = 'Entities.ObjectType',
+  BooleanType = 'Entities.BooleanType',
 }
 
 export enum DeleteI18nKey {

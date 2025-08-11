@@ -5,8 +5,10 @@ import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import { CreateI18nKey, EntitiesI18nKey, FeaturesI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialApplicationScheme } from '@/src/models/dial/application';
+import { DialApplicationScheme, TypeEntity } from '@/src/models/dial/application';
 import Switch from '@/src/components/Common/Switch/Switch';
+import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
+import { DropdownItemsModel } from '@/src/models/dropdown-item';
 
 interface Props {
   runner: DialApplicationScheme;
@@ -15,6 +17,10 @@ interface Props {
 
 const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
   const t = useI18n();
+  const types: DropdownItemsModel[] = [
+    { id: TypeEntity.OBJECT, name: t(EntitiesI18nKey.ObjectType) },
+    { id: TypeEntity.BOOLEAN, name: t(EntitiesI18nKey.BooleanType) },
+  ];
 
   const onChangeTopics = useCallback(
     (topics: string[]) => {
@@ -32,6 +38,27 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
 
   return (
     <div className="flex flex-col gap-6 h-full">
+      <TextInputField
+        elementId="title"
+        fieldTitle={t(EntitiesI18nKey.Title)}
+        placeholder={t(EntitiesI18nKey.TitlePlaceholder)}
+        value={runner.title}
+        optional={true}
+        onChange={(title: string) => {
+          onChangeRunner({ ...runner, title });
+        }}
+      />
+
+      <DropdownField
+        selectedValue={runner.type}
+        elementId="type"
+        items={types}
+        fieldTitle={t(EntitiesI18nKey.Type)}
+        placeholder={t(EntitiesI18nKey.TypePlaceholder)}
+        onChange={(type: string) => {
+          onChangeRunner({ ...runner, type: type as TypeEntity });
+        }}
+      />
       <Multiselect
         elementId="topics"
         selectedItems={runner.topics}
