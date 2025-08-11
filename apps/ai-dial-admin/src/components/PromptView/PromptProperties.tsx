@@ -167,6 +167,7 @@ const PromptProperties: FC<Props> = ({
         {/* will be uncommented after BE implement author */}
         {publication ? (
           <>
+            <LabeledText label={t(CreateI18nKey.DisplayNameTitle)} text={prompt.name} copyButton={true} />
             {/* <LabeledText label="Author" text={publication.author} /> */}
             <LabeledText
               label={t(EntitiesI18nKey.CreatedAt)}
@@ -175,6 +176,7 @@ const PromptProperties: FC<Props> = ({
           </>
         ) : (
           <>
+            <LabeledText label={t(CreateI18nKey.DisplayNameTitle)} text={prompt.name} copyButton={true} />
             {/* <LabeledText label="Author" text={prompt.author} /> */}
             <LabeledText label={t(EntitiesI18nKey.UpdatedAt)} text={formatDateTimeToLocalString(prompt.updateTime)} />
           </>
@@ -183,16 +185,6 @@ const PromptProperties: FC<Props> = ({
 
       <div className="mt-8 pt-8">
         <div className="flex flex-col gap-6 pr-6">
-          <div className="lg:w-[35%]">
-            <TextInputField
-              elementId="name"
-              fieldTitle={t(CreateI18nKey.NameTitle)}
-              placeholder={t(CreateI18nKey.NamePlaceholder)}
-              value={prompt.name}
-              disabled={true}
-              iconAfterInput={<CopyButton field={prompt.name} />}
-            />
-          </div>
           <div className="w-[105px]">
             {isImmutable ? (
               <TextInputField
