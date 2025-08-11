@@ -17,7 +17,7 @@ export const getInterceptorsGridData = (
 };
 
 export const getInterceptorsColumnDefs = (
-  remove: (entity: DialBaseEntity) => void,
+  remove: (entity: DialBaseEntity, index: number) => void,
   open: (entity: DialBaseEntity) => void,
 ): ColDef[] => [
   DRAGGABLE_COL_DEF,
