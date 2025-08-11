@@ -99,6 +99,7 @@ export enum EntityParameterKeys {
   KEYS = 'grantedKeys',
   PARAMETERS = 'parameters',
   MODELS = 'models',
+  UNIT = 'unit',
 }
 
 export enum ParameterNamesI18nKey {
@@ -163,6 +164,7 @@ export enum ParameterNamesI18nKey {
   'dial:appendApplicationPropertiesHeader' = 'ParameterNames.appendApplicationPropertiesHeader',
   grantedKeys = 'ParameterNames.grantedKeys',
   createdAt = 'ParameterNames.createdAt',
+  updatedAt = 'ParameterNames.updatedAt',
   expiresAt = 'ParameterNames.expiresAt',
   keyGeneratedAt = 'ParameterNames.keyGeneratedAt',
   project = 'ParameterNames.project',
