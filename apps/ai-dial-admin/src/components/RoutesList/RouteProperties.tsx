@@ -106,6 +106,7 @@ const RouteProperties: FC<Props> = ({ route, updateRoute }) => {
           disabled={true}
           iconAfterInput={<CopyButton field={route.name} />}
         />
+
         <TextAreaField
           elementId="description"
           fieldTitle={t(CreateI18nKey.DescriptionTitle)}
@@ -113,6 +114,16 @@ const RouteProperties: FC<Props> = ({ route, updateRoute }) => {
           optional={true}
           value={route.description}
           onChange={onChangeDescription}
+        />
+
+        <NumberInputField
+          elementId="order"
+          fieldTitle={t(RoutesI18nKey.Order)}
+          placeholder={t(RoutesI18nKey.OrderPlaceholder)}
+          value={route.order}
+          onChange={(order) => {
+            updateRoute({ ...route, order: order ? +order : undefined });
+          }}
         />
 
         <Paths route={route} updateRoute={updateRoute} />

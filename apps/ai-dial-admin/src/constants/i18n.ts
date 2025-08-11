@@ -491,6 +491,8 @@ export enum RoutesI18nKey {
   MethodsTitle = 'Routes.MethodsTitle',
   InvalidPath = 'Routes.InvalidPath',
   InvalidStatus = 'Routes.InvalidStatus',
+  Order = 'Routes.Order',
+  OrderPlaceholder = 'Routes.OrderPlaceholder',
 }
 
 export enum PublicationsI18nKey {
