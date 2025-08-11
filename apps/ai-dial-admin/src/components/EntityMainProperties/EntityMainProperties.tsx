@@ -125,7 +125,7 @@ const EntityMainProperties: FC<Props> = ({
         <TextInputField
           fieldTitle={t(CreateI18nKey.IdTitle)}
           elementId="id"
-          placeholder={t(CreateI18nKey.IdTitle)}
+          placeholder={t(CreateI18nKey.IdPlaceholder)}
           value={entity.name}
           onChange={onChangeName}
           errorText={nameError?.text}

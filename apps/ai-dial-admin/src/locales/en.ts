@@ -157,6 +157,12 @@ export default {
     SourceType: 'Source type',
     Endpoints: 'Endpoints',
     AppRunner: 'Application runner',
+    Type: 'Type',
+    TypePlaceholder: 'Enter type',
+    Title: 'Title',
+    TitlePlaceholder: 'Enter title',
+    ObjectType: 'Object',
+    BooleanType: 'Boolean',
   },
   DeleteEntity: {
     Title: 'Confirm Deleting ',
