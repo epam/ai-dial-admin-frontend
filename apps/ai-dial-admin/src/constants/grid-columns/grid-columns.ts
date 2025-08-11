@@ -48,7 +48,7 @@ const UPDATED_AT_COLUMN: ColDef = {
   ...dateTimeColumn,
 };
 
-const DESCRIPTION_COLUMN: ColDef = {
+export const DESCRIPTION_COLUMN: ColDef = {
   field: 'description',
   colId: 'description',
   headerName: 'Description',

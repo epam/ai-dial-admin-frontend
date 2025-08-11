@@ -20,7 +20,10 @@ const ActionColumn = <T extends object>({ items, data, api, node }: Props<T>) =>
     <div className="w-[24px] h-[24px] ml-[-4px]">
       <Dropdown width={200} type={DropdownType.ContextMenu} trigger={<ActionTrigger />}>
         {dropdownItems.map((item, i) => (
-          <DropdownMenuItem key={i} item={<ActionItem item={item} entity={data as T} />} />
+          <DropdownMenuItem
+            key={i}
+            item={<ActionItem item={item} entity={data as T} rowIndex={node.rowIndex as number} />}
+          />
         ))}
       </Dropdown>
     </div>
