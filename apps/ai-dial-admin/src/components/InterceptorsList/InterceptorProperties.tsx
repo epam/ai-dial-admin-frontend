@@ -5,7 +5,6 @@ import { FC } from 'react';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
-import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getInterceptorContainers } from '@/src/app/[lang]/interceptors/actions';
 import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
 import { useI18n } from '@/src/locales/client';
@@ -13,7 +12,6 @@ import { useI18n } from '@/src/locales/client';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
-import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
 import SourceField from '@/src/components/SourceField/SourceField';
 
 interface Props {
@@ -26,16 +24,6 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
 
   return (
     <div className="h-full flex flex-col pt-3 gap-10 divide-y divide-primary w-full">
-      <div className="flex flex-row gap-10">
-        <LabeledText
-          label={t(EntitiesI18nKey.CreatedAt)}
-          text={formatDateTimeToLocalString(selectedInterceptor.createdAt)}
-        />
-        <LabeledText
-          label={t(EntitiesI18nKey.UpdatedAt)}
-          text={formatDateTimeToLocalString(selectedInterceptor.updatedAt)}
-        />
-      </div>
       <div className="flex">
         <div className="lg:w-[35%] flex flex-col gap-6 mt-3">
           <SimpleEntityProperties

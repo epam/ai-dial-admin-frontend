@@ -1,5 +1,12 @@
 .react-mde {
+  // fix locking scroll
+  .CodeMirror-scroll {
+    overscroll-behavior: contain;
+    touch-action: auto;
+  }
+
   @apply border-primary !important;
+
   .mde-header {
     @apply bg-transparent text-secondary border-b-primary;
     @apply border-b-primary;
@@ -21,6 +28,7 @@
       }
     }
   }
+
   .mde-preview {
     @apply overflow-x-auto;
     @apply min-h-[250px] !important;
@@ -33,6 +41,12 @@
       background-color: unset;
     }
   }
+
+  // hide icon
+  .mde-header-group:nth-of-type(2) .mde-header-item:nth-child(4) {
+    display: none;
+  }
+
   .mde-text {
     @apply min-h-[250px];
   }
