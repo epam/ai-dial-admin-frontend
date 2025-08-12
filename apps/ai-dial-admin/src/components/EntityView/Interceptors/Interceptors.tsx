@@ -45,10 +45,10 @@ const EntityInterceptors: FC<Props> = ({ entity, interceptors, onChangeEntity })
 
   const onRemoveInterceptor = useCallback(
     (_: DialBaseEntity, index: number) => {
-      const filtered = entity.interceptors?.splice(index, 1) || [];
+      entity.interceptors?.splice(index, 1);
       onChangeEntity({
         ...entity,
-        interceptors: filtered,
+        interceptors: entity.interceptors,
       });
     },
     [entity, onChangeEntity],

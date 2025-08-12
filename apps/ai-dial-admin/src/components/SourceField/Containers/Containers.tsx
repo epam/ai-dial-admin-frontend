@@ -19,14 +19,16 @@ import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import InputModal from '@/src/components/Common/InputModal/InputModal';
 import SelectContainerModal from '@/src/components/SourceField/Containers/SelectContainerModal';
 import Button from '@/src/components/Common/Button/Button';
+import Field from '@/src/components/Common/Field/Field';
 
 interface Props {
   entity: DialInterceptor;
   onChange: (entity: DialInterceptor) => void;
   getContainers: () => Promise<Container[] | null>;
+  fieldId?: string;
 }
 
-const Containers: FC<Props> = ({ entity, onChange, getContainers }) => {
+const Containers: FC<Props> = ({ entity, onChange, getContainers, fieldId }) => {
   const t = useI18n() as (key: string) => string;
   const { showNotification } = useNotification();
 
@@ -84,9 +86,15 @@ const Containers: FC<Props> = ({ entity, onChange, getContainers }) => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex lg:flex-row flex-col gap-2">
-        <div className="lg:w-[35%]">
-          <InputModal modalState={modalState} onOpenModal={onOpenModal} selectedValue={selectedContainer?.id}>
+      <div className="flex lg:flex-row flex-col gap-2 items-end">
+        <div className="flex flex-col lg:w-[35%]">
+          <Field fieldTitle={t(SourceI18nKey.Container)} htmlFor={fieldId} />
+          <InputModal
+            modalState={modalState}
+            onOpenModal={onOpenModal}
+            selectedValue={selectedContainer?.id}
+            elementId={fieldId}
+          >
             <SelectContainerModal
               selectedId={entity.source?.containerId}
               onClose={onCloseModal}

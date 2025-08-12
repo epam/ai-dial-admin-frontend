@@ -16,6 +16,7 @@ interface Props {
   readonly?: boolean;
   valueCssClasses?: string;
   inputCssClasses?: string;
+  elementId?: string;
 }
 
 const InputModal: FC<Props> = ({
@@ -26,6 +27,7 @@ const InputModal: FC<Props> = ({
   valueCssClasses,
   inputCssClasses,
   onOpenModal,
+  elementId,
 }) => {
   const t = useI18n();
 
@@ -34,7 +36,13 @@ const InputModal: FC<Props> = ({
   return (
     <>
       {typeof value === 'string' || selectedValue?.length === 0 ? (
-        <button type="button" className="w-full" onClick={readonly ? void 0 : onOpenModal} aria-label="open-popup">
+        <button
+          type="button"
+          className="w-full"
+          onClick={readonly ? void 0 : onOpenModal}
+          aria-label="open-popup"
+          id={elementId}
+        >
           <div
             className={classNames(
               readonly ? 'border-0 p-0 !body' : '',
