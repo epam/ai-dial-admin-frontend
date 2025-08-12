@@ -16,14 +16,16 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import InputModal from '@/src/components/Common/InputModal/InputModal';
 import SelectRunnerModal from '@/src/components/SourceField/Template/SelectRunnerModal';
 import Button from '@/src/components/Common/Button/Button';
+import Field from '@/src/components/Common/Field/Field';
 
 interface Props {
   entity: DialInterceptor;
   onChange: (entity: DialInterceptor) => void;
   getRunners: () => Promise<InterceptorTemplate[] | null>;
+  fieldId?: string;
 }
 
-const Templates: FC<Props> = ({ entity, onChange, getRunners }) => {
+const Templates: FC<Props> = ({ entity, onChange, getRunners, fieldId }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
 
@@ -77,9 +79,15 @@ const Templates: FC<Props> = ({ entity, onChange, getRunners }) => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex lg:flex-row flex-col gap-2">
-        <div className="lg:w-[35%]">
-          <InputModal modalState={modalState} onOpenModal={onOpenModal} selectedValue={selectedRunner?.name}>
+      <div className="flex lg:flex-row flex-col gap-2 items-end">
+        <div className="flex flex-col lg:w-[35%]">
+          <Field fieldTitle={t(SourceI18nKey.InterceptorTemplate)} htmlFor={fieldId} />
+          <InputModal
+            modalState={modalState}
+            onOpenModal={onOpenModal}
+            selectedValue={selectedRunner?.name}
+            elementId={fieldId}
+          >
             <SelectRunnerModal
               selected={entity.source?.runnerName}
               onClose={onCloseModal}
