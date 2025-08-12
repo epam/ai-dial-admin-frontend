@@ -93,9 +93,9 @@ const DuplicatePrompt: FC<Props> = ({ modalState, entity, versionsMap, onDuplica
           onChange={onChangeDuplicationType}
         />
         <TextInputField
-          fieldTitle={t(CreateI18nKey.NameTitle)}
+          fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
           elementId="name"
-          placeholder={t(CreateI18nKey.NamePlaceholder)}
+          placeholder={t(CreateI18nKey.DisplayNamePlaceholder)}
           value={clonedPrompt.name}
           onChange={onChangeName}
           disabled={duplicationType === DuplicationTypes.VERSION}
