@@ -45,7 +45,7 @@ const ActivityAuditView: FC<Props> = ({
   hideComparator,
   entity,
 }) => {
-  const t = useI18n();
+  const t = useI18n() as (t: string) => string;
   const router = useRouter();
 
   const { showNotification } = useNotification();
@@ -60,11 +60,14 @@ const ActivityAuditView: FC<Props> = ({
     previousRevision,
     activity.resourceType,
     true,
+    t,
   );
   const after = generateCurrentResource(
     previousRevision,
     compareView === CompareView.NEXT ? activityRevision : (entity as ActivityAuditEntity),
     activity.resourceType,
+    false,
+    t,
   );
 
   const onOpenModal = useCallback(() => {

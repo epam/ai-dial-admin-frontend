@@ -8,7 +8,7 @@ import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/Aut
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 import { CreateI18nKey } from '@/src/constants/i18n';
-import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
+import { MAX_NAME_SYMBOLS, MIN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
@@ -87,7 +87,9 @@ const EntityMainProperties: FC<Props> = ({
   useEffect(() => {
     const errorKey = getDisplayNameErrorKeyPerView(view, isWrongLengthWithView(view, entity.displayName));
 
-    setDisplayNameError(isValidDisplayName ? void 0 : errorKey ? t(errorKey, { number: MAX_NAME_SYMBOLS }) : '');
+    setDisplayNameError(
+      isValidDisplayName ? void 0 : errorKey ? t(errorKey, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS }) : '',
+    );
   }, [entity.displayName, isValidDisplayName, t, view]);
 
   const onChangeVersion = useCallback(
@@ -101,7 +103,9 @@ const EntityMainProperties: FC<Props> = ({
       } else {
         const isLengthError = displayVersion != null ? isWrongLengthWithView(view, displayVersion) : false;
         setIsValidVersion(!isLengthError);
-        setVersionError(isLengthError ? t(CreateI18nKey.ErrorLength) : '');
+        setVersionError(
+          isLengthError ? t(CreateI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS }) : '',
+        );
       }
     },
     [entity, onChangeEntity, displayNameError, t, view, isVersionOptional, isValidDisplayName, setIsValidDisplayName],
@@ -121,7 +125,7 @@ const EntityMainProperties: FC<Props> = ({
         <TextInputField
           fieldTitle={t(CreateI18nKey.IdTitle)}
           elementId="id"
-          placeholder={t(CreateI18nKey.IdTitle)}
+          placeholder={t(CreateI18nKey.IdPlaceholder)}
           value={entity.name}
           onChange={onChangeName}
           errorText={nameError?.text}

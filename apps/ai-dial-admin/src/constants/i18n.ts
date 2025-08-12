@@ -135,6 +135,12 @@ export enum EntitiesI18nKey {
   SourceType = 'Entities.SourceType',
   Endpoints = 'Entities.Endpoints',
   AppRunner = 'Entities.AppRunner',
+  Type = 'Entities.Type',
+  TypePlaceholder = 'Entities.TypePlaceholder',
+  Title = 'Entities.Title',
+  TitlePlaceholder = 'Entities.TitlePlaceholder',
+  ObjectType = 'Entities.ObjectType',
+  BooleanType = 'Entities.BooleanType',
 }
 
 export enum DeleteI18nKey {
@@ -236,8 +242,8 @@ export enum CreateI18nKey {
   KeyPlaceholder = 'CreateEntity.key.placeholder',
   ErrorKey = 'CreateEntity.key.error',
   ErrorName = 'CreateEntity.name.error',
-  LengthError = 'CreateEntity.name.length',
   ErrorLength = 'CreateEntity.errorLength',
+  MinMaxLength = 'CreateEntity.minMaxLength',
   InterceptorName = 'CreateEntity.name.interceptor',
   ForbiddenCharsError = 'CreateEntity.name.forbiddenChars',
   DisplayNameTitle = 'CreateEntity.displayName.title',
