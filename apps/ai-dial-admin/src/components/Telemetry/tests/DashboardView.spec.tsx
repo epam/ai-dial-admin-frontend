@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import DashboardView from '../DashboardView';
-import { MenuI18nKey, TelemetryI18nKey } from '../../../constants/i18n';
+import { MenuI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 
 describe('DashboardView', () => {
   test('renders dashboard title and dashboard component', () => {
