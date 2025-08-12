@@ -21,10 +21,32 @@ export const PROMPT_IMPORT_ZIP_URL = `${PROMPTS_URL}/import/zip`;
 export const PROMPT_IMPORT_JSON_URL = `${PROMPTS_URL}/import/json`;
 
 export class PromptsApi extends BaseApi {
-  getPromptsList(token: JWT | null, path: string): Promise<DialPrompt[] | null | undefined> {
-    return this.post(PROMPT_LIST_URL, { path }, token).then((response) =>
-      response === void 0 ? void 0 : (response as { items: DialPrompt[] })?.items || [],
-    );
+  async getPromptsList(token: JWT | null, path: string): Promise<DialPrompt[] | null | undefined> {
+    const allItems: DialPrompt[] = [];
+    let nextToken: string | undefined = undefined;
+
+    while (true) {
+      const body: { path: string; nextToken?: string } = { path };
+      if (nextToken) {
+        body.nextToken = nextToken;
+      }
+
+      const response = (await this.post(PROMPT_LIST_URL, body, token)) as
+        | { items: DialPrompt[]; nextToken?: string }
+        | undefined;
+
+      if (!response) break;
+
+      if (Array.isArray(response.items) && response.items.length > 0) {
+        allItems.push(...response.items);
+      }
+
+      if (!response.nextToken) break;
+
+      nextToken = response.nextToken;
+    }
+
+    return allItems;
   }
 
   getPrompt(token: JWT | null, path?: string): Promise<DialPrompt | null> {
