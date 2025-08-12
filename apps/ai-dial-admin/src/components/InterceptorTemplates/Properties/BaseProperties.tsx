@@ -41,8 +41,8 @@ const BaseProperties: FC<Props> = ({ template, setTemplate, names, isImmutable }
 
       <TextInputField
         elementId="name"
-        fieldTitle={t(CreateI18nKey.NameTitle)}
-        placeholder={t(CreateI18nKey.NamePlaceholder)}
+        fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
+        placeholder={t(CreateI18nKey.DisplayNamePlaceholder)}
         value={template.displayName}
         onChange={(displayName) => {
           setTemplate({ ...template, displayName });
