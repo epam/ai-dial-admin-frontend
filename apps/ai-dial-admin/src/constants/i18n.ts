@@ -220,6 +220,7 @@ export enum ButtonsI18nKey {
   Rollback = 'Buttons.Rollback',
   Back = 'Buttons.Back',
   Close = 'Buttons.Close',
+  OpenAdapter = 'Buttons.OpenAdapter',
   OpenAppRunner = 'Buttons.OpenAppRunner',
 }
 
@@ -234,7 +235,6 @@ export enum CreateI18nKey {
   Route = 'CreateEntity.Route',
   Interceptor = 'CreateEntity.Interceptor',
   NameTitle = 'CreateEntity.name.title',
-  NamePlaceholder = 'CreateEntity.name.placeholder',
   IdTitle = 'CreateEntity.id.title',
   IdPlaceholder = 'CreateEntity.id.placeholder',
   IdUrlError = 'CreateEntity.id.UrlError',

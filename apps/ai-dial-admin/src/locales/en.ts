@@ -261,7 +261,6 @@ export default {
     },
     name: {
       title: 'Name',
-      placeholder: 'Enter name',
       error: 'This name already exists.',
       interceptor: 'Interceptor Name',
       forbiddenChars: 'Name must not contain forbidden characters: {list}',
@@ -371,7 +370,8 @@ export default {
     Refresh: 'Refresh',
     Back: 'Back',
     Close: 'Close',
-    OpenAppRunner: 'Open application runner',
+    OpenAppRunner: 'Open Application Runner',
+    OpenAdapter: 'Open Adapter',
   },
   UpstreamEndpoints: {
     Upstream: 'Upstream',
