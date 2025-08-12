@@ -16,13 +16,11 @@ const DashboardView: FC<Props> = ({ grafanaLink }) => {
   const t = useI18n();
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 relative" data-testid={'dashboard-view'}>
+    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 relative">
       <div className="flex flex-row mb-3 py-1.5 justify-between items-center">
-        <h1 className="truncate" data-testid="dashboard-view-heading">
-          {t(MenuI18nKey.Dashboard)}
-        </h1>
+        <h1>{t(MenuI18nKey.Dashboard)}</h1>
         {grafanaLink && (
-          <Link className="tertiary" href={grafanaLink} target={'_blank'}>
+          <Link className="tertiary" href={grafanaLink} target="_blank">
             <Grafana />
             <p className="small-text-semi ml-2">{t(TelemetryI18nKey.Grafana)}</p>
           </Link>
