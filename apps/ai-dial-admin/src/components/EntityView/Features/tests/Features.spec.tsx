@@ -3,6 +3,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
 import EntityFeatures from '../Features';
 import { FeaturesI18nKey } from '@/src/constants/i18n';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 describe('EntityFeatures', () => {
   test('renders all text and switch fields for models view', () => {
@@ -16,7 +17,11 @@ describe('EntityFeatures', () => {
     };
     const onChangeEntity = vi.fn();
 
-    render(<EntityFeatures view={ApplicationRoute.Models} entity={entity} onChangeEntity={onChangeEntity} />);
+    render(
+      <SaveValidationContextProvider>
+        <EntityFeatures view={ApplicationRoute.Models} entity={entity} onChangeEntity={onChangeEntity} />
+      </SaveValidationContextProvider>,
+    );
 
     // Text fields
     expect(screen.getByText(FeaturesI18nKey.rateEndpoint)).toBeInTheDocument();
@@ -30,7 +35,11 @@ describe('EntityFeatures', () => {
     const entity = { features: {} };
     const onChangeEntity = vi.fn();
 
-    render(<EntityFeatures view={ApplicationRoute.Keys} entity={entity} onChangeEntity={onChangeEntity} />);
+    render(
+      <SaveValidationContextProvider>
+        <EntityFeatures view={ApplicationRoute.Keys} entity={entity} onChangeEntity={onChangeEntity} />
+      </SaveValidationContextProvider>,
+    );
 
     // Should not render any known field titles
     expect(screen.queryByText(FeaturesI18nKey.rateEndpoint)).toBeNull();

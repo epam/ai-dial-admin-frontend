@@ -7,8 +7,8 @@ import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { FieldError } from '@/src/models/error';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import { getErrorForAppRunnerId } from './utils';
 import AppRunnerExtendedProperties from './ExtendedProperties';
+import { getErrorForAppRunnerId } from './utils';
 
 interface Props {
   runner: DialApplicationScheme;

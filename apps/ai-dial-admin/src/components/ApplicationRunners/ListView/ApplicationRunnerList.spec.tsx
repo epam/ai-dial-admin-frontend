@@ -5,13 +5,16 @@ import { render } from '@testing-library/react';
 import { fireEvent } from '@testing-library/dom';
 import { describe, expect, test } from 'vitest';
 import ApplicationRunnersList from './ApplicationRunnersList';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 describe('Components - ApplicationRunnersList', () => {
   test('Should render successfully', () => {
     const { baseElement } = render(
-      <ApplicationRunnersList
-        data={[{ 'dial:applicationTypeDisplayName': 'name' }, { 'dial:applicationTypeDisplayName': void 0 }]}
-      />,
+      <SaveValidationContextProvider>
+        <ApplicationRunnersList
+          data={[{ 'dial:applicationTypeDisplayName': 'name' }, { 'dial:applicationTypeDisplayName': void 0 }]}
+        />
+      </SaveValidationContextProvider>,
     );
 
     expect(baseElement).toBeTruthy();
@@ -21,7 +24,9 @@ describe('Components - ApplicationRunnersList', () => {
 describe('Components - ApplicationRunnersView', () => {
   test('Should render successfully', () => {
     const { baseElement } = render(
-      <ApplicationRunnersView originalScheme={{ 'dial:applicationTypeDisplayName': 'name' }} applications={[]} />,
+      <SaveValidationContextProvider>
+        <ApplicationRunnersView originalScheme={{ 'dial:applicationTypeDisplayName': 'name' }} applications={[]} />,
+      </SaveValidationContextProvider>,
     );
 
     expect(baseElement).toBeTruthy();
@@ -42,7 +47,11 @@ describe('Components - Properties', () => {
       scheme = newScheme;
     };
 
-    const { baseElement, getByTestId } = render(<SchemeProperties runner={scheme} onChangeRunner={onChangeScheme} />);
+    const { baseElement, getByTestId } = render(
+      <SaveValidationContextProvider>
+        <SchemeProperties runner={scheme} onChangeRunner={onChangeScheme} />
+      </SaveValidationContextProvider>,
+    );
 
     expect(baseElement).toBeTruthy();
 

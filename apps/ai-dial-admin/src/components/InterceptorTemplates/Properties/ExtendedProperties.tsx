@@ -1,13 +1,13 @@
-import { FC, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo } from 'react';
 
-import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { CreateI18nKey } from '@/src/constants/i18n';
-import { FieldError } from '@/src/models/error';
-import { getUrlError } from '@/src/utils/validation/url-error';
 import { useI18n } from '@/src/locales/client';
+import { InterceptorTemplate } from '@/src/models/interceptor-template';
+import { getUrlError } from '@/src/utils/validation/url-error';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import BaseProperties from '@/src/components/InterceptorTemplates/Properties/BaseProperties';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   template: InterceptorTemplate;
@@ -17,8 +17,39 @@ interface Props {
 const ExtendedProperties: FC<Props> = ({ template, onChange }) => {
   const t = useI18n() as (key: string) => string;
 
-  const [completionEndpointError, setCompletionEndpointError] = useState<FieldError | null>(null);
-  const [configurationEndpointError, setConfigurationEndpointError] = useState<FieldError | null>(null);
+  const { dispatch } = useSaveValidationContext();
+
+  const completionEndpointError = useMemo(() => {
+    return template.completionEndpoint ? getUrlError(template.completionEndpoint, t) : null;
+  }, [template.completionEndpoint, t]);
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'completionEndpoint', isValid: !completionEndpointError });
+  }, [completionEndpointError, t, dispatch]);
+
+  const configurationEndpointError = useMemo(() => {
+    return template.configurationEndpoint ? getUrlError(template.configurationEndpoint, t) : null;
+  }, [template.configurationEndpoint, t]);
+  useEffect(() => {
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: 'configurationEndpoint',
+      isValid: !configurationEndpointError,
+    });
+  }, [configurationEndpointError, t, dispatch]);
+
+  const onChangeCompletionEndpoint = useCallback(
+    (completionEndpoint: string) => {
+      onChange({ ...template, completionEndpoint });
+    },
+    [template, onChange],
+  );
+
+  const onChangeConfigurationEndpoint = useCallback(
+    (configurationEndpoint: string) => {
+      onChange({ ...template, configurationEndpoint });
+    },
+    [template, onChange],
+  );
 
   return (
     <div className="flex flex-col gap-6 mt-3">
@@ -33,10 +64,7 @@ const ExtendedProperties: FC<Props> = ({ template, onChange }) => {
           value={template?.completionEndpoint}
           errorText={completionEndpointError?.text}
           invalid={!!completionEndpointError}
-          onChange={(completionEndpoint) => {
-            setCompletionEndpointError(getUrlError(completionEndpoint, t));
-            onChange({ ...template, completionEndpoint });
-          }}
+          onChange={onChangeCompletionEndpoint}
         />
         <TextInputField
           elementId="configurationEndpoint"
@@ -45,10 +73,7 @@ const ExtendedProperties: FC<Props> = ({ template, onChange }) => {
           value={template.configurationEndpoint}
           errorText={configurationEndpointError?.text}
           invalid={!!configurationEndpointError}
-          onChange={(configurationEndpoint) => {
-            setConfigurationEndpointError(getUrlError(configurationEndpoint, t));
-            onChange({ ...template, configurationEndpoint });
-          }}
+          onChange={onChangeConfigurationEndpoint}
         />
       </div>
     </div>
