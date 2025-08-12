@@ -64,8 +64,8 @@ const SchemeProperties: FC<Props> = ({ runner, isImmutable, onChangeRunner }) =>
 
       <TextInputField
         elementId="name"
-        fieldTitle={t(CreateI18nKey.NameTitle)}
-        placeholder={t(CreateI18nKey.NamePlaceholder)}
+        fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
+        placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
         value={runner['dial:applicationTypeDisplayName']}
         onChange={onChangeName}
       />
