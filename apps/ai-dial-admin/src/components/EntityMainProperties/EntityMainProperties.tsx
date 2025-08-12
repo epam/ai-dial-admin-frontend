@@ -121,7 +121,7 @@ const EntityMainProperties: FC<Props> = ({
 
   return (
     <div className="w-full flex flex-col gap-6">
-      <div className='flex flex-col lg:w-[35%] gap-6'>
+      <div className="flex flex-col lg:w-[35%] gap-6">
         {!isEntityImmutable && (
           <TextInputField
             fieldTitle={t(CreateI18nKey.IdTitle)}
