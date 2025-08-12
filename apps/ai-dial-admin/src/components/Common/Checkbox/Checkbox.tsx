@@ -30,7 +30,7 @@ const Checkbox: FC<Props> = ({ label, id, checked, onChange }) => {
 
   return (
     <label className={checkboxClassNames} htmlFor={id}>
-      {checked && <IconCheck className="mr-2" {...BASE_ICON_PROPS} />}
+      {checked && <IconCheck className="mr-2 border rounded" {...BASE_ICON_PROPS} />}
       {label && (
         <Tooltip triggerClassName="flex-1 min-w-0" contentClassName="truncate" tooltip={label}>
           <p className="text-primary flex-1 min-w-0 truncate">{label}</p>
