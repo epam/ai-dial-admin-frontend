@@ -1,6 +1,7 @@
 import { FC, ReactNode } from 'react';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
+import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 
 interface Props {
   label: string;
@@ -17,9 +18,8 @@ const LabeledText: FC<Props> = ({ label, text, children, copyButton }) => {
         children
       ) : (
         <div className="flex flex-row">
-          <p className="flex-1 min-w-0 truncate mr-2" title={text}>
-            {text}
-          </p>
+          <Tooltip tooltip={text}>{text}</Tooltip>
+
           {copyButton && <CopyButton field={text} />}
         </div>
       )}
