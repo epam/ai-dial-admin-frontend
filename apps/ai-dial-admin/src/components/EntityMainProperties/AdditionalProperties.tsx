@@ -56,23 +56,25 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
 
   return (
     <div className="w-full flex flex-col gap-6">
-      {isEntityImmutable && isShowMaintainer ? (
-        <TextInputField
-          elementId="author"
-          fieldTitle={t(EntitiesI18nKey.Maintainer)}
-          placeholder={t(EntitiesI18nKey.MaintainerPlaceholder)}
-          value={entity.author}
-          optional={true}
-          onChange={(author) => onChangeEntity({ ...entity, author })}
-        />
-      ) : null}
+      <div className='flex flex-col lg:w-[35%] gap-6'>
+        {isEntityImmutable && isShowMaintainer ? (
+          <TextInputField
+            elementId="author"
+            fieldTitle={t(EntitiesI18nKey.Maintainer)}
+            placeholder={t(EntitiesI18nKey.MaintainerPlaceholder)}
+            value={entity.author}
+            optional={true}
+            onChange={(author) => onChangeEntity({ ...entity, author })}
+          />
+        ) : null}
 
-      {isShowCompletionEndpoint && isEntityImmutable ? (
-        <ReadonlyField
-          value={applicationRunner['dial:applicationTypeCompletionEndpoint']}
-          title={t(CreateI18nKey.CompletionEndpointTitle)}
-        />
-      ) : null}
+        {isShowCompletionEndpoint && isEntityImmutable ? (
+          <ReadonlyField
+            value={applicationRunner['dial:applicationTypeCompletionEndpoint']}
+            title={t(CreateI18nKey.CompletionEndpointTitle)}
+          />
+        ) : null}
+      </div>
 
       {view === ApplicationRoute.Models ? (
         <SourceEntitySelector
