@@ -39,12 +39,14 @@ const dateTimeColumn: Partial<ColDef> = {
 const CREATED_AT_COLUMN: ColDef = {
   field: 'createdAt',
   headerName: 'Creation time',
+  hide: false,
   ...dateTimeColumn,
 };
 
 const UPDATED_AT_COLUMN: ColDef = {
   field: 'updateTime',
   headerName: 'Updated time',
+  hide: false,
   ...dateTimeColumn,
 };
 
@@ -57,9 +59,14 @@ export const DESCRIPTION_COLUMN: ColDef = {
 
 export const VERSION_COLUMN: ColDef = { field: 'version', colId: 'version', headerName: 'Version' };
 export const AUTHOR_COLUMN: ColDef = { field: 'author', colId: 'author', headerName: 'Author' };
-export const DISPLAY_NAME_COLUMN: ColDef = { field: 'displayName', colId: 'displayName', headerName: 'Display Name' };
+export const DISPLAY_NAME_COLUMN: ColDef = {
+  field: 'displayName',
+  colId: 'displayName',
+  headerName: 'Display Name',
+  hide: false,
+};
 const DISPLAY_NAME_COLUMN_WITH_SORT: ColDef = { ...DISPLAY_NAME_COLUMN, sort: 'asc' };
-export const NAME_COLUMN: ColDef = { field: 'name', colId: 'name', headerName: 'ID' };
+export const NAME_COLUMN: ColDef = { field: 'name', colId: 'name', headerName: 'ID', hide: false };
 const NAME_COLUMN_WITH_SORT: ColDef = { ...NAME_COLUMN, sort: 'asc' };
 
 const TOPIC_COLUMN: ColDef = {
@@ -88,12 +95,13 @@ export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [NAME_COLUMN_WITH_SORT, DESCRIPTI
 export const ENTITY_BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
 export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   DISPLAY_NAME_COLUMN_WITH_SORT,
-  { field: 'displayVersion', colId: 'displayVersion', headerName: 'Version' },
+  { field: 'displayVersion', colId: 'displayVersion', headerName: 'Version', hide: false },
   DESCRIPTION_COLUMN,
   NAME_COLUMN,
   {
     field: 'adapter',
     headerName: 'Adapter',
+    hide: false,
   },
   { field: 'type', headerName: 'Type', hide: true },
   { field: 'overrideName', headerName: 'Override Name', hide: true },
@@ -111,7 +119,7 @@ export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   DISPLAY_NAME_COLUMN_WITH_SORT,
   DESCRIPTION_COLUMN,
   NAME_COLUMN,
-  { field: 'endpoint', headerName: 'Endpoint' },
+  { field: 'endpoint', headerName: 'Endpoint', hide: false },
   TOPIC_COLUMN,
   ATTACHMENT_COLUMN(t),
   { field: 'maxInputAttachments', headerName: 'Max attachment number', hide: true },
