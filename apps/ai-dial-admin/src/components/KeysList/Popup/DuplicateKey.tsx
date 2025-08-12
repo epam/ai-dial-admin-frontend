@@ -61,8 +61,8 @@ const DuplicateKey: FC<Props> = ({ onDuplicate, modalState, onClose, entity, nam
       <div className="flex flex-col gap-4 px-6 py-4">
         <TextInputField
           elementId="name"
-          fieldTitle={t(CreateI18nKey.NameTitle)}
-          placeholder={t(CreateI18nKey.NamePlaceholder)}
+          fieldTitle={t(CreateI18nKey.IdTitle)}
+          placeholder={t(CreateI18nKey.IdPlaceholder)}
           value={clonedEntity.name}
           errorText={nameError?.text}
           invalid={!!nameError}
