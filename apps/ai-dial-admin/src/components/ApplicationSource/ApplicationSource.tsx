@@ -1,15 +1,13 @@
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import Button from '@/src/components/Common/Button/Button';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import RunnerSelector from '@/src/components/EntityMainProperties/RunnerSelector/RunnerSelector';
+import SourceEntitySelector from '@/src/components/EntityMainProperties/SourceEntitySelector/SourceEntitySelector';
+import { RUNNERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { useCurrentLocale, useI18n } from '@/src/locales/client';
+import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -24,7 +22,7 @@ interface Props {
 
 const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntityImmutable }) => {
   const t = useI18n();
-  const currentLocale = useCurrentLocale();
+
   const sources: DropdownItemsModel[] = useMemo(
     () => [
       {
@@ -68,12 +66,12 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
     [entity, onChangeEntity, t],
   );
 
-  const openInNewTab = useCallback(() => {
-    window.open(
-      `/${currentLocale}${ApplicationRoute.ApplicationRunners}/${encodeURIComponent(`${entity.customAppSchemaId}`)}`,
-      '_blank',
-    );
-  }, [currentLocale, entity.customAppSchemaId]);
+  const onChangeAppRunner = useCallback(
+    (value?: string) => {
+      onChangeEntity({ ...entity, customAppSchemaId: value, endpoint: void 0 });
+    },
+    [entity, onChangeEntity],
+  );
 
   return (
     <div className="h-full flex flex-col gap-4">
@@ -120,25 +118,18 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
         </div>
       )}
       {sourceType?.id === SourceTypes.APP_RUNNER && (
-        <div className="flex flex-row gap-4 items-start">
-          <div className={classNames(isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
-            <RunnerSelector
-              entity={entity}
-              runners={runners}
-              isEditEntityView={isEntityImmutable}
-              onChangeEntity={onChangeEntity}
-              required={true}
-            />
-          </div>
-          {isEntityImmutable && (
-            <Button
-              cssClass="secondary mt-[22px]"
-              title={t(ButtonsI18nKey.OpenAppRunner)}
-              iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
-              onClick={openInNewTab}
-              disable={!entity.customAppSchemaId}
-            />
-          )}
+        <div className={classNames('flex flex-row gap-4 items-start')}>
+          <SourceEntitySelector
+            buttonTitle={t(ButtonsI18nKey.OpenAppRunner)}
+            columns={RUNNERS_COLUMNS}
+            fieldTitle={t(CreateI18nKey.RunnerName)}
+            placeholder={t(CreateI18nKey.RunnerPlaceholder)}
+            selectedValue={entity.customAppSchemaId}
+            sourceEntities={runners}
+            route={ApplicationRoute.ApplicationRunners}
+            isEntityImmutable={isEntityImmutable}
+            onChangeValue={onChangeAppRunner}
+          />
         </div>
       )}
     </div>

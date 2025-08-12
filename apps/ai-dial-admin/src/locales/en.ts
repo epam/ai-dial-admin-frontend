@@ -370,7 +370,8 @@ export default {
     Refresh: 'Refresh',
     Back: 'Back',
     Close: 'Close',
-    OpenAppRunner: 'Open application runner',
+    OpenAppRunner: 'Open Application Runner',
+    OpenAdapter: 'Open Adapter',
   },
   UpstreamEndpoints: {
     Upstream: 'Upstream',
