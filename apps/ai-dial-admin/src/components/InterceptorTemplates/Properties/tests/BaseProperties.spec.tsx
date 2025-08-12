@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 
 import BaseProperties from '../BaseProperties';
+import { CreateI18nKey } from '@/src/constants/i18n';
 
 describe('Interceptor Template BaseProperties', () => {
   const template: InterceptorTemplate = {
@@ -19,15 +20,15 @@ describe('Interceptor Template BaseProperties', () => {
   test('Should render all important fields', () => {
     const setTemplateMock = vi.fn();
     render(<BaseProperties template={template} setTemplate={setTemplateMock} names={names} />);
-    expect(screen.getByPlaceholderText('CreateEntity.id.placeholder')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('CreateEntity.name.placeholder')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('CreateEntity.description.placeholder')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(CreateI18nKey.IdPlaceholder)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(CreateI18nKey.DisplayNamePlaceholder)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(CreateI18nKey.DescriptionPlaceholder)).toBeInTheDocument();
   });
 
   test('Should call setTemplate on id change', async () => {
     const setTemplateMock = vi.fn();
     render(<BaseProperties template={template} setTemplate={setTemplateMock} names={names} />);
-    const idInput = screen.getByPlaceholderText('CreateEntity.id.placeholder');
+    const idInput = screen.getByPlaceholderText(CreateI18nKey.IdPlaceholder);
     await userEvent.clear(idInput);
     await userEvent.type(idInput, 'new-id');
     expect(setTemplateMock).toHaveBeenCalled();
@@ -36,7 +37,7 @@ describe('Interceptor Template BaseProperties', () => {
   test('Should call setTemplate on name change', async () => {
     const setTemplateMock = vi.fn();
     render(<BaseProperties template={template} setTemplate={setTemplateMock} names={names} />);
-    const nameInput = screen.getByPlaceholderText('CreateEntity.name.placeholder');
+    const nameInput = screen.getByPlaceholderText(CreateI18nKey.DisplayNamePlaceholder);
     await userEvent.clear(nameInput);
     await userEvent.type(nameInput, 'New Name');
     expect(setTemplateMock).toHaveBeenCalled();
@@ -45,7 +46,7 @@ describe('Interceptor Template BaseProperties', () => {
   test('Should call setTemplate on description change', async () => {
     const setTemplateMock = vi.fn();
     render(<BaseProperties template={template} setTemplate={setTemplateMock} names={names} />);
-    const descInput = screen.getByPlaceholderText('CreateEntity.description.placeholder');
+    const descInput = screen.getByPlaceholderText(CreateI18nKey.DescriptionPlaceholder);
     await userEvent.clear(descInput);
     await userEvent.type(descInput, 'New Desc');
     expect(setTemplateMock).toHaveBeenCalled();

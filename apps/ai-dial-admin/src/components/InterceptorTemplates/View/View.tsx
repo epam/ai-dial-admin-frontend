@@ -16,6 +16,7 @@ import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeade
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import ExtendedProperties from '@/src/components/InterceptorTemplates/Properties/ExtendedProperties';
 import Interceptors from '@/src/components/InterceptorTemplates/View/Interceptors/Interceptors';
+import EntityHeader from '@/src/components/EntityView/Header/Header';
 
 interface Props {
   route: ApplicationRoute;
@@ -80,7 +81,12 @@ const View: FC<Props> = ({ route, template }) => {
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
         {activeTab === EntityViewTab.Properties && (
-          <ExtendedProperties template={selectedTemplate} onChange={onChange} />
+          <>
+            <EntityHeader entity={selectedTemplate} />
+            <div className="flex-1 min-h-0">
+              <ExtendedProperties template={selectedTemplate} onChange={onChange} />
+            </div>
+          </>
         )}
         {activeTab === EntityViewTab.Interceptors && <Interceptors interceptorList={selectedTemplate.interceptors} />}
       </div>

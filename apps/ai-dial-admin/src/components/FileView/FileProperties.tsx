@@ -63,8 +63,8 @@ const FileProperties: FC<Props> = ({ file, onChangeFile }) => {
           <div className="lg:w-[35%]">
             <TextInputField
               elementId="name"
-              fieldTitle={t(CreateI18nKey.NameTitle)}
-              placeholder={t(CreateI18nKey.NamePlaceholder)}
+              fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
+              placeholder={t(CreateI18nKey.DisplayNamePlaceholder)}
               value={file.name}
               disabled={true}
               iconAfterInput={<CopyButton field={file.name} />}

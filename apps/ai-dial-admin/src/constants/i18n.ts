@@ -235,7 +235,6 @@ export enum CreateI18nKey {
   Route = 'CreateEntity.Route',
   Interceptor = 'CreateEntity.Interceptor',
   NameTitle = 'CreateEntity.name.title',
-  NamePlaceholder = 'CreateEntity.name.placeholder',
   IdTitle = 'CreateEntity.id.title',
   IdPlaceholder = 'CreateEntity.id.placeholder',
   IdUrlError = 'CreateEntity.id.UrlError',

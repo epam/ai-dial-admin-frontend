@@ -261,7 +261,6 @@ export default {
     },
     name: {
       title: 'Name',
-      placeholder: 'Enter name',
       error: 'This name already exists.',
       interceptor: 'Interceptor Name',
       forbiddenChars: 'Name must not contain forbidden characters: {list}',
