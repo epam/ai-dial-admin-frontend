@@ -6,7 +6,7 @@ import classNames from 'classnames';
 import Button from '@/src/components/Common/Button/Button';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import RunnerSelector from '@/src/components/EntityMainProperties/RunnerSelector/RunnerSelector';
+import SourceEntitySelector from '@/src/components/EntityMainProperties/SourceEntitySelector/SourceEntitySelector';
 import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
@@ -68,6 +68,13 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
     [entity, onChangeEntity, t],
   );
 
+  const onChangeAppRunner = useCallback(
+    (value?: string) => {
+      onChangeEntity({ ...entity, customAppSchemaId: value, endpoint: void 0 });
+    },
+    [entity, onChangeEntity],
+  );
+
   const openInNewTab = useCallback(() => {
     window.open(
       `/${currentLocale}${ApplicationRoute.ApplicationRunners}/${encodeURIComponent(`${entity.customAppSchemaId}`)}`,
@@ -122,12 +129,13 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
       {sourceType?.id === SourceTypes.APP_RUNNER && (
         <div className="flex flex-row gap-4 items-start">
           <div className={classNames(isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
-            <RunnerSelector
-              entity={entity}
-              runners={runners}
-              isEditEntityView={isEntityImmutable}
-              onChangeEntity={onChangeEntity}
-              required={true}
+            <SourceEntitySelector
+              fieldTitle={t(CreateI18nKey.RunnerName)}
+              placeholder={t(CreateI18nKey.RunnerPlaceholder)}
+              selectedValue={entity.customAppSchemaId}
+              sourceEntities={runners}
+              isEntityImmutable={isEntityImmutable}
+              onChangeValue={onChangeAppRunner}
             />
           </div>
           {isEntityImmutable && entity.customAppSchemaId && (

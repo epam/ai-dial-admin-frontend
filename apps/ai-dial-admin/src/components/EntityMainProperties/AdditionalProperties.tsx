@@ -13,7 +13,7 @@ import { DialApplication, DialApplicationScheme } from '@/src/models/dial/applic
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
-import AdapterSelector from './AdapterSelector/AdapterSelector';
+import SourceEntitySelector from '@/src/components/EntityMainProperties/SourceEntitySelector/SourceEntitySelector';
 
 interface Props {
   view: ApplicationRoute;
@@ -47,7 +47,7 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
   }, [setAdapters]);
 
   const onChangeAdapter = useCallback(
-    (adapter: string) => {
+    (adapter?: string) => {
       onChangeEntity({ ...entity, adapter });
     },
     [entity, onChangeEntity],
@@ -74,7 +74,14 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
       ) : null}
 
       {view === ApplicationRoute.Models ? (
-        <AdapterSelector adapters={adapters} onChangeAdapter={onChangeAdapter} model={entity} />
+        <SourceEntitySelector
+          selectedValue={entity.adapter}
+          fieldTitle={t(CreateI18nKey.AdapterTitle)}
+          placeholder={t(CreateI18nKey.AdapterPlaceholder)}
+          onChangeValue={onChangeAdapter}
+          isEntityImmutable={isEntityImmutable}
+          sourceEntities={adapters}
+        />
       ) : null}
     </div>
   );
