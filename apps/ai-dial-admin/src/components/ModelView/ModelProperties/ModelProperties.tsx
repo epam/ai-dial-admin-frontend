@@ -33,15 +33,13 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, updateModel }) => {
   return (
     <div className="h-full flex flex-col pt-3 divide-y divide-primary">
       <div className="flex flex-col gap-6">
-        <div className="lg:w-[35%]">
-          <EntityMainProperties
-            view={ApplicationRoute.Models}
-            entity={model}
-            onChangeEntity={updateModel}
-            names={modelsNames}
-            isEntityImmutable={true}
-          />
-        </div>
+        <EntityMainProperties
+          view={ApplicationRoute.Models}
+          entity={model}
+          onChangeEntity={updateModel}
+          names={modelsNames}
+          isEntityImmutable={true}
+        />
 
         <div className="lg:w-[75%]">
           <ModelTypeProperties model={model} onChangeModel={updateModel} />

@@ -19,7 +19,7 @@ const ApplicationInfo: FC<Props> = ({ application }) => {
       <TextInputField
         elementId="displayName"
         readonly={true}
-        fieldTitle={t(CreateI18nKey.NameTitle)}
+        fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
         value={application?.displayName}
       />
       <TextInputField
