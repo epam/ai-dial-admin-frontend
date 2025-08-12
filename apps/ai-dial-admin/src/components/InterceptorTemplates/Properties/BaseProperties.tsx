@@ -25,19 +25,20 @@ const BaseProperties: FC<Props> = ({ template, setTemplate, names, isImmutable }
 
   return (
     <div className="flex flex-col gap-6 h-full">
-      <TextInputField
-        elementId="id"
-        fieldTitle={t(CreateI18nKey.IdTitle)}
-        placeholder={t(CreateI18nKey.IdPlaceholder)}
-        value={template.name}
-        errorText={nameError?.text}
-        invalid={!!nameError}
-        onChange={(name) => {
-          setNameError(getErrorForName(name, names, t));
-          setTemplate({ ...template, name });
-        }}
-        disabled={isImmutable}
-      />
+      {!isImmutable && (
+        <TextInputField
+          elementId="id"
+          fieldTitle={t(CreateI18nKey.IdTitle)}
+          placeholder={t(CreateI18nKey.IdPlaceholder)}
+          value={template.name}
+          errorText={nameError?.text}
+          invalid={!!nameError}
+          onChange={(name) => {
+            setNameError(getErrorForName(name, names, t));
+            setTemplate({ ...template, name });
+          }}
+        />
+      )}
 
       <TextInputField
         elementId="name"
