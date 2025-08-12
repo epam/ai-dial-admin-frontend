@@ -856,5 +856,7 @@ export default {
   Source: {
     OpenTemplate: 'Open template',
     OpenContainer: 'Open container',
+    Container: 'Container',
+    InterceptorTemplate: 'Interceptor template',
   },
 } as const;
