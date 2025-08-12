@@ -1,40 +1,51 @@
 import { FC, useState } from 'react';
+import { ColDef } from 'ag-grid-community';
 
 import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
-import { RUNNERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import Grid from '@/src/components/Grid/Grid';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
-import { BasicI18nKey, ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { PopUpState } from '@/src/types/pop-up';
+import { DialAdapter } from '@/src/models/dial/adapter';
 
 interface Props {
+  title: string;
   selectedId?: string;
-  runners?: DialApplicationScheme[];
+  sourceEntities?: (DialApplicationScheme | DialAdapter)[];
   modalState: PopUpState;
+  columns: ColDef[];
   onClose: () => void;
   onApply: (id?: string) => void;
 }
 
-const SelectRunnerModal: FC<Props> = ({ selectedId, runners, modalState, onClose, onApply }) => {
+const SelectSourceEntityModal: FC<Props> = ({
+  title,
+  selectedId,
+  columns,
+  sourceEntities,
+  modalState,
+  onClose,
+  onApply,
+}) => {
   const t = useI18n();
 
-  const [selectedRunner, setSelectedRunner] = useState(selectedId);
+  const [selectedEntity, setSelectedEntity] = useState(selectedId);
 
   return (
     <Popup
       onClose={onClose}
-      heading={t(CreateI18nKey.RunnerName)}
-      portalId="entityNameToken"
+      heading={title}
+      portalId="sourceEntitySelectorModal"
       state={modalState}
       containerClassName={'h-[750px] lg:max-w-[65%]'}
     >
       <div className="flex flex-col px-6 py-4 flex-1 min-h-0">
         <Grid
-          columnDefs={RUNNERS_COLUMNS.map((col) => ({ ...col, sort: void 0 }))}
+          columnDefs={columns.map((col) => ({ ...col, sort: void 0 }))}
           additionalGridOptions={{
             rowSelection: { mode: 'singleRow', enableClickSelection: true },
             selectionColumnDef: {
@@ -42,22 +53,22 @@ const SelectRunnerModal: FC<Props> = ({ selectedId, runners, modalState, onClose
               cellRenderer: (data: { data?: DialApplicationScheme; id: string }) => (
                 <RadioButtonRenderer
                   inputId={data.data?.$id || data.id}
-                  isChecked={data.data?.$id === selectedRunner}
+                  isChecked={data.data?.$id === selectedEntity}
                 />
               ),
             },
             onRowSelected: (event) => {
               if (event.node.isSelected()) {
-                setSelectedRunner(event.data.$id);
+                setSelectedEntity(event.data.$id);
               }
             },
             onGridReady: (event) => {
               event.api?.updateGridOptions({
-                columnDefs: RUNNERS_COLUMNS,
-                rowData: [{ ['dial:applicationTypeDisplayName']: t(BasicI18nKey.None) }, ...(runners || [])],
+                columnDefs: columns,
+                rowData: [{ ['dial:applicationTypeDisplayName']: t(BasicI18nKey.None) }, ...(sourceEntities || [])],
               });
               event.api.forEachNode((node) => {
-                if (node.data.$id === selectedRunner) {
+                if (node.data.$id === selectedEntity) {
                   node.setSelected(true);
                 }
               });
@@ -70,11 +81,11 @@ const SelectRunnerModal: FC<Props> = ({ selectedId, runners, modalState, onClose
         <Button
           cssClass="primary"
           title={t(ButtonsI18nKey.Apply)}
-          onClick={() => onApply(selectedRunner === t(BasicI18nKey.None) ? void 0 : selectedRunner)}
+          onClick={() => onApply(selectedEntity === t(BasicI18nKey.None) ? void 0 : selectedEntity)}
         />
       </div>
     </Popup>
   );
 };
 
-export default SelectRunnerModal;
+export default SelectSourceEntityModal;

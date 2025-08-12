@@ -1,6 +1,6 @@
 import { CreateI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getDisplayNameErrorKeyPerView, getVersionErrorKeyPerView } from './utils';
+import { getDisplayNameErrorKeyPerView, getVersionErrorKeyPerView } from '../utils';
 import { describe, expect, test } from 'vitest';
 
 describe('EntityMainProperties :: errors :: getDisplayNameErrorKeyPerView', () => {
