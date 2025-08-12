@@ -14,6 +14,7 @@ import { DialApplication, DialApplicationScheme } from '@/src/models/dial/applic
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ApplicationRoute } from '@/src/types/routes';
 import { SourceTypes } from './constants';
+import { RUNNERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
   entity: DialApplication;
@@ -130,6 +131,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
         <div className="flex flex-row gap-4 items-start">
           <div className={classNames(isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
             <SourceEntitySelector
+              columns={RUNNERS_COLUMNS}
               fieldTitle={t(CreateI18nKey.RunnerName)}
               placeholder={t(CreateI18nKey.RunnerPlaceholder)}
               selectedValue={entity.customAppSchemaId}

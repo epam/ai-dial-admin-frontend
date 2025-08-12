@@ -1,5 +1,6 @@
 'use client';
 
+import { ColDef } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
@@ -8,12 +9,11 @@ import Field from '@/src/components/Common/Field/Field';
 import InputModal from '@/src/components/Common/InputModal/InputModal';
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { DialAdapter } from '@/src/models/dial/adapter';
+import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { PopUpState } from '@/src/types/pop-up';
-import SelectRunnerModal from './SelectSourceEntityModal';
-import { DialAdapter } from '@/src/models/dial/adapter';
+import SelectSourceEntityModal from './SelectSourceEntityModal';
 
 interface Props {
   fieldTitle: string;
@@ -23,6 +23,7 @@ interface Props {
   isEntityImmutable?: boolean;
   onChangeValue: (value?: string) => void;
   optional?: boolean;
+  columns: ColDef[];
 }
 
 const SourceEntitySelector: FC<Props> = ({
@@ -31,13 +32,14 @@ const SourceEntitySelector: FC<Props> = ({
   placeholder,
   sourceEntities,
   onChangeValue,
+  columns,
   isEntityImmutable = false,
   optional,
 }) => {
   const t = useI18n();
 
   const [modalState, setIsModalState] = useState(PopUpState.Closed);
-  const [runnerTitle, setRunnerTitle] = useState('');
+  const [valueTitle, setValueTitle] = useState('');
   const [errorText, setErrorText] = useState('');
 
   const onOpenModal = useCallback(() => {
@@ -73,31 +75,28 @@ const SourceEntitySelector: FC<Props> = ({
     [onChangeValue, onCloseModal, optional, t],
   );
 
-  // useEffect(() => {
-  //   setRunnerTitle(
-  //     sourceEntities?.find((r) => r.$id === customAppSchemaId)?.['dial:applicationTypeDisplayName'] ||
-  //       customAppSchemaId ||
-  //       '',
-  //   );
-  // }, [customAppSchemaId, sourceEntities]);
+  useEffect(() => {
+    setValueTitle(dropdownItems?.find((r) => r.id === selectedValue)?.name || '');
+  }, [selectedValue, dropdownItems]);
 
   return isEntityImmutable ? (
     <div className="flex flex-col">
       <Field fieldTitle={fieldTitle} htmlFor="sourceEntity" />
       <InputModal
         modalState={modalState}
-        selectedValue={runnerTitle}
+        selectedValue={valueTitle}
         onOpenModal={onOpenModal}
         inputCssClasses={errorText && 'input-error'}
       >
-        <div>dddd</div>
-        {/* <SelectRunnerModal
-          selectedId={customAppSchemaId}
+        <SelectSourceEntityModal
+          title={fieldTitle}
+          selectedId={selectedValue}
           onApply={onChange}
           modalState={modalState}
+          columns={columns}
           onClose={onCloseModal}
-          runners={sourceEntities}
-        /> */}
+          sourceEntities={sourceEntities}
+        />
       </InputModal>
       <ErrorText errorText={errorText} />
     </div>
