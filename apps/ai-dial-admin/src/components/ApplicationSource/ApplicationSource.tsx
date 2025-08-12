@@ -130,13 +130,12 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
               required={true}
             />
           </div>
-          {isEntityImmutable && (
+          {isEntityImmutable && entity.customAppSchemaId && (
             <Button
               cssClass="secondary mt-[22px]"
               title={t(ButtonsI18nKey.OpenAppRunner)}
               iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
               onClick={openInNewTab}
-              disable={!entity.customAppSchemaId}
             />
           )}
         </div>

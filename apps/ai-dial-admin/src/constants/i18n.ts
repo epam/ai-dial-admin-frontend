@@ -220,6 +220,7 @@ export enum ButtonsI18nKey {
   Rollback = 'Buttons.Rollback',
   Back = 'Buttons.Back',
   Close = 'Buttons.Close',
+  OpenAdapter = 'Buttons.OpenAdapter',
   OpenAppRunner = 'Buttons.OpenAppRunner',
 }
 
