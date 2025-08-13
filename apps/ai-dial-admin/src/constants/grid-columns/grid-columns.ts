@@ -205,14 +205,14 @@ export const RUNNERS_COLUMNS: ColDef[] = [
 export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, NAME_COLUMN, DESCRIPTION_COLUMN];
 
 export const PROMPTS_COLUMNS: ColDef[] = [
-  NAME_COLUMN_WITH_SORT,
+  { field: 'name', colId: 'name', headerName: 'Display Name' },
   { field: 'version', headerName: 'Version' },
   AUTHOR_COLUMN,
   UPDATED_AT_COLUMN,
 ];
 
 export const FILES_COLUMNS: ColDef[] = [
-  NAME_COLUMN_WITH_SORT,
+  { field: 'name', colId: 'name', headerName: 'Display Name' },
   { field: 'extension', headerName: 'Extension' },
   AUTHOR_COLUMN,
 ];

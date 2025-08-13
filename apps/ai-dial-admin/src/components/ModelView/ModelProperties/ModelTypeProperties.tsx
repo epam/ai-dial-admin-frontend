@@ -91,18 +91,19 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
           onChange={onChangeType}
         />
       </div>
-
-      <InputWithReadonlyParts
-        inputId="endpoint"
-        value={model.endpointDeploymentName}
-        fullValue={model.endpoint}
-        title={t(EntitiesI18nKey.Endpoint)}
-        postfixPart={postfixPart}
-        prefixPart={prefixPart}
-        onChange={onChangeEndpoint}
-        invalid={!model.endpointDeploymentName}
-        errorText={t(ErrorI18nKey.IncorrectModelEndpointAlias)}
-      />
+      <div className="lg:w-[75%]">
+        <InputWithReadonlyParts
+          inputId="endpoint"
+          value={model.endpointDeploymentName}
+          fullValue={model.endpoint}
+          title={t(EntitiesI18nKey.Endpoint)}
+          postfixPart={postfixPart}
+          prefixPart={prefixPart}
+          onChange={onChangeEndpoint}
+          invalid={!model.endpointDeploymentName}
+          errorText={t(ErrorI18nKey.IncorrectModelEndpointAlias)}
+        />
+      </div>
       <div className="w-full flex flex-col gap-5 lg:w-[35%]">
         <TextInputField
           elementId="overrideName"
