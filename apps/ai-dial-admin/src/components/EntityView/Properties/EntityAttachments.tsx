@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useState } from 'react';
 
 import AttachmentInput from '@/src/components/Common/AttachmentInput/AttachmentInput';
 import { NumberInputField } from '@/src/components/Common/InputField/InputField';
@@ -8,6 +8,8 @@ import { AttachmentsI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { mimeMapping } from './constants';
+
+const MAX_ATTACHMENTS_LIMIT = 1000;
 
 interface Props {
   entity: DialBaseEntity;
@@ -17,11 +19,18 @@ interface Props {
 const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
   const t = useI18n();
 
+  const [attachmentError, setAttachmentError] = useState<string | undefined>();
+
   const onChangeAttachmentMax = useCallback(
     (value: number | string) => {
+      if (Number(value) > MAX_ATTACHMENTS_LIMIT) {
+        setAttachmentError(t(AttachmentsI18nKey.AttachmentsMaxNumberError, { max: MAX_ATTACHMENTS_LIMIT }));
+      } else {
+        setAttachmentError(void 0);
+      }
       onChangeEntity({ ...entity, maxInputAttachments: value });
     },
-    [entity, onChangeEntity],
+    [entity, onChangeEntity, t],
   );
 
   const onChangeAttachmentTypes = useCallback(
@@ -34,6 +43,7 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
           maxInputAttachments: void 0,
           inputAttachmentTypes: void 0,
         });
+        setAttachmentError(null);
       }
     },
     [entity, onChangeEntity],
@@ -57,6 +67,9 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
             placeholder={t(AttachmentsI18nKey.AttachmentsMaxNumberPlaceholder)}
             value={entity.maxInputAttachments}
             onChange={onChangeAttachmentMax}
+            errorText={attachmentError}
+            invalid={!!attachmentError}
+            min={0}
           />
         </div>
       )}
