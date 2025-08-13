@@ -5,15 +5,15 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import Button from '@/src/components/Common/Button/Button';
 import Loader from '@/src/components/Common/Loader/Loader';
 import Popup from '@/src/components/Common/Popup/Popup';
+import { baseColumnComparator } from '@/src/components/Grid/comparators/base-column-comparator';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { PopUpState } from '@/src/types/pop-up';
 import { getErrorNotification } from '@/src/utils/notification';
-import { uniq } from 'lodash';
+import { isEqual, uniq } from 'lodash';
 import MultiselectContentModal from './ModalContent';
-import { baseColumnComparator } from '@/src/components/Grid/comparators/base-column-comparator';
 
 interface Props {
   initSelectedItems?: string[];
@@ -103,7 +103,12 @@ const MultiselectModal: FC<Props> = ({
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
         <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <Button cssClass="primary" title={t(ButtonsI18nKey.Apply)} onClick={onApply} disable={!isValid} />
+        <Button
+          cssClass="primary"
+          title={t(ButtonsI18nKey.Apply)}
+          onClick={onApply}
+          disable={!isValid || isEqual(newItems, selectedItems)}
+        />
       </div>
     </Popup>
   );
