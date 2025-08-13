@@ -31,6 +31,15 @@ const SimpleEntityProperties: FC<Props> = ({
   versionsMap,
 }) => {
   const t = useI18n() as (t: string) => string;
+  const idTitleKey =
+    view === ApplicationRoute.Prompts || view === ApplicationRoute.Files
+      ? CreateI18nKey.DisplayNameTitle
+      : CreateI18nKey.IdTitle;
+
+  const idPlaceholderKey =
+    view === ApplicationRoute.Prompts || view === ApplicationRoute.Files
+      ? CreateI18nKey.DisplayNamePlaceholder
+      : CreateI18nKey.IdPlaceholder;
 
   const [nameError, setNameError] = useState<FieldError | null>(null);
   const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
@@ -89,8 +98,8 @@ const SimpleEntityProperties: FC<Props> = ({
       {!isEntityImmutable && (
         <TextInputField
           elementId="name"
-          fieldTitle={t(CreateI18nKey.IdTitle)}
-          placeholder={t(CreateI18nKey.IdPlaceholder)}
+          fieldTitle={t(idTitleKey)}
+          placeholder={t(idPlaceholderKey)}
           value={entity.name}
           errorText={nameError?.text}
           invalid={!!nameError}
