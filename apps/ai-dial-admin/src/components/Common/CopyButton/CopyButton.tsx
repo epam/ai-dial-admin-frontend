@@ -1,15 +1,15 @@
-import { FC, useCallback } from 'react';
 import { IconCopy } from '@tabler/icons-react';
+import { FC, useCallback } from 'react';
 
+import { BasicI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { BasicI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { getSuccessNotification } from '@/src/utils/notification';
 
 interface Props {
-  title?: string;
-  field?: string;
+  title: string;
+  field: string;
 }
 
 const CopyButton: FC<Props> = ({ title, field }) => {
@@ -19,9 +19,7 @@ const CopyButton: FC<Props> = ({ title, field }) => {
   const onClick = useCallback(() => {
     if (field) {
       navigator.clipboard.writeText(field);
-      showNotification(
-        getSuccessNotification(`${title || t(CreateI18nKey.NameTitle)} ${t(BasicI18nKey.CopiedSuccessfully)}`),
-      );
+      showNotification(getSuccessNotification(`${title} ${t(BasicI18nKey.CopiedSuccessfully)}`));
     }
   }, [field, title, showNotification, t]);
 

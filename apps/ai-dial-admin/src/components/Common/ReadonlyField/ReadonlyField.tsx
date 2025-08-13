@@ -5,7 +5,7 @@ import { TextInputField } from '@/src/components/Common/InputField/InputField';
 
 interface Props {
   title: string;
-  value?: string;
+  value: string;
 }
 const ReadonlyField: FC<Props> = ({ value, title }) => {
   return (
