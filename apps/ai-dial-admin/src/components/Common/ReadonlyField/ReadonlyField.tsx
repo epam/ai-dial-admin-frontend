@@ -5,7 +5,7 @@ import { TextInputField } from '@/src/components/Common/InputField/InputField';
 
 interface Props {
   title: string;
-  value: string;
+  value?: string;
 }
 const ReadonlyField: FC<Props> = ({ value, title }) => {
   return (
@@ -14,7 +14,7 @@ const ReadonlyField: FC<Props> = ({ value, title }) => {
       elementId="readonlyField"
       disabled={true}
       value={value}
-      iconAfterInput={<CopyButton field={value} title={title} />}
+      iconAfterInput={<CopyButton field={value || ''} title={title} />}
     />
   );
 };
