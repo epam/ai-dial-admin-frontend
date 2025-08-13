@@ -42,7 +42,7 @@ const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntit
   return (
     <div className="h-full flex flex-col pt-3 divide-y divide-primary">
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-4 lg:w-[35%]">
+        <div className="flex flex-col gap-4">
           <EntityMainProperties
             view={view}
             entity={entity}

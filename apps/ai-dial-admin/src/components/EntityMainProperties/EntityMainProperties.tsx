@@ -19,6 +19,7 @@ import { getErrorForName, isWrongLengthWithView } from '@/src/utils/validation/n
 import AdditionalProperties from './AdditionalProperties';
 import { getDisplayNameErrorKeyPerView, getVersionErrorKeyPerView } from './utils';
 import { DialModel } from '@/src/models/dial/model';
+import classNames from 'classnames';
 
 interface Props {
   view: ApplicationRoute;
@@ -120,8 +121,8 @@ const EntityMainProperties: FC<Props> = ({
   );
 
   return (
-    <div className="w-full flex flex-col gap-6">
-      <div className="flex flex-col lg:w-[35%] gap-6">
+    <div className="w-full flex flex-col">
+      <div className={classNames('flex flex-col gap-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
         {!isEntityImmutable && (
           <TextInputField
             fieldTitle={t(CreateI18nKey.IdTitle)}
