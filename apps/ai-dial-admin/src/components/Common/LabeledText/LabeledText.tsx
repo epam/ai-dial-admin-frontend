@@ -20,7 +20,7 @@ const LabeledText: FC<Props> = ({ label, text, children, copyButton }) => {
           <p className="flex-1 min-w-0 truncate mr-2" title={text}>
             {text}
           </p>
-          {copyButton && <CopyButton field={text} />}
+          {copyButton && <CopyButton field={text || ''} title={label} />}
         </div>
       )}
     </div>
