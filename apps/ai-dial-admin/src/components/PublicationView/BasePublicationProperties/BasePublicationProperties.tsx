@@ -36,7 +36,7 @@ const BasePublicationProperties: FC<Props> = ({ publication, children, applicati
         <div className="flex flex-row gap-8">
           {!application ? (
             <LabeledText label={t(PublicationsI18nKey.Action)}>
-              <p className="flex items-center">
+              <p className="truncate items-center">
                 <span className={indicatorClassNames} />
                 {t(ACTION_I18N_KEYS[publication.action])}
               </p>
