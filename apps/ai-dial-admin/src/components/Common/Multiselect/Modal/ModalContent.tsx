@@ -142,7 +142,7 @@ const MultiselectContentModal: FC<Props> = ({
               )
             );
           })}
-          {filteredNewItems.map((item, index) => {
+          {(draggable ? newItems : filteredNewItems).map((item, index) => {
             return (
               <NewItemInput
                 key={index}

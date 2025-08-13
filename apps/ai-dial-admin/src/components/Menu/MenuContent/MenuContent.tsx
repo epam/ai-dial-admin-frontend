@@ -3,7 +3,7 @@
 import { FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { usePathname, useRouter } from 'next/navigation';
-import { IconDownload, IconRefresh, IconUpload } from '@tabler/icons-react';
+import { IconDownload, IconUpload } from '@tabler/icons-react';
 
 import { MenuI18nKey, ReloadConfigI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -43,10 +43,10 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   const [modalState, setIsOpenModal] = useState(PopUpState.Closed);
   const [isLoadingReload, setIsLoadingReload] = useState(false);
 
-  const onOpenModal = useCallback(() => {
-    setIsLoadingReload(false);
-    setIsOpenModal(PopUpState.Opened);
-  }, [setIsOpenModal]);
+  // const onOpenModal = useCallback(() => {
+  //   setIsLoadingReload(false);
+  //   setIsOpenModal(PopUpState.Opened);
+  // }, [setIsOpenModal]);
 
   const onCloseModal = useCallback(() => {
     setIsOpenModal(PopUpState.Closed);
@@ -89,13 +89,13 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
         </nav>
 
         <div className="px-3 py-2 text-secondary flex flex-row gap-3 items-center">
-          {isSidebarOpen && (
+          {/* {isSidebarOpen && (
             <MenuAction
               tooltip={t(ReloadConfigI18nKey.ReloadTitle)}
               icon={<IconRefresh {...BASE_ICON_PROPS} widths={24} height={24} />}
               onClick={onOpenModal}
             />
-          )}
+          )} */}
 
           <MenuAction
             tooltip={t(MenuI18nKey.ImportConfig)}

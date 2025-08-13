@@ -56,7 +56,7 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
 
   return (
     <div className="w-full flex flex-col gap-6">
-      <div className="flex flex-col lg:w-[35%] gap-6">
+      <div className="flex flex-col lg:w-[35%] gap-6 mt-4">
         {isEntityImmutable && isShowMaintainer ? (
           <TextInputField
             elementId="author"
