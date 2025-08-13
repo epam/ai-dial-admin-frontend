@@ -56,7 +56,9 @@ const View: FC<Props> = ({ route, template }) => {
   }, [template]);
 
   useEffect(() => {
-    setIsChanged(!isEqual(template, selectedTemplate));
+    const { updatedAt: __updateTemplate, ...restTemplate } = template;
+    const { updatedAt: __updateSelected, ...restSelectedTemplate } = selectedTemplate;
+    setIsChanged(!isEqual(restTemplate, restSelectedTemplate));
   }, [template, selectedTemplate]);
 
   const onChange = useCallback((template: InterceptorTemplate) => {
