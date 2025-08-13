@@ -222,6 +222,9 @@ export enum ButtonsI18nKey {
   Close = 'Buttons.Close',
   OpenAdapter = 'Buttons.OpenAdapter',
   OpenAppRunner = 'Buttons.OpenAppRunner',
+  None = 'Buttons.None',
+  UseAll = 'Buttons.UseAll',
+  UseAllAttachment = 'Buttons.UseAllAttachment',
 }
 
 export enum CreateI18nKey {
