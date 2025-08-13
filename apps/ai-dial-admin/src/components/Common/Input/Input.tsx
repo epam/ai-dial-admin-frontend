@@ -2,7 +2,7 @@
 
 import classNames from 'classnames';
 import { FC, WheelEvent } from 'react';
-import Tooltip from '../Tooltip/Tooltip';
+import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 
 export interface InputProps {
   type?: string;
