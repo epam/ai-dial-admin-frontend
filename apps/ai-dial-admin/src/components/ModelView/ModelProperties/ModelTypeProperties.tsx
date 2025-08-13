@@ -132,10 +132,14 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
               addPlaceholder={t(TopicsI18nKey.AddTopicPlaceholder)}
               addTitle={t(TopicsI18nKey.AddTopic)}
             />
-            <EntityAttachments entity={model} onChangeEntity={onChangeModel} />
           </>
         )}
       </div>
+      {model.type === DialModelType.Chat && (
+        <div className="w-full flex flex-col gap-5 lg:w-[75%]">
+          <EntityAttachments entity={model} onChangeEntity={onChangeModel} />
+        </div>
+      )}
     </div>
   );
 };
