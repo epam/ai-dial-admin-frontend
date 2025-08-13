@@ -43,7 +43,7 @@ const BasePublicationProperties: FC<Props> = ({ publication, children, applicati
             </LabeledText>
           ) : runnerId ? (
             <LabeledText label={t(PublicationsI18nKey.Runner)}>
-              <p className="flex items-center">{runner?.['dial:applicationTypeDisplayName'] || runnerId}</p>
+              <p className="truncate items-center">{runner?.['dial:applicationTypeDisplayName'] || runnerId}</p>
             </LabeledText>
           ) : null}
           <LabeledText label={t(PublicationsI18nKey.Author)} text={publication.author} />
