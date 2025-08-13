@@ -129,9 +129,7 @@ const AttachmentInput: FC<Props> = ({
       return;
     }
 
-    const newSelected = selected.filter((_, i) => i !== index);
-    setSelected(newSelected);
-    fireChange(newSelected);
+    setValues(selected.filter((_, i) => i !== index));
   };
 
   const handleSelectAll = () => {
