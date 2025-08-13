@@ -39,10 +39,10 @@ const MIME_TYPES = {
 };
 
 export const mimeMapping = [
-  { label: 'gif', value: 'image/gif' },
-  { label: 'png', value: 'image/png' },
-  { label: 'jpg', value: 'image/jpeg' },
-  { label: 'tiff', value: 'image/tiff' },
+  { label: 'gif', value: MIME_TYPES.GIF },
+  { label: 'png', value: MIME_TYPES.PNG },
+  { label: 'jpg', value: MIME_TYPES.JPEG },
+  { label: 'tiff', value: MIME_TYPES.TIFF },
 
   { label: 'json', value: MIME_TYPES.JSON },
   { label: 'xml', value: MIME_TYPES.XML },
