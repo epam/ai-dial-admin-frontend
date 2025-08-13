@@ -7,7 +7,7 @@ import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/Aut
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 import { CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
-import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
+import { MAX_NAME_SYMBOLS, MIN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { FieldError } from '@/src/models/error';
@@ -39,9 +39,13 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
 
   const onChangeDisplayName = useCallback(
     (displayName: string) => {
-      const isValid = displayName ? displayName.length <= MAX_NAME_SYMBOLS : true;
+      const isValid = displayName
+        ? displayName.length <= MAX_NAME_SYMBOLS && displayName.length >= MIN_NAME_SYMBOLS
+        : true;
       setIsValidDisplayName(isValid);
-      setDisplayNameError(isValid ? void 0 : t(CreateI18nKey.ErrorLength, { number: MAX_NAME_SYMBOLS }));
+      setDisplayNameError(
+        isValid ? void 0 : t(CreateI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS }),
+      );
       onChangeAdapter({ ...entity, displayName });
     },
     [t, onChangeAdapter, entity],
@@ -85,7 +89,6 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
         onChange={onChangeDisplayName}
         invalid={!isValidDisplayName}
         items={uniq(names)}
-        optional={true}
       />
 
       <TextAreaField
