@@ -73,7 +73,7 @@ const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntit
         {view === ApplicationRoute.Applications && (
           <ApplicationSource entity={entity} onChangeEntity={updateEntity} runners={runners} isEntityImmutable={true} />
         )}
-        <div className="flex flex-col gap-4 lg:w-[35%]">
+        <div className="flex flex-col gap-4 lg:w-[75%]">
           <EntityAttachments entity={entity} onChangeEntity={updateEntity} />
         </div>
       </div>
