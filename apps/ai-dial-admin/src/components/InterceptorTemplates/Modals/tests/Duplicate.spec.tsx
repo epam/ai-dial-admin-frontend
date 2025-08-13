@@ -7,6 +7,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import Duplicate from '../Duplicate';
 
 describe('Duplicate InterceptorTemplate Modal', () => {
+  const user = userEvent.setup();
   const onCloseMock = vi.fn();
   const onDuplicateMock = vi.fn();
 
@@ -39,9 +40,9 @@ describe('Duplicate InterceptorTemplate Modal', () => {
       />,
     );
 
-    await userEvent.clear(screen.getByPlaceholderText('CreateEntity.id.placeholder'));
-    await userEvent.type(screen.getByPlaceholderText('CreateEntity.id.placeholder'), 't_copy');
-    await userEvent.click(screen.getByRole('button', { name: 'Buttons.Duplicate' }));
+    await user.clear(screen.getByPlaceholderText('CreateEntity.id.placeholder'));
+    await user.type(screen.getByPlaceholderText('CreateEntity.id.placeholder'), 't_copy');
+    await user.click(screen.getByRole('button', { name: 'Buttons.Duplicate' }));
 
     expect(onDuplicateMock).toHaveBeenCalled();
   });
@@ -57,7 +58,7 @@ describe('Duplicate InterceptorTemplate Modal', () => {
       />,
     );
 
-    await userEvent.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
+    await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
     expect(onCloseMock).toHaveBeenCalled();
   });
 });
