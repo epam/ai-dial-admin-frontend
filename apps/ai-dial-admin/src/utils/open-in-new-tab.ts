@@ -4,7 +4,7 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 
 export const onOpenInNewTab = (route?: ApplicationRoute, entity?: unknown, entityType?: DEPLOYMENT_ENTITY) => {
   const path = getEntityPath(route, entity, false, entityType);
@@ -38,7 +38,7 @@ export const getEntityPath = (
       return (data as DialActivity).activityId;
 
     case ApplicationRoute.InterceptorDeployments:
-      return `${encodeURIComponent(data as string)}?entityType=${entityType || ''}`;
+      return `${encodeURIComponent((data as Container).id)}?entityType=${entityType || ''}`;
 
     default:
       return encodeURIComponent((data as DialBaseNamedEntity).name || '');
