@@ -3,7 +3,7 @@
 import { FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { usePathname, useRouter } from 'next/navigation';
-import { IconDownload, IconRefresh, IconUpload } from '@tabler/icons-react';
+import { IconDownload, IconUpload } from '@tabler/icons-react';
 
 import { MenuI18nKey, ReloadConfigI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
