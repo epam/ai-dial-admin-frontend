@@ -10,6 +10,7 @@ import Field from '@/src/components/Common/Field/Field';
 import Tag from '@/src/components/Common/TagInput/Tag';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
 
 export interface AttachmentOption {
   label: string;
@@ -28,8 +29,7 @@ interface Props {
   onChange?: (values: string[]) => void;
 }
 
-const ALL = '*/*';
-const ALL_ATTACHMENTS_VALUE = [{ label: ALL, value: ALL }];
+const ALL_ATTACHMENTS_VALUE = [{ label: ALL_ATTACHMENTS, value: ALL_ATTACHMENTS }];
 
 const AttachmentInput: FC<Props> = ({
   availableItems,
@@ -75,7 +75,7 @@ const AttachmentInput: FC<Props> = ({
         selected.map((s) => s.value),
       )
     ) {
-      if (initialValues.length === 1 && initialValues[0] === ALL) {
+      if (initialValues.length === 1 && initialValues[0] === ALL_ATTACHMENTS) {
         setValues(ALL_ATTACHMENTS_VALUE);
       } else {
         const initial = initialValues
