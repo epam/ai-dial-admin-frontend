@@ -113,9 +113,9 @@ export const getComponents = (
   Object.entries(data).forEach(([key, data]) => {
     data.forEach((entity) => {
       const dependencies =
-        entity.dependencies?.flatMap((d) =>
+        (entity.dependencies?.flatMap((d) =>
           d === EntityType.ENTITIES ? [EntityType.APPLICATION, EntityType.MODEL, EntityType.ROUTE] : [d],
-        ) || [];
+        ) as EntityType[]) || [];
       components.push({
         dependencies,
         name: entity.$id || entity.name,
