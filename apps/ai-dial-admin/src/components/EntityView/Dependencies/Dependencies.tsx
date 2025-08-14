@@ -13,7 +13,7 @@ import { DialModel } from '@/src/models/dial/model';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import AddDependenciesButton from './AddDependenciesButton';
+import AddDependenciesButton from './AddDependenciesModal/AddDependenciesButton';
 import { getDependenciesData } from './utils';
 
 interface Props {
