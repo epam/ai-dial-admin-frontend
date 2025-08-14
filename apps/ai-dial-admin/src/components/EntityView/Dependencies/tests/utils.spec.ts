@@ -20,47 +20,47 @@ describe('getDependenciesData', () => {
   it('should correctly separate dependencies and available entities', () => {
     const dependencies = ['modelB', 'appC'];
 
-    const { rowData, availableModels, availableApplications } = getDependenciesData(dependencies, models, applications);
+    const { data, filteredApplications, filteredModels } = getDependenciesData(dependencies, models, applications);
 
-    expect(rowData).toEqual(
+    expect(data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: 'modelB', type: MenuI18nKey.Models }),
         expect.objectContaining({ name: 'appC', type: MenuI18nKey.Applications }),
       ]),
     );
-    expect(rowData).toHaveLength(2);
+    expect(data).toHaveLength(2);
 
-    expect(availableModels).toEqual(
+    expect(filteredModels).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: 'modelA' }),
         expect.objectContaining({ name: 'modelC' }),
       ]),
     );
-    expect(availableModels).not.toEqual(expect.arrayContaining([expect.objectContaining({ name: 'modelB' })]));
+    expect(filteredModels).not.toEqual(expect.arrayContaining([expect.objectContaining({ name: 'modelB' })]));
 
-    expect(availableApplications).toEqual(
+    expect(filteredApplications).toEqual(
       expect.arrayContaining([expect.objectContaining({ name: 'appA' }), expect.objectContaining({ name: 'appB' })]),
     );
-    expect(availableApplications).not.toEqual(expect.arrayContaining([expect.objectContaining({ name: 'appC' })]));
+    expect(filteredApplications).not.toEqual(expect.arrayContaining([expect.objectContaining({ name: 'appC' })]));
   });
 
   it('should return empty rowData if no dependencies match', () => {
     const dependencies: string[] = ['nonexistent'];
 
-    const { rowData, availableModels, availableApplications } = getDependenciesData(dependencies, models, applications);
+    const { data, filteredApplications, filteredModels } = getDependenciesData(dependencies, models, applications);
 
-    expect(rowData).toHaveLength(0);
-    expect(availableModels).toHaveLength(models.length);
-    expect(availableApplications).toHaveLength(applications.length);
+    expect(data).toHaveLength(0);
+    expect(filteredApplications).toHaveLength(models.length);
+    expect(filteredModels).toHaveLength(applications.length);
   });
 
   it('should return all entities in rowData if all dependencies match', () => {
     const dependencies = [...models.map((m) => m.name), ...applications.map((a) => a.name)];
 
-    const { rowData, availableModels, availableApplications } = getDependenciesData(dependencies, models, applications);
+    const { data, filteredApplications, filteredModels } = getDependenciesData(dependencies, models, applications);
 
-    expect(rowData).toHaveLength(models.length + applications.length);
-    expect(availableModels).toHaveLength(0);
-    expect(availableApplications).toHaveLength(0);
+    expect(data).toHaveLength(models.length + applications.length);
+    expect(filteredApplications).toHaveLength(0);
+    expect(filteredModels).toHaveLength(0);
   });
 });
