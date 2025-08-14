@@ -5,6 +5,7 @@ import { FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import classNames from 'classnames';
+import { useRouter } from 'next/navigation';
 
 import Button from '@/src/components/Common/Button/Button';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
@@ -21,12 +22,11 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { rollbackEntityPerRevision } from '@/src/utils/audit/get-rollback-request';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { useRouter } from 'next/navigation';
-import { generateCurrentResource } from './activity-audit.utils';
-import ActivityAuditEntityDiff from './ActivityAuditViewDiff/ActivityAuditEntityDiff';
-import ActivityAuditEntityDiffCompare from './ActivityAuditViewDiff/ActivityAuditEntityDiffCompare';
-import ActivityAuditEntityDiffFilter from './ActivityAuditViewDiff/ActivityAuditEntityDiffFilter';
-import ActivityAuditViewHeader from './ActivityAuditViewHeader/ActivityAuditViewHeader';
+import { generateCurrentResource } from '@/src/components/ActivityAudit/View/utils';
+import EntityDiff from '@/src/components/ActivityAudit/View/DiffReport/EntityDiff';
+import CompareControl from '@/src/components/ActivityAudit/View/DiffReport/CompareControl';
+import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
+import ViewHeader from '@/src/components/ActivityAudit/View/Header/Header';
 
 interface Props {
   activity: DialActivity;
@@ -37,7 +37,7 @@ interface Props {
   entity?: DialBaseEntity;
 }
 
-const ActivityAuditView: FC<Props> = ({
+const AuditView: FC<Props> = ({
   activity,
   activityRevision,
   previousRevision,
@@ -117,8 +117,8 @@ const ActivityAuditView: FC<Props> = ({
               {activity.activityId} <CopyButton field={activity.activityId} title={t(CreateI18nKey.IdTitle)} />
             </h1>
             <div className="flex flex-row items-center gap-4">
-              <ActivityAuditEntityDiffCompare compareView={compareView} setCompareView={setCompareView} />
-              <ActivityAuditEntityDiffFilter diffView={diffView} setDiffView={setDiffView} />
+              <CompareControl compareView={compareView} setCompareView={setCompareView} />
+              <FilterControl diffView={diffView} setDiffView={setDiffView} />
               <Button
                 iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
                 cssClass="secondary"
@@ -129,17 +129,15 @@ const ActivityAuditView: FC<Props> = ({
           </div>
         )}
         <div className="flex-1 flex flex-col relative divide-y divide-primary min-h-0">
-          <ActivityAuditViewHeader activity={activity} isModalView={isModalView}>
+          <ViewHeader activity={activity} isModalView={isModalView}>
             {isModalView && (
               <div className="flex flex-row gap-3">
-                {!hideComparator && (
-                  <ActivityAuditEntityDiffCompare compareView={compareView} setCompareView={setCompareView} />
-                )}
-                <ActivityAuditEntityDiffFilter diffView={diffView} setDiffView={setDiffView} />
+                {!hideComparator && <CompareControl compareView={compareView} setCompareView={setCompareView} />}
+                <FilterControl diffView={diffView} setDiffView={setDiffView} />
               </div>
             )}
-          </ActivityAuditViewHeader>
-          <ActivityAuditEntityDiff
+          </ViewHeader>
+          <EntityDiff
             currentEntity={before}
             compareEntity={after}
             type={activity.resourceType}
@@ -172,4 +170,4 @@ const ActivityAuditView: FC<Props> = ({
   );
 };
 
-export default ActivityAuditView;
+export default AuditView;

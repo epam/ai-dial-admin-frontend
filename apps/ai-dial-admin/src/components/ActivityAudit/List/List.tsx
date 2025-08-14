@@ -32,9 +32,9 @@ import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
-import { SYSTEM_ROLLBACK_ID } from './constants';
-import ActivityDetails from './Modals/Details';
-import { getActivityAuditColumns, getGridFilters } from './utils';
+import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
+import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
+import { getActivityAuditColumns, getGridFilters } from '@/src/components/ActivityAudit/List/utils';
 
 interface Props {
   entity?: DialBaseEntity;

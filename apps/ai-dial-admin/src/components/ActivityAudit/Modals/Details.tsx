@@ -3,7 +3,7 @@ import { FC, useEffect, useState } from 'react';
 import classNames from 'classnames';
 
 import { getActivityById, getRevisionDetails } from '@/src/app/[lang]/activity-audit/actions';
-import ActivityAuditView from '@/src/components/ActivityAuditView/ActivityAuditView';
+import AuditView from '@/src/components/ActivityAudit/View/AuditView';
 import Loader from '@/src/components/Common/Loader/Loader';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ActivityAuditI18nKey } from '@/src/constants/i18n';
@@ -91,7 +91,7 @@ const ActivityDetails: FC<Props> = ({
         {loading ? (
           <Loader />
         ) : (
-          <ActivityAuditView
+          <AuditView
             activity={activity || ({} as DialActivity)}
             activityRevision={activityRevision}
             previousRevision={previousRevision}

@@ -1,0 +1,24 @@
+import { ActivityAuditResourceType } from '@/src/types/activity-audit';
+
+export const SYSTEM_ROLLBACK_ID = 'system-rollback';
+export const SYSTEM_ROLLBACK_ENTITIES = [
+  ActivityAuditResourceType.MODEL,
+  ActivityAuditResourceType.APPLICATION,
+  ActivityAuditResourceType.ROUTE,
+  ActivityAuditResourceType.ROLE,
+  ActivityAuditResourceType.KEY,
+  ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA,
+  ActivityAuditResourceType.INTERCEPTOR,
+  ActivityAuditResourceType.ADAPTER,
+];
+
+export const SYSTEM_ROLLBACK_TAB_NAME: Record<ActivityAuditResourceType, string> = {
+  [ActivityAuditResourceType.MODEL]: 'Models',
+  [ActivityAuditResourceType.APPLICATION]: 'Applications',
+  [ActivityAuditResourceType.ADAPTER]: 'Adapters',
+  [ActivityAuditResourceType.INTERCEPTOR]: 'Interceptors',
+  [ActivityAuditResourceType.KEY]: 'Keys',
+  [ActivityAuditResourceType.ROLE]: 'Roles',
+  [ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA]: 'ApplicationRunners',
+  [ActivityAuditResourceType.ROUTE]: 'Routes',
+};
