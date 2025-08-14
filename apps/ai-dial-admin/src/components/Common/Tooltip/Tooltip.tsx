@@ -27,7 +27,7 @@ const Tooltip: FC<Props> = ({
 
   return (
     <TooltipContainer {...tooltipProps}>
-      <TooltipTrigger className={classNames(triggerClassName, 'flex-1 min-w-0 truncate')}>{children}</TooltipTrigger>
+      <TooltipTrigger className={classNames(triggerClassName, 'truncate')}>{children}</TooltipTrigger>
       <TooltipContent className={classNames(contentClassName, 'max-w-[300px]')}>{tooltip}</TooltipContent>
     </TooltipContainer>
   );
