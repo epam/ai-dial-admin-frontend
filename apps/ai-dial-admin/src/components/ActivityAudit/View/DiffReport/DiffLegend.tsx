@@ -12,7 +12,7 @@ interface Props {
   changed?: number;
 }
 
-const ActivityAuditEntityDiffLegend: FC<Props> = ({ description, added, removed, changed }) => {
+const DiffLegend: FC<Props> = ({ description, added, removed, changed }) => {
   const t = useI18n();
 
   const containerClass = classNames('flex flex-row small', description ? 'gap-6 text-secondary' : 'gap-2 text-primary');
@@ -41,4 +41,4 @@ const ActivityAuditEntityDiffLegend: FC<Props> = ({ description, added, removed,
   );
 };
 
-export default ActivityAuditEntityDiffLegend;
+export default DiffLegend;

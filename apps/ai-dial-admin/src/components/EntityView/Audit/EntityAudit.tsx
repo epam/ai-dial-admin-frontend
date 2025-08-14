@@ -1,7 +1,7 @@
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { FC, useState } from 'react';
 
-import ActivityAuditList from '@/src/components/ActivityAudit/List';
+import ActivityAuditList from '@/src/components/ActivityAudit/List/List';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import { EntityViewTab } from '@/src/components/EntityView/entity-view';
 import Dashboard from '@/src/components/Telemetry/Dashboard';
