@@ -7,6 +7,7 @@ import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
 import classNames from 'classnames';
+import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 
 interface Props {
   modalState: PopUpState;
@@ -50,7 +51,9 @@ const InputModal: FC<Props> = ({
               inputCssClasses,
             )}
           >
-            <span className={valueCssClasses}>{value}</span>
+            <Tooltip tooltip={value}>
+              <span className={valueCssClasses}>{value}</span>
+            </Tooltip>
             {!readonly && <OpenPopup />}
           </div>
         </button>
@@ -58,7 +61,7 @@ const InputModal: FC<Props> = ({
         <div className="w-full" onClick={readonly ? void 0 : onOpenModal}>
           <div
             className={classNames(
-              'input flex flex-row items-center w-full justify-between truncate',
+              'input flex flex-row items-center w-full justify-between',
               readonly ? 'border-0 p-0' : '',
             )}
           >

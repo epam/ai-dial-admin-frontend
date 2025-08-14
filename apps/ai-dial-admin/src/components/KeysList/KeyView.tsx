@@ -175,7 +175,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
             setErrorNotifications={setErrorNotifications}
           >
             <Button
-              cssClass={`primary`}
+              cssClass="primary"
               title={t(ButtonsI18nKey.Rotate)}
               iconBefore={<IconRefresh {...BASE_ICON_PROPS} />}
               onClick={() => setRotateModalState(PopUpState.Opened)}

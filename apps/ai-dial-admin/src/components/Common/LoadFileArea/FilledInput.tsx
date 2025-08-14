@@ -39,10 +39,7 @@ const FilledInput: FC<Props> = ({
           {isInvalid ? <IconExclamationCircle {...BASE_ICON_PROPS} /> : iconBeforeInput}
         </div>
       </Tooltip>
-      <Input
-        cssClass={classNames('border-0 bg-transparent truncate', isInvalid ? 'text-error' : '', cssClass)}
-        {...props}
-      />
+      <Input cssClass={classNames('border-0 bg-transparent', isInvalid ? 'text-error' : '', cssClass)} {...props} />
       <div className="flex items-center">{iconAfterInput}</div>
     </div>
   );

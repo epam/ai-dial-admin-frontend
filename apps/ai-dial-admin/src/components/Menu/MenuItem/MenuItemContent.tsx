@@ -29,7 +29,7 @@ const MenuItemContent: FC<Props> = ({ menuItem, isActive, isSidebarOpen }) => {
 
   return (
     <Tooltip
-      triggerClassName="flex-1 min-w-0 small-text-semi truncate"
+      triggerClassName="small-text-semi"
       tooltip={t(menuItem.key)}
       placement={'right'}
       hideTooltip={isSidebarOpen}
