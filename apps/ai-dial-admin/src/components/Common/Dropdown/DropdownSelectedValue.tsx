@@ -55,7 +55,7 @@ const DropdownSelectedItem: FC<Props> = ({
           })}
         </div>
       ) : (
-        <Tooltip tooltip={placeholder} triggerClassName="text-left">
+        <Tooltip tooltip={placeholder} triggerClassName="flex-1 min-w-0">
           <span className="flex-1 min-w-0 mr-2 text-secondary pointer-events-none">{placeholder}</span>
         </Tooltip>
       )}
