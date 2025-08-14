@@ -5,7 +5,6 @@ import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ApplicationRoute } from '@/src/types/routes';
 
 import View from './View';
-import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 const template: InterceptorTemplate = {
   name: 'test-template',
@@ -17,11 +16,7 @@ const template: InterceptorTemplate = {
 
 describe('View', () => {
   it('Should render correctly', () => {
-    render(
-      <SaveValidationContextProvider>
-        <View route={ApplicationRoute.InterceptorTemplates} template={template} />
-      </SaveValidationContextProvider>,
-    );
+    render(<View route={ApplicationRoute.InterceptorTemplates} template={template} />);
 
     expect(screen.getByRole('button', { name: 'Buttons.Delete' })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'CreateEntity.completionEndpoint.title' })).toHaveValue(
