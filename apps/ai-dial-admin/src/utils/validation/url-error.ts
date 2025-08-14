@@ -1,5 +1,5 @@
+import { ErrorI18nKey } from '@/src/constants/i18n';
 import { ErrorType } from '@/src/types/error-type';
-import { CreateI18nKey } from '@/src/constants/i18n';
 
 const ENDPOINT_REGEX =
   /^https?:\/\/[-a-zA-Z0-9@:%._+~#=]{1,256}(\.[a-zA-Z0-9()]{1,6})?\b(:[0-9]{1,5})?([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/;
@@ -30,7 +30,7 @@ export const getUrlError = (url: string, t?: (str: string) => string) => {
   if (url && !isValidHttpUrl(url)) {
     return {
       type: ErrorType.INVALID,
-      text: t ? t(CreateI18nKey.IdUrlError) : '',
+      text: t ? t(ErrorI18nKey.UrlField) : '',
     };
   }
 

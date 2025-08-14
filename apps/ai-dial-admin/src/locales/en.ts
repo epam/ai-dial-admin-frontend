@@ -257,7 +257,6 @@ export default {
       title: 'ID',
       placeholder: 'Enter ID',
       error: 'This id already exists.',
-      UrlError: 'This id should be URL.',
     },
     name: {
       title: 'Name',
@@ -852,7 +851,7 @@ export default {
     MaintenanceInProgress: 'Maintenance in progress',
     SystemUnavailable: 'The system is temporarily unavailable due to a technical update.',
     TryAgainLater: 'Please try again later.',
-    IncorrectEndpoint: 'Endpoint must be a valid url starting with http:// or https://',
+    UrlField: 'This field must be a valid URL starting with  http:// or https://',
     WarningEndpoint: 'The endpoint uses HTTP instead of HTTPS. This may expose data to security risks.',
   },
   Source: {

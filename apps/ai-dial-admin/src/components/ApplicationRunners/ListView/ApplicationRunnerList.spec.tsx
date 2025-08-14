@@ -21,7 +21,7 @@ describe('Components - ApplicationRunnersList', () => {
 describe('Components - ApplicationRunnersView', () => {
   test('Should render successfully', () => {
     const { baseElement } = render(
-      <ApplicationRunnersView originalScheme={{ 'dial:applicationTypeDisplayName': 'name' }} applications={[]} />,
+      <ApplicationRunnersView originalScheme={{ 'dial:applicationTypeDisplayName': 'name' }} />,
     );
 
     expect(baseElement).toBeTruthy();

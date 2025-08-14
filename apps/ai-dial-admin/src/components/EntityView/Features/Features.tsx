@@ -1,12 +1,15 @@
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Switch from '@/src/components/Common/Switch/Switch';
 import { FeaturesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseEntity, DialFeatures } from '@/src/models/dial/base-entity';
+import { FieldError } from '@/src/models/error';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getUrlError } from '@/src/utils/validation/url-error';
 import { getSwitchControls, getTextControls } from './utils';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   view: ApplicationRoute;
@@ -15,9 +18,39 @@ interface Props {
 }
 
 const EntityFeatures: FC<Props> = ({ view, entity, onChangeEntity }) => {
-  const t = useI18n();
+  const t = useI18n() as (key: string) => string;
   const switchKeys = getSwitchControls(view);
   const textKeys = getTextControls(view);
+
+  const [textFieldErrors, setTextFieldErrors] = useState<Record<string, FieldError | null>>({});
+
+  const { dispatch } = useSaveValidationContext();
+
+  useEffect(() => {
+    const initialErrors: Record<string, FieldError | null> = {};
+    textKeys.forEach((key) => {
+      const value = entity.features?.[key] as string;
+      if (value) {
+        initialErrors[key] = getUrlError(value, t);
+      } else {
+        initialErrors[key] = null;
+      }
+    });
+    setTextFieldErrors(initialErrors);
+
+    textKeys.forEach((key) => {
+      const value = entity.features?.[key] as string;
+      const error = value ? getUrlError(value, t) : null;
+      dispatch({ type: ValidationActionType.SetField, field: key, isValid: !error });
+    });
+  }, [textKeys, entity.features, t, dispatch]);
+
+  useEffect(() => {
+    textKeys.forEach((key) => {
+      const error = textFieldErrors[key];
+      dispatch({ type: ValidationActionType.SetField, field: key, isValid: !error });
+    });
+  }, [textFieldErrors, textKeys, dispatch]);
 
   const onSwitch = useCallback(
     (value: boolean, key: keyof DialFeatures) => {
@@ -34,6 +67,14 @@ const EntityFeatures: FC<Props> = ({ view, entity, onChangeEntity }) => {
 
   const onChange = useCallback(
     (value: string, key: keyof DialFeatures) => {
+      const urlError = getUrlError(value, t);
+      setTextFieldErrors((prev) => ({
+        ...prev,
+        [key]: urlError,
+      }));
+
+      dispatch({ type: ValidationActionType.SetField, field: key, isValid: !urlError });
+
       onChangeEntity({
         ...entity,
         features: {
@@ -42,12 +83,13 @@ const EntityFeatures: FC<Props> = ({ view, entity, onChangeEntity }) => {
         } as DialFeatures,
       });
     },
-    [onChangeEntity, entity],
+    [onChangeEntity, entity, t, dispatch],
   );
 
   return (
     <div className="h-full flex flex-col pt-3 gap-y-9 lg:w-[35%]">
       {textKeys.map((key) => {
+        const error = textFieldErrors[key];
         return (
           <TextInputField
             key={key}
@@ -55,6 +97,8 @@ const EntityFeatures: FC<Props> = ({ view, entity, onChangeEntity }) => {
             elementId={key}
             placeholder={t(FeaturesI18nKey[`${key}Placeholder` as keyof typeof FeaturesI18nKey])}
             value={entity.features?.[key] as string}
+            errorText={error?.text}
+            invalid={!!error}
             onChange={(value) => onChange(value, key)}
           />
         );
