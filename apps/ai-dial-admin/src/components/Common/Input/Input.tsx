@@ -1,5 +1,6 @@
 'use client';
 
+import { ALLOWED_INPUT_KEYS } from '@/src/constants/input';
 import classNames from 'classnames';
 import { ChangeEvent, FC, KeyboardEvent, WheelEvent } from 'react';
 
@@ -36,22 +37,9 @@ const Input: FC<InputProps> = ({
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (!isNumericInput) return;
 
-    // Allow navigation keys, backspace, delete, etc.
-    const allowedKeys = [
-      'ArrowLeft',
-      'ArrowRight',
-      'ArrowUp',
-      'ArrowDown',
-      'Backspace',
-      'Delete',
-      'Tab',
-      'Enter',
-      'Escape',
-      'Home',
-      'End',
-    ];
-
-    if (allowedKeys.includes(e.key)) return;
+    if (ALLOWED_INPUT_KEYS.includes(e.key)) {
+      return;
+    }
 
     // Allow minus sign only at the beginning and if min allows negative numbers
     if (e.key === '-' && e.currentTarget.selectionStart === 0 && (min === undefined || min < 0)) {
