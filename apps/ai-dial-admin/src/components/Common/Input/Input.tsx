@@ -2,7 +2,6 @@
 
 import classNames from 'classnames';
 import { FC, WheelEvent } from 'react';
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 
 export interface InputProps {
   type?: string;
@@ -17,7 +16,7 @@ export interface InputProps {
 }
 
 const Input: FC<InputProps> = ({
-  value,
+  value = '',
   inputId,
   placeholder = '',
   cssClass = '',
@@ -29,20 +28,18 @@ const Input: FC<InputProps> = ({
   const handleWheel = (e: WheelEvent<HTMLInputElement>) => (e.target as HTMLInputElement).blur();
 
   return (
-    <Tooltip tooltip={value ? String(value) : ''}>
-      <input
-        type={type}
-        autoComplete="off"
-        id={inputId}
-        data-testid={inputId}
-        placeholder={placeholder}
-        value={value || ''}
-        disabled={disabled}
-        className={classNames(invalid ? 'input-error' : '', cssClass)}
-        onChange={(event) => onChange?.(event.currentTarget.value)}
-        onWheel={handleWheel}
-      />
-    </Tooltip>
+    <input
+      type={type}
+      autoComplete="off"
+      id={inputId}
+      data-testid={inputId}
+      placeholder={placeholder}
+      value={value as string | number}
+      disabled={disabled}
+      className={classNames(invalid ? 'input-error' : '', cssClass)}
+      onChange={(event) => onChange?.(event.currentTarget.value)}
+      onWheel={handleWheel}
+    />
   );
 };
 
