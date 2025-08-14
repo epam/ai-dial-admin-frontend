@@ -45,7 +45,6 @@ const InputWithReadonlyParts: FC<Props> = ({
           <Input
             cssClass={classNames('border-0 border-r rounded-none h-full')}
             value={prefixPart}
-            disabled={true}
             inputId={prefixPart + 'prefix'}
           />
           <Input cssClass={classNames('border-0 bg-transparent', cssClass)} {...props} />

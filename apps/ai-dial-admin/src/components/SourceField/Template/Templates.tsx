@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
@@ -6,6 +6,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ApplicationRoute } from '@/src/types/routes';
 import { SourceI18nKey } from '@/src/constants/i18n';
+import { DialModel } from '@/src/models/dial/model';
 import { getErrorNotification } from '@/src/utils/notification';
 import { useNotification } from '@/src/context/NotificationContext';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
@@ -18,14 +19,14 @@ import SelectRunnerModal from '@/src/components/SourceField/Template/SelectRunne
 import Button from '@/src/components/Common/Button/Button';
 import Field from '@/src/components/Common/Field/Field';
 
-interface Props {
-  entity: DialInterceptor;
-  onChange: (entity: DialInterceptor) => void;
+interface Props<T> {
+  entity: T;
+  onChange: (entity: T) => void;
   getRunners: () => Promise<InterceptorTemplate[] | null>;
   fieldId?: string;
 }
 
-const Templates: FC<Props> = ({ entity, onChange, getRunners, fieldId }) => {
+const Templates = <T extends DialModel | DialInterceptor>({ entity, onChange, getRunners, fieldId }: Props<T>) => {
   const t = useI18n();
   const { showNotification } = useNotification();
 

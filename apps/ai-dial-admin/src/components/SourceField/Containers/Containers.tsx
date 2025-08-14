@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { PopUpState } from '@/src/types/pop-up';
 import { FieldError } from '@/src/models/error';
@@ -7,6 +7,7 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 import { ApplicationRoute } from '@/src/types/routes';
+import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { IconExternalLink } from '@tabler/icons-react';
@@ -21,21 +22,29 @@ import SelectContainerModal from '@/src/components/SourceField/Containers/Select
 import Button from '@/src/components/Common/Button/Button';
 import Field from '@/src/components/Common/Field/Field';
 
-interface Props {
-  entity: DialInterceptor;
-  onChange: (entity: DialInterceptor) => void;
+interface Props<T> {
+  entity: T;
+  onChange: (entity: T) => void;
   getContainers: () => Promise<Container[] | null>;
   fieldId?: string;
+  view?: ApplicationRoute;
 }
 
-const Containers: FC<Props> = ({ entity, onChange, getContainers, fieldId }) => {
+const Containers = <T extends DialInterceptor | DialModel>({
+  entity,
+  onChange,
+  getContainers,
+  fieldId,
+  view,
+}: Props<T>) => {
   const t = useI18n() as (key: string) => string;
   const { showNotification } = useNotification();
 
   const [completionEndpointError, setCompletionEndpointError] = useState<FieldError | null>(null);
   const [configurationEndpointError, setConfigurationEndpointError] = useState<FieldError | null>(null);
+  const [endpointError, setEndpointError] = useState<FieldError | null>(null);
   const [modalState, setModalState] = useState(PopUpState.Closed);
-  const [interceptorContainers, setInterceptorContainers] = useState<Container[]>([]);
+  const [containers, setcContainers] = useState<Container[]>([]);
   const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
 
   const onOpenModal = useCallback(() => {
@@ -71,7 +80,7 @@ const Containers: FC<Props> = ({ entity, onChange, getContainers, fieldId }) => 
     const fetchContainers = async () => {
       const containers = await getContainers();
       if (containers?.length) {
-        setInterceptorContainers(containers.filter((container) => container.status === 'running') || []);
+        setcContainers(containers /*.filter((container) => container.status === 'running')*/ || []);
       }
     };
 
@@ -79,10 +88,8 @@ const Containers: FC<Props> = ({ entity, onChange, getContainers, fieldId }) => 
   }, [getContainers, showNotification]);
 
   useEffect(() => {
-    setSelectedContainer(
-      interceptorContainers?.find((container) => container.id === entity.source?.containerId) || null,
-    );
-  }, [interceptorContainers, selectedContainer, entity]);
+    setSelectedContainer(containers?.find((container) => container.id === entity.source?.containerId) || null);
+  }, [containers, selectedContainer, entity]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -99,7 +106,7 @@ const Containers: FC<Props> = ({ entity, onChange, getContainers, fieldId }) => 
               selectedId={entity.source?.containerId}
               onClose={onCloseModal}
               onApply={onSelect}
-              interceptorContainers={interceptorContainers}
+              interceptorContainers={containers}
               modalState={modalState}
             />
           </InputModal>
@@ -114,40 +121,70 @@ const Containers: FC<Props> = ({ entity, onChange, getContainers, fieldId }) => 
         )}
       </div>
       {entity.source?.containerId && (
-        <div className="lg:w-[35%] flex flex-col gap-6">
-          <TextInputField
-            textBeforeInput={selectedContainer?.url}
-            elementId="completionEndpoint"
-            fieldTitle={t(CreateI18nKey.CompletionEndpointTitle)}
-            placeholder={t(CreateI18nKey.CompletionEndpointPlaceholder)}
-            value={entity.source.completionEndpointPath}
-            errorText={completionEndpointError?.text}
-            invalid={!!completionEndpointError}
-            onChange={(completionEndpointPath) => {
-              setCompletionEndpointError(getUrlError(`${selectedContainer?.url}${completionEndpointPath}`, t));
-              onChange({
-                ...entity,
-                source: { ...entity.source, $type: SOURCE_TYPE.CONTAINER, completionEndpointPath },
-              });
-            }}
-          />
-          <TextInputField
-            textBeforeInput={selectedContainer?.url}
-            elementId="configurationEndpoint"
-            fieldTitle={t(CreateI18nKey.ConfigurationEndpointTitle)}
-            placeholder={t(CreateI18nKey.ConfigurationEndpointPlaceholder)}
-            value={entity.source.configurationEndpointPath}
-            errorText={configurationEndpointError?.text}
-            invalid={!!configurationEndpointError}
-            onChange={(configurationEndpointPath) => {
-              setConfigurationEndpointError(getUrlError(`${selectedContainer?.url}${configurationEndpointPath}`, t));
-              onChange({
-                ...entity,
-                source: { ...entity.source, $type: SOURCE_TYPE.CONTAINER, configurationEndpointPath },
-              });
-            }}
-          />
-        </div>
+        <>
+          {view === ApplicationRoute.Models ? (
+            <div className="lg:w-[35%] flex flex-col gap-6">
+              <TextInputField
+                textBeforeInput={selectedContainer?.url}
+                elementId="endpoint"
+                fieldTitle={t(CreateI18nKey.CompletionEndpointTitle)}
+                placeholder={t(CreateI18nKey.CompletionEndpointPlaceholder)}
+                value={
+                  entity.source.completionEndpointPath || (entity as DialModel).type === DialModelType.Chat
+                    ? '/chat/completions'
+                    : '/embeddings'
+                }
+                errorText={endpointError?.text}
+                disabled={true}
+                invalid={!!endpointError}
+                onChange={(completionEndpointPath) => {
+                  setEndpointError(getUrlError(`${selectedContainer?.url}${completionEndpointPath}`, t));
+                  onChange({
+                    ...entity,
+                    source: { ...entity.source, $type: SOURCE_TYPE.CONTAINER, completionEndpointPath },
+                  });
+                }}
+              />
+            </div>
+          ) : (
+            <div className="lg:w-[35%] flex flex-col gap-6">
+              <TextInputField
+                textBeforeInput={selectedContainer?.url}
+                elementId="completionEndpoint"
+                fieldTitle={t(CreateI18nKey.CompletionEndpointTitle)}
+                placeholder={t(CreateI18nKey.CompletionEndpointPlaceholder)}
+                value={entity.source.completionEndpointPath}
+                errorText={completionEndpointError?.text}
+                invalid={!!completionEndpointError}
+                onChange={(completionEndpointPath) => {
+                  setCompletionEndpointError(getUrlError(`${selectedContainer?.url}${completionEndpointPath}`, t));
+                  onChange({
+                    ...entity,
+                    source: { ...entity.source, $type: SOURCE_TYPE.CONTAINER, completionEndpointPath },
+                  });
+                }}
+              />
+              <TextInputField
+                textBeforeInput={selectedContainer?.url}
+                elementId="configurationEndpoint"
+                fieldTitle={t(CreateI18nKey.ConfigurationEndpointTitle)}
+                placeholder={t(CreateI18nKey.ConfigurationEndpointPlaceholder)}
+                value={entity.source.configurationEndpointPath}
+                errorText={configurationEndpointError?.text}
+                invalid={!!configurationEndpointError}
+                onChange={(configurationEndpointPath) => {
+                  setConfigurationEndpointError(
+                    getUrlError(`${selectedContainer?.url}${configurationEndpointPath}`, t),
+                  );
+                  onChange({
+                    ...entity,
+                    source: { ...entity.source, $type: SOURCE_TYPE.CONTAINER, configurationEndpointPath },
+                  });
+                }}
+              />
+            </div>
+          )}
+        </>
       )}
     </div>
   );

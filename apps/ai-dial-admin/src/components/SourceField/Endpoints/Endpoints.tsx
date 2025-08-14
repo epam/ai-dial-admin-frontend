@@ -13,7 +13,7 @@ interface Props {
   onChange: (entity: DialInterceptor) => void;
 }
 
-const Endpoints: FC<Props> = ({ entity, onChange }) => {
+const InterceptorEndpoints: FC<Props> = ({ entity, onChange }) => {
   const t = useI18n() as (key: string) => string;
 
   const [completionEndpointError, setCompletionEndpointError] = useState<FieldError | null>(null);
@@ -37,7 +37,7 @@ const Endpoints: FC<Props> = ({ entity, onChange }) => {
         elementId="configurationEndpoint"
         fieldTitle={t(CreateI18nKey.ConfigurationEndpointTitle)}
         placeholder={t(CreateI18nKey.ConfigurationEndpointPlaceholder)}
-        value={entity.configurationEndpoint}
+        value={(entity as DialInterceptor).configurationEndpoint}
         errorText={configurationEndpointError?.text}
         invalid={!!configurationEndpointError}
         onChange={(configurationEndpoint) => {
@@ -49,4 +49,4 @@ const Endpoints: FC<Props> = ({ entity, onChange }) => {
   );
 };
 
-export default Endpoints;
+export default InterceptorEndpoints;

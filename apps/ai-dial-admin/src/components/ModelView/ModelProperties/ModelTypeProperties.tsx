@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { getModelsTopics } from '@/src/app/[lang]/models/actions';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
@@ -8,33 +8,32 @@ import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
 import EntityAttachments from '@/src/components/EntityView/Properties/EntityAttachments';
 import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
-import { EntitiesI18nKey, ErrorI18nKey, ModelViewI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, ModelViewI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
 import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import { useI18n } from '@/src/locales/client';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { RadioButtonModel } from '@/src/models/radio-button';
-import InputWithReadonlyParts from '@/src/components/Common/Input/InputWithReadonlyParts';
-import { splitEndpoint } from '@/src/components/ModelView/ModelProperties/utils';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { useNotification } from '@/src/context/NotificationContext';
 import { getErrorNotification } from '@/src/utils/notification';
+import { getModelContainers } from '@/src/app/[lang]/interceptors/actions';
+import SourceField from '@/src/components/SourceField/SourceField';
+import { MODELS_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   model: DialModel;
   onChangeModel: (model: DialModel) => void;
+  view?: ApplicationRoute;
 }
 
-const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
+const ModelTypeProperties: FC<Props> = ({ model, onChangeModel, view }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const showNotificationRef = useRef(showNotification);
 
   const [adapters, setAdapters] = useState<DialAdapter[]>([]);
-
-  const [prefixPart, postfixPart] = useMemo(() => {
-    return splitEndpoint(model, adapters);
-  }, [model, adapters]);
 
   const modelTypeRadio: RadioButtonModel[] = [
     { id: DialModelType.Chat, name: t(ModelViewI18nKey.Chat) },
@@ -72,13 +71,6 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
     [model, onChangeModel],
   );
 
-  const onChangeEndpoint = useCallback(
-    (value: string) => {
-      onChangeModel({ ...model, endpointDeploymentName: value });
-    },
-    [model, onChangeModel],
-  );
-
   return (
     <div className="w-full flex flex-col gap-5">
       <div className="w-full lg:w-[35%]">
@@ -91,17 +83,16 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
           onChange={onChangeType}
         />
       </div>
-      <div className="lg:w-[75%]">
-        <InputWithReadonlyParts
-          inputId="endpoint"
-          value={model.endpointDeploymentName}
-          fullValue={model.endpoint}
-          title={t(EntitiesI18nKey.Endpoint)}
-          postfixPart={postfixPart}
-          prefixPart={prefixPart}
-          onChange={onChangeEndpoint}
-          invalid={!model.endpointDeploymentName}
-          errorText={t(ErrorI18nKey.IncorrectModelEndpointAlias)}
+      <div className="w-full">
+        <SourceField
+          entity={model}
+          onChange={onChangeModel}
+          getContainers={getModelContainers}
+          elementId={'sourceType'}
+          fieldTitle={t(EntitiesI18nKey.SourceType)}
+          sourceItems={MODELS_SOURCE_ITEMS}
+          view={view}
+          adapters={adapters}
         />
       </div>
       <div className="w-full flex flex-col gap-5 lg:w-[35%]">

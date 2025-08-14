@@ -1,4 +1,5 @@
 import { DialBaseEntity } from './base-entity';
+import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 
 export interface DialModel extends DialBaseEntity {
   type?: DialModelType;
@@ -10,6 +11,7 @@ export interface DialModel extends DialBaseEntity {
   pricing?: DialModelPricing;
   maxRetryAttempts?: number;
   displayVersion?: string;
+  source?: SOURCE_FIELD;
 }
 
 export interface DialTokenizer {

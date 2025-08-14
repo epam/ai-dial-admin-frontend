@@ -41,7 +41,7 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, updateModel }) => {
           isEntityImmutable={true}
         />
 
-        <ModelTypeProperties model={model} onChangeModel={updateModel} />
+        <ModelTypeProperties model={model} onChangeModel={updateModel} view={ApplicationRoute.Models} />
       </div>
 
       <div className="flex flex-col gap-6 mt-4 pt-4">

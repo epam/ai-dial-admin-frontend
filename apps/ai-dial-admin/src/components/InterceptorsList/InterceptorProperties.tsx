@@ -7,6 +7,7 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getInterceptorContainers } from '@/src/app/[lang]/interceptors/actions';
 import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
+import { INTERCEPTOR_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
 import { useI18n } from '@/src/locales/client';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
@@ -52,12 +53,13 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
       </div>
       <div className="flex flex-col pt-3 w-full">
         <SourceField
-          interceptor={selectedInterceptor}
+          entity={selectedInterceptor}
           onChange={onChangeInterceptor}
           getContainers={getInterceptorContainers}
           getRunners={getInterceptorTemplatesList}
           elementId={'sourceType'}
           fieldTitle={t(EntitiesI18nKey.SourceType)}
+          sourceItems={INTERCEPTOR_SOURCE_ITEMS}
         />
       </div>
     </div>

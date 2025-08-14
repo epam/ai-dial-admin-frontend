@@ -1,5 +1,5 @@
 import { DialBaseNamedEntity } from './base-entity';
-import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 
 export interface DialInterceptor extends DialBaseNamedEntity {
   endpoint?: string;
@@ -9,11 +9,5 @@ export interface DialInterceptor extends DialBaseNamedEntity {
   author?: string;
   createdAt?: number;
   updatedAt?: number;
-  source?: {
-    $type: SOURCE_TYPE;
-    runnerName?: string;
-    containerId?: string;
-    completionEndpointPath?: string;
-    configurationEndpointPath?: string;
-  };
+  source?: SOURCE_FIELD;
 }
