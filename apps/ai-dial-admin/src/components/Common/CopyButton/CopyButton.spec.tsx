@@ -15,7 +15,7 @@ describe('Common components :: CopyButton', () => {
   });
 
   test('Should copy text and show notification on click', () => {
-    const { getByRole } = render(<CopyButton field="copied value" />);
+    const { getByRole } = render(<CopyButton field="copied value" title="Copy this" />);
     fireEvent.click(getByRole('button', { name: 'copy' }));
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith('copied value');
   });

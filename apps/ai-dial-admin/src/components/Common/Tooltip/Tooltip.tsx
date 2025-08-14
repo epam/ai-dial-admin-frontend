@@ -1,4 +1,5 @@
 import { FC, ReactNode } from 'react';
+import classNames from 'classnames';
 
 import TooltipTrigger from './TooltipTrigger';
 import TooltipContainer, { TooltipContainerOptions } from './TooltipContext';
@@ -26,8 +27,8 @@ const Tooltip: FC<Props> = ({
 
   return (
     <TooltipContainer {...tooltipProps}>
-      <TooltipTrigger className={triggerClassName}>{children}</TooltipTrigger>
-      <TooltipContent className={contentClassName}>{tooltip}</TooltipContent>
+      <TooltipTrigger className={classNames(triggerClassName, 'flex-1 min-w-0 truncate')}>{children}</TooltipTrigger>
+      <TooltipContent className={classNames(contentClassName, 'max-w-[300px]')}>{tooltip}</TooltipContent>
     </TooltipContainer>
   );
 };

@@ -41,9 +41,7 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, updateModel }) => {
           isEntityImmutable={true}
         />
 
-        <div className="lg:w-[75%]">
-          <ModelTypeProperties model={model} onChangeModel={updateModel} />
-        </div>
+        <ModelTypeProperties model={model} onChangeModel={updateModel} />
       </div>
 
       <div className="flex flex-col gap-6 mt-4 pt-4">

@@ -92,9 +92,11 @@ const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, upd
               {t(UpstreamEndpointsI18nKey.Upstream)} {index + 1}
             </h3>
             {isCollapsed && (
-              <p className="max-w-[220px] md:max-w-[50%] truncate tiny text-secondary mt-3">
-                {endpoint.endpoint || '—'}
-              </p>
+              <Tooltip tooltip={endpoint.endpoint || '—'}>
+                <p className="max-w-[220px] md:max-w-[50%] truncate tiny text-secondary mt-3">
+                  {endpoint.endpoint || '—'}
+                </p>
+              </Tooltip>
             )}
           </div>
         )}

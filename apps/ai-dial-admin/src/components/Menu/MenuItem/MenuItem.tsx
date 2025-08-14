@@ -37,15 +37,11 @@ const MenuItem: FC<Props> = ({ config, activeMenuItem, isOpenByDefault = false, 
 
   return (
     <li className="flex flex-col">
-      <Tooltip
-        triggerClassName="flex-1 min-w-0 small-text-semi truncate"
-        tooltip={t(config.key) ?? ''}
-        placement={'right'}
-      >
+      <Tooltip triggerClassName="small-text-semi" tooltip={t(config.key) ?? ''} placement={'right'}>
         <button className={menuBlockClassNames} onClick={onClick} aria-label="button">
           <div className="flex flex-row items-center flex-1 min-w-0">
             <div className={classNames('mr-4', iconClassNames)}>{config.icon}</div>
-            <span className="flex-1 min-w-0 text-left truncate"> {t(config.key) ?? ''}</span>
+            <span className="text-left truncate"> {t(config.key) ?? ''}</span>
           </div>
           {isSidebarOpen && (
             <div className={classNames('ml-4', iconClassNames)}>

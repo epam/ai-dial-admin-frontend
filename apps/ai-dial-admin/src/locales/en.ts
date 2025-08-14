@@ -372,6 +372,9 @@ export default {
     Close: 'Close',
     OpenAppRunner: 'Open Application Runner',
     OpenAdapter: 'Open Adapter',
+    None: 'None',
+    UseAll: 'Use all',
+    UseAllAttachment: 'Use all attachment types',
   },
   UpstreamEndpoints: {
     Upstream: 'Upstream',
