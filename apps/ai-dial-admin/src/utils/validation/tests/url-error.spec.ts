@@ -55,7 +55,7 @@ describe('getUrlError', () => {
     const error = getUrlError(url, t);
 
     expect(error.type).toEqual(ErrorType.INVALID);
-    expect(error.text).toEqual(ErrorI18nKey.Url);
+    expect(error.text).toEqual(ErrorI18nKey.UrlField);
   });
   test('returns null for valid url', () => {
     const url = 'https://example.com';
