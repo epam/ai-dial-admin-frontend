@@ -10,7 +10,7 @@ interface Props extends InputProps {
   textBeforeInput?: string;
 }
 
-const InputWithText: FC<Props> = ({ textBeforeInput, cssClass, ...props }) => {
+const InputWithText: FC<Props> = ({ textBeforeInput, cssClass, value, ...props }) => {
   if (!textBeforeInput) {
     return <Input cssClass={classNames(cssClass)} {...props} />;
   }
@@ -22,10 +22,12 @@ const InputWithText: FC<Props> = ({ textBeforeInput, cssClass, ...props }) => {
         props.disabled ? 'bg-layer-3 text-secondary' : '',
       )}
     >
-      <p className="overflow-hidden overflow-ellipsis items-center px-4 py-3 bg-layer-3 small text-secondary">
-        <Tooltip tooltip={textBeforeInput}>{textBeforeInput}</Tooltip>
-      </p>
-      <Input cssClass={classNames('border-0 bg-transparent', cssClass)} {...props} />
+      <Tooltip tooltip={`${textBeforeInput}${value ? ` ${value}` : ''}`}>
+        <p className="overflow-hidden overflow-ellipsis items-center px-4 py-3 bg-layer-3 small text-secondary max-w-[50%]">
+          {textBeforeInput}
+        </p>
+        <Input cssClass={classNames('border-0 bg-transparent', cssClass)} value={value} {...props} />
+      </Tooltip>
     </div>
   );
 };
