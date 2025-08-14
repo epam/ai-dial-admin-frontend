@@ -25,7 +25,7 @@ describe('Components - ApplicationRunnersView', () => {
   test('Should render successfully', () => {
     const { baseElement } = render(
       <SaveValidationContextProvider>
-        <ApplicationRunnersView originalScheme={{ 'dial:applicationTypeDisplayName': 'name' }} applications={[]} />,
+        <ApplicationRunnersView originalScheme={{ 'dial:applicationTypeDisplayName': 'name' }} />
       </SaveValidationContextProvider>,
     );
 
