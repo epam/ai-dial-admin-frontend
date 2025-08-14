@@ -699,7 +699,6 @@ export enum ErrorI18nKey {
   SystemUnavailable = 'Error.SystemUnavailable',
   TryAgainLater = 'Error.TryAgainLater',
   UrlField = 'Error.UrlField',
-  IncorrectModelEndpointAlias = 'Error.IncorrectModelEndpointAlias',
   WarningEndpoint = 'Error.WarningEndpoint',
   ServerError = 'Error.ServerError',
 }

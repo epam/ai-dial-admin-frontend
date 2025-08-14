@@ -857,7 +857,6 @@ export default {
     TryAgainLater: 'Please try again later.',
     UrlField: 'This field must be a valid URL starting with  http:// or https://',
     WarningEndpoint: 'The endpoint uses HTTP instead of HTTPS. This may expose data to security risks.',
-    IncorrectModelEndpointAlias: 'This endpoint alias could not be empty',
   },
   Source: {
     OpenTemplate: 'Open template',

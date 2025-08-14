@@ -36,7 +36,7 @@ const DropdownSelectedItem: FC<Props> = ({
     <div className={selectedClassNames} role="menuitem">
       {selectedValue?.name ? (
         <>
-          <Tooltip tooltip={selectedValue?.name}>
+          <Tooltip tooltip={selectedValue?.name} triggerClassName="flex-1 min-w-0">
             {selectedValue.icon && <span className="mr-2 text-icon-primary">{selectedValue.icon}</span>}
             <span className={selectedValueClassNames}>
               {prefix}
@@ -48,14 +48,14 @@ const DropdownSelectedItem: FC<Props> = ({
         <div className="flex flex-1">
           {multipleValues.map((v) => {
             return (
-              <Tooltip key={v} tooltip={v}>
+              <Tooltip key={v} tooltip={v} triggerClassName="flex-1 min-w-0">
                 <span className="inline-block rounded border border-icon-secondary p-1 mr-1">{v}</span>
               </Tooltip>
             );
           })}
         </div>
       ) : (
-        <Tooltip tooltip={placeholder} triggerClassName="text-left">
+        <Tooltip tooltip={placeholder} triggerClassName="flex-1 min-w-0">
           <span className="flex-1 min-w-0 mr-2 text-secondary pointer-events-none">{placeholder}</span>
         </Tooltip>
       )}
