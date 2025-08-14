@@ -437,6 +437,7 @@ export default {
     EnterAttachmentsTypes: 'Enter attachments types',
     AttachmentsMaxNumber: 'Attachments max number',
     AttachmentsMaxNumberPlaceholder: 'Enter number',
+    AttachmentsMaxNumberError: 'Max allowed number of attachments is {max}',
   },
   Tabs: {
     Properties: 'Properties',
