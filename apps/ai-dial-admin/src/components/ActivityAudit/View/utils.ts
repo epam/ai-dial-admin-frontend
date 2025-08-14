@@ -1,23 +1,16 @@
-import { ColDef } from 'ag-grid-community';
 import { isEqual } from 'lodash';
 
 import { ModelViewI18nKey } from '@/src/constants/i18n';
 import { NO_LIMITS_KEY } from '@/src/constants/role';
-import { ActivityAuditDiff, ActivityAuditDiffSection, ActivityAuditSection } from '@/src/models/dial/activity-audit';
+import { ActivityAuditDiff, ActivityAuditSection } from '@/src/models/dial/activity-audit';
 import { DialRoleLimits } from '@/src/models/dial/base-entity';
 import { DialModelEndpoint, DialModelPricing, PricingType } from '@/src/models/dial/model';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus, DiffView } from '@/src/types/activity-audit';
+import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus } from '@/src/types/activity-audit';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import {
-  ENTITIES_DIFF_COLUMNS,
-  EntityParameterKeys,
-  INTERCEPTORS_DIFF_COLUMNS,
-  RESOURCE_DIFF_COLUMNS,
-  ROLE_LIMITS_DIFF_COLUMNS,
-} from './utils';
+import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
+import { roleLimitsKeys } from '@/src/components/ActivityAudit/View/DiffReport/utils';
 
-const roleLimitsKeys = ['minute', 'day', 'week', 'month'];
 const dateKeys = ['expiresAt', 'keyGeneratedAt', 'createdAt', 'updatedAt'];
 const appRunnerParameterKeys = [
   'properties',
@@ -46,61 +39,6 @@ const separateObjectParameterKeys = [
   EntityParameterKeys.ROLES,
   EntityParameterKeys.MODELS,
 ];
-
-export const getColumnsByParameter = (
-  parameter?: string,
-  index?: number,
-  t?: (stringToTranslate: string) => string,
-  type?: ActivityAuditResourceType,
-): ColDef[] => {
-  if (parameter === EntityParameterKeys.ROLES && (index === 1 || type === ActivityAuditResourceType.ROLE)) {
-    return ROLE_LIMITS_DIFF_COLUMNS;
-  }
-
-  if (parameter === EntityParameterKeys.INTERCEPTORS) {
-    return INTERCEPTORS_DIFF_COLUMNS;
-  }
-
-  if (
-    parameter === EntityParameterKeys.APPLICATIONS ||
-    parameter === EntityParameterKeys.ENTITIES ||
-    parameter === EntityParameterKeys.KEYS ||
-    (parameter === EntityParameterKeys.ROLES && type === ActivityAuditResourceType.KEY)
-  ) {
-    return ENTITIES_DIFF_COLUMNS;
-  }
-  return RESOURCE_DIFF_COLUMNS(t as (stringToTranslate: string) => string);
-};
-
-export const getRowDataByParameter = (
-  data?: ActivityAuditDiff[],
-  parameter?: string,
-  index?: number,
-  type?: ActivityAuditResourceType,
-) => {
-  if (parameter === EntityParameterKeys.ROLES && (index === 1 || type === ActivityAuditResourceType.ROLE)) {
-    return data?.map((item) => {
-      const valueMap: Record<string, string> = {};
-      item.value.split(',').forEach((pair) => {
-        const [key, val] = pair.split(':').map((s) => s.trim());
-        valueMap[key as keyof typeof valueMap] = val;
-      });
-
-      const newObj: Record<string, string> = {
-        ...item,
-      };
-
-      if (item.parameter) {
-        roleLimitsKeys.forEach((key) => {
-          newObj[key] = valueMap[key] || NO_LIMITS_KEY;
-        });
-      }
-
-      return newObj as unknown as ActivityAuditDiff;
-    });
-  }
-  return data;
-};
 
 /**
  * Generate activity audit diff between two resources, divided into different sections if needed
@@ -156,7 +94,7 @@ export const generateCurrentResource = (
  * @param {(string | boolean | number)} val1 - first value to compare
  * @param {(string | boolean | number)} val2 - second value to compare
  */
-export const compareSimpleTypes = (
+const compareSimpleTypes = (
   diffs: ActivityAuditDiff[],
   key: string,
   val1?: string | boolean | number,
@@ -193,7 +131,7 @@ export const compareSimpleTypes = (
  * @param {string} key - resource key
  * @param {?(string | boolean | number)} [value] - value to fill
  */
-export const fillSimpleTypes = (diffs: ActivityAuditDiff[], key: string, value?: string | boolean | number): void => {
+const fillSimpleTypes = (diffs: ActivityAuditDiff[], key: string, value?: string | boolean | number): void => {
   const isTime = dateKeys.includes(key);
   diffs.push({
     parameter: key,
@@ -209,7 +147,7 @@ export const fillSimpleTypes = (diffs: ActivityAuditDiff[], key: string, value?:
  * @param {object} val1 - first value to compare
  * @param {object} val2 - second value to compare
  */
-export const compareObjectTypes = (
+const compareObjectTypes = (
   diffMap: Record<string, ActivityAuditDiff[]>,
   key: EntityParameterKeys,
   val1: object,
@@ -255,7 +193,7 @@ export const compareObjectTypes = (
  * @param {EntityParameterKeys} key - resource key
  * @param {object} value - value to fill
  */
-export const fillObjectTypes = (
+const fillObjectTypes = (
   diffMap: Record<string, ActivityAuditDiff[]>,
   key: EntityParameterKeys,
   value: object,
@@ -293,12 +231,7 @@ export const fillObjectTypes = (
  * @param {object} val1 - first value to compare
  * @param {object} val2 - second value to compare
  */
-export const compareSimpleObjects = (
-  diffs: ActivityAuditDiff[],
-  val1: object,
-  val2: object,
-  isCurrent?: boolean,
-): void => {
+const compareSimpleObjects = (diffs: ActivityAuditDiff[], val1: object, val2: object, isCurrent?: boolean): void => {
   const allKeys = new Set([...Object.keys(val1 || {}), ...Object.keys(val2 || {})].sort());
   allKeys.forEach((key) => {
     const value1 = val1?.[key as keyof typeof val1];
@@ -317,7 +250,7 @@ export const compareSimpleObjects = (
  * @param {ActivityAuditDiff[]} diffs - result array
  * @param {object} value - value to fill
  */
-export const fillSimpleObjects = (diffs: ActivityAuditDiff[], value: object): void => {
+const fillSimpleObjects = (diffs: ActivityAuditDiff[], value: object): void => {
   const allKeys = Object.keys(value).sort();
   allKeys.forEach((key) => {
     const val = value?.[key as keyof typeof value];
@@ -333,7 +266,7 @@ export const fillSimpleObjects = (diffs: ActivityAuditDiff[], value: object): vo
  * @param {object} val1 - first value to compare
  * @param {object} val2 - second value to compare
  */
-export const compareStringArray = (
+const compareStringArray = (
   diffs: ActivityAuditDiff[],
   key: string,
   val1?: object,
@@ -353,12 +286,7 @@ export const compareStringArray = (
  * @param {string} key - resource key
  * @param {object} value - value to fill
  */
-export const fillStringArray = (
-  diffs: ActivityAuditDiff[],
-  key: string,
-  value: object,
-  t?: (str: string) => string,
-) => {
+const fillStringArray = (diffs: ActivityAuditDiff[], key: string, value: object, t?: (str: string) => string) => {
   const val = generateStringFromObject(value, key === EntityParameterKeys.PRICING ? t : void 0);
   fillSimpleTypes(diffs, key, val);
 };
@@ -369,7 +297,7 @@ export const fillStringArray = (
  * @param {object} value - initial object
  * @returns {string} - result string
  */
-export const generateStringFromObject = (value?: object, t?: (str: string) => string): string => {
+const generateStringFromObject = (value?: object, t?: (str: string) => string): string => {
   if (t) {
     return convertPricing(value as DialModelPricing, t);
   }
@@ -387,7 +315,7 @@ export const generateStringFromObject = (value?: object, t?: (str: string) => st
  * @param {(str: string) => string} t - translation
  * @returns {string} - string with values and translation
  */
-export const convertPricing = (value: DialModelPricing, t: (str: string) => string): string => {
+const convertPricing = (value: DialModelPricing, t: (str: string) => string): string => {
   const isToken = value.unit === PricingType.Token;
   return Object.entries(value)
     .map(([key, value]) => {
@@ -408,7 +336,7 @@ export const convertPricing = (value: DialModelPricing, t: (str: string) => stri
  * @param {object} val1 - first value to compare
  * @param {object} val2 - second value to compare
  */
-export const compareSeparateObjects = (
+const compareSeparateObjects = (
   diffs: ActivityAuditDiff[],
   key: string,
   val1: object,
@@ -445,7 +373,7 @@ export const compareSeparateObjects = (
  * @param {string} key key - resource key
  * @param {object} value - value to fill
  */
-export const fillSeparateObjects = (diffs: ActivityAuditDiff[], key: string, value: object) => {
+const fillSeparateObjects = (diffs: ActivityAuditDiff[], key: string, value: object) => {
   if (key === EntityParameterKeys.INTERCEPTORS) {
     fillInterceptors(diffs, value as string[]);
   }
@@ -476,7 +404,7 @@ export const fillSeparateObjects = (diffs: ActivityAuditDiff[], key: string, val
  * @param {object[]} val1 - first value to compare
  * @param {object[]} val2 - second value to compare
  */
-export const compareObjectArray = (
+const compareObjectArray = (
   diffMap: Record<string, ActivityAuditDiff[]>,
   key: string,
   val1: object[],
@@ -495,7 +423,7 @@ export const compareObjectArray = (
  * @param {string} key - resource key
  * @param {object[]} value - value to fill
  */
-export const fillObjectArray = (diffMap: Record<string, ActivityAuditDiff[]>, key: string, value: object[]): void => {
+const fillObjectArray = (diffMap: Record<string, ActivityAuditDiff[]>, key: string, value: object[]): void => {
   if (key === EntityParameterKeys.UPSTREAMS) {
     fillUpstreams(diffMap, value as DialModelEndpoint[]);
   }
@@ -508,7 +436,7 @@ export const fillObjectArray = (diffMap: Record<string, ActivityAuditDiff[]>, ke
  * @param {string[]} val1 - first value to compare
  * @param {string[]} val2 - second value to compare
  */
-export const compareEntities = (diffs: ActivityAuditDiff[], val1: string[], val2: string[], isCurrent?: boolean) => {
+const compareEntities = (diffs: ActivityAuditDiff[], val1: string[], val2: string[], isCurrent?: boolean) => {
   const len = Math.max(val1?.length || 0, val2?.length || 0);
   for (let i = 0; i < len; i++) {
     const value1 = val1?.[i];
@@ -536,7 +464,7 @@ export const compareEntities = (diffs: ActivityAuditDiff[], val1: string[], val2
  * @param {ActivityAuditDiff[]} diffs - result array
  * @param {string[]} value - value to fill
  */
-export const fillApplications = (diffs: ActivityAuditDiff[], value: string[]) => {
+const fillApplications = (diffs: ActivityAuditDiff[], value: string[]) => {
   const result = (value || []).map((val) => ({
     parameter: val || '',
     value: val || '',
@@ -868,30 +796,6 @@ export const createSectionFromDiffs = (
 };
 
 /**
- * Calculate number of changes in diff section
- *
- * @param {ActivityAuditDiffSection[]} sections - section where need to check changes
- * @param {?DiffStatus} [status] - status which need to check
- * @returns {number} - result of status changes count
- */
-export const getDiffCount = (sections: ActivityAuditDiffSection[], status?: DiffStatus): number => {
-  let count = 0;
-
-  sections.forEach((section) => {
-    Object.values(section).forEach((arr) => {
-      if (Array.isArray(arr)) {
-        arr.forEach((item) => {
-          if (item.status === status) {
-            count++;
-          }
-        });
-      }
-    });
-  });
-  return status === DiffStatus.CHANGED ? count / 2 : count;
-};
-
-/**
  * Helper to compare values and set correct status after
  *
  * @param {?(string | boolean | number)} [value1] - first value
@@ -1011,39 +915,4 @@ export const mergeEntityMaps = (
     result.set(resourceType, mergedEntities);
   }
   return result;
-};
-
-/**
- * Filter compare section to return section if it has any data
- *
- * @param {ActivityAuditDiffSection[]} sections - initial sections
- * @param {string} name - section title
- * @param {?DiffView} [diffView] - variable to control showing only changes or all values
- * @param {?ActivityAuditResourceType} [type] - resource type
- * @returns {*} - sections data compare and current with index
- */
-export const filterNotEmptySections = (
-  sections: ActivityAuditDiffSection[],
-  name: string,
-  diffView?: DiffView,
-  type?: ActivityAuditResourceType,
-) => {
-  return sections.reduce<{ index: number; currentData?: ActivityAuditDiff[]; compareData?: ActivityAuditDiff[] }[]>(
-    (acc, item, index) => {
-      const current = getRowDataByParameter(item.current, name, index, type);
-      const compare = getRowDataByParameter(item.compare, name, index, type);
-
-      const currentData = diffView === DiffView.ALL ? current : current?.filter((d) => d.status);
-      const compareData = diffView === DiffView.ALL ? compare : compare?.filter((d) => d.status);
-
-      const hasData = (currentData && currentData.length > 0) || (compareData && compareData.length > 0);
-
-      if (hasData) {
-        acc.push({ index, currentData, compareData });
-      }
-
-      return acc;
-    },
-    [],
-  );
 };

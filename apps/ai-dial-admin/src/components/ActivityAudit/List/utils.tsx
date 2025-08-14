@@ -14,7 +14,7 @@ import { TimeRange } from '@/src/models/time-range';
 import { FilterOperatorDto } from '@/src/types/request';
 import { formatDateToLocalString } from '@/src/utils/formatting/date';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
-import { ActivityAuditRevision } from './models';
+import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
 
 /**
  * Generate columns with actions for activity audit grid

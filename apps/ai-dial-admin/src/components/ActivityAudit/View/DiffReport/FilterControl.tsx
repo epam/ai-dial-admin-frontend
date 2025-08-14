@@ -13,7 +13,7 @@ interface Props {
   isResources?: boolean;
 }
 
-const ActivityAuditEntityDiffFilter: FC<Props> = ({ diffView, setDiffView, isResources }) => {
+const FilterControl: FC<Props> = ({ diffView, setDiffView, isResources }) => {
   const t = useI18n();
 
   const items: DropdownItemsModel[] = [
@@ -49,4 +49,4 @@ const ActivityAuditEntityDiffFilter: FC<Props> = ({ diffView, setDiffView, isRes
   );
 };
 
-export default ActivityAuditEntityDiffFilter;
+export default FilterControl;
