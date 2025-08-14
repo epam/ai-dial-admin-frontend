@@ -29,20 +29,18 @@ const Input: FC<InputProps> = ({
   const handleWheel = (e: WheelEvent<HTMLInputElement>) => (e.target as HTMLInputElement).blur();
 
   return (
-    <Tooltip tooltip={value ? String(value) : ''}>
-      <input
-        type={type}
-        autoComplete="off"
-        id={inputId}
-        data-testid={inputId}
-        placeholder={placeholder}
-        value={value || ''}
-        disabled={disabled}
-        className={classNames(invalid ? 'input-error' : '', cssClass)}
-        onChange={(event) => onChange?.(event.currentTarget.value)}
-        onWheel={handleWheel}
-      />
-    </Tooltip>
+    <input
+      type={type}
+      autoComplete="off"
+      id={inputId}
+      data-testid={inputId}
+      placeholder={placeholder}
+      value={value || ''}
+      disabled={disabled}
+      className={classNames(invalid ? 'input-error' : '', cssClass)}
+      onChange={(event) => onChange?.(event.currentTarget.value)}
+      onWheel={handleWheel}
+    />
   );
 };
 
