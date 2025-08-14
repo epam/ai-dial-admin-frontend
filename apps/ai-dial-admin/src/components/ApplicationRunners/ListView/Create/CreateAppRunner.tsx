@@ -15,6 +15,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props {
   modalState: PopUpState;
@@ -34,6 +35,7 @@ const CreateScheme: FC<Props> = ({ modalState, onClose, route }) => {
     $id: '',
   });
   const [isValid, setIsValid] = useState(false);
+  const { isValid: isSchemeValid } = useSaveValidationContext();
 
   const onChangeScheme = useCallback(
     (entity: DialApplicationScheme) => {
@@ -59,8 +61,8 @@ const CreateScheme: FC<Props> = ({ modalState, onClose, route }) => {
       !!currentScheme.$id &&
       !getErrorForAppRunnerId(currentScheme.$id, t) &&
       !getErrorForDescription(currentScheme?.description, t);
-    setIsValid(isValidId && !!currentScheme['dial:applicationTypeDisplayName']);
-  }, [currentScheme, t]);
+    setIsValid(isValidId && !!isSchemeValid && !!currentScheme['dial:applicationTypeDisplayName']);
+  }, [currentScheme, isSchemeValid, t]);
 
   return (
     <Popup onClose={onClose} heading={t(CreateI18nKey.ApplicationRunner)} portalId="CreateRunner" state={modalState}>

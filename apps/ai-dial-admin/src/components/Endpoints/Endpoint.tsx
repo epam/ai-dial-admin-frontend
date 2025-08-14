@@ -36,7 +36,7 @@ const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, upd
   const onChangeEndPointUrl = useCallback(
     (url: string) => {
       updateEndpoint({ ...endpoint, endpoint: url });
-      setEndpointError(url === '' ? '' : isValidEndpoint(url) ? '' : t(ErrorI18nKey.IncorrectEndpoint));
+      setEndpointError(url === '' ? '' : isValidEndpoint(url) ? '' : t(ErrorI18nKey.UrlField));
       setEndpointWarning(url === '' ? '' : isDangerEndpoint(url) ? t(ErrorI18nKey.WarningEndpoint) : '');
     },
     [endpoint, updateEndpoint, t],

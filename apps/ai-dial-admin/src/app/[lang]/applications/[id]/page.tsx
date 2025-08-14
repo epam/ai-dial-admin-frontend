@@ -12,6 +12,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { logger } from '@/src/server/logger';
 import Page403 from '@/src/components/Page403/Page403';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,15 +50,17 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   }
 
   return (
-    <EntityView
-      view={ApplicationRoute.Applications}
-      names={applications?.map((model) => model.displayName || '') || []}
-      roles={roles}
-      interceptors={interceptors}
-      applicationSchemes={applicationSchemes}
-      originalEntity={application}
-      removeEntity={removeApplication}
-      updateEntity={updateApplication}
-    />
+    <SaveValidationContextProvider>
+      <EntityView
+        view={ApplicationRoute.Applications}
+        names={applications?.map((model) => model.displayName || '') || []}
+        roles={roles}
+        interceptors={interceptors}
+        applicationSchemes={applicationSchemes}
+        originalEntity={application}
+        removeEntity={removeApplication}
+        updateEntity={updateApplication}
+      />
+    </SaveValidationContextProvider>
   );
 }

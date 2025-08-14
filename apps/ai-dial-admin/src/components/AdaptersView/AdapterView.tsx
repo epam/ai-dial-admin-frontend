@@ -21,6 +21,7 @@ import { getErrorNotification } from '@/src/utils/notification';
 import AdapterModels from './AdapterModels';
 import AdapterProperties from './AdapterProperties';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props {
   originalAdapter: DialAdapter;
@@ -40,6 +41,7 @@ const AdapterView: FC<Props> = ({ originalAdapter }) => {
   const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
+  const { isValid } = useSaveValidationContext();
 
   useEffect(() => {
     setSelectedAdapter(cloneDeep(originalAdapter));
@@ -103,6 +105,7 @@ const AdapterView: FC<Props> = ({ originalAdapter }) => {
           isChanged={isChanged}
           onDiscard={onDiscard}
           onSave={onSave}
+          hasErrors={!isValid}
           removeEntity={removeAdapter}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
