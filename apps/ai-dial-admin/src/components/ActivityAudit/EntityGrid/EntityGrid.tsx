@@ -4,8 +4,7 @@ import { createPortal } from 'react-dom';
 import { CellClickedEvent, ColDef, GridApi, GridReadyEvent, RowClassRules } from 'ag-grid-community';
 
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
-import { getColumnsByParameter } from '@/src/components/ActivityAuditView/activity-audit.utils';
-import { getCurrentAndRollbackEntities } from '@/src/components/ActivityAuditView/utils';
+import { getCurrentAndRollbackEntities, getColumnsByParameter } from '@/src/components/ActivityAudit/EntityGrid/utils';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Grid from '@/src/components/Grid/Grid';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
@@ -27,7 +26,7 @@ interface Props {
   activity?: DialActivity;
 }
 
-const ActivityAuditEntityGrid: FC<Props> = ({
+const AuditEntityGrid: FC<Props> = ({
   data,
   parameter,
   index,
@@ -120,4 +119,4 @@ const ActivityAuditEntityGrid: FC<Props> = ({
   );
 };
 
-export default ActivityAuditEntityGrid;
+export default AuditEntityGrid;

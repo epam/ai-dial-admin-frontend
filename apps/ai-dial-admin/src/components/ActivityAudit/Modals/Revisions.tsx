@@ -6,7 +6,7 @@ import classNames from 'classnames';
 import { getRevisions } from '@/src/app/[lang]/activity-audit/actions';
 import { sorts } from '@/src/components/ActivityAudit/constants';
 import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
-import { groupByDay } from '@/src/components/ActivityAudit/utils';
+import { groupByDay } from '@/src/components/ActivityAudit/List/utils';
 import Button from '@/src/components/Common/Button/Button';
 import DatePicker from '@/src/components/Common/DatePicker/DatePicker';
 import Loader from '@/src/components/Common/Loader/Loader';

@@ -1,4 +1,4 @@
-import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/constants';
+import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
 import { ActivityAuditI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { EmbeddedApp } from '@/src/context/AppContext';
 import { ApplicationRoute } from '@/src/types/routes';

@@ -7,6 +7,7 @@ import {
   parametersTabs,
   propertiesTabs,
   rolesTabs,
+  dependenciesTabs,
 } from './entity-view';
 import { describe, expect, test, vi } from 'vitest';
 
@@ -20,7 +21,14 @@ describe('Entity View :: getViewTabs', () => {
 
   test('Should return tabs for application', () => {
     const res = getViewTabs(t, ApplicationRoute.Applications, false);
-    expect(res).toEqual([propertiesTabs(t), featuresTabs(t), rolesTabs(t), interceptorsTabs(t), auditTabs(t)]);
+    expect(res).toEqual([
+      propertiesTabs(t),
+      featuresTabs(t),
+      rolesTabs(t),
+      interceptorsTabs(t),
+      dependenciesTabs(t),
+      auditTabs(t),
+    ]);
   });
 
   test('Should return tabs for application with editor', () => {
@@ -31,6 +39,7 @@ describe('Entity View :: getViewTabs', () => {
       parametersTabs(t),
       rolesTabs(t),
       interceptorsTabs(t),
+      dependenciesTabs(t),
       auditTabs(t),
     ]);
   });

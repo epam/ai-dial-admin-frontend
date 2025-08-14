@@ -15,6 +15,7 @@ export enum EntityViewTab {
   Audit = 'Audit',
   Activities = 'Activities',
   Dashboard = 'Dashboard',
+  Dependencies = 'Dependencies',
 }
 
 export const propertiesTabs = (t: (stringToTranslate: string) => string) => ({
@@ -62,6 +63,11 @@ export const activitiesTabs = (t: (stringToTranslate: string) => string) => ({
   name: t(TabsI18nKey.Activities),
 });
 
+export const dependenciesTabs = (t: (stringToTranslate: string) => string) => ({
+  id: EntityViewTab.Dependencies,
+  name: t(TabsI18nKey.Dependencies),
+});
+
 export const getViewTabs = (
   t: (stringToTranslate: string) => string,
   view: ApplicationRoute,
@@ -73,8 +79,12 @@ export const getViewTabs = (
 
   const tabs: TabModel[] = [propertiesTabs(t), featuresTabs(t), rolesTabs(t), interceptorsTabs(t)];
 
-  if (view === ApplicationRoute.Applications && isParametersTabAvailable) {
-    tabs.splice(2, 0, parametersTabs(t));
+  if (view === ApplicationRoute.Applications) {
+    tabs.push(dependenciesTabs(t));
+
+    if (isParametersTabAvailable) {
+      tabs.splice(2, 0, parametersTabs(t));
+    }
   }
 
   tabs.push(auditTabs(t));
