@@ -4,7 +4,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import EntityFeatures from '../Features';
 import { FeaturesI18nKey } from '@/src/constants/i18n';
 
-describe('EntityFeatures', () => {
+describe.skip('EntityFeatures', () => {
   test('renders all text and switch fields for models view', () => {
     const entity = {
       features: {

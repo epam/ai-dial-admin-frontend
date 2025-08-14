@@ -1,13 +1,13 @@
 'use client';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { IconCircleCheck, IconExclamationCircle, IconX } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { IconX, IconExclamationCircle, IconCircleCheck } from '@tabler/icons-react';
+import { FC, useCallback, useEffect, useState } from 'react';
 
-import { NotificationIcons } from '@/src/components/Notification/Notification';
 import Button from '@/src/components/Common/Button/Button';
-import { useI18n } from '@/src/locales/client';
+import { NotificationIcons } from '@/src/components/Notification/Notification';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { useI18n } from '@/src/locales/client';
 import { FileDetails, NotificationConfig, NotificationIconColor } from '@/src/models/notification';
 
 function calculateOverallProgress(downloadDetails: FileDetails[]) {

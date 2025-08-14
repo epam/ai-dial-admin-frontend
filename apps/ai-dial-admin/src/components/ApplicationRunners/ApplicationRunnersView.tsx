@@ -9,9 +9,11 @@ import { removeApplicationScheme, updateApplicationScheme } from '@/src/app/[lan
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import { EntityViewTab, parametersTabs, propertiesTabs } from '@/src/components/EntityView/entity-view';
 import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
+import EntityHeader from '@/src/components/EntityView/Header/Header';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { TabModel } from '@/src/models/tab';
@@ -21,7 +23,6 @@ import { getErrorNotification } from '@/src/utils/notification';
 import AppRunnerApplications from './ConfigurationView/Applications';
 import SchemeParameters from './ConfigurationView/Parameters';
 import SchemeProperties from './ConfigurationView/Properties';
-import EntityHeader from '@/src/components/EntityView/Header/Header';
 
 interface Props {
   originalScheme: DialApplicationScheme;
@@ -45,6 +46,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
   const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
+  const { isValid: isPropertiesValid } = useSaveValidationContext();
 
   useEffect(() => {
     setSelectedScheme(cloneDeep(originalScheme));
@@ -107,6 +109,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
           entity={selectedScheme}
           isChanged={isChanged}
           onDiscard={onDiscard}
+          hasErrors={!isPropertiesValid}
           onSave={onSave}
           removeEntity={removeApplicationScheme}
           jsonEditorEnabled={jsonEditorEnabled}
