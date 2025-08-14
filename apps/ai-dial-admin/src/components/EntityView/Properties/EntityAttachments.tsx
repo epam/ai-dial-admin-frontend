@@ -43,7 +43,7 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
           maxInputAttachments: void 0,
           inputAttachmentTypes: void 0,
         });
-        setAttachmentError(null);
+        setAttachmentError(void 0);
       }
     },
     [entity, onChangeEntity],
