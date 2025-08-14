@@ -143,6 +143,9 @@ export default {
     NoFolders: 'No Folders',
     NoResource: 'Resource does not exist',
     NoInterceptorTemplates: 'No Interceptor Templates',
+    NoDependencies: 'No Dependencies',
+    AddModel: 'Add Model',
+    AddApplication: 'Add Application',
     // base fields
     Icon: 'Icon',
     Endpoint: 'Endpoint',
@@ -450,6 +453,7 @@ export default {
     Models: 'Models',
     Files: 'Files',
     Activities: 'Activities',
+    Dependencies: 'Dependencies',
   },
   ForwardToken: {
     ForwardToken: 'Forward auth token',

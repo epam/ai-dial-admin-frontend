@@ -23,6 +23,7 @@ export interface DialBaseEntity extends DialBaseNamedEntity {
   maxInputAttachments?: number | string;
   interceptors?: string[];
   features?: DialFeatures;
+  dependencies?: string[];
 }
 
 export type DialRoleLimitsMap = Record<string, DialRoleLimits>;

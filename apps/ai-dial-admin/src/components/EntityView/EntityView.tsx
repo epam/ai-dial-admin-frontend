@@ -41,6 +41,8 @@ import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModal
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
+import EntityDependencies from './Dependencies/Dependencies';
+import { DialModel } from '@/src/models/dial/model';
 
 interface Props {
   view: ApplicationRoute;
@@ -49,6 +51,8 @@ interface Props {
   roles?: DialRole[] | null;
   applicationSchemes?: DialApplicationScheme[] | null;
   interceptors?: DialInterceptor[] | null;
+  applications?: DialApplication[] | null;
+  models?: DialModel[] | null;
   updateEntity: (entity: DialBaseEntity) => Promise<ServerActionResponse>;
   removeEntity: (entity?: string) => Promise<ServerActionResponse>;
 }
@@ -60,6 +64,8 @@ const EntityView: FC<Props> = ({
   interceptors,
   applicationSchemes,
   view,
+  applications,
+  models,
   updateEntity,
   removeEntity,
 }) => {
@@ -328,6 +334,14 @@ const EntityView: FC<Props> = ({
                 <EntityInterceptors
                   entity={selectedEntity}
                   interceptors={interceptors || []}
+                  onChangeEntity={onChangeEntity}
+                />
+              )}
+              {activeTab === EntityViewTab.Dependencies && (
+                <EntityDependencies
+                  entity={selectedEntity}
+                  applications={applications || []}
+                  models={models || []}
                   onChangeEntity={onChangeEntity}
                 />
               )}

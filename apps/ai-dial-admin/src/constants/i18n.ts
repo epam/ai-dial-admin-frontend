@@ -122,6 +122,9 @@ export enum EntitiesI18nKey {
   NoFolders = 'Entities.NoFolders',
   NoResource = 'Entities.NoResource',
   NoInterceptorTemplates = 'Entities.NoInterceptorTemplates',
+  NoDependencies = 'Entities.NoDependencies',
+  AddModel = 'Entities.AddModel',
+  AddApplication = 'Entities.AddApplication',
   Icon = 'Entities.Icon',
   Endpoint = 'Entities.Endpoint',
   EndpointBase = 'Entities.EndpointBase',
@@ -441,6 +444,7 @@ export enum TabsI18nKey {
   Audit = 'Tabs.Audit',
   Activities = 'Tabs.Activities',
   Files = 'Tabs.Files',
+  Dependencies = 'Tabs.Dependencies',
 }
 
 export enum EditorI18nKey {
