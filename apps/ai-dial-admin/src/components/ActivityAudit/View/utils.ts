@@ -94,7 +94,7 @@ export const generateCurrentResource = (
  * @param {(string | boolean | number)} val1 - first value to compare
  * @param {(string | boolean | number)} val2 - second value to compare
  */
-const compareSimpleTypes = (
+export const compareSimpleTypes = (
   diffs: ActivityAuditDiff[],
   key: string,
   val1?: string | boolean | number,
@@ -131,7 +131,7 @@ const compareSimpleTypes = (
  * @param {string} key - resource key
  * @param {?(string | boolean | number)} [value] - value to fill
  */
-const fillSimpleTypes = (diffs: ActivityAuditDiff[], key: string, value?: string | boolean | number): void => {
+export const fillSimpleTypes = (diffs: ActivityAuditDiff[], key: string, value?: string | boolean | number): void => {
   const isTime = dateKeys.includes(key);
   diffs.push({
     parameter: key,
