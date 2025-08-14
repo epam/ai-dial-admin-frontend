@@ -11,6 +11,7 @@ vi.mock('@/src/constants/ag-grid', () => ({
 vi.mock('@/src/constants/grid-columns/actions', () => ({
   getOpenInNewTabOperation: vi.fn((cb) => ({ type: 'open', cb })),
   getResourceRollbackOperation: vi.fn((cb) => ({ type: 'rollback', cb })),
+  getViewDetailsOperation: vi.fn((cb) => ({ type: 'viewDetails', cb })),
 }));
 
 vi.mock('@/src/constants/grid-columns/grid-columns', () => ({
@@ -21,16 +22,18 @@ describe('Activity Audit List utils :: getActivityAuditColumns', () => {
   test('returns columns with action column at the end', () => {
     const openMock = vi.fn();
     const rollbackMock = vi.fn();
+    const viewDetails = vi.fn();
 
-    const cols = getActivityAuditColumns(openMock, rollbackMock);
+    const cols = getActivityAuditColumns(openMock, rollbackMock, viewDetails);
 
     expect(cols).toHaveLength(3);
     expect(cols[0]).toEqual({ colId: 'a' });
     expect(cols[1]).toEqual({ colId: 'b' });
     expect(cols[2].colId).toBe('actions');
-    expect((cols[2] as { actions: { type: string }[] }).actions).toHaveLength(2);
+    expect((cols[2] as { actions: { type: string }[] }).actions).toHaveLength(3);
     expect((cols[2] as { actions: { type: string }[] }).actions[0].type).toBe('open');
-    expect((cols[2] as { actions: { type: string }[] }).actions[1].type).toBe('rollback');
+    expect((cols[2] as { actions: { type: string }[] }).actions[1].type).toBe('viewDetails');
+    expect((cols[2] as { actions: { type: string }[] }).actions[2].type).toBe('rollback');
   });
 });
 
