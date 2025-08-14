@@ -1,4 +1,4 @@
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import classNames from 'classnames';
 
@@ -6,11 +6,13 @@ import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import SourceEntitySelector from '@/src/components/EntityMainProperties/SourceEntitySelector/SourceEntitySelector';
 import { RUNNERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getUrlError } from '@/src/utils/validation/url-error';
 import { SourceTypes } from './constants';
 
 interface Props {
@@ -21,8 +23,7 @@ interface Props {
 }
 
 const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntityImmutable }) => {
-  const t = useI18n();
-
+  const t = useI18n() as (key: string) => string;
   const sources: DropdownItemsModel[] = useMemo(
     () => [
       {
@@ -39,12 +40,46 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
   const [sourceType, setSourceType] = useState<DropdownItemsModel | undefined>(
     entity.endpoint || !entity.customAppSchemaId ? sources[0] : sources[1],
   );
-  const [endpointErrorText, setEndpointErrorText] = useState('');
+  const { dispatch } = useSaveValidationContext();
+
+  const endpointError = useMemo(() => {
+    return entity.endpoint ? getUrlError(entity.endpoint, t) : null;
+  }, [entity.endpoint, t]);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'baseEndpoint', isValid: !endpointError });
+  }, [endpointError, t, dispatch]);
+
+  const viewerUrlError = useMemo(() => {
+    return entity.viewerUrl ? getUrlError(entity.viewerUrl, t) : null;
+  }, [entity.viewerUrl, t]);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'viewerUrl', isValid: !viewerUrlError });
+  }, [viewerUrlError, t, dispatch]);
+
+  const editorUrlError = useMemo(() => {
+    return entity.editorUrl ? getUrlError(entity.editorUrl, t) : null;
+  }, [entity.editorUrl, t]);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'editorUrl', isValid: !editorUrlError });
+  }, [editorUrlError, t, dispatch]);
+
+  const onChangeEndpoint = useCallback(
+    (endpoint: string) => {
+      onChangeEntity({ ...entity, endpoint });
+    },
+    [entity, onChangeEntity],
+  );
 
   const onChangeSource = useCallback(
     (value: string) => {
       if (sourceType?.id !== value) {
-        setEndpointErrorText('');
+        // Reset validation states when changing source type
+        dispatch({ type: ValidationActionType.SetField, field: 'endpoint', isValid: true });
+        dispatch({ type: ValidationActionType.SetField, field: 'viewerUrl', isValid: true });
+        dispatch({ type: ValidationActionType.SetField, field: 'editorUrl', isValid: true });
         setSourceType(sources?.find((t) => t.id === value));
         onChangeEntity({
           ...entity,
@@ -55,15 +90,21 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
         });
       }
     },
-    [entity, onChangeEntity, sourceType?.id, sources],
+    [entity, onChangeEntity, sourceType?.id, sources, dispatch],
   );
 
-  const onChangeEndpoint = useCallback(
-    (endpoint: string) => {
-      onChangeEntity({ ...entity, endpoint });
-      setEndpointErrorText(endpoint ? '' : t(ErrorI18nKey.RequiredField));
+  const onChangeViewerUrl = useCallback(
+    (viewerUrl: string) => {
+      onChangeEntity({ ...entity, viewerUrl });
     },
-    [entity, onChangeEntity, t],
+    [entity, onChangeEntity],
+  );
+
+  const onChangeEditorUrl = useCallback(
+    (editorUrl: string) => {
+      onChangeEntity({ ...entity, editorUrl });
+    },
+    [entity, onChangeEntity],
   );
 
   const onChangeAppRunner = useCallback(
@@ -92,8 +133,8 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
             placeholder={t(CreateI18nKey.CompletionEndpointPlaceholder)}
             value={entity.endpoint}
             onChange={onChangeEndpoint}
-            invalid={!!endpointErrorText}
-            errorText={endpointErrorText}
+            invalid={!!endpointError}
+            errorText={endpointError?.text}
           />
           {isEntityImmutable && (
             <>
@@ -103,7 +144,9 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
                 fieldTitle={t(CreateI18nKey.ViewerUrlTitle)}
                 placeholder={t(CreateI18nKey.ViewerUrlPlaceholder)}
                 value={entity.viewerUrl}
-                onChange={(viewerUrl) => onChangeEntity({ ...entity, viewerUrl })}
+                errorText={viewerUrlError?.text}
+                invalid={!!viewerUrlError}
+                onChange={onChangeViewerUrl}
               />
               <TextInputField
                 optional={true}
@@ -111,7 +154,9 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
                 fieldTitle={t(CreateI18nKey.EditorUrlTitle)}
                 placeholder={t(CreateI18nKey.EditorUrlPlaceholder)}
                 value={entity.editorUrl}
-                onChange={(editorUrl) => onChangeEntity({ ...entity, editorUrl })}
+                errorText={editorUrlError?.text}
+                invalid={!!editorUrlError}
+                onChange={onChangeEditorUrl}
               />
             </>
           )}

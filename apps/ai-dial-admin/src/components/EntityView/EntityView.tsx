@@ -43,6 +43,7 @@ import EntityHeader from '@/src/components/EntityView/Header/Header';
 import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
 import EntityDependencies from './Dependencies/Dependencies';
 import { DialModel } from '@/src/models/dial/model';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props {
   view: ApplicationRoute;
@@ -94,6 +95,7 @@ const EntityView: FC<Props> = ({
   const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [key, setKey] = useState(0);
+  const { isValid: isFeaturesValid } = useSaveValidationContext();
 
   const { visualizerConnector } = useAppContext();
 
@@ -285,6 +287,7 @@ const EntityView: FC<Props> = ({
             isChanged={isChanged}
             onSave={onTryToSave}
             onDiscard={onDiscard}
+            hasErrors={!isFeaturesValid}
             removeEntity={removeEntity}
             jsonEditorEnabled={jsonEditorEnabled}
             toggleJsonEditor={toggleJsonEditor}

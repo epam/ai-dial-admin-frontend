@@ -1,4 +1,4 @@
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { MAX_RUNNER_ID_SYMBOLS } from '@/src/constants/validation';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ErrorType } from '@/src/types/error-type';
@@ -40,7 +40,7 @@ export const getErrorForAppRunnerId = (id?: string, t?: (str: string, param?: Re
   if (isWrongId) {
     return {
       type: ErrorType.INVALID,
-      text: t ? t(CreateI18nKey.IdUrlError) : '',
+      text: t ? t(ErrorI18nKey.UrlField) : '',
     };
   }
   if (isWrongLength) {

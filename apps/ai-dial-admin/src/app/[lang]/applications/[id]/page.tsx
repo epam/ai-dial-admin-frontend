@@ -5,6 +5,7 @@ import { removeApplication, updateApplication } from '@/src/app/[lang]/applicati
 import { applicationRunnersApi, applicationsApi, interceptorsApi, modelsApi, rolesApi } from '@/src/app/api/api';
 import EntityView from '@/src/components/EntityView/EntityView';
 import Page403 from '@/src/components/Page403/Page403';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
@@ -52,17 +53,19 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   }
 
   return (
-    <EntityView
-      view={ApplicationRoute.Applications}
-      names={applications?.map((model) => model.displayName || '') || []}
-      roles={roles}
-      interceptors={interceptors}
-      applications={applications}
-      models={models}
-      applicationSchemes={applicationSchemes}
-      originalEntity={application}
-      removeEntity={removeApplication}
-      updateEntity={updateApplication}
-    />
+    <SaveValidationContextProvider>
+      <EntityView
+        view={ApplicationRoute.Applications}
+        names={applications?.map((model) => model.displayName || '') || []}
+        roles={roles}
+        interceptors={interceptors}
+        applications={applications}
+        models={models}
+        applicationSchemes={applicationSchemes}
+        originalEntity={application}
+        removeEntity={removeApplication}
+        updateEntity={updateApplication}
+      />
+    </SaveValidationContextProvider>
   );
 }

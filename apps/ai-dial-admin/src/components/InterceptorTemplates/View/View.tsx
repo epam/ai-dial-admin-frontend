@@ -17,6 +17,7 @@ import Tabs from '@/src/components/Common/Tabs/Tabs';
 import ExtendedProperties from '@/src/components/InterceptorTemplates/Properties/ExtendedProperties';
 import Interceptors from '@/src/components/InterceptorTemplates/View/Interceptors/Interceptors';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props {
   route: ApplicationRoute;
@@ -31,6 +32,7 @@ const View: FC<Props> = ({ route, template }) => {
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isChanged, setIsChanged] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(cloneDeep(template));
+  const { isValid } = useSaveValidationContext();
 
   const tabs = [propertiesTabs(t), interceptorsTabs(t)];
 
@@ -78,6 +80,7 @@ const View: FC<Props> = ({ route, template }) => {
           removeEntity={deleteInterceptorTemplate}
           hideJsonEditor={true}
           jsonEditorEnabled={false}
+          hasErrors={!isValid}
           jsonErrors={null}
         />
       </div>

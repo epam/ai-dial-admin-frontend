@@ -25,6 +25,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import InterceptorProperties from './InterceptorProperties';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props {
   originalInterceptor: DialInterceptor;
@@ -47,6 +48,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
   const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
+  const { isValid } = useSaveValidationContext();
 
   useEffect(() => {
     setSelectedInterceptor(cloneDeep(originalInterceptor));
@@ -137,6 +139,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
           toggleJsonEditor={toggleJsonEditor}
           jsonErrors={jsonErrors}
           setErrorNotifications={setErrorNotifications}
+          hasErrors={!isValid}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
