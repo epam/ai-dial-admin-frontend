@@ -14,7 +14,7 @@ import {
 import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
 import DiffLegend from '@/src/components/ActivityAudit/View/DiffReport/DiffLegend';
 import AuditEntityGrid from '@/src/components/ActivityAudit/EntityGrid/EntityGrid';
-import { mergeEntityMaps } from '@/src/components/ActivityAuditView/activity-audit.utils';
+import { mergeEntityMaps } from '@/src/components/ActivityAudit/View/utils';
 import { getSystemRollbackColumns } from '@/src/components/ActivityAudit/Rollback/utils';
 import Button from '@/src/components/Common/Button/Button';
 import Loader from '@/src/components/Common/Loader/Loader';
