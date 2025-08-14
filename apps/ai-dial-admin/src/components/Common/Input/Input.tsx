@@ -2,7 +2,6 @@
 
 import classNames from 'classnames';
 import { FC, WheelEvent } from 'react';
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 
 export interface InputProps {
   type?: string;
@@ -17,7 +16,7 @@ export interface InputProps {
 }
 
 const Input: FC<InputProps> = ({
-  value,
+  value = '',
   inputId,
   placeholder = '',
   cssClass = '',
@@ -35,7 +34,7 @@ const Input: FC<InputProps> = ({
       id={inputId}
       data-testid={inputId}
       placeholder={placeholder}
-      value={value || ''}
+      value={value as string | number}
       disabled={disabled}
       className={classNames(invalid ? 'input-error' : '', cssClass)}
       onChange={(event) => onChange?.(event.currentTarget.value)}

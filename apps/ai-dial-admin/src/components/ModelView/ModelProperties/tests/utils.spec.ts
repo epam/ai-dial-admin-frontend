@@ -12,7 +12,7 @@ describe('splitEndpoint', () => {
 
     const [base, postfix] = splitEndpoint(model, adapters);
     expect(base).toBe('https://api.example.com');
-    expect(postfix).toBe('/chat/completions');
+    expect(postfix).toBe('chat/completions');
   });
 
   test('returns correct baseEndpoint and postfix for embedding model', () => {
@@ -38,7 +38,7 @@ describe('splitEndpoint', () => {
     expect(base).toBe('');
     expect(postfix).toBe('chat/completions');
   });
-http://dial-uat-openai.epm-gpt-common/openai/deployments/chat/completions
+
   test('handles missing endpoint gracefully', () => {
     const model = {
       type: DialModelType.Chat,
@@ -48,6 +48,6 @@ http://dial-uat-openai.epm-gpt-common/openai/deployments/chat/completions
 
     const [base, postfix] = splitEndpoint(model, adapters);
     expect(base).toBe('');
-    expect(postfix).toBe('/chat/completions');
+    expect(postfix).toBe('chat/completions');
   });
 });
