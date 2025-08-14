@@ -11,10 +11,11 @@ import {
   getRevisions,
   systemRollbackToRevision,
 } from '@/src/app/[lang]/activity-audit/actions';
-import ActivityAuditEntityDiffFilter from '@/src/components/ActivityAuditView/ActivityAuditViewDiff/ActivityAuditEntityDiffFilter';
-import ActivityAuditEntityDiffLegend from '@/src/components/ActivityAuditView/ActivityAuditViewDiff/ActivityAuditEntityDiffLegend';
-import ActivityAuditEntityGrid from '@/src/components/ActivityAuditView/ActivityAuditViewDiff/ActivityAuditEntityGrid';
-import { mergeEntityMaps } from '@/src/components/ActivityAuditView/activity-audit.utils';
+import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
+import DiffLegend from '@/src/components/ActivityAudit/View/DiffReport/DiffLegend';
+import AuditEntityGrid from '@/src/components/ActivityAudit/EntityGrid/EntityGrid';
+import { mergeEntityMaps } from '@/src/components/ActivityAudit/View/utils';
+import { getSystemRollbackColumns } from '@/src/components/ActivityAudit/Rollback/utils';
 import Button from '@/src/components/Common/Button/Button';
 import Loader from '@/src/components/Common/Loader/Loader';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
@@ -27,10 +28,11 @@ import { ActivityAuditEntity, ActivityAuditResourceType, DiffView } from '@/src/
 import { PopUpState } from '@/src/types/pop-up';
 import { getRevisionRouteForAllEntities } from '@/src/utils/audit/get-revision-route';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import ConfirmationRollback from './Modals/Confirmation';
-import RollbackRevisions from './Modals/Revisions';
-import { getSystemRollbackColumns, sorts, SYSTEM_ROLLBACK_ENTITIES, SYSTEM_ROLLBACK_TAB_NAME } from './constants';
-import { ActivityAuditRevision } from './models';
+import ConfirmationRollback from '@/src/components/ActivityAudit/Modals/Confirmation';
+import RollbackRevisions from '@/src/components/ActivityAudit/Modals/Revisions';
+import { SYSTEM_ROLLBACK_ENTITIES, SYSTEM_ROLLBACK_TAB_NAME } from '@/src/components/ActivityAudit/Rollback/constants';
+import { sorts } from '@/src/components/ActivityAudit/constants';
+import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
 
 const SystemRollback: FC = () => {
   const t = useI18n() as (t: string) => string;
@@ -149,7 +151,7 @@ const SystemRollback: FC = () => {
       <div className="flex flex-row justify-between mb-3">
         <h1>{t(ActivityAuditI18nKey.RollbackSystem)}</h1>
         <div className="flex flex-row gap-3 items-center">
-          <ActivityAuditEntityDiffFilter diffView={diffView} setDiffView={setDiffView} isResources={true} />
+          <FilterControl diffView={diffView} setDiffView={setDiffView} isResources={true} />
           <div
             className="flex flex-row items-center small bg-layer-3 rounded h-6 p-2 cursor-pointer"
             onClick={() => setRevisionsModalState(PopUpState.Opened)}
@@ -184,7 +186,7 @@ const SystemRollback: FC = () => {
               <div className="flex-1 flex flex-row gap-8">
                 <div className="flex flex-col flex-1">
                   <h3 className="mb-4 text-primary">{t(ActivityAuditI18nKey.CurrentState)}</h3>
-                  <ActivityAuditEntityGrid
+                  <AuditEntityGrid
                     data={currentRows}
                     columns={columns}
                     diffView={diffView}
@@ -194,7 +196,7 @@ const SystemRollback: FC = () => {
                 </div>
                 <div className="flex flex-col flex-1">
                   <h3 className="mb-4 text-primary">{t(ActivityAuditI18nKey.RollbackState)}</h3>
-                  <ActivityAuditEntityGrid
+                  <AuditEntityGrid
                     data={rollbackRows}
                     columns={columns}
                     diffView={diffView}
@@ -206,7 +208,7 @@ const SystemRollback: FC = () => {
             </div>
           )}
         </div>
-        <ActivityAuditEntityDiffLegend description={true} />
+        <DiffLegend description={true} />
       </div>
       {rollBackModalState === PopUpState.Opened &&
         createPortal(
