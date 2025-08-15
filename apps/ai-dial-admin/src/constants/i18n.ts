@@ -90,6 +90,7 @@ export enum BasicI18nKey {
   Search = 'Basic.Search',
   Comparison = 'Basic.Comparison',
   Current = 'Basic.Current',
+  ResetFilters = 'Basic.ResetFilters',
 }
 
 export enum CommonControlsI18nKey {
