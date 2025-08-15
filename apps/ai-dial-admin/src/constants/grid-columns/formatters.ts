@@ -9,6 +9,9 @@ export const getFormattedResourceType = (value: string): string => {
   if (value === ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA) {
     return 'Application Runner';
   }
+  if (value === ActivityAuditResourceType.INTERCEPTOR_TEMPLATE) {
+    return 'Interceptor Template';
+  }
   return value;
 };
 
