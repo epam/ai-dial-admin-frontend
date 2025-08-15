@@ -3,6 +3,7 @@
 import { MouseEvent, useCallback, useState } from 'react';
 
 import { IconFileArrowLeft, IconFileArrowRight, IconPlus, IconColumns2 } from '@tabler/icons-react';
+import { GridApi } from 'ag-grid-community';
 
 import { exportFiles, importFiles } from '@/src/app/[lang]/files/actions';
 import { exportPrompts, importPrompts } from '@/src/app/[lang]/prompts/actions';
@@ -36,6 +37,7 @@ import EntityListModals, { ModalType } from '@/src/components/EntityListView/Ent
 import { getFormDataForImport } from './EntityListHeaderButtons.utils';
 import CreateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Create';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import ResetFiltersButton from './ResetFiltersButton';
 
 interface Props<T> {
   names?: string[];
@@ -45,6 +47,7 @@ interface Props<T> {
   route: ApplicationRoute;
   showColumnsButton?: boolean;
   showExportImportButtons?: boolean;
+  gridApi?: GridApi | null;
   toggleColumnsPanel: () => void;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
   context?: () => PromptFolderContextType | FileFolderContextType;
@@ -58,6 +61,7 @@ const EntityListHeaderButtons = <T extends DialBaseEntity | DialKey | DialApplic
   route,
   showColumnsButton,
   showExportImportButtons,
+  gridApi,
   toggleColumnsPanel,
   createEntity,
   context,
@@ -202,6 +206,7 @@ const EntityListHeaderButtons = <T extends DialBaseEntity | DialKey | DialApplic
 
   return (
     <div className="flex gap-4">
+      <ResetFiltersButton gridApi={gridApi} />
       {showColumnsButton && (
         <Button
           cssClass="tertiary"
