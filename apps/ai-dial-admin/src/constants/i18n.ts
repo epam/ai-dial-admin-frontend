@@ -345,6 +345,7 @@ export enum AttachmentsI18nKey {
   EnterAttachmentsTypes = 'Attachments.EnterAttachmentsTypes',
   AttachmentsMaxNumber = 'Attachments.AttachmentsMaxNumber',
   AttachmentsMaxNumberPlaceholder = 'Attachments.AttachmentsMaxNumberPlaceholder',
+  AttachmentsMaxNumberError = 'Attachments.AttachmentsMaxNumberError',
 }
 
 export enum KeysI18nKey {
