@@ -50,6 +50,7 @@ export default {
     Search: 'Search',
     Comparison: 'Comparison',
     Current: 'Current state',
+    ResetFilters: 'Reset filters',
   },
   CommonControls: {
     DnDIconFile: 'Drop image file here',

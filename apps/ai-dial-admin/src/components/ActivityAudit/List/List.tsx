@@ -9,11 +9,14 @@ import { GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-commu
 import classNames from 'classnames';
 
 import { getActivities } from '@/src/app/[lang]/activity-audit/actions';
+import { getActivityAuditColumns, getGridFilters } from '@/src/components/ActivityAudit/List/utils';
+import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
+import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
 import Button from '@/src/components/Common/Button/Button';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
 import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/EntityListView/constants';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/ResetFiltersButton';
 import ListView from '@/src/components/ListView/ListView';
 import { ACTIONS_COLUMN_CEL_ID, CACHE_LIMIT, PAGE_SIZE } from '@/src/constants/ag-grid';
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
@@ -30,11 +33,9 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { rollbackEntityPerType } from '@/src/utils/audit/get-rollback-request';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
-import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
-import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
-import { getActivityAuditColumns, getGridFilters } from '@/src/components/ActivityAudit/List/utils';
 
 interface Props {
   entity?: DialBaseEntity;
@@ -214,6 +215,7 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
         view={!entity ? ApplicationRoute.ActivityAudit : void 0}
       >
         <div className={classNames('flex gap-4', entity ? 'flex-1 justify-between' : 'justify-end')}>
+          <ResetFiltersButton gridApi={gridApi} />
           <TimeFilter
             timePeriod={timePeriod as string}
             onTimePeriodChange={onTimePeriodChange}
