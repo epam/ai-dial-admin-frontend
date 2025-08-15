@@ -22,7 +22,7 @@ const InputWithText: FC<Props> = ({ textBeforeInput, cssClass, value, ...props }
         props.disabled ? 'bg-layer-3 text-secondary' : '',
       )}
     >
-      <Tooltip tooltip={`${textBeforeInput}${value ? ` ${value}` : ''}`}>
+      <Tooltip tooltip={`${textBeforeInput}${value ? ` ${value}` : ''}`} triggerClassName={'flex'}>
         <p className="overflow-hidden overflow-ellipsis items-center px-4 py-3 bg-layer-3 small text-secondary max-w-[50%]">
           {textBeforeInput}
         </p>
