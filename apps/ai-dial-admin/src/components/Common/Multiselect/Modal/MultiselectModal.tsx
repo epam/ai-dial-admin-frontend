@@ -107,7 +107,7 @@ const MultiselectModal: FC<Props> = ({
           cssClass="primary"
           title={t(ButtonsI18nKey.Apply)}
           onClick={onApply}
-          disable={!isValid || isEqual(newItems, selectedItems)}
+          disable={!isValid || (draggable && isEqual(newItems, selectedItems))}
         />
       </div>
     </Popup>
