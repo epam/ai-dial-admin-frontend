@@ -12,7 +12,7 @@ interface Props {
   setCompareView: Dispatch<SetStateAction<CompareView>>;
 }
 
-const ActivityAuditEntityDiffCompare: FC<Props> = ({ compareView, setCompareView }) => {
+const CompareControl: FC<Props> = ({ compareView, setCompareView }) => {
   const t = useI18n();
 
   const items: DropdownItemsModel[] = [
@@ -48,4 +48,4 @@ const ActivityAuditEntityDiffCompare: FC<Props> = ({ compareView, setCompareView
   );
 };
 
-export default ActivityAuditEntityDiffCompare;
+export default CompareControl;

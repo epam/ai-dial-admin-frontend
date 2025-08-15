@@ -12,14 +12,14 @@ import { DialActivity } from '@/src/models/dial/activity-audit';
 import { ActivityAuditType } from '@/src/types/activity-audit';
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import { auditResourceRoute } from './ActivityAuditViewHeader.utils';
+import { auditResourceRoute } from '@/src/components/ActivityAudit/View/Header/constants';
 
 interface Props {
   activity: DialActivity;
   isModalView?: boolean;
   children?: ReactNode;
 }
-const ActivityAuditViewHeader: FC<Props> = ({ activity, isModalView, children }) => {
+const ViewHeader: FC<Props> = ({ activity, isModalView, children }) => {
   const t = useI18n();
   const currentLocale = useCurrentLocale();
 
@@ -89,4 +89,4 @@ const ActivityAuditViewHeader: FC<Props> = ({ activity, isModalView, children })
   );
 };
 
-export default ActivityAuditViewHeader;
+export default ViewHeader;

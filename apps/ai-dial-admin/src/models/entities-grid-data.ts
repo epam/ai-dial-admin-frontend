@@ -14,6 +14,6 @@ export interface EntitiesGridData extends DialBaseEntity {
   key?: string;
   path?: string;
   $id?: string; // application runner
-  dependencies?: EntityType[];
+  dependencies?: (EntityType | string)[];
   status?: DiffStatus;
 }

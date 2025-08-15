@@ -143,6 +143,9 @@ export default {
     NoFolders: 'No Folders',
     NoResource: 'Resource does not exist',
     NoInterceptorTemplates: 'No Interceptor Templates',
+    NoDependencies: 'No Dependencies',
+    AddModel: 'Add Model',
+    AddApplication: 'Add Application',
     // base fields
     Icon: 'Icon',
     Endpoint: 'Endpoint',
@@ -434,6 +437,7 @@ export default {
     EnterAttachmentsTypes: 'Enter attachments types',
     AttachmentsMaxNumber: 'Attachments max number',
     AttachmentsMaxNumberPlaceholder: 'Enter number',
+    AttachmentsMaxNumberError: 'Max allowed number of attachments is {max}',
   },
   Tabs: {
     Properties: 'Properties',
@@ -449,6 +453,7 @@ export default {
     Models: 'Models',
     Files: 'Files',
     Activities: 'Activities',
+    Dependencies: 'Dependencies',
   },
   ForwardToken: {
     ForwardToken: 'Forward auth token',
@@ -853,7 +858,6 @@ export default {
     TryAgainLater: 'Please try again later.',
     UrlField: 'This field must be a valid URL starting with  http:// or https://',
     WarningEndpoint: 'The endpoint uses HTTP instead of HTTPS. This may expose data to security risks.',
-    IncorrectModelEndpointAlias: 'This endpoint alias could not be empty',
   },
   Source: {
     OpenTemplate: 'Open template',

@@ -4,9 +4,9 @@ import { redirect } from 'next/navigation';
 import { ApplicationRoute } from '@/src/types/routes';
 
 import { activityAuditApi } from '@/src/app/api/api';
-import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/constants';
-import SystemRollback from '@/src/components/ActivityAudit/SystemRollback';
-import ActivityAuditView from '@/src/components/ActivityAuditView/ActivityAuditView';
+import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
+import SystemRollback from '@/src/components/ActivityAudit/Rollback/SystemRollback';
+import AuditView from '@/src/components/ActivityAudit/View/AuditView';
 import Page403 from '@/src/components/Page403/Page403';
 import { DialActivity } from '@/src/models/dial/activity-audit';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
@@ -81,7 +81,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   }
 
   return (
-    <ActivityAuditView
+    <AuditView
       activity={activity}
       activityRevision={activityRevision}
       previousRevision={previousRevision}

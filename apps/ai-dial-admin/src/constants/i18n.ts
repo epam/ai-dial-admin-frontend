@@ -122,6 +122,9 @@ export enum EntitiesI18nKey {
   NoFolders = 'Entities.NoFolders',
   NoResource = 'Entities.NoResource',
   NoInterceptorTemplates = 'Entities.NoInterceptorTemplates',
+  NoDependencies = 'Entities.NoDependencies',
+  AddModel = 'Entities.AddModel',
+  AddApplication = 'Entities.AddApplication',
   Icon = 'Entities.Icon',
   Endpoint = 'Entities.Endpoint',
   EndpointBase = 'Entities.EndpointBase',
@@ -342,6 +345,7 @@ export enum AttachmentsI18nKey {
   EnterAttachmentsTypes = 'Attachments.EnterAttachmentsTypes',
   AttachmentsMaxNumber = 'Attachments.AttachmentsMaxNumber',
   AttachmentsMaxNumberPlaceholder = 'Attachments.AttachmentsMaxNumberPlaceholder',
+  AttachmentsMaxNumberError = 'Attachments.AttachmentsMaxNumberError',
 }
 
 export enum KeysI18nKey {
@@ -440,6 +444,7 @@ export enum TabsI18nKey {
   Audit = 'Tabs.Audit',
   Activities = 'Tabs.Activities',
   Files = 'Tabs.Files',
+  Dependencies = 'Tabs.Dependencies',
 }
 
 export enum EditorI18nKey {
@@ -695,7 +700,6 @@ export enum ErrorI18nKey {
   SystemUnavailable = 'Error.SystemUnavailable',
   TryAgainLater = 'Error.TryAgainLater',
   UrlField = 'Error.UrlField',
-  IncorrectModelEndpointAlias = 'Error.IncorrectModelEndpointAlias',
   WarningEndpoint = 'Error.WarningEndpoint',
   ServerError = 'Error.ServerError',
 }
