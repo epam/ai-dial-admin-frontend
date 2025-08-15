@@ -32,4 +32,5 @@ export enum ActivityAuditResourceType {
   ROLE = 'Role',
   ROUTE = 'Route',
   APPLICATION_TYPE_SCHEMA = 'ApplicationTypeSchema',
+  INTERCEPTOR_TEMPLATE = 'InterceptorRunner',
 }
