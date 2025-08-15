@@ -44,7 +44,7 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
     if (isEntityImmutable) {
       validateDisplayName(entity.displayName);
     }
-  }, [dispatch, entity.displayName, isEntityImmutable, validateDisplayName]);
+  }, [entity.displayName, isEntityImmutable, validateDisplayName]);
 
   const validateEndpoint = useCallback(
     (endpoint?: string) => {
@@ -58,7 +58,7 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
     if (isEntityImmutable) {
       validateEndpoint(entity.baseEndpoint);
     }
-  }, [dispatch, entity.baseEndpoint, isEntityImmutable, validateEndpoint]);
+  }, [entity.baseEndpoint, isEntityImmutable, validateEndpoint]);
 
   const onChangeName = useCallback(
     (name: string) => {
