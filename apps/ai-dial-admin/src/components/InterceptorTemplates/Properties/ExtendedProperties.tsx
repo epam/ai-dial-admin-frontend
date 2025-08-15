@@ -20,14 +20,14 @@ const ExtendedProperties: FC<Props> = ({ template, onChange }) => {
   const { dispatch } = useSaveValidationContext();
 
   const completionEndpointError = useMemo(() => {
-    return template.completionEndpoint ? getUrlError(template.completionEndpoint, t) : null;
+    return template.completionEndpoint ? getUrlError(template.completionEndpoint, false, t) : null;
   }, [template.completionEndpoint, t]);
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'completionEndpoint', isValid: !completionEndpointError });
   }, [completionEndpointError, t, dispatch]);
 
   const configurationEndpointError = useMemo(() => {
-    return template.configurationEndpoint ? getUrlError(template.configurationEndpoint, t) : null;
+    return template.configurationEndpoint ? getUrlError(template.configurationEndpoint, false, t) : null;
   }, [template.configurationEndpoint, t]);
   useEffect(() => {
     dispatch({
