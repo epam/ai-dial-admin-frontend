@@ -41,7 +41,7 @@ const Containers: FC<Props> = ({ entity, onChange, getContainers, fieldId }) => 
 
   const completionEndpointError = useMemo(() => {
     return entity.source?.completionEndpointPath
-      ? getUrlError(`${selectedContainer?.url}${entity.source?.completionEndpointPath}`, t)
+      ? getUrlError(`${selectedContainer?.url}${entity.source?.completionEndpointPath}`, false, t)
       : null;
   }, [entity, selectedContainer, t]);
 
@@ -51,7 +51,7 @@ const Containers: FC<Props> = ({ entity, onChange, getContainers, fieldId }) => 
 
   const configurationEndpointError = useMemo(() => {
     return entity.source?.configurationEndpointPath
-      ? getUrlError(`${selectedContainer?.url}${entity.source?.configurationEndpointPath}`, t)
+      ? getUrlError(`${selectedContainer?.url}${entity.source?.configurationEndpointPath}`, false, t)
       : null;
   }, [entity, selectedContainer, t]);
 

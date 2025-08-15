@@ -1,20 +1,20 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
+
 import { uniq } from 'lodash';
 
 import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/AutocompleteField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 import { CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
-import { MAX_NAME_SYMBOLS, MIN_NAME_SYMBOLS } from '@/src/constants/validation';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { FieldError } from '@/src/models/error';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import { getErrorForName } from '@/src/utils/validation/name-error';
+import { getErrorForDisplayName, getErrorForName } from '@/src/utils/validation/name-error';
 import { getUrlError } from '@/src/utils/validation/url-error';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   entity: DialAdapter;
@@ -27,18 +27,38 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
   const t = useI18n() as (t: string, props?: Record<string, number>) => string;
   const { dispatch } = useSaveValidationContext();
 
-  const [isValidDisplayName, setIsValidDisplayName] = useState(true);
   const [nameError, setNameError] = useState<FieldError | null>(null);
-  const [displayNameError, setDisplayNameError] = useState<string | undefined>(void 0);
+  const [displayNameError, setDisplayNameError] = useState<FieldError | null>(null);
   const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
+  const [baseEndpointError, setBaseEndpointError] = useState<FieldError | null>(null);
 
-  const baseEndpointError = useMemo(() => {
-    return entity.baseEndpoint ? getUrlError(entity.baseEndpoint, t) : null;
-  }, [entity.baseEndpoint, t]);
-
+  const validateDisplayName = useCallback(
+    (displayName?: string) => {
+      const error = getErrorForDisplayName(displayName, t);
+      setDisplayNameError(error);
+      dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
+    },
+    [dispatch, t],
+  );
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'baseEndpoint', isValid: !baseEndpointError });
-  }, [baseEndpointError, dispatch]);
+    if (isEntityImmutable) {
+      validateDisplayName(entity.displayName);
+    }
+  }, [entity.displayName, isEntityImmutable, validateDisplayName]);
+
+  const validateEndpoint = useCallback(
+    (endpoint?: string) => {
+      const error = getUrlError(endpoint, true, t);
+      setBaseEndpointError(error);
+      dispatch({ type: ValidationActionType.SetField, field: 'baseEndpoint', isValid: !error });
+    },
+    [dispatch, t],
+  );
+  useEffect(() => {
+    if (isEntityImmutable) {
+      validateEndpoint(entity.baseEndpoint);
+    }
+  }, [entity.baseEndpoint, isEntityImmutable, validateEndpoint]);
 
   const onChangeName = useCallback(
     (name: string) => {
@@ -53,17 +73,12 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
 
   const onChangeDisplayName = useCallback(
     (displayName: string) => {
-      const isValid = displayName
-        ? displayName.length <= MAX_NAME_SYMBOLS && displayName.length >= MIN_NAME_SYMBOLS
-        : true;
-      setIsValidDisplayName(isValid);
-      setDisplayNameError(
-        isValid ? void 0 : t(CreateI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS }),
-      );
-      dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid });
+      if (!isEntityImmutable) {
+        validateDisplayName(displayName);
+      }
       onChangeAdapter({ ...entity, displayName });
     },
-    [t, onChangeAdapter, entity, dispatch],
+    [isEntityImmutable, onChangeAdapter, entity, validateDisplayName],
   );
 
   const onChangeDescription = useCallback(
@@ -78,10 +93,21 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
 
   const onChangeEndpoint = useCallback(
     (baseEndpoint: string) => {
+      if (!isEntityImmutable) {
+        validateEndpoint(baseEndpoint);
+      }
       onChangeAdapter({ ...entity, baseEndpoint });
     },
-    [onChangeAdapter, entity],
+    [isEntityImmutable, onChangeAdapter, entity, validateEndpoint],
   );
+
+  // initial validation on creation adapter (disable save when no values entered yet)
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!entity.name });
+    dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!entity.displayName });
+    dispatch({ type: ValidationActionType.SetField, field: 'baseEndpoint', isValid: !!entity.baseEndpoint });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="h-full flex flex-col gap-6">
@@ -102,9 +128,9 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
         fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
         placeholder={t(CreateI18nKey.DisplayNamePlaceholder)}
         value={entity.displayName}
-        errorText={displayNameError}
+        errorText={displayNameError?.text}
         onChange={onChangeDisplayName}
-        invalid={!isValidDisplayName}
+        invalid={!!displayNameError}
         items={uniq(names)}
       />
 
