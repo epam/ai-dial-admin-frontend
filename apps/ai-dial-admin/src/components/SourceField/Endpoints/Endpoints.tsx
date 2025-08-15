@@ -19,14 +19,14 @@ const Endpoints: FC<Props> = ({ entity, onChange }) => {
   const { dispatch } = useSaveValidationContext();
 
   const completionEndpointError = useMemo(() => {
-    return entity.endpoint ? getUrlError(entity.endpoint, t) : null;
+    return entity.endpoint ? getUrlError(entity.endpoint, false, t) : null;
   }, [entity.endpoint, t]);
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'completionEndpoint', isValid: !completionEndpointError });
   }, [completionEndpointError, t, dispatch]);
 
   const configurationEndpointError = useMemo(() => {
-    return entity.configurationEndpoint ? getUrlError(entity.configurationEndpoint, t) : null;
+    return entity.configurationEndpoint ? getUrlError(entity.configurationEndpoint, false, t) : null;
   }, [entity.configurationEndpoint, t]);
   useEffect(() => {
     dispatch({

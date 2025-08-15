@@ -49,6 +49,19 @@ export const getErrorForName = (
   return null;
 };
 
+export const getErrorForDisplayName = (name?: string, t?: (str: string) => string) => {
+  const isWrongLength = isWrongFieldLength(name || '');
+  const tWithArgs = t as (str: string, args?: Record<string, string | number>) => string;
+
+  if (isWrongLength || !name) {
+    return {
+      type: ErrorType.LENGTH,
+      text: t ? tWithArgs(CreateI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS }) : '',
+    };
+  }
+  return null;
+};
+
 export const isWrongLengthWithView = (view: ApplicationRoute, value?: string): boolean => {
   if (view === ApplicationRoute.Applications || view === ApplicationRoute.Models) {
     return value != null ? isWrongFieldLength(value) : false;
