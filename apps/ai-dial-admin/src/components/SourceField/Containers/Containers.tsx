@@ -40,17 +40,21 @@ const Containers: FC<Props> = ({ entity, onChange, getContainers, fieldId }) => 
   const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
 
   const completionEndpointError = useMemo(() => {
-    return entity.source?.completionEndpointPath ? getUrlError(entity.source?.completionEndpointPath, false, t) : null;
-  }, [entity.source?.completionEndpointPath, t]);
+    return entity.source?.completionEndpointPath
+      ? getUrlError(`${selectedContainer?.url}${entity.source?.completionEndpointPath}`, false, t)
+      : null;
+  }, [entity, selectedContainer, t]);
+
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'completionEndpoint', isValid: !completionEndpointError });
   }, [completionEndpointError, t, dispatch]);
 
   const configurationEndpointError = useMemo(() => {
     return entity.source?.configurationEndpointPath
-      ? getUrlError(entity.source?.configurationEndpointPath, false, t)
+      ? getUrlError(`${selectedContainer?.url}${entity.source?.configurationEndpointPath}`, false, t)
       : null;
-  }, [entity.source?.configurationEndpointPath, t]);
+  }, [entity, selectedContainer, t]);
+
   useEffect(() => {
     dispatch({
       type: ValidationActionType.SetField,
