@@ -10,4 +10,5 @@ export const auditResourceRoute: Record<ActivityAuditResourceType, ApplicationRo
   [ActivityAuditResourceType.ROLE]: ApplicationRoute.Roles,
   [ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA]: ApplicationRoute.ApplicationRunners,
   [ActivityAuditResourceType.ROUTE]: ApplicationRoute.Routes,
+  [ActivityAuditResourceType.INTERCEPTOR_TEMPLATE]: ApplicationRoute.InterceptorTemplates,
 };
