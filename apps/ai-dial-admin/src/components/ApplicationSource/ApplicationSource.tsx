@@ -43,7 +43,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
   const { dispatch } = useSaveValidationContext();
 
   const endpointError = useMemo(() => {
-    return entity.endpoint ? getUrlError(entity.endpoint, t) : null;
+    return entity.endpoint ? getUrlError(entity.endpoint, false, t) : null;
   }, [entity.endpoint, t]);
 
   useEffect(() => {
@@ -51,7 +51,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
   }, [endpointError, t, dispatch]);
 
   const viewerUrlError = useMemo(() => {
-    return entity.viewerUrl ? getUrlError(entity.viewerUrl, t) : null;
+    return entity.viewerUrl ? getUrlError(entity.viewerUrl, false, t) : null;
   }, [entity.viewerUrl, t]);
 
   useEffect(() => {
@@ -59,7 +59,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
   }, [viewerUrlError, t, dispatch]);
 
   const editorUrlError = useMemo(() => {
-    return entity.editorUrl ? getUrlError(entity.editorUrl, t) : null;
+    return entity.editorUrl ? getUrlError(entity.editorUrl, false, t) : null;
   }, [entity.editorUrl, t]);
 
   useEffect(() => {

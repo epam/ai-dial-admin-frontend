@@ -28,7 +28,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
 
   const completionEndpointError = useMemo(() => {
     return runner['dial:applicationTypeCompletionEndpoint']
-      ? getUrlError(runner['dial:applicationTypeCompletionEndpoint'], t)
+      ? getUrlError(runner['dial:applicationTypeCompletionEndpoint'], false, t)
       : null;
   }, [runner, t]);
 
@@ -38,7 +38,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
 
   const configurationEndpointError = useMemo(() => {
     return runner['dial:applicationTypeConfigurationEndpoint']
-      ? getUrlError(runner['dial:applicationTypeConfigurationEndpoint'], t)
+      ? getUrlError(runner['dial:applicationTypeConfigurationEndpoint'], false, t)
       : null;
   }, [runner, t]);
   useEffect(() => {
@@ -51,7 +51,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
 
   const rateEndpointError = useMemo(() => {
     return runner['dial:applicationTypeRateEndpoint']
-      ? getUrlError(runner['dial:applicationTypeRateEndpoint'], t)
+      ? getUrlError(runner['dial:applicationTypeRateEndpoint'], false, t)
       : null;
   }, [runner, t]);
   useEffect(() => {
@@ -60,7 +60,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
 
   const promptEndpointError = useMemo(() => {
     return runner['dial:applicationTypeTruncatePromptEndpoint']
-      ? getUrlError(runner['dial:applicationTypeTruncatePromptEndpoint'], t)
+      ? getUrlError(runner['dial:applicationTypeTruncatePromptEndpoint'], false, t)
       : null;
   }, [runner, t]);
   useEffect(() => {
@@ -69,7 +69,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
 
   const tokenizeEndpointError = useMemo(() => {
     return runner['dial:applicationTypeTokenizeEndpoint']
-      ? getUrlError(runner['dial:applicationTypeTokenizeEndpoint'], t)
+      ? getUrlError(runner['dial:applicationTypeTokenizeEndpoint'], false, t)
       : null;
   }, [runner, t]);
   useEffect(() => {
@@ -77,14 +77,18 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
   }, [tokenizeEndpointError, t, dispatch]);
 
   const viewerUrlError = useMemo(() => {
-    return runner['dial:applicationTypeViewerUrl'] ? getUrlError(runner['dial:applicationTypeViewerUrl'], t) : null;
+    return runner['dial:applicationTypeViewerUrl']
+      ? getUrlError(runner['dial:applicationTypeViewerUrl'], false, t)
+      : null;
   }, [runner, t]);
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'viewerUrl', isValid: !viewerUrlError });
   }, [viewerUrlError, t, dispatch]);
 
   const editorUrlError = useMemo(() => {
-    return runner['dial:applicationTypeEditorUrl'] ? getUrlError(runner['dial:applicationTypeEditorUrl'], t) : null;
+    return runner['dial:applicationTypeEditorUrl']
+      ? getUrlError(runner['dial:applicationTypeEditorUrl'], false, t)
+      : null;
   }, [runner, t]);
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'editorUrl', isValid: !editorUrlError });
