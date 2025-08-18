@@ -8,7 +8,6 @@ import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/Aut
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 import { CreateI18nKey } from '@/src/constants/i18n';
-import { MAX_NAME_SYMBOLS, MIN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
@@ -17,7 +16,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
 import { getErrorForName, isWrongLengthWithView } from '@/src/utils/validation/name-error';
 import AdditionalProperties from './AdditionalProperties';
-import { getDisplayNameErrorKeyPerView, getVersionErrorKeyPerView } from './utils';
+import { getDisplayNameError, getVersionError } from './utils';
 import { DialModel } from '@/src/models/dial/model';
 import classNames from 'classnames';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -87,12 +86,7 @@ const EntityMainProperties: FC<Props> = ({
   );
 
   useEffect(() => {
-    const errorKey = getDisplayNameErrorKeyPerView(view, isWrongLengthWithView(view, entity.displayName));
-    const error = isValidDisplayName
-      ? void 0
-      : errorKey
-        ? t(errorKey, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS })
-        : '';
+    const error = getDisplayNameError(view, isValidDisplayName, entity.displayName as string, t);
     setDisplayNameError(error);
     dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
     validateVersion(entity.version);
@@ -101,21 +95,7 @@ const EntityMainProperties: FC<Props> = ({
 
   const validateVersion = useCallback(
     (displayVersion?: string) => {
-      let error = '';
-      if (!isVersionOptional) {
-        const errorKey = getVersionErrorKeyPerView(view);
-        const hasDisplayVersion = displayVersion != null;
-        const isLengthError = hasDisplayVersion ? isWrongLengthWithView(view, displayVersion) : false;
-        if (!hasDisplayVersion) {
-          error = errorKey ? t(errorKey) : '';
-        } else if (isLengthError) {
-          error = t(CreateI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS });
-        } else {
-          error = '';
-        }
-      } else {
-        error = '';
-      }
+      const error = getVersionError(view, isVersionOptional, displayVersion as string, t);
       setVersionError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'displayVersion', isValid: !error });
     },
