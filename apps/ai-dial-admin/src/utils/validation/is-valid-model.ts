@@ -1,8 +1,16 @@
 import { DialModel, DialModelEndpoint } from '@/src/models/dial/model';
 import { isValidEndpoint } from '@/src/utils/validation/url-error';
+import { MAX_ATTACHMENTS_LIMIT } from '@/src/constants/dial-base-entity';
 
 export const isValidModel = (entity: DialModel) => {
-  return !!entity.adapter && isValidUpstreams(entity.upstreams);
+  return !!entity.adapter && isValidUpstreams(entity.upstreams) && isValidAttachment(entity.maxInputAttachments);
+};
+
+export const isValidAttachment = (maxInputAttachments?: string | number): boolean => {
+  if (maxInputAttachments) {
+    return +maxInputAttachments <= MAX_ATTACHMENTS_LIMIT;
+  }
+  return true;
 };
 
 export const isValidUpstreams = (upstreams?: DialModelEndpoint[]): boolean => {
