@@ -553,6 +553,8 @@ export default {
     BodyTitle: 'Body',
     BodyPlaceholder: 'Enter Body',
     MethodsTitle: 'Methods',
+    Order: 'Order',
+    OrderPlaceholder: 'Enter order number',
     RequiredProperty: 'This property is required',
     InvalidPath: 'Path must start with / and use only letters, digits, - , and _',
     InvalidStatus: 'Status must be a number from 100 to 999',

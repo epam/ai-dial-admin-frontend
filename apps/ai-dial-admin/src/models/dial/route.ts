@@ -9,6 +9,7 @@ export interface DialRoute extends DialBaseNamedEntity {
   methods?: string[];
   upstreams?: DialModelEndpoint[];
   maxRetryAttempts?: number;
+  order?: number;
 }
 
 export interface RouteResponse {
