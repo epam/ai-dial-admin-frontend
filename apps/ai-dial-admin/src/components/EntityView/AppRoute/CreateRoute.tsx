@@ -24,14 +24,22 @@ const CreateRoute: FC<Props> = ({ modalState, onClose, onCreate }) => {
         <TextInputField
           elementId="name"
           fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
-          placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
+          placeholder={t(CreateI18nKey.DisplayNamePlaceholder)}
           value={name}
           onChange={(name) => setName(name)}
         />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
         <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <Button cssClass="primary" title={t(ButtonsI18nKey.Create)} onClick={() => onCreate(name)} />
+        <Button
+          cssClass="primary"
+          title={t(ButtonsI18nKey.Create)}
+          disable={!name}
+          onClick={() => {
+            onCreate(name);
+            setName('');
+          }}
+        />
       </div>
     </Popup>
   );

@@ -48,7 +48,7 @@ const EntityRoutes: FC<Props> = ({ routes, onChangeRoutes }) => {
     <>
       <div className="flex flex-row gap-4 h-full w-full">
         <div className="bg-layer-3 h-full w-[296px] p-4">
-          <div className="flex flex-row flex-wrap justify-between items-center mb-4">
+          <div className="flex flex-row flex-wrap justify-between items-center mb-6">
             <h1>{t(TabsI18nKey.Routes)}</h1>
             <Button
               cssClass="primary"
@@ -68,7 +68,9 @@ const EntityRoutes: FC<Props> = ({ routes, onChangeRoutes }) => {
         </div>
         <div className="flex flex-col flex-1 min-h-0 w-full relative"></div>
       </div>
-      <CreateRoute modalState={modalState} onClose={handleModalClose} onCreate={onCreate} />
+      {modalState === PopUpState.Opened && (
+        <CreateRoute modalState={modalState} onClose={handleModalClose} onCreate={onCreate} />
+      )}
     </>
   );
 };
