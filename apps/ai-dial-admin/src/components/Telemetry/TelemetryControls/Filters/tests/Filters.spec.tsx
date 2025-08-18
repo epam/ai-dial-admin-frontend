@@ -1,9 +1,9 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, expect, test, vi, beforeEach } from 'vitest';
-import Filters from '../Filters';
-import { ApplicationRoute } from '@/src/types/routes';
-import { FilterData } from '@/src/models/telemetry';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
+import { FilterData } from '@/src/models/telemetry';
+import { ApplicationRoute } from '@/src/types/routes';
+import { render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import Filters from '../Filters';
 
 describe('Filters', () => {
   const mockGetData = vi.fn();
