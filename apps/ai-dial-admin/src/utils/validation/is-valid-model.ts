@@ -2,7 +2,7 @@ import { DialModel, DialModelEndpoint } from '@/src/models/dial/model';
 import { isValidEndpoint } from '@/src/utils/validation/url-error';
 
 export const isValidModel = (entity: DialModel) => {
-  return !!entity.adapter && isValidUpstreams(entity.upstreams) && !!entity.endpointDeploymentName;
+  return !!entity.adapter && isValidUpstreams(entity.upstreams);
 };
 
 export const isValidUpstreams = (upstreams?: DialModelEndpoint[]): boolean => {

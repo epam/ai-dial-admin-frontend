@@ -95,7 +95,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
         <InputWithReadonlyParts
           inputId="endpoint"
           value={model.endpointDeploymentName}
-          fullValue={`${prefixPart}${model.endpointDeploymentName}${postfixPart}`}
+          fullValue={`${prefixPart}${model.endpointDeploymentName ? model.endpointDeploymentName + '/' : ''}${postfixPart}`}
           title={t(EntitiesI18nKey.Endpoint)}
           postfixPart={`/${postfixPart}`}
           prefixPart={prefixPart}
@@ -134,11 +134,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
           </>
         )}
       </div>
-      {model.type === DialModelType.Chat && (
-        <div className="w-full flex flex-col gap-5 lg:w-[75%]">
-          <EntityAttachments entity={model} onChangeEntity={onChangeModel} />
-        </div>
-      )}
+      {model.type === DialModelType.Chat && <EntityAttachments entity={model} onChangeEntity={onChangeModel} />}
     </div>
   );
 };
