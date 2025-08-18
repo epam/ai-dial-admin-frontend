@@ -1,41 +1,87 @@
-import { render } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, expect, test, vi, beforeEach } from 'vitest';
+import Filters from '../Filters';
 import { ApplicationRoute } from '@/src/types/routes';
-import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
-import Filters from '@/src/components/Telemetry/TelemetryControls/Filters/Filters';
-import { describe, expect, test, vi } from 'vitest';
-const setFilters = vi.fn();
-const getData = vi.fn().mockReturnValue({ data: [] });
+import { FilterData } from '@/src/models/telemetry';
+import { TelemetryI18nKey } from '@/src/constants/i18n';
 
-describe('Components - Filters', () => {
-  test('renders correctly', () => {
-    const filters = [
-      {
-        condition: FILTER_OPERATOR.Equal,
-        value: 'asd',
-        type: FILTER_TYPE.Entity,
-      },
-    ];
-    const { getByTestId } = render(
-      <Filters filters={filters} setFilters={setFilters} route={ApplicationRoute.Dashboard} getData={getData} />,
-    );
+describe('Filters', () => {
+  const mockGetData = vi.fn();
+  const mockSetFilters = vi.fn();
 
-    const filter = getByTestId('dashboard-filter');
-    expect(filter).toBeTruthy();
+  beforeEach(() => {
+    mockGetData.mockReset();
+    mockSetFilters.mockReset();
   });
 
-  test('user can aad new filter', () => {
-    const filters = [
-      {
-        condition: FILTER_OPERATOR.Equal,
-        value: 'asd',
-        type: FILTER_TYPE.Entity,
-      },
-    ];
-    const { getByTestId } = render(
-      <Filters filters={filters} setFilters={setFilters} route={ApplicationRoute.Dashboard} getData={getData} />,
+  test('renders filters and AddFilter button', async () => {
+    render(
+      <Filters
+        filters={[{ value: 'f1' }] as FilterData[]}
+        setFilters={mockSetFilters}
+        getData={mockGetData}
+        route={ApplicationRoute.Dashboard}
+      />,
     );
 
-    const filter = getByTestId('dashboard-filter');
-    expect(filter).toBeTruthy();
+    expect(screen.getByText('f1')).toBeInTheDocument();
+    expect(screen.getByText(TelemetryI18nKey.AddFilter)).toBeInTheDocument();
   });
+
+  // test('calls addFilter when Edit is clicked', async () => {
+  //   mockGetData
+  //     .mockResolvedValueOnce({ success: true, response: { data: [['p1']] } })
+  //     .mockResolvedValueOnce({ success: true, response: { data: [['e1']] } });
+
+  //   const setFilters = vi.fn((fn) => {
+  //     expect(typeof fn).toBe('function');
+  //     // Simulate state update for edit
+  //     expect(fn([{ id: 'f1' }])).toEqual([{ id: 'f1', edited: true }]);
+  //   });
+
+  //   render(
+  //     <Filters
+  //       filters={[{ id: 'f1' }]}
+  //       setFilters={setFilters}
+  //       getData={mockGetData}
+  //       route={ApplicationRoute.Dashboard}
+  //     />,
+  //   );
+
+  //   await waitFor(() => {
+  //     fireEvent.click(screen.getByText('Edit'));
+  //   });
+  // });
+
+  // test('calls addFilter when AddFilter is clicked', async () => {
+  //   mockGetData
+  //     .mockResolvedValueOnce({ success: true, response: { data: [['p1']] } })
+  //     .mockResolvedValueOnce({ success: true, response: { data: [['e1']] } });
+
+  //   const setFilters = vi.fn((fn) => {
+  //     expect(typeof fn).toBe('function');
+  //     // Simulate state update for add
+  //     expect(fn([])).toEqual([{ id: 'new' }]);
+  //   });
+
+  //   render(<Filters filters={[]} setFilters={setFilters} getData={mockGetData} route={ApplicationRoute.Dashboard} />);
+
+  //   await waitFor(() => {
+  //     fireEvent.click(screen.getByText('AddFilter'));
+  //   });
+  // });
+
+  // test('renders nothing if filters is empty', async () => {
+  //   mockGetData
+  //     .mockResolvedValueOnce({ success: true, response: { data: [['p1']] } })
+  //     .mockResolvedValueOnce({ success: true, response: { data: [['e1']] } });
+
+  //   render(
+  //     <Filters filters={[]} setFilters={mockSetFilters} getData={mockGetData} route={ApplicationRoute.Dashboard} />,
+  //   );
+
+  //   await waitFor(() => {
+  //     expect(screen.queryByText('Filter-0')).toBeNull();
+  //   });
+  // });
 });
