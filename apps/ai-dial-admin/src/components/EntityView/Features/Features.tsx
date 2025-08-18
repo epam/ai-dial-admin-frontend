@@ -31,7 +31,7 @@ const EntityFeatures: FC<Props> = ({ view, entity, onChangeEntity }) => {
     textKeys.forEach((key) => {
       const value = entity.features?.[key] as string;
       if (value) {
-        initialErrors[key] = getUrlError(value, t);
+        initialErrors[key] = getUrlError(value, false, t);
       } else {
         initialErrors[key] = null;
       }
@@ -40,7 +40,7 @@ const EntityFeatures: FC<Props> = ({ view, entity, onChangeEntity }) => {
 
     textKeys.forEach((key) => {
       const value = entity.features?.[key] as string;
-      const error = value ? getUrlError(value, t) : null;
+      const error = value ? getUrlError(value, false, t) : null;
       dispatch({ type: ValidationActionType.SetField, field: key, isValid: !error });
     });
   }, [textKeys, entity.features, t, dispatch]);
@@ -67,7 +67,7 @@ const EntityFeatures: FC<Props> = ({ view, entity, onChangeEntity }) => {
 
   const onChange = useCallback(
     (value: string, key: keyof DialFeatures) => {
-      const urlError = getUrlError(value, t);
+      const urlError = getUrlError(value, false, t);
       setTextFieldErrors((prev) => ({
         ...prev,
         [key]: urlError,

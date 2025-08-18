@@ -10,6 +10,7 @@ export const SYSTEM_ROLLBACK_ENTITIES = [
   ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA,
   ActivityAuditResourceType.INTERCEPTOR,
   ActivityAuditResourceType.ADAPTER,
+  ActivityAuditResourceType.INTERCEPTOR_TEMPLATE,
 ];
 
 export const SYSTEM_ROLLBACK_TAB_NAME: Record<ActivityAuditResourceType, string> = {
@@ -21,4 +22,5 @@ export const SYSTEM_ROLLBACK_TAB_NAME: Record<ActivityAuditResourceType, string>
   [ActivityAuditResourceType.ROLE]: 'Roles',
   [ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA]: 'ApplicationRunners',
   [ActivityAuditResourceType.ROUTE]: 'Routes',
+  [ActivityAuditResourceType.INTERCEPTOR_TEMPLATE]: 'InterceptorTemplates',
 };

@@ -90,6 +90,7 @@ export enum BasicI18nKey {
   Search = 'Basic.Search',
   Comparison = 'Basic.Comparison',
   Current = 'Basic.Current',
+  ResetFilters = 'Basic.ResetFilters',
 }
 
 export enum CommonControlsI18nKey {
@@ -122,6 +123,9 @@ export enum EntitiesI18nKey {
   NoFolders = 'Entities.NoFolders',
   NoResource = 'Entities.NoResource',
   NoInterceptorTemplates = 'Entities.NoInterceptorTemplates',
+  NoDependencies = 'Entities.NoDependencies',
+  AddModel = 'Entities.AddModel',
+  AddApplication = 'Entities.AddApplication',
   Icon = 'Entities.Icon',
   Endpoint = 'Entities.Endpoint',
   EndpointBase = 'Entities.EndpointBase',
@@ -249,15 +253,13 @@ export enum CreateI18nKey {
   InterceptorName = 'CreateEntity.name.interceptor',
   ForbiddenCharsError = 'CreateEntity.name.forbiddenChars',
   DisplayNameTitle = 'CreateEntity.displayName.title',
-  DisplayNameErrorApplication = 'CreateEntity.displayName.errorApplication',
   DisplayNameErrorModel = 'CreateEntity.displayName.errorModel',
   DisplayNamePlaceholder = 'CreateEntity.displayName.placeholder',
   ModelDisplayName = 'CreateEntity.displayName.ModelDisplayName',
   ApplicationDisplayName = 'CreateEntity.displayName.ApplicationDisplayName',
   VersionTitle = 'CreateEntity.version.title',
   VersionPlaceholder = 'CreateEntity.version.placeholder',
-  VersionErrorModel = 'CreateEntity.version.errorApplication',
-  VersionErrorApplication = 'CreateEntity.version.errorModel',
+  VersionErrorModel = 'CreateEntity.version.errorModel',
   DescriptionTitle = 'CreateEntity.description.title',
   DescriptionPlaceholder = 'CreateEntity.description.placeholder',
   DescriptionLengthError = 'CreateEntity.description.length',
@@ -342,6 +344,7 @@ export enum AttachmentsI18nKey {
   EnterAttachmentsTypes = 'Attachments.EnterAttachmentsTypes',
   AttachmentsMaxNumber = 'Attachments.AttachmentsMaxNumber',
   AttachmentsMaxNumberPlaceholder = 'Attachments.AttachmentsMaxNumberPlaceholder',
+  AttachmentsMaxNumberError = 'Attachments.AttachmentsMaxNumberError',
 }
 
 export enum KeysI18nKey {
@@ -440,6 +443,7 @@ export enum TabsI18nKey {
   Audit = 'Tabs.Audit',
   Activities = 'Tabs.Activities',
   Files = 'Tabs.Files',
+  Dependencies = 'Tabs.Dependencies',
 }
 
 export enum EditorI18nKey {
@@ -499,6 +503,8 @@ export enum RoutesI18nKey {
   MethodsTitle = 'Routes.MethodsTitle',
   InvalidPath = 'Routes.InvalidPath',
   InvalidStatus = 'Routes.InvalidStatus',
+  Order = 'Routes.Order',
+  OrderPlaceholder = 'Routes.OrderPlaceholder',
 }
 
 export enum PublicationsI18nKey {
@@ -695,7 +701,6 @@ export enum ErrorI18nKey {
   SystemUnavailable = 'Error.SystemUnavailable',
   TryAgainLater = 'Error.TryAgainLater',
   UrlField = 'Error.UrlField',
-  IncorrectModelEndpointAlias = 'Error.IncorrectModelEndpointAlias',
   WarningEndpoint = 'Error.WarningEndpoint',
   ServerError = 'Error.ServerError',
 }

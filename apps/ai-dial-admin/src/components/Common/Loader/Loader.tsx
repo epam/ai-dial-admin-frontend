@@ -2,7 +2,8 @@
 
 import { FC } from 'react';
 import classNames from 'classnames';
-import { IconLoader } from '@tabler/icons-react';
+
+import LoaderIcon from '@/public/images/icons/loader.svg';
 
 interface Props {
   size?: number;
@@ -17,7 +18,7 @@ const Loader: FC<Props> = ({ size = 18, loaderClassName = '', containerClassName
       data-testid={dataTestId}
       className={classNames('flex w-full items-center justify-center text-secondary', containerClassName || 'h-full')}
     >
-      <IconLoader
+      <LoaderIcon
         height={size}
         width={size}
         className={classNames('shrink-0 grow-0 basis-auto animate-spin-steps', loaderClassName)}
