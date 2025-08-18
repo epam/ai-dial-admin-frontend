@@ -106,16 +106,6 @@ const RouteProperties: FC<Props> = ({ route, updateRoute }) => {
           onChange={onChangeDescription}
         />
 
-        <NumberInputField
-          elementId="order"
-          fieldTitle={t(RoutesI18nKey.Order)}
-          placeholder={t(RoutesI18nKey.OrderPlaceholder)}
-          value={route.order}
-          onChange={(order) => {
-            updateRoute({ ...route, order: order ? +order : undefined });
-          }}
-        />
-
         <Paths route={route} updateRoute={updateRoute} />
 
         <Switch
@@ -174,6 +164,16 @@ const RouteProperties: FC<Props> = ({ route, updateRoute }) => {
         <MaxRetryAttempts
           maxRetryAttempts={route.maxRetryAttempts}
           onChangeMaxRetryAttempts={onChangeMaxRetryAttempts}
+        />
+
+        <NumberInputField
+          elementId="order"
+          fieldTitle={t(RoutesI18nKey.Order)}
+          placeholder={t(RoutesI18nKey.OrderPlaceholder)}
+          value={route.order}
+          onChange={(order) => {
+            updateRoute({ ...route, order: order ? +order : undefined });
+          }}
         />
       </div>
     </div>
