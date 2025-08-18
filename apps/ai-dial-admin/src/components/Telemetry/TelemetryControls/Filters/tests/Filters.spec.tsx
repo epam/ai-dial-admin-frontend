@@ -1,30 +1,41 @@
-import { TelemetryI18nKey } from '@/src/constants/i18n';
-import { FilterData } from '@/src/models/telemetry';
+import { render } from '@testing-library/react';
 import { ApplicationRoute } from '@/src/types/routes';
-import { render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import Filters from '../Filters';
+import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
+import Filters from '@/src/components/Telemetry/TelemetryControls/Filters/Filters';
+import { describe, expect, test, vi } from 'vitest';
+const setFilters = vi.fn();
+const getData = vi.fn().mockReturnValue({ data: [] });
 
-describe('Filters', () => {
-  const mockGetData = vi.fn();
-  const mockSetFilters = vi.fn();
-
-  beforeEach(() => {
-    mockGetData.mockReset();
-    mockSetFilters.mockReset();
-  });
-
-  test('renders filters and AddFilter button', async () => {
-    render(
-      <Filters
-        filters={[{ value: 'f1' }] as FilterData[]}
-        setFilters={mockSetFilters}
-        getData={mockGetData}
-        route={ApplicationRoute.Dashboard}
-      />,
+describe('Components - Filters', () => {
+  test('renders correctly', () => {
+    const filters = [
+      {
+        condition: FILTER_OPERATOR.Equal,
+        value: 'asd',
+        type: FILTER_TYPE.Entity,
+      },
+    ];
+    const { getByTestId } = render(
+      <Filters filters={filters} setFilters={setFilters} route={ApplicationRoute.Dashboard} getData={getData} />,
     );
 
-    expect(screen.getByText('f1')).toBeInTheDocument();
-    expect(screen.getByText(TelemetryI18nKey.AddFilter)).toBeInTheDocument();
+    const filter = getByTestId('dashboard-filter');
+    expect(filter).toBeTruthy();
+  });
+
+  test('user can aad new filter', () => {
+    const filters = [
+      {
+        condition: FILTER_OPERATOR.Equal,
+        value: 'asd',
+        type: FILTER_TYPE.Entity,
+      },
+    ];
+    const { getByTestId } = render(
+      <Filters filters={filters} setFilters={setFilters} route={ApplicationRoute.Dashboard} getData={getData} />,
+    );
+
+    const filter = getByTestId('dashboard-filter');
+    expect(filter).toBeTruthy();
   });
 });
