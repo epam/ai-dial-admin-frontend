@@ -278,8 +278,6 @@ export default {
       placeholder: 'Enter display name',
       ModelDisplayName: 'Model display name',
       ApplicationDisplayName: 'Application display name',
-      errorApplication:
-        'This name is used by versionless application. Specify version for application with this display name to group applications.',
       errorModel:
         'This name is used by versionless model. Specify version for model with this display name to group models.',
     },
@@ -287,7 +285,6 @@ export default {
       title: 'Version',
       placeholder: 'Enter version',
       errorModel: 'For a model with this Display name, specifying a version is mandatory.',
-      errorApplication: 'For an application with this Display name, specifying a version is mandatory.',
     },
     nameVersionCombinationError: 'This combination of name and version already exists. Specify another',
     description: {

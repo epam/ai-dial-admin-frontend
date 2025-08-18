@@ -165,16 +165,18 @@ const RouteProperties: FC<Props> = ({ route, updateRoute }) => {
           maxRetryAttempts={route.maxRetryAttempts}
           onChangeMaxRetryAttempts={onChangeMaxRetryAttempts}
         />
-
-        <NumberInputField
-          elementId="order"
-          fieldTitle={t(RoutesI18nKey.Order)}
-          placeholder={t(RoutesI18nKey.OrderPlaceholder)}
-          value={route.order}
-          onChange={(order) => {
-            updateRoute({ ...route, order: order ? +order : undefined });
-          }}
-        />
+        <div className="lg:w-[35%]">
+          <NumberInputField
+            elementId="order"
+            fieldTitle={t(RoutesI18nKey.Order)}
+            placeholder={t(RoutesI18nKey.OrderPlaceholder)}
+            value={route.order}
+            min={0}
+            onChange={(order) => {
+              updateRoute({ ...route, order: order ? +order : undefined });
+            }}
+          />
+        </div>
       </div>
     </div>
   );
