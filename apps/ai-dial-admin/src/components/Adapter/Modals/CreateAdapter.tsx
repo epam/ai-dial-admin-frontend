@@ -18,11 +18,10 @@ import { getEntityPath } from '@/src/utils/open-in-new-tab';
 interface Props {
   modalState: PopUpState;
   onClose: () => void;
-  route: ApplicationRoute;
   names: string[];
 }
 
-const CreateAdapter: FC<Props> = ({ modalState, onClose, route, names }) => {
+const CreateAdapter: FC<Props> = ({ modalState, onClose, names }) => {
   const t = useI18n() as (t: string) => string;
   const router = useRouter();
 
@@ -50,14 +49,14 @@ const CreateAdapter: FC<Props> = ({ modalState, onClose, route, names }) => {
     };
     createAdapter(entity).then((res) => {
       if (res.success) {
-        const originalRoute = route.split('/')[1];
-        router.push(`${originalRoute}/${getEntityPath(route, res.response || entity)}`);
+        const originalRoute = ApplicationRoute.Adapters.split('/')[1];
+        router.push(`${originalRoute}/${getEntityPath(ApplicationRoute.Adapters, res.response || entity)}`);
         onClose();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [currentAdapter, route, router, onClose, showNotification]);
+  }, [currentAdapter, router, onClose, showNotification]);
 
   return (
     <Popup onClose={onClose} heading={t(CreateI18nKey.Adapter)} portalId="CreateRunner" state={modalState}>

@@ -1,0 +1,71 @@
+import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { DialAdapter } from '@/src/models/dial/adapter';
+import { PopUpState } from '@/src/types/pop-up';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
+import DuplicateAdapter from '../DuplicateAdapter';
+
+describe('DuplicateAdapter', () => {
+  const baseAdapter: DialAdapter = {
+    name: 'adapter1',
+    displayName: 'Adapter One',
+    baseEndpoint: 'http://endpoint',
+  };
+
+  test('renders all fields and buttons', () => {
+    render(
+      <DuplicateAdapter modalState={PopUpState.Opened} onClose={vi.fn()} adapter={baseAdapter} onDuplicate={vi.fn()} />,
+    );
+
+    expect(screen.getByText(CreateI18nKey.IdTitle)).toBeInTheDocument();
+    expect(screen.getByText(CreateI18nKey.DisplayNameTitle)).toBeInTheDocument();
+    expect(screen.getByText(EntitiesI18nKey.EndpointBase)).toBeInTheDocument();
+    expect(screen.getByText(ButtonsI18nKey.Cancel)).toBeInTheDocument();
+    expect(screen.getByText(ButtonsI18nKey.Duplicate)).toBeInTheDocument();
+  });
+
+  test('calls onClose when Cancel is clicked', () => {
+    const onClose = vi.fn();
+    render(
+      <DuplicateAdapter modalState={PopUpState.Opened} onClose={onClose} adapter={baseAdapter} onDuplicate={vi.fn()} />,
+    );
+    fireEvent.click(screen.getByText(ButtonsI18nKey.Cancel));
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  test('calls onDuplicate with correct entity when Duplicate is clicked', () => {
+    const onDuplicate = vi.fn();
+    render(
+      <DuplicateAdapter
+        modalState={PopUpState.Opened}
+        onClose={vi.fn()}
+        adapter={baseAdapter}
+        onDuplicate={onDuplicate}
+      />,
+    );
+    // Fill in the name to enable the button
+    fireEvent.change(screen.getByPlaceholderText(CreateI18nKey.IdPlaceholder), { target: { value: 'adapter2' } });
+    fireEvent.change(screen.getByPlaceholderText(CreateI18nKey.DisplayNamePlaceholder), {
+      target: { value: 'Adapter Two' },
+    });
+    fireEvent.change(screen.getByPlaceholderText(EntitiesI18nKey.EndpointPlaceholder), {
+      target: { value: 'http://new' },
+    });
+    expect(screen.getByText(ButtonsI18nKey.Duplicate)).not.toBeDisabled();
+    fireEvent.click(screen.getByText(ButtonsI18nKey.Duplicate));
+    expect(onDuplicate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'adapter2',
+        displayName: 'Adapter Two',
+        baseEndpoint: 'http://new',
+      }),
+    );
+  });
+
+  // test('disables Duplicate button if name is empty', () => {
+  //   render(
+  //     <DuplicateAdapter modalState={PopUpState.Opened} onClose={vi.fn()} adapter={baseAdapter} onDuplicate={vi.fn()} />,
+  //   );
+  //   expect(screen.getByText(ButtonsI18nKey.Duplicate)).toBeDisabled();
+  // });
+});

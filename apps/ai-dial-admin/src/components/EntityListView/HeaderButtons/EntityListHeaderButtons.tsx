@@ -180,7 +180,7 @@ const EntityListHeaderButtons = <T extends DialBaseEntity | DialKey | DialApplic
     if (route === ApplicationRoute.Adapters) {
       return (
         <SaveValidationContextProvider>
-          <CreateAdapter modalState={modalState} onClose={handleModalClose} route={route} names={names || []} />
+          <CreateAdapter modalState={modalState} onClose={handleModalClose} names={names || []} />
         </SaveValidationContextProvider>
       );
     }
