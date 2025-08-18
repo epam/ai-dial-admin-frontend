@@ -60,7 +60,7 @@ describe('Utils :: isValidEntity', () => {
     expect(res4).toBeTruthy();
     expect(res5).toBeFalsy();
     expect(res6).toBeTruthy();
-    expect(res7).toBeTruthy();
+    expect(res7).toBeFalsy();
   });
 
   test('Should check Routes', () => {
