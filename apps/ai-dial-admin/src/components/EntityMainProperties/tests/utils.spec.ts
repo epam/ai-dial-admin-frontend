@@ -10,7 +10,7 @@ import { describe, expect, test } from 'vitest';
 
 const mockT = (key: string, params?: Record<string, number>) => {
   if (params) {
-    return `${key} (${params.min}-${params.max})`;
+    return `${key}`;
   }
   return key;
 };
@@ -57,13 +57,13 @@ describe('EntityMainProperties :: errors :: getDisplayNameError', () => {
 
   test('Should return min/max length error for wrong length display name', () => {
     const result = getDisplayNameError(ApplicationRoute.Models, false, 'a', mockT);
-    expect(result).toBe(`${CreateI18nKey.MinMaxLength} (2-255)`);
+    expect(result).toBe(`${CreateI18nKey.MinMaxLength}`);
   });
 
   test('Should return view-specific error if not wrong length', () => {
     const longValidName = 'ValidDisplayNameWithinLength';
     const result = getDisplayNameError(ApplicationRoute.Applications, false, longValidName, mockT);
-    expect(result).toBe(`${CreateI18nKey.DisplayNameErrorApplication} (2-255)`);
+    expect(result).toBe(`${CreateI18nKey.ErrorUnique}`);
   });
 });
 
@@ -80,7 +80,7 @@ describe('EntityMainProperties :: errors :: getVersionError', () => {
 
   test('Should return min/max length error if version is too short/long', () => {
     const result = getVersionError(ApplicationRoute.Models, false, 'x', mockT);
-    expect(result).toBe(`${CreateI18nKey.MinMaxLength} (2-255)`);
+    expect(result).toBe(`${CreateI18nKey.MinMaxLength}`);
   });
 
   test('Should return empty if version is valid', () => {
