@@ -50,13 +50,14 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
   );
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 w-full">
       <AttachmentInput
         initialValues={entity.inputAttachmentTypes}
         fieldTitle={t(AttachmentsI18nKey.Attachments)}
         placeholder={t(AttachmentsI18nKey.EnterAttachmentsTypes)}
         allValueLabel={t(ButtonsI18nKey.UseAllAttachment)}
         availableItems={mimeMapping}
+        inputClass="lg:w-[35%]"
         onChange={(values) => onChangeAttachmentTypes(values)}
       />
       {entity.inputAttachmentTypes?.length && (

@@ -26,6 +26,7 @@ interface Props {
   elementId?: string;
   optional?: boolean;
   disable?: boolean;
+  inputClass?: string;
   onChange?: (values: string[]) => void;
 }
 
@@ -40,6 +41,7 @@ const AttachmentInput: FC<Props> = ({
   elementId,
   optional,
   disable,
+  inputClass,
   onChange,
 }) => {
   const t = useI18n();
@@ -170,8 +172,8 @@ const AttachmentInput: FC<Props> = ({
           <Tag key="all-values" tag={allValueLabel || ''} remove={() => removeAttachment(0)} />
         </div>
       ) : (
-        <div className={classNames('flex flex-row gap-2 items-center', disable && 'pointer-events-none')}>
-          <div className={classNames('input min-h-[38px] p-[6px] flex-1')}>
+        <div className={classNames('flex flex-row gap-2 items-center w-full', disable && 'pointer-events-none')}>
+          <div className={classNames('input min-h-[38px] p-[6px]', inputClass)}>
             <div
               ref={containerRef}
               className={classNames('flex flex-wrap items-start gap-2', wraps ? 'flex-col-reverse' : 'flex-row')}
