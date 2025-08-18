@@ -4,7 +4,7 @@ import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import DuplicateAdapter from '@/src/components/AdaptersList/Duplicate/DuplicateAdapter';
+import DuplicateAdapter from '@/src/components/Adapter/Modals/DuplicateAdapter';
 import DuplicateScheme from '@/src/components/ApplicationRunners/ListView/Duplicate/DuplicateAppRunner';
 import DuplicateEntityPopup from '@/src/components/DuplicateEntityPopup/DuplicateEntityPopup';
 import DuplicateKey from '@/src/components/KeysList/Popup/DuplicateKey';

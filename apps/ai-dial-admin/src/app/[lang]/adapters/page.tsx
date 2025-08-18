@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { adaptersApi } from '@/src/app/api/api';
-import AdaptersList from '@/src/components/AdaptersList/AdaptersList';
+import AdaptersList from '@/src/components/Adapter/List/AdaptersList';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { logger } from '@/src/server/logger';

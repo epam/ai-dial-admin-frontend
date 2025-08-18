@@ -7,7 +7,7 @@ import { IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
 
-import DeleteAdapter from '@/src/components/AdaptersList/Delete/DeleteAdapter';
+import DeleteAdapter from '@/src/components/Adapter/Modals/DeleteAdapter';
 import DeleteScheme from '@/src/components/ApplicationRunners/ListView/Delete/DeleteAppRunner';
 import AddVersionModal from '@/src/components/Common/AddVersionModal/AddVersionModal';
 import Button from '@/src/components/Common/Button/Button';

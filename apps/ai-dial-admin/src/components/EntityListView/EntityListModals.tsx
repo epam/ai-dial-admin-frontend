@@ -2,7 +2,7 @@
 import { FC, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
-import DeleteAdapter from '@/src/components/AdaptersList/Delete/DeleteAdapter';
+import DeleteAdapter from '@/src/components/Adapter/Modals/DeleteAdapter';
 import DeleteScheme from '@/src/components/ApplicationRunners/ListView/Delete/DeleteAppRunner';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import FilePathModal from '@/src/components/Common/FilePath/FilePathModal';
