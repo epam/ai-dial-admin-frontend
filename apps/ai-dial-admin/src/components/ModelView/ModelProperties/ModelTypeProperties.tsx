@@ -8,7 +8,7 @@ import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
 import EntityAttachments from '@/src/components/EntityView/Properties/EntityAttachments';
 import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
-import { EntitiesI18nKey, ErrorI18nKey, ModelViewI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, ModelViewI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
 import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import { useI18n } from '@/src/locales/client';
@@ -91,18 +91,17 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
           onChange={onChangeType}
         />
       </div>
-
-      <InputWithReadonlyParts
-        inputId="endpoint"
-        value={model.endpointDeploymentName}
-        fullValue={model.endpoint}
-        title={t(EntitiesI18nKey.Endpoint)}
-        postfixPart={postfixPart}
-        prefixPart={prefixPart}
-        onChange={onChangeEndpoint}
-        invalid={!model.endpointDeploymentName}
-        errorText={t(ErrorI18nKey.IncorrectModelEndpointAlias)}
-      />
+      <div className="lg:w-[75%]">
+        <InputWithReadonlyParts
+          inputId="endpoint"
+          value={model.endpointDeploymentName}
+          fullValue={`${prefixPart}${model.endpointDeploymentName}${postfixPart}`}
+          title={t(EntitiesI18nKey.Endpoint)}
+          postfixPart={`/${postfixPart}`}
+          prefixPart={prefixPart}
+          onChange={onChangeEndpoint}
+        />
+      </div>
       <div className="w-full flex flex-col gap-5 lg:w-[35%]">
         <TextInputField
           elementId="overrideName"
@@ -132,10 +131,14 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
               addPlaceholder={t(TopicsI18nKey.AddTopicPlaceholder)}
               addTitle={t(TopicsI18nKey.AddTopic)}
             />
-            <EntityAttachments entity={model} onChangeEntity={onChangeModel} />
           </>
         )}
       </div>
+      {model.type === DialModelType.Chat && (
+        <div className="w-full flex flex-col gap-5 lg:w-[75%]">
+          <EntityAttachments entity={model} onChangeEntity={onChangeModel} />
+        </div>
+      )}
     </div>
   );
 };

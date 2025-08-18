@@ -2,94 +2,64 @@
 
 import { FC, useCallback, useState } from 'react';
 
-import AutocompleteInput from '@/src/components/Common/AutocompleteInput/AutocompleteInput';
+import AttachmentInput from '@/src/components/Common/AttachmentInput/AttachmentInput';
 import { NumberInputField } from '@/src/components/Common/InputField/InputField';
-import RadioField from '@/src/components/Common/RadioField/RadioField';
-import { AttachmentsI18nKey, BasicI18nKey } from '@/src/constants/i18n';
-import { RadioFieldOrientation } from '@/src/types/radio-orientation';
+import { AttachmentsI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { RadioButtonModel } from '@/src/models/radio-button';
-import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { mimeMapping } from './constants';
+
+const MAX_ATTACHMENTS_LIMIT = 1000;
 
 interface Props {
   entity: DialBaseEntity;
-
   onChangeEntity: (entity: DialBaseEntity) => void;
 }
 
 const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
   const t = useI18n();
 
-  const [activeAttachmentType, setActiveAttachmentType] = useState(getActiveAttach(entity.inputAttachmentTypes));
-
-  const attachments: RadioButtonModel[] = [
-    {
-      id: BasicI18nKey.None,
-      name: t(BasicI18nKey.None),
-    },
-    {
-      id: AttachmentsI18nKey.AllAttachments,
-      name: t(AttachmentsI18nKey.AllAttachments),
-    },
-    {
-      id: AttachmentsI18nKey.CustomAttachments,
-      name: t(AttachmentsI18nKey.CustomAttachments),
-    },
-  ];
-
-  const onChangeAttachments = useCallback(
-    (key: string) => {
-      if (key === BasicI18nKey.None) {
-        onChangeEntity({
-          ...entity,
-          maxInputAttachments: void 0,
-          inputAttachmentTypes: [],
-        });
-      } else if (key === AttachmentsI18nKey.AllAttachments) {
-        onChangeEntity({ ...entity, inputAttachmentTypes: [ALL_ATTACHMENTS] });
-      } else if (key === AttachmentsI18nKey.CustomAttachments) {
-        onChangeEntity({ ...entity, inputAttachmentTypes: [] });
-      }
-      setActiveAttachmentType(key as BasicI18nKey | AttachmentsI18nKey);
-    },
-    [entity, onChangeEntity],
-  );
+  const [attachmentError, setAttachmentError] = useState<string | undefined>();
 
   const onChangeAttachmentMax = useCallback(
     (value: number | string) => {
+      if (Number(value) > MAX_ATTACHMENTS_LIMIT) {
+        setAttachmentError(t(AttachmentsI18nKey.AttachmentsMaxNumberError, { max: MAX_ATTACHMENTS_LIMIT }));
+      } else {
+        setAttachmentError(void 0);
+      }
       onChangeEntity({ ...entity, maxInputAttachments: value });
     },
-    [entity, onChangeEntity],
+    [entity, onChangeEntity, t],
   );
 
   const onChangeAttachmentTypes = useCallback(
     (types: string[]) => {
-      onChangeEntity({ ...entity, inputAttachmentTypes: types });
+      if (types.length) {
+        onChangeEntity({ ...entity, inputAttachmentTypes: types });
+      } else {
+        onChangeEntity({
+          ...entity,
+          maxInputAttachments: void 0,
+          inputAttachmentTypes: void 0,
+        });
+        setAttachmentError(void 0);
+      }
     },
     [entity, onChangeEntity],
   );
 
   return (
     <div className="flex flex-col gap-4">
-      <RadioField
-        radioButtons={attachments}
-        activeRadioButton={activeAttachmentType}
-        elementId="attachments"
+      <AttachmentInput
+        initialValues={entity.inputAttachmentTypes}
         fieldTitle={t(AttachmentsI18nKey.Attachments)}
-        orientation={RadioFieldOrientation.Column}
-        onChange={onChangeAttachments}
+        placeholder={t(AttachmentsI18nKey.EnterAttachmentsTypes)}
+        allValueLabel={t(ButtonsI18nKey.UseAllAttachment)}
+        availableItems={mimeMapping}
+        onChange={(values) => onChangeAttachmentTypes(values)}
       />
-      {activeAttachmentType === AttachmentsI18nKey.CustomAttachments && (
-        <div className="pl-[26px]">
-          <AutocompleteInput
-            placeholder={t(AttachmentsI18nKey.EnterAttachmentsTypes)}
-            selectedItems={entity.inputAttachmentTypes}
-            updateSelected={onChangeAttachmentTypes}
-          />
-        </div>
-      )}
-      {activeAttachmentType !== BasicI18nKey.None && (
+      {entity.inputAttachmentTypes?.length && (
         <div className="w-[148px]">
           <NumberInputField
             elementId="maxAttachment"
@@ -97,6 +67,9 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
             placeholder={t(AttachmentsI18nKey.AttachmentsMaxNumberPlaceholder)}
             value={entity.maxInputAttachments}
             onChange={onChangeAttachmentMax}
+            errorText={attachmentError}
+            invalid={!!attachmentError}
+            min={0}
           />
         </div>
       )}
@@ -105,14 +78,3 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
 };
 
 export default EntityAttachments;
-
-const getActiveAttach = (types?: string[]) => {
-  if (!types) {
-    return BasicI18nKey.None;
-  }
-  if (types.length === 1 && types[0] === ALL_ATTACHMENTS) {
-    return AttachmentsI18nKey.AllAttachments;
-  }
-
-  return AttachmentsI18nKey.CustomAttachments;
-};

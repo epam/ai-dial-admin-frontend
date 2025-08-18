@@ -24,16 +24,16 @@ const Checkbox: FC<Props> = ({ label, id, checked, onChange }) => {
   );
 
   const checkboxClassNames = classNames(
-    'flex flex-row items-center cursor-pointer text-accent-primary small-medium',
+    'flex flex-row items-center cursor-pointer text-accent-primary small-medium flex-1 min-w-0',
     `${checked ? '' : 'before:content-[""] before:inline-block before:w-[18px] before:h-[18px] before:border before:border-hover before:rounded before:mr-2'}`,
   );
 
   return (
     <label className={checkboxClassNames} htmlFor={id}>
-      {checked && <IconCheck className="mr-2" {...BASE_ICON_PROPS} />}
+      {checked && <IconCheck className="mr-2 border rounded" {...BASE_ICON_PROPS} />}
       {label && (
-        <Tooltip triggerClassName="flex-1 min-w-0" contentClassName="truncate" tooltip={label}>
-          <p className="text-primary flex-1 min-w-0 truncate">{label}</p>
+        <Tooltip tooltip={label} triggerClassName="flex-1 min-w-0">
+          <p className="text-primary w-full truncate">{label}</p>
         </Tooltip>
       )}
       <input type="checkbox" onChange={handleChange} id={id} checked={checked} className="invisible w-0 h-0" />

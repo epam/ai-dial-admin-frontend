@@ -5,6 +5,6 @@ import { EntityOperation } from '@/src/types/entity-operations';
 export interface EntityOperationDeclaration<T> {
   icon: ReactNode;
   id: EntityOperation;
-  onClick: (entity: T) => void;
+  onClick: (entity: T, index: number) => void;
   hidden?: (api: GridApi, node: IRowNode) => boolean;
 }

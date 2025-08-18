@@ -15,7 +15,7 @@ describe('ApplicationInfo', () => {
 
     render(<ApplicationInfo application={application} />);
 
-    expect(screen.getByText(CreateI18nKey.NameTitle)).toBeInTheDocument();
+    expect(screen.getByText(CreateI18nKey.DisplayNameTitle)).toBeInTheDocument();
     expect(screen.getByText('Test App')).toBeInTheDocument();
     expect(screen.getByText(CreateI18nKey.VersionTitle)).toBeInTheDocument();
     expect(screen.getByText('1.0.0')).toBeInTheDocument();

@@ -42,7 +42,7 @@ const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntit
   return (
     <div className="h-full flex flex-col pt-3 divide-y divide-primary">
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-4 lg:w-[35%]">
+        <div className="flex flex-col gap-4">
           <EntityMainProperties
             view={view}
             entity={entity}
@@ -57,21 +57,23 @@ const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntit
             entity={entity}
             onChangeEntity={updateEntity}
           />
-          <Multiselect
-            elementId="topics"
-            selectedItems={entity.topics}
-            getItems={getModelsTopics}
-            onChangeItems={onChangeItems}
-            heading={t(TopicsI18nKey.Topics)}
-            title={t(TopicsI18nKey.Topics)}
-            addPlaceholder={t(TopicsI18nKey.AddTopicPlaceholder)}
-            addTitle={t(TopicsI18nKey.AddTopic)}
-          />
+          <div className="flex flex-col gap-4 lg:w-[35%]">
+            <Multiselect
+              elementId="topics"
+              selectedItems={entity.topics}
+              getItems={getModelsTopics}
+              onChangeItems={onChangeItems}
+              heading={t(TopicsI18nKey.Topics)}
+              title={t(TopicsI18nKey.Topics)}
+              addPlaceholder={t(TopicsI18nKey.AddTopicPlaceholder)}
+              addTitle={t(TopicsI18nKey.AddTopic)}
+            />
+          </div>
         </div>
         {view === ApplicationRoute.Applications && (
           <ApplicationSource entity={entity} onChangeEntity={updateEntity} runners={runners} isEntityImmutable={true} />
         )}
-        <div className="flex flex-col gap-4 lg:w-[35%]">
+        <div className="flex flex-col gap-4 lg:w-[75%]">
           <EntityAttachments entity={entity} onChangeEntity={updateEntity} />
         </div>
       </div>

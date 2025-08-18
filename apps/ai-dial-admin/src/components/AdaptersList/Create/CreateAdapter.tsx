@@ -1,5 +1,5 @@
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useState } from 'react';
 
 import { createAdapter } from '@/src/app/[lang]/adapters/actions';
 import AdapterProperties from '@/src/components/AdaptersView/AdapterProperties';
@@ -7,13 +7,13 @@ import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import { isValidAdapter } from '@/src/utils/validation/is-valid-adapter';
 
 interface Props {
   modalState: PopUpState;
@@ -27,6 +27,7 @@ const CreateAdapter: FC<Props> = ({ modalState, onClose, route, names }) => {
   const router = useRouter();
 
   const { showNotification } = useNotification();
+  const { isValid } = useSaveValidationContext();
 
   const [currentAdapter, setCurrentAdapter] = useState<DialAdapter>({
     name: '',
@@ -34,7 +35,6 @@ const CreateAdapter: FC<Props> = ({ modalState, onClose, route, names }) => {
     baseEndpoint: '',
     description: '',
   });
-  const [isValid, setIsValid] = useState(false);
 
   const onChangeAdapter = useCallback(
     (entity: DialAdapter) => {
@@ -58,10 +58,6 @@ const CreateAdapter: FC<Props> = ({ modalState, onClose, route, names }) => {
       }
     });
   }, [currentAdapter, route, router, onClose, showNotification]);
-
-  useEffect(() => {
-    setIsValid(isValidAdapter(currentAdapter, names));
-  }, [currentAdapter, names]);
 
   return (
     <Popup onClose={onClose} heading={t(CreateI18nKey.Adapter)} portalId="CreateRunner" state={modalState}>

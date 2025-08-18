@@ -3,6 +3,7 @@ import classNames from 'classnames';
 import { ButtonHTMLAttributes, FocusEvent, forwardRef, MouseEvent, ReactNode, useContext } from 'react';
 
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
+import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import { MenuContext } from './DropdownComponent';
 import { menuItemClassNames } from './constants';
 import { isChecked, isIndeterminate, isMultiSelectClickAvailable } from './utils';
@@ -111,20 +112,26 @@ const DropdownMenuItem = forwardRef<HTMLButtonElement, DropdownMenuItemProps & B
                 <></>
               )}
               {!dropdownItem.description ? (
-                <span
-                  className={classNames(
-                    'inline-block truncate small',
-                    multipleValues &&
-                      (allItemsCount === 1 || isChecked(multipleValues, dropdownItem?.id, allItemsCount)) &&
-                      'pointer-events-none opacity-60',
-                  )}
-                >
-                  {dropdownItem.name}
-                </span>
+                <Tooltip tooltip={dropdownItem.name} triggerClassName="text-left">
+                  <span
+                    className={classNames(
+                      'small',
+                      multipleValues &&
+                        (allItemsCount === 1 || isChecked(multipleValues, dropdownItem?.id, allItemsCount)) &&
+                        'pointer-events-none opacity-60',
+                    )}
+                  >
+                    {dropdownItem.name}
+                  </span>
+                </Tooltip>
               ) : (
                 <div className="w-full flex justify-between items-center small">
-                  <span className="truncate">{dropdownItem.name}</span>
-                  <span className="text-secondary">{dropdownItem.description}</span>
+                  <Tooltip tooltip={dropdownItem.name} triggerClassName="text-left">
+                    <span>{dropdownItem.name}</span>
+                  </Tooltip>
+                  <Tooltip tooltip={dropdownItem.description} triggerClassName="text-left">
+                    <span className="text-secondary">{dropdownItem.description}</span>
+                  </Tooltip>
                 </div>
               )}
             </>

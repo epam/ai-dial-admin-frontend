@@ -1,6 +1,5 @@
 import { FC, useCallback, useState } from 'react';
 
-import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 import { CreateI18nKey } from '@/src/constants/i18n';
@@ -8,8 +7,8 @@ import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { FieldError } from '@/src/models/error';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import { getErrorForAppRunnerId } from './utils';
 import AppRunnerExtendedProperties from './ExtendedProperties';
+import { getErrorForAppRunnerId } from './utils';
 
 interface Props {
   runner: DialApplicationScheme;
@@ -51,22 +50,22 @@ const SchemeProperties: FC<Props> = ({ runner, isImmutable, onChangeRunner }) =>
 
   return (
     <div className="flex flex-col gap-6 h-full">
-      <TextInputField
-        elementId="id"
-        fieldTitle={t(CreateI18nKey.IdTitle)}
-        placeholder={t(CreateI18nKey.IdPlaceholder)}
-        value={runner.$id}
-        errorText={idError?.text}
-        invalid={!!idError}
-        onChange={onChangeId}
-        disabled={isImmutable}
-        iconAfterInput={isImmutable && <CopyButton field={runner.$id} title={t(CreateI18nKey.IdTitle)} />}
-      />
+      {!isImmutable && (
+        <TextInputField
+          elementId="id"
+          fieldTitle={t(CreateI18nKey.IdTitle)}
+          placeholder={t(CreateI18nKey.IdPlaceholder)}
+          value={runner.$id}
+          errorText={idError?.text}
+          invalid={!!idError}
+          onChange={onChangeId}
+        />
+      )}
 
       <TextInputField
         elementId="name"
-        fieldTitle={t(CreateI18nKey.NameTitle)}
-        placeholder={t(CreateI18nKey.NamePlaceholder)}
+        fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
+        placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
         value={runner['dial:applicationTypeDisplayName']}
         onChange={onChangeName}
       />

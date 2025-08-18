@@ -36,7 +36,7 @@ const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, upd
   const onChangeEndPointUrl = useCallback(
     (url: string) => {
       updateEndpoint({ ...endpoint, endpoint: url });
-      setEndpointError(url === '' ? '' : isValidEndpoint(url) ? '' : t(ErrorI18nKey.IncorrectEndpoint));
+      setEndpointError(url === '' ? '' : isValidEndpoint(url) ? '' : t(ErrorI18nKey.UrlField));
       setEndpointWarning(url === '' ? '' : isDangerEndpoint(url) ? t(ErrorI18nKey.WarningEndpoint) : '');
     },
     [endpoint, updateEndpoint, t],
@@ -92,9 +92,11 @@ const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, upd
               {t(UpstreamEndpointsI18nKey.Upstream)} {index + 1}
             </h3>
             {isCollapsed && (
-              <p className="max-w-[220px] md:max-w-[50%] truncate tiny text-secondary mt-3">
-                {endpoint.endpoint || '—'}
-              </p>
+              <Tooltip tooltip={endpoint.endpoint || '—'}>
+                <p className="max-w-[220px] md:max-w-[50%] truncate tiny text-secondary mt-3">
+                  {endpoint.endpoint || '—'}
+                </p>
+              </Tooltip>
             )}
           </div>
         )}

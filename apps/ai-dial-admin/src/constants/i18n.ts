@@ -90,6 +90,7 @@ export enum BasicI18nKey {
   Search = 'Basic.Search',
   Comparison = 'Basic.Comparison',
   Current = 'Basic.Current',
+  ResetFilters = 'Basic.ResetFilters',
 }
 
 export enum CommonControlsI18nKey {
@@ -122,6 +123,9 @@ export enum EntitiesI18nKey {
   NoFolders = 'Entities.NoFolders',
   NoResource = 'Entities.NoResource',
   NoInterceptorTemplates = 'Entities.NoInterceptorTemplates',
+  NoDependencies = 'Entities.NoDependencies',
+  AddModel = 'Entities.AddModel',
+  AddApplication = 'Entities.AddApplication',
   Icon = 'Entities.Icon',
   Endpoint = 'Entities.Endpoint',
   EndpointBase = 'Entities.EndpointBase',
@@ -135,6 +139,12 @@ export enum EntitiesI18nKey {
   SourceType = 'Entities.SourceType',
   Endpoints = 'Entities.Endpoints',
   AppRunner = 'Entities.AppRunner',
+  Type = 'Entities.Type',
+  TypePlaceholder = 'Entities.TypePlaceholder',
+  Title = 'Entities.Title',
+  TitlePlaceholder = 'Entities.TitlePlaceholder',
+  ObjectType = 'Entities.ObjectType',
+  BooleanType = 'Entities.BooleanType',
 }
 
 export enum DeleteI18nKey {
@@ -214,7 +224,11 @@ export enum ButtonsI18nKey {
   Rollback = 'Buttons.Rollback',
   Back = 'Buttons.Back',
   Close = 'Buttons.Close',
+  OpenAdapter = 'Buttons.OpenAdapter',
   OpenAppRunner = 'Buttons.OpenAppRunner',
+  None = 'Buttons.None',
+  UseAll = 'Buttons.UseAll',
+  UseAllAttachment = 'Buttons.UseAllAttachment',
 }
 
 export enum CreateI18nKey {
@@ -228,10 +242,8 @@ export enum CreateI18nKey {
   Route = 'CreateEntity.Route',
   Interceptor = 'CreateEntity.Interceptor',
   NameTitle = 'CreateEntity.name.title',
-  NamePlaceholder = 'CreateEntity.name.placeholder',
   IdTitle = 'CreateEntity.id.title',
   IdPlaceholder = 'CreateEntity.id.placeholder',
-  IdUrlError = 'CreateEntity.id.UrlError',
   KeyTitle = 'CreateEntity.key.title',
   KeyPlaceholder = 'CreateEntity.key.placeholder',
   ErrorKey = 'CreateEntity.key.error',
@@ -334,6 +346,7 @@ export enum AttachmentsI18nKey {
   EnterAttachmentsTypes = 'Attachments.EnterAttachmentsTypes',
   AttachmentsMaxNumber = 'Attachments.AttachmentsMaxNumber',
   AttachmentsMaxNumberPlaceholder = 'Attachments.AttachmentsMaxNumberPlaceholder',
+  AttachmentsMaxNumberError = 'Attachments.AttachmentsMaxNumberError',
 }
 
 export enum KeysI18nKey {
@@ -432,6 +445,7 @@ export enum TabsI18nKey {
   Audit = 'Tabs.Audit',
   Activities = 'Tabs.Activities',
   Files = 'Tabs.Files',
+  Dependencies = 'Tabs.Dependencies',
 }
 
 export enum EditorI18nKey {
@@ -688,8 +702,7 @@ export enum ErrorI18nKey {
   MaintenanceInProgress = 'Error.MaintenanceInProgress',
   SystemUnavailable = 'Error.SystemUnavailable',
   TryAgainLater = 'Error.TryAgainLater',
-  IncorrectEndpoint = 'Error.IncorrectEndpoint',
-  IncorrectModelEndpointAlias = 'Error.IncorrectModelEndpointAlias',
+  UrlField = 'Error.UrlField',
   WarningEndpoint = 'Error.WarningEndpoint',
   ServerError = 'Error.ServerError',
 }
@@ -697,4 +710,6 @@ export enum ErrorI18nKey {
 export enum SourceI18nKey {
   OpenTemplate = 'Source.OpenTemplate',
   OpenContainer = 'Source.OpenContainer',
+  Container = 'Source.Container',
+  InterceptorTemplate = 'Source.InterceptorTemplate',
 }

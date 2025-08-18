@@ -1,6 +1,6 @@
 'use client';
 
-import { ColDef, GridOptions } from 'ag-grid-community';
+import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -90,12 +90,18 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
 
   const [showColumnsPanel, setShowColumnsPanel] = useState(false);
 
+  const [gridApi, setGridApi] = useState<GridApi | null>(null);
+
   const entityRef = useRef(currentEntity);
   const filesRef = useRef(folderContext?.fetchedFoldersData);
   useEffect(() => {
     entityRef.current = currentEntity;
     filesRef.current = folderContext?.fetchedFoldersData;
   }, [currentEntity, folderContext?.fetchedFoldersData]);
+
+  const onGridReady = useCallback((api: GridApi) => {
+    setGridApi(api);
+  }, []);
 
   const handleModalClose = useCallback(() => {
     setModalState(PopUpState.Closed);
@@ -291,6 +297,7 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
         showFolders={showFolders}
         view={route}
         context={context}
+        onGridReady={onGridReady}
       >
         <EntityListHeaderButtons
           names={names}
@@ -303,6 +310,7 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
           toggleColumnsPanel={toggleColumnsPanel}
           createEntity={createEntity}
           context={context}
+          gridApi={gridApi}
         />
       </ListView>
       {modalType ? (

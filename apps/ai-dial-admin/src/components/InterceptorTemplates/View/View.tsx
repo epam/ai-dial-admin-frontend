@@ -16,6 +16,8 @@ import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeade
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import ExtendedProperties from '@/src/components/InterceptorTemplates/Properties/ExtendedProperties';
 import Interceptors from '@/src/components/InterceptorTemplates/View/Interceptors/Interceptors';
+import EntityHeader from '@/src/components/EntityView/Header/Header';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props {
   route: ApplicationRoute;
@@ -30,6 +32,7 @@ const View: FC<Props> = ({ route, template }) => {
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isChanged, setIsChanged] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(cloneDeep(template));
+  const { isValid } = useSaveValidationContext();
 
   const tabs = [propertiesTabs(t), interceptorsTabs(t)];
 
@@ -55,7 +58,9 @@ const View: FC<Props> = ({ route, template }) => {
   }, [template]);
 
   useEffect(() => {
-    setIsChanged(!isEqual(template, selectedTemplate));
+    const { updatedAt: __updateTemplate, ...restTemplate } = template;
+    const { updatedAt: __updateSelected, ...restSelectedTemplate } = selectedTemplate;
+    setIsChanged(!isEqual(restTemplate, restSelectedTemplate));
   }, [template, selectedTemplate]);
 
   const onChange = useCallback((template: InterceptorTemplate) => {
@@ -75,12 +80,18 @@ const View: FC<Props> = ({ route, template }) => {
           removeEntity={deleteInterceptorTemplate}
           hideJsonEditor={true}
           jsonEditorEnabled={false}
+          hasErrors={!isValid}
           jsonErrors={null}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
         {activeTab === EntityViewTab.Properties && (
-          <ExtendedProperties template={selectedTemplate} onChange={onChange} />
+          <>
+            <EntityHeader entity={selectedTemplate} />
+            <div className="flex-1 min-h-0">
+              <ExtendedProperties template={selectedTemplate} onChange={onChange} />
+            </div>
+          </>
         )}
         {activeTab === EntityViewTab.Interceptors && <Interceptors interceptorList={selectedTemplate.interceptors} />}
       </div>

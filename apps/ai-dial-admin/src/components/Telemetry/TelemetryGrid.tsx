@@ -31,7 +31,7 @@ const TelemetryGrid: FC<Props> = ({ columnDefs, title, getData, query, refreshTi
   useEffect(() => {
     const fetch = async () => {
       const response = await getData(query);
-      if (response.success) {
+      if (response?.success) {
         setData(getGridData(response.response as TelemetryData));
       } else {
         setData(null);

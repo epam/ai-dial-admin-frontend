@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { ErrorType } from '@/src/types/error-type';
+import { ErrorI18nKey } from '@/src/constants/i18n';
 import { isDangerEndpoint, isValidEndpoint, isValidHttpUrl, getUrlError } from '../url-error';
 
 describe('isValidHttpUrl', () => {
@@ -51,15 +52,15 @@ describe('getUrlError', () => {
   test('returns an error for invalid url', () => {
     const url = 'invalid-url';
     const t = (str: string) => str; // Mock translation function
-    const error = getUrlError(url, t);
+    const error = getUrlError(url, false, t);
 
-    expect(error.type).toEqual(ErrorType.INVALID);
-    expect(error.text).toEqual('CreateEntity.id.UrlError');
+    expect(error?.type).toEqual(ErrorType.INVALID);
+    expect(error?.text).toEqual(ErrorI18nKey.UrlField);
   });
   test('returns null for valid url', () => {
     const url = 'https://example.com';
     const t = (str: string) => str; // Mock translation function
-    const error = getUrlError(url, t);
+    const error = getUrlError(url, false, t);
 
     expect(error).toBeNull();
   });

@@ -1,12 +1,12 @@
-import { FC, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo } from 'react';
 
 import { CreateI18nKey } from '@/src/constants/i18n';
-import { FieldError } from '@/src/models/error';
+import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { getUrlError } from '@/src/utils/validation/url-error';
-import { useI18n } from '@/src/locales/client';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   entity: DialInterceptor;
@@ -16,8 +16,39 @@ interface Props {
 const Endpoints: FC<Props> = ({ entity, onChange }) => {
   const t = useI18n() as (key: string) => string;
 
-  const [completionEndpointError, setCompletionEndpointError] = useState<FieldError | null>(null);
-  const [configurationEndpointError, setConfigurationEndpointError] = useState<FieldError | null>(null);
+  const { dispatch } = useSaveValidationContext();
+
+  const completionEndpointError = useMemo(() => {
+    return entity.endpoint ? getUrlError(entity.endpoint, false, t) : null;
+  }, [entity.endpoint, t]);
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'completionEndpoint', isValid: !completionEndpointError });
+  }, [completionEndpointError, t, dispatch]);
+
+  const configurationEndpointError = useMemo(() => {
+    return entity.configurationEndpoint ? getUrlError(entity.configurationEndpoint, false, t) : null;
+  }, [entity.configurationEndpoint, t]);
+  useEffect(() => {
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: 'configurationEndpoint',
+      isValid: !configurationEndpointError,
+    });
+  }, [configurationEndpointError, t, dispatch]);
+
+  const onChangeCompletionEndpoint = useCallback(
+    (endpoint: string) => {
+      onChange({ ...entity, endpoint });
+    },
+    [entity, onChange],
+  );
+
+  const onChangeConfigurationEndpoint = useCallback(
+    (configurationEndpoint: string) => {
+      onChange({ ...entity, configurationEndpoint });
+    },
+    [entity, onChange],
+  );
 
   return (
     <div className="lg:w-[35%] flex flex-col gap-6">
@@ -28,10 +59,7 @@ const Endpoints: FC<Props> = ({ entity, onChange }) => {
         value={entity.endpoint}
         errorText={completionEndpointError?.text}
         invalid={!!completionEndpointError}
-        onChange={(endpoint) => {
-          setCompletionEndpointError(getUrlError(endpoint, t));
-          onChange({ ...entity, endpoint });
-        }}
+        onChange={onChangeCompletionEndpoint}
       />
       <TextInputField
         elementId="configurationEndpoint"
@@ -40,10 +68,7 @@ const Endpoints: FC<Props> = ({ entity, onChange }) => {
         value={entity.configurationEndpoint}
         errorText={configurationEndpointError?.text}
         invalid={!!configurationEndpointError}
-        onChange={(configurationEndpoint) => {
-          setConfigurationEndpointError(getUrlError(configurationEndpoint, t));
-          onChange({ ...entity, configurationEndpoint });
-        }}
+        onChange={onChangeConfigurationEndpoint}
       />
     </div>
   );

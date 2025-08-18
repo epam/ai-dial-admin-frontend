@@ -17,7 +17,7 @@ const MenuItemContent: FC<Props> = ({ menuItem, isActive, isSidebarOpen }) => {
   const t = useI18n();
   const menuClassNames = classNames(
     'group p-2 text-primary rounded cursor-pointer hover:bg-accent-primary-alpha focus:bg-accent-primary-alpha small-150 md:tiny',
-    'flex flex-row items-center border-l-2 focus-within:outline outline-offset-[-1px] h-[40px] md:h-[32px]',
+    'flex flex-row items-center border-l-2 h-[40px] md:h-[32px]',
     isActive ? 'bg-accent-primary-alpha border-l-accent-primary' : 'border-l-transparent',
   );
 
@@ -29,7 +29,7 @@ const MenuItemContent: FC<Props> = ({ menuItem, isActive, isSidebarOpen }) => {
 
   return (
     <Tooltip
-      triggerClassName="flex-1 min-w-0 small-text-semi truncate"
+      triggerClassName="small-text-semi"
       tooltip={t(menuItem.key)}
       placement={'right'}
       hideTooltip={isSidebarOpen}

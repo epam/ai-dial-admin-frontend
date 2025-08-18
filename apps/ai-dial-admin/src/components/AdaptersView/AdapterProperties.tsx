@@ -1,18 +1,20 @@
 'use client';
 
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
+
 import { uniq } from 'lodash';
 
 import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/AutocompleteField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 import { CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
-import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { FieldError } from '@/src/models/error';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import { getErrorForName } from '@/src/utils/validation/name-error';
+import { getErrorForDisplayName, getErrorForName } from '@/src/utils/validation/name-error';
+import { getUrlError } from '@/src/utils/validation/url-error';
 
 interface Props {
   entity: DialAdapter;
@@ -23,44 +25,89 @@ interface Props {
 
 const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntityImmutable }) => {
   const t = useI18n() as (t: string, props?: Record<string, number>) => string;
-  const [isValidDisplayName, setIsValidDisplayName] = useState(true);
+  const { dispatch } = useSaveValidationContext();
+
   const [nameError, setNameError] = useState<FieldError | null>(null);
-  const [displayNameError, setDisplayNameError] = useState<string | undefined>(void 0);
+  const [displayNameError, setDisplayNameError] = useState<FieldError | null>(null);
   const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
+  const [baseEndpointError, setBaseEndpointError] = useState<FieldError | null>(null);
+
+  const validateDisplayName = useCallback(
+    (displayName?: string) => {
+      const error = getErrorForDisplayName(displayName, t);
+      setDisplayNameError(error);
+      dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
+    },
+    [dispatch, t],
+  );
+  useEffect(() => {
+    if (isEntityImmutable) {
+      validateDisplayName(entity.displayName);
+    }
+  }, [entity.displayName, isEntityImmutable, validateDisplayName]);
+
+  const validateEndpoint = useCallback(
+    (endpoint?: string) => {
+      const error = getUrlError(endpoint, true, t);
+      setBaseEndpointError(error);
+      dispatch({ type: ValidationActionType.SetField, field: 'baseEndpoint', isValid: !error });
+    },
+    [dispatch, t],
+  );
+  useEffect(() => {
+    if (isEntityImmutable) {
+      validateEndpoint(entity.baseEndpoint);
+    }
+  }, [entity.baseEndpoint, isEntityImmutable, validateEndpoint]);
 
   const onChangeName = useCallback(
     (name: string) => {
       const newEntity = { ...entity, name };
-      setNameError(getErrorForName(name, names, t));
+      const error = getErrorForName(name, names, t);
+      setNameError(error);
+      dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
       onChangeAdapter(newEntity);
     },
-    [entity, names, t, onChangeAdapter],
+    [entity, names, t, onChangeAdapter, dispatch],
   );
 
   const onChangeDisplayName = useCallback(
     (displayName: string) => {
-      const isValid = displayName ? displayName.length <= MAX_NAME_SYMBOLS : true;
-      setIsValidDisplayName(isValid);
-      setDisplayNameError(isValid ? void 0 : t(CreateI18nKey.ErrorLength, { number: MAX_NAME_SYMBOLS }));
+      if (!isEntityImmutable) {
+        validateDisplayName(displayName);
+      }
       onChangeAdapter({ ...entity, displayName });
     },
-    [t, onChangeAdapter, entity],
+    [isEntityImmutable, onChangeAdapter, entity, validateDisplayName],
   );
 
   const onChangeDescription = useCallback(
     (description: string) => {
-      setDescriptionError(getErrorForDescription(description, t));
+      const error = getErrorForDescription(description, t);
+      setDescriptionError(error);
+      dispatch({ type: ValidationActionType.SetField, field: 'description', isValid: !error });
       onChangeAdapter({ ...entity, description });
     },
-    [onChangeAdapter, entity, t],
+    [onChangeAdapter, entity, t, dispatch],
   );
 
   const onChangeEndpoint = useCallback(
     (baseEndpoint: string) => {
+      if (!isEntityImmutable) {
+        validateEndpoint(baseEndpoint);
+      }
       onChangeAdapter({ ...entity, baseEndpoint });
     },
-    [onChangeAdapter, entity],
+    [isEntityImmutable, onChangeAdapter, entity, validateEndpoint],
   );
+
+  // initial validation on creation adapter (disable save when no values entered yet)
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!entity.name });
+    dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!entity.displayName });
+    dispatch({ type: ValidationActionType.SetField, field: 'baseEndpoint', isValid: !!entity.baseEndpoint });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="h-full flex flex-col gap-6">
@@ -81,11 +128,10 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
         fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
         placeholder={t(CreateI18nKey.DisplayNamePlaceholder)}
         value={entity.displayName}
-        errorText={displayNameError}
+        errorText={displayNameError?.text}
         onChange={onChangeDisplayName}
-        invalid={!isValidDisplayName}
+        invalid={!!displayNameError}
         items={uniq(names)}
-        optional={true}
       />
 
       <TextAreaField
@@ -106,6 +152,8 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
         fieldTitle={t(EntitiesI18nKey.EndpointBase)}
         value={entity.baseEndpoint}
         onChange={onChangeEndpoint}
+        errorText={baseEndpointError?.text}
+        invalid={!!baseEndpointError}
       />
     </div>
   );

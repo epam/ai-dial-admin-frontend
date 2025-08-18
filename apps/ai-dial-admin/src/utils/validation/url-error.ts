@@ -1,5 +1,5 @@
+import { ErrorI18nKey } from '@/src/constants/i18n';
 import { ErrorType } from '@/src/types/error-type';
-import { CreateI18nKey } from '@/src/constants/i18n';
 
 const ENDPOINT_REGEX =
   /^https?:\/\/[-a-zA-Z0-9@:%._+~#=]{1,256}(\.[a-zA-Z0-9()]{1,6})?\b(:[0-9]{1,5})?([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/;
@@ -26,11 +26,17 @@ export const isDangerEndpoint = (value: string) => {
   return WARNING_ENDPOINT_REGEX.test(value);
 };
 
-export const getUrlError = (url: string, t?: (str: string) => string) => {
+export const getUrlError = (url?: string, required?: boolean, t?: (str: string) => string) => {
+  if (!url && required) {
+    return {
+      type: ErrorType.EMPTY,
+      text: t ? t(ErrorI18nKey.RequiredField) : '',
+    };
+  }
   if (url && !isValidHttpUrl(url)) {
     return {
       type: ErrorType.INVALID,
-      text: t ? t(CreateI18nKey.IdUrlError) : '',
+      text: t ? t(ErrorI18nKey.UrlField) : '',
     };
   }
 

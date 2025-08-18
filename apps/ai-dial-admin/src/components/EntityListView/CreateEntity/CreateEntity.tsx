@@ -20,6 +20,7 @@ import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import { isValidEntity } from '@/src/utils/validation/is-valid-entity';
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props {
   route: ApplicationRoute;
@@ -47,6 +48,7 @@ const CreateEntity: FC<Props> = ({
   const t = useI18n();
   const router = useRouter();
   const { filePath, fetchFiles } = usePromptFolder();
+  const { isValid: isValidProperties } = useSaveValidationContext();
 
   const { showNotification } = useNotification();
 
@@ -100,9 +102,9 @@ const CreateEntity: FC<Props> = ({
   }, [currentEntity, showNotification, fetchFiles, filePath, onClose, route, router, createEntity]);
 
   useEffect(() => {
-    setIsValid(isValidEntity(route, currentEntity, !!versionsMap, names));
+    setIsValid(isValidEntity(route, currentEntity, !!versionsMap, names) && isValidProperties);
     setIsUniqueNameError(false);
-  }, [currentEntity, route, versionsMap, names]);
+  }, [currentEntity, route, versionsMap, names, isValidProperties]);
 
   return (
     <Popup onClose={onClose} heading={modalTitle} portalId="CreateEntity" state={modalState}>

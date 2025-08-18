@@ -1,4 +1,3 @@
-import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { NumberInputField, TextInputField } from '@/src/components/Common/InputField/InputField';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
@@ -98,15 +97,6 @@ const RouteProperties: FC<Props> = ({ route, updateRoute }) => {
   return (
     <div className="h-full flex flex-col pt-3 w-full">
       <div className="flex flex-col gap-6 lg:w-[35%]">
-        <TextInputField
-          elementId="name"
-          fieldTitle={t(CreateI18nKey.NameTitle)}
-          placeholder={t(CreateI18nKey.NamePlaceholder)}
-          value={route.name}
-          disabled={true}
-          iconAfterInput={<CopyButton field={route.name} />}
-        />
-
         <TextAreaField
           elementId="description"
           fieldTitle={t(CreateI18nKey.DescriptionTitle)}

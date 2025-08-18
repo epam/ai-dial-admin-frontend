@@ -4,6 +4,7 @@ import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 
 interface Props {
   selectedValue?: DropdownItemsModel;
@@ -35,24 +36,28 @@ const DropdownSelectedItem: FC<Props> = ({
     <div className={selectedClassNames} role="menuitem">
       {selectedValue?.name ? (
         <>
-          {selectedValue.icon && <span className="mr-2 text-icon-primary">{selectedValue.icon}</span>}
-          <span className={selectedValueClassNames}>
-            {prefix}
-            {selectedValue?.name}
-          </span>
+          <Tooltip tooltip={selectedValue?.name} triggerClassName="flex-1 min-w-0">
+            {selectedValue.icon && <span className="mr-2 text-icon-primary">{selectedValue.icon}</span>}
+            <span className={selectedValueClassNames}>
+              {prefix}
+              {selectedValue?.name}
+            </span>
+          </Tooltip>
         </>
       ) : multipleValues ? (
-        <div className="flex flex-1 truncate">
+        <div className="flex flex-1">
           {multipleValues.map((v) => {
             return (
-              <span key={v} className="inline-block rounded border border-icon-secondary p-1 mr-1">
-                {v}
-              </span>
+              <Tooltip key={v} tooltip={v} triggerClassName="flex-1 min-w-0">
+                <span className="inline-block rounded border border-icon-secondary p-1 mr-1">{v}</span>
+              </Tooltip>
             );
           })}
         </div>
       ) : (
-        <span className="truncate flex-1 min-w-0 mr-2 text-secondary pointer-events-none">{placeholder}</span>
+        <Tooltip tooltip={placeholder} triggerClassName="flex-1 min-w-0">
+          <span className="flex-1 min-w-0 mr-2 text-secondary pointer-events-none">{placeholder}</span>
+        </Tooltip>
       )}
 
       {isOpen ? <IconChevronUp {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}

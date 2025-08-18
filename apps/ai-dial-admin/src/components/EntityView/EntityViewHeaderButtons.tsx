@@ -44,6 +44,7 @@ interface Props<T> {
   jsonErrors: JSONEditorError[] | null;
   hideJsonEditor?: boolean;
   children?: ReactNode;
+  hasErrors?: boolean;
   onDiscard: () => void;
   onSave: (newVersion?: string) => void;
   removeEntity: (entity?: string) => Promise<ServerActionResponse>;
@@ -60,6 +61,7 @@ const EntityViewHeaderButtons = <T extends DialBaseEntity | DialKey>({
   onDiscard,
   onSave,
   removeEntity,
+  hasErrors,
   jsonEditorEnabled,
   toggleJsonEditor,
   jsonErrors,
@@ -184,7 +186,7 @@ const EntityViewHeaderButtons = <T extends DialBaseEntity | DialKey>({
               cssClass={`primary ${buttonsClassNames}`}
               title={t(ButtonsI18nKey.Save)}
               onClick={() => onTryToSave()}
-              disable={(jsonEditorEnabled && !isValidJSON) || !isValidEntity(view, entity)}
+              disable={hasErrors || (jsonEditorEnabled && !isValidJSON) || !isValidEntity(view, entity)}
             />
           </div>
         ) : (

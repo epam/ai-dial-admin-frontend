@@ -1,27 +1,36 @@
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { MAX_RUNNER_ID_SYMBOLS } from '@/src/constants/validation';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ErrorType } from '@/src/types/error-type';
 import { isValidHttpUrl } from '@/src/utils/validation/url-error';
 import { cloneDeep } from 'lodash';
+const fields: (keyof DialApplicationScheme)[] = [
+  '$id',
+  '$schema',
+  'description',
+  'applications',
+  'topics',
+  'updatedAt',
+  'createdAt',
+  'dial:applicationTypeCompletionEndpoint',
+  'dial:applicationTypeViewerUrl',
+  'dial:applicationTypeEditorUrl',
+  'dial:applicationTypeDisplayName',
+  'dial:applicationTypeConfigurationEndpoint',
+  'dial:applicationTypeRateEndpoint',
+  'dial:applicationTypeTokenizeEndpoint',
+  'dial:applicationTypeTruncatePromptEndpoint',
+  'dial:appendApplicationPropertiesHeader',
+];
 
 export const clearSchemeForEditor = (scheme: DialApplicationScheme) => {
   const clonedScheme = cloneDeep(scheme);
-  delete clonedScheme.$id;
-  delete clonedScheme.$schema;
-  delete clonedScheme.description;
-  delete clonedScheme.applications;
-  delete clonedScheme.topics;
-  delete clonedScheme['dial:applicationTypeCompletionEndpoint'];
-  delete clonedScheme['dial:applicationTypeViewerUrl'];
-  delete clonedScheme['dial:applicationTypeEditorUrl'];
-  delete clonedScheme['dial:applicationTypeDisplayName'];
-  delete clonedScheme['dial:applicationTypeConfigurationEndpoint'];
-  delete clonedScheme['dial:applicationTypeRateEndpoint'];
-  delete clonedScheme['dial:applicationTypeTokenizeEndpoint'];
-  delete clonedScheme['dial:applicationTypeTruncatePromptEndpoint'];
-  delete clonedScheme['dial:appendApplicationPropertiesHeader'];
 
+  fields.forEach((field) => {
+    if (clonedScheme[field]) {
+      delete clonedScheme[field];
+    }
+  });
   return clonedScheme;
 };
 
@@ -31,7 +40,7 @@ export const getErrorForAppRunnerId = (id?: string, t?: (str: string, param?: Re
   if (isWrongId) {
     return {
       type: ErrorType.INVALID,
-      text: t ? t(CreateI18nKey.IdUrlError) : '',
+      text: t ? t(ErrorI18nKey.UrlField) : '',
     };
   }
   if (isWrongLength) {

@@ -44,11 +44,11 @@ const EntityInterceptors: FC<Props> = ({ entity, interceptors, onChangeEntity })
   );
 
   const onRemoveInterceptor = useCallback(
-    (interceptor: DialBaseEntity) => {
-      const filtered = entity.interceptors?.filter((i) => i !== interceptor.name);
+    (_: DialBaseEntity, index: number) => {
+      entity.interceptors?.splice(index, 1);
       onChangeEntity({
         ...entity,
-        interceptors: filtered,
+        interceptors: entity.interceptors,
       });
     },
     [entity, onChangeEntity],
@@ -96,14 +96,7 @@ const EntityInterceptors: FC<Props> = ({ entity, interceptors, onChangeEntity })
       {!entity.interceptors?.length ? (
         <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoInterceptors)} />
       ) : (
-        <Grid
-          columnDefs={columns}
-          rowData={rowData}
-          additionalGridOptions={{
-            rowDragManaged: true,
-            onRowDragEnd: onRowDragEnd,
-          }}
-        />
+        <Grid columnDefs={columns} rowData={rowData} additionalGridOptions={{ rowDragManaged: true, onRowDragEnd }} />
       )}
       {addModalState === PopUpState.Opened &&
         createPortal(

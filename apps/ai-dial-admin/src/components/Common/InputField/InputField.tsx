@@ -24,6 +24,8 @@ export interface InputFieldBaseProps extends FieldControlProps {
   iconAfterInput?: ReactNode;
   iconBeforeInput?: ReactNode;
   textBeforeInput?: string;
+  min?: number;
+  max?: number;
 }
 
 export interface InputFieldProps extends InputFieldBaseProps {

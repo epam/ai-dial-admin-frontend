@@ -63,7 +63,7 @@ const PromptsProperties: FC<Props> = ({ prompt, action, collapsed }) => {
         <div className="flex justify-end gap-4">
           {action === ActionType.DELETE && (
             <Button
-              cssClass={`secondary`}
+              cssClass="secondary"
               title={t(PublicationsI18nKey.OpenPrompt)}
               iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
               onClick={openPrompt}

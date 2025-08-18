@@ -83,9 +83,7 @@ const PopupView: FC<Props> = ({
                   {heading &&
                     (typeof heading === 'string' ? (
                       <h3 className={classNames('flex-1 min-w-0 mr-3', headingClassName)}>
-                        <Tooltip contentClassName="truncate" tooltip={heading}>
-                          {heading}
-                        </Tooltip>
+                        <Tooltip tooltip={heading}>{heading}</Tooltip>
                       </h3>
                     ) : (
                       heading

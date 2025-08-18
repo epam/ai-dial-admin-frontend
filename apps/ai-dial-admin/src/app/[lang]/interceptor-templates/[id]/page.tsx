@@ -12,6 +12,7 @@ import { SIGN_IN_LINK } from '@/src/constants/auth';
 
 import InterceptorTemplateView from '@/src/components/InterceptorTemplates/View/View';
 import Page403 from '@/src/components/Page403/Page403';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,5 +40,9 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     return redirect(ApplicationRoute.InterceptorTemplates);
   }
 
-  return <InterceptorTemplateView route={ApplicationRoute.InterceptorTemplates} template={interceptorTemplate} />;
+  return (
+    <SaveValidationContextProvider>
+      <InterceptorTemplateView route={ApplicationRoute.InterceptorTemplates} template={interceptorTemplate} />
+    </SaveValidationContextProvider>
+  );
 }

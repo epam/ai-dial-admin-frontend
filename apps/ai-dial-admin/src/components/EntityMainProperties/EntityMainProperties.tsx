@@ -19,6 +19,7 @@ import { getErrorForName, isWrongLengthWithView } from '@/src/utils/validation/n
 import AdditionalProperties from './AdditionalProperties';
 import { getDisplayNameErrorKeyPerView, getVersionErrorKeyPerView } from './utils';
 import { DialModel } from '@/src/models/dial/model';
+import classNames from 'classnames';
 
 interface Props {
   view: ApplicationRoute;
@@ -120,61 +121,63 @@ const EntityMainProperties: FC<Props> = ({
   );
 
   return (
-    <div className="w-full flex flex-col gap-6">
-      {!isEntityImmutable && (
-        <TextInputField
-          fieldTitle={t(CreateI18nKey.IdTitle)}
-          elementId="id"
-          placeholder={t(CreateI18nKey.IdTitle)}
-          value={entity.name}
-          onChange={onChangeName}
-          errorText={nameError?.text}
-          invalid={!!nameError}
+    <div className="w-full flex flex-col">
+      <div className={classNames('flex flex-col gap-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
+        {!isEntityImmutable && (
+          <TextInputField
+            fieldTitle={t(CreateI18nKey.IdTitle)}
+            elementId="id"
+            placeholder={t(CreateI18nKey.IdPlaceholder)}
+            value={entity.name}
+            onChange={onChangeName}
+            errorText={nameError?.text}
+            invalid={!!nameError}
+          />
+        )}
+        <AutocompleteField
+          elementId="displayName"
+          fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
+          placeholder={t(CreateI18nKey.DisplayNamePlaceholder)}
+          value={entity.displayName}
+          errorText={displayNameError}
+          onChange={onChangeDisplayName}
+          invalid={!isValidDisplayName}
+          items={uniq(names)}
         />
-      )}
-      <AutocompleteField
-        elementId="displayName"
-        fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
-        placeholder={t(CreateI18nKey.DisplayNamePlaceholder)}
-        value={entity.displayName}
-        errorText={displayNameError}
-        onChange={onChangeDisplayName}
-        invalid={!isValidDisplayName}
-        items={uniq(names)}
-      />
 
-      {view === ApplicationRoute.Models && (
-        <TextInputField
-          elementId="displayVersion"
-          fieldTitle={t(CreateI18nKey.VersionTitle)}
-          placeholder={t(CreateI18nKey.VersionPlaceholder)}
-          optional={isVersionOptional}
-          value={(entity as DialModel).displayVersion}
-          onChange={onChangeVersion}
-          invalid={!isValidVersion}
-          errorText={versionError}
-        />
-      )}
+        {view === ApplicationRoute.Models && (
+          <TextInputField
+            elementId="displayVersion"
+            fieldTitle={t(CreateI18nKey.VersionTitle)}
+            placeholder={t(CreateI18nKey.VersionPlaceholder)}
+            optional={isVersionOptional}
+            value={(entity as DialModel).displayVersion}
+            onChange={onChangeVersion}
+            invalid={!isValidVersion}
+            errorText={versionError}
+          />
+        )}
 
-      {view === ApplicationRoute.Applications && !isEntityImmutable && (
-        <ApplicationSource
-          entity={entity}
-          runners={runners}
-          isEntityImmutable={isEntityImmutable}
-          onChangeEntity={onChangeEntity}
+        {view === ApplicationRoute.Applications && !isEntityImmutable && (
+          <ApplicationSource
+            entity={entity}
+            runners={runners}
+            isEntityImmutable={isEntityImmutable}
+            onChangeEntity={onChangeEntity}
+          />
+        )}
+        <TextAreaField
+          elementId="description"
+          fieldTitle={t(CreateI18nKey.DescriptionTitle)}
+          placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
+          optional={true}
+          value={entity.description}
+          errorText={descriptionError?.text}
+          invalid={!!descriptionError}
+          onChange={onChangeDescription}
+          elementCssClass="w-full"
         />
-      )}
-      <TextAreaField
-        elementId="description"
-        fieldTitle={t(CreateI18nKey.DescriptionTitle)}
-        placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
-        optional={true}
-        value={entity.description}
-        errorText={descriptionError?.text}
-        invalid={!!descriptionError}
-        onChange={onChangeDescription}
-        elementCssClass="w-full"
-      />
+      </div>
 
       <AdditionalProperties
         entity={entity}
