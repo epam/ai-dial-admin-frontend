@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { rolesApi, routesApi } from '@/src/app/api/api';
-import EntityView from '@/src/components/EntityView/EntityView';
+import EntityView from '@/src/components/EntityView/View/EntityView';
 import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';

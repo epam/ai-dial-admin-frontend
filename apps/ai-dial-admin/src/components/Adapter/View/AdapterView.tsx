@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation';
 
 import { removeAdapter, updateAdapter } from '@/src/app/[lang]/adapters/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
-import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/entity-view';
-import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
+import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -99,7 +99,7 @@ const AdapterView: FC<Props> = ({ originalAdapter }) => {
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={headerClassName}>
         <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
-        <EntityViewHeaderButtons
+        <HeaderButtons
           view={ApplicationRoute.Adapters}
           entity={selectedAdapter}
           isChanged={isChanged}

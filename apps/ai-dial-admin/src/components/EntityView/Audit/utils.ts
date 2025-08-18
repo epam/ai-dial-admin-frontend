@@ -1,4 +1,4 @@
-import { activitiesTabs, dashboardTabs } from '@/src/components/EntityView/entity-view';
+import { activitiesTabs, dashboardTabs } from '@/src/components/EntityView/View/utils';
 import { TabModel } from '@/src/models/tab';
 
 export const getAuditTabs = (

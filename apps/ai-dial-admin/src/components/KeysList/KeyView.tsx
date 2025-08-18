@@ -16,8 +16,8 @@ import Button from '@/src/components/Common/Button/Button';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { EntityViewTab, propertiesTabs, rolesTabs } from '@/src/components/EntityView/entity-view';
-import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
+import { EntityViewTab, propertiesTabs, rolesTabs } from '@/src/components/EntityView/View/utils';
+import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import { ButtonsI18nKey, EntitiesI18nKey, KeysI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -162,7 +162,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
         <div className={headerClassName}>
           <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
-          <EntityViewHeaderButtons
+          <HeaderButtons
             view={ApplicationRoute.Keys}
             entity={selectedKey}
             isChanged={isChanged}
@@ -180,7 +180,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
               iconBefore={<IconRefresh {...BASE_ICON_PROPS} />}
               onClick={() => setRotateModalState(PopUpState.Opened)}
             />
-          </EntityViewHeaderButtons>
+          </HeaderButtons>
         </div>
         <div className="flex-1 overflow-auto mt-3 min-h-0">
           {jsonEditorEnabled ? (

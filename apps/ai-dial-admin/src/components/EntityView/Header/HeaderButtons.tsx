@@ -54,7 +54,7 @@ interface Props<T> {
   promptVersions?: string[];
 }
 
-const EntityViewHeaderButtons = <T extends DialBaseEntity | DialKey>({
+const HeaderButtons = <T extends DialBaseEntity | DialKey>({
   view,
   entity,
   isChanged,
@@ -243,4 +243,4 @@ const EntityViewHeaderButtons = <T extends DialBaseEntity | DialKey>({
   );
 };
 
-export default EntityViewHeaderButtons;
+export default HeaderButtons;

@@ -15,9 +15,9 @@ import {
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
-import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/entity-view';
+import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import { useNotification } from '@/src/context/NotificationContext';
-import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
+import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import { EntitiesI18nKey, KeysI18nKey, TabsI18nKey } from '@/src/constants/i18n';
@@ -192,7 +192,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={headerClassName}>
         <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
-        <EntityViewHeaderButtons
+        <HeaderButtons
           view={ApplicationRoute.Roles}
           entity={selectedRole}
           isChanged={isChanged}

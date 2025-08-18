@@ -3,7 +3,7 @@ import { FC, useState } from 'react';
 
 import ActivityAuditList from '@/src/components/ActivityAudit/List/List';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
-import { EntityViewTab } from '@/src/components/EntityView/entity-view';
+import { EntityViewTab } from '@/src/components/EntityView/View/utils';
 import Dashboard from '@/src/components/Telemetry/Dashboard';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';

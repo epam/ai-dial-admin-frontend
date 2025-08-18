@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 
 import { removeApplication, updateApplication } from '@/src/app/[lang]/applications/actions';
 import { applicationRunnersApi, applicationsApi, interceptorsApi, modelsApi, rolesApi } from '@/src/app/api/api';
-import EntityView from '@/src/components/EntityView/EntityView';
+import EntityView from '@/src/components/EntityView/View/EntityView';
 import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';

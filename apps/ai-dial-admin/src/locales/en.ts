@@ -452,6 +452,7 @@ export default {
     Files: 'Files',
     Activities: 'Activities',
     Dependencies: 'Dependencies',
+    Routes: 'App Routes',
   },
   ForwardToken: {
     ForwardToken: 'Forward auth token',

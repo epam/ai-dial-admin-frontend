@@ -1,6 +1,7 @@
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { TabModel } from '@/src/models/tab';
 import { ApplicationRoute } from '@/src/types/routes';
+import { DialApplication, DialApplicationScheme } from '../../../models/dial/application';
 
 export enum EntityViewTab {
   Properties = 'Properties',
@@ -16,6 +17,7 @@ export enum EntityViewTab {
   Activities = 'Activities',
   Dashboard = 'Dashboard',
   Dependencies = 'Dependencies',
+  Routes = 'Routes',
 }
 
 export const propertiesTabs = (t: (stringToTranslate: string) => string) => ({
@@ -68,6 +70,11 @@ export const dependenciesTabs = (t: (stringToTranslate: string) => string) => ({
   name: t(TabsI18nKey.Dependencies),
 });
 
+export const appRouteTab = (t: (stringToTranslate: string) => string) => ({
+  id: EntityViewTab.Routes,
+  name: t(TabsI18nKey.Routes),
+});
+
 export const getViewTabs = (
   t: (stringToTranslate: string) => string,
   view: ApplicationRoute,
@@ -85,9 +92,22 @@ export const getViewTabs = (
     if (isParametersTabAvailable) {
       tabs.splice(2, 0, parametersTabs(t));
     }
+
+    tabs.push(appRouteTab(t));
   }
 
   tabs.push(auditTabs(t));
 
   return tabs;
+};
+
+export const getIsParametersTabAvailable = (
+  application: DialApplication,
+  appRunners?: DialApplicationScheme[] | null,
+) => {
+  return (
+    (!!application.customAppSchemaId &&
+      !!appRunners?.find((s) => s.$id === application.customAppSchemaId)?.['dial:applicationTypeEditorUrl']) ||
+    !!application.editorUrl
+  );
 };

@@ -444,6 +444,7 @@ export enum TabsI18nKey {
   Activities = 'Tabs.Activities',
   Files = 'Tabs.Files',
   Dependencies = 'Tabs.Dependencies',
+  Routes = 'Tabs.Routes',
 }
 
 export enum EditorI18nKey {

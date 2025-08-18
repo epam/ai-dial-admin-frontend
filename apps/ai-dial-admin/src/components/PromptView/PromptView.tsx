@@ -8,8 +8,8 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import { createPrompt, getPrompt, getPrompts, movePrompts, removePrompt } from '@/src/app/[lang]/prompts/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/entity-view';
-import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
+import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import PromptProperties from '@/src/components/PromptView/PromptProperties';
 import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/PromptView/utils';
@@ -133,7 +133,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={headerClassName}>
         <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
-        <EntityViewHeaderButtons
+        <HeaderButtons
           view={ApplicationRoute.Prompts}
           entity={selectedPrompt}
           isChanged={isChanged}

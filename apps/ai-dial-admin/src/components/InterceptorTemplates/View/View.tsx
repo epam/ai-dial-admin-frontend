@@ -7,12 +7,12 @@ import { useRouter } from 'next/navigation';
 import { ApplicationRoute } from '@/src/types/routes';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { useI18n } from '@/src/locales/client';
-import { EntityViewTab, interceptorsTabs, propertiesTabs } from '@/src/components/EntityView/entity-view';
+import { EntityViewTab, interceptorsTabs, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import { deleteInterceptorTemplate, updateInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { getErrorNotification } from '@/src/utils/notification';
 import { useNotification } from '@/src/context/NotificationContext';
 
-import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
+import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import ExtendedProperties from '@/src/components/InterceptorTemplates/Properties/ExtendedProperties';
 import Interceptors from '@/src/components/InterceptorTemplates/View/Interceptors/Interceptors';
@@ -71,7 +71,7 @@ const View: FC<Props> = ({ route, template }) => {
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className="flex flex-row min-h-[34px] justify-between">
         <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-        <EntityViewHeaderButtons
+        <HeaderButtons
           view={route}
           entity={selectedTemplate}
           isChanged={isChanged}
