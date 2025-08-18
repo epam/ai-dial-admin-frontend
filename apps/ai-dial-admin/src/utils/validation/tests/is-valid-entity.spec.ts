@@ -40,12 +40,27 @@ describe('Utils :: isValidEntity', () => {
       ['name2'],
     );
 
+    const res7 = isValidEntity(
+      ApplicationRoute.Models,
+      {
+        displayName: 'displayName',
+        name: 'name',
+        adapter: 'adapter',
+        displayVersion: '1.0.0',
+        endpointDeploymentName: 'endpointDeploymentName',
+        maxInputAttachments: 1005,
+      },
+      void 0,
+      ['name2'],
+    );
+
     expect(res1).toBeFalsy();
     expect(res2).toBeFalsy();
     expect(res3).toBeFalsy();
     expect(res4).toBeTruthy();
     expect(res5).toBeFalsy();
     expect(res6).toBeTruthy();
+    expect(res7).toBeTruthy();
   });
 
   test('Should check Routes', () => {
