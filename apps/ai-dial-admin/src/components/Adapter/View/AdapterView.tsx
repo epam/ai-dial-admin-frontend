@@ -18,7 +18,7 @@ import { TabModel } from '@/src/models/tab';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
-import AdapterModels from './AdapterModels';
+import AdapterModels from '../ModelsView/AdapterModels';
 import AdapterProperties from './AdapterProperties';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';

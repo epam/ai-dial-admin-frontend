@@ -2,7 +2,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useState } from 'react';
 
 import { createAdapter } from '@/src/app/[lang]/adapters/actions';
-import AdapterProperties from '@/src/components/AdaptersView/AdapterProperties';
+import AdapterProperties from '@/src/components/Adapter/View/AdapterProperties';
 import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';

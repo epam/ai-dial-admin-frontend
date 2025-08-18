@@ -6,7 +6,7 @@ import { IconFileArrowLeft, IconFileArrowRight, IconPlus, IconColumns2 } from '@
 
 import { exportFiles, importFiles } from '@/src/app/[lang]/files/actions';
 import { exportPrompts, importPrompts } from '@/src/app/[lang]/prompts/actions';
-import CreateAdapter from '@/src/components/AdaptersList/Create/CreateAdapter';
+import CreateAdapter from '@/src/components/Adapter/Modals/CreateAdapter';
 import CreateScheme from '@/src/components/ApplicationRunners/ListView/Create/CreateAppRunner';
 import Button from '@/src/components/Common/Button/Button';
 import { getImportResults } from '@/src/components/EntityListView/Import/import';
