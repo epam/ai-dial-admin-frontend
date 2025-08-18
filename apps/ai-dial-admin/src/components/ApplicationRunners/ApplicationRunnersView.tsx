@@ -7,7 +7,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { removeApplicationScheme, updateApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
-import { EntityViewTab, parametersTabs, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import { appRouteTab, EntityViewTab, parametersTabs, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
@@ -23,6 +23,7 @@ import { getErrorNotification } from '@/src/utils/notification';
 import AppRunnerApplications from './ConfigurationView/Applications';
 import SchemeParameters from './ConfigurationView/Parameters';
 import SchemeProperties from './ConfigurationView/Properties';
+import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
 
 interface Props {
   originalScheme: DialApplicationScheme;
@@ -36,6 +37,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
   const tabs: TabModel[] = [
     propertiesTabs(t),
     parametersTabs(t),
+    appRouteTab(t),
     { id: EntityViewTab.Applications, name: t(TabsI18nKey.Applications) },
   ];
 
@@ -145,6 +147,13 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
 
             {activeTab === EntityViewTab.Applications && (
               <AppRunnerApplications appRunner={selectedScheme} onChangeAppRunner={onChangeScheme} />
+            )}
+
+            {activeTab === EntityViewTab.Routes && (
+              <EntityRoutes
+                routes={selectedScheme.routes}
+                onChangeRoutes={(routes) => setSelectedScheme({ ...selectedScheme, routes })}
+              />
             )}
           </>
         )}

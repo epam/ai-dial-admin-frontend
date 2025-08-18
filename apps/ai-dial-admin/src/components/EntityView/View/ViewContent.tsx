@@ -19,6 +19,7 @@ import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
 import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
+import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
 
 interface Props {
   activeTab: EntityViewTab;
@@ -79,6 +80,12 @@ const ViewContent: FC<Props> = ({
       )}
       {activeTab === EntityViewTab.Features && (
         <EntityFeatures entity={selectedEntity} onChangeEntity={onChangeEntity} view={view} />
+      )}
+      {activeTab === EntityViewTab.Routes && (
+        <EntityRoutes
+          routes={(selectedEntity as DialApplication).routes}
+          onChangeRoutes={(routes) => onChangeEntity({ ...selectedEntity, routes } as DialApplication)}
+        />
       )}
       {activeTab === EntityViewTab.Parameters && (
         <ApplicationParametersTab

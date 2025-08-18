@@ -29,6 +29,7 @@ export interface DialApplicationScheme {
   createdAt?: number;
   updatedAt?: number;
   topics?: string[];
+  routes?: DialRoute[];
 }
 
 export enum TypeEntity {
