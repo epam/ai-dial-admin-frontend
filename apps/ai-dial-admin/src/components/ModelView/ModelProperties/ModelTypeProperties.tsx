@@ -95,7 +95,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
         <InputWithReadonlyParts
           inputId="endpoint"
           value={model.endpointDeploymentName}
-          fullValue={`${prefixPart}${model.endpointDeploymentName || '/'}${postfixPart}`}
+          fullValue={`${prefixPart}${model.endpointDeploymentName ? model.endpointDeploymentName + '/' : ''}${postfixPart}`}
           title={t(EntitiesI18nKey.Endpoint)}
           postfixPart={`/${postfixPart}`}
           prefixPart={prefixPart}
