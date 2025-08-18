@@ -213,7 +213,7 @@ export const RUNNERS_COLUMNS: ColDef[] = [
   TOPIC_COLUMN,
 ];
 
-export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, NAME_COLUMN, DESCRIPTION_COLUMN];
+export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
 
 export const PROMPTS_COLUMNS: ColDef[] = [
   { field: 'name', colId: 'name', headerName: 'Display Name' },
