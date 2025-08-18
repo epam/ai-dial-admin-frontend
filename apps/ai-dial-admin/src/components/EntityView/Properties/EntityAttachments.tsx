@@ -8,8 +8,7 @@ import { AttachmentsI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { mimeMapping } from './constants';
-
-const MAX_ATTACHMENTS_LIMIT = 1000;
+import { MAX_ATTACHMENTS_LIMIT } from '@/src/constants/dial-base-entity';
 
 interface Props {
   entity: DialBaseEntity;
