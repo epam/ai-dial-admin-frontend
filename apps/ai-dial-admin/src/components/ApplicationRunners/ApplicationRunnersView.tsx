@@ -9,7 +9,13 @@ import { cloneDeep, isEqual } from 'lodash';
 import { removeApplicationScheme, updateApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
-import { appRouteTab, auditTabs, EntityViewTab, parametersTabs, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import {
+  appRouteTab,
+  auditTabs,
+  EntityViewTab,
+  parametersTabs,
+  propertiesTabs,
+} from '@/src/components/EntityView/View/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
