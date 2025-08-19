@@ -1,6 +1,9 @@
 import { describe, expect, test, vi } from 'vitest';
+
 import { ErrorType } from '@/src/types/error-type';
-import { getErrorForName, forbiddenNameSymbols } from '../name-error';
+import { getErrorForName, forbiddenNameSymbols, getErrorForDisplayName } from '../name-error';
+
+const mockT = vi.fn().mockReturnValue('Translated Text');
 
 describe('Utils :: validations :: getErrorForName', () => {
   const mockT = vi.fn().mockReturnValue('Translated Text');
@@ -82,5 +85,47 @@ describe('Utils :: validations :: getErrorForName', () => {
 
     expect(res1).toBeNull();
     expect(res2).toBeNull();
+  });
+});
+
+describe('getErrorForDisplayName', () => {
+  test('returns error if name is undefined', () => {
+    const result = getErrorForDisplayName(undefined);
+    expect(result).toEqual({
+      type: ErrorType.LENGTH,
+      text: '',
+    });
+  });
+
+  test('returns error if name is empty string', () => {
+    const result = getErrorForDisplayName('', mockT);
+    expect(result).toEqual({
+      type: ErrorType.LENGTH,
+      text: 'Translated Text',
+    });
+  });
+
+  test('returns error if name is too short', () => {
+    const result = getErrorForDisplayName('a', mockT);
+
+    expect(result).toEqual({
+      type: ErrorType.LENGTH,
+      text: 'Translated Text',
+    });
+  });
+
+  test('returns error if name is too long', () => {
+    const longName = 'a'.repeat(300);
+    const result = getErrorForDisplayName(longName, mockT);
+    expect(result).toEqual({
+      type: ErrorType.LENGTH,
+      text: 'Translated Text',
+    });
+  });
+
+  test('returns null if name is valid length', () => {
+    const validName = 'validName';
+    const result = getErrorForDisplayName(validName, mockT);
+    expect(result).toBeNull();
   });
 });

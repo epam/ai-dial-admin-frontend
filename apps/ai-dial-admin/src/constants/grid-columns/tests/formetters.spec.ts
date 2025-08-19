@@ -8,6 +8,11 @@ describe('Formatters :: getFormattedResourceType', () => {
     expect(res).toBe('Application Runner');
   });
 
+  test('Should return Application Runner', () => {
+    const res = getFormattedResourceType(ActivityAuditResourceType.INTERCEPTOR_TEMPLATE);
+    expect(res).toBe('Interceptor Template');
+  });
+
   test('Should return Application', () => {
     const res = getFormattedResourceType(ActivityAuditResourceType.APPLICATION);
     expect(res).toBe('Application');

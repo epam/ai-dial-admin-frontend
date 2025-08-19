@@ -10,6 +10,7 @@ describe('Utils :: prepareEntityForDuplicate', () => {
     entities: ['entities'],
     roles: ['roles'],
   };
+
   test('Should return filtered role', () => {
     const result = prepareEntityForDuplicate(ApplicationRoute.Roles, entity);
     expect(result).toEqual({
@@ -38,5 +39,10 @@ describe('Utils :: prepareEntityForDuplicate', () => {
       entities: ['entities'],
       roles: [],
     });
+  });
+
+  test('Should return original entity', () => {
+    const result = prepareEntityForDuplicate(ApplicationRoute.Model, entity);
+    expect(result).toEqual(entity);
   });
 });
