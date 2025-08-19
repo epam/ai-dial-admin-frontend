@@ -33,6 +33,7 @@ export const getUrlError = (url?: string, required?: boolean, t?: (str: string) 
       text: t ? t(ErrorI18nKey.RequiredField) : '',
     };
   }
+
   if (url && !isValidHttpUrl(url)) {
     return {
       type: ErrorType.INVALID,

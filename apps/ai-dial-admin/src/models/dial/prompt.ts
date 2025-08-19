@@ -10,7 +10,7 @@ export interface DialPrompt extends DialBaseEntity, DialFile {
   versions?: string[];
 }
 
-export enum PromptStatus {
+enum PromptStatus {
   pending = 'PENDING',
   approved = 'APPROVED',
 }
