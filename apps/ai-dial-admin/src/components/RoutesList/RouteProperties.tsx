@@ -16,10 +16,11 @@ import { handleRouteOutputChange } from './routes';
 
 interface Props {
   route: DialRoute;
+  isAppRoute?: boolean;
   updateRoute: (route: DialRoute) => void;
 }
 
-const RouteProperties: FC<Props> = ({ route, updateRoute }) => {
+const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
   const t = useI18n();
 
   const outputRadio: RadioButtonModel[] = [
@@ -30,6 +31,13 @@ const RouteProperties: FC<Props> = ({ route, updateRoute }) => {
   const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE'];
 
   const [statusError, setStatusError] = useState('');
+
+  const onChangeName = useCallback(
+    (name: string) => {
+      updateRoute({ ...route, name });
+    },
+    [route, updateRoute],
+  );
 
   const onChangeDescription = useCallback(
     (description: string) => {
@@ -97,15 +105,26 @@ const RouteProperties: FC<Props> = ({ route, updateRoute }) => {
   return (
     <div className="h-full flex flex-col pt-3 w-full">
       <div className="flex flex-col gap-6 lg:w-[35%]">
-        <TextAreaField
-          elementId="description"
-          fieldTitle={t(CreateI18nKey.DescriptionTitle)}
-          placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
-          optional={true}
-          value={route.description}
-          onChange={onChangeDescription}
-        />
+        {isAppRoute && (
+          <TextInputField
+            elementId="name"
+            fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
+            placeholder={t(CreateI18nKey.DisplayNamePlaceholder)}
+            value={route.name}
+            onChange={onChangeName}
+          />
+        )}
 
+        {!isAppRoute && (
+          <TextAreaField
+            elementId="description"
+            fieldTitle={t(CreateI18nKey.DescriptionTitle)}
+            placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
+            optional={true}
+            value={route.description}
+            onChange={onChangeDescription}
+          />
+        )}
         <Paths route={route} updateRoute={updateRoute} />
 
         <Switch
