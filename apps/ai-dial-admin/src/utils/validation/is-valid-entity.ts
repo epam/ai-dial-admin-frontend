@@ -1,6 +1,6 @@
 import { MAX_RUNNER_ID_SYMBOLS } from '@/src/constants/validation';
 import { DialAdapter } from '@/src/models/dial/adapter';
-import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
+import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity, DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialKey } from '@/src/models/dial/key';
 import { DialModel } from '@/src/models/dial/model';
@@ -11,8 +11,9 @@ import { getErrorForDescription } from '@/src/utils/validation/description-error
 import { isValidAdapter } from '@/src/utils/validation/is-valid-adapter';
 import { isValidKey } from '@/src/utils/validation/is-valid-key';
 import { isValidModel } from '@/src/utils/validation/is-valid-model';
-import { getErrorForName, isWrongLengthWithView } from '@/src/utils/validation/name-error';
 import { isValidRoute } from '@/src/utils/validation/is-valid-route';
+import { getErrorForName, isWrongLengthWithView } from '@/src/utils/validation/name-error';
+import { isValidApplication } from './is-valid-application';
 
 export const isValidEntity = (
   view: ApplicationRoute,
@@ -73,8 +74,4 @@ const getIsValidSimpleEntity = (entity: DialBaseNamedEntity, withVersion?: boole
     !getErrorForName(entity.name, names) &&
     !getErrorForDescription(entity.description)
   );
-};
-
-const isValidApplication = (entity: DialApplication) => {
-  return (entity as DialApplication).customAppSchemaId != null ? true : !!entity.endpoint;
 };
