@@ -13,6 +13,7 @@ import { ActivityAuditType } from '@/src/types/activity-audit';
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { auditResourceRoute } from '@/src/components/ActivityAudit/View/Header/constants';
+import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 
 interface Props {
   activity: DialActivity;
@@ -39,7 +40,7 @@ const ViewHeader: FC<Props> = ({ activity, isModalView, children }) => {
 
   return (
     <div className="flex flex-row w-full justify-between">
-      <div className="flex flex-row gap-10 w-full">
+      <div className="flex flex-row gap-10 w-full flex-wrap">
         {activity.activityType && (
           <LabeledText label={t(ActivityAuditI18nKey.ActivityType)} text={activity.activityType} />
         )}
@@ -52,7 +53,7 @@ const ViewHeader: FC<Props> = ({ activity, isModalView, children }) => {
         {activity.resourceId && (
           <LabeledText label={t(ActivityAuditI18nKey.ResourceId)}>
             <div className="flex flex-row gap-1 items-center">
-              <div>{activity.resourceId}</div>
+              <Tooltip tooltip={activity.resourceId}>{activity.resourceId}</Tooltip>
               {activity.activityType != ActivityAuditType.Delete && (
                 <button onClick={() => openResourceInNewTab(activity)} className="text-secondary">
                   <IconExternalLink {...BASE_ICON_PROPS} />
@@ -76,7 +77,7 @@ const ViewHeader: FC<Props> = ({ activity, isModalView, children }) => {
         {activity.activityId && isModalView && (
           <LabeledText label={t(ActivityAuditI18nKey.ActivityId)}>
             <div className="flex flex-row gap-1 items-center">
-              <div>{activity.activityId}</div>
+              <Tooltip tooltip={activity.activityId}>{activity.activityId}</Tooltip>
               <button onClick={() => openActivityInNewTab(activity)} className="text-secondary">
                 <IconExternalLink {...BASE_ICON_PROPS} />
               </button>
