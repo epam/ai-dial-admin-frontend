@@ -1,4 +1,4 @@
-import { NO_LIMITS_KEY } from '@/src/constants/role';
+import { RolesI18nKey } from '@/src/constants/i18n';
 
 const limitValueFormatter = (value: string) => {
   if (/^\d*$/.test(value)) {
@@ -7,7 +7,7 @@ const limitValueFormatter = (value: string) => {
 };
 
 export const cellRenderParams = {
-  placeholder: NO_LIMITS_KEY,
+  placeholder: RolesI18nKey.NoLimits,
   valueFormatter: limitValueFormatter,
   inputType: 'number',
 };
