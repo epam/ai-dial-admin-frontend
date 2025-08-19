@@ -86,6 +86,7 @@ export enum ParameterNamesI18nKey {
   entities = 'ParameterNames.entities',
   'dial:applicationTypeCompletionEndpoint' = 'ParameterNames.applicationTypeCompletionEndpoint',
   'dial:applicationTypeDisplayName' = 'ParameterNames.applicationTypeDisplayName',
+  title = 'ParameterNames.title',
   'dial:applicationTypeEditorUrl' = 'ParameterNames.applicationTypeEditorUrl',
   'dial:applicationTypeViewerUrl' = 'ParameterNames.applicationTypeViewerUrl',
   'dial:applicationTypeConfigurationEndpoint' = 'ParameterNames.applicationTypeConfigurationEndpoint',
