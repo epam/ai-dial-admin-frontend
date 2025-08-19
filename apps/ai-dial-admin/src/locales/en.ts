@@ -16,9 +16,6 @@ export default {
     ModalTitle: 'Confirm logging out',
     ModalDescription: 'Are you sure that you want to log out?',
   },
-  Placeholder: {
-    TagsInput: 'Enter tags...',
-  },
   Basic: {
     None: '- None -',
     Failed: 'Failed',

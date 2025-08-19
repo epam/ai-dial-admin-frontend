@@ -47,10 +47,6 @@ export enum MenuI18nKey {
   ActivityAudit = 'Menu.ActivityAudit',
 }
 
-export enum PlaceholderI18nKey {
-  TagsInput = 'Placeholder.TagsInput',
-}
-
 export enum AuthI18nKey {
   Login = 'Auth.Login',
   Logout = 'Auth.Logout',

@@ -6,7 +6,6 @@ import classNames from 'classnames';
 
 import ErrorText from '@/src/components/Common/ErrorText/ErrorText';
 import Field from '@/src/components/Common/Field/Field';
-import { PlaceholderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import Tag from './Tag';
 
@@ -92,7 +91,7 @@ const TagInput: FC<Props> = ({
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             className={classNames('outline-none border-none w-full min-w-[100px] flex-1 p-1')}
-            placeholder={placeholder || t(PlaceholderI18nKey.TagsInput)}
+            placeholder={placeholder}
           />
         </div>
       </div>
