@@ -1,5 +1,5 @@
 import * as entitiesUtils from '@/src/utils/entities/entities-list-view';
-import { getPreviewTabs } from '../PreviewModal.utils';
+import { getPreviewTabs } from '../utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ExportFormat } from '@/src/types/export';
 
