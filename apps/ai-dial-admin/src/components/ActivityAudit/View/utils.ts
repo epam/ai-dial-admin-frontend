@@ -38,6 +38,7 @@ const separateObjectParameterKeys = [
   EntityParameterKeys.KEYS,
   EntityParameterKeys.ROLES,
   EntityParameterKeys.MODELS,
+  EntityParameterKeys.DEPENDENCIES,
 ];
 
 /**
@@ -360,7 +361,8 @@ const compareSeparateObjects = (
     key === EntityParameterKeys.ENTITIES ||
     key === EntityParameterKeys.KEYS ||
     key === EntityParameterKeys.ROLES ||
-    key === EntityParameterKeys.MODELS
+    key === EntityParameterKeys.MODELS ||
+    key === EntityParameterKeys.DEPENDENCIES
   ) {
     compareEntities(diffs, val1 as string[], val2 as string[], isCurrent);
   }
@@ -390,9 +392,11 @@ const fillSeparateObjects = (diffs: ActivityAuditDiff[], key: string, value: obj
     key === EntityParameterKeys.APPLICATIONS ||
     key === EntityParameterKeys.ENTITIES ||
     key === EntityParameterKeys.KEYS ||
-    key === EntityParameterKeys.ROLES
+    key === EntityParameterKeys.ROLES ||
+    key === EntityParameterKeys.MODELS ||
+    key === EntityParameterKeys.DEPENDENCIES
   ) {
-    fillApplications(diffs, value as string[]);
+    fillEntities(diffs, value as string[]);
   }
 };
 
@@ -464,7 +468,7 @@ const compareEntities = (diffs: ActivityAuditDiff[], val1: string[], val2: strin
  * @param {ActivityAuditDiff[]} diffs - result array
  * @param {string[]} value - value to fill
  */
-const fillApplications = (diffs: ActivityAuditDiff[], value: string[]) => {
+const fillEntities = (diffs: ActivityAuditDiff[], value: string[]) => {
   const result = (value || []).map((val) => ({
     parameter: val || '',
     value: val || '',
@@ -729,6 +733,7 @@ export const createSectionFromDiffs = (
     EntityParameterKeys.KEYS,
     EntityParameterKeys.PARAMETERS,
     EntityParameterKeys.MODELS,
+    EntityParameterKeys.DEPENDENCIES,
   ];
   const sections: ActivityAuditSection = {};
   sectionNames.forEach((name) => {
