@@ -21,7 +21,7 @@ const EntityAudit: FC<Props> = ({ entity, view }) => {
   const t = useI18n() as (str: string) => string;
 
   const { featureFlags } = useAppContext();
-  const tabs = getAuditTabs(t, featureFlags);
+  const tabs = getAuditTabs(t, featureFlags, view);
   const [activeTab, setActiveTab] = useState(tabs[0].id);
 
   return (

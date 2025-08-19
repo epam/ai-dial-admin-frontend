@@ -36,9 +36,10 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
+import { DialApplicationScheme } from '@/src/models/dial/application';
 
 interface Props {
-  entity?: DialBaseEntity;
+  entity?: DialBaseEntity | DialApplicationScheme;
 }
 
 const ActivityAuditList: FC<Props> = ({ entity }) => {
@@ -75,7 +76,7 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
             ? [
                 {
                   column: 'resourceId',
-                  value: entity.name,
+                  value: (entity as DialApplicationScheme).$id || (entity as DialBaseEntity).name,
                   operator: 'eq',
                 } as FilterDto,
               ]

@@ -103,4 +103,5 @@ export enum ParameterNamesI18nKey {
   parameters = 'ParameterNames.parameters',
   extraData = 'ParameterNames.extraData',
   models = 'ParameterNames.models',
+  baseEndpoint = 'ParameterNames.baseEndpoint',
 }
