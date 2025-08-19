@@ -18,7 +18,7 @@ describe('ApplicationRunner :: clearSchemeForEditor', () => {
       ['dial:applicationTypeRateEndpoint']: 'dial:applicationTypeRateEndpoint',
       ['dial:applicationTypeTruncatePromptEndpoint']: 'dial:applicationTypeTruncatePromptEndpoint',
       ['dial:appendApplicationPropertiesHeader']: true,
-      routes: [],
+      ['dial:applicationTypeRoutes']: [],
       properties: {
         properties1: '1',
         properties2: '2',

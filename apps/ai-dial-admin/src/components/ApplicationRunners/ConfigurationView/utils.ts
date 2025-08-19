@@ -4,6 +4,7 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ErrorType } from '@/src/types/error-type';
 import { isValidHttpUrl } from '@/src/utils/validation/url-error';
 import { cloneDeep } from 'lodash';
+
 const fields: (keyof DialApplicationScheme)[] = [
   '$id',
   '$schema',
