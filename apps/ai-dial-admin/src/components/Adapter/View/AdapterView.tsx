@@ -9,7 +9,7 @@ import { removeAdapter, updateAdapter } from '@/src/app/[lang]/adapters/actions'
 import AdapterModels from '@/src/components/Adapter/ModelsView/AdapterModels';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
-import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
