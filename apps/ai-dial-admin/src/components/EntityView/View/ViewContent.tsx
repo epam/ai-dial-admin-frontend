@@ -11,7 +11,7 @@ import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interce
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import { EntityViewTab } from '@/src/components/EntityView/View/utils';
 import ModelProperties from '@/src/components/ModelView/ModelProperties/ModelProperties';
-import RouteProperties from '@/src/components/RoutesList/RouteProperties';
+import RouteProperties from '@/src/components/Routes/Properties/RouteProperties';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { DialInterceptor } from '@/src/models/dial/interceptor';

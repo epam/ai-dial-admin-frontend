@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { routesApi } from '@/src/app/api/api';
-import RoutesList from '@/src/components/RoutesList/RoutesList';
+import RoutesList from '@/src/components/Routes/List/RoutesList';
 import { DialRoute } from '@/src/models/dial/route';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
