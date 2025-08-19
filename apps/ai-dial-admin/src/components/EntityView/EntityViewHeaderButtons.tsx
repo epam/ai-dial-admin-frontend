@@ -35,6 +35,8 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import { generateNewInitialVersion } from '@/src/utils/prompts/versions';
+import { InterceptorTemplate } from '@/src/models/interceptor-template';
+import DeleteInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Delete';
 
 interface Props<T> {
   view: ApplicationRoute;
@@ -162,6 +164,8 @@ const EntityViewHeaderButtons = <T extends DialBaseEntity | DialKey>({
       <DeleteScheme entity={entity as DialApplicationScheme} isEntityView={true} />
     ) : view === ApplicationRoute.Adapters ? (
       <DeleteAdapter entity={entity as DialAdapter} isEntityView={true} />
+    ) : view === ApplicationRoute.InterceptorTemplates ? (
+      <DeleteInterceptorTemplate template={entity as InterceptorTemplate} />
     ) : null;
 
   return (
