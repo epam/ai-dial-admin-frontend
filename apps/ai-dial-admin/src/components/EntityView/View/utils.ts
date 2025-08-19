@@ -81,7 +81,7 @@ export const getViewTabs = (
   isParametersTabAvailable: boolean,
 ): TabModel[] => {
   if (view === ApplicationRoute.Routes) {
-    return [propertiesTabs(t), rolesTabs(t)];
+    return [propertiesTabs(t), rolesTabs(t), auditTabs(t)];
   }
 
   const tabs: TabModel[] = [propertiesTabs(t), featuresTabs(t), rolesTabs(t), interceptorsTabs(t)];

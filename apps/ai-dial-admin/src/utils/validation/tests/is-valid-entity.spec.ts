@@ -1,6 +1,7 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
 import { isValidEntity } from '@/src/utils/validation/is-valid-entity';
+import { max } from 'lodash';
 
 describe('Utils :: isValidEntity', () => {
   test('Should check entity with version', () => {
@@ -158,10 +159,23 @@ describe('Utils :: isValidEntity', () => {
       ['name2'],
     );
 
+    const res6 = isValidEntity(
+      ApplicationRoute.Applications,
+      {
+        name: 'name',
+        displayName: 'displayName',
+        customAppSchemaId: 'customAppSchemaId',
+        maxInputAttachments: 1005,
+      },
+      void 0,
+      ['name2'],
+    );
+
     expect(res1).toBeFalsy();
     expect(res2).toBeFalsy();
     expect(res3).toBeTruthy();
     expect(res4).toBeFalsy();
+    expect(res6).toBeFalsy();
     expect(res5).toBeTruthy();
   });
 

@@ -1,27 +1,28 @@
 'use client';
+import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import classNames from 'classnames';
 import { cloneDeep, isEqual } from 'lodash';
-import { useRouter } from 'next/navigation';
 
 import { removeAdapter, updateAdapter } from '@/src/app/[lang]/adapters/actions';
+import AdapterModels from '@/src/components/Adapter/ModelsView/AdapterModels';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
+import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
+import EntityHeader from '@/src/components/EntityView/Header/Header';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { TabModel } from '@/src/models/tab';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
-import AdapterModels from '../ModelsView/AdapterModels';
 import AdapterProperties from './AdapterProperties';
-import EntityHeader from '@/src/components/EntityView/Header/Header';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props {
   originalAdapter: DialAdapter;
@@ -32,7 +33,7 @@ const AdapterView: FC<Props> = ({ originalAdapter }) => {
   const router = useRouter();
   const { showNotification } = useNotification();
 
-  const tabs: TabModel[] = [propertiesTabs(t), { id: EntityViewTab.Models, name: t(TabsI18nKey.Models) }];
+  const tabs: TabModel[] = [propertiesTabs(t), { id: EntityViewTab.Models, name: t(TabsI18nKey.Models) }, auditTabs(t)];
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedAdapter, setSelectedAdapter] = useState(cloneDeep(originalAdapter));
@@ -143,6 +144,9 @@ const AdapterView: FC<Props> = ({ originalAdapter }) => {
               <div className="w-full h-full">
                 <AdapterModels adapter={selectedAdapter} onChangeAdapter={onChangeAdapter} />
               </div>
+            )}
+            {activeTab === EntityViewTab.Audit && (
+              <EntityAudit entity={selectedAdapter} view={ApplicationRoute.Adapters} />
             )}
           </>
         )}

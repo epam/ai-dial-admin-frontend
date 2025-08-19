@@ -840,6 +840,8 @@ export default {
     parameters: 'Parameters',
     extraData: 'Extra data',
     models: 'Models',
+    baseEndpoint: 'Base endpoint',
+    dependencies: 'Dependencies',
   },
   Error: {
     ServerError: 'Server Error',

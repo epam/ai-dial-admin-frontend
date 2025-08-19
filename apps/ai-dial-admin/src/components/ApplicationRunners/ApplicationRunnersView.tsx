@@ -1,13 +1,15 @@
 'use client';
 
-import classNames from 'classnames';
-import { cloneDeep, isEqual } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
+import classNames from 'classnames';
+import { cloneDeep, isEqual } from 'lodash';
+
 import { removeApplicationScheme, updateApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
-import { appRouteTab, EntityViewTab, parametersTabs, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import { auditTabs, EntityViewTab, parametersTabs, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
@@ -24,6 +26,7 @@ import AppRunnerApplications from './ConfigurationView/Applications';
 import SchemeParameters from './ConfigurationView/Parameters';
 import SchemeProperties from './ConfigurationView/Properties';
 import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
+import EntityAudit from '../EntityView/Audit/EntityAudit';
 
 interface Props {
   originalScheme: DialApplicationScheme;
@@ -39,6 +42,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
     parametersTabs(t),
     appRouteTab(t),
     { id: EntityViewTab.Applications, name: t(TabsI18nKey.Applications) },
+    auditTabs(t),
   ];
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -153,7 +157,10 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
               <EntityRoutes
                 routes={selectedScheme.routes}
                 onChangeRoutes={(routes) => setSelectedScheme({ ...selectedScheme, routes })}
-              />
+              />)}
+
+            {activeTab === EntityViewTab.Audit && (
+              <EntityAudit entity={selectedScheme} view={ApplicationRoute.ApplicationRunners} />
             )}
           </>
         )}
