@@ -30,6 +30,7 @@ export enum EntityParameterKeys {
   PARAMETERS = 'parameters',
   MODELS = 'models',
   UNIT = 'unit',
+  DEPENDENCIES = 'dependencies',
 }
 
 export enum ParameterNamesI18nKey {
@@ -104,4 +105,5 @@ export enum ParameterNamesI18nKey {
   extraData = 'ParameterNames.extraData',
   models = 'ParameterNames.models',
   baseEndpoint = 'ParameterNames.baseEndpoint',
+  dependencies = 'ParameterNames.dependencies',
 }

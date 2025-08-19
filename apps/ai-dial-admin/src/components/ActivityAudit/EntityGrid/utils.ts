@@ -49,6 +49,8 @@ export const getColumnsByParameter = (
     parameter === EntityParameterKeys.APPLICATIONS ||
     parameter === EntityParameterKeys.ENTITIES ||
     parameter === EntityParameterKeys.KEYS ||
+    parameter === EntityParameterKeys.MODELS ||
+    parameter === EntityParameterKeys.DEPENDENCIES ||
     (parameter === EntityParameterKeys.ROLES && type === ActivityAuditResourceType.KEY)
   ) {
     return ENTITIES_DIFF_COLUMNS;
