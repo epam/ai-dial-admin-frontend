@@ -206,7 +206,7 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
   }, [router]);
 
   return (
-    <>
+    <div role="activities" className="flex flex-col flex-1 min-h-0 w-full relative">
       <ListView
         additionalGridOptions={gridOptions}
         columnDefs={columnDefs}
@@ -275,7 +275,7 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
           />,
           document.body,
         )}
-    </>
+    </div>
   );
 };
 
