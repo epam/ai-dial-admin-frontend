@@ -37,9 +37,7 @@ const EntityRoutes: FC<Props> = ({ routes, onChangeRoutes }) => {
   }, [tabs, activeRouteTab]);
 
   useEffect(() => {
-    if (!activeRouteTab) {
-      setActiveRouteIndex((routes || []).findIndex((route) => route.name === activeRouteTab));
-    }
+    setActiveRouteIndex((routes || []).findIndex((route) => route.name === activeRouteTab));
   }, [activeRouteTab, routes]);
 
   const handleModalClose = useCallback(() => {
@@ -92,11 +90,13 @@ const EntityRoutes: FC<Props> = ({ routes, onChangeRoutes }) => {
             )}
           </div>
         </div>
-        <div className="flex flex-col flex-1 min-h-0 w-full relative">
-          <RouteContent
-            route={routes?.[activeRouteIndex as number] || ({} as DialRoute)}
-            onChangeRoute={onChangeRoute}
-          />
+        <div className="flex flex-col flex-1 min-h-0 min-w-0 relative">
+          {routes?.[activeRouteIndex as number] && (
+            <RouteContent
+              route={routes?.[activeRouteIndex as number] || ({} as DialRoute)}
+              onChangeRoute={onChangeRoute}
+            />
+          )}
         </div>
       </div>
       {modalState === PopUpState.Opened && (
