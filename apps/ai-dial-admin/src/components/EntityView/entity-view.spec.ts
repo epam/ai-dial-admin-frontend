@@ -46,6 +46,6 @@ describe('Entity View :: getViewTabs', () => {
 
   test('Should return tabs for routes', () => {
     const res = getViewTabs(t, ApplicationRoute.Routes, true);
-    expect(res).toEqual([propertiesTabs(t), rolesTabs(t)]);
+    expect(res).toEqual([propertiesTabs(t), rolesTabs(t), auditTabs(t)]);
   });
 });
