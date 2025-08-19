@@ -8,7 +8,7 @@ import { getRules } from '@/src/app/[lang]/folders-storage/actions';
 import Button from '@/src/components/Common/Button/Button';
 import RulesCompare from '@/src/components/PublicationView/Popup/RulesCompare';
 import RulesStructure from '@/src/components/PublicationView/Popup/RulesStructure';
-import RulesItem from '@/src/components/Rules/RulesItem';
+import RulesItem from '@/src/components/Rules/Item/RulesItem';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';

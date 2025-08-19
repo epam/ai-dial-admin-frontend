@@ -2,7 +2,7 @@ import { render } from '@testing-library/react';
 
 import { DialRule, RuleDiffStatus, RuleFunction } from '@/src/models/dial/rule';
 import { describe, expect, test } from 'vitest';
-import { generateRuleDiff, getOperationIcon, sortRules } from './rules';
+import { generateRuleDiff, getOperationIcon, sortRules } from './utils';
 
 describe('Rules :: getOperationIcon', () => {
   test('returns IconEqual component when operation is EQUAL', () => {

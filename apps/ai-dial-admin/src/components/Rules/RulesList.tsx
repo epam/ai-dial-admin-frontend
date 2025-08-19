@@ -9,7 +9,7 @@ import { useRuleFolder } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialRule } from '@/src/models/dial/rule';
 import { getFolderName } from '@/src/utils/files/folder';
-import RulesItem from './RulesItem';
+import RulesItem from './Item/RulesItem';
 import { sortRules } from './rules';
 
 interface Props {

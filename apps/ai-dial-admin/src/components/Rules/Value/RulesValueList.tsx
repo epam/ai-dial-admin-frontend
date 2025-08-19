@@ -11,7 +11,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialRule, RuleDiffModel } from '@/src/models/dial/rule';
 import RulesValue from './RulesValue';
 import RulesValueReadonly from './RulesValueReadonly';
-import { generateRuleDiff } from './rules';
+import { generateRuleDiff } from '../utils';
 
 const emptyRule = { function: void 0, source: '', targets: [] } as unknown as DialRule;
 
