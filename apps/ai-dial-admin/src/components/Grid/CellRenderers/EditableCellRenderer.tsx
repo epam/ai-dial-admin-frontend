@@ -14,7 +14,7 @@ interface EditableCellRendererParams extends ICellRendererParams {
 
 const EditableCellRenderer = (params: EditableCellRendererParams) => {
   const t = useI18n();
-  const translatedPlaceholder = params.placeholder ? t(params.placeholder as any) : '';
+  const translatedPlaceholder = params.placeholder ? t(params.placeholder as any, {}) : '';
 
   const [value, setValue] = useState(
     params.valueFormatter ? params.valueFormatter(params.value) : params.value || translatedPlaceholder,

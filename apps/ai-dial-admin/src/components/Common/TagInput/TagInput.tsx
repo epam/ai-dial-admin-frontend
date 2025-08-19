@@ -6,7 +6,6 @@ import classNames from 'classnames';
 
 import ErrorText from '@/src/components/Common/ErrorText/ErrorText';
 import Field from '@/src/components/Common/Field/Field';
-import { useI18n } from '@/src/locales/client';
 import Tag from './Tag';
 
 interface Props {
@@ -30,8 +29,6 @@ const TagInput: FC<Props> = ({
   invalid,
   onChange,
 }) => {
-  const t = useI18n();
-
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
