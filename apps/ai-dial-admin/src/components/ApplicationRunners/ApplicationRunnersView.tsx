@@ -1,13 +1,15 @@
 'use client';
 
-import classNames from 'classnames';
-import { cloneDeep, isEqual } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
+import classNames from 'classnames';
+import { cloneDeep, isEqual } from 'lodash';
+
 import { removeApplicationScheme, updateApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
-import { EntityViewTab, parametersTabs, propertiesTabs } from '@/src/components/EntityView/entity-view';
+import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import { auditTabs, EntityViewTab, parametersTabs, propertiesTabs } from '@/src/components/EntityView/entity-view';
 import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
@@ -37,6 +39,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
     propertiesTabs(t),
     parametersTabs(t),
     { id: EntityViewTab.Applications, name: t(TabsI18nKey.Applications) },
+    auditTabs(t),
   ];
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -145,6 +148,10 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
 
             {activeTab === EntityViewTab.Applications && (
               <AppRunnerApplications appRunner={selectedScheme} onChangeAppRunner={onChangeScheme} />
+            )}
+
+            {activeTab === EntityViewTab.Audit && (
+              <EntityAudit entity={selectedScheme} view={ApplicationRoute.ApplicationRunners} />
             )}
           </>
         )}

@@ -1,37 +1,39 @@
 'use client';
 
-import { cloneDeep, isEqual } from 'lodash';
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
-import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
+
+import classNames from 'classnames';
+import { cloneDeep, isEqual } from 'lodash';
 
 import { removeRole, updateRole } from '@/src/app/[lang]/roles/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import {
-  getRelevantKeysForRole,
   getEntitiesForRole,
+  getRelevantKeysForRole,
   ROLES_ENTITIES_COLUMNS,
 } from '@/src/components/AddEntitiesTab/AddEntitiesView.utils';
-import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
-import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/entity-view';
-import { useNotification } from '@/src/context/NotificationContext';
+import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/entity-view';
 import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
-import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
+import EntityHeader from '@/src/components/EntityView/Header/Header';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
+import { KEYS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, KeysI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialRoleLimits, DialRoleLimitsMap } from '@/src/models/dial/base-entity';
 import { DialApplication } from '@/src/models/dial/application';
+import { DialRoleLimits, DialRoleLimitsMap } from '@/src/models/dial/base-entity';
+import { DialKey } from '@/src/models/dial/key';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
+import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { TabModel } from '@/src/models/tab';
+import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
-import { DialKey } from '@/src/models/dial/key';
-import { KEYS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { getErrorNotification } from '@/src/utils/notification';
-import EntityHeader from '@/src/components/EntityView/Header/Header';
 
 interface Props {
   originalRole: DialRole;
@@ -50,6 +52,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
     propertiesTabs(t),
     { id: EntityViewTab.Entities, name: t(TabsI18nKey.Entities) },
     { id: EntityViewTab.Keys, name: t(TabsI18nKey.Keys) },
+    auditTabs(t),
   ];
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -218,7 +221,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
         ) : (
           <>
             {activeTab === EntityViewTab.Properties && (
-              <div className="h-full lg:w-[35%] mt-3">
+              <div className="lg:w-[35%] mt-3">
                 <EntityHeader entity={selectedRole} />
                 <div className="flex-1 min-h-0">
                   <SimpleEntityProperties
@@ -255,6 +258,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
             getRelevantDataForEntity={getRelevantKeysForRole.bind(this, selectedRole)}
           />
         )}
+        {activeTab === EntityViewTab.Audit && <EntityAudit entity={selectedRole} view={ApplicationRoute.Roles} />}
       </div>
     </div>
   );
