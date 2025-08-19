@@ -1,30 +1,31 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { IconRefresh } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { cloneDeep, isEqual } from 'lodash';
-import { useRouter } from 'next/navigation';
 
 import { removeKey, updateKey } from '@/src/app/[lang]/keys/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import { getRelevantRolesForKey } from '@/src/components/AddEntitiesTab/AddEntitiesView.utils';
-import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import Button from '@/src/components/Common/Button/Button';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
-import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { EntityViewTab, propertiesTabs, rolesTabs } from '@/src/components/EntityView/entity-view';
+import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import { auditTabs, EntityViewTab, propertiesTabs, rolesTabs } from '@/src/components/EntityView/entity-view';
 import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
+import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, KeysI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { DialRole } from '@/src/models/dial/role';
+import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { TabModel } from '@/src/models/tab';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
@@ -46,7 +47,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
   const router = useRouter();
   const { showNotification } = useNotification();
 
-  const tabs: TabModel[] = [propertiesTabs(t), rolesTabs(t)];
+  const tabs: TabModel[] = [propertiesTabs(t), rolesTabs(t), auditTabs(t)];
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [confirmModalState, setConfirmModalState] = useState(PopUpState.Closed);
@@ -222,6 +223,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
                   getRelevantDataForEntity={getRelevantRolesForKey.bind(this, selectedKey)}
                 />
               )}
+              {activeTab === EntityViewTab.Audit && <EntityAudit entity={selectedKey} view={ApplicationRoute.Keys} />}
             </>
           )}
         </div>

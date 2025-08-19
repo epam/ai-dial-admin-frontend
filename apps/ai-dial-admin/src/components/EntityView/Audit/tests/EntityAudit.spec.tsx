@@ -11,11 +11,19 @@ vi.mock('@/src/context/AppContext', () => ({
 }));
 
 describe('EntityAudit', () => {
-  test('renders audit', () => {
+  test('renders audit tab with Activities and Dashboards', () => {
     const entity = { name: 'Test Entity', id: '123' };
 
-    render(<EntityAudit entity={entity} view={ApplicationRoute.Dashboard} />);
+    render(<EntityAudit entity={entity} view={ApplicationRoute.Models} />);
 
     expect(screen.getByRole('dashboards')).toBeInTheDocument();
+  });
+
+  test('renders audit tab with Activities only', () => {
+    const entity = { name: 'Test Entity', id: '123' };
+
+    render(<EntityAudit entity={entity} view={ApplicationRoute.Roles} />);
+
+    expect(screen.getByRole('activities')).toBeInTheDocument();
   });
 });

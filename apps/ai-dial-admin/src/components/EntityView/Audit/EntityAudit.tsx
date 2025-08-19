@@ -21,7 +21,7 @@ const EntityAudit: FC<Props> = ({ entity, view }) => {
   const t = useI18n() as (str: string) => string;
 
   const { featureFlags } = useAppContext();
-  const tabs = getAuditTabs(t, featureFlags);
+  const tabs = getAuditTabs(t, featureFlags, view);
   const [activeTab, setActiveTab] = useState(tabs[0].id);
 
   return (
@@ -39,11 +39,7 @@ const EntityAudit: FC<Props> = ({ entity, view }) => {
       </div>
       <div className="flex flex-col flex-1 min-h-0 w-full relative">
         {activeTab === EntityViewTab.Dashboard && <Dashboard entity={entity} route={view} />}
-        {activeTab === EntityViewTab.Activities && (
-          <div className="flex flex-col flex-1 min-h-0 w-full relative">
-            <ActivityAuditList entity={entity} />
-          </div>
-        )}
+        {activeTab === EntityViewTab.Activities && <ActivityAuditList entity={entity} />}
       </div>
     </div>
   );

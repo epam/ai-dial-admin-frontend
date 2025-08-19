@@ -842,6 +842,7 @@ export default {
     parameters: 'Parameters',
     extraData: 'Extra data',
     models: 'Models',
+    baseEndpoint: 'Base endpoint',
   },
   Error: {
     ServerError: 'Server Error',
