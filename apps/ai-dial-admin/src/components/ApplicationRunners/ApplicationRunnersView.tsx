@@ -9,7 +9,7 @@ import { cloneDeep, isEqual } from 'lodash';
 import { removeApplicationScheme, updateApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
-import { auditTabs, EntityViewTab, parametersTabs, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import { appRouteTab, auditTabs, EntityViewTab, parametersTabs, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
@@ -26,7 +26,6 @@ import AppRunnerApplications from './ConfigurationView/Applications';
 import SchemeParameters from './ConfigurationView/Parameters';
 import SchemeProperties from './ConfigurationView/Properties';
 import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
-import EntityAudit from '../EntityView/Audit/EntityAudit';
 
 interface Props {
   originalScheme: DialApplicationScheme;
@@ -155,9 +154,12 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
 
             {activeTab === EntityViewTab.Routes && (
               <EntityRoutes
-                routes={selectedScheme.routes}
-                onChangeRoutes={(routes) => setSelectedScheme({ ...selectedScheme, routes })}
-              />)}
+                routes={selectedScheme['dial:applicationTypeRoutes']}
+                onChangeRoutes={(routes) =>
+                  setSelectedScheme({ ...selectedScheme, ['dial:applicationTypeRoutes']: routes })
+                }
+              />
+            )}
 
             {activeTab === EntityViewTab.Audit && (
               <EntityAudit entity={selectedScheme} view={ApplicationRoute.ApplicationRunners} />
