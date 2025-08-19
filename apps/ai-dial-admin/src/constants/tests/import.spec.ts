@@ -1,16 +1,78 @@
-import { IMPORT_RESOLUTIONS } from '../import';
-import { ImportFileType } from '@/src/types/import';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
+import { IMPORT_RESOLUTIONS, IMPORT_STEPS, IMPORT_CONFIG_STEPS, IMPORT_FILE_TYPES } from '../import';
+import { ImportI18nKey } from '@/src/constants/i18n';
+import { ConflictResolutionPolicy, ImportFileType, ImportSteps } from '@/src/types/import';
+import { StepStatus } from '@/src/models/step';
+import { ApplicationRoute } from '@/src/types/routes';
 
-describe('Prompts list :: IMPORT_RESOLUTIONS', () => {
-  const mockT = vi.fn().mockReturnValue('Translated Text');
-  test('Should return 2 resolutions', () => {
-    const res = IMPORT_RESOLUTIONS(mockT);
-    expect(res.length).toEqual(2);
+const t = (s: string) => s;
+
+describe('IMPORT_RESOLUTIONS', () => {
+  test('returns OVERRIDE and SKIP by default', () => {
+    const result = IMPORT_RESOLUTIONS(t);
+    expect(result).toEqual([
+      { id: ConflictResolutionPolicy.OVERRIDE, name: ImportI18nKey.Override },
+      { id: ConflictResolutionPolicy.SKIP, name: ImportI18nKey.Skip },
+    ]);
   });
 
-  test('Should return 3 resolutions', () => {
-    const res = IMPORT_RESOLUTIONS(mockT, ImportFileType.JSON);
-    expect(res.length).toEqual(3);
+  test('adds MANUAL for JSON import type', () => {
+    const result = IMPORT_RESOLUTIONS(t, ImportFileType.JSON);
+    expect(result.some((r) => r.id === ConflictResolutionPolicy.MANUAL)).toBe(true);
+  });
+
+  test('adds MANUAL for FILES import type', () => {
+    const result = IMPORT_RESOLUTIONS(t, ImportFileType.FILES);
+    expect(result.some((r) => r.id === ConflictResolutionPolicy.MANUAL)).toBe(true);
+  });
+
+  test('does not add MANUAL for ARCHIVE import type', () => {
+    const result = IMPORT_RESOLUTIONS(t, ImportFileType.ARCHIVE);
+    expect(result.some((r) => r.id === ConflictResolutionPolicy.MANUAL)).toBe(false);
+  });
+});
+
+describe('IMPORT_STEPS', () => {
+  test('returns steps for files and properties', () => {
+    const steps = IMPORT_STEPS(t);
+    expect(steps).toEqual([
+      { id: ImportSteps.FILES, name: ImportI18nKey.ImportFiles, status: StepStatus.INVALID },
+      { id: ImportSteps.PROPERTIES, name: ImportI18nKey.ImportProperties, status: StepStatus.INVALID },
+    ]);
+  });
+});
+
+describe('IMPORT_CONFIG_STEPS', () => {
+  test('returns steps for files and configuration', () => {
+    const steps = IMPORT_CONFIG_STEPS(t);
+    expect(steps).toEqual([
+      { id: ImportSteps.FILES, name: ImportI18nKey.ImportFiles, status: StepStatus.INVALID },
+      { id: ImportSteps.CONFIGURATION, name: ImportI18nKey.ImportConfiguration, status: StepStatus.INVALID },
+    ]);
+  });
+});
+
+describe('IMPORT_FILE_TYPES', () => {
+  test('returns only ARCHIVE by default', () => {
+    const result = IMPORT_FILE_TYPES(t);
+    expect(result).toEqual([
+      {
+        id: ImportFileType.ARCHIVE,
+        name: ImportI18nKey.DialArchive,
+        description: ImportI18nKey.ImportArchiveDescription,
+      },
+    ]);
+  });
+
+  test('returns ARCHIVE and JSON for Prompts route', () => {
+    const result = IMPORT_FILE_TYPES(t, ApplicationRoute.Prompts);
+    expect(result.some((r) => r.id === ImportFileType.ARCHIVE)).toBe(true);
+    expect(result.some((r) => r.id === ImportFileType.JSON)).toBe(true);
+  });
+
+  test('returns ARCHIVE and FILES for Files route', () => {
+    const result = IMPORT_FILE_TYPES(t, ApplicationRoute.Files);
+    expect(result.some((r) => r.id === ImportFileType.ARCHIVE)).toBe(true);
+    expect(result.some((r) => r.id === ImportFileType.FILES)).toBe(true);
   });
 });

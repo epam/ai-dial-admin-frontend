@@ -9,13 +9,11 @@ interface Props {
   size?: number;
   loaderClassName?: string;
   containerClassName?: string;
-  dataTestId?: string;
 }
 
-const Loader: FC<Props> = ({ size = 18, loaderClassName = '', containerClassName = '', dataTestId }) => {
+const Loader: FC<Props> = ({ size = 18, loaderClassName = '', containerClassName = '' }) => {
   return (
     <div
-      data-testid={dataTestId}
       className={classNames('flex w-full items-center justify-center text-secondary', containerClassName || 'h-full')}
     >
       <LoaderIcon

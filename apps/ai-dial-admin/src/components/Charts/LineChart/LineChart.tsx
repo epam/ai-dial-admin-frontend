@@ -57,13 +57,13 @@ const LineChart: FC<Props> = ({ getData, refreshTime }) => {
       <h3 className="text-primary mb-4">{t(TelemetryI18nKey.SystemUsage)}</h3>
 
       {loading ? (
-        <Loader dataTestId={'chart-loader'} size={24} />
+        <Loader size={24} />
       ) : (
         <>
           {!data?.length ? (
-            <NoDataContent dataTestId={'chart-no-data'} emptyDataTitle={t(BasicI18nKey.NoData)} />
+            <NoDataContent emptyDataTitle={t(BasicI18nKey.NoData)} />
           ) : (
-            <div data-testid={'chart'}>
+            <div>
               {options && <ReactECharts option={options} className="flex w-full h-full min-h-[280px] m-0 p-0" />}
             </div>
           )}
