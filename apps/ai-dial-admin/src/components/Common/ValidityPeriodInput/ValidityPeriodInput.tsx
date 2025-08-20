@@ -6,7 +6,7 @@ import Dropdown from '@/src/components/Common/Dropdown/Dropdown';
 import DropdownMenuItem from '@/src/components/Common/Dropdown/DropdownItem';
 import Field from '@/src/components/Common/Field/Field';
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
-import { CreateI18nKey, EntityFieldsI18nKey, KeysI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, KeysI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ValidityPeriods } from '@/src/types/key';
@@ -53,7 +53,7 @@ const ValidityPeriodInput: FC<Props> = ({ onChange }) => {
   return (
     <div className="flex flex-row gap-6">
       <div className="flex flex-col">
-        <Field fieldTitle={t(CreateI18nKey.ValidityPeriodTitle)} />
+        <Field fieldTitle={t(KeysI18nKey.ValidityPeriod)} />
         <div className="w-[160px]">
           <Dropdown
             className="w-full flex items-center"

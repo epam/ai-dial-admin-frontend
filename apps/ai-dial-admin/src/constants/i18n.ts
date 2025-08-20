@@ -223,19 +223,14 @@ export enum CreateI18nKey {
   Prompt = 'CreateEntity.Prompt',
   Route = 'CreateEntity.Route',
   Interceptor = 'CreateEntity.Interceptor',
+  CreateInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Create',
+  SelectInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Select',
+  InterceptorContainer = 'CreateEntity.InterceptorContainer',
 
   KeyTitle = 'CreateEntity.key.title',
   KeyPlaceholder = 'CreateEntity.key.placeholder',
   ErrorKey = 'CreateEntity.key.error',
   ErrorName = 'CreateEntity.name.error', //???
-
-  ValidityPeriodTitle = 'CreateEntity.ValidityPeriodTitle',
-  ContentTitle = 'CreateEntity.content.title',
-  ContentPlaceholder = 'CreateEntity.content.placeholder',
-
-  CreateInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Create',
-  SelectInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Select',
-  InterceptorContainer = 'CreateEntity.InterceptorContainer',
 }
 
 export enum UpstreamEndpointsI18nKey {
@@ -280,6 +275,7 @@ export enum KeysI18nKey {
   SaveWithoutRoles = 'Keys.SaveWithoutRoles',
   SaveWithoutRolesDescriptions = 'Keys.SaveWithoutRolesDescriptions',
   AddKeys = 'Keys.AddKeys',
+  ValidityPeriod = 'Keys.ValidityPeriod',
   NoRoles = 'Keys.Status.NoRoles',
   Expired = 'Keys.Status.Expired',
   AlmostExpired = 'Keys.Status.AlmostExpired',
@@ -428,10 +424,6 @@ export enum PublicationsI18nKey {
   ApplicationPublishApproveDescription = 'Publications.Applications.PublishApproveDescription',
   ApplicationUnpublishApproveDescription = 'Publications.Applications.UnpublishApproveDescription',
   OpenPrompt = 'Publications.Prompt.OpenPrompt',
-  TestPrompt = 'Publications.Prompt.TestPrompt',
-  Version = 'Publications.Prompt.Version',
-  Description = 'Publications.Prompt.Description',
-  Content = 'Publications.Prompt.Content',
   ActionPublish = 'Publications.ActionPublish',
   ActionUnpublish = 'Publications.ActionUnpublish',
   Action = 'Publications.Action',
@@ -671,6 +663,7 @@ export enum EntityFieldsI18nKey {
   defaultRoleLimit = 'EntityFields.defaultRoleLimit',
   fieldsHashingOrder = 'EntityFields.fieldsHashingOrder',
   endpointDeploymentName = 'EntityFields.endpointDeploymentName',
+  content = 'EntityFields.content',
   name = 'EntityFields.name',
   id = 'EntityFields.id',
   author = 'EntityFields.author',

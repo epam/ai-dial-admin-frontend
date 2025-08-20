@@ -5,7 +5,6 @@ import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import {
   BasicI18nKey,
   ButtonsI18nKey,
-  CreateI18nKey,
   DuplicateI18nKey,
   EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,

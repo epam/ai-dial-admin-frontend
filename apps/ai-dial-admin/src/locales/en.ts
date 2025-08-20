@@ -243,12 +243,6 @@ export default {
       placeholder: 'Enter value or generate',
       error: 'This value already exists.',
     },
-
-    ValidityPeriodTitle: 'Validity period',
-    content: {
-      title: 'Content',
-      placeholder: 'Enter prompt',
-    },
   },
   Type: {
     Object: 'Object',
@@ -448,10 +442,6 @@ export default {
       ReasonTitle: 'Reason',
       ReasonPlaceholder: 'Describe the reason for decline',
       OpenPrompt: 'Open Prompt',
-      TestPrompt: 'Test on Playground',
-      Version: 'Version',
-      Description: 'Description',
-      Content: 'Content',
     },
     Files: {
       FilesListTitle: 'Files list',
@@ -497,6 +487,7 @@ export default {
     RotateKeyDescription: 'Rotating key will provide new key value and deactivate the current one.',
     RotateKeySuccessTitle: 'Key rotated successfully',
     RotateKeySuccessDescription: 'New key value generated',
+    ValidityPeriod: 'Validity period',
     Status: {
       NoRoles: 'No roles assigned',
       Expired: 'Expired',
@@ -733,6 +724,7 @@ export default {
     baseEndpoint: 'Base endpoint',
     dependencies: 'Dependencies',
     order: 'Order',
+    content: 'Content',
   },
   EntityPlaceholders: {
     Project: 'Enter project',

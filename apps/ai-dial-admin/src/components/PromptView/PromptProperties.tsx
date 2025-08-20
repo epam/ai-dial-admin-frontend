@@ -17,7 +17,6 @@ import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 import {
   BasicI18nKey,
   ButtonsI18nKey,
-  CreateI18nKey,
   EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
   FoldersI18nKey,
@@ -235,7 +234,7 @@ const PromptProperties: FC<Props> = ({
           />
           <div>
             <div className="flex justify-between mb-2">
-              <div className="tiny mb-2 text-secondary">{t(CreateI18nKey.ContentTitle)}</div>
+              <div className="tiny mb-2 text-secondary">{t(EntityFieldsI18nKey.content)}</div>
               <Switch
                 isOn={isJSONContentMode}
                 title="JSON"

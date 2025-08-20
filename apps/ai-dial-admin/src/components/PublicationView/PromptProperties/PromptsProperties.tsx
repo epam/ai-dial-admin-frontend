@@ -1,12 +1,12 @@
 import classNames from 'classnames';
 import { FC, ReactNode, useCallback, useState } from 'react';
 
-import { IconChevronDown, IconChevronRight, IconExternalLink, IconMessages } from '@tabler/icons-react';
+import { IconChevronDown, IconChevronRight, IconExternalLink } from '@tabler/icons-react';
 
 import Button from '@/src/components/Common/Button/Button';
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
-import { PublicationsI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
@@ -70,13 +70,6 @@ const PromptsProperties: FC<Props> = ({ prompt, action, collapsed }) => {
               dataTestId={'publication-prompt-open-button'}
             />
           )}
-          <Button
-            cssClass="secondary"
-            title={t(PublicationsI18nKey.TestPrompt)}
-            iconBefore={<IconMessages width={18} height={18} />}
-            onClick={() => void 0}
-            hideTitleOnMobile={true}
-          />
         </div>
       </div>
       <div
@@ -84,13 +77,13 @@ const PromptsProperties: FC<Props> = ({ prompt, action, collapsed }) => {
         className={classNames('flex flex-col h-full justify-between', isCollapsed && 'hidden')}
       >
         <div className="mt-4">
-          <LabeledText label={t(PublicationsI18nKey.Version)} text={prompt.version as string} />
+          <LabeledText label={t(EntityFieldsI18nKey.displayVersion)} text={prompt.version as string} />
         </div>
         <div className="mt-4">
-          <LabeledText label={t(PublicationsI18nKey.Description)} text={prompt.description as string} />
+          <LabeledText label={t(EntityFieldsI18nKey.description)} text={prompt.description as string} />
         </div>
         <div className="mt-4">
-          <LabeledText label={t(PublicationsI18nKey.Content)}>
+          <LabeledText label={t(EntityFieldsI18nKey.content)}>
             <Tooltip
               contentClassName="truncate"
               tooltip={formatPromptText(prompt.content as string)}
