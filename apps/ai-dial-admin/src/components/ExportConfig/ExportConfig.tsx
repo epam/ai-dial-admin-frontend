@@ -101,8 +101,8 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
         .then(({ blob, fileName }) => {
           showNotification(
             getSuccessNotification(
-              t(ExportI18nKey.ExportSuccessTitle, { type }),
-              t(ExportI18nKey.ExportSuccessDescription),
+              t(ExportI18nKey.SuccessTitle, { type }),
+              t(ExportI18nKey.SuccessDescription),
             ),
           );
 
@@ -110,7 +110,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
         })
         .catch(() => {
           showNotification(
-            getErrorNotification(t(ExportI18nKey.ExportErrorTitle, { type }), t(ExportI18nKey.ExportErrorDescription)),
+            getErrorNotification(t(ExportI18nKey.ErrorTitle, { type }), t(ExportI18nKey.ErrorDescription)),
           );
         });
     },
@@ -123,8 +123,8 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
       .then(({ blob, fileName }) => {
         showNotification(
           getSuccessNotification(
-            t(ExportI18nKey.ExportSuccessTitle, { type }),
-            t(ExportI18nKey.ExportSuccessDescription),
+            t(ExportI18nKey.SuccessTitle, { type }),
+            t(ExportI18nKey.SuccessDescription),
           ),
         );
 
@@ -132,7 +132,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
       })
       .catch(() => {
         showNotification(
-          getErrorNotification(t(ExportI18nKey.ExportErrorTitle, { type }), t(ExportI18nKey.ExportErrorDescription)),
+          getErrorNotification(t(ExportI18nKey.ErrorTitle, { type }), t(ExportI18nKey.ErrorDescription)),
         );
       });
   }, [showNotification, t]);

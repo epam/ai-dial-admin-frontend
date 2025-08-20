@@ -91,17 +91,14 @@ const EntityListHeaderButtons = <T extends DialBaseEntity | DialKey | DialApplic
       exportFunction(promptPaths)
         .then(({ blob, fileName }) => {
           showNotification(
-            getSuccessNotification(
-              t(ExportI18nKey.ExportSuccessTitle, { type }),
-              t(ExportI18nKey.ExportSuccessDescription),
-            ),
+            getSuccessNotification(t(ExportI18nKey.SuccessTitle, { type }), t(ExportI18nKey.SuccessDescription)),
           );
 
           downloadFile(blob, fileName);
         })
         .catch(() => {
           showNotification(
-            getErrorNotification(t(ExportI18nKey.ExportErrorTitle, { type }), t(ExportI18nKey.ExportErrorDescription)),
+            getErrorNotification(t(ExportI18nKey.ErrorTitle, { type }), t(ExportI18nKey.ErrorDescription)),
           );
         });
       handleModalClose();
@@ -120,8 +117,8 @@ const EntityListHeaderButtons = <T extends DialBaseEntity | DialKey | DialApplic
       const folderName = getFolderName(path) || '';
       const prepareNotificationId = showNotification(
         getPrepareNotification(
-          t(ImportI18nKey.ImportPrepareTitle, { folder: folderName }),
-          t(ImportI18nKey.ImportPrepareDescription, { folder: folderName }),
+          t(ImportI18nKey.PrepareTitle, { folder: folderName }),
+          t(ImportI18nKey.PrepareDescription, { folder: folderName }),
         ),
       );
       const importFunction = route === ApplicationRoute.Prompts ? importPrompts : importFiles;
@@ -134,7 +131,7 @@ const EntityListHeaderButtons = <T extends DialBaseEntity | DialKey | DialApplic
         if (res.success) {
           const error = (res.response as { error: string })?.error;
           if (error) {
-            showNotification(getErrorNotification(t(ImportI18nKey.ImportArchiveErrorTitle), error));
+            showNotification(getErrorNotification(t(ImportI18nKey.ArchiveErrorTitle), error));
           } else {
             const results = (res.response as { importResults: ImportResult[] }).importResults;
             getImportResults(results, folderName, translatedType, t, showNotification);
