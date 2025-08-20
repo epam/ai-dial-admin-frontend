@@ -25,6 +25,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { downloadFile } from '@/src/utils/download';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import NoPreview from '@/src/components/ExportConfig/Preview/NoPreview';
 
 interface Props {
   enableExportConfigMap?: boolean;
@@ -52,16 +53,26 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
     },
   ];
 
-  const exportFormats: RadioButtonModel[] = [
-    {
-      id: ExportFormat.ADMIN,
-      name: t(ImportI18nKey.DialArchive),
-    },
-    {
-      id: ExportFormat.CORE,
-      name: t(ImportI18nKey.DialCoreFile),
-    },
-  ];
+  const exportFormats: RadioButtonModel[] = useMemo(() => {
+    const formats = [
+      {
+        id: ExportFormat.ADMIN,
+        name: t(ImportI18nKey.DialArchive),
+      },
+      {
+        id: ExportFormat.CORE,
+        name: t(ImportI18nKey.DialCoreFile),
+      },
+    ];
+
+    if (enableExportConfigMap) {
+      formats.push({
+        id: ExportFormat.ACTIVE_CONFIG,
+        name: t(ExportI18nKey.ActiveConfig),
+      });
+    }
+    return formats;
+  }, [enableExportConfigMap, t]);
 
   const exportRequest = useMemo(() => {
     return {
@@ -126,6 +137,14 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
       });
   }, [showNotification, t]);
 
+  const onTryExport = useCallback(() => {
+    if (selectedExportFormat === ExportFormat.ACTIVE_CONFIG) {
+      onExportMap();
+    } else {
+      setPreviewModalState(PopUpState.Opened);
+    }
+  }, [onExportMap, selectedExportFormat]);
+
   useEffect(() => {
     if (exportRequest.$type === ExportType.Full) {
       setIsExportDisable(exportRequest.componentTypes.length === 0);
@@ -139,23 +158,13 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
       <div className="flex flex-col w-full h-full rounded p-4 bg-layer-2">
         <div className="mb-4 flex flex-row items-center justify-between">
           <h1>{t(MenuI18nKey.ExportConfig)}</h1>
-          <div className="flex flex-row gap-4 items-center">
-            {enableExportConfigMap && (
-              <Button
-                cssClass="secondary"
-                iconBefore={<IconUpload {...BASE_ICON_PROPS} />}
-                title={t(ButtonsI18nKey.ExportConfigMap)}
-                onClick={onExportMap}
-              />
-            )}
-            <Button
-              cssClass="primary"
-              iconBefore={<IconUpload {...BASE_ICON_PROPS} />}
-              title={t(ButtonsI18nKey.Export)}
-              disable={isExportDisable}
-              onClick={() => setPreviewModalState(PopUpState.Opened)}
-            />
-          </div>
+          <Button
+            cssClass="primary"
+            iconBefore={<IconUpload {...BASE_ICON_PROPS} />}
+            title={t(ButtonsI18nKey.Export)}
+            disable={isExportDisable}
+            onClick={onTryExport}
+          />
         </div>
         <div className="flex-1 min-h-0 gap-x-3 flex flex-row w-full">
           <div className="border border-primary p-4 rounded w-[240px] flex flex-col">
@@ -190,13 +199,17 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
               )}
             </div>
           </div>
-          <ConfigContent
-            selectedExportFormat={selectedExportFormat}
-            dependencies={dependencies}
-            selectedExportType={selectedExportType}
-            customExportData={customExportData}
-            setCustomExportData={setCustomExportData}
-          />
+          {selectedExportFormat === ExportFormat.ACTIVE_CONFIG ? (
+            <NoPreview />
+          ) : (
+            <ConfigContent
+              selectedExportFormat={selectedExportFormat}
+              dependencies={dependencies}
+              selectedExportType={selectedExportType}
+              customExportData={customExportData}
+              setCustomExportData={setCustomExportData}
+            />
+          )}
         </div>
       </div>
 

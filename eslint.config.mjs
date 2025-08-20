@@ -24,6 +24,7 @@ export default defineConfig([
     '**/**.config.mjs',
     '**/jest.config.ts',
     '**/**.spec.ts',
+    '**/**.spec.tsx',
   ]),
   {
     extends: compat.extends('eslint:recommended', 'prettier', 'next'),
