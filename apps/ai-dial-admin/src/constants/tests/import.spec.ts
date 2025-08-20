@@ -47,7 +47,7 @@ describe('IMPORT_CONFIG_STEPS', () => {
     const steps = IMPORT_CONFIG_STEPS(t);
     expect(steps).toEqual([
       { id: ImportSteps.FILES, name: ImportI18nKey.Files, status: StepStatus.INVALID },
-      { id: ImportSteps.CONFIGURATION, name: ImportI18nKey.ImportConfiguration, status: StepStatus.INVALID },
+      { id: ImportSteps.CONFIGURATION, name: ImportI18nKey.Configuration, status: StepStatus.INVALID },
     ]);
   });
 });
@@ -59,7 +59,7 @@ describe('IMPORT_FILE_TYPES', () => {
       {
         id: ImportFileType.ARCHIVE,
         name: ImportI18nKey.DialArchive,
-        description: ImportI18nKey.ImportArchiveDescription,
+        description: ImportI18nKey.ArchiveDescription,
       },
     ]);
   });
