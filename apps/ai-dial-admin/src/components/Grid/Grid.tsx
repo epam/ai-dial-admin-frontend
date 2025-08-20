@@ -38,7 +38,6 @@ import { baseColumnComparator } from './comparators/base-column-comparator';
 import { getColumnsStateFromStorage, GridModel, saveColumnsStateToStorage } from './grid-columns';
 import { getRowHeight } from './grid-rows';
 import FloatingFilter from './FloatingFilter/FloatingFilter';
-import { FloatingArrow } from '@floating-ui/react';
 
 interface Props<T> {
   columnDefs?: ColDef[];
