@@ -6,4 +6,5 @@ export enum ExportType {
 export enum ExportFormat {
   CORE = 'CORE',
   ADMIN = 'ADMIN',
+  ACTIVE_CONFIG = 'ACTIVE_CONFIG',
 }

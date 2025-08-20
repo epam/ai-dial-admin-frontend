@@ -205,7 +205,6 @@ export enum ButtonsI18nKey {
   ContinueEditing = 'Buttons.ContinueEditing',
   Import = 'Buttons.Import',
   Export = 'Buttons.Export',
-  ExportConfigMap = 'Buttons.ExportConfigMap',
   OpenWithoutSave = 'Buttons.OpenWithoutSave',
   LeaveWithoutSave = 'Buttons.LeaveWithoutSave',
   Next = 'Buttons.Next',
@@ -608,8 +607,9 @@ export enum ExportI18nKey {
   IncludeSecrets = 'Export.IncludeSecrets',
   IncludeDependencies = 'Export.IncludeDependencies',
   Included = 'Export.Included',
-  FilePreparation = 'Export.FilePreparation',
   Folders = 'Export.Folders',
+  ActiveConfig = 'Export.ActiveConfig',
+  NoPreview = 'Export.NoPreview',
 }
 
 export enum FoldersI18nKey {
