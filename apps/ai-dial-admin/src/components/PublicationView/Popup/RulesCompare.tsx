@@ -3,7 +3,7 @@ import { FC } from 'react';
 import classNames from 'classnames';
 
 import Popup from '@/src/components/Common/Popup/Popup';
-import RulesItem from '@/src/components/Rules/RulesItem';
+import RulesItem from '@/src/components/Rules/Item/RulesItem';
 import { FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRule } from '@/src/models/dial/rule';

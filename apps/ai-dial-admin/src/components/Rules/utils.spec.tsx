@@ -2,7 +2,8 @@ import { render } from '@testing-library/react';
 
 import { DialRule, RuleDiffStatus, RuleFunction } from '@/src/models/dial/rule';
 import { describe, expect, test } from 'vitest';
-import { generateRuleDiff, getOperationIcon, sortRules } from './rules';
+import { generateRuleDiff, getAttributeItems, getOperationIcon, getOperationItems, sortRules } from './utils';
+import { FoldersI18nKey } from '../../constants/i18n';
 
 describe('Rules :: getOperationIcon', () => {
   test('returns IconEqual component when operation is EQUAL', () => {
@@ -108,5 +109,41 @@ describe('Rules :: generateRuleDiff', () => {
       status: RuleDiffStatus.INCLUDE,
       items: ['t1', 't2'],
     });
+  });
+});
+
+describe('getOperationItems', () => {
+  test('returns translated operation items with icons', () => {
+    const t = (s: string) => s;
+    const items = getOperationItems(t);
+
+    expect(items).toHaveLength(3);
+    expect(items[0]).toMatchObject({ id: RuleFunction.EQUAL, name: FoldersI18nKey.equal });
+    expect(items[1]).toMatchObject({ id: RuleFunction.CONTAIN, name: FoldersI18nKey.contain });
+    expect(items[2]).toMatchObject({ id: RuleFunction.REGEX, name: FoldersI18nKey.regex });
+
+    // Check icons are present (JSX)
+    expect(items[0].icon).toBeTruthy();
+    expect(items[1].icon).toBeTruthy();
+    expect(items[2].icon).toBeTruthy();
+  });
+});
+
+describe('getAttributeItems', () => {
+  const t = (s: string) => s;
+
+  test('returns translated attribute items', () => {
+    const items = getAttributeItems(t, ['a', 'b']);
+    expect(items).toEqual([{ id: 'a' }, { id: 'b' }]);
+  });
+
+  test('returns empty array if attributes is undefined', () => {
+    const items = getAttributeItems(t, undefined);
+    expect(items).toEqual([]);
+  });
+
+  test('returns empty array if attributes is empty', () => {
+    const items = getAttributeItems(t, []);
+    expect(items).toEqual([]);
   });
 });

@@ -9,8 +9,8 @@ import { useRuleFolder } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialRule } from '@/src/models/dial/rule';
 import { getFolderName } from '@/src/utils/files/folder';
-import RulesItem from './RulesItem';
-import { sortRules } from './rules';
+import RulesItem from '@/src/components/Rules/Item/RulesItem';
+import { sortRules } from '@/src/components/Rules/utils';
 
 interface Props {
   rulesMap?: Record<string, DialRule[]>;

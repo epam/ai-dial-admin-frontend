@@ -9,9 +9,9 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useRuleFolder } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialRule, RuleDiffModel } from '@/src/models/dial/rule';
-import RulesValue from './RulesValue';
-import RulesValueReadonly from './RulesValueReadonly';
-import { generateRuleDiff } from './rules';
+import RulesValue from '@/src/components/Rules/Value/RulesValue';
+import RulesValueReadonly from '@/src/components/Rules/Value/RulesValueReadonly';
+import { generateRuleDiff } from '@/src/components/Rules/utils';
 
 const emptyRule = { function: void 0, source: '', targets: [] } as unknown as DialRule;
 

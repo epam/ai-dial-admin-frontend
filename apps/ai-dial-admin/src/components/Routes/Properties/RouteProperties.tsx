@@ -5,14 +5,14 @@ import Switch from '@/src/components/Common/Switch/Switch';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 import MaxRetryAttempts from '@/src/components/MaxRetryAttempts/MaxRetryAttempts';
 import { CreateI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
-import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { useI18n } from '@/src/locales/client';
 import { DialRoute, RouteOutput } from '@/src/models/dial/route';
 import { RadioButtonModel } from '@/src/models/radio-button';
+import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { FC, useCallback, useState } from 'react';
-import UpstreamEndpoints from '../Endpoints/UpstreamEndpoints';
-import Paths from './Paths/Paths';
-import { handleRouteOutputChange } from './routes';
+import UpstreamEndpoints from '@/src/components/Endpoints/UpstreamEndpoints';
+import Paths from '@/src/components/Routes/Paths/Paths';
+import { handleRouteOutputChange } from '@/src/components/Routes/utils';
 
 interface Props {
   route: DialRoute;
@@ -123,7 +123,6 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
             onChange={onChangeDescription}
           />
         )}
-
         <Paths route={route} updateRoute={updateRoute} />
 
         <Switch

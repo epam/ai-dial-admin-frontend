@@ -5,8 +5,8 @@ import { Dispatch, FC, ReactNode, SetStateAction, useCallback, useEffect, useRef
 import classNames from 'classnames';
 
 import { DialRule } from '@/src/models/dial/rule';
-import RulesItemBody from './RulesItemBody';
-import RulesItemHeader from './RulesItemHeader';
+import RulesItemBody from '@/src/components/Rules/Item/RulesItemBody';
+import RulesItemHeader from '@/src/components/Rules/Item/RulesItemHeader';
 
 interface Props {
   children?: ReactNode;

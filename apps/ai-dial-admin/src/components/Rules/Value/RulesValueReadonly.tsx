@@ -8,7 +8,7 @@ import Tag from '@/src/components/Common/TagInput/Tag';
 import { FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRule, RuleDiffModel, RuleDiffStatus, RuleSource } from '@/src/models/dial/rule';
-import { getOperationIcon } from './rules';
+import { getOperationIcon } from '@/src/components/Rules/utils';
 
 interface Props {
   rule: DialRule;

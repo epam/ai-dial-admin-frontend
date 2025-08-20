@@ -1,4 +1,4 @@
-import { handleRouteOutputChange, removeEmptyValues } from './routes';
+import { handleRouteOutputChange, removeEmptyValues } from './utils';
 import { RouteOutput } from '@/src/models/dial/route';
 import { describe, expect, test } from 'vitest';
 

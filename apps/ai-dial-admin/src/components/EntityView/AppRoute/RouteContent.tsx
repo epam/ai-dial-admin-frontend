@@ -5,7 +5,7 @@ import Tabs from '@/src/components/Common/Tabs/Tabs';
 import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import { useI18n } from '@/src/locales/client';
 import { DialRoute } from '@/src/models/dial/route';
-import RouteProperties from '@/src/components/RoutesList/RouteProperties';
+import RouteProperties from '@/src/components/Routes/Properties/RouteProperties';
 
 interface Props {
   route: DialRoute;
