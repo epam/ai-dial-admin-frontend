@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import Tabs from '@/src/components/Common/Tabs/Tabs';
-import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/entity-view';
-import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
+import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
 import { useFileFolder } from '@/src/context/FileFolderContext';
@@ -79,7 +79,7 @@ const FileView: FC<Props> = ({ originalFile }) => {
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={headerClassName}>
         <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={false} />
-        <EntityViewHeaderButtons
+        <HeaderButtons
           view={ApplicationRoute.Files}
           entity={selectedFile}
           isChanged={isChanged}

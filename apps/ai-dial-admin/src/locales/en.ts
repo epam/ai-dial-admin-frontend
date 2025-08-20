@@ -448,6 +448,7 @@ export default {
     Files: 'Files',
     Activities: 'Activities',
     Dependencies: 'Dependencies',
+    Routes: 'App Routes',
   },
   ForwardToken: {
     ForwardToken: 'Forward auth token',
@@ -824,6 +825,7 @@ export default {
     applicationTypeDisplayName: 'Name',
     applicationTypeViewerUrl: 'Viewer URL',
     applicationTypeEditorUrl: 'Editor URL',
+    title: 'Title',
     applicationTypeConfigurationEndpoint: 'Configuration endpoint',
     applicationTypeRateEndpoint: 'Rate endpoint',
     applicationTypeTokenizeEndpoint: 'Tokenize endpoint',

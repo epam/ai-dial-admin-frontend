@@ -1,10 +1,12 @@
 import { DialBaseEntity } from './base-entity';
+import { DialRoute } from './route';
 
 export interface DialApplication extends DialBaseEntity {
   customAppSchemaId?: string;
   maxRetryAttempts?: number;
   viewerUrl?: string;
   editorUrl?: string;
+  routes?: DialRoute[];
 }
 
 export interface DialApplicationScheme {
@@ -27,6 +29,7 @@ export interface DialApplicationScheme {
   createdAt?: number;
   updatedAt?: number;
   topics?: string[];
+  'dial:applicationTypeRoutes'?: DialRoute[];
 }
 
 export enum TypeEntity {

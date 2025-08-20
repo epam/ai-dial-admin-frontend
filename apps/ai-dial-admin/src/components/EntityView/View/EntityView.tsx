@@ -1,21 +1,23 @@
 'use client';
 
-import ApplicationParametersTab from '@/src/components/ApplicationParametersTab/ApplicationParametersTab';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
-import EntityProperties from '@/src/components/EntityProperties/EntityProperties';
+import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
+import { ModalType } from '@/src/components/EntityView/Modals/constants';
+import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
+import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
+import { EntityViewTab, getIsParametersTabAvailable, getViewTabs } from '@/src/components/EntityView/View/utils';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
-import ModelProperties from '@/src/components/ModelView/ModelProperties/ModelProperties';
-import RouteProperties from '@/src/components/RoutesList/RouteProperties';
 import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAttachmentData } from '@/src/models/attachment-data';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
-import { DialRoute } from '@/src/models/dial/route';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
@@ -31,19 +33,7 @@ import classNames from 'classnames';
 import { cloneDeep, isEqual } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
-import EntityAudit from './Audit/EntityAudit';
-import { EntityViewTab, getViewTabs } from '@/src/components/EntityView/entity-view';
-import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
-import EntityFeatures from '@/src/components/EntityView/Features/Features';
-import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
-import { ModalType } from '@/src/components/EntityView/Modals/constants';
-import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
-import EntityRoles from '@/src/components/EntityView/Roles/Roles';
-import EntityHeader from '@/src/components/EntityView/Header/Header';
-import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
-import EntityDependencies from './Dependencies/Dependencies';
-import { DialModel } from '@/src/models/dial/model';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import ViewContent from './ViewContent';
 
 interface Props {
   view: ApplicationRoute;
@@ -61,23 +51,16 @@ interface Props {
 const EntityView: FC<Props> = ({
   originalEntity,
   names,
-  roles,
-  interceptors,
   applicationSchemes,
   view,
-  applications,
-  models,
   updateEntity,
   removeEntity,
+  ...props
 }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
 
-  const isParametersTabAvailable =
-    (!!(originalEntity as DialApplication).customAppSchemaId &&
-      !!applicationSchemes?.find((s) => s.$id === (originalEntity as DialApplication).customAppSchemaId)?.[
-        'dial:applicationTypeEditorUrl'
-      ]) ||
-    !!(originalEntity as DialApplication).editorUrl;
+  const isParametersTabAvailable = getIsParametersTabAvailable(originalEntity as DialApplication, applicationSchemes);
+
   const tabs = getViewTabs(t, view, isParametersTabAvailable);
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -210,26 +193,6 @@ const EntityView: FC<Props> = ({
     setJsonEditorEnabled((prev) => !prev);
   }, [setJsonEditorEnabled]);
 
-  const getPropertiesView = useCallback(() => {
-    if (view === ApplicationRoute.Models) {
-      return <ModelProperties model={selectedEntity} modelsNames={names} updateModel={onChangeEntity} />;
-    }
-
-    if (view === ApplicationRoute.Routes) {
-      return <RouteProperties route={selectedEntity as DialRoute} updateRoute={onChangeEntity} />;
-    }
-
-    return (
-      <EntityProperties
-        entity={selectedEntity}
-        runners={applicationSchemes || []}
-        names={names}
-        view={view}
-        updateEntity={onChangeEntity}
-      />
-    );
-  }, [onChangeEntity, selectedEntity, applicationSchemes, names, view]);
-
   const changeTab = useCallback(() => {
     setActiveTab(nextTab as EntityViewTab);
     setNextTab(void 0);
@@ -281,7 +244,7 @@ const EntityView: FC<Props> = ({
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
         <div className={headerClassName}>
           <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
-          <EntityViewHeaderButtons
+          <HeaderButtons
             view={view}
             entity={selectedEntity}
             isChanged={isChanged}
@@ -307,49 +270,17 @@ const EntityView: FC<Props> = ({
               setJsonErrors={setJsonErrors}
             />
           ) : (
-            <>
-              {activeTab === EntityViewTab.Properties && (
-                <div className="flex flex-col h-full w-full">
-                  <EntityHeader entity={selectedEntity} />
-                  <div className="flex-1 min-h-0">{getPropertiesView()}</div>
-                </div>
-              )}
-              {activeTab === EntityViewTab.Features && (
-                <EntityFeatures entity={selectedEntity} onChangeEntity={onChangeEntity} view={view} />
-              )}
-              {activeTab === EntityViewTab.Parameters && (
-                <ApplicationParametersTab
-                  entity={selectedEntity}
-                  applicationSchemes={applicationSchemes}
-                  jsonEditorEnabled={jsonEditorEnabled}
-                />
-              )}
-              {activeTab === EntityViewTab.Roles && (
-                <EntityRoles
-                  view={view}
-                  entity={selectedEntity}
-                  roles={roles || []}
-                  onChangeEntity={onChangeEntity}
-                  isSkipRefresh={isSkipRefresh}
-                />
-              )}
-              {activeTab === EntityViewTab.Interceptors && (
-                <EntityInterceptors
-                  entity={selectedEntity}
-                  interceptors={interceptors || []}
-                  onChangeEntity={onChangeEntity}
-                />
-              )}
-              {activeTab === EntityViewTab.Dependencies && (
-                <EntityDependencies
-                  entity={selectedEntity}
-                  applications={applications || []}
-                  models={models || []}
-                  onChangeEntity={onChangeEntity}
-                />
-              )}
-              {activeTab === EntityViewTab.Audit && <EntityAudit entity={selectedEntity} view={view} />}
-            </>
+            <ViewContent
+              view={view}
+              applicationSchemes={applicationSchemes}
+              activeTab={activeTab}
+              names={names}
+              selectedEntity={selectedEntity}
+              jsonEditorEnabled={jsonEditorEnabled}
+              isSkipRefresh={isSkipRefresh}
+              onChangeEntity={onChangeEntity}
+              {...props}
+            />
           )}
         </div>
       </div>

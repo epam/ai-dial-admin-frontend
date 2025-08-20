@@ -10,8 +10,8 @@ import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import { getRelevantDataForInterceptor } from '@/src/components/AddEntitiesTab/AddEntitiesView.utils';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
-import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/entity-view';
-import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
+import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import { TabsI18nKey } from '@/src/constants/i18n';
@@ -133,7 +133,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={headerClassName}>
         <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
-        <EntityViewHeaderButtons
+        <HeaderButtons
           view={ApplicationRoute.Interceptors}
           entity={selectedInterceptor}
           isChanged={isChanged}

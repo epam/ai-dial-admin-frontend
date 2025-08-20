@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 
 import { removeModel, updateModel } from '@/src/app/[lang]/models/actions';
 import { interceptorsApi, modelsApi, rolesApi } from '@/src/app/api/api';
-import EntityView from '@/src/components/EntityView/EntityView';
+import EntityView from '@/src/components/EntityView/View/EntityView';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';

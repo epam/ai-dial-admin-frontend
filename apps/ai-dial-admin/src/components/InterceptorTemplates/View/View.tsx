@@ -8,8 +8,8 @@ import { cloneDeep, isEqual } from 'lodash';
 import { deleteInterceptorTemplate, updateInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
-import { auditTabs, EntityViewTab, interceptorsTabs, propertiesTabs } from '@/src/components/EntityView/entity-view';
-import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
+import { auditTabs, EntityViewTab, interceptorsTabs, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import ExtendedProperties from '@/src/components/InterceptorTemplates/Properties/ExtendedProperties';
 import Interceptors from '@/src/components/InterceptorTemplates/View/Interceptors/Interceptors';
@@ -72,7 +72,7 @@ const View: FC<Props> = ({ route, template }) => {
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className="flex flex-row min-h-[34px] justify-between">
         <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-        <EntityViewHeaderButtons
+        <HeaderButtons
           view={route}
           entity={selectedTemplate}
           isChanged={isChanged}
