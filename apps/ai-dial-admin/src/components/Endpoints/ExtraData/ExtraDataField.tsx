@@ -2,7 +2,7 @@ import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBas
 import { RadioButtonWithContent } from '@/src/components/Common/RadioGroup/RadioGroup';
 import RadioGroupModalField from '@/src/components/Common/RadioGroupModalField/RadioGroupModalField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import { BasicI18nKey, UpstreamEndpointsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntityFieldsI18nKey, UpstreamEndpointsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialEndpointExtraData, DialModelEndpoint } from '@/src/models/dial/model';
 import { JSONEditorError } from '@/src/types/editor';
@@ -134,7 +134,7 @@ const ExtraDataField: FC<Props> = ({ endpoint, fieldTitle, onChangeExtraData }) 
     <div className="flex flex-col">
       <RadioGroupModalField
         title={fieldTitle ?? ''}
-        popupTitle={t(UpstreamEndpointsI18nKey.ExtraDataTitle)}
+        popupTitle={t(EntityFieldsI18nKey.extraData)}
         elementId="extraDataInput"
         portalId="extraDataPortal"
         customInputValue={

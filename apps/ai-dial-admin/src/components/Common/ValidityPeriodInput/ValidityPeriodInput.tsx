@@ -6,7 +6,7 @@ import Dropdown from '@/src/components/Common/Dropdown/Dropdown';
 import DropdownMenuItem from '@/src/components/Common/Dropdown/DropdownItem';
 import Field from '@/src/components/Common/Field/Field';
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
-import { CreateI18nKey, KeysI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, EntityFieldsI18nKey, KeysI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ValidityPeriods } from '@/src/types/key';
@@ -70,7 +70,7 @@ const ValidityPeriodInput: FC<Props> = ({ onChange }) => {
           </Dropdown>
         </div>
       </div>
-      <LabeledText label={t(KeysI18nKey.ExpirationTime)}>
+      <LabeledText label={t(EntityFieldsI18nKey.expiresAt)}>
         <div className="flex flex-1 items-center">
           {expirationTime ? formatDateTimeToLocalString(expirationTime) : ''}
         </div>

@@ -1,4 +1,4 @@
-import { CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import AdapterProperties from '../AdapterProperties';
@@ -16,7 +16,7 @@ describe('AdapterProperties', () => {
     expect(screen.getByText(CreateI18nKey.IdTitle)).toBeInTheDocument();
     expect(screen.getByText(CreateI18nKey.DisplayNameTitle)).toBeInTheDocument();
     expect(screen.getByText(CreateI18nKey.DescriptionTitle)).toBeInTheDocument();
-    expect(screen.getByText(EntitiesI18nKey.EndpointBase)).toBeInTheDocument();
+    expect(screen.getByText(EntityFieldsI18nKey.baseEndpoint)).toBeInTheDocument();
   });
 
   test('calls onChangeAdapter when name changes', () => {
@@ -46,7 +46,7 @@ describe('AdapterProperties', () => {
         onChangeAdapter={onChangeAdapter}
       />,
     );
-    fireEvent.change(screen.getByPlaceholderText(EntitiesI18nKey.EndpointPlaceholder), {
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Endpoint), {
       target: { value: 'http://new' },
     });
     expect(onChangeAdapter).toHaveBeenCalledWith(expect.objectContaining({ baseEndpoint: 'http://new' }));

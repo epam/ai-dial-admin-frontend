@@ -1,7 +1,7 @@
 import { FC } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import { CreateI18nKey, EntitiesI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
@@ -42,7 +42,7 @@ const ApplicationInfo: FC<Props> = ({ application }) => {
         readonly={true}
         elementId="topics"
         selectedItems={application?.descriptionKeywords}
-        title={t(TopicsI18nKey.Topics)}
+        title={t(EntityFieldsI18nKey.Topics)}
       />
     </div>
   ) : null;

@@ -24,12 +24,14 @@ export interface DialApplicationScheme {
   'dial:applicationTypeTokenizeEndpoint'?: string;
   'dial:applicationTypeTruncatePromptEndpoint'?: string;
   'dial:appendApplicationPropertiesHeader'?: boolean;
+  'dial:applicationTypeRoutes'?: DialRoute[];
+  'dial:applicationTypePlaybackSupport'?: boolean;
+  'dial:applicationTypeIconUrl'?: string;
   properties?: Record<string, unknown>;
   applications?: string[];
   createdAt?: number;
   updatedAt?: number;
   topics?: string[];
-  'dial:applicationTypeRoutes'?: DialRoute[];
 }
 
 export enum TypeEntity {

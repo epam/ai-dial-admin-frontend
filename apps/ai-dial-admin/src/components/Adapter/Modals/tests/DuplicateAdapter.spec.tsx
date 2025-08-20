@@ -1,4 +1,4 @@
-import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, CreateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { PopUpState } from '@/src/types/pop-up';
 import { fireEvent, render, screen } from '@testing-library/react';
@@ -19,7 +19,7 @@ describe('DuplicateAdapter', () => {
 
     expect(screen.getByText(CreateI18nKey.IdTitle)).toBeInTheDocument();
     expect(screen.getByText(CreateI18nKey.DisplayNameTitle)).toBeInTheDocument();
-    expect(screen.getByText(EntitiesI18nKey.EndpointBase)).toBeInTheDocument();
+    expect(screen.getByText(EntityFieldsI18nKey.baseEndpoint)).toBeInTheDocument();
     expect(screen.getByText(ButtonsI18nKey.Cancel)).toBeInTheDocument();
     expect(screen.getByText(ButtonsI18nKey.Duplicate)).toBeInTheDocument();
   });
@@ -48,7 +48,7 @@ describe('DuplicateAdapter', () => {
     fireEvent.change(screen.getByPlaceholderText(CreateI18nKey.DisplayNamePlaceholder), {
       target: { value: 'Adapter Two' },
     });
-    fireEvent.change(screen.getByPlaceholderText(EntitiesI18nKey.EndpointPlaceholder), {
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Endpoint), {
       target: { value: 'http://new' },
     });
     expect(screen.getByText(ButtonsI18nKey.Duplicate)).not.toBeDisabled();

@@ -3,7 +3,13 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import Button from '@/src/components/Common/Button/Button';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Popup from '@/src/components/Common/Popup/Popup';
-import { ButtonsI18nKey, CreateI18nKey, DuplicateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import {
+  ButtonsI18nKey,
+  CreateI18nKey,
+  DuplicateI18nKey,
+  EntityFieldsI18nKey,
+  EntityPlaceholdersI18nKey,
+} from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { PopUpState } from '@/src/types/pop-up';
@@ -67,8 +73,8 @@ const DuplicateAdapter: FC<Props> = ({ onDuplicate, modalState, onClose, adapter
 
         <TextInputField
           elementId="endpoint"
-          placeholder={t(EntitiesI18nKey.EndpointPlaceholder)}
-          fieldTitle={t(EntitiesI18nKey.EndpointBase)}
+          placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+          fieldTitle={t(EntityFieldsI18nKey.baseEndpoint)}
           value={entity.baseEndpoint}
           onChange={onChangeEndpoint}
         />

@@ -4,7 +4,7 @@ import RadioField from '@/src/components/Common/RadioField/RadioField';
 import Switch from '@/src/components/Common/Switch/Switch';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 import MaxRetryAttempts from '@/src/components/MaxRetryAttempts/MaxRetryAttempts';
-import { CreateI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, EntityFieldsI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRoute, RouteOutput } from '@/src/models/dial/route';
 import { RadioButtonModel } from '@/src/models/radio-button';
@@ -24,7 +24,7 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
   const t = useI18n();
 
   const outputRadio: RadioButtonModel[] = [
-    { id: RouteOutput.UPSTREAMS, name: t(RoutesI18nKey.Upstreams) },
+    { id: RouteOutput.UPSTREAMS, name: t(EntityFieldsI18nKey.upstreams) },
     { id: RouteOutput.RESPONSE, name: t(RoutesI18nKey.Response) },
   ];
 
@@ -136,8 +136,8 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
           elementId="methods"
           selectedItems={route.methods}
           onChangeItems={onChangeMethods}
-          heading={t(RoutesI18nKey.MethodsTitle)}
-          title={t(RoutesI18nKey.MethodsTitle)}
+          heading={t(EntityFieldsI18nKey.methods)}
+          title={t(EntityFieldsI18nKey.methods)}
           allItems={methods}
         />
 
@@ -156,7 +156,7 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
             <div className="mr-2">
               <NumberInputField
                 elementId="status"
-                fieldTitle={t(RoutesI18nKey.StatusTitle)}
+                fieldTitle={t(EntityFieldsI18nKey.status)}
                 placeholder={t(RoutesI18nKey.StatusPlaceholder)}
                 value={route.response.status}
                 onChange={onChangeStatus}
@@ -167,7 +167,7 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
             <div className="flex-1">
               <TextInputField
                 elementId="body"
-                fieldTitle={t(RoutesI18nKey.BodyTitle)}
+                fieldTitle={t(EntityFieldsI18nKey.body)}
                 placeholder={t(RoutesI18nKey.BodyPlaceholder)}
                 value={route.response.body}
                 onChange={onChangeBody}

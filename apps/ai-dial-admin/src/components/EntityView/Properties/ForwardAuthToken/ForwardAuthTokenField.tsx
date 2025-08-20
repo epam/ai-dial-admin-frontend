@@ -1,7 +1,7 @@
 import AlertError from '@/src/components/Common/Alerts/AlertError';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import RadioGroupModalField from '@/src/components/Common/RadioGroupModalField/RadioGroupModalField';
-import { BasicI18nKey, CreateI18nKey, ForwardTokenI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, CreateI18nKey, EntityFieldsI18nKey, ForwardTokenI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -73,7 +73,7 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
   return (
     <div className="flex flex-col">
       <RadioGroupModalField
-        title={t(ForwardTokenI18nKey.ForwardToken)}
+        title={t(EntityFieldsI18nKey.forwardAuthToken)}
         popupTitle={t(ForwardTokenI18nKey.ForwardTokenModalTitle)}
         elementId="forwardAuthToken"
         portalId="entityNameToken"

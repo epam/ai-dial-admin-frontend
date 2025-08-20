@@ -23,6 +23,8 @@ const fields: (keyof DialApplicationScheme)[] = [
   'dial:applicationTypeTokenizeEndpoint',
   'dial:applicationTypeTruncatePromptEndpoint',
   'dial:appendApplicationPropertiesHeader',
+  'dial:applicationTypePlaybackSupport',
+  'dial:applicationTypeIconUrl',
 ];
 
 export const clearSchemeForEditor = (scheme: DialApplicationScheme) => {

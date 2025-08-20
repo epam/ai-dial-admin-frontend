@@ -2,7 +2,7 @@ import { FC, useCallback, useState } from 'react';
 
 import InputModal from '@/src/components/Common/InputModal/InputModal';
 import Switch from '@/src/components/Common/Switch/Switch';
-import { ModelViewI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModel } from '@/src/models/dial/model';
 import { PopUpState } from '@/src/types/pop-up';
@@ -50,7 +50,7 @@ const TokenizerModelSwitch: FC<Props> = ({ model, onChangeModel }) => {
     <div className="flex flex-col gap-3">
       <Switch
         isOn={model.tokenizerModel != null}
-        title={t(ModelViewI18nKey.TokenizerModel)}
+        title={t(EntityFieldsI18nKey.tokenizerModel)}
         switchId="tokenizerModel"
         onChange={onSwitchTokenizerModel}
       />

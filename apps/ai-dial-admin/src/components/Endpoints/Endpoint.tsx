@@ -8,7 +8,7 @@ import classNames from 'classnames';
 import { NumberInputField, TextInputField } from '@/src/components/Common/InputField/InputField';
 import PasswordInputField from '@/src/components/Common/PasswordInput/PasswordInputField';
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
-import { ErrorI18nKey, UpstreamEndpointsI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, ErrorI18nKey, UpstreamEndpointsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
@@ -136,7 +136,7 @@ const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, upd
           <NumberInputField
             elementId={'weight ' + index}
             value={endpoint.weight}
-            fieldTitle={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.Weight) : ''}
+            fieldTitle={isFirstLine || isTablet ? t(EntityFieldsI18nKey.weight) : ''}
             containerCssClass="w-[120px]"
             elementCssClass="h-[38px]"
             placeholder={t(UpstreamEndpointsI18nKey.WeightPlaceholder)}
@@ -146,7 +146,7 @@ const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, upd
           <NumberInputField
             elementId={'tier ' + index}
             value={endpoint.tier}
-            fieldTitle={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.Tier) : ''}
+            fieldTitle={isFirstLine || isTablet ? t(EntityFieldsI18nKey.tier) : ''}
             containerCssClass="w-[120px]"
             elementCssClass="h-[38px]"
             placeholder={t(UpstreamEndpointsI18nKey.TierPlaceholder)}
@@ -154,7 +154,7 @@ const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, upd
           />
 
           <ExtraDataField
-            fieldTitle={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.ExtraDataTitle) : ''}
+            fieldTitle={isFirstLine || isTablet ? t(EntityFieldsI18nKey.extraData) : ''}
             endpoint={endpoint}
             onChangeExtraData={onChangeExtraData}
           />

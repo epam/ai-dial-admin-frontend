@@ -11,7 +11,7 @@ import TokenizerModelSwitch from '@/src/components/ModelView/TokenizerModel/Toke
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import ModelTypeProperties from './ModelTypeProperties';
-import { HashingOrderI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, HashingOrderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -65,8 +65,8 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, updateModel }) => {
             onChangeItems={(fieldsHashingOrder) => {
               updateModel({ ...model, fieldsHashingOrder });
             }}
-            heading={t(HashingOrderI18nKey.HashingOrder)}
-            title={t(HashingOrderI18nKey.HashingOrder)}
+            heading={t(EntityFieldsI18nKey.fieldsHashingOrder)}
+            title={t(EntityFieldsI18nKey.fieldsHashingOrder)}
             addPlaceholder={t(HashingOrderI18nKey.HashingOrderPlaceholder)}
             addTitle={t(HashingOrderI18nKey.Add)}
             optional={true}

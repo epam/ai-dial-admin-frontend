@@ -1,13 +1,13 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import Paths from './Paths';
-import { RoutesI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 
 describe('Paths', () => {
   test('renders empty path input if no paths', () => {
     render(<Paths route={{ paths: [] }} updateRoute={vi.fn()} />);
     expect(screen.getByPlaceholderText(RoutesI18nKey.PathPlaceholder)).toBeInTheDocument();
-    expect(screen.getByText(RoutesI18nKey.PathTitle)).toBeInTheDocument();
+    expect(screen.getByText(EntityFieldsI18nKey.paths)).toBeInTheDocument();
   });
 
   test('renders Path components for each path', () => {

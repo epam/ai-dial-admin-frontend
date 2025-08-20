@@ -5,7 +5,7 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
-import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
@@ -60,7 +60,7 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
         {isEntityImmutable && isShowMaintainer ? (
           <TextInputField
             elementId="author"
-            fieldTitle={t(EntitiesI18nKey.Maintainer)}
+            fieldTitle={t(EntityFieldsI18nKey.author)}
             placeholder={t(EntitiesI18nKey.MaintainerPlaceholder)}
             value={entity.author}
             optional={true}

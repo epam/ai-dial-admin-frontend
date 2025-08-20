@@ -1,7 +1,7 @@
 import { FC, useCallback } from 'react';
 
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
-import { BasicI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 
@@ -53,7 +53,7 @@ const MaxRetryAttempts: FC<Props> = ({ maxRetryAttempts, onChangeMaxRetryAttempt
         selectedValue={activeMaxAttempts}
         elementId="maxRetryAttempts"
         items={items}
-        fieldTitle={t(EntitiesI18nKey.MaxRetryAttempts)}
+        fieldTitle={t(EntityFieldsI18nKey.maxRetryAttempts)}
         onChange={onChange}
       />
     </div>

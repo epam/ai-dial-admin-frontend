@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import { CreateI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, EntityFieldsI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialRoute } from '@/src/models/dial/route';
@@ -134,7 +134,7 @@ const SimpleEntityProperties: FC<Props> = ({
         <TextInputField
           elementId="path"
           placeholder={t(RoutesI18nKey.PathPlaceholder)}
-          fieldTitle={t(RoutesI18nKey.PathTitle)}
+          fieldTitle={t(EntityFieldsI18nKey.paths)}
           value={(entity as DialRoute).paths?.[0]}
           errorText={pathError?.text}
           invalid={!!pathError}

@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 
 import { NumberInputField } from '@/src/components/Common/InputField/InputField';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
-import { BasicI18nKey, EntitiesI18nKey, RolesI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseEntity, DialRoleLimits, DialRoleLimitsMap } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
@@ -241,28 +241,28 @@ const EntityRoles: FC<Props> = ({ entity, roles, onChangeEntity, isSkipRefresh }
               elementId="minute"
               value={entity.defaultRoleLimit?.minute}
               placeholder={t(RolesI18nKey.NoLimits)}
-              fieldTitle={t(RolesI18nKey.TokensPerMinute)}
+              fieldTitle={t(EntityFieldsI18nKey.minute)}
               onChange={onChangeMinuteDefaultLimit}
             />
             <NumberInputField
               elementId="day"
               placeholder={t(RolesI18nKey.NoLimits)}
               value={entity.defaultRoleLimit?.day}
-              fieldTitle={t(RolesI18nKey.TokensPerDay)}
+              fieldTitle={t(EntityFieldsI18nKey.day)}
               onChange={onChangeDayDefaultLimit}
             />
             <NumberInputField
               elementId="week"
               placeholder={t(RolesI18nKey.NoLimits)}
               value={entity.defaultRoleLimit?.week}
-              fieldTitle={t(RolesI18nKey.TokensPerWeek)}
+              fieldTitle={t(EntityFieldsI18nKey.week)}
               onChange={onChangeWeekDefaultLimit}
             />
             <NumberInputField
               elementId="month"
               placeholder={t(RolesI18nKey.NoLimits)}
               value={entity.defaultRoleLimit?.month}
-              fieldTitle={t(RolesI18nKey.TokensPerMonth)}
+              fieldTitle={t(EntityFieldsI18nKey.month)}
               onChange={onChangeMonthDefaultLimit}
             />
           </div>

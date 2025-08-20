@@ -18,7 +18,9 @@ describe('ApplicationRunner :: clearSchemeForEditor', () => {
       ['dial:applicationTypeRateEndpoint']: 'dial:applicationTypeRateEndpoint',
       ['dial:applicationTypeTruncatePromptEndpoint']: 'dial:applicationTypeTruncatePromptEndpoint',
       ['dial:appendApplicationPropertiesHeader']: true,
+      ['dial:applicationTypePlaybackSupport']: true,
       ['dial:applicationTypeRoutes']: [],
+      ['dial:applicationTypeIconUrl']: 'icon.svg',
       properties: {
         properties1: '1',
         properties2: '2',

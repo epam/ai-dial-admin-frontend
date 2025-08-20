@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getInterceptorContainers } from '@/src/app/[lang]/interceptors/actions';
@@ -35,7 +35,7 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
           />
           <TextInputField
             elementId="author"
-            fieldTitle={t(EntitiesI18nKey.Maintainer)}
+            fieldTitle={t(EntityFieldsI18nKey.author)}
             placeholder={t(EntitiesI18nKey.MaintainerPlaceholder)}
             value={selectedInterceptor.author}
             optional={true}
