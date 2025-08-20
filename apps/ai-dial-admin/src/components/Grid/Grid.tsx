@@ -37,7 +37,8 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { baseColumnComparator } from './comparators/base-column-comparator';
 import { getColumnsStateFromStorage, GridModel, saveColumnsStateToStorage } from './grid-columns';
 import { getRowHeight } from './grid-rows';
-import FloatingFilter from './FloatingFilter/FloatingFilterComponent';
+import FloatingFilter from './FloatingFilter/FloatingFilter';
+import { FloatingArrow } from '@floating-ui/react';
 
 interface Props<T> {
   columnDefs?: ColDef[];
@@ -153,6 +154,17 @@ const Grid = <T extends object>({
     gridApi?.updateGridOptions({ columnDefs: columns, rowData });
   }, [columnDefs, gridApi, rowData]);
 
+  const tooltipRenderer = (params: { value: string }) => {
+    return (
+      <div className="tooltip relative break-words">
+        {params.value}
+        <div className="absolute left-1/2 top-[-6px]">
+          <div className="tooltip-arrow"></div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="ag-theme-balham-dark h-full overflow-x-auto" role="table">
       <AgGridReact
@@ -176,6 +188,7 @@ const Grid = <T extends object>({
           } as ITextFilterParams,
           comparator: baseColumnComparator.bind(this),
           tooltipValueGetter: (p: ITooltipParams) => p.data?.[(p.colDef as ColDef)?.field || ''],
+          tooltipComponent: tooltipRenderer,
         }}
         onGridSizeChanged={onGridSizeChanged}
         onFilterChanged={onStateChanged}
