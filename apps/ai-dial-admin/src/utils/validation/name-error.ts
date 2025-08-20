@@ -1,4 +1,4 @@
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { MAX_NAME_SYMBOLS, MIN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { ErrorType } from '@/src/types/error-type';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -15,7 +15,7 @@ export const getErrorForName = (
   if (isUniqueError) {
     return {
       type: ErrorType.EXISTING,
-      text: t ? t(CreateI18nKey.ErrorUnique) : '',
+      text: t ? t(ErrorI18nKey.NameExists) : '',
     };
   }
 

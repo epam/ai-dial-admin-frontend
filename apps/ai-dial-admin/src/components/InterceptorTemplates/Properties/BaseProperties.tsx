@@ -1,7 +1,7 @@
 import { FC, useState } from 'react';
 
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { FieldError } from '@/src/models/error';
 import { useI18n } from '@/src/locales/client';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
@@ -42,8 +42,8 @@ const BaseProperties: FC<Props> = ({ template, setTemplate, names, isImmutable }
 
       <TextInputField
         elementId="name"
-        fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
-        placeholder={t(CreateI18nKey.DisplayNamePlaceholder)}
+        fieldTitle={t(EntityFieldsI18nKey.displayName)}
+        placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
         value={template.displayName}
         onChange={(displayName) => {
           setTemplate({ ...template, displayName });
@@ -52,8 +52,8 @@ const BaseProperties: FC<Props> = ({ template, setTemplate, names, isImmutable }
 
       <TextAreaField
         elementId="description"
-        fieldTitle={t(CreateI18nKey.DescriptionTitle)}
-        placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
+        fieldTitle={t(EntityFieldsI18nKey.description)}
+        placeholder={t(EntityPlaceholdersI18nKey.Description)}
         optional={true}
         errorText={descriptionError?.text}
         invalid={!!descriptionError}

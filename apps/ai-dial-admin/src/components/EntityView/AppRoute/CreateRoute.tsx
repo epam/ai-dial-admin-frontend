@@ -2,7 +2,7 @@ import { FC, useState } from 'react';
 
 import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
-import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, CreateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
@@ -23,8 +23,8 @@ const CreateRoute: FC<Props> = ({ modalState, onClose, onCreate }) => {
       <div className="flex flex-col overflow-auto px-6 py-4">
         <TextInputField
           elementId="name"
-          fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
-          placeholder={t(CreateI18nKey.DisplayNamePlaceholder)}
+          fieldTitle={t(EntityFieldsI18nKey.displayName)}
+          placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
           value={name}
           onChange={(name) => setName(name)}
         />

@@ -1,4 +1,4 @@
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { MAX_NAME_SYMBOLS, MIN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isWrongLengthWithView } from '@/src/utils/validation/name-error';
@@ -10,7 +10,7 @@ export const getDisplayNameErrorKeyPerView = (view: ApplicationRoute, wrongLengt
 
   switch (view) {
     case ApplicationRoute.Models:
-      return CreateI18nKey.DisplayNameErrorModel;
+      return ErrorI18nKey.DisplayNameErrorModel;
 
     case ApplicationRoute.Applications:
       return CreateI18nKey.ErrorUnique;

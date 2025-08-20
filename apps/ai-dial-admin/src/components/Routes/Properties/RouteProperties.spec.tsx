@@ -1,4 +1,4 @@
-import { CreateI18nKey, EntityFieldsI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import RouteProperties from './RouteProperties';
@@ -16,7 +16,7 @@ describe('RouteProperties', () => {
 
   test('renders all fields for app route', () => {
     render(<RouteProperties route={baseRoute} isAppRoute={true} updateRoute={vi.fn()} />);
-    expect(screen.getByText(CreateI18nKey.DisplayNameTitle)).toBeInTheDocument();
+    expect(screen.getByText(EntityFieldsI18nKey.displayName)).toBeInTheDocument();
     expect(screen.getByText(EntityFieldsI18nKey.paths)).toBeInTheDocument();
     expect(screen.getByText(RoutesI18nKey.RewritePath)).toBeInTheDocument();
     expect(screen.getByText(EntityFieldsI18nKey.methods)).toBeInTheDocument();
@@ -29,13 +29,13 @@ describe('RouteProperties', () => {
 
   test('renders description field for non-app route', () => {
     render(<RouteProperties route={baseRoute} isAppRoute={false} updateRoute={vi.fn()} />);
-    expect(screen.getByText(CreateI18nKey.DescriptionTitle)).toBeInTheDocument();
+    expect(screen.getByText(EntityFieldsI18nKey.description)).toBeInTheDocument();
   });
 
   test('calls updateRoute when name changes', () => {
     const updateRoute = vi.fn();
     render(<RouteProperties route={baseRoute} isAppRoute={true} updateRoute={updateRoute} />);
-    fireEvent.change(screen.getByPlaceholderText(CreateI18nKey.DisplayNamePlaceholder), {
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName), {
       target: { value: 'newName' },
     });
     expect(updateRoute).toHaveBeenCalledWith(expect.objectContaining({ name: 'newName' }));
@@ -44,7 +44,7 @@ describe('RouteProperties', () => {
   test('calls updateRoute when description changes', () => {
     const updateRoute = vi.fn();
     render(<RouteProperties route={{ ...baseRoute, response: void 0 }} isAppRoute={false} updateRoute={updateRoute} />);
-    fireEvent.change(screen.getByPlaceholderText(CreateI18nKey.DescriptionPlaceholder), {
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Description), {
       target: { value: 'newDesc' },
     });
     expect(updateRoute).toHaveBeenCalledWith(expect.objectContaining({ description: 'newDesc' }));

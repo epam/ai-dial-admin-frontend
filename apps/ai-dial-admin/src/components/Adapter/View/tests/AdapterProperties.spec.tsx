@@ -14,8 +14,8 @@ describe('AdapterProperties', () => {
   test('renders all fields', () => {
     render(<AdapterProperties entity={baseEntity} names={['adapter1', 'adapter2']} onChangeAdapter={vi.fn()} />);
     expect(screen.getByText(CreateI18nKey.IdTitle)).toBeInTheDocument();
-    expect(screen.getByText(CreateI18nKey.DisplayNameTitle)).toBeInTheDocument();
-    expect(screen.getByText(CreateI18nKey.DescriptionTitle)).toBeInTheDocument();
+    expect(screen.getByText(EntityFieldsI18nKey.displayName)).toBeInTheDocument();
+    expect(screen.getByText(EntityFieldsI18nKey.description)).toBeInTheDocument();
     expect(screen.getByText(EntityFieldsI18nKey.baseEndpoint)).toBeInTheDocument();
   });
 
@@ -31,7 +31,7 @@ describe('AdapterProperties', () => {
   test('calls onChangeAdapter when displayName changes', () => {
     const onChangeAdapter = vi.fn();
     render(<AdapterProperties entity={baseEntity} names={['adapter1']} onChangeAdapter={onChangeAdapter} />);
-    fireEvent.change(screen.getByPlaceholderText(CreateI18nKey.DisplayNamePlaceholder), {
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName), {
       target: { value: 'New Name' },
     });
     expect(onChangeAdapter).toHaveBeenCalledWith(expect.objectContaining({ displayName: 'New Name' }));

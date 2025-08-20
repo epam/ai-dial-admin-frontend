@@ -227,7 +227,6 @@ export enum CreateI18nKey {
   Prompt = 'CreateEntity.Prompt',
   Route = 'CreateEntity.Route',
   Interceptor = 'CreateEntity.Interceptor',
-  NameTitle = 'CreateEntity.name.title',
   IdTitle = 'CreateEntity.id.title',
   IdPlaceholder = 'CreateEntity.id.placeholder',
   KeyTitle = 'CreateEntity.key.title',
@@ -238,19 +237,11 @@ export enum CreateI18nKey {
   MinMaxLength = 'CreateEntity.minMaxLength',
   InterceptorName = 'CreateEntity.name.interceptor',
   ForbiddenCharsError = 'CreateEntity.name.forbiddenChars',
-  DisplayNameTitle = 'CreateEntity.displayName.title',
-  DisplayNameErrorModel = 'CreateEntity.displayName.errorModel',
-  DisplayNamePlaceholder = 'CreateEntity.displayName.placeholder',
   ModelDisplayName = 'CreateEntity.displayName.ModelDisplayName',
   ApplicationDisplayName = 'CreateEntity.displayName.ApplicationDisplayName',
   VersionTitle = 'CreateEntity.version.title',
   VersionPlaceholder = 'CreateEntity.version.placeholder',
   VersionErrorModel = 'CreateEntity.version.errorModel',
-  DescriptionTitle = 'CreateEntity.description.title',
-  DescriptionPlaceholder = 'CreateEntity.description.placeholder',
-  DescriptionLengthError = 'CreateEntity.description.length',
-  AdapterTitle = 'CreateEntity.adapter.title',
-  AdapterPlaceholder = 'CreateEntity.adapter.placeholder',
   ValidityPeriodTitle = 'CreateEntity.ValidityPeriodTitle',
   ContentTitle = 'CreateEntity.content.title',
   ContentPlaceholder = 'CreateEntity.content.placeholder',
@@ -659,6 +650,9 @@ export enum ErrorI18nKey {
   UrlField = 'Error.UrlField',
   WarningEndpoint = 'Error.WarningEndpoint',
   ServerError = 'Error.ServerError',
+  DescriptionLength = 'Error.DescriptionLength',
+  DisplayNameErrorModel = 'Error.DisplayNameErrorModel',
+  NameExists = 'Error.NameExists',
 }
 
 export enum SourceI18nKey {
@@ -674,6 +668,9 @@ export enum EntityPlaceholdersI18nKey {
   Endpoint = 'EntityPlaceholdersI18nKey.Endpoint',
   EditorUrl = 'EntityPlaceholdersI18nKey.EditorUrl',
   ViewerUrl = 'EntityPlaceholdersI18nKey.ViewerUrl',
+  SelectAdapter = 'EntityPlaceholdersI18nKey.SelectAdapter',
+  Description = 'EntityPlaceholdersI18nKey.Description',
+  DisplayName = 'EntityPlaceholdersI18nKey.DisplayName',
 }
 
 export enum EntityFieldsI18nKey {

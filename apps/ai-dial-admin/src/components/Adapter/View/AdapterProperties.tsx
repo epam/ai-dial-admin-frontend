@@ -125,8 +125,8 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
 
       <AutocompleteField
         elementId="displayName"
-        fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
-        placeholder={t(CreateI18nKey.DisplayNamePlaceholder)}
+        fieldTitle={t(EntityFieldsI18nKey.displayName)}
+        placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
         value={entity.displayName}
         errorText={displayNameError?.text}
         onChange={onChangeDisplayName}
@@ -136,8 +136,8 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
 
       <TextAreaField
         elementId="description"
-        fieldTitle={t(CreateI18nKey.DescriptionTitle)}
-        placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
+        fieldTitle={t(EntityFieldsI18nKey.description)}
+        placeholder={t(EntityPlaceholdersI18nKey.Description)}
         optional={true}
         value={entity.description}
         errorText={descriptionError?.text}

@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import Button from '@/src/components/Common/Button/Button';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import { BasicI18nKey, ButtonsI18nKey, CreateI18nKey, DuplicateI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, CreateI18nKey, DuplicateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
 import { DialPrompt } from '@/src/models/dial/prompt';
@@ -93,9 +93,9 @@ const DuplicatePrompt: FC<Props> = ({ modalState, entity, versionsMap, onDuplica
           onChange={onChangeDuplicationType}
         />
         <TextInputField
-          fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
+          fieldTitle={t(EntityFieldsI18nKey.displayName)}
+          placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
           elementId="name"
-          placeholder={t(CreateI18nKey.DisplayNamePlaceholder)}
           value={clonedPrompt.name}
           onChange={onChangeName}
           disabled={duplicationType === DuplicationTypes.VERSION}

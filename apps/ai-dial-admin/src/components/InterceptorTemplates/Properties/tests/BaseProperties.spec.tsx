@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 
 import BaseProperties from '../BaseProperties';
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 
 describe('Interceptor Template BaseProperties', () => {
   const template: InterceptorTemplate = {
@@ -21,8 +21,8 @@ describe('Interceptor Template BaseProperties', () => {
     const setTemplateMock = vi.fn();
     render(<BaseProperties template={template} setTemplate={setTemplateMock} names={names} />);
     expect(screen.getByPlaceholderText(CreateI18nKey.IdPlaceholder)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(CreateI18nKey.DisplayNamePlaceholder)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(CreateI18nKey.DescriptionPlaceholder)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Description)).toBeInTheDocument();
   });
 
   test('Should call setTemplate on id change', async () => {
@@ -37,7 +37,7 @@ describe('Interceptor Template BaseProperties', () => {
   test('Should call setTemplate on name change', async () => {
     const setTemplateMock = vi.fn();
     render(<BaseProperties template={template} setTemplate={setTemplateMock} names={names} />);
-    const nameInput = screen.getByPlaceholderText(CreateI18nKey.DisplayNamePlaceholder);
+    const nameInput = screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName);
     await userEvent.clear(nameInput);
     await userEvent.type(nameInput, 'New Name');
     expect(setTemplateMock).toHaveBeenCalled();
@@ -46,7 +46,7 @@ describe('Interceptor Template BaseProperties', () => {
   test('Should call setTemplate on description change', async () => {
     const setTemplateMock = vi.fn();
     render(<BaseProperties template={template} setTemplate={setTemplateMock} names={names} />);
-    const descInput = screen.getByPlaceholderText(CreateI18nKey.DescriptionPlaceholder);
+    const descInput = screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Description);
     await userEvent.clear(descInput);
     await userEvent.type(descInput, 'New Desc');
     expect(setTemplateMock).toHaveBeenCalled();

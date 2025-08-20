@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import { CreateI18nKey, EntityFieldsI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialRoute } from '@/src/models/dial/route';
@@ -33,12 +33,12 @@ const SimpleEntityProperties: FC<Props> = ({
   const t = useI18n() as (t: string) => string;
   const idTitleKey =
     view === ApplicationRoute.Prompts || view === ApplicationRoute.Files
-      ? CreateI18nKey.DisplayNameTitle
+      ? EntityFieldsI18nKey.displayName
       : CreateI18nKey.IdTitle;
 
   const idPlaceholderKey =
     view === ApplicationRoute.Prompts || view === ApplicationRoute.Files
-      ? CreateI18nKey.DisplayNamePlaceholder
+      ? EntityPlaceholdersI18nKey.DisplayName
       : CreateI18nKey.IdPlaceholder;
 
   const [nameError, setNameError] = useState<FieldError | null>(null);
@@ -120,8 +120,8 @@ const SimpleEntityProperties: FC<Props> = ({
       )}
       <TextAreaField
         elementId="description"
-        fieldTitle={t(CreateI18nKey.DescriptionTitle)}
-        placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
+        fieldTitle={t(EntityFieldsI18nKey.description)}
+        placeholder={t(EntityPlaceholdersI18nKey.Description)}
         optional={true}
         value={entity.description}
         errorText={descriptionError?.text}

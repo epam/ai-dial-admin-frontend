@@ -78,9 +78,9 @@ const DuplicateEntityPopup: FC<Props> = ({ onDuplicate, names, view, modalState,
           {!isSimple && (
             <>
               <TextInputField
-                fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
+                fieldTitle={t(EntityFieldsI18nKey.displayName)}
+                placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
                 elementId="name"
-                placeholder={t(CreateI18nKey.DisplayNamePlaceholder)}
                 value={(clonedEntity as DialBaseEntity).displayName}
                 onChange={onChangeDisplayName}
               />

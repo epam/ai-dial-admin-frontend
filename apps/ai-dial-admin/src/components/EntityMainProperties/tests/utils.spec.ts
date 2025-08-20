@@ -1,4 +1,4 @@
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import {
   getDisplayNameErrorKeyPerView,
@@ -19,7 +19,7 @@ describe('EntityMainProperties :: errors :: getDisplayNameErrorKeyPerView', () =
   test('Should return key for model', () => {
     const res = getDisplayNameErrorKeyPerView(ApplicationRoute.Models);
 
-    expect(res).toBe(CreateI18nKey.DisplayNameErrorModel);
+    expect(res).toBe(ErrorI18nKey.DisplayNameErrorModel);
   });
 
   test('Should return key for application', () => {

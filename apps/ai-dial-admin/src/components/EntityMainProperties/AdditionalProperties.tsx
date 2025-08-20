@@ -5,7 +5,13 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
-import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import {
+  ButtonsI18nKey,
+  CreateI18nKey,
+  EntitiesI18nKey,
+  EntityFieldsI18nKey,
+  EntityPlaceholdersI18nKey,
+} from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
@@ -82,8 +88,8 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
           buttonTitle={t(ButtonsI18nKey.OpenAdapter)}
           columns={SIMPLE_DESCRIPTION_COLUMNS}
           selectedValue={entity.adapter}
-          fieldTitle={t(CreateI18nKey.AdapterTitle)}
-          placeholder={t(CreateI18nKey.AdapterPlaceholder)}
+          fieldTitle={t(EntityFieldsI18nKey.adapter)}
+          placeholder={t(EntityPlaceholdersI18nKey.SelectAdapter)}
           onChangeValue={onChangeAdapter}
           isEntityImmutable={isEntityImmutable}
           sourceEntities={adapters}

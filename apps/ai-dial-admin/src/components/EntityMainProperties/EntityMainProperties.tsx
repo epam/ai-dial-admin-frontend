@@ -7,7 +7,7 @@ import ApplicationSource from '@/src/components/ApplicationSource/ApplicationSou
 import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/AutocompleteField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
@@ -138,8 +138,8 @@ const EntityMainProperties: FC<Props> = ({
         )}
         <AutocompleteField
           elementId="displayName"
-          fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
-          placeholder={t(CreateI18nKey.DisplayNamePlaceholder)}
+          fieldTitle={t(EntityFieldsI18nKey.displayName)}
+          placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
           value={entity.displayName}
           errorText={displayNameError}
           onChange={onChangeDisplayName}
@@ -170,8 +170,8 @@ const EntityMainProperties: FC<Props> = ({
         )}
         <TextAreaField
           elementId="description"
-          fieldTitle={t(CreateI18nKey.DescriptionTitle)}
-          placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
+          fieldTitle={t(EntityFieldsI18nKey.description)}
+          placeholder={t(EntityPlaceholdersI18nKey.Description)}
           optional={true}
           value={entity.description}
           errorText={descriptionError?.text}

@@ -64,9 +64,9 @@ const DuplicateAdapter: FC<Props> = ({ onDuplicate, modalState, onClose, adapter
         />
 
         <TextInputField
-          fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
+          fieldTitle={t(EntityFieldsI18nKey.displayName)}
           elementId="displayName"
-          placeholder={t(CreateI18nKey.DisplayNamePlaceholder)}
+          placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
           value={entity.displayName}
           onChange={onChangeDisplayName}
         />

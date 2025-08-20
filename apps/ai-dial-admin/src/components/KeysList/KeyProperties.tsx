@@ -95,8 +95,8 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
       )}
       <TextAreaField
         elementId="description"
-        fieldTitle={t(CreateI18nKey.DescriptionTitle)}
-        placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
+        fieldTitle={t(EntityFieldsI18nKey.description)}
+        placeholder={t(EntityPlaceholdersI18nKey.Description)}
         optional={true}
         value={entity.description}
         errorText={descriptionError?.text}

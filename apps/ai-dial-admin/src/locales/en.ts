@@ -252,8 +252,6 @@ export default {
       error: 'This id already exists.',
     },
     name: {
-      title: 'Name',
-      error: 'This name already exists.',
       interceptor: 'Interceptor Name',
       forbiddenChars: 'Name must not contain forbidden characters: {list}',
     },
@@ -263,12 +261,8 @@ export default {
       error: 'This value already exists.',
     },
     displayName: {
-      title: 'Display name',
-      placeholder: 'Enter display name',
       ModelDisplayName: 'Model display name',
       ApplicationDisplayName: 'Application display name',
-      errorModel:
-        'This name is used by versionless model. Specify version for model with this display name to group models.',
     },
     version: {
       title: 'Version',
@@ -276,17 +270,7 @@ export default {
       errorModel: 'For a model with this Display name, specifying a version is mandatory.',
     },
     nameVersionCombinationError: 'This combination of name and version already exists. Specify another',
-    description: {
-      title: 'Description',
-      placeholder: 'Enter description',
-      length: 'User can add any characters, but not more than 2048.',
-    },
     ValidityPeriodTitle: 'Validity period',
-    adapter: {
-      title: 'Adapter',
-      placeholder: 'Select adapter',
-    },
-
     content: {
       title: 'Content',
       placeholder: 'Enter prompt',
@@ -729,12 +713,10 @@ export default {
     fieldsHashingOrder: 'Hashing order',
     endpointDeploymentName: 'Endpoint deployment name',
     endpoint: 'Endpoint',
-    //dddd
     name: 'Name',
     displayName: 'Display name',
     adapter: 'Adapter',
     description: 'Description',
-    // ----
     author: 'Maintainer',
     displayVersion: 'Display version',
     iconUrl: 'Icon URL',
@@ -808,6 +790,9 @@ export default {
     Endpoint: 'Enter endpoint',
     ViewerUrl: 'Enter Viewer URL',
     EditorUrl: 'Enter Editor URL',
+    SelectAdapter: 'Select adapter',
+    Description: 'Enter description',
+    DisplayName: 'Enter display name',
   },
   Error: {
     ServerError: 'Server Error',
@@ -824,6 +809,10 @@ export default {
     TryAgainLater: 'Please try again later.',
     UrlField: 'This field must be a valid URL starting with  http:// or https://',
     WarningEndpoint: 'The endpoint uses HTTP instead of HTTPS. This may expose data to security risks.',
+    DescriptionLength: 'User can add any characters, but not more than 2048.',
+    NameExists: 'This name already exists.',
+    DisplayNameErrorModel:
+      'This name is used by versionless model. Specify version for model with this display name to group models.',
   },
   Source: {
     OpenTemplate: 'Open template',

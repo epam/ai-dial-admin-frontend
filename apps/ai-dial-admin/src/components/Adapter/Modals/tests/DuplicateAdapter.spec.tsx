@@ -18,7 +18,7 @@ describe('DuplicateAdapter', () => {
     );
 
     expect(screen.getByText(CreateI18nKey.IdTitle)).toBeInTheDocument();
-    expect(screen.getByText(CreateI18nKey.DisplayNameTitle)).toBeInTheDocument();
+    expect(screen.getByText(EntityFieldsI18nKey.displayName)).toBeInTheDocument();
     expect(screen.getByText(EntityFieldsI18nKey.baseEndpoint)).toBeInTheDocument();
     expect(screen.getByText(ButtonsI18nKey.Cancel)).toBeInTheDocument();
     expect(screen.getByText(ButtonsI18nKey.Duplicate)).toBeInTheDocument();
@@ -45,7 +45,7 @@ describe('DuplicateAdapter', () => {
     );
     // Fill in the name to enable the button
     fireEvent.change(screen.getByPlaceholderText(CreateI18nKey.IdPlaceholder), { target: { value: 'adapter2' } });
-    fireEvent.change(screen.getByPlaceholderText(CreateI18nKey.DisplayNamePlaceholder), {
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName), {
       target: { value: 'Adapter Two' },
     });
     fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Endpoint), {

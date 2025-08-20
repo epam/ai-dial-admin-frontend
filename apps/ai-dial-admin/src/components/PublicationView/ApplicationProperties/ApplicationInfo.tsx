@@ -19,7 +19,7 @@ const ApplicationInfo: FC<Props> = ({ application }) => {
       <TextInputField
         elementId="displayName"
         readonly={true}
-        fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
+        fieldTitle={t(EntityFieldsI18nKey.displayName)}
         value={application?.displayName}
       />
       <TextInputField
@@ -32,7 +32,7 @@ const ApplicationInfo: FC<Props> = ({ application }) => {
       <TextInputField
         readonly={true}
         elementId="description"
-        fieldTitle={t(CreateI18nKey.DescriptionTitle)}
+        fieldTitle={t(EntityFieldsI18nKey.description)}
         value={application?.description}
       />
 
@@ -42,7 +42,7 @@ const ApplicationInfo: FC<Props> = ({ application }) => {
         readonly={true}
         elementId="topics"
         selectedItems={application?.descriptionKeywords}
-        title={t(EntityFieldsI18nKey.Topics)}
+        title={t(EntityFieldsI18nKey.topics)}
       />
     </div>
   ) : null;

@@ -20,6 +20,7 @@ import {
   CreateI18nKey,
   EntitiesI18nKey,
   EntityFieldsI18nKey,
+  EntityPlaceholdersI18nKey,
   PromptsI18nKey,
 } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -173,7 +174,7 @@ const PromptProperties: FC<Props> = ({
         {/* will be uncommented after BE implement author */}
         {publication ? (
           <>
-            <LabeledText label={t(CreateI18nKey.DisplayNameTitle)} text={prompt.name} copyButton={true} />
+            <LabeledText label={t(EntityFieldsI18nKey.displayName)} text={prompt.name} copyButton={true} />
             {/* <LabeledText label="Author" text={publication.author} /> */}
             <LabeledText
               label={t(EntityFieldsI18nKey.createdAt)}
@@ -182,7 +183,7 @@ const PromptProperties: FC<Props> = ({
           </>
         ) : (
           <>
-            <LabeledText label={t(CreateI18nKey.DisplayNameTitle)} text={prompt.name} copyButton={true} />
+            <LabeledText label={t(EntityFieldsI18nKey.displayName)} text={prompt.name} copyButton={true} />
             {/* <LabeledText label="Author" text={prompt.author} /> */}
             <LabeledText
               label={t(EntityFieldsI18nKey.updatedAt)}
@@ -223,8 +224,8 @@ const PromptProperties: FC<Props> = ({
           <TextAreaField
             elementId="description"
             elementCssClass="lg:w-[35%]"
-            fieldTitle={t(CreateI18nKey.DescriptionTitle)}
-            placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
+            fieldTitle={t(EntityFieldsI18nKey.description)}
+            placeholder={t(EntityPlaceholdersI18nKey.Description)}
             optional={true}
             disabled={isImmutable}
             value={prompt.description}
