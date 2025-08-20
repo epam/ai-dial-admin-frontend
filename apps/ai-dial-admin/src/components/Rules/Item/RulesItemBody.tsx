@@ -5,8 +5,8 @@ import { FC, useState } from 'react';
 import classNames from 'classnames';
 
 import { DialRule } from '@/src/models/dial/rule';
-import RulesItemOperator from './RulesItemOperator';
-import RulesValueList from './RulesValueList';
+import RulesItemOperator from '@/src/components/Rules/Item/RulesItemOperator';
+import RulesValueList from '@/src/components/Rules/Value/RulesValueList';
 
 interface Props {
   rules: DialRule[];

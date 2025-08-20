@@ -13,7 +13,7 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialRule, RuleFunction } from '@/src/models/dial/rule';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
-import { getAttributeItems, getOperationItems } from '../utils';
+import { getAttributeItems, getOperationItems } from '@/src/components/Rules/utils';
 
 interface Props {
   rule: DialRule;
