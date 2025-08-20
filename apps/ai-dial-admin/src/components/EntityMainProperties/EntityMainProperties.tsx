@@ -7,7 +7,7 @@ import ApplicationSource from '@/src/components/ApplicationSource/ApplicationSou
 import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/AutocompleteField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import { CreateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
@@ -150,8 +150,8 @@ const EntityMainProperties: FC<Props> = ({
         {view === ApplicationRoute.Models && (
           <TextInputField
             elementId="displayVersion"
-            fieldTitle={t(CreateI18nKey.VersionTitle)}
-            placeholder={t(CreateI18nKey.VersionPlaceholder)}
+            fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
+            placeholder={t(EntityPlaceholdersI18nKey.Version)}
             optional={isVersionOptional}
             value={(entity as DialModel).displayVersion}
             onChange={onChangeVersion}

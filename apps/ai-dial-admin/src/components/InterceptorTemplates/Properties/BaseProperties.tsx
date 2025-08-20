@@ -1,7 +1,7 @@
 import { FC, useState } from 'react';
 
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { CreateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { FieldError } from '@/src/models/error';
 import { useI18n } from '@/src/locales/client';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';

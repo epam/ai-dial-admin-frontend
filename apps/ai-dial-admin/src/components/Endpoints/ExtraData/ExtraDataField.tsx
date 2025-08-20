@@ -2,12 +2,7 @@ import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBas
 import { RadioButtonWithContent } from '@/src/components/Common/RadioGroup/RadioGroup';
 import RadioGroupModalField from '@/src/components/Common/RadioGroupModalField/RadioGroupModalField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import {
-  BasicI18nKey,
-  EntityFieldsI18nKey,
-  EntityPlaceholdersI18nKey,
-  UpstreamEndpointsI18nKey,
-} from '@/src/constants/i18n';
+import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialEndpointExtraData, DialModelEndpoint } from '@/src/models/dial/model';
 import { JSONEditorError } from '@/src/types/editor';
@@ -114,7 +109,7 @@ const ExtraDataField: FC<Props> = ({ endpoint, fieldTitle, onChangeExtraData }) 
     { id: NONE_ID, name: t(BasicI18nKey.None) },
     {
       id: USE_STRING_ID,
-      name: t(UpstreamEndpointsI18nKey.ExtraDataString),
+      name: t(TypeI18nKey.String),
       content: (
         <TextAreaField
           elementId="extraDataStringValue"
@@ -126,7 +121,7 @@ const ExtraDataField: FC<Props> = ({ endpoint, fieldTitle, onChangeExtraData }) 
     },
     {
       id: USE_JSON_ID,
-      name: t(UpstreamEndpointsI18nKey.ExtraDataJson),
+      name: t(TypeI18nKey.JSON),
       content: (
         <div className="h-[540px] max-h-[35vh]">
           <JsonEditorBase value={jsonValue} onChange={onChangeJsonValue} onValidateJSON={onValidateJSON} />

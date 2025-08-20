@@ -8,7 +8,7 @@ import EntityAttachments from '@/src/components/EntityView/Properties/EntityAtta
 import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
 import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
 import MaxRetryAttempts from '@/src/components/MaxRetryAttempts/MaxRetryAttempts';
-import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
@@ -52,7 +52,7 @@ const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntit
             isEntityImmutable={true}
           />
           <EntityIcon
-            fieldTitle={t(EntitiesI18nKey.Icon)}
+            fieldTitle={t(EntityFieldsI18nKey.icon)}
             elementId="icon"
             entity={entity}
             onChangeEntity={updateEntity}

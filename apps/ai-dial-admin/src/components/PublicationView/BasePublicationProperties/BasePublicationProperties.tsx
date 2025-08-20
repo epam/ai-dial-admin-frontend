@@ -3,7 +3,7 @@ import { FC, ReactNode } from 'react';
 import classNames from 'classnames';
 
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
-import { EntitiesI18nKey, EntityFieldsI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import { ACTION_I18N_KEYS } from '@/src/constants/publications';
 import { useI18n } from '@/src/locales/client';
 import { ActionType, ApplicationPublication, Publication } from '@/src/models/dial/publications';

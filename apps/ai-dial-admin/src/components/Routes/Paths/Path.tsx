@@ -47,7 +47,7 @@ const Path: FC<Props> = ({ index, path, allPaths, onRemove, onChangePath }) => {
         <TextInputField
           elementId={'path ' + index}
           value={path}
-          placeholder={t(EntityPlaceholdersI18nKey.Path)}
+          placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
           fieldTitle={index === 0 ? t(EntityFieldsI18nKey.paths) : ''}
           onChange={(value) => onChangePath(index, value)}
           errorText={

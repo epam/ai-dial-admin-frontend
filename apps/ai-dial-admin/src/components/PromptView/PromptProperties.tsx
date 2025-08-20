@@ -18,9 +18,9 @@ import {
   BasicI18nKey,
   ButtonsI18nKey,
   CreateI18nKey,
-  EntitiesI18nKey,
   EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
+  FoldersI18nKey,
   PromptsI18nKey,
 } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -199,7 +199,7 @@ const PromptProperties: FC<Props> = ({
             {isImmutable ? (
               <TextInputField
                 elementId="version"
-                fieldTitle={t(CreateI18nKey.VersionTitle)}
+                fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
                 value={prompt.version}
                 disabled={isImmutable}
               />
@@ -209,7 +209,7 @@ const PromptProperties: FC<Props> = ({
                 selectedValue={prompt.version}
                 elementId="version"
                 items={[...new Set([...versions, ...addedVersions])].map((v) => ({ id: v, name: v }))}
-                fieldTitle={t(CreateI18nKey.VersionTitle)}
+                fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
                 onChange={onChangeVersion}
               >
                 <Button
@@ -255,16 +255,16 @@ const PromptProperties: FC<Props> = ({
             {isImmutable ? (
               <TextInputField
                 elementId="version"
-                fieldTitle={t(CreateI18nKey.StoragePathTitle)}
+                fieldTitle={t(FoldersI18nKey.Storage)}
                 value={prompt.path}
                 disabled={isImmutable}
               />
             ) : (
               <FilePath
                 value={prompt.folderId}
-                label={t(CreateI18nKey.StoragePathTitle)}
+                label={t(FoldersI18nKey.Storage)}
                 modalTitle={t(BasicI18nKey.MoveToFolder)}
-                placeholder={t(CreateI18nKey.StoragePathPlaceholder)}
+                placeholder={t(EntityPlaceholdersI18nKey.Path)}
                 onChange={onChangePath}
                 context={usePromptFolder}
               />

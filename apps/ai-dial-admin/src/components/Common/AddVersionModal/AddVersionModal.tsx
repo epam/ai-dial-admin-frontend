@@ -3,7 +3,7 @@ import { FC, useState } from 'react';
 import Button from '@/src/components/Common/Button/Button';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Popup from '@/src/components/Common/Popup/Popup';
-import { ButtonsI18nKey, CreateI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
 
@@ -33,8 +33,8 @@ const AddVersionModal: FC<Props> = ({
         {prefilledVersion && <div className="text-secondary">{t(PromptsI18nKey.NewVersionSaveDescription)}</div>}
         <TextInputField
           elementId="name"
-          fieldTitle={t(CreateI18nKey.VersionTitle)}
-          placeholder={t(CreateI18nKey.VersionPlaceholder)}
+          fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
+          placeholder={t(EntityPlaceholdersI18nKey.Version)}
           value={version}
           onChange={setVersion}
         />

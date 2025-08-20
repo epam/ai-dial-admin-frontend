@@ -6,7 +6,7 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, RoutesI18nKey } from '@
 describe('Paths', () => {
   test('renders empty path input if no paths', () => {
     render(<Paths route={{ paths: [] }} updateRoute={vi.fn()} />);
-    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Path)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.PathUrl)).toBeInTheDocument();
     expect(screen.getByText(EntityFieldsI18nKey.paths)).toBeInTheDocument();
   });
 

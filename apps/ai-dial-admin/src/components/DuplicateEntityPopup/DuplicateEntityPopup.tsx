@@ -3,7 +3,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import Button from '@/src/components/Common/Button/Button';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Popup from '@/src/components/Common/Popup/Popup';
-import { ButtonsI18nKey, CreateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseEntity, DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { FieldError } from '@/src/models/error';
@@ -87,9 +87,9 @@ const DuplicateEntityPopup: FC<Props> = ({ onDuplicate, names, view, modalState,
 
               {view === ApplicationRoute.Models && (
                 <TextInputField
-                  fieldTitle={t(CreateI18nKey.VersionTitle)}
+                  fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
                   elementId="version"
-                  placeholder={t(CreateI18nKey.VersionPlaceholder)}
+                  placeholder={t(EntityPlaceholdersI18nKey.Version)}
                   value={(clonedEntity as DialModel).displayVersion}
                   onChange={onChangeVersion}
                 />

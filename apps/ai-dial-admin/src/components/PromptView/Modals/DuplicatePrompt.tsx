@@ -2,7 +2,16 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import Button from '@/src/components/Common/Button/Button';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import { BasicI18nKey, ButtonsI18nKey, CreateI18nKey, DuplicateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
+import {
+  BasicI18nKey,
+  ButtonsI18nKey,
+  CreateI18nKey,
+  DuplicateI18nKey,
+  EntityFieldsI18nKey,
+  EntityPlaceholdersI18nKey,
+  FoldersI18nKey,
+  PromptsI18nKey,
+} from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
 import { DialPrompt } from '@/src/models/dial/prompt';
@@ -101,18 +110,18 @@ const DuplicatePrompt: FC<Props> = ({ modalState, entity, versionsMap, onDuplica
           disabled={duplicationType === DuplicationTypes.VERSION}
         />
         <TextInputField
-          fieldTitle={t(CreateI18nKey.VersionTitle)}
+          fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
+          placeholder={t(EntityPlaceholdersI18nKey.Version)}
           elementId="version"
-          placeholder={t(CreateI18nKey.VersionPlaceholder)}
           value={clonedPrompt.version}
           onChange={onChangeVersion}
         />
         {duplicationType === DuplicationTypes.PROMPT && (
           <FilePath
             value={clonedPrompt.folderId}
-            label={t(CreateI18nKey.StoragePathTitle)}
+            label={t(FoldersI18nKey.Storage)}
             modalTitle={t(BasicI18nKey.MoveToFolder)}
-            placeholder={t(CreateI18nKey.StoragePathPlaceholder)}
+            placeholder={t(EntityPlaceholdersI18nKey.Path)}
             onChange={onChangePath}
             context={usePromptFolder}
           />

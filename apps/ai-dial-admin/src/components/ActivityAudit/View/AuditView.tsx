@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import Button from '@/src/components/Common/Button/Button';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
-import { ActivityAuditI18nKey, ButtonsI18nKey, CreateI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { ActivityAuditI18nKey, ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';

@@ -65,6 +65,7 @@ export enum BasicI18nKey {
   From = 'Basic.From',
   To = 'Basic.To',
   Browse = 'Basic.Browse',
+  AddField = 'Basic.AddField',
   Move = 'Basic.Move',
   MoveToFolder = 'Basic.MoveToFolder',
   Selected = 'Basic.Selected',
@@ -122,13 +123,13 @@ export enum EntitiesI18nKey {
   NoDependencies = 'Entities.NoDependencies',
   AddModel = 'Entities.AddModel',
   AddApplication = 'Entities.AddApplication',
-  Icon = 'Entities.Icon',
   AddEntities = 'Entities.AddEntities',
   SourceType = 'Entities.SourceType',
   Endpoints = 'Entities.Endpoints',
   AppRunner = 'Entities.AppRunner',
-  ObjectType = 'Entities.ObjectType',
-  BooleanType = 'Entities.BooleanType',
+  InterceptorName = 'Entities.InterceptorName',
+  ModelDisplayName = 'Entities.ModelDisplayName',
+  ApplicationDisplayName = 'Entities.ApplicationDisplayName',
 }
 
 export enum DeleteI18nKey {
@@ -210,8 +211,6 @@ export enum ButtonsI18nKey {
   OpenAdapter = 'Buttons.OpenAdapter',
   OpenAppRunner = 'Buttons.OpenAppRunner',
   None = 'Buttons.None',
-  UseAll = 'Buttons.UseAll',
-  UseAllAttachment = 'Buttons.UseAllAttachment',
 }
 
 export enum CreateI18nKey {
@@ -224,33 +223,16 @@ export enum CreateI18nKey {
   Prompt = 'CreateEntity.Prompt',
   Route = 'CreateEntity.Route',
   Interceptor = 'CreateEntity.Interceptor',
+
   KeyTitle = 'CreateEntity.key.title',
   KeyPlaceholder = 'CreateEntity.key.placeholder',
   ErrorKey = 'CreateEntity.key.error',
   ErrorName = 'CreateEntity.name.error', //???
-  ErrorLength = 'CreateEntity.errorLength',
-  MinMaxLength = 'CreateEntity.minMaxLength',
-  InterceptorName = 'CreateEntity.name.interceptor',
-  ForbiddenCharsError = 'CreateEntity.name.forbiddenChars',
-  ModelDisplayName = 'CreateEntity.displayName.ModelDisplayName',
-  ApplicationDisplayName = 'CreateEntity.displayName.ApplicationDisplayName',
-  VersionTitle = 'CreateEntity.version.title',
-  VersionPlaceholder = 'CreateEntity.version.placeholder',
-  VersionErrorModel = 'CreateEntity.version.errorModel',
+
   ValidityPeriodTitle = 'CreateEntity.ValidityPeriodTitle',
   ContentTitle = 'CreateEntity.content.title',
   ContentPlaceholder = 'CreateEntity.content.placeholder',
-  StoragePathTitle = 'CreateEntity.storage.title',
-  StoragePathPlaceholder = 'CreateEntity.storage.placeholder',
-  CompletionEndpointTitle = 'CreateEntity.completionEndpoint.title',
-  CompletionEndpointPlaceholder = 'CreateEntity.completionEndpoint.placeholder',
-  ConfigurationEndpointTitle = 'CreateEntity.configurationEndpoint.title',
-  ConfigurationEndpointPlaceholder = 'CreateEntity.configurationEndpoint.placeholder',
-  RunnerName = 'CreateEntity.runner.title',
-  RunnerPlaceholder = 'CreateEntity.runner.placeholder',
-  NameVersionCombinationError = 'CreateEntity.nameVersionCombinationError',
-  SchemeTitle = 'CreateEntity.Scheme',
-  ErrorUnique = 'CreateEntity.ErrorUnique',
+
   CreateInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Create',
   SelectInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Select',
   InterceptorContainer = 'CreateEntity.InterceptorContainer',
@@ -261,8 +243,6 @@ export enum UpstreamEndpointsI18nKey {
   AddUpstream = 'UpstreamEndpoints.AddUpstream',
   UpstreamEndpoints = 'UpstreamEndpoints.UpstreamEndpoints',
   UpstreamKey = 'UpstreamEndpoints.UpstreamKey',
-  ExtraDataString = 'UpstreamEndpoints.ExtraDataString',
-  ExtraDataJson = 'UpstreamEndpoints.ExtraDataJson',
 }
 
 export enum ModelViewI18nKey {
@@ -290,8 +270,10 @@ export enum AttachmentsI18nKey {
   Attachments = 'Attachments.Attachments',
   AllAttachments = 'Attachments.AllAttachments',
   CustomAttachments = 'Attachments.CustomAttachments',
-  AttachmentsMaxNumber = 'Attachments.AttachmentsMaxNumber',
-  AttachmentsMaxNumberError = 'Attachments.AttachmentsMaxNumberError',
+  MaxNumber = 'Attachments.MaxNumber',
+  MaxNumberError = 'Attachments.MaxNumberError',
+  UseAll = 'Attachments.UseAll',
+  UseAllAttachment = 'Attachments.UseAllAttachment',
 }
 
 export enum KeysI18nKey {
@@ -347,17 +329,9 @@ export enum FeaturesI18nKey {
   folderAttachmentsSupported = 'Features.folderAttachmentsSupported',
   accessibleByPerRequestKey = 'Features.accessibleByPerRequestKey',
   configurationEndpoint = 'Features.configurationEndpoint',
-  configurationEndpointPlaceholder = 'Features.configurationEndpointPlaceholder',
   rateEndpoint = 'Features.rateEndpoint',
-  rateEndpointPlaceholder = 'Features.rateEndpointPlaceholder',
   tokenizeEndpoint = 'Features.tokenizeEndpoint',
-  tokenizeEndpointPlaceholder = 'Features.tokenizeEndpointPlaceholder',
   truncatePromptEndpoint = 'Features.truncatePromptEndpoint',
-  truncatePromptEndpointPlaceholder = 'Features.truncatePromptEndpointPlaceholder',
-}
-// TODO: AAAAA
-export enum HashingOrderI18nKey {
-  Add = 'HashingOrder.Add',
 }
 
 export enum TopicsI18nKey {
@@ -575,6 +549,7 @@ export enum FoldersI18nKey {
   FolderCreate = 'Folder.FolderCreate',
   FolderCreatePlaceholder = 'Folder.FolderCreatePlaceholder',
   FolderCreateSuccess = 'Folder.FolderCreateSuccess',
+  Storage = 'Folder.Storage',
 }
 
 export enum ActivityAuditI18nKey {
@@ -632,6 +607,12 @@ export enum ErrorI18nKey {
   DescriptionLength = 'Error.DescriptionLength',
   DisplayNameErrorModel = 'Error.DisplayNameErrorModel',
   NameExists = 'Error.NameExists',
+  Unique = 'Error.Unique',
+  Version = 'Error.Version',
+  NameVersionCombination = 'Error.NameVersionCombination',
+  Length = 'Error.Length',
+  MinMaxLength = 'Error.MinMaxLength',
+  ForbiddenChars = 'Error.ForbiddenChars',
 }
 
 export enum SourceI18nKey {
@@ -641,32 +622,47 @@ export enum SourceI18nKey {
   InterceptorTemplate = 'Source.InterceptorTemplate',
 }
 
+export enum TypeI18nKey {
+  Object = 'Type.Object',
+  Boolean = 'Type.Boolean',
+  String = 'Type.String',
+  JSON = 'Type.JSON',
+}
+
 export enum EntityPlaceholdersI18nKey {
-  Project = 'EntityPlaceholdersI18nKey.Project',
-  ContactPoint = 'EntityPlaceholdersI18nKey.ContactPoint',
-  Endpoint = 'EntityPlaceholdersI18nKey.Endpoint',
-  EditorUrl = 'EntityPlaceholdersI18nKey.EditorUrl',
-  ViewerUrl = 'EntityPlaceholdersI18nKey.ViewerUrl',
-  SelectAdapter = 'EntityPlaceholdersI18nKey.SelectAdapter',
-  Description = 'EntityPlaceholdersI18nKey.Description',
-  DisplayName = 'EntityPlaceholdersI18nKey.DisplayName',
-  Id = 'EntityPlaceholdersI18nKey.Id',
-  Maintainer = 'EntityPlaceholdersI18nKey.Maintainer',
-  Type = 'EntityPlaceholdersI18nKey.Type',
-  Title = 'EntityPlaceholdersI18nKey.Title',
-  Tier = 'EntityPlaceholdersI18nKey.Tier',
-  Weight = 'EntityPlaceholdersI18nKey.Weight',
-  UpstreamEndpoint = 'EntityPlaceholdersI18nKey.UpstreamEndpoint',
-  UpstreamKey = 'EntityPlaceholdersI18nKey.UpstreamKey',
-  Value = 'EntityPlaceholdersI18nKey.Value',
-  OverrideName = 'EntityPlaceholdersI18nKey.OverrideName',
-  Number = 'EntityPlaceholdersI18nKey.Number',
-  AttachmentsTypes = 'EntityPlaceholdersI18nKey.AttachmentsTypes',
-  Topic = 'EntityPlaceholdersI18nKey.Topic',
-  Path = 'EntityPlaceholdersI18nKey.Path',
-  Status = 'EntityPlaceholdersI18nKey.Status',
-  Order = 'EntityPlaceholdersI18nKey.Order',
-  Body = 'EntityPlaceholdersI18nKey.Body',
+  Project = 'EntityPlaceholders.Project',
+  ContactPoint = 'EntityPlaceholders.ContactPoint',
+  Endpoint = 'EntityPlaceholders.Endpoint',
+  EditorUrl = 'EntityPlaceholders.EditorUrl',
+  ViewerUrl = 'EntityPlaceholders.ViewerUrl',
+  SelectAdapter = 'EntityPlaceholders.SelectAdapter',
+  Description = 'EntityPlaceholders.Description',
+  DisplayName = 'EntityPlaceholders.DisplayName',
+  Id = 'EntityPlaceholders.Id',
+  Maintainer = 'EntityPlaceholders.Maintainer',
+  Type = 'EntityPlaceholders.Type',
+  Title = 'EntityPlaceholders.Title',
+  Tier = 'EntityPlaceholders.Tier',
+  Weight = 'EntityPlaceholders.Weight',
+  UpstreamEndpoint = 'EntityPlaceholders.UpstreamEndpoint',
+  UpstreamKey = 'EntityPlaceholders.UpstreamKey',
+  Value = 'EntityPlaceholders.Value',
+  OverrideName = 'EntityPlaceholders.OverrideName',
+  Number = 'EntityPlaceholders.Number',
+  AttachmentsTypes = 'EntityPlaceholders.AttachmentsTypes',
+  Topic = 'EntityPlaceholders.Topic',
+  PathUrl = 'EntityPlaceholders.PathUrl',
+  Path = 'EntityPlaceholders.Path',
+  Status = 'EntityPlaceholders.Status',
+  Order = 'EntityPlaceholders.Order',
+  Body = 'EntityPlaceholders.Body',
+  ConfigurationEndpoint = 'EntityPlaceholders.ConfigurationEndpoint',
+  CompletionEndpoint = 'EntityPlaceholders.CompletionEndpoint',
+  RateEndpoint = 'EntityPlaceholders.RateEndpoint',
+  TokenizeEndpoint = 'EntityPlaceholders.TokenizeEndpoint',
+  TruncatePromptEndpoint = 'EntityPlaceholders.truncatePromptEndpoint',
+  SelectAppRunner = 'EntityPlaceholders.SelectAppRunner',
+  Version = 'EntityPlaceholders.Version',
 }
 
 export enum EntityFieldsI18nKey {
@@ -683,6 +679,7 @@ export enum EntityFieldsI18nKey {
   displayVersion = 'EntityFields.displayVersion',
   adapter = 'EntityFields.adapter',
   iconUrl = 'EntityFields.iconUrl',
+  icon = 'EntityFields.Icon',
   description = 'EntityFields.description',
   forwardAuthToken = 'EntityFields.forwardAuthToken',
   features = 'EntityFields.features',
@@ -748,4 +745,5 @@ export enum EntityFieldsI18nKey {
   order = 'EntityFields.order',
   baseEndpoint = 'EntityFields.baseEndpoint',
   dependencies = 'EntityFields.dependencies',
+  completionEndpoint = 'EntityFields.completionEndpoint',
 }

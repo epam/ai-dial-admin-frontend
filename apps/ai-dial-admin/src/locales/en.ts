@@ -28,6 +28,7 @@ export default {
     To: 'To',
     Browse: 'Browse',
     Move: 'Move',
+    AddField: 'Add field',
     MoveToFolder: 'Move to another folder',
     Selected: 'selected',
     SelectAll: 'Select All',
@@ -142,20 +143,18 @@ export default {
     NoResource: 'Resource does not exist',
     NoInterceptorTemplates: 'No Interceptor Templates',
     NoDependencies: 'No Dependencies',
+    // add entity or entities
     AddModel: 'Add Model',
     AddApplication: 'Add Application',
-    // base fields
-    Icon: 'Icon',
-    Endpoint: 'Endpoint',
-
     AddEntities: 'Add Entities',
 
+    // entity control
     SourceType: 'Source type',
     Endpoints: 'Endpoints',
     AppRunner: 'Application runner',
-
-    ObjectType: 'Object',
-    BooleanType: 'Boolean',
+    ModelDisplayName: 'Model display name',
+    ApplicationDisplayName: 'Application display name',
+    Interceptor: 'Interceptor Name',
   },
   DeleteEntity: {
     Title: 'Confirm Deleting ',
@@ -223,8 +222,6 @@ export default {
     },
   },
   CreateEntity: {
-    errorLength: 'User can add any characters, but not more than {number}.',
-    minMaxLength: 'User can add any allowed characters, but not less than {min} and not more than {max}.',
     Model: 'Create Model',
     Application: 'Create Application',
     ApplicationRunner: 'Create Application Runner',
@@ -234,53 +231,30 @@ export default {
     Prompt: 'Create Prompt',
     Route: 'Create Route',
     Adapter: 'Create Adapter',
-    Scheme: 'Scheme',
     InterceptorTemplate: {
       Create: 'Create Interceptor Template',
       Select: 'Select Interceptor Template',
     },
+
     InterceptorContainer: 'Select Interceptor Container',
-    ErrorUnique: 'This field must be unique.',
-    runner: {
-      title: 'Application Runner',
-      placeholder: 'Select Application Runner',
-    },
-    name: {
-      interceptor: 'Interceptor Name',
-      forbiddenChars: 'Name must not contain forbidden characters: {list}',
-    },
+
     key: {
       title: 'Key value',
       placeholder: 'Enter value or generate',
       error: 'This value already exists.',
     },
-    displayName: {
-      ModelDisplayName: 'Model display name',
-      ApplicationDisplayName: 'Application display name',
-    },
-    version: {
-      title: 'Version',
-      placeholder: 'Enter version',
-      errorModel: 'For a model with this Display name, specifying a version is mandatory.',
-    },
-    nameVersionCombinationError: 'This combination of name and version already exists. Specify another',
+
     ValidityPeriodTitle: 'Validity period',
     content: {
       title: 'Content',
       placeholder: 'Enter prompt',
     },
-    storage: {
-      title: 'Storage folder',
-      placeholder: 'Enter path',
-    },
-    completionEndpoint: {
-      title: 'Completion endpoint',
-      placeholder: 'Enter Completion endpoint',
-    },
-    configurationEndpoint: {
-      title: 'Configuration endpoint',
-      placeholder: 'Enter Configuration endpoint',
-    },
+  },
+  Type: {
+    Object: 'Object',
+    Boolean: 'Boolean',
+    String: 'String',
+    JSON: 'JSON',
   },
   Buttons: {
     Copy: 'Copy',
@@ -321,16 +295,12 @@ export default {
     OpenAppRunner: 'Open Application Runner',
     OpenAdapter: 'Open Adapter',
     None: 'None',
-    UseAll: 'Use all',
-    UseAllAttachment: 'Use all attachment types',
   },
   UpstreamEndpoints: {
     Upstream: 'Upstream',
     AddUpstream: 'Add Upstream',
     UpstreamEndpoints: 'Upstream Endpoints',
     UpstreamKey: 'Keys',
-    ExtraDataString: 'String', // TYPE
-    ExtraDataJson: 'JSON', // TYPE
   },
   ModelView: {
     InteractionLimit: {
@@ -364,8 +334,10 @@ export default {
     Attachments: 'Attachments',
     AllAttachments: 'All attachments types',
     CustomAttachments: 'Custom attachments types',
-    AttachmentsMaxNumber: 'Attachments max number',
-    AttachmentsMaxNumberError: 'Max allowed number of attachments is {max}',
+    MaxNumber: 'Attachments max number',
+    MaxNumberError: 'Max allowed number of attachments is {max}',
+    UseAllAttachment: 'Use all attachment types',
+    UseAll: 'Use all',
   },
   Tabs: {
     Properties: 'Properties',
@@ -408,19 +380,12 @@ export default {
     autoCachingSupported: 'Auto caching ',
     parallelToolCallsSupported: 'Parallel tool calls',
     configurationEndpoint: 'Configuration endpoint',
-    configurationEndpointPlaceholder: 'Enter configuration endpoint',
     rateEndpoint: 'Rate endpoint',
-    rateEndpointPlaceholder: 'Enter rate endpoint',
     tokenizeEndpoint: 'Tokenize endpoint',
-    tokenizeEndpointPlaceholder: 'Enter tokenize endpoint',
     truncatePromptEndpoint: 'Truncate prompt endpoint',
-    truncatePromptEndpointPlaceholder: 'Enter truncate prompt endpoint',
   },
   Topics: {
     AddTopic: 'Add Topic',
-  },
-  HashingOrder: {
-    Add: 'Add field',
   },
   Editor: {
     ErrorLine: 'The error line is {line}',
@@ -644,6 +609,7 @@ export default {
     FolderCreate: 'Create Folder',
     FolderCreatePlaceholder: 'Enter folder name',
     FolderCreateSuccess: 'Folder created successfully',
+    Storage: 'Storage folder',
   },
   ActivityAudit: {
     ResourceDiff: 'Resource diff',
@@ -698,8 +664,9 @@ export default {
     adapter: 'Adapter',
     description: 'Description',
     author: 'Maintainer',
-    displayVersion: 'Display version',
+    displayVersion: 'Version',
     iconUrl: 'Icon URL',
+    icon: 'Icon',
     forwardAuthToken: 'Forward auth token',
     features: 'Features',
     inputAttachmentTypes: 'Input attachment types',
@@ -713,6 +680,7 @@ export default {
     maxTotalTokens: 'Max total tokens',
     pricing: 'Cost',
     unit: 'Unit',
+    scheme: 'Scheme',
     prompt: 'Prompt',
     completion: 'Completion',
     upstreams: 'Upstreams',
@@ -737,9 +705,10 @@ export default {
     body: 'Body',
     $defs: 'Definitions',
     $id: 'ID',
-    $schema: 'Schema',
+    $schema: 'Scheme',
     title: 'Title',
     applicationTypeCompletionEndpoint: 'Completion endpoint',
+    completionEndpoint: 'Completion endpoint',
     applicationTypeDisplayName: 'Name',
     applicationTypeViewerUrl: 'Viewer URL',
     applicationTypeEditorUrl: 'Editor URL',
@@ -765,16 +734,18 @@ export default {
     dependencies: 'Dependencies',
     order: 'Order',
   },
-  EntityFieldsPlaceholders: {
+  EntityPlaceholders: {
     Project: 'Enter project',
     ContactPoint: 'Enter email',
     Endpoint: 'Enter endpoint',
     ViewerUrl: 'Enter Viewer URL',
     EditorUrl: 'Enter Editor URL',
     SelectAdapter: 'Select adapter',
+    SelectAppRunner: 'Select Application Runner',
     Description: 'Enter description',
     DisplayName: 'Enter display name',
     Id: 'Enter ID',
+    Version: 'Enter version',
     Maintainer: 'Enter maintainer',
     Type: 'Enter type',
     Title: 'Enter title',
@@ -787,10 +758,16 @@ export default {
     Number: 'Enter number',
     AttachmentsTypes: 'Enter attachments types',
     Topic: 'Enter topic name',
-    Path: 'Enter path URL',
+    PathUrl: 'Enter path URL',
+    Path: 'Enter path',
     Status: 'Enter status',
     Body: 'Enter Body',
     Order: 'Enter order number',
+    ConfigurationEndpoint: 'Enter configuration endpoint',
+    CompletionEndpoint: 'Enter Completion endpoint',
+    RateEndpoint: 'Enter rate endpoint',
+    TokenizeEndpoint: 'Enter tokenize endpoint',
+    TruncatePromptEndpoint: 'Enter truncate prompt endpoint',
   },
   Error: {
     ServerError: 'Server Error',
@@ -809,6 +786,12 @@ export default {
     WarningEndpoint: 'The endpoint uses HTTP instead of HTTPS. This may expose data to security risks.',
     DescriptionLength: 'User can add any characters, but not more than 2048.',
     NameExists: 'This name already exists.',
+    Unique: 'This field must be unique.',
+    Version: 'For a model with this Display name, specifying a version is mandatory.',
+    NameVersionCombination: 'This combination of name and version already exists. Specify another',
+    Length: 'User can add any characters, but not more than {number}.',
+    MinMaxLength: 'User can add any allowed characters, but not less than {min} and not more than {max}.',
+    ForbiddenChars: 'Name must not contain forbidden characters: {list}',
     DisplayNameErrorModel:
       'This name is used by versionless model. Specify version for model with this display name to group models.',
   },

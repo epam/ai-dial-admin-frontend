@@ -1,7 +1,7 @@
 import { FC } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
@@ -25,7 +25,7 @@ const ApplicationInfo: FC<Props> = ({ application }) => {
       <TextInputField
         readonly={true}
         elementId="displayVersion"
-        fieldTitle={t(CreateI18nKey.VersionTitle)}
+        fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
         value={application?.displayVersion}
       />
 
@@ -36,7 +36,7 @@ const ApplicationInfo: FC<Props> = ({ application }) => {
         value={application?.description}
       />
 
-      <EntityIcon fieldTitle={t(EntitiesI18nKey.Icon)} readonly={true} elementId="icon" entity={application} />
+      <EntityIcon fieldTitle={t(EntityFieldsI18nKey.icon)} readonly={true} elementId="icon" entity={application} />
 
       <Multiselect
         readonly={true}

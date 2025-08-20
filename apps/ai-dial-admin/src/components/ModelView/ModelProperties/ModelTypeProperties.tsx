@@ -8,13 +8,7 @@ import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
 import EntityAttachments from '@/src/components/EntityView/Properties/EntityAttachments';
 import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
-import {
-  EntitiesI18nKey,
-  EntityFieldsI18nKey,
-  EntityPlaceholdersI18nKey,
-  ModelViewI18nKey,
-  TopicsI18nKey,
-} from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ModelViewI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
 import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import { useI18n } from '@/src/locales/client';
@@ -120,7 +114,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
         {model.type === DialModelType.Chat && (
           <>
             <EntityIcon
-              fieldTitle={t(EntitiesI18nKey.Icon)}
+              fieldTitle={t(EntityFieldsI18nKey.icon)}
               elementId="icon"
               entity={model}
               onChangeEntity={onChangeModel}

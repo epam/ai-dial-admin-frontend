@@ -58,7 +58,7 @@ const Paths: FC<Props> = ({ route, updateRoute }) => {
             <TextInputField
               elementId={'path 0'}
               value={''}
-              placeholder={t(EntityPlaceholdersI18nKey.Path)}
+              placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
               fieldTitle={t(EntityFieldsI18nKey.paths)}
               onChange={(value) => onChangePath(0, value)}
             />

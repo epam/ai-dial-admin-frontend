@@ -6,12 +6,11 @@ import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import Switch from '@/src/components/Common/Switch/Switch';
 import {
-  CreateI18nKey,
-  EntitiesI18nKey,
   FeaturesI18nKey,
   TopicsI18nKey,
   EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
+  TypeI18nKey,
 } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -27,8 +26,8 @@ interface Props {
 const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
   const t = useI18n() as (key: string) => string;
   const types: DropdownItemsModel[] = [
-    { id: TypeEntity.OBJECT, name: t(EntitiesI18nKey.ObjectType) },
-    { id: TypeEntity.BOOLEAN, name: t(EntitiesI18nKey.BooleanType) },
+    { id: TypeEntity.OBJECT, name: t(TypeI18nKey.Object) },
+    { id: TypeEntity.BOOLEAN, name: t(TypeI18nKey.Boolean) },
   ];
 
   const { dispatch } = useSaveValidationContext();
@@ -193,8 +192,8 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
 
       <TextInputField
         elementId="completionEndPoint"
-        fieldTitle={t(CreateI18nKey.CompletionEndpointTitle)}
-        placeholder={t(CreateI18nKey.CompletionEndpointPlaceholder)}
+        fieldTitle={t(EntityFieldsI18nKey.completionEndpoint)}
+        placeholder={t(EntityPlaceholdersI18nKey.CompletionEndpoint)}
         value={runner['dial:applicationTypeCompletionEndpoint']}
         errorText={completionEndpointError?.text}
         invalid={!!completionEndpointError}
@@ -204,7 +203,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
       <TextInputField
         elementId="configurationEndPoint"
         fieldTitle={t(FeaturesI18nKey.configurationEndpoint)}
-        placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+        placeholder={t(EntityPlaceholdersI18nKey.ConfigurationEndpoint)}
         value={runner['dial:applicationTypeConfigurationEndpoint']}
         optional={true}
         errorText={configurationEndpointError?.text}
@@ -214,7 +213,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
       <TextInputField
         elementId="rateEndpoint"
         fieldTitle={t(FeaturesI18nKey.rateEndpoint)}
-        placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+        placeholder={t(EntityPlaceholdersI18nKey.RateEndpoint)}
         value={runner['dial:applicationTypeRateEndpoint']}
         optional={true}
         errorText={rateEndpointError?.text}
@@ -225,7 +224,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
       <TextInputField
         elementId="promptEndpoint"
         fieldTitle={t(FeaturesI18nKey.truncatePromptEndpoint)}
-        placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+        placeholder={t(EntityPlaceholdersI18nKey.TruncatePromptEndpoint)}
         value={runner['dial:applicationTypeTruncatePromptEndpoint']}
         optional={true}
         errorText={promptEndpointError?.text}
@@ -236,7 +235,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
       <TextInputField
         elementId="tokenizeEndpoint"
         fieldTitle={t(FeaturesI18nKey.tokenizeEndpoint)}
-        placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+        placeholder={t(EntityPlaceholdersI18nKey.TokenizeEndpoint)}
         value={runner['dial:applicationTypeTokenizeEndpoint']}
         optional={true}
         errorText={tokenizeEndpointError?.text}
