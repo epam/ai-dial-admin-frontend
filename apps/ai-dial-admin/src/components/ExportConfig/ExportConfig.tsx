@@ -100,10 +100,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
       })
         .then(({ blob, fileName }) => {
           showNotification(
-            getSuccessNotification(
-              t(ExportI18nKey.SuccessTitle, { type }),
-              t(ExportI18nKey.SuccessDescription),
-            ),
+            getSuccessNotification(t(ExportI18nKey.SuccessTitle, { type }), t(ExportI18nKey.SuccessDescription)),
           );
 
           downloadFile(blob, fileName);
@@ -122,10 +119,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
     exportConfigMap()
       .then(({ blob, fileName }) => {
         showNotification(
-          getSuccessNotification(
-            t(ExportI18nKey.SuccessTitle, { type }),
-            t(ExportI18nKey.SuccessDescription),
-          ),
+          getSuccessNotification(t(ExportI18nKey.SuccessTitle, { type }), t(ExportI18nKey.SuccessDescription)),
         );
 
         downloadFile(blob, fileName);
