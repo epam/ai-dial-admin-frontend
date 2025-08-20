@@ -449,6 +449,7 @@ export default {
     Activities: 'Activities',
     Dependencies: 'Dependencies',
     Routes: 'App Routes',
+    Traces: 'Traces',
   },
   ForwardToken: {
     ForwardToken: 'Forward auth token',
@@ -532,6 +533,10 @@ export default {
         Hours: 'Last {value, plural, =1 {# hour} other {# hours} }',
         Days: 'Last {value, plural, =1 {# day} other {# days} }',
       },
+    },
+    UsageLog: {
+      TracesTitle: 'Traces',
+      NoTracesTitle: 'No Traces',
     },
   },
   Routes: {

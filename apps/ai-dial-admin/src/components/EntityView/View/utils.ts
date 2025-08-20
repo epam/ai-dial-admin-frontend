@@ -18,6 +18,7 @@ export enum EntityViewTab {
   Dashboard = 'Dashboard',
   Dependencies = 'Dependencies',
   Routes = 'Routes',
+  Traces = 'Traces',
 }
 
 export const propertiesTabs = (t: (stringToTranslate: string) => string) => ({
@@ -73,6 +74,11 @@ export const dependenciesTabs = (t: (stringToTranslate: string) => string) => ({
 export const appRouteTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Routes,
   name: t(TabsI18nKey.Routes),
+});
+
+export const tracesTabs = (t: (stringToTranslate: string) => string) => ({
+  id: EntityViewTab.Traces,
+  name: t(TabsI18nKey.Traces),
 });
 
 export const getViewTabs = (

@@ -9,6 +9,7 @@ import {
   formatAttachment,
   getFormattedResourceType,
   numberValueFormatter,
+  priceValueFormatter,
 } from '@/src/constants/grid-columns/formatters';
 import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';
@@ -324,6 +325,78 @@ export const TELEMETRY_COLUMNS: ColDef[] = [
 ];
 
 export const TELEMETRY_GRID_COLUMNS: ColDef[] = [NAME_COLUMN, ...TELEMETRY_COLUMNS];
+
+export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
+  { field: 'completion_time', headerName: 'Completion Time', ...dateTimeColumn },
+  { field: 'trace_id', headerName: 'Trace ID' },
+  { field: 'topic', headerName: 'Topic' },
+  { field: 'reactions', headerName: 'Reactions', hide: true }, // TODO: not implemented
+  {
+    field: 'cached_prompt_tokens',
+    headerName: 'Cached Prompt Tokens',
+    hide: true,
+    cellClass: 'align-right',
+    headerClass: 'align-right',
+    comparator: numberValueComparator,
+    valueFormatter: (params) => numberValueFormatter(params),
+  },
+  {
+    field: 'prompt_tokens',
+    headerName: 'Prompt Tokens',
+    cellClass: 'align-right',
+    headerClass: 'align-right',
+    comparator: numberValueComparator,
+    valueFormatter: (params) => numberValueFormatter(params),
+  },
+  {
+    field: 'completion_tokens',
+    headerName: 'Completion Tokens',
+    cellClass: 'align-right',
+    headerClass: 'align-right',
+    comparator: numberValueComparator,
+    valueFormatter: (params) => numberValueFormatter(params),
+  },
+  {
+    field: 'deployment_price',
+    headerName: 'Deployment Price',
+    hide: true,
+    cellClass: 'align-right',
+    headerClass: 'align-right',
+    comparator: numberValueComparator,
+    valueFormatter: (params) => numberValueFormatter(params),
+  },
+  {
+    field: 'number_request_messages',
+    headerName: 'Number of Request Messages',
+    hide: true,
+    cellClass: 'align-right',
+    headerClass: 'align-right',
+    comparator: numberValueComparator,
+    valueFormatter: (params) => numberValueFormatter(params),
+  },
+  {
+    field: 'price',
+    headerName: 'Total Price',
+    cellClass: 'align-right',
+    headerClass: 'align-right',
+    comparator: numberValueComparator,
+    valueFormatter: (params) => priceValueFormatter(params),
+  },
+  { field: 'deployment', headerName: 'Deployment ID' },
+  { field: 'parent_deployment', headerName: 'Parent Deployment ID', hide: true },
+  { field: 'model', headerName: 'Model', hide: true },
+  { field: 'project_id', headerName: 'Project' },
+  { field: 'upstream', headerName: 'Upstream', hide: true },
+  { field: 'execution_path', headerName: 'Execution Path', hide: true },
+  { field: 'user_hash', headerName: 'User' },
+  { field: 'user_title', headerName: 'User Title', hide: true },
+  { field: 'language', headerName: 'Language', hide: true },
+  { field: 'duration', headerName: 'Duration', hide: true },
+  { field: 'response_id', headerName: 'Response ID', hide: true },
+  { field: 'chat_id', headerName: 'Conversation ID', hide: true },
+  { field: 'core_span_id', headerName: 'Core span ID', hide: true },
+  { field: 'core_parent_span_id', headerName: 'Core parent span ID' },
+];
 
 export const PROJECT_GRID_COLUMNS: ColDef[] = [{ field: 'name', headerName: 'Project' }, ...TELEMETRY_COLUMNS];
 

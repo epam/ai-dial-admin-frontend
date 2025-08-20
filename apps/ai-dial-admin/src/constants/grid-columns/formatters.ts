@@ -1,3 +1,4 @@
+import Big from 'big.js';
 import { ValueFormatterParams } from 'ag-grid-community';
 
 import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
@@ -20,6 +21,19 @@ export const formatAttachment = (value: string, t: (stringToTranslate: string) =
     return t(AttachmentsI18nKey.AllAttachments);
   }
   return value;
+};
+
+export const priceValueFormatter = (params: ValueFormatterParams) => {
+  let price = null;
+  try {
+    price = new Big(params.data[params?.colDef?.field as string]);
+  } catch (e) {
+    if (e) {
+      price = '';
+    }
+  }
+
+  return `$${price}`;
 };
 
 export const numberValueFormatter = (params: ValueFormatterParams) => {

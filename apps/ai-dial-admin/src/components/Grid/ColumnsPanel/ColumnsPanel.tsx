@@ -47,7 +47,12 @@ const ColumnsPanel: FC<Props> = ({
   drop(ref);
 
   return (
-    <div className={panelClassNames} onClick={(e) => e.stopPropagation()}>
+    <div
+      className={panelClassNames}
+      onClick={(e) => e.stopPropagation()}
+      role={'toolbar'}
+      aria-label={t(ButtonsI18nKey.Columns)}
+    >
       <div className={headerClassNames}>
         <h3 className="flex-1 min-w-0 mr-3">{t(ButtonsI18nKey.Columns)}</h3>
         <div className="flex">
