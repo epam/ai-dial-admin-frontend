@@ -105,7 +105,7 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
   return (
     <div className="h-full flex flex-col pt-3 w-full">
       <div className="flex flex-col gap-6 lg:w-[35%]">
-        {isAppRoute && (
+        {isAppRoute ? (
           <TextInputField
             elementId="name"
             fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
@@ -113,9 +113,7 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
             value={route.name}
             onChange={onChangeName}
           />
-        )}
-
-        {!isAppRoute && (
+        ) : (
           <TextAreaField
             elementId="description"
             fieldTitle={t(CreateI18nKey.DescriptionTitle)}
