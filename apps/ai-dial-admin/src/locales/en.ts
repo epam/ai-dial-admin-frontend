@@ -149,12 +149,11 @@ export default {
     Endpoint: 'Endpoint',
 
     AddEntities: 'Add Entities',
-    MaintainerPlaceholder: 'Enter maintainer',
+
     SourceType: 'Source type',
     Endpoints: 'Endpoints',
     AppRunner: 'Application runner',
-    TypePlaceholder: 'Enter type',
-    TitlePlaceholder: 'Enter title',
+
     ObjectType: 'Object',
     BooleanType: 'Boolean',
   },
@@ -246,11 +245,6 @@ export default {
       title: 'Application Runner',
       placeholder: 'Select Application Runner',
     },
-    id: {
-      title: 'ID',
-      placeholder: 'Enter ID',
-      error: 'This id already exists.',
-    },
     name: {
       interceptor: 'Interceptor Name',
       forbiddenChars: 'Name must not contain forbidden characters: {list}',
@@ -334,14 +328,9 @@ export default {
     Upstream: 'Upstream',
     AddUpstream: 'Add Upstream',
     UpstreamEndpoints: 'Upstream Endpoints',
-    UpstreamEndpointsPlaceholder: 'Enter upstream endpoint',
     UpstreamKey: 'Keys',
-    UpstreamKeyPlaceholder: 'Enter upstream key',
-    WeightPlaceholder: 'Enter weight',
-    TierPlaceholder: 'Enter tier',
-    ExtraDataString: 'String',
-    ExtraDataStringPlaceholder: 'Enter value',
-    ExtraDataJson: 'JSON',
+    ExtraDataString: 'String', // TYPE
+    ExtraDataJson: 'JSON', // TYPE
   },
   ModelView: {
     InteractionLimit: {
@@ -360,7 +349,6 @@ export default {
       CharWithoutWhitespace: 'Char without whitespace',
       PerMillion: 'per million',
     },
-    OverrideNamePlaceholder: 'Enter override name',
     Chat: 'Chat',
     Embedding: 'Embedding',
   },
@@ -376,9 +364,7 @@ export default {
     Attachments: 'Attachments',
     AllAttachments: 'All attachments types',
     CustomAttachments: 'Custom attachments types',
-    EnterAttachmentsTypes: 'Enter attachments types',
     AttachmentsMaxNumber: 'Attachments max number',
-    AttachmentsMaxNumberPlaceholder: 'Enter number',
     AttachmentsMaxNumberError: 'Max allowed number of attachments is {max}',
   },
   Tabs: {
@@ -432,10 +418,8 @@ export default {
   },
   Topics: {
     AddTopic: 'Add Topic',
-    AddTopicPlaceholder: 'Enter topic name',
   },
   HashingOrder: {
-    HashingOrderPlaceholder: 'Enter value',
     Add: 'Add field',
   },
   Editor: {
@@ -481,14 +465,9 @@ export default {
   },
   Routes: {
     AddPaths: 'Add paths',
-    PathPlaceholder: 'Enter path URL',
     RewritePath: 'Rewrite path',
     Output: 'Output',
     Response: 'Response',
-    StatusPlaceholder: 'Enter status',
-    BodyPlaceholder: 'Enter Body',
-    Order: 'Order',
-    OrderPlaceholder: 'Enter order number',
     RequiredProperty: 'This property is required',
     InvalidPath: 'Path must start with / and use only letters, digits, - , and _',
     InvalidStatus: 'Status must be a number from 100 to 999',
@@ -677,7 +656,7 @@ export default {
     ConfirmSystemRollbackAlert:
       'This operation is irreversible and will overwrite the current configuration of all applications, models, roles, and settings in the system.',
     ConfirmSystemRollbackLabel: 'Type System Rollback to confirm',
-    ConfirmSystemRollbackPlaceholder: 'Enter rollback confirmation ',
+    ConfirmSystemRollbackPlaceholder: 'Enter rollback confirmation',
     ConfirmSelectionRollbackDescription: 'You`re about to revert this resource to a previous state from: ',
     ConfirmRollbackDescription: {
       Part1: 'You`re about to revert',
@@ -714,6 +693,7 @@ export default {
     endpointDeploymentName: 'Endpoint deployment name',
     endpoint: 'Endpoint',
     name: 'Name',
+    id: 'ID',
     displayName: 'Display name',
     adapter: 'Adapter',
     description: 'Description',
@@ -756,7 +736,7 @@ export default {
     status: 'Status',
     body: 'Body',
     $defs: 'Definitions',
-    $id: 'Id',
+    $id: 'ID',
     $schema: 'Schema',
     title: 'Title',
     applicationTypeCompletionEndpoint: 'Completion endpoint',
@@ -783,6 +763,7 @@ export default {
     models: 'Models',
     baseEndpoint: 'Base endpoint',
     dependencies: 'Dependencies',
+    order: 'Order',
   },
   EntityFieldsPlaceholders: {
     Project: 'Enter project',
@@ -793,6 +774,23 @@ export default {
     SelectAdapter: 'Select adapter',
     Description: 'Enter description',
     DisplayName: 'Enter display name',
+    Id: 'Enter ID',
+    Maintainer: 'Enter maintainer',
+    Type: 'Enter type',
+    Title: 'Enter title',
+    Weight: 'Enter weight',
+    Tier: 'Enter tier',
+    UpstreamEndpoint: 'Enter upstream endpoint',
+    UpstreamKey: 'Enter upstream key',
+    Value: 'Enter value',
+    OverrideName: 'Enter override name',
+    Number: 'Enter number',
+    AttachmentsTypes: 'Enter attachments types',
+    Topic: 'Enter topic name',
+    Path: 'Enter path URL',
+    Status: 'Enter status',
+    Body: 'Enter Body',
+    Order: 'Enter order number',
   },
   Error: {
     ServerError: 'Server Error',

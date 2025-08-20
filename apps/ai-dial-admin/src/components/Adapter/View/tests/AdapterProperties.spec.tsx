@@ -1,4 +1,4 @@
-import { CreateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import AdapterProperties from '../AdapterProperties';
@@ -13,7 +13,7 @@ describe('AdapterProperties', () => {
 
   test('renders all fields', () => {
     render(<AdapterProperties entity={baseEntity} names={['adapter1', 'adapter2']} onChangeAdapter={vi.fn()} />);
-    expect(screen.getByText(CreateI18nKey.IdTitle)).toBeInTheDocument();
+    expect(screen.getByText(EntityFieldsI18nKey.id)).toBeInTheDocument();
     expect(screen.getByText(EntityFieldsI18nKey.displayName)).toBeInTheDocument();
     expect(screen.getByText(EntityFieldsI18nKey.description)).toBeInTheDocument();
     expect(screen.getByText(EntityFieldsI18nKey.baseEndpoint)).toBeInTheDocument();
@@ -24,7 +24,7 @@ describe('AdapterProperties', () => {
     render(
       <AdapterProperties entity={baseEntity} names={['adapter1', 'adapter2']} onChangeAdapter={onChangeAdapter} />,
     );
-    fireEvent.change(screen.getByPlaceholderText(CreateI18nKey.IdPlaceholder), { target: { value: 'adapter3' } });
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Id), { target: { value: 'adapter3' } });
     expect(onChangeAdapter).toHaveBeenCalledWith(expect.objectContaining({ name: 'adapter3' }));
   });
 
@@ -54,6 +54,6 @@ describe('AdapterProperties', () => {
 
   test('does not render name field if isEntityImmutable', () => {
     render(<AdapterProperties entity={baseEntity} names={['adapter1']} onChangeAdapter={vi.fn()} isEntityImmutable />);
-    expect(screen.queryByPlaceholderText(CreateI18nKey.IdPlaceholder)).toBeNull();
+    expect(screen.queryByPlaceholderText(EntityPlaceholdersI18nKey.Id)).toBeNull();
   });
 });

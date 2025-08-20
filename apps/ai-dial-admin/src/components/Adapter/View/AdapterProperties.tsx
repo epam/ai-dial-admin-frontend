@@ -7,7 +7,7 @@ import { uniq } from 'lodash';
 import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/AutocompleteField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import { CreateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
@@ -114,8 +114,8 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
       {!isEntityImmutable && (
         <TextInputField
           elementId="name"
-          fieldTitle={t(CreateI18nKey.IdTitle)}
-          placeholder={t(CreateI18nKey.IdPlaceholder)}
+          placeholder={t(EntityPlaceholdersI18nKey.Id)}
+          fieldTitle={t(EntityFieldsI18nKey.id)}
           value={entity.name}
           errorText={nameError?.text}
           invalid={!!nameError}

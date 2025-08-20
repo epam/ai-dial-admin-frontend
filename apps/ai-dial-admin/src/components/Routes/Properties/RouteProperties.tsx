@@ -157,7 +157,7 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
               <NumberInputField
                 elementId="status"
                 fieldTitle={t(EntityFieldsI18nKey.status)}
-                placeholder={t(RoutesI18nKey.StatusPlaceholder)}
+                placeholder={t(EntityPlaceholdersI18nKey.Status)}
                 value={route.response.status}
                 onChange={onChangeStatus}
                 errorText={statusError}
@@ -168,7 +168,7 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
               <TextInputField
                 elementId="body"
                 fieldTitle={t(EntityFieldsI18nKey.body)}
-                placeholder={t(RoutesI18nKey.BodyPlaceholder)}
+                placeholder={t(EntityPlaceholdersI18nKey.Body)}
                 value={route.response.body}
                 onChange={onChangeBody}
               />
@@ -185,8 +185,8 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
         <div className="lg:w-[35%]">
           <NumberInputField
             elementId="order"
-            fieldTitle={t(RoutesI18nKey.Order)}
-            placeholder={t(RoutesI18nKey.OrderPlaceholder)}
+            fieldTitle={t(EntityFieldsI18nKey.order)}
+            placeholder={t(EntityPlaceholdersI18nKey.Order)}
             value={route.order}
             min={0}
             onChange={(order) => {

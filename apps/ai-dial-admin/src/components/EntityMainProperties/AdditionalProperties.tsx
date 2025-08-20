@@ -5,13 +5,7 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
-import {
-  ButtonsI18nKey,
-  CreateI18nKey,
-  EntitiesI18nKey,
-  EntityFieldsI18nKey,
-  EntityPlaceholdersI18nKey,
-} from '@/src/constants/i18n';
+import { ButtonsI18nKey, CreateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
@@ -67,7 +61,7 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
           <TextInputField
             elementId="author"
             fieldTitle={t(EntityFieldsI18nKey.author)}
-            placeholder={t(EntitiesI18nKey.MaintainerPlaceholder)}
+            placeholder={t(EntityPlaceholdersI18nKey.Maintainer)}
             value={entity.author}
             optional={true}
             onChange={(author) => onChangeEntity({ ...entity, author })}

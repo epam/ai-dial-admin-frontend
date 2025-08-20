@@ -127,9 +127,9 @@ const EntityMainProperties: FC<Props> = ({
       <div className={classNames('flex flex-col gap-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
         {!isEntityImmutable && (
           <TextInputField
-            fieldTitle={t(CreateI18nKey.IdTitle)}
             elementId="id"
-            placeholder={t(CreateI18nKey.IdPlaceholder)}
+            placeholder={t(EntityPlaceholdersI18nKey.Id)}
+            fieldTitle={t(EntityFieldsI18nKey.id)}
             value={entity.name}
             onChange={onChangeName}
             errorText={nameError?.text}

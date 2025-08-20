@@ -162,7 +162,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
       <TextInputField
         elementId="title"
         fieldTitle={t(EntityFieldsI18nKey.title)}
-        placeholder={t(EntitiesI18nKey.TitlePlaceholder)}
+        placeholder={t(EntityPlaceholdersI18nKey.Title)}
         value={runner.title}
         optional={true}
         onChange={(title: string) => {
@@ -175,7 +175,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
         elementId="type"
         items={types}
         fieldTitle={t(EntityFieldsI18nKey.type)}
-        placeholder={t(EntitiesI18nKey.TypePlaceholder)}
+        placeholder={t(EntityPlaceholdersI18nKey.Type)}
         onChange={(type: string) => {
           onChangeRunner({ ...runner, type: type as TypeEntity });
         }}
@@ -187,7 +187,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
         onChangeItems={onChangeTopics}
         heading={t(EntityFieldsI18nKey.topics)}
         title={t(EntityFieldsI18nKey.topics)}
-        addPlaceholder={t(TopicsI18nKey.AddTopicPlaceholder)}
+        addPlaceholder={t(EntityPlaceholdersI18nKey.Topic)}
         addTitle={t(TopicsI18nKey.AddTopic)}
       />
 

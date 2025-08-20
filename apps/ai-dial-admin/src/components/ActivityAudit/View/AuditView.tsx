@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import Button from '@/src/components/Common/Button/Button';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
-import { ActivityAuditI18nKey, ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import { ActivityAuditI18nKey, ButtonsI18nKey, CreateI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -116,7 +116,7 @@ const AuditView: FC<Props> = ({
           <div className="flex flex-row flex-wrap justify-between mb-6 gap-3">
             <h1 className="flex flex-row items-center gap-x-3">
               <Tooltip tooltip={activity.activityId}>{activity.activityId}</Tooltip>
-              <CopyButton field={activity.activityId} title={t(CreateI18nKey.IdTitle)} />
+              <CopyButton field={activity.activityId} title={t(EntityFieldsI18nKey.id)} />
             </h1>
             <div className="flex flex-row items-center gap-4 flex-wrap">
               <CompareControl compareView={compareView} setCompareView={setCompareView} />

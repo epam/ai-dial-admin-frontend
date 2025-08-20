@@ -8,7 +8,13 @@ import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
 import EntityAttachments from '@/src/components/EntityView/Properties/EntityAttachments';
 import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
-import { EntitiesI18nKey, EntityFieldsI18nKey, ModelViewI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
+import {
+  EntitiesI18nKey,
+  EntityFieldsI18nKey,
+  EntityPlaceholdersI18nKey,
+  ModelViewI18nKey,
+  TopicsI18nKey,
+} from '@/src/constants/i18n';
 import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import { useI18n } from '@/src/locales/client';
@@ -106,7 +112,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
         <TextInputField
           elementId="overrideName"
           fieldTitle={t(EntityFieldsI18nKey.overrideName)}
-          placeholder={t(ModelViewI18nKey.OverrideNamePlaceholder)}
+          placeholder={t(EntityPlaceholdersI18nKey.OverrideName)}
           value={model.overrideName}
           onChange={onChangeOverrideName}
           optional={true}
@@ -128,7 +134,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
               onChangeItems={onChangeItems}
               heading={t(EntityFieldsI18nKey.topics)}
               title={t(EntityFieldsI18nKey.topics)}
-              addPlaceholder={t(TopicsI18nKey.AddTopicPlaceholder)}
+              addPlaceholder={t(EntityPlaceholdersI18nKey.Topic)}
               addTitle={t(TopicsI18nKey.AddTopic)}
             />
           </>

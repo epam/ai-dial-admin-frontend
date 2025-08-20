@@ -85,8 +85,8 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
       {!isKeyImmutable && (
         <TextInputField
           elementId="name"
-          fieldTitle={t(CreateI18nKey.IdTitle)}
-          placeholder={t(CreateI18nKey.IdPlaceholder)}
+          placeholder={t(EntityPlaceholdersI18nKey.Id)}
+          fieldTitle={t(EntityFieldsI18nKey.id)}
           value={entity.name}
           errorText={nameError?.text}
           invalid={!!nameError}

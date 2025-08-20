@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import { CreateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialRoute } from '@/src/models/dial/route';
@@ -34,12 +34,12 @@ const SimpleEntityProperties: FC<Props> = ({
   const idTitleKey =
     view === ApplicationRoute.Prompts || view === ApplicationRoute.Files
       ? EntityFieldsI18nKey.displayName
-      : CreateI18nKey.IdTitle;
+      : EntityFieldsI18nKey.id;
 
   const idPlaceholderKey =
     view === ApplicationRoute.Prompts || view === ApplicationRoute.Files
       ? EntityPlaceholdersI18nKey.DisplayName
-      : CreateI18nKey.IdPlaceholder;
+      : EntityPlaceholdersI18nKey.Id;
 
   const [nameError, setNameError] = useState<FieldError | null>(null);
   const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
@@ -133,7 +133,7 @@ const SimpleEntityProperties: FC<Props> = ({
       {view === ApplicationRoute.Routes && (
         <TextInputField
           elementId="path"
-          placeholder={t(RoutesI18nKey.PathPlaceholder)}
+          placeholder={t(EntityPlaceholdersI18nKey.Path)}
           fieldTitle={t(EntityFieldsI18nKey.paths)}
           value={(entity as DialRoute).paths?.[0]}
           errorText={pathError?.text}

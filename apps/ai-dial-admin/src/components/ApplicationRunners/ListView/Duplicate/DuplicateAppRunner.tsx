@@ -3,7 +3,13 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import Button from '@/src/components/Common/Button/Button';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Popup from '@/src/components/Common/Popup/Popup';
-import { ButtonsI18nKey, CreateI18nKey, DuplicateI18nKey } from '@/src/constants/i18n';
+import {
+  ButtonsI18nKey,
+  CreateI18nKey,
+  DuplicateI18nKey,
+  EntityFieldsI18nKey,
+  EntityPlaceholdersI18nKey,
+} from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
 import { DialApplicationScheme } from '@/src/models/dial/application';
@@ -41,9 +47,9 @@ const DuplicateScheme: FC<Props> = ({ onDuplicate, modalState, onClose, entity }
     >
       <div className="flex flex-col px-6 py-4">
         <TextInputField
-          fieldTitle={t(CreateI18nKey.IdTitle)}
           elementId="id"
-          placeholder={t(CreateI18nKey.IdPlaceholder)}
+          placeholder={t(EntityPlaceholdersI18nKey.Id)}
+          fieldTitle={t(EntityFieldsI18nKey.id)}
           value={clonedEntity.$id}
           onChange={onChangeId}
         />

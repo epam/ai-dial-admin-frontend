@@ -5,7 +5,7 @@ import classNames from 'classnames';
 
 import Button from '@/src/components/Common/Button/Button';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import { EntityFieldsI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialRoute } from '@/src/models/dial/route';
@@ -58,7 +58,7 @@ const Paths: FC<Props> = ({ route, updateRoute }) => {
             <TextInputField
               elementId={'path 0'}
               value={''}
-              placeholder={t(RoutesI18nKey.PathPlaceholder)}
+              placeholder={t(EntityPlaceholdersI18nKey.Path)}
               fieldTitle={t(EntityFieldsI18nKey.paths)}
               onChange={(value) => onChangePath(0, value)}
             />

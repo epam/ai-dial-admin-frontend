@@ -4,7 +4,7 @@ import { FC, useCallback, useState } from 'react';
 
 import AttachmentInput from '@/src/components/Common/AttachmentInput/AttachmentInput';
 import { NumberInputField } from '@/src/components/Common/InputField/InputField';
-import { AttachmentsI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { AttachmentsI18nKey, ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { mimeMapping } from './constants';
@@ -53,7 +53,7 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
       <AttachmentInput
         initialValues={entity.inputAttachmentTypes}
         fieldTitle={t(AttachmentsI18nKey.Attachments)}
-        placeholder={t(AttachmentsI18nKey.EnterAttachmentsTypes)}
+        placeholder={t(EntityPlaceholdersI18nKey.AttachmentsTypes)}
         allValueLabel={t(ButtonsI18nKey.UseAllAttachment)}
         availableItems={mimeMapping}
         inputClass="lg:w-[35%]"
@@ -64,7 +64,7 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
           <NumberInputField
             elementId="maxAttachment"
             fieldTitle={t(AttachmentsI18nKey.AttachmentsMaxNumber)}
-            placeholder={t(AttachmentsI18nKey.AttachmentsMaxNumberPlaceholder)}
+            placeholder={t(EntityPlaceholdersI18nKey.Number)}
             value={entity.maxInputAttachments}
             onChange={onChangeAttachmentMax}
             errorText={attachmentError}

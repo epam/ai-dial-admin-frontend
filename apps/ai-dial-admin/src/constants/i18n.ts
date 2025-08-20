@@ -124,12 +124,9 @@ export enum EntitiesI18nKey {
   AddApplication = 'Entities.AddApplication',
   Icon = 'Entities.Icon',
   AddEntities = 'Entities.AddEntities',
-  MaintainerPlaceholder = 'Entities.MaintainerPlaceholder',
   SourceType = 'Entities.SourceType',
   Endpoints = 'Entities.Endpoints',
   AppRunner = 'Entities.AppRunner',
-  TypePlaceholder = 'Entities.TypePlaceholder',
-  TitlePlaceholder = 'Entities.TitlePlaceholder',
   ObjectType = 'Entities.ObjectType',
   BooleanType = 'Entities.BooleanType',
 }
@@ -227,12 +224,10 @@ export enum CreateI18nKey {
   Prompt = 'CreateEntity.Prompt',
   Route = 'CreateEntity.Route',
   Interceptor = 'CreateEntity.Interceptor',
-  IdTitle = 'CreateEntity.id.title',
-  IdPlaceholder = 'CreateEntity.id.placeholder',
   KeyTitle = 'CreateEntity.key.title',
   KeyPlaceholder = 'CreateEntity.key.placeholder',
   ErrorKey = 'CreateEntity.key.error',
-  ErrorName = 'CreateEntity.name.error',
+  ErrorName = 'CreateEntity.name.error', //???
   ErrorLength = 'CreateEntity.errorLength',
   MinMaxLength = 'CreateEntity.minMaxLength',
   InterceptorName = 'CreateEntity.name.interceptor',
@@ -265,18 +260,12 @@ export enum UpstreamEndpointsI18nKey {
   Upstream = 'UpstreamEndpoints.Upstream',
   AddUpstream = 'UpstreamEndpoints.AddUpstream',
   UpstreamEndpoints = 'UpstreamEndpoints.UpstreamEndpoints',
-  UpstreamEndpointsPlaceholder = 'UpstreamEndpoints.UpstreamEndpointsPlaceholder',
   UpstreamKey = 'UpstreamEndpoints.UpstreamKey',
-  UpstreamKeyPlaceholder = 'UpstreamEndpoints.UpstreamKeyPlaceholder',
-  TierPlaceholder = 'UpstreamEndpoints.TierPlaceholder',
-  WeightPlaceholder = 'UpstreamEndpoints.WeightPlaceholder',
   ExtraDataString = 'UpstreamEndpoints.ExtraDataString',
-  ExtraDataStringPlaceholder = 'UpstreamEndpoints.ExtraDataStringPlaceholder',
   ExtraDataJson = 'UpstreamEndpoints.ExtraDataJson',
 }
 
 export enum ModelViewI18nKey {
-  OverrideNamePlaceholder = 'ModelView.OverrideNamePlaceholder',
   Embedding = 'ModelView.Embedding',
   Chat = 'ModelView.Chat',
 
@@ -301,9 +290,7 @@ export enum AttachmentsI18nKey {
   Attachments = 'Attachments.Attachments',
   AllAttachments = 'Attachments.AllAttachments',
   CustomAttachments = 'Attachments.CustomAttachments',
-  EnterAttachmentsTypes = 'Attachments.EnterAttachmentsTypes',
   AttachmentsMaxNumber = 'Attachments.AttachmentsMaxNumber',
-  AttachmentsMaxNumberPlaceholder = 'Attachments.AttachmentsMaxNumberPlaceholder',
   AttachmentsMaxNumberError = 'Attachments.AttachmentsMaxNumberError',
 }
 
@@ -370,13 +357,11 @@ export enum FeaturesI18nKey {
 }
 // TODO: AAAAA
 export enum HashingOrderI18nKey {
-  HashingOrderPlaceholder = 'HashingOrder.HashingOrderPlaceholder',
   Add = 'HashingOrder.Add',
 }
 
 export enum TopicsI18nKey {
   AddTopic = 'Topics.AddTopic',
-  AddTopicPlaceholder = 'Topics.AddTopicPlaceholder',
 }
 
 export enum TabsI18nKey {
@@ -439,18 +424,12 @@ export enum TelemetryI18nKey {
 
 export enum RoutesI18nKey {
   AddPaths = 'Routes.AddPaths',
-  PathPlaceholder = 'Routes.PathPlaceholder',
   RewritePath = 'Routes.RewritePath',
   Output = 'Routes.Output',
   Response = 'Routes.Response',
-  KeysPlaceholder = 'Routes.KeysPlaceholder',
-  StatusPlaceholder = 'Routes.StatusPlaceholder',
-  BodyPlaceholder = 'Routes.BodyPlaceholder',
   RequiredProperty = 'Routes.RequiredProperty',
   InvalidPath = 'Routes.InvalidPath',
   InvalidStatus = 'Routes.InvalidStatus',
-  Order = 'Routes.Order',
-  OrderPlaceholder = 'Routes.OrderPlaceholder',
 }
 
 export enum PublicationsI18nKey {
@@ -671,6 +650,23 @@ export enum EntityPlaceholdersI18nKey {
   SelectAdapter = 'EntityPlaceholdersI18nKey.SelectAdapter',
   Description = 'EntityPlaceholdersI18nKey.Description',
   DisplayName = 'EntityPlaceholdersI18nKey.DisplayName',
+  Id = 'EntityPlaceholdersI18nKey.Id',
+  Maintainer = 'EntityPlaceholdersI18nKey.Maintainer',
+  Type = 'EntityPlaceholdersI18nKey.Type',
+  Title = 'EntityPlaceholdersI18nKey.Title',
+  Tier = 'EntityPlaceholdersI18nKey.Tier',
+  Weight = 'EntityPlaceholdersI18nKey.Weight',
+  UpstreamEndpoint = 'EntityPlaceholdersI18nKey.UpstreamEndpoint',
+  UpstreamKey = 'EntityPlaceholdersI18nKey.UpstreamKey',
+  Value = 'EntityPlaceholdersI18nKey.Value',
+  OverrideName = 'EntityPlaceholdersI18nKey.OverrideName',
+  Number = 'EntityPlaceholdersI18nKey.Number',
+  AttachmentsTypes = 'EntityPlaceholdersI18nKey.AttachmentsTypes',
+  Topic = 'EntityPlaceholdersI18nKey.Topic',
+  Path = 'EntityPlaceholdersI18nKey.Path',
+  Status = 'EntityPlaceholdersI18nKey.Status',
+  Order = 'EntityPlaceholdersI18nKey.Order',
+  Body = 'EntityPlaceholdersI18nKey.Body',
 }
 
 export enum EntityFieldsI18nKey {
@@ -680,6 +676,7 @@ export enum EntityFieldsI18nKey {
   fieldsHashingOrder = 'EntityFields.fieldsHashingOrder',
   endpointDeploymentName = 'EntityFields.endpointDeploymentName',
   name = 'EntityFields.name',
+  id = 'EntityFields.id',
   author = 'EntityFields.author',
   endpoint = 'EntityFields.endpoint',
   displayName = 'EntityFields.displayName',
@@ -748,6 +745,7 @@ export enum EntityFieldsI18nKey {
   parameters = 'EntityFields.parameters',
   extraData = 'EntityFields.extraData',
   models = 'EntityFields.models',
+  order = 'EntityFields.order',
   baseEndpoint = 'EntityFields.baseEndpoint',
   dependencies = 'EntityFields.dependencies',
 }

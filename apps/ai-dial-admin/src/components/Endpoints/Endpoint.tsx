@@ -8,7 +8,12 @@ import classNames from 'classnames';
 import { NumberInputField, TextInputField } from '@/src/components/Common/InputField/InputField';
 import PasswordInputField from '@/src/components/Common/PasswordInput/PasswordInputField';
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
-import { EntityFieldsI18nKey, ErrorI18nKey, UpstreamEndpointsI18nKey } from '@/src/constants/i18n';
+import {
+  EntityFieldsI18nKey,
+  EntityPlaceholdersI18nKey,
+  ErrorI18nKey,
+  UpstreamEndpointsI18nKey,
+} from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
@@ -106,7 +111,7 @@ const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, upd
           <TextInputField
             elementId={'upstreamEndpoints ' + index}
             value={endpoint.endpoint}
-            placeholder={t(UpstreamEndpointsI18nKey.UpstreamEndpointsPlaceholder)}
+            placeholder={t(EntityPlaceholdersI18nKey.UpstreamEndpoint)}
             fieldTitle={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.UpstreamEndpoints) : ''}
             containerCssClass="lg:w-[560px]"
             elementCssClass="h-[38px]"
@@ -127,7 +132,7 @@ const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, upd
           <PasswordInputField
             elementId={'key ' + index}
             value={endpoint.key}
-            placeholder={t(UpstreamEndpointsI18nKey.UpstreamKeyPlaceholder)}
+            placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
             fieldTitle={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.UpstreamKey) : ''}
             optional={isKeyOptional}
             onChange={onChangeKey}
@@ -139,7 +144,7 @@ const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, upd
             fieldTitle={isFirstLine || isTablet ? t(EntityFieldsI18nKey.weight) : ''}
             containerCssClass="w-[120px]"
             elementCssClass="h-[38px]"
-            placeholder={t(UpstreamEndpointsI18nKey.WeightPlaceholder)}
+            placeholder={t(EntityPlaceholdersI18nKey.Weight)}
             onChange={onChangeWeight}
           />
 
@@ -149,7 +154,7 @@ const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, upd
             fieldTitle={isFirstLine || isTablet ? t(EntityFieldsI18nKey.tier) : ''}
             containerCssClass="w-[120px]"
             elementCssClass="h-[38px]"
-            placeholder={t(UpstreamEndpointsI18nKey.TierPlaceholder)}
+            placeholder={t(EntityPlaceholdersI18nKey.Tier)}
             onChange={onChangeTier}
           />
 

@@ -56,9 +56,9 @@ const DuplicateAdapter: FC<Props> = ({ onDuplicate, modalState, onClose, adapter
     <Popup onClose={onClose} heading={t(DuplicateI18nKey.AdapterHeader)} portalId="DuplicateKey" state={modalState}>
       <div className="flex flex-col gap-3 px-6 py-4 ">
         <TextInputField
-          fieldTitle={t(CreateI18nKey.IdTitle)}
+          placeholder={t(EntityPlaceholdersI18nKey.Id)}
+          fieldTitle={t(EntityFieldsI18nKey.id)}
           elementId="name"
-          placeholder={t(CreateI18nKey.IdPlaceholder)}
           value={entity.name}
           onChange={onChangeName}
         />

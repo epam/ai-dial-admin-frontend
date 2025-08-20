@@ -28,8 +28,8 @@ const BaseProperties: FC<Props> = ({ template, setTemplate, names, isImmutable }
       {!isImmutable && (
         <TextInputField
           elementId="id"
-          fieldTitle={t(CreateI18nKey.IdTitle)}
-          placeholder={t(CreateI18nKey.IdPlaceholder)}
+          placeholder={t(EntityPlaceholdersI18nKey.Id)}
+          fieldTitle={t(EntityFieldsI18nKey.id)}
           value={template.name}
           errorText={nameError?.text}
           invalid={!!nameError}

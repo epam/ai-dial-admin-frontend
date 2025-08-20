@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 
 import BaseProperties from '../BaseProperties';
-import { CreateI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 
 describe('Interceptor Template BaseProperties', () => {
   const template: InterceptorTemplate = {
@@ -20,7 +20,7 @@ describe('Interceptor Template BaseProperties', () => {
   test('Should render all important fields', () => {
     const setTemplateMock = vi.fn();
     render(<BaseProperties template={template} setTemplate={setTemplateMock} names={names} />);
-    expect(screen.getByPlaceholderText(CreateI18nKey.IdPlaceholder)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Id)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Description)).toBeInTheDocument();
   });
@@ -28,7 +28,7 @@ describe('Interceptor Template BaseProperties', () => {
   test('Should call setTemplate on id change', async () => {
     const setTemplateMock = vi.fn();
     render(<BaseProperties template={template} setTemplate={setTemplateMock} names={names} />);
-    const idInput = screen.getByPlaceholderText(CreateI18nKey.IdPlaceholder);
+    const idInput = screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Id);
     await userEvent.clear(idInput);
     await userEvent.type(idInput, 'new-id');
     expect(setTemplateMock).toHaveBeenCalled();
