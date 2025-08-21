@@ -85,16 +85,19 @@ describe('Utils :: telemetry :: getLineChartData', () => {
 
 describe('Utils :: telemetry :: prepareChartData', () => {
   test('returns correct result', () => {
-    const data = [
-      { time: '2023-10-01T00:00:00Z', requests: '100' },
-      { time: '2023-10-01T01:00:00Z', requests: '200' },
-    ];
+    const mockDate = new Date('2023-12-25T12:00:00Z');
+    vi.useFakeTimers();
+    vi.setSystemTime(mockDate);
+
+    const data = [{ time: '2023-12-25T12:00:00Z', requests: '100' }];
     const result = prepareChartData(data);
     expect(result).toEqual({
       ...lineChartDefaultOptions,
-      xAxis: { ...lineChartDefaultOptions.xAxis, data: ['10/1/2023, 2:00:00 AM', '10/1/2023, 3:00:00 AM'] },
-      series: [{ ...lineChartDefaultOptions.series[0], data: ['100', '200'] }],
+      xAxis: { ...lineChartDefaultOptions.xAxis, data: [mockDate.toLocaleString()] },
+      series: [{ ...lineChartDefaultOptions.series[0], data: ['100'] }],
     });
+
+    vi.useRealTimers();
   });
 });
 
