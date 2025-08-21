@@ -1,12 +1,41 @@
-import { PopUpState } from '@/src/types/pop-up';
-import { render } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, expect, test, vi, beforeEach } from 'vitest';
 import CreateAppRunner from '../CreateAppRunner';
-import { describe, expect, test, vi } from 'vitest';
+import { ButtonsI18nKey, CreateI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 
-describe('Components :: CreateScheme', () => {
-  test('Should render successfully', () => {
-    const { baseElement } = render(<CreateAppRunner onClose={vi.fn()} modalState={PopUpState.Opened} />);
+describe('CreateAppRunner', () => {
+  const baseProps = {
+    modalState: 'Opened',
+    onClose: vi.fn(),
+    route: '/app/application-runners',
+  };
 
-    expect(baseElement).toBeTruthy();
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('renders popup and fields', () => {
+    render(<CreateAppRunner {...baseProps} />);
+    expect(screen.getByText(CreateI18nKey.ApplicationRunner)).toBeInTheDocument();
+    expect(screen.getByText(ButtonsI18nKey.Cancel)).toBeInTheDocument();
+    expect(screen.getByText(ButtonsI18nKey.Create)).toBeInTheDocument();
+    expect(screen.getByText('SchemeProperties')).toBeInTheDocument();
+  });
+
+  test('calls onClose when Cancel is clicked', () => {
+    render(<CreateAppRunner {...baseProps} />);
+    fireEvent.click(screen.getByText(ButtonsI18nKey.Cancel));
+    expect(baseProps.onClose).toHaveBeenCalled();
+  });
+
+  test('Create button is enabled when all fields are valid', () => {
+    render(<CreateAppRunner {...baseProps} />);
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName), {
+      target: { value: 'Runner' },
+    });
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Id), { target: { value: 'runner-1' } });
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Description), { target: { value: 'desc' } });
+    const createBtn = screen.getByText(ButtonsI18nKey.Create);
+    expect(createBtn).not.toBeDisabled();
   });
 });
