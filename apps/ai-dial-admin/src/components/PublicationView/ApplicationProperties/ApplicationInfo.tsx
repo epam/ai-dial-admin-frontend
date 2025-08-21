@@ -36,7 +36,12 @@ const ApplicationInfo: FC<Props> = ({ application }) => {
         value={application?.description}
       />
 
-      <EntityIcon fieldTitle={t(EntityFieldsI18nKey.icon)} readonly={true} elementId="icon" entity={application} />
+      <EntityIcon
+        fieldTitle={t(EntityFieldsI18nKey.iconUrl)}
+        readonly={true}
+        elementId="icon"
+        iconUrl={application.iconUrl}
+      />
 
       <Multiselect
         readonly={true}

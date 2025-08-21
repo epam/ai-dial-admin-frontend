@@ -52,7 +52,7 @@ const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntit
             isEntityImmutable={true}
           />
           <EntityIcon
-            fieldTitle={t(EntityFieldsI18nKey.icon)}
+            fieldTitle={t(EntityFieldsI18nKey.iconUrl)}
             elementId="icon"
             iconUrl={entity.iconUrl}
             onChange={(icon) => updateEntity({ ...entity, iconUrl: icon })}

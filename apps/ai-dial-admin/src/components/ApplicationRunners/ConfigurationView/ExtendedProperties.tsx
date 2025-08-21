@@ -169,7 +169,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
     <div className="flex flex-col gap-6 h-full">
       <EntityIcon
         elementId="icon"
-        fieldTitle={t(EntityFieldsI18nKey.icon)}
+        fieldTitle={t(EntityFieldsI18nKey.iconUrl)}
         iconUrl={runner['dial:applicationTypeIconUrl']}
         onChange={(icon: string) => {
           onChange(icon, 'dial:applicationTypeIconUrl');
@@ -291,6 +291,15 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
         switchId="applicationTypePlaybackSupport"
         onChange={(value: boolean) => {
           onChange(value, 'dial:applicationTypePlaybackSupport');
+        }}
+      />
+
+      <Switch
+        isOn={runner['dial:applicationTypePlaybackSupport']}
+        title={t(EntityFieldsI18nKey['dial:applicationTypePlaybackSupport'])}
+        switchId="applicationTypePlaybackSupport"
+        onChange={(value: boolean) => {
+          onChangeRunner({ ...runner, 'dial:applicationTypePlaybackSupport': value });
         }}
       />
     </div>

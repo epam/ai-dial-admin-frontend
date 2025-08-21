@@ -15,7 +15,7 @@ interface Props {
   iconUrl?: string;
   elementId: string;
   readonly?: boolean;
-  onChange: (iconUrl: string) => void;
+  onChange?: (iconUrl: string) => void;
 }
 
 const EntityIcon: FC<Props> = ({ fieldTitle, elementId, iconUrl, readonly, onChange }) => {
@@ -45,12 +45,12 @@ const EntityIcon: FC<Props> = ({ fieldTitle, elementId, iconUrl, readonly, onCha
               modalState={modalState}
               selectedValue={value}
               onClose={onCloseModal}
-              onChange={onChange}
+              onChange={(url) => onChange?.(url)}
             />
           </InputModal>
         )
       ) : (
-        <FilledIcon fileUrl={value} onChange={onChange} readonly={readonly} />
+        <FilledIcon fileUrl={value} onChange={(url) => onChange?.(url)} readonly={readonly} />
       )}
     </div>
   );

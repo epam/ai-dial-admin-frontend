@@ -27,7 +27,7 @@ const IconGalleryModal: FC<Props> = ({ modalState, selectedValue, onClose, onCha
   return (
     <Popup
       onClose={onClose}
-      heading={t(EntityFieldsI18nKey.icon)}
+      heading={t(EntityFieldsI18nKey.iconUrl)}
       portalId="IconSelector"
       state={modalState}
       containerClassName={popupClassNames}

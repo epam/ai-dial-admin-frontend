@@ -114,10 +114,10 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
         {model.type === DialModelType.Chat && (
           <>
             <EntityIcon
-              fieldTitle={t(EntityFieldsI18nKey.icon)}
+              fieldTitle={t(EntityFieldsI18nKey.iconUrl)}
               elementId="icon"
-              entity={model}
-              onChangeEntity={onChangeModel}
+              iconUrl={model.iconUrl}
+              onChange={(icon) => onChangeModel({ ...model, iconUrl: icon })}
             />
             <Multiselect
               elementId="topics"
