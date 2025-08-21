@@ -703,6 +703,7 @@ export enum EntityFieldsI18nKey {
   $defs = 'EntityFields.$defs',
   $id = 'EntityFields.$id',
   $schema = 'EntityFields.$schema',
+  scheme = 'EntityFields.scheme',
   applications = 'EntityFields.applications',
   entities = 'EntityFields.entities',
   'dial:applicationTypeCompletionEndpoint' = 'EntityFields.applicationTypeCompletionEndpoint',
