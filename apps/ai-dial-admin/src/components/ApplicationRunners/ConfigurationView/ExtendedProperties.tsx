@@ -186,16 +186,18 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
         }}
       />
 
-      <DropdownField
-        selectedValue={runner.type || BasicI18nKey.None}
-        elementId="type"
-        items={types}
-        fieldTitle={t(EntityFieldsI18nKey.type)}
-        placeholder={t(EntityPlaceholdersI18nKey.Type)}
-        onChange={(type: string) => {
-          onChangeRunner({ ...runner, type: type as TypeEntity });
-        }}
-      />
+      <div className="lg:w-[35%]">
+        <DropdownField
+          selectedValue={runner.type || BasicI18nKey.None}
+          elementId="type"
+          items={types}
+          fieldTitle={t(EntityFieldsI18nKey.type)}
+          placeholder={t(EntityPlaceholdersI18nKey.Type)}
+          onChange={(type: string) => {
+            onChangeRunner({ ...runner, type: type === BasicI18nKey.None ? void 0 : (type as TypeEntity) });
+          }}
+        />
+      </div>
       <Multiselect
         elementId="topics"
         selectedItems={runner.topics}
