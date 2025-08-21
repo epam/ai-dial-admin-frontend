@@ -1,4 +1,4 @@
-import { RoutesI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey } from '@/src/constants/i18n';
 import { ErrorType } from '@/src/types/error-type';
 
 // todo when correct regexp will be found return all validation
@@ -28,13 +28,13 @@ export const getErrorForPath = (path?: string, t?: (str: string) => string) => {
   if (isEmptyPath) {
     return {
       type: ErrorType.EMPTY,
-      text: t ? t(RoutesI18nKey.RequiredProperty) : '',
+      text: t ? t(ErrorI18nKey.RequiredProperty) : '',
     };
   }
   // if (isInvalid) {
   //   return {
   //     type: ErrorType.INVALID,
-  //     text: t ? t(RoutesI18nKey.InvalidPath) : '',
+  //     text: t ? t(ErrorI18nKey.InvalidPath) : '',
   //   };
   // }
 

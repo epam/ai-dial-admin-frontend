@@ -198,7 +198,6 @@ export enum ButtonsI18nKey {
   Unpublish = 'Buttons.Unpublish',
   Rotate = 'Buttons.Rotate',
   ReviewStructure = 'Buttons.ReviewStructure',
-  CompareChanges = 'Buttons.CompareChanges',
   Refresh = 'Buttons.Refresh',
   Rollback = 'Buttons.Rollback',
   Back = 'Buttons.Back',
@@ -387,12 +386,7 @@ export enum TelemetryI18nKey {
 
 export enum RoutesI18nKey {
   AddPaths = 'Routes.AddPaths',
-  RewritePath = 'Routes.RewritePath',
   Output = 'Routes.Output',
-  Response = 'Routes.Response',
-  RequiredProperty = 'Routes.RequiredProperty',
-  InvalidPath = 'Routes.InvalidPath',
-  InvalidStatus = 'Routes.InvalidStatus',
 }
 
 export enum PublicationsI18nKey {
@@ -417,13 +411,15 @@ export enum PublicationsI18nKey {
   ApplicationPublishApproveDescription = 'Publications.Applications.PublishApproveDescription',
   ApplicationUnpublishApproveDescription = 'Publications.Applications.UnpublishApproveDescription',
   OpenPrompt = 'Publications.Prompt.OpenPrompt',
-  ActionPublish = 'Publications.ActionPublish',
-  ActionUnpublish = 'Publications.ActionUnpublish',
   Action = 'Publications.Action',
   Runner = 'Publications.Runner',
   Author = 'Publications.Author',
   FolderStorage = 'Publications.FolderStorage',
   FilesListTitle = 'Publications.Files.FilesListTitle',
+}
+
+export enum CompareI18nKey {
+  CompareChanges = 'Compare.CompareChanges',
 }
 
 export enum PromptsI18nKey {
@@ -595,6 +591,9 @@ export enum ErrorI18nKey {
   MinMaxLength = 'Error.MinMaxLength',
   KeyValueExists = 'Error.KeyValueExists',
   ForbiddenChars = 'Error.ForbiddenChars',
+  RequiredProperty = 'Error.RequiredProperty',
+  InvalidPath = 'Error.InvalidPath',
+  InvalidStatus = 'Error.InvalidStatus',
 }
 
 export enum SourceI18nKey {
@@ -663,6 +662,8 @@ export enum EntityFieldsI18nKey {
   displayVersion = 'EntityFields.displayVersion',
   adapter = 'EntityFields.adapter',
   iconUrl = 'EntityFields.iconUrl',
+  rewritePath = 'EntityFields.rewritePath',
+  response = 'EntityFields.response',
   description = 'EntityFields.description',
   forwardAuthToken = 'EntityFields.forwardAuthToken',
   features = 'EntityFields.features',

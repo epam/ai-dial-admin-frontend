@@ -276,13 +276,15 @@ export default {
     Rotate: 'Rotate',
     Rollback: 'Rollback',
     ReviewStructure: 'Review structure',
-    CompareChanges: 'Compare changes',
     Refresh: 'Refresh',
     Back: 'Back',
     Close: 'Close',
     OpenAppRunner: 'Open Application Runner',
     OpenAdapter: 'Open Adapter',
     None: 'None',
+  },
+  Compare: {
+    CompareChanges: 'Compare changes',
   },
   UpstreamEndpoints: {
     Upstream: 'Upstream',
@@ -418,12 +420,7 @@ export default {
   },
   Routes: {
     AddPaths: 'Add paths',
-    RewritePath: 'Rewrite path',
     Output: 'Output',
-    Response: 'Response',
-    RequiredProperty: 'This property is required',
-    InvalidPath: 'Path must start with / and use only letters, digits, - , and _',
-    InvalidStatus: 'Status must be a number from 100 to 999',
   },
   Publications: {
     Prompt: {
@@ -456,8 +453,6 @@ export default {
       PublishApproveDescription: 'Are you sure that you want to publish application?',
       UnpublishApproveDescription: 'Are you sure that you want to unpublish application?',
     },
-    ActionPublish: 'Publish',
-    ActionUnpublish: 'Unpublish',
     Action: 'Action',
     Author: 'Author',
     Runner: 'Runner',
@@ -716,6 +711,9 @@ export default {
     dependencies: 'Dependencies',
     order: 'Order',
     content: 'Content',
+    rewritePath: 'Rewrite path',
+    response: 'Response',
+   
   },
   EntityPlaceholders: {
     Project: 'Enter project',
@@ -766,6 +764,9 @@ export default {
     MaintenanceInProgress: 'Maintenance in progress',
     SystemUnavailable: 'The system is temporarily unavailable due to a technical update.',
     TryAgainLater: 'Please try again later.',
+     RequiredProperty: 'This property is required',
+    InvalidPath: 'Path must start with / and use only letters, digits, - , and _',
+    InvalidStatus: 'Status must be a number from 100 to 999',
     UrlField: 'This field must be a valid URL starting with  http:// or https://',
     WarningEndpoint: 'The endpoint uses HTTP instead of HTTPS. This may expose data to security risks.',
     DescriptionLength: 'User can add any characters, but not more than 2048.',
