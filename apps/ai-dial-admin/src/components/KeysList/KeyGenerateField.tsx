@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import Button from '@/src/components/Common/Button/Button';
 import PasswordInputField from '@/src/components/Common/PasswordInput/PasswordInputField';
 import { FieldError } from '@/src/models/error';
-import { ButtonsI18nKey, CreateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { getErrorForKey } from './keys-list';
