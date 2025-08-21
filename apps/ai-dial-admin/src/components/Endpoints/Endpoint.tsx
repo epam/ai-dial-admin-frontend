@@ -112,7 +112,7 @@ const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, upd
             elementId={'upstreamEndpoints ' + index}
             value={endpoint.endpoint}
             placeholder={t(EntityPlaceholdersI18nKey.UpstreamEndpoint)}
-            fieldTitle={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.UpstreamEndpoints) : ''}
+            fieldTitle={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.Endpoints) : ''}
             containerCssClass="lg:w-[560px]"
             elementCssClass="h-[38px]"
             errorText={endpointError}
@@ -133,7 +133,7 @@ const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, upd
             elementId={'key ' + index}
             value={endpoint.key}
             placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
-            fieldTitle={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.UpstreamKey) : ''}
+            fieldTitle={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.Keys) : ''}
             optional={isKeyOptional}
             onChange={onChangeKey}
           />

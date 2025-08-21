@@ -135,8 +135,8 @@ const FolderCreateSetup: FC<Props> = ({
               fieldTitle={t(ImportI18nKey.File)}
               emptyTitle={t(ImportI18nKey.DropAnyFile)}
               iconBeforeInput={<IconFileTypeZip width={18} height={18} className="text-secondary" />}
-              fileFormatError={t(ImportI18nKey.ImportArchiveFileFormatError)}
-              fileCountError={t(ImportI18nKey.ImportArchiveDescription)}
+              fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
+              fileCountError={t(ImportI18nKey.ArchiveDescription)}
               acceptTypes="application/zip, .zip, application/x-zip-compressed"
               onChangeFile={changeFile}
               isMultiple={false}
@@ -146,13 +146,13 @@ const FolderCreateSetup: FC<Props> = ({
           {fileType === ImportFileType.FILES && (
             <LoadFileAreaField
               elementId="importFiles"
-              fieldTitle={t(ImportI18nKey.ImportFiles)}
+              fieldTitle={t(ImportI18nKey.Files)}
               emptyTitle={t(ImportI18nKey.DropAnyFile)}
               files={files}
               acceptTypes={view === ApplicationRoute.Prompts ? 'application/json' : '/'}
               onChangeFile={changeFile}
               dynamicIcon={getFileIcon}
-              errorText={t(ImportI18nKey.ImportFileError)}
+              errorText={t(ImportI18nKey.FileError)}
               maxFilesCount={30}
             />
           )}
