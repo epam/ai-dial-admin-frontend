@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { IMPORT_RESOLUTIONS, IMPORT_STEPS, IMPORT_CONFIG_STEPS, IMPORT_FILE_TYPES } from '../import';
-import { ImportI18nKey } from '@/src/constants/i18n';
+import { ImportI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { ConflictResolutionPolicy, ImportFileType, ImportSteps } from '@/src/types/import';
 import { StepStatus } from '@/src/models/step';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -36,8 +36,8 @@ describe('IMPORT_STEPS', () => {
   test('returns steps for files and properties', () => {
     const steps = IMPORT_STEPS(t);
     expect(steps).toEqual([
-      { id: ImportSteps.FILES, name: ImportI18nKey.ImportFiles, status: StepStatus.INVALID },
-      { id: ImportSteps.PROPERTIES, name: ImportI18nKey.ImportProperties, status: StepStatus.INVALID },
+      { id: ImportSteps.FILES, name: ImportI18nKey.Files, status: StepStatus.INVALID },
+      { id: ImportSteps.PROPERTIES, name: TabsI18nKey.Properties, status: StepStatus.INVALID },
     ]);
   });
 });
@@ -46,8 +46,8 @@ describe('IMPORT_CONFIG_STEPS', () => {
   test('returns steps for files and configuration', () => {
     const steps = IMPORT_CONFIG_STEPS(t);
     expect(steps).toEqual([
-      { id: ImportSteps.FILES, name: ImportI18nKey.ImportFiles, status: StepStatus.INVALID },
-      { id: ImportSteps.CONFIGURATION, name: ImportI18nKey.ImportConfiguration, status: StepStatus.INVALID },
+      { id: ImportSteps.FILES, name: ImportI18nKey.Files, status: StepStatus.INVALID },
+      { id: ImportSteps.CONFIGURATION, name: ImportI18nKey.Configuration, status: StepStatus.INVALID },
     ]);
   });
 });
@@ -59,7 +59,7 @@ describe('IMPORT_FILE_TYPES', () => {
       {
         id: ImportFileType.ARCHIVE,
         name: ImportI18nKey.DialArchive,
-        description: ImportI18nKey.ImportArchiveDescription,
+        description: ImportI18nKey.ArchiveDescription,
       },
     ]);
   });

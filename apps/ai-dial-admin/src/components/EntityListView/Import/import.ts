@@ -54,24 +54,24 @@ export const getImportResults = (
   if (success > 0) {
     showNotification(
       getSuccessNotification(
-        t(ImportI18nKey.ImportSuccessTitle, { number: success, type }),
-        t(ImportI18nKey.ImportSuccessDescription, { folder: folderName }),
+        t(ImportI18nKey.SuccessTitle, { number: success, type }),
+        t(ImportI18nKey.SuccessDescription, { folder: folderName }),
       ),
     );
   }
   if (failed.length > 0) {
     showNotification(
       getErrorNotification(
-        t(ImportI18nKey.ImportErrorTitle, { number: failed.length, type }),
-        `${t(ImportI18nKey.ImportErrorDescription)}\n${failed.join('\n')}`,
+        t(ImportI18nKey.ErrorTitle, { number: failed.length, type }),
+        `${t(ImportI18nKey.ErrorDescription)}\n${failed.join('\n')}`,
       ),
     );
   }
   if (skipped.length > 0) {
     showNotification(
       getErrorNotification(
-        t(ImportI18nKey.ImportSkipTitle, { number: skipped.length, type }),
-        `${t(ImportI18nKey.ImportSkipDescription)}\n${skipped.join('\n')}`,
+        t(ImportI18nKey.SkipTitle, { number: skipped.length, type }),
+        `${t(ImportI18nKey.SkipDescription)}\n${skipped.join('\n')}`,
       ),
     );
   }
@@ -128,7 +128,7 @@ export const generatePromptRowDataForImportGrid = (
         index: 0,
         name: key,
         version: '',
-        promptName: t?.(ImportI18nKey.ImportPromptError) || '',
+        promptName: t?.(ImportI18nKey.PromptError) || '',
         invalid: true,
         extension,
       });
@@ -169,7 +169,7 @@ export const generateFileRowDataForImportGrid = (
       data.push({
         index: 0,
         name: key,
-        fileName: t?.(ImportI18nKey.ImportFileError) || '',
+        fileName: t?.(ImportI18nKey.FileError) || '',
         invalid: true,
         extension: '',
       });
