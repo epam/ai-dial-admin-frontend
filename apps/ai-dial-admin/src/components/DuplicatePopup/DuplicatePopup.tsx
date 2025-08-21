@@ -24,7 +24,7 @@ interface Props {
   onDuplicate: (entity: ClonedEntity) => void;
 }
 
-const DuplicateEntityPopup: FC<Props> = ({ onDuplicate, names, view, modalState, onClose, entity }) => {
+const DuplicatePopup: FC<Props> = ({ onDuplicate, names, view, modalState, onClose, entity }) => {
   const t = useI18n() as (t: string) => string;
   const isSimple = isSimpleEntity(view);
 
@@ -56,12 +56,14 @@ const DuplicateEntityPopup: FC<Props> = ({ onDuplicate, names, view, modalState,
   return (
     <Popup onClose={onClose} heading={t(heading)} portalId="DeleteEntity" state={modalState}>
       <div className="flex flex-col px-6 py-4">
-        {!isSimple && <div className="text-secondary small mb-4">{t(duplicateModalDescriptionMap[view])}</div>}
+        {!!duplicateModalDescriptionMap[view] && (
+          <div className="text-secondary small mb-4">{t(duplicateModalDescriptionMap[view])}</div>
+        )}
         <div className="flex flex-col gap-3">
           <IdControl entity={clonedEntity} onChangeEntity={setEntity} names={names} />
           <DisplayNameControl displayName={clonedEntity.displayName} onChange={onChangeDisplayName} />
 
-          {!isSimple && view === ApplicationRoute.Models && (
+          {view === ApplicationRoute.Models && (
             <TextInputField
               fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
               elementId="version"
@@ -91,4 +93,4 @@ const DuplicateEntityPopup: FC<Props> = ({ onDuplicate, names, view, modalState,
     </Popup>
   );
 };
-export default DuplicateEntityPopup;
+export default DuplicatePopup;

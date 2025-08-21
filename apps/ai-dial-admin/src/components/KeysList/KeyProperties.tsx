@@ -1,15 +1,15 @@
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Switch from '@/src/components/Common/Switch/Switch';
 import ValidityPeriodInput from '@/src/components/Common/ValidityPeriodInput/ValidityPeriodInput';
-import { FieldError } from '@/src/models/error';
-import { getErrorForName } from '@/src/utils/validation/name-error';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
+import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import KeyGenerateField from './KeyGenerateField';
-import DescriptionControl from '../EntityMainProperties/BaseProperties/Description';
 
 interface Props {
   entity: DialKey;
@@ -21,19 +21,6 @@ interface Props {
 
 const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChangeKey }) => {
   const t = useI18n() as (t: string) => string;
-
-  const [nameError, setNameError] = useState<FieldError | null>(null);
-
-  const onChangeName = useCallback(
-    (name: string) => {
-      setNameError(getErrorForName(name, names, t));
-      onChangeKey({
-        ...entity,
-        name: name.trim(),
-      });
-    },
-    [onChangeKey, entity, names, t],
-  );
 
   const onChangeProject = useCallback(
     (project: string) => {
@@ -72,17 +59,12 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
 
   return (
     <div className="flex flex-col gap-6 h-full">
-      {!isKeyImmutable && (
-        <TextInputField
-          elementId="name"
-          placeholder={t(EntityPlaceholdersI18nKey.Id)}
-          fieldTitle={t(EntityFieldsI18nKey.id)}
-          value={entity.name}
-          errorText={nameError?.text}
-          invalid={!!nameError}
-          onChange={onChangeName}
-        />
-      )}
+      {!isKeyImmutable && <IdControl entity={entity} names={names} onChangeEntity={onChangeKey} />}
+
+      <DisplayNameControl
+        displayName={entity.displayName}
+        onChange={(displayName: string) => onChangeKey({ ...entity, displayName })}
+      />
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeKey} />
 
