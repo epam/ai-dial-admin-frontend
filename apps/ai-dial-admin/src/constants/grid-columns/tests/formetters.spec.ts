@@ -1,6 +1,6 @@
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { formatAttachment, numberValueFormatter, getFormattedResourceType } from '../formatters';
+import { formatAttachment, numberValueFormatter, getFormattedResourceType, priceValueFormatter } from '../formatters';
 
 describe('Formatters :: getFormattedResourceType', () => {
   test('Should return Application Runner', () => {
@@ -57,5 +57,34 @@ describe('Formatters :: numberValueFormatter', () => {
       colDef: {},
     } as any;
     expect(numberValueFormatter(params)).toBe('');
+  });
+});
+
+describe('Formatters :: priceValueFormatter', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  test('formats number from params.data using colDef.field', () => {
+    const params = {
+      data: { price: 12345 },
+      colDef: { field: 'price' },
+    } as any;
+    expect(priceValueFormatter(params)).toBe('12345');
+  });
+
+  test('returns empty string if params.data is missing', () => {
+    const params = {
+      data: undefined,
+      colDef: { field: 'price' },
+    } as any;
+    expect(priceValueFormatter(params)).toBe('');
+  });
+
+  test('returns empty string if colDef.field is missing', () => {
+    const params = {
+      data: { amount: 12345 },
+      colDef: {},
+    } as any;
+    expect(priceValueFormatter(params)).toBe('');
   });
 });
