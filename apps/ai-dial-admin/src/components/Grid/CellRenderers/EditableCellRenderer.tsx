@@ -43,7 +43,7 @@ const EditableCellRenderer = (params: EditableCellRendererParams) => {
         onChange={handleChange}
         className="leading-[18px] h-[32px]"
       />
-      {params.defaultValue && params.defaultValue !== value && (
+      {!!params.defaultValue && params.defaultValue !== value && (
         <div className="absolute top-0 right-0 text-accent-tertiary">
           <Triangle />
         </div>
