@@ -28,7 +28,7 @@ const Icon: FC<IconProps> = ({ url, name, selected, onClick }) => {
     selected ? 'border-accent-primary bg-accent-primary-alpha' : 'border-transparent',
   );
   const iconBackgroundClassNames = classNames('mb-2 text-icon-primary', url ? 'rounded-full bg-model-icon' : '');
-  const iconTitleClassNames = classNames('tiny', selected ? 'text-primary' : 'text-secondary');
+  const iconTitleClassNames = classNames('tiny truncate w-full', selected ? 'text-primary' : 'text-secondary');
 
   return (
     <button className={iconClassNames} onClick={onClick} aria-label="Icon">

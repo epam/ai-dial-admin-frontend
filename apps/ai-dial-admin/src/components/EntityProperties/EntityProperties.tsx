@@ -52,10 +52,10 @@ const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntit
             isEntityImmutable={true}
           />
           <EntityIcon
-            fieldTitle={t(EntityFieldsI18nKey.icon)}
+            fieldTitle={t(EntityFieldsI18nKey.iconUrl)}
             elementId="icon"
-            entity={entity}
-            onChangeEntity={updateEntity}
+            iconUrl={entity.iconUrl}
+            onChange={(icon) => updateEntity({ ...entity, iconUrl: icon })}
           />
           <div className="flex flex-col gap-4 lg:w-[35%]">
             <Multiselect

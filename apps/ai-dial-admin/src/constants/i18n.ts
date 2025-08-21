@@ -95,12 +95,6 @@ export enum CommonControlsI18nKey {
   Or = 'CommonControls.Or',
 }
 
-export enum FileUploadI18nKey {
-  IconModalHeader = 'FileUpload.ModalHeader',
-  IconMenuChangeItem = 'FileUpload.MenuChangeItem',
-  IconMenuDeleteItem = 'FileUpload.MenuDeleteItem',
-}
-
 export enum EntitiesI18nKey {
   NoApplications = 'Entities.NoApplications',
   NoApplicationRunners = 'Entities.NoApplicationRunners',
@@ -130,6 +124,7 @@ export enum EntitiesI18nKey {
   InterceptorName = 'Entities.InterceptorName',
   ModelDisplayName = 'Entities.ModelDisplayName',
   ApplicationDisplayName = 'Entities.ApplicationDisplayName',
+  ChangeIcon = 'Entities.ChangeIcon',
 }
 
 export enum DeleteI18nKey {
@@ -671,7 +666,6 @@ export enum EntityFieldsI18nKey {
   displayVersion = 'EntityFields.displayVersion',
   adapter = 'EntityFields.adapter',
   iconUrl = 'EntityFields.iconUrl',
-  icon = 'EntityFields.icon',
   description = 'EntityFields.description',
   forwardAuthToken = 'EntityFields.forwardAuthToken',
   features = 'EntityFields.features',
@@ -725,6 +719,7 @@ export enum EntityFieldsI18nKey {
   'dial:applicationTypeTruncatePromptEndpoint' = 'EntityFields.applicationTypeTruncatePromptEndpoint',
   'dial:appendApplicationPropertiesHeader' = 'EntityFields.appendApplicationPropertiesHeader',
   'dial:applicationTypePlaybackSupport' = 'EntityFields.applicationTypePlaybackSupport',
+  'dial:applicationTypeIconUrl' = 'EntityFields.applicationTypeIconUrl',
   grantedKeys = 'EntityFields.grantedKeys',
   createdAt = 'EntityFields.createdAt',
   updatedAt = 'EntityFields.updatedAt',

@@ -8,7 +8,7 @@ import { GridApi } from 'ag-grid-community';
 import { exportFiles, importFiles } from '@/src/app/[lang]/files/actions';
 import { exportPrompts, importPrompts } from '@/src/app/[lang]/prompts/actions';
 import CreateAdapter from '@/src/components/Adapter/Modals/CreateAdapter';
-import CreateScheme from '@/src/components/ApplicationRunners/ListView/Create/CreateAppRunner';
+import CreateAppRunner from '@/src/components/ApplicationRunners/Modals/CreateAppRunner';
 import Button from '@/src/components/Common/Button/Button';
 import { getImportResults } from '@/src/components/EntityListView/Import/import';
 import CreateKey from '@/src/components/KeysList/Popup/CreateKey';
@@ -159,7 +159,7 @@ const EntityListHeaderButtons = <T extends DialBaseEntity | DialKey | DialApplic
     if (route === ApplicationRoute.ApplicationRunners) {
       return (
         <SaveValidationContextProvider>
-          <CreateScheme modalState={modalState} onClose={handleModalClose} route={route} />;
+          <CreateAppRunner modalState={modalState} onClose={handleModalClose} route={route} />;
         </SaveValidationContextProvider>
       );
     }

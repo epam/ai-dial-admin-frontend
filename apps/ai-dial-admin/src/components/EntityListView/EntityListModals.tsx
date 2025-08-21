@@ -3,7 +3,7 @@ import { FC, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
 import DeleteAdapter from '@/src/components/Adapter/Modals/DeleteAdapter';
-import DeleteScheme from '@/src/components/ApplicationRunners/ListView/Delete/DeleteAppRunner';
+import DeleteAppRunner from '@/src/components/ApplicationRunners/Modals/DeleteAppRunner';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import FilePathModal from '@/src/components/Common/FilePath/FilePathModal';
 import { BasicI18nKey, ButtonsI18nKey, DeleteI18nKey } from '@/src/constants/i18n';
@@ -116,7 +116,7 @@ const EntityListModals: FC<Props> = ({
             onClose={handleClose}
           >
             {route === ApplicationRoute.ApplicationRunners ? (
-              <DeleteScheme entity={entity as DialApplicationScheme} />
+              <DeleteAppRunner entity={entity as DialApplicationScheme} />
             ) : route === ApplicationRoute.Adapters ? (
               <DeleteAdapter entity={entity as DialAdapter} />
             ) : route === ApplicationRoute.InterceptorTemplates ? (
