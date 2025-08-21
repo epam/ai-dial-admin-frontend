@@ -154,7 +154,7 @@ export default {
     AppRunner: 'Application runner',
     ModelDisplayName: 'Model display name',
     ApplicationDisplayName: 'Application display name',
-    Interceptor: 'Interceptor Name',
+    InterceptorName: 'Interceptor Name',
   },
   DeleteEntity: {
     Title: 'Confirm Deleting ',

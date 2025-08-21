@@ -665,7 +665,7 @@ export enum EntityFieldsI18nKey {
   displayVersion = 'EntityFields.displayVersion',
   adapter = 'EntityFields.adapter',
   iconUrl = 'EntityFields.iconUrl',
-  icon = 'EntityFields.Icon',
+  icon = 'EntityFields.icon',
   description = 'EntityFields.description',
   forwardAuthToken = 'EntityFields.forwardAuthToken',
   features = 'EntityFields.features',
