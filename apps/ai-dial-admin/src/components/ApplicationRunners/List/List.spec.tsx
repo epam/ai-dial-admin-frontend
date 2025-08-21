@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import ApplicationRunnersList from './List';
-import { MenuI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 
 describe('ApplicationRunnersList', () => {
   test('renders ApplicationRunnersList with data', () => {
@@ -18,6 +18,6 @@ describe('ApplicationRunnersList', () => {
   test('renders ApplicationRunnersList without data', () => {
     render(<ApplicationRunnersList data={[]} />);
     expect(screen.getByText(MenuI18nKey.ApplicationRunners)).toBeInTheDocument();
-    expect(screen.getByRole('table')).toBeNull();
+    expect(screen.getByText(EntitiesI18nKey.NoApplicationRunners)).toBeInTheDocument();
   });
 });
