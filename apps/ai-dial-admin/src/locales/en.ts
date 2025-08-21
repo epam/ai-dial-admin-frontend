@@ -342,7 +342,6 @@ export default {
     Activities: 'Activities',
     Dependencies: 'Dependencies',
     Routes: 'App Routes',
-    Traces: 'Traces',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',
@@ -382,9 +381,7 @@ export default {
     Add: 'Add Interceptors',
   },
   FileUpload: {
-    ModalHeader: 'Icon',
-    MenuChangeItem: 'Change icon',
-    MenuDeleteItem: 'Delete',
+    MenuChangeItem: 'Change icon', // T
   },
   Telemetry: {
     SystemUsage: 'System Usage',
@@ -414,10 +411,6 @@ export default {
         Hours: 'Last {value, plural, =1 {# hour} other {# hours} }',
         Days: 'Last {value, plural, =1 {# day} other {# days} }',
       },
-    },
-    UsageLog: {
-      TracesTitle: 'Traces',
-      NoTracesTitle: 'No Traces',
     },
   },
   Routes: {
@@ -701,6 +694,7 @@ export default {
     viewerUrl: 'Viewer URL',
     editorUrl: 'Editor URL',
     applicationTypeConfigurationEndpoint: 'Configuration endpoint',
+    applicationTypeIconUrl: 'Icon',
     applicationTypeRateEndpoint: 'Rate endpoint',
     applicationTypeTokenizeEndpoint: 'Tokenize endpoint',
     applicationTypeTruncatePromptEndpoint: 'Truncate prompt endpoint',

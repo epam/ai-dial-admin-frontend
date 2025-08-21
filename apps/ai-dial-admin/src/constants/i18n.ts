@@ -96,9 +96,7 @@ export enum CommonControlsI18nKey {
 }
 
 export enum FileUploadI18nKey {
-  IconModalHeader = 'FileUpload.ModalHeader',
   IconMenuChangeItem = 'FileUpload.MenuChangeItem',
-  IconMenuDeleteItem = 'FileUpload.MenuDeleteItem',
 }
 
 export enum EntitiesI18nKey {
@@ -345,7 +343,6 @@ export enum TabsI18nKey {
   Files = 'Tabs.Files',
   Dependencies = 'Tabs.Dependencies',
   Routes = 'Tabs.Routes',
-  Traces = 'Tabs.Traces',
 }
 
 export enum EditorI18nKey {
@@ -386,8 +383,6 @@ export enum TelemetryI18nKey {
   FilterConditionStartsWith = 'Telemetry.Filter.ConditionStartsWith',
   FilterConditionEndsWith = 'Telemetry.Filter.ConditionEndsWith',
   FilterDurationSeconds = 'Telemetry.Filter.Duration.Seconds',
-  TracesTitle = 'Telemetry.UsageLog.TracesTitle',
-  NoTracesTitle = 'Telemetry.UsageLog.NoTracesTitle',
 }
 
 export enum RoutesI18nKey {
@@ -722,6 +717,7 @@ export enum EntityFieldsI18nKey {
   'dial:applicationTypeTruncatePromptEndpoint' = 'EntityFields.applicationTypeTruncatePromptEndpoint',
   'dial:appendApplicationPropertiesHeader' = 'EntityFields.appendApplicationPropertiesHeader',
   'dial:applicationTypePlaybackSupport' = 'EntityFields.applicationTypePlaybackSupport',
+  'dial:applicationTypeIconUrl' = 'EntityFields.applicationTypeIconUrl',
   grantedKeys = 'EntityFields.grantedKeys',
   createdAt = 'EntityFields.createdAt',
   updatedAt = 'EntityFields.updatedAt',

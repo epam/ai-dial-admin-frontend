@@ -4,7 +4,7 @@ import { FC, useCallback, useState } from 'react';
 
 import ContextMenu, { ContextMenuItem } from '@/src/components/Common/ContextMenu/ContextMenu';
 import IconGalleryModal from '@/src/components/IconGallery/IconGalleryModal';
-import { FileUploadI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, FileUploadI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
@@ -31,7 +31,7 @@ const FilledIcon: FC<Props> = ({ readonly, fileUrl, onChange }) => {
       icon: <IconRefreshDot {...BASE_ICON_PROPS} />,
     },
     {
-      title: t(FileUploadI18nKey.IconMenuDeleteItem),
+      title: t(ButtonsI18nKey.Delete),
       onClick: () => onChange(''),
       icon: <IconTrashX {...BASE_ICON_PROPS} />,
     },

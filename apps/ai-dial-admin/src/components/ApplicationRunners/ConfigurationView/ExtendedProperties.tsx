@@ -17,7 +17,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme, TypeEntity } from '@/src/models/dial/application';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { getUrlError } from '@/src/utils/validation/url-error';
-import EntityIcon from '../../EntityView/Properties/EntityIcon';
+import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
 
 interface Props {
   runner: DialApplicationScheme;
