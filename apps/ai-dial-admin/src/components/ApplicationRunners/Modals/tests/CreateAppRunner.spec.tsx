@@ -19,7 +19,7 @@ describe('CreateAppRunner', () => {
     expect(screen.getByText(CreateI18nKey.ApplicationRunner)).toBeInTheDocument();
     expect(screen.getByText(ButtonsI18nKey.Cancel)).toBeInTheDocument();
     expect(screen.getByText(ButtonsI18nKey.Create)).toBeInTheDocument();
-    expect(screen.getByText('SchemeProperties')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Id)).toBeInTheDocument();
   });
 
   test('calls onClose when Cancel is clicked', () => {
