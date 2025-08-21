@@ -379,9 +379,6 @@ export default {
   Topics: {
     AddTopic: 'Add Topic',
   },
-  Editor: {
-    ErrorLine: 'The error line is {line}',
-  },
   Interceptors: {
     Add: 'Add Interceptors',
   },
@@ -426,6 +423,7 @@ export default {
     Output: 'Output',
   },
   Publications: {
+    ReasonTitle: 'Reason',
     Prompt: {
       PublishApproveModalTitle: 'Publish Prompt',
       UnpublishApproveModalTitle: 'Unpublish Prompt',
@@ -433,7 +431,6 @@ export default {
       UnpublishDeclineModalTitle: 'Decline Prompt Unpublishing',
       PublishApproveDescription: 'Are you sure that you want to publish prompt?',
       UnpublishApproveDescription: 'Are you sure that you want to unpublish prompt?',
-      ReasonTitle: 'Reason',
       ReasonPlaceholder: 'Describe the reason for decline',
       OpenPrompt: 'Open Prompt',
     },
@@ -445,7 +442,6 @@ export default {
       UnpublishDeclineModalTitle: 'Decline File Unpublishing',
       PublishApproveDescription: 'Are you sure that you want to publish file?',
       UnpublishApproveDescription: 'Are you sure that you want to unpublish file?',
-      ReasonTitle: 'Reason',
       ReasonPlaceholder: 'Describe the reason for decline',
     },
     Applications: {
@@ -716,7 +712,6 @@ export default {
     content: 'Content',
     rewritePath: 'Rewrite path',
     response: 'Response',
-   
   },
   EntityPlaceholders: {
     Project: 'Enter project',
@@ -767,7 +762,7 @@ export default {
     MaintenanceInProgress: 'Maintenance in progress',
     SystemUnavailable: 'The system is temporarily unavailable due to a technical update.',
     TryAgainLater: 'Please try again later.',
-     RequiredProperty: 'This property is required',
+    RequiredProperty: 'This property is required',
     InvalidPath: 'Path must start with / and use only letters, digits, - , and _',
     InvalidStatus: 'Status must be a number from 100 to 999',
     UrlField: 'This field must be a valid URL starting with  http:// or https://',
@@ -783,6 +778,7 @@ export default {
     KeyValueExists: 'This value already exists.',
     DisplayNameErrorModel:
       'This name is used by versionless model. Specify version for model with this display name to group models.',
+    EditorErrorLine: 'The error line is {line}',
   },
   Source: {
     OpenTemplate: 'Open template',

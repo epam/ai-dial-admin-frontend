@@ -343,10 +343,6 @@ export enum TabsI18nKey {
   Conversations = 'Tabs.Conversations',
 }
 
-export enum EditorI18nKey {
-  ErrorLine = 'Editor.ErrorLine',
-}
-
 export enum InterceptorsI18nKey {
   Add = 'Interceptors.Add',
 }
@@ -399,7 +395,7 @@ export enum PublicationsI18nKey {
   PromptUnpublishDeclineModalTitle = 'Publications.Prompt.UnpublishDeclineModalTitle',
   PromptPublishApproveDescription = 'Publications.Prompt.PublishApproveDescription',
   PromptUnpublishApproveDescription = 'Publications.Prompt.UnpublishApproveDescription',
-  DeclineReason = 'Publications.Prompt.ReasonTitle',
+  DeclineReason = 'Publications.ReasonTitle',
   DeclineReasonPlaceholder = 'Publications.Prompt.ReasonPlaceholder',
   FilePublishApproveModalTitle = 'Publications.Files.PublishApproveModalTitle',
   FilePublishDeclineModalTitle = 'Publications.Files.PublishDeclineModalTitle',
@@ -597,6 +593,7 @@ export enum ErrorI18nKey {
   RequiredProperty = 'Error.RequiredProperty',
   InvalidPath = 'Error.InvalidPath',
   InvalidStatus = 'Error.InvalidStatus',
+  EditorErrorLine = 'Error.EditorErrorLine',
 }
 
 export enum SourceI18nKey {
