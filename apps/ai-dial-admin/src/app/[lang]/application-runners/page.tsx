@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { applicationRunnersApi } from '@/src/app/api/api';
-import ApplicationRunnersList from '@/src/components/ApplicationRunners/List/ApplicationRunnersList';
+import ApplicationRunnersList from '@/src/components/ApplicationRunners/List/List';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
