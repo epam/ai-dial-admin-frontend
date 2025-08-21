@@ -226,11 +226,6 @@ export enum CreateI18nKey {
   CreateInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Create',
   SelectInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Select',
   InterceptorContainer = 'CreateEntity.InterceptorContainer',
-
-  KeyTitle = 'CreateEntity.key.title',
-  KeyPlaceholder = 'CreateEntity.key.placeholder',
-  ErrorKey = 'CreateEntity.key.error',
-  ErrorName = 'CreateEntity.name.error', //???
 }
 
 export enum UpstreamEndpointsI18nKey {
@@ -600,6 +595,7 @@ export enum ErrorI18nKey {
   NameVersionCombination = 'Error.NameVersionCombination',
   Length = 'Error.Length',
   MinMaxLength = 'Error.MinMaxLength',
+  KeyValueExists = 'Error.KeyValueExists',
   ForbiddenChars = 'Error.ForbiddenChars',
 }
 
@@ -651,6 +647,7 @@ export enum EntityPlaceholdersI18nKey {
   TruncatePromptEndpoint = 'EntityPlaceholders.truncatePromptEndpoint',
   SelectAppRunner = 'EntityPlaceholders.SelectAppRunner',
   Version = 'EntityPlaceholders.Version',
+  KeyValue = 'EntityPlaceholders.KeyValue',
 }
 
 export enum EntityFieldsI18nKey {
@@ -687,6 +684,7 @@ export enum EntityFieldsI18nKey {
   completion = 'EntityFields.completion',
   upstreams = 'EntityFields.upstreams',
   key = 'EntityFields.key',
+  keyValue = 'EntityFields.keyValue',
   weight = 'EntityFields.weight',
   tier = 'EntityFields.tier',
   overrideName = 'EntityFields.overrideName',

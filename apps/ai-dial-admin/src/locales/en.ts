@@ -231,17 +231,10 @@ export default {
     Prompt: 'Create Prompt',
     Route: 'Create Route',
     Adapter: 'Create Adapter',
+    InterceptorContainer: 'Select Interceptor Container',
     InterceptorTemplate: {
       Create: 'Create Interceptor Template',
       Select: 'Select Interceptor Template',
-    },
-
-    InterceptorContainer: 'Select Interceptor Container',
-
-    key: {
-      title: 'Key value',
-      placeholder: 'Enter value or generate',
-      error: 'This value already exists.',
     },
   },
   Type: {
@@ -645,6 +638,7 @@ export default {
     fieldsHashingOrder: 'Hashing order',
     endpointDeploymentName: 'Endpoint deployment name',
     endpoint: 'Endpoint',
+    keyValue: 'Key value',
     name: 'Name',
     id: 'ID',
     displayName: 'Display name',
@@ -756,6 +750,7 @@ export default {
     RateEndpoint: 'Enter rate endpoint',
     TokenizeEndpoint: 'Enter tokenize endpoint',
     TruncatePromptEndpoint: 'Enter truncate prompt endpoint',
+    KeyValue: 'Enter value or generate',
   },
   Error: {
     ServerError: 'Server Error',
@@ -780,6 +775,7 @@ export default {
     Length: 'User can add any characters, but not more than {number}.',
     MinMaxLength: 'User can add any allowed characters, but not less than {min} and not more than {max}.',
     ForbiddenChars: 'Name must not contain forbidden characters: {list}',
+    KeyValueExists: 'This value already exists.',
     DisplayNameErrorModel:
       'This name is used by versionless model. Specify version for model with this display name to group models.',
   },
