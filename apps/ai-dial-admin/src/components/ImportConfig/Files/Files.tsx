@@ -74,7 +74,7 @@ const Files: FC<Props> = ({
   return (
     <div className="flex flex-col flex-1 min-h-0 rounded border border-primary p-6 mt-8">
       <div className="mb-2 flex flex-row justify-between">
-        <h1>{t(ImportI18nKey.ImportFiles)}</h1>
+        <h1>{t(ImportI18nKey.Files)}</h1>
         <Button
           cssClass="primary"
           title={t(ButtonsI18nKey.Next)}
@@ -111,8 +111,8 @@ const Files: FC<Props> = ({
               maxFilesCount={1}
               files={files.length === 0 ? files : [files[0]]}
               isMultiple={false}
-              fileFormatError={t(ImportI18nKey.ImportArchiveFileFormatError)}
-              fileCountError={t(ImportI18nKey.ImportArchiveDescription)}
+              fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
+              fileCountError={t(ImportI18nKey.ArchiveDescription)}
               iconBeforeInput={<IconZip className="text-secondary" {...BASE_ICON_PROPS} />}
               acceptTypes=".zip, application/x-zip-compressed"
               onChangeFile={onChangeFile}
@@ -129,9 +129,9 @@ const Files: FC<Props> = ({
                 </i>
               }
               acceptTypes="application/JSON"
-              fileFormatError={t(ImportI18nKey.ImportJsonFileFormatError)}
+              fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
               isInvalid={isLargeFile}
-              errorText={t(ImportI18nKey.ImportFileError)}
+              errorText={t(ImportI18nKey.FileError)}
               onChangeFile={onChangeFile}
             />
           )}
