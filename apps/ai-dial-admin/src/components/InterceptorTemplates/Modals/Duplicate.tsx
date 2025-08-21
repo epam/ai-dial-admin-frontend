@@ -36,7 +36,7 @@ const DuplicateTemplate: FC<Props> = ({ onDuplicate, modalState, onClose, templa
       state={modalState}
     >
       <div className="flex flex-col px-6 py-4">
-        <IdControl entity={clonedTemplate} onChangeEntity={setTemplate} />
+        <IdControl entity={clonedTemplate} names={names} onChangeEntity={setTemplate} />
 
         <DisplayNameControl
           displayName={clonedTemplate.displayName}
