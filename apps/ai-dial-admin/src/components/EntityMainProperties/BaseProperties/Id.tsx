@@ -21,11 +21,10 @@ const IdControl = <T extends { name?: string }>({ entity, names, onChangeEntity 
 
   const onChangeName = useCallback(
     (name: string) => {
-      const newEntity = { ...entity, name };
       const error = getErrorForName(name, names, t);
       setNameError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
-      onChangeEntity?.(newEntity);
+      onChangeEntity?.({ ...entity, name });
     },
     [dispatch, entity, names, onChangeEntity, t],
   );

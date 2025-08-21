@@ -31,11 +31,11 @@ const DisplayNameControl: FC<Props> = ({ displayName, isEntityImmutable, onChang
   const onChangeDisplayName = useCallback(
     (value: string) => {
       if (!isEntityImmutable) {
-        validateDisplayName(displayName);
+        validateDisplayName(value);
       }
       onChange?.(value);
     },
-    [displayName, onChange, isEntityImmutable, validateDisplayName],
+    [onChange, isEntityImmutable, validateDisplayName],
   );
 
   return (

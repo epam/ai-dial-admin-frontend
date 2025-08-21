@@ -13,6 +13,7 @@ import UpstreamEndpoints from '@/src/components/Endpoints/UpstreamEndpoints';
 import Paths from '@/src/components/Routes/Paths/Paths';
 import { handleRouteOutputChange } from '@/src/components/Routes/utils';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 
 interface Props {
   route: DialRoute;
@@ -35,6 +36,13 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
   const onChangeName = useCallback(
     (name: string) => {
       updateRoute({ ...route, name });
+    },
+    [route, updateRoute],
+  );
+
+  const onChangeDisplayName = useCallback(
+    (displayName: string) => {
+      updateRoute({ ...route, displayName });
     },
     [route, updateRoute],
   );
@@ -99,15 +107,12 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
     <div className="h-full flex flex-col pt-3 w-full">
       <div className="flex flex-col gap-6 lg:w-[35%]">
         {isAppRoute ? (
-          <TextInputField
-            elementId="name"
-            fieldTitle={t(EntityFieldsI18nKey.displayName)}
-            placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
-            value={route.name}
-            onChange={onChangeName}
-          />
+          <DisplayNameControl displayName={route.name} onChange={onChangeName} />
         ) : (
-          <DescriptionControl entity={route} onChangeEntity={updateRoute} />
+          <>
+            <DisplayNameControl displayName={route.displayName} onChange={onChangeDisplayName} />
+            <DescriptionControl entity={route} onChangeEntity={updateRoute} />
+          </>
         )}
         <Paths route={route} updateRoute={updateRoute} />
 

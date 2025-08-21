@@ -157,7 +157,6 @@ export enum DuplicateI18nKey {
   ModelDescription = 'DuplicateEntity.Model.Description',
   ApplicationRunnerHeader = 'DuplicateEntity.ApplicationRunner.Header',
   ApplicationHeader = 'DuplicateEntity.Application.Header',
-  ApplicationDescription = 'DuplicateEntity.Application.Description',
   RoleHeader = 'DuplicateEntity.Role.Header',
   KeyHeader = 'DuplicateEntity.Key.Header',
   RouteHeader = 'DuplicateEntity.Route.Header',
