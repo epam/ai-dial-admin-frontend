@@ -33,7 +33,11 @@ const DropdownSelectedItem: FC<Props> = ({
     isMenu ? 'border-b-2bg-accent-primary-alpha border-b-accent-primary border-b-2 py-[13px]' : '',
   );
   return (
-    <div className={selectedClassNames} role="menuitem">
+    <div
+      className={selectedClassNames}
+      role="menuitem"
+      aria-label={selectedValue?.name || multipleValues?.join(', ') || placeholder}
+    >
       {selectedValue?.name ? (
         <>
           <Tooltip tooltip={selectedValue?.name} triggerClassName="flex-1 min-w-0">

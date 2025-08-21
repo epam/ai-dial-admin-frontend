@@ -65,7 +65,7 @@ const DropdownMenuItem = forwardRef<HTMLButtonElement, DropdownMenuItemProps & B
           ref={ref}
           type="button"
           role="menuitem"
-          aria-label="dropdown-item"
+          aria-label={dropdownItem?.name}
           className={classNames(
             menuItemClassNames,
             isMenu ? 'h-[44px] pl-6' : 'h-[34px]',
