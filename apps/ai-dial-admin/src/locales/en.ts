@@ -450,6 +450,7 @@ export default {
     Dependencies: 'Dependencies',
     Routes: 'App Routes',
     Traces: 'Traces',
+    Conversations: 'Conversations',
   },
   ForwardToken: {
     ForwardToken: 'Forward auth token',
@@ -537,6 +538,8 @@ export default {
     UsageLog: {
       TracesTitle: 'Traces',
       NoTracesTitle: 'No Traces',
+      ConversationsTitle: 'Conversations',
+      NoConversationsTitle: 'No Conversations',
     },
   },
   Routes: {
