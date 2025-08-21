@@ -11,6 +11,7 @@ import {
   EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
   TypeI18nKey,
+  BasicI18nKey,
 } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -27,6 +28,7 @@ interface Props {
 const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
   const t = useI18n() as (key: string) => string;
   const types: DropdownItemsModel[] = [
+    { id: BasicI18nKey.None, name: t(BasicI18nKey.None) },
     { id: TypeEntity.OBJECT, name: t(TypeI18nKey.Object) },
     { id: TypeEntity.BOOLEAN, name: t(TypeI18nKey.Boolean) },
   ];
@@ -185,7 +187,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
       />
 
       <DropdownField
-        selectedValue={runner.type}
+        selectedValue={runner.type || BasicI18nKey.None}
         elementId="type"
         items={types}
         fieldTitle={t(EntityFieldsI18nKey.type)}

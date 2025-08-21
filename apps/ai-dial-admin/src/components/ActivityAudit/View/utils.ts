@@ -12,13 +12,7 @@ import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
 import { roleLimitsKeys } from '@/src/components/ActivityAudit/View/DiffReport/utils';
 
 const dateKeys = ['expiresAt', 'keyGeneratedAt', 'createdAt', 'updatedAt'];
-const appRunnerParameterKeys = [
-  'properties',
-  'dial:applicationTypeEditorUrl',
-  'dial:applicationTypeViewerUrl',
-  'dial:applicationTypeCompletionEndpoint',
-  '$defs',
-];
+const appRunnerParameterKeys = ['properties', '$defs'];
 
 const arrayParameterKeys = [
   EntityParameterKeys.TOPICS,
