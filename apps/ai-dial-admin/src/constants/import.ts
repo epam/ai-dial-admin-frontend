@@ -1,5 +1,5 @@
 import { RadioButtonModel } from '@/src/models/radio-button';
-import { ImportI18nKey } from '@/src/constants/i18n';
+import { ImportI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { ConflictResolutionPolicy, ImportFileType, ImportSteps } from '@/src/types/import';
 import { Step, StepStatus } from '@/src/models/step';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -19,13 +19,13 @@ export const IMPORT_RESOLUTIONS = (
 };
 
 export const IMPORT_STEPS = (t: (stringToTranslate: string) => string): Step[] => [
-  { id: ImportSteps.FILES, name: t(ImportI18nKey.ImportFiles), status: StepStatus.INVALID },
-  { id: ImportSteps.PROPERTIES, name: t(ImportI18nKey.ImportProperties), status: StepStatus.INVALID },
+  { id: ImportSteps.FILES, name: t(ImportI18nKey.Files), status: StepStatus.INVALID },
+  { id: ImportSteps.PROPERTIES, name: t(TabsI18nKey.Properties), status: StepStatus.INVALID },
 ];
 
 export const IMPORT_CONFIG_STEPS = (t: (stringToTranslate: string) => string): Step[] => [
-  { id: ImportSteps.FILES, name: t(ImportI18nKey.ImportFiles), status: StepStatus.INVALID },
-  { id: ImportSteps.CONFIGURATION, name: t(ImportI18nKey.ImportConfiguration), status: StepStatus.INVALID },
+  { id: ImportSteps.FILES, name: t(ImportI18nKey.Files), status: StepStatus.INVALID },
+  { id: ImportSteps.CONFIGURATION, name: t(ImportI18nKey.Configuration), status: StepStatus.INVALID },
 ];
 
 export const IMPORT_FILE_TYPES = (
@@ -36,7 +36,7 @@ export const IMPORT_FILE_TYPES = (
     {
       id: ImportFileType.ARCHIVE,
       name: t(ImportI18nKey.DialArchive),
-      description: t(ImportI18nKey.ImportArchiveDescription),
+      description: t(ImportI18nKey.ArchiveDescription),
     },
   ];
   if (route === ApplicationRoute.Prompts) {
@@ -45,7 +45,7 @@ export const IMPORT_FILE_TYPES = (
       {
         id: ImportFileType.JSON,
         name: t(ImportI18nKey.DialCoreFiles),
-        description: t(ImportI18nKey.ImportJsonDescription),
+        description: t(ImportI18nKey.JsonDescription),
       },
     ];
   } else if (route === ApplicationRoute.Files) {
@@ -53,8 +53,8 @@ export const IMPORT_FILE_TYPES = (
       ...buttons,
       {
         id: ImportFileType.FILES,
-        name: t(ImportI18nKey.ImportSeparateFiles),
-        description: t(ImportI18nKey.ImportSeparateFilesDescription),
+        name: t(ImportI18nKey.SeparateFiles),
+        description: t(ImportI18nKey.SeparateFilesDescription),
       },
     ];
   }

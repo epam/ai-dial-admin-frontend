@@ -57,7 +57,7 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
   return (
     <div className="flex flex-col flex-1 min-h-0 rounded border border-primary p-6 mt-8">
       <div className="mb-2 flex flex-row justify-between">
-        <h1>{t(ImportI18nKey.ImportConfiguration)}</h1>
+        <h1>{t(ImportI18nKey.Configuration)}</h1>
         <Button
           cssClass="primary"
           title={t(ButtonsI18nKey.Import)}
