@@ -226,17 +226,17 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
       );
     }
 
-    // if (route === ApplicationRoute.InterceptorTemplates) {
-    //   return (
-    //     <DuplicateInterceptorTemplate
-    //       template={currentEntity as InterceptorTemplate}
-    //       onDuplicate={onDuplicate as (template: InterceptorTemplate) => Promise<ServerActionResponse>}
-    //       modalState={modalState}
-    //       onClose={handleModalClose}
-    //       names={names}
-    //     />
-    //   );
-    // }
+    if (route === ApplicationRoute.InterceptorTemplates) {
+      return (
+        <DuplicateInterceptorTemplate
+          template={currentEntity as InterceptorTemplate}
+          onDuplicate={onDuplicate as (template: InterceptorTemplate) => Promise<ServerActionResponse>}
+          modalState={modalState}
+          onClose={handleModalClose}
+          names={names}
+        />
+      );
+    }
     if (route === ApplicationRoute.Adapters) {
       return (
         <DuplicateAdapter
