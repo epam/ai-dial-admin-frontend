@@ -25,7 +25,7 @@ describe('Duplicate InterceptorTemplate Modal', () => {
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'DuplicateEntity.InterceptorTemplate.Header' })).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(EntityFieldsI18nKey.id)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Id)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Cancel })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate })).toBeInTheDocument();
   });
