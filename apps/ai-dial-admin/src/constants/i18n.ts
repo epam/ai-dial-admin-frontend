@@ -95,10 +95,6 @@ export enum CommonControlsI18nKey {
   Or = 'CommonControls.Or',
 }
 
-export enum FileUploadI18nKey {
-  IconMenuChangeItem = 'FileUpload.MenuChangeItem',
-}
-
 export enum EntitiesI18nKey {
   NoApplications = 'Entities.NoApplications',
   NoApplicationRunners = 'Entities.NoApplicationRunners',
@@ -128,6 +124,7 @@ export enum EntitiesI18nKey {
   InterceptorName = 'Entities.InterceptorName',
   ModelDisplayName = 'Entities.ModelDisplayName',
   ApplicationDisplayName = 'Entities.ApplicationDisplayName',
+  ChangeIcon = 'Entities.ChangeIcon',
 }
 
 export enum DeleteI18nKey {

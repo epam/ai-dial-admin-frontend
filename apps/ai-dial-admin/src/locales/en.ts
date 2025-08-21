@@ -155,6 +155,7 @@ export default {
     ModelDisplayName: 'Model display name',
     ApplicationDisplayName: 'Application display name',
     InterceptorName: 'Interceptor Name',
+    ChangeIcon: 'Change icon',
   },
   DeleteEntity: {
     Title: 'Confirm Deleting ',
@@ -380,9 +381,6 @@ export default {
   },
   Interceptors: {
     Add: 'Add Interceptors',
-  },
-  FileUpload: {
-    MenuChangeItem: 'Change icon', // T
   },
   Telemetry: {
     SystemUsage: 'System Usage',

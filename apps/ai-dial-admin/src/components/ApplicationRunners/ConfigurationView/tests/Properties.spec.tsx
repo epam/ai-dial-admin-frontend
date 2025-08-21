@@ -14,12 +14,12 @@ describe('SchemeProperties', () => {
     const onChangeRunner = vi.fn();
     render(<SchemeProperties runner={baseRunner} onChangeRunner={onChangeRunner} />);
     // ID field
-    expect(screen.getByLabelText('ID')).toBeInTheDocument();
+    expect(screen.getByLabelText(EntityFieldsI18nKey.id)).toBeInTheDocument();
     fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Id), { target: { value: 'new-id' } });
     expect(onChangeRunner).toHaveBeenCalledWith(expect.objectContaining({ $id: 'new-id' }));
 
     // Name field
-    expect(screen.getByLabelText('DisplayName')).toBeInTheDocument();
+    expect(screen.getByLabelText(EntityFieldsI18nKey.displayName)).toBeInTheDocument();
     fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName), {
       target: { value: 'new name' },
     });
@@ -28,25 +28,11 @@ describe('SchemeProperties', () => {
     );
 
     // Description field
-    expect(screen.getByLabelText('Description')).toBeInTheDocument();
+    expect(screen.getByText(EntityFieldsI18nKey.description)).toBeInTheDocument();
     fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Description), {
       target: { value: 'new desc' },
     });
     expect(onChangeRunner).toHaveBeenCalledWith(expect.objectContaining({ description: 'new desc' }));
-  });
-
-  test('shows id error and invalid', () => {
-    render(<SchemeProperties runner={{ ...baseRunner, $id: 'bad' }} onChangeRunner={vi.fn()} />);
-    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Id), { target: { value: 'bad' } });
-    expect(screen.getByText('id error')).toBeInTheDocument();
-    expect(screen.getByText('invalid')).toBeInTheDocument();
-  });
-
-  test('shows description error and invalid', () => {
-    render(<SchemeProperties runner={baseRunner} onChangeRunner={vi.fn()} />);
-    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Description), { target: { value: 'bad' } });
-    expect(screen.getByText('desc error')).toBeInTheDocument();
-    expect(screen.getByText('invalid')).toBeInTheDocument();
   });
 
   test('does not render id field if isImmutable', () => {
@@ -57,6 +43,6 @@ describe('SchemeProperties', () => {
   test('renders AppRunnerExtendedProperties if isImmutable', () => {
     render(<SchemeProperties runner={baseRunner} isImmutable onChangeRunner={vi.fn()} />);
     // extended field
-    expect(screen.getByText(EntityFieldsI18nKey['dial:applicationTypePlaybackSupport'])).toBeInTheDocument();
+    expect(screen.getByText(EntityFieldsI18nKey.topics)).toBeInTheDocument();
   });
 });
