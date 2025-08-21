@@ -10,8 +10,8 @@ import { DialModel } from '@/src/models/dial/model';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
-import DisplayNameControl from '../EntityMainProperties/BaseProperties/DisplayName';
-import IdControl from '../EntityMainProperties/BaseProperties/Id';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import { duplicateModalDescriptionMap, duplicateModalTitleMap } from './constants';
 
 type ClonedEntity = DialBaseNamedEntity | DialModel;
