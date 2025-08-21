@@ -1,4 +1,4 @@
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey } from '@/src/constants/i18n';
 import { MAX_NAME_SYMBOLS, MIN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { ErrorType } from '@/src/types/error-type';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -15,7 +15,7 @@ export const getErrorForName = (
   if (isUniqueError) {
     return {
       type: ErrorType.EXISTING,
-      text: t ? t(CreateI18nKey.ErrorUnique) : '',
+      text: t ? t(ErrorI18nKey.Unique) : '',
     };
   }
 
@@ -23,7 +23,7 @@ export const getErrorForName = (
   if (isIncludesName) {
     return {
       type: ErrorType.EXISTING,
-      text: t ? t(CreateI18nKey.ErrorName) : '',
+      text: t ? t(ErrorI18nKey.NameExists) : '',
     };
   }
 
@@ -32,7 +32,7 @@ export const getErrorForName = (
   if (isWrongLength) {
     return {
       type: ErrorType.LENGTH,
-      text: t ? tWithArgs(CreateI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS }) : '',
+      text: t ? tWithArgs(ErrorI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS }) : '',
     };
   }
 
@@ -41,7 +41,7 @@ export const getErrorForName = (
     if (hasForbiddenChars) {
       return {
         type: ErrorType.FORBIDDEN_CHARS,
-        text: t ? tWithArgs(CreateI18nKey.ForbiddenCharsError, { list: forbiddenNameSymbols.join(' ') }) : '',
+        text: t ? tWithArgs(ErrorI18nKey.ForbiddenChars, { list: forbiddenNameSymbols.join(' ') }) : '',
       };
     }
   }
@@ -56,7 +56,7 @@ export const getErrorForDisplayName = (name?: string, t?: (str: string) => strin
   if (isWrongLength || !name) {
     return {
       type: ErrorType.LENGTH,
-      text: t ? tWithArgs(CreateI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS }) : '',
+      text: t ? tWithArgs(ErrorI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS }) : '',
     };
   }
   return null;

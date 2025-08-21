@@ -8,7 +8,7 @@ import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
 import EntityAttachments from '@/src/components/EntityView/Properties/EntityAttachments';
 import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
-import { EntitiesI18nKey, ModelViewI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ModelViewI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
 import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import { useI18n } from '@/src/locales/client';
@@ -86,7 +86,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
           radioButtons={modelTypeRadio}
           activeRadioButton={model.type as string}
           elementId="type"
-          fieldTitle={t(ModelViewI18nKey.Type)}
+          fieldTitle={t(EntityFieldsI18nKey.type)}
           orientation={RadioFieldOrientation.Row}
           onChange={onChangeType}
         />
@@ -96,7 +96,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
           inputId="endpoint"
           value={model.endpointDeploymentName}
           fullValue={`${prefixPart}${model.endpointDeploymentName ? model.endpointDeploymentName + '/' : ''}${postfixPart}`}
-          title={t(EntitiesI18nKey.Endpoint)}
+          title={t(EntityFieldsI18nKey.endpoint)}
           postfixPart={`/${postfixPart}`}
           prefixPart={prefixPart}
           onChange={onChangeEndpoint}
@@ -105,8 +105,8 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
       <div className="w-full flex flex-col gap-5 lg:w-[35%]">
         <TextInputField
           elementId="overrideName"
-          fieldTitle={t(ModelViewI18nKey.OverrideName)}
-          placeholder={t(ModelViewI18nKey.OverrideNamePlaceholder)}
+          fieldTitle={t(EntityFieldsI18nKey.overrideName)}
+          placeholder={t(EntityPlaceholdersI18nKey.OverrideName)}
           value={model.overrideName}
           onChange={onChangeOverrideName}
           optional={true}
@@ -114,7 +114,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
         {model.type === DialModelType.Chat && (
           <>
             <EntityIcon
-              fieldTitle={t(EntitiesI18nKey.Icon)}
+              fieldTitle={t(EntityFieldsI18nKey.icon)}
               elementId="icon"
               entity={model}
               onChangeEntity={onChangeModel}
@@ -126,9 +126,9 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
               allItems={model.topics}
               optional={true}
               onChangeItems={onChangeItems}
-              heading={t(TopicsI18nKey.Topics)}
-              title={t(TopicsI18nKey.Topics)}
-              addPlaceholder={t(TopicsI18nKey.AddTopicPlaceholder)}
+              heading={t(EntityFieldsI18nKey.topics)}
+              title={t(EntityFieldsI18nKey.topics)}
+              addPlaceholder={t(EntityPlaceholdersI18nKey.Topic)}
               addTitle={t(TopicsI18nKey.AddTopic)}
             />
           </>

@@ -5,7 +5,7 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
-import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
@@ -60,8 +60,8 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
         {isEntityImmutable && isShowMaintainer ? (
           <TextInputField
             elementId="author"
-            fieldTitle={t(EntitiesI18nKey.Maintainer)}
-            placeholder={t(EntitiesI18nKey.MaintainerPlaceholder)}
+            fieldTitle={t(EntityFieldsI18nKey.author)}
+            placeholder={t(EntityPlaceholdersI18nKey.Maintainer)}
             value={entity.author}
             optional={true}
             onChange={(author) => onChangeEntity({ ...entity, author })}
@@ -71,7 +71,7 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
         {isShowCompletionEndpoint && isEntityImmutable ? (
           <ReadonlyField
             value={applicationRunner['dial:applicationTypeCompletionEndpoint']}
-            title={t(CreateI18nKey.CompletionEndpointTitle)}
+            title={t(EntityFieldsI18nKey.completionEndpoint)}
           />
         ) : null}
       </div>
@@ -82,8 +82,8 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
           buttonTitle={t(ButtonsI18nKey.OpenAdapter)}
           columns={SIMPLE_DESCRIPTION_COLUMNS}
           selectedValue={entity.adapter}
-          fieldTitle={t(CreateI18nKey.AdapterTitle)}
-          placeholder={t(CreateI18nKey.AdapterPlaceholder)}
+          fieldTitle={t(EntityFieldsI18nKey.adapter)}
+          placeholder={t(EntityPlaceholdersI18nKey.SelectAdapter)}
           onChangeValue={onChangeAdapter}
           isEntityImmutable={isEntityImmutable}
           sourceEntities={adapters}

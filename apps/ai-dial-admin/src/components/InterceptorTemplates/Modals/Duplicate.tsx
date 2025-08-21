@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { ButtonsI18nKey, CreateI18nKey, DuplicateI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, DuplicateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { PopUpState } from '@/src/types/pop-up';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { FieldError } from '@/src/models/error';
@@ -47,9 +47,9 @@ const DuplicateScheme: FC<Props> = ({ onDuplicate, modalState, onClose, template
     >
       <div className="flex flex-col px-6 py-4">
         <TextInputField
-          fieldTitle={t(CreateI18nKey.IdTitle)}
           elementId="name"
-          placeholder={t(CreateI18nKey.IdPlaceholder)}
+          placeholder={t(EntityPlaceholdersI18nKey.Id)}
+          fieldTitle={t(EntityFieldsI18nKey.id)}
           value={clonedTemplate.name}
           onChange={onChangeName}
           errorText={nameError?.text}

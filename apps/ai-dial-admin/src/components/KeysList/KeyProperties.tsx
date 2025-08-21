@@ -7,7 +7,7 @@ import ValidityPeriodInput from '@/src/components/Common/ValidityPeriodInput/Val
 import { FieldError } from '@/src/models/error';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
 import { getErrorForName } from '@/src/utils/validation/name-error';
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import KeyGenerateField from './KeyGenerateField';
@@ -85,8 +85,8 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
       {!isKeyImmutable && (
         <TextInputField
           elementId="name"
-          fieldTitle={t(CreateI18nKey.IdTitle)}
-          placeholder={t(CreateI18nKey.IdPlaceholder)}
+          placeholder={t(EntityPlaceholdersI18nKey.Id)}
+          fieldTitle={t(EntityFieldsI18nKey.id)}
           value={entity.name}
           errorText={nameError?.text}
           invalid={!!nameError}
@@ -95,8 +95,8 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
       )}
       <TextAreaField
         elementId="description"
-        fieldTitle={t(CreateI18nKey.DescriptionTitle)}
-        placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
+        fieldTitle={t(EntityFieldsI18nKey.description)}
+        placeholder={t(EntityPlaceholdersI18nKey.Description)}
         optional={true}
         value={entity.description}
         errorText={descriptionError?.text}
@@ -105,16 +105,16 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
       />
       <TextInputField
         elementId="project"
-        fieldTitle={t(CreateI18nKey.ProjectTitle)}
-        placeholder={t(CreateI18nKey.ProjectPlaceholder)}
+        fieldTitle={t(EntityFieldsI18nKey.project)}
+        placeholder={t(EntityPlaceholdersI18nKey.Project)}
         value={entity.project}
         onChange={onChangeProject}
       />
       {isKeyImmutable && (
         <TextInputField
           elementId="projectContact"
-          fieldTitle={t(CreateI18nKey.ProjectContactPointTitle)}
-          placeholder={t(CreateI18nKey.ProjectContactPointPlaceholder)}
+          fieldTitle={t(EntityFieldsI18nKey.projectContactPoint)}
+          placeholder={t(EntityPlaceholdersI18nKey.ContactPoint)}
           value={entity.projectContactPoint}
           onChange={onChangeProjectContactPoint}
         />
@@ -124,7 +124,7 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
       {isKeyImmutable && (
         <Switch
           isOn={entity.secured}
-          title={t(CreateI18nKey.SecuredTitle)}
+          title={t(EntityFieldsI18nKey.secured)}
           switchId="secured"
           onChange={onChangeSecured}
         />

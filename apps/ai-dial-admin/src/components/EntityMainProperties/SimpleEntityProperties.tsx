@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import { CreateI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialRoute } from '@/src/models/dial/route';
@@ -33,13 +33,13 @@ const SimpleEntityProperties: FC<Props> = ({
   const t = useI18n() as (t: string) => string;
   const idTitleKey =
     view === ApplicationRoute.Prompts || view === ApplicationRoute.Files
-      ? CreateI18nKey.DisplayNameTitle
-      : CreateI18nKey.IdTitle;
+      ? EntityFieldsI18nKey.displayName
+      : EntityFieldsI18nKey.id;
 
   const idPlaceholderKey =
     view === ApplicationRoute.Prompts || view === ApplicationRoute.Files
-      ? CreateI18nKey.DisplayNamePlaceholder
-      : CreateI18nKey.IdPlaceholder;
+      ? EntityPlaceholdersI18nKey.DisplayName
+      : EntityPlaceholdersI18nKey.Id;
 
   const [nameError, setNameError] = useState<FieldError | null>(null);
   const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
@@ -73,7 +73,7 @@ const SimpleEntityProperties: FC<Props> = ({
 
   useEffect(() => {
     if (versionsMap) {
-      setVersionError(isValidVersion ? void 0 : t(CreateI18nKey.NameVersionCombinationError));
+      setVersionError(isValidVersion ? void 0 : t(ErrorI18nKey.NameVersionCombination));
     }
   }, [t, versionsMap, isValidVersion]);
 
@@ -109,8 +109,8 @@ const SimpleEntityProperties: FC<Props> = ({
       {versionsMap && (
         <TextInputField
           elementId="version"
-          fieldTitle={t(CreateI18nKey.VersionTitle)}
-          placeholder={t(CreateI18nKey.VersionPlaceholder)}
+          fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
+          placeholder={t(EntityPlaceholdersI18nKey.Version)}
           disabled={isEntityImmutable}
           errorText={versionError}
           invalid={!isValidVersion}
@@ -120,8 +120,8 @@ const SimpleEntityProperties: FC<Props> = ({
       )}
       <TextAreaField
         elementId="description"
-        fieldTitle={t(CreateI18nKey.DescriptionTitle)}
-        placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
+        fieldTitle={t(EntityFieldsI18nKey.description)}
+        placeholder={t(EntityPlaceholdersI18nKey.Description)}
         optional={true}
         value={entity.description}
         errorText={descriptionError?.text}
@@ -133,8 +133,8 @@ const SimpleEntityProperties: FC<Props> = ({
       {view === ApplicationRoute.Routes && (
         <TextInputField
           elementId="path"
-          placeholder={t(RoutesI18nKey.PathPlaceholder)}
-          fieldTitle={t(RoutesI18nKey.PathTitle)}
+          placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
+          fieldTitle={t(EntityFieldsI18nKey.paths)}
           value={(entity as DialRoute).paths?.[0]}
           errorText={pathError?.text}
           invalid={!!pathError}

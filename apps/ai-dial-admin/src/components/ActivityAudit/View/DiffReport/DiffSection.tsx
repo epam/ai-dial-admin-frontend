@@ -4,8 +4,7 @@ import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { filterNotEmptySections, getDiffCount } from '@/src/components/ActivityAudit/View/DiffReport/utils';
-import { ParameterNamesI18nKey } from '@/src/components/ActivityAudit/constants';
-import { BasicI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { ActivityAuditDiffSection } from '@/src/models/dial/activity-audit';
@@ -45,7 +44,7 @@ const DiffSection: FC<Props> = ({ sections, name, type, diffView, compareView })
           <i className="text-icon-secondary">
             {isCollapsed ? <IconChevronRight {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
           </i>
-          <h3 className="mx-2">{t(ParameterNamesI18nKey[name as keyof typeof ParameterNamesI18nKey])}</h3>
+          <h3 className="mx-2">{t(EntityFieldsI18nKey[name as keyof typeof EntityFieldsI18nKey])}</h3>
         </div>
         <DiffLegend added={added} changed={changed} removed={removed} />
       </button>

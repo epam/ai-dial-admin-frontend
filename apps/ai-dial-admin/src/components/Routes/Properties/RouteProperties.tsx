@@ -4,7 +4,7 @@ import RadioField from '@/src/components/Common/RadioField/RadioField';
 import Switch from '@/src/components/Common/Switch/Switch';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 import MaxRetryAttempts from '@/src/components/MaxRetryAttempts/MaxRetryAttempts';
-import { CreateI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRoute, RouteOutput } from '@/src/models/dial/route';
 import { RadioButtonModel } from '@/src/models/radio-button';
@@ -24,7 +24,7 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
   const t = useI18n();
 
   const outputRadio: RadioButtonModel[] = [
-    { id: RouteOutput.UPSTREAMS, name: t(RoutesI18nKey.Upstreams) },
+    { id: RouteOutput.UPSTREAMS, name: t(EntityFieldsI18nKey.upstreams) },
     { id: RouteOutput.RESPONSE, name: t(RoutesI18nKey.Response) },
   ];
 
@@ -108,16 +108,16 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
         {isAppRoute ? (
           <TextInputField
             elementId="name"
-            fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
-            placeholder={t(CreateI18nKey.DisplayNamePlaceholder)}
+            fieldTitle={t(EntityFieldsI18nKey.displayName)}
+            placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
             value={route.name}
             onChange={onChangeName}
           />
         ) : (
           <TextAreaField
             elementId="description"
-            fieldTitle={t(CreateI18nKey.DescriptionTitle)}
-            placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
+            fieldTitle={t(EntityFieldsI18nKey.description)}
+            placeholder={t(EntityPlaceholdersI18nKey.Description)}
             optional={true}
             value={route.description}
             onChange={onChangeDescription}
@@ -136,8 +136,8 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
           elementId="methods"
           selectedItems={route.methods}
           onChangeItems={onChangeMethods}
-          heading={t(RoutesI18nKey.MethodsTitle)}
-          title={t(RoutesI18nKey.MethodsTitle)}
+          heading={t(EntityFieldsI18nKey.methods)}
+          title={t(EntityFieldsI18nKey.methods)}
           allItems={methods}
         />
 
@@ -156,8 +156,8 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
             <div className="mr-2">
               <NumberInputField
                 elementId="status"
-                fieldTitle={t(RoutesI18nKey.StatusTitle)}
-                placeholder={t(RoutesI18nKey.StatusPlaceholder)}
+                fieldTitle={t(EntityFieldsI18nKey.status)}
+                placeholder={t(EntityPlaceholdersI18nKey.Status)}
                 value={route.response.status}
                 onChange={onChangeStatus}
                 errorText={statusError}
@@ -167,8 +167,8 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
             <div className="flex-1">
               <TextInputField
                 elementId="body"
-                fieldTitle={t(RoutesI18nKey.BodyTitle)}
-                placeholder={t(RoutesI18nKey.BodyPlaceholder)}
+                fieldTitle={t(EntityFieldsI18nKey.body)}
+                placeholder={t(EntityPlaceholdersI18nKey.Body)}
                 value={route.response.body}
                 onChange={onChangeBody}
               />
@@ -185,8 +185,8 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
         <div className="lg:w-[35%]">
           <NumberInputField
             elementId="order"
-            fieldTitle={t(RoutesI18nKey.Order)}
-            placeholder={t(RoutesI18nKey.OrderPlaceholder)}
+            fieldTitle={t(EntityFieldsI18nKey.order)}
+            placeholder={t(EntityPlaceholdersI18nKey.Order)}
             value={route.order}
             min={0}
             onChange={(order) => {

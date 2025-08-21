@@ -3,7 +3,7 @@ import { FC, useCallback, useState } from 'react';
 import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 import ValidityPeriodInput from '@/src/components/Common/ValidityPeriodInput/ValidityPeriodInput';
-import { ButtonsI18nKey, KeysI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey, KeysI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { PopUpState } from '@/src/types/pop-up';
@@ -38,7 +38,7 @@ export const KeyRotateModal: FC<Props> = ({ modalState, selectedKey, keys, onCon
   return (
     <Popup
       dataTestId="keyRotateModal"
-      heading={t(KeysI18nKey.RotateKeyTitle)}
+      heading={t(EntityFieldsI18nKey.keyValue)}
       portalId="KeyRotateModal"
       state={modalState}
       dividers={true}

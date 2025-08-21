@@ -4,7 +4,7 @@ import { render, screen } from '@testing-library/react';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 
 import ExtendedProperties from '../ExtendedProperties';
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, EntityFieldsI18nKey, FeaturesI18nKey } from '@/src/constants/i18n';
 
 describe('Interceptor Template ExtendedProperties', () => {
   test('Should render BaseProperties and SourceField with External Endpoints', () => {
@@ -19,9 +19,9 @@ describe('Interceptor Template ExtendedProperties', () => {
 
     render(<ExtendedProperties template={template} onChange={onChangeMock} />);
 
-    expect(screen.getByRole('textbox', { name: CreateI18nKey.DisplayNameTitle })).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'CreateEntity.description.title (Optional)' })).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'CreateEntity.completionEndpoint.title' })).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'CreateEntity.configurationEndpoint.title' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: EntityFieldsI18nKey.displayName })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.description} (Optional)` })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: EntityFieldsI18nKey.completionEndpoint })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: FeaturesI18nKey.configurationEndpoint })).toBeInTheDocument();
   });
 });

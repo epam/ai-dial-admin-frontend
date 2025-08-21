@@ -7,7 +7,7 @@ import { uniq } from 'lodash';
 import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/AutocompleteField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import { CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
@@ -114,8 +114,8 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
       {!isEntityImmutable && (
         <TextInputField
           elementId="name"
-          fieldTitle={t(CreateI18nKey.IdTitle)}
-          placeholder={t(CreateI18nKey.IdPlaceholder)}
+          placeholder={t(EntityPlaceholdersI18nKey.Id)}
+          fieldTitle={t(EntityFieldsI18nKey.id)}
           value={entity.name}
           errorText={nameError?.text}
           invalid={!!nameError}
@@ -125,8 +125,8 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
 
       <AutocompleteField
         elementId="displayName"
-        fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
-        placeholder={t(CreateI18nKey.DisplayNamePlaceholder)}
+        fieldTitle={t(EntityFieldsI18nKey.displayName)}
+        placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
         value={entity.displayName}
         errorText={displayNameError?.text}
         onChange={onChangeDisplayName}
@@ -136,8 +136,8 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
 
       <TextAreaField
         elementId="description"
-        fieldTitle={t(CreateI18nKey.DescriptionTitle)}
-        placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
+        fieldTitle={t(EntityFieldsI18nKey.description)}
+        placeholder={t(EntityPlaceholdersI18nKey.Description)}
         optional={true}
         value={entity.description}
         errorText={descriptionError?.text}
@@ -148,8 +148,8 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
 
       <TextInputField
         elementId="endpoint"
-        placeholder={t(EntitiesI18nKey.EndpointPlaceholder)}
-        fieldTitle={t(EntitiesI18nKey.EndpointBase)}
+        placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+        fieldTitle={t(EntityFieldsI18nKey.baseEndpoint)}
         value={entity.baseEndpoint}
         onChange={onChangeEndpoint}
         errorText={baseEndpointError?.text}

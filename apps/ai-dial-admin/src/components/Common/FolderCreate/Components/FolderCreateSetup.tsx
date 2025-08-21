@@ -9,7 +9,7 @@ import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import LoadFileAreaField from '@/src/components/Common/LoadFileArea/LoadFileAreaField';
 import RadioButton from '@/src/components/Common/RadioButton/RadioButton';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
-import { CreateI18nKey, FoldersI18nKey, ImportI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, FoldersI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_ZIP_TYPE } from '@/src/constants/request-headers';
 import { useI18n } from '@/src/locales/client';
 import { RadioButtonModel } from '@/src/models/radio-button';
@@ -108,7 +108,7 @@ const FolderCreateSetup: FC<Props> = ({
     <>
       <div className="w-[50%]">
         <TextInputField
-          fieldTitle={t(CreateI18nKey.NameTitle)}
+          fieldTitle={t(EntityFieldsI18nKey.name)}
           elementId="name"
           placeholder={t(FoldersI18nKey.FolderCreatePlaceholder)}
           value={folderName}

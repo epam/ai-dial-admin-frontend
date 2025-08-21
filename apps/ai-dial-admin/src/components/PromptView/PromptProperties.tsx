@@ -14,7 +14,14 @@ import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
 import MdEditor from '@/src/components/Common/MdEditor/MdEditor';
 import Switch from '@/src/components/Common/Switch/Switch';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import { BasicI18nKey, ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
+import {
+  BasicI18nKey,
+  ButtonsI18nKey,
+  EntityFieldsI18nKey,
+  EntityPlaceholdersI18nKey,
+  FoldersI18nKey,
+  PromptsI18nKey,
+} from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
@@ -166,18 +173,21 @@ const PromptProperties: FC<Props> = ({
         {/* will be uncommented after BE implement author */}
         {publication ? (
           <>
-            <LabeledText label={t(CreateI18nKey.DisplayNameTitle)} text={prompt.name} copyButton={true} />
+            <LabeledText label={t(EntityFieldsI18nKey.displayName)} text={prompt.name} copyButton={true} />
             {/* <LabeledText label="Author" text={publication.author} /> */}
             <LabeledText
-              label={t(EntitiesI18nKey.CreatedAt)}
+              label={t(EntityFieldsI18nKey.createdAt)}
               text={formatDateTimeToLocalString(publication.createdAt)}
             />
           </>
         ) : (
           <>
-            <LabeledText label={t(CreateI18nKey.DisplayNameTitle)} text={prompt.name} copyButton={true} />
+            <LabeledText label={t(EntityFieldsI18nKey.displayName)} text={prompt.name} copyButton={true} />
             {/* <LabeledText label="Author" text={prompt.author} /> */}
-            <LabeledText label={t(EntitiesI18nKey.UpdatedAt)} text={formatDateTimeToLocalString(prompt.updateTime)} />
+            <LabeledText
+              label={t(EntityFieldsI18nKey.updatedAt)}
+              text={formatDateTimeToLocalString(prompt.updateTime)}
+            />
           </>
         )}
       </div>
@@ -188,7 +198,7 @@ const PromptProperties: FC<Props> = ({
             {isImmutable ? (
               <TextInputField
                 elementId="version"
-                fieldTitle={t(CreateI18nKey.VersionTitle)}
+                fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
                 value={prompt.version}
                 disabled={isImmutable}
               />
@@ -198,7 +208,7 @@ const PromptProperties: FC<Props> = ({
                 selectedValue={prompt.version}
                 elementId="version"
                 items={[...new Set([...versions, ...addedVersions])].map((v) => ({ id: v, name: v }))}
-                fieldTitle={t(CreateI18nKey.VersionTitle)}
+                fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
                 onChange={onChangeVersion}
               >
                 <Button
@@ -213,8 +223,8 @@ const PromptProperties: FC<Props> = ({
           <TextAreaField
             elementId="description"
             elementCssClass="lg:w-[35%]"
-            fieldTitle={t(CreateI18nKey.DescriptionTitle)}
-            placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
+            fieldTitle={t(EntityFieldsI18nKey.description)}
+            placeholder={t(EntityPlaceholdersI18nKey.Description)}
             optional={true}
             disabled={isImmutable}
             value={prompt.description}
@@ -224,7 +234,7 @@ const PromptProperties: FC<Props> = ({
           />
           <div>
             <div className="flex justify-between mb-2">
-              <div className="tiny mb-2 text-secondary">{t(CreateI18nKey.ContentTitle)}</div>
+              <div className="tiny mb-2 text-secondary">{t(EntityFieldsI18nKey.content)}</div>
               <Switch
                 isOn={isJSONContentMode}
                 title="JSON"
@@ -244,16 +254,16 @@ const PromptProperties: FC<Props> = ({
             {isImmutable ? (
               <TextInputField
                 elementId="version"
-                fieldTitle={t(CreateI18nKey.StoragePathTitle)}
+                fieldTitle={t(FoldersI18nKey.Storage)}
                 value={prompt.path}
                 disabled={isImmutable}
               />
             ) : (
               <FilePath
                 value={prompt.folderId}
-                label={t(CreateI18nKey.StoragePathTitle)}
+                label={t(FoldersI18nKey.Storage)}
                 modalTitle={t(BasicI18nKey.MoveToFolder)}
-                placeholder={t(CreateI18nKey.StoragePathPlaceholder)}
+                placeholder={t(EntityPlaceholdersI18nKey.Path)}
                 onChange={onChangePath}
                 context={usePromptFolder}
               />

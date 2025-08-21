@@ -1,7 +1,7 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { CreateI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, FeaturesI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -145,8 +145,8 @@ const Containers: FC<Props> = ({ entity, onChange, getContainers, fieldId }) => 
           <TextInputField
             textBeforeInput={selectedContainer?.url}
             elementId="completionEndpoint"
-            fieldTitle={t(CreateI18nKey.CompletionEndpointTitle)}
-            placeholder={t(CreateI18nKey.CompletionEndpointPlaceholder)}
+            fieldTitle={t(EntityFieldsI18nKey.completionEndpoint)}
+            placeholder={t(EntityPlaceholdersI18nKey.CompletionEndpoint)}
             value={entity.source.completionEndpointPath}
             errorText={completionEndpointError?.text}
             invalid={!!completionEndpointError}
@@ -160,8 +160,8 @@ const Containers: FC<Props> = ({ entity, onChange, getContainers, fieldId }) => 
           <TextInputField
             textBeforeInput={selectedContainer?.url}
             elementId="configurationEndpoint"
-            fieldTitle={t(CreateI18nKey.ConfigurationEndpointTitle)}
-            placeholder={t(CreateI18nKey.ConfigurationEndpointPlaceholder)}
+            fieldTitle={t(FeaturesI18nKey.configurationEndpoint)}
+            placeholder={t(EntityPlaceholdersI18nKey.ConfigurationEndpoint)}
             value={entity.source.configurationEndpointPath}
             errorText={configurationEndpointError?.text}
             invalid={!!configurationEndpointError}

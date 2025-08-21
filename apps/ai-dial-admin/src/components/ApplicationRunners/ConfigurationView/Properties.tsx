@@ -2,7 +2,7 @@ import { FC, useCallback, useState } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { FieldError } from '@/src/models/error';
@@ -53,8 +53,8 @@ const SchemeProperties: FC<Props> = ({ runner, isImmutable, onChangeRunner }) =>
       {!isImmutable && (
         <TextInputField
           elementId="id"
-          fieldTitle={t(CreateI18nKey.IdTitle)}
-          placeholder={t(CreateI18nKey.IdPlaceholder)}
+          placeholder={t(EntityPlaceholdersI18nKey.Id)}
+          fieldTitle={t(EntityFieldsI18nKey.id)}
           value={runner.$id}
           errorText={idError?.text}
           invalid={!!idError}
@@ -64,16 +64,16 @@ const SchemeProperties: FC<Props> = ({ runner, isImmutable, onChangeRunner }) =>
 
       <TextInputField
         elementId="name"
-        fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
-        placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
+        fieldTitle={t(EntityFieldsI18nKey.displayName)}
+        placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
         value={runner['dial:applicationTypeDisplayName']}
         onChange={onChangeName}
       />
 
       <TextAreaField
         elementId="description"
-        fieldTitle={t(CreateI18nKey.DescriptionTitle)}
-        placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
+        fieldTitle={t(EntityFieldsI18nKey.description)}
+        placeholder={t(EntityPlaceholdersI18nKey.Description)}
         optional={true}
         errorText={descriptionError?.text}
         invalid={!!descriptionError}

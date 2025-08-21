@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useMemo } from 'react';
 
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, FeaturesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { getUrlError } from '@/src/utils/validation/url-error';
@@ -54,8 +54,8 @@ const Endpoints: FC<Props> = ({ entity, onChange }) => {
     <div className="lg:w-[35%] flex flex-col gap-6">
       <TextInputField
         elementId="completionEndpoint"
-        fieldTitle={t(CreateI18nKey.CompletionEndpointTitle)}
-        placeholder={t(CreateI18nKey.CompletionEndpointPlaceholder)}
+        fieldTitle={t(EntityFieldsI18nKey.completionEndpoint)}
+        placeholder={t(EntityPlaceholdersI18nKey.CompletionEndpoint)}
         value={entity.endpoint}
         errorText={completionEndpointError?.text}
         invalid={!!completionEndpointError}
@@ -63,8 +63,8 @@ const Endpoints: FC<Props> = ({ entity, onChange }) => {
       />
       <TextInputField
         elementId="configurationEndpoint"
-        fieldTitle={t(CreateI18nKey.ConfigurationEndpointTitle)}
-        placeholder={t(CreateI18nKey.ConfigurationEndpointPlaceholder)}
+        fieldTitle={t(FeaturesI18nKey.configurationEndpoint)}
+        placeholder={t(EntityPlaceholdersI18nKey.ConfigurationEndpoint)}
         value={entity.configurationEndpoint}
         errorText={configurationEndpointError?.text}
         invalid={!!configurationEndpointError}
