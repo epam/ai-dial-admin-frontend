@@ -22,7 +22,7 @@ const ResetFiltersButton: FC<Props> = ({ gridApi }) => {
 
     const checkFilters = () => {
       const model = gridApi.getFilterModel();
-      setFiltersActive(Object.keys(model).length > 0);
+      setFiltersActive(Object.keys(model ?? {}).length > 0);
     };
 
     checkFilters();

@@ -88,6 +88,17 @@ export const getLineChartData = (data: TelemetryData): Record<string, string>[] 
   );
 };
 
+export const getTracesListingData = (data: TelemetryData): Record<string, string>[] => {
+  return (
+    data.data?.map((row) => {
+      return (row as string[]).reduce((acc: Record<string, string>, value, index) => {
+        acc[data.headers[index]] = value;
+        return acc;
+      }, {});
+    }) || []
+  );
+};
+
 export const getDefaultFilterValue = (
   type: FILTER_TYPE,
   entities: DropdownItemsModel[],

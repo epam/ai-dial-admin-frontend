@@ -142,6 +142,37 @@ export const SYSTEM_USAGE_QUERY: TelemetryQuery = {
   },
 };
 
+export const TRACES_QUERY: TelemetryQuery = {
+  $type: 'json',
+  query: {
+    expressions: [
+      '_time as completion_time',
+      'model',
+      'deployment',
+      'parent_deployment',
+      'execution_path',
+      'trace_id',
+      'core_span_id',
+      'core_parent_span_id',
+      'project_id',
+      'language',
+      'upstream',
+      'topic',
+      'title as user_title',
+      'response_id',
+      'user_hash',
+      'deployment_price',
+      'price',
+      'number_request_messages',
+      'chat_id',
+      'prompt_tokens',
+      'completion_tokens',
+      //'cached_prompt_tokens',
+    ],
+    from: 'analytics',
+  },
+};
+
 export const TELEMETRY_GRID_HEADERS_MAP: Record<string, string> = {
   deployment: 'name',
   project_id: 'name',
