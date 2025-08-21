@@ -86,7 +86,7 @@ const UsageLog: FC<Props> = ({ route }) => {
         </div>
       </div>
       <div className="flex flex-1 rounded overflow-auto my-3 min-h-0 border border-primary">
-        <>{activeTab === EntityViewTab.Traces && <Traces route={route} getData={getData} />}</>
+        {activeTab === EntityViewTab.Traces && <Traces route={route} getData={getData} />}
       </div>
     </div>
   );

@@ -26,14 +26,14 @@ export const formatAttachment = (value: string, t: (stringToTranslate: string) =
 export const priceValueFormatter = (params: ValueFormatterParams) => {
   let price = null;
   try {
-    price = new Big(params.data[params?.colDef?.field as string]);
+    price = new Big(params.data[params?.colDef?.field as string]).toString();
   } catch (e) {
     if (e) {
       price = '';
     }
   }
 
-  return `$${price}`;
+  return price;
 };
 
 export const numberValueFormatter = (params: ValueFormatterParams) => {

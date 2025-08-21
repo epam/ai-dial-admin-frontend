@@ -66,18 +66,18 @@ describe('Formatters :: priceValueFormatter', () => {
   });
   test('formats number from params.data using colDef.field', () => {
     const params = {
-      data: { amount: 12345 },
-      colDef: { field: 'amount' },
+      data: { price: 12345 },
+      colDef: { field: 'price' },
     } as any;
-    expect(priceValueFormatter(params)).toBe('$12345');
+    expect(priceValueFormatter(params)).toBe('12345');
   });
 
   test('returns empty string if params.data is missing', () => {
     const params = {
       data: undefined,
-      colDef: { field: 'amount' },
+      colDef: { field: 'price' },
     } as any;
-    expect(priceValueFormatter(params)).toBe('$');
+    expect(priceValueFormatter(params)).toBe('');
   });
 
   test('returns empty string if colDef.field is missing', () => {
@@ -85,6 +85,6 @@ describe('Formatters :: priceValueFormatter', () => {
       data: { amount: 12345 },
       colDef: {},
     } as any;
-    expect(priceValueFormatter(params)).toBe('$');
+    expect(priceValueFormatter(params)).toBe('');
   });
 });

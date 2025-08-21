@@ -37,6 +37,18 @@ const dateTimeColumn: Partial<ColDef> = {
   tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
 };
 
+const numericColumn: Partial<ColDef> = {
+  cellClass: 'align-right',
+  headerClass: 'align-right',
+  comparator: numberValueComparator,
+  valueFormatter: (params) => numberValueFormatter(params),
+};
+
+const priceColumn: Partial<ColDef> = {
+  ...numericColumn,
+  valueFormatter: (params) => `$${priceValueFormatter(params)}`,
+};
+
 const CREATED_AT_COLUMN: ColDef = {
   field: 'createdAt',
   headerName: 'Creation time',
@@ -335,52 +347,34 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
     field: 'cached_prompt_tokens',
     headerName: 'Cached Prompt Tokens',
     hide: true,
-    cellClass: 'align-right',
-    headerClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
+    ...numericColumn,
   },
   {
     field: 'prompt_tokens',
     headerName: 'Prompt Tokens',
-    cellClass: 'align-right',
-    headerClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
+    ...numericColumn,
   },
   {
     field: 'completion_tokens',
     headerName: 'Completion Tokens',
-    cellClass: 'align-right',
-    headerClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
+    ...numericColumn,
   },
   {
     field: 'deployment_price',
     headerName: 'Deployment Price',
     hide: true,
-    cellClass: 'align-right',
-    headerClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
+    ...numericColumn,
   },
   {
     field: 'number_request_messages',
     headerName: 'Number of Request Messages',
     hide: true,
-    cellClass: 'align-right',
-    headerClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
+    ...numericColumn,
   },
   {
     field: 'price',
     headerName: 'Total Price',
-    cellClass: 'align-right',
-    headerClass: 'align-right',
-    comparator: numberValueComparator,
-    valueFormatter: (params) => priceValueFormatter(params),
+    ...priceColumn,
   },
   { field: 'deployment', headerName: 'Deployment ID' },
   { field: 'parent_deployment', headerName: 'Parent Deployment ID', hide: true },

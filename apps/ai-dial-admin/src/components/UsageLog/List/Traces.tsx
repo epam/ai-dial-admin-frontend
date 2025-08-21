@@ -95,7 +95,6 @@ const Traces: FC<Props> = ({ route, getData }) => {
     >
       <div className="flex gap-4">
         <ResetFiltersButton gridApi={gridApi} />
-        <div id="test">{data?.length}</div>
         {!!data?.length && (
           <Button
             cssClass="tertiary"
