@@ -5,18 +5,29 @@ import userEvent from '@testing-library/user-event';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 
-import Traces from '@/src/components/UsageLog/List/Traces';
+import List from '@/src/components/UsageLog/List/List';
+import { TRACES_QUERY } from '@/src/constants/telemetry';
+import { USAGE_LOG_TRACES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
-describe('Traces', () => {
+describe('List', () => {
   const user = userEvent.setup();
 
-  test('should render Traces component correctly', async () => {
+  test('should render List component correctly', async () => {
     const getData = vi.fn().mockReturnValue({
       success: true,
       response: { data: [['2025-08-11T00:10:05.654Z']], headers: ['completion_time'] },
     });
 
-    render(<Traces route={ApplicationRoute.UsageLog} getData={getData} />);
+    render(
+      <List
+        route={ApplicationRoute.UsageLog}
+        getData={getData}
+        query={TRACES_QUERY}
+        columnDefs={USAGE_LOG_TRACES_COLUMNS}
+        title={TelemetryI18nKey.TracesTitle}
+        emptyDataTitle={TelemetryI18nKey.NoTracesTitle}
+      />,
+    );
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: TelemetryI18nKey.TracesTitle })).toBeInTheDocument();
@@ -26,13 +37,22 @@ describe('Traces', () => {
     });
   });
 
-  test('show ColumnPanel when Columns button is clicked', async () => {
+  test('should show ColumnPanel when Columns button is clicked', async () => {
     const getData = vi.fn().mockReturnValue({
       success: true,
       response: { data: [['2025-08-11T00:10:05.654Z']], headers: ['completion_time'] },
     });
 
-    render(<Traces route={ApplicationRoute.UsageLog} getData={getData} />);
+    render(
+      <List
+        route={ApplicationRoute.UsageLog}
+        getData={getData}
+        query={TRACES_QUERY}
+        columnDefs={USAGE_LOG_TRACES_COLUMNS}
+        title={TelemetryI18nKey.TracesTitle}
+        emptyDataTitle={TelemetryI18nKey.NoTracesTitle}
+      />,
+    );
 
     await waitFor(() => {
       user.click(screen.getByRole('button', { name: ButtonsI18nKey.Columns }));

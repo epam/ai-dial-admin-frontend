@@ -94,7 +94,7 @@ const SourceEntitySelector: FC<Props> = ({
   }, [selectedValue, dropdownItems]);
 
   return isEntityImmutable ? (
-    <div className={classNames('flex flex-row gap-4 items-start', 'w-full')}>
+    <div className={classNames('flex flex-row gap-2 items-start', 'w-full')}>
       <div className={classNames('flex flex-col', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
         <Field fieldTitle={fieldTitle} htmlFor="sourceEntity" />
         <InputModal

@@ -155,6 +155,7 @@ export default {
     ModelDisplayName: 'Model display name',
     ApplicationDisplayName: 'Application display name',
     InterceptorName: 'Interceptor Name',
+    ChangeIcon: 'Change icon',
   },
   DeleteEntity: {
     Title: 'Confirm Deleting ',
@@ -343,6 +344,7 @@ export default {
     Dependencies: 'Dependencies',
     Routes: 'App Routes',
     Traces: 'Traces',
+    Conversations: 'Conversations',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',
@@ -381,11 +383,6 @@ export default {
   Interceptors: {
     Add: 'Add Interceptors',
   },
-  FileUpload: {
-    ModalHeader: 'Icon',
-    MenuChangeItem: 'Change icon',
-    MenuDeleteItem: 'Delete',
-  },
   Telemetry: {
     SystemUsage: 'System Usage',
     EntitiesConsumption: 'Entities Consumption',
@@ -418,6 +415,8 @@ export default {
     UsageLog: {
       TracesTitle: 'Traces',
       NoTracesTitle: 'No Traces',
+      ConversationsTitle: 'Conversations',
+      NoConversationsTitle: 'No Conversations',
     },
   },
   Routes: {
@@ -651,8 +650,7 @@ export default {
     description: 'Description',
     author: 'Maintainer',
     displayVersion: 'Version',
-    iconUrl: 'Icon URL',
-    icon: 'Icon',
+    iconUrl: 'Icon',
     forwardAuthToken: 'Forward auth token',
     features: 'Features',
     inputAttachmentTypes: 'Input attachment types',
@@ -701,6 +699,7 @@ export default {
     viewerUrl: 'Viewer URL',
     editorUrl: 'Editor URL',
     applicationTypeConfigurationEndpoint: 'Configuration endpoint',
+    applicationTypeIconUrl: 'Icon',
     applicationTypeRateEndpoint: 'Rate endpoint',
     applicationTypeTokenizeEndpoint: 'Tokenize endpoint',
     applicationTypeTruncatePromptEndpoint: 'Truncate prompt endpoint',

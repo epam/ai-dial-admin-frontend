@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import DuplicateAdapter from '@/src/components/Adapter/Modals/DuplicateAdapter';
-import DuplicateScheme from '@/src/components/ApplicationRunners/ListView/Duplicate/DuplicateAppRunner';
+import DuplicateScheme from '@/src/components/ApplicationRunners/Modals/DuplicateAppRunner';
 import DuplicateEntityPopup from '@/src/components/DuplicateEntityPopup/DuplicateEntityPopup';
 import DuplicateKey from '@/src/components/KeysList/Popup/DuplicateKey';
 import ListView from '@/src/components/ListView/ListView';

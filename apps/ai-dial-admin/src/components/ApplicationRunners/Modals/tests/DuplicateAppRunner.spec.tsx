@@ -2,7 +2,7 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { PopUpState } from '@/src/types/pop-up';
 import { render } from '@testing-library/react';
 import { fireEvent } from '@testing-library/dom';
-import DuplicateScheme from './DuplicateAppRunner';
+import DuplicateScheme from '@/src/components/ApplicationRunners/Modals/DuplicateAppRunner';
 import { describe, expect, test, vi } from 'vitest';
 
 describe('Components :: DuplicateScheme', () => {

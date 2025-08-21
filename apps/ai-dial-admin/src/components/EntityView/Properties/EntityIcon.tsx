@@ -6,35 +6,24 @@ import FilledIcon from '@/src/components/Common/IconFile/FilledIcon';
 import IconGalleryModal from '@/src/components/IconGallery/IconGalleryModal';
 import InputModal from '@/src/components/Common/InputModal/InputModal';
 import { PopUpState } from '@/src/types/pop-up';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { useAppContext } from '@/src/context/AppContext';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
   fieldTitle: string;
-  entity: DialBaseEntity;
+  iconUrl?: string;
   elementId: string;
   readonly?: boolean;
-  onChangeEntity?: (entity: DialBaseEntity) => void;
+  onChange?: (iconUrl: string) => void;
 }
 
-const EntityIcon: FC<Props> = ({ fieldTitle, elementId, entity, readonly, onChangeEntity }) => {
+const EntityIcon: FC<Props> = ({ fieldTitle, elementId, iconUrl, readonly, onChange }) => {
   const t = useI18n();
   const { themeUrl } = useAppContext();
-  const value = entity.iconUrl
-    ? entity.iconUrl.startsWith('https://')
-      ? entity.iconUrl
-      : `${themeUrl}/${entity.iconUrl}`
-    : '';
-  const [modalState, setIsModalState] = useState(PopUpState.Closed);
+  const value = iconUrl ? (iconUrl.startsWith('https://') ? iconUrl : `${themeUrl}/${iconUrl}`) : '';
 
-  const onChangeIcon = useCallback(
-    (url: string) => {
-      onChangeEntity?.({ ...entity, iconUrl: url });
-    },
-    [entity, onChangeEntity],
-  );
+  const [modalState, setIsModalState] = useState(PopUpState.Closed);
 
   const onCloseModal = useCallback(() => {
     setIsModalState(PopUpState.Closed);
@@ -56,12 +45,12 @@ const EntityIcon: FC<Props> = ({ fieldTitle, elementId, entity, readonly, onChan
               modalState={modalState}
               selectedValue={value}
               onClose={onCloseModal}
-              onChange={onChangeIcon}
+              onChange={(url) => onChange?.(url)}
             />
           </InputModal>
         )
       ) : (
-        <FilledIcon fileUrl={value} onChange={onChangeIcon} readonly={readonly} />
+        <FilledIcon fileUrl={value} onChange={(url) => onChange?.(url)} readonly={readonly} />
       )}
     </div>
   );

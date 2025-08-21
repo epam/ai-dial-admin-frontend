@@ -362,7 +362,7 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
     field: 'deployment_price',
     headerName: 'Deployment Price',
     hide: true,
-    ...numericColumn,
+    ...priceColumn,
   },
   {
     field: 'number_request_messages',
@@ -387,6 +387,59 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
   { field: 'duration', headerName: 'Duration', hide: true },
   { field: 'response_id', headerName: 'Response ID', hide: true },
   { field: 'chat_id', headerName: 'Conversation ID', hide: true },
+  { field: 'core_span_id', headerName: 'Core span ID', hide: true },
+  { field: 'core_parent_span_id', headerName: 'Core parent span ID' },
+];
+
+export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
+  { field: 'completion_time', headerName: 'Last activity', ...dateTimeColumn },
+  { field: 'chat_id', headerName: 'Conversation ID' },
+  { field: 'topic', headerName: 'Topic' },
+  {
+    field: 'cached_prompt_tokens',
+    headerName: 'Cached Prompt Tokens',
+    hide: true,
+    ...numericColumn,
+  },
+  {
+    field: 'prompt_tokens',
+    headerName: 'Prompt Tokens',
+    ...numericColumn,
+  },
+  {
+    field: 'completion_tokens',
+    headerName: 'Completion Tokens',
+    ...numericColumn,
+  },
+  {
+    field: 'deployment_price',
+    headerName: 'Deployment Price',
+    hide: true,
+    ...priceColumn,
+  },
+  {
+    field: 'price',
+    headerName: 'Total Price',
+    ...priceColumn,
+  },
+  {
+    field: 'number_request_messages',
+    headerName: 'Number of Request Messages',
+    hide: true,
+    ...numericColumn,
+  },
+
+  { field: 'deployment', headerName: 'Deployment ID' },
+  { field: 'parent_deployment', headerName: 'Parent Deployment ID', hide: true },
+  { field: 'model', headerName: 'Model', hide: true },
+  { field: 'project_id', headerName: 'Project' },
+  { field: 'upstream', headerName: 'Upstream', hide: true },
+  { field: 'execution_path', headerName: 'Execution Path', hide: true },
+  { field: 'user_hash', headerName: 'User' },
+  { field: 'user_title', headerName: 'User Title', hide: true },
+  { field: 'language', headerName: 'Language', hide: true },
+  { field: 'duration', headerName: 'Duration', hide: true },
+  { field: 'response_id', headerName: 'Response ID', hide: true },
   { field: 'core_span_id', headerName: 'Core span ID', hide: true },
   { field: 'core_parent_span_id', headerName: 'Core parent span ID' },
 ];

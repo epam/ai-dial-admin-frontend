@@ -4,11 +4,13 @@ import { FC, useCallback, useState } from 'react';
 import { ApplicationRoute } from '@/src/types/routes';
 import { TimeRange } from '@/src/models/time-range';
 import { TelemetryQuery } from '@/src/models/telemetry';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { EntityViewTab, tracesTabs } from '@/src/components/EntityView/View/utils';
+import { ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
+import { conversationsTabs, EntityViewTab, tracesTabs } from '@/src/components/EntityView/View/utils';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 import { getFormattedFilters } from '@/src/utils/telemetry';
 import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
+import { USAGE_LOG_CONVERSATIONS_COLUMNS, USAGE_LOG_TRACES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { CONVERSATIONS_QUERY, TRACES_QUERY } from '@/src/constants/telemetry';
 import { useI18n } from '@/src/locales/client';
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
 import { IconRefresh } from '@tabler/icons-react';
@@ -16,7 +18,7 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
 import Button from '@/src/components/Common/Button/Button';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
-import Traces from '@/src/components/UsageLog/List/Traces';
+import List from '@/src/components/UsageLog/List/List';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
 
 interface Props {
@@ -25,7 +27,7 @@ interface Props {
 
 const UsageLog: FC<Props> = ({ route }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
-  const tabs = [tracesTabs(t)];
+  const tabs = [tracesTabs(t), conversationsTabs(t)];
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Traces);
   const [timePeriod, setTimePeriod] = useState(DEFAULT_TIME_PERIOD);
@@ -86,7 +88,26 @@ const UsageLog: FC<Props> = ({ route }) => {
         </div>
       </div>
       <div className="flex flex-1 rounded overflow-auto my-3 min-h-0 border border-primary">
-        {activeTab === EntityViewTab.Traces && <Traces route={route} getData={getData} />}
+        {activeTab === EntityViewTab.Traces && (
+          <List
+            route={route}
+            getData={getData}
+            columnDefs={USAGE_LOG_TRACES_COLUMNS}
+            query={TRACES_QUERY}
+            title={t(TelemetryI18nKey.TracesTitle)}
+            emptyDataTitle={t(TelemetryI18nKey.NoTracesTitle)}
+          />
+        )}
+        {activeTab === EntityViewTab.Conversations && (
+          <List
+            title={t(TelemetryI18nKey.ConversationsTitle)}
+            emptyDataTitle={t(TelemetryI18nKey.NoConversationsTitle)}
+            route={route}
+            getData={getData}
+            columnDefs={USAGE_LOG_CONVERSATIONS_COLUMNS}
+            query={CONVERSATIONS_QUERY}
+          />
+        )}
       </div>
     </div>
   );

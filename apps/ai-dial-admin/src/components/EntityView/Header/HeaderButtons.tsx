@@ -8,7 +8,7 @@ import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
 
 import DeleteAdapter from '@/src/components/Adapter/Modals/DeleteAdapter';
-import DeleteScheme from '@/src/components/ApplicationRunners/ListView/Delete/DeleteAppRunner';
+import DeleteAppRunner from '@/src/components/ApplicationRunners/Modals/DeleteAppRunner';
 import AddVersionModal from '@/src/components/Common/AddVersionModal/AddVersionModal';
 import Button from '@/src/components/Common/Button/Button';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
@@ -161,7 +161,7 @@ const HeaderButtons = <T extends DialBaseEntity | DialKey>({
 
   const deleteModalContent =
     view === ApplicationRoute.ApplicationRunners ? (
-      <DeleteScheme entity={entity as DialApplicationScheme} isEntityView={true} />
+      <DeleteAppRunner entity={entity as DialApplicationScheme} isEntityView={true} />
     ) : view === ApplicationRoute.Adapters ? (
       <DeleteAdapter entity={entity as DialAdapter} isEntityView={true} />
     ) : view === ApplicationRoute.InterceptorTemplates ? (

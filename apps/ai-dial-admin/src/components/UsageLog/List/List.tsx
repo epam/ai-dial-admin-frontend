@@ -1,17 +1,16 @@
 import { FC, MouseEvent, useCallback, useEffect, useState } from 'react';
-import { GridApi, GridOptions } from 'ag-grid-community';
+import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 
-import { ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { TelemetryData, TelemetryQuery } from '@/src/models/telemetry';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { getTracesListingData } from '@/src/utils/telemetry';
-import { TRACES_QUERY } from '@/src/constants/telemetry';
 import { useI18n } from '@/src/locales/client';
 import { IconColumns2, IconFileArrowRight } from '@tabler/icons-react';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
-import { USAGE_LOG_TRACES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { logger } from 'nx/src/utils/logger';
 
 import Button from '@/src/components/Common/Button/Button';
 import ListView from '@/src/components/ListView/ListView';
@@ -21,9 +20,13 @@ import Loader from '@/src/components/Common/Loader/Loader';
 interface Props {
   route: ApplicationRoute;
   getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
+  query: TelemetryQuery;
+  columnDefs: ColDef[];
+  title: string;
+  emptyDataTitle: string;
 }
 
-const Traces: FC<Props> = ({ route, getData }) => {
+const List: FC<Props> = ({ route, getData, query, columnDefs, title, emptyDataTitle }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
 
   const [data, setData] = useState<Record<string, string>[] | undefined>(void 0);
@@ -59,7 +62,7 @@ const Traces: FC<Props> = ({ route, getData }) => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const response = await getData(TRACES_QUERY);
+      const response = await getData(query);
       if (response.success) {
         const data = getTracesListingData(response.response as TelemetryData);
         setData(data);
@@ -69,8 +72,8 @@ const Traces: FC<Props> = ({ route, getData }) => {
       setLoading(false);
     };
 
-    fetchData();
-  }, [getData]);
+    fetchData().catch((error) => logger.error(`Getting usage log view data error: ${error}`));
+  }, [getData, query]);
 
   useEffect(() => {
     window.addEventListener('click', closeColumnsPanel);
@@ -84,9 +87,9 @@ const Traces: FC<Props> = ({ route, getData }) => {
   return (
     <ListView
       data={data}
-      columnDefs={USAGE_LOG_TRACES_COLUMNS}
-      title={t(TelemetryI18nKey.TracesTitle)}
-      emptyDataTitle={t(TelemetryI18nKey.NoTracesTitle)}
+      columnDefs={columnDefs}
+      title={title}
+      emptyDataTitle={emptyDataTitle}
       additionalGridOptions={gridOptions}
       showColumnsPanel={showColumnsPanel}
       toggleColumnsPanel={toggleColumnsPanel}
@@ -116,4 +119,4 @@ const Traces: FC<Props> = ({ route, getData }) => {
   );
 };
 
-export default Traces;
+export default List;
