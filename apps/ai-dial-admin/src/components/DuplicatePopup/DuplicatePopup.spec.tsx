@@ -1,57 +1,55 @@
-import { fireEvent, render } from '@testing-library/react';
-import { PopUpState } from '@/src/types/pop-up';
-import { ApplicationRoute } from '@/src/types/routes';
-import DuplicateEntityPopup from './DuplicateEntityPopup';
-import { DialBaseEntity, DialBaseNamedEntity } from '@/src/models/dial/base-entity';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
-const mockFunction = vi.fn();
+import DuplicatePopup from './DuplicatePopup';
+import { ApplicationRoute } from '@/src/types/routes';
+import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '../../constants/i18n';
 
-describe('EntityView :: DuplicateEntityPopup', () => {
-  test('Should render empty successfully', () => {
-    const { baseElement } = render(
-      <DuplicateEntityPopup
-        modalState={PopUpState.Opened}
-        onDuplicate={mockFunction}
-        onClose={mockFunction}
-        view={ApplicationRoute.Keys}
-        entity={{}}
-      />,
-    );
-    expect(baseElement).toBeTruthy();
+describe('DuplicatePopup', () => {
+  const baseEntity = { name: 'oldName', displayName: 'oldDisplay', displayVersion: '1.0' };
+  const baseProps = {
+    view: 'Simple',
+    modalState: 'Opened',
+    names: ['existing'],
+    entity: baseEntity,
+    onClose: vi.fn(),
+    onDuplicate: vi.fn(),
+  };
+
+  test('calls onClose when Cancel is clicked', () => {
+    render(<DuplicatePopup {...baseProps} />);
+    fireEvent.click(screen.getByText(ButtonsI18nKey.Cancel));
+    expect(baseProps.onClose).toHaveBeenCalled();
   });
-  test('Should render successfully', () => {
-    let entity = {
-      name: 'name',
-      displayVersion: 'displayVersion',
-      displayName: 'displayName',
-    } as DialBaseEntity | DialBaseNamedEntity;
-    const onDuplicate = (en: DialBaseEntity | DialBaseNamedEntity) => {
-      entity = en;
-    };
 
-    const { baseElement, getByTestId } = render(
-      <DuplicateEntityPopup
-        modalState={PopUpState.Opened}
-        onDuplicate={onDuplicate}
-        onClose={mockFunction}
-        names={[]}
-        view={ApplicationRoute.Applications}
-        entity={entity}
-      />,
+  test('calls onDuplicate with cloned entity when Duplicate is clicked', () => {
+    const onDuplicate = vi.fn();
+    render(<DuplicatePopup {...baseProps} onDuplicate={onDuplicate} />);
+    // Set name to make isValid true
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Id), { target: { value: 'newName' } });
+    fireEvent.click(screen.getByText(ButtonsI18nKey.Duplicate));
+    expect(onDuplicate).toHaveBeenCalledWith(expect.objectContaining({ name: 'newName' }));
+  });
+  test('renders displayName and version fields for model entity', () => {
+    render(<DuplicatePopup {...baseProps} view={ApplicationRoute.Models} />);
+    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Version)).toBeInTheDocument();
+  });
+
+  test('updates displayName and version on change', () => {
+    const onDuplicate = vi.fn();
+    render(<DuplicatePopup {...baseProps} view={ApplicationRoute.Models} onDuplicate={onDuplicate} />);
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Id), { target: { value: 'modelName' } });
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName), {
+      target: { value: 'display' },
+    });
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Version), { target: { value: '2.0' } });
+    fireEvent.click(screen.getByText(ButtonsI18nKey.Duplicate));
+    expect(onDuplicate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'modelName',
+        displayName: 'display',
+        displayVersion: '2.0',
+      }),
     );
-    expect(baseElement).toBeTruthy();
-
-    const name = getByTestId('id');
-    expect(entity.name).toBe('name');
-    fireEvent.change(name, { target: { value: 'New name' } });
-
-    const displayName = getByTestId('name');
-    expect((entity as DialBaseEntity).displayName).toBe('displayName');
-    fireEvent.change(displayName, { target: { value: 'New displayName' } });
-
-    fireEvent.click(getByTestId('duplicateBtn'));
-
-    expect(entity.name).toBe('New name');
-    fireEvent.click(getByTestId('cancelBtn'));
   });
 });

@@ -26,13 +26,11 @@ import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
-import { FieldError } from '@/src/models/error';
 import { JSONEditorError } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
-import { getErrorForDescription } from '@/src/utils/validation/description-error';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 
 interface Props {
