@@ -38,10 +38,13 @@ describe('Textarea', () => {
     expect(textarea).toBeDisabled();
   });
 
+  test('handles  number values', () => {
+    render(<Textarea value={123} textareaId="my-textarea" />);
+    expect(screen.getByRole('textbox')).toHaveValue('123');
+  });
+
   test('handles null and number values', () => {
     render(<Textarea value={null} textareaId="my-textarea" />);
     expect(screen.getByRole('textbox')).toHaveValue('');
-    render(<Textarea value={123} textareaId="my-textarea" />);
-    expect(screen.getByRole('textbox')).toHaveValue('123');
   });
 });
