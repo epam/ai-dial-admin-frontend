@@ -341,6 +341,7 @@ export enum TabsI18nKey {
   Dependencies = 'Tabs.Dependencies',
   Routes = 'Tabs.Routes',
   Traces = 'Tabs.Traces',
+  Conversations = 'Tabs.Conversations',
 }
 
 export enum EditorI18nKey {
@@ -383,6 +384,8 @@ export enum TelemetryI18nKey {
   FilterDurationSeconds = 'Telemetry.Filter.Duration.Seconds',
   TracesTitle = 'Telemetry.UsageLog.TracesTitle',
   NoTracesTitle = 'Telemetry.UsageLog.NoTracesTitle',
+  ConversationsTitle = 'Telemetry.UsageLog.ConversationsTitle',
+  NoConversationsTitle = 'Telemetry.UsageLog.NoConversationsTitle',
 }
 
 export enum RoutesI18nKey {
