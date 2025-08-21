@@ -343,6 +343,7 @@ export enum TabsI18nKey {
   Files = 'Tabs.Files',
   Dependencies = 'Tabs.Dependencies',
   Routes = 'Tabs.Routes',
+  Traces = 'Tabs.Traces',
 }
 
 export enum EditorI18nKey {
@@ -383,6 +384,8 @@ export enum TelemetryI18nKey {
   FilterConditionStartsWith = 'Telemetry.Filter.ConditionStartsWith',
   FilterConditionEndsWith = 'Telemetry.Filter.ConditionEndsWith',
   FilterDurationSeconds = 'Telemetry.Filter.Duration.Seconds',
+  TracesTitle = 'Telemetry.UsageLog.TracesTitle',
+  NoTracesTitle = 'Telemetry.UsageLog.NoTracesTitle',
 }
 
 export enum RoutesI18nKey {
@@ -663,7 +666,6 @@ export enum EntityFieldsI18nKey {
   displayVersion = 'EntityFields.displayVersion',
   adapter = 'EntityFields.adapter',
   iconUrl = 'EntityFields.iconUrl',
-  icon = 'EntityFields.icon',
   description = 'EntityFields.description',
   forwardAuthToken = 'EntityFields.forwardAuthToken',
   features = 'EntityFields.features',

@@ -41,6 +41,7 @@ const FilledIcon: FC<Props> = ({ readonly, fileUrl, onChange }) => {
     return (
       <div className="bg-controls-enable-primary rounded-full w-[80px] group relative border border-primary hover:border-hover">
         <Image
+          role="icon"
           src={src}
           alt="entityImage"
           width={80}
