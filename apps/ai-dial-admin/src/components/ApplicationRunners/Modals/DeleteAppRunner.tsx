@@ -13,7 +13,7 @@ interface Props {
   isEntityView?: boolean;
 }
 
-const DeleteScheme: FC<Props> = ({ entity, isEntityView }) => {
+const DeleteAppRunner: FC<Props> = ({ entity, isEntityView }) => {
   const t = useI18n();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -63,4 +63,4 @@ const DeleteScheme: FC<Props> = ({ entity, isEntityView }) => {
   );
 };
 
-export default DeleteScheme;
+export default DeleteAppRunner;

@@ -23,7 +23,7 @@ interface Props {
   route: ApplicationRoute;
 }
 
-const CreateScheme: FC<Props> = ({ modalState, onClose, route }) => {
+const CreateAppRunner: FC<Props> = ({ modalState, onClose, route }) => {
   const t = useI18n() as (t: string) => string;
   const router = useRouter();
 
@@ -77,4 +77,4 @@ const CreateScheme: FC<Props> = ({ modalState, onClose, route }) => {
   );
 };
 
-export default CreateScheme;
+export default CreateAppRunner;
