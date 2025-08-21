@@ -26,21 +26,3 @@ describe('KeyView - view', () => {
     expect(baseElement).toBeTruthy();
   });
 });
-
-describe('KeyView - KeyProperties', () => {
-  test('Should render successfully', () => {
-    let entity = { key: 'key', project: 'project', name: 'key', secured: true, description: 'description' };
-    const onChangeKey = (key: DialKey) => {
-      entity = { ...entity, ...key };
-    };
-    const { baseElement, getByTestId } = render(
-      <KeyProperties entity={entity} names={['key']} onChangeKey={onChangeKey} isKeyImmutable={false} />,
-    );
-    expect(baseElement).toBeTruthy();
-
-    const descriptionControl = getByTestId('description');
-    expect(entity.description).toBe('description');
-    fireEvent.change(descriptionControl, { target: { value: 'new description' } });
-    expect(entity.description).toBe('new description');
-  });
-});

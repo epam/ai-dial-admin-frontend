@@ -17,7 +17,6 @@ const Textarea: FC<Props> = ({ value, textareaId, placeholder, cssClass = '', di
   return (
     <textarea
       id={textareaId}
-      data-testid={textareaId}
       placeholder={placeholder}
       value={value || void 0}
       disabled={disabled}

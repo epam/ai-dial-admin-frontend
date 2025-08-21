@@ -10,6 +10,7 @@ import ErrorText from '@/src/components/Common/ErrorText/ErrorText';
 import Field from '@/src/components/Common/Field/Field';
 import InputWithIcon from '@/src/components/Common/Input/InputWithIcon';
 import InputWithText from '@/src/components/Common/Input/InputWithText';
+import { getInputValue } from '@/src/components/Common/InputField/utils';
 
 export interface InputFieldBaseProps extends FieldControlProps {
   placeholder?: string;
@@ -76,15 +77,6 @@ export interface NumberInputFieldProps extends InputFieldBaseProps {
 }
 
 export const NumberInputField: FC<NumberInputFieldProps> = ({ onChange, value, ...props }) => {
-  const lessThanOnePattern = /^0+\.(\d+)?$/;
-  const leadingZerosPattern = /^0+/;
-
-  const getInputValue = (inputValue: string | number): string | number => {
-    return String(inputValue)?.match(lessThanOnePattern)
-      ? String(inputValue)?.replace(leadingZerosPattern, '0')
-      : Number(inputValue);
-  };
-
   return (
     <InputField
       type="number"
