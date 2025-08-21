@@ -1,19 +1,19 @@
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey } from '@/src/constants/i18n';
 import { MAX_NAME_SYMBOLS, MIN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isWrongLengthWithView } from '@/src/utils/validation/name-error';
 
 export const getDisplayNameErrorKeyPerView = (view: ApplicationRoute, wrongLength?: boolean) => {
   if (wrongLength) {
-    return CreateI18nKey.MinMaxLength;
+    return ErrorI18nKey.MinMaxLength;
   }
 
   switch (view) {
     case ApplicationRoute.Models:
-      return CreateI18nKey.DisplayNameErrorModel;
+      return ErrorI18nKey.DisplayNameErrorModel;
 
     case ApplicationRoute.Applications:
-      return CreateI18nKey.ErrorUnique;
+      return ErrorI18nKey.Unique;
 
     default:
       return '';
@@ -23,7 +23,7 @@ export const getDisplayNameErrorKeyPerView = (view: ApplicationRoute, wrongLengt
 export const getVersionErrorKeyPerView = (view: ApplicationRoute) => {
   switch (view) {
     case ApplicationRoute.Models:
-      return CreateI18nKey.VersionErrorModel;
+      return ErrorI18nKey.Version;
 
     default:
       return '';
@@ -55,7 +55,7 @@ export const getVersionError = (
     if (!hasDisplayVersion) {
       error = errorKey ? t(errorKey) : '';
     } else if (isLengthError) {
-      error = t(CreateI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS });
+      error = t(ErrorI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS });
     } else {
       error = '';
     }

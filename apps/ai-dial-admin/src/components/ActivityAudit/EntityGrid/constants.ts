@@ -2,8 +2,7 @@ import { ColDef, ICellRendererParams } from 'ag-grid-community';
 
 import ExtraDataCellRenderer from '@/src/components/Grid/CellRenderers/ExtraDataCellRenderer';
 import PasswordCellRenderer from '@/src/components/Grid/CellRenderers/PasswordCellRenderer';
-import { FeaturesI18nKey } from '@/src/constants/i18n';
-import { ParameterNamesI18nKey } from '@/src/components/ActivityAudit/constants';
+import { FeaturesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 
 export const INTERCEPTORS_DIFF_COLUMNS = [
   { field: 'parameter', headerName: 'Order', width: 90, maxWidth: 90 },
@@ -44,9 +43,9 @@ export const RESOURCE_DIFF_COLUMNS = (t: (stringToTranslate: string) => string):
 ];
 
 const formatParameter = (value: string, t: (stringToTranslate: string) => string) => {
-  const parametersKey = ParameterNamesI18nKey[value as keyof typeof ParameterNamesI18nKey];
-  if (parametersKey) {
-    return t(parametersKey);
+  const entityFieldKey = EntityFieldsI18nKey[value as keyof typeof EntityFieldsI18nKey];
+  if (entityFieldKey) {
+    return t(entityFieldKey);
   }
   const featuresKey = FeaturesI18nKey[value as keyof typeof FeaturesI18nKey];
 

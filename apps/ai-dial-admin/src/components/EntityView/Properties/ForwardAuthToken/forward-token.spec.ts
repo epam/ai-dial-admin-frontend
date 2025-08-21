@@ -1,4 +1,4 @@
-import { CreateI18nKey, ForwardTokenI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, ForwardTokenI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import {
   getAlertTitlePerView,
@@ -40,19 +40,19 @@ describe('EntityProperties :: ForwardAuthToken :: getDisplayNamePerView', () => 
   test('Should return key for model', () => {
     const res = getDisplayNamePerView(ApplicationRoute.Models);
 
-    expect(res).toBe(CreateI18nKey.ModelDisplayName);
+    expect(res).toBe(EntitiesI18nKey.ModelDisplayName);
   });
 
   test('Should return key for application', () => {
     const res = getDisplayNamePerView(ApplicationRoute.Applications);
 
-    expect(res).toBe(CreateI18nKey.ApplicationDisplayName);
+    expect(res).toBe(EntitiesI18nKey.ApplicationDisplayName);
   });
 
   test('Should return key for interceptor', () => {
     const res = getDisplayNamePerView(ApplicationRoute.Interceptors);
 
-    expect(res).toBe(CreateI18nKey.InterceptorName);
+    expect(res).toBe(EntitiesI18nKey.InterceptorName);
   });
 
   test('Should return empty string', () => {

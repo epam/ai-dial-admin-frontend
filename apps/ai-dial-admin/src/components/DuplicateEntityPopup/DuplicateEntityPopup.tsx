@@ -3,7 +3,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import Button from '@/src/components/Common/Button/Button';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Popup from '@/src/components/Common/Popup/Popup';
-import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseEntity, DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { FieldError } from '@/src/models/error';
@@ -67,9 +67,9 @@ const DuplicateEntityPopup: FC<Props> = ({ onDuplicate, names, view, modalState,
         {!isSimple && <div className="text-secondary small mb-4">{t(duplicateModalDescriptionMap[view])}</div>}
         <div className="flex flex-col gap-3">
           <TextInputField
-            fieldTitle={t(CreateI18nKey.IdTitle)}
             elementId="id"
-            placeholder={t(CreateI18nKey.IdPlaceholder)}
+            placeholder={t(EntityPlaceholdersI18nKey.Id)}
+            fieldTitle={t(EntityFieldsI18nKey.id)}
             value={clonedEntity.name}
             errorText={nameError?.text}
             invalid={!!nameError}
@@ -78,18 +78,18 @@ const DuplicateEntityPopup: FC<Props> = ({ onDuplicate, names, view, modalState,
           {!isSimple && (
             <>
               <TextInputField
-                fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
+                fieldTitle={t(EntityFieldsI18nKey.displayName)}
+                placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
                 elementId="name"
-                placeholder={t(CreateI18nKey.DisplayNamePlaceholder)}
                 value={(clonedEntity as DialBaseEntity).displayName}
                 onChange={onChangeDisplayName}
               />
 
               {view === ApplicationRoute.Models && (
                 <TextInputField
-                  fieldTitle={t(CreateI18nKey.VersionTitle)}
+                  fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
                   elementId="version"
-                  placeholder={t(CreateI18nKey.VersionPlaceholder)}
+                  placeholder={t(EntityPlaceholdersI18nKey.Version)}
                   value={(clonedEntity as DialModel).displayVersion}
                   onChange={onChangeVersion}
                 />

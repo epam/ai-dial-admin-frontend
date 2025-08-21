@@ -1,4 +1,4 @@
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey } from '@/src/constants/i18n';
 import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
 import { FieldError } from '@/src/models/error';
 import { ErrorType } from '@/src/types/error-type';
@@ -23,14 +23,14 @@ export const getErrorForKey = (
   if (isIncludesKey) {
     return {
       type: ErrorType.EXISTING,
-      text: t ? t(CreateI18nKey.ErrorKey) : '',
+      text: t ? t(ErrorI18nKey.KeyValueExists) : '',
     };
   }
 
   if (isWrongLength) {
     return {
       type: ErrorType.LENGTH,
-      text: t ? t(CreateI18nKey.ErrorLength, { number: MAX_NAME_SYMBOLS }) : '',
+      text: t ? t(ErrorI18nKey.Length, { number: MAX_NAME_SYMBOLS }) : '',
     };
   }
   return null;

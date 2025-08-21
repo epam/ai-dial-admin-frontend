@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import AttachmentInput from './AttachmentInput';
+import { AttachmentsI18nKey } from '@/src/constants/i18n';
 
 beforeAll(() => {
   const resizeObserverMock = vi.fn().mockImplementation(() => ({
@@ -24,12 +25,12 @@ const options = [
   { label: 'ZIP', value: 'zip' },
 ];
 
-describe('Common components – AttachmentInput', () => {
+describe('Common components - AttachmentInput', () => {
   it('renders tags from initialValues', () => {
     render(<AttachmentInput availableItems={options} initialValues={['pdf']} />);
 
     expect(screen.getByText('PDF')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Buttons.UseAll' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: AttachmentsI18nKey.UseAll })).toBeInTheDocument();
   });
 
   it('filters suggestions while typing and adds one on click', async () => {
@@ -53,7 +54,7 @@ describe('Common components – AttachmentInput', () => {
     const onChange = vi.fn();
     render(<AttachmentInput availableItems={options} onChange={onChange} allValueLabel="ALL VALUES" />);
 
-    const allButton = screen.getByRole('button', { name: 'Buttons.UseAll' });
+    const allButton = screen.getByRole('button', { name: AttachmentsI18nKey.UseAll });
 
     await userEvent.click(allButton);
 

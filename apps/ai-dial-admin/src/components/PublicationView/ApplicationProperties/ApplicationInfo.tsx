@@ -1,7 +1,7 @@
 import { FC } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import { CreateI18nKey, EntitiesI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
@@ -19,30 +19,30 @@ const ApplicationInfo: FC<Props> = ({ application }) => {
       <TextInputField
         elementId="displayName"
         readonly={true}
-        fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
+        fieldTitle={t(EntityFieldsI18nKey.displayName)}
         value={application?.displayName}
       />
       <TextInputField
         readonly={true}
         elementId="displayVersion"
-        fieldTitle={t(CreateI18nKey.VersionTitle)}
+        fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
         value={application?.displayVersion}
       />
 
       <TextInputField
         readonly={true}
         elementId="description"
-        fieldTitle={t(CreateI18nKey.DescriptionTitle)}
+        fieldTitle={t(EntityFieldsI18nKey.description)}
         value={application?.description}
       />
 
-      <EntityIcon fieldTitle={t(EntitiesI18nKey.Icon)} readonly={true} elementId="icon" entity={application} />
+      <EntityIcon fieldTitle={t(EntityFieldsI18nKey.icon)} readonly={true} elementId="icon" entity={application} />
 
       <Multiselect
         readonly={true}
         elementId="topics"
         selectedItems={application?.descriptionKeywords}
-        title={t(TopicsI18nKey.Topics)}
+        title={t(EntityFieldsI18nKey.topics)}
       />
     </div>
   ) : null;

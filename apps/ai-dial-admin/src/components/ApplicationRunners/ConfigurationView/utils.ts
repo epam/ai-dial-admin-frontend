@@ -1,4 +1,4 @@
-import { CreateI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey } from '@/src/constants/i18n';
 import { MAX_RUNNER_ID_SYMBOLS } from '@/src/constants/validation';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ErrorType } from '@/src/types/error-type';
@@ -23,6 +23,8 @@ const fields: (keyof DialApplicationScheme)[] = [
   'dial:applicationTypeTokenizeEndpoint',
   'dial:applicationTypeTruncatePromptEndpoint',
   'dial:appendApplicationPropertiesHeader',
+  'dial:applicationTypePlaybackSupport',
+  'dial:applicationTypeIconUrl',
 ];
 
 export const clearSchemeForEditor = (scheme: DialApplicationScheme) => {
@@ -48,7 +50,7 @@ export const getErrorForAppRunnerId = (id?: string, t?: (str: string, param?: Re
   if (isWrongLength) {
     return {
       type: ErrorType.LENGTH,
-      text: t ? t(CreateI18nKey.ErrorLength, { number: MAX_RUNNER_ID_SYMBOLS }) : '',
+      text: t ? t(ErrorI18nKey.Length, { number: MAX_RUNNER_ID_SYMBOLS }) : '',
     };
   }
   return null;

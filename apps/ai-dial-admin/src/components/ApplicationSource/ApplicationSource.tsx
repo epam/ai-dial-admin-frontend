@@ -6,7 +6,7 @@ import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import SourceEntitySelector from '@/src/components/EntityMainProperties/SourceEntitySelector/SourceEntitySelector';
 import { RUNNERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
@@ -129,8 +129,8 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
         <div className={classNames('flex flex-col gap-4', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
           <TextInputField
             elementId="completionEndpoint"
-            fieldTitle={t(CreateI18nKey.CompletionEndpointTitle)}
-            placeholder={t(CreateI18nKey.CompletionEndpointPlaceholder)}
+            fieldTitle={t(EntityFieldsI18nKey.completionEndpoint)}
+            placeholder={t(EntityPlaceholdersI18nKey.CompletionEndpoint)}
             value={entity.endpoint}
             onChange={onChangeEndpoint}
             invalid={!!endpointError}
@@ -141,8 +141,8 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
               <TextInputField
                 optional={true}
                 elementId="viewerUrl"
-                fieldTitle={t(CreateI18nKey.ViewerUrlTitle)}
-                placeholder={t(CreateI18nKey.ViewerUrlPlaceholder)}
+                fieldTitle={t(EntityFieldsI18nKey.viewerUrl)}
+                placeholder={t(EntityPlaceholdersI18nKey.ViewerUrl)}
                 value={entity.viewerUrl}
                 errorText={viewerUrlError?.text}
                 invalid={!!viewerUrlError}
@@ -151,8 +151,8 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
               <TextInputField
                 optional={true}
                 elementId="editorUrl"
-                fieldTitle={t(CreateI18nKey.EditorUrlTitle)}
-                placeholder={t(CreateI18nKey.EditorUrlPlaceholder)}
+                fieldTitle={t(EntityFieldsI18nKey.editorUrl)}
+                placeholder={t(EntityPlaceholdersI18nKey.EditorUrl)}
                 value={entity.editorUrl}
                 errorText={editorUrlError?.text}
                 invalid={!!editorUrlError}
@@ -167,8 +167,8 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
           <SourceEntitySelector
             buttonTitle={t(ButtonsI18nKey.OpenAppRunner)}
             columns={RUNNERS_COLUMNS}
-            fieldTitle={t(CreateI18nKey.RunnerName)}
-            placeholder={t(CreateI18nKey.RunnerPlaceholder)}
+            fieldTitle={t(EntitiesI18nKey.AppRunner)}
+            placeholder={t(EntityPlaceholdersI18nKey.SelectAppRunner)}
             selectedValue={entity.customAppSchemaId}
             sourceEntities={runners}
             route={ApplicationRoute.ApplicationRunners}

@@ -4,7 +4,7 @@ import { FC, useCallback, useState } from 'react';
 
 import AttachmentInput from '@/src/components/Common/AttachmentInput/AttachmentInput';
 import { NumberInputField } from '@/src/components/Common/InputField/InputField';
-import { AttachmentsI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { AttachmentsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { mimeMapping } from './constants';
@@ -23,7 +23,7 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
   const onChangeAttachmentMax = useCallback(
     (value: number | string) => {
       if (Number(value) > MAX_ATTACHMENTS_LIMIT) {
-        setAttachmentError(t(AttachmentsI18nKey.AttachmentsMaxNumberError, { max: MAX_ATTACHMENTS_LIMIT }));
+        setAttachmentError(t(AttachmentsI18nKey.MaxNumberError, { max: MAX_ATTACHMENTS_LIMIT }));
       } else {
         setAttachmentError(void 0);
       }
@@ -53,8 +53,8 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
       <AttachmentInput
         initialValues={entity.inputAttachmentTypes}
         fieldTitle={t(AttachmentsI18nKey.Attachments)}
-        placeholder={t(AttachmentsI18nKey.EnterAttachmentsTypes)}
-        allValueLabel={t(ButtonsI18nKey.UseAllAttachment)}
+        placeholder={t(EntityPlaceholdersI18nKey.AttachmentsTypes)}
+        allValueLabel={t(AttachmentsI18nKey.UseAllAttachment)}
         availableItems={mimeMapping}
         inputClass="lg:w-[35%]"
         onChange={(values) => onChangeAttachmentTypes(values)}
@@ -63,8 +63,8 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
         <div className="w-[148px]">
           <NumberInputField
             elementId="maxAttachment"
-            fieldTitle={t(AttachmentsI18nKey.AttachmentsMaxNumber)}
-            placeholder={t(AttachmentsI18nKey.AttachmentsMaxNumberPlaceholder)}
+            fieldTitle={t(AttachmentsI18nKey.MaxNumber)}
+            placeholder={t(EntityPlaceholdersI18nKey.Number)}
             value={entity.maxInputAttachments}
             onChange={onChangeAttachmentMax}
             errorText={attachmentError}

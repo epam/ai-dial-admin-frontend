@@ -1,5 +1,5 @@
 import { ErrorType } from '@/src/types/error-type';
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey } from '@/src/constants/i18n';
 import { KeyStatus } from '@/src/types/key';
 import { getErrorForKey, getColorClass } from '../keys-list';
 import { describe, expect, test, vi } from 'vitest';
@@ -16,7 +16,7 @@ describe('Keys list :: getErrorForKey', () => {
       type: ErrorType.EXISTING,
       text: 'Key already exists',
     });
-    expect(t).toHaveBeenCalledWith(CreateI18nKey.ErrorKey);
+    expect(t).toHaveBeenCalledWith(ErrorI18nKey.KeyValueExists);
   });
 
   test('returns EXISTING error object with empty string if t is not provided', () => {

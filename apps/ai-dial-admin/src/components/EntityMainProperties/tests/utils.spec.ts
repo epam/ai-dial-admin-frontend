@@ -1,4 +1,4 @@
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import {
   getDisplayNameErrorKeyPerView,
@@ -19,13 +19,13 @@ describe('EntityMainProperties :: errors :: getDisplayNameErrorKeyPerView', () =
   test('Should return key for model', () => {
     const res = getDisplayNameErrorKeyPerView(ApplicationRoute.Models);
 
-    expect(res).toBe(CreateI18nKey.DisplayNameErrorModel);
+    expect(res).toBe(ErrorI18nKey.DisplayNameErrorModel);
   });
 
   test('Should return key for application', () => {
     const res = getDisplayNameErrorKeyPerView(ApplicationRoute.Applications);
 
-    expect(res).toBe(CreateI18nKey.ErrorUnique);
+    expect(res).toBe(ErrorI18nKey.Unique);
   });
 
   test('Should return empty string', () => {
@@ -39,7 +39,7 @@ describe('EntityMainProperties :: errors :: getVersionErrorKeyPerView', () => {
   test('Should return key for model', () => {
     const res = getVersionErrorKeyPerView(ApplicationRoute.Models);
 
-    expect(res).toBe(CreateI18nKey.VersionErrorModel);
+    expect(res).toBe(ErrorI18nKey.Version);
   });
 
   test('Should return empty string', () => {
@@ -57,13 +57,13 @@ describe('EntityMainProperties :: errors :: getDisplayNameError', () => {
 
   test('Should return min/max length error for wrong length display name', () => {
     const result = getDisplayNameError(ApplicationRoute.Models, false, 'a', mockT);
-    expect(result).toBe(`${CreateI18nKey.MinMaxLength}`);
+    expect(result).toBe(ErrorI18nKey.MinMaxLength);
   });
 
   test('Should return view-specific error if not wrong length', () => {
     const longValidName = 'ValidDisplayNameWithinLength';
     const result = getDisplayNameError(ApplicationRoute.Applications, false, longValidName, mockT);
-    expect(result).toBe(`${CreateI18nKey.ErrorUnique}`);
+    expect(result).toBe(ErrorI18nKey.Unique);
   });
 });
 
@@ -75,12 +75,12 @@ describe('EntityMainProperties :: errors :: getVersionError', () => {
 
   test('Should return missing version error if required but not provided', () => {
     const result = getVersionError(ApplicationRoute.Models, false, '', mockT);
-    expect(result).toBe(CreateI18nKey.VersionErrorModel);
+    expect(result).toBe(ErrorI18nKey.Version);
   });
 
   test('Should return min/max length error if version is too short/long', () => {
     const result = getVersionError(ApplicationRoute.Models, false, 'x', mockT);
-    expect(result).toBe(`${CreateI18nKey.MinMaxLength}`);
+    expect(result).toBe(ErrorI18nKey.MinMaxLength);
   });
 
   test('Should return empty if version is valid', () => {
