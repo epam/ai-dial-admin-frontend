@@ -69,7 +69,7 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, modalState, onClose
   return (
     <Popup
       onClose={onClose}
-      heading={t(ExportI18nKey.ExportFilePreview)}
+      heading={t(ExportI18nKey.FilePreview)}
       portalId="ExportFilePreview"
       state={modalState}
       containerClassName="h-[800px] lg:max-w-[75%] md:max-w-[90%]"
