@@ -6,6 +6,7 @@ import { useI18n } from '@/src/locales/client';
 import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import { DialApplicationResource } from '@/src/models/dial/application-resource';
+import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 
 interface Props {
   application: DialApplicationResource;
@@ -29,12 +30,7 @@ const ApplicationInfo: FC<Props> = ({ application }) => {
         value={application?.displayVersion}
       />
 
-      <TextInputField
-        readonly={true}
-        elementId="description"
-        fieldTitle={t(EntityFieldsI18nKey.description)}
-        value={application?.description}
-      />
+      <DescriptionControl entity={application} readonly={true} />
 
       <EntityIcon
         fieldTitle={t(EntityFieldsI18nKey.iconUrl)}

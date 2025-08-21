@@ -7,6 +7,8 @@ import { ButtonsI18nKey, DuplicateI18nKey, EntityFieldsI18nKey, EntityPlaceholde
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { PopUpState } from '@/src/types/pop-up';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 
 interface Props {
   modalState: PopUpState;
@@ -25,13 +27,6 @@ const DuplicateAdapter: FC<Props> = ({ onDuplicate, modalState, onClose, adapter
     setIsValid(!!entity.name);
   }, [entity]);
 
-  const onChangeName = useCallback(
-    (name: string) => {
-      setEntity({ ...entity, name });
-    },
-    [setEntity, entity],
-  );
-
   const onChangeDisplayName = useCallback(
     (displayName: string) => {
       setEntity({ ...entity, displayName });
@@ -49,21 +44,9 @@ const DuplicateAdapter: FC<Props> = ({ onDuplicate, modalState, onClose, adapter
   return (
     <Popup onClose={onClose} heading={t(DuplicateI18nKey.AdapterHeader)} portalId="DuplicateKey" state={modalState}>
       <div className="flex flex-col gap-3 px-6 py-4 ">
-        <TextInputField
-          placeholder={t(EntityPlaceholdersI18nKey.Id)}
-          fieldTitle={t(EntityFieldsI18nKey.id)}
-          elementId="name"
-          value={entity.name}
-          onChange={onChangeName}
-        />
+        <IdControl entity={entity} onChangeEntity={setEntity} />
 
-        <TextInputField
-          fieldTitle={t(EntityFieldsI18nKey.displayName)}
-          elementId="displayName"
-          placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
-          value={entity.displayName}
-          onChange={onChangeDisplayName}
-        />
+        <DisplayNameControl displayName={entity.displayName} onChange={onChangeDisplayName} />
 
         <TextInputField
           elementId="endpoint"

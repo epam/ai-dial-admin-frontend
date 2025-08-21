@@ -23,7 +23,7 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
   const t = useI18n();
 
   return (
-    <div className="h-full flex flex-col pt-3 gap-10 divide-y divide-primary w-full">
+    <div className="h-full flex flex-col gap-10 divide-y divide-primary w-full">
       <div className="flex">
         <div className="lg:w-[35%] flex flex-col gap-6 mt-3">
           <SimpleEntityProperties
@@ -33,6 +33,7 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
             isEntityImmutable={true}
             view={ApplicationRoute.Interceptors}
           />
+
           <TextInputField
             elementId="author"
             fieldTitle={t(EntityFieldsI18nKey.author)}

@@ -1,5 +1,6 @@
 export interface DialBaseNamedEntity {
   name?: string;
+  displayName?: string;
   description?: string;
   version?: string;
   endpoint?: string;

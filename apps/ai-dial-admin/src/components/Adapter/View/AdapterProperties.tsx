@@ -2,18 +2,16 @@
 
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { uniq } from 'lodash';
-
-import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/AutocompleteField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
+import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { FieldError } from '@/src/models/error';
-import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import { getErrorForDisplayName, getErrorForName } from '@/src/utils/validation/name-error';
+import { getErrorForDisplayName } from '@/src/utils/validation/name-error';
 import { getUrlError } from '@/src/utils/validation/url-error';
 
 interface Props {
@@ -27,19 +25,16 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
   const t = useI18n() as (t: string, props?: Record<string, number>) => string;
   const { dispatch } = useSaveValidationContext();
 
-  const [nameError, setNameError] = useState<FieldError | null>(null);
-  const [displayNameError, setDisplayNameError] = useState<FieldError | null>(null);
-  const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
   const [baseEndpointError, setBaseEndpointError] = useState<FieldError | null>(null);
 
   const validateDisplayName = useCallback(
     (displayName?: string) => {
       const error = getErrorForDisplayName(displayName, t);
-      setDisplayNameError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
     },
     [dispatch, t],
   );
+
   useEffect(() => {
     if (isEntityImmutable) {
       validateDisplayName(entity.displayName);
@@ -60,35 +55,11 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
     }
   }, [entity.baseEndpoint, isEntityImmutable, validateEndpoint]);
 
-  const onChangeName = useCallback(
-    (name: string) => {
-      const newEntity = { ...entity, name };
-      const error = getErrorForName(name, names, t);
-      setNameError(error);
-      dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
-      onChangeAdapter(newEntity);
-    },
-    [entity, names, t, onChangeAdapter, dispatch],
-  );
-
   const onChangeDisplayName = useCallback(
     (displayName: string) => {
-      if (!isEntityImmutable) {
-        validateDisplayName(displayName);
-      }
       onChangeAdapter({ ...entity, displayName });
     },
-    [isEntityImmutable, onChangeAdapter, entity, validateDisplayName],
-  );
-
-  const onChangeDescription = useCallback(
-    (description: string) => {
-      const error = getErrorForDescription(description, t);
-      setDescriptionError(error);
-      dispatch({ type: ValidationActionType.SetField, field: 'description', isValid: !error });
-      onChangeAdapter({ ...entity, description });
-    },
-    [onChangeAdapter, entity, t, dispatch],
+    [onChangeAdapter, entity],
   );
 
   const onChangeEndpoint = useCallback(
@@ -111,40 +82,15 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
 
   return (
     <div className="h-full flex flex-col gap-6">
-      {!isEntityImmutable && (
-        <TextInputField
-          elementId="name"
-          placeholder={t(EntityPlaceholdersI18nKey.Id)}
-          fieldTitle={t(EntityFieldsI18nKey.id)}
-          value={entity.name}
-          errorText={nameError?.text}
-          invalid={!!nameError}
-          onChange={onChangeName}
-        />
-      )}
+      {!isEntityImmutable && <IdControl entity={entity} names={names} onChangeEntity={onChangeAdapter} />}
 
-      <AutocompleteField
-        elementId="displayName"
-        fieldTitle={t(EntityFieldsI18nKey.displayName)}
-        placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
-        value={entity.displayName}
-        errorText={displayNameError?.text}
+      <DisplayNameControl
+        displayName={entity.displayName}
+        isEntityImmutable={isEntityImmutable}
         onChange={onChangeDisplayName}
-        invalid={!!displayNameError}
-        items={uniq(names)}
       />
 
-      <TextAreaField
-        elementId="description"
-        fieldTitle={t(EntityFieldsI18nKey.description)}
-        placeholder={t(EntityPlaceholdersI18nKey.Description)}
-        optional={true}
-        value={entity.description}
-        errorText={descriptionError?.text}
-        invalid={!!descriptionError}
-        onChange={onChangeDescription}
-        elementCssClass="w-full"
-      />
+      <DescriptionControl entity={entity} onChangeEntity={onChangeAdapter} />
 
       <TextInputField
         elementId="endpoint"

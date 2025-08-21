@@ -1,7 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
@@ -9,9 +8,10 @@ import { DialRoute } from '@/src/models/dial/route';
 import { FieldError } from '@/src/models/error';
 import { ApplicationRoute } from '@/src/types/routes';
 import { checkNameVersionCombination } from '@/src/utils/prompts/versions';
-import { getErrorForDescription } from '@/src/utils/validation/description-error';
 import { getErrorForName } from '@/src/utils/validation/name-error';
 import { getErrorForPath } from '@/src/utils/validation/path-error';
+import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 
 interface Props {
   view?: ApplicationRoute;
@@ -42,7 +42,6 @@ const SimpleEntityProperties: FC<Props> = ({
       : EntityPlaceholdersI18nKey.Id;
 
   const [nameError, setNameError] = useState<FieldError | null>(null);
-  const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
   const [pathError, setPathError] = useState<FieldError | null>(null);
 
   const [versionError, setVersionError] = useState<string | undefined>(void 0);
@@ -77,14 +76,6 @@ const SimpleEntityProperties: FC<Props> = ({
     }
   }, [t, versionsMap, isValidVersion]);
 
-  const onChangeDescription = useCallback(
-    (description: string) => {
-      setDescriptionError(getErrorForDescription(description, t));
-      onChangeEntity({ ...entity, description });
-    },
-    [entity, onChangeEntity, t],
-  );
-
   const onChangePath = useCallback(
     (path: string) => {
       onChangeEntity({ ...entity, paths: [path] } as DialRoute);
@@ -106,6 +97,12 @@ const SimpleEntityProperties: FC<Props> = ({
           onChange={onChangeName}
         />
       )}
+
+      <DisplayNameControl
+        displayName={entity.displayName}
+        onChange={(name) => onChangeEntity({ ...entity, displayName: name })}
+      />
+
       {versionsMap && (
         <TextInputField
           elementId="version"
@@ -118,17 +115,8 @@ const SimpleEntityProperties: FC<Props> = ({
           onChange={onChangeVersion}
         />
       )}
-      <TextAreaField
-        elementId="description"
-        fieldTitle={t(EntityFieldsI18nKey.description)}
-        placeholder={t(EntityPlaceholdersI18nKey.Description)}
-        optional={true}
-        value={entity.description}
-        errorText={descriptionError?.text}
-        invalid={!!descriptionError}
-        onChange={onChangeDescription}
-        elementCssClass="w-full"
-      />
+
+      <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
 
       {view === ApplicationRoute.Routes && (
         <TextInputField

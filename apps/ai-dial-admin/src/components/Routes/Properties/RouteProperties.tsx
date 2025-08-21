@@ -2,7 +2,6 @@ import { NumberInputField, TextInputField } from '@/src/components/Common/InputF
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
 import Switch from '@/src/components/Common/Switch/Switch';
-import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 import MaxRetryAttempts from '@/src/components/MaxRetryAttempts/MaxRetryAttempts';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -13,6 +12,7 @@ import { FC, useCallback, useState } from 'react';
 import UpstreamEndpoints from '@/src/components/Endpoints/UpstreamEndpoints';
 import Paths from '@/src/components/Routes/Paths/Paths';
 import { handleRouteOutputChange } from '@/src/components/Routes/utils';
+import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 
 interface Props {
   route: DialRoute;
@@ -35,13 +35,6 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
   const onChangeName = useCallback(
     (name: string) => {
       updateRoute({ ...route, name });
-    },
-    [route, updateRoute],
-  );
-
-  const onChangeDescription = useCallback(
-    (description: string) => {
-      updateRoute({ ...route, description });
     },
     [route, updateRoute],
   );
@@ -114,14 +107,7 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
             onChange={onChangeName}
           />
         ) : (
-          <TextAreaField
-            elementId="description"
-            fieldTitle={t(EntityFieldsI18nKey.description)}
-            placeholder={t(EntityPlaceholdersI18nKey.Description)}
-            optional={true}
-            value={route.description}
-            onChange={onChangeDescription}
-          />
+          <DescriptionControl entity={route} onChangeEntity={updateRoute} />
         )}
         <Paths route={route} updateRoute={updateRoute} />
 

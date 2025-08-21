@@ -2,15 +2,14 @@ import { FC, useCallback, useState } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Switch from '@/src/components/Common/Switch/Switch';
-import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 import ValidityPeriodInput from '@/src/components/Common/ValidityPeriodInput/ValidityPeriodInput';
 import { FieldError } from '@/src/models/error';
-import { getErrorForDescription } from '@/src/utils/validation/description-error';
 import { getErrorForName } from '@/src/utils/validation/name-error';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import KeyGenerateField from './KeyGenerateField';
+import DescriptionControl from '../EntityMainProperties/BaseProperties/Description';
 
 interface Props {
   entity: DialKey;
@@ -24,7 +23,6 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
   const t = useI18n() as (t: string) => string;
 
   const [nameError, setNameError] = useState<FieldError | null>(null);
-  const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
 
   const onChangeName = useCallback(
     (name: string) => {
@@ -35,14 +33,6 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
       });
     },
     [onChangeKey, entity, names, t],
-  );
-
-  const onChangeDescription = useCallback(
-    (description: string) => {
-      setDescriptionError(getErrorForDescription(description, t));
-      onChangeKey({ ...entity, description });
-    },
-    [entity, onChangeKey, t],
   );
 
   const onChangeProject = useCallback(
@@ -93,16 +83,9 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
           onChange={onChangeName}
         />
       )}
-      <TextAreaField
-        elementId="description"
-        fieldTitle={t(EntityFieldsI18nKey.description)}
-        placeholder={t(EntityPlaceholdersI18nKey.Description)}
-        optional={true}
-        value={entity.description}
-        errorText={descriptionError?.text}
-        invalid={!!descriptionError}
-        onChange={onChangeDescription}
-      />
+
+      <DescriptionControl entity={entity} onChangeEntity={onChangeKey} />
+
       <TextInputField
         elementId="project"
         fieldTitle={t(EntityFieldsI18nKey.project)}
