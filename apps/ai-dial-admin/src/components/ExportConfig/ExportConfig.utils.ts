@@ -5,7 +5,6 @@ import {
   ENTITY_BASE_COLUMNS,
   RUNNERS_COLUMNS,
   SIMPLE_ENTITY_COLUMNS,
-  SIMPLE_DESCRIPTION_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
@@ -63,7 +62,7 @@ export const getActualColDefs = (
     columns = [...RUNNERS_COLUMNS];
   }
   if (type === EntityType.ADAPTER) {
-    columns = [...SIMPLE_DESCRIPTION_COLUMNS];
+    columns = [...SIMPLE_ENTITY_COLUMNS];
   }
   if (remove && isEntityWithDependency(type)) {
     columns.push({

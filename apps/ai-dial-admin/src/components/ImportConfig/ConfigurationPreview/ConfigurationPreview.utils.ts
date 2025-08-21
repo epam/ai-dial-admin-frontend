@@ -9,7 +9,6 @@ import {
   RUNNERS_COLUMNS,
   MODELS_COLUMNS,
   APPLICATIONS_COLUMNS,
-  SIMPLE_DESCRIPTION_COLUMNS,
   SIMPLE_ENTITY_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
 import StatusCellRenderer from '@/src/components/Grid/CellRenderers/StatusCellRenderer';
@@ -149,5 +148,5 @@ export const getComponentColDefs = (type: string, t: (v: string) => string): Col
     return [getComponentActionColumn(), ...KEYS_COLUMNS];
   }
 
-  return [getComponentActionColumn(), ...SIMPLE_DESCRIPTION_COLUMNS];
+  return [getComponentActionColumn(), ...SIMPLE_ENTITY_COLUMNS];
 };

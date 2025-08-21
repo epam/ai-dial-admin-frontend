@@ -14,7 +14,7 @@ import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import SourceEntitySelector from '@/src/components/EntityMainProperties/SourceEntitySelector/SourceEntitySelector';
-import { SIMPLE_DESCRIPTION_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
   view: ApplicationRoute;
@@ -80,7 +80,7 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
         <SourceEntitySelector
           route={ApplicationRoute.Adapters}
           buttonTitle={t(ButtonsI18nKey.OpenAdapter)}
-          columns={SIMPLE_DESCRIPTION_COLUMNS}
+          columns={SIMPLE_ENTITY_COLUMNS}
           selectedValue={entity.adapter}
           fieldTitle={t(EntityFieldsI18nKey.adapter)}
           placeholder={t(EntityPlaceholdersI18nKey.SelectAdapter)}
