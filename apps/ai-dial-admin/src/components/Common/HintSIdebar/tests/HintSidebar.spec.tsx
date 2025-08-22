@@ -1,5 +1,6 @@
-import { describe, expect, test, Mock, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { AppContextType, useAppContext } from '@/src/context/AppContext';
 
 import HintSidebar from '@/src/components/Common/HintSIdebar/HintSidebar';
 
@@ -15,5 +16,15 @@ describe('HintSidebar', () => {
 
     expect(screen.getByRole('complementary')).toBeInTheDocument();
     expect(screen.getByText('content')).toBeInTheDocument();
+  });
+
+  test('should not render HintSidebar content', () => {
+    vi.mocked(useAppContext).mockReturnValue({
+      hintSidebar: { show: false, content: null },
+    } as AppContextType);
+
+    render(<HintSidebar />);
+
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
   });
 });

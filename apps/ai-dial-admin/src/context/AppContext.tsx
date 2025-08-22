@@ -4,7 +4,7 @@ import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storag
 import { LOCAL_STORAGE_SIDEBAR_OPEN_KEY } from '@/src/constants/main-layout';
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 
-interface AppContextType {
+export interface AppContextType {
   themeUrl?: string;
   sidebarOpen: boolean;
   toggleSidebar: (e: MouseEvent<HTMLButtonElement>) => void;
