@@ -49,30 +49,27 @@ const FileProperties: FC<Props> = ({ file, onChangeFile }) => {
   ]);
 
   return (
-    <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full">
+    <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full gap-6">
       {/* will be uncommented after BE implement author */}
       <div className="flex flex-row gap-10">
         <LabeledText label={t(EntityFieldsI18nKey.displayName)} text={file.name} />
         {/* <LabeledText label="Author" text={file.author} /> */}
       </div>
 
-      {/* <div className="mt-8 pt-8"> */}
-      <div>
-        <div className="flex flex-col gap-6">
-          <div>
-            <Field fieldTitle={t(BasicI18nKey.Source)} />
-            <Grid columnDefs={columnDefs} rowData={rowData} />
-          </div>
-          <div className="lg:w-[35%]">
-            <FilePath
-              value={file.folderId}
-              label={t(FoldersI18nKey.Storage)}
-              modalTitle={t(BasicI18nKey.MoveToFolder)}
-              placeholder={t(EntityPlaceholdersI18nKey.Path)}
-              onChange={onChangePath}
-              context={useFileFolder}
-            />
-          </div>
+      <div className="flex flex-col gap-6 pt-6">
+        <div>
+          <Field fieldTitle={t(BasicI18nKey.Source)} />
+          <Grid columnDefs={columnDefs} rowData={rowData} />
+        </div>
+        <div className="lg:w-[35%]">
+          <FilePath
+            value={file.folderId}
+            label={t(FoldersI18nKey.Storage)}
+            modalTitle={t(BasicI18nKey.MoveToFolder)}
+            placeholder={t(EntityPlaceholdersI18nKey.Path)}
+            onChange={onChangePath}
+            context={useFileFolder}
+          />
         </div>
       </div>
     </div>

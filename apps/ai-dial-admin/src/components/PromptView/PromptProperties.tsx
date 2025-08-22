@@ -181,7 +181,7 @@ const PromptProperties: FC<Props> = ({
         )}
       </div>
 
-      <div className="pt-4">
+      <div className="pt-6">
         <div className="flex flex-col gap-6 pr-6">
           <div className="w-[105px]">
             {isImmutable ? (
