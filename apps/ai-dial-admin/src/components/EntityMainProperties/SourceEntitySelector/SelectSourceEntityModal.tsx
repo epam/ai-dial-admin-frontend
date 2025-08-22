@@ -50,16 +50,19 @@ const SelectSourceEntityModal: FC<Props> = ({
             rowSelection: { mode: 'singleRow', enableClickSelection: true },
             selectionColumnDef: {
               ...RADIO_BUTTON_COL_DEF,
-              cellRenderer: (data: { data?: DialApplicationScheme; id: string }) => (
+              cellRenderer: (data: { data?: DialApplicationScheme | DialAdapter; id: string }) => (
                 <RadioButtonRenderer
-                  inputId={data.data?.$id || data.id}
-                  isChecked={data.data?.$id === selectedEntity}
+                  inputId={(data.data as DialApplicationScheme)?.$id || (data.data as DialAdapter)?.name || data.id}
+                  isChecked={
+                    (data.data as DialApplicationScheme)?.$id === selectedEntity ||
+                    (data.data as DialAdapter)?.name === selectedEntity
+                  }
                 />
               ),
             },
             onRowSelected: (event) => {
               if (event.node.isSelected()) {
-                setSelectedEntity(event.data.$id);
+                setSelectedEntity(event.data.$id || event.data.name);
               }
             },
             onGridReady: (event) => {
@@ -68,7 +71,7 @@ const SelectSourceEntityModal: FC<Props> = ({
                 rowData: [{ ['dial:applicationTypeDisplayName']: t(BasicI18nKey.None) }, ...(sourceEntities || [])],
               });
               event.api.forEachNode((node) => {
-                if (node.data.$id === selectedEntity) {
+                if (node.data.$id === selectedEntity || node.data.name === selectedEntity) {
                   node.setSelected(true);
                 }
               });
