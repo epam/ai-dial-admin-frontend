@@ -10,6 +10,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import Page403 from '@/src/components/Page403/Page403';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,5 +42,9 @@ export default async function Page(params: {
     redirect(ApplicationRoute.Prompts);
   }
 
-  return <PromptView originalPrompt={prompt} prompts={prompts} />;
+  return (
+    <SaveValidationContextProvider>
+      <PromptView originalPrompt={prompt} prompts={prompts} />
+    </SaveValidationContextProvider>
+  );
 }
