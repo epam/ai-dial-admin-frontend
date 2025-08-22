@@ -10,6 +10,7 @@ import { Publication } from '@/src/models/dial/publications';
 import { logger } from '@/src/server/logger';
 import Page403 from '@/src/components/Page403/Page403';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,12 +35,14 @@ export default async function Page(params: { searchParams: Promise<{ path: strin
   }
 
   return (
-    <PublicationView
-      publication={data as Publication}
-      view={ApplicationRoute.ApplicationPublications}
-      approvePublication={approvePublication}
-      declinePublication={declinePublication}
-      applicationSchemes={applicationSchemes}
-    />
+    <SaveValidationContextProvider>
+      <PublicationView
+        publication={data as Publication}
+        view={ApplicationRoute.ApplicationPublications}
+        approvePublication={approvePublication}
+        declinePublication={declinePublication}
+        applicationSchemes={applicationSchemes}
+      />
+    </SaveValidationContextProvider>
   );
 }
