@@ -1,6 +1,6 @@
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { Notification } from '@/src/models/notification';
-import { EditorI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey } from '@/src/constants/i18n';
 import { getErrorNotification } from '@/src/utils/notification';
 
 export const showEditorErrorNotifications = ({
@@ -14,7 +14,7 @@ export const showEditorErrorNotifications = ({
 }) => {
   return errors.map((error) => {
     const id = showNotification(
-      getErrorNotification(error.message, t(EditorI18nKey.ErrorLine, { line: error.startLineNumber }), null),
+      getErrorNotification(error.message, t(ErrorI18nKey.EditorErrorLine, { line: error.startLineNumber }), null),
     );
     return { id, ...error };
   });

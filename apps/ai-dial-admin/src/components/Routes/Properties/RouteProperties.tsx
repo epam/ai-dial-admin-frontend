@@ -3,7 +3,7 @@ import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
 import Switch from '@/src/components/Common/Switch/Switch';
 import MaxRetryAttempts from '@/src/components/MaxRetryAttempts/MaxRetryAttempts';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRoute, RouteOutput } from '@/src/models/dial/route';
 import { RadioButtonModel } from '@/src/models/radio-button';
@@ -26,7 +26,7 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
 
   const outputRadio: RadioButtonModel[] = [
     { id: RouteOutput.UPSTREAMS, name: t(EntityFieldsI18nKey.upstreams) },
-    { id: RouteOutput.RESPONSE, name: t(RoutesI18nKey.Response) },
+    { id: RouteOutput.RESPONSE, name: t(EntityFieldsI18nKey.response) },
   ];
 
   const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE'];
@@ -71,7 +71,7 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
           status,
         },
       });
-      setStatusError(+status >= 100 && +status <= 999 ? '' : t(RoutesI18nKey.InvalidStatus));
+      setStatusError(+status >= 100 && +status <= 999 ? '' : t(ErrorI18nKey.InvalidStatus));
     },
     [route, updateRoute, t],
   );
@@ -118,7 +118,7 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
 
         <Switch
           isOn={route.rewritePath}
-          title={t(RoutesI18nKey.RewritePath)}
+          title={t(EntityFieldsI18nKey.rewritePath)}
           switchId="RewritePath"
           onChange={onChangeRewritePath}
         />

@@ -18,7 +18,7 @@ describe('RouteProperties', () => {
     render(<RouteProperties route={baseRoute} isAppRoute={true} updateRoute={vi.fn()} />);
     expect(screen.getByText(EntityFieldsI18nKey.displayName)).toBeInTheDocument();
     expect(screen.getByText(EntityFieldsI18nKey.paths)).toBeInTheDocument();
-    expect(screen.getByText(RoutesI18nKey.RewritePath)).toBeInTheDocument();
+    expect(screen.getByText(EntityFieldsI18nKey.rewritePath)).toBeInTheDocument();
     expect(screen.getByText(EntityFieldsI18nKey.methods)).toBeInTheDocument();
     expect(screen.getByText(RoutesI18nKey.Output)).toBeInTheDocument();
     expect(screen.getByText(EntityFieldsI18nKey.status)).toBeInTheDocument();
