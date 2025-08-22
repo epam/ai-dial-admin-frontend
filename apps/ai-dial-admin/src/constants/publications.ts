@@ -1,9 +1,9 @@
-import { PublicationsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { ActionType } from '@/src/models/dial/publications';
 
 export const ACTION_I18N_KEYS: Record<ActionType, string> = {
-  [ActionType.ADD]: PublicationsI18nKey.ActionPublish,
-  [ActionType.DELETE]: PublicationsI18nKey.ActionUnpublish,
+  [ActionType.ADD]: ButtonsI18nKey.Publish,
+  [ActionType.DELETE]: ButtonsI18nKey.Unpublish,
 };
 
 export const ACTION_CLASSNAMES: Record<ActionType, string> = {

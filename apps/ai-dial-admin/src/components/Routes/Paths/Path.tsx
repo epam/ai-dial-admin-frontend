@@ -4,7 +4,7 @@ import { IconTrash } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { isValidRoutePath } from '@/src/utils/validation/path-error';
@@ -52,9 +52,9 @@ const Path: FC<Props> = ({ index, path, allPaths, onRemove, onChangePath }) => {
           onChange={(value) => onChangePath(index, value)}
           errorText={
             isEmptyPath && index === 0 && isAllEmptyValues
-              ? t(RoutesI18nKey.RequiredProperty)
+              ? t(ErrorI18nKey.RequiredProperty)
               : isInvalidPath
-                ? t(RoutesI18nKey.InvalidPath)
+                ? t(ErrorI18nKey.InvalidPath)
                 : ''
           }
           invalid={(isEmptyPath && index === 0 && isAllEmptyValues) || isInvalidPath}

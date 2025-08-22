@@ -10,7 +10,7 @@ import RulesCompare from '@/src/components/PublicationView/Popup/RulesCompare';
 import RulesStructure from '@/src/components/PublicationView/Popup/RulesStructure';
 import RulesItem from '@/src/components/Rules/Item/RulesItem';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, CompareI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useRuleFolder } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
@@ -66,7 +66,7 @@ const BasePublicationPermissions: FC<Props> = ({ rules, folderId, showCompare })
         {showCompareButton && (
           <Button
             cssClass="secondary"
-            title={t(ButtonsI18nKey.CompareChanges)}
+            title={t(CompareI18nKey.CompareChanges)}
             iconBefore={<IconReplace {...BASE_ICON_PROPS} />}
             onClick={() => setCompareModalState(PopUpState.Opened)}
             dataTestId={'publication-permissions-compare-changes-button'}
