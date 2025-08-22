@@ -32,8 +32,13 @@ const ExtendedProperties: FC<Props> = ({ template, onChange }) => {
         <BaseProperties template={template} setTemplate={onChange} isImmutable={true} />
       </div>
       <div className="lg:w-[35%] flex flex-col gap-6">
-        <CompletionEndpointControl endpoint={template?.completionEndpoint} onChange={onChangeCompletionEndpoint} />
+        <CompletionEndpointControl
+          required={true}
+          endpoint={template?.completionEndpoint}
+          onChange={onChangeCompletionEndpoint}
+        />
         <ConfigurationEndpointControl
+          required={true}
           endpoint={template?.configurationEndpoint}
           onChange={onChangeConfigurationEndpoint}
         />

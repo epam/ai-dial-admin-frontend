@@ -52,14 +52,14 @@ describe('getUrlError', () => {
   const t = (str: string) => str;
 
   test('returns an error for required url', () => {
-    const error = getUrlError(void 0, true, t);
+    const error = getUrlError(void 0, t, true);
 
     expect(error?.type).toEqual(ErrorType.EMPTY);
     expect(error?.text).toEqual(ErrorI18nKey.RequiredField);
   });
 
   test('returns an error for required url  without t', () => {
-    const error = getUrlError(void 0, true);
+    const error = getUrlError(void 0, void 0, true);
 
     expect(error?.type).toEqual(ErrorType.EMPTY);
     expect(error?.text).toEqual('');
@@ -68,7 +68,7 @@ describe('getUrlError', () => {
   test('returns an error for invalid url', () => {
     const url = 'invalid-url';
 
-    const error = getUrlError(url, false, t);
+    const error = getUrlError(url, t);
 
     expect(error?.type).toEqual(ErrorType.INVALID);
     expect(error?.text).toEqual(ErrorI18nKey.UrlField);
@@ -77,7 +77,7 @@ describe('getUrlError', () => {
   test('returns an error for invalid url without t', () => {
     const url = 'invalid-url';
 
-    const error = getUrlError(url, false);
+    const error = getUrlError(url);
 
     expect(error?.type).toEqual(ErrorType.INVALID);
     expect(error?.text).toEqual('');
@@ -86,7 +86,7 @@ describe('getUrlError', () => {
   test('returns null for valid url', () => {
     const url = 'https://example.com';
     const t = (str: string) => str;
-    const error = getUrlError(url, false, t);
+    const error = getUrlError(url, t);
 
     expect(error).toBeNull();
   });

@@ -7,6 +7,7 @@ import { getUrlError } from '@/src/utils/validation/url-error';
 
 export interface EndpointControlProps {
   endpoint?: string;
+  required?: boolean;
   textBeforeInput?: string;
   onChange?: (endpoint: string) => void;
 }
@@ -17,13 +18,14 @@ export interface Props extends EndpointControlProps {
   placeholder: string;
 }
 
-const EndpointControl: FC<Props> = ({ textBeforeInput, placeholder, fieldTitle, endpoint, onChange, id }) => {
+const EndpointControl: FC<Props> = ({ textBeforeInput, required, placeholder, fieldTitle, endpoint, onChange, id }) => {
+  console.log(placeholder);
   const t = useI18n() as (t: string) => string;
   const { dispatch } = useSaveValidationContext();
 
   const endpointError = useMemo(() => {
-    return endpoint ? getUrlError(textBeforeInput ? `${textBeforeInput}${endpoint}` : endpoint, false, t) : null;
-  }, [endpoint, textBeforeInput, t]);
+    return endpoint ? getUrlError(textBeforeInput ? `${textBeforeInput}${endpoint}` : endpoint, t, !required) : null;
+  }, [endpoint, textBeforeInput, required, t]);
 
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: id, isValid: !endpointError });
@@ -36,6 +38,7 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, placeholder, fieldTitle, 
       fieldTitle={fieldTitle}
       placeholder={placeholder}
       value={endpoint}
+      optional={!required}
       errorText={endpointError?.text}
       invalid={!!endpointError}
       onChange={onChange}

@@ -1,20 +1,20 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useMemo, useState } from 'react';
 
 import classNames from 'classnames';
 
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
+import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
+import EditorUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/EditorUrl';
+import ViewerUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ViewerUrl';
 import SourceEntitySelector from '@/src/components/EntityMainProperties/SourceEntitySelector/SourceEntitySelector';
 import { RUNNERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { ButtonsI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getUrlError } from '@/src/utils/validation/url-error';
 import { SourceTypes } from './constants';
-
 interface Props {
   entity: DialApplication;
   runners?: DialApplicationScheme[];
@@ -41,30 +41,6 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
     entity.endpoint || !entity.customAppSchemaId ? sources[0] : sources[1],
   );
   const { dispatch } = useSaveValidationContext();
-
-  const endpointError = useMemo(() => {
-    return entity.endpoint ? getUrlError(entity.endpoint, false, t) : null;
-  }, [entity.endpoint, t]);
-
-  useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'baseEndpoint', isValid: !endpointError });
-  }, [endpointError, t, dispatch]);
-
-  const viewerUrlError = useMemo(() => {
-    return entity.viewerUrl ? getUrlError(entity.viewerUrl, false, t) : null;
-  }, [entity.viewerUrl, t]);
-
-  useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'viewerUrl', isValid: !viewerUrlError });
-  }, [viewerUrlError, t, dispatch]);
-
-  const editorUrlError = useMemo(() => {
-    return entity.editorUrl ? getUrlError(entity.editorUrl, false, t) : null;
-  }, [entity.editorUrl, t]);
-
-  useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'editorUrl', isValid: !editorUrlError });
-  }, [editorUrlError, t, dispatch]);
 
   const onChangeEndpoint = useCallback(
     (endpoint: string) => {
@@ -127,37 +103,11 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
       </div>
       {sourceType?.id === SourceTypes.ENDPOINTS && (
         <div className={classNames('flex flex-col gap-4', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
-          <TextInputField
-            elementId="completionEndpoint"
-            fieldTitle={t(EntityFieldsI18nKey.completionEndpoint)}
-            placeholder={t(EntityPlaceholdersI18nKey.CompletionEndpoint)}
-            value={entity.endpoint}
-            onChange={onChangeEndpoint}
-            invalid={!!endpointError}
-            errorText={endpointError?.text}
-          />
+          <CompletionEndpointControl required={true} endpoint={entity.endpoint} onChange={onChangeEndpoint} />
           {isEntityImmutable && (
             <>
-              <TextInputField
-                optional={true}
-                elementId="viewerUrl"
-                fieldTitle={t(EntityFieldsI18nKey.viewerUrl)}
-                placeholder={t(EntityPlaceholdersI18nKey.ViewerUrl)}
-                value={entity.viewerUrl}
-                errorText={viewerUrlError?.text}
-                invalid={!!viewerUrlError}
-                onChange={onChangeViewerUrl}
-              />
-              <TextInputField
-                optional={true}
-                elementId="editorUrl"
-                fieldTitle={t(EntityFieldsI18nKey.editorUrl)}
-                placeholder={t(EntityPlaceholdersI18nKey.EditorUrl)}
-                value={entity.editorUrl}
-                errorText={editorUrlError?.text}
-                invalid={!!editorUrlError}
-                onChange={onChangeEditorUrl}
-              />
+              <ViewerUrlControl endpoint={entity.viewerUrl} onChange={onChangeViewerUrl} />
+              <EditorUrlControl endpoint={entity.editorUrl} onChange={onChangeEditorUrl} />
             </>
           )}
         </div>

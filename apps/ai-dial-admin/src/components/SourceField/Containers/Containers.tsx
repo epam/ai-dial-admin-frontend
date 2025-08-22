@@ -1,7 +1,7 @@
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, FeaturesI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { SourceI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -11,15 +11,14 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { getUrlError } from '@/src/utils/validation/url-error';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import Button from '@/src/components/Common/Button/Button';
 import Field from '@/src/components/Common/Field/Field';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import InputModal from '@/src/components/Common/InputModal/InputModal';
 import SelectContainerModal from '@/src/components/SourceField/Containers/SelectContainerModal';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
+import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
 
 interface Props {
   entity: DialInterceptor;
@@ -33,35 +32,9 @@ const Containers: FC<Props> = ({ entity, onChange, getContainers, fieldId }) => 
   const { showNotification } = useNotification();
   const showNotificationRef = useRef(showNotification);
 
-  const { dispatch } = useSaveValidationContext();
-
   const [modalState, setModalState] = useState(PopUpState.Closed);
   const [interceptorContainers, setInterceptorContainers] = useState<Container[]>([]);
   const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
-
-  const completionEndpointError = useMemo(() => {
-    return entity.source?.completionEndpointPath
-      ? getUrlError(`${selectedContainer?.url}${entity.source?.completionEndpointPath}`, false, t)
-      : null;
-  }, [entity, selectedContainer, t]);
-
-  useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'completionEndpoint', isValid: !completionEndpointError });
-  }, [completionEndpointError, t, dispatch]);
-
-  const configurationEndpointError = useMemo(() => {
-    return entity.source?.configurationEndpointPath
-      ? getUrlError(`${selectedContainer?.url}${entity.source?.configurationEndpointPath}`, false, t)
-      : null;
-  }, [entity, selectedContainer, t]);
-
-  useEffect(() => {
-    dispatch({
-      type: ValidationActionType.SetField,
-      field: 'configurationEndpoint',
-      isValid: !configurationEndpointError,
-    });
-  }, [configurationEndpointError, t, dispatch]);
 
   const onOpenModal = useCallback(() => {
     setModalState(PopUpState.Opened);
@@ -142,14 +115,9 @@ const Containers: FC<Props> = ({ entity, onChange, getContainers, fieldId }) => 
       </div>
       {entity.source?.containerId && (
         <div className="lg:w-[35%] flex flex-col gap-6">
-          <TextInputField
+          <CompletionEndpointControl
+            endpoint={entity.source.completionEndpointPath}
             textBeforeInput={selectedContainer?.url}
-            elementId="completionEndpoint"
-            fieldTitle={t(EntityFieldsI18nKey.completionEndpoint)}
-            placeholder={t(EntityPlaceholdersI18nKey.CompletionEndpoint)}
-            value={entity.source.completionEndpointPath}
-            errorText={completionEndpointError?.text}
-            invalid={!!completionEndpointError}
             onChange={(completionEndpointPath) => {
               onChange({
                 ...entity,
@@ -157,14 +125,10 @@ const Containers: FC<Props> = ({ entity, onChange, getContainers, fieldId }) => 
               });
             }}
           />
-          <TextInputField
+
+          <ConfigurationEndpointControl
+            endpoint={entity.source.configurationEndpointPath}
             textBeforeInput={selectedContainer?.url}
-            elementId="configurationEndpoint"
-            fieldTitle={t(FeaturesI18nKey.configurationEndpoint)}
-            placeholder={t(EntityPlaceholdersI18nKey.ConfigurationEndpoint)}
-            value={entity.source.configurationEndpointPath}
-            errorText={configurationEndpointError?.text}
-            invalid={!!configurationEndpointError}
             onChange={(configurationEndpointPath) => {
               onChange({
                 ...entity,
