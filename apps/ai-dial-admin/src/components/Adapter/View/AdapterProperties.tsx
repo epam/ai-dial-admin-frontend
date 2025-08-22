@@ -10,7 +10,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { getErrorForDisplayName } from '@/src/utils/validation/name-error';
-import EndpointControl from '../../EntityMainProperties/BaseProperties/Endpoint/Endpoint';
+import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
 
 interface Props {
   entity: DialAdapter;
@@ -56,6 +56,7 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
     dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!entity.name });
     dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!entity.displayName });
     dispatch({ type: ValidationActionType.SetField, field: 'baseEndpoint', isValid: !!entity.baseEndpoint });
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -63,12 +64,7 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
     <div className="h-full flex flex-col gap-6">
       {!isEntityImmutable && <IdControl entity={entity} names={names} onChangeEntity={onChangeAdapter} />}
 
-      <DisplayNameControl
-        required={true}
-        displayName={entity.displayName}
-        isEntityImmutable={isEntityImmutable}
-        onChange={onChangeDisplayName}
-      />
+      <DisplayNameControl required={true} displayName={entity.displayName} onChange={onChangeDisplayName} />
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeAdapter} />
 

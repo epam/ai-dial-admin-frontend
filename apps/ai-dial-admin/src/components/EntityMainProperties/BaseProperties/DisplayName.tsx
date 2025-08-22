@@ -9,12 +9,11 @@ import { getErrorForDisplayName } from '@/src/utils/validation/name-error';
 
 interface Props {
   displayName?: string;
-  isEntityImmutable?: boolean;
   required?: boolean;
   onChange?: (displayName: string) => void;
 }
 
-const DisplayNameControl: FC<Props> = ({ displayName, isEntityImmutable, onChange, required }) => {
+const DisplayNameControl: FC<Props> = ({ displayName, onChange, required }) => {
   const t = useI18n() as (t: string) => string;
   const { dispatch } = useSaveValidationContext();
 
@@ -31,12 +30,10 @@ const DisplayNameControl: FC<Props> = ({ displayName, isEntityImmutable, onChang
 
   const onChangeDisplayName = useCallback(
     (value: string) => {
-      if (!isEntityImmutable) {
-        validateDisplayName(value);
-      }
+      validateDisplayName(value);
       onChange?.(value);
     },
-    [onChange, isEntityImmutable, validateDisplayName],
+    [onChange, validateDisplayName],
   );
 
   return (
