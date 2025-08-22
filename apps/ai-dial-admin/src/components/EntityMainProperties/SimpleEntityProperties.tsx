@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useMemo } from 'react';
+import { FC, useCallback, useState } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
@@ -12,6 +12,7 @@ import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
 import { checkNameVersionCombination } from '@/src/utils/prompts/versions';
 import { getErrorForPath } from '@/src/utils/validation/path-error';
+import { FieldError } from '@/src/models/error';
 
 interface Props {
   view?: ApplicationRoute;
@@ -43,35 +44,28 @@ const SimpleEntityProperties: FC<Props> = ({
       ? EntityPlaceholdersI18nKey.DisplayName
       : EntityPlaceholdersI18nKey.Id;
 
-  const pathError = useMemo(() => {
-    return getErrorForPath((entity as DialRoute).paths?.[0], t);
-  }, [entity, t]);
-
-  const versionError = useMemo(() => {
-    const isValidVersion = !checkNameVersionCombination(versionsMap, entity.name as string, entity.version || '');
-    return isValidVersion ? void 0 : t(ErrorI18nKey.NameVersionCombination);
-  }, [versionsMap, entity.name, entity.version, t]);
-
-  useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !versionError });
-  }, [versionError, t, dispatch]);
-
-  useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'path', isValid: !pathError });
-  }, [pathError, t, dispatch]);
+  const [versionError, setVersionError] = useState<FieldError | undefined>(void 0);
+  const [pathError, setPathError] = useState<FieldError | undefined>(void 0);
 
   const onChangeVersion = useCallback(
     (version: string) => {
       onChangeEntity({ ...entity, version });
+      const isValidVersion = !checkNameVersionCombination(versionsMap, entity.name as string, entity.version || '');
+      const versionError = isValidVersion && versionsMap ? void 0 : t(ErrorI18nKey.NameVersionCombination);
+      setVersionError(versionError);
+      dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !versionError });
     },
-    [entity, onChangeEntity],
+    [dispatch, entity, onChangeEntity, t, versionsMap],
   );
 
   const onChangePath = useCallback(
     (path: string) => {
       onChangeEntity({ ...entity, paths: [path] } as DialRoute);
+      const pathError = getErrorForPath((entity as DialRoute).paths?.[0], t);
+      setPathError(pathError);
+      dispatch({ type: ValidationActionType.SetField, field: 'path', isValid: !pathError });
     },
-    [entity, onChangeEntity],
+    [dispatch, entity, onChangeEntity, t],
   );
 
   return (
@@ -97,7 +91,7 @@ const SimpleEntityProperties: FC<Props> = ({
           fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
           placeholder={t(EntityPlaceholdersI18nKey.Version)}
           disabled={isEntityImmutable}
-          errorText={versionError}
+          errorText={versionError?.text}
           invalid={!!versionError}
           value={entity.version}
           onChange={onChangeVersion}

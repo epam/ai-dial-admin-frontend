@@ -44,6 +44,7 @@ const DisplayNameControl: FC<Props> = ({ displayName, isEntityImmutable, onChang
       placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
       elementId="displayName"
       value={displayName}
+      optional={true}
       onChange={onChangeDisplayName}
       errorText={displayNameError?.text}
       invalid={!!displayNameError}

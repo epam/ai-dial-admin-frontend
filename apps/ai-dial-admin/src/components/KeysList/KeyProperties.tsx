@@ -3,7 +3,7 @@ import { FC, useCallback, useEffect, useMemo } from 'react';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Switch from '@/src/components/Common/Switch/Switch';
 import ValidityPeriodInput from '@/src/components/Common/ValidityPeriodInput/ValidityPeriodInput';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
@@ -29,9 +29,13 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
     return !!entity.key && !(entity.key.length > MAX_NAME_SYMBOLS);
   }, [entity.key]);
 
+  const projectError = useMemo(() => {
+    return entity.project ? void 0 : t(ErrorI18nKey.RequiredField);
+  }, [entity.project, t]);
+
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'project', isValid: !!entity.project });
-  }, [entity.project, dispatch]);
+    dispatch({ type: ValidationActionType.SetField, field: 'project', isValid: !projectError });
+  }, [entity.project, dispatch, projectError]);
 
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'key', isValid: isValidKey });
@@ -88,8 +92,9 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
         fieldTitle={t(EntityFieldsI18nKey.project)}
         placeholder={t(EntityPlaceholdersI18nKey.Project)}
         value={entity.project}
+        errorText={projectError}
         onChange={onChangeProject}
-        invalid={!entity.project}
+        invalid={!!projectError}
       />
 
       {isKeyImmutable && (
