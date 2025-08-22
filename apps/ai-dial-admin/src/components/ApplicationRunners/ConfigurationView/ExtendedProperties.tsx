@@ -293,15 +293,6 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
           onChange(value, 'dial:applicationTypePlaybackSupport');
         }}
       />
-
-      <Switch
-        isOn={runner['dial:applicationTypePlaybackSupport']}
-        title={t(EntityFieldsI18nKey['dial:applicationTypePlaybackSupport'])}
-        switchId="applicationTypePlaybackSupport"
-        onChange={(value: boolean) => {
-          onChangeRunner({ ...runner, 'dial:applicationTypePlaybackSupport': value });
-        }}
-      />
     </div>
   );
 };
