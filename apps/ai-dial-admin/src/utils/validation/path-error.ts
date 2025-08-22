@@ -1,5 +1,6 @@
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { ErrorType } from '@/src/types/error-type';
+import { FieldError } from '@/src/models/error';
 
 // todo when correct regexp will be found return all validation
 // const PATH_REGEX = /^\/(?=.{1,})([a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*\/?)?$/;
@@ -21,9 +22,8 @@ export const isValidAllRoutePaths = (paths: string[]): boolean => {
   // return nonEmptyValues.every((path) => PATH_REGEX.test(path));
 };
 
-export const getErrorForPath = (path?: string, t?: (str: string) => string) => {
+export const getErrorForPath = (path?: string, t?: (str: string) => string): FieldError | undefined => {
   const isEmptyPath = !path || path === '';
-  // const isInvalid = path && !PATH_REGEX.test(path);
 
   if (isEmptyPath) {
     return {
@@ -31,12 +31,6 @@ export const getErrorForPath = (path?: string, t?: (str: string) => string) => {
       text: t ? t(ErrorI18nKey.RequiredProperty) : '',
     };
   }
-  // if (isInvalid) {
-  //   return {
-  //     type: ErrorType.INVALID,
-  //     text: t ? t(ErrorI18nKey.InvalidPath) : '',
-  //   };
-  // }
 
-  return null;
+  return void 0;
 };
