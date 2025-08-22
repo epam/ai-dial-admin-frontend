@@ -18,7 +18,7 @@ const LabeledText: FC<Props> = ({ label, text, children, copyButton }) => {
       {children ? (
         children
       ) : (
-        <div className="flex flex-row">
+        <div className="flex flex-row items-center">
           <Tooltip tooltip={text}>{text}</Tooltip>
 
           {copyButton && (
