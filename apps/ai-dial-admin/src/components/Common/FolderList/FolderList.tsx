@@ -13,7 +13,7 @@ import {
   getManageFolderOperation,
 } from '@/src/components/Common/FolderCreate/utils';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
-import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/EntityListHeaderButtons.utils';
+import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { EntitiesI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';

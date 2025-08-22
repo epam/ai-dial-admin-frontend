@@ -41,6 +41,15 @@ describe('RouteProperties', () => {
     expect(updateRoute).toHaveBeenCalledWith(expect.objectContaining({ name: 'newName' }));
   });
 
+  test('calls updateRoute when displayname changes', () => {
+    const updateRoute = vi.fn();
+    render(<RouteProperties route={baseRoute} isAppRoute={false} updateRoute={updateRoute} />);
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName), {
+      target: { value: 'newName' },
+    });
+    expect(updateRoute).toHaveBeenCalledWith(expect.objectContaining({ displayName: 'newName' }));
+  });
+
   test('calls updateRoute when description changes', () => {
     const updateRoute = vi.fn();
     render(<RouteProperties route={{ ...baseRoute, response: void 0 }} isAppRoute={false} updateRoute={updateRoute} />);

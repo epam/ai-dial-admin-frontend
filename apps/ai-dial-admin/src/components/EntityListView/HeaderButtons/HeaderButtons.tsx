@@ -34,7 +34,7 @@ import { getErrorNotification, getPrepareNotification, getSuccessNotification } 
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import { createModalTitleMap } from '@/src/components/EntityListView/constants';
 import EntityListModals, { ModalType } from '@/src/components/EntityListView/EntityListModals';
-import { getFormDataForImport } from './EntityListHeaderButtons.utils';
+import { getFormDataForImport } from './utils';
 import CreateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Create';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import ResetFiltersButton from './ResetFiltersButton';
@@ -157,11 +157,7 @@ const EntityListHeaderButtons = <T extends DialBaseEntity | DialKey | DialApplic
 
   const getCreateModal = () => {
     if (route === ApplicationRoute.ApplicationRunners) {
-      return (
-        <SaveValidationContextProvider>
-          <CreateAppRunner modalState={modalState} onClose={handleModalClose} route={route} />;
-        </SaveValidationContextProvider>
-      );
+      return <CreateAppRunner modalState={modalState} onClose={handleModalClose} route={route} />;
     }
 
     if (route === ApplicationRoute.InterceptorTemplates) {
@@ -175,29 +171,23 @@ const EntityListHeaderButtons = <T extends DialBaseEntity | DialKey | DialApplic
       );
     }
     if (route === ApplicationRoute.Adapters) {
-      return (
-        <SaveValidationContextProvider>
-          <CreateAdapter modalState={modalState} onClose={handleModalClose} names={names || []} />
-        </SaveValidationContextProvider>
-      );
+      return <CreateAdapter modalState={modalState} onClose={handleModalClose} names={names || []} />;
     }
 
     if (route === ApplicationRoute.Keys) {
       return <CreateKey modalState={modalState} onClose={handleModalClose} names={names || []} keys={keys || []} />;
     }
     return (
-      <SaveValidationContextProvider>
-        <CreateEntity
-          route={route}
-          runners={runners}
-          modalTitle={t(createModalTitleMap[route])}
-          modalState={modalState}
-          createEntity={createEntity as (entity: DialBaseEntity) => Promise<ServerActionResponse>}
-          onClose={handleModalClose}
-          names={names || []}
-          versionsMap={versionsMap}
-        />
-      </SaveValidationContextProvider>
+      <CreateEntity
+        route={route}
+        runners={runners}
+        modalTitle={t(createModalTitleMap[route])}
+        modalState={modalState}
+        createEntity={createEntity as (entity: DialBaseEntity) => Promise<ServerActionResponse>}
+        onClose={handleModalClose}
+        names={names || []}
+        versionsMap={versionsMap}
+      />
     );
   };
 
@@ -242,7 +232,7 @@ const EntityListHeaderButtons = <T extends DialBaseEntity | DialKey | DialApplic
         route={route}
         modalState={modalState}
         modalType={modalType}
-        createModal={getCreateModal()}
+        createModal={<SaveValidationContextProvider>{getCreateModal()}</SaveValidationContextProvider>}
         handleExport={onExport}
         handleImport={onImport}
         handleClose={handleModalClose}

@@ -5,10 +5,8 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/
 import { FieldError } from '@/src/models/error';
 import { useI18n } from '@/src/locales/client';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import { getErrorForDescription } from '@/src/utils/validation/description-error';
 import { getErrorForName } from '@/src/utils/validation/name-error';
-
-import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
+import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 
 interface Props {
   template: InterceptorTemplate;
@@ -21,7 +19,6 @@ const BaseProperties: FC<Props> = ({ template, setTemplate, names, isImmutable }
   const t = useI18n() as (t: string) => string;
 
   const [nameError, setNameError] = useState<FieldError | null>(null);
-  const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
 
   return (
     <div className="flex flex-col gap-6 h-full">
@@ -39,7 +36,6 @@ const BaseProperties: FC<Props> = ({ template, setTemplate, names, isImmutable }
           }}
         />
       )}
-
       <TextInputField
         elementId="name"
         fieldTitle={t(EntityFieldsI18nKey.displayName)}
@@ -49,20 +45,7 @@ const BaseProperties: FC<Props> = ({ template, setTemplate, names, isImmutable }
           setTemplate({ ...template, displayName });
         }}
       />
-
-      <TextAreaField
-        elementId="description"
-        fieldTitle={t(EntityFieldsI18nKey.description)}
-        placeholder={t(EntityPlaceholdersI18nKey.Description)}
-        optional={true}
-        errorText={descriptionError?.text}
-        invalid={!!descriptionError}
-        value={template.description}
-        onChange={(description) => {
-          setDescriptionError(getErrorForDescription(description, t));
-          setTemplate({ ...template, description });
-        }}
-      />
+      <DescriptionControl entity={template} onChangeEntity={setTemplate} />
     </div>
   );
 };

@@ -12,6 +12,7 @@ import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import InterceptorTemplatesList from '@/src/components/InterceptorTemplates/List/List';
 import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
 import Page403 from '@/src/components/Page403/Page403';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,5 +37,9 @@ export default async function Page() {
     logger.error('Getting interceptor templates error', e);
   }
 
-  return <InterceptorTemplatesList data={data || []} route={ApplicationRoute.InterceptorTemplates} />;
+  return (
+    <SaveValidationContextProvider>
+      <InterceptorTemplatesList data={data || []} route={ApplicationRoute.InterceptorTemplates} />
+    </SaveValidationContextProvider>
+  );
 }

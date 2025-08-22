@@ -15,7 +15,7 @@ import {
   readAllFiles,
   readJsonFiles,
 } from '@/src/components/Common/FolderCreate/utils';
-import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/EntityListHeaderButtons.utils';
+import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
 import {
   changeFilesMap,
   generateFileColumnsForImportGrid,

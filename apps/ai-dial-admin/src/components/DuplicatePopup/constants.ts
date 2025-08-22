@@ -15,5 +15,4 @@ export const duplicateModalTitleMap: Record<string, DuplicateI18nKey> = {
 
 export const duplicateModalDescriptionMap: Record<string, DuplicateI18nKey> = {
   [ApplicationRoute.Models]: DuplicateI18nKey.ModelDescription,
-  [ApplicationRoute.Applications]: DuplicateI18nKey.ApplicationDescription,
 };

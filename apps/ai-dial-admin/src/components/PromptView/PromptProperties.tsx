@@ -13,7 +13,6 @@ import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBas
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
 import MdEditor from '@/src/components/Common/MdEditor/MdEditor';
 import Switch from '@/src/components/Common/Switch/Switch';
-import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 import {
   BasicI18nKey,
   ButtonsI18nKey,
@@ -27,13 +26,12 @@ import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
-import { FieldError } from '@/src/models/error';
 import { JSONEditorError } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
-import { getErrorForDescription } from '@/src/utils/validation/description-error';
+import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 
 interface Props {
   prompt: DialPrompt;
@@ -66,17 +64,8 @@ const PromptProperties: FC<Props> = ({
   const versions: string[] = prompts?.map((prompt) => prompt.version) || [];
   const [modalState, setModalState] = useState(PopUpState.Closed);
 
-  const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
   const [isJSONContentMode, setJSONContentMode] = useState(false);
   const [jsonValue, setJsonValue] = useState<string | undefined>(undefined);
-
-  const onChangeDescription = useCallback(
-    (description: string) => {
-      setDescriptionError(getErrorForDescription(description, t));
-      onChangePrompt?.({ ...prompt, description });
-    },
-    [prompt, onChangePrompt, t],
-  );
 
   const onChangeContent = useCallback(
     (content: string) => {
@@ -220,18 +209,9 @@ const PromptProperties: FC<Props> = ({
               </DropdownField>
             )}
           </div>
-          <TextAreaField
-            elementId="description"
-            elementCssClass="lg:w-[35%]"
-            fieldTitle={t(EntityFieldsI18nKey.description)}
-            placeholder={t(EntityPlaceholdersI18nKey.Description)}
-            optional={true}
-            disabled={isImmutable}
-            value={prompt.description}
-            errorText={descriptionError?.text}
-            invalid={!!descriptionError}
-            onChange={onChangeDescription}
-          />
+          <div className="lg:w-[35%]">
+            <DescriptionControl entity={prompt} onChangeEntity={onChangePrompt} disabled={isImmutable} />
+          </div>
           <div>
             <div className="flex justify-between mb-2">
               <div className="tiny mb-2 text-secondary">{t(EntityFieldsI18nKey.content)}</div>
