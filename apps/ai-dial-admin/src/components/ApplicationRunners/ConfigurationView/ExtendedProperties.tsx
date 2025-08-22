@@ -1,24 +1,27 @@
-import { FC, useCallback, useEffect, useMemo } from 'react';
+import { FC, useCallback } from 'react';
 
 import { getModelsTopics } from '@/src/app/[lang]/models/actions';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import Switch from '@/src/components/Common/Switch/Switch';
+import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
+import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
+import EditorUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/EditorUrl';
+import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
+import ViewerUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ViewerUrl';
+import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
 import {
-  FeaturesI18nKey,
-  TopicsI18nKey,
+  BasicI18nKey,
   EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
+  FeaturesI18nKey,
+  TopicsI18nKey,
   TypeI18nKey,
-  BasicI18nKey,
 } from '@/src/constants/i18n';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme, TypeEntity } from '@/src/models/dial/application';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
-import { getUrlError } from '@/src/utils/validation/url-error';
-import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
 
 interface Props {
   runner: DialApplicationScheme;
@@ -32,75 +35,6 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
     { id: TypeEntity.OBJECT, name: t(TypeI18nKey.Object) },
     { id: TypeEntity.BOOLEAN, name: t(TypeI18nKey.Boolean) },
   ];
-
-  const { dispatch } = useSaveValidationContext();
-
-  const getError = useCallback(
-    (key: keyof DialApplicationScheme) => {
-      return runner[key] ? getUrlError(runner[key] as string, false, t) : null;
-    },
-    [runner, t],
-  );
-
-  const completionEndpointError = useMemo(() => {
-    return getError('dial:applicationTypeCompletionEndpoint');
-  }, [getError]);
-
-  useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'completionEndpoint', isValid: !completionEndpointError });
-  }, [completionEndpointError, t, dispatch]);
-
-  const configurationEndpointError = useMemo(() => {
-    return getError('dial:applicationTypeConfigurationEndpoint');
-  }, [getError]);
-
-  useEffect(() => {
-    dispatch({
-      type: ValidationActionType.SetField,
-      field: 'configurationEndpoint',
-      isValid: !configurationEndpointError,
-    });
-  }, [configurationEndpointError, t, dispatch]);
-
-  const rateEndpointError = useMemo(() => {
-    return getError('dial:applicationTypeRateEndpoint');
-  }, [getError]);
-
-  useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'rateEndpoint', isValid: !rateEndpointError });
-  }, [rateEndpointError, t, dispatch]);
-
-  const promptEndpointError = useMemo(() => {
-    return getError('dial:applicationTypeTruncatePromptEndpoint');
-  }, [getError]);
-
-  useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'promptEndpoint', isValid: !promptEndpointError });
-  }, [promptEndpointError, t, dispatch]);
-
-  const tokenizeEndpointError = useMemo(() => {
-    return getError('dial:applicationTypeTokenizeEndpoint');
-  }, [getError]);
-
-  useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'tokenizeEndpoint', isValid: !tokenizeEndpointError });
-  }, [tokenizeEndpointError, t, dispatch]);
-
-  const viewerUrlError = useMemo(() => {
-    return getError('dial:applicationTypeViewerUrl');
-  }, [getError]);
-
-  useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'viewerUrl', isValid: !viewerUrlError });
-  }, [viewerUrlError, t, dispatch]);
-
-  const editorUrlError = useMemo(() => {
-    return getError('dial:applicationTypeEditorUrl');
-  }, [getError]);
-
-  useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'editorUrl', isValid: !editorUrlError });
-  }, [editorUrlError, t, dispatch]);
 
   const onChange = useCallback(
     (value: string | string[] | boolean, key: keyof DialApplicationScheme) => {
@@ -208,75 +142,43 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
         addPlaceholder={t(EntityPlaceholdersI18nKey.Topic)}
         addTitle={t(TopicsI18nKey.AddTopic)}
       />
-      <TextInputField
-        elementId="completionEndPoint"
-        fieldTitle={t(EntityFieldsI18nKey.completionEndpoint)}
-        placeholder={t(EntityPlaceholdersI18nKey.CompletionEndpoint)}
-        value={runner['dial:applicationTypeCompletionEndpoint']}
-        errorText={completionEndpointError?.text}
-        invalid={!!completionEndpointError}
+
+      <CompletionEndpointControl
+        endpoint={runner['dial:applicationTypeCompletionEndpoint']}
         onChange={onChangeCompletionEndPoint}
       />
-      <TextInputField
-        elementId="configurationEndPoint"
-        fieldTitle={t(FeaturesI18nKey.configurationEndpoint)}
-        placeholder={t(EntityPlaceholdersI18nKey.ConfigurationEndpoint)}
-        value={runner['dial:applicationTypeConfigurationEndpoint']}
-        optional={true}
-        errorText={configurationEndpointError?.text}
-        invalid={!!configurationEndpointError}
+      <ConfigurationEndpointControl
+        endpoint={runner['dial:applicationTypeConfigurationEndpoint']}
         onChange={onChangeConfigurationEndpoint}
       />
-      <TextInputField
-        elementId="rateEndpoint"
+
+      <EndpointControl
+        id="rateEndpoint"
         fieldTitle={t(FeaturesI18nKey.rateEndpoint)}
         placeholder={t(EntityPlaceholdersI18nKey.RateEndpoint)}
-        value={runner['dial:applicationTypeRateEndpoint']}
-        optional={true}
-        errorText={rateEndpointError?.text}
-        invalid={!!rateEndpointError}
+        endpoint={runner['dial:applicationTypeRateEndpoint']}
         onChange={onChangeRateEndpoint}
       />
-      <TextInputField
-        elementId="promptEndpoint"
+
+      <EndpointControl
+        id="promptEndpoint"
         fieldTitle={t(FeaturesI18nKey.truncatePromptEndpoint)}
         placeholder={t(EntityPlaceholdersI18nKey.TruncatePromptEndpoint)}
-        value={runner['dial:applicationTypeTruncatePromptEndpoint']}
-        optional={true}
-        errorText={promptEndpointError?.text}
-        invalid={!!promptEndpointError}
+        endpoint={runner['dial:applicationTypeTruncatePromptEndpoint']}
         onChange={onChangePromptEndpoint}
       />
-      <TextInputField
-        elementId="tokenizeEndpoint"
+
+      <EndpointControl
+        id="tokenizeEndpoint"
         fieldTitle={t(FeaturesI18nKey.tokenizeEndpoint)}
         placeholder={t(EntityPlaceholdersI18nKey.TokenizeEndpoint)}
-        value={runner['dial:applicationTypeTokenizeEndpoint']}
-        optional={true}
-        errorText={tokenizeEndpointError?.text}
-        invalid={!!tokenizeEndpointError}
+        endpoint={runner['dial:applicationTypeTokenizeEndpoint']}
         onChange={onChangeTokenizeEndpoint}
       />
-      <TextInputField
-        elementId="viewerUrl"
-        fieldTitle={t(EntityFieldsI18nKey['dial:applicationTypeViewerUrl'])}
-        placeholder={t(EntityPlaceholdersI18nKey.ViewerUrl)}
-        value={runner['dial:applicationTypeViewerUrl']}
-        optional={true}
-        errorText={viewerUrlError?.text}
-        invalid={!!viewerUrlError}
-        onChange={onChangeViewerUrl}
-      />
-      <TextInputField
-        elementId="editorUrl"
-        fieldTitle={t(EntityFieldsI18nKey['dial:applicationTypeEditorUrl'])}
-        placeholder={t(EntityPlaceholdersI18nKey.EditorUrl)}
-        value={runner['dial:applicationTypeEditorUrl']}
-        optional={true}
-        errorText={editorUrlError?.text}
-        invalid={!!editorUrlError}
-        onChange={onChangeEditorUrl}
-      />
+
+      <ViewerUrlControl endpoint={runner['dial:applicationTypeViewerUrl']} onChange={onChangeViewerUrl} />
+      <EditorUrlControl endpoint={runner['dial:applicationTypeEditorUrl']} onChange={onChangeEditorUrl} />
+
       <Switch
         isOn={runner['dial:appendApplicationPropertiesHeader']}
         title={t(EntityFieldsI18nKey['dial:appendApplicationPropertiesHeader'])}
