@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react';
 import Content from './Content';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 describe('Components - Content', () => {
   test('Should render successfully', () => {
