@@ -16,10 +16,11 @@ export interface Props extends EndpointControlProps {
   id: string;
   fieldTitle: string;
   placeholder: string;
+  elementCssClass?: string;
+  iconAfterInput?: React.ReactNode;
 }
 
-const EndpointControl: FC<Props> = ({ textBeforeInput, required, placeholder, fieldTitle, endpoint, onChange, id }) => {
-  console.log(placeholder);
+const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, ...props }) => {
   const t = useI18n() as (t: string) => string;
   const { dispatch } = useSaveValidationContext();
 
@@ -35,13 +36,11 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, placeholder, fi
     <TextInputField
       textBeforeInput={textBeforeInput}
       elementId={id}
-      fieldTitle={fieldTitle}
-      placeholder={placeholder}
       value={endpoint}
       optional={!required}
       errorText={endpointError?.text}
       invalid={!!endpointError}
-      onChange={onChange}
+      {...props}
     />
   );
 };
