@@ -194,11 +194,9 @@ export default {
     },
     Application: {
       Header: 'Duplicate Application',
-      Description: 'Enter name and version to duplicate Application.',
     },
     ApplicationRunner: {
       Header: 'Duplicate Application Runner',
-      Description: 'Enter name and version to duplicate Application.',
     },
     Key: {
       Header: 'Duplicate Key',

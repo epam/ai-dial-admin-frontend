@@ -2,7 +2,6 @@ import { NumberInputField, TextInputField } from '@/src/components/Common/InputF
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
 import Switch from '@/src/components/Common/Switch/Switch';
-import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 import MaxRetryAttempts from '@/src/components/MaxRetryAttempts/MaxRetryAttempts';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -13,6 +12,8 @@ import { FC, useCallback, useState } from 'react';
 import UpstreamEndpoints from '@/src/components/Endpoints/UpstreamEndpoints';
 import Paths from '@/src/components/Routes/Paths/Paths';
 import { handleRouteOutputChange } from '@/src/components/Routes/utils';
+import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 
 interface Props {
   route: DialRoute;
@@ -39,9 +40,9 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
     [route, updateRoute],
   );
 
-  const onChangeDescription = useCallback(
-    (description: string) => {
-      updateRoute({ ...route, description });
+  const onChangeDisplayName = useCallback(
+    (displayName: string) => {
+      updateRoute({ ...route, displayName });
     },
     [route, updateRoute],
   );
@@ -106,22 +107,12 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
     <div className="h-full flex flex-col pt-3 w-full">
       <div className="flex flex-col gap-6 lg:w-[35%]">
         {isAppRoute ? (
-          <TextInputField
-            elementId="name"
-            fieldTitle={t(EntityFieldsI18nKey.displayName)}
-            placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
-            value={route.name}
-            onChange={onChangeName}
-          />
+          <DisplayNameControl displayName={route.name} onChange={onChangeName} />
         ) : (
-          <TextAreaField
-            elementId="description"
-            fieldTitle={t(EntityFieldsI18nKey.description)}
-            placeholder={t(EntityPlaceholdersI18nKey.Description)}
-            optional={true}
-            value={route.description}
-            onChange={onChangeDescription}
-          />
+          <>
+            <DisplayNameControl displayName={route.displayName} onChange={onChangeDisplayName} />
+            <DescriptionControl entity={route} onChangeEntity={updateRoute} />
+          </>
         )}
         <Paths route={route} updateRoute={updateRoute} />
 

@@ -1,15 +1,15 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
-import { ButtonsI18nKey, DuplicateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { PopUpState } from '@/src/types/pop-up';
-import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { FieldError } from '@/src/models/error';
+import { ButtonsI18nKey, DuplicateI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { InterceptorTemplate } from '@/src/models/interceptor-template';
+import { PopUpState } from '@/src/types/pop-up';
 import { getErrorForName } from '@/src/utils/validation/name-error';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 
 interface Props {
   modalState: PopUpState;
@@ -18,21 +18,11 @@ interface Props {
   onDuplicate: (template: InterceptorTemplate) => void;
   names?: string[];
 }
-
-const DuplicateScheme: FC<Props> = ({ onDuplicate, modalState, onClose, template, names }) => {
+const DuplicateTemplate: FC<Props> = ({ onDuplicate, modalState, onClose, template, names }) => {
   const t = useI18n() as (t: string) => string;
 
   const [clonedTemplate, setTemplate] = useState<InterceptorTemplate>({ ...template, name: `${template.name}_(copy)` });
   const [isValid, setIsValid] = useState(false);
-  const [nameError, setNameError] = useState<FieldError | null>(null);
-
-  const onChangeName = useCallback(
-    (name: string) => {
-      setNameError(getErrorForName(name, names, t));
-      setTemplate({ ...clonedTemplate, name: name });
-    },
-    [names, t, clonedTemplate],
-  );
 
   useEffect(() => {
     setIsValid(!getErrorForName(clonedTemplate.name, names, t));
@@ -46,14 +36,11 @@ const DuplicateScheme: FC<Props> = ({ onDuplicate, modalState, onClose, template
       state={modalState}
     >
       <div className="flex flex-col px-6 py-4">
-        <TextInputField
-          elementId="name"
-          placeholder={t(EntityPlaceholdersI18nKey.Id)}
-          fieldTitle={t(EntityFieldsI18nKey.id)}
-          value={clonedTemplate.name}
-          onChange={onChangeName}
-          errorText={nameError?.text}
-          invalid={!!nameError}
+        <IdControl entity={clonedTemplate} names={names} onChangeEntity={setTemplate} />
+
+        <DisplayNameControl
+          displayName={clonedTemplate.displayName}
+          onChange={(displayName) => setTemplate({ ...clonedTemplate, displayName })}
         />
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
@@ -76,4 +63,4 @@ const DuplicateScheme: FC<Props> = ({ onDuplicate, modalState, onClose, template
   );
 };
 
-export default DuplicateScheme;
+export default DuplicateTemplate;

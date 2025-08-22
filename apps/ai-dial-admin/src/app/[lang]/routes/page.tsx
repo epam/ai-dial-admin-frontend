@@ -10,6 +10,7 @@ import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { logger } from '@/src/server/logger';
 import Page403 from '@/src/components/Page403/Page403';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,5 +34,9 @@ export default async function Page() {
     logger.error('Getting routes error', e);
   }
 
-  return <RoutesList data={data || []} />;
+  return (
+    <SaveValidationContextProvider>
+      <RoutesList data={data || []} />
+    </SaveValidationContextProvider>
+  );
 }

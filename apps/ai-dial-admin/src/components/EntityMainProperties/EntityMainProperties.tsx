@@ -6,20 +6,19 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import ApplicationSource from '@/src/components/ApplicationSource/ApplicationSource';
 import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/AutocompleteField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { FieldError } from '@/src/models/error';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getErrorForDescription } from '@/src/utils/validation/description-error';
 import { getErrorForName, isWrongLengthWithView } from '@/src/utils/validation/name-error';
 import AdditionalProperties from './AdditionalProperties';
 import { getDisplayNameError, getVersionError } from './utils';
 import { DialModel } from '@/src/models/dial/model';
 import classNames from 'classnames';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 
 interface Props {
   view: ApplicationRoute;
@@ -46,7 +45,6 @@ const EntityMainProperties: FC<Props> = ({
   const [isVersionOptional, setIsVersionOptional] = useState(true);
 
   const [nameError, setNameError] = useState<FieldError | null>(null);
-  const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
 
   const [isValidDisplayName, setIsValidDisplayName] = useState(true);
   const [displayNameError, setDisplayNameError] = useState<string | undefined>(void 0);
@@ -114,14 +112,6 @@ const EntityMainProperties: FC<Props> = ({
     [onChangeEntity, entity, isVersionOptional, isValidDisplayName, displayNameError, validateVersion],
   );
 
-  const onChangeDescription = useCallback(
-    (description: string) => {
-      setDescriptionError(getErrorForDescription(description, t));
-      onChangeEntity({ ...entity, description });
-    },
-    [entity, onChangeEntity, t],
-  );
-
   return (
     <div className="w-full flex flex-col">
       <div className={classNames('flex flex-col gap-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
@@ -168,17 +158,8 @@ const EntityMainProperties: FC<Props> = ({
             onChangeEntity={onChangeEntity}
           />
         )}
-        <TextAreaField
-          elementId="description"
-          fieldTitle={t(EntityFieldsI18nKey.description)}
-          placeholder={t(EntityPlaceholdersI18nKey.Description)}
-          optional={true}
-          value={entity.description}
-          errorText={descriptionError?.text}
-          invalid={!!descriptionError}
-          onChange={onChangeDescription}
-          elementCssClass="w-full"
-        />
+
+        <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
       </div>
 
       <AdditionalProperties

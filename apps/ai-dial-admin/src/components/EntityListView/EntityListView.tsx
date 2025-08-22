@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import DuplicateAdapter from '@/src/components/Adapter/Modals/DuplicateAdapter';
 import DuplicateScheme from '@/src/components/ApplicationRunners/Modals/DuplicateAppRunner';
-import DuplicateEntityPopup from '@/src/components/DuplicateEntityPopup/DuplicateEntityPopup';
+import DuplicatePopup from '@/src/components/DuplicatePopup/DuplicatePopup';
 import DuplicateKey from '@/src/components/KeysList/Popup/DuplicateKey';
 import ListView from '@/src/components/ListView/ListView';
 import DuplicatePrompt from '@/src/components/PromptView/Modals/DuplicatePrompt';
@@ -32,7 +32,7 @@ import { isAssetView } from '@/src/utils/is-asset-view';
 import { getErrorNotification } from '@/src/utils/notification';
 import { emptyDataTitleMap, listViewTitleMap } from './constants';
 import EntityListModals, { ModalType } from './EntityListModals';
-import EntityListHeaderButtons from './HeaderButtons/EntityListHeaderButtons';
+import EntityListHeaderButtons from './HeaderButtons/HeaderButtons';
 import DuplicateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Duplicate';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { onOpenInNewTab, getEntityPath } from '@/src/utils/open-in-new-tab';
@@ -273,7 +273,7 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
       );
     }
     return (
-      <DuplicateEntityPopup
+      <DuplicatePopup
         view={route}
         names={names || []}
         entity={currentEntity}
