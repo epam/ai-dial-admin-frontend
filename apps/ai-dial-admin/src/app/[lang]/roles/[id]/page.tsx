@@ -12,6 +12,7 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { DialKey } from '@/src/models/dial/key';
 import { logger } from '@/src/server/logger';
 import Page403 from '@/src/components/Page403/Page403';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,12 +46,14 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   }
 
   return (
-    <RolesView
-      names={roles?.map((role) => role.name || '') || []}
-      originalRole={role}
-      models={models || []}
-      applications={applications || []}
-      keys={keys || []}
-    />
+    <SaveValidationContextProvider>
+      <RolesView
+        names={roles?.map((role) => role.name || '') || []}
+        originalRole={role}
+        models={models || []}
+        applications={applications || []}
+        keys={keys || []}
+      />
+    </SaveValidationContextProvider>
   );
 }

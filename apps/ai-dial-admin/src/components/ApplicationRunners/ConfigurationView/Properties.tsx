@@ -1,12 +1,11 @@
 import { FC, useCallback, useState } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { FieldError } from '@/src/models/error';
-import { getErrorForDescription } from '@/src/utils/validation/description-error';
+import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import AppRunnerExtendedProperties from './ExtendedProperties';
 import { getErrorForAppRunnerId } from './utils';
 
@@ -20,7 +19,6 @@ const SchemeProperties: FC<Props> = ({ runner, isImmutable, onChangeRunner }) =>
   const t = useI18n() as (t: string) => string;
 
   const [idError, setIdError] = useState<FieldError | null>(null);
-  const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
 
   const onChangeId = useCallback(
     (id: string) => {
@@ -31,14 +29,6 @@ const SchemeProperties: FC<Props> = ({ runner, isImmutable, onChangeRunner }) =>
       });
     },
     [onChangeRunner, runner, t],
-  );
-
-  const onChangeDescription = useCallback(
-    (description: string) => {
-      setDescriptionError(getErrorForDescription(description, t));
-      onChangeRunner({ ...runner, description });
-    },
-    [runner, onChangeRunner, t],
   );
 
   const onChangeName = useCallback(
@@ -70,16 +60,7 @@ const SchemeProperties: FC<Props> = ({ runner, isImmutable, onChangeRunner }) =>
         onChange={onChangeName}
       />
 
-      <TextAreaField
-        elementId="description"
-        fieldTitle={t(EntityFieldsI18nKey.description)}
-        placeholder={t(EntityPlaceholdersI18nKey.Description)}
-        optional={true}
-        errorText={descriptionError?.text}
-        invalid={!!descriptionError}
-        value={runner.description}
-        onChange={onChangeDescription}
-      />
+      <DescriptionControl entity={runner} onChangeEntity={onChangeRunner} />
 
       {isImmutable && <AppRunnerExtendedProperties runner={runner} onChangeRunner={onChangeRunner} />}
     </div>

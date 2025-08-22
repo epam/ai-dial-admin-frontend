@@ -1,16 +1,15 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import Button from '@/src/components/Common/Button/Button';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Popup from '@/src/components/Common/Popup/Popup';
 import ValidityPeriodInput from '@/src/components/Common/ValidityPeriodInput/ValidityPeriodInput';
-import { isValidKey } from '@/src/utils/validation/is-valid-key';
-import { ButtonsI18nKey, DuplicateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, DuplicateI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
-import { FieldError } from '@/src/models/error';
 import { PopUpState } from '@/src/types/pop-up';
-import { getErrorForName } from '@/src/utils/validation/name-error';
+import { isValidKey } from '@/src/utils/validation/is-valid-key';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import KeyGenerateField from '../KeyGenerateField';
 
 interface Props {
@@ -28,19 +27,9 @@ const DuplicateKey: FC<Props> = ({ onDuplicate, modalState, onClose, entity, nam
   const [clonedEntity, setEntity] = useState<DialKey>({ ...entity, key: '', name: '', expiresAt: void 0 });
   const [isValid, setIsValid] = useState(false);
 
-  const [nameError, setNameError] = useState<FieldError | null>(null);
-
   useEffect(() => {
     setIsValid(isValidKey(clonedEntity, names) && !keys.includes(clonedEntity.key));
   }, [clonedEntity, keys, names]);
-
-  const onChangeName = useCallback(
-    (name: string) => {
-      setNameError(getErrorForName(name, names, t));
-      setEntity({ ...clonedEntity, name });
-    },
-    [names, t, clonedEntity],
-  );
 
   const onChangeExpiresAt = useCallback(
     (expiresAt: number) => {
@@ -59,15 +48,12 @@ const DuplicateKey: FC<Props> = ({ onDuplicate, modalState, onClose, entity, nam
   return (
     <Popup onClose={onClose} heading={t(DuplicateI18nKey.KeyHeader)} portalId="DuplicateKey" state={modalState}>
       <div className="flex flex-col gap-4 px-6 py-4">
-        <TextInputField
-          elementId="name"
-          placeholder={t(EntityPlaceholdersI18nKey.Id)}
-          fieldTitle={t(EntityFieldsI18nKey.id)}
-          value={clonedEntity.name}
-          errorText={nameError?.text}
-          invalid={!!nameError}
-          onChange={onChangeName}
+        <IdControl entity={clonedEntity} onChangeEntity={setEntity} />
+        <DisplayNameControl
+          displayName={clonedEntity.displayName}
+          onChange={(displayName: string) => setEntity({ ...clonedEntity, displayName })}
         />
+
         <KeyGenerateField keys={keys} selectedKey={clonedEntity} changeKey={onChangeKey} />
         <ValidityPeriodInput onChange={onChangeExpiresAt} />
       </div>

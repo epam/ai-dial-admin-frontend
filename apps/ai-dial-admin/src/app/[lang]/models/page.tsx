@@ -10,6 +10,7 @@ import { logger } from '@/src/server/logger';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,5 +34,9 @@ export default async function Page() {
     logger.error('Getting models error', e);
   }
 
-  return <ModelsList data={data || []} />;
+  return (
+    <SaveValidationContextProvider>
+      <ModelsList data={data || []} />
+    </SaveValidationContextProvider>
+  );
 }
