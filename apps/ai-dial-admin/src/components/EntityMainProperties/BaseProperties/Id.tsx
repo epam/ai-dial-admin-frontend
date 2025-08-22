@@ -9,11 +9,19 @@ import { getErrorForName } from '@/src/utils/validation/name-error';
 
 interface Props<T> {
   entity: T;
+  fieldTitle?: string;
+  placeholder?: string;
   names?: string[];
   onChangeEntity?: (entity: T) => void;
 }
 
-const IdControl = <T extends { name?: string }>({ entity, names, onChangeEntity }: Props<T>) => {
+const IdControl = <T extends { name?: string }>({
+  fieldTitle,
+  placeholder,
+  entity,
+  names,
+  onChangeEntity,
+}: Props<T>) => {
   const t = useI18n() as (t: string) => string;
   const { dispatch } = useSaveValidationContext();
 
@@ -31,8 +39,8 @@ const IdControl = <T extends { name?: string }>({ entity, names, onChangeEntity 
 
   return (
     <TextInputField
-      placeholder={t(EntityPlaceholdersI18nKey.Id)}
-      fieldTitle={t(EntityFieldsI18nKey.id)}
+      placeholder={placeholder || t(EntityPlaceholdersI18nKey.Id)}
+      fieldTitle={fieldTitle || t(EntityFieldsI18nKey.id)}
       elementId="name"
       value={entity.name}
       onChange={onChangeName}

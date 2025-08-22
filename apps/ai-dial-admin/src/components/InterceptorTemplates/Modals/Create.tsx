@@ -10,7 +10,6 @@ import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getErrorNotification } from '@/src/utils/notification';
 import { createInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { useNotification } from '@/src/context/NotificationContext';
-import { getErrorForDescription } from '@/src/utils/validation/description-error';
 import { getErrorForName } from '@/src/utils/validation/name-error';
 
 import Button from '@/src/components/Common/Button/Button';
@@ -48,10 +47,7 @@ const Create: FC<Props> = ({ route, onClose, modalState, names }) => {
   }, [template, route, router, onClose, showNotification]);
 
   useEffect(() => {
-    const isValidId =
-      !getErrorForName(template?.name, names, t) &&
-      !!template.displayName.trim() &&
-      !getErrorForDescription(template?.description, t);
+    const isValidId = !getErrorForName(template?.name, names, t) && !!template.displayName.trim();
     setIsValid(isValidId);
   }, [template, t, names]);
 

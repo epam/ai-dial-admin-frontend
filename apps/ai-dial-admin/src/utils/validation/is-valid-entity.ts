@@ -2,17 +2,14 @@ import { MAX_RUNNER_ID_SYMBOLS } from '@/src/constants/validation';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity, DialBaseNamedEntity } from '@/src/models/dial/base-entity';
-import { DialKey } from '@/src/models/dial/key';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
-import { getErrorForDescription } from '@/src/utils/validation/description-error';
 import { isValidAdapter } from '@/src/utils/validation/is-valid-adapter';
-import { isValidKey } from '@/src/utils/validation/is-valid-key';
 import { isValidModel } from '@/src/utils/validation/is-valid-model';
 import { isValidRoute } from '@/src/utils/validation/is-valid-route';
-import { getErrorForName, isWrongLengthWithView } from '@/src/utils/validation/name-error';
+import { isWrongLengthWithView } from '@/src/utils/validation/name-error';
 import { isValidApplication } from './is-valid-application';
 
 export const isValidEntity = (
@@ -26,16 +23,17 @@ export const isValidEntity = (
       return isValidAdapter(entity as DialAdapter, names);
     }
 
+    //TODO: remove
     if (view === ApplicationRoute.Keys) {
-      return isValidKey(entity as DialKey, names);
+      return true;
     }
 
     if (view === ApplicationRoute.ApplicationRunners) {
       const id = (entity as DialApplicationScheme).$id;
-      return !!id && id.length <= MAX_RUNNER_ID_SYMBOLS && !getErrorForDescription(entity.description);
+      return !!id && id.length <= MAX_RUNNER_ID_SYMBOLS;
     }
 
-    const isValidSimpleEntity = getIsValidSimpleEntity(entity, withVersion, names);
+    const isValidSimpleEntity = getIsValidSimpleEntity(entity, withVersion);
 
     if (view === ApplicationRoute.Routes) {
       return isValidRoute(entity as DialRoute, isValidSimpleEntity);
@@ -49,9 +47,9 @@ export const isValidEntity = (
   }
 
   const baseEntity = entity as DialBaseEntity;
-  const isValidNames = !!baseEntity.displayName && !!baseEntity.name && !getErrorForName(baseEntity.name, names);
+  const isValidNames = !!baseEntity.displayName && !!baseEntity.name;
   const isWrongLength = isWrongLengthWithView(view, baseEntity.displayName);
-  const baseEntityValidation = isValidNames && !getErrorForDescription(entity.description) && !isWrongLength;
+  const baseEntityValidation = isValidNames && !isWrongLength;
 
   if (view === ApplicationRoute.Applications) {
     return baseEntityValidation && isValidApplication(entity);
@@ -67,11 +65,6 @@ export const isValidEntity = (
   return baseEntityValidation && !!baseEntity.endpoint;
 };
 
-const getIsValidSimpleEntity = (entity: DialBaseNamedEntity, withVersion?: boolean, names?: string[]) => {
-  return (
-    !!entity.name &&
-    !!(withVersion ? entity.version : true) &&
-    !getErrorForName(entity.name, names) &&
-    !getErrorForDescription(entity.description)
-  );
+const getIsValidSimpleEntity = (entity: DialBaseNamedEntity, withVersion?: boolean) => {
+  return !!entity.name && !!(withVersion ? entity.version : true);
 };

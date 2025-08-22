@@ -1,17 +1,17 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
+import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialRoute } from '@/src/models/dial/route';
-import { FieldError } from '@/src/models/error';
 import { ApplicationRoute } from '@/src/types/routes';
 import { checkNameVersionCombination } from '@/src/utils/prompts/versions';
-import { getErrorForName } from '@/src/utils/validation/name-error';
 import { getErrorForPath } from '@/src/utils/validation/path-error';
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 
 interface Props {
   view?: ApplicationRoute;
@@ -31,6 +31,8 @@ const SimpleEntityProperties: FC<Props> = ({
   versionsMap,
 }) => {
   const t = useI18n() as (t: string) => string;
+  const { dispatch } = useSaveValidationContext();
+
   const idTitleKey =
     view === ApplicationRoute.Prompts || view === ApplicationRoute.Files
       ? EntityFieldsI18nKey.displayName
@@ -41,60 +43,46 @@ const SimpleEntityProperties: FC<Props> = ({
       ? EntityPlaceholdersI18nKey.DisplayName
       : EntityPlaceholdersI18nKey.Id;
 
-  const [nameError, setNameError] = useState<FieldError | null>(null);
-  const [pathError, setPathError] = useState<FieldError | null>(null);
+  const pathError = useMemo(() => {
+    return getErrorForPath((entity as DialRoute).paths?.[0], t);
+  }, [entity, t]);
 
-  const [versionError, setVersionError] = useState<string | undefined>(void 0);
-  const [isValidVersion, setIsValidVersion] = useState(true);
+  const versionError = useMemo(() => {
+    const isValidVersion = !checkNameVersionCombination(versionsMap, entity.name as string, entity.version || '');
+    return isValidVersion ? void 0 : t(ErrorI18nKey.NameVersionCombination);
+  }, [versionsMap, entity.name, entity.version, t]);
 
-  const onChangeName = useCallback(
-    (name: string) => {
-      onChangeEntity({ ...entity, name });
-      if (versionsMap) {
-        setIsValidVersion(!checkNameVersionCombination(versionsMap, name, entity.version as string));
-        setNameError(getErrorForName(name, names, t));
-      } else {
-        setNameError(getErrorForName(name, names, t));
-      }
-    },
-    [entity, onChangeEntity, names, versionsMap, t],
-  );
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !versionError });
+  }, [versionError, t, dispatch]);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'path', isValid: !pathError });
+  }, [pathError, t, dispatch]);
 
   const onChangeVersion = useCallback(
     (version: string) => {
       onChangeEntity({ ...entity, version });
-      if (versionsMap) {
-        setIsValidVersion(!checkNameVersionCombination(versionsMap, entity.name as string, version));
-      }
     },
-    [entity, onChangeEntity, versionsMap],
+    [entity, onChangeEntity],
   );
-
-  useEffect(() => {
-    if (versionsMap) {
-      setVersionError(isValidVersion ? void 0 : t(ErrorI18nKey.NameVersionCombination));
-    }
-  }, [t, versionsMap, isValidVersion]);
 
   const onChangePath = useCallback(
     (path: string) => {
       onChangeEntity({ ...entity, paths: [path] } as DialRoute);
-      setPathError(getErrorForPath(path, t));
     },
-    [entity, onChangeEntity, t],
+    [entity, onChangeEntity],
   );
 
   return (
     <div className="flex flex-col gap-6">
       {!isEntityImmutable && (
-        <TextInputField
-          elementId="name"
+        <IdControl
           fieldTitle={t(idTitleKey)}
           placeholder={t(idPlaceholderKey)}
-          value={entity.name}
-          errorText={nameError?.text}
-          invalid={!!nameError}
-          onChange={onChangeName}
+          entity={entity}
+          names={names}
+          onChangeEntity={onChangeEntity}
         />
       )}
 
@@ -110,7 +98,7 @@ const SimpleEntityProperties: FC<Props> = ({
           placeholder={t(EntityPlaceholdersI18nKey.Version)}
           disabled={isEntityImmutable}
           errorText={versionError}
-          invalid={!isValidVersion}
+          invalid={!!versionError}
           value={entity.version}
           onChange={onChangeVersion}
         />

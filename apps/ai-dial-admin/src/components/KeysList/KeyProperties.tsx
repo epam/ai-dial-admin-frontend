@@ -1,4 +1,4 @@
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useEffect, useMemo } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Switch from '@/src/components/Common/Switch/Switch';
@@ -10,6 +10,8 @@ import DescriptionControl from '@/src/components/EntityMainProperties/BaseProper
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import KeyGenerateField from './KeyGenerateField';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
 
 interface Props {
   entity: DialKey;
@@ -21,6 +23,19 @@ interface Props {
 
 const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChangeKey }) => {
   const t = useI18n() as (t: string) => string;
+  const { dispatch } = useSaveValidationContext();
+
+  const isValidKey = useMemo(() => {
+    return !!entity.key && !(entity.key.length > MAX_NAME_SYMBOLS);
+  }, [entity.key]);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'project', isValid: !!entity.project });
+  }, [entity.project, dispatch]);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'key', isValid: isValidKey });
+  }, [isValidKey, dispatch]);
 
   const onChangeProject = useCallback(
     (project: string) => {
@@ -74,7 +89,9 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
         placeholder={t(EntityPlaceholdersI18nKey.Project)}
         value={entity.project}
         onChange={onChangeProject}
+        invalid={!entity.project}
       />
+
       {isKeyImmutable && (
         <TextInputField
           elementId="projectContact"

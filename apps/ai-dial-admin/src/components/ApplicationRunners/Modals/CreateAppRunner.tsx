@@ -13,7 +13,6 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
-import { getErrorForDescription } from '@/src/utils/validation/description-error';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
@@ -57,10 +56,7 @@ const CreateAppRunner: FC<Props> = ({ modalState, onClose, route }) => {
   }, [currentScheme, route, router, onClose, showNotification]);
 
   useEffect(() => {
-    const isValidId =
-      !!currentScheme.$id &&
-      !getErrorForAppRunnerId(currentScheme.$id, t) &&
-      !getErrorForDescription(currentScheme?.description, t);
+    const isValidId = !!currentScheme.$id && !getErrorForAppRunnerId(currentScheme.$id, t);
     setIsValid(isValidId && !!isSchemeValid && !!currentScheme['dial:applicationTypeDisplayName']);
   }, [currentScheme, isSchemeValid, t]);
 

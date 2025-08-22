@@ -11,7 +11,6 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { FieldError } from '@/src/models/error';
-import { getErrorForDisplayName } from '@/src/utils/validation/name-error';
 import { getUrlError } from '@/src/utils/validation/url-error';
 
 interface Props {
@@ -26,20 +25,6 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
   const { dispatch } = useSaveValidationContext();
 
   const [baseEndpointError, setBaseEndpointError] = useState<FieldError | null>(null);
-
-  const validateDisplayName = useCallback(
-    (displayName?: string) => {
-      const error = getErrorForDisplayName(displayName, t);
-      dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
-    },
-    [dispatch, t],
-  );
-
-  useEffect(() => {
-    if (isEntityImmutable) {
-      validateDisplayName(entity.displayName);
-    }
-  }, [entity.displayName, isEntityImmutable, validateDisplayName]);
 
   const validateEndpoint = useCallback(
     (endpoint?: string) => {
