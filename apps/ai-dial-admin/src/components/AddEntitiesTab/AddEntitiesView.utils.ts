@@ -133,8 +133,8 @@ export const getEntitiesForRole = (role: DialRole, allEntities: EntitiesGridData
       minute: limit?.minute == null ? NO_LIMITS_KEY : limit?.minute,
       month: limit?.month == null ? NO_LIMITS_KEY : limit?.month,
       week: limit?.week == null ? NO_LIMITS_KEY : limit?.week,
-      invitationTtl: share?.invitationTtl,
-      maxAcceptedUsers: share?.maxAcceptedUsers,
+      invitationTtl: share?.invitationTtl == null ? NO_LIMITS_KEY : share?.invitationTtl,
+      maxAcceptedUsers: share?.maxAcceptedUsers == null ? NO_LIMITS_KEY : share?.maxAcceptedUsers,
     });
   });
 
