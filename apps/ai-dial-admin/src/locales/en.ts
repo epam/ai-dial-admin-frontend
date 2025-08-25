@@ -347,6 +347,7 @@ export default {
     Routes: 'App Routes',
     Traces: 'Traces',
     Conversations: 'Conversations',
+    Attachments: 'Attachments',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',
@@ -420,7 +421,11 @@ export default {
   },
   Routes: {
     AddPaths: 'Add paths',
+    RequestAttachmentPaths: 'Request attachment paths',
+    ResponseAttachmentPaths: 'Response attachment paths',
     Output: 'Output',
+    Read: 'Read',
+    Write: 'Write',
   },
   Publications: {
     ReasonTitle: 'Reason',
@@ -714,6 +719,7 @@ export default {
     content: 'Content',
     rewritePath: 'Rewrite path',
     response: 'Response',
+    permissions: 'Permissions',
   },
   EntityPlaceholders: {
     Project: 'Enter project',

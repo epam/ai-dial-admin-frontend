@@ -342,6 +342,7 @@ export enum TabsI18nKey {
   Routes = 'Tabs.Routes',
   Traces = 'Tabs.Traces',
   Conversations = 'Tabs.Conversations',
+  Attachments = 'Tabs.Attachments',
 }
 
 export enum InterceptorsI18nKey {
@@ -387,6 +388,10 @@ export enum TelemetryI18nKey {
 export enum RoutesI18nKey {
   AddPaths = 'Routes.AddPaths',
   Output = 'Routes.Output',
+  Read = 'Routes.Read',
+  Write = 'Routes.Write',
+  ResponseAttachmentPaths = 'Routes.ResponseAttachmentPaths',
+  RequestAttachmentPaths = 'Routes.RequestAttachmentPaths',
 }
 
 export enum PublicationsI18nKey {
@@ -659,6 +664,7 @@ export enum EntityFieldsI18nKey {
   id = 'EntityFields.id',
   author = 'EntityFields.author',
   endpoint = 'EntityFields.endpoint',
+  permissions = 'EntityFields.permissions',
   displayName = 'EntityFields.displayName',
   displayVersion = 'EntityFields.displayVersion',
   adapter = 'EntityFields.adapter',

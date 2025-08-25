@@ -2,20 +2,21 @@
 import { FC, useState } from 'react';
 
 import Tabs from '@/src/components/Common/Tabs/Tabs';
-import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import { attachmentsTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import { useI18n } from '@/src/locales/client';
-import { DialRoute } from '@/src/models/dial/route';
+import { DialAppRoute } from '@/src/models/dial/route';
 import RouteProperties from '@/src/components/Routes/Properties/RouteProperties';
+import RouteAttachments from './RouteAttachments';
 
 interface Props {
-  route: DialRoute;
-  onChangeRoute: (route: DialRoute) => void;
+  route: DialAppRoute;
+  onChangeRoute: (route: DialAppRoute) => void;
 }
 
 const RouteContent: FC<Props> = ({ route, onChangeRoute }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
 
-  const tabs = [propertiesTabs(t)];
+  const tabs = [propertiesTabs(t), attachmentsTabs(t)];
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
 
@@ -29,6 +30,8 @@ const RouteContent: FC<Props> = ({ route, onChangeRoute }) => {
         {activeTab === EntityViewTab.Properties && (
           <RouteProperties route={route} updateRoute={onChangeRoute} isAppRoute={true} />
         )}
+
+        {activeTab === EntityViewTab.Attachments && <RouteAttachments route={route} onChangeRoute={onChangeRoute} />}
       </div>
     </div>
   );
