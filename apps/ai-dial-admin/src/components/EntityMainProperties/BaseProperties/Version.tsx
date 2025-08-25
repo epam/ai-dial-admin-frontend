@@ -1,7 +1,8 @@
-import { EntityFieldsI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
-import { TextInputField } from '../../Common/InputField/InputField';
 import { FC } from 'react';
+
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+import { TextInputField } from '@/src/components/Common/InputField/InputField';
 
 interface Props {
   version?: string;
@@ -17,6 +18,7 @@ const VersionControl: FC<Props> = ({ version, ...props }) => {
     <TextInputField
       elementId="displayVersion"
       fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
+      placeholder={t(EntityPlaceholdersI18nKey.Version)}
       value={version}
       {...props}
     />
