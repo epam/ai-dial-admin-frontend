@@ -372,7 +372,11 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
   {
     field: 'deployment_price',
     headerName: 'Deployment Price',
-    hide: true,
+    ...priceColumn,
+  },
+  {
+    field: 'price',
+    headerName: 'Total Price',
     ...priceColumn,
   },
   {
@@ -381,13 +385,8 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
     hide: true,
     ...numericColumn,
   },
-  {
-    field: 'price',
-    headerName: 'Total Price',
-    ...priceColumn,
-  },
   { field: 'deployment', headerName: 'Deployment ID' },
-  { field: 'parent_deployment', headerName: 'Parent Deployment ID' },
+  { field: 'parent_deployment', headerName: 'Parent Deployment ID', hide: true },
   { field: 'model', headerName: 'Model', hide: true },
   { field: 'project_id', headerName: 'Project' },
   { field: 'upstream', headerName: 'Upstream', hide: true },
