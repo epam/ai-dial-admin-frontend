@@ -1,9 +1,7 @@
-import { RolesGridData } from '@/src/components/EntityView/Roles/models';
-import { DialBaseEntity, DialRoleLimitsMap } from '@/src/models/dial/base-entity';
-import { DialRole } from '@/src/models/dial/role';
-import { ColDef, GridApi, IRowNode } from 'ag-grid-community';
+import { ColDef, Column, GridApi, IRowNode } from 'ag-grid-community';
 import { isEqual } from 'lodash';
 
+import { RolesGridData } from '@/src/components/EntityView/Roles/models';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import {
@@ -13,8 +11,8 @@ import {
   getSetNoLimitsOperation,
 } from '@/src/constants/grid-columns/actions';
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-
-import { DialRoleLimits } from '@/src/models/dial/base-entity';
+import { DialBaseEntity, DialRoleLimits, DialRoleLimitsMap, DialRoleShareMap } from '@/src/models/dial/base-entity';
+import { DialRole } from '@/src/models/dial/role';
 import { cellRenderParams } from './constants';
 
 export const isDisableRole = (entity: DialBaseEntity) => {
@@ -26,19 +24,22 @@ export const getRolesGridData = (entity: DialBaseEntity, roles: DialRole[]): Rol
     return getAllRolesWithLimits(roles, entity);
   }
 
-  return getRolesWithLimits(roles, entity.roleLimits);
+  return getRolesWithLimits(roles, entity.roleLimits, entity.roleShareResourceLimits);
 };
 
 const getAllRolesWithLimits = (roles: DialRole[], entity?: DialBaseEntity) => {
   const data: RolesGridData[] = [];
   roles.forEach((role) => {
     const limit = entity?.roleLimits?.[role.name || ''];
+    const share = entity?.roleShareResourceLimits?.[role.name || ''];
     data.push({
       ...role,
       day: getLimitData(limit?.day, entity?.defaultRoleLimit?.day),
       minute: getLimitData(limit?.minute, entity?.defaultRoleLimit?.minute),
       week: getLimitData(limit?.week, entity?.defaultRoleLimit?.week),
       month: getLimitData(limit?.month, entity?.defaultRoleLimit?.month),
+      invitationTtl: getLimitData(share?.invitationTtl, entity?.defaultRoleShareResourceLimit?.invitationTtl),
+      maxAcceptedUsers: getLimitData(share?.maxAcceptedUsers, entity?.defaultRoleShareResourceLimit?.maxAcceptedUsers),
     });
   });
   return data;
@@ -48,7 +49,7 @@ const getLimitData = (value?: string | null, defaultValue?: string | null) => {
   return value === null && defaultValue !== null ? null : value || defaultValue;
 };
 
-const getRolesWithLimits = (roles: DialRole[], limits?: DialRoleLimitsMap) => {
+const getRolesWithLimits = (roles: DialRole[], limits?: DialRoleLimitsMap, shares?: DialRoleShareMap) => {
   if (limits == null) {
     return [];
   }
@@ -57,7 +58,8 @@ const getRolesWithLimits = (roles: DialRole[], limits?: DialRoleLimitsMap) => {
   Object.keys(limits).forEach((roleName) => {
     const role = roles.find((role) => role.name === roleName);
     const limit = limits?.[roleName];
-    data.push({ ...role, ...limit });
+    const share = shares?.[roleName];
+    data.push({ ...role, ...limit, ...share });
   });
 
   return data;
@@ -111,6 +113,26 @@ export const LIMIT_COLUMNS = (
       onChange,
     },
   },
+  {
+    headerName: 'Expiration time',
+    field: 'invitationTtl',
+    cellClass: NO_BORDER_CLASS,
+    cellRenderer: EditableCellRenderer,
+    cellRendererParams: {
+      ...cellRenderParams,
+      onChange,
+    },
+  },
+  {
+    headerName: 'Max users',
+    field: 'maxAcceptedUsers',
+    cellClass: NO_BORDER_CLASS,
+    cellRenderer: EditableCellRenderer,
+    cellRendererParams: {
+      ...cellRenderParams,
+      onChange,
+    },
+  },
 ];
 
 export const getRolesColumnDefs = (
@@ -140,5 +162,57 @@ export const isResetAvailable = (entity: DialBaseEntity): boolean => {
   return (
     entity.roleLimits != null &&
     Object.values(entity.roleLimits).some((limit) => !isEqual(limit, entity.defaultRoleLimit))
+  );
+};
+
+export const isSetNoLimitsHidden = (api: GridApi, node: IRowNode) => {
+  const month = api.getCellValue({
+    colKey: api.getColumn('month') as Column,
+    rowNode: node,
+  });
+  const week = api.getCellValue({
+    colKey: api.getColumn('week') as Column,
+    rowNode: node,
+  });
+  const minute = api.getCellValue({
+    colKey: api.getColumn('minute') as Column,
+    rowNode: node,
+  });
+  const day = api.getCellValue({
+    colKey: api.getColumn('day') as Column,
+    rowNode: node,
+  });
+  return !day && !minute && !month && !week;
+};
+
+export const isResetToDefaultHidden = (api: GridApi, node: IRowNode, entity: DialBaseEntity) => {
+  const month = api.getCellValue({
+    colKey: api.getColumn('month') as Column,
+    rowNode: node,
+  });
+  const week = api.getCellValue({
+    colKey: api.getColumn('week') as Column,
+    rowNode: node,
+  });
+  const minute = api.getCellValue({
+    colKey: api.getColumn('minute') as Column,
+    rowNode: node,
+  });
+  const day = api.getCellValue({
+    colKey: api.getColumn('day') as Column,
+    rowNode: node,
+  });
+
+  const defaultDay = entity.defaultRoleLimit?.day;
+  const defaultMinute = entity.defaultRoleLimit?.minute;
+  const defaultWeek = entity.defaultRoleLimit?.week;
+  const defaultMonth = entity.defaultRoleLimit?.month;
+
+  return (
+    (day === defaultDay && minute === defaultMinute && week === defaultWeek && month === defaultMonth) ||
+    !defaultDay ||
+    !defaultMinute ||
+    !defaultWeek ||
+    !defaultMonth
   );
 };

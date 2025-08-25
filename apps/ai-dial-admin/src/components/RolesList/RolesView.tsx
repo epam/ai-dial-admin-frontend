@@ -11,6 +11,7 @@ import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import {
   getEntitiesForRole,
   getRelevantKeysForRole,
+  isDialRoleShareKey,
   ROLES_ENTITIES_COLUMNS,
 } from '@/src/components/AddEntitiesTab/AddEntitiesView.utils';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
@@ -25,7 +26,7 @@ import { EntitiesI18nKey, KeysI18nKey, TabsI18nKey } from '@/src/constants/i18n'
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
-import { DialRoleLimits, DialRoleLimitsMap } from '@/src/models/dial/base-entity';
+import { DialRoleLimits } from '@/src/models/dial/base-entity';
 import { DialKey } from '@/src/models/dial/key';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
@@ -174,19 +175,30 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
   const onChangeRoleToken = useCallback(
     (value: number, data: DialRole, token: string) => {
       const name = data.name as string;
-      onChangeRole(
-        {
-          ...entityRef.current,
-          limits: {
-            ...entityRef.current.limits,
-            [name]: {
-              ...entityRef.current.limits?.[name],
-              [token]: value.toString(),
-            },
-          } as DialRoleLimitsMap,
+      const limits = entityRef.current.limits ?? {};
+      const share = entityRef.current.share ?? {};
+      const updatedLimits = {
+        ...limits,
+        [name]: {
+          ...limits[name],
+          [token]: value.toString(),
         },
-        true,
-      );
+      };
+
+      const updatedShare = {
+        ...share,
+        [name]: {
+          ...share[name],
+          [token]: value.toString(),
+        },
+      };
+
+      const updatedEntity = {
+        ...entityRef.current,
+        ...(isDialRoleShareKey(token) ? { share: updatedShare } : { limits: updatedLimits }),
+      };
+
+      onChangeRole(updatedEntity, true);
     },
     [onChangeRole],
   );
@@ -223,7 +235,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
             {activeTab === EntityViewTab.Properties && (
               <div className="lg:w-[35%] mt-3">
                 <EntityHeader entity={selectedRole} />
-                <div className="flex-1 min-h-0">
+                <div className="flex-1 min-h-0 pt-4">
                   <SimpleEntityProperties
                     entity={selectedRole}
                     onChangeEntity={onChangeRole}

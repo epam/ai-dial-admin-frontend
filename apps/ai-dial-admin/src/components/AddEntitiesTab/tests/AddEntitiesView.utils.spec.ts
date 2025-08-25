@@ -25,23 +25,27 @@ const keys = [{ name: 'key', type: MenuI18nKey.Keys, route: ApplicationRoute.Key
 describe('Add Entities tab :: getEntitiesGridData', () => {
   test('Should return all items', () => {
     expect(
-      getEntitiesGridData(
-        [{ name: 'model' }],
-        [{ name: 'application' }],
-        [{ name: 'role' }],
-        [{ name: 'key' }],
-      ),
+      getEntitiesGridData([{ name: 'model' }], [{ name: 'application' }], [{ name: 'role' }], [{ name: 'key' }]),
     ).toEqual(data);
   });
 });
 
 describe('Add Entities tab :: getEntitiesForRole ', () => {
-  test('Should return empty array', () => {
+  test('Should return empty array when no limits are defined', () => {
     expect(getEntitiesForRole({}, data)).toEqual([]);
   });
 
-  test('Should return array with model', () => {
-    expect(getEntitiesForRole({ limits: { model: { day: 1 } }, model1: { day: 1 } }, data)).toEqual([
+  test('Should return array with model and share properties when share is defined', () => {
+    expect(
+      getEntitiesForRole(
+        {
+          limits: { model: { day: 1 } },
+          share: { model: { invitationTtl: 3600, maxAcceptedUsers: 10 } },
+          model1: { day: 1 },
+        },
+        data,
+      ),
+    ).toEqual([
       {
         day: 1,
         minute: 'No Limits',
@@ -50,14 +54,20 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
         name: 'model',
         route: ApplicationRoute.Models,
         type: MenuI18nKey.Models,
+        invitationTtl: 3600,
+        maxAcceptedUsers: 10,
       },
     ]);
   });
 
-  test('Should return array with model', () => {
+  test('Should return array with model and updated limits and share properties', () => {
     expect(
       getEntitiesForRole(
-        { limits: { model: { minute: 1, week: 2, month: 3 } }, model1: { minute: 1, week: 2, month: 3 } },
+        {
+          limits: { model: { minute: 1, week: 2, month: 3 } },
+          share: { model: { invitationTtl: 1800, maxAcceptedUsers: 5 } },
+          model1: { minute: 1, week: 2, month: 3 },
+        },
         data,
       ),
     ).toEqual([
@@ -69,6 +79,116 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
         name: 'model',
         route: ApplicationRoute.Models,
         type: MenuI18nKey.Models,
+        invitationTtl: 1800,
+        maxAcceptedUsers: 5,
+      },
+    ]);
+  });
+
+  test('Should handle missing share properties and return "No Limits"', () => {
+    expect(
+      getEntitiesForRole(
+        {
+          limits: { model: { minute: 1, week: 2, month: 3 } },
+          model1: { minute: 1, week: 2, month: 3 },
+        },
+        data,
+      ),
+    ).toEqual([
+      {
+        day: 'No Limits',
+        minute: 1,
+        week: 2,
+        month: 3,
+        name: 'model',
+        route: ApplicationRoute.Models,
+        type: MenuI18nKey.Models,
+        invitationTtl: 'No Limits',
+        maxAcceptedUsers: 'No Limits',
+      },
+    ]);
+  });
+
+  test('Should handle multiple entities with some missing share properties', () => {
+    expect(
+      getEntitiesForRole(
+        {
+          limits: {
+            model: { day: 1 },
+            model2: { minute: 1, week: 2, month: 3 },
+          },
+          share: {
+            model: { invitationTtl: 3600, maxAcceptedUsers: 10 },
+          },
+          model1: { day: 1 },
+        },
+        data,
+      ),
+    ).toEqual([
+      {
+        day: 1,
+        minute: 'No Limits',
+        week: 'No Limits',
+        month: 'No Limits',
+        name: 'model',
+        route: ApplicationRoute.Models,
+        type: MenuI18nKey.Models,
+        invitationTtl: 3600,
+        maxAcceptedUsers: 10,
+      },
+      {
+        day: 'No Limits',
+        minute: 1,
+        week: 2,
+        month: 3,
+        invitationTtl: 'No Limits',
+        maxAcceptedUsers: 'No Limits',
+      },
+    ]);
+  });
+
+  test('Should return empty array if role.limits is null or not an object', () => {
+    expect(getEntitiesForRole({ limits: null }, data)).toEqual([]);
+    expect(getEntitiesForRole({ limits: undefined }, data)).toEqual([]);
+  });
+
+  test('Should return empty array when no limits or share properties exist', () => {
+    expect(getEntitiesForRole({}, data)).toEqual([]);
+  });
+
+  test('Should return data for entities that have limits and default "No Limits" for others', () => {
+    expect(
+      getEntitiesForRole(
+        {
+          limits: {
+            model: { minute: 10 },
+            model2: { month: 5 },
+          },
+          share: {
+            model: { invitationTtl: 3600 },
+          },
+        },
+        data,
+      ),
+    ).toEqual([
+      {
+        day: 'No Limits',
+        minute: 10,
+        week: 'No Limits',
+        month: 'No Limits',
+        name: 'model',
+        route: ApplicationRoute.Models,
+        type: MenuI18nKey.Models,
+        invitationTtl: 3600,
+        maxAcceptedUsers: 'No Limits',
+      },
+      {
+        day: 'No Limits',
+        minute: 'No Limits',
+        week: 'No Limits',
+        month: 5,
+        invitationTtl: 'No Limits',
+        maxAcceptedUsers: 'No Limits',
       },
     ]);
   });
