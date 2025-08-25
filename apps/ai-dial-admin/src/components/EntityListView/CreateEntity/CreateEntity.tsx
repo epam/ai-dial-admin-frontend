@@ -99,7 +99,7 @@ const CreateEntity: FC<Props> = ({
 
   useEffect(() => {
     setIsValidEntity(isValidFn(route, currentEntity, !!versionsMap, names));
-    setIsUniqueNameError(false);
+    setIsUniqueNameError(null);
   }, [currentEntity, route, versionsMap, names]);
 
   // initial validation (disable save when no values entered yet)
@@ -125,7 +125,6 @@ const CreateEntity: FC<Props> = ({
             runners={runners}
             entity={currentEntity}
             names={names}
-            isUniqueNameError={!!isUniqueNameError}
             onChangeEntity={onChangeEntity}
           />
         )}
@@ -136,7 +135,7 @@ const CreateEntity: FC<Props> = ({
           cssClass="primary"
           title={t(ButtonsI18nKey.Create)}
           onClick={onCreate}
-          disable={(isUniqueNameError !== null && !isUniqueNameError) || !isValid || isValidEntity}
+          disable={(isUniqueNameError !== null && !isUniqueNameError) || !isValid || !isValidEntity}
         />
       </div>
     </Popup>

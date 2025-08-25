@@ -1,11 +1,6 @@
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
-import {
-  getDisplayNameErrorKeyPerView,
-  getVersionErrorKeyPerView,
-  getDisplayNameError,
-  getVersionError,
-} from '../utils';
+import {  getDisplayNameError, getVersionError } from '../utils';
 import { describe, expect, test } from 'vitest';
 
 const mockT = (key: string, params?: Record<string, number>) => {
@@ -15,39 +10,6 @@ const mockT = (key: string, params?: Record<string, number>) => {
   return key;
 };
 
-describe('EntityMainProperties :: errors :: getDisplayNameErrorKeyPerView', () => {
-  test('Should return key for model', () => {
-    const res = getDisplayNameErrorKeyPerView(ApplicationRoute.Models);
-
-    expect(res).toBe(ErrorI18nKey.DisplayNameErrorModel);
-  });
-
-  test('Should return key for application', () => {
-    const res = getDisplayNameErrorKeyPerView(ApplicationRoute.Applications);
-
-    expect(res).toBe(ErrorI18nKey.Unique);
-  });
-
-  test('Should return empty string', () => {
-    const res = getDisplayNameErrorKeyPerView(ApplicationRoute.Keys);
-
-    expect(res).toBe('');
-  });
-});
-
-describe('EntityMainProperties :: errors :: getVersionErrorKeyPerView', () => {
-  test('Should return key for model', () => {
-    const res = getVersionErrorKeyPerView(ApplicationRoute.Models);
-
-    expect(res).toBe(ErrorI18nKey.Version);
-  });
-
-  test('Should return empty string', () => {
-    const res = getVersionErrorKeyPerView(ApplicationRoute.Keys);
-
-    expect(res).toBe('');
-  });
-});
 
 describe('EntityMainProperties :: errors :: getDisplayNameError', () => {
   test('Should return no error if valid display name', () => {

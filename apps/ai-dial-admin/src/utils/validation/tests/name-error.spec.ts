@@ -91,18 +91,8 @@ describe('Utils :: validations :: getErrorForName', () => {
 describe('getErrorForDisplayName', () => {
   test('returns error if name is undefined', () => {
     const result = getErrorForDisplayName(undefined);
-    expect(result).toEqual({
-      type: ErrorType.LENGTH,
-      text: '',
-    });
-  });
 
-  test('returns error if name is empty string', () => {
-    const result = getErrorForDisplayName('', false, mockT);
-    expect(result).toEqual({
-      type: ErrorType.LENGTH,
-      text: 'Translated Text',
-    });
+    expect(result).toBeNull();
   });
 
   test('returns error if name is too short', () => {

@@ -3,41 +3,23 @@ import { MAX_NAME_SYMBOLS, MIN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isWrongLengthWithView } from '@/src/utils/validation/name-error';
 
-export const getDisplayNameErrorKeyPerView = (view: ApplicationRoute, wrongLength?: boolean) => {
-  if (wrongLength) {
-    return ErrorI18nKey.MinMaxLength;
-  }
-
-  switch (view) {
-    case ApplicationRoute.Models:
-      return ErrorI18nKey.DisplayNameErrorModel;
-
-    case ApplicationRoute.Applications:
-      return ErrorI18nKey.Unique;
-
-    default:
-      return '';
-  }
-};
-
-export const getVersionErrorKeyPerView = (view: ApplicationRoute) => {
-  switch (view) {
-    case ApplicationRoute.Models:
-      return ErrorI18nKey.Version;
-
-    default:
-      return '';
-  }
-};
-
 export const getDisplayNameError = (
   view: ApplicationRoute,
-  isValidDisplayName: boolean,
   displayName: string,
+  names: string[],
   t: (str: string, param?: Record<string, number>) => string,
+  version?: string,
 ) => {
-  const errorKey = getDisplayNameErrorKeyPerView(view, isWrongLengthWithView(view, displayName));
-  return isValidDisplayName ? '' : errorKey ? t(errorKey, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS }) : '';
+  const isWrongLength = isWrongLengthWithView(view, displayName);
+  if (isWrongLength) {
+    return t(ErrorI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS });
+  }
+
+  if (view === ApplicationRoute.Models) {
+    return names.includes(displayName) && !!version ? t(ErrorI18nKey.DisplayNameErrorModel) : '';
+  }
+  // TODO: review - ErrorI18nKey.Unique restore?
+  return '';
 };
 
 export const getVersionError = (
@@ -46,19 +28,16 @@ export const getVersionError = (
   displayVersion: string,
   t: (str: string, param?: Record<string, number>) => string,
 ) => {
-  let error = '';
   if (!isVersionOptional) {
-    const errorKey = getVersionErrorKeyPerView(view);
     const hasDisplayVersion = !!displayVersion;
 
     const isLengthError = hasDisplayVersion ? isWrongLengthWithView(view, displayVersion) : false;
     if (!hasDisplayVersion) {
-      error = errorKey ? t(errorKey) : '';
-    } else if (isLengthError) {
-      error = t(ErrorI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS });
-    } else {
-      error = '';
+      return t(ErrorI18nKey.Version);
+    }
+    if (isLengthError) {
+      return t(ErrorI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS });
     }
   }
-  return error;
+  return '';
 };
