@@ -123,7 +123,20 @@ describe('getErrorForDisplayName', () => {
     });
   });
 
-  test('returns null if name is valid length', () => {
+  test('returns error if required and name is empty', () => {
+    const result = getErrorForDisplayName('', true, mockT);
+    expect(result).toMatchObject({
+      type: ErrorType.LENGTH,
+      text: 'Translated Text',
+    });
+  });
+
+  test('returns null if name is valid and required', () => {
+    expect(getErrorForDisplayName('abc', true, mockT)).toBeNull();
+    expect(getErrorForDisplayName('abcdef', true, mockT)).toBeNull();
+  });
+
+  test('returns null if name is valid and not required', () => {
     const validName = 'validName';
     const result = getErrorForDisplayName(validName, false, mockT);
     expect(result).toBeNull();

@@ -21,7 +21,7 @@ export const isValidEntity = (
 ) => {
   // TODO: remove after clear all entity validation
   if (view === ApplicationRoute.Keys || view === ApplicationRoute.Roles) {
-    return;
+    return true;
   }
 
   if (isSimpleEntity(view)) {
