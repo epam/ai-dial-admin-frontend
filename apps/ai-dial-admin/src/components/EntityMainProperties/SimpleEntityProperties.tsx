@@ -12,6 +12,7 @@ import { getErrorForName } from '@/src/utils/validation/name-error';
 import { getErrorForPath } from '@/src/utils/validation/path-error';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
 
 interface Props {
   view?: ApplicationRoute;
@@ -103,18 +104,7 @@ const SimpleEntityProperties: FC<Props> = ({
         onChange={(name) => onChangeEntity({ ...entity, displayName: name })}
       />
 
-      {versionsMap && (
-        <TextInputField
-          elementId="version"
-          fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
-          placeholder={t(EntityPlaceholdersI18nKey.Version)}
-          disabled={isEntityImmutable}
-          errorText={versionError}
-          invalid={!isValidVersion}
-          value={entity.version}
-          onChange={onChangeVersion}
-        />
-      )}
+      {versionsMap && <VersionControl version={entity.version} onChange={onChangeVersion} error={versionError} />}
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
 

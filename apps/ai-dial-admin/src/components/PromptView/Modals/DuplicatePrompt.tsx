@@ -1,27 +1,27 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import Button from '@/src/components/Common/Button/Button';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
+import FilePath from '@/src/components/Common/FilePath/FilePath';
+import Popup from '@/src/components/Common/Popup/Popup';
+import RadioField from '@/src/components/Common/RadioField/RadioField';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
 import {
   BasicI18nKey,
   ButtonsI18nKey,
   DuplicateI18nKey,
-  EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
   FoldersI18nKey,
   PromptsI18nKey,
 } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
-import { PopUpState } from '@/src/types/pop-up';
-import { DialPrompt } from '@/src/models/dial/prompt';
-import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/prompts/versions';
-import { RadioButtonModel } from '@/src/models/radio-button';
-import { RadioFieldOrientation } from '@/src/types/radio-orientation';
-import { DuplicationTypes } from '@/src/types/prompt';
-import Popup from '@/src/components/Common/Popup/Popup';
-import RadioField from '@/src/components/Common/RadioField/RadioField';
-import FilePath from '@/src/components/Common/FilePath/FilePath';
 import { usePromptFolder } from '@/src/context/PromptFolderContext';
+import { useI18n } from '@/src/locales/client';
+import { DialPrompt } from '@/src/models/dial/prompt';
+import { RadioButtonModel } from '@/src/models/radio-button';
+import { PopUpState } from '@/src/types/pop-up';
+import { DuplicationTypes } from '@/src/types/prompt';
+import { RadioFieldOrientation } from '@/src/types/radio-orientation';
+import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/prompts/versions';
 
 interface Props {
   modalState: PopUpState;
@@ -100,21 +100,13 @@ const DuplicatePrompt: FC<Props> = ({ modalState, entity, versionsMap, onDuplica
           orientation={RadioFieldOrientation.Column}
           onChange={onChangeDuplicationType}
         />
-        <TextInputField
-          fieldTitle={t(EntityFieldsI18nKey.displayName)}
-          placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
-          elementId="name"
-          value={clonedPrompt.name}
+        <DisplayNameControl
+          displayName={clonedPrompt.name}
           onChange={onChangeName}
           disabled={duplicationType === DuplicationTypes.VERSION}
         />
-        <TextInputField
-          fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
-          placeholder={t(EntityPlaceholdersI18nKey.Version)}
-          elementId="version"
-          value={clonedPrompt.version}
-          onChange={onChangeVersion}
-        />
+        <VersionControl version={clonedPrompt.version} onChange={onChangeVersion} />
+
         {duplicationType === DuplicationTypes.PROMPT && (
           <FilePath
             value={clonedPrompt.folderId}

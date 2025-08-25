@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 
 import DeleteAdapter from '@/src/components/Adapter/Modals/DeleteAdapter';
 import DeleteAppRunner from '@/src/components/ApplicationRunners/Modals/DeleteAppRunner';
-import AddVersionModal from '@/src/components/Common/AddVersionModal/AddVersionModal';
+import AddVersionModal from '@/src/components/PromptView/Modals/AddVersionModal';
 import Button from '@/src/components/Common/Button/Button';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import Switch from '@/src/components/Common/Switch/Switch';
