@@ -15,7 +15,6 @@ import EntityHeader from '@/src/components/EntityView/Header/Header';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { TabModel } from '@/src/models/tab';
@@ -42,7 +41,6 @@ const AdapterView: FC<Props> = ({ originalAdapter }) => {
   const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
-  const { isValid } = useSaveValidationContext();
 
   useEffect(() => {
     setSelectedAdapter(cloneDeep(originalAdapter));
@@ -106,7 +104,6 @@ const AdapterView: FC<Props> = ({ originalAdapter }) => {
           isChanged={isChanged}
           onDiscard={onDiscard}
           onSave={onSave}
-          hasErrors={!isValid}
           removeEntity={removeAdapter}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}

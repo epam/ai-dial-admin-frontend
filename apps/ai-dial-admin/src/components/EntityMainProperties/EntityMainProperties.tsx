@@ -19,6 +19,7 @@ import { DialModel } from '@/src/models/dial/model';
 import classNames from 'classnames';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
+import IdControl from './BaseProperties/Id';
 
 interface Props {
   view: ApplicationRoute;
@@ -115,17 +116,8 @@ const EntityMainProperties: FC<Props> = ({
   return (
     <div className="w-full flex flex-col">
       <div className={classNames('flex flex-col gap-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
-        {!isEntityImmutable && (
-          <TextInputField
-            elementId="id"
-            placeholder={t(EntityPlaceholdersI18nKey.Id)}
-            fieldTitle={t(EntityFieldsI18nKey.id)}
-            value={entity.name}
-            onChange={onChangeName}
-            errorText={nameError?.text}
-            invalid={!!nameError}
-          />
-        )}
+        {!isEntityImmutable && <IdControl entity={entity} onChangeEntity={onChangeEntity} />}
+
         <AutocompleteField
           elementId="displayName"
           fieldTitle={t(EntityFieldsI18nKey.displayName)}
