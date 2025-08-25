@@ -8,6 +8,7 @@ interface Props {
   version?: string;
   readonly?: boolean;
   optional?: boolean;
+  disabled?: boolean;
   error?: string;
   onChange?: (version: string) => void;
 }
