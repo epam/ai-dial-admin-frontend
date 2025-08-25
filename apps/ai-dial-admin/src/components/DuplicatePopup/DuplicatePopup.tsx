@@ -1,17 +1,17 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import Button from '@/src/components/Common/Button/Button';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Popup from '@/src/components/Common/Popup/Popup';
-import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
+import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialModel } from '@/src/models/dial/model';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
-import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import { duplicateModalDescriptionMap, duplicateModalTitleMap } from './constants';
 
 type ClonedEntity = DialBaseNamedEntity | DialModel;
@@ -64,13 +64,7 @@ const DuplicatePopup: FC<Props> = ({ onDuplicate, names, view, modalState, onClo
           <DisplayNameControl displayName={clonedEntity.displayName} onChange={onChangeDisplayName} />
 
           {view === ApplicationRoute.Models && (
-            <TextInputField
-              fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
-              elementId="version"
-              placeholder={t(EntityPlaceholdersI18nKey.Version)}
-              value={(clonedEntity as DialModel).displayVersion}
-              onChange={onChangeVersion}
-            />
+            <VersionControl version={(clonedEntity as DialModel).displayVersion} onChange={onChangeVersion} />
           )}
         </div>
       </div>
