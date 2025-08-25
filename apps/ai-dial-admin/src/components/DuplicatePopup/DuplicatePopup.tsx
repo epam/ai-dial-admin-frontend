@@ -11,6 +11,7 @@ import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialModel } from '@/src/models/dial/model';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { duplicateModalDescriptionMap, duplicateModalTitleMap } from './constants';
 
@@ -27,17 +28,13 @@ interface Props {
 const DuplicatePopup: FC<Props> = ({ onDuplicate, names, view, modalState, onClose, entity }) => {
   const t = useI18n() as (t: string) => string;
   const isSimple = isSimpleEntity(view);
+  const { isValid, dispatch } = useSaveValidationContext();
 
   const [clonedEntity, setEntity] = useState<ClonedEntity>(
     isSimple ? { ...entity, name: '' } : { ...entity, name: '', displayVersion: '', displayName: '' },
   );
 
-  const [isValid, setIsValid] = useState(false);
   const heading = duplicateModalTitleMap[view as string];
-
-  useEffect(() => {
-    setIsValid(!!clonedEntity.name);
-  }, [clonedEntity, isSimple]);
 
   const onChangeVersion = useCallback(
     (displayVersion: string) => {
@@ -52,6 +49,12 @@ const DuplicatePopup: FC<Props> = ({ onDuplicate, names, view, modalState, onClo
     },
     [setEntity, clonedEntity],
   );
+
+  // initial validation (disable save when no values entered yet)
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!clonedEntity.name });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Popup onClose={onClose} heading={t(heading)} portalId="DeleteEntity" state={modalState}>
