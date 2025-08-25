@@ -1,7 +1,7 @@
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { TabModel } from '@/src/models/tab';
 import { ApplicationRoute } from '@/src/types/routes';
-import { DialApplication, DialApplicationScheme } from '../../../models/dial/application';
+import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 
 export enum EntityViewTab {
   Properties = 'Properties',
@@ -20,6 +20,7 @@ export enum EntityViewTab {
   Routes = 'Routes',
   Traces = 'Traces',
   Conversations = 'Conversations',
+  Attachments = 'Attachments',
 }
 
 export const propertiesTabs = (t: (stringToTranslate: string) => string) => ({
@@ -85,6 +86,11 @@ export const tracesTabs = (t: (stringToTranslate: string) => string) => ({
 export const conversationsTabs = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Conversations,
   name: t(TabsI18nKey.Conversations),
+});
+
+export const attachmentsTabs = (t: (stringToTranslate: string) => string) => ({
+  id: EntityViewTab.Attachments,
+  name: t(TabsI18nKey.Attachments),
 });
 
 export const getViewTabs = (

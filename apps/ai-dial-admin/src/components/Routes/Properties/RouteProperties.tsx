@@ -1,24 +1,25 @@
+import { FC, useCallback, useState } from 'react';
+
 import { NumberInputField, TextInputField } from '@/src/components/Common/InputField/InputField';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
 import Switch from '@/src/components/Common/Switch/Switch';
-import MaxRetryAttempts from '@/src/components/MaxRetryAttempts/MaxRetryAttempts';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
-import { DialRoute, RouteOutput } from '@/src/models/dial/route';
-import { RadioButtonModel } from '@/src/models/radio-button';
-import { RadioFieldOrientation } from '@/src/types/radio-orientation';
-import { FC, useCallback, useState } from 'react';
 import UpstreamEndpoints from '@/src/components/Endpoints/UpstreamEndpoints';
-import Paths from '@/src/components/Routes/Paths/Paths';
-import { handleRouteOutputChange } from '@/src/components/Routes/utils';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import MaxRetryAttempts from '@/src/components/MaxRetryAttempts/MaxRetryAttempts';
+import Paths from '@/src/components/Routes/Paths/Paths';
+import { handleRouteOutputChange } from '@/src/components/Routes/utils';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+import { DialAppRoute, DialRoute, RouteOutput } from '@/src/models/dial/route';
+import { RadioButtonModel } from '@/src/models/radio-button';
+import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 
 interface Props {
-  route: DialRoute;
+  route: DialRoute | DialAppRoute;
   isAppRoute?: boolean;
-  updateRoute: (route: DialRoute) => void;
+  updateRoute: (route: DialRoute | DialAppRoute) => void;
 }
 
 const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
@@ -103,6 +104,13 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
     [updateRoute, route],
   );
 
+  const onChangePaths = useCallback(
+    (paths: string[]) => {
+      updateRoute({ ...route, paths });
+    },
+    [route, updateRoute],
+  );
+
   return (
     <div className="h-full flex flex-col pt-3 w-full">
       <div className="flex flex-col gap-6 lg:w-[35%]">
@@ -114,7 +122,7 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
             <DescriptionControl entity={route} onChangeEntity={updateRoute} />
           </>
         )}
-        <Paths route={route} updateRoute={updateRoute} />
+        <Paths title={t(EntityFieldsI18nKey.paths)} paths={route.paths} onChangePaths={onChangePaths} />
 
         <Switch
           isOn={route.rewritePath}
@@ -173,7 +181,23 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
           maxRetryAttempts={route.maxRetryAttempts}
           onChangeMaxRetryAttempts={onChangeMaxRetryAttempts}
         />
-        <div className="lg:w-[35%]">
+
+        <div className="lg:w-[25%] flex flex-col gap-6">
+          {/* // TODO: temp - waiting design */}
+          {/* {isAppRoute && (
+            <DropdownField
+              selectedValue={(route as DialAppRoute).permissions || BasicI18nKey.None}
+              elementId="permissions"
+              items={items}
+              fieldTitle={t(EntityFieldsI18nKey.permissions)}
+              onChange={(value) => {
+                updateRoute({
+                  ...route,
+                  permissions: value === BasicI18nKey.None ? void 0 : (value as RoutePermission),
+                });
+              }}
+            />
+          )} */}
           <NumberInputField
             elementId="order"
             fieldTitle={t(EntityFieldsI18nKey.order)}
