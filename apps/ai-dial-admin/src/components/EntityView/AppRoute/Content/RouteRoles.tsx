@@ -62,7 +62,7 @@ const RouteRoles: FC<Props> = ({ route, parentRoles, onChangeRoute, roles }) => 
     <>
       <div className="h-full w-full flex flex-col">
         <div className="flex flex-row items-center w-full mb-4 justify-between">
-          <div className="flex flex-row items-center">
+          <div className="flex flex-row items-center h-[38px]">
             <h1 className="mr-4"> {t(TabsI18nKey.Roles)}</h1>
             <Switch
               switchId="inheritedAppRoles"
@@ -73,7 +73,7 @@ const RouteRoles: FC<Props> = ({ route, parentRoles, onChangeRoute, roles }) => 
               }}
             />
           </div>
-          {!!isInherited && (
+          {!isInherited && (
             <Button
               cssClass="secondary"
               iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
