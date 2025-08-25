@@ -55,7 +55,7 @@ const DuplicateKey: FC<Props> = ({ onDuplicate, modalState, onClose, entity, nam
 
   return (
     <Popup onClose={onClose} heading={t(DuplicateI18nKey.KeyHeader)} portalId="DuplicateKey" state={modalState}>
-      <div className="flex flex-col gap-4 px-6 py-4">
+      <div className="flex flex-col gap-6 px-6 py-4">
         <IdControl entity={clonedEntity} names={names} onChangeEntity={setEntity} />
         <DisplayNameControl
           displayName={clonedEntity.displayName}
