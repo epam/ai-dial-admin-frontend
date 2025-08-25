@@ -45,7 +45,9 @@ vi.mock('@/src/context/RuleFolderContext', () => ({
 }));
 
 vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => vi.fn(),
+  useAppContext: () => {
+    return { hintSidebar: { show: false, content: null } };
+  },
 }));
 
 vi.mock('@/src/context/SaveValidationContext', () => ({
