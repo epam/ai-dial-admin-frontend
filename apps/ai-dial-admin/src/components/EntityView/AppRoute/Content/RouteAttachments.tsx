@@ -43,7 +43,7 @@ const RouteAttachments: FC<Props> = ({ route, onChangeRoute }) => {
           onChangePaths={onChangeRequest}
         />
       </div>
-      <div className="w-full lg:w-[50%] pt-10">
+      <div className="w-full lg:w-[50%] pt-9">
         <Paths
           title={t(RoutesI18nKey.ResponseAttachmentPaths)}
           paths={route.attachmentPaths?.responseBody}
