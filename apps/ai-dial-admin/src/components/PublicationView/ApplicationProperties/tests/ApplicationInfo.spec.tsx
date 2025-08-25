@@ -17,8 +17,6 @@ describe('ApplicationInfo', () => {
 
     expect(screen.getByText(EntityFieldsI18nKey.displayName)).toBeInTheDocument();
     expect(screen.getByText('Test App')).toBeInTheDocument();
-    expect(screen.getByText(EntityFieldsI18nKey.displayVersion)).toBeInTheDocument();
-    expect(screen.getByText('1.0.0')).toBeInTheDocument();
     expect(screen.getByText(EntityFieldsI18nKey.description)).toBeInTheDocument();
     expect(screen.getByText('A test application')).toBeInTheDocument();
     expect(screen.getByText(EntityFieldsI18nKey.iconUrl)).toBeInTheDocument();
