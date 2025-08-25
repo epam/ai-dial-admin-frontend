@@ -1,27 +1,20 @@
+import { FC, useCallback, useState } from 'react';
+
 import { NumberInputField, TextInputField } from '@/src/components/Common/InputField/InputField';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
 import Switch from '@/src/components/Common/Switch/Switch';
-import MaxRetryAttempts from '@/src/components/MaxRetryAttempts/MaxRetryAttempts';
-import {
-  BasicI18nKey,
-  EntityFieldsI18nKey,
-  EntityPlaceholdersI18nKey,
-  ErrorI18nKey,
-  RoutesI18nKey,
-} from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
-import { DialAppRoute, DialRoute, RouteOutput, RoutePermission } from '@/src/models/dial/route';
-import { RadioButtonModel } from '@/src/models/radio-button';
-import { RadioFieldOrientation } from '@/src/types/radio-orientation';
-import { FC, useCallback, useState } from 'react';
 import UpstreamEndpoints from '@/src/components/Endpoints/UpstreamEndpoints';
-import Paths from '@/src/components/Routes/Paths/Paths';
-import { handleRouteOutputChange } from '@/src/components/Routes/utils';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
+import MaxRetryAttempts from '@/src/components/MaxRetryAttempts/MaxRetryAttempts';
+import Paths from '@/src/components/Routes/Paths/Paths';
+import { handleRouteOutputChange } from '@/src/components/Routes/utils';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+import { DialAppRoute, DialRoute, RouteOutput } from '@/src/models/dial/route';
+import { RadioButtonModel } from '@/src/models/radio-button';
+import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 
 interface Props {
   route: DialRoute | DialAppRoute;
@@ -35,12 +28,6 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
   const outputRadio: RadioButtonModel[] = [
     { id: RouteOutput.UPSTREAMS, name: t(EntityFieldsI18nKey.upstreams) },
     { id: RouteOutput.RESPONSE, name: t(EntityFieldsI18nKey.response) },
-  ];
-
-  const items: DropdownItemsModel[] = [
-    { id: BasicI18nKey.None, name: t(BasicI18nKey.None) },
-    { id: RoutePermission.READ, name: t(RoutesI18nKey.Read) },
-    { id: RoutePermission.WRITE, name: t(RoutesI18nKey.Write) },
   ];
 
   const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE'];
@@ -196,7 +183,8 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
         />
 
         <div className="lg:w-[25%] flex flex-col gap-6">
-          {isAppRoute && (
+          {/* // TODO: temp - waiting design */}
+          {/* {isAppRoute && (
             <DropdownField
               selectedValue={(route as DialAppRoute).permissions || BasicI18nKey.None}
               elementId="permissions"
@@ -209,7 +197,7 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
                 });
               }}
             />
-          )}
+          )} */}
           <NumberInputField
             elementId="order"
             fieldTitle={t(EntityFieldsI18nKey.order)}

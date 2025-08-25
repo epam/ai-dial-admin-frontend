@@ -4,7 +4,7 @@ import { FC, useCallback } from 'react';
 import Paths from '@/src/components/Routes/Paths/Paths';
 import { RoutesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialAppRoute } from '@/src/models/dial/route';
+import { AttachmentPaths, DialAppRoute } from '@/src/models/dial/route';
 
 interface Props {
   route: DialAppRoute;
@@ -16,14 +16,20 @@ const RouteAttachments: FC<Props> = ({ route, onChangeRoute }) => {
 
   const onChangeRequest = useCallback(
     (paths: string[]) => {
-      onChangeRoute({ ...route, attachmentPaths: { ...route.attachmentPaths, requestBody: paths } });
+      onChangeRoute({
+        ...route,
+        attachmentPaths: { ...(route.attachmentPaths || {}), requestBody: paths } as AttachmentPaths,
+      });
     },
     [route, onChangeRoute],
   );
 
   const onChangeResponse = useCallback(
     (paths: string[]) => {
-      onChangeRoute({ ...route, attachmentPaths: { ...route.attachmentPaths, responseBody: paths } });
+      onChangeRoute({
+        ...route,
+        attachmentPaths: { ...(route.attachmentPaths || {}), responseBody: paths } as AttachmentPaths,
+      });
     },
     [route, onChangeRoute],
   );
@@ -33,14 +39,14 @@ const RouteAttachments: FC<Props> = ({ route, onChangeRoute }) => {
       <div className="w-full lg:w-[50%]">
         <Paths
           title={t(RoutesI18nKey.RequestAttachmentPaths)}
-          paths={route.attachmentPaths.requestBody}
+          paths={route.attachmentPaths?.requestBody}
           onChangePaths={onChangeRequest}
         />
       </div>
       <div className="w-full lg:w-[50%] mt-10">
         <Paths
           title={t(RoutesI18nKey.ResponseAttachmentPaths)}
-          paths={route.attachmentPaths.responseBody}
+          paths={route.attachmentPaths?.responseBody}
           onChangePaths={onChangeResponse}
         />
       </div>

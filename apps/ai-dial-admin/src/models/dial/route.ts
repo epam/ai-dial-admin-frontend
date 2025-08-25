@@ -15,12 +15,13 @@ export interface DialRoute extends DialBaseNamedEntity {
 // AppRoute - routes in the application or app runner
 export interface DialAppRoute extends DialRoute {
   permissions?: RoutePermission;
-  attachmentPaths: {
-    requestBody: string[];
-    responseBody: string[];
-  };
+  attachmentPaths?: AttachmentPaths;
 }
 
+export interface AttachmentPaths {
+  requestBody: string[];
+  responseBody: string[];
+}
 export interface RouteResponse {
   status?: number | string;
   body?: string;
