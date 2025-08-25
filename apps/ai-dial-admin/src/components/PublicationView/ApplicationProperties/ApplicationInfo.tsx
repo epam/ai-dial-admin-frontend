@@ -1,12 +1,12 @@
 import { FC } from 'react';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
+import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
+import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
-import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import { DialApplicationResource } from '@/src/models/dial/application-resource';
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 
 interface Props {
   application: DialApplicationResource;
@@ -17,18 +17,7 @@ const ApplicationInfo: FC<Props> = ({ application }) => {
 
   return application ? (
     <div className="flex flex-col gap-y-6">
-      <TextInputField
-        elementId="displayName"
-        readonly={true}
-        fieldTitle={t(EntityFieldsI18nKey.displayName)}
-        value={application?.displayName}
-      />
-      <TextInputField
-        readonly={true}
-        elementId="displayVersion"
-        fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
-        value={application?.displayVersion}
-      />
+      <DisplayNameControl readonly={true} displayName={application?.displayName} />
 
       <DescriptionControl entity={application} readonly={true} />
 

@@ -23,24 +23,10 @@ export const isValidEntity = (
       return isValidAdapter(entity as DialAdapter, names);
     }
 
-    //TODO: remove
-    if (view === ApplicationRoute.Keys) {
-      return true;
-    }
-
-    if (view === ApplicationRoute.ApplicationRunners) {
-      const id = (entity as DialApplicationScheme).$id;
-      return !!id && id.length <= MAX_RUNNER_ID_SYMBOLS;
-    }
-
     const isValidSimpleEntity = getIsValidSimpleEntity(entity, withVersion);
 
     if (view === ApplicationRoute.Routes) {
       return isValidRoute(entity as DialRoute, isValidSimpleEntity);
-    }
-
-    if (view === ApplicationRoute.Interceptors) {
-      return isValidSimpleEntity;
     }
 
     return isValidSimpleEntity;

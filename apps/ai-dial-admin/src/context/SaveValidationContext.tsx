@@ -21,6 +21,7 @@ interface SaveValidationContextType {
 }
 
 const validationReducer = (state: ValidationState, action: ValidationAction): ValidationState => {
+  console.log('Validation for field:', state);
   switch (action.type) {
     case ValidationActionType.SetField: {
       const newFieldValidations = new Map(state.fieldValidations);

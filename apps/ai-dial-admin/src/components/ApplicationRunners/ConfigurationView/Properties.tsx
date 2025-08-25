@@ -8,6 +8,8 @@ import { FieldError } from '@/src/models/error';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import AppRunnerExtendedProperties from './ExtendedProperties';
 import { getErrorForAppRunnerId } from './utils';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   runner: DialApplicationScheme;
@@ -17,18 +19,21 @@ interface Props {
 
 const SchemeProperties: FC<Props> = ({ runner, isImmutable, onChangeRunner }) => {
   const t = useI18n() as (t: string) => string;
+  const { dispatch } = useSaveValidationContext();
 
   const [idError, setIdError] = useState<FieldError | null>(null);
 
   const onChangeId = useCallback(
     (id: string) => {
-      setIdError(getErrorForAppRunnerId(id, t));
+      const error = getErrorForAppRunnerId(id, t);
+      setIdError(error);
+      dispatch({ type: ValidationActionType.SetField, field: 'id', isValid: !error });
       onChangeRunner({
         ...runner,
         $id: id.trim(),
       });
     },
-    [onChangeRunner, runner, t],
+    [dispatch, onChangeRunner, runner, t],
   );
 
   const onChangeName = useCallback(
@@ -52,13 +57,7 @@ const SchemeProperties: FC<Props> = ({ runner, isImmutable, onChangeRunner }) =>
         />
       )}
 
-      <TextInputField
-        elementId="name"
-        fieldTitle={t(EntityFieldsI18nKey.displayName)}
-        placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
-        value={runner['dial:applicationTypeDisplayName']}
-        onChange={onChangeName}
-      />
+      <DisplayNameControl displayName={runner['dial:applicationTypeDisplayName']} onChange={onChangeName} />
 
       <DescriptionControl entity={runner} onChangeEntity={onChangeRunner} />
 

@@ -32,6 +32,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
+import VersionControl from '../EntityMainProperties/BaseProperties/Version';
 
 interface Props {
   prompt: DialPrompt;
@@ -185,12 +186,7 @@ const PromptProperties: FC<Props> = ({
         <div className="flex flex-col gap-6 pr-6">
           <div className="w-[105px]">
             {isImmutable ? (
-              <TextInputField
-                elementId="version"
-                fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
-                value={prompt.version}
-                disabled={isImmutable}
-              />
+              <VersionControl version={prompt.version} disabled={true} />
             ) : (
               <DropdownField
                 elementCssClass="lg:w-[35%]"

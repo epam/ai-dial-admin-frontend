@@ -13,7 +13,6 @@ import AddVersionModal from '@/src/components/Common/AddVersionModal/AddVersionM
 import Button from '@/src/components/Common/Button/Button';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import Switch from '@/src/components/Common/Switch/Switch';
-import { isValidEntity } from '@/src/utils/validation/is-valid-entity';
 import { deleteModalTitleMap } from '@/src/components/EntityListView/constants';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { showEditorErrorNotifications } from '@/src/components/JSONEditor/JSONEditor.utils';
@@ -183,7 +182,7 @@ const HeaderButtons = <T extends DialBaseEntity | DialKey>({
                 cssClass={`secondary ${buttonsClassNames}`}
                 title={t(ButtonsI18nKey.SaveAsNewVersion)}
                 onClick={() => setVersionModalState(PopUpState.Opened)}
-                disable={(jsonEditorEnabled && !isValidJSON) || !isValidEntity(view, entity)}
+                disable={jsonEditorEnabled && !isValidJSON}
               />
             )}
             <Button

@@ -10,10 +10,12 @@ import { getErrorForDisplayName } from '@/src/utils/validation/name-error';
 interface Props {
   displayName?: string;
   required?: boolean;
+  readonly?: boolean;
+  disabled?: boolean;
   onChange?: (displayName: string) => void;
 }
 
-const DisplayNameControl: FC<Props> = ({ displayName, onChange, required }) => {
+const DisplayNameControl: FC<Props> = ({ displayName, onChange, required, ...props }) => {
   const t = useI18n() as (t: string) => string;
   const { dispatch } = useSaveValidationContext();
 
@@ -43,10 +45,10 @@ const DisplayNameControl: FC<Props> = ({ displayName, onChange, required }) => {
       elementId="displayName"
       optional={!required}
       value={displayName}
-      optional={true}
       onChange={onChangeDisplayName}
       errorText={displayNameError?.text}
       invalid={!!displayNameError}
+      {...props}
     />
   );
 };
