@@ -36,7 +36,6 @@ describe('Constants :: grid columns', () => {
     expect(Array.isArray(PROMPTS_COLUMNS)).toBe(true);
     expect(PROMPTS_COLUMNS.some((c) => c.field === 'name')).toBe(true);
     expect(PROMPTS_COLUMNS.some((c) => c.field === 'version')).toBe(true);
-    expect(PROMPTS_COLUMNS.some((c) => c.field === 'author')).toBe(true);
   });
 
   test('EXPORT_COLUMNS returns expected columns for prompts', () => {
@@ -44,7 +43,6 @@ describe('Constants :: grid columns', () => {
     expect(Array.isArray(cols)).toBe(true);
     expect(cols.some((c) => c.field === 'name')).toBe(true);
     expect(cols.some((c) => c.field === 'version' || c.field === 'extension')).toBe(true);
-    expect(cols.some((c) => c.field === 'author')).toBe(true);
   });
 
   test('EXPORT_COLUMNS returns expected columns for files', () => {
@@ -56,7 +54,6 @@ describe('Constants :: grid columns', () => {
   test('PUBLICATION_COLUMNS returns expected columns', () => {
     expect(Array.isArray(PUBLICATION_COLUMNS)).toBe(true);
     expect(PUBLICATION_COLUMNS.some((c) => c.field === 'requestName')).toBe(true);
-    expect(PUBLICATION_COLUMNS.some((c) => c.field === 'author')).toBe(true);
   });
 
   test('ENTITIES_COLUMNS returns columns with actions', () => {

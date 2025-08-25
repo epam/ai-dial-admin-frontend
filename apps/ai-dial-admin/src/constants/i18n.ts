@@ -640,7 +640,7 @@ export enum EntityPlaceholdersI18nKey {
   CompletionEndpoint = 'EntityPlaceholders.CompletionEndpoint',
   RateEndpoint = 'EntityPlaceholders.RateEndpoint',
   TokenizeEndpoint = 'EntityPlaceholders.TokenizeEndpoint',
-  TruncatePromptEndpoint = 'EntityPlaceholders.truncatePromptEndpoint',
+  TruncatePromptEndpoint = 'EntityPlaceholders.TruncatePromptEndpoint',
   SelectAppRunner = 'EntityPlaceholders.SelectAppRunner',
   Version = 'EntityPlaceholders.Version',
   KeyValue = 'EntityPlaceholders.KeyValue',
