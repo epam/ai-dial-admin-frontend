@@ -387,7 +387,7 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
     ...priceColumn,
   },
   { field: 'deployment', headerName: 'Deployment ID' },
-  { field: 'parent_deployment', headerName: 'Parent Deployment ID', hide: true },
+  { field: 'parent_deployment', headerName: 'Parent Deployment ID' },
   { field: 'model', headerName: 'Model', hide: true },
   { field: 'project_id', headerName: 'Project' },
   { field: 'upstream', headerName: 'Upstream', hide: true },
@@ -424,12 +424,6 @@ export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
   },
   {
     field: 'deployment_price',
-    headerName: 'Deployment Price',
-    hide: true,
-    ...priceColumn,
-  },
-  {
-    field: 'price',
     headerName: 'Total Price',
     ...priceColumn,
   },
@@ -441,18 +435,10 @@ export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
   },
 
   { field: 'deployment', headerName: 'Deployment ID' },
-  { field: 'parent_deployment', headerName: 'Parent Deployment ID', hide: true },
-  { field: 'model', headerName: 'Model', hide: true },
   { field: 'project_id', headerName: 'Project' },
-  { field: 'upstream', headerName: 'Upstream', hide: true },
-  { field: 'execution_path', headerName: 'Execution Path', hide: true },
   { field: 'user_hash', headerName: 'User' },
   { field: 'user_title', headerName: 'User Title', hide: true },
   { field: 'language', headerName: 'Language', hide: true },
-  { field: 'duration', headerName: 'Duration', hide: true },
-  { field: 'response_id', headerName: 'Response ID', hide: true },
-  { field: 'core_span_id', headerName: 'Core span ID', hide: true },
-  { field: 'core_parent_span_id', headerName: 'Core parent span ID' },
 ];
 
 export const PROJECT_GRID_COLUMNS: ColDef[] = [{ field: 'name', headerName: 'Project' }, ...TELEMETRY_COLUMNS];
