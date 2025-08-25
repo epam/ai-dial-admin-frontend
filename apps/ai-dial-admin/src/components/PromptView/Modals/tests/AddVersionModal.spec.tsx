@@ -5,7 +5,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { PopUpState } from '@/src/types/pop-up';
 
-import AddVersionModal from './AddVersionModal';
+import AddVersionModal from '../AddVersionModal';
 
 describe('Common components - AddVersionModal', () => {
   test('renders input and buttons', () => {

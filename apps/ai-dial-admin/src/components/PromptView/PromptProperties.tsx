@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { IconPlus } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 
-import AddVersionModal from '@/src/components/Common/AddVersionModal/AddVersionModal';
+import AddVersionModal from '@/src/components/PromptView/Modals/AddVersionModal';
 import Button from '@/src/components/Common/Button/Button';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
