@@ -7,7 +7,7 @@ describe('Paths', () => {
   test('renders empty path input if no paths', () => {
     render(<Paths paths={[]} title="title" onChangePaths={vi.fn()} />);
     expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.PathUrl)).toBeInTheDocument();
-    expect(screen.getByText(EntityFieldsI18nKey.paths)).toBeInTheDocument();
+    expect(screen.getByText('title')).toBeInTheDocument();
   });
 
   test('renders Path components for each path', () => {
@@ -48,7 +48,7 @@ describe('Paths', () => {
 
   test('clears path if only one and Remove is clicked', () => {
     const onChangePaths = vi.fn();
-    render(<Paths paths={['/a']} title='title' onChangePaths={onChangePaths} />);
+    render(<Paths paths={['/a']} title="title" onChangePaths={onChangePaths} />);
     fireEvent.click(screen.getByLabelText('button'));
     expect(onChangePaths).toHaveBeenCalledWith({ paths: [''] });
   });
