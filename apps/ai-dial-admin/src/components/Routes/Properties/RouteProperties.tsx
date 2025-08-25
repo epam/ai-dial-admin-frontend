@@ -3,9 +3,15 @@ import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
 import Switch from '@/src/components/Common/Switch/Switch';
 import MaxRetryAttempts from '@/src/components/MaxRetryAttempts/MaxRetryAttempts';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import {
+  BasicI18nKey,
+  EntityFieldsI18nKey,
+  EntityPlaceholdersI18nKey,
+  ErrorI18nKey,
+  RoutesI18nKey,
+} from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialRoute, RouteOutput } from '@/src/models/dial/route';
+import { DialAppRoute, DialRoute, RouteOutput, RoutePermission } from '@/src/models/dial/route';
 import { RadioButtonModel } from '@/src/models/radio-button';
 import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { FC, useCallback, useState } from 'react';
@@ -14,11 +20,13 @@ import Paths from '@/src/components/Routes/Paths/Paths';
 import { handleRouteOutputChange } from '@/src/components/Routes/utils';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
+import { DropdownItemsModel } from '@/src/models/dropdown-item';
 
 interface Props {
-  route: DialRoute;
+  route: DialRoute | DialAppRoute;
   isAppRoute?: boolean;
-  updateRoute: (route: DialRoute) => void;
+  updateRoute: (route: DialRoute | DialAppRoute) => void;
 }
 
 const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
@@ -27,6 +35,12 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
   const outputRadio: RadioButtonModel[] = [
     { id: RouteOutput.UPSTREAMS, name: t(EntityFieldsI18nKey.upstreams) },
     { id: RouteOutput.RESPONSE, name: t(EntityFieldsI18nKey.response) },
+  ];
+
+  const items: DropdownItemsModel[] = [
+    { id: BasicI18nKey.None, name: t(BasicI18nKey.None) },
+    { id: RoutePermission.READ, name: t(RoutesI18nKey.Read) },
+    { id: RoutePermission.WRITE, name: t(RoutesI18nKey.Write) },
   ];
 
   const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE'];
@@ -173,7 +187,22 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
           maxRetryAttempts={route.maxRetryAttempts}
           onChangeMaxRetryAttempts={onChangeMaxRetryAttempts}
         />
-        <div className="lg:w-[35%]">
+
+        <div className="lg:w-[25%] flex flex-col gap-6">
+          {isAppRoute && (
+            <DropdownField
+              selectedValue={(route as DialAppRoute).permissions || BasicI18nKey.None}
+              elementId="permissions"
+              items={items}
+              fieldTitle={t(EntityFieldsI18nKey.permissions)}
+              onChange={(value) => {
+                updateRoute({
+                  ...route,
+                  permissions: value === BasicI18nKey.None ? void 0 : (value as RoutePermission),
+                });
+              }}
+            />
+          )}
           <NumberInputField
             elementId="order"
             fieldTitle={t(EntityFieldsI18nKey.order)}
