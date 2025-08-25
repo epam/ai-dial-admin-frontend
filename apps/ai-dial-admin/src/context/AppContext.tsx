@@ -4,7 +4,7 @@ import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storag
 import { LOCAL_STORAGE_SIDEBAR_OPEN_KEY } from '@/src/constants/main-layout';
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 
-interface AppContextType {
+export interface AppContextType {
   themeUrl?: string;
   sidebarOpen: boolean;
   toggleSidebar: (e: MouseEvent<HTMLButtonElement>) => void;
@@ -14,6 +14,12 @@ interface AppContextType {
   setVisualizerConnector?: Dispatch<SetStateAction<VisualizerConnector | null>>;
   featureFlags: Record<string, boolean>;
   embeddedApps: EmbeddedApp[];
+  hintSidebar: {
+    show: boolean;
+    content: ReactNode | null;
+    showHintSidebar: (c: ReactNode) => void;
+    closeHintSidebar: () => void;
+  };
 }
 
 export interface EmbeddedApp {
@@ -41,6 +47,8 @@ export const AppContextProvider = ({
   const [sidebarOpen, setSidebarOpen] = useState(isSidebarOpenState);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [visualizerConnector, setVisualizerConnector] = useState<VisualizerConnector | null>(null);
+  const [show, setShow] = useState(false);
+  const [content, setContent] = useState<ReactNode | null>(null);
 
   const toggleSidebar = (e: MouseEvent<HTMLButtonElement>) => {
     e.currentTarget.blur();
@@ -50,6 +58,16 @@ export const AppContextProvider = ({
 
   const toggleUserMenu = () => {
     setUserMenuOpen(!userMenuOpen);
+  };
+
+  const showHintSidebar = (c: ReactNode) => {
+    setContent(c);
+    setShow(true);
+  };
+
+  const closeHintSidebar = () => {
+    setContent(null);
+    setShow(false);
   };
 
   const value = {
@@ -62,6 +80,7 @@ export const AppContextProvider = ({
     setVisualizerConnector,
     featureFlags,
     embeddedApps,
+    hintSidebar: { show, content, showHintSidebar, closeHintSidebar },
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
