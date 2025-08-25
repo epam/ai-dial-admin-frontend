@@ -2,7 +2,6 @@ import { MAX_RUNNER_ID_SYMBOLS } from '@/src/constants/validation';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity, DialBaseNamedEntity } from '@/src/models/dial/base-entity';
-import { DialKey } from '@/src/models/dial/key';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -21,7 +20,7 @@ export const isValidEntity = (
   names?: string[],
 ) => {
   // TODO: remove after clear all entity validation
-  if (view === ApplicationRoute.Keys) {
+  if (view === ApplicationRoute.Keys || view === ApplicationRoute.Roles) {
     return;
   }
 

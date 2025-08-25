@@ -98,7 +98,7 @@ describe('getErrorForDisplayName', () => {
   });
 
   test('returns error if name is empty string', () => {
-    const result = getErrorForDisplayName('', mockT);
+    const result = getErrorForDisplayName('', false, mockT);
     expect(result).toEqual({
       type: ErrorType.LENGTH,
       text: 'Translated Text',
@@ -106,7 +106,7 @@ describe('getErrorForDisplayName', () => {
   });
 
   test('returns error if name is too short', () => {
-    const result = getErrorForDisplayName('a', mockT);
+    const result = getErrorForDisplayName('a', false, mockT);
 
     expect(result).toEqual({
       type: ErrorType.LENGTH,
@@ -116,7 +116,7 @@ describe('getErrorForDisplayName', () => {
 
   test('returns error if name is too long', () => {
     const longName = 'a'.repeat(300);
-    const result = getErrorForDisplayName(longName, mockT);
+    const result = getErrorForDisplayName(longName, false, mockT);
     expect(result).toEqual({
       type: ErrorType.LENGTH,
       text: 'Translated Text',
@@ -125,7 +125,7 @@ describe('getErrorForDisplayName', () => {
 
   test('returns null if name is valid length', () => {
     const validName = 'validName';
-    const result = getErrorForDisplayName(validName, mockT);
+    const result = getErrorForDisplayName(validName, false, mockT);
     expect(result).toBeNull();
   });
 });
