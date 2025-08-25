@@ -117,6 +117,13 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
     [updateRoute, route],
   );
 
+  const onChangePaths = useCallback(
+    (paths: string[]) => {
+      updateRoute({ ...route, paths });
+    },
+    [route, updateRoute],
+  );
+
   return (
     <div className="h-full flex flex-col pt-3 w-full">
       <div className="flex flex-col gap-6 lg:w-[35%]">
@@ -128,7 +135,7 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
             <DescriptionControl entity={route} onChangeEntity={updateRoute} />
           </>
         )}
-        <Paths route={route} updateRoute={updateRoute} />
+        <Paths title={t(EntityFieldsI18nKey.paths)} paths={route.paths} onChangePaths={onChangePaths} />
 
         <Switch
           isOn={route.rewritePath}

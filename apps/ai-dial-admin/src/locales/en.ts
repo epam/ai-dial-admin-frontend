@@ -419,6 +419,8 @@ export default {
   },
   Routes: {
     AddPaths: 'Add paths',
+    RequestAttachmentPaths: 'Request attachment paths',
+    ResponseAttachmentPaths: 'Response attachment paths',
     Output: 'Output',
     Read: 'Read',
     Write: 'Write',
