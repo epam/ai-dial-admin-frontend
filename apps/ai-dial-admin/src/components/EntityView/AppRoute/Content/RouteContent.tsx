@@ -13,10 +13,11 @@ import { DialRole } from '@/src/models/dial/role';
 interface Props {
   route: DialAppRoute;
   roles: DialRole[];
+  parentRoles?: string[];
   onChangeRoute: (route: DialAppRoute) => void;
 }
 
-const RouteContent: FC<Props> = ({ route, roles, onChangeRoute }) => {
+const RouteContent: FC<Props> = ({ route, parentRoles, roles, onChangeRoute }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
 
   const tabs = [propertiesTabs(t), attachmentsTabs(t), rolesTabs(t)];
@@ -35,7 +36,9 @@ const RouteContent: FC<Props> = ({ route, roles, onChangeRoute }) => {
         )}
 
         {activeTab === EntityViewTab.Attachments && <RouteAttachments route={route} onChangeRoute={onChangeRoute} />}
-        {activeTab === EntityViewTab.Roles && <RouteRoles route={route} roles={roles} onChangeRoute={onChangeRoute} />}
+        {activeTab === EntityViewTab.Roles && (
+          <RouteRoles route={route} roles={roles} parentRoles={parentRoles} onChangeRoute={onChangeRoute} />
+        )}
       </div>
     </div>
   );

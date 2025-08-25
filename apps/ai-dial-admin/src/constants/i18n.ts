@@ -392,6 +392,7 @@ export enum RoutesI18nKey {
   Write = 'Routes.Write',
   ResponseAttachmentPaths = 'Routes.ResponseAttachmentPaths',
   RequestAttachmentPaths = 'Routes.RequestAttachmentPaths',
+  InheritApplicationRoles = 'Routes.InheritApplicationRoles',
 }
 
 export enum PublicationsI18nKey {

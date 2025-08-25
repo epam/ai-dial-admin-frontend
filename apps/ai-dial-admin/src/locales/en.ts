@@ -423,6 +423,7 @@ export default {
     AddPaths: 'Add paths',
     RequestAttachmentPaths: 'Request attachment paths',
     ResponseAttachmentPaths: 'Response attachment paths',
+    InheritApplicationRoles: 'Inherit Application Roles',
     Output: 'Output',
     Read: 'Read',
     Write: 'Write',
