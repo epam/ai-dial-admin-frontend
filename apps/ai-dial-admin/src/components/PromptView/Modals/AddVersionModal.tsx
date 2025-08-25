@@ -1,9 +1,9 @@
 import { FC, useState } from 'react';
 
 import Button from '@/src/components/Common/Button/Button';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Popup from '@/src/components/Common/Popup/Popup';
-import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
+import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
+import { ButtonsI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
 
@@ -31,13 +31,7 @@ const AddVersionModal: FC<Props> = ({
     <Popup onClose={onClose} heading={heading} portalId="newVersionModal" state={modalState}>
       <div className=" flex flex-col gap-4 text-primary small px-6 py-4">
         {prefilledVersion && <div className="text-secondary">{t(PromptsI18nKey.NewVersionSaveDescription)}</div>}
-        <TextInputField
-          elementId="name"
-          fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
-          placeholder={t(EntityPlaceholdersI18nKey.Version)}
-          value={version}
-          onChange={setVersion}
-        />
+        <VersionControl version={version} onChange={setVersion} />
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
         <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />

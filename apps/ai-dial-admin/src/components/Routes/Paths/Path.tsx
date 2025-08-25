@@ -1,28 +1,36 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 
 import { IconTrash } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+import { EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { isValidRoutePath } from '@/src/utils/validation/path-error';
 
 interface Props {
   index: number;
+  fieldTitle: string;
   path: string;
   allPaths?: string[];
   onRemove: (index: number) => void;
   onChangePath: (index: number, value: string) => void;
 }
 
-const Path: FC<Props> = ({ index, path, allPaths, onRemove, onChangePath }) => {
+const Path: FC<Props> = ({ index, path, fieldTitle, allPaths, onRemove, onChangePath }) => {
   const t = useI18n();
 
   const [isEmptyPath, setIsEmptyPath] = useState(true);
   const [isInvalidPath, setIsInvalidPath] = useState(false);
   const isAllEmptyValues = !allPaths?.some((v) => v !== '');
+  const error = useMemo(() => {
+    return isEmptyPath && index === 0 && isAllEmptyValues
+      ? t(ErrorI18nKey.RequiredProperty)
+      : isInvalidPath
+        ? t(ErrorI18nKey.InvalidPath)
+        : '';
+  }, [index, isAllEmptyValues, isEmptyPath, isInvalidPath, t]);
 
   const removeButtonClass = classNames(
     'cursor-pointer ml-[10px]',
@@ -48,15 +56,9 @@ const Path: FC<Props> = ({ index, path, allPaths, onRemove, onChangePath }) => {
           elementId={'path ' + index}
           value={path}
           placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
-          fieldTitle={index === 0 ? t(EntityFieldsI18nKey.paths) : ''}
+          fieldTitle={index === 0 ? fieldTitle : ''}
           onChange={(value) => onChangePath(index, value)}
-          errorText={
-            isEmptyPath && index === 0 && isAllEmptyValues
-              ? t(ErrorI18nKey.RequiredProperty)
-              : isInvalidPath
-                ? t(ErrorI18nKey.InvalidPath)
-                : ''
-          }
+          errorText={error}
           invalid={(isEmptyPath && index === 0 && isAllEmptyValues) || isInvalidPath}
         />
       </div>

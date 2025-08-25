@@ -5,21 +5,21 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import ApplicationSource from '@/src/components/ApplicationSource/ApplicationSource';
 import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/AutocompleteField';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
+import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
+import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
+import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { DialModel } from '@/src/models/dial/model';
 import { FieldError } from '@/src/models/error';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorForName, isWrongLengthWithView } from '@/src/utils/validation/name-error';
+import classNames from 'classnames';
 import AdditionalProperties from './AdditionalProperties';
 import { getDisplayNameError, getVersionError } from './utils';
-import { DialModel } from '@/src/models/dial/model';
-import classNames from 'classnames';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import IdControl from './BaseProperties/Id';
 
 interface Props {
   view: ApplicationRoute;
@@ -130,15 +130,11 @@ const EntityMainProperties: FC<Props> = ({
         />
 
         {view === ApplicationRoute.Models && (
-          <TextInputField
-            elementId="displayVersion"
-            fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
-            placeholder={t(EntityPlaceholdersI18nKey.Version)}
-            optional={isVersionOptional}
-            value={(entity as DialModel).displayVersion}
+          <VersionControl
+            version={(entity as DialModel).displayVersion}
             onChange={onChangeVersion}
-            invalid={!!versionError}
-            errorText={versionError}
+            error={versionError}
+            optional={isVersionOptional}
           />
         )}
 

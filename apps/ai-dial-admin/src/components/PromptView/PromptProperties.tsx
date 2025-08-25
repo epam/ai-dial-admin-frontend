@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { IconPlus } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 
-import AddVersionModal from '@/src/components/Common/AddVersionModal/AddVersionModal';
+import AddVersionModal from '@/src/components/PromptView/Modals/AddVersionModal';
 import Button from '@/src/components/Common/Button/Button';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
@@ -32,7 +32,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import VersionControl from '../EntityMainProperties/BaseProperties/Version';
+import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
 
 interface Props {
   prompt: DialPrompt;
@@ -186,7 +186,7 @@ const PromptProperties: FC<Props> = ({
         <div className="flex flex-col gap-6 pr-6">
           <div className="w-[105px]">
             {isImmutable ? (
-              <VersionControl version={prompt.version} disabled={true} />
+              <VersionControl version={prompt.version} disabled={isImmutable} />
             ) : (
               <DropdownField
                 elementCssClass="lg:w-[35%]"

@@ -7,11 +7,13 @@ import { TextInputField } from '@/src/components/Common/InputField/InputField';
 interface Props {
   version?: string;
   readonly?: boolean;
+  optional?: boolean;
   disabled?: boolean;
+  error?: string;
   onChange?: (version: string) => void;
 }
 
-const VersionControl: FC<Props> = ({ version, ...props }) => {
+const VersionControl: FC<Props> = ({ version, error, ...props }) => {
   const t = useI18n() as (t: string) => string;
 
   return (
@@ -20,6 +22,8 @@ const VersionControl: FC<Props> = ({ version, ...props }) => {
       fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
       placeholder={t(EntityPlaceholdersI18nKey.Version)}
       value={version}
+      errorText={error}
+      invalid={!!error}
       {...props}
     />
   );
