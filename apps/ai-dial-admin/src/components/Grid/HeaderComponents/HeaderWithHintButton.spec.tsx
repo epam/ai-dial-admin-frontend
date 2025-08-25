@@ -7,26 +7,10 @@ import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderW
 describe('HeaderWithHintButton', () => {
   test('should render HeaderWithHintButton component', async () => {
     const user = userEvent.setup();
-    const mockSort = vi.fn();
-    const mockProgressSort = vi.fn();
-    const mockHandler = vi.fn();
-    const mockColumn = { getSort: mockSort, addEventListener: mockHandler, removeEventListener: mockHandler } as any;
 
-    render(
-      <HeaderWithHintButton
-        hintText={'text'}
-        hintTitle={'title'}
-        displayName={'column name'}
-        column={mockColumn}
-        progressSort={mockProgressSort}
-      />,
-    );
+    render(<HeaderWithHintButton hintText={'text'} hintTitle={'title'} displayName={'column name'} />);
 
     expect(screen.getByText('column name')).toBeInTheDocument();
     expect(screen.getByRole('button')).toBeInTheDocument();
-
-    await user.click(screen.getByText('column name'));
-
-    expect(mockSort).toHaveBeenCalled();
   });
 });
