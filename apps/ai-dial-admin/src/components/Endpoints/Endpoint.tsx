@@ -2,10 +2,10 @@
 
 import { FC, useCallback, useState } from 'react';
 
-import { IconAlertTriangleFilled, IconChevronDown, IconChevronRight, IconTrash, IconTrashX } from '@tabler/icons-react';
+import { IconChevronDown, IconChevronRight, IconTrash, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import { NumberInputField, TextInputField } from '@/src/components/Common/InputField/InputField';
+import { NumberInputField } from '@/src/components/Common/InputField/InputField';
 import PasswordInputField from '@/src/components/Common/PasswordInput/PasswordInputField';
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import {
@@ -18,8 +18,10 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { DialEndpointExtraData, DialModelEndpoint } from '@/src/models/dial/model';
-import { isDangerEndpoint, isValidEndpoint } from '@/src/utils/validation/url-error';
+import { isDangerEndpoint } from '@/src/utils/validation/url-error';
+import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
 import ExtraDataField from './ExtraData/ExtraDataField';
+import WarningIcon from './WarningIcon';
 
 interface Props {
   index: number;
@@ -34,14 +36,13 @@ const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, upd
   const t = useI18n();
   const isFirstLine = index === 0;
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [endpointError, setEndpointError] = useState('');
   const [endpointWarning, setEndpointWarning] = useState('');
   const isTablet = useIsTabletScreen();
 
   const onChangeEndPointUrl = useCallback(
     (url: string) => {
       updateEndpoint({ ...endpoint, endpoint: url });
-      setEndpointError(url === '' ? '' : isValidEndpoint(url) ? '' : t(ErrorI18nKey.UrlField));
+
       setEndpointWarning(url === '' ? '' : isDangerEndpoint(url) ? t(ErrorI18nKey.WarningEndpoint) : '');
     },
     [endpoint, updateEndpoint, t],
@@ -55,7 +56,6 @@ const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, upd
   );
 
   const onRemove = useCallback(() => {
-    setEndpointError('');
     setEndpointWarning('');
     removeEndpoint(index);
   }, [index, removeEndpoint]);
@@ -108,26 +108,17 @@ const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, upd
         <div
           className={classNames('flex flex-col mt-4 gap-y-4 lg:flex-row lg:gap-x-2 lg:mt-0', isCollapsed && 'hidden')}
         >
-          <TextInputField
-            elementId={'upstreamEndpoints ' + index}
-            value={endpoint.endpoint}
-            placeholder={t(EntityPlaceholdersI18nKey.UpstreamEndpoint)}
-            fieldTitle={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.Endpoints) : ''}
-            containerCssClass="lg:w-[560px]"
-            elementCssClass="h-[38px]"
-            errorText={endpointError}
-            invalid={!!endpointError}
-            onChange={onChangeEndPointUrl}
-            iconAfterInput={
-              <Tooltip tooltip={endpointWarning} placement={'bottom'}>
-                <IconAlertTriangleFilled
-                  fill="#F4CE46"
-                  {...BASE_ICON_PROPS}
-                  className={endpointWarning ? '' : 'hidden'}
-                />
-              </Tooltip>
-            }
-          />
+          <div className="lg:w-[560px]">
+            <EndpointControl
+              id={'upstreamEndpoints ' + index}
+              endpoint={endpoint.endpoint}
+              elementCssClass="h-[38px]"
+              placeholder={t(EntityPlaceholdersI18nKey.UpstreamEndpoint)}
+              fieldTitle={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.Endpoints) : ''}
+              onChange={onChangeEndPointUrl}
+              iconAfterInput={<WarningIcon endpointWarning={endpointWarning} />}
+            />
+          </div>
 
           <PasswordInputField
             elementId={'key ' + index}

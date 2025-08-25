@@ -1,12 +1,8 @@
-import { FC, useCallback, useEffect, useMemo } from 'react';
+import { FC, useCallback } from 'react';
 
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, FeaturesI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { getUrlError } from '@/src/utils/validation/url-error';
-
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
+import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
 
 interface Props {
   entity: DialInterceptor;
@@ -14,28 +10,6 @@ interface Props {
 }
 
 const Endpoints: FC<Props> = ({ entity, onChange }) => {
-  const t = useI18n() as (key: string) => string;
-
-  const { dispatch } = useSaveValidationContext();
-
-  const completionEndpointError = useMemo(() => {
-    return entity.endpoint ? getUrlError(entity.endpoint, false, t) : null;
-  }, [entity.endpoint, t]);
-  useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'completionEndpoint', isValid: !completionEndpointError });
-  }, [completionEndpointError, t, dispatch]);
-
-  const configurationEndpointError = useMemo(() => {
-    return entity.configurationEndpoint ? getUrlError(entity.configurationEndpoint, false, t) : null;
-  }, [entity.configurationEndpoint, t]);
-  useEffect(() => {
-    dispatch({
-      type: ValidationActionType.SetField,
-      field: 'configurationEndpoint',
-      isValid: !configurationEndpointError,
-    });
-  }, [configurationEndpointError, t, dispatch]);
-
   const onChangeCompletionEndpoint = useCallback(
     (endpoint: string) => {
       onChange({ ...entity, endpoint });
@@ -52,24 +26,8 @@ const Endpoints: FC<Props> = ({ entity, onChange }) => {
 
   return (
     <div className="lg:w-[35%] flex flex-col gap-6">
-      <TextInputField
-        elementId="completionEndpoint"
-        fieldTitle={t(EntityFieldsI18nKey.completionEndpoint)}
-        placeholder={t(EntityPlaceholdersI18nKey.CompletionEndpoint)}
-        value={entity.endpoint}
-        errorText={completionEndpointError?.text}
-        invalid={!!completionEndpointError}
-        onChange={onChangeCompletionEndpoint}
-      />
-      <TextInputField
-        elementId="configurationEndpoint"
-        fieldTitle={t(FeaturesI18nKey.configurationEndpoint)}
-        placeholder={t(EntityPlaceholdersI18nKey.ConfigurationEndpoint)}
-        value={entity.configurationEndpoint}
-        errorText={configurationEndpointError?.text}
-        invalid={!!configurationEndpointError}
-        onChange={onChangeConfigurationEndpoint}
-      />
+      <CompletionEndpointControl endpoint={entity.endpoint} onChange={onChangeCompletionEndpoint} />
+      <ConfigurationEndpointControl endpoint={entity.configurationEndpoint} onChange={onChangeConfigurationEndpoint} />
     </div>
   );
 };
