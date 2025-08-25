@@ -18,6 +18,7 @@ import { GridFilterType } from '@/src/types/grid-filter';
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
+import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
 
 const stringFilter: Partial<ColDef> = {
   filterParams: {
@@ -46,6 +47,13 @@ const numericColumn: Partial<ColDef> = {
 
 const priceColumn: Partial<ColDef> = {
   ...numericColumn,
+  headerComponent: HeaderWithHintButton,
+  headerComponentParams: {
+    hintText:
+      'The calculated price is an approximation. Since different models, applications, and configurations may have varying token usage and processing costs, it’s not possible to determine the exact final price in advance. \n' +
+      'The estimate gives you a general idea of expected costs, but the actual price may differ depending on how the chat unfolds (e.g., message length, complexity, model type, or additional features used).',
+    hintTitle: 'Total Price',
+  }, // TODO: Update when source of hints will be defined
   valueFormatter: (params) => `$${priceValueFormatter(params)}`,
 };
 
