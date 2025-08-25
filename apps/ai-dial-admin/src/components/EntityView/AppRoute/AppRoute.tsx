@@ -12,13 +12,15 @@ import { PopUpState } from '@/src/types/pop-up';
 import { TabOrientation } from '@/src/types/tab';
 import CreateRoute from '@/src/components/EntityView/AppRoute/CreateRoute';
 import RouteContent from '@/src/components/EntityView/AppRoute/Content/RouteContent';
+import { DialRole } from '@/src/models/dial/role';
 
 interface Props {
+  roles?: DialRole[] | null;
   routes?: DialAppRoute[];
   onChangeRoutes: (routes: DialAppRoute[]) => void;
 }
 
-const EntityRoutes: FC<Props> = ({ routes, onChangeRoutes }) => {
+const EntityRoutes: FC<Props> = ({ roles, routes, onChangeRoutes }) => {
   const t = useI18n() as (str: string) => string;
 
   const [modalState, setModalState] = useState(PopUpState.Closed);
@@ -94,6 +96,7 @@ const EntityRoutes: FC<Props> = ({ routes, onChangeRoutes }) => {
           {routes?.[activeRouteIndex as number] && (
             <RouteContent
               route={routes?.[activeRouteIndex as number] || ({} as DialAppRoute)}
+              roles={roles || []}
               onChangeRoute={onChangeRoute}
             />
           )}

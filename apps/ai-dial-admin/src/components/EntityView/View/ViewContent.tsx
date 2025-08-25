@@ -83,6 +83,7 @@ const ViewContent: FC<Props> = ({
       )}
       {activeTab === EntityViewTab.Routes && (
         <EntityRoutes
+          roles={roles}
           routes={(selectedEntity as DialApplication).routes}
           onChangeRoutes={(routes) => onChangeEntity({ ...selectedEntity, routes } as DialApplication)}
         />

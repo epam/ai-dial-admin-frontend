@@ -35,7 +35,7 @@ const RouteAttachments: FC<Props> = ({ route, onChangeRoute }) => {
   );
 
   return (
-    <div className="h-full w-full flex flex-col divide-y gap-y-9 divide-primary">
+    <div className="h-full w-full flex flex-col divide-y gap-y-9 divide-primary mt-3">
       <div className="w-full lg:w-[50%]">
         <Paths
           title={t(RoutesI18nKey.RequestAttachmentPaths)}
