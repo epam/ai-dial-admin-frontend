@@ -19,37 +19,37 @@ describe('Paths', () => {
   test('calls onChangePaths when AddPaths is clicked', () => {
     const onChangePaths = vi.fn();
     render(<Paths paths={['/a']} title="title" onChangePaths={onChangePaths} />);
-    fireEvent.click(screen.getByText(RoutesI18nKey.AddPaths));
-    expect(onChangePaths).toHaveBeenCalledWith({ paths: ['/a', ''] });
+    fireEvent.click(screen.getByRole('button', { name: RoutesI18nKey.AddPaths }));
+    expect(onChangePaths).toHaveBeenCalledWith(['/a', '']);
   });
 
   test('calls onChangePaths with two empty paths if adding first path', () => {
     const onChangePaths = vi.fn();
     render(<Paths title="title" onChangePaths={onChangePaths} />);
     fireEvent.click(screen.getByText(RoutesI18nKey.AddPaths));
-    expect(onChangePaths).toHaveBeenCalledWith({ paths: ['', ''] });
+    expect(onChangePaths).toHaveBeenCalledWith(['', '']);
     fireEvent.click(screen.getByLabelText('button'));
-    expect(onChangePaths).toHaveBeenCalledWith({ paths: ['', ''] });
+    expect(onChangePaths).toHaveBeenCalledWith(['', '']);
   });
 
   test('calls onChangePaths when path input changes', () => {
     const onChangePaths = vi.fn();
     render(<Paths paths={['/a']} title="title" onChangePaths={onChangePaths} />);
     fireEvent.change(screen.getByDisplayValue('/a'), { target: { value: '/changed' } });
-    expect(onChangePaths).toHaveBeenCalledWith({ paths: ['/changed'] });
+    expect(onChangePaths).toHaveBeenCalledWith(['/changed']);
   });
 
   test('calls onChangePaths when Remove is clicked', () => {
     const onChangePaths = vi.fn();
     render(<Paths paths={['/a', '/b']} title="title" onChangePaths={onChangePaths} />);
     fireEvent.click(screen.getAllByLabelText('button')[0]);
-    expect(onChangePaths).toHaveBeenCalledWith({ paths: ['/b'] });
+    expect(onChangePaths).toHaveBeenCalledWith(['/b']);
   });
 
   test('clears path if only one and Remove is clicked', () => {
     const onChangePaths = vi.fn();
     render(<Paths paths={['/a']} title="title" onChangePaths={onChangePaths} />);
     fireEvent.click(screen.getByLabelText('button'));
-    expect(onChangePaths).toHaveBeenCalledWith({ paths: [''] });
+    expect(onChangePaths).toHaveBeenCalledWith(['']);
   });
 });
