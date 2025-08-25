@@ -19,6 +19,7 @@ import { DialModel } from '@/src/models/dial/model';
 import classNames from 'classnames';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
+import VersionControl from './BaseProperties/Version';
 
 interface Props {
   view: ApplicationRoute;
@@ -138,15 +139,11 @@ const EntityMainProperties: FC<Props> = ({
         />
 
         {view === ApplicationRoute.Models && (
-          <TextInputField
-            elementId="displayVersion"
-            fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
-            placeholder={t(EntityPlaceholdersI18nKey.Version)}
-            optional={isVersionOptional}
-            value={(entity as DialModel).displayVersion}
+          <VersionControl
+            version={(entity as DialModel).displayVersion}
             onChange={onChangeVersion}
-            invalid={!!versionError}
-            errorText={versionError}
+            error={versionError}
+            optional={isVersionOptional}
           />
         )}
 
