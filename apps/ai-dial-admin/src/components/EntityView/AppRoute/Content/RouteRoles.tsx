@@ -55,7 +55,7 @@ const RouteRoles: FC<Props> = ({ route, parentRoles, onChangeRoute, roles }) => 
         userRoles: [...(route.userRoles || []), ...roles.map((r) => r.name as string)],
       });
     },
-    [route, onChangeRoute],
+    [onCloseAddModal, onChangeRoute, route],
   );
 
   return (
@@ -73,12 +73,14 @@ const RouteRoles: FC<Props> = ({ route, parentRoles, onChangeRoute, roles }) => 
               }}
             />
           </div>
-          <Button
-            cssClass="primary"
-            iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-            title={t(ButtonsI18nKey.Add)}
-            onClick={onOpenAddModal}
-          />
+          {!!isInherited && (
+            <Button
+              cssClass="secondary"
+              iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+              title={t(ButtonsI18nKey.Add)}
+              onClick={onOpenAddModal}
+            />
+          )}
         </div>
         <div className="flex-1 min-h-0">
           <div className="h-full">
