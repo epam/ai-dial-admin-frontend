@@ -14,30 +14,12 @@ const MaxRetryAttempts: FC<Props> = ({ maxRetryAttempts, onChangeMaxRetryAttempt
   const t = useI18n();
 
   const items: DropdownItemsModel[] = [
-    {
-      id: '0',
-      name: t(BasicI18nKey.None),
-    },
-    {
-      id: '1',
-      name: '1',
-    },
-    {
-      id: '2',
-      name: '2',
-    },
-    {
-      id: '3',
-      name: '3',
-    },
-    {
-      id: '4',
-      name: '4',
-    },
-    {
-      id: '5',
-      name: '5',
-    },
+    { id: '0', name: t(BasicI18nKey.None) },
+    { id: '1', name: '1' },
+    { id: '2', name: '2' },
+    { id: '3', name: '3' },
+    { id: '4', name: '4' },
+    { id: '5', name: '5' },
   ];
   const activeMaxAttempts = maxRetryAttempts?.toString() || '0';
   const onChange = useCallback(

@@ -5,61 +5,61 @@ import classNames from 'classnames';
 
 import Button from '@/src/components/Common/Button/Button';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import { EntityPlaceholdersI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { DialRoute } from '@/src/models/dial/route';
 import Path from './Path';
 
 interface Props {
-  route: DialRoute;
-  updateRoute: (route: DialRoute) => void;
+  title: string;
+  paths?: string[];
+  onChangePaths: (path: string[]) => void;
 }
 
-const Paths: FC<Props> = ({ route, updateRoute }) => {
+const Paths: FC<Props> = ({ title, paths, onChangePaths }) => {
   const t = useI18n();
 
   const onAddPath = useCallback(() => {
-    const newPaths = [...(route.paths || [])];
+    const newPaths = [...(paths || [])];
     newPaths.push('');
     if (newPaths.length === 1) {
       newPaths.push('');
     }
-    updateRoute({ ...route, paths: newPaths });
-  }, [route, updateRoute]);
+    onChangePaths(newPaths);
+  }, [paths, onChangePaths]);
 
   const onRemove = useCallback(
     (index: number) => {
-      const newPaths = [...(route.paths || [])];
-      if (route.paths?.length === 1) {
+      const newPaths = [...(paths || [])];
+      if (paths?.length === 1) {
         newPaths[index] = '';
       } else {
         newPaths.splice(index, 1);
       }
-      updateRoute({ ...route, paths: newPaths });
+      onChangePaths(newPaths);
     },
-    [route, updateRoute],
+    [paths, onChangePaths],
   );
 
   const onChangePath = useCallback(
     (index: number, value: string) => {
-      const newPaths = [...(route.paths || [])];
+      const newPaths = [...(paths || [])];
       newPaths[index] = value;
-      updateRoute({ ...route, paths: newPaths });
+      onChangePaths(newPaths);
     },
-    [route, updateRoute],
+    [paths, onChangePaths],
   );
 
   return (
     <div className="flex flex-col gap-y-3">
-      {route.paths == null || route.paths.length === 0 ? (
+      {paths == null || paths.length === 0 ? (
         <div key="path 0" className="flex items-center">
           <div className="flex-1">
             <TextInputField
               elementId={'path 0'}
               value={''}
               placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
-              fieldTitle={t(EntityFieldsI18nKey.paths)}
+              fieldTitle={title}
               onChange={(value) => onChangePath(0, value)}
             />
           </div>
@@ -68,18 +68,19 @@ const Paths: FC<Props> = ({ route, updateRoute }) => {
           </button>
         </div>
       ) : (
-        route.paths?.map((path, index) => (
+        paths?.map((path, index) => (
           <Path
             key={'path ' + index}
             path={path}
             index={index}
-            allPaths={route.paths}
+            fieldTitle={title}
+            allPaths={paths}
             onRemove={onRemove}
             onChangePath={onChangePath}
           />
         ))
       )}
-      <div className="mt-2">
+      <div>
         <Button
           cssClass="secondary"
           title={t(RoutesI18nKey.AddPaths)}

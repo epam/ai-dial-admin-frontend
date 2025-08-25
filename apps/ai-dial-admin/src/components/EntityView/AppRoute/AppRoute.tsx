@@ -6,16 +6,16 @@ import Tabs from '@/src/components/Common/Tabs/Tabs';
 import { ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { DialRoute } from '@/src/models/dial/route';
+import { DialAppRoute } from '@/src/models/dial/route';
 import { TabModel } from '@/src/models/tab';
 import { PopUpState } from '@/src/types/pop-up';
 import { TabOrientation } from '@/src/types/tab';
-import CreateRoute from './CreateRoute';
-import RouteContent from './RouteContent';
+import CreateRoute from '@/src/components/EntityView/AppRoute/CreateRoute';
+import RouteContent from '@/src/components/EntityView/AppRoute/Content/RouteContent';
 
 interface Props {
-  routes?: DialRoute[];
-  onChangeRoutes: (routes: DialRoute[]) => void;
+  routes?: DialAppRoute[];
+  onChangeRoutes: (routes: DialAppRoute[]) => void;
 }
 
 const EntityRoutes: FC<Props> = ({ routes, onChangeRoutes }) => {
@@ -49,7 +49,7 @@ const EntityRoutes: FC<Props> = ({ routes, onChangeRoutes }) => {
   }, []);
 
   const onChangeRoute = useCallback(
-    (route: DialRoute) => {
+    (route: DialAppRoute) => {
       if (routes) {
         routes[activeRouteIndex as number] = route;
         onChangeRoutes([...(routes || [])]);
@@ -61,7 +61,7 @@ const EntityRoutes: FC<Props> = ({ routes, onChangeRoutes }) => {
   const onCreate = useCallback(
     (name: string) => {
       handleModalClose();
-      onChangeRoutes([...(routes || []), { name } as DialRoute]);
+      onChangeRoutes([...(routes || []), { name } as DialAppRoute]);
     },
     [handleModalClose, onChangeRoutes, routes],
   );
@@ -93,7 +93,7 @@ const EntityRoutes: FC<Props> = ({ routes, onChangeRoutes }) => {
         <div className="flex flex-col flex-1 min-h-0 min-w-0 relative">
           {routes?.[activeRouteIndex as number] && (
             <RouteContent
-              route={routes?.[activeRouteIndex as number] || ({} as DialRoute)}
+              route={routes?.[activeRouteIndex as number] || ({} as DialAppRoute)}
               onChangeRoute={onChangeRoute}
             />
           )}
