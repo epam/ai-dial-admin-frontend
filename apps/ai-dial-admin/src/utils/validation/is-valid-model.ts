@@ -3,7 +3,7 @@ import { isValidEndpoint } from '@/src/utils/validation/url-error';
 import { MAX_ATTACHMENTS_LIMIT } from '@/src/constants/dial-base-entity';
 
 export const isValidModel = (entity: DialModel) => {
-  return !!entity.adapter && isValidUpstreams(entity.upstreams) && isValidAttachment(entity.maxInputAttachments);
+  return !!entity.adapter && isValidAttachment(entity.maxInputAttachments);
 };
 
 export const isValidAttachment = (maxInputAttachments?: string | number): boolean => {
