@@ -159,7 +159,7 @@ const PromptProperties: FC<Props> = ({
 
   return (
     <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full">
-      <div className="flex flex-row gap-10">
+      <div className="flex flex-row gap-10 mb-6">
         {/* will be uncommented after BE implement author */}
         {publication ? (
           <>
@@ -172,7 +172,7 @@ const PromptProperties: FC<Props> = ({
           </>
         ) : (
           <>
-            <LabeledText label={t(EntityFieldsI18nKey.displayName)} text={prompt.name} copyButton={true} />
+            <LabeledText label={t(EntityFieldsI18nKey.displayName)} text={prompt.name} copyButton={true} />s
             {/* <LabeledText label="Author" text={prompt.author} /> */}
             <LabeledText
               label={t(EntityFieldsI18nKey.updatedAt)}
