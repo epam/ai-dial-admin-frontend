@@ -235,7 +235,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
             {activeTab === EntityViewTab.Properties && (
               <div className="lg:w-[35%] mt-3">
                 <EntityHeader entity={selectedRole} />
-                <div className="flex-1 min-h-0">
+                <div className="flex-1 min-h-0 pt-4">
                   <SimpleEntityProperties
                     entity={selectedRole}
                     onChangeEntity={onChangeRole}

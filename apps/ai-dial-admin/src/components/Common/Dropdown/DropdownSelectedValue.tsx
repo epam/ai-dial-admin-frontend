@@ -29,7 +29,7 @@ const DropdownSelectedItem: FC<Props> = ({
     selectedClassName ||
     classNames('flex flex-row w-full items-center', isMenu ? 'small-medium cursor-pointer' : 'input input-field');
   const selectedValueClassNames = classNames(
-    'truncate flex-1 min-w-0 mr-2',
+    'truncate flex-1 min-w-0 mr-2 flex items-center',
     isMenu ? 'border-b-2bg-accent-primary-alpha border-b-accent-primary border-b-2 py-[13px]' : '',
   );
   return (

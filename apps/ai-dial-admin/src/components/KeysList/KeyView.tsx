@@ -198,14 +198,16 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
               {activeTab === EntityViewTab.Properties && (
                 <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full">
                   <KeyViewHeader selectedKey={selectedKey} />
-                  <div className="pt-6 lg:w-[35%]">
-                    <KeyProperties
-                      entity={selectedKey}
-                      names={names}
-                      keys={keys}
-                      onChangeKey={onChangeKey}
-                      isKeyImmutable={true}
-                    ></KeyProperties>
+                  <div className="pt-6 w-full">
+                    <div className="lg:w-[35%]">
+                      <KeyProperties
+                        entity={selectedKey}
+                        names={names}
+                        keys={keys}
+                        onChangeKey={onChangeKey}
+                        isKeyImmutable={true}
+                      ></KeyProperties>
+                    </div>
                   </div>
                 </div>
               )}
