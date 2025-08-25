@@ -10,6 +10,8 @@ export interface EntitiesGridData extends DialBaseEntity {
   minute?: string | null;
   month?: string | null;
   week?: string | null;
+  invitationTtl?: number | null;
+  maxAcceptedUsers?: number | null;
   enabled?: boolean;
   key?: string;
   path?: string;

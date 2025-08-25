@@ -280,6 +280,8 @@ export enum KeysI18nKey {
 }
 
 export enum RolesI18nKey {
+  DefaultLimits = 'Roles.DefaultLimits',
+  DefaultInvitations = 'Roles.DefaultInvitations',
   NoLimits = 'Roles.NoLimits',
   AddRoles = 'Roles.AddRoles',
   AvailableSpecificRoles = 'Roles.AvailableSpecificRoles',
@@ -691,6 +693,8 @@ export enum EntityFieldsI18nKey {
   day = 'EntityFields.day',
   week = 'EntityFields.week',
   month = 'EntityFields.month',
+  invitationTtl = 'EntityFields.invitationTtl',
+  maxAcceptedUsers = 'EntityFields.maxAcceptedUsers',
   interceptors = 'EntityFields.interceptors',
   roles = 'EntityFields.roles',
   paths = 'EntityFields.paths',

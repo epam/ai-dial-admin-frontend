@@ -1,22 +1,21 @@
-import { Column, GridApi, IRowNode } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { NumberInputField } from '@/src/components/Common/InputField/InputField';
+import { isDialRoleShareKey } from '@/src/components/AddEntitiesTab/AddEntitiesView.utils';
+import AlertInfo from '@/src/components/Common/Alerts/AlertInfo';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
-import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, RolesI18nKey } from '@/src/constants/i18n';
+import RolesGrid from '@/src/components/EntityView/Roles/RolesGrid';
+import { isDisableRole, isResetToDefaultHidden, isSetNoLimitsHidden } from '@/src/components/EntityView/Roles/utils';
+import { EntitiesI18nKey, RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseEntity, DialRoleLimits, DialRoleLimitsMap } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
-import RolesGrid from '@/src/components/EntityView/Roles/RolesGrid';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import AlertInfo from '@/src/components/Common/Alerts/AlertInfo';
-import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
+import RolesDefaults from './RolesDefaults';
 
 interface Props {
-  view: ApplicationRoute;
   entity: DialBaseEntity;
   isSkipRefresh: boolean;
   roles: DialRole[];
@@ -40,62 +39,35 @@ const EntityRoles: FC<Props> = ({ entity, roles, onChangeEntity, isSkipRefresh }
     entityRef.current = entity;
   }, [entity]);
 
-  const onChangeDefaultLimit = useCallback(
-    (value: number | string, key: keyof DialRoleLimits) => {
-      onChangeEntity({
-        ...entity,
-        defaultRoleLimit: { ...entity.defaultRoleLimit, [key]: value },
-      });
-    },
-    [entity, onChangeEntity],
-  );
-
-  const onChangeDayDefaultLimit = useCallback(
-    (day: number | string) => {
-      onChangeDefaultLimit(day, 'day');
-    },
-    [onChangeDefaultLimit],
-  );
-
-  const onChangeWeekDefaultLimit = useCallback(
-    (week: number | string) => {
-      onChangeDefaultLimit(week, 'week');
-    },
-    [onChangeDefaultLimit],
-  );
-
-  const onChangeMonthDefaultLimit = useCallback(
-    (month: number | string) => {
-      onChangeDefaultLimit(month, 'month');
-    },
-    [onChangeDefaultLimit],
-  );
-
-  const onChangeMinuteDefaultLimit = useCallback(
-    (minute: number | string) => {
-      onChangeDefaultLimit(minute, 'minute');
-    },
-    [onChangeDefaultLimit],
-  );
-
   const onChangeRoleToken = useCallback(
     (value: number, data: DialRole, token: string) => {
       const name = data.name as string;
-      onChangeEntity(
-        {
-          ...entity,
-          roleLimits: {
-            ...entityRef.current.roleLimits,
-            [name]: {
-              ...entityRef.current.roleLimits?.[name],
-              [token]: value.toString(),
-            },
-          } as DialRoleLimitsMap,
+      const roleLimits = entityRef.current.roleLimits ?? {};
+      const roleShareResourceLimits = entityRef.current.roleShareResourceLimits ?? {};
+      const updatedLimits = {
+        ...roleLimits,
+        [name]: {
+          ...roleLimits[name],
+          [token]: value.toString(),
         },
-        true,
-      );
+      };
+
+      const updatedShare = {
+        ...roleShareResourceLimits,
+        [name]: {
+          ...roleShareResourceLimits[name],
+          [token]: value.toString(),
+        },
+      };
+
+      const updatedEntity = {
+        ...entityRef.current,
+        ...(isDialRoleShareKey(token) ? { roleShareResourceLimits: updatedShare } : { roleLimits: updatedLimits }),
+      };
+
+      onChangeEntity(updatedEntity, true);
     },
-    [onChangeEntity, entity],
+    [onChangeEntity],
   );
 
   const onAddRoles = useCallback(
@@ -197,76 +169,10 @@ const EntityRoles: FC<Props> = ({ entity, roles, onChangeEntity, isSkipRefresh }
     onOpenInNewTab(ApplicationRoute.Roles, role);
   };
 
-  const isResetToDefaultHidden = (api: GridApi, node: IRowNode) => {
-    const minute = api.getCellValue({
-      colKey: api.getColumn('minute') as Column,
-      rowNode: node,
-    });
-    const day = api.getCellValue({
-      colKey: api.getColumn('day') as Column,
-      rowNode: node,
-    });
-    const defaultDay = entity.defaultRoleLimit?.day;
-    const defaultMinute = entity.defaultRoleLimit?.minute;
-    return (day === defaultDay && minute === defaultMinute) || !defaultDay || !defaultMinute;
-  };
-
-  const isSetNoLimitsHidden = (api: GridApi, node: IRowNode) => {
-    const month = api.getCellValue({
-      colKey: api.getColumn('month') as Column,
-      rowNode: node,
-    });
-    const week = api.getCellValue({
-      colKey: api.getColumn('week') as Column,
-      rowNode: node,
-    });
-    const minute = api.getCellValue({
-      colKey: api.getColumn('minute') as Column,
-      rowNode: node,
-    });
-    const day = api.getCellValue({
-      colKey: api.getColumn('day') as Column,
-      rowNode: node,
-    });
-    return !day && !minute && !month && !week;
-  };
-
   return (
     <div className="h-full flex flex-col pt-3">
       <div className="flex flex-col flex-1 min-h-0 divide-y divide-primary">
-        <div className="flex flex-col mb-8">
-          <h1 className="mb-4">{t(BasicI18nKey.Settings)}</h1>
-          <div className="flex flex-row gap-x-3">
-            <NumberInputField
-              elementId="minute"
-              value={entity.defaultRoleLimit?.minute}
-              placeholder={t(RolesI18nKey.NoLimits)}
-              fieldTitle={t(EntityFieldsI18nKey.minute)}
-              onChange={onChangeMinuteDefaultLimit}
-            />
-            <NumberInputField
-              elementId="day"
-              placeholder={t(RolesI18nKey.NoLimits)}
-              value={entity.defaultRoleLimit?.day}
-              fieldTitle={t(EntityFieldsI18nKey.day)}
-              onChange={onChangeDayDefaultLimit}
-            />
-            <NumberInputField
-              elementId="week"
-              placeholder={t(RolesI18nKey.NoLimits)}
-              value={entity.defaultRoleLimit?.week}
-              fieldTitle={t(EntityFieldsI18nKey.week)}
-              onChange={onChangeWeekDefaultLimit}
-            />
-            <NumberInputField
-              elementId="month"
-              placeholder={t(RolesI18nKey.NoLimits)}
-              value={entity.defaultRoleLimit?.month}
-              fieldTitle={t(EntityFieldsI18nKey.month)}
-              onChange={onChangeMonthDefaultLimit}
-            />
-          </div>
-        </div>
+        <RolesDefaults entity={entity} onChangeEntity={onChangeEntity} />
 
         <div className="flex-1 min-h-0 pt-8 mb-4">
           <RolesGrid
@@ -280,7 +186,7 @@ const EntityRoles: FC<Props> = ({ entity, roles, onChangeEntity, isSkipRefresh }
             onResetToDefaultRole={onResetToDefaultRole}
             onResetAllRolesToDefault={onResetAllRolesToDefault}
             onSetNoLimits={onSetNoLimits}
-            isResetToDefaultHidden={isResetToDefaultHidden}
+            isResetToDefaultHidden={(api, node) => isResetToDefaultHidden(api, node, entity)}
             isSetNoLimitsHidden={isSetNoLimitsHidden}
             isSkipRefresh={isSkipRefresh}
           />

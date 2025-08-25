@@ -16,7 +16,9 @@ export interface DialBaseEntity extends DialBaseNamedEntity {
   iconUrl?: string;
   isPublic?: boolean;
   roleLimits?: DialRoleLimitsMap;
+  roleShareResourceLimits?: DialRoleShareMap;
   defaultRoleLimit?: DialRoleLimits;
+  defaultRoleShareResourceLimit?: DialRoleShare;
   forwardAuthToken?: boolean;
   inputAttachmentTypes?: string[];
   topics?: string[];
@@ -28,12 +30,18 @@ export interface DialBaseEntity extends DialBaseNamedEntity {
 }
 
 export type DialRoleLimitsMap = Record<string, DialRoleLimits>;
+export type DialRoleShareMap = Record<string, DialRoleShare>;
 
 export interface DialRoleLimits {
   day?: string | null;
   minute?: string | null;
   week?: string | null;
   month?: string | null;
+}
+
+export interface DialRoleShare {
+  invitationTtl?: string | null;
+  maxAcceptedUsers?: string | null;
 }
 
 export interface DialFeatures {

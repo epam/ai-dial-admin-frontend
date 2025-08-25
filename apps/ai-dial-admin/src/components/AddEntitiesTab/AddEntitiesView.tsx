@@ -48,7 +48,7 @@ const AddEntitiesView: FC<Props> = ({
   keys,
   viewTitle,
   customColumns,
-  modalTitle: modalTitle,
+  modalTitle,
   onAdd,
   onRemove,
   emptyDataTitle,
