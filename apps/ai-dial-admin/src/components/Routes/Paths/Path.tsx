@@ -64,9 +64,11 @@ const Path: FC<Props> = ({ index, path, readonly, fieldTitle, allPaths, onRemove
           invalid={(isEmptyPath && index === 0 && isAllEmptyValues) || isInvalidPath}
         />
       </div>
-      <button aria-label="button" className={removeButtonClass} onClick={() => onRemove(index)}>
-        <IconTrash {...BASE_ICON_PROPS} />
-      </button>
+      {!readonly && (
+        <button aria-label="button" className={removeButtonClass} onClick={() => onRemove(index)}>
+          <IconTrash {...BASE_ICON_PROPS} />
+        </button>
+      )}
     </div>
   );
 };
