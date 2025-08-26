@@ -257,6 +257,7 @@ const DropdownMenuComponent = forwardRef<HTMLDivElement, DropdownProps & HTMLPro
             isNested && menuItemClassNames,
             isNested ? 'h-[34px] w-full px-3' : 'h-auto px-0',
             className,
+            disabled ? 'pointer-events-none' : '',
           )}
           {...getReferenceProps(
             parent.getItemProps({

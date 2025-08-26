@@ -102,7 +102,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, routes, on
               roles={roles || []}
               parentRoles={Object.keys(parentRoleLimits || {})}
               onChangeRoute={onChangeRoute}
-              readonly={true}
+              readonly={readonly}
             />
           )}
         </div>
