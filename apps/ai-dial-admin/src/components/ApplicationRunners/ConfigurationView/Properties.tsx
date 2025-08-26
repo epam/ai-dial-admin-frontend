@@ -32,7 +32,9 @@ const SchemeProperties: FC<Props> = ({ runner, isImmutable, onChangeRunner }) =>
 
   return (
     <div className="flex flex-col gap-6 h-full">
-      {!isImmutable && <IdControl entity={{ name: runner.$id }} onChangeEntity={(entity) => onChangeId(entity.name)} />}
+      {!isImmutable && (
+        <IdControl isUrlId={true} entity={{ name: runner.$id }} onChangeEntity={(entity) => onChangeId(entity.name)} />
+      )}
 
       <DisplayNameControl displayName={runner['dial:applicationTypeDisplayName']} onChange={onChangeName} />
 

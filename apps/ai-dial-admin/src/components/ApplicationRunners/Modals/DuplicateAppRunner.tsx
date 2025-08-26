@@ -51,7 +51,11 @@ const DuplicateScheme: FC<Props> = ({ onDuplicate, modalState, onClose, entity }
       state={modalState}
     >
       <div className="flex flex-col px-6 py-4 gap-y-6">
-        <IdControl entity={{ name: clonedEntity.$id }} onChangeEntity={(entity) => onChangeId(entity.name)} />
+        <IdControl
+          isUrlId={true}
+          entity={{ name: clonedEntity.$id }}
+          onChangeEntity={(entity) => onChangeId(entity.name)}
+        />
         <DisplayNameControl displayName={clonedEntity['dial:applicationTypeDisplayName']} onChange={onChangeName} />
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
