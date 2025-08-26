@@ -165,11 +165,12 @@ const Endpoint: FC<Props> = ({
           <ExtraDataField
             fieldTitle={isFirstLine || isTablet ? t(EntityFieldsI18nKey.extraData) : ''}
             endpoint={endpoint}
+            disabled={readonly}
             onChangeExtraData={onChangeExtraData}
           />
         </div>
       </div>
-      {(numEndpoints !== 1 || Object.keys(endpoint).length !== 0) && (
+      {(numEndpoints !== 1 || Object.keys(endpoint).length !== 0) && !readonly && (
         <button
           className={classNames('text-error cursor-pointer mt-[10px]', index === 0 && !isTablet && 'lg:mt-[32px]')}
           onClick={onRemove}

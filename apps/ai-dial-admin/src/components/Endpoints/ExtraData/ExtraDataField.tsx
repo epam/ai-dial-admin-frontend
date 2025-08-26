@@ -12,10 +12,11 @@ import { NONE_ID, USE_JSON_ID, USE_STRING_ID } from './extra-data';
 interface Props {
   endpoint: DialModelEndpoint;
   fieldTitle?: string;
+  disabled?: boolean;
   onChangeExtraData: (extraData: DialEndpointExtraData) => void;
 }
 
-const ExtraDataField: FC<Props> = ({ endpoint, fieldTitle, onChangeExtraData }) => {
+const ExtraDataField: FC<Props> = ({ endpoint, disabled, fieldTitle, onChangeExtraData }) => {
   const t = useI18n();
   const [isValid, setIsValid] = useState(false);
   const [stringValue, setStringValue] = useState<string | undefined>(undefined);
@@ -133,6 +134,7 @@ const ExtraDataField: FC<Props> = ({ endpoint, fieldTitle, onChangeExtraData }) 
   return (
     <div className="flex flex-col">
       <RadioGroupModalField
+        disabled={disabled}
         title={fieldTitle ?? ''}
         popupTitle={t(EntityFieldsI18nKey.extraData)}
         elementId="extraDataInput"

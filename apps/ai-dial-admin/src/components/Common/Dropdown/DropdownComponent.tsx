@@ -107,6 +107,7 @@ const DropdownMenuComponent = forwardRef<HTMLDivElement, DropdownProps & HTMLPro
       isMenu = false,
       selectedClassName,
       dismissRef,
+      disabled,
       multipleValues,
       ...props
     },
@@ -277,6 +278,7 @@ const DropdownMenuComponent = forwardRef<HTMLDivElement, DropdownProps & HTMLPro
               isOpen={isMenuOpen}
               prefix={prefix}
               isMenu={isMenu}
+              disabled={disabled}
               multipleValues={multipleValues}
             />
           )}
