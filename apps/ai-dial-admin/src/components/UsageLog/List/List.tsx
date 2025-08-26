@@ -10,7 +10,6 @@ import { useI18n } from '@/src/locales/client';
 import { IconColumns2, IconFileArrowRight } from '@tabler/icons-react';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
-import { logger } from 'nx/src/utils/logger';
 
 import Button from '@/src/components/Common/Button/Button';
 import ListView from '@/src/components/ListView/ListView';
@@ -72,7 +71,7 @@ const List: FC<Props> = ({ route, getData, query, columnDefs, title, emptyDataTi
       setLoading(false);
     };
 
-    fetchData().catch((error) => logger.error(`Getting usage log view data error: ${error}`));
+    fetchData().catch((error) => console.error(`Getting usage log view data error: ${error}`));
   }, [getData, query]);
 
   useEffect(() => {
