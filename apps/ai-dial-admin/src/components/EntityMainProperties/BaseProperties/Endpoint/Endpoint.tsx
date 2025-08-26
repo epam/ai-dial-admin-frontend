@@ -26,7 +26,7 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, .
   const { dispatch } = useSaveValidationContext();
 
   const endpointError = useMemo(() => {
-    return endpoint ? getUrlError(textBeforeInput ? `${textBeforeInput}${endpoint}` : endpoint, t, !required) : null;
+    return getUrlError(textBeforeInput ? `${textBeforeInput}${endpoint}` : endpoint, t, required);
   }, [endpoint, textBeforeInput, required, t]);
 
   useEffect(() => {

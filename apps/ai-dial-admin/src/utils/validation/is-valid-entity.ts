@@ -1,5 +1,4 @@
 import { MAX_RUNNER_ID_SYMBOLS } from '@/src/constants/validation';
-import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity, DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialModel } from '@/src/models/dial/model';
