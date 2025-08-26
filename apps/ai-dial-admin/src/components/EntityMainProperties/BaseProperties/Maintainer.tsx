@@ -17,8 +17,8 @@ const MaintainerControl = <T extends { author?: string }>({ entity, onChangeEnti
       elementId="author"
       fieldTitle={t(EntityFieldsI18nKey.author)}
       placeholder={t(EntityPlaceholdersI18nKey.Maintainer)}
-      value={entity.author}
       optional={true}
+      value={entity.author}
       onChange={(author?: string) => onChangeEntity({ ...entity, author })}
       {...props}
     />
