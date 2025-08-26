@@ -17,7 +17,7 @@ import { DialAppRoute } from '@/src/models/dial/route';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import AddEntitiesGrid from '../../AddEntitiesGrid';
+import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 
 interface Props {
