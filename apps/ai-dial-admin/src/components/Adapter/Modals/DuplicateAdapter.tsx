@@ -28,7 +28,7 @@ const DuplicateAdapter: FC<Props> = ({ onDuplicate, modalState, onClose, adapter
   }, [entity]);
 
   const onChangeDisplayName = useCallback(
-    (displayName: string) => {
+    (displayName?: string) => {
       setEntity({ ...entity, displayName });
     },
     [setEntity, entity],

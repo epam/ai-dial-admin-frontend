@@ -37,14 +37,14 @@ const DuplicatePopup: FC<Props> = ({ onDuplicate, names, view, modalState, onClo
   const heading = duplicateModalTitleMap[view as string];
 
   const onChangeVersion = useCallback(
-    (displayVersion: string) => {
+    (displayVersion?: string) => {
       setEntity({ ...(clonedEntity as DialModel), displayVersion });
     },
     [setEntity, clonedEntity],
   );
 
   const onChangeDisplayName = useCallback(
-    (displayName: string) => {
+    (displayName?: string) => {
       setEntity({ ...clonedEntity, displayName });
     },
     [setEntity, clonedEntity],
