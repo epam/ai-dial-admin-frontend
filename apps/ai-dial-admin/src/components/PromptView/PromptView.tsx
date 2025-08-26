@@ -1,7 +1,7 @@
 'use client';
 
 import classNames from 'classnames';
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
@@ -22,6 +22,7 @@ import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor
 import { ApplicationRoute } from '@/src/types/routes';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { getErrorNotification } from '@/src/utils/notification';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   originalPrompt: DialPrompt;
@@ -57,7 +58,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
 
   useEffect(() => {
     if (Object.keys(selectedPrompt).length && originalPrompt) {
-      setIsChanged(!isEqual(originalPrompt, selectedPrompt));
+      setIsChanged(!isEqualSkippingUndefined(originalPrompt, selectedPrompt));
     }
   }, [selectedPrompt, originalPrompt]);
 

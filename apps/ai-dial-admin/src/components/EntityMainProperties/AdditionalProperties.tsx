@@ -64,7 +64,7 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
             placeholder={t(EntityPlaceholdersI18nKey.Maintainer)}
             value={entity.author}
             optional={true}
-            onChange={(author) => onChangeEntity({ ...entity, author })}
+            onChange={(author?: string) => onChangeEntity({ ...entity, author })}
           />
         ) : null}
 

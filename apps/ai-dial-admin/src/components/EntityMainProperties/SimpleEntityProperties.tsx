@@ -48,7 +48,7 @@ const SimpleEntityProperties: FC<Props> = ({
   const [pathError, setPathError] = useState<string | undefined>(void 0);
 
   const onChangeVersion = useCallback(
-    (version: string) => {
+    (version?: string) => {
       onChangeEntity({ ...entity, version });
       const isValidVersion = !checkNameVersionCombination(versionsMap, entity.name as string, entity.version || '');
       const versionError = isValidVersion && versionsMap ? void 0 : t(ErrorI18nKey.NameVersionCombination);
@@ -59,8 +59,8 @@ const SimpleEntityProperties: FC<Props> = ({
   );
 
   const onChangePath = useCallback(
-    (path: string) => {
-      onChangeEntity({ ...entity, paths: [path] } as DialRoute);
+    (path?: string) => {
+      onChangeEntity({ ...entity, paths: path ? [path] : [] } as DialRoute);
       const pathError = getErrorForPath((entity as DialRoute).paths?.[0], t);
       setPathError(pathError?.text);
       dispatch({ type: ValidationActionType.SetField, field: 'path', isValid: !pathError });

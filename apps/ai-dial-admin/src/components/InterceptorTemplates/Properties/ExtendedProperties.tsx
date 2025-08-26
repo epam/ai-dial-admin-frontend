@@ -13,14 +13,14 @@ interface Props {
 
 const ExtendedProperties: FC<Props> = ({ template, onChange }) => {
   const onChangeCompletionEndpoint = useCallback(
-    (completionEndpoint: string) => {
+    (completionEndpoint?: string) => {
       onChange({ ...template, completionEndpoint });
     },
     [template, onChange],
   );
 
   const onChangeConfigurationEndpoint = useCallback(
-    (configurationEndpoint: string) => {
+    (configurationEndpoint?: string) => {
       onChange({ ...template, configurationEndpoint });
     },
     [template, onChange],
@@ -32,13 +32,8 @@ const ExtendedProperties: FC<Props> = ({ template, onChange }) => {
         <BaseProperties template={template} setTemplate={onChange} isImmutable={true} />
       </div>
       <div className="lg:w-[35%] flex flex-col gap-6">
-        <CompletionEndpointControl
-          required={true}
-          endpoint={template?.completionEndpoint}
-          onChange={onChangeCompletionEndpoint}
-        />
+        <CompletionEndpointControl endpoint={template?.completionEndpoint} onChange={onChangeCompletionEndpoint} />
         <ConfigurationEndpointControl
-          required={true}
           endpoint={template?.configurationEndpoint}
           onChange={onChangeConfigurationEndpoint}
         />

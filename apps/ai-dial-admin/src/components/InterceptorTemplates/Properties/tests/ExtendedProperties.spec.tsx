@@ -21,7 +21,11 @@ describe('Interceptor Template ExtendedProperties', () => {
 
     expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.displayName} (Optional)` })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.description} (Optional)` })).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: EntityFieldsI18nKey.completionEndpoint })).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: FeaturesI18nKey.configurationEndpoint })).toBeInTheDocument();
+    expect(
+      screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.completionEndpoint} (Optional)` }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('textbox', { name: `${FeaturesI18nKey.configurationEndpoint} (Optional)` }),
+    ).toBeInTheDocument();
   });
 });

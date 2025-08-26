@@ -10,7 +10,7 @@ export interface EndpointControlProps {
   required?: boolean;
   textBeforeInput?: string;
   disabled?: boolean;
-  onChange?: (endpoint: string) => void;
+  onChange?: (endpoint?: string) => void;
 }
 
 export interface Props extends EndpointControlProps {

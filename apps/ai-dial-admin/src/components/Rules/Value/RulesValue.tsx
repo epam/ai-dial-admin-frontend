@@ -70,10 +70,10 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
   );
 
   const onChangeRegex = useCallback(
-    (regex: string) => {
-      const newRule = { ...rule, targets: [regex] };
+    (regex?: string) => {
+      const newRule = { ...rule, targets: regex ? [regex] : [] };
       onChangeValue(newRule);
-      setError(regex);
+      setError(regex || '');
     },
     [onChangeValue, rule, setError],
   );

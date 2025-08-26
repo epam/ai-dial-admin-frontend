@@ -21,18 +21,18 @@ const SchemeProperties: FC<Props> = ({ runner, isImmutable, onChangeRunner }) =>
   const [idError, setIdError] = useState<FieldError | null>(null);
 
   const onChangeId = useCallback(
-    (id: string) => {
+    (id?: string) => {
       setIdError(getErrorForAppRunnerId(id, t));
       onChangeRunner({
         ...runner,
-        $id: id.trim(),
+        $id: id,
       });
     },
     [onChangeRunner, runner, t],
   );
 
   const onChangeName = useCallback(
-    (name: string) => {
+    (name?: string) => {
       onChangeRunner({ ...runner, 'dial:applicationTypeDisplayName': name });
     },
     [runner, onChangeRunner],

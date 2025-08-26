@@ -21,8 +21,8 @@ const ConfirmationRollback: FC<Props> = ({ revisionDate, modalState, onClose, on
   const [isDisabled, setIsDisabled] = useState(true);
 
   const onChangeConfirmation = useCallback(
-    (value: string) => {
-      setConfirmation(value);
+    (value?: string) => {
+      setConfirmation(value || '');
       setIsDisabled(value !== t(ActivityAuditI18nKey.RollbackSystem));
     },
     [t],

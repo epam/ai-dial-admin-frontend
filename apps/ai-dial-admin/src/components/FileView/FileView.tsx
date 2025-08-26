@@ -1,7 +1,7 @@
 'use client';
 
 import classNames from 'classnames';
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
@@ -18,6 +18,7 @@ import { addTrailingSlash, changePath } from '@/src/utils/files/path';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   originalFile: DialFile;
@@ -40,7 +41,7 @@ const FileView: FC<Props> = ({ originalFile }) => {
   const headerClassName = classNames('flex flex-row min-h-[34px] justify-between');
 
   useEffect(() => {
-    setIsChanged(!isEqual(originalFile, selectedFile));
+    setIsChanged(!isEqualSkippingUndefined(originalFile, selectedFile));
   }, [selectedFile, originalFile]);
 
   const onChangeActiveTab = useCallback(

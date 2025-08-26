@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import classNames from 'classnames';
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep } from 'lodash';
 
 import { removeRole, updateRole } from '@/src/app/[lang]/roles/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
@@ -35,6 +35,7 @@ import { TabModel } from '@/src/models/tab';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   originalRole: DialRole;
@@ -81,7 +82,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
   }, [originalRole]);
 
   useEffect(() => {
-    setIsChanged(!isEqual(originalRole, selectedRole));
+    setIsChanged(!isEqualSkippingUndefined(originalRole, selectedRole));
   }, [selectedRole, originalRole]);
 
   const onChangeActiveTab = useCallback(

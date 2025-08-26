@@ -22,8 +22,8 @@ export const isValidEndpoint = (value: string) => {
   return ENDPOINT_REGEX.test(value);
 };
 
-export const isDangerEndpoint = (value: string) => {
-  return WARNING_ENDPOINT_REGEX.test(value);
+export const isDangerEndpoint = (value?: string) => {
+  return WARNING_ENDPOINT_REGEX.test(value || '');
 };
 
 export const getUrlError = (url?: string, t?: (str: string) => string, required?: boolean) => {

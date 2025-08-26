@@ -1,5 +1,4 @@
 import { ColDef, Column, GridApi, IRowNode } from 'ag-grid-community';
-import { isEqual } from 'lodash';
 
 import { RolesGridData } from '@/src/components/EntityView/Roles/models';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
@@ -14,6 +13,7 @@ import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns
 import { DialBaseEntity, DialRoleLimits, DialRoleLimitsMap, DialRoleShareMap } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
 import { cellRenderParams } from './constants';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 export const isDisableRole = (entity: DialBaseEntity) => {
   return !Object.keys(entity.roleLimits || {}).length && !entity.isPublic;
@@ -161,7 +161,7 @@ export const getRolesColumnDefs = (
 export const isResetAvailable = (entity: DialBaseEntity): boolean => {
   return (
     entity.roleLimits != null &&
-    Object.values(entity.roleLimits).some((limit) => !isEqual(limit, entity.defaultRoleLimit))
+    Object.values(entity.roleLimits).some((limit) => !isEqualSkippingUndefined(limit, entity.defaultRoleLimit))
   );
 };
 

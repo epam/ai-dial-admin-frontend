@@ -10,7 +10,7 @@ interface Props {
   optional?: boolean;
   disabled?: boolean;
   error?: string;
-  onChange?: (version: string) => void;
+  onChange?: (version?: string) => void;
 }
 
 const VersionControl: FC<Props> = ({ version, error, ...props }) => {

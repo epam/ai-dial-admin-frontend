@@ -52,14 +52,14 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
   }, [permissionsItems, route]);
 
   const onChangeName = useCallback(
-    (name: string) => {
+    (name?: string) => {
       updateRoute({ ...route, name });
     },
     [route, updateRoute],
   );
 
   const onChangeDisplayName = useCallback(
-    (displayName: string) => {
+    (displayName?: string) => {
       updateRoute({ ...route, displayName });
     },
     [route, updateRoute],
@@ -95,7 +95,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
   );
 
   const onChangeBody = useCallback(
-    (body: string) => {
+    (body?: string) => {
       updateRoute({
         ...route,
         response: {

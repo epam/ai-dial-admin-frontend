@@ -31,7 +31,7 @@ const AddVersionModal: FC<Props> = ({
     <Popup onClose={onClose} heading={heading} portalId="newVersionModal" state={modalState}>
       <div className=" flex flex-col gap-4 text-primary small px-6 py-4">
         {prefilledVersion && <div className="text-secondary">{t(PromptsI18nKey.NewVersionSaveDescription)}</div>}
-        <VersionControl version={version} onChange={setVersion} />
+        <VersionControl version={version} onChange={(v) => setVersion(v || '')} />
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
         <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />

@@ -57,15 +57,15 @@ const DuplicatePrompt: FC<Props> = ({ modalState, entity, versionsMap, onDuplica
   }, [clonedPrompt, versionsMap]);
 
   const onChangeName = useCallback(
-    (name: string) => {
+    (name?: string) => {
       setClonedPrompt({ ...clonedPrompt, name });
     },
     [setClonedPrompt, clonedPrompt],
   );
 
   const onChangeVersion = useCallback(
-    (version: string) => {
-      setClonedPrompt({ ...clonedPrompt, version });
+    (version?: string) => {
+      setClonedPrompt({ ...clonedPrompt, version: version || '' });
     },
     [setClonedPrompt, clonedPrompt],
   );

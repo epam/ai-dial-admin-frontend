@@ -26,7 +26,7 @@ const CreateRoute: FC<Props> = ({ modalState, onClose, onCreate }) => {
           fieldTitle={t(EntityFieldsI18nKey.displayName)}
           placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
           value={name}
-          onChange={(name) => setName(name)}
+          onChange={(name) => setName(name || '')}
         />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">

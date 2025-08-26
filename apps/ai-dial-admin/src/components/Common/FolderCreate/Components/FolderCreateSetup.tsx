@@ -78,9 +78,9 @@ const FolderCreateSetup: FC<Props> = ({
   );
 
   const changeName = useCallback(
-    (name: string) => {
-      setFolderName(name);
-      setCurrentSteps(files, name);
+    (name?: string) => {
+      setFolderName(name || '');
+      setCurrentSteps(files, name || '');
     },
     [setFolderName, setCurrentSteps, files],
   );

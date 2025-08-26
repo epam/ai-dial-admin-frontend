@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import classNames from 'classnames';
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep } from 'lodash';
 
 import { removeApplicationScheme, updateApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
@@ -32,6 +32,7 @@ import AppRunnerApplications from './ConfigurationView/Applications';
 import SchemeParameters from './ConfigurationView/Parameters';
 import SchemeProperties from './ConfigurationView/Properties';
 import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   originalScheme: DialApplicationScheme;
@@ -69,7 +70,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
   );
 
   useEffect(() => {
-    setIsChanged(!isEqual(originalScheme, selectedScheme));
+    setIsChanged(!isEqualSkippingUndefined(originalScheme, selectedScheme));
   }, [selectedScheme, originalScheme]);
 
   const onChangeActiveTab = useCallback(
