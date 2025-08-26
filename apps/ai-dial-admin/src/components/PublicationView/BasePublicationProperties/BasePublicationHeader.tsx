@@ -39,7 +39,7 @@ const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action 
   const [declineReason, setDeclineReason] = useState('');
   const isDeclineInvalid = useMemo(() => {
     const value = declineReason.trim();
-    return !value && value.length >= 15;
+    return !value || value.length >= 15;
   }, [declineReason]);
 
   useEffect(() => {
