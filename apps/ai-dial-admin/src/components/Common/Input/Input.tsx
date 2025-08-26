@@ -17,7 +17,6 @@ export interface InputProps {
   onChange?: (value: string) => void;
   min?: number;
   max?: number;
-  customTooltip?: string;
 }
 
 const Input: FC<InputProps> = ({
@@ -31,7 +30,6 @@ const Input: FC<InputProps> = ({
   min,
   max,
   onChange,
-  customTooltip,
 }) => {
   const handleWheel = (e: WheelEvent<HTMLInputElement>) => (e.target as HTMLInputElement).blur();
 
@@ -105,7 +103,7 @@ const Input: FC<InputProps> = ({
     onChange?.(newValue);
   };
   return (
-    <Tooltip tooltip={customTooltip || value}>
+    <Tooltip tooltip={value}>
       <input
         type={type}
         autoComplete="off"
