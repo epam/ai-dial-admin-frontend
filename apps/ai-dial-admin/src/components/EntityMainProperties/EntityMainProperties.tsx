@@ -1,7 +1,7 @@
 'use client';
 
 import { uniq } from 'lodash';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import ApplicationSource from '@/src/components/ApplicationSource/ApplicationSource';
 import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/AutocompleteField';
@@ -27,7 +27,6 @@ interface Props {
   names: string[];
   runners?: DialApplicationScheme[];
   isEntityImmutable?: boolean;
-  isUniqueNameError?: boolean;
   onChangeEntity: (entity: DialBaseEntity) => void;
 }
 
@@ -36,7 +35,6 @@ const EntityMainProperties: FC<Props> = ({
   entity,
   runners,
   names,
-  isUniqueNameError,
   onChangeEntity,
   isEntityImmutable = false,
 }) => {
@@ -44,73 +42,50 @@ const EntityMainProperties: FC<Props> = ({
   const { dispatch } = useSaveValidationContext();
 
   const [isVersionOptional, setIsVersionOptional] = useState(true);
-
-  const [nameError, setNameError] = useState<FieldError | null>(null);
-
-  const [isValidDisplayName, setIsValidDisplayName] = useState(true);
   const [displayNameError, setDisplayNameError] = useState<string | undefined>(void 0);
 
-  const [versionError, setVersionError] = useState<string | undefined>(void 0);
-
-  useEffect(() => {
-    if (isUniqueNameError) {
-      setNameError(getErrorForName(void 0, void 0, t, true));
-    }
-  }, [isUniqueNameError, t]);
+  const versionError = useMemo(() => {
+    return entity.displayName ? void 0 : getVersionError(view, isVersionOptional, entity.version as string, t);
+  }, [entity.version, entity.displayName, isVersionOptional, t, view]);
 
   const onChangeName = useCallback(
-    (name: string) => {
-      const newEntity = { ...entity, name };
+    (newEntity: DialBaseEntity) => {
       if (view === ApplicationRoute.Models) {
-        (newEntity as DialModel).endpointDeploymentName = name;
+        (newEntity as DialModel).endpointDeploymentName = newEntity.name;
       }
-      setNameError(getErrorForName(name, void 0, t));
+
       onChangeEntity(newEntity);
     },
-    [entity, onChangeEntity, view, t],
+    [onChangeEntity, view],
   );
 
   const onChangeDisplayName = useCallback(
     (name: string) => {
       const displayName = name.trim();
-      const isIncludesDisplayName = names.includes(displayName);
-      setIsVersionOptional(!isIncludesDisplayName);
-      setIsValidDisplayName(
-        (!isIncludesDisplayName || (isIncludesDisplayName && !!(entity as DialModel).displayVersion)) &&
-          !isWrongLengthWithView(view, displayName),
+      setIsVersionOptional(!names.includes(displayName));
+      setDisplayNameError(
+        getDisplayNameError(view, displayName as string, names, t, (entity as DialModel).displayVersion),
       );
+
       onChangeEntity({ ...entity, displayName });
     },
-    [names, entity, view, onChangeEntity],
+    [names, view, t, onChangeEntity, entity],
   );
 
   useEffect(() => {
-    const error = getDisplayNameError(view, isValidDisplayName, entity.displayName as string, t);
-    setDisplayNameError(error);
-    dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
-    validateVersion(entity.version);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entity.displayName, isValidDisplayName, t, view]);
+    dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !displayNameError });
+  }, [displayNameError, t, view, dispatch]);
 
-  const validateVersion = useCallback(
-    (displayVersion?: string) => {
-      const error = getVersionError(view, isVersionOptional, displayVersion as string, t);
-      setVersionError(error);
-      dispatch({ type: ValidationActionType.SetField, field: 'displayVersion', isValid: !error });
-    },
-    [dispatch, isVersionOptional, t, view],
-  );
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'displayVersion', isValid: !versionError });
+  }, [versionError, t, view, dispatch]);
 
   const onChangeVersion = useCallback(
     (displayVersion: string) => {
       onChangeEntity({ ...entity, displayVersion } as DialModel);
-      if (!isVersionOptional && !isValidDisplayName && !!displayNameError) {
-        setIsValidDisplayName(!!displayVersion);
-      } else {
-        validateVersion(displayVersion);
-      }
+      setDisplayNameError(getDisplayNameError(view, entity.displayName as string, names, t, displayVersion));
     },
-    [onChangeEntity, entity, isVersionOptional, isValidDisplayName, displayNameError, validateVersion],
+    [onChangeEntity, entity, view, names, t],
   );
 
   return (
@@ -125,7 +100,7 @@ const EntityMainProperties: FC<Props> = ({
           value={entity.displayName}
           errorText={displayNameError}
           onChange={onChangeDisplayName}
-          invalid={!isValidDisplayName}
+          invalid={!!displayNameError}
           items={uniq(names)}
         />
 

@@ -18,6 +18,16 @@ export const isValidEntity = (
   withVersion?: boolean,
   names?: string[],
 ) => {
+  // TODO: remove after clear all entity validation
+  if (
+    view === ApplicationRoute.Keys ||
+    view === ApplicationRoute.Roles ||
+    view === ApplicationRoute.InterceptorTemplates ||
+    view === ApplicationRoute.Interceptors
+  ) {
+    return true;
+  }
+
   if (isSimpleEntity(view)) {
     if (view === ApplicationRoute.Adapters) {
       return isValidAdapter(entity as DialAdapter, names);

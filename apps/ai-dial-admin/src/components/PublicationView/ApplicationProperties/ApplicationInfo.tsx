@@ -16,7 +16,7 @@ const ApplicationInfo: FC<Props> = ({ application }) => {
   const t = useI18n();
 
   return application ? (
-    <div className="flex flex-col gap-y-6">
+    <div className="flex flex-col gap-y-6 w-full lg:w-[35%]">
       <DisplayNameControl readonly={true} displayName={application?.displayName} />
       <DescriptionControl entity={application} readonly={true} />
 

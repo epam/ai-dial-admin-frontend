@@ -60,7 +60,7 @@ const HeaderButtons = <T extends DialBaseEntity | DialKey>({
   entity,
   isChanged,
   onDiscard,
-  onSave,
+  s
   removeEntity,
   jsonEditorEnabled,
   toggleJsonEditor,

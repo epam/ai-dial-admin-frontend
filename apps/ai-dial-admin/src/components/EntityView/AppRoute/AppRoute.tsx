@@ -12,13 +12,18 @@ import { PopUpState } from '@/src/types/pop-up';
 import { TabOrientation } from '@/src/types/tab';
 import CreateRoute from '@/src/components/EntityView/AppRoute/CreateRoute';
 import RouteContent from '@/src/components/EntityView/AppRoute/Content/RouteContent';
+import { DialRole } from '@/src/models/dial/role';
+import { DialRoleLimitsMap } from '@/src/models/dial/base-entity';
 
 interface Props {
+  roles?: DialRole[] | null;
   routes?: DialAppRoute[];
+  parentRoleLimits?: DialRoleLimitsMap;
+  readonly?: boolean;
   onChangeRoutes: (routes: DialAppRoute[]) => void;
 }
 
-const EntityRoutes: FC<Props> = ({ routes, onChangeRoutes }) => {
+const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, routes, onChangeRoutes }) => {
   const t = useI18n() as (str: string) => string;
 
   const [modalState, setModalState] = useState(PopUpState.Closed);
@@ -94,7 +99,10 @@ const EntityRoutes: FC<Props> = ({ routes, onChangeRoutes }) => {
           {routes?.[activeRouteIndex as number] && (
             <RouteContent
               route={routes?.[activeRouteIndex as number] || ({} as DialAppRoute)}
+              roles={roles || []}
+              parentRoles={Object.keys(parentRoleLimits || {})}
               onChangeRoute={onChangeRoute}
+              readonly={readonly}
             />
           )}
         </div>

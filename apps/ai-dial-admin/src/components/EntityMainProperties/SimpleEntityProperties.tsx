@@ -14,6 +14,8 @@ import { checkNameVersionCombination } from '@/src/utils/prompts/versions';
 import { getErrorForPath } from '@/src/utils/validation/path-error';
 import { FieldError } from '@/src/models/error';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
+import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   view?: ApplicationRoute;
@@ -96,7 +98,7 @@ const SimpleEntityProperties: FC<Props> = ({
           placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
           fieldTitle={t(EntityFieldsI18nKey.paths)}
           value={(entity as DialRoute).paths?.[0]}
-          errorText={pathError?.text}
+          errorText={pathError}
           invalid={!!pathError}
           onChange={onChangePath}
         />

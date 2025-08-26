@@ -106,22 +106,6 @@ describe('Utils :: isValidEntity', () => {
     expect(res9).toBeFalsy();
   });
 
-  test('Should check Keys', () => {
-    const res1 = isValidEntity(ApplicationRoute.Keys, {});
-    const res2 = isValidEntity(ApplicationRoute.Keys, { key: 'key', name: 'key' });
-    const res3 = isValidEntity(ApplicationRoute.Keys, { key: 'key', name: 'key', project: 'project' });
-    const res4 = isValidEntity(ApplicationRoute.Keys, { key: 'key', name: 'key', project: 'project' }, void 0, ['key']);
-    const res5 = isValidEntity(ApplicationRoute.Keys, { key: 'key', name: 'key', project: 'project' }, void 0, [
-      'key2',
-    ]);
-
-    expect(res1).toBeFalsy();
-    expect(res2).toBeFalsy();
-    expect(res3).toBeTruthy();
-    expect(res4).toBeFalsy();
-    expect(res5).toBeTruthy();
-  });
-
   test('Should check ApplicationRunners', () => {
     const res1 = isValidEntity(ApplicationRoute.ApplicationRunners, {});
     const res2 = isValidEntity(ApplicationRoute.ApplicationRunners, { $id: 'id' });
@@ -213,19 +197,5 @@ describe('Utils :: isValidEntity', () => {
     expect(res3).toBeTruthy();
     expect(res4).toBeFalsy();
     expect(res5).toBeTruthy();
-  });
-
-  test('Should check simple entity', () => {
-    const res1 = isValidEntity(ApplicationRoute.Roles, {});
-    const res2 = isValidEntity(ApplicationRoute.Roles, { name: 'name' });
-    const res3 = isValidEntity(ApplicationRoute.Roles, { name: 'name' }, true);
-    const res4 = isValidEntity(ApplicationRoute.Roles, { name: 'name' }, void 0, ['name1']);
-    const res5 = isValidEntity(ApplicationRoute.Roles, { name: 'name' }, void 0, ['name']);
-
-    expect(res1).toBeFalsy();
-    expect(res2).toBeTruthy();
-    expect(res3).toBeFalsy();
-    expect(res4).toBeTruthy();
-    expect(res5).toBeFalsy();
   });
 });

@@ -12,6 +12,7 @@ import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialModel } from '@/src/models/dial/model';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { duplicateModalDescriptionMap, duplicateModalTitleMap } from './constants';
 
@@ -62,7 +63,7 @@ const DuplicatePopup: FC<Props> = ({ onDuplicate, names, view, modalState, onClo
         {!!duplicateModalDescriptionMap[view] && (
           <div className="text-secondary small mb-4">{t(duplicateModalDescriptionMap[view])}</div>
         )}
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-6">
           <IdControl entity={clonedEntity} onChangeEntity={setEntity} names={names} />
           <DisplayNameControl displayName={clonedEntity.displayName} onChange={onChangeDisplayName} />
 
