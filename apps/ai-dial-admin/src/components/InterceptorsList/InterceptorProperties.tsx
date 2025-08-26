@@ -2,17 +2,17 @@
 
 import { FC } from 'react';
 
-import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
+import { getInterceptorContainers } from '@/src/app/[lang]/interceptors/actions';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getInterceptorContainers } from '@/src/app/[lang]/interceptors/actions';
-import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
-import { useI18n } from '@/src/locales/client';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
+import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
 import SourceField from '@/src/components/SourceField/SourceField';
+import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
 
 interface Props {
   selectedInterceptor: DialInterceptor;
@@ -34,14 +34,8 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
             view={ApplicationRoute.Interceptors}
           />
 
-          <TextInputField
-            elementId="author"
-            fieldTitle={t(EntityFieldsI18nKey.author)}
-            placeholder={t(EntityPlaceholdersI18nKey.Maintainer)}
-            value={selectedInterceptor.author}
-            optional={true}
-            onChange={(author) => onChangeInterceptor({ ...selectedInterceptor, author })}
-          />
+          <MaintainerControl entity={selectedInterceptor} onChangeEntity={onChangeInterceptor} />
+
           <div className="w-full">
             <ForwardAuthTokenField
               view={ApplicationRoute.Interceptors}
