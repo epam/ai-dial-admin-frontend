@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 
 import { IconRefresh } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep } from 'lodash';
 
 import { removeKey, updateKey } from '@/src/app/[lang]/keys/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
@@ -34,6 +34,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import KeyProperties from './KeyProperties';
 import KeyRotateModal from './KeyRotateModal';
 import KeyViewHeader from './KeyViewHeader';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   originalKey: DialKey;
@@ -69,7 +70,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
   );
 
   useEffect(() => {
-    setIsChanged(!isEqual(originalKey, selectedKey));
+    setIsChanged(!isEqualSkippingUndefined(originalKey, selectedKey));
   }, [selectedKey, originalKey]);
 
   const onChangeActiveTab = useCallback(

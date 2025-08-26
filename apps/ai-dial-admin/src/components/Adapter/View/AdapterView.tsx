@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import classNames from 'classnames';
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep } from 'lodash';
 
 import { removeAdapter, updateAdapter } from '@/src/app/[lang]/adapters/actions';
 import AdapterModels from '@/src/components/Adapter/ModelsView/AdapterModels';
@@ -23,6 +23,7 @@ import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import AdapterProperties from './AdapterProperties';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   originalAdapter: DialAdapter;
@@ -54,7 +55,7 @@ const AdapterView: FC<Props> = ({ originalAdapter }) => {
   );
 
   useEffect(() => {
-    setIsChanged(!isEqual(originalAdapter, selectedAdapter));
+    setIsChanged(!isEqualSkippingUndefined(originalAdapter, selectedAdapter));
   }, [selectedAdapter, originalAdapter]);
 
   const onChangeActiveTab = useCallback(

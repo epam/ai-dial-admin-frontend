@@ -3,20 +3,21 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep } from 'lodash';
 
 import { deleteInterceptorTemplate, updateInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
-import { auditTabs, EntityViewTab, interceptorsTabs, propertiesTabs } from '@/src/components/EntityView/View/utils';
-import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
+import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
+import { auditTabs, EntityViewTab, interceptorsTabs, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import ExtendedProperties from '@/src/components/InterceptorTemplates/Properties/ExtendedProperties';
 import Interceptors from '@/src/components/InterceptorTemplates/View/Interceptors/Interceptors';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 
 interface Props {
@@ -59,7 +60,7 @@ const View: FC<Props> = ({ route, template }) => {
   useEffect(() => {
     const { updatedAt: __updateTemplate, ...restTemplate } = template;
     const { updatedAt: __updateSelected, ...restSelectedTemplate } = selectedTemplate;
-    setIsChanged(!isEqual(restTemplate, restSelectedTemplate));
+    setIsChanged(!isEqualSkippingUndefined(restTemplate, restSelectedTemplate));
   }, [template, selectedTemplate]);
 
   const onChange = useCallback((template: InterceptorTemplate) => {

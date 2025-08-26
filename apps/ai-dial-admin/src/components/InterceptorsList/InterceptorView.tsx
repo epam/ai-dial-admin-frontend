@@ -1,7 +1,7 @@
 'use client';
 
 import classNames from 'classnames';
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
@@ -26,6 +26,7 @@ import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import InterceptorProperties from './InterceptorProperties';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   originalInterceptor: DialInterceptor;
@@ -63,7 +64,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
   );
 
   useEffect(() => {
-    setIsChanged(!isEqual(originalInterceptor, selectedInterceptor));
+    setIsChanged(!isEqualSkippingUndefined(originalInterceptor, selectedInterceptor));
   }, [selectedInterceptor, originalInterceptor]);
 
   const onChangeActiveTab = useCallback(

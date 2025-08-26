@@ -3,7 +3,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import classNames from 'classnames';
-import { isEqual } from 'lodash';
 
 import { updateRules } from '@/src/app/[lang]/folders-storage/actions';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
@@ -13,6 +12,7 @@ import { useRuleFolder } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialRule } from '@/src/models/dial/rule';
 import FolderInfoHeader from './FolderInfoHeader';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   isReadonly?: boolean;
@@ -56,7 +56,7 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
   }, [fetchedFoldersRule, filePath]);
 
   useEffect(() => {
-    setIsChanged(!isEqual(originalRules, editableRules));
+    setIsChanged(!isEqualSkippingUndefined(originalRules, editableRules));
     setIsSaveDisable(
       !!editableRules?.[filePath]?.some(
         (rule) =>

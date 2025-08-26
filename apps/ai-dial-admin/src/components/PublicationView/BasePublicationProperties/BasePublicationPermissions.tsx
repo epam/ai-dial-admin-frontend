@@ -2,7 +2,6 @@ import { FC, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { IconReplace, IconBrandStackshare } from '@tabler/icons-react';
-import { isEqual } from 'lodash';
 
 import { getRules } from '@/src/app/[lang]/folders-storage/actions';
 import Button from '@/src/components/Common/Button/Button';
@@ -17,6 +16,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialRule } from '@/src/models/dial/rule';
 import { PopUpState } from '@/src/types/pop-up';
 import { addTrailingSlash } from '@/src/utils/files/path';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   rules: DialRule[];
@@ -43,7 +43,7 @@ const BasePublicationPermissions: FC<Props> = ({ rules, folderId, showCompare })
       getRules(folderId).then((folderRules) => {
         const rule = folderRules?.[folderId] || [];
         setCompareRules(rule);
-        setShowCompareButton(showCompare && !isEqual(rule, rules));
+        setShowCompareButton(showCompare && !isEqualSkippingUndefined(rule, rules));
       });
       fetchFolderHierarchy?.(folderId);
     }
