@@ -15,7 +15,7 @@ describe('ApplicationRunner :: clearSchemeForEditor', () => {
       ['dial:applicationTypeViewerUrl']: 'dial:applicationTypeViewerUrl',
       ['dial:applicationTypeEditorUrl']: 'dial:applicationTypeEditorUrl',
       ['dial:applicationTypeConfigurationEndpoint']: 'dial:applicationTypeConfigurationEndpoint',
-      ['dial:applicationTypeTokenizeEndpoint']: 'dial:applicatigetErrorForAppRunnerId onTypeTokenizeEndpoint',
+      ['dial:applicationTypeTokenizeEndpoint']: 'dial:onTypeTokenizeEndpoint',
       ['dial:applicationTypeRateEndpoint']: 'dial:applicationTypeRateEndpoint',
       ['dial:applicationTypeTruncatePromptEndpoint']: 'dial:applicationTypeTruncatePromptEndpoint',
       ['dial:appendApplicationPropertiesHeader']: true,

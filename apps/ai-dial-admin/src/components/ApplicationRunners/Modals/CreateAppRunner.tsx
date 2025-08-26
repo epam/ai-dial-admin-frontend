@@ -3,19 +3,17 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { createApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationView/Properties';
-import { getErrorForAppRunnerId } from '@/src/components/ApplicationRunners/ConfigurationView/utils';
 import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
-import { getErrorForDescription } from '@/src/utils/validation/description-error';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props {
   modalState: PopUpState;
@@ -34,8 +32,7 @@ const CreateAppRunner: FC<Props> = ({ modalState, onClose, route }) => {
     $schema: 'https://dial.epam.com/application_type_schemas/schema#',
     $id: '',
   });
-  const [isValid, setIsValid] = useState(false);
-  const { isValid: isSchemeValid } = useSaveValidationContext();
+  const { isValid, dispatch } = useSaveValidationContext();
 
   const onChangeScheme = useCallback(
     (entity: DialApplicationScheme) => {
@@ -56,13 +53,11 @@ const CreateAppRunner: FC<Props> = ({ modalState, onClose, route }) => {
     });
   }, [currentScheme, route, router, onClose, showNotification]);
 
+  // initial validation (disable save when no values entered yet)
   useEffect(() => {
-    const isValidId =
-      !!currentScheme.$id &&
-      !getErrorForAppRunnerId(currentScheme.$id, t) &&
-      !getErrorForDescription(currentScheme?.description, t);
-    setIsValid(isValidId && !!isSchemeValid && !!currentScheme['dial:applicationTypeDisplayName']);
-  }, [currentScheme, isSchemeValid, t]);
+    dispatch({ type: ValidationActionType.SetField, field: 'id', isValid: !!currentScheme.$id });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Popup onClose={onClose} heading={t(CreateI18nKey.ApplicationRunner)} portalId="CreateRunner" state={modalState}>

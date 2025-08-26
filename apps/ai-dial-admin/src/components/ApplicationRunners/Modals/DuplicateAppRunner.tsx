@@ -1,12 +1,14 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import Button from '@/src/components/Common/Button/Button';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Popup from '@/src/components/Common/Popup/Popup';
-import { ButtonsI18nKey, DuplicateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
+import { ButtonsI18nKey, DuplicateI18nKey } from '@/src/constants/i18n';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { PopUpState } from '@/src/types/pop-up';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { PopUpState } from '@/src/types/pop-up';
 
 interface Props {
   modalState: PopUpState;
@@ -19,11 +21,7 @@ const DuplicateScheme: FC<Props> = ({ onDuplicate, modalState, onClose, entity }
   const t = useI18n();
 
   const [clonedEntity, setEntity] = useState<DialApplicationScheme>({ ...entity, $id: '' });
-  const [isValid, setIsValid] = useState(false);
-
-  useEffect(() => {
-    setIsValid(!!clonedEntity.$id);
-  }, [clonedEntity]);
+  const { dispatch, isValid } = useSaveValidationContext();
 
   const onChangeId = useCallback(
     (id?: string) => {
@@ -32,6 +30,19 @@ const DuplicateScheme: FC<Props> = ({ onDuplicate, modalState, onClose, entity }
     [setEntity, clonedEntity],
   );
 
+  const onChangeName = useCallback(
+    (name?: string) => {
+      setEntity({ ...clonedEntity, 'dial:applicationTypeDisplayName': name });
+    },
+    [clonedEntity],
+  );
+
+  // initial validation (disable save when no values entered yet)
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'id', isValid: !!clonedEntity.$id });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <Popup
       onClose={onClose}
@@ -39,14 +50,9 @@ const DuplicateScheme: FC<Props> = ({ onDuplicate, modalState, onClose, entity }
       portalId="DuplicateKey"
       state={modalState}
     >
-      <div className="flex flex-col px-6 py-4">
-        <TextInputField
-          elementId="id"
-          placeholder={t(EntityPlaceholdersI18nKey.Id)}
-          fieldTitle={t(EntityFieldsI18nKey.id)}
-          value={clonedEntity.$id}
-          onChange={onChangeId}
-        />
+      <div className="flex flex-col px-6 py-4 gap-y-6">
+        <IdControl entity={{ name: clonedEntity.$id }} onChangeEntity={(entity) => onChangeId(entity.name)} />
+        <DisplayNameControl displayName={clonedEntity['dial:applicationTypeDisplayName']} onChange={onChangeName} />
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
         <Button
