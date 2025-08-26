@@ -1,14 +1,15 @@
 'use client';
 
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo } from 'react';
 
 import AttachmentInput from '@/src/components/Common/AttachmentInput/AttachmentInput';
 import { NumberInputField } from '@/src/components/Common/InputField/InputField';
 import { AttachmentsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { getMaxAttachmentError } from '@/src/utils/validation/is-valid-model';
 import { mimeMapping } from './constants';
-import { MAX_ATTACHMENTS_LIMIT } from '@/src/constants/dial-base-entity';
 
 interface Props {
   entity: DialBaseEntity;
@@ -16,20 +17,22 @@ interface Props {
 }
 
 const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
-  const t = useI18n();
+  const t = useI18n() as (str: string, param?: Record<string, number>) => string;
 
-  const [attachmentError, setAttachmentError] = useState<string | undefined>();
+  const { dispatch } = useSaveValidationContext();
+  const error = useMemo(() => {
+    return getMaxAttachmentError(entity.maxInputAttachments, t);
+  }, [t, entity.maxInputAttachments]);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'maxRetryAttempts', isValid: !error });
+  }, [error, t, dispatch]);
 
   const onChangeAttachmentMax = useCallback(
     (value: number | string) => {
-      if (Number(value) > MAX_ATTACHMENTS_LIMIT) {
-        setAttachmentError(t(AttachmentsI18nKey.MaxNumberError, { max: MAX_ATTACHMENTS_LIMIT }));
-      } else {
-        setAttachmentError(void 0);
-      }
       onChangeEntity({ ...entity, maxInputAttachments: value });
     },
-    [entity, onChangeEntity, t],
+    [entity, onChangeEntity],
   );
 
   const onChangeAttachmentTypes = useCallback(
@@ -42,7 +45,6 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
           maxInputAttachments: void 0,
           inputAttachmentTypes: void 0,
         });
-        setAttachmentError(void 0);
       }
     },
     [entity, onChangeEntity],
@@ -56,7 +58,7 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
         placeholder={t(EntityPlaceholdersI18nKey.AttachmentsTypes)}
         allValueLabel={t(AttachmentsI18nKey.UseAllAttachment)}
         availableItems={mimeMapping}
-        inputClass="lg:w-[35%]"
+        inputClass="lg:w-[35%] lg:flex-0"
         onChange={(values) => onChangeAttachmentTypes(values)}
       />
       {entity.inputAttachmentTypes?.length && (
@@ -67,8 +69,8 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
             placeholder={t(EntityPlaceholdersI18nKey.Number)}
             value={entity.maxInputAttachments}
             onChange={onChangeAttachmentMax}
-            errorText={attachmentError}
-            invalid={!!attachmentError}
+            errorText={error}
+            invalid={!!error}
             min={0}
           />
         </div>

@@ -1,16 +1,22 @@
+import { MAX_ATTACHMENTS_LIMIT } from '@/src/constants/dial-base-entity';
+import { ErrorI18nKey } from '@/src/constants/i18n';
 import { DialModel, DialModelEndpoint } from '@/src/models/dial/model';
 import { isValidEndpoint } from '@/src/utils/validation/url-error';
-import { MAX_ATTACHMENTS_LIMIT } from '@/src/constants/dial-base-entity';
 
 export const isValidModel = (entity: DialModel) => {
-  return !!entity.adapter && isValidAttachment(entity.maxInputAttachments);
+  return !!entity.adapter;
 };
 
-export const isValidAttachment = (maxInputAttachments?: string | number): boolean => {
-  if (maxInputAttachments) {
-    return +maxInputAttachments <= MAX_ATTACHMENTS_LIMIT;
+export const getMaxAttachmentError = (
+  maxInputAttachments?: number | string,
+  t?: (str: string, param?: Record<string, number>) => string,
+) => {
+  const isValid = !maxInputAttachments || +maxInputAttachments <= MAX_ATTACHMENTS_LIMIT;
+  if (!isValid) {
+    return t?.(ErrorI18nKey.MaxNumberError, { max: MAX_ATTACHMENTS_LIMIT });
   }
-  return true;
+
+  return;
 };
 
 export const isValidUpstreams = (upstreams?: DialModelEndpoint[]): boolean => {

@@ -7,7 +7,6 @@ import { getErrorForDescription } from '@/src/utils/validation/description-error
 import { isValidModel } from '@/src/utils/validation/is-valid-model';
 import { isValidRoute } from '@/src/utils/validation/is-valid-route';
 import { getErrorForName, isWrongLengthWithView } from '@/src/utils/validation/name-error';
-import { isValidApplication } from './is-valid-application';
 
 export const isValidEntity = (
   view: ApplicationRoute,
@@ -22,6 +21,7 @@ export const isValidEntity = (
     view === ApplicationRoute.InterceptorTemplates ||
     view === ApplicationRoute.Interceptors ||
     view === ApplicationRoute.ApplicationRunners ||
+    view === ApplicationRoute.Applications ||
     view === ApplicationRoute.Adapters
   ) {
     return true;
@@ -41,10 +41,6 @@ export const isValidEntity = (
   const isValidNames = !!baseEntity.displayName && !!baseEntity.name && !getErrorForName(baseEntity.name, names);
   const isWrongLength = isWrongLengthWithView(view, baseEntity.displayName);
   const baseEntityValidation = isValidNames && !getErrorForDescription(entity.description) && !isWrongLength;
-
-  if (view === ApplicationRoute.Applications) {
-    return baseEntityValidation && isValidApplication(entity);
-  }
 
   if (view === ApplicationRoute.Models) {
     return (
