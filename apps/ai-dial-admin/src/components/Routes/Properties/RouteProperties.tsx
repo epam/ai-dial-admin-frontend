@@ -1,4 +1,4 @@
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useMemo, useState } from 'react';
 
 import { NumberInputField, TextInputField } from '@/src/components/Common/InputField/InputField';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
@@ -12,17 +12,20 @@ import Paths from '@/src/components/Routes/Paths/Paths';
 import { handleRouteOutputChange } from '@/src/components/Routes/utils';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialAppRoute, DialRoute, RouteOutput } from '@/src/models/dial/route';
+import { DialAppRoute, DialRoute, RouteOutput, RoutePermission } from '@/src/models/dial/route';
 import { RadioButtonModel } from '@/src/models/radio-button';
 import { RadioFieldOrientation } from '@/src/types/radio-orientation';
+import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
+import { DropdownItemsModel } from '@/src/models/dropdown-item';
 
 interface Props {
   route: DialRoute | DialAppRoute;
   isAppRoute?: boolean;
+  readonly?: boolean;
   updateRoute: (route: DialRoute | DialAppRoute) => void;
 }
 
-const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
+const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }) => {
   const t = useI18n();
 
   const outputRadio: RadioButtonModel[] = [
@@ -30,19 +33,33 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
     { id: RouteOutput.RESPONSE, name: t(EntityFieldsI18nKey.response) },
   ];
 
+  const permissionsItems: DropdownItemsModel[] = useMemo(
+    () => [
+      { id: 'read', name: t(RoutesI18nKey.Read) },
+      { id: 'write', name: t(RoutesI18nKey.Write) },
+    ],
+    [t],
+  );
+
   const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE'];
 
   const [statusError, setStatusError] = useState('');
 
+  const selectedPermissions = useMemo(() => {
+    return (
+      (route as DialAppRoute).permissions?.map((p) => permissionsItems.find((i) => i.id === p)?.name as string) || null
+    );
+  }, [permissionsItems, route]);
+
   const onChangeName = useCallback(
-    (name: string) => {
+    (name?: string) => {
       updateRoute({ ...route, name });
     },
     [route, updateRoute],
   );
 
   const onChangeDisplayName = useCallback(
-    (displayName: string) => {
+    (displayName?: string) => {
       updateRoute({ ...route, displayName });
     },
     [route, updateRoute],
@@ -97,6 +114,19 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
     [route, updateRoute],
   );
 
+  const onChangePermissions = useCallback(
+    (value: string) => {
+      const appRoute = route as DialAppRoute;
+      updateRoute({
+        ...route,
+        permissions: appRoute.permissions?.includes(value as RoutePermission)
+          ? appRoute.permissions?.filter((v) => v !== value)
+          : [...(appRoute.permissions || []), value as RoutePermission],
+      });
+    },
+    [route, updateRoute],
+  );
+
   const onChangeMaxRetryAttempts = useCallback(
     (maxRetryAttempts?: number) => {
       updateRoute({ ...route, maxRetryAttempts });
@@ -115,24 +145,31 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
     <div className="h-full flex flex-col pt-3 w-full">
       <div className="flex flex-col gap-6 lg:w-[35%]">
         {isAppRoute ? (
-          <DisplayNameControl displayName={route.name} onChange={onChangeName} />
+          <DisplayNameControl displayName={route.name} onChange={onChangeName} disabled={readonly} />
         ) : (
           <>
             <DisplayNameControl displayName={route.displayName} onChange={onChangeDisplayName} />
             <DescriptionControl entity={route} onChangeEntity={updateRoute} />
           </>
         )}
-        <Paths title={t(EntityFieldsI18nKey.paths)} paths={route.paths} onChangePaths={onChangePaths} />
+        <Paths
+          title={t(EntityFieldsI18nKey.paths)}
+          paths={route.paths}
+          onChangePaths={onChangePaths}
+          readonly={readonly}
+        />
 
         <Switch
           isOn={route.rewritePath}
           title={t(EntityFieldsI18nKey.rewritePath)}
           switchId="RewritePath"
+          disabled={readonly}
           onChange={onChangeRewritePath}
         />
 
         <Multiselect
           elementId="methods"
+          readonly={readonly}
           selectedItems={route.methods}
           onChangeItems={onChangeMethods}
           heading={t(EntityFieldsI18nKey.methods)}
@@ -154,6 +191,7 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
           <div className="flex lg:w-[60%]">
             <div className="mr-2">
               <NumberInputField
+                disabled={readonly}
                 elementId="status"
                 fieldTitle={t(EntityFieldsI18nKey.status)}
                 placeholder={t(EntityPlaceholdersI18nKey.Status)}
@@ -165,6 +203,7 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
             </div>
             <div className="flex-1">
               <TextInputField
+                disabled={readonly}
                 elementId="body"
                 fieldTitle={t(EntityFieldsI18nKey.body)}
                 placeholder={t(EntityPlaceholdersI18nKey.Body)}
@@ -174,32 +213,30 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
             </div>
           </div>
         ) : (
-          <UpstreamEndpoints entity={route} onChangeEntity={updateRoute} />
+          <UpstreamEndpoints readonly={readonly} entity={route} onChangeEntity={updateRoute} />
         )}
 
         <MaxRetryAttempts
+          readonly={readonly}
           maxRetryAttempts={route.maxRetryAttempts}
           onChangeMaxRetryAttempts={onChangeMaxRetryAttempts}
         />
 
         <div className="lg:w-[25%] flex flex-col gap-6">
-          {/* // TODO: temp - waiting design */}
-          {/* {isAppRoute && (
+          {isAppRoute && (
             <DropdownField
-              selectedValue={(route as DialAppRoute).permissions || BasicI18nKey.None}
+              disabled={readonly}
+              placeholder={t(EntityPlaceholdersI18nKey.SelectPermission)}
               elementId="permissions"
-              items={items}
+              items={permissionsItems}
+              multipleValues={selectedPermissions}
               fieldTitle={t(EntityFieldsI18nKey.permissions)}
-              onChange={(value) => {
-                updateRoute({
-                  ...route,
-                  permissions: value === BasicI18nKey.None ? void 0 : (value as RoutePermission),
-                });
-              }}
+              onChange={onChangePermissions}
             />
-          )} */}
+          )}
           <NumberInputField
             elementId="order"
+            disabled={readonly}
             fieldTitle={t(EntityFieldsI18nKey.order)}
             placeholder={t(EntityPlaceholdersI18nKey.Order)}
             value={route.order}

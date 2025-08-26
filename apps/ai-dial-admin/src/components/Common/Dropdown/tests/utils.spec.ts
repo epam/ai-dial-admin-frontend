@@ -4,8 +4,10 @@ import { isChecked, isIndeterminate, isMultiSelectClickAvailable } from '../util
 
 describe('Dropdown :: isMultiSelectClickAvailable ', () => {
   test('Should return true when not multiselect', () => {
-    const result = isMultiSelectClickAvailable(void 0, 'id', 0);
-    expect(result).toBeTruthy();
+    const result1 = isMultiSelectClickAvailable(void 0, 'id', 0);
+    const result2 = isMultiSelectClickAvailable(null, 'id', 0);
+    expect(result1).toBeTruthy();
+    expect(result2).toBeTruthy();
   });
 
   test('Should return true when only one item is selected and can be changed', () => {

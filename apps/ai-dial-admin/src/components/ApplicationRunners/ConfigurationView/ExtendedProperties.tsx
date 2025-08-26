@@ -37,7 +37,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
   ];
 
   const onChange = useCallback(
-    (value: string | string[] | boolean, key: keyof DialApplicationScheme) => {
+    (value: string | string[] | boolean | undefined, key: keyof DialApplicationScheme) => {
       onChangeRunner({ ...runner, [key]: value });
     },
     [runner, onChangeRunner],
@@ -51,49 +51,49 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
   );
 
   const onChangeCompletionEndPoint = useCallback(
-    (endpoint: string) => {
+    (endpoint?: string) => {
       onChange(endpoint, 'dial:applicationTypeCompletionEndpoint');
     },
     [onChange],
   );
 
   const onChangeConfigurationEndpoint = useCallback(
-    (url: string) => {
+    (url?: string) => {
       onChange(url, 'dial:applicationTypeConfigurationEndpoint');
     },
     [onChange],
   );
 
   const onChangeRateEndpoint = useCallback(
-    (url: string) => {
+    (url?: string) => {
       onChange(url, 'dial:applicationTypeRateEndpoint');
     },
     [onChange],
   );
 
   const onChangePromptEndpoint = useCallback(
-    (url: string) => {
+    (url?: string) => {
       onChange(url, 'dial:applicationTypeTruncatePromptEndpoint');
     },
     [onChange],
   );
 
   const onChangeTokenizeEndpoint = useCallback(
-    (url: string) => {
+    (url?: string) => {
       onChange(url, 'dial:applicationTypeTokenizeEndpoint');
     },
     [onChange],
   );
 
   const onChangeViewerUrl = useCallback(
-    (url: string) => {
+    (url?: string) => {
       onChange(url, 'dial:applicationTypeViewerUrl');
     },
     [onChange],
   );
 
   const onChangeEditorUrl = useCallback(
-    (url: string) => {
+    (url?: string) => {
       onChange(url, 'dial:applicationTypeEditorUrl');
     },
     [onChange],

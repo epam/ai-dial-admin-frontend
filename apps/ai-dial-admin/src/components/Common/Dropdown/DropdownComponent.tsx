@@ -81,7 +81,7 @@ export interface DropdownProps {
   isMenu?: boolean;
   prefix?: string;
   dismissRef?: Ref<unknown>;
-  multipleValues?: string[];
+  multipleValues?: string[] | null;
 }
 
 const DropdownMenuComponent = forwardRef<HTMLDivElement, DropdownProps & HTMLProps<HTMLButtonElement>>(
@@ -107,6 +107,7 @@ const DropdownMenuComponent = forwardRef<HTMLDivElement, DropdownProps & HTMLPro
       isMenu = false,
       selectedClassName,
       dismissRef,
+      disabled,
       multipleValues,
       ...props
     },
@@ -256,6 +257,7 @@ const DropdownMenuComponent = forwardRef<HTMLDivElement, DropdownProps & HTMLPro
             isNested && menuItemClassNames,
             isNested ? 'h-[34px] w-full px-3' : 'h-auto px-0',
             className,
+            disabled ? 'pointer-events-none' : '',
           )}
           {...getReferenceProps(
             parent.getItemProps({
@@ -277,6 +279,7 @@ const DropdownMenuComponent = forwardRef<HTMLDivElement, DropdownProps & HTMLPro
               isOpen={isMenuOpen}
               prefix={prefix}
               isMenu={isMenu}
+              disabled={disabled}
               multipleValues={multipleValues}
             />
           )}

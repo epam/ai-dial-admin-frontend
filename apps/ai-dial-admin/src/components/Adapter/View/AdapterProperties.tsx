@@ -38,14 +38,14 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
   }, [entity.displayName, isEntityImmutable, validateDisplayName]);
 
   const onChangeDisplayName = useCallback(
-    (displayName: string) => {
+    (displayName?: string) => {
       onChangeAdapter({ ...entity, displayName });
     },
     [onChangeAdapter, entity],
   );
 
   const onChangeEndpoint = useCallback(
-    (baseEndpoint: string) => {
+    (baseEndpoint?: string) => {
       onChangeAdapter({ ...entity, baseEndpoint });
     },
     [onChangeAdapter, entity],

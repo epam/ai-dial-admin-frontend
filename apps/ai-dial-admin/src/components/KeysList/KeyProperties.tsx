@@ -82,7 +82,7 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
 
       <DisplayNameControl
         displayName={entity.displayName}
-        onChange={(displayName: string) => onChangeKey({ ...entity, displayName })}
+        onChange={(displayName) => onChangeKey({ ...entity, displayName })}
       />
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeKey} />

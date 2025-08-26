@@ -34,7 +34,7 @@ const EntityFeatures: FC<Props> = ({ view, entity, onChangeEntity }) => {
   );
 
   const onChange = useCallback(
-    (value: string, key: keyof DialFeatures) => {
+    (value: string | undefined, key: keyof DialFeatures) => {
       onChangeEntity({
         ...entity,
         features: {
