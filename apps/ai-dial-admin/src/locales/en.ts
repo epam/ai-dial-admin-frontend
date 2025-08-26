@@ -757,7 +757,7 @@ export default {
     TokenizeEndpoint: 'Enter tokenize endpoint',
     TruncatePromptEndpoint: 'Enter truncate prompt endpoint',
     KeyValue: 'Enter value or generate',
-    SelectPermission: 'Select permission'
+    SelectPermission: 'Select permission',
   },
   Error: {
     ServerError: 'Server Error',
