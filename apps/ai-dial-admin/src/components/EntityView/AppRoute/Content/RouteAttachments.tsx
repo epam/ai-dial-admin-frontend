@@ -8,10 +8,11 @@ import { AttachmentPaths, DialAppRoute } from '@/src/models/dial/route';
 
 interface Props {
   route: DialAppRoute;
+  readonly?: boolean;
   onChangeRoute: (route: DialAppRoute) => void;
 }
 
-const RouteAttachments: FC<Props> = ({ route, onChangeRoute }) => {
+const RouteAttachments: FC<Props> = ({ route, readonly, onChangeRoute }) => {
   const t = useI18n() as (str: string) => string;
 
   const onChangeRequest = useCallback(
@@ -40,12 +41,14 @@ const RouteAttachments: FC<Props> = ({ route, onChangeRoute }) => {
         <Paths
           title={t(RoutesI18nKey.RequestAttachmentPaths)}
           paths={route.attachmentPaths?.requestBody}
+          readonly={readonly}
           onChangePaths={onChangeRequest}
         />
       </div>
       <div className="w-full lg:w-[50%] pt-9">
         <Paths
           title={t(RoutesI18nKey.ResponseAttachmentPaths)}
+          readonly={readonly}
           paths={route.attachmentPaths?.responseBody}
           onChangePaths={onChangeResponse}
         />

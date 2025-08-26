@@ -52,9 +52,11 @@ const DropdownSelectedItem: FC<Props> = ({
         <div className="flex flex-1">
           {multipleValues.map((v) => {
             return (
-              <Tooltip key={v} tooltip={v} triggerClassName="flex-1 min-w-0">
-                <span className="inline-block rounded border border-icon-secondary p-1 mr-1">{v}</span>
-              </Tooltip>
+              <div key={v}>
+                <Tooltip tooltip={v} triggerClassName="flex-1 min-w-0">
+                  <span className="inline-block rounded border border-icon-secondary p-1 mr-1">{v}</span>
+                </Tooltip>
+              </div>
             );
           })}
         </div>

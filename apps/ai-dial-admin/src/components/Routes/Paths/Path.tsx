@@ -13,12 +13,13 @@ interface Props {
   index: number;
   fieldTitle: string;
   path: string;
+  readonly?: boolean;
   allPaths?: string[];
   onRemove: (index: number) => void;
   onChangePath: (index: number, value: string) => void;
 }
 
-const Path: FC<Props> = ({ index, path, fieldTitle, allPaths, onRemove, onChangePath }) => {
+const Path: FC<Props> = ({ index, path, readonly, fieldTitle, allPaths, onRemove, onChangePath }) => {
   const t = useI18n();
 
   const [isEmptyPath, setIsEmptyPath] = useState(true);
@@ -55,6 +56,7 @@ const Path: FC<Props> = ({ index, path, fieldTitle, allPaths, onRemove, onChange
         <TextInputField
           elementId={'path ' + index}
           value={path}
+          disabled={readonly}
           placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
           fieldTitle={index === 0 ? fieldTitle : ''}
           onChange={(value) => onChangePath(index, value)}

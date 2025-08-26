@@ -1,4 +1,4 @@
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useMemo, useState } from 'react';
 
 import { NumberInputField, TextInputField } from '@/src/components/Common/InputField/InputField';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
@@ -15,16 +15,17 @@ import { useI18n } from '@/src/locales/client';
 import { DialAppRoute, DialRoute, RouteOutput, RoutePermission } from '@/src/models/dial/route';
 import { RadioButtonModel } from '@/src/models/radio-button';
 import { RadioFieldOrientation } from '@/src/types/radio-orientation';
-import DropdownField from '../../Common/Dropdown/DropdownField';
-import { DropdownItemsModel } from '../../../models/dropdown-item';
+import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
+import { DropdownItemsModel } from '@/src/models/dropdown-item';
 
 interface Props {
   route: DialRoute | DialAppRoute;
   isAppRoute?: boolean;
+  readonly?: boolean;
   updateRoute: (route: DialRoute | DialAppRoute) => void;
 }
 
-const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
+const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }) => {
   const t = useI18n();
 
   const outputRadio: RadioButtonModel[] = [
@@ -32,14 +33,23 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
     { id: RouteOutput.RESPONSE, name: t(EntityFieldsI18nKey.response) },
   ];
 
-  const items: DropdownItemsModel[] = [
-    { id: 'read', name: t(RoutesI18nKey.Read) },
-    { id: 'write', name: t(RoutesI18nKey.Write) },
-  ];
+  const permissionsItems: DropdownItemsModel[] = useMemo(
+    () => [
+      { id: 'read', name: t(RoutesI18nKey.Read) },
+      { id: 'write', name: t(RoutesI18nKey.Write) },
+    ],
+    [t],
+  );
 
   const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE'];
 
   const [statusError, setStatusError] = useState('');
+
+  const selectedPermissions = useMemo(() => {
+    return (
+      (route as DialAppRoute).permissions?.map((p) => permissionsItems.find((i) => i.id === p)?.name as string) || null
+    );
+  }, [permissionsItems, route]);
 
   const onChangeName = useCallback(
     (name: string) => {
@@ -135,14 +145,19 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
     <div className="h-full flex flex-col pt-3 w-full">
       <div className="flex flex-col gap-6 lg:w-[35%]">
         {isAppRoute ? (
-          <DisplayNameControl displayName={route.name} onChange={onChangeName} />
+          <DisplayNameControl displayName={route.name} onChange={onChangeName} disabled={readonly} />
         ) : (
           <>
             <DisplayNameControl displayName={route.displayName} onChange={onChangeDisplayName} />
             <DescriptionControl entity={route} onChangeEntity={updateRoute} />
           </>
         )}
-        <Paths title={t(EntityFieldsI18nKey.paths)} paths={route.paths} onChangePaths={onChangePaths} />
+        <Paths
+          title={t(EntityFieldsI18nKey.paths)}
+          paths={route.paths}
+          onChangePaths={onChangePaths}
+          readonly={readonly}
+        />
 
         <Switch
           isOn={route.rewritePath}
@@ -207,10 +222,8 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
             <DropdownField
               placeholder={t(EntityPlaceholdersI18nKey.SelectPermission)}
               elementId="permissions"
-              items={items}
-              multipleValues={
-                (route as DialAppRoute).permissions?.map((p) => items.find((i) => i.id === p)?.name as string) || null
-              }
+              items={permissionsItems}
+              multipleValues={selectedPermissions}
               fieldTitle={t(EntityFieldsI18nKey.permissions)}
               onChange={onChangePermissions}
             />
