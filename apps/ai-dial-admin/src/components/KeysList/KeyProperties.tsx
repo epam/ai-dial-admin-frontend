@@ -42,14 +42,14 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
   }, [isValidKey, dispatch]);
 
   const onChangeProject = useCallback(
-    (project: string) => {
-      onChangeKey({ ...entity, project });
+    (project?: string) => {
+      onChangeKey({ ...entity, project: project || '' });
     },
     [entity, onChangeKey],
   );
 
   const onChangeProjectContactPoint = useCallback(
-    (projectContactPoint: string) => {
+    (projectContactPoint?: string) => {
       onChangeKey({ ...entity, projectContactPoint });
     },
     [entity, onChangeKey],

@@ -78,7 +78,7 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
   );
 
   const onChangeBody = useCallback(
-    (body: string) => {
+    (body?: string) => {
       updateRoute({
         ...route,
         response: {

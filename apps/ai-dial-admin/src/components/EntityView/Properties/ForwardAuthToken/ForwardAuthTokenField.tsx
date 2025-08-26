@@ -45,9 +45,9 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
   );
 
   const onChangeName = useCallback(
-    (name: string) => {
-      setConfirmName(name);
-      setIsValid(name.trim() === (view === ApplicationRoute.Interceptors ? entity.name : entity.displayName));
+    (name?: string) => {
+      setConfirmName(name || '');
+      setIsValid(name === (view === ApplicationRoute.Interceptors ? entity.name : entity.displayName));
     },
     [entity.displayName, entity.name, view],
   );

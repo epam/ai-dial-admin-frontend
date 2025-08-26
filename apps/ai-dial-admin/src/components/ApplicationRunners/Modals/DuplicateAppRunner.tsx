@@ -26,7 +26,7 @@ const DuplicateScheme: FC<Props> = ({ onDuplicate, modalState, onClose, entity }
   }, [clonedEntity]);
 
   const onChangeId = useCallback(
-    (id: string) => {
+    (id?: string) => {
       setEntity({ ...clonedEntity, $id: id });
     },
     [setEntity, clonedEntity],

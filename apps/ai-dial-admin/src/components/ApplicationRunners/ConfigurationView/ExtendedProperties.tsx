@@ -115,7 +115,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
         placeholder={t(EntityPlaceholdersI18nKey.Title)}
         value={runner.title}
         optional={true}
-        onChange={(title: string) => {
+        onChange={(title?: string) => {
           onChangeRunner({ ...runner, title });
         }}
       />

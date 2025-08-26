@@ -15,7 +15,7 @@ interface Props {
   path: string;
   allPaths?: string[];
   onRemove: (index: number) => void;
-  onChangePath: (index: number, value: string) => void;
+  onChangePath: (index: number, value?: string) => void;
 }
 
 const Path: FC<Props> = ({ index, path, fieldTitle, allPaths, onRemove, onChangePath }) => {

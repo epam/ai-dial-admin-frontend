@@ -59,7 +59,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
   );
 
   const onChangeOverrideName = useCallback(
-    (overrideName: string) => {
+    (overrideName?: string) => {
       onChangeModel({ ...model, overrideName });
     },
     [model, onChangeModel],

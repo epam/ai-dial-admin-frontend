@@ -35,7 +35,7 @@ const DuplicateAdapter: FC<Props> = ({ onDuplicate, modalState, onClose, adapter
   );
 
   const onChangeEndpoint = useCallback(
-    (baseEndpoint: string) => {
+    (baseEndpoint?: string) => {
       setEntity({ ...entity, baseEndpoint });
     },
     [setEntity, entity],
