@@ -63,11 +63,11 @@ export const generateNewInitialVersion = (version?: string) => {
 };
 
 export const checkNameVersionCombination = (
-  versionsPerName: Record<string, string[]>,
+  versionsPerName: Record<string, string[]> | undefined,
   name: string,
   version: string,
 ) => {
-  return versionsPerName[name] && versionsPerName[name].includes(version);
+  return versionsPerName?.[name] && versionsPerName[name].includes(version);
 };
 
 export const compareVersions = (version1: string, version2: string) => {

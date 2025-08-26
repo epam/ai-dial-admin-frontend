@@ -37,6 +37,7 @@ import { getErrorNotification } from '@/src/utils/notification';
 import { generateNewInitialVersion } from '@/src/utils/prompts/versions';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import DeleteInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Delete';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props<T> {
   view: ApplicationRoute;
@@ -46,7 +47,7 @@ interface Props<T> {
   jsonErrors: JSONEditorError[] | null;
   hideJsonEditor?: boolean;
   children?: ReactNode;
-  hasErrors?: boolean;
+  hasErrors?: boolean; // TODO: remove after review validation
   onDiscard: () => void;
   onSave: (newVersion?: string) => void;
   removeEntity: (entity?: string) => Promise<ServerActionResponse>;
@@ -78,6 +79,7 @@ const HeaderButtons = <T extends DialBaseEntity | DialKey>({
   const { showNotification } = useNotification();
   const isSimple = isSimpleEntity(view);
   const { fetchFiles, filePath } = usePromptFolder();
+  const { isValid } = useSaveValidationContext();
 
   const [modalState, setIsOpenModal] = useState(PopUpState.Closed);
   const [versionModalState, setVersionModalState] = useState(PopUpState.Closed);
@@ -190,7 +192,7 @@ const HeaderButtons = <T extends DialBaseEntity | DialKey>({
               cssClass={`primary ${buttonsClassNames}`}
               title={t(ButtonsI18nKey.Save)}
               onClick={() => onTryToSave()}
-              disable={hasErrors || (jsonEditorEnabled && !isValidJSON) || !isValidEntity(view, entity)}
+              disable={hasErrors || (jsonEditorEnabled && !isValidJSON) || !isValidEntity(view, entity) || !isValid}
             />
           </div>
         ) : (

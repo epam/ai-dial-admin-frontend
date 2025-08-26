@@ -91,22 +91,12 @@ describe('Utils :: validations :: getErrorForName', () => {
 describe('getErrorForDisplayName', () => {
   test('returns error if name is undefined', () => {
     const result = getErrorForDisplayName(undefined);
-    expect(result).toEqual({
-      type: ErrorType.LENGTH,
-      text: '',
-    });
-  });
 
-  test('returns error if name is empty string', () => {
-    const result = getErrorForDisplayName('', mockT);
-    expect(result).toEqual({
-      type: ErrorType.LENGTH,
-      text: 'Translated Text',
-    });
+    expect(result).toBeNull();
   });
 
   test('returns error if name is too short', () => {
-    const result = getErrorForDisplayName('a', mockT);
+    const result = getErrorForDisplayName('a', false, mockT);
 
     expect(result).toEqual({
       type: ErrorType.LENGTH,
@@ -116,16 +106,29 @@ describe('getErrorForDisplayName', () => {
 
   test('returns error if name is too long', () => {
     const longName = 'a'.repeat(300);
-    const result = getErrorForDisplayName(longName, mockT);
+    const result = getErrorForDisplayName(longName, false, mockT);
     expect(result).toEqual({
       type: ErrorType.LENGTH,
       text: 'Translated Text',
     });
   });
 
-  test('returns null if name is valid length', () => {
+  test('returns error if required and name is empty', () => {
+    const result = getErrorForDisplayName('', true, mockT);
+    expect(result).toMatchObject({
+      type: ErrorType.LENGTH,
+      text: 'Translated Text',
+    });
+  });
+
+  test('returns null if name is valid and required', () => {
+    expect(getErrorForDisplayName('abc', true, mockT)).toBeNull();
+    expect(getErrorForDisplayName('abcdef', true, mockT)).toBeNull();
+  });
+
+  test('returns null if name is valid and not required', () => {
     const validName = 'validName';
-    const result = getErrorForDisplayName(validName, mockT);
+    const result = getErrorForDisplayName(validName, false, mockT);
     expect(result).toBeNull();
   });
 });
