@@ -423,6 +423,7 @@ export default {
     AddPaths: 'Add paths',
     RequestAttachmentPaths: 'Request attachment paths',
     ResponseAttachmentPaths: 'Response attachment paths',
+    InheritApplicationRoles: 'Inherit Application Roles',
     Output: 'Output',
     Read: 'Read',
     Write: 'Write',
@@ -756,6 +757,7 @@ export default {
     TokenizeEndpoint: 'Enter tokenize endpoint',
     TruncatePromptEndpoint: 'Enter truncate prompt endpoint',
     KeyValue: 'Enter value or generate',
+    SelectPermission: 'Select permission',
   },
   Error: {
     ServerError: 'Server Error',

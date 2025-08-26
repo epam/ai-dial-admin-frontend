@@ -7,13 +7,15 @@ interface Props {
   title: string;
   switchId: string;
   isOn?: boolean;
+  disabled?: boolean;
   onChange?: (value: boolean) => void;
 }
 
-const Switch: FC<Props> = ({ title, switchId, isOn = false, onChange }) => {
+const Switch: FC<Props> = ({ title, switchId, isOn = false, disabled, onChange }) => {
   const switchClassName = classNames(
     'flex w-[36px] h-[18px]  cursor-pointer items-center gap-1 rounded-full p-0.5 transition-all duration-200',
     isOn ? 'flex-row-reverse bg-accent-primary' : 'flex-row bg-layer-4',
+    disabled ? 'pointer-events-none' : '',
   );
 
   const onClick = useCallback(

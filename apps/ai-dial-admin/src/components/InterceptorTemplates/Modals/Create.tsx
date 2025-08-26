@@ -10,31 +10,30 @@ import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getErrorNotification } from '@/src/utils/notification';
 import { createInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { useNotification } from '@/src/context/NotificationContext';
-import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import { getErrorForName } from '@/src/utils/validation/name-error';
 
 import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 import BaseProperties from '@/src/components/InterceptorTemplates/Properties/BaseProperties';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   route: ApplicationRoute;
+  names: string[];
   modalState: PopUpState;
   onClose: () => void;
-  names: string[];
 }
 
 const Create: FC<Props> = ({ route, onClose, modalState, names }) => {
   const t = useI18n() as (t: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
+  const { isValid, dispatch } = useSaveValidationContext();
 
   const [template, setTemplate] = useState<InterceptorTemplate>({
     name: '',
     displayName: '',
     description: '',
   });
-  const [isValid, setIsValid] = useState(false);
 
   const onCreate = useCallback(() => {
     createInterceptorTemplate(template).then((res) => {
@@ -47,13 +46,11 @@ const Create: FC<Props> = ({ route, onClose, modalState, names }) => {
     });
   }, [template, route, router, onClose, showNotification]);
 
+  // initial validation (disable save when no values entered yet)
   useEffect(() => {
-    const isValidId =
-      !getErrorForName(template?.name, names, t) &&
-      !!template.displayName.trim() &&
-      !getErrorForDescription(template?.description, t);
-    setIsValid(isValidId);
-  }, [template, t, names]);
+    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!template.name });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Popup

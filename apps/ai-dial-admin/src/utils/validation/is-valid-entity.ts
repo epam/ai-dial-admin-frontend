@@ -2,14 +2,12 @@ import { MAX_RUNNER_ID_SYMBOLS } from '@/src/constants/validation';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity, DialBaseNamedEntity } from '@/src/models/dial/base-entity';
-import { DialKey } from '@/src/models/dial/key';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
 import { isValidAdapter } from '@/src/utils/validation/is-valid-adapter';
-import { isValidKey } from '@/src/utils/validation/is-valid-key';
 import { isValidModel } from '@/src/utils/validation/is-valid-model';
 import { isValidRoute } from '@/src/utils/validation/is-valid-route';
 import { getErrorForName, isWrongLengthWithView } from '@/src/utils/validation/name-error';
@@ -21,13 +19,19 @@ export const isValidEntity = (
   withVersion?: boolean,
   names?: string[],
 ) => {
+  // TODO: remove after clear all entity validation
+  if (
+    view === ApplicationRoute.Keys ||
+    view === ApplicationRoute.Roles ||
+    view === ApplicationRoute.InterceptorTemplates ||
+    view === ApplicationRoute.Interceptors
+  ) {
+    return true;
+  }
+
   if (isSimpleEntity(view)) {
     if (view === ApplicationRoute.Adapters) {
       return isValidAdapter(entity as DialAdapter, names);
-    }
-
-    if (view === ApplicationRoute.Keys) {
-      return isValidKey(entity as DialKey, names);
     }
 
     if (view === ApplicationRoute.ApplicationRunners) {
@@ -39,10 +43,6 @@ export const isValidEntity = (
 
     if (view === ApplicationRoute.Routes) {
       return isValidRoute(entity as DialRoute, isValidSimpleEntity);
-    }
-
-    if (view === ApplicationRoute.Interceptors) {
-      return isValidSimpleEntity;
     }
 
     return isValidSimpleEntity;

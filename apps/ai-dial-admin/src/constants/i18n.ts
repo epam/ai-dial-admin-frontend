@@ -392,6 +392,7 @@ export enum RoutesI18nKey {
   Write = 'Routes.Write',
   ResponseAttachmentPaths = 'Routes.ResponseAttachmentPaths',
   RequestAttachmentPaths = 'Routes.RequestAttachmentPaths',
+  InheritApplicationRoles = 'Routes.InheritApplicationRoles',
 }
 
 export enum PublicationsI18nKey {
@@ -643,6 +644,7 @@ export enum EntityPlaceholdersI18nKey {
   Status = 'EntityPlaceholders.Status',
   Order = 'EntityPlaceholders.Order',
   Body = 'EntityPlaceholders.Body',
+  SelectPermission = 'EntityPlaceholders.SelectPermission',
   ConfigurationEndpoint = 'EntityPlaceholders.ConfigurationEndpoint',
   CompletionEndpoint = 'EntityPlaceholders.CompletionEndpoint',
   RateEndpoint = 'EntityPlaceholders.RateEndpoint',

@@ -16,7 +16,6 @@ import EntityHeader from '@/src/components/EntityView/Header/Header';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -53,7 +52,6 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
   const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
-  const { isValid } = useSaveValidationContext();
 
   useEffect(() => {
     setSelectedInterceptor(cloneDeep(originalInterceptor));
@@ -144,7 +142,6 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
           toggleJsonEditor={toggleJsonEditor}
           jsonErrors={jsonErrors}
           setErrorNotifications={setErrorNotifications}
-          hasErrors={!isValid}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
