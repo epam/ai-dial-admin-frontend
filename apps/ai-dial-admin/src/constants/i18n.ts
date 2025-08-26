@@ -54,45 +54,27 @@ export enum AuthI18nKey {
   ModalDescription = 'Auth.ModalDescription',
 }
 
+export enum SettingsModalI18nKey {
+  Settings = 'SettingsModal.Settings',
+  Theme = 'SettingsModal.Theme',
+}
+
 export enum BasicI18nKey {
   None = 'Basic.None',
   Failed = 'Basic.Failed',
   NoData = 'Basic.NoData',
   NoParameters = 'Basic.NoParameters',
   Value = 'Basic.Value',
-  Settings = 'Basic.Settings',
-  Theme = 'Basic.Theme',
   From = 'Basic.From',
   To = 'Basic.To',
-  Browse = 'Basic.Browse',
   AddField = 'Basic.AddField',
-  Move = 'Basic.Move',
   MoveToFolder = 'Basic.MoveToFolder',
   Selected = 'Basic.Selected',
   SelectAll = 'Basic.SelectAll',
-  SaveChangesTitle = 'Basic.SaveChangesTitle',
-  SaveChangesDescription = 'Basic.SaveChangesDescription',
-  SaveParametersTitle = 'Basic.SaveParametersTitle',
-  SaveParametersDescription = 'Basic.SaveParametersDescription',
-  SaveWithEmptyRolesTitle = 'Basic.SaveWithEmptyRolesTitle',
-  SaveWithEmptyRolesDescription = 'Basic.SaveWithEmptyRolesDescription',
-  SaveProceedWithConfiguration = 'Basic.SaveProceedWithConfiguration',
-  Source = 'Basic.Source',
-  Config = 'Basic.Config',
-  View = 'Basic.View',
-  Before = 'Basic.Before',
-  After = 'Basic.After',
   CopiedSuccessfully = 'Basic.CopiedSuccessfully',
-
   Search = 'Basic.Search',
-  Comparison = 'Basic.Comparison',
-  Current = 'Basic.Current',
-  ResetFilters = 'Basic.ResetFilters',
-}
-
-export enum CommonControlsI18nKey {
-  DnDIconFileTitle = 'CommonControls.DnDIconFile',
-  Or = 'CommonControls.Or',
+  Or = 'Basic.Or',
+  And = 'Basic.And',
 }
 
 export enum EntitiesI18nKey {
@@ -119,12 +101,17 @@ export enum EntitiesI18nKey {
   AddApplication = 'Entities.AddApplication',
   AddEntities = 'Entities.AddEntities',
   SourceType = 'Entities.SourceType',
+  Source = 'Entities.Source',
   Endpoints = 'Entities.Endpoints',
   AppRunner = 'Entities.AppRunner',
   InterceptorName = 'Entities.InterceptorName',
   ModelDisplayName = 'Entities.ModelDisplayName',
   ApplicationDisplayName = 'Entities.ApplicationDisplayName',
   ChangeIcon = 'Entities.ChangeIcon',
+  SaveChangesTitle = 'Entities.SaveChangesTitle',
+  SaveChangesDescription = 'Entities.SaveChangesDescription',
+  SaveParametersTitle = 'Entities.SaveParametersTitle',
+  SaveParametersDescription = 'Entities.SaveParametersDescription',
 }
 
 export enum DeleteI18nKey {
@@ -175,13 +162,16 @@ export enum ButtonsI18nKey {
   DeleteAll = 'Buttons.DeleteAll',
   Duplicate = 'Buttons.Duplicate',
   Save = 'Buttons.Save',
+  Move = 'Buttons.Move',
   SaveAsNewVersion = 'Buttons.SaveAsNewVersion',
   Apply = 'Buttons.Apply',
+  Browse = 'Buttons.Browse',
   Discard = 'Buttons.Discard',
   Add = 'Buttons.Add',
   Columns = 'Buttons.Columns',
   Reset = 'Buttons.Reset',
   ResetToDefault = 'Buttons.ResetToDefault',
+  ResetFilters = 'Buttons.ResetFilters',
   Generate = 'Buttons.Generate',
   Approve = 'Buttons.Approve',
   Decline = 'Buttons.Decline',
@@ -287,6 +277,9 @@ export enum RolesI18nKey {
   SpecificLimitsResetTitle = 'Roles.SpecificLimitsResetTitle',
   SpecificLimitsResetDescription = 'Roles.SpecificLimitsResetDescription',
   ResetToDefaultLimits = 'Roles.ResetToDefaultLimits',
+  SaveWithEmptyRolesTitle = 'Roles.SaveWithEmptyRolesTitle',
+  SaveWithEmptyRolesDescription = 'Roles.SaveWithEmptyRolesDescription',
+  SaveProceedWithConfiguration = 'Roles.SaveProceedWithConfiguration',
   NotAvailableModel = 'Roles.NotAvailableModel',
 }
 
@@ -425,6 +418,11 @@ export enum PublicationsI18nKey {
 
 export enum CompareI18nKey {
   CompareChanges = 'Compare.CompareChanges',
+  View = 'Compare.View',
+  Comparison = 'Compare.Comparison',
+  Current = 'Compare.Current',
+  Before = 'Compare.Before',
+  After = 'Compare.After',
 }
 
 export enum PromptsI18nKey {
@@ -479,6 +477,7 @@ export enum ImportI18nKey {
 }
 
 export enum ExportI18nKey {
+  Config = 'Export.Config',
   Structure = 'Export.Structure',
   ExportFormat = 'Export.ExportFormat',
   ExportType = 'Export.ExportType',
@@ -509,13 +508,11 @@ export enum FoldersI18nKey {
   ReviewStructure = 'Folder.ReviewStructure',
   Proposed = 'Folder.Proposed',
   Current = 'Folder.Current',
-  Or = 'Folder.Or',
-  And = 'Folder.And',
+
   AttributeTitle = 'Folder.AttributeTitle',
   AttributePlaceholder = 'Folder.AttributePlaceholder',
   OperationTitle = 'Folder.OperationTitle',
   OperationPlaceholder = 'Folder.OperationPlaceholder',
-  ValueTitle = 'Folder.ValueTitle',
   ValuePlaceholder = 'Folder.ValuePlaceholder',
   RegexPlaceholder = 'Folder.RegexPlaceholder',
   equal = 'Folder.Function.Equal',

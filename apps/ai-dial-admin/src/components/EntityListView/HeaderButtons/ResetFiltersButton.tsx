@@ -4,7 +4,7 @@ import { IconRestore } from '@tabler/icons-react';
 import { GridApi } from 'ag-grid-community';
 
 import Button from '@/src/components/Common/Button/Button';
-import { BasicI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
@@ -45,7 +45,7 @@ const ResetFiltersButton: FC<Props> = ({ gridApi }) => {
 
   return (
     <Button
-      title={t(BasicI18nKey.ResetFilters)}
+      title={t(ButtonsI18nKey.ResetFilters)}
       cssClass="tertiary"
       iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
       onClick={resetFilters}

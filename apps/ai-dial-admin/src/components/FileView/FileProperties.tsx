@@ -58,7 +58,7 @@ const FileProperties: FC<Props> = ({ file, onChangeFile }) => {
 
       <div className="flex flex-col gap-6 pt-6">
         <div className="flex flex-col">
-          <Field fieldTitle={t(BasicI18nKey.Source)} />
+          <Field fieldTitle={t(EntitiesI18nKey.Source)} />
           <Grid columnDefs={columnDefs} rowData={rowData} />
         </div>
         <div className="lg:w-[35%]">
