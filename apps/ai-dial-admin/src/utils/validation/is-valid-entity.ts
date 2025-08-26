@@ -20,7 +20,12 @@ export const isValidEntity = (
   names?: string[],
 ) => {
   // TODO: remove after clear all entity validation
-  if (view === ApplicationRoute.Keys || view === ApplicationRoute.Roles) {
+  if (
+    view === ApplicationRoute.Keys ||
+    view === ApplicationRoute.Roles ||
+    view === ApplicationRoute.InterceptorTemplates ||
+    view === ApplicationRoute.Interceptors
+  ) {
     return true;
   }
 
@@ -38,10 +43,6 @@ export const isValidEntity = (
 
     if (view === ApplicationRoute.Routes) {
       return isValidRoute(entity as DialRoute, isValidSimpleEntity);
-    }
-
-    if (view === ApplicationRoute.Interceptors) {
-      return isValidSimpleEntity;
     }
 
     return isValidSimpleEntity;
