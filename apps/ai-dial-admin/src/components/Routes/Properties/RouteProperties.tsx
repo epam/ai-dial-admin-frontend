@@ -12,9 +12,11 @@ import Paths from '@/src/components/Routes/Paths/Paths';
 import { handleRouteOutputChange } from '@/src/components/Routes/utils';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialAppRoute, DialRoute, RouteOutput } from '@/src/models/dial/route';
+import { DialAppRoute, DialRoute, RouteOutput, RoutePermission } from '@/src/models/dial/route';
 import { RadioButtonModel } from '@/src/models/radio-button';
 import { RadioFieldOrientation } from '@/src/types/radio-orientation';
+import DropdownField from '../../Common/Dropdown/DropdownField';
+import { DropdownItemsModel } from '../../../models/dropdown-item';
 
 interface Props {
   route: DialRoute | DialAppRoute;
@@ -28,6 +30,11 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
   const outputRadio: RadioButtonModel[] = [
     { id: RouteOutput.UPSTREAMS, name: t(EntityFieldsI18nKey.upstreams) },
     { id: RouteOutput.RESPONSE, name: t(EntityFieldsI18nKey.response) },
+  ];
+
+  const items: DropdownItemsModel[] = [
+    { id: 'read', name: t(RoutesI18nKey.Read) },
+    { id: 'write', name: t(RoutesI18nKey.Write) },
   ];
 
   const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE'];
@@ -93,6 +100,19 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
   const onChangeMethods = useCallback(
     (methods: string[]) => {
       updateRoute({ ...route, methods });
+    },
+    [route, updateRoute],
+  );
+
+  const onChangePermissions = useCallback(
+    (value: string) => {
+      const appRoute = route as DialAppRoute;
+      updateRoute({
+        ...route,
+        permissions: appRoute.permissions?.includes(value as RoutePermission)
+          ? appRoute.permissions?.filter((v) => v !== value)
+          : [...(appRoute.permissions || []), value as RoutePermission],
+      });
     },
     [route, updateRoute],
   );
@@ -183,21 +203,18 @@ const RouteProperties: FC<Props> = ({ route, isAppRoute, updateRoute }) => {
         />
 
         <div className="lg:w-[25%] flex flex-col gap-6">
-          {/* // TODO: temp - waiting design */}
-          {/* {isAppRoute && (
+          {isAppRoute && (
             <DropdownField
-              selectedValue={(route as DialAppRoute).permissions || BasicI18nKey.None}
+              placeholder={t(EntityPlaceholdersI18nKey.SelectPermission)}
               elementId="permissions"
               items={items}
+              multipleValues={
+                (route as DialAppRoute).permissions?.map((p) => items.find((i) => i.id === p)?.name as string) || null
+              }
               fieldTitle={t(EntityFieldsI18nKey.permissions)}
-              onChange={(value) => {
-                updateRoute({
-                  ...route,
-                  permissions: value === BasicI18nKey.None ? void 0 : (value as RoutePermission),
-                });
-              }}
+              onChange={onChangePermissions}
             />
-          )} */}
+          )}
           <NumberInputField
             elementId="order"
             fieldTitle={t(EntityFieldsI18nKey.order)}

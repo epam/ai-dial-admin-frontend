@@ -644,6 +644,7 @@ export enum EntityPlaceholdersI18nKey {
   Status = 'EntityPlaceholders.Status',
   Order = 'EntityPlaceholders.Order',
   Body = 'EntityPlaceholders.Body',
+  SelectPermission = 'EntityPlaceholders.SelectPermission',
   ConfigurationEndpoint = 'EntityPlaceholders.ConfigurationEndpoint',
   CompletionEndpoint = 'EntityPlaceholders.CompletionEndpoint',
   RateEndpoint = 'EntityPlaceholders.RateEndpoint',

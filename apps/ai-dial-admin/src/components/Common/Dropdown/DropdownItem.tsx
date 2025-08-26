@@ -14,7 +14,7 @@ interface DropdownMenuItemProps {
   disabled?: boolean;
   isActiveItem?: boolean;
   isMenu?: boolean;
-  multipleValues?: string[];
+  multipleValues?: string[] | null;
   allItemsCount?: number;
   children?: ReactNode;
 }
@@ -97,11 +97,11 @@ const DropdownMenuItem = forwardRef<HTMLButtonElement, DropdownMenuItemProps & B
           {!ItemComponent && dropdownItem && (
             <>
               {dropdownItem.icon && <span className="mr-3 text-icon-secondary">{dropdownItem.icon}</span>}
-              {multipleValues ? (
+              {multipleValues !== undefined ? (
                 <div
                   className={classNames(
                     'rounded border ag-checkbox-input-wrapper',
-                    multipleValues.some((v) => v === dropdownItem.id) && 'ag-checked',
+                    multipleValues?.some((v) => v === dropdownItem.id) && 'ag-checked',
                     allItemsCount === 1 && 'pointer-events-none opacity-60',
                     isIndeterminate(multipleValues, dropdownItem?.id, allItemsCount) && 'ag-indeterminate',
                     isChecked(multipleValues, dropdownItem?.id, allItemsCount) &&

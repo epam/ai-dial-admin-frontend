@@ -81,7 +81,7 @@ export interface DropdownProps {
   isMenu?: boolean;
   prefix?: string;
   dismissRef?: Ref<unknown>;
-  multipleValues?: string[];
+  multipleValues?: string[] | null;
 }
 
 const DropdownMenuComponent = forwardRef<HTMLDivElement, DropdownProps & HTMLProps<HTMLButtonElement>>(
