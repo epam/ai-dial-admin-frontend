@@ -11,11 +11,12 @@ import Endpoint from './Endpoint';
 
 interface Props {
   entity: DialRoute | DialModel;
+  readonly?: boolean;
   onChangeEntity: (entity: DialRoute | DialModel) => void;
   isKeyOptional?: boolean;
 }
 
-const UpstreamEndpoints: FC<Props> = ({ entity, onChangeEntity, isKeyOptional }) => {
+const UpstreamEndpoints: FC<Props> = ({ readonly, entity, onChangeEntity, isKeyOptional }) => {
   const t = useI18n();
 
   const onAddEndpoint = useCallback(() => {
@@ -53,6 +54,7 @@ const UpstreamEndpoints: FC<Props> = ({ entity, onChangeEntity, isKeyOptional })
         {entity.upstreams == null || entity.upstreams.length === 0 ? (
           <Endpoint
             key={0}
+            readonly={readonly}
             endpoint={{}}
             index={0}
             isKeyOptional={isKeyOptional}
@@ -63,6 +65,7 @@ const UpstreamEndpoints: FC<Props> = ({ entity, onChangeEntity, isKeyOptional })
         ) : (
           entity.upstreams?.map((endpoint, index) => (
             <Endpoint
+              readonly={readonly}
               key={index}
               endpoint={endpoint}
               index={index}
@@ -74,14 +77,16 @@ const UpstreamEndpoints: FC<Props> = ({ entity, onChangeEntity, isKeyOptional })
           ))
         )}
       </div>
-      <div>
-        <Button
-          cssClass="secondary"
-          title={t(UpstreamEndpointsI18nKey.AddUpstream)}
-          iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-          onClick={onAddEndpoint}
-        />
-      </div>
+      {!readonly && (
+        <div>
+          <Button
+            cssClass="secondary"
+            title={t(UpstreamEndpointsI18nKey.AddUpstream)}
+            iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+            onClick={onAddEndpoint}
+          />
+        </div>
+      )}
     </div>
   );
 };
