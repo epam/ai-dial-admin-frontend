@@ -39,7 +39,7 @@ const DuplicateScheme: FC<Props> = ({ onDuplicate, modalState, onClose, entity }
 
   // initial validation (disable save when no values entered yet)
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'id', isValid: !!clonedEntity.$id });
+    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!clonedEntity.$id });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

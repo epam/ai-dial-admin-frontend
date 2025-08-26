@@ -55,7 +55,7 @@ const CreateAppRunner: FC<Props> = ({ modalState, onClose, route }) => {
 
   // initial validation (disable save when no values entered yet)
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'id', isValid: !!currentScheme.$id });
+    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!currentScheme.$id });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
