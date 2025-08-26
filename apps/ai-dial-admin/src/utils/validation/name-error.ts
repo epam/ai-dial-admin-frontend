@@ -49,11 +49,11 @@ export const getErrorForName = (
   return null;
 };
 
-export const getErrorForDisplayName = (name?: string, t?: (str: string) => string) => {
-  const isWrongLength = isWrongFieldLength(name || '');
+export const getErrorForDisplayName = (name?: string, required?: boolean, t?: (str: string) => string) => {
+  const isWrongLength = !name && !required ? false : isWrongFieldLength(name || '');
   const tWithArgs = t as (str: string, args?: Record<string, string | number>) => string;
 
-  if (isWrongLength || !name) {
+  if (isWrongLength || (!name && required)) {
     return {
       type: ErrorType.LENGTH,
       text: t ? tWithArgs(ErrorI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS }) : '',

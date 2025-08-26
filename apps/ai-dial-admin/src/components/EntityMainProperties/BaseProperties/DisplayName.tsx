@@ -23,11 +23,11 @@ const DisplayNameControl: FC<Props> = ({ displayName, onChange, required, ...pro
 
   const validateDisplayName = useCallback(
     (displayName?: string) => {
-      const error = getErrorForDisplayName(displayName, t);
+      const error = getErrorForDisplayName(displayName, required, t);
       setDisplayNameError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
     },
-    [dispatch, t],
+    [dispatch, required, t],
   );
 
   const onChangeDisplayName = useCallback(
