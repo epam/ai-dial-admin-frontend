@@ -12,11 +12,12 @@ import Path from './Path';
 
 interface Props {
   title: string;
+  readonly?: boolean;
   paths?: string[];
   onChangePaths: (path: string[]) => void;
 }
 
-const Paths: FC<Props> = ({ title, paths, onChangePaths }) => {
+const Paths: FC<Props> = ({ title, readonly, paths, onChangePaths }) => {
   const t = useI18n();
 
   const onAddPath = useCallback(() => {
@@ -58,6 +59,7 @@ const Paths: FC<Props> = ({ title, paths, onChangePaths }) => {
             <TextInputField
               elementId={'path 0'}
               value={''}
+              disabled={readonly}
               placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
               fieldTitle={title}
               onChange={(value?: string) => onChangePath(0, value)}
@@ -70,6 +72,7 @@ const Paths: FC<Props> = ({ title, paths, onChangePaths }) => {
       ) : (
         paths?.map((path, index) => (
           <Path
+            readonly={readonly}
             key={'path ' + index}
             path={path}
             index={index}
@@ -80,14 +83,16 @@ const Paths: FC<Props> = ({ title, paths, onChangePaths }) => {
           />
         ))
       )}
-      <div>
-        <Button
-          cssClass="secondary"
-          title={t(RoutesI18nKey.AddPaths)}
-          iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-          onClick={onAddPath}
-        />
-      </div>
+      {!readonly && (
+        <div>
+          <Button
+            cssClass="secondary"
+            title={t(RoutesI18nKey.AddPaths)}
+            iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+            onClick={onAddPath}
+          />
+        </div>
+      )}
     </div>
   );
 };

@@ -25,6 +25,7 @@ import WarningIcon from './WarningIcon';
 
 interface Props {
   index: number;
+  readonly?: boolean;
   numEndpoints: number;
   endpoint: DialModelEndpoint;
   isKeyOptional?: boolean;
@@ -32,7 +33,15 @@ interface Props {
   removeEndpoint: (index: number) => void;
 }
 
-const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, updateEndpoint, removeEndpoint }) => {
+const Endpoint: FC<Props> = ({
+  readonly,
+  index,
+  endpoint,
+  isKeyOptional,
+  numEndpoints,
+  updateEndpoint,
+  removeEndpoint,
+}) => {
   const t = useI18n();
   const isFirstLine = index === 0;
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -110,6 +119,7 @@ const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, upd
         >
           <div className="lg:w-[560px]">
             <EndpointControl
+              disabled={readonly}
               id={'upstreamEndpoints ' + index}
               endpoint={endpoint.endpoint}
               elementCssClass="h-[38px]"
@@ -121,6 +131,7 @@ const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, upd
           </div>
 
           <PasswordInputField
+            disabled={readonly}
             elementId={'key ' + index}
             value={endpoint.key}
             placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
@@ -131,6 +142,7 @@ const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, upd
 
           <NumberInputField
             elementId={'weight ' + index}
+            disabled={readonly}
             value={endpoint.weight}
             fieldTitle={isFirstLine || isTablet ? t(EntityFieldsI18nKey.weight) : ''}
             containerCssClass="w-[120px]"
@@ -141,6 +153,7 @@ const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, upd
 
           <NumberInputField
             elementId={'tier ' + index}
+            disabled={readonly}
             value={endpoint.tier}
             fieldTitle={isFirstLine || isTablet ? t(EntityFieldsI18nKey.tier) : ''}
             containerCssClass="w-[120px]"
@@ -152,11 +165,12 @@ const Endpoint: FC<Props> = ({ index, endpoint, isKeyOptional, numEndpoints, upd
           <ExtraDataField
             fieldTitle={isFirstLine || isTablet ? t(EntityFieldsI18nKey.extraData) : ''}
             endpoint={endpoint}
+            disabled={readonly}
             onChangeExtraData={onChangeExtraData}
           />
         </div>
       </div>
-      {(numEndpoints !== 1 || Object.keys(endpoint).length !== 0) && (
+      {(numEndpoints !== 1 || Object.keys(endpoint).length !== 0) && !readonly && (
         <button
           className={classNames('text-error cursor-pointer mt-[10px]', index === 0 && !isTablet && 'lg:mt-[32px]')}
           onClick={onRemove}

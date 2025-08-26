@@ -16,6 +16,7 @@ interface Props {
   selectedRadioValue: string;
   valueCssClasses?: string;
   isValid: boolean;
+  disabled?: boolean;
   radioButtons: RadioButtonWithContent[];
   onChangeRadioField: (id: string) => void;
   onApply: () => void;
@@ -27,6 +28,7 @@ const RadioGroupModalField: FC<Props> = ({
   popupTitle,
   elementId,
   portalId,
+  disabled,
   customInputValue,
   selectedInputValue,
   selectedRadioValue,
@@ -54,6 +56,7 @@ const RadioGroupModalField: FC<Props> = ({
     <div className="flex flex-col">
       <Field fieldTitle={title} htmlFor={elementId} />
       <InputModal
+        readonly={disabled}
         modalState={modalState}
         selectedValue={customInputValue ?? radioButtons.find(({ id }) => id === selectedInputValue)?.name}
         valueCssClasses={valueCssClasses}

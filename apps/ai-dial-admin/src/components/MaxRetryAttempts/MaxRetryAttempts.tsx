@@ -7,10 +7,11 @@ import { DropdownItemsModel } from '@/src/models/dropdown-item';
 
 interface Props {
   maxRetryAttempts?: number;
+  readonly?: boolean;
   onChangeMaxRetryAttempts: (num?: number) => void;
 }
 
-const MaxRetryAttempts: FC<Props> = ({ maxRetryAttempts, onChangeMaxRetryAttempts }) => {
+const MaxRetryAttempts: FC<Props> = ({ readonly, maxRetryAttempts, onChangeMaxRetryAttempts }) => {
   const t = useI18n();
 
   const items: DropdownItemsModel[] = [
@@ -35,6 +36,7 @@ const MaxRetryAttempts: FC<Props> = ({ maxRetryAttempts, onChangeMaxRetryAttempt
         selectedValue={activeMaxAttempts}
         elementId="maxRetryAttempts"
         items={items}
+        disabled={readonly}
         fieldTitle={t(EntityFieldsI18nKey.maxRetryAttempts)}
         onChange={onChange}
       />

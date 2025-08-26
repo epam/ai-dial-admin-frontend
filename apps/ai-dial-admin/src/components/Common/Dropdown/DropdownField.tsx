@@ -12,6 +12,7 @@ interface Props extends InputFieldBaseProps {
   items: DropdownItemsModel[];
   selectedClassName?: string;
   selectedValue?: string;
+  multipleValues?: string[] | null;
   onChange: (value: string) => void;
   prefix?: string;
   children?: ReactNode;
@@ -25,6 +26,7 @@ const DropdownField: FC<Props> = ({
   onChange,
   selectedValue,
   children,
+  multipleValues,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   value,
   ...props
@@ -33,9 +35,20 @@ const DropdownField: FC<Props> = ({
     <div className="flex flex-col w-full">
       <Field fieldTitle={fieldTitle} optional={optional} htmlFor={elementId} />
 
-      <Dropdown {...props} id={elementId} selectedValue={items.find((item) => item.id === selectedValue)}>
+      <Dropdown
+        {...props}
+        id={elementId}
+        selectedValue={items.find((item) => item.id === selectedValue)}
+        multipleValues={multipleValues}
+      >
         {items.map((item, i) => (
-          <DropdownMenuItem id={item.id} key={i} dropdownItem={item} onClick={() => onChange(item.id)} />
+          <DropdownMenuItem
+            id={item.id}
+            key={i}
+            dropdownItem={item}
+            onClick={() => onChange(item.id)}
+            multipleValues={multipleValues}
+          />
         ))}
         {children && <DropdownMenuItem>{children}</DropdownMenuItem>}
       </Dropdown>
