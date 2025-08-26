@@ -25,7 +25,7 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
 
   const validateDisplayName = useCallback(
     (displayName?: string) => {
-      const error = getErrorForDisplayName(displayName, t);
+      const error = getErrorForDisplayName(displayName, true, t);
       dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
     },
     [dispatch, t],
