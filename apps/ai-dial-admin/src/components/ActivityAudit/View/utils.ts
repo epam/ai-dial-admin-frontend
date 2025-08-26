@@ -1,5 +1,3 @@
-import { isEqual } from 'lodash';
-
 import { ModelViewI18nKey } from '@/src/constants/i18n';
 import { NO_LIMITS_KEY } from '@/src/constants/role';
 import { ActivityAuditDiff, ActivityAuditSection } from '@/src/models/dial/activity-audit';
