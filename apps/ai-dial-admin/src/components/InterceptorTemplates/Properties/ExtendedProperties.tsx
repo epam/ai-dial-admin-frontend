@@ -13,14 +13,14 @@ interface Props {
 
 const ExtendedProperties: FC<Props> = ({ template, onChange }) => {
   const onChangeCompletionEndpoint = useCallback(
-    (completionEndpoint: string) => {
+    (completionEndpoint?: string) => {
       onChange({ ...template, completionEndpoint });
     },
     [template, onChange],
   );
 
   const onChangeConfigurationEndpoint = useCallback(
-    (configurationEndpoint: string) => {
+    (configurationEndpoint?: string) => {
       onChange({ ...template, configurationEndpoint });
     },
     [template, onChange],
