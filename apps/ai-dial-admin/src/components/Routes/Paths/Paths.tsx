@@ -43,11 +43,9 @@ const Paths: FC<Props> = ({ title, paths, onChangePaths }) => {
 
   const onChangePath = useCallback(
     (index: number, value?: string) => {
-      if (value) {
-        const newPaths = [...(paths || [])];
-        newPaths[index] = value;
-        onChangePaths(newPaths);
-      }
+      const newPaths = [...(paths || [])];
+      newPaths[index] = value || '';
+      onChangePaths(newPaths);
     },
     [paths, onChangePaths],
   );
