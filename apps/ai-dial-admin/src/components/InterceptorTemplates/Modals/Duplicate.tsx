@@ -4,12 +4,12 @@ import { ButtonsI18nKey, DuplicateI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { PopUpState } from '@/src/types/pop-up';
-import { getErrorForName } from '@/src/utils/validation/name-error';
 
 import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   modalState: PopUpState;
@@ -20,22 +20,24 @@ interface Props {
 }
 const DuplicateTemplate: FC<Props> = ({ onDuplicate, modalState, onClose, template, names }) => {
   const t = useI18n() as (t: string) => string;
+  const { isValid, dispatch } = useSaveValidationContext();
 
   const [clonedTemplate, setTemplate] = useState<InterceptorTemplate>({ ...template, name: `${template.name}_(copy)` });
-  const [isValid, setIsValid] = useState(false);
 
+  // initial validation (disable save when no values entered yet)
   useEffect(() => {
-    setIsValid(!getErrorForName(clonedTemplate.name, names, t));
-  }, [clonedTemplate, names, t]);
+    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!template.name });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Popup
       onClose={onClose}
       heading={t(DuplicateI18nKey.InterceptorTemplate)}
-      portalId="DuplicateKey"
+      portalId="DuplicateTemplate"
       state={modalState}
     >
-      <div className="flex flex-col px-6 py-4">
+      <div className="flex flex-col px-6 py-4 gap-y-6">
         <IdControl entity={clonedTemplate} names={names} onChangeEntity={setTemplate} />
 
         <DisplayNameControl
