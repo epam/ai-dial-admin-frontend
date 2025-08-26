@@ -172,7 +172,7 @@ const PromptProperties: FC<Props> = ({
           </>
         ) : (
           <>
-            <LabeledText label={t(EntityFieldsI18nKey.displayName)} text={prompt.name} copyButton={true} />s
+            <LabeledText label={t(EntityFieldsI18nKey.displayName)} text={prompt.name} copyButton={true} />
             {/* <LabeledText label="Author" text={prompt.author} /> */}
             <LabeledText
               label={t(EntityFieldsI18nKey.updatedAt)}
