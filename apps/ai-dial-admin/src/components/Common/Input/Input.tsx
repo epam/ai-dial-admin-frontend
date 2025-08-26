@@ -3,6 +3,7 @@
 import { ALLOWED_INPUT_KEYS } from '@/src/constants/input';
 import classNames from 'classnames';
 import { ChangeEvent, FC, KeyboardEvent, WheelEvent } from 'react';
+import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 
 export interface InputProps {
   type?: string;
@@ -16,6 +17,7 @@ export interface InputProps {
   onChange?: (value: string) => void;
   min?: number;
   max?: number;
+  customTooltip?: string;
 }
 
 const Input: FC<InputProps> = ({
@@ -29,6 +31,7 @@ const Input: FC<InputProps> = ({
   min,
   max,
   onChange,
+  customTooltip,
 }) => {
   const handleWheel = (e: WheelEvent<HTMLInputElement>) => (e.target as HTMLInputElement).blur();
 
@@ -101,23 +104,24 @@ const Input: FC<InputProps> = ({
 
     onChange?.(newValue);
   };
-
   return (
-    <input
-      type={type}
-      autoComplete="off"
-      id={inputId}
-      data-testid={inputId}
-      placeholder={placeholder}
-      value={value as string | number}
-      disabled={disabled}
-      className={classNames(invalid ? 'input-error' : '', cssClass)}
-      onChange={handleChange}
-      onKeyDown={handleKeyDown}
-      onWheel={handleWheel}
-      min={min}
-      max={max}
-    />
+    <Tooltip tooltip={customTooltip || value}>
+      <input
+        type={type}
+        autoComplete="off"
+        id={inputId}
+        data-testid={inputId}
+        placeholder={placeholder}
+        value={value as string | number}
+        disabled={disabled}
+        className={classNames(invalid ? 'input-error' : '', cssClass)}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        onWheel={handleWheel}
+        min={min}
+        max={max}
+      />
+    </Tooltip>
   );
 };
 
