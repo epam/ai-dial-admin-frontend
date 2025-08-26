@@ -1,10 +1,9 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { FieldError } from '@/src/models/error';
 import { getErrorForName, getErrorForUrlId } from '@/src/utils/validation/name-error';
 
 interface Props<T> {
@@ -13,6 +12,7 @@ interface Props<T> {
   placeholder?: string;
   names?: string[];
   isUrlId?: boolean;
+  isUniqueNameError?: boolean;
   onChangeEntity?: (entity: T) => void;
 }
 
@@ -22,21 +22,27 @@ const IdControl = <T extends { name?: string }>({
   entity,
   names,
   isUrlId,
+  isUniqueNameError,
   onChangeEntity,
 }: Props<T>) => {
   const t = useI18n() as (t: string) => string;
   const { dispatch } = useSaveValidationContext();
 
-  const [nameError, setNameError] = useState<FieldError | null>(null);
+  const nameError = useMemo(() => {
+    return isUrlId
+      ? getErrorForUrlId(entity.name, names, t)
+      : getErrorForName(entity.name, names, t, isUniqueNameError);
+  }, [entity.name, isUniqueNameError, isUrlId, names, t]);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !nameError });
+  }, [nameError, t, dispatch]);
 
   const onChangeName = useCallback(
     (name?: string) => {
-      const error = isUrlId ? getErrorForUrlId(name, names, t) : getErrorForName(name, names, t);
-      setNameError(error);
-      dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
       onChangeEntity?.({ ...entity, name });
     },
-    [dispatch, entity, isUrlId, names, onChangeEntity, t],
+    [entity, onChangeEntity],
   );
 
   return (

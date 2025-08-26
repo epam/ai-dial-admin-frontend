@@ -8,7 +8,7 @@ import { AttachmentsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i
 import { useI18n } from '@/src/locales/client';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { getMaxAttachmentError } from '@/src/utils/validation/is-valid-model';
+import { getMaxAttachmentError } from '@/src/utils/validation/get-max-attachment-error';
 import { mimeMapping } from './constants';
 
 interface Props {

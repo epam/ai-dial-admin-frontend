@@ -55,7 +55,7 @@ const CreateEntity: FC<Props> = ({
     versionsMap ? { name: '', description: '', version: '1.0.0' } : { name: '', description: '' },
   );
 
-  const [isUniqueNameError, setIsUniqueNameError] = useState<boolean | null>(null);
+  const [isUniqueNameError, setIsUniqueNameError] = useState<boolean | undefined>(void 0);
   // TODO: remove after review validation
   const [isValidEntity, setIsValidEntity] = useState<boolean | undefined>(false);
 
@@ -99,7 +99,7 @@ const CreateEntity: FC<Props> = ({
 
   useEffect(() => {
     setIsValidEntity(isValidFn(route, currentEntity, !!versionsMap, names));
-    setIsUniqueNameError(null);
+    setIsUniqueNameError(void 0);
   }, [currentEntity, route, versionsMap, names]);
 
   // initial validation (disable save when no values entered yet)
@@ -125,6 +125,7 @@ const CreateEntity: FC<Props> = ({
             runners={runners}
             entity={currentEntity}
             names={names}
+            isUniqueNameError={isUniqueNameError}
             onChangeEntity={onChangeEntity}
           />
         )}

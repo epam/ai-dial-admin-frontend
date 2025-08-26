@@ -23,6 +23,7 @@ interface Props {
   view: ApplicationRoute;
   entity: DialBaseEntity;
   names: string[];
+  isUniqueNameError?: boolean;
   runners?: DialApplicationScheme[];
   isEntityImmutable?: boolean;
   onChangeEntity: (entity: DialBaseEntity) => void;
@@ -33,6 +34,7 @@ const EntityMainProperties: FC<Props> = ({
   entity,
   runners,
   names,
+  isUniqueNameError,
   onChangeEntity,
   isEntityImmutable = false,
 }) => {
@@ -88,7 +90,9 @@ const EntityMainProperties: FC<Props> = ({
   return (
     <div className="w-full flex flex-col">
       <div className={classNames('flex flex-col gap-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
-        {!isEntityImmutable && <IdControl entity={entity} onChangeEntity={onChangeName} />}
+        {!isEntityImmutable && (
+          <IdControl entity={entity} onChangeEntity={onChangeName} isUniqueNameError={isUniqueNameError} />
+        )}
         <AutocompleteField
           elementId="displayName"
           fieldTitle={t(EntityFieldsI18nKey.displayName)}
