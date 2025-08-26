@@ -311,6 +311,8 @@ export default {
     Embedding: 'Embedding',
   },
   Roles: {
+    DefaultLimits: 'Default limits',
+    DefaultInvitations: 'Default invitation settings',
     NoLimits: 'No Limits',
     AddRoles: 'Add Roles',
     ResetToDefaultLimits: 'Reset to default limits',
@@ -345,6 +347,7 @@ export default {
     Routes: 'App Routes',
     Traces: 'Traces',
     Conversations: 'Conversations',
+    Attachments: 'Attachments',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',
@@ -418,7 +421,11 @@ export default {
   },
   Routes: {
     AddPaths: 'Add paths',
+    RequestAttachmentPaths: 'Request attachment paths',
+    ResponseAttachmentPaths: 'Response attachment paths',
     Output: 'Output',
+    Read: 'Read',
+    Write: 'Write',
   },
   Publications: {
     ReasonTitle: 'Reason',
@@ -663,10 +670,12 @@ export default {
     overrideName: 'Override name',
     properties: 'Properties',
     enabled: 'Default tokens enabled',
-    minute: 'Default tokens per minute',
-    day: 'Default tokens per day',
-    week: 'Default tokens per week',
-    month: 'Default tokens per month',
+    minute: 'Tokens per minute',
+    day: 'Tokens per day',
+    week: 'Tokens per week',
+    month: 'Tokens per month',
+    invitationTtl: 'Expiration time',
+    maxAcceptedUsers: 'Max users',
     interceptors: 'Interceptors',
     roles: 'Roles',
     applications: 'Applications',
@@ -710,6 +719,7 @@ export default {
     content: 'Content',
     rewritePath: 'Rewrite path',
     response: 'Response',
+    permissions: 'Permissions',
   },
   EntityPlaceholders: {
     Project: 'Enter project',

@@ -12,9 +12,24 @@ export interface DialRoute extends DialBaseNamedEntity {
   order?: number;
 }
 
+// AppRoute - routes in the application or app runner
+export interface DialAppRoute extends DialRoute {
+  permissions?: RoutePermission;
+  attachmentPaths?: AttachmentPaths;
+}
+
+export interface AttachmentPaths {
+  requestBody: string[];
+  responseBody: string[];
+}
 export interface RouteResponse {
   status?: number | string;
   body?: string;
+}
+
+export enum RoutePermission {
+  READ = 'read',
+  WRITE = 'write',
 }
 
 export enum RouteOutput {
