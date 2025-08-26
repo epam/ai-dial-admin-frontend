@@ -19,10 +19,11 @@ interface Props {
   roles?: DialRole[] | null;
   routes?: DialAppRoute[];
   parentRoleLimits?: DialRoleLimitsMap;
+  readonly?: boolean;
   onChangeRoutes: (routes: DialAppRoute[]) => void;
 }
 
-const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, routes, onChangeRoutes }) => {
+const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, routes, onChangeRoutes }) => {
   const t = useI18n() as (str: string) => string;
 
   const [modalState, setModalState] = useState(PopUpState.Closed);
@@ -101,6 +102,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, routes, onChangeRout
               roles={roles || []}
               parentRoles={Object.keys(parentRoleLimits || {})}
               onChangeRoute={onChangeRoute}
+              readonly={true}
             />
           )}
         </div>

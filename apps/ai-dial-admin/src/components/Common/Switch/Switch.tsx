@@ -7,6 +7,7 @@ interface Props {
   title: string;
   switchId: string;
   isOn?: boolean;
+  disabled?: boolean;
   onChange?: (value: boolean) => void;
 }
 

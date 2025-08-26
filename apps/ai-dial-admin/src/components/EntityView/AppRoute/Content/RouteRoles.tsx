@@ -18,6 +18,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import AddEntitiesGrid from '../../AddEntitiesGrid';
+import NoDataContent from '@/src/components/Common/NoData/NoData';
 
 interface Props {
   parentRoles?: string[];
@@ -79,9 +80,12 @@ const RouteRoles: FC<Props> = ({ route, parentRoles, readonly, onChangeRoute, ro
   };
 
   const columns = useMemo(() => {
-    return isInherited
-      ? SIMPLE_ENTITY_COLUMNS
-      : [...SIMPLE_ENTITY_COLUMNS, ACTION_COLUMN([getOpenInNewTabOperation(onOpen), getRemoveOperation(onRemoveRole)])];
+    const actions = [getOpenInNewTabOperation(onOpen)];
+    if (!isInherited) {
+      actions.push(getRemoveOperation(onRemoveRole));
+    }
+
+    return [...SIMPLE_ENTITY_COLUMNS, ACTION_COLUMN(actions)];
   }, [isInherited, onRemoveRole]);
 
   return (
@@ -110,7 +114,11 @@ const RouteRoles: FC<Props> = ({ route, parentRoles, readonly, onChangeRoute, ro
         </div>
         <div className="flex-1 min-h-0">
           <div className="h-full">
-            <Grid columnDefs={columns} rowData={data} />
+            {data.length > 0 ? (
+              <Grid columnDefs={columns} rowData={data} />
+            ) : (
+              <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoRoles)} />
+            )}
           </div>
         </div>
       </div>

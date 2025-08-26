@@ -163,11 +163,13 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
           isOn={route.rewritePath}
           title={t(EntityFieldsI18nKey.rewritePath)}
           switchId="RewritePath"
+          disabled={readonly}
           onChange={onChangeRewritePath}
         />
 
         <Multiselect
           elementId="methods"
+          readonly={readonly}
           selectedItems={route.methods}
           onChangeItems={onChangeMethods}
           heading={t(EntityFieldsI18nKey.methods)}
@@ -189,6 +191,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
           <div className="flex lg:w-[60%]">
             <div className="mr-2">
               <NumberInputField
+                disabled={readonly}
                 elementId="status"
                 fieldTitle={t(EntityFieldsI18nKey.status)}
                 placeholder={t(EntityPlaceholdersI18nKey.Status)}
@@ -200,6 +203,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
             </div>
             <div className="flex-1">
               <TextInputField
+                disabled={readonly}
                 elementId="body"
                 fieldTitle={t(EntityFieldsI18nKey.body)}
                 placeholder={t(EntityPlaceholdersI18nKey.Body)}
@@ -209,10 +213,11 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
             </div>
           </div>
         ) : (
-          <UpstreamEndpoints entity={route} onChangeEntity={updateRoute} />
+          <UpstreamEndpoints readonly={readonly} entity={route} onChangeEntity={updateRoute} />
         )}
 
         <MaxRetryAttempts
+          readonly={readonly}
           maxRetryAttempts={route.maxRetryAttempts}
           onChangeMaxRetryAttempts={onChangeMaxRetryAttempts}
         />
@@ -220,6 +225,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
         <div className="lg:w-[25%] flex flex-col gap-6">
           {isAppRoute && (
             <DropdownField
+              disabled={readonly}
               placeholder={t(EntityPlaceholdersI18nKey.SelectPermission)}
               elementId="permissions"
               items={permissionsItems}
@@ -230,6 +236,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
           )}
           <NumberInputField
             elementId="order"
+            disabled={readonly}
             fieldTitle={t(EntityFieldsI18nKey.order)}
             placeholder={t(EntityPlaceholdersI18nKey.Order)}
             value={route.order}
