@@ -7,7 +7,6 @@ import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import { isValidAdapter } from '@/src/utils/validation/is-valid-adapter';
 import { isValidModel } from '@/src/utils/validation/is-valid-model';
 import { isValidRoute } from '@/src/utils/validation/is-valid-route';
 import { getErrorForName, isWrongLengthWithView } from '@/src/utils/validation/name-error';
@@ -24,16 +23,13 @@ export const isValidEntity = (
     view === ApplicationRoute.Keys ||
     view === ApplicationRoute.Roles ||
     view === ApplicationRoute.InterceptorTemplates ||
-    view === ApplicationRoute.Interceptors
+    view === ApplicationRoute.Interceptors ||
+    view === ApplicationRoute.Adapters
   ) {
     return true;
   }
 
   if (isSimpleEntity(view)) {
-    if (view === ApplicationRoute.Adapters) {
-      return isValidAdapter(entity as DialAdapter, names);
-    }
-
     if (view === ApplicationRoute.ApplicationRunners) {
       const id = (entity as DialApplicationScheme).$id;
       return !!id && id.length <= MAX_RUNNER_ID_SYMBOLS && !getErrorForDescription(entity.description);
