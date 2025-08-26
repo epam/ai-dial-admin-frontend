@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, useCallback } from 'react';
 
 import { FieldControlProps } from '@/src/models/field-control-props';
 import { BasicI18nKey } from '@/src/constants/i18n';
@@ -88,9 +88,17 @@ export const NumberInputField: FC<NumberInputFieldProps> = ({ onChange, value, .
 };
 
 export interface TextInputFieldProps extends InputFieldBaseProps {
-  onChange?: (value: string) => void;
+  onChange?: (value?: string) => void;
 }
 
 export const TextInputField: FC<TextInputFieldProps> = ({ onChange, ...props }) => {
-  return <InputField type="text" onChange={(v) => onChange?.(v as string)} {...props} />;
+  const onChangeValue = useCallback(
+    (value?: string | number) => {
+      const valueStr = (value as string).trim();
+      onChange?.(!valueStr ? void 0 : valueStr);
+    },
+    [onChange],
+  );
+
+  return <InputField type="text" onChange={onChangeValue} {...props} />;
 };

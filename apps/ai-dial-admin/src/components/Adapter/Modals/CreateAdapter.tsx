@@ -43,14 +43,10 @@ const CreateAdapter: FC<Props> = ({ modalState, onClose, names }) => {
   );
 
   const onCreate = useCallback(() => {
-    const entity = {
-      ...currentAdapter,
-      name: currentAdapter.name?.trim(),
-    };
-    createAdapter(entity).then((res) => {
+    createAdapter(currentAdapter).then((res) => {
       if (res.success) {
         const originalRoute = ApplicationRoute.Adapters.split('/')[1];
-        router.push(`${originalRoute}/${getEntityPath(ApplicationRoute.Adapters, res.response || entity)}`);
+        router.push(`${originalRoute}/${getEntityPath(ApplicationRoute.Adapters, res.response || currentAdapter)}`);
         onClose();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
