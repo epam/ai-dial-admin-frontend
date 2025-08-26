@@ -40,7 +40,7 @@ const DropdownSelectedItem: FC<Props> = ({
     >
       {selectedValue?.name ? (
         <>
-          <Tooltip tooltip={selectedValue?.name} triggerClassName="flex-1 min-w-0">
+          <Tooltip tooltip={selectedValue?.name} triggerClassName="flex-1 min-w-0 flex items-center">
             {selectedValue.icon && <span className="mr-2 text-icon-primary">{selectedValue.icon}</span>}
             <span className={selectedValueClassNames}>
               {prefix}

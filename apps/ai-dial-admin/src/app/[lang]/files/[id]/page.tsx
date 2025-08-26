@@ -6,6 +6,7 @@ import { addTrailingSlash, getFolderNameAndPath } from '@/src/utils/files/path';
 import FileView from '@/src/components/FileView/FileView';
 import { logger } from '@/src/server/logger';
 import Page403 from '@/src/components/Page403/Page403';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,5 +29,9 @@ export default async function Page(params: { searchParams: Promise<{ path: strin
     redirect(ApplicationRoute.Files);
   }
 
-  return <FileView originalFile={file}></FileView>;
+  return (
+    <SaveValidationContextProvider>
+      <FileView originalFile={file}></FileView>
+    </SaveValidationContextProvider>
+  );
 }

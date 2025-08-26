@@ -39,7 +39,7 @@ const ApplicationProperties: FC<Props> = ({ publication }) => {
   return application ? (
     <div className="flex flex-col gap-y-6 h-full">
       <Tabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab as ApplicationPublicationTab)} />
-      <div className="flex-1 min-h-0 pt-[25px] lg:pt-0 lg:w-[35%]">
+      <div className="flex-1 min-h-0 pt-[25px] lg:pt-0">
         {selectedTab === ApplicationPublicationTab.Properties && <ApplicationInfo application={application} />}
         {selectedTab === ApplicationPublicationTab.Parameters && <ApplicationParametersTab entity={application} />}
         {selectedTab === ApplicationPublicationTab.Files && <FilesProperties publication={publication} />}
