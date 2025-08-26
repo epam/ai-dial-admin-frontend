@@ -1,5 +1,3 @@
-import { isEqual } from 'lodash';
-
 import { ModelViewI18nKey } from '@/src/constants/i18n';
 import { NO_LIMITS_KEY } from '@/src/constants/role';
 import { ActivityAuditDiff, ActivityAuditSection } from '@/src/models/dial/activity-audit';
@@ -10,6 +8,7 @@ import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus } from '@/sr
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
 import { roleLimitsKeys } from '@/src/components/ActivityAudit/View/DiffReport/utils';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 const dateKeys = ['expiresAt', 'keyGeneratedAt', 'createdAt', 'updatedAt'];
 const appRunnerParameterKeys = ['properties', '$defs'];
@@ -540,7 +539,7 @@ export const compareRoleLimits = (
         value: convertRoleLimitsIntoString(value2),
         status: isCurrent ? DiffStatus.MIRROR : DiffStatus.ADDED,
       });
-    } else if (value1 != null && value2 != null && !isEqual(value1, value2)) {
+    } else if (value1 != null && value2 != null && !isEqualSkippingUndefined(value1, value2)) {
       diffs.push({ parameter: key, value: convertRoleLimitsIntoString(value2), status: DiffStatus.CHANGED });
     } else {
       diffs.push({ parameter: key, value: convertRoleLimitsIntoString(value1) });
@@ -901,7 +900,7 @@ export const mergeEntityMaps = (
       }
 
       if (currentEntity && previousEntity) {
-        if (isEqual(currentEntity, previousEntity)) {
+        if (isEqualSkippingUndefined(currentEntity, previousEntity)) {
           return currentEntity as unknown as EntitiesGridData;
         } else {
           return { ...currentEntity, status: DiffStatus.CHANGED };

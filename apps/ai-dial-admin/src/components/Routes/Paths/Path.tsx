@@ -16,7 +16,7 @@ interface Props {
   readonly?: boolean;
   allPaths?: string[];
   onRemove: (index: number) => void;
-  onChangePath: (index: number, value: string) => void;
+  onChangePath: (index: number, value?: string) => void;
 }
 
 const Path: FC<Props> = ({ index, path, readonly, fieldTitle, allPaths, onRemove, onChangePath }) => {

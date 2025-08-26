@@ -28,7 +28,7 @@ const IdControl = <T extends { name?: string }>({
   const [nameError, setNameError] = useState<FieldError | null>(null);
 
   const onChangeName = useCallback(
-    (name: string) => {
+    (name?: string) => {
       const error = getErrorForName(name, names, t);
       setNameError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });

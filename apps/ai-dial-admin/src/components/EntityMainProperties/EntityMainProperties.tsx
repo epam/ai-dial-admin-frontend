@@ -58,8 +58,7 @@ const EntityMainProperties: FC<Props> = ({
   );
 
   const onChangeDisplayName = useCallback(
-    (name: string) => {
-      const displayName = name.trim();
+    (displayName: string) => {
       setIsVersionOptional(!names.includes(displayName));
       setDisplayNameError(
         getDisplayNameError(view, displayName as string, names, t, (entity as DialModel).displayVersion),
@@ -79,7 +78,7 @@ const EntityMainProperties: FC<Props> = ({
   }, [versionError, t, view, dispatch]);
 
   const onChangeVersion = useCallback(
-    (displayVersion: string) => {
+    (displayVersion?: string) => {
       onChangeEntity({ ...entity, displayVersion } as DialModel);
       setDisplayNameError(getDisplayNameError(view, entity.displayName as string, names, t, displayVersion));
     },

@@ -49,10 +49,10 @@ const Endpoint: FC<Props> = ({
   const isTablet = useIsTabletScreen();
 
   const onChangeEndPointUrl = useCallback(
-    (url: string) => {
+    (url?: string) => {
       updateEndpoint({ ...endpoint, endpoint: url });
 
-      setEndpointWarning(url === '' ? '' : isDangerEndpoint(url) ? t(ErrorI18nKey.WarningEndpoint) : '');
+      setEndpointWarning(!url ? '' : isDangerEndpoint(url) ? t(ErrorI18nKey.WarningEndpoint) : '');
     },
     [endpoint, updateEndpoint, t],
   );

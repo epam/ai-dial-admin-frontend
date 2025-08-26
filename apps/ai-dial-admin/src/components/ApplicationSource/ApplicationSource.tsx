@@ -43,7 +43,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
   const { dispatch } = useSaveValidationContext();
 
   const onChangeEndpoint = useCallback(
-    (endpoint: string) => {
+    (endpoint?: string) => {
       onChangeEntity({ ...entity, endpoint });
     },
     [entity, onChangeEntity],
@@ -70,14 +70,14 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
   );
 
   const onChangeViewerUrl = useCallback(
-    (viewerUrl: string) => {
+    (viewerUrl?: string) => {
       onChangeEntity({ ...entity, viewerUrl });
     },
     [entity, onChangeEntity],
   );
 
   const onChangeEditorUrl = useCallback(
-    (editorUrl: string) => {
+    (editorUrl?: string) => {
       onChangeEntity({ ...entity, editorUrl });
     },
     [entity, onChangeEntity],

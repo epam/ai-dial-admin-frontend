@@ -43,9 +43,9 @@ const Paths: FC<Props> = ({ title, readonly, paths, onChangePaths }) => {
   );
 
   const onChangePath = useCallback(
-    (index: number, value: string) => {
+    (index: number, value?: string) => {
       const newPaths = [...(paths || [])];
-      newPaths[index] = value;
+      newPaths[index] = value || '';
       onChangePaths(newPaths);
     },
     [paths, onChangePaths],
@@ -62,7 +62,7 @@ const Paths: FC<Props> = ({ title, readonly, paths, onChangePaths }) => {
               disabled={readonly}
               placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
               fieldTitle={title}
-              onChange={(value) => onChangePath(0, value)}
+              onChange={(value?: string) => onChangePath(0, value)}
             />
           </div>
           <button disabled={true} aria-label="button" className={classNames('cursor-pointer ml-[10px] mt-[20px]')}>

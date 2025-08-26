@@ -11,14 +11,14 @@ interface Props {
 
 const Endpoints: FC<Props> = ({ entity, onChange }) => {
   const onChangeCompletionEndpoint = useCallback(
-    (endpoint: string) => {
+    (endpoint?: string) => {
       onChange({ ...entity, endpoint });
     },
     [entity, onChange],
   );
 
   const onChangeConfigurationEndpoint = useCallback(
-    (configurationEndpoint: string) => {
+    (configurationEndpoint?: string) => {
       onChange({ ...entity, configurationEndpoint });
     },
     [entity, onChange],

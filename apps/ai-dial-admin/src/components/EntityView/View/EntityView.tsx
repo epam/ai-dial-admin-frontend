@@ -30,10 +30,11 @@ import {
 } from '@epam/ai-dial-shared';
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 import classNames from 'classnames';
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 import ViewContent from './ViewContent';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   view: ApplicationRoute;
@@ -121,7 +122,7 @@ const EntityView: FC<Props> = ({
   }, []);
 
   useEffect(() => {
-    setIsChanged(!isEqual(originalEntity, selectedEntity));
+    setIsChanged(!isEqualSkippingUndefined(originalEntity, selectedEntity));
   }, [selectedEntity, originalEntity]);
 
   useEffect(() => {

@@ -20,11 +20,11 @@ describe('View', () => {
     render(<View route={ApplicationRoute.InterceptorTemplates} template={template} />);
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Delete })).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: EntityFieldsI18nKey.completionEndpoint })).toHaveValue(
-      template.completionEndpoint,
-    );
-    expect(screen.getByRole('textbox', { name: FeaturesI18nKey.configurationEndpoint })).toHaveValue(
-      template.configurationEndpoint,
-    );
+    expect(
+      screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.completionEndpoint} (Optional)` }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('textbox', { name: `${FeaturesI18nKey.configurationEndpoint} (Optional)` }),
+    ).toBeInTheDocument();
   });
 });

@@ -12,7 +12,7 @@ interface Props {
   required?: boolean;
   readonly?: boolean;
   disabled?: boolean;
-  onChange?: (displayName: string) => void;
+  onChange?: (displayName?: string) => void;
 }
 
 const DisplayNameControl: FC<Props> = ({ displayName, onChange, required, ...props }) => {
@@ -31,7 +31,7 @@ const DisplayNameControl: FC<Props> = ({ displayName, onChange, required, ...pro
   );
 
   const onChangeDisplayName = useCallback(
-    (value: string) => {
+    (value?: string) => {
       validateDisplayName(value);
       onChange?.(value);
     },
