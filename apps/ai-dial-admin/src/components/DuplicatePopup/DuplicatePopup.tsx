@@ -31,7 +31,7 @@ const DuplicatePopup: FC<Props> = ({ onDuplicate, names, view, modalState, onClo
   const { isValid, dispatch } = useSaveValidationContext();
 
   const [clonedEntity, setEntity] = useState<ClonedEntity>(
-    isSimple ? { ...entity, name: '' } : { ...entity, name: '', displayVersion: '', displayName: '' },
+    isSimple ? { ...entity, name: void 0 } : { ...entity, name: void 0, displayVersion: void 0, displayName: void 0 },
   );
 
   const heading = duplicateModalTitleMap[view as string];
@@ -67,7 +67,11 @@ const DuplicatePopup: FC<Props> = ({ onDuplicate, names, view, modalState, onClo
           <DisplayNameControl displayName={clonedEntity.displayName} onChange={onChangeDisplayName} />
 
           {view === ApplicationRoute.Models && (
-            <VersionControl version={(clonedEntity as DialModel).displayVersion} onChange={onChangeVersion} />
+            <VersionControl
+              version={(clonedEntity as DialModel).displayVersion}
+              onChange={onChangeVersion}
+              optional={true}
+            />
           )}
         </div>
       </div>

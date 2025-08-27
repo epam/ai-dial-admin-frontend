@@ -19,6 +19,7 @@ import Button from '@/src/components/Common/Button/Button';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { ApplicationRoute } from '@/src/types/routes';
 import classNames from 'classnames';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   fieldTitle: string;
@@ -47,10 +48,18 @@ const SourceEntitySelector: FC<Props> = ({
 }) => {
   const t = useI18n();
   const currentLocale = useCurrentLocale();
+  const { dispatch } = useSaveValidationContext();
 
   const [modalState, setIsModalState] = useState(PopUpState.Closed);
   const [valueTitle, setValueTitle] = useState('');
-  const [errorText, setErrorText] = useState('');
+
+  const errorText = useMemo(() => {
+    return !optional ? (selectedValue ? '' : t(ErrorI18nKey.RequiredField)) : void 0;
+  }, [optional, selectedValue, t]);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'sourceEntitySelector', isValid: !errorText });
+  }, [errorText, t, dispatch]);
 
   const onOpenModal = useCallback(() => {
     setIsModalState(PopUpState.Opened);
@@ -78,11 +87,8 @@ const SourceEntitySelector: FC<Props> = ({
       onChangeValue(value);
 
       onCloseModal();
-      if (!optional) {
-        setErrorText(value ? '' : t(ErrorI18nKey.RequiredField));
-      }
     },
-    [onChangeValue, onCloseModal, optional, t],
+    [onChangeValue, onCloseModal],
   );
 
   const openInNewTab = useCallback(() => {
