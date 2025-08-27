@@ -8,7 +8,7 @@ import classNames from 'classnames';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TagInput from '@/src/components/Common/TagInput/TagInput';
-import { ErrorI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ErrorI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialRule, RuleFunction } from '@/src/models/dial/rule';
@@ -131,7 +131,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
             <TextInputField
               elementId={'upstreamEndpoints ' + index}
               value={rule.targets?.[0]}
-              fieldTitle={isFirstLine ? t(FoldersI18nKey.ValueTitle) : ''}
+              fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
               placeholder={t(FoldersI18nKey.RegexPlaceholder)}
               onChange={onChangeRegex}
               errorText={errorText}
@@ -141,7 +141,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
           ) : (
             <TagInput
               elementId="rule-values"
-              fieldTitle={isFirstLine ? t(FoldersI18nKey.ValueTitle) : ''}
+              fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
               placeholder={t(FoldersI18nKey.ValuePlaceholder)}
               initialTags={rule.targets}
               onChange={onChangeTags}

@@ -2,7 +2,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { FC } from 'react';
 import { createPortal } from 'react-dom';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
-import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ModalType } from './constants';
 
@@ -24,8 +24,8 @@ const EntityViewModals: FC<Props> = ({ modalState, modalType, handleConfirm, han
         createPortal(
           <ConfirmationModal
             modalState={modalState}
-            heading={t(BasicI18nKey.SaveChangesTitle)}
-            description={t(BasicI18nKey.SaveChangesDescription)}
+            heading={t(EntitiesI18nKey.SaveChangesTitle)}
+            description={t(EntitiesI18nKey.SaveChangesDescription)}
             confirmLabel={t(ButtonsI18nKey.Save)}
             cancelLabel={t(ButtonsI18nKey.OpenWithoutSave)}
             onConfirm={() => handleConfirm(ModalType.entity)}
@@ -39,8 +39,8 @@ const EntityViewModals: FC<Props> = ({ modalState, modalType, handleConfirm, han
         createPortal(
           <ConfirmationModal
             modalState={modalState}
-            heading={t(BasicI18nKey.SaveParametersTitle)}
-            description={t(BasicI18nKey.SaveParametersDescription)}
+            heading={t(EntitiesI18nKey.SaveParametersTitle)}
+            description={t(EntitiesI18nKey.SaveParametersDescription)}
             confirmLabel={t(ButtonsI18nKey.Save)}
             cancelLabel={t(ButtonsI18nKey.LeaveWithoutSave)}
             onConfirm={() => handleConfirm(ModalType.parameters)}
@@ -54,7 +54,7 @@ const EntityViewModals: FC<Props> = ({ modalState, modalType, handleConfirm, han
         createPortal(
           <ConfirmationModal
             modalState={modalState}
-            heading={t(BasicI18nKey.SaveWithEmptyRolesTitle)}
+            heading={t(RolesI18nKey.SaveWithEmptyRolesTitle)}
             confirmLabel={t(ButtonsI18nKey.Save)}
             cancelLabel={t(ButtonsI18nKey.ContinueEditing)}
             containerClassName="lg:!max-w-[440px]"
@@ -63,8 +63,8 @@ const EntityViewModals: FC<Props> = ({ modalState, modalType, handleConfirm, han
             onCancel={() => handleCancel(ModalType.emptyRoles)}
           >
             <div className="text-secondary small-150 px-6 py-4">
-              <p className="mb-2">{t(BasicI18nKey.SaveWithEmptyRolesDescription)}</p>
-              <p className="small-text-semi">{t(BasicI18nKey.SaveProceedWithConfiguration)}</p>
+              <p className="mb-2">{t(RolesI18nKey.SaveWithEmptyRolesDescription)}</p>
+              <p className="small-text-semi">{t(RolesI18nKey.SaveProceedWithConfiguration)}</p>
             </div>
           </ConfirmationModal>,
           document.body,
