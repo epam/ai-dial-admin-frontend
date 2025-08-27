@@ -16,7 +16,6 @@ export interface DialRoute extends DialBaseNamedEntity {
 export interface DialAppRoute extends DialRoute {
   permissions?: RoutePermission[];
   attachmentPaths?: AttachmentPaths;
-  userRoles?: string[];
 }
 
 export interface AttachmentPaths {

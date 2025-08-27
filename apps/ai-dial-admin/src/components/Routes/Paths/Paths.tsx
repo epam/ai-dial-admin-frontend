@@ -65,9 +65,11 @@ const Paths: FC<Props> = ({ title, readonly, paths, onChangePaths }) => {
               onChange={(value?: string) => onChangePath(0, value)}
             />
           </div>
-          <button disabled={true} aria-label="button" className={classNames('cursor-pointer ml-[10px] mt-[20px]')}>
-            <IconTrash {...BASE_ICON_PROPS} />
-          </button>
+          {!readonly && (
+            <button disabled={true} aria-label="button" className={classNames('cursor-pointer ml-[10px] mt-[20px]')}>
+              <IconTrash {...BASE_ICON_PROPS} />
+            </button>
+          )}
         </div>
       ) : (
         paths?.map((path, index) => (
