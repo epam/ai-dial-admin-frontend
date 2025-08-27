@@ -10,8 +10,8 @@ const mockT = vi.fn().mockReturnValue('Translated Text');
 describe('Validation :: getErrorForUrlId', () => {
   const t = (s: string) => s;
   test('Should clear all field', () => {
-    const res1 = getErrorForUrlId('id');
-    const res2 = getErrorForUrlId('id', t);
+    const res1 = getErrorForUrlId('id', []);
+    const res2 = getErrorForUrlId('id', [], t);
 
     expect(res1).toEqual({
       text: '',
@@ -25,8 +25,8 @@ describe('Validation :: getErrorForUrlId', () => {
   });
 
   test('Should clear all field', () => {
-    const res1 = getErrorForUrlId(`https://ai-dial-test.com${new Array(851).fill('a').join()}`);
-    const res2 = getErrorForUrlId(`https://ai-dial-test.com${new Array(851).fill('a').join()}`, t);
+    const res1 = getErrorForUrlId(`https://ai-dial-test.com${new Array(851).fill('a').join()}`, []);
+    const res2 = getErrorForUrlId(`https://ai-dial-test.com${new Array(851).fill('a').join()}`, [], t);
 
     expect(res1).toEqual({
       text: '',
@@ -92,8 +92,8 @@ describe('Utils :: validations :: getErrorForName', () => {
   });
 
   test('Should return translated error for not unique name', () => {
-    const res1 = getErrorForName('name', ['names'], mockT, true);
-    const res2 = getErrorForName('name', ['names'], void 0, true);
+    const res1 = getErrorForName('names', ['names'], mockT, true);
+    const res2 = getErrorForName('names', ['names'], void 0, true);
 
     expect(res1).toEqual({
       type: ErrorType.EXISTING,
