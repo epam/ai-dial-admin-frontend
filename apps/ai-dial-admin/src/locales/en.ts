@@ -240,7 +240,12 @@ export default {
     Object: 'Object',
     Boolean: 'Boolean',
     String: 'String',
+    Number: 'Number',
     JSON: 'JSON',
+  },
+  Boolean: {
+    true: 'True',
+    false: 'False',
   },
   Buttons: {
     Copy: 'Copy',
@@ -257,6 +262,7 @@ export default {
     Import: 'Import',
     Export: 'Export',
     Add: 'Add',
+    AddDefault: 'Add default',
     Columns: 'Columns',
     Reset: 'Reset',
     ResetToDefault: 'Reset to default',
@@ -757,6 +763,7 @@ export default {
     TruncatePromptEndpoint: 'Enter truncate prompt endpoint',
     KeyValue: 'Enter value or generate',
     SelectPermission: 'Select permission',
+    Key: 'Enter key',
   },
   Error: {
     ServerError: 'Server Error',

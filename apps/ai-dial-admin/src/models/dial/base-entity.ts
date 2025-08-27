@@ -27,7 +27,10 @@ export interface DialBaseEntity extends DialBaseNamedEntity {
   interceptors?: string[];
   features?: DialFeatures;
   dependencies?: string[];
+  defaults?: Record<string, DefaultsValue>;
 }
+
+export type DefaultsValue = string | number | boolean;
 
 export type DialRoleLimitsMap = Record<string, DialRoleLimits>;
 export type DialRoleShareMap = Record<string, DialRoleShare>;
