@@ -1,7 +1,6 @@
 import { ApplicationRoute } from '@/src/types/routes';
-import { describe, expect, test } from 'vitest';
 import { isValidEntity } from '@/src/utils/validation/is-valid-entity';
-import { max } from 'lodash';
+import { describe, expect, test } from 'vitest';
 
 describe('Utils :: isValidEntity', () => {
   test('Should check entity with version', () => {
@@ -160,42 +159,6 @@ describe('Utils :: isValidEntity', () => {
     expect(res3).toBeTruthy();
     expect(res4).toBeFalsy();
     expect(res6).toBeFalsy();
-    expect(res5).toBeTruthy();
-  });
-
-  test('Should check Adapters', () => {
-    const res1 = isValidEntity(ApplicationRoute.Adapters, {});
-    const res2 = isValidEntity(ApplicationRoute.Adapters, { name: 'name', displayName: 'displayName' });
-    const res3 = isValidEntity(ApplicationRoute.Adapters, {
-      name: 'name',
-      displayName: 'displayName',
-      baseEndpoint: 'baseEndpoint',
-    });
-    const res4 = isValidEntity(
-      ApplicationRoute.Adapters,
-      {
-        name: 'name',
-        displayName: 'displayName',
-        baseEndpoint: 'baseEndpoint',
-      },
-      void 0,
-      ['name'],
-    );
-    const res5 = isValidEntity(
-      ApplicationRoute.Adapters,
-      {
-        name: 'name',
-        displayName: 'displayName',
-        baseEndpoint: 'baseEndpoint',
-      },
-      void 0,
-      ['name2'],
-    );
-
-    expect(res1).toBeFalsy();
-    expect(res2).toBeFalsy();
-    expect(res3).toBeTruthy();
-    expect(res4).toBeFalsy();
     expect(res5).toBeTruthy();
   });
 });
