@@ -75,7 +75,7 @@ const ViewContent: FC<Props> = ({
       {activeTab === EntityViewTab.Properties && (
         <div className="flex flex-col h-full w-full">
           <EntityHeader entity={selectedEntity} />
-          <div className="flex-1 min-h-0">{getPropertiesView()}</div>
+          <div className="flex-1 min-h-0 pt-4">{getPropertiesView()}</div>
         </div>
       )}
       {activeTab === EntityViewTab.Features && (

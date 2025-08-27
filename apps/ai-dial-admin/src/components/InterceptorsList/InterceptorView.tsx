@@ -160,7 +160,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
             {activeTab === EntityViewTab.Properties && (
               <>
                 <EntityHeader entity={selectedInterceptor} />
-                <div className="flex-1 min-h-0">
+                <div className="flex-1 min-h-0 pt-4">
                   <InterceptorProperties
                     selectedInterceptor={selectedInterceptor}
                     onChangeInterceptor={onChangeInterceptor}

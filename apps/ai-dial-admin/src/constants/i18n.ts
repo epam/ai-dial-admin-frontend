@@ -255,7 +255,6 @@ export enum AttachmentsI18nKey {
   AllAttachments = 'Attachments.AllAttachments',
   CustomAttachments = 'Attachments.CustomAttachments',
   MaxNumber = 'Attachments.MaxNumber',
-  MaxNumberError = 'Attachments.MaxNumberError',
   UseAll = 'Attachments.UseAll',
   UseAllAttachment = 'Attachments.UseAllAttachment',
 }
@@ -602,6 +601,7 @@ export enum ErrorI18nKey {
   InvalidPath = 'Error.InvalidPath',
   InvalidStatus = 'Error.InvalidStatus',
   EditorErrorLine = 'Error.EditorErrorLine',
+  MaxNumberError = 'Error.MaxNumberError',
 }
 
 export enum SourceI18nKey {

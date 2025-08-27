@@ -19,6 +19,7 @@ import { DropdownProps } from '../DropdownComponent';
 import { dropdownMenuClassNames } from '../constants';
 import DropdownAutocompleteItem from './DropdownAutocompleteItem';
 import classNames from 'classnames';
+import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 
 export interface DropdownAutocompleteProps extends DropdownProps {
   inputId: string;
@@ -94,25 +95,27 @@ const DropdownAutocomplete = forwardRef<HTMLDivElement, DropdownAutocompleteProp
 
     return (
       <>
-        <input
-          id={inputId}
-          {...getReferenceProps({
-            ref: refs.setReference,
-            onChange,
-            disabled,
-            value: inputValue,
-            placeholder: placeholder,
-            'aria-autocomplete': 'list',
-            onKeyDown: (event) => {
-              if (event.key === 'Enter' && activeIndex != null && filteredItems[activeIndex]) {
-                setInputValue(filteredItems[activeIndex]);
-                setActiveIndex(null);
-                setOpen(false);
-              }
-            },
-          })}
-          className={classNames(invalid ? 'input-error' : '', '')}
-        />
+        <Tooltip tooltip={inputValue}>
+          <input
+            id={inputId}
+            {...getReferenceProps({
+              ref: refs.setReference,
+              onChange,
+              disabled,
+              value: inputValue,
+              placeholder: placeholder,
+              'aria-autocomplete': 'list',
+              onKeyDown: (event) => {
+                if (event.key === 'Enter' && activeIndex != null && filteredItems[activeIndex]) {
+                  setInputValue(filteredItems[activeIndex]);
+                  setActiveIndex(null);
+                  setOpen(false);
+                }
+              },
+            })}
+            className={classNames(invalid ? 'input-error' : '', '')}
+          />
+        </Tooltip>
         <FloatingPortal>
           {open && (
             <FloatingFocusManager context={context} initialFocus={-1} visuallyHiddenDismiss>
