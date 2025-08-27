@@ -75,12 +75,14 @@ const EntityMainProperties: FC<Props> = ({
     dispatch({
       type: ValidationActionType.SetField,
       field: 'displayName',
-      isValid: !displayNameError && !entity.displayName,
+      isValid: !displayNameError,
     });
   }, [entity.displayName, displayNameError, t, view, dispatch]);
 
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'displayVersion', isValid: !!versionError });
+    if (view === ApplicationRoute.Models) {
+      dispatch({ type: ValidationActionType.SetField, field: 'displayVersion', isValid: !!versionError });
+    }
   }, [versionError, t, view, dispatch]);
 
   const onChangeVersion = useCallback(
