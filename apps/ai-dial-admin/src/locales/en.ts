@@ -134,6 +134,7 @@ export default {
     NoApplicationRunners: 'No Application Runners',
     NoDashboard: 'No Dashboard',
     NoRoutes: 'No Routes',
+    NoAppRoutes: 'No App Routes',
     NoPrompts: 'No Prompts',
     NoFiles: 'No Files',
     NoPublications: 'No Publications',
