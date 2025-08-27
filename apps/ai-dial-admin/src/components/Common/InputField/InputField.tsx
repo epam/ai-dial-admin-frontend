@@ -27,6 +27,7 @@ export interface InputFieldBaseProps extends FieldControlProps {
   textBeforeInput?: string;
   min?: number;
   max?: number;
+  tooltipTriggerClassName?: string;
 }
 
 export interface InputFieldProps extends InputFieldBaseProps {

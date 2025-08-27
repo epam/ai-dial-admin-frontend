@@ -27,9 +27,9 @@ const TooltipTrigger = forwardRef<HTMLElement, HTMLProps<HTMLElement> & { asChil
   }
 
   return (
-    <div ref={ref} {...context.getReferenceProps(props)} className={props.className || 'text-left'}>
+    <span ref={ref} {...context.getReferenceProps(props)} className={props.className || 'text-left'}>
       {children}
-    </div>
+    </span>
   );
 });
 export default TooltipTrigger;
