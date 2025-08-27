@@ -325,7 +325,6 @@ export default {
     AllAttachments: 'All attachments types',
     CustomAttachments: 'Custom attachments types',
     MaxNumber: 'Attachments max number',
-    MaxNumberError: 'Max allowed number of attachments is {max}',
     UseAllAttachment: 'Use all attachment types',
     UseAll: 'Use all',
   },
@@ -784,6 +783,7 @@ export default {
     NameVersionCombination: 'This combination of name and version already exists. Specify another',
     Length: 'User can add any characters, but not more than {number}.',
     MinMaxLength: 'User can add any allowed characters, but not less than {min} and not more than {max}.',
+    MaxNumberError: 'Max allowed number of attachments is {max}',
     ForbiddenChars: 'Name must not contain forbidden characters: {list}',
     KeyValueExists: 'This value already exists.',
     DisplayNameErrorModel:

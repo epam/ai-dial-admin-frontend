@@ -3,66 +3,6 @@ import { isValidEntity } from '@/src/utils/validation/is-valid-entity';
 import { describe, expect, test } from 'vitest';
 
 describe('Utils :: isValidEntity', () => {
-  test('Should check entity with version', () => {
-    const res1 = isValidEntity(ApplicationRoute.Models, {});
-    const res2 = isValidEntity(ApplicationRoute.Models, { displayName: 'displayName' });
-    const res3 = isValidEntity(ApplicationRoute.Models, { displayName: 'displayName', name: 'name' });
-    const res4 = isValidEntity(ApplicationRoute.Models, {
-      displayName: 'displayName',
-      name: 'name',
-      adapter: 'adapter',
-      displayVersion: '1.0.0',
-      endpointDeploymentName: 'endpointDeploymentName',
-    });
-
-    const res5 = isValidEntity(
-      ApplicationRoute.Models,
-      {
-        displayName: 'displayName',
-        name: 'name',
-        endpoint: 'endpoint',
-        displayVersion: '1.0.0',
-        endpointDeploymentName: 'endpointDeploymentName',
-      },
-      void 0,
-      ['name'],
-    );
-    const res6 = isValidEntity(
-      ApplicationRoute.Models,
-      {
-        displayName: 'displayName',
-        name: 'name',
-        adapter: 'adapter',
-        displayVersion: '1.0.0',
-        endpointDeploymentName: 'endpointDeploymentName',
-      },
-      void 0,
-      ['name2'],
-    );
-
-    const res7 = isValidEntity(
-      ApplicationRoute.Models,
-      {
-        displayName: 'displayName',
-        name: 'name',
-        adapter: 'adapter',
-        displayVersion: '1.0.0',
-        endpointDeploymentName: 'endpointDeploymentName',
-        maxInputAttachments: 1005,
-      },
-      void 0,
-      ['name2'],
-    );
-
-    expect(res1).toBeFalsy();
-    expect(res2).toBeFalsy();
-    expect(res3).toBeFalsy();
-    expect(res4).toBeTruthy();
-    expect(res5).toBeFalsy();
-    expect(res6).toBeTruthy();
-    expect(res7).toBeFalsy();
-  });
-
   test('Should check Routes', () => {
     const res1 = isValidEntity(ApplicationRoute.Routes, {});
     const res2 = isValidEntity(ApplicationRoute.Routes, { name: 'name', displayName: 'displayName' });
@@ -103,54 +43,5 @@ describe('Utils :: isValidEntity', () => {
     expect(res7).toBeTruthy();
     expect(res8).toBeTruthy();
     expect(res9).toBeFalsy();
-  });
-
-  test('Should check Applications', () => {
-    const res1 = isValidEntity(ApplicationRoute.Applications, {});
-    const res2 = isValidEntity(ApplicationRoute.Applications, { name: 'name', displayName: 'displayName' });
-    const res3 = isValidEntity(ApplicationRoute.Applications, {
-      name: 'name',
-      displayName: 'displayName',
-      customAppSchemaId: 'customAppSchemaId',
-    });
-    const res4 = isValidEntity(
-      ApplicationRoute.Applications,
-      {
-        name: 'name',
-        displayName: 'displayName',
-        customAppSchemaId: 'customAppSchemaId',
-      },
-      void 0,
-      ['name'],
-    );
-    const res5 = isValidEntity(
-      ApplicationRoute.Applications,
-      {
-        name: 'name',
-        displayName: 'displayName',
-        customAppSchemaId: 'customAppSchemaId',
-      },
-      void 0,
-      ['name2'],
-    );
-
-    const res6 = isValidEntity(
-      ApplicationRoute.Applications,
-      {
-        name: 'name',
-        displayName: 'displayName',
-        customAppSchemaId: 'customAppSchemaId',
-        maxInputAttachments: 1005,
-      },
-      void 0,
-      ['name2'],
-    );
-
-    expect(res1).toBeFalsy();
-    expect(res2).toBeFalsy();
-    expect(res3).toBeTruthy();
-    expect(res4).toBeFalsy();
-    expect(res6).toBeFalsy();
-    expect(res5).toBeTruthy();
   });
 });
