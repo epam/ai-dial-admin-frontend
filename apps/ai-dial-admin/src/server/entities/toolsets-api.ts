@@ -4,7 +4,7 @@ import { DialToolset } from '@/src/models/dial/toolset';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
 
-export const TOOLSETS_URL = `${API}/toolsets`;
+export const TOOLSETS_URL = `${API}/toolSets`;
 export const TOOLSET_URL = (name?: string) => `${TOOLSETS_URL}/${name}`;
 
 export class ToolsetsApi extends BaseApi {

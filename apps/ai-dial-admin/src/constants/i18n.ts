@@ -25,6 +25,7 @@ export enum MenuI18nKey {
   Prompts = 'Menu.Prompts',
   Files = 'Menu.Files',
   Audit = 'Menu.Audit',
+  Toolsets = 'Menu.Toolsets',
   AuditDescription = 'Menu.AuditDescription',
   MCPDescription = 'Menu.MCPDescription',
   Dashboard = 'Menu.Dashboard',
@@ -97,6 +98,7 @@ export enum EntitiesI18nKey {
   NoFolders = 'Entities.NoFolders',
   NoResource = 'Entities.NoResource',
   NoInterceptorTemplates = 'Entities.NoInterceptorTemplates',
+  NoToolsets = 'Entities.NoToolsets',
   NoDependencies = 'Entities.NoDependencies',
   AddModel = 'Entities.AddModel',
   AddApplication = 'Entities.AddApplication',
@@ -134,6 +136,7 @@ export enum DeleteI18nKey {
   Route = 'DeleteEntity.Route',
   Prompt = 'DeleteEntity.Prompt',
   File = 'DeleteEntity.File',
+  Toolsets = 'DeleteEntity.Toolsets',
   InterceptorTemplateTitle = 'DeleteEntity.InterceptorTemplate.Title',
   InterceptorTemplateDescriptionWarning = 'DeleteEntity.InterceptorTemplate.DescriptionWarning',
   InterceptorTemplateInterceptorsTitle = 'DeleteEntity.InterceptorTemplate.InterceptorsTitle',
@@ -152,6 +155,7 @@ export enum DuplicateI18nKey {
   InterceptorHeader = 'DuplicateEntity.Interceptor.Header',
   AdapterHeader = 'DuplicateEntity.Adapter.Header',
   InterceptorTemplate = 'DuplicateEntity.InterceptorTemplate.Header',
+  Toolsets = 'DuplicateEntity.Toolsets.Header',
 }
 
 export enum ButtonsI18nKey {
@@ -202,6 +206,7 @@ export enum CreateI18nKey {
   Model = 'CreateEntity.Model',
   Application = 'CreateEntity.Application',
   Adapter = 'CreateEntity.Adapter',
+  Toolsets = 'CreateEntity.Toolsets',
   ApplicationRunner = 'CreateEntity.ApplicationRunner',
   Role = 'CreateEntity.Role',
   Key = 'CreateEntity.Key',
