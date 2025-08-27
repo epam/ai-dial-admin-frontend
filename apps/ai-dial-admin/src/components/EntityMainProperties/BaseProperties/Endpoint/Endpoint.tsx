@@ -46,6 +46,7 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, o
       errorText={endpointError?.text}
       invalid={!!endpointError}
       onChange={onChangeEndpoint}
+      tooltipTriggerClassName={'flex-1'}
       {...props}
     />
   );
