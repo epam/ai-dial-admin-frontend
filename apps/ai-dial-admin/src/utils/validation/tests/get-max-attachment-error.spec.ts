@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { ErrorI18nKey } from '@/src/constants/i18n';
-import { getMaxAttachmentError } from '../is-valid-model';
+import { getMaxAttachmentError } from '../get-max-attachment-error';
 
 describe('getMaxAttachmentError', () => {
   const t = (key: string) => key;

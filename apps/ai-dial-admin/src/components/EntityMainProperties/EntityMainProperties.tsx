@@ -72,11 +72,15 @@ const EntityMainProperties: FC<Props> = ({
   );
 
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !displayNameError });
-  }, [displayNameError, t, view, dispatch]);
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: 'displayName',
+      isValid: !displayNameError && !entity.displayName,
+    });
+  }, [entity.displayName, displayNameError, t, view, dispatch]);
 
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'displayVersion', isValid: !versionError });
+    dispatch({ type: ValidationActionType.SetField, field: 'displayVersion', isValid: !!versionError });
   }, [versionError, t, view, dispatch]);
 
   const onChangeVersion = useCallback(
