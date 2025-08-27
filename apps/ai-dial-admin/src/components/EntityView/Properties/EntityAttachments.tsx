@@ -8,7 +8,7 @@ import { AttachmentsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i
 import { useI18n } from '@/src/locales/client';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { getMaxAttachmentError } from '@/src/utils/validation/is-valid-model';
+import { getMaxAttachmentError } from '@/src/utils/validation/get-max-attachment-error';
 import { mimeMapping } from './constants';
 
 interface Props {
@@ -51,7 +51,7 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
   );
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-6 w-full">
       <AttachmentInput
         initialValues={entity.inputAttachmentTypes}
         fieldTitle={t(AttachmentsI18nKey.Attachments)}

@@ -22,7 +22,7 @@ const LabeledText: FC<Props> = ({ label, text, children, copyButton }) => {
           <Tooltip tooltip={text}>{text}</Tooltip>
 
           {copyButton && (
-            <div className="ml-2">
+            <div className="ml-2 flex items-center justify-center">
               <CopyButton field={text || ''} title={label} />
             </div>
           )}

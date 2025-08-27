@@ -18,6 +18,8 @@ export const isValidEntity = (
     view === ApplicationRoute.InterceptorTemplates ||
     view === ApplicationRoute.Interceptors ||
     view === ApplicationRoute.ApplicationRunners ||
+    view === ApplicationRoute.Applications ||
+    view === ApplicationRoute.Models ||
     view === ApplicationRoute.Adapters
   ) {
     return true;
