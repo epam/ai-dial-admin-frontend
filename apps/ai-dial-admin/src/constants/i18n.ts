@@ -146,16 +146,16 @@ export enum DeleteI18nKey {
 export enum DuplicateI18nKey {
   ModelHeader = 'DuplicateEntity.Model.Header',
   ModelDescription = 'DuplicateEntity.Model.Description',
-  ApplicationRunnerHeader = 'DuplicateEntity.ApplicationRunner.Header',
-  ApplicationHeader = 'DuplicateEntity.Application.Header',
-  RoleHeader = 'DuplicateEntity.Role.Header',
-  KeyHeader = 'DuplicateEntity.Key.Header',
-  RouteHeader = 'DuplicateEntity.Route.Header',
-  PromptHeader = 'DuplicateEntity.Prompt.Header',
-  InterceptorHeader = 'DuplicateEntity.Interceptor.Header',
-  AdapterHeader = 'DuplicateEntity.Adapter.Header',
-  InterceptorTemplate = 'DuplicateEntity.InterceptorTemplate.Header',
-  Toolsets = 'DuplicateEntity.Toolsets.Header',
+  ApplicationRunnerHeader = 'DuplicateEntity.ApplicationRunner',
+  ApplicationHeader = 'DuplicateEntity.Application',
+  RoleHeader = 'DuplicateEntity.Role',
+  KeyHeader = 'DuplicateEntity.Key',
+  RouteHeader = 'DuplicateEntity.Route',
+  PromptHeader = 'DuplicateEntity.Prompt',
+  InterceptorHeader = 'DuplicateEntity.Interceptor',
+  AdapterHeader = 'DuplicateEntity.Adapter',
+  InterceptorTemplate = 'DuplicateEntity.InterceptorTemplate',
+  Toolsets = 'DuplicateEntity.Toolsets',
 }
 
 export enum ButtonsI18nKey {
