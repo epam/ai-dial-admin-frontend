@@ -46,9 +46,10 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
   const [statusError, setStatusError] = useState('');
 
   const selectedPermissions = useMemo(() => {
-    return (
-      (route as DialAppRoute).permissions?.map((p) => permissionsItems.find((i) => i.id === p)?.name as string) || null
+    const values = (route as DialAppRoute).permissions?.map(
+      (p) => permissionsItems.find((i) => i.id === p)?.name as string,
     );
+    return values?.length ? null : [];
   }, [permissionsItems, route]);
 
   const onChangeName = useCallback(
