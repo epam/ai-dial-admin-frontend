@@ -8,7 +8,13 @@ import { FILES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { getGridFileColumns, getGridFileData } from '@/src/utils/files/grid-data';
 import Grid from '@/src/components/Grid/Grid';
 import { FILE_DOWNLOAD, FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
-import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import {
+  BasicI18nKey,
+  EntitiesI18nKey,
+  EntityFieldsI18nKey,
+  EntityPlaceholdersI18nKey,
+  FoldersI18nKey,
+} from '@/src/constants/i18n';
 import { useFileFolder } from '@/src/context/FileFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
@@ -58,7 +64,7 @@ const FileProperties: FC<Props> = ({ file, onChangeFile }) => {
 
       <div className="flex flex-col gap-6 pt-6">
         <div className="flex flex-col">
-          <Field fieldTitle={t(BasicI18nKey.Source)} />
+          <Field fieldTitle={t(EntitiesI18nKey.Source)} />
           <Grid columnDefs={columnDefs} rowData={rowData} />
         </div>
         <div className="lg:w-[35%]">
