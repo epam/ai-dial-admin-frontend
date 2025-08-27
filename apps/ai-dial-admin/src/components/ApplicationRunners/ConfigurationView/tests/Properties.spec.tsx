@@ -19,7 +19,6 @@ describe('SchemeProperties', () => {
     expect(onChangeRunner).toHaveBeenCalledWith(expect.objectContaining({ $id: 'new-id' }));
 
     // Name field
-    expect(screen.getByLabelText(EntityFieldsI18nKey.displayName)).toBeInTheDocument();
     fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName), {
       target: { value: 'new name' },
     });

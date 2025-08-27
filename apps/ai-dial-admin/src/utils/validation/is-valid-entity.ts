@@ -1,5 +1,3 @@
-import { MAX_RUNNER_ID_SYMBOLS } from '@/src/constants/validation';
-import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity, DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRoute } from '@/src/models/dial/route';
@@ -23,17 +21,13 @@ export const isValidEntity = (
     view === ApplicationRoute.Roles ||
     view === ApplicationRoute.InterceptorTemplates ||
     view === ApplicationRoute.Interceptors ||
+    view === ApplicationRoute.ApplicationRunners ||
     view === ApplicationRoute.Adapters
   ) {
     return true;
   }
 
   if (isSimpleEntity(view)) {
-    if (view === ApplicationRoute.ApplicationRunners) {
-      const id = (entity as DialApplicationScheme).$id;
-      return !!id && id.length <= MAX_RUNNER_ID_SYMBOLS && !getErrorForDescription(entity.description);
-    }
-
     const isValidSimpleEntity = getIsValidSimpleEntity(entity, withVersion, names);
 
     if (view === ApplicationRoute.Routes) {

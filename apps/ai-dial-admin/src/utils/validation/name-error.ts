@@ -1,24 +1,50 @@
 import { ErrorI18nKey } from '@/src/constants/i18n';
-import { MAX_NAME_SYMBOLS, MIN_NAME_SYMBOLS } from '@/src/constants/validation';
+import {
+  MAX_NAME_SYMBOLS,
+  MAX_URL_ID_SYMBOLS,
+  MIN_NAME_SYMBOLS,
+  FORBIDDEN_NAME_SYMBOLS,
+} from '@/src/constants/validation';
 import { ErrorType } from '@/src/types/error-type';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isValidHttpUrl } from './url-error';
 
-export const forbiddenNameSymbols = ['%', '/', '\\', ';'];
+export const getErrorForUrlId = (
+  id?: string,
+  names?: string[],
+  t?: (str: string, param?: Record<string, number>) => string,
+) => {
+  const isIncludesName = id && names?.includes(id);
+  if (isIncludesName) {
+    return {
+      type: ErrorType.EXISTING,
+      text: t ? t(ErrorI18nKey.NameExists) : '',
+    };
+  }
+
+  const isWrongId = id && !isValidHttpUrl(id);
+  const isWrongLength = !!id && id?.length > MAX_URL_ID_SYMBOLS;
+  if (isWrongId) {
+    return {
+      type: ErrorType.INVALID,
+      text: t ? t(ErrorI18nKey.UrlField) : '',
+    };
+  }
+  if (isWrongLength) {
+    return {
+      type: ErrorType.LENGTH,
+      text: t ? t(ErrorI18nKey.Length, { number: MAX_URL_ID_SYMBOLS }) : '',
+    };
+  }
+  return null;
+};
 
 export const getErrorForName = (
   name?: string,
   names?: string[],
   t?: (str: string) => string,
-  isUniqueError?: boolean,
   checkForbiddenChars = true,
 ) => {
-  if (isUniqueError) {
-    return {
-      type: ErrorType.EXISTING,
-      text: t ? t(ErrorI18nKey.Unique) : '',
-    };
-  }
-
   const isIncludesName = name && names?.includes(name);
   if (isIncludesName) {
     return {
@@ -41,7 +67,7 @@ export const getErrorForName = (
     if (hasForbiddenChars) {
       return {
         type: ErrorType.FORBIDDEN_CHARS,
-        text: t ? tWithArgs(ErrorI18nKey.ForbiddenChars, { list: forbiddenNameSymbols.join(' ') }) : '',
+        text: t ? tWithArgs(ErrorI18nKey.ForbiddenChars, { list: FORBIDDEN_NAME_SYMBOLS.join(' ') }) : '',
       };
     }
   }
@@ -77,5 +103,5 @@ export const isWrongFieldLength = (value: string): boolean => {
 export const hasInvalidCharacters = (value?: string): boolean => {
   if (!value) return false;
 
-  return forbiddenNameSymbols.some((symbol) => value.includes(symbol));
+  return FORBIDDEN_NAME_SYMBOLS.some((symbol) => value.includes(symbol));
 };
