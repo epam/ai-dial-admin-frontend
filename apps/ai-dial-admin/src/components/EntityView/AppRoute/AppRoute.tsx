@@ -15,6 +15,7 @@ import RouteContent from '@/src/components/EntityView/AppRoute/Content/RouteCont
 import { DialRole } from '@/src/models/dial/role';
 import { DialRoleLimitsMap } from '@/src/models/dial/base-entity';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
+import HorizontalCollapseBar from '../../Common/HorizontalCollapseBar/HorizontalCollapseBar';
 
 interface Props {
   roles?: DialRole[] | null;
@@ -31,14 +32,14 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
   const [modalState, setModalState] = useState(PopUpState.Closed);
 
   const tabs: TabModel[] = useMemo(() => {
-    return routes?.map((route) => ({ id: route.name, name: route.name }) as TabModel) || [];
+    return routes?.map((route) => ({ id: route.name, name: route.displayName }) as TabModel) || [];
   }, [routes]);
 
   const [activeRouteTab, setActiveRouteTab] = useState<string | null>(null);
   const [activeRouteIndex, setActiveRouteIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!activeRouteTab) {
+    if (!activeRouteTab && tabs.length) {
       setActiveRouteTab(tabs[0]?.id || '');
     }
   }, [tabs, activeRouteTab]);
@@ -68,7 +69,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
   const onCreate = useCallback(
     (name: string) => {
       handleModalClose();
-      onChangeRoutes([...(routes || []), { name } as DialAppRoute]);
+      onChangeRoutes([...(routes || []), { name, displayName: name } as DialAppRoute]);
     },
     [handleModalClose, onChangeRoutes, routes],
   );
@@ -76,30 +77,33 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
   return (
     <>
       <div className="flex flex-row gap-4 h-full w-full">
-        <div className="bg-layer-3 h-full w-[296px] p-4 relative flex flex-col">
-          <div className="flex flex-row flex-wrap justify-between items-center mb-6">
-            <h1>{t(TabsI18nKey.Routes)}</h1>
-            {!readonly && (
-              <Button
-                cssClass="primary"
-                iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-                title={t(ButtonsI18nKey.Add)}
-                onClick={handleModalOpen}
-              />
-            )}
+        <HorizontalCollapseBar width="296" title={t(TabsI18nKey.Routes)} containerClass="bg-layer-3">
+          <div className="h-full relative flex flex-col">
+            <div className="flex flex-row flex-wrap justify-between items-center mb-6">
+              <h1>{t(TabsI18nKey.Routes)}</h1>
+              {!readonly && (
+                <Button
+                  cssClass="primary"
+                  iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+                  title={t(ButtonsI18nKey.Add)}
+                  onClick={handleModalOpen}
+                />
+              )}
+            </div>
+            <div className="flex-1 min-h-0 relative">
+              {!activeRouteTab && <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoAppRoutes)} />}
+              {activeRouteTab && !!tabs.length && (
+                <Tabs
+                  activeTab={activeRouteTab}
+                  tabs={tabs}
+                  onClick={(tab) => setActiveRouteTab(tab)}
+                  orientation={TabOrientation.Vertical}
+                />
+              )}
+            </div>
           </div>
-          <div className="flex-1 min-h-0 relative">
-            {!activeRouteTab && <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoAppRoutes)} />}
-            {activeRouteTab && !!tabs.length && (
-              <Tabs
-                activeTab={activeRouteTab}
-                tabs={tabs}
-                onClick={(tab) => setActiveRouteTab(tab)}
-                orientation={TabOrientation.Vertical}
-              />
-            )}
-          </div>
-        </div>
+        </HorizontalCollapseBar>
+
         <div className="flex flex-col flex-1 min-h-0 min-w-0 relative border border-primary rounded">
           {routes?.[activeRouteIndex as number] && (
             <RouteContent

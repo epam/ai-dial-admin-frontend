@@ -9,16 +9,14 @@ interface Props {
   children: ReactNode;
   width: string;
   title: string;
+  containerClass?: string;
 }
 const CLOSED_WIDTH = '60';
 
-const HorizontalCollapseBar: FC<Props> = ({ children, width, title }) => {
+const HorizontalCollapseBar: FC<Props> = ({ containerClass, children, width, title }) => {
   const [containerWidth, setContainerWidth] = useState(width);
   const [isOpened, setIsOpened] = useState(true);
 
-  const containerClass = classNames(
-    `border border-primary rounded p-4 mr-4 flex flex-col justify-between overflow-y-auto`,
-  );
   const bodyClass = isOpened ? '' : 'hidden';
   const titleClass = classNames(`transform rotate-180 [writing-mode:tb-rl] ${isOpened ? 'hidden' : ''}`);
   const buttonClass = classNames(`flex cursor-pointer ${isOpened ? 'justify-end' : 'justify-center'}`);
@@ -29,7 +27,13 @@ const HorizontalCollapseBar: FC<Props> = ({ children, width, title }) => {
   };
 
   return (
-    <div data-testid="collapseBarContainer" className={containerClass} style={{ width: `${containerWidth}px` }}>
+    <div
+      className={classNames(
+        `border border-transparent rounded p-4 mr-4 flex flex-col justify-between overflow-y-auto`,
+        containerClass,
+      )}
+      style={{ width: `${containerWidth}px` }}
+    >
       <div className={classNames('flex-1 min-h-0 overflow-auto', bodyClass)}> {children}</div>
       <div className={titleClass}> {title}</div>
       <div className={buttonClass}>
