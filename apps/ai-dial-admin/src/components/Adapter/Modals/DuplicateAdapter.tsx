@@ -1,7 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import Button from '@/src/components/Common/Button/Button';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey, DuplicateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -9,6 +8,8 @@ import { DialAdapter } from '@/src/models/dial/adapter';
 import { PopUpState } from '@/src/types/pop-up';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
+import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   modalState: PopUpState;
@@ -21,11 +22,16 @@ const DuplicateAdapter: FC<Props> = ({ onDuplicate, modalState, onClose, adapter
   const t = useI18n();
 
   const [entity, setEntity] = useState<DialAdapter>({ ...adapter, name: '' });
-  const [isValid, setIsValid] = useState(false);
+  const { isValid, dispatch } = useSaveValidationContext();
 
+  // initial validation on creation adapter (disable save when no values entered yet)
   useEffect(() => {
-    setIsValid(!!entity.name);
-  }, [entity]);
+    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!entity.name });
+    dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!entity.displayName });
+    dispatch({ type: ValidationActionType.SetField, field: 'baseEndpoint', isValid: !!entity.baseEndpoint });
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onChangeDisplayName = useCallback(
     (displayName?: string) => {
@@ -48,11 +54,12 @@ const DuplicateAdapter: FC<Props> = ({ onDuplicate, modalState, onClose, adapter
 
         <DisplayNameControl displayName={entity.displayName} onChange={onChangeDisplayName} />
 
-        <TextInputField
-          elementId="endpoint"
+        <EndpointControl
+          id="baseEndpoint"
+          required={true}
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           fieldTitle={t(EntityFieldsI18nKey.baseEndpoint)}
-          value={entity.baseEndpoint}
+          endpoint={entity.baseEndpoint}
           onChange={onChangeEndpoint}
         />
       </div>
