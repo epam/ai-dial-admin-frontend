@@ -19,6 +19,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
+import { DialRoleLimitsMap } from '@/src/models/dial/base-entity';
 
 interface Props {
   parentRoles?: string[];
@@ -30,18 +31,19 @@ interface Props {
 
 const RouteRoles: FC<Props> = ({ route, parentRoles, readonly, onChangeRoute, roles }) => {
   const t = useI18n() as (str: string) => string;
-  const [isInherited, setIsInherited] = useState((route.userRoles || []).length === 0);
+  const [isInherited, setIsInherited] = useState((Object.keys(route.roleLimits || {}) || []).length === 0);
 
   const data = useMemo(() => {
+    const userRoles = Object.keys(route.roleLimits || {});
     return roles.filter((role) =>
-      isInherited ? parentRoles?.includes(role.name as string) : route.userRoles?.includes(role.name as string),
+      isInherited ? parentRoles?.includes(role.name as string) : userRoles?.includes(role.name as string),
     );
-  }, [parentRoles, roles, isInherited, route.userRoles]);
+  }, [parentRoles, roles, isInherited, route.roleLimits]);
 
-  const availableRoles = useMemo(
-    () => roles.filter((role) => !route.userRoles?.includes(role.name as string)),
-    [roles, route.userRoles],
-  );
+  const availableRoles = useMemo(() => {
+    const userRoles = Object.keys(route.roleLimits || {});
+    return roles.filter((role) => !userRoles?.includes(role.name as string));
+  }, [roles, route.roleLimits]);
 
   const [addModalState, setAddModalState] = useState(PopUpState.Closed);
 
@@ -58,7 +60,10 @@ const RouteRoles: FC<Props> = ({ route, parentRoles, readonly, onChangeRoute, ro
       onCloseAddModal();
       onChangeRoute({
         ...route,
-        userRoles: [...(route.userRoles || []), ...roles.map((r) => r.name as string)],
+        roleLimits: {
+          ...(route.roleLimits || []),
+          ...roles.reduce((acc, role) => ({ ...acc, [role.name as string]: { enable: true } }), {}),
+        } as DialRoleLimitsMap,
       });
     },
     [onCloseAddModal, onChangeRoute, route],
@@ -67,9 +72,12 @@ const RouteRoles: FC<Props> = ({ route, parentRoles, readonly, onChangeRoute, ro
   const onRemoveRole = useCallback(
     (role: DialRole) => {
       onCloseAddModal();
+
+      const roleLimits = { ...(route.roleLimits || {}) };
+      delete roleLimits[role.name as string];
       onChangeRoute({
         ...route,
-        userRoles: (route.userRoles || []).filter((r) => r !== role.name),
+        roleLimits,
       });
     },
     [onCloseAddModal, onChangeRoute, route],
@@ -97,6 +105,10 @@ const RouteRoles: FC<Props> = ({ route, parentRoles, readonly, onChangeRoute, ro
             title={t(RoutesI18nKey.InheritApplicationRoles)}
             isOn={isInherited}
             onChange={(value) => {
+              onChangeRoute({
+                ...route,
+                roleLimits: {},
+              });
               setIsInherited(value);
             }}
           />

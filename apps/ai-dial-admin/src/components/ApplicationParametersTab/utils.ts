@@ -19,7 +19,7 @@ export const getFrameConfig = (
   };
 };
 
-export const getScheme = (
+export const getAppRunner = (
   entity: DialApplication,
   applicationSchemes?: DialApplicationScheme[] | null,
 ): DialApplicationScheme | undefined => {
