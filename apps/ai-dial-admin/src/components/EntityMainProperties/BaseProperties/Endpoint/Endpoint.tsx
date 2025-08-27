@@ -1,8 +1,9 @@
-import { FC, useEffect, useMemo } from 'react';
+import { FC, useCallback, useState } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
+import { FieldError } from '@/src/models/error';
 import { getUrlError } from '@/src/utils/validation/url-error';
 
 export interface EndpointControlProps {
@@ -21,17 +22,20 @@ export interface Props extends EndpointControlProps {
   iconAfterInput?: React.ReactNode;
 }
 
-const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, ...props }) => {
+const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, onChange, ...props }) => {
   const t = useI18n() as (t: string) => string;
   const { dispatch } = useSaveValidationContext();
+  const [endpointError, setEndpointError] = useState<FieldError | null>(null);
 
-  const endpointError = useMemo(() => {
-    return getUrlError(textBeforeInput ? `${textBeforeInput}${endpoint}` : endpoint, t, required);
-  }, [endpoint, textBeforeInput, required, t]);
-
-  useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: id, isValid: !endpointError });
-  }, [endpointError, textBeforeInput, t, dispatch, id]);
+  const onChangeEndpoint = useCallback(
+    (endpoint?: string) => {
+      const error = getUrlError(textBeforeInput ? `${textBeforeInput}${endpoint}` : endpoint, t, required);
+      setEndpointError(error);
+      dispatch({ type: ValidationActionType.SetField, field: id, isValid: !endpointError });
+      onChange?.(endpoint);
+    },
+    [dispatch, endpointError, id, onChange, required, t, textBeforeInput],
+  );
 
   return (
     <TextInputField
@@ -41,6 +45,7 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, .
       optional={!required}
       errorText={endpointError?.text}
       invalid={!!endpointError}
+      onChange={onChangeEndpoint}
       tooltipTriggerClassName={'flex-1'}
       {...props}
     />

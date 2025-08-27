@@ -18,7 +18,6 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { getErrorNotification } from '@/src/utils/notification';
-import { isValidEntity as isValidFn } from '@/src/utils/validation/is-valid-entity';
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { RoutesForCheckingUniqueName } from './constants';
@@ -55,9 +54,7 @@ const CreateEntity: FC<Props> = ({
     versionsMap ? { name: '', description: '', version: '1.0.0' } : { name: '', description: '' },
   );
 
-  const [isUniqueNameError, setIsUniqueNameError] = useState<boolean | null>(null);
-  // TODO: remove after review validation
-  const [isValidEntity, setIsValidEntity] = useState<boolean | undefined>(false);
+  const [isUniqueNameError, setIsUniqueNameError] = useState<boolean | undefined>(void 0);
 
   const onChangeEntity = useCallback(
     (entity: DialBaseEntity) => {
@@ -98,8 +95,8 @@ const CreateEntity: FC<Props> = ({
   }, [currentEntity, showNotification, fetchFiles, filePath, onClose, route, router, createEntity]);
 
   useEffect(() => {
-    setIsValidEntity(isValidFn(route, currentEntity, !!versionsMap, names));
-    setIsUniqueNameError(null);
+    // setIsValidEntity(isValidFn(route, currentEntity, !!versionsMap, names));
+    setIsUniqueNameError(void 0);
   }, [currentEntity, route, versionsMap, names]);
 
   // initial validation (disable save when no values entered yet)
@@ -125,6 +122,7 @@ const CreateEntity: FC<Props> = ({
             runners={runners}
             entity={currentEntity}
             names={names}
+            isUniqueNameError={isUniqueNameError}
             onChangeEntity={onChangeEntity}
           />
         )}
@@ -135,7 +133,7 @@ const CreateEntity: FC<Props> = ({
           cssClass="primary"
           title={t(ButtonsI18nKey.Create)}
           onClick={onCreate}
-          disable={(isUniqueNameError !== null && !isUniqueNameError) || !isValid || !isValidEntity}
+          disable={(isUniqueNameError != null && !isUniqueNameError) || !isValid}
         />
       </div>
     </Popup>

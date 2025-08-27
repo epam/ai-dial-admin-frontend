@@ -23,6 +23,7 @@ interface Props {
   view: ApplicationRoute;
   entity: DialBaseEntity;
   names: string[];
+  isUniqueNameError?: boolean;
   runners?: DialApplicationScheme[];
   isEntityImmutable?: boolean;
   onChangeEntity: (entity: DialBaseEntity) => void;
@@ -33,6 +34,7 @@ const EntityMainProperties: FC<Props> = ({
   entity,
   runners,
   names,
+  isUniqueNameError,
   onChangeEntity,
   isEntityImmutable = false,
 }) => {
@@ -70,12 +72,19 @@ const EntityMainProperties: FC<Props> = ({
   );
 
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !displayNameError });
-  }, [displayNameError, t, view, dispatch]);
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: 'displayName',
+      isValid: !displayNameError,
+    });
+  }, [entity.displayName, displayNameError, t, view, dispatch]);
 
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'displayVersion', isValid: !versionError });
-  }, [versionError, t, view, dispatch]);
+    if (view === ApplicationRoute.Models) {
+      dispatch({ type: ValidationActionType.SetField, field: 'displayVersion', isValid: !versionError });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [versionError, (entity as DialModel).displayVersion, t, view, dispatch]);
 
   const onChangeVersion = useCallback(
     (displayVersion?: string) => {
@@ -88,7 +97,9 @@ const EntityMainProperties: FC<Props> = ({
   return (
     <div className="w-full flex flex-col">
       <div className={classNames('flex flex-col gap-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
-        {!isEntityImmutable && <IdControl entity={entity} onChangeEntity={onChangeName} />}
+        {!isEntityImmutable && (
+          <IdControl entity={entity} onChangeEntity={onChangeName} isUniqueNameError={isUniqueNameError} />
+        )}
         <AutocompleteField
           elementId="displayName"
           fieldTitle={t(EntityFieldsI18nKey.displayName)}
