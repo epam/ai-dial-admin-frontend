@@ -142,7 +142,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
             {activeTab === EntityViewTab.Properties && (
               <div className="pt-3 w-full lg:w-[35%]">
                 <EntityHeader entity={selectedScheme} />
-                <div className="flex-1 min-h-0">
+                <div className="flex-1 min-h-0 pt-4">
                   <SchemeProperties runner={selectedScheme} isImmutable={true} onChangeRunner={onChangeScheme} />
                 </div>
               </div>
