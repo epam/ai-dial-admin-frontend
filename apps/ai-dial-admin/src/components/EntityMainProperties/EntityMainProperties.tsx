@@ -81,9 +81,9 @@ const EntityMainProperties: FC<Props> = ({
 
   useEffect(() => {
     if (view === ApplicationRoute.Models) {
-      dispatch({ type: ValidationActionType.SetField, field: 'displayVersion', isValid: !!versionError });
+      dispatch({ type: ValidationActionType.SetField, field: 'displayVersion', isValid: !versionError });
     }
-  }, [versionError, t, view, dispatch]);
+  }, [versionError, (entity as DialModel).displayVersion, t, view, dispatch]);
 
   const onChangeVersion = useCallback(
     (displayVersion?: string) => {
