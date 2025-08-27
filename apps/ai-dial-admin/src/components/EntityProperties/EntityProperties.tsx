@@ -73,7 +73,7 @@ const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntit
           <ApplicationSource entity={entity} onChangeEntity={updateEntity} runners={runners} isEntityImmutable={true} />
         )}
         <EntityAttachments entity={entity} onChangeEntity={updateEntity} />
-        {view === ApplicationRoute.Applications && <Defaults entity={entity} />}
+        {view === ApplicationRoute.Applications && <Defaults entity={entity} onChangeEntity={updateEntity} />}
       </div>
       <div className="flex flex-col gap-6 pt-3 lg:w-[35%]">
         <ForwardAuthTokenField view={view} entity={entity} onChangeEntity={updateEntity} />
