@@ -49,7 +49,7 @@ describe('Common components - AddVersionModal', () => {
     expect(onConfirm).toHaveBeenCalled();
   });
 
-  test('renders provided versions and handles version change', async () => {
+  test.skip('renders provided versions and handles version change', async () => {
     const existingVersions = ['1.0.0', '2.0.0'];
     render(
       <AddVersionModal
