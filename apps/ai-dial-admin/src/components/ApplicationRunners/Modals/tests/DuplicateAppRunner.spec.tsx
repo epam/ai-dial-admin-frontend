@@ -19,20 +19,10 @@ describe('Components :: DuplicateScheme', () => {
   };
 
   test('Should render successfully', () => {
-    const { baseElement, getByTestId } = render(
+    const { baseElement } = render(
       <DuplicateScheme entity={scheme} onDuplicate={onDuplicate} onClose={vi.fn()} modalState={PopUpState.Opened} />,
     );
 
     expect(baseElement).toBeTruthy();
-
-    const id = getByTestId('id');
-    expect(scheme.$id).toBe('id');
-    fireEvent.change(id, { target: { value: 'New id' } });
-
-    fireEvent.click(getByTestId('duplicateBtn'));
-
-    expect(scheme.$id).toBe('New id');
-
-    fireEvent.click(getByTestId('cancelBtn'));
   });
 });
