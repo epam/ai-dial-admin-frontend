@@ -16,7 +16,7 @@ const ApplicationAppRoutes: FC<Props> = ({ selectedEntity, applicationRunners, o
   const routes = useMemo(() => {
     const appRunners = getAppRunner(selectedEntity, applicationRunners);
     return appRunners?.['dial:applicationTypeRoutes'] || selectedEntity.routes || [];
-  }, [selectedEntity]);
+  }, [applicationRunners, selectedEntity]);
 
   return (
     <EntityRoutes
