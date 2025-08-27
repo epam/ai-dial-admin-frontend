@@ -180,6 +180,7 @@ export enum ButtonsI18nKey {
   Apply = 'Buttons.Apply',
   Discard = 'Buttons.Discard',
   Add = 'Buttons.Add',
+  AddDefault = 'Buttons.AddDefault',
   Columns = 'Buttons.Columns',
   Reset = 'Buttons.Reset',
   ResetToDefault = 'Buttons.ResetToDefault',
@@ -615,7 +616,13 @@ export enum TypeI18nKey {
   Object = 'Type.Object',
   Boolean = 'Type.Boolean',
   String = 'Type.String',
+  Number = 'Type.Number',
   JSON = 'Type.JSON',
+}
+
+export enum BooleanI18nKey {
+  true = 'Boolean.true',
+  false = 'Boolean.false',
 }
 
 export enum EntityPlaceholdersI18nKey {
@@ -654,6 +661,7 @@ export enum EntityPlaceholdersI18nKey {
   SelectAppRunner = 'EntityPlaceholders.SelectAppRunner',
   Version = 'EntityPlaceholders.Version',
   KeyValue = 'EntityPlaceholders.KeyValue',
+  Key = 'EntityPlaceholders.Key',
 }
 
 export enum EntityFieldsI18nKey {

@@ -80,7 +80,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
   );
 
   return (
-    <div className="w-full flex flex-col gap-5">
+    <div className="w-full flex flex-col gap-6">
       <div className="w-full lg:w-[35%]">
         <RadioField
           radioButtons={modelTypeRadio}
@@ -102,7 +102,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
           onChange={onChangeEndpoint}
         />
       </div>
-      <div className="w-full flex flex-col gap-5 lg:w-[35%]">
+      <div className="w-full flex flex-col gap-6 lg:w-[35%]">
         <TextInputField
           elementId="overrideName"
           fieldTitle={t(EntityFieldsI18nKey.overrideName)}
