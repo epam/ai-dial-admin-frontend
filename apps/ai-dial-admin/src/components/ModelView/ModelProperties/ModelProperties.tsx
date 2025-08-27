@@ -1,6 +1,7 @@
 import { FC, useCallback } from 'react';
 
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
+import Defaults from '@/src/components/Defaults/Defaults';
 import UpstreamEndpoints from '@/src/components/Endpoints/UpstreamEndpoints';
 import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMainProperties';
 import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
@@ -8,12 +9,11 @@ import MaxRetryAttempts from '@/src/components/MaxRetryAttempts/MaxRetryAttempts
 import Limits from '@/src/components/ModelView/Limits/Limits';
 import Pricing from '@/src/components/ModelView/Pricing/Pricing';
 import TokenizerModelSwitch from '@/src/components/ModelView/TokenizerModel/Tokenizer';
+import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import ModelTypeProperties from './ModelTypeProperties';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, BasicI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
-import Defaults from '../../Defaults/Defaults';
 
 interface Props {
   model: DialModel;

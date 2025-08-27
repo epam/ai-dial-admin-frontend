@@ -60,8 +60,6 @@ export const getDefaultValueByType = (type: DefaultItemType): DefaultsValue => {
       return true;
     case DefaultItemType.number:
       return 0;
-    case DefaultItemType.string:
-      return '';
     default:
       return '';
   }
@@ -80,8 +78,6 @@ export const getValueByType = (value?: DefaultsValue, type?: DefaultItemType): D
       return value !== BooleanType.false;
     case DefaultItemType.number:
       return Number(value);
-    case DefaultItemType.string:
-      return String(value);
     default:
       return String(value);
   }
