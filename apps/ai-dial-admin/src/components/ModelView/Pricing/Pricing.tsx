@@ -39,7 +39,7 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
 
   const pricingContainerClasses = classNames(
     'flex flex-col gap-y-4 justify-center rounded border border-primary p-3 mb-4',
-    'lg:w-[50%] lg:border-none lg:p-0 lg:flex-row lg:gap-x-2 lg:items-center lg:mb-0',
+    'lg:justify-start lg:border-none lg:p-0 lg:flex-row lg:gap-x-2 lg:items-center lg:mb-0',
   );
 
   const onChangePricingType = useCallback(
@@ -73,19 +73,20 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
 
   return (
     <div className={pricingContainerClasses}>
-      <DropdownField
-        selectedValue={activeType}
-        elementId="pricing"
-        items={items}
-        fieldTitle={t(ModelViewI18nKey.CostUnit)}
-        onChange={onChangePricingType}
-      />
-
+      <div className="lg:w-[35%]">
+        <DropdownField
+          selectedValue={activeType}
+          elementId="pricing"
+          items={items}
+          fieldTitle={t(ModelViewI18nKey.CostUnit)}
+          onChange={onChangePricingType}
+        />
+      </div>
       <NumberInputField
         elementId="promptsPrice"
         fieldTitle={t(ModelViewI18nKey.PromptPrice)}
         value={isTokenType ? Number(model.pricing?.prompt) * 1000000 : model.pricing?.prompt}
-        containerCssClass="w-[120px] lg:w-auto"
+        containerCssClass="w-[120px] lg:w-auto lg:max-w-[120px]"
         onChange={onChangePrompt}
         iconBeforeInput={<IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} />}
         disabled={activeType === BasicI18nKey.None}
@@ -94,7 +95,7 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
         elementId="completionsPrice"
         iconBeforeInput={<IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} />}
         fieldTitle={t(ModelViewI18nKey.CompletionPrice)}
-        containerCssClass="w-[120px] lg:w-auto"
+        containerCssClass="w-[120px] lg:w-auto lg:max-w-[120px]"
         disabled={activeType === BasicI18nKey.None}
         onChange={onChangeCompletion}
         value={isTokenType ? Number(model.pricing?.completion) * 1000000 : model.pricing?.completion}

@@ -91,7 +91,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
   );
 
   return (
-    <div className="h-full flex flex-col gap-4">
+    <div className="h-full flex flex-col gap-6">
       <div className="max-w-[180px]">
         <DropdownField
           selectedValue={sourceType?.id}
@@ -102,7 +102,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
         />
       </div>
       {sourceType?.id === SourceTypes.ENDPOINTS && (
-        <div className={classNames('flex flex-col gap-4', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
+        <div className={classNames('flex flex-col gap-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
           <CompletionEndpointControl required={true} endpoint={entity.endpoint} onChange={onChangeEndpoint} />
           {isEntityImmutable && (
             <>
@@ -113,7 +113,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
         </div>
       )}
       {sourceType?.id === SourceTypes.APP_RUNNER && (
-        <div className={classNames('flex flex-row gap-4 items-start')}>
+        <div className={classNames('flex flex-row gap-6 items-start')}>
           <SourceEntitySelector
             buttonTitle={t(ButtonsI18nKey.OpenAppRunner)}
             columns={RUNNERS_COLUMNS}

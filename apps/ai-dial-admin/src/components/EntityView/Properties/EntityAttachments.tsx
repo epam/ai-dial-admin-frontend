@@ -49,7 +49,7 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
   );
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-6 w-full">
       <AttachmentInput
         initialValues={entity.inputAttachmentTypes}
         fieldTitle={t(AttachmentsI18nKey.Attachments)}

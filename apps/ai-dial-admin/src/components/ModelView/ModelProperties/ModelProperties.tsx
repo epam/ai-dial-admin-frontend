@@ -13,6 +13,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import ModelTypeProperties from './ModelTypeProperties';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import Defaults from '../../Defaults/Defaults';
 
 interface Props {
   model: DialModel;
@@ -31,47 +32,39 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, updateModel }) => {
   );
 
   return (
-    <div className="h-full flex flex-col pt-3 divide-y divide-primary">
-      <div className="flex flex-col gap-6">
-        <EntityMainProperties
-          view={ApplicationRoute.Models}
-          entity={model}
-          onChangeEntity={updateModel}
-          names={modelsNames}
-          isEntityImmutable={true}
-        />
-
-        <ModelTypeProperties model={model} onChangeModel={updateModel} />
+    <div className="h-full flex flex-col pt-3 gap-6">
+      <EntityMainProperties
+        view={ApplicationRoute.Models}
+        entity={model}
+        onChangeEntity={updateModel}
+        names={modelsNames}
+        isEntityImmutable={true}
+      />
+      <ModelTypeProperties model={model} onChangeModel={updateModel} />
+      <Defaults entity={model} onChangeEntity={updateModel} />
+      <UpstreamEndpoints entity={model} onChangeEntity={updateModel} isKeyOptional={true} />
+      <TokenizerModelSwitch model={model} onChangeModel={updateModel} />
+      <div className="w-full lg:w-[35%]">
+        <ForwardAuthTokenField view={ApplicationRoute.Models} entity={model} onChangeEntity={updateModel} />
       </div>
-
-      <div className="flex flex-col gap-6 mt-4 pt-4">
-        <UpstreamEndpoints entity={model} onChangeEntity={updateModel} isKeyOptional={true} />
-        <TokenizerModelSwitch model={model} onChangeModel={updateModel} />
-        <div className="w-full lg:w-[35%]">
-          <ForwardAuthTokenField view={ApplicationRoute.Models} entity={model} onChangeEntity={updateModel} />
-        </div>
-        <Limits model={model} onChangeModel={updateModel} />
-        <MaxRetryAttempts
-          maxRetryAttempts={model.maxRetryAttempts}
-          onChangeMaxRetryAttempts={onChangeMaxRetryAttempts}
+      <Limits model={model} onChangeModel={updateModel} />
+      <MaxRetryAttempts maxRetryAttempts={model.maxRetryAttempts} onChangeMaxRetryAttempts={onChangeMaxRetryAttempts} />
+      <Pricing model={model} onChangeModel={updateModel} />
+      <div className="w-full lg:w-[35%]">
+        <Multiselect
+          elementId="order"
+          draggable={true}
+          selectedItems={model.fieldsHashingOrder || []}
+          allItems={model.fieldsHashingOrder || []}
+          onChangeItems={(fieldsHashingOrder) => {
+            updateModel({ ...model, fieldsHashingOrder });
+          }}
+          heading={t(EntityFieldsI18nKey.fieldsHashingOrder)}
+          title={t(EntityFieldsI18nKey.fieldsHashingOrder)}
+          addPlaceholder={t(EntityPlaceholdersI18nKey.Value)}
+          addTitle={t(BasicI18nKey.AddField)}
+          optional={true}
         />
-        <Pricing model={model} onChangeModel={updateModel} />
-        <div className="w-full lg:w-[35%]">
-          <Multiselect
-            elementId="order"
-            draggable={true}
-            selectedItems={model.fieldsHashingOrder || []}
-            allItems={model.fieldsHashingOrder || []}
-            onChangeItems={(fieldsHashingOrder) => {
-              updateModel({ ...model, fieldsHashingOrder });
-            }}
-            heading={t(EntityFieldsI18nKey.fieldsHashingOrder)}
-            title={t(EntityFieldsI18nKey.fieldsHashingOrder)}
-            addPlaceholder={t(EntityPlaceholdersI18nKey.Value)}
-            addTitle={t(BasicI18nKey.AddField)}
-            optional={true}
-          />
-        </div>
       </div>
     </div>
   );
