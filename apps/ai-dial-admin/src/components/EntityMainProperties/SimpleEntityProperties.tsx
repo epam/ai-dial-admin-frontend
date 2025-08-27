@@ -1,18 +1,18 @@
 import { FC, useCallback, useState } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
-import { checkNameVersionCombination } from '@/src/utils/prompts/versions';
 import { getErrorForPath } from '@/src/utils/validation/path-error';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { getPromptVersionError } from '../../utils/validation/version-error';
 
 interface Props {
   view?: ApplicationRoute;
@@ -47,15 +47,21 @@ const SimpleEntityProperties: FC<Props> = ({
   const [versionError, setVersionError] = useState<string | undefined>(void 0);
   const [pathError, setPathError] = useState<string | undefined>(void 0);
 
-  const onChangeVersion = useCallback(
+  const validateVersion = useCallback(
     (version?: string) => {
-      onChangeEntity({ ...entity, version });
-      const isValidVersion = !checkNameVersionCombination(versionsMap, entity.name as string, entity.version || '');
-      const versionError = isValidVersion && versionsMap ? void 0 : t(ErrorI18nKey.NameVersionCombination);
+      const versionError = getPromptVersionError(versionsMap, entity, t, version);
       setVersionError(versionError);
       dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !versionError });
     },
-    [dispatch, entity, onChangeEntity, t, versionsMap],
+    [dispatch, entity, t, versionsMap],
+  );
+
+  const onChangeVersion = useCallback(
+    (version?: string) => {
+      onChangeEntity({ ...entity, version });
+      validateVersion(version);
+    },
+    [entity, onChangeEntity, validateVersion],
   );
 
   const onChangePath = useCallback(
@@ -79,11 +85,13 @@ const SimpleEntityProperties: FC<Props> = ({
           onChangeEntity={onChangeEntity}
         />
       )}
-
-      <DisplayNameControl
-        displayName={entity.displayName}
-        onChange={(name) => onChangeEntity({ ...entity, displayName: name })}
-      />
+      {/* not need for prompts */}
+      {!versionsMap && (
+        <DisplayNameControl
+          displayName={entity.displayName}
+          onChange={(name) => onChangeEntity({ ...entity, displayName: name })}
+        />
+      )}
 
       {versionsMap && <VersionControl version={entity.version} onChange={onChangeVersion} error={versionError} />}
 

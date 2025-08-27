@@ -2,7 +2,7 @@ import { DialRoute } from '@/src/models/dial/route';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { RoutesApi } from '../routes-api';
+import { RoutesApi, ROUTES_URL } from '../routes-api';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -13,6 +13,7 @@ describe('Server :: RoutesApi', () => {
   beforeEach(() => {
     fetch.resetMocks();
   });
+
   const mockRoute: DialRoute = {
     name: 'route-1',
     description: 'Test route',
@@ -23,7 +24,7 @@ describe('Server :: RoutesApi', () => {
 
     const result = await instance.getRoutesList(TOKEN_MOCK);
 
-    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/routes'), expect.objectContaining({ method: 'GET' }));
+    expect(fetch).toHaveBeenCalledWith(`${TEST_URL}${ROUTES_URL}`, expect.objectContaining({ method: 'GET' }));
     expect(result).toEqual(JSON.stringify([mockRoute]));
   });
 

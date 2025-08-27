@@ -102,6 +102,10 @@ const CreateEntity: FC<Props> = ({
   // initial validation (disable save when no values entered yet)
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!currentEntity.name });
+
+    if (versionsMap) {
+      dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !!currentEntity.version });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
