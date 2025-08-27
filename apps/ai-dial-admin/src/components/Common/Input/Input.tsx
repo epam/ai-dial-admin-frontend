@@ -17,6 +17,7 @@ export interface InputProps {
   onChange?: (value: string) => void;
   min?: number;
   max?: number;
+  tooltipTriggerClassName?: string;
 }
 
 const Input: FC<InputProps> = ({
@@ -30,6 +31,7 @@ const Input: FC<InputProps> = ({
   min,
   max,
   onChange,
+  tooltipTriggerClassName,
 }) => {
   const handleWheel = (e: WheelEvent<HTMLInputElement>) => (e.target as HTMLInputElement).blur();
 
@@ -103,7 +105,7 @@ const Input: FC<InputProps> = ({
     onChange?.(newValue);
   };
   return (
-    <Tooltip tooltip={value}>
+    <Tooltip tooltip={value} triggerClassName={tooltipTriggerClassName}>
       <input
         type={type}
         autoComplete="off"
