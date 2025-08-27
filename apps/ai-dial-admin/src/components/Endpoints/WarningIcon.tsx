@@ -13,7 +13,7 @@ interface Props {
 
 const WarningIcon: FC<Props> = ({ endpointWarning }) => {
   return (
-    <Tooltip tooltip={endpointWarning} placement={'bottom'}>
+    <Tooltip tooltip={endpointWarning} placement={'bottom'} triggerClassName={endpointWarning ? 'w-[20px]' : 'hidden'}>
       <IconAlertTriangleFilled fill="#F4CE46" {...BASE_ICON_PROPS} className={endpointWarning ? '' : 'hidden'} />
     </Tooltip>
   );

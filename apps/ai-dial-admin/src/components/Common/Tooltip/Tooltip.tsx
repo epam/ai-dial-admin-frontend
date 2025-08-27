@@ -21,14 +21,12 @@ const Tooltip: FC<Props> = ({
   contentClassName,
   ...tooltipProps
 }) => {
-  if (hideTooltip || !tooltip) {
-    return <span className={triggerClassName}>{children}</span>;
-  }
-
   return (
     <TooltipContainer {...tooltipProps}>
       <TooltipTrigger className={classNames(triggerClassName, 'truncate')}>{children}</TooltipTrigger>
-      <TooltipContent className={classNames(contentClassName, 'max-w-[300px]')}>{tooltip}</TooltipContent>
+      <TooltipContent className={classNames(contentClassName, 'max-w-[300px]', (hideTooltip || !tooltip) && 'hidden')}>
+        {tooltip}
+      </TooltipContent>
     </TooltipContainer>
   );
 };
