@@ -26,12 +26,12 @@ const RouteContent: FC<Props> = ({ route, parentRoles, readonly, roles, onChange
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
 
   return (
-    <div className="h-full w-full p-4 border flex flex-col border-primary rounded">
+    <div className="h-full w-full p-4 flex flex-col">
       <div className="mb-4">
         <Tabs tabs={tabs} activeTab={activeTab} onClick={(tab) => setActiveTab(tab as EntityViewTab)} />
       </div>
 
-      <div className="flex-1 min-h-0 overflow-auto">
+      <div className="flex-1 min-h-0 overflow-auto mt-4 lg:mt-0">
         {activeTab === EntityViewTab.Properties && (
           <RouteProperties route={route} updateRoute={onChangeRoute} isAppRoute={true} readonly={readonly} />
         )}

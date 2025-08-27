@@ -3,7 +3,7 @@ import { ChangeEvent, FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import Button from '@/src/components/Common/Button/Button';
-import { BasicI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
@@ -61,7 +61,7 @@ const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, 
           disable={disabled}
           cssClass="secondary"
           onClick={onOpenFilePathModal}
-          title={t(BasicI18nKey.Move)}
+          title={t(ButtonsI18nKey.Move)}
           iconBefore={<IconFolderShare {...BASE_ICON_PROPS} />}
         />
       </div>

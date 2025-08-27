@@ -5,7 +5,7 @@ import { FC } from 'react';
 import classNames from 'classnames';
 
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { FoldersI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -30,7 +30,7 @@ const RulesItemOperator: FC<Props> = ({ folderName, isEmpty, isReadonly }) => {
       {isEmpty && isReadonly ? (
         <span className="small">{message}</span>
       ) : (
-        <span className={operatorNameClass}>{t(FoldersI18nKey.Or)}</span>
+        <span className={operatorNameClass}>{t(BasicI18nKey.Or)}</span>
       )}
     </div>
   );

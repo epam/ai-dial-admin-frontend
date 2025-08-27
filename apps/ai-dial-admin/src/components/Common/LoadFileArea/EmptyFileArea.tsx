@@ -5,9 +5,9 @@ import { useDrop } from 'react-dnd';
 import { NativeTypes } from 'react-dnd-html5-backend';
 
 import Button from '@/src/components/Common/Button/Button';
-import { BasicI18nKey, CommonControlsI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
 import ErrorText from '@/src/components/Common/ErrorText/ErrorText';
+import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
   emptyTitle: string;
@@ -136,8 +136,8 @@ const EmptyFileArea: FC<Props> = ({
           className="flex flex-col items-center cursor-pointer h-full w-full text-secondary tiny justify-center"
         >
           <p className="mb-1">{emptyTitle}</p>
-          <p className="mb-0.5"> {t(CommonControlsI18nKey.Or)}</p>
-          <Button cssClass="tertiary" title={t(BasicI18nKey.Browse)} onClick={() => fileInputRef.current?.click()} />
+          <p className="mb-0.5"> {t(BasicI18nKey.Or)}</p>
+          <Button cssClass="tertiary" title={t(ButtonsI18nKey.Browse)} onClick={() => fileInputRef.current?.click()} />
         </label>
         <input
           multiple={isMultiple}

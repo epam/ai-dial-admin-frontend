@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { getFrameConfig, getScheme } from '../utils';
+import { getFrameConfig, getAppRunner } from '../utils';
 
 describe('getFrameConfig', () => {
   test('returns config for DialApplicationScheme', () => {
@@ -60,7 +60,7 @@ describe('getScheme', () => {
       { $id: 'scheme-456', 'dial:applicationTypeEditorUrl': 'https://url2' },
     ];
 
-    const result = getScheme(entity, schemes);
+    const result = getAppRunner(entity, schemes);
     expect(result).toEqual(schemes[0]);
   });
 
@@ -71,7 +71,7 @@ describe('getScheme', () => {
       { $id: 'scheme-456', 'dial:applicationTypeEditorUrl': 'https://url2' },
     ];
 
-    const result = getScheme(entity, schemes);
+    const result = getAppRunner(entity, schemes);
     expect(result).toEqual(schemes[1]);
   });
 
@@ -81,7 +81,7 @@ describe('getScheme', () => {
       { $id: 'scheme-123', 'dial:applicationTypeEditorUrl': 'https://url1' },
     ];
 
-    const result = getScheme(entity, schemes);
+    const result = getAppRunner(entity, schemes);
     expect(result).toBeUndefined();
   });
 
@@ -91,7 +91,7 @@ describe('getScheme', () => {
       'dial:applicationTypeEditorUrl': 'https://casted-url',
     };
 
-    const result = getScheme(entity);
+    const result = getAppRunner(entity);
     expect(result).toEqual(entity);
   });
 });

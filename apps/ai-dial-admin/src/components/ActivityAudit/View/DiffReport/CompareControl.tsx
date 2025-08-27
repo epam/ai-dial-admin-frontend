@@ -2,7 +2,7 @@ import { Dispatch, FC, SetStateAction, useCallback } from 'react';
 
 import Dropdown from '@/src/components/Common/Dropdown/Dropdown';
 import DropdownMenuItem from '@/src/components/Common/Dropdown/DropdownItem';
-import { ActivityAuditI18nKey, BasicI18nKey } from '@/src/constants/i18n';
+import { ActivityAuditI18nKey, CompareI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { CompareView } from '@/src/types/activity-audit';
@@ -38,7 +38,7 @@ const CompareControl: FC<Props> = ({ compareView, setCompareView }) => {
       <Dropdown
         selectedClassName="flex items-center my-[5px] mr-2 px-1.5 py-1 small text-primary rounded bg-layer-4 cursor-pointer"
         selectedValue={items.find((item) => item.id === compareView)}
-        prefix={`${t(BasicI18nKey.Comparison)}: `}
+        prefix={`${t(CompareI18nKey.Comparison)}: `}
       >
         {items.map((item, i) => (
           <DropdownMenuItem className="gap-0" key={i} dropdownItem={item} onClick={() => onChange(item.id)} />
