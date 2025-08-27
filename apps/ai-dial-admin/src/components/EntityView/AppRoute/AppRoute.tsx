@@ -90,7 +90,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
           </div>
           <div className="flex-1 min-h-0 relative">
             {!activeRouteTab && <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoAppRoutes)} />}
-            {activeRouteTab && tabs.length && (
+            {activeRouteTab && !!tabs.length && (
               <Tabs
                 activeTab={activeRouteTab}
                 tabs={tabs}

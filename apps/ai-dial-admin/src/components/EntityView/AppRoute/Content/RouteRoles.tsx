@@ -130,7 +130,10 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
             {data.length > 0 ? (
               <Grid columnDefs={columns} rowData={data} />
             ) : iAppRunnerView ? (
-              <NoDataContent icon={<IconReplace />} emptyDataTitle={t(RoutesI18nKey.InheritRolesWarning)} />
+              <NoDataContent
+                icon={<IconReplace width={60} height={60} />}
+                emptyDataTitle={t(RoutesI18nKey.InheritRolesWarning)}
+              />
             ) : (
               <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoRoles)} />
             )}
