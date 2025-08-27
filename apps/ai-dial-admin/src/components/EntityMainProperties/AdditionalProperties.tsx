@@ -3,7 +3,6 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -15,6 +14,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import SourceEntitySelector from '@/src/components/EntityMainProperties/SourceEntitySelector/SourceEntitySelector';
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
 
 interface Props {
   view: ApplicationRoute;
@@ -58,14 +58,7 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
     <div className="w-full flex flex-col gap-6">
       <div className="flex flex-col lg:w-[35%] gap-6 mt-4">
         {isEntityImmutable && isShowMaintainer ? (
-          <TextInputField
-            elementId="author"
-            fieldTitle={t(EntityFieldsI18nKey.author)}
-            placeholder={t(EntityPlaceholdersI18nKey.Maintainer)}
-            value={entity.author}
-            optional={true}
-            onChange={(author?: string) => onChangeEntity({ ...entity, author })}
-          />
+          <MaintainerControl entity={entity} onChangeEntity={onChangeEntity} />
         ) : null}
 
         {isShowCompletionEndpoint && isEntityImmutable ? (
