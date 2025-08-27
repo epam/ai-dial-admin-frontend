@@ -49,7 +49,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
     const values = (route as DialAppRoute).permissions?.map(
       (p) => permissionsItems.find((i) => i.id === p)?.name as string,
     );
-    return !values || !values?.length ? null : [];
+    return !values || !values?.length ? null : values;
   }, [permissionsItems, route]);
 
   const onChangeName = useCallback(
