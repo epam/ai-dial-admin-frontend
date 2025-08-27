@@ -28,6 +28,7 @@ const separateObjectParameterKeys = [
   EntityParameterKeys.FEATURES,
   EntityParameterKeys.APPLICATIONS,
   EntityParameterKeys.ENTITIES,
+  EntityParameterKeys.ROUTES,
   EntityParameterKeys.KEYS,
   EntityParameterKeys.ROLES,
   EntityParameterKeys.MODELS,
@@ -355,6 +356,7 @@ const compareSeparateObjects = (
     key === EntityParameterKeys.KEYS ||
     key === EntityParameterKeys.ROLES ||
     key === EntityParameterKeys.MODELS ||
+    key === EntityParameterKeys.ROUTES ||
     key === EntityParameterKeys.DEPENDENCIES
   ) {
     compareEntities(diffs, val1 as string[], val2 as string[], isCurrent);
@@ -386,6 +388,7 @@ const fillSeparateObjects = (diffs: ActivityAuditDiff[], key: string, value: obj
     key === EntityParameterKeys.ENTITIES ||
     key === EntityParameterKeys.KEYS ||
     key === EntityParameterKeys.ROLES ||
+    key === EntityParameterKeys.ROUTES ||
     key === EntityParameterKeys.MODELS ||
     key === EntityParameterKeys.DEPENDENCIES
   ) {
@@ -727,6 +730,7 @@ export const createSectionFromDiffs = (
     EntityParameterKeys.PARAMETERS,
     EntityParameterKeys.MODELS,
     EntityParameterKeys.DEPENDENCIES,
+    EntityParameterKeys.ROUTES,
   ];
   const sections: ActivityAuditSection = {};
   sectionNames.forEach((name) => {

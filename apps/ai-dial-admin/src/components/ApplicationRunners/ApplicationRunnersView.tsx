@@ -158,6 +158,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
 
             {activeTab === EntityViewTab.Routes && (
               <EntityRoutes
+                iAppRunnerView={true}
                 routes={selectedScheme['dial:applicationTypeRoutes']}
                 onChangeRoutes={(routes) =>
                   setSelectedScheme({ ...selectedScheme, ['dial:applicationTypeRoutes']: routes })

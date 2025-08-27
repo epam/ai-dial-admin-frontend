@@ -12,13 +12,14 @@ import { DialRole } from '@/src/models/dial/role';
 
 interface Props {
   route: DialAppRoute;
+  iAppRunnerView?: boolean;
   roles: DialRole[];
   readonly?: boolean;
   parentRoles?: string[];
   onChangeRoute: (route: DialAppRoute) => void;
 }
 
-const RouteContent: FC<Props> = ({ route, parentRoles, readonly, roles, onChangeRoute }) => {
+const RouteContent: FC<Props> = ({ route, readonly, onChangeRoute, ...props }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
 
   const tabs = [propertiesTabs(t), attachmentsTabs(t), rolesTabs(t)];
@@ -40,13 +41,7 @@ const RouteContent: FC<Props> = ({ route, parentRoles, readonly, roles, onChange
           <RouteAttachments route={route} onChangeRoute={onChangeRoute} readonly={readonly} />
         )}
         {activeTab === EntityViewTab.Roles && (
-          <RouteRoles
-            route={route}
-            roles={roles}
-            parentRoles={parentRoles}
-            onChangeRoute={onChangeRoute}
-            readonly={readonly}
-          />
+          <RouteRoles route={route} onChangeRoute={onChangeRoute} readonly={readonly} {...props} />
         )}
       </div>
     </div>

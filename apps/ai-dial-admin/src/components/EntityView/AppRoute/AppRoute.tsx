@@ -21,10 +21,11 @@ interface Props {
   routes?: DialAppRoute[];
   parentRoleLimits?: DialRoleLimitsMap;
   readonly?: boolean;
+  iAppRunnerView?: boolean;
   onChangeRoutes: (routes: DialAppRoute[]) => void;
 }
 
-const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, routes, onChangeRoutes }) => {
+const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunnerView, routes, onChangeRoutes }) => {
   const t = useI18n() as (str: string) => string;
 
   const [modalState, setModalState] = useState(PopUpState.Closed);
@@ -102,6 +103,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, routes, on
         <div className="flex flex-col flex-1 min-h-0 min-w-0 relative border border-primary rounded">
           {routes?.[activeRouteIndex as number] && (
             <RouteContent
+              iAppRunnerView={iAppRunnerView}
               route={routes?.[activeRouteIndex as number] || ({} as DialAppRoute)}
               roles={roles || []}
               parentRoles={Object.keys(parentRoleLimits || {})}

@@ -31,4 +31,7 @@ export enum EntityParameterKeys {
   MODELS = 'models',
   UNIT = 'unit',
   DEPENDENCIES = 'dependencies',
+  // app routes
+  ROUTES = 'routes',
+  APP_RUNNER_ROUTES = 'dial:applicationTypeRoutes',
 }
