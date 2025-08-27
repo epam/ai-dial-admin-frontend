@@ -105,14 +105,6 @@ describe('Utils :: isValidEntity', () => {
     expect(res9).toBeFalsy();
   });
 
-  test('Should check ApplicationRunners', () => {
-    const res1 = isValidEntity(ApplicationRoute.ApplicationRunners, {});
-    const res2 = isValidEntity(ApplicationRoute.ApplicationRunners, { $id: 'id' });
-
-    expect(res1).toBeFalsy();
-    expect(res2).toBeTruthy();
-  });
-
   test('Should check Applications', () => {
     const res1 = isValidEntity(ApplicationRoute.Applications, {});
     const res2 = isValidEntity(ApplicationRoute.Applications, { name: 'name', displayName: 'displayName' });

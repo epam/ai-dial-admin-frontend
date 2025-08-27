@@ -5,13 +5,14 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
-import { getErrorForName } from '@/src/utils/validation/name-error';
+import { getErrorForName, getErrorForUrlId } from '@/src/utils/validation/name-error';
 
 interface Props<T> {
   entity: T;
   fieldTitle?: string;
   placeholder?: string;
   names?: string[];
+  isUrlId?: boolean;
   onChangeEntity?: (entity: T) => void;
 }
 
@@ -20,6 +21,7 @@ const IdControl = <T extends { name?: string }>({
   placeholder,
   entity,
   names,
+  isUrlId,
   onChangeEntity,
 }: Props<T>) => {
   const t = useI18n() as (t: string) => string;
@@ -29,12 +31,12 @@ const IdControl = <T extends { name?: string }>({
 
   const onChangeName = useCallback(
     (name?: string) => {
-      const error = getErrorForName(name, names, t);
+      const error = isUrlId ? getErrorForUrlId(name, names, t) : getErrorForName(name, names, t);
       setNameError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
       onChangeEntity?.({ ...entity, name });
     },
-    [dispatch, entity, names, onChangeEntity, t],
+    [dispatch, entity, isUrlId, names, onChangeEntity, t],
   );
 
   return (
