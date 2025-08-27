@@ -83,6 +83,7 @@ const EntityMainProperties: FC<Props> = ({
     if (view === ApplicationRoute.Models) {
       dispatch({ type: ValidationActionType.SetField, field: 'displayVersion', isValid: !versionError });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [versionError, (entity as DialModel).displayVersion, t, view, dispatch]);
 
   const onChangeVersion = useCallback(
