@@ -219,11 +219,6 @@ describe('Defaults :: utils :: getValueByType', () => {
     expect(result).toBe(true);
   });
 
-  test('should return false for falsy values when type is boolean', () => {
-    const result = getValueByType(0, DefaultItemType.boolean);
-    expect(result).toBe(false);
-  });
-
   test('should return 0 when value is falsy and type is number', () => {
     const result = getValueByType('', DefaultItemType.number);
     expect(result).toBe(0);

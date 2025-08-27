@@ -72,11 +72,11 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
   const keyError = useMemo(() => (item.key ? '' : t(ErrorI18nKey.RequiredField)), [item.key, t]);
 
   const onChangeValue = useCallback(
-    (v?: string | number | boolean) => {
-      const value = getValueByType(v, getDefaultValueType(v) as DefaultItemType);
+    (v?: string | number | boolean, newType?: string) => {
+      const value = getValueByType(v, (newType || type?.id) as DefaultItemType);
       changeItem({ ...item, value }, index);
     },
-    [changeItem, item, index],
+    [type?.id, changeItem, item, index],
   );
 
   const onChangeKey = useCallback(
@@ -90,7 +90,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
     (newType: string) => {
       if (newType !== type?.id) {
         const value = getDefaultValueByType(newType as DefaultItemType);
-        onChangeValue(value);
+        onChangeValue(value, newType);
       }
     },
     [onChangeValue, type],

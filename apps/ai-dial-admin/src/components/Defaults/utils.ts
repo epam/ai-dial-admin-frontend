@@ -77,7 +77,7 @@ export const getDefaultValueByType = (type: DefaultItemType): DefaultsValue => {
 export const getValueByType = (value?: DefaultsValue, type?: DefaultItemType): DefaultsValue => {
   switch (type) {
     case DefaultItemType.boolean:
-      return value === BooleanType.true || !!value;
+      return value !== BooleanType.false;
     case DefaultItemType.number:
       return Number(value);
     case DefaultItemType.string:
