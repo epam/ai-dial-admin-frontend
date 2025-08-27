@@ -18,7 +18,7 @@ export const getDisplayNameError = (
   if (view === ApplicationRoute.Models) {
     return names.includes(displayName) && !version ? t(ErrorI18nKey.DisplayNameErrorModel) : '';
   }
-  // TODO: review - ErrorI18nKey.Unique restore?
+
   return '';
 };
 
