@@ -67,7 +67,7 @@ const SimpleEntityProperties: FC<Props> = ({
   const onChangePath = useCallback(
     (path?: string) => {
       onChangeEntity({ ...entity, paths: path ? [path] : [] } as DialRoute);
-      const pathError = getErrorForPath((entity as DialRoute).paths?.[0], t);
+      const pathError = getErrorForPath(path, t);
       setPathError(pathError?.text);
       dispatch({ type: ValidationActionType.SetField, field: 'path', isValid: !pathError });
     },

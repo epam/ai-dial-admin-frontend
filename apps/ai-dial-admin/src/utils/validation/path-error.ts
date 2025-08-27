@@ -9,16 +9,10 @@ export const isValidRoutePath = (_path: string): boolean => {
   // return path === '' ? true : PATH_REGEX.test(path);
 };
 
-export const isValidAllRoutePaths = (paths: string[]): boolean => {
-  const nonEmptyValues = paths.filter((path) => path !== '');
+export const isValidPaths = (paths: string[]): boolean => {
+  const validPaths = paths.filter((path) => !!getErrorForPath(path));
 
-  return !(nonEmptyValues.length === 0);
-
-  // if (nonEmptyValues.length === 0) {
-  //   return false;
-  // }
-
-  // return nonEmptyValues.every((path) => PATH_REGEX.test(path));
+  return !(validPaths.length === 0);
 };
 
 export const getErrorForPath = (path?: string, t?: (str: string) => string) => {
