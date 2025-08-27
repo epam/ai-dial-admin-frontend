@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -29,10 +29,6 @@ const IdControl = <T extends { name?: string }>({
   const t = useI18n() as (t: string) => string;
   const { dispatch } = useSaveValidationContext();
   const [nameError, setNameError] = useState<FieldError | null>(null);
-
-  useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !nameError });
-  }, [nameError, t, dispatch]);
 
   const onChangeName = useCallback(
     (name?: string) => {
