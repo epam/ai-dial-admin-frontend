@@ -78,9 +78,7 @@ describe('Server :: ToolsetsApi', () => {
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TOOLSET_URL(mockToolset.name)}`,
-      expect.objectContaining({
-        method: 'DELETE',
-      }),
+      expect.objectContaining({ method: 'DELETE' }),
     );
   });
 });

@@ -23,4 +23,5 @@ export const SYSTEM_ROLLBACK_TAB_NAME: Record<ActivityAuditResourceType, string>
   [ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA]: 'ApplicationRunners',
   [ActivityAuditResourceType.ROUTE]: 'Routes',
   [ActivityAuditResourceType.INTERCEPTOR_TEMPLATE]: 'InterceptorTemplates',
+  [ActivityAuditResourceType.TOOLSETS]: 'Toolsets',
 };
