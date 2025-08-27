@@ -2,7 +2,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { FC } from 'react';
 import { createPortal } from 'react-dom';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
-import { ButtonsI18nKey, RolesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ModalType } from './constants';
 
