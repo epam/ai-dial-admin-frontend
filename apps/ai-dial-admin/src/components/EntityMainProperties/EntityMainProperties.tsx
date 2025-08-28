@@ -103,8 +103,8 @@ const EntityMainProperties: FC<Props> = ({
   );
 
   return (
-    <div className="w-full flex flex-col gap-6">
-      <div className={classNames('flex flex-col', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
+    <div className="w-full flex flex-col">
+      <div className={classNames('flex flex-col gap-y-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
         {!isEntityImmutable && (
           <IdControl entity={entity} onChangeEntity={onChangeName} isUniqueNameError={isUniqueNameError} />
         )}
