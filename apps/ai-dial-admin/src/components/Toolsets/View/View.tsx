@@ -105,6 +105,7 @@ const ToolsetView: FC<Props> = ({ names, originalToolset }) => {
           onSave={onSave}
           removeEntity={removeToolset}
           jsonEditorEnabled={jsonEditorEnabled}
+          jsonErrors={jsonErrors}
           toggleJsonEditor={toggleJsonEditor}
           setErrorNotifications={setErrorNotifications}
         />
@@ -113,7 +114,7 @@ const ToolsetView: FC<Props> = ({ names, originalToolset }) => {
         {jsonEditorEnabled ? (
           <JSONEditor
             key={key}
-            entity={selectedToolset}
+            model={selectedToolset}
             errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedToolset}
             setIsChanged={setIsChanged}

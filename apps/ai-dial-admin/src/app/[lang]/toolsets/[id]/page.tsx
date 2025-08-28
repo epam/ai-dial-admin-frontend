@@ -35,7 +35,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   return (
     <SaveValidationContextProvider>
-      <ToolsetView names={toolSets?.map((t) => t.name || '') || []} originalEntity={toolSet} />
+      <ToolsetView names={toolSets?.map((t) => t.name || '') || []} originalToolset={toolSet} />
     </SaveValidationContextProvider>
   );
 }
