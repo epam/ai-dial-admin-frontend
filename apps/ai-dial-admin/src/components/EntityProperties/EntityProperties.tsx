@@ -1,19 +1,18 @@
 import { FC, useCallback } from 'react';
 
-import { getModelsTopics } from '@/src/app/[lang]/models/actions';
 import ApplicationSource from '@/src/components/ApplicationSource/ApplicationSource';
-import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import Defaults from '@/src/components/Defaults/Defaults';
 import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMainProperties';
 import EntityAttachments from '@/src/components/EntityView/Properties/EntityAttachments';
 import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
 import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
 import MaxRetryAttempts from '@/src/components/MaxRetryAttempts/MaxRetryAttempts';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';
+import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 
 interface Props {
   entity: DialBaseEntity;
@@ -25,13 +24,6 @@ interface Props {
 
 const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntity }) => {
   const t = useI18n();
-
-  const onChangeItems = useCallback(
-    (topics: string[]) => {
-      updateEntity({ ...entity, topics });
-    },
-    [entity, updateEntity],
-  );
 
   const onChangeMaxRetryAttempts = useCallback(
     (maxRetryAttempts?: number) => {
@@ -58,16 +50,7 @@ const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntit
           onChange={(icon) => updateEntity({ ...entity, iconUrl: icon })}
         />
         <div className="lg:w-[35%]">
-          <Multiselect
-            elementId="topics"
-            selectedItems={entity.topics}
-            getItems={getModelsTopics}
-            onChangeItems={onChangeItems}
-            heading={t(EntityFieldsI18nKey.topics)}
-            title={t(EntityFieldsI18nKey.topics)}
-            addPlaceholder={t(EntityPlaceholdersI18nKey.Topic)}
-            addTitle={t(TopicsI18nKey.AddTopic)}
-          />
+          <TopicsControl entity={entity} onChange={updateEntity} />
         </div>
         {view === ApplicationRoute.Applications && (
           <ApplicationSource entity={entity} onChangeEntity={updateEntity} runners={runners} isEntityImmutable={true} />

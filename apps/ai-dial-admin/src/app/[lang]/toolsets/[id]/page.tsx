@@ -2,15 +2,14 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { toolSetsApi } from '@/src/app/api/api';
-import EntityView from '@/src/components/EntityView/View/EntityView';
 import Page403 from '@/src/components/Page403/Page403';
+import ToolsetView from '@/src/components/Toolsets/View/View';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialToolset } from '@/src/models/dial/toolset';
 import { logger } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { removeToolset, updateToolset } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,13 +35,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   return (
     <SaveValidationContextProvider>
-      <EntityView
-        view={ApplicationRoute.Toolsets}
-        names={toolSets?.map((t) => t.name || '') || []}
-        originalEntity={toolSet}
-        removeEntity={removeToolset}
-        updateEntity={updateToolset}
-      />
+      <ToolsetView names={toolSets?.map((t) => t.name || '') || []} originalEntity={toolSet} />
     </SaveValidationContextProvider>
   );
 }
