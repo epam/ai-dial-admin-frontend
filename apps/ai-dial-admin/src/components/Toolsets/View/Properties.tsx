@@ -30,7 +30,7 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
         <MaintainerControl entity={selectedToolset} onChangeEntity={onChangeToolset} />
         <IconControl
           iconUrl={selectedToolset.iconUrl}
-          onChange={(icon) => onChangeEntity({ ...selectedToolset, iconUrl: icon })}
+          onChange={(icon) => onChangeToolset({ ...selectedToolset, iconUrl: icon })}
         />
         <TopicsControl entity={selectedToolset} onChange={onChangeToolset} />
       </div>
