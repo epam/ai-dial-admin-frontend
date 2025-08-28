@@ -1,4 +1,4 @@
-import { FC, useCallback } from 'react';
+import { FC } from 'react';
 
 import ApplicationSource from '@/src/components/ApplicationSource/ApplicationSource';
 import Defaults from '@/src/components/Defaults/Defaults';
@@ -7,7 +7,7 @@ import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/
 import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMainProperties';
 import EntityAttachments from '@/src/components/EntityView/Properties/EntityAttachments';
 import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
-import MaxRetryAttempts from '@/src/components/MaxRetryAttempts/MaxRetryAttempts';
+import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -21,15 +21,8 @@ interface Props {
 }
 
 const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntity }) => {
-  const onChangeMaxRetryAttempts = useCallback(
-    (maxRetryAttempts?: number) => {
-      updateEntity({ ...(entity as DialApplication), maxRetryAttempts });
-    },
-    [updateEntity, entity],
-  );
-
   return (
-    <div className="h-full flex flex-col pt-3 ">
+    <div className="h-full flex flex-col pt-3">
       <div className="flex flex-col gap-6">
         <EntityMainProperties
           view={view}
@@ -53,10 +46,7 @@ const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntit
         <ForwardAuthTokenField view={view} entity={entity} onChangeEntity={updateEntity} />
 
         {view === ApplicationRoute.Applications && (
-          <MaxRetryAttempts
-            maxRetryAttempts={(entity as DialApplication).maxRetryAttempts}
-            onChangeMaxRetryAttempts={onChangeMaxRetryAttempts}
-          />
+          <MaxRetryAttempts entity={entity as DialApplication} onChangeEntity={updateEntity} />
         )}
       </div>
     </div>

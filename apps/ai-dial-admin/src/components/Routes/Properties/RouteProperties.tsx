@@ -7,7 +7,7 @@ import Switch from '@/src/components/Common/Switch/Switch';
 import UpstreamEndpoints from '@/src/components/Endpoints/UpstreamEndpoints';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
-import MaxRetryAttempts from '@/src/components/MaxRetryAttempts/MaxRetryAttempts';
+import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
 import Paths from '@/src/components/Routes/Paths/Paths';
 import { handleRouteOutputChange } from '@/src/components/Routes/utils';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
@@ -127,13 +127,6 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
     [route, updateRoute],
   );
 
-  const onChangeMaxRetryAttempts = useCallback(
-    (maxRetryAttempts?: number) => {
-      updateRoute({ ...route, maxRetryAttempts });
-    },
-    [updateRoute, route],
-  );
-
   const onChangePaths = useCallback(
     (paths: string[]) => {
       updateRoute({ ...route, paths });
@@ -214,11 +207,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
           <UpstreamEndpoints readonly={readonly} entity={route} onChangeEntity={updateRoute} />
         )}
 
-        <MaxRetryAttempts
-          readonly={readonly}
-          maxRetryAttempts={route.maxRetryAttempts}
-          onChangeMaxRetryAttempts={onChangeMaxRetryAttempts}
-        />
+        <MaxRetryAttempts readonly={readonly} entity={route} onChangeEntity={updateRoute} />
 
         <div className="lg:w-[25%] flex flex-col gap-6">
           {isAppRoute && (

@@ -1,11 +1,11 @@
-import { FC, useCallback } from 'react';
+import { FC } from 'react';
 
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import Defaults from '@/src/components/Defaults/Defaults';
 import UpstreamEndpoints from '@/src/components/Endpoints/UpstreamEndpoints';
 import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMainProperties';
 import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
-import MaxRetryAttempts from '@/src/components/MaxRetryAttempts/MaxRetryAttempts';
+import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
 import Limits from '@/src/components/ModelView/Limits/Limits';
 import Pricing from '@/src/components/ModelView/Pricing/Pricing';
 import TokenizerModelSwitch from '@/src/components/ModelView/TokenizerModel/Tokenizer';
@@ -24,13 +24,6 @@ interface Props {
 const ModelProperties: FC<Props> = ({ model, modelsNames, updateModel }) => {
   const t = useI18n();
 
-  const onChangeMaxRetryAttempts = useCallback(
-    (maxRetryAttempts?: number) => {
-      updateModel({ ...model, maxRetryAttempts });
-    },
-    [updateModel, model],
-  );
-
   return (
     <div className="h-full flex flex-col pt-3 gap-6">
       <EntityMainProperties
@@ -48,7 +41,7 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, updateModel }) => {
         <ForwardAuthTokenField view={ApplicationRoute.Models} entity={model} onChangeEntity={updateModel} />
       </div>
       <Limits model={model} onChangeModel={updateModel} />
-      <MaxRetryAttempts maxRetryAttempts={model.maxRetryAttempts} onChangeMaxRetryAttempts={onChangeMaxRetryAttempts} />
+      <MaxRetryAttempts entity={model} onChangeEntity={updateModel} />
       <Pricing model={model} onChangeModel={updateModel} />
       <div className="w-full lg:w-[35%]">
         <Multiselect

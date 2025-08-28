@@ -6,12 +6,12 @@ export interface DialToolset extends DialBaseNamedEntity {
   iconUrl?: string;
   author?: string;
   topics?: string[];
+  maxRetryAttempts?: number;
   // "endpoint": "http://sample-endpoint/call",
   // "descriptionKeywords": [
   //   "MCP",
   //   "tool"
   // ],
-  // "maxRetryAttempts": 3,
   // "transport": "http", // HTTP or SSE
   // "allowedTools": [
   //   "first",

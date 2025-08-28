@@ -5,13 +5,13 @@ import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 
-interface Props {
-  maxRetryAttempts?: number;
+interface Props<T> {
+  entity?: T;
   readonly?: boolean;
-  onChangeMaxRetryAttempts: (num?: number) => void;
+  onChangeEntity: (entity: T) => void;
 }
 
-const MaxRetryAttempts: FC<Props> = ({ readonly, maxRetryAttempts, onChangeMaxRetryAttempts }) => {
+const MaxRetryAttempts = <T extends { maxRetryAttempts?: number }>({ entity, onChangeEntity, readonly }: Props<T>) => {
   const t = useI18n();
 
   const items: DropdownItemsModel[] = [
@@ -22,12 +22,13 @@ const MaxRetryAttempts: FC<Props> = ({ readonly, maxRetryAttempts, onChangeMaxRe
     { id: '4', name: '4' },
     { id: '5', name: '5' },
   ];
-  const activeMaxAttempts = maxRetryAttempts?.toString() || '0';
+
+  const activeMaxAttempts = entity?.maxRetryAttempts?.toString() || '0';
   const onChange = useCallback(
     (value: string) => {
-      onChangeMaxRetryAttempts(Number(value));
+      onChangeEntity({ ...entity, maxRetryAttempts: Number(value) } as T);
     },
-    [onChangeMaxRetryAttempts],
+    [entity, onChangeEntity],
   );
 
   return (
