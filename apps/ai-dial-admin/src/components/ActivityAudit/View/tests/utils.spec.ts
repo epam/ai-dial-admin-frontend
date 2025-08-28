@@ -16,6 +16,7 @@ import {
   isSimpleValueAddedOrRemoved,
   isSimpleValueChanged,
   mergeEntityMaps,
+  mergeLimits,
 } from '../utils';
 
 describe('Activity audit :: generateCurrentResource ', () => {
@@ -407,6 +408,64 @@ describe('Activity audit :: createSectionFromDiffs', () => {
     });
   });
 
+  test('should merge limits and share limits under ROLES', () => {
+    const current: Record<string, ActivityAuditDiff[]> = {
+      [EntityParameterKeys.DEFAULT_ROLE_LIMIT]: [{ parameter: 'default', value: '10' }],
+      [EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT]: [{ parameter: 'shareDefault', value: '8' }],
+      [EntityParameterKeys.ROLE_LIMITS]: [{ parameter: 'role1', value: '5' }],
+      [EntityParameterKeys.ROLE_SHARE_LIMITS]: [{ parameter: 'role1Share', value: '3' }],
+    };
+    const compare: Record<string, ActivityAuditDiff[]> = {
+      [EntityParameterKeys.DEFAULT_ROLE_LIMIT]: [{ parameter: 'default', value: '15' }],
+      [EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT]: [{ parameter: 'shareDefault', value: '12' }],
+      [EntityParameterKeys.ROLE_LIMITS]: [{ parameter: 'role1', value: '7' }],
+      [EntityParameterKeys.ROLE_SHARE_LIMITS]: [{ parameter: 'role1Share', value: '5' }],
+    };
+
+    const result = createSectionFromDiffs(current, compare);
+
+    expect(result[EntityParameterKeys.ROLES]).toHaveLength(2);
+
+    expect(result[EntityParameterKeys.ROLES][0]).toEqual({
+      current: [
+        ...current[EntityParameterKeys.DEFAULT_ROLE_LIMIT],
+        ...current[EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT],
+      ],
+      compare: [
+        ...compare[EntityParameterKeys.DEFAULT_ROLE_LIMIT],
+        ...compare[EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT],
+      ],
+    });
+
+    expect(result[EntityParameterKeys.ROLES][1]).toEqual({
+      current: [...current[EntityParameterKeys.ROLE_LIMITS], ...current[EntityParameterKeys.ROLE_SHARE_LIMITS]],
+      compare: [...compare[EntityParameterKeys.ROLE_LIMITS], ...compare[EntityParameterKeys.ROLE_SHARE_LIMITS]],
+    });
+  });
+
+  test('should handle merging of default role limits without share limits', () => {
+    const current: Record<string, ActivityAuditDiff[]> = {
+      [EntityParameterKeys.DEFAULT_ROLE_LIMIT]: [{ parameter: 'default', value: '10' }],
+      [EntityParameterKeys.ROLE_LIMITS]: [{ parameter: 'role1', value: '5' }],
+    };
+    const compare: Record<string, ActivityAuditDiff[]> = {
+      [EntityParameterKeys.DEFAULT_ROLE_LIMIT]: [{ parameter: 'default', value: '15' }],
+      [EntityParameterKeys.ROLE_LIMITS]: [{ parameter: 'role1', value: '7' }],
+    };
+
+    const result = createSectionFromDiffs(current, compare);
+
+    expect(result[EntityParameterKeys.ROLES]).toHaveLength(2);
+    expect(result[EntityParameterKeys.ROLES][0]).toEqual({
+      current: current[EntityParameterKeys.DEFAULT_ROLE_LIMIT],
+      compare: compare[EntityParameterKeys.DEFAULT_ROLE_LIMIT],
+    });
+    expect(result[EntityParameterKeys.ROLES][1]).toEqual({
+      current: current[EntityParameterKeys.ROLE_LIMITS],
+      compare: compare[EntityParameterKeys.ROLE_LIMITS],
+    });
+  });
+
   test('should create sections for UPSTREAMS keys correctly', () => {
     const current: Record<string, ActivityAuditDiff[]> = {
       upstreams1: [{ parameter: 'u1', value: 'val1' }],
@@ -459,6 +518,23 @@ describe('Activity audit :: createSectionFromDiffs', () => {
     const compare = {};
     const result = createSectionFromDiffs(current, compare);
     expect(result).toEqual({});
+  });
+
+  test('should handle edge case where ROLES section contains only roles', () => {
+    const current: Record<string, ActivityAuditDiff[]> = {
+      [EntityParameterKeys.ROLES]: [{ parameter: 'role1', value: 'admin' }],
+    };
+    const compare: Record<string, ActivityAuditDiff[]> = {
+      [EntityParameterKeys.ROLES]: [{ parameter: 'role1', value: 'user' }],
+    };
+
+    const result = createSectionFromDiffs(current, compare);
+
+    expect(result[EntityParameterKeys.ROLES]).toHaveLength(1);
+    expect(result[EntityParameterKeys.ROLES][0]).toEqual({
+      current: current[EntityParameterKeys.ROLES],
+      compare: compare[EntityParameterKeys.ROLES],
+    });
   });
 });
 
@@ -647,5 +723,113 @@ describe('Activity audit :: mergeEntityMaps', () => {
     const output = result.get(ActivityAuditResourceType.MODEL)!;
 
     expect(output).toEqual([]);
+  });
+});
+
+describe('Activity audit ::  mergeLimits', () => {
+  test('should merge two arrays with the same parameter', () => {
+    const arr1 = [{ parameter: 'myrole', value: 'minute: 1, day: 2, week: 3, month: 44' }];
+
+    const arr2 = [{ parameter: 'myrole', value: 'maxAcceptedUsers: 9, invitationTtl: 145', status: 'changed' }];
+
+    const expected = [
+      {
+        parameter: 'myrole',
+        value: 'minute: 1, day: 2, week: 3, month: 44, maxAcceptedUsers: 9, invitationTtl: 145',
+        status: 'changed',
+      },
+    ];
+
+    expect(mergeLimits(arr1, arr2)).toEqual(expected);
+  });
+
+  test('should merge arrays with different parameters', () => {
+    const arr1 = [{ parameter: 'myrole', value: 'minute: 1, day: 2, week: 3, month: 44' }];
+
+    const arr2 = [{ parameter: 'user', value: 'maxAcceptedUsers: 9, invitationTtl: 145', status: 'changed' }];
+
+    const expected = [
+      {
+        parameter: 'myrole',
+        value: 'minute: 1, day: 2, week: 3, month: 44',
+      },
+      {
+        parameter: 'user',
+        value: 'maxAcceptedUsers: 9, invitationTtl: 145',
+        status: 'changed',
+      },
+    ];
+
+    expect(mergeLimits(arr1, arr2)).toEqual(expected);
+  });
+
+  test('should handle missing status and default it to "unchanged"', () => {
+    const arr1 = [{ parameter: 'myrole', value: 'minute: 1, day: 2' }];
+
+    const arr2 = [{ parameter: 'myrole', value: 'week: 3, month: 44' }];
+
+    const expected = [
+      {
+        parameter: 'myrole',
+        value: 'minute: 1, day: 2, week: 3, month: 44',
+      },
+    ];
+
+    expect(mergeLimits(arr1, arr2)).toEqual(expected);
+  });
+
+  test('should update status to "changed" if present in second array', () => {
+    const arr1 = [{ parameter: 'myrole', value: 'minute: 1' }];
+
+    const arr2 = [{ parameter: 'myrole', value: 'day: 2, week: 3', status: 'changed' }];
+
+    const expected = [
+      {
+        parameter: 'myrole',
+        value: 'minute: 1, day: 2, week: 3',
+        status: 'changed',
+      },
+    ];
+
+    expect(mergeLimits(arr1, arr2)).toEqual(expected);
+  });
+
+  test('should handle empty arrays', () => {
+    const arr1 = [];
+    const arr2 = [];
+
+    const expected = [];
+
+    expect(mergeLimits(arr1, arr2)).toEqual(expected);
+  });
+
+  test('should return an array with only the first array content if the second is empty', () => {
+    const arr1 = [{ parameter: 'myrole', value: 'minute: 1' }];
+
+    const arr2 = [];
+
+    const expected = [
+      {
+        parameter: 'myrole',
+        value: 'minute: 1',
+      },
+    ];
+
+    expect(mergeLimits(arr1, arr2)).toEqual(expected);
+  });
+
+  test('should return an array with only the second array content if the first is empty', () => {
+    const arr1 = [];
+    const arr2 = [{ parameter: 'myrole', value: 'minute: 1', status: 'changed' }];
+
+    const expected = [
+      {
+        parameter: 'myrole',
+        value: 'minute: 1',
+        status: 'changed',
+      },
+    ];
+
+    expect(mergeLimits(arr1, arr2)).toEqual(expected);
   });
 });
