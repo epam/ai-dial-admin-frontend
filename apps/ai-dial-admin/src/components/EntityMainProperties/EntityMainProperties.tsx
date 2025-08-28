@@ -103,8 +103,8 @@ const EntityMainProperties: FC<Props> = ({
   );
 
   return (
-    <div className="w-full flex flex-col gap-6">
-      <div className={classNames('flex flex-col gap-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
+    <div className="w-full flex flex-col">
+      <div className={classNames('flex flex-col gap-y-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
         {!isEntityImmutable && (
           <IdControl entity={entity} onChangeEntity={onChangeName} isUniqueNameError={isUniqueNameError} />
         )}
@@ -140,13 +140,15 @@ const EntityMainProperties: FC<Props> = ({
         <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
       </div>
 
-      <AdditionalProperties
-        entity={entity}
-        onChangeEntity={onChangeEntity}
-        view={view}
-        isEntityImmutable={isEntityImmutable}
-        runners={runners}
-      />
+      <div className="mt-4">
+        <AdditionalProperties
+          entity={entity}
+          onChangeEntity={onChangeEntity}
+          view={view}
+          isEntityImmutable={isEntityImmutable}
+          runners={runners}
+        />
+      </div>
     </div>
   );
 };

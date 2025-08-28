@@ -2,22 +2,21 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getModelsTopics } from '@/src/app/[lang]/models/actions';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
-import RadioField from '@/src/components/Common/RadioField/RadioField';
-import EntityAttachments from '@/src/components/EntityView/Properties/EntityAttachments';
-import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ModelViewI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
-import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
+import InputWithReadonlyParts from '@/src/components/Common/Input/InputWithReadonlyParts';
+import { TextInputField } from '@/src/components/Common/InputField/InputField';
+import RadioField from '@/src/components/Common/RadioField/RadioField';
+import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import EntityAttachments from '@/src/components/EntityView/Properties/EntityAttachments';
+import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
+import { splitEndpoint } from '@/src/components/ModelView/ModelProperties/utils';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
+import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { RadioButtonModel } from '@/src/models/radio-button';
-import InputWithReadonlyParts from '@/src/components/Common/Input/InputWithReadonlyParts';
-import { splitEndpoint } from '@/src/components/ModelView/ModelProperties/utils';
-import { DialAdapter } from '@/src/models/dial/adapter';
-import { useNotification } from '@/src/context/NotificationContext';
+import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { getErrorNotification } from '@/src/utils/notification';
 
 interface Props {
@@ -65,13 +64,6 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
     [model, onChangeModel],
   );
 
-  const onChangeItems = useCallback(
-    (topics: string[]) => {
-      onChangeModel({ ...model, topics });
-    },
-    [model, onChangeModel],
-  );
-
   const onChangeEndpoint = useCallback(
     (value: string) => {
       onChangeModel({ ...model, endpointDeploymentName: value });
@@ -113,24 +105,8 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
         />
         {model.type === DialModelType.Chat && (
           <>
-            <EntityIcon
-              fieldTitle={t(EntityFieldsI18nKey.iconUrl)}
-              elementId="icon"
-              iconUrl={model.iconUrl}
-              onChange={(icon) => onChangeModel({ ...model, iconUrl: icon })}
-            />
-            <Multiselect
-              elementId="topics"
-              selectedItems={model.topics}
-              getItems={getModelsTopics}
-              allItems={model.topics}
-              optional={true}
-              onChangeItems={onChangeItems}
-              heading={t(EntityFieldsI18nKey.topics)}
-              title={t(EntityFieldsI18nKey.topics)}
-              addPlaceholder={t(EntityPlaceholdersI18nKey.Topic)}
-              addTitle={t(TopicsI18nKey.AddTopic)}
-            />
+            <IconControl iconUrl={model.iconUrl} onChange={(icon) => onChangeModel({ ...model, iconUrl: icon })} />
+            <TopicsControl entity={model} onChange={onChangeModel} />
           </>
         )}
       </div>
