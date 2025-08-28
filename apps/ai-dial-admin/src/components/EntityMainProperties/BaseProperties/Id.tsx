@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -30,17 +30,29 @@ const IdControl = <T extends { name?: string }>({
   const { dispatch } = useSaveValidationContext();
   const [nameError, setNameError] = useState<FieldError | null>(null);
 
-  const onChangeName = useCallback(
+  const validateName = useCallback(
     (name?: string) => {
-      const error = isUrlId
-        ? getErrorForUrlId(entity.name, names, t)
-        : getErrorForName(entity.name, names, t, isUniqueNameError);
+      const error = isUrlId ? getErrorForUrlId(name, names, t) : getErrorForName(name, names, t, isUniqueNameError);
       setNameError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
-      onChangeEntity?.({ ...entity, name });
     },
-    [dispatch, entity, isUniqueNameError, isUrlId, names, onChangeEntity, t],
+    [dispatch, isUniqueNameError, isUrlId, names, t],
   );
+
+  const onChangeName = useCallback(
+    (name?: string) => {
+      onChangeEntity?.({ ...entity, name });
+      validateName(name);
+    },
+    [entity, onChangeEntity, validateName],
+  );
+
+  useEffect(() => {
+    if (entity.name) {
+      validateName(entity.name);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isUniqueNameError]);
 
   return (
     <TextInputField

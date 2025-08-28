@@ -81,7 +81,7 @@ export const DESCRIPTION_COLUMN: ColDef = {
 };
 
 export const VERSION_COLUMN: ColDef = { field: 'version', colId: 'version', headerName: 'Version' };
-export const AUTHOR_COLUMN: ColDef = { field: 'author', colId: 'author', headerName: 'Author' };
+export const AUTHOR_COLUMN: ColDef = { field: 'author', colId: 'author', headerName: 'Author', hide: false };
 export const DISPLAY_NAME_COLUMN: ColDef = {
   field: 'displayName',
   colId: 'displayName',
@@ -136,6 +136,7 @@ export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
     headerName: 'Adapter',
     hide: false,
   },
+  AUTHOR_COLUMN,
   { field: 'type', headerName: 'Type', hide: true },
   { field: 'overrideName', headerName: 'Override Name', hide: true },
   TOPIC_COLUMN,
@@ -154,6 +155,7 @@ export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   NAME_COLUMN,
   { field: 'endpoint', headerName: 'Endpoint', hide: false },
   TOPIC_COLUMN,
+  AUTHOR_COLUMN,
   ATTACHMENT_COLUMN(t),
   { field: 'maxInputAttachments', headerName: 'Max attachment number', hide: true },
   { field: 'forwardAuthToken', headerName: 'Forward auth token', hide: true },

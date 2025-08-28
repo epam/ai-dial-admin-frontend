@@ -146,6 +146,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
       <div className="flex flex-col gap-6 lg:w-[35%]">
         <DisplayNameControl
           displayName={route.displayName || route.name}
+          required={isAppRoute}
           onChange={onChangeDisplayName}
           disabled={readonly}
         />
