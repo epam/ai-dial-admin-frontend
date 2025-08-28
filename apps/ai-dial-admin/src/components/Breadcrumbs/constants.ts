@@ -126,6 +126,15 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
       { name: 'Id', href: false },
     ],
   },
+  [ApplicationRoute.Toolsets]: {
+    segments: [
+      {
+        name: 'Toolsets',
+        i18nKey: MenuI18nKey.Toolsets,
+      },
+      { name: 'Id', href: false },
+    ],
+  },
   [ApplicationRoute.Dashboard]: {
     segments: [{ name: 'Dashboard', i18nKey: MenuI18nKey.Dashboard }],
   },
