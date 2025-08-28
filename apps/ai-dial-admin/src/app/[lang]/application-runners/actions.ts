@@ -17,7 +17,16 @@ export async function createApplicationScheme(scheme: DialApplicationScheme) {
   return applicationRunnersApi.createApplicationScheme(scheme, token);
 }
 
-export async function updateApplicationScheme(scheme: DialApplicationScheme) {
+export async function updateApplicationScheme(runner: DialApplicationScheme) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return applicationRunnersApi.updateApplicationScheme(scheme, token);
+  return applicationRunnersApi.updateApplicationScheme(
+    {
+      ...runner,
+      'dial:applicationTypeRoutes': runner['dial:applicationTypeRoutes']?.map((route) => ({
+        ...route,
+        name: route.displayName || route.name,
+      })),
+    },
+    token,
+  );
 }

@@ -25,5 +25,11 @@ export async function createApplication(application: DialApplication) {
 
 export async function updateApplication(application: DialApplication) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return applicationsApi.updateApplication(application, token);
+  return applicationsApi.updateApplication(
+    {
+      ...application,
+      routes: application.routes?.map((route) => ({ ...route, name: route.displayName || route.name })),
+    },
+    token,
+  );
 }
