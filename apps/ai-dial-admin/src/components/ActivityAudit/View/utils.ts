@@ -7,7 +7,7 @@ import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus } from '@/src/types/activity-audit';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
-import { roleLimitsKeys } from '@/src/components/ActivityAudit/View/DiffReport/utils';
+import { roleLimitsKeys, roleShareLimitsKeys } from '@/src/components/ActivityAudit/View/DiffReport/utils';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 const dateKeys = ['expiresAt', 'keyGeneratedAt', 'createdAt', 'updatedAt'];
@@ -25,6 +25,8 @@ const separateObjectParameterKeys = [
   EntityParameterKeys.INTERCEPTORS,
   EntityParameterKeys.ROLE_LIMITS,
   EntityParameterKeys.DEFAULT_ROLE_LIMIT,
+  EntityParameterKeys.ROLE_SHARE_LIMITS,
+  EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT,
   EntityParameterKeys.FEATURES,
   EntityParameterKeys.APPLICATIONS,
   EntityParameterKeys.ENTITIES,
@@ -174,7 +176,8 @@ const compareObjectTypes = (
   } else if (
     !diffMap[key] &&
     (separateObjectParameterKeys.includes(key) ||
-      (key === EntityParameterKeys.LIMITS && type === ActivityAuditResourceType.ROLE))
+      (type === ActivityAuditResourceType.ROLE &&
+        (key === EntityParameterKeys.LIMITS || key === EntityParameterKeys.SHARE)))
   ) {
     diffMap[key] = [];
     compareSeparateObjects(diffMap[key], key, val1, val2, isCurrent);
@@ -341,11 +344,19 @@ const compareSeparateObjects = (
   if (key === EntityParameterKeys.INTERCEPTORS) {
     compareInterceptors(diffs, val1 as string[], val2 as string[], isCurrent);
   }
-  if (key === EntityParameterKeys.ROLE_LIMITS || key === EntityParameterKeys.LIMITS) {
+  if (
+    key === EntityParameterKeys.ROLE_LIMITS ||
+    key === EntityParameterKeys.LIMITS ||
+    key === EntityParameterKeys.ROLE_SHARE_LIMITS ||
+    key === EntityParameterKeys.SHARE
+  ) {
     compareRoleLimits(diffs, val1 as Record<string, DialRoleLimits>, val2 as Record<string, DialRoleLimits>, isCurrent);
   }
   if (key === EntityParameterKeys.DEFAULT_ROLE_LIMIT) {
     compareDefaultLimits(diffs, val1, val2, isCurrent);
+  }
+  if (key === EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT) {
+    compareDefaultShareLimits(diffs, val1, val2, isCurrent);
   }
   if (key === EntityParameterKeys.FEATURES) {
     compareSimpleObjects(diffs, val1, val2, isCurrent);
@@ -374,11 +385,19 @@ const fillSeparateObjects = (diffs: ActivityAuditDiff[], key: string, value: obj
   if (key === EntityParameterKeys.INTERCEPTORS) {
     fillInterceptors(diffs, value as string[]);
   }
-  if (key === EntityParameterKeys.ROLE_LIMITS || key === EntityParameterKeys.LIMITS) {
+  if (
+    key === EntityParameterKeys.ROLE_LIMITS ||
+    key === EntityParameterKeys.LIMITS ||
+    key === EntityParameterKeys.ROLE_SHARE_LIMITS ||
+    key === EntityParameterKeys.SHARE
+  ) {
     fillRoleLimits(diffs, value as Record<string, DialRoleLimits>);
   }
   if (key === EntityParameterKeys.DEFAULT_ROLE_LIMIT) {
     fillDefaultLimits(diffs, value);
+  }
+  if (key === EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT) {
+    fillDefaultShareLimits(diffs, value);
   }
   if (key === EntityParameterKeys.FEATURES) {
     fillSimpleObjects(diffs, value);
@@ -532,8 +551,8 @@ export const compareRoleLimits = (
 ): void => {
   const allKeys = new Set([...Object.keys(val1 || {}), ...Object.keys(val2 || {})].sort());
   allKeys.forEach((key) => {
-    const value1 = val1?.[key as keyof typeof val1];
-    const value2 = val2?.[key as keyof typeof val2];
+    const value1 = val1?.[key];
+    const value2 = val2?.[key];
     if (value1 != null && value2 == null) {
       diffs.push({ parameter: '', value: '', status: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED });
     } else if (value1 == null && value2 != null) {
@@ -607,6 +626,39 @@ export const compareDefaultLimits = (
  */
 export const fillDefaultLimits = (diffs: ActivityAuditDiff[], value: DialRoleLimits): void => {
   roleLimitsKeys.forEach((key) => {
+    const val = value?.[key as keyof typeof value] || NO_LIMITS_KEY;
+    fillSimpleTypes(diffs, key, val);
+  });
+};
+
+/**
+ * Compare default role share limits
+ *
+ * @param {ActivityAuditDiff[]} diffs - result array
+ * @param {DialRoleLimits} val1 - first value to compare
+ * @param {DialRoleLimits} val2 - second value to compare
+ */
+export const compareDefaultShareLimits = (
+  diffs: ActivityAuditDiff[],
+  val1: DialRoleLimits,
+  val2: DialRoleLimits,
+  isCurrent?: boolean,
+): void => {
+  roleShareLimitsKeys.forEach((key) => {
+    const value1 = val1?.[key as keyof typeof val1] || NO_LIMITS_KEY;
+    const value2 = val2?.[key as keyof typeof val2] || NO_LIMITS_KEY;
+    compareSimpleTypes(diffs, key, value1, value2, isCurrent);
+  });
+};
+
+/**
+ * Fill default role share limits diff
+ *
+ * @param {ActivityAuditDiff[]} diffs - result array
+ * @param {DialRoleLimits} value - value to fill
+ */
+export const fillDefaultShareLimits = (diffs: ActivityAuditDiff[], value: DialRoleLimits): void => {
+  roleShareLimitsKeys.forEach((key) => {
     const val = value?.[key as keyof typeof value] || NO_LIMITS_KEY;
     fillSimpleTypes(diffs, key, val);
   });
@@ -707,6 +759,34 @@ const createEmptyObjectWithKeys = <T extends object>(obj: T): T => {
   }, {} as T);
 };
 
+export const mergeLimits = (limits: ActivityAuditDiff[], shareLimits: ActivityAuditDiff[]) => {
+  const mergedMap = new Map();
+
+  const mergeValues = (value1: string, value2: string) => {
+    return `${value1}, ${value2}`;
+  };
+
+  limits.forEach(({ parameter, value, status }) => {
+    mergedMap.set(parameter, { value, status });
+  });
+
+  shareLimits.forEach(({ parameter, value, status }) => {
+    if (mergedMap.has(parameter)) {
+      const current = mergedMap.get(parameter);
+      current.value = mergeValues(current.value, value);
+      current.status = status || current.status;
+    } else {
+      mergedMap.set(parameter, { value, status });
+    }
+  });
+
+  return Array.from(mergedMap, ([parameter, { value, status }]) => ({
+    parameter,
+    value,
+    status,
+  }));
+};
+
 /**
  * Generate sections from diff compare result
  *
@@ -738,27 +818,42 @@ export const createSectionFromDiffs = (
       const compareDefault = compare[EntityParameterKeys.DEFAULT_ROLE_LIMIT];
       const currentLimits = current[EntityParameterKeys.ROLE_LIMITS];
       const compareLimits = compare[EntityParameterKeys.ROLE_LIMITS];
+      const currentDefaultShare = current[EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT];
+      const compareDefaultShare = compare[EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT];
+      const currentLimitsShare = current[EntityParameterKeys.ROLE_SHARE_LIMITS];
+      const compareLimitsShare = compare[EntityParameterKeys.ROLE_SHARE_LIMITS];
       if (currentDefault?.length || compareDefault?.length) {
         if (!sections[name]) {
           sections[name] = [];
         }
-        sections[name].push({ current: currentDefault, compare: compareDefault });
+        sections[name].push({
+          current: [...currentDefault, ...(currentDefaultShare || [])],
+          compare: [...compareDefault, ...(compareDefaultShare || [])],
+        });
       }
       if (currentLimits?.length || compareLimits?.length) {
         if (!sections[name]) {
           sections[name] = [];
         }
-        sections[name].push({ current: currentLimits, compare: compareLimits });
+        sections[name].push({
+          current: mergeLimits(currentLimits || [], currentLimitsShare || []),
+          compare: mergeLimits(compareLimits || [], compareLimitsShare || []),
+        });
       }
       // case for role where limits stored into 'limits' property instead of entities 'roleLimits' or 'defaultRoleLimit'
       if (!currentDefault && !compareDefault && !currentLimits && !compareLimits) {
         const currentRoleLimits = current[EntityParameterKeys.LIMITS];
         const compareRoleLimits = compare[EntityParameterKeys.LIMITS];
+        const currentLimitsShare = current[EntityParameterKeys.SHARE];
+        const compareLimitsShare = compare[EntityParameterKeys.SHARE];
         if (currentRoleLimits?.length || compareRoleLimits?.length) {
           if (!sections[name]) {
             sections[name] = [];
           }
-          sections[name].push({ current: currentRoleLimits, compare: compareRoleLimits });
+          sections[name].push({
+            current: mergeLimits(currentRoleLimits || [], currentLimitsShare || []),
+            compare: mergeLimits(compareRoleLimits || [], compareLimitsShare || []),
+          });
         }
         // case for key where only role names stored into 'roles' property
         const currentRoles = current[EntityParameterKeys.ROLES];
