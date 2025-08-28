@@ -6,7 +6,6 @@ import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMa
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import { DialToolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
-import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
 import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 
@@ -20,19 +19,21 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
   return (
     <div className="pt-3 w-full lg:w-[35%]">
       <EntityHeader entity={selectedToolset} />
-      <div className="flex-1 min-h-0 pt-4 flex flex-col">
+      <div className="flex-1 min-h-0 pt-4 flex flex-col gap-y-3">
         <EntityMainProperties
           entity={selectedToolset}
           onChangeEntity={onChangeToolset}
           names={names}
+          isEntityImmutable={true}
           view={ApplicationRoute.Toolsets}
         />
-        <MaintainerControl entity={selectedToolset} onChangeEntity={onChangeToolset} />
-        <IconControl
-          iconUrl={selectedToolset.iconUrl}
-          onChange={(icon) => onChangeToolset({ ...selectedToolset, iconUrl: icon })}
-        />
-        <TopicsControl entity={selectedToolset} onChange={onChangeToolset} />
+        <div className="flex flex-col gap-y-6">
+          <IconControl
+            iconUrl={selectedToolset.iconUrl}
+            onChange={(icon) => onChangeToolset({ ...selectedToolset, iconUrl: icon })}
+          />
+          <TopicsControl entity={selectedToolset} onChange={onChangeToolset} />
+        </div>
       </div>
     </div>
   );
