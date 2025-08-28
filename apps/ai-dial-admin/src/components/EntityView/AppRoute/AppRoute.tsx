@@ -15,7 +15,7 @@ import RouteContent from '@/src/components/EntityView/AppRoute/Content/RouteCont
 import { DialRole } from '@/src/models/dial/role';
 import { DialRoleLimitsMap } from '@/src/models/dial/base-entity';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
-import HorizontalCollapseBar from '../../Common/HorizontalCollapseBar/HorizontalCollapseBar';
+import HorizontalCollapseBar from '@/src/components/Common/HorizontalCollapseBar/HorizontalCollapseBar';
 
 interface Props {
   roles?: DialRole[] | null;

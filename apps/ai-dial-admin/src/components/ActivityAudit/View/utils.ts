@@ -730,7 +730,6 @@ export const createSectionFromDiffs = (
     EntityParameterKeys.PARAMETERS,
     EntityParameterKeys.MODELS,
     EntityParameterKeys.DEPENDENCIES,
-    EntityParameterKeys.ROUTES,
   ];
   const sections: ActivityAuditSection = {};
   sectionNames.forEach((name) => {

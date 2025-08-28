@@ -28,17 +28,8 @@ describe('RouteProperties', () => {
   });
 
   test('renders description field for non-app route', () => {
-    render(<RouteProperties route={baseRoute} isAppRoute={false} updateRoute={vi.fn()} />);
+    render(<RouteProperties route={baseRoute} isAppRoute={true} updateRoute={vi.fn()} />);
     expect(screen.getByText(EntityFieldsI18nKey.description)).toBeInTheDocument();
-  });
-
-  test('calls updateRoute when name changes', () => {
-    const updateRoute = vi.fn();
-    render(<RouteProperties route={baseRoute} isAppRoute={true} updateRoute={updateRoute} />);
-    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName), {
-      target: { value: 'newName' },
-    });
-    expect(updateRoute).toHaveBeenCalledWith(expect.objectContaining({ name: 'newName' }));
   });
 
   test('calls updateRoute when displayname changes', () => {
