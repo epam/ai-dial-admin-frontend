@@ -1,4 +1,4 @@
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { NumberInputField, TextInputField } from '@/src/components/Common/InputField/InputField';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
@@ -17,6 +17,7 @@ import { RadioButtonModel } from '@/src/models/radio-button';
 import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   route: DialRoute | DialAppRoute;
@@ -27,6 +28,7 @@ interface Props {
 
 const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }) => {
   const t = useI18n();
+  const { dispatch } = useSaveValidationContext();
 
   const outputRadio: RadioButtonModel[] = [
     { id: RouteOutput.UPSTREAMS, name: t(EntityFieldsI18nKey.upstreams) },
@@ -44,6 +46,10 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
   const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE'];
 
   const [statusError, setStatusError] = useState('');
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'status', isValid: !statusError });
+  }, [dispatch, statusError]);
 
   const selectedPermissions = useMemo(() => {
     const values = (route as DialAppRoute).permissions?.map(

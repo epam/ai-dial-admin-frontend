@@ -61,7 +61,7 @@ export default {
     Audit: 'Audit',
     Home: 'Home',
     Homepage: 'Homepage',
-
+    Toolsets: 'Toolsets',
     Adapters: 'Adapters',
     Applications: 'Applications',
     ApplicationRunners: 'Application Runners',
@@ -127,6 +127,7 @@ export default {
     NoResource: 'Resource does not exist',
     NoInterceptorTemplates: 'No Interceptor Templates',
     NoDependencies: 'No Dependencies',
+    NoToolsets: 'No Toolsets',
     // add entity or entities
     AddModel: 'Add Model',
     AddApplication: 'Add Application',
@@ -159,6 +160,7 @@ export default {
     File: 'File',
     Route: 'Route',
     Interceptor: 'Interceptor',
+    Toolsets: 'Toolsets',
     ApplicationRunner: {
       Title: 'Application Runner',
       DescriptionWarning: 'This Application Runner and all related Applications will be deleted permanently.',
@@ -179,36 +181,19 @@ export default {
     },
   },
   DuplicateEntity: {
+    Toolsets: 'Duplicate Toolset',
+    Application: 'Duplicate Application',
+    ApplicationRunner: 'Duplicate Application Runner',
+    Key: 'Duplicate Key',
+    Route: 'Duplicate Route',
+    Role: 'Duplicate Role',
+    Prompt: 'Duplicate Prompt',
+    Interceptor: 'Duplicate Interceptor',
+    InterceptorTemplate: 'Duplicate Interceptor Template',
+    Adapter: 'Duplicate Adapter',
     Model: {
       Header: 'Duplicate Model',
       Description: 'Enter name and version to duplicate Model.',
-    },
-    Application: {
-      Header: 'Duplicate Application',
-    },
-    ApplicationRunner: {
-      Header: 'Duplicate Application Runner',
-    },
-    Key: {
-      Header: 'Duplicate Key',
-    },
-    Route: {
-      Header: 'Duplicate Route',
-    },
-    Prompt: {
-      Header: 'Duplicate Prompt',
-    },
-    Role: {
-      Header: 'Duplicate Role',
-    },
-    Interceptor: {
-      Header: 'Duplicate Interceptor',
-    },
-    Adapter: {
-      Header: 'Duplicate Adapter',
-    },
-    InterceptorTemplate: {
-      Header: 'Duplicate Interceptor Template',
     },
   },
   CreateEntity: {
@@ -218,6 +203,7 @@ export default {
     Role: 'Create Role',
     Interceptor: 'Create Interceptor',
     Key: 'Create Key',
+    Toolsets: 'Create Toolset',
     Prompt: 'Create Prompt',
     Route: 'Create Route',
     Adapter: 'Create Adapter',
