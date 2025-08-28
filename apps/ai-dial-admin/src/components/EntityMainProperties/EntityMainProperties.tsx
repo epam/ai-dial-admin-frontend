@@ -77,7 +77,7 @@ const EntityMainProperties: FC<Props> = ({
   );
 
   useEffect(() => {
-    if (view === ApplicationRoute.Models) {
+    if (view === ApplicationRoute.Models || view === ApplicationRoute.Applications) {
       dispatch({
         type: ValidationActionType.SetField,
         field: 'displayName',

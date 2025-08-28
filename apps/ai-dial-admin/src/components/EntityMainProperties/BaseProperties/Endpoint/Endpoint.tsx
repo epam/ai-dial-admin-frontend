@@ -28,12 +28,12 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, o
   const [endpointError, setEndpointError] = useState<FieldError | null>(null);
 
   const validateEndpoint = useCallback(
-    (endpoint?: string) => {
-      const error = getUrlError(textBeforeInput ? `${textBeforeInput}${endpoint}` : endpoint, t, required);
+    (value?: string) => {
+      const error = getUrlError(textBeforeInput ? `${textBeforeInput}${value}` : value, t, required);
       setEndpointError(error);
-      dispatch({ type: ValidationActionType.SetField, field: id, isValid: !endpointError });
+      dispatch({ type: ValidationActionType.SetField, field: id, isValid: !error });
     },
-    [dispatch, endpointError, id, required, t, textBeforeInput],
+    [dispatch, id, required, t, textBeforeInput],
   );
 
   useEffect(() => {
@@ -44,9 +44,9 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, o
   }, [required]);
 
   const onChangeEndpoint = useCallback(
-    (endpoint?: string) => {
-      validateEndpoint(endpoint);
-      onChange?.(endpoint);
+    (value?: string) => {
+      validateEndpoint(value);
+      onChange?.(value);
     },
     [onChange, validateEndpoint],
   );
