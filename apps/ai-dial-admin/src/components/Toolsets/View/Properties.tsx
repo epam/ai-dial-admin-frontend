@@ -17,9 +17,9 @@ interface Props {
 
 const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset }) => {
   return (
-    <div className="pt-3 w-full lg:w-[35%]">
+    <div className="pt-3 w-full">
       <EntityHeader entity={selectedToolset} />
-      <div className="flex-1 min-h-0 pt-4 flex flex-col gap-y-3">
+      <div className="flex-1 min-h-0 pt-4 flex flex-col">
         <EntityMainProperties
           entity={selectedToolset}
           onChangeEntity={onChangeToolset}
@@ -27,7 +27,7 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
           isEntityImmutable={true}
           view={ApplicationRoute.Toolsets}
         />
-        <div className="flex flex-col gap-y-6">
+        <div className="flex flex-col gap-y-6 lg:w-[35%] mt-6">
           <IconControl
             iconUrl={selectedToolset.iconUrl}
             onChange={(icon) => onChangeToolset({ ...selectedToolset, iconUrl: icon })}
