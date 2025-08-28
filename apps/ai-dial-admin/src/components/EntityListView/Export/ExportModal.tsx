@@ -38,7 +38,7 @@ const ExportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
     >
       <div className="flex px-6 py-4 flex-1 flex-col min-h-0">
         <div className="flex flex-1 min-h-0">
-          <HorizontalCollapseBar width="360" title={t(ExportI18nKey.Folders)}>
+          <HorizontalCollapseBar width="360" title={t(ExportI18nKey.Folders)} containerClass="border-primary">
             <FolderList context={context} />
           </HorizontalCollapseBar>
           <ExportGrid context={context} route={route} />
