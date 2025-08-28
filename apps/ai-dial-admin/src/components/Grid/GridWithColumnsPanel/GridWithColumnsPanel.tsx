@@ -53,7 +53,11 @@ const GridWithColumnsPanel = <T extends object>({
   useEffect(() => {
     if (colDefs == null || colDefs.length === 0) {
       const storageColumns = view ? getColumnVisibilityFromStorage(columnDefs, view) : null;
-      setColDefs(storageColumns || [...columnDefs]);
+      setColDefs(
+        !(storageColumns && columnDefs.length > storageColumns?.length)
+          ? storageColumns || [...columnDefs]
+          : [...columnDefs],
+      );
       setShowResetButton(
         storageColumns ? storageColumns?.some((c, index) => c.hide !== columnDefs[index].hide) : false,
       );
