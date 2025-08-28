@@ -51,9 +51,7 @@ const SingleValueChart: FC<Props> = ({ title, getData, unit, query, refreshTime 
 
   return (
     <div className="flex flex-col rounded-lg border border-primary md:min-w-[250px] min-w-[150px] w-full p-4">
-      <h3 data-testid="chart-title" className="text-primary mb-4">
-        {t(title)}
-      </h3>
+      <h3 className="text-primary mb-4">{t(title)}</h3>
       {loading ? (
         <Loader size={24} />
       ) : (
@@ -61,15 +59,8 @@ const SingleValueChart: FC<Props> = ({ title, getData, unit, query, refreshTime 
           {data === null ? (
             <NoDataContent emptyDataTitle={t(BasicI18nKey.NoData)} />
           ) : (
-            <div
-              data-testid="chart-value"
-              className="flex items-center justify-center text-accent-primary md:text-6xl font-semibold h-full text-3xl nowrap"
-            >
-              {unit && (
-                <span data-testid="chart-value-unit" className="text-secondary font-extralight mr-1">
-                  {unit}
-                </span>
-              )}
+            <div className="flex items-center justify-center text-accent-primary md:text-6xl font-semibold h-full text-3xl nowrap">
+              {unit && <span className="text-secondary font-extralight mr-1">{unit}</span>}
               {formatNumberWithExponent(data)}
             </div>
           )}

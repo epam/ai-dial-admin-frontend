@@ -1,34 +1,38 @@
-import SingleValueChart from '@/src/components/Charts/SingleValueChart/SingleValueChart';
-import { render } from '@testing-library/react';
-import { MONEY_QUERY } from '@/src/constants/telemetry';
-import { ServerActionResponse } from '@/src/models/server-action';
-import { describe, expect, test } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import SingleValueChart from './SingleValueChart';
+import { describe, it, expect, vi } from 'vitest';
+import { BasicI18nKey } from '@/src/constants/i18n';
 
-function getData(): Promise<ServerActionResponse> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ success: true, response: { data: ['2345'] } });
-    }, 0);
+const validQuery = {
+  $type: 'test',
+  query: {
+    expressions: [],
+    from: '',
+  },
+};
+
+const mockGetData = vi.fn(async () => ({ success: true, response: 42 }));
+const defaultProps = {
+  title: 'Test Title',
+  getData: mockGetData,
+  query: validQuery,
+  unit: 'ms',
+};
+
+describe('SingleValueChart', () => {
+  it('renders the title as text', () => {
+    render(<SingleValueChart {...defaultProps} />);
+    expect(screen.getByText('Test Title')).toBeInTheDocument();
   });
-}
 
-describe('Components - SingleValueChart', () => {
-  test('renders correctly', () => {
-    const { getByTestId } = render(
-      <SingleValueChart title={'Title'} getData={getData} query={MONEY_QUERY} unit={'$'} />,
-    );
+  it('renders the unit if provided', async () => {
+    render(<SingleValueChart {...defaultProps} />);
+    expect(await screen.findByText('ms')).toBeInTheDocument();
+  });
 
-    setTimeout(() => {
-      const title = getByTestId('chart-title');
-      const chartValue = getByTestId('chart-value');
-      const chartValueUnit = getByTestId('chart-value-unit');
-
-      expect(title).toBeTruthy();
-      expect(title.innerHTML).toBe('Title');
-      expect(chartValue).toBeTruthy();
-      expect(chartValue.innerHTML).toBe('2.3 K');
-      expect(chartValueUnit).toBeTruthy();
-      expect(chartValueUnit.innerHTML).toBe('$');
-    }, 2000);
+  it('renders NoDataContent if data is null', async () => {
+    mockGetData.mockResolvedValueOnce({ success: false } as any);
+    render(<SingleValueChart {...defaultProps} />);
+    expect(await screen.findByText(BasicI18nKey.NoData)).toBeInTheDocument();
   });
 });

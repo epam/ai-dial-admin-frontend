@@ -155,7 +155,7 @@ const FolderList: FC<Props> = ({ context, initialPath, view, disableAutoFetch })
     });
   };
   return (
-    <div className="flex-1 w-full overflow-y-auto" data-testid={'folder-list'}>
+    <div className="flex-1 w-full overflow-y-auto">
       {!folderContext?.files?.length ? (
         <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoFolders)} />
       ) : (
