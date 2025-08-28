@@ -21,6 +21,7 @@ import { getErrorNotification } from '@/src/utils/notification';
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { RoutesForCheckingUniqueName } from './constants';
+import { DialRoute } from '@/src/models/dial/route';
 
 interface Props {
   route: ApplicationRoute;
@@ -102,6 +103,18 @@ const CreateEntity: FC<Props> = ({
   // initial validation (disable save when no values entered yet)
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!currentEntity.name });
+
+    if (versionsMap) {
+      dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !!currentEntity.version });
+    }
+
+    if (route === ApplicationRoute.Routes) {
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'path',
+        isValid: !!(currentEntity as DialRoute).paths?.length,
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

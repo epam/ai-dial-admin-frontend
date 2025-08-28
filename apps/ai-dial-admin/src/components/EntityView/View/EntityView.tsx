@@ -10,7 +10,6 @@ import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAttachmentData } from '@/src/models/attachment-data';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
@@ -79,7 +78,6 @@ const EntityView: FC<Props> = ({
   const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [key, setKey] = useState(0);
-  const { isValid: isFeaturesValid } = useSaveValidationContext();
 
   const { visualizerConnector } = useAppContext();
 
@@ -251,7 +249,6 @@ const EntityView: FC<Props> = ({
             isChanged={isChanged}
             onSave={onTryToSave}
             onDiscard={onDiscard}
-            hasErrors={!isFeaturesValid}
             removeEntity={removeEntity}
             jsonEditorEnabled={jsonEditorEnabled}
             toggleJsonEditor={toggleJsonEditor}
