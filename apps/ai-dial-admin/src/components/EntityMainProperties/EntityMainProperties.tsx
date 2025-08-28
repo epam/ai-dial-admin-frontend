@@ -62,22 +62,30 @@ const EntityMainProperties: FC<Props> = ({
   const onChangeDisplayName = useCallback(
     (displayName: string) => {
       setIsVersionOptional(!names.includes(displayName));
-      setDisplayNameError(
-        getDisplayNameError(view, displayName as string, names, t, (entity as DialModel).displayVersion),
-      );
+      const error = getDisplayNameError(view, displayName as string, names, t, (entity as DialModel).displayVersion);
+      setDisplayNameError(error);
+
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'displayName',
+        isValid: !error,
+      });
 
       onChangeEntity({ ...entity, displayName });
     },
-    [names, view, t, onChangeEntity, entity],
+    [names, dispatch, view, t, onChangeEntity, entity],
   );
 
   useEffect(() => {
-    dispatch({
-      type: ValidationActionType.SetField,
-      field: 'displayName',
-      isValid: !displayNameError,
-    });
-  }, [entity.displayName, displayNameError, t, view, dispatch]);
+    if (view === ApplicationRoute.Models || view === ApplicationRoute.Applications) {
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'displayName',
+        isValid: !!entity.displayName,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
 
   useEffect(() => {
     if (view === ApplicationRoute.Models) {
@@ -95,8 +103,8 @@ const EntityMainProperties: FC<Props> = ({
   );
 
   return (
-    <div className="w-full flex flex-col gap-6">
-      <div className={classNames('flex flex-col gap-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
+    <div className="w-full flex flex-col">
+      <div className={classNames('flex flex-col gap-y-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
         {!isEntityImmutable && (
           <IdControl entity={entity} onChangeEntity={onChangeName} isUniqueNameError={isUniqueNameError} />
         )}
@@ -132,13 +140,15 @@ const EntityMainProperties: FC<Props> = ({
         <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
       </div>
 
-      <AdditionalProperties
-        entity={entity}
-        onChangeEntity={onChangeEntity}
-        view={view}
-        isEntityImmutable={isEntityImmutable}
-        runners={runners}
-      />
+      <div className="mt-4">
+        <AdditionalProperties
+          entity={entity}
+          onChangeEntity={onChangeEntity}
+          view={view}
+          isEntityImmutable={isEntityImmutable}
+          runners={runners}
+        />
+      </div>
     </div>
   );
 };

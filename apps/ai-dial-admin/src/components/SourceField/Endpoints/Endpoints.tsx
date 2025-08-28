@@ -26,7 +26,7 @@ const Endpoints: FC<Props> = ({ entity, onChange }) => {
 
   return (
     <div className="lg:w-[35%] flex flex-col gap-6">
-      <CompletionEndpointControl endpoint={entity.endpoint} onChange={onChangeCompletionEndpoint} />
+      <CompletionEndpointControl endpoint={entity.endpoint} onChange={onChangeCompletionEndpoint} required={true} />
       <ConfigurationEndpointControl endpoint={entity.configurationEndpoint} onChange={onChangeConfigurationEndpoint} />
     </div>
   );

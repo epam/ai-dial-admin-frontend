@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useMemo } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Switch from '@/src/components/Common/Switch/Switch';
@@ -29,9 +29,7 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
     return !!entity.key && !(entity.key.length > MAX_NAME_SYMBOLS);
   }, [entity.key]);
 
-  const projectError = useMemo(() => {
-    return entity.project ? void 0 : t(ErrorI18nKey.RequiredField);
-  }, [entity.project, t]);
+  const [projectError, setProjectError] = useState<string | undefined>();
 
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'project', isValid: !projectError });
@@ -41,11 +39,21 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
     dispatch({ type: ValidationActionType.SetField, field: 'key', isValid: isValidKey });
   }, [isValidKey, dispatch]);
 
+  const validateProject = useCallback(
+    (project?: string) => {
+      const error = project ? void 0 : t(ErrorI18nKey.RequiredField);
+      setProjectError(error);
+      dispatch({ type: ValidationActionType.SetField, field: 'project', isValid: !error });
+    },
+    [dispatch, t],
+  );
+
   const onChangeProject = useCallback(
     (project?: string) => {
       onChangeKey({ ...entity, project: project || '' });
+      validateProject(project);
     },
-    [entity, onChangeKey],
+    [entity, onChangeKey, validateProject],
   );
 
   const onChangeProjectContactPoint = useCallback(

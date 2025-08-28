@@ -1,27 +1,25 @@
 import { FC, useCallback } from 'react';
 
-import { getModelsTopics } from '@/src/app/[lang]/models/actions';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import Switch from '@/src/components/Common/Switch/Switch';
 import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
 import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
 import EditorUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/EditorUrl';
 import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
 import ViewerUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ViewerUrl';
-import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
+import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
 import {
   BasicI18nKey,
   EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
   FeaturesI18nKey,
-  TopicsI18nKey,
   TypeI18nKey,
 } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme, TypeEntity } from '@/src/models/dial/application';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
+import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 
 interface Props {
   runner: DialApplicationScheme;
@@ -41,13 +39,6 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
       onChangeRunner({ ...runner, [key]: value });
     },
     [runner, onChangeRunner],
-  );
-
-  const onChangeTopics = useCallback(
-    (topics: string[]) => {
-      onChange(topics, 'topics');
-    },
-    [onChange],
   );
 
   const onChangeCompletionEndPoint = useCallback(
@@ -101,9 +92,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
 
   return (
     <div className="flex flex-col gap-6 h-full">
-      <EntityIcon
-        elementId="icon"
-        fieldTitle={t(EntityFieldsI18nKey.iconUrl)}
+      <IconControl
         iconUrl={runner['dial:applicationTypeIconUrl']}
         onChange={(icon: string) => {
           onChange(icon, 'dial:applicationTypeIconUrl');
@@ -132,16 +121,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
           }}
         />
       </div>
-      <Multiselect
-        elementId="topics"
-        selectedItems={runner.topics}
-        getItems={getModelsTopics}
-        onChangeItems={onChangeTopics}
-        heading={t(EntityFieldsI18nKey.topics)}
-        title={t(EntityFieldsI18nKey.topics)}
-        addPlaceholder={t(EntityPlaceholdersI18nKey.Topic)}
-        addTitle={t(TopicsI18nKey.AddTopic)}
-      />
+      <TopicsControl entity={runner} onChange={onChangeRunner} />
 
       <CompletionEndpointControl
         endpoint={runner['dial:applicationTypeCompletionEndpoint']}

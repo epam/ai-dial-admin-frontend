@@ -3,19 +3,20 @@ import { DialBaseNamedEntity } from './base-entity';
 
 export interface DialToolset extends DialBaseNamedEntity {
   transport?: ToolsetTransport;
+  iconUrl?: string;
+  author?: string;
+  topics?: string[];
+  maxRetryAttempts?: number;
   // "endpoint": "http://sample-endpoint/call",
-  // "iconUrl": "https://sample-endpoint/icon.png",
   // "descriptionKeywords": [
   //   "MCP",
   //   "tool"
   // ],
-  // "maxRetryAttempts": 3,
   // "transport": "http", // HTTP or SSE
   // "allowedTools": [
   //   "first",
   //   "second"
   // ],
-  // "author": "test-author",
   // "isPublic": false,
   // "roleLimits": {
   //   "testRole1": {

@@ -1,4 +1,4 @@
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -27,14 +27,28 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, o
   const { dispatch } = useSaveValidationContext();
   const [endpointError, setEndpointError] = useState<FieldError | null>(null);
 
-  const onChangeEndpoint = useCallback(
-    (endpoint?: string) => {
-      const error = getUrlError(textBeforeInput ? `${textBeforeInput}${endpoint}` : endpoint, t, required);
+  const validateEndpoint = useCallback(
+    (value?: string) => {
+      const error = getUrlError(textBeforeInput ? `${textBeforeInput}${value}` : value, t, required);
       setEndpointError(error);
-      dispatch({ type: ValidationActionType.SetField, field: id, isValid: !endpointError });
-      onChange?.(endpoint);
+      dispatch({ type: ValidationActionType.SetField, field: id, isValid: !error });
     },
-    [dispatch, endpointError, id, onChange, required, t, textBeforeInput],
+    [dispatch, id, required, t, textBeforeInput],
+  );
+
+  useEffect(() => {
+    if (required) {
+      dispatch({ type: ValidationActionType.SetField, field: id, isValid: !!endpoint });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [required]);
+
+  const onChangeEndpoint = useCallback(
+    (value?: string) => {
+      validateEndpoint(value);
+      onChange?.(value);
+    },
+    [onChange, validateEndpoint],
   );
 
   return (

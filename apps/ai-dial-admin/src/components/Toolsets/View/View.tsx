@@ -6,52 +6,35 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
-import { removeApplicationScheme, updateApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
-import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
-import {
-  appRouteTab,
-  auditTabs,
-  EntityViewTab,
-  parametersTabs,
-  propertiesTabs,
-} from '@/src/components/EntityView/View/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
-import EntityHeader from '@/src/components/EntityView/Header/Header';
+import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
-import { TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialApplicationScheme } from '@/src/models/dial/application';
 import { TabModel } from '@/src/models/tab';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getErrorNotification } from '@/src/utils/notification';
-import AppRunnerApplications from './ConfigurationView/Applications';
-import SchemeParameters from './ConfigurationView/Parameters';
-import SchemeProperties from './ConfigurationView/Properties';
-import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import { getErrorNotification } from '@/src/utils/notification';
+import { removeToolset, updateToolset } from '@/src/app/[lang]/toolsets/actions';
+import { DialToolset } from '@/src/models/dial/toolset';
+import ToolsetProperties from './Properties';
 
 interface Props {
-  originalScheme: DialApplicationScheme;
+  names: string[];
+  originalToolset: DialToolset;
 }
 
-const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
+const ToolsetView: FC<Props> = ({ names, originalToolset }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
 
-  const tabs: TabModel[] = [
-    propertiesTabs(t),
-    parametersTabs(t),
-    { id: EntityViewTab.Applications, name: t(TabsI18nKey.Applications) },
-    appRouteTab(t),
-    auditTabs(t),
-  ];
+  const tabs: TabModel[] = [propertiesTabs(t)];
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
-  const [selectedScheme, setSelectedScheme] = useState(cloneDeep(originalScheme));
+  const [selectedToolset, setSelectedToolset] = useState(cloneDeep(originalToolset));
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
   const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
@@ -59,8 +42,8 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
   const [key, setKey] = useState(0);
 
   useEffect(() => {
-    setSelectedScheme(cloneDeep(originalScheme));
-  }, [originalScheme]);
+    setSelectedToolset(cloneDeep(originalToolset));
+  }, [originalToolset]);
 
   const headerClassName = classNames(
     'flex flex-row min-h-[34px]',
@@ -68,8 +51,8 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
   );
 
   useEffect(() => {
-    setIsChanged(!isEqualSkippingUndefined(originalScheme, selectedScheme));
-  }, [selectedScheme, originalScheme]);
+    setIsChanged(!isEqualSkippingUndefined(originalToolset, selectedToolset));
+  }, [selectedToolset, originalToolset]);
 
   const onChangeActiveTab = useCallback(
     (tab: string) => {
@@ -86,14 +69,14 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
-    setSelectedScheme(originalScheme);
-  }, [setSelectedScheme, originalScheme, jsonEditorEnabled]);
+    setSelectedToolset(originalToolset);
+  }, [setSelectedToolset, originalToolset, jsonEditorEnabled]);
 
-  const onChangeScheme = useCallback(
-    (entity: DialApplicationScheme) => {
-      setSelectedScheme(entity);
+  const onChangeToolset = useCallback(
+    (entity: DialToolset) => {
+      setSelectedToolset(entity);
     },
-    [setSelectedScheme],
+    [setSelectedToolset],
   );
 
   const toggleJsonEditor = useCallback(() => {
@@ -101,14 +84,14 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
   }, [setJsonEditorEnabled]);
 
   const onSave = useCallback(() => {
-    updateApplicationScheme(selectedScheme).then((res) => {
+    updateToolset(selectedToolset).then((res) => {
       if (res.success) {
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedScheme, router, showNotification]);
+  }, [selectedToolset, router, showNotification]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
@@ -116,14 +99,14 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
         <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
         <HeaderButtons
           view={ApplicationRoute.ApplicationRunners}
-          entity={selectedScheme}
+          entity={selectedToolset}
           isChanged={isChanged}
           onDiscard={onDiscard}
           onSave={onSave}
-          removeEntity={removeApplicationScheme}
+          removeEntity={removeToolset}
           jsonEditorEnabled={jsonEditorEnabled}
-          toggleJsonEditor={toggleJsonEditor}
           jsonErrors={jsonErrors}
+          toggleJsonEditor={toggleJsonEditor}
           setErrorNotifications={setErrorNotifications}
         />
       </div>
@@ -131,43 +114,16 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
         {jsonEditorEnabled ? (
           <JSONEditor
             key={key}
-            entity={selectedScheme}
+            model={selectedToolset}
             errorNotifications={errorNotifications}
-            setSelectedEntity={setSelectedScheme}
+            setSelectedEntity={setSelectedToolset}
             setIsChanged={setIsChanged}
             setJsonErrors={setJsonErrors}
           />
         ) : (
           <>
             {activeTab === EntityViewTab.Properties && (
-              <div className="pt-3 w-full lg:w-[35%]">
-                <EntityHeader entity={selectedScheme} />
-                <div className="flex-1 min-h-0 pt-4">
-                  <SchemeProperties runner={selectedScheme} isImmutable={true} onChangeRunner={onChangeScheme} />
-                </div>
-              </div>
-            )}
-
-            {activeTab === EntityViewTab.Parameters && (
-              <SchemeParameters scheme={selectedScheme} onChangeScheme={onChangeScheme} />
-            )}
-
-            {activeTab === EntityViewTab.Applications && (
-              <AppRunnerApplications appRunner={selectedScheme} onChangeAppRunner={onChangeScheme} />
-            )}
-
-            {activeTab === EntityViewTab.Routes && (
-              <EntityRoutes
-                iAppRunnerView={true}
-                routes={selectedScheme['dial:applicationTypeRoutes']}
-                onChangeRoutes={(routes) =>
-                  setSelectedScheme({ ...selectedScheme, ['dial:applicationTypeRoutes']: routes })
-                }
-              />
-            )}
-
-            {activeTab === EntityViewTab.Audit && (
-              <EntityAudit entity={selectedScheme} view={ApplicationRoute.ApplicationRunners} />
+              <ToolsetProperties names={names} selectedToolset={selectedToolset} onChangeToolset={onChangeToolset} />
             )}
           </>
         )}
@@ -176,4 +132,4 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
   );
 };
 
-export default ApplicationRunnersView;
+export default ToolsetView;
