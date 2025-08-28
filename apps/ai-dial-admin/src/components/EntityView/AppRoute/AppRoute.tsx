@@ -52,7 +52,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
   const onChangeRoute = useCallback(
     (route: DialAppRoute) => {
       if (routes) {
-        routes[activeRouteIndex as number] = { ...route, name: route.displayName };
+        routes[activeRouteIndex as number] = route;
         onChangeRoutes([...(routes || [])]);
       }
     },
