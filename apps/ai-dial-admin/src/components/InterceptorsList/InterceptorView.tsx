@@ -149,7 +149,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
         {jsonEditorEnabled ? (
           <JSONEditor
             key={key}
-            model={selectedInterceptor}
+            entity={selectedInterceptor}
             errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedInterceptor}
             setIsChanged={setIsChanged}

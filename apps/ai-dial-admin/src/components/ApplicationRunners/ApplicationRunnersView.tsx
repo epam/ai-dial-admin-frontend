@@ -131,7 +131,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
         {jsonEditorEnabled ? (
           <JSONEditor
             key={key}
-            model={selectedScheme}
+            entity={selectedScheme}
             errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedScheme}
             setIsChanged={setIsChanged}

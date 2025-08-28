@@ -1,36 +1,32 @@
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
-import { clearResolvedErrors } from '@/src/components/JSONEditor/JSONEditor.utils';
+import { clearResolvedErrors } from '@/src/components/JSONEditor/utils';
 import { useNotification } from '@/src/context/NotificationContext';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
-import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { DialKey } from '@/src/models/dial/key';
-import { DialRole } from '@/src/models/dial/role';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
-import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
-import { DialPrompt } from '@/src/models/dial/prompt';
+import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
 
-interface Props {
-  model: DialBaseEntity;
+interface Props<T> {
+  entity: T;
   errorNotifications: JSONEditorErrorNotification[];
-  setSelectedEntity:
-    | Dispatch<SetStateAction<DialBaseEntity>>
-    | Dispatch<SetStateAction<DialPrompt>>
-    | Dispatch<SetStateAction<DialRole>>
-    | Dispatch<SetStateAction<DialInterceptor>>
-    | Dispatch<SetStateAction<DialKey>>;
+  setSelectedEntity: Dispatch<SetStateAction<T>>;
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
   setJsonErrors?: Dispatch<SetStateAction<JSONEditorError[]>>;
 }
 
-const JSONEditor: FC<Props> = ({ model, errorNotifications, setSelectedEntity, setIsChanged, setJsonErrors }) => {
+const JSONEditor = <T extends object>({
+  entity,
+  errorNotifications,
+  setSelectedEntity,
+  setIsChanged,
+  setJsonErrors,
+}: Props<T>) => {
   const { removeNotification } = useNotification();
   const [entityModel, setEntityModel] = useState<string>('');
 
   useEffect(() => {
-    if (model) {
-      setEntityModel(JSON.stringify(model, null, 4));
+    if (entity) {
+      setEntityModel(JSON.stringify(entity, null, 4));
     }
-  }, [model, setEntityModel]);
+  }, [entity, setEntityModel]);
 
   const onChangeJSON = useCallback(
     (updatedConfig?: string) => {
