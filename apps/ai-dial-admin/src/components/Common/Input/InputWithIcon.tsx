@@ -26,7 +26,7 @@ const InputWithIcon: FC<Props> = ({ iconBeforeInput, iconAfterInput, hideBorder,
       )}
     >
       {iconBeforeInput}
-      <Input cssClass={classNames('border-0 bg-transparent', cssClass)} {...props} />
+      <Input cssClass={classNames('border-0 bg-transparent', cssClass)} tooltipTriggerClassName={'flex-1'} {...props} />
       {iconAfterInput}
     </div>
   );
