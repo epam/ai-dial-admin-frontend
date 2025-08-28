@@ -14,6 +14,7 @@ interface ActionProps {
   item: FolderOperationDeclaration;
 }
 
+//TODO: refactor - use for common usage
 const FolderActions: FC<ActionsProps> = ({ items, icon }) => {
   return (
     <div>
@@ -32,7 +33,7 @@ const ActionTrigger: FC<{ icon: ReactNode }> = ({ icon }) => {
 
 const ActionItem: FC<ActionProps> = ({ item }) => {
   return (
-    <div className="text-primary flex-row flex w-full gap-2 items-center" onClick={item.onClick}>
+    <div className="text-primary flex-row flex w-full gap-2 items-center" onClick={() => item.onClick()}>
       <span className="text-secondary">{item.icon}</span>
       <span className="small-medium">{item.id}</span>
     </div>

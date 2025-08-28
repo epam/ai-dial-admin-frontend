@@ -1,21 +1,18 @@
 import { IconPlus } from '@tabler/icons-react';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 
 import Button from '@/src/components/Common/Button/Button';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
-import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import HorizontalCollapseBar from '@/src/components/Common/HorizontalCollapseBar/HorizontalCollapseBar';
+import RouteContent from '@/src/components/EntityView/AppRoute/Content/RouteContent';
+import CreateRoute from '@/src/components/EntityView/AppRoute/CreateRoute';
+import { ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { DialAppRoute } from '@/src/models/dial/route';
-import { TabModel } from '@/src/models/tab';
-import { PopUpState } from '@/src/types/pop-up';
-import { TabOrientation } from '@/src/types/tab';
-import CreateRoute from '@/src/components/EntityView/AppRoute/CreateRoute';
-import RouteContent from '@/src/components/EntityView/AppRoute/Content/RouteContent';
-import { DialRole } from '@/src/models/dial/role';
 import { DialRoleLimitsMap } from '@/src/models/dial/base-entity';
-import NoDataContent from '@/src/components/Common/NoData/NoData';
-import HorizontalCollapseBar from '@/src/components/Common/HorizontalCollapseBar/HorizontalCollapseBar';
+import { DialRole } from '@/src/models/dial/role';
+import { DialAppRoute } from '@/src/models/dial/route';
+import { PopUpState } from '@/src/types/pop-up';
+import AppRouteList from './AppRouteList';
 
 interface Props {
   roles?: DialRole[] | null;
@@ -31,22 +28,18 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
 
   const [modalState, setModalState] = useState(PopUpState.Closed);
 
-  const tabs: TabModel[] = useMemo(() => {
-    return routes?.map((route) => ({ id: route.name, name: route.displayName }) as TabModel) || [];
-  }, [routes]);
-
-  const [activeRouteTab, setActiveRouteTab] = useState<string | null>(null);
+  const [activeRoute, setActiveRoute] = useState<string | undefined>(undefined);
   const [activeRouteIndex, setActiveRouteIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!activeRouteTab && tabs.length) {
-      setActiveRouteTab(tabs[0]?.id || '');
+    if (!activeRoute && routes?.length) {
+      setActiveRoute(routes[0]?.name || '');
     }
-  }, [tabs, activeRouteTab]);
+  }, [routes, activeRoute]);
 
   useEffect(() => {
-    setActiveRouteIndex((routes || []).findIndex((route) => route.name === activeRouteTab));
-  }, [activeRouteTab, routes]);
+    setActiveRouteIndex((routes || []).findIndex((route) => route.name === activeRoute));
+  }, [activeRoute, routes]);
 
   const handleModalClose = useCallback(() => {
     setModalState(PopUpState.Closed);
@@ -74,6 +67,13 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
     [handleModalClose, onChangeRoutes, routes],
   );
 
+  const onRemoveRoute = useCallback(
+    (name?: string) => {
+      onChangeRoutes(routes?.filter((route) => route.name !== name) || []);
+    },
+    [onChangeRoutes, routes],
+  );
+
   return (
     <>
       <div className="flex flex-row gap-4 h-full w-full">
@@ -90,17 +90,12 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
                 />
               )}
             </div>
-            <div className="flex-1 min-h-0 relative">
-              {!activeRouteTab && <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoAppRoutes)} />}
-              {activeRouteTab && !!tabs.length && (
-                <Tabs
-                  activeTab={activeRouteTab}
-                  tabs={tabs}
-                  onClick={(tab) => setActiveRouteTab(tab)}
-                  orientation={TabOrientation.Vertical}
-                />
-              )}
-            </div>
+            <AppRouteList
+              routes={routes}
+              activeRoute={activeRoute}
+              onClick={(tab) => setActiveRoute(tab)}
+              onRemove={onRemoveRoute}
+            />
           </div>
         </HorizontalCollapseBar>
 

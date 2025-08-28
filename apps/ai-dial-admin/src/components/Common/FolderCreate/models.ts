@@ -5,8 +5,9 @@ import { FolderOperation } from './types';
 export interface FolderOperationDeclaration {
   icon: ReactNode;
   id: FolderOperation;
-  onClick: () => void;
+  onClick: (id?: string) => void;
 }
+
 export interface ZipFilePreview {
   fileName: string;
   name?: string;

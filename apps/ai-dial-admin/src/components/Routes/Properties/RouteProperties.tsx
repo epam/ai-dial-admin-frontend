@@ -144,7 +144,11 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
   return (
     <div className="h-full flex flex-col pt-3 w-full">
       <div className="flex flex-col gap-6 lg:w-[35%]">
-        <DisplayNameControl displayName={route.displayName} onChange={onChangeDisplayName} disabled={readonly} />
+        <DisplayNameControl
+          displayName={route.displayName || route.name}
+          onChange={onChangeDisplayName}
+          disabled={readonly}
+        />
         {!isAppRoute && <DescriptionControl entity={route} onChangeEntity={updateRoute} />}
         <Paths
           title={t(EntityFieldsI18nKey.paths)}
