@@ -7,7 +7,8 @@ import EntityHeader from '@/src/components/EntityView/Header/Header';
 import { DialToolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
-import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
+import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
+import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 
 interface Props {
   selectedToolset: DialToolset;
@@ -27,7 +28,11 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
           view={ApplicationRoute.Toolsets}
         />
         <MaintainerControl entity={selectedToolset} onChangeEntity={onChangeToolset} />
-        <EntityIcon entity={selectedToolset} onChangeEntity={onChangeToolset} />
+        <IconControl
+          iconUrl={selectedToolset.iconUrl}
+          onChange={(icon) => onChangeEntity({ ...selectedToolset, iconUrl: icon })}
+        />
+        <TopicsControl entity={selectedToolset} onChange={onChangeToolset} />
       </div>
     </div>
   );

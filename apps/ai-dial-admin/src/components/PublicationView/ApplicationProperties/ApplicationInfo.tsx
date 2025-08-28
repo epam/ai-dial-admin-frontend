@@ -2,7 +2,7 @@ import { FC } from 'react';
 
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
+import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import { DialApplicationResource } from '@/src/models/dial/application-resource';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
@@ -20,12 +20,7 @@ const ApplicationInfo: FC<Props> = ({ application }) => {
       <DisplayNameControl readonly={true} displayName={application?.displayName} />
       <DescriptionControl entity={application} readonly={true} />
 
-      <EntityIcon
-        fieldTitle={t(EntityFieldsI18nKey.iconUrl)}
-        readonly={true}
-        elementId="icon"
-        iconUrl={application.iconUrl}
-      />
+      <IconControl readonly={true} iconUrl={application.iconUrl} />
 
       <Multiselect
         readonly={true}

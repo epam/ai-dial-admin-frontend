@@ -5,6 +5,7 @@ export interface DialToolset extends DialBaseNamedEntity {
   transport?: ToolsetTransport;
   iconUrl?: string;
   author?: string;
+  topics?: string[];
   // "endpoint": "http://sample-endpoint/call",
   // "descriptionKeywords": [
   //   "MCP",

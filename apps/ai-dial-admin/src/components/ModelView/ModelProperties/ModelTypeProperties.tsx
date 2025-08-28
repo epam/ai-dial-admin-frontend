@@ -8,7 +8,7 @@ import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 import EntityAttachments from '@/src/components/EntityView/Properties/EntityAttachments';
-import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
+import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
 import { splitEndpoint } from '@/src/components/ModelView/ModelProperties/utils';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -105,12 +105,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
         />
         {model.type === DialModelType.Chat && (
           <>
-            <EntityIcon
-              fieldTitle={t(EntityFieldsI18nKey.iconUrl)}
-              elementId="icon"
-              iconUrl={model.iconUrl}
-              onChange={(icon) => onChangeModel({ ...model, iconUrl: icon })}
-            />
+            <IconControl iconUrl={model.iconUrl} onChange={(icon) => onChangeModel({ ...model, iconUrl: icon })} />
             <TopicsControl entity={model} onChange={onChangeModel} />
           </>
         )}

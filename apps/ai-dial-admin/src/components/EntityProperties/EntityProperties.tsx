@@ -2,17 +2,15 @@ import { FC, useCallback } from 'react';
 
 import ApplicationSource from '@/src/components/ApplicationSource/ApplicationSource';
 import Defaults from '@/src/components/Defaults/Defaults';
+import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
+import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMainProperties';
 import EntityAttachments from '@/src/components/EntityView/Properties/EntityAttachments';
-import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
 import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
 import MaxRetryAttempts from '@/src/components/MaxRetryAttempts/MaxRetryAttempts';
-import { EntityFieldsI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';
-import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 
 interface Props {
   entity: DialBaseEntity;
@@ -23,8 +21,6 @@ interface Props {
 }
 
 const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntity }) => {
-  const t = useI18n();
-
   const onChangeMaxRetryAttempts = useCallback(
     (maxRetryAttempts?: number) => {
       updateEntity({ ...(entity as DialApplication), maxRetryAttempts });
@@ -43,12 +39,7 @@ const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntit
           runners={runners}
           isEntityImmutable={true}
         />
-        <EntityIcon
-          fieldTitle={t(EntityFieldsI18nKey.iconUrl)}
-          elementId="icon"
-          iconUrl={entity.iconUrl}
-          onChange={(icon) => updateEntity({ ...entity, iconUrl: icon })}
-        />
+        <IconControl iconUrl={entity.iconUrl} onChange={(icon) => updateEntity({ ...entity, iconUrl: icon })} />
         <div className="lg:w-[35%]">
           <TopicsControl entity={entity} onChange={updateEntity} />
         </div>

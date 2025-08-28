@@ -8,7 +8,7 @@ import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/
 import EditorUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/EditorUrl';
 import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
 import ViewerUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ViewerUrl';
-import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
+import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
 import {
   BasicI18nKey,
   EntityFieldsI18nKey,
@@ -92,9 +92,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
 
   return (
     <div className="flex flex-col gap-6 h-full">
-      <EntityIcon
-        elementId="icon"
-        fieldTitle={t(EntityFieldsI18nKey.iconUrl)}
+      <IconControl
         iconUrl={runner['dial:applicationTypeIconUrl']}
         onChange={(icon: string) => {
           onChange(icon, 'dial:applicationTypeIconUrl');
