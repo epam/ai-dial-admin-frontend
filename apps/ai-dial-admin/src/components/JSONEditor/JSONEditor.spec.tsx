@@ -8,7 +8,7 @@ describe('Components - JSONEditor', () => {
 
   test('Should render JSONEditor', () => {
     const { baseElement } = render(
-      <JSONEditor model={modelMock} errorNotifications={[]} setSelectedEntity={setSelectedEntity} />,
+      <JSONEditor entity={modelMock} errorNotifications={[]} setSelectedEntity={setSelectedEntity} />,
     );
 
     expect(baseElement).toBeTruthy();

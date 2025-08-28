@@ -25,7 +25,6 @@ interface Props<T> {
   view: ApplicationRoute;
   entity: T;
   jsonEditorEnabled: boolean;
-  jsonErrors: JSONEditorError[] | null;
   onDiscard: () => void;
   onSave: (newVersion?: string) => void;
   setErrorNotifications?: (notification: JSONEditorErrorNotification[]) => void;
@@ -39,7 +38,6 @@ const ModifiedEntityButtons = <T extends DialBaseEntity | DialKey>({
   onDiscard,
   onSave,
   jsonEditorEnabled,
-  jsonErrors,
   setErrorNotifications,
   contentJsonErrors,
   promptVersions,
@@ -47,7 +45,7 @@ const ModifiedEntityButtons = <T extends DialBaseEntity | DialKey>({
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
   const { showNotification } = useNotification();
 
-  const { isValid } = useSaveValidationContext();
+  const { isValid, jsonErrors } = useSaveValidationContext();
 
   const [versionModalState, setVersionModalState] = useState(PopUpState.Closed);
   const [isValidJSON, setIsValidJSON] = useState<boolean>(true);
@@ -98,14 +96,14 @@ const ModifiedEntityButtons = <T extends DialBaseEntity | DialKey>({
             cssClass={classNames('secondary', buttonsClassNames)}
             title={t(ButtonsI18nKey.SaveAsNewVersion)}
             onClick={() => setVersionModalState(PopUpState.Opened)}
-            disable={(jsonEditorEnabled && !isValidJSON) || !isValid}
+            disable={(jsonEditorEnabled && !!jsonErrors?.length) || !isValid}
           />
         )}
         <Button
           cssClass={classNames('primary', buttonsClassNames)}
           title={t(ButtonsI18nKey.Save)}
           onClick={() => onTryToSave()}
-          disable={(jsonEditorEnabled && !isValidJSON) || !isValid}
+          disable={(jsonEditorEnabled && !!jsonErrors?.length) || !isValid}
         />
       </div>
       {versionModalState === PopUpState.Opened &&

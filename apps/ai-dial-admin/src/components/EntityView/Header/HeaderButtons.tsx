@@ -28,7 +28,6 @@ interface Props<T> {
   entity: T;
   isChanged: boolean;
   jsonEditorEnabled: boolean;
-  jsonErrors: JSONEditorError[] | null;
   hideJsonEditor?: boolean;
   children?: ReactNode;
   onDiscard: () => void;
@@ -49,7 +48,6 @@ const HeaderButtons = <T extends DialBaseEntity | DialKey>({
   removeEntity,
   jsonEditorEnabled,
   toggleJsonEditor,
-  jsonErrors,
   setErrorNotifications,
   hideJsonEditor,
   children,
@@ -99,7 +97,6 @@ const HeaderButtons = <T extends DialBaseEntity | DialKey>({
           <ModifiedEntityButtons
             entity={entity}
             jsonEditorEnabled={jsonEditorEnabled}
-            jsonErrors={jsonErrors}
             onDiscard={onDiscard}
             onSave={onSave}
             view={view}

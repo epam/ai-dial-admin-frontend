@@ -116,7 +116,7 @@ const AdapterView: FC<Props> = ({ originalAdapter }) => {
         {jsonEditorEnabled ? (
           <JSONEditor
             key={key}
-            model={selectedAdapter}
+            entity={selectedAdapter}
             errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedAdapter}
             setIsChanged={setIsChanged}
