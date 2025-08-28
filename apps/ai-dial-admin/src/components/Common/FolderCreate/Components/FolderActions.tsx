@@ -14,7 +14,7 @@ interface ActionProps {
   item: FolderOperationDeclaration;
 }
 
-//TODO: refactor - use for common names
+//TODO: refactor - use for common usage
 const FolderActions: FC<ActionsProps> = ({ items, icon }) => {
   return (
     <div>
