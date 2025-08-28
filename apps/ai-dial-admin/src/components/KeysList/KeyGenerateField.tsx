@@ -46,7 +46,6 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
           errorText={keyError?.text}
           invalid={!!keyError}
           onChange={onChangeKeyValue}
-          tooltipTriggerClassName={'flex-1'}
         />
       </div>
       {isKeyImmutable ? (
