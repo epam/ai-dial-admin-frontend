@@ -62,22 +62,30 @@ const EntityMainProperties: FC<Props> = ({
   const onChangeDisplayName = useCallback(
     (displayName: string) => {
       setIsVersionOptional(!names.includes(displayName));
-      setDisplayNameError(
-        getDisplayNameError(view, displayName as string, names, t, (entity as DialModel).displayVersion),
-      );
+      const error = getDisplayNameError(view, displayName as string, names, t, (entity as DialModel).displayVersion);
+      setDisplayNameError(error);
+
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'displayName',
+        isValid: !error,
+      });
 
       onChangeEntity({ ...entity, displayName });
     },
-    [names, view, t, onChangeEntity, entity],
+    [names, dispatch, view, t, onChangeEntity, entity],
   );
 
   useEffect(() => {
-    dispatch({
-      type: ValidationActionType.SetField,
-      field: 'displayName',
-      isValid: !displayNameError,
-    });
-  }, [entity.displayName, displayNameError, t, view, dispatch]);
+    if (view === ApplicationRoute.Models || view === ApplicationRoute.Applications) {
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'displayName',
+        isValid: !!entity.displayName,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
 
   useEffect(() => {
     if (view === ApplicationRoute.Models) {
