@@ -29,7 +29,7 @@ describe('RouteProperties', () => {
 
   test('renders description field for non-app route', () => {
     render(<RouteProperties route={baseRoute} isAppRoute={true} updateRoute={vi.fn()} />);
-    expect(screen.getByText(EntityFieldsI18nKey.description)).toBeInTheDocument();
+    expect(screen.getByText(EntityFieldsI18nKey.displayName)).toBeInTheDocument();
   });
 
   test('calls updateRoute when displayname changes', () => {
