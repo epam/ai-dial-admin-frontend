@@ -1,5 +1,5 @@
 'use client';
-import { IconPlus } from '@tabler/icons-react';
+import { IconPlus, IconReplace } from '@tabler/icons-react';
 import { FC, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -25,11 +25,12 @@ interface Props {
   parentRoles?: string[];
   roles: DialRole[];
   readonly?: boolean;
+  iAppRunnerView?: boolean;
   route: DialAppRoute;
   onChangeRoute: (route: DialAppRoute) => void;
 }
 
-const RouteRoles: FC<Props> = ({ route, parentRoles, readonly, onChangeRoute, roles }) => {
+const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, onChangeRoute, roles }) => {
   const t = useI18n() as (str: string) => string;
   const [isInherited, setIsInherited] = useState((Object.keys(route.roleLimits || {}) || []).length === 0);
 
@@ -128,6 +129,11 @@ const RouteRoles: FC<Props> = ({ route, parentRoles, readonly, onChangeRoute, ro
           <div className="h-full">
             {data.length > 0 ? (
               <Grid columnDefs={columns} rowData={data} />
+            ) : iAppRunnerView ? (
+              <NoDataContent
+                icon={<IconReplace width={60} height={60} />}
+                emptyDataTitle={t(RoutesI18nKey.InheritRolesWarning)}
+              />
             ) : (
               <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoRoles)} />
             )}

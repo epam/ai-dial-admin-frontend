@@ -12,7 +12,7 @@ import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProper
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { getPromptVersionError } from '../../utils/validation/version-error';
+import { getPromptVersionError } from '@/src/utils/validation/version-error';
 
 interface Props {
   view?: ApplicationRoute;

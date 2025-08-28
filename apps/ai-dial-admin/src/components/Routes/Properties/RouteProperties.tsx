@@ -58,13 +58,6 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
     return !values || !values?.length ? null : values;
   }, [permissionsItems, route]);
 
-  const onChangeName = useCallback(
-    (name?: string) => {
-      updateRoute({ ...route, name });
-    },
-    [route, updateRoute],
-  );
-
   const onChangeDisplayName = useCallback(
     (displayName?: string) => {
       updateRoute({ ...route, displayName });
@@ -151,14 +144,8 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
   return (
     <div className="h-full flex flex-col pt-3 w-full">
       <div className="flex flex-col gap-6 lg:w-[35%]">
-        {isAppRoute ? (
-          <DisplayNameControl displayName={route.name} onChange={onChangeName} disabled={readonly} />
-        ) : (
-          <>
-            <DisplayNameControl displayName={route.displayName} onChange={onChangeDisplayName} />
-            <DescriptionControl entity={route} onChangeEntity={updateRoute} />
-          </>
-        )}
+        <DisplayNameControl displayName={route.displayName} onChange={onChangeDisplayName} disabled={readonly} />
+        {!isAppRoute && <DescriptionControl entity={route} onChangeEntity={updateRoute} />}
         <Paths
           title={t(EntityFieldsI18nKey.paths)}
           paths={route.paths}

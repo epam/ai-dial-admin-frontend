@@ -392,6 +392,7 @@ export enum RoutesI18nKey {
   ResponseAttachmentPaths = 'Routes.ResponseAttachmentPaths',
   RequestAttachmentPaths = 'Routes.RequestAttachmentPaths',
   InheritApplicationRoles = 'Routes.InheritApplicationRoles',
+  InheritRolesWarning = 'Routes.InheritRolesWarning',
 }
 
 export enum PublicationsI18nKey {
@@ -726,6 +727,8 @@ export enum EntityFieldsI18nKey {
   scheme = 'EntityFields.scheme',
   applications = 'EntityFields.applications',
   entities = 'EntityFields.entities',
+  routes = 'EntityFields.routes',
+  'dial:applicationTypeRoutes' = 'EntityFields.applicationTypeRoutes',
   'dial:applicationTypeCompletionEndpoint' = 'EntityFields.applicationTypeCompletionEndpoint',
   'dial:applicationTypeDisplayName' = 'EntityFields.applicationTypeDisplayName',
   title = 'EntityFields.title',

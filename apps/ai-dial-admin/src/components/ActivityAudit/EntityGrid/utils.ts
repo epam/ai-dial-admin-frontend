@@ -50,6 +50,7 @@ export const getColumnsByParameter = (
     parameter === EntityParameterKeys.ENTITIES ||
     parameter === EntityParameterKeys.KEYS ||
     parameter === EntityParameterKeys.MODELS ||
+    parameter === EntityParameterKeys.ROUTES ||
     parameter === EntityParameterKeys.DEPENDENCIES ||
     (parameter === EntityParameterKeys.ROLES && type === ActivityAuditResourceType.KEY)
   ) {
