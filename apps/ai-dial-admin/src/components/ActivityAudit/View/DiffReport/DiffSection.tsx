@@ -3,14 +3,15 @@ import { FC, useCallback, useState } from 'react';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import classNames from 'classnames';
 
+import AuditEntityGrid from '@/src/components/ActivityAudit/EntityGrid/EntityGrid';
+import DiffLegend from '@/src/components/ActivityAudit/View/DiffReport/DiffLegend';
 import { filterNotEmptySections, getDiffCount } from '@/src/components/ActivityAudit/View/DiffReport/utils';
+import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
 import { CompareI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { ActivityAuditDiffSection } from '@/src/models/dial/activity-audit';
 import { ActivityAuditResourceType, CompareView, DiffStatus, DiffView } from '@/src/types/activity-audit';
-import DiffLegend from '@/src/components/ActivityAudit/View/DiffReport/DiffLegend';
-import AuditEntityGrid from '@/src/components/ActivityAudit/EntityGrid/EntityGrid';
 
 interface Props {
   sections: ActivityAuditDiffSection[];
@@ -37,6 +38,11 @@ const DiffSection: FC<Props> = ({ sections, name, type, diffView, compareView })
 
   if (validSections.length === 0) return null;
 
+  const title =
+    type === ActivityAuditResourceType.ROLE && name === EntityParameterKeys.ROLES
+      ? t(EntityFieldsI18nKey.entities)
+      : t(EntityFieldsI18nKey[name as keyof typeof EntityFieldsI18nKey]);
+
   return (
     <div className="flex flex-col rounded border border-primary bg-layer-3 p-4">
       <button className="flex items-center justify-between" onClick={toggleCollapse}>
@@ -44,7 +50,7 @@ const DiffSection: FC<Props> = ({ sections, name, type, diffView, compareView })
           <i className="text-icon-secondary">
             {isCollapsed ? <IconChevronRight {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
           </i>
-          <h3 className="mx-2">{t(EntityFieldsI18nKey[name as keyof typeof EntityFieldsI18nKey])}</h3>
+          <h3 className="mx-2">{title}</h3>
         </div>
         <DiffLegend added={added} changed={changed} removed={removed} />
       </button>

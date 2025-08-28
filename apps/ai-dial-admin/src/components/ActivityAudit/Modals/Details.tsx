@@ -52,6 +52,7 @@ const ActivityDetails: FC<Props> = ({
           epochTimestampMs: activityDetails.epochTimestampMs,
           initiatedEmail: activityDetails.initiatedEmail,
           activityType: activityDetails.activityType,
+          resourceType: activityDetails.resourceType,
         } as DialActivity);
         const route = getRevisionRouteForEntityType(
           activityDetails?.resourceType,
