@@ -2,9 +2,10 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import ProfileButton from './ProfileButton';
 
+const toggleUserMenu = vi.fn();
 vi.mock('next-auth/react', () => ({ useSession: () => ({ data: { user: {} } }) }));
 vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ userMenuOpen: false, toggleUserMenu: vi.fn() }),
+  useAppContext: () => ({ userMenuOpen: false, toggleUserMenu }),
 }));
 
 describe('ProfileButton', () => {
@@ -15,11 +16,6 @@ describe('ProfileButton', () => {
   });
 
   it('calls toggleUserMenu on click', () => {
-    const toggleUserMenu = vi.fn();
-    vi.mocked(require('@/src/context/AppContext').useAppContext).mockReturnValue({
-      userMenuOpen: false,
-      toggleUserMenu,
-    });
     render(<ProfileButton />);
     fireEvent.click(screen.getByLabelText('Account settings'));
     expect(toggleUserMenu).toHaveBeenCalled();
