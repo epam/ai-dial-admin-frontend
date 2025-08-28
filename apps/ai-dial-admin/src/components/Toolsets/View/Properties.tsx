@@ -2,11 +2,10 @@
 
 import { FC } from 'react';
 
+import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMainProperties';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
-import { useI18n } from '@/src/locales/client';
 import { DialToolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
-import EntityMainProperties from '../../EntityMainProperties/EntityMainProperties';
 
 interface Props {
   selectedToolset: DialToolset;
@@ -15,8 +14,6 @@ interface Props {
 }
 
 const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
-
   return (
     <div className="pt-3 w-full lg:w-[35%]">
       <EntityHeader entity={selectedToolset} />
