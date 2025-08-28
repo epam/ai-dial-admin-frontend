@@ -1,4 +1,4 @@
-import { FC, useCallback } from 'react';
+import { useCallback } from 'react';
 
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';

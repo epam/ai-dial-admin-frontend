@@ -34,7 +34,7 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
             onChange={(icon) => onChangeToolset({ ...selectedToolset, iconUrl: icon })}
           />
           <TopicsControl entity={selectedToolset} onChange={onChangeToolset} />
-          <MaxRetryAttempts entity={selectedToolset} onChange={onChangeToolset} />
+          <MaxRetryAttempts entity={selectedToolset} onChangeEntity={onChangeToolset} />
         </div>
       </div>
     </div>
