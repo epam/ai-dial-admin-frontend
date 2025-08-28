@@ -8,11 +8,11 @@ import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialAppRoute } from '@/src/models/dial/route';
-import { IconDotsVertical, IconExternalLink, IconTrash } from '@tabler/icons-react';
+import { IconDotsVertical, IconTrash } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 interface Props {
-  activeRoute?: string ;
+  activeRoute?: string;
   routes?: DialAppRoute[];
   onClick: (route?: string) => void;
   onRemove: (route?: string) => void;
