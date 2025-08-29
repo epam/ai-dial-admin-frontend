@@ -28,6 +28,12 @@ export interface DialBaseEntity extends DialBaseNamedEntity {
   features?: DialFeatures;
   dependencies?: string[];
   defaults?: Record<string, DefaultsValue>;
+  defaultsTemp?: DefaultTemp[];
+}
+
+export interface DefaultTemp {
+  key: string;
+  value: DefaultsValue;
 }
 
 export type DefaultsValue = string | number | boolean;

@@ -9,10 +9,11 @@ import { DefaultItemType } from './types';
  * @returns {*} array of key value objects
  */
 export const convertDefaultsToArray = (defaults: Record<string, DefaultsValue>) => {
-  return Object.entries(defaults || {}).map(([key, value]) => ({
+  const array = Object.entries(defaults || {}).map(([key, value]) => ({
     key,
     value,
   }));
+  return array;
 };
 
 /**
@@ -27,7 +28,9 @@ export const convertDefaultsToRecord = (
   const record: Record<string, string | number | boolean> = {};
 
   for (const { key, value } of defaults) {
-    record[key] = value;
+    if (key) {
+      record[key] = value;
+    }
   }
 
   return record;
@@ -57,7 +60,7 @@ export const getDefaultValueType = (value?: DefaultsValue): keyof typeof Default
 export const getDefaultValueByType = (type: DefaultItemType): DefaultsValue => {
   switch (type) {
     case DefaultItemType.boolean:
-      return true;
+      return false;
     case DefaultItemType.number:
       return 0;
     default:
