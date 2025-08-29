@@ -97,9 +97,15 @@ const EntityMainProperties: FC<Props> = ({
   const onChangeVersion = useCallback(
     (displayVersion?: string) => {
       onChangeEntity({ ...entity, displayVersion } as DialModel);
-      setDisplayNameError(getDisplayNameError(view, entity.displayName as string, names, t, displayVersion));
+      const error = getDisplayNameError(view, entity.displayName as string, names, t, displayVersion);
+      setDisplayNameError(error);
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'displayName',
+        isValid: !error,
+      });
     },
-    [onChangeEntity, entity, view, names, t],
+    [onChangeEntity, entity, view, names, t, dispatch],
   );
 
   return (
