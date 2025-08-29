@@ -145,6 +145,8 @@ export default {
     ExternalEndpoint: 'External Endpoint',
     InterceptorContainer: 'Interceptor Container',
     InterceptorTemplate: 'Interceptor Template',
+    Author: 'Author',
+
     // modals
     SaveChangesTitle: 'Save Changes',
     SaveChangesDescription: 'Save changes before opening the parameters tab. All unsaved changes will be lost.',
@@ -455,7 +457,6 @@ export default {
       UnpublishApproveDescription: 'Are you sure that you want to unpublish application?',
     },
     Action: 'Action',
-    Author: 'Author',
     Runner: 'Runner',
     FolderStorage: 'Folder Storage',
   },

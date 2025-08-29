@@ -112,6 +112,7 @@ export enum EntitiesI18nKey {
   InterceptorTemplate = 'Entities.InterceptorTemplate',
   InterceptorName = 'Entities.InterceptorName',
   ModelDisplayName = 'Entities.ModelDisplayName',
+  Author = 'Entities.Author',
   ApplicationDisplayName = 'Entities.ApplicationDisplayName',
   ChangeIcon = 'Entities.ChangeIcon',
   SaveChangesTitle = 'Entities.SaveChangesTitle',
@@ -422,7 +423,6 @@ export enum PublicationsI18nKey {
   OpenPrompt = 'Publications.Prompt.OpenPrompt',
   Action = 'Publications.Action',
   Runner = 'Publications.Runner',
-  Author = 'Publications.Author',
   FolderStorage = 'Publications.FolderStorage',
   FilesListTitle = 'Publications.Files.FilesListTitle',
 }
