@@ -21,14 +21,16 @@ const ToolsetType: FC<Props> = ({ selectedToolset, onChangeToolset }) => {
 
   return (
     <div className="flex flex-col">
-      <RadioField
-        fieldTitle="Transport"
-        elementId="transport"
-        activeRadioButton={selectedToolset.transport || ToolsetTransport.HTTP}
-        radioButtons={transportOptions}
-        orientation={RadioFieldOrientation.Column}
-        onChange={(transport) => onChangeToolset({ ...selectedToolset, transport: transport as ToolsetTransport })}
-      />
+      {!!selectedToolset.allowedTools && (
+        <RadioField
+          fieldTitle="Transport"
+          elementId="transport"
+          activeRadioButton={selectedToolset.transport || ToolsetTransport.SSE}
+          radioButtons={transportOptions}
+          orientation={RadioFieldOrientation.Column}
+          onChange={(transport) => onChangeToolset({ ...selectedToolset, transport: transport as ToolsetTransport })}
+        />
+      )}
     </div>
   );
 };
