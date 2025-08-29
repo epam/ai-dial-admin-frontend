@@ -7,9 +7,14 @@ import { Publication } from '@/src/models/dial/publications';
 import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 
 export const onOpenInNewTab = (route?: ApplicationRoute, entity?: unknown, entityType?: DEPLOYMENT_ENTITY) => {
+  const url = getUrnForEntity(route, entity, entityType);
+  window.open(url, '_blank');
+};
+
+export const getUrnForEntity = (route?: ApplicationRoute, entity?: unknown, entityType?: DEPLOYMENT_ENTITY) => {
   const path = getEntityPath(route, entity, false, entityType);
   const originalRoute = route?.split('/')?.[1];
-  window.open(`/${originalRoute}/${path}`, '_blank');
+  return `/${originalRoute}/${path}`;
 };
 
 export const getEntityPath = (
