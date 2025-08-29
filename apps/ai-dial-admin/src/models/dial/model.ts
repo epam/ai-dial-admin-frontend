@@ -1,6 +1,6 @@
-import { DialBaseEntity } from './base-entity';
+import { ChatEntity } from './base-entity';
 
-export interface DialModel extends DialBaseEntity {
+export interface DialModel extends ChatEntity {
   type?: DialModelType;
   endpointDeploymentName?: string;
   upstreams?: DialModelEndpoint[];
@@ -8,7 +8,6 @@ export interface DialModel extends DialBaseEntity {
   overrideName?: string;
   limits?: DialModelLimit;
   pricing?: DialModelPricing;
-  maxRetryAttempts?: number;
   displayVersion?: string;
 }
 

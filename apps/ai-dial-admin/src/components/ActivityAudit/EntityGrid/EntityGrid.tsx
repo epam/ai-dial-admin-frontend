@@ -9,7 +9,7 @@ import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Grid from '@/src/components/Grid/Grid';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { ActivityAuditDiff, DialActivity } from '@/src/models/dial/activity-audit';
+import { ActivityAuditDiff, DialActivity } from '@/src/models/activity-audit';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus, DiffView } from '@/src/types/activity-audit';
 import { PopUpState } from '@/src/types/pop-up';

@@ -5,8 +5,10 @@ export interface BaseEntity {
   name?: string;
   displayName?: string;
   description?: string;
+}
 
-  endpoint?: string | null; //?
+export interface BaseEndpointEntity {
+  endpoint?: string | null;
 }
 
 export interface ModifiedEntity {
@@ -19,6 +21,7 @@ export interface ChatEntity extends BaseEntity, ModifiedEntity {
   // for models, applications, interceptors, toolsets
   author?: string;
   iconUrl?: string;
+  endpoint?: string | null;
 
   // for models, applications, interceptors,
   defaults?: Record<string, DefaultsValue>;
@@ -31,7 +34,6 @@ export interface ChatEntity extends BaseEntity, ModifiedEntity {
 export interface DialBaseEntity extends BaseEntity, ModifiedEntity {
   adapter?: string;
   author?: string;
-  baseEndpoint?: string;
   displayName?: string;
   iconUrl?: string;
   isPublic?: boolean;

@@ -8,7 +8,7 @@ import Loader from '@/src/components/Common/Loader/Loader';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ActivityAuditI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialActivity } from '@/src/models/dial/activity-audit';
+import { DialActivity } from '@/src/models/activity-audit';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { PopUpState } from '@/src/types/pop-up';

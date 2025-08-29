@@ -11,7 +11,7 @@ import { createKey, removeKey, updateKey } from '@/src/app/[lang]/keys/actions';
 import { createModel, removeModel, updateModel } from '@/src/app/[lang]/models/actions';
 import { createRole, removeRole, updateRole } from '@/src/app/[lang]/roles/actions';
 import { createRoute, removeRoute, updateRoute } from '@/src/app/[lang]/routes/actions';
-import { DialActivity } from '@/src/models/dial/activity-audit';
+import { DialActivity } from '@/src/models/activity-audit';
 import { ActivityAuditEntity, ActivityAuditResourceType, ActivityAuditType } from '@/src/types/activity-audit';
 import { getRevisionRouteForEntityType } from './get-revision-route';
 

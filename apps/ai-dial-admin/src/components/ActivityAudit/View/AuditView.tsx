@@ -14,7 +14,7 @@ import { ActivityAuditI18nKey, ButtonsI18nKey, EntityFieldsI18nKey } from '@/src
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialActivity } from '@/src/models/dial/activity-audit';
+import { DialActivity } from '@/src/models/activity-audit';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { ActivityAuditEntity, CompareView, DiffView } from '@/src/types/activity-audit';
 import { PopUpState } from '@/src/types/pop-up';
