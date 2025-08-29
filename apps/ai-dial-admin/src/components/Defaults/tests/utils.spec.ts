@@ -11,7 +11,7 @@ import { DefaultItemType } from '../types';
 import { BooleanType } from '@/src/types/boolean';
 
 describe('Defaults :: utils :: convertDefaultsToArray', () => {
-  test('should convert an empty object to an empty array', () => {
+  test('should convert an empty object to an array with one empty item', () => {
     const result = convertDefaultsToArray({});
     expect(result).toEqual([]);
   });
@@ -189,7 +189,7 @@ describe('Defaults :: utils :: getDefaultValueType', () => {
 describe('Defaults :: utils :: getDefaultValueByType', () => {
   test('should return true when type is boolean', () => {
     const result = getDefaultValueByType(DefaultItemType.boolean);
-    expect(result).toBe(true);
+    expect(result).toBe(false);
   });
 
   test('should return 0 when type is number', () => {

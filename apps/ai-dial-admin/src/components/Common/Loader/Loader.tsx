@@ -14,6 +14,7 @@ interface Props {
 const Loader: FC<Props> = ({ size = 18, loaderClassName = '', containerClassName = '' }) => {
   return (
     <div
+      role="loader"
       className={classNames('flex w-full items-center justify-center text-secondary', containerClassName || 'h-full')}
     >
       <LoaderIcon

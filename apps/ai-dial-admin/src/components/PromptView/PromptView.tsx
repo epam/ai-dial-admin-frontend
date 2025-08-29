@@ -153,7 +153,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
         {jsonEditorEnabled ? (
           <JSONEditor
             key={key}
-            model={selectedPrompt}
+            entity={selectedPrompt}
             errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedPrompt}
             setIsChanged={setIsChanged}

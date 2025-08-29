@@ -1,11 +1,17 @@
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
 import ReadonlyField from './ReadonlyField';
-import { render } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
 
-describe('Common components - ReadonlyField', () => {
-  test('Should render successfully', () => {
-    const { baseElement } = render(<ReadonlyField title="title" value="value" />);
+describe('ReadonlyField', () => {
+  it('renders the title and value', () => {
+    render(<ReadonlyField title="Test Title" value="Test Value" />);
+    expect(screen.getByDisplayValue('Test Value')).toBeInTheDocument();
+    expect(screen.getByText('Test Title')).toBeInTheDocument();
+  });
 
-    expect(baseElement).toBeTruthy();
+  it('renders with empty value', () => {
+    render(<ReadonlyField title="Empty Value" />);
+    expect(screen.getByDisplayValue('')).toBeInTheDocument();
+    expect(screen.getByText('Empty Value')).toBeInTheDocument();
   });
 });

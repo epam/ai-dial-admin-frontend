@@ -1,32 +1,36 @@
-import PublicationProperties from '@/src/components/PublicationView/PublicationProperties';
-import { Publication } from '@/src/models/dial/publications';
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+import PublicationProperties from '../PublicationProperties';
 import { ApplicationRoute } from '@/src/types/routes';
-import { publicationPrompt } from '@/src/utils/tests/mock/publication.mock';
-import { render } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 
-describe('Components - BasePublicationProperties', () => {
-  test('Should correctly render BasePublicationProperties component', () => {
-    const { getByTestId } = render(
-      <PublicationProperties
-        view={ApplicationRoute.PromptPublications}
-        publication={publicationPrompt as Publication}
-      />,
-    );
-    const header = getByTestId('publication-header');
-    const content = getByTestId('publication-content');
-    const view = getByTestId('publication-prompt-view');
+const fakePublication = { id: '1', name: 'Test Publication' } as any;
+const fakeSchemes = [{ id: 'scheme1' }] as any;
 
-    expect(header).toBeTruthy();
-    expect(content).toBeTruthy();
-    expect(view).toBeTruthy();
+describe('PublicationProperties', () => {
+  it('renders prompt publication properties', () => {
+    render(<PublicationProperties view={ApplicationRoute.PromptPublications} publication={fakePublication} />);
+    expect(screen.getByText(EntityFieldsI18nKey.createdAt)).toBeInTheDocument();
   });
 
-  test('Should not render BasePublicationProperties component if view is incorrect', () => {
-    const { container } = render(
-      <PublicationProperties view={ApplicationRoute.Home} publication={publicationPrompt as Publication} />,
-    );
+  it('renders file publication properties', () => {
+    render(<PublicationProperties view={ApplicationRoute.FilePublications} publication={fakePublication} />);
+    expect(screen.getByText(EntityFieldsI18nKey.createdAt)).toBeInTheDocument();
+  });
 
-    expect(container.innerHTML).toBeFalsy();
+  it('renders application publication properties', () => {
+    render(
+      <PublicationProperties
+        view={ApplicationRoute.ApplicationPublications}
+        publication={fakePublication}
+        applicationSchemes={fakeSchemes}
+      />,
+    );
+    expect(screen.getByText(EntityFieldsI18nKey.createdAt)).toBeInTheDocument();
+  });
+
+  it('renders nothing for unknown view', () => {
+    const { container } = render(<PublicationProperties view={ApplicationRoute.Home} publication={fakePublication} />);
+    expect(container.innerHTML).toBe('');
   });
 });

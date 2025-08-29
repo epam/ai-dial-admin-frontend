@@ -1,15 +1,23 @@
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
 import Content from './Content';
-import { describe, expect, test } from 'vitest';
 
-describe('Components - Content', () => {
-  test('Should render successfully', () => {
-    const { baseElement } = render(
+describe('Content', () => {
+  it('renders children', () => {
+    render(
       <Content isEnableAuth={true} beVersion={'1.0.0'}>
-        <div>content</div>
+        <div>Test Content</div>
       </Content>,
     );
+    expect(screen.getByText('Test Content')).toBeInTheDocument();
+  });
 
-    expect(baseElement).toBeTruthy();
+  it('renders with beVersion', () => {
+    render(
+      <Content isEnableAuth={false} beVersion={'2.3.4'}>
+        <span>Versioned</span>
+      </Content>,
+    );
+    expect(screen.getByText('Versioned')).toBeInTheDocument();
   });
 });
