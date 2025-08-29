@@ -6,11 +6,10 @@ export interface DialToolset extends DialBaseNamedEntity {
   iconUrl?: string;
   author?: string;
   topics?: string[];
+  endpoint?: string | null;
   maxRetryAttempts?: number;
   allowedTools?: string[];
   descriptionKeywords?: string[];
-  // "endpoint": "http://sample-endpoint/call",
-  // "isPublic": false,
   // "roleLimits": {
   //   "testRole1": {
   //     "minute": "128000",
