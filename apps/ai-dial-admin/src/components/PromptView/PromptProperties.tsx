@@ -16,6 +16,7 @@ import Switch from '@/src/components/Common/Switch/Switch';
 import {
   BasicI18nKey,
   ButtonsI18nKey,
+  EntitiesI18nKey,
   EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
   FoldersI18nKey,
@@ -160,11 +161,10 @@ const PromptProperties: FC<Props> = ({
   return (
     <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full">
       <div className="flex flex-row gap-10 mb-6">
-        {/* will be uncommented after BE implement author */}
         {publication ? (
           <>
             <LabeledText label={t(EntityFieldsI18nKey.displayName)} text={prompt.name} copyButton={true} />
-            {/* <LabeledText label="Author" text={publication.author} /> */}
+            {prompt.author && <LabeledText label={t(EntitiesI18nKey.Author)} text={prompt.author} />}
             <LabeledText
               label={t(EntityFieldsI18nKey.createdAt)}
               text={formatDateTimeToLocalString(publication.createdAt)}
@@ -173,7 +173,7 @@ const PromptProperties: FC<Props> = ({
         ) : (
           <>
             <LabeledText label={t(EntityFieldsI18nKey.displayName)} text={prompt.name} copyButton={true} />
-            {/* <LabeledText label="Author" text={prompt.author} /> */}
+            {prompt.author && <LabeledText label={t(EntitiesI18nKey.Author)} text={prompt.author} />}
             <LabeledText
               label={t(EntityFieldsI18nKey.updatedAt)}
               text={formatDateTimeToLocalString(prompt.updateTime)}
