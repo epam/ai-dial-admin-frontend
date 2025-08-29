@@ -1,4 +1,4 @@
-import { DialBaseNamedEntity } from './base-entity';
+import { DefaultsValue, DefaultTemp, DialBaseNamedEntity } from './base-entity';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 
 export interface DialInterceptor extends DialBaseNamedEntity {
@@ -9,6 +9,8 @@ export interface DialInterceptor extends DialBaseNamedEntity {
   author?: string;
   createdAt?: number;
   updatedAt?: number;
+  defaults?: Record<string, DefaultsValue>;
+  defaultsTemp?: DefaultTemp[];
   source?: {
     $type: SOURCE_TYPE;
     runnerName?: string;

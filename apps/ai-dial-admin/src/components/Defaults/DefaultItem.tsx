@@ -130,7 +130,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
               selectedValue={item.value.toString()}
               elementId={'entity-default-value ' + index}
               items={booleans}
-              fieldTitle={isFirstLine ? t(EntityFieldsI18nKey.type) : ''}
+              fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
               onChange={onChangeValue}
             />
           )}

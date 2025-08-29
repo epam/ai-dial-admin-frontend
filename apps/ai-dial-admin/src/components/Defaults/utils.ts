@@ -28,7 +28,9 @@ export const convertDefaultsToRecord = (
   const record: Record<string, string | number | boolean> = {};
 
   for (const { key, value } of defaults) {
-    record[key] = value;
+    if (key) {
+      record[key] = value;
+    }
   }
 
   return record;
