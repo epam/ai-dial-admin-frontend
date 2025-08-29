@@ -1,7 +1,7 @@
-import { DefaultsValue, DefaultTemp, DialBaseNamedEntity, DialModifiedEntity } from './base-entity';
+import { DefaultsValue, DefaultTemp, BaseEntity, DialModifiedEntity } from './base-entity';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 
-export interface DialInterceptor extends DialBaseNamedEntity, DialModifiedEntity {
+export interface DialInterceptor extends BaseEntity, DialModifiedEntity {
   endpoint?: string;
   configurationEndpoint?: string;
   forwardAuthToken?: boolean;

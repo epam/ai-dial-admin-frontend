@@ -1,7 +1,7 @@
-import { DialBaseNamedEntity } from './base-entity';
+import { BaseEntity } from './base-entity';
 import { DialFile } from './file';
 
-export interface DialPrompt extends DialBaseNamedEntity, DialFile {
+export interface DialPrompt extends BaseEntity, DialFile {
   version: string;
   status: PromptStatus;
   content: string;

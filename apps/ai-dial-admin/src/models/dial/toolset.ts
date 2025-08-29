@@ -1,7 +1,7 @@
 import { ToolsetTransport } from '@/src/types/toolset';
-import { DialBaseNamedEntity } from './base-entity';
+import { BaseEntity } from './base-entity';
 
-export interface DialToolset extends DialBaseNamedEntity {
+export interface DialToolset extends BaseEntity {
   transport?: ToolsetTransport;
   iconUrl?: string;
   author?: string;

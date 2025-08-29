@@ -11,7 +11,6 @@ import {
   numberValueFormatter,
   priceValueFormatter,
 } from '@/src/constants/grid-columns/formatters';
-import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
 import { GridFilterType } from '@/src/types/grid-filter';
@@ -97,7 +96,7 @@ const TOPIC_COLUMN: ColDef = {
   colId: 'topics',
   headerName: 'Topics',
   cellRenderer: TopicsCellRenderer,
-  cellRendererParams: (params: { data?: DialBaseNamedEntity & { topics: string[] } }) => ({
+  cellRendererParams: (params: { data?: { topics: string[] } }) => ({
     topics: params.data?.topics || [],
   }),
 };
