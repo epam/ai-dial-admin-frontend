@@ -2,20 +2,16 @@
 
 import { FC, useCallback, useMemo } from 'react';
 
+import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
+import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 import { DialToolset } from '@/src/models/dial/toolset';
+import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { RadioButtonModel } from '@/src/models/radio-button';
 import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { ToolsetTransport } from '@/src/types/toolset';
-import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
-import { useI18n } from '@/src/locales/client';
-import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
-import Endpoint from '../../Endpoints/Endpoint';
-import InputModal from '../../Common/InputModal/InputModal';
-import EndpointControl from '../../EntityMainProperties/BaseProperties/Endpoint/Endpoint';
-import Containers from '../../SourceField/Containers/Containers';
-import SelectContainerModal from '../../SourceField/Containers/SelectContainerModal';
+import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
 
 interface Props {
   selectedToolset: DialToolset;

@@ -11,7 +11,6 @@ interface Props {
 }
 
 const ApplicationInfo: FC<Props> = ({ application }) => {
-
   return application ? (
     <div className="flex flex-col gap-y-6 w-full lg:w-[35%]">
       <DisplayNameControl readonly={true} displayName={application?.displayName} />
