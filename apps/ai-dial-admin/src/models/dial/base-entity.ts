@@ -51,9 +51,6 @@ export interface DialBaseEntity extends BaseEntity, ModifiedEntity {
   dependencies?: string[];
 }
 
-///
-// topics: string[];
-
 export type DialRoleLimitsMap = Record<string, DialRoleLimits>;
 export type DialRoleShareMap = Record<string, DialRoleShare>;
 

@@ -1,7 +1,7 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import { EntitiesI18nKey } from '@/src/constants/i18n';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useI18n } from '@/src/locales/client';
@@ -23,9 +23,9 @@ const Interceptors: FC<Props> = ({ interceptorList }) => {
   const t = useI18n() as (key: string) => string;
   const { showNotification } = useNotification();
 
-  const [interceptors, setInterceptors] = useState<DialBaseEntity[]>([]);
+  const [interceptors, setInterceptors] = useState<DialInterceptor[]>([]);
 
-  const onOpen = useCallback((interceptor: DialBaseEntity) => {
+  const onOpen = useCallback((interceptor: DialInterceptor) => {
     onOpenInNewTab(ApplicationRoute.Interceptors, interceptor);
   }, []);
 
