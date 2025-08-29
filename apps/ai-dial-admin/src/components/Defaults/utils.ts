@@ -60,7 +60,7 @@ export const getDefaultValueType = (value?: DefaultsValue): keyof typeof Default
 export const getDefaultValueByType = (type: DefaultItemType): DefaultsValue => {
   switch (type) {
     case DefaultItemType.boolean:
-      return true;
+      return false;
     case DefaultItemType.number:
       return 0;
     default:

@@ -189,7 +189,7 @@ describe('Defaults :: utils :: getDefaultValueType', () => {
 describe('Defaults :: utils :: getDefaultValueByType', () => {
   test('should return true when type is boolean', () => {
     const result = getDefaultValueByType(DefaultItemType.boolean);
-    expect(result).toBe(true);
+    expect(result).toBe(false);
   });
 
   test('should return 0 when type is number', () => {
