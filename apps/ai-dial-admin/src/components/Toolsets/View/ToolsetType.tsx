@@ -9,8 +9,13 @@ import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { ToolsetTransport } from '@/src/types/toolset';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { useI18n } from '@/src/locales/client';
-import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
+import Endpoint from '../../Endpoints/Endpoint';
+import InputModal from '../../Common/InputModal/InputModal';
+import EndpointControl from '../../EntityMainProperties/BaseProperties/Endpoint/Endpoint';
+import Containers from '../../SourceField/Containers/Containers';
+import SelectContainerModal from '../../SourceField/Containers/SelectContainerModal';
 
 interface Props {
   selectedToolset: DialToolset;
@@ -46,14 +51,28 @@ const ToolsetType: FC<Props> = ({ selectedToolset, onChangeToolset }) => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-row">
+      <div className="flex flex-row gap-x-6">
         <DropdownField
+          containerCssClass="w-[200px]"
           selectedValue={selectedType}
           elementId="type"
           items={types}
           fieldTitle={t(EntityFieldsI18nKey.type)}
           onChange={onChangeType}
         />
+
+        <div className="flex-1 min-w-0">
+          {selectedType === EntitiesI18nKey.ExternalEndpoint && (
+            <EndpointControl
+              id="endpoint"
+              required={true}
+              placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+              fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
+              endpoint={selectedToolset.endpoint}
+              onChange={(endpoint) => onChangeToolset({ ...selectedToolset, endpoint })}
+            />
+          )}
+        </div>
       </div>
       {!!selectedToolset.allowedTools && (
         <RadioField
