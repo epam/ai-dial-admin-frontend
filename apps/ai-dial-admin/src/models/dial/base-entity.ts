@@ -1,19 +1,34 @@
 import { DialFeatures } from '@/src/models/dial/features';
+import { DefaultsValue, DefaultTemp } from './defaults';
 
-export interface DialBaseNamedEntity {
+export interface BaseEntity {
   name?: string;
   displayName?: string;
   description?: string;
-  version?: string;
-  endpoint?: string | null;
+
+  endpoint?: string | null; //?
 }
 
-export interface DialModifiedEntity {
+export interface ModifiedEntity {
   createdAt?: number;
   updatedAt?: number;
 }
 
-export interface DialBaseEntity extends DialBaseNamedEntity, DialModifiedEntity {
+// TODO: rename to
+export interface ChatEntity extends BaseEntity, ModifiedEntity {
+  // for models, applications, interceptors, toolsets
+  author?: string;
+  iconUrl?: string;
+
+  // for models, applications, interceptors,
+  defaults?: Record<string, DefaultsValue>;
+  defaultsTemp?: DefaultTemp[];
+
+  // for models, applications, toolsets
+  maxInputAttachments?: number | string;
+}
+
+export interface DialBaseEntity extends BaseEntity, ModifiedEntity {
   adapter?: string;
   author?: string;
   baseEndpoint?: string;
@@ -32,16 +47,10 @@ export interface DialBaseEntity extends DialBaseNamedEntity, DialModifiedEntity 
   interceptors?: string[];
   features?: DialFeatures;
   dependencies?: string[];
-  defaults?: Record<string, DefaultsValue>;
-  defaultsTemp?: DefaultTemp[];
 }
 
-export interface DefaultTemp {
-  key: string;
-  value: DefaultsValue;
-}
-
-export type DefaultsValue = string | number | boolean;
+///
+// topics: string[];
 
 export type DialRoleLimitsMap = Record<string, DialRoleLimits>;
 export type DialRoleShareMap = Record<string, DialRoleShare>;

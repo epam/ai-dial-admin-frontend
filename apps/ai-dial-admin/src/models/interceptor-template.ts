@@ -1,6 +1,6 @@
-import { DialModifiedEntity } from '@/src/models/dial/base-entity';
+import { ModifiedEntity } from '@/src/models/dial/base-entity';
 
-export interface InterceptorTemplate extends DialModifiedEntity {
+export interface InterceptorTemplate extends ModifiedEntity {
   name: string;
   displayName?: string;
   description?: string;

@@ -1,6 +1,6 @@
-import { DialModifiedEntity } from './base-entity';
+import { ModifiedEntity } from './base-entity';
 
-export interface DialFile extends DialModifiedEntity {
+export interface DialFile extends ModifiedEntity {
   bucket?: string;
   contentLength?: number;
   contentType?: string;
