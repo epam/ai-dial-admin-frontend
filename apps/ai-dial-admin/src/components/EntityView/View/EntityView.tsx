@@ -261,7 +261,7 @@ const EntityView: FC<Props> = ({
           {jsonEditorEnabled && activeTab !== EntityViewTab.Parameters ? (
             <JSONEditor
               key={key}
-              model={selectedEntity}
+              entity={selectedEntity}
               errorNotifications={errorNotifications}
               setSelectedEntity={setSelectedEntity}
               setIsChanged={setIsChanged}

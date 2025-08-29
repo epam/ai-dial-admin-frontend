@@ -1,10 +1,11 @@
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
 import Loader from './Loader';
-import { describe, expect, test } from 'vitest';
 
-describe('Common components - Loader', () => {
-  test('Should render successfully', () => {
-    const { baseElement } = render(<Loader />);
-    expect(baseElement).toBeTruthy();
+describe('Loader', () => {
+  it('renders with default size', () => {
+    render(<Loader size={32} />);
+    const loader = screen.getByRole('loader');
+    expect(loader).toBeTruthy();
   });
 });

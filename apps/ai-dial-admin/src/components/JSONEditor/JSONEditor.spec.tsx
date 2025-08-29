@@ -1,16 +1,20 @@
-import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
-import { render } from '@testing-library/react';
-import { modelMock } from '@/src/utils/tests/mock/models.mock';
-import { describe, expect, test, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import JSONEditor from './JSONEditor';
 
-describe('Components - JSONEditor', () => {
-  const setSelectedEntity = vi.fn();
+const entity = { id: '1', name: 'Test Entity' };
+const mockSetSelectedEntity = vi.fn();
 
-  test('Should render JSONEditor', () => {
-    const { baseElement } = render(
-      <JSONEditor model={modelMock} errorNotifications={[]} setSelectedEntity={setSelectedEntity} />,
-    );
+describe('JSONEditor', () => {
+  it('renders JsonEditorBase when model is provided', () => {
+    render(<JSONEditor entity={entity} errorNotifications={[]} setSelectedEntity={mockSetSelectedEntity} />);
+    // Should render `Loading...` from JsonEditorBase
+    expect(screen.getByText('Loading...')).toBeTruthy();
+  });
 
-    expect(baseElement).toBeTruthy();
+  it('renders nothing if model is not provided', () => {
+    // @ts-expect-error purposely omitting model
+    const { container } = render(<JSONEditor errorNotifications={[]} setSelectedEntity={mockSetSelectedEntity} />);
+    expect(container.firstChild).toBeNull();
   });
 });

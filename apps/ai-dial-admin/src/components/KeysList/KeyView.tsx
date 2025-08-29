@@ -188,7 +188,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
           {jsonEditorEnabled ? (
             <JSONEditor
               key={key}
-              model={selectedKey}
+              entity={selectedKey}
               errorNotifications={errorNotifications}
               setSelectedEntity={setSelectedKey}
               setIsChanged={setIsChanged}

@@ -225,7 +225,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
         {jsonEditorEnabled ? (
           <JSONEditor
             key={key}
-            model={selectedRole}
+            entity={selectedRole}
             errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedRole}
             setIsChanged={setIsChanged}
