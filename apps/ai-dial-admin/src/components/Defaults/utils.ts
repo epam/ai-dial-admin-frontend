@@ -13,9 +13,6 @@ export const convertDefaultsToArray = (defaults: Record<string, DefaultsValue>) 
     key,
     value,
   }));
-  if (!array.length) {
-    array.push({ key: '', value: '' });
-  }
   return array;
 };
 

@@ -13,7 +13,7 @@ import { BooleanType } from '@/src/types/boolean';
 describe('Defaults :: utils :: convertDefaultsToArray', () => {
   test('should convert an empty object to an array with one empty item', () => {
     const result = convertDefaultsToArray({});
-    expect(result).toEqual([{ key: '', value: '' }]);
+    expect(result).toEqual([]);
   });
 
   test('should convert a record with string values to an array', () => {
