@@ -14,6 +14,6 @@ describe('ToolsetsList', () => {
   test('renders EntityListView with empty data', () => {
     render(<ApplicationsList data={[]} runners={[]} />);
     expect(screen.getByText(MenuI18nKey.Applications)).toBeInTheDocument();
-    expect(screen.getByText(EntitiesI18nKey.NoToolsets)).toBeInTheDocument();
+    expect(screen.getByText(EntitiesI18nKey.NoApplications)).toBeInTheDocument();
   });
 });
