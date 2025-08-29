@@ -242,14 +242,14 @@ export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH
 export const PROMPTS_COLUMNS: ColDef[] = [
   { field: 'name', colId: 'name', headerName: 'Display Name' },
   { field: 'version', headerName: 'Version' },
-  // AUTHOR_COLUMN,
+  AUTHOR_COLUMN,
   UPDATED_AT_COLUMN,
 ];
 
 export const FILES_COLUMNS: ColDef[] = [
   { field: 'name', colId: 'name', headerName: 'Display Name' },
   { field: 'extension', headerName: 'Extension' },
-  // AUTHOR_COLUMN,
+  AUTHOR_COLUMN,
 ];
 
 export const EXPORT_COLUMNS = (onChange: (value: string, name: string) => void, route?: ApplicationRoute): ColDef[] => [
@@ -272,13 +272,13 @@ export const EXPORT_COLUMNS = (onChange: (value: string, name: string) => void, 
         headerName: 'Extension',
         field: 'extension',
       },
-  // AUTHOR_COLUMN,
+  AUTHOR_COLUMN,
   UPDATED_AT_COLUMN,
 ];
 
 export const PUBLICATION_COLUMNS: ColDef[] = [
   { field: 'requestName', headerName: 'Name' },
-  // AUTHOR_COLUMN,
+  AUTHOR_COLUMN,
   { ...CREATED_AT_COLUMN, sort: 'asc' },
 ];
 

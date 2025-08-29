@@ -26,7 +26,7 @@ import { EntitiesI18nKey, KeysI18nKey, TabsI18nKey } from '@/src/constants/i18n'
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
-import { DialRoleLimits } from '@/src/models/dial/base-entity';
+import { DialRoleLimits } from '@/src/models/dial/role-limits';
 import { DialKey } from '@/src/models/dial/key';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';

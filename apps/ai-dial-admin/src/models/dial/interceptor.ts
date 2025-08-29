@@ -1,5 +1,6 @@
+import { BaseEntity } from './base-entity';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { ChatEntity } from './base-entity';
+import { DefaultsValue, DefaultTemp } from '@/src/models/dial/default';
 
 export interface DialInterceptor extends ChatEntity {
   configurationEndpoint?: string;

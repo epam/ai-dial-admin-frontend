@@ -1,4 +1,5 @@
-import { BaseEntity, DialRoleLimitsMap } from './base-entity';
+import { DialRoleLimitsMap } from '@/src/models/dial/role-limits';
+import { BaseEntity } from './base-entity';
 import { DialModelEndpoint } from './model';
 
 export interface DialRoute extends BaseEntity {

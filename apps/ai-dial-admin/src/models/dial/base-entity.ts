@@ -1,5 +1,6 @@
 import { DialFeatures } from '@/src/models/dial/features';
-import { DefaultsValue, DefaultTemp } from './defaults';
+import { DefaultsValue, DefaultTemp } from '@/src/models/dial/default';
+import { DialRoleLimits, DialRoleLimitsMap, DialRoleShare, DialRoleShareMap } from '@/src/models/dial/role-limits';
 
 export interface BaseEntity {
   name?: string;
@@ -49,19 +50,4 @@ export interface DialBaseEntity extends BaseEntity, ModifiedEntity {
   interceptors?: string[];
   features?: DialFeatures;
   dependencies?: string[];
-}
-
-export type DialRoleLimitsMap = Record<string, DialRoleLimits>;
-export type DialRoleShareMap = Record<string, DialRoleShare>;
-
-export interface DialRoleLimits {
-  day?: string | null;
-  minute?: string | null;
-  week?: string | null;
-  month?: string | null;
-}
-
-export interface DialRoleShare {
-  invitationTtl?: string | null;
-  maxAcceptedUsers?: string | null;
 }

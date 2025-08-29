@@ -56,6 +56,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
         dispatch({ type: ValidationActionType.SetField, field: 'endpoint', isValid: true });
         dispatch({ type: ValidationActionType.SetField, field: 'viewerUrl', isValid: true });
         dispatch({ type: ValidationActionType.SetField, field: 'editorUrl', isValid: true });
+        dispatch({ type: ValidationActionType.SetField, field: 'completionEndpoint', isValid: true });
         setSourceType(sources?.find((t) => t.id === value));
         onChangeEntity({
           ...entity,
