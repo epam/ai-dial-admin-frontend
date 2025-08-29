@@ -3,7 +3,7 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { useTheme } from '@/src/context/ThemeContext';
-import { getFrameConfig, getAppRunner } from '@/src/components/Applications/List/ParametersTab/utils';
+import { getFrameConfig, getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import FrameRenderer from '@/src/components/FrameRenderer/FrameRenderer';
 import NoData from '@/src/components/Common/NoData/NoData';
 import { BasicI18nKey } from '@/src/constants/i18n';

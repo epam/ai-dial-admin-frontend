@@ -1,7 +1,7 @@
 'use client';
 import { FC, useCallback } from 'react';
 
-import ApplicationParametersTab from '@/src/components/Applications/List/ParametersTab/ParametersTab';
+import ApplicationParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import EntityProperties from '@/src/components/EntityProperties/EntityProperties';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityDependencies from '@/src/components/EntityView/Dependencies/Dependencies';
