@@ -13,6 +13,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   modalState: PopUpState;
@@ -50,7 +51,7 @@ const CreateKey: FC<Props> = ({ modalState, names, keys, onClose }) => {
   const onCreate = useCallback(() => {
     createKey(currentKey).then((res) => {
       if (res.success) {
-        router.push(`${ApplicationRoute.Keys}/${currentKey.name}`);
+        router.push(getUrnForEntity(ApplicationRoute.Keys, currentKey));
         onClose();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
