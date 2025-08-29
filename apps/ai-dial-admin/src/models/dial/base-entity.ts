@@ -1,14 +1,19 @@
+import { DialFeatures } from '@/src/models/dial/features';
+
 export interface DialBaseNamedEntity {
   name?: string;
   displayName?: string;
   description?: string;
   version?: string;
-  endpoint?: string;
+  endpoint?: string | null;
 }
 
-export interface DialBaseEntity extends DialBaseNamedEntity {
+export interface DialModifiedEntity {
   createdAt?: number;
   updatedAt?: number;
+}
+
+export interface DialBaseEntity extends DialBaseNamedEntity, DialModifiedEntity {
   adapter?: string;
   author?: string;
   baseEndpoint?: string;
@@ -51,25 +56,4 @@ export interface DialRoleLimits {
 export interface DialRoleShare {
   invitationTtl?: string | null;
   maxAcceptedUsers?: string | null;
-}
-
-export interface DialFeatures {
-  truncatePromptEndpoint: string;
-  rateEndpoint: string;
-  configurationEndpoint: string;
-  tokenizeEndpoint: string;
-  toolsSupported: boolean;
-  systemPromptSupported: boolean;
-  urlAttachmentsSupported: boolean;
-  folderAttachmentsSupported: boolean;
-  seedSupported: boolean;
-  allowResume: boolean;
-  addonsSupported: boolean;
-  temperatureSupported: boolean;
-  accessibleByPerRequestKey: boolean;
-  parallelToolCallsSupported: boolean;
-  contentPartsSupported: boolean;
-  cacheSupported: boolean;
-  autoCachingSupported: boolean;
-  consentRequired: boolean;
 }

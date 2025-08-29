@@ -1,4 +1,4 @@
-import { DialBaseEntity } from './base-entity';
+import { DialBaseEntity, DialModifiedEntity } from './base-entity';
 import { DialRoute } from './route';
 
 export interface DialApplication extends DialBaseEntity {
@@ -9,12 +9,15 @@ export interface DialApplication extends DialBaseEntity {
   routes?: DialRoute[];
 }
 
-export interface DialApplicationScheme {
+export interface DialApplicationScheme extends DialModifiedEntity {
   $schema?: string;
   $id?: string;
   description?: string;
   title?: string;
   type?: TypeEntity;
+  properties?: Record<string, unknown>;
+  applications?: string[];
+  topics?: string[];
   'dial:applicationTypeEditorUrl'?: string;
   'dial:applicationTypeViewerUrl'?: string;
   'dial:applicationTypeDisplayName'?: string;
@@ -27,11 +30,6 @@ export interface DialApplicationScheme {
   'dial:applicationTypeRoutes'?: DialRoute[];
   'dial:applicationTypePlaybackSupport'?: boolean;
   'dial:applicationTypeIconUrl'?: string;
-  properties?: Record<string, unknown>;
-  applications?: string[];
-  createdAt?: number;
-  updatedAt?: number;
-  topics?: string[];
 }
 
 export enum TypeEntity {
