@@ -1,4 +1,4 @@
-import { getAvailableEntities } from '@/src/components/AddEntitiesTab/AddEntitiesView.utils';
+import { getAvailableEntities } from '@/src/components/AddEntitiesTab/utils';
 import { ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { EntityType } from '@/src/types/entity-type';

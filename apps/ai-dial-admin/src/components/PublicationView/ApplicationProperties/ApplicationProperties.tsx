@@ -1,6 +1,6 @@
 import { FC, useEffect, useState } from 'react';
 
-import ApplicationParametersTab from '@/src/components/ApplicationParametersTab/ApplicationParametersTab';
+import ApplicationParametersTab from '@/src/components/Applications/List/ParametersTab/ApplicationParametersTab';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';

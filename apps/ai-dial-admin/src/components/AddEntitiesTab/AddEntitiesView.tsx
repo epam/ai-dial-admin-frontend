@@ -17,11 +17,7 @@ import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
 import { PopUpState } from '@/src/types/pop-up';
 import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
-import {
-  ENTITY_COLUMNS,
-  getAvailableEntities,
-  getEntitiesGridData,
-} from '@/src/components/AddEntitiesTab/AddEntitiesView.utils';
+import { ENTITY_COLUMNS, getAvailableEntities, getEntitiesGridData } from '@/src/components/AddEntitiesTab/utils';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
