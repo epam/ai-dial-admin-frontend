@@ -142,6 +142,7 @@ export default {
     InterceptorName: 'Interceptor Name',
     ChangeIcon: 'Change icon',
     Source: 'Source',
+    Author: 'Author',
 
     // modals
     SaveChangesTitle: 'Save Changes',
@@ -453,7 +454,6 @@ export default {
       UnpublishApproveDescription: 'Are you sure that you want to unpublish application?',
     },
     Action: 'Action',
-    Author: 'Author',
     Runner: 'Runner',
     FolderStorage: 'Folder Storage',
   },
