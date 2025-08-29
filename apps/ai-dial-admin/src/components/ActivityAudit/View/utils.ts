@@ -827,8 +827,8 @@ export const createSectionFromDiffs = (
           sections[name] = [];
         }
         sections[name].push({
-          current: [...currentDefault, ...(currentDefaultShare || [])],
-          compare: [...compareDefault, ...(compareDefaultShare || [])],
+          current: [...(currentDefault || []), ...(currentDefaultShare || [])],
+          compare: [...(compareDefault || []), ...(compareDefaultShare || [])],
         });
       }
       if (currentLimits?.length || compareLimits?.length) {
