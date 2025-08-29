@@ -12,7 +12,6 @@ import {
   BooleanI18nKey,
   EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
-  ErrorI18nKey,
   TypeI18nKey,
 } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -69,7 +68,6 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
     [t],
   );
   const type = useMemo(() => types.find((t) => t.id === getDefaultValueType(item.value)), [item.value, types]);
-  const keyError = useMemo(() => (item.key ? '' : t(ErrorI18nKey.RequiredField)), [item.key, t]);
 
   const onChangeValue = useCallback(
     (v?: string | number | boolean, newType?: string) => {
@@ -101,19 +99,17 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
       <div className={classNames('flex flex-row gap-x-4 items-center')}>
         <div className="min-w-[187px]">
           <TextInputField
-            elementId={'key ' + index}
+            elementId={'entity-default-key ' + index}
             value={item.key}
             placeholder={t(EntityPlaceholdersI18nKey.Key)}
             fieldTitle={isFirstLine ? t(EntityFieldsI18nKey.key) : ''}
             onChange={onChangeKey}
-            invalid={!!keyError}
-            errorText={keyError}
           />
         </div>
-        <div className={classNames('min-w-[384px]', !!keyError && 'pb-4')}>
+        <div className={classNames('min-w-[384px]')}>
           {type?.id === DefaultItemType.string && (
             <TextInputField
-              elementId={'value ' + index}
+              elementId={'entity-default-value ' + index}
               value={item.value as string}
               placeholder={t(EntityPlaceholdersI18nKey.Value)}
               fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
@@ -122,7 +118,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
           )}
           {type?.id === DefaultItemType.number && (
             <NumberInputField
-              elementId={'value ' + index}
+              elementId={'entity-default-value ' + index}
               value={item.value as string}
               placeholder={t(EntityPlaceholdersI18nKey.Value)}
               fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
@@ -132,17 +128,17 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
           {type?.id === DefaultItemType.boolean && (
             <DropdownField
               selectedValue={item.value.toString()}
-              elementId={'value ' + index}
+              elementId={'entity-default-value ' + index}
               items={booleans}
               fieldTitle={isFirstLine ? t(EntityFieldsI18nKey.type) : ''}
               onChange={onChangeValue}
             />
           )}
         </div>
-        <div className={classNames('min-w-[136px]', !!keyError && 'pb-4')}>
+        <div className={classNames('min-w-[136px]')}>
           <DropdownField
             selectedValue={type?.id}
-            elementId="type"
+            elementId={'entity-default-type ' + index}
             items={types}
             fieldTitle={isFirstLine ? t(EntityFieldsI18nKey.type) : ''}
             onChange={onChangeType}
@@ -151,11 +147,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
       </div>
 
       <button
-        className={classNames(
-          'text-error cursor-pointer mt-[10px]',
-          index === 0 && 'lg:mt-[32px]',
-          !!keyError && 'pb-4',
-        )}
+        className={classNames('text-error cursor-pointer mt-[10px]', index === 0 && 'lg:mt-[32px]')}
         onClick={() => onRemove(index)}
         aria-label="remove"
       >

@@ -9,10 +9,14 @@ import { DefaultItemType } from './types';
  * @returns {*} array of key value objects
  */
 export const convertDefaultsToArray = (defaults: Record<string, DefaultsValue>) => {
-  return Object.entries(defaults || {}).map(([key, value]) => ({
+  const array = Object.entries(defaults || {}).map(([key, value]) => ({
     key,
     value,
   }));
+  if (!array.length) {
+    array.push({ key: '', value: '' });
+  }
+  return array;
 };
 
 /**
