@@ -17,12 +17,13 @@ import RolesDefaults from './RolesDefaults';
 
 interface Props {
   entity: DialBaseEntity;
+  view: ApplicationRoute;
   isSkipRefresh: boolean;
   roles: DialRole[];
   onChangeEntity: (entity: DialBaseEntity, withRefresh?: boolean) => void;
 }
 
-const EntityRoles: FC<Props> = ({ entity, roles, onChangeEntity, isSkipRefresh }) => {
+const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRefresh }) => {
   const t = useI18n();
 
   const [addModalState, setAddModalState] = useState(PopUpState.Closed);
@@ -172,10 +173,11 @@ const EntityRoles: FC<Props> = ({ entity, roles, onChangeEntity, isSkipRefresh }
   return (
     <div className="h-full flex flex-col pt-3">
       <div className="flex flex-col flex-1 min-h-0 divide-y divide-primary">
-        <RolesDefaults entity={entity} onChangeEntity={onChangeEntity} />
+        {view !== ApplicationRoute.Routes && <RolesDefaults entity={entity} onChangeEntity={onChangeEntity} />}
 
         <div className="flex-1 min-h-0 pt-8 mb-4">
           <RolesGrid
+            view={view}
             entity={entity}
             roles={roles}
             onChangeEntity={onChangeEntity}
@@ -192,7 +194,9 @@ const EntityRoles: FC<Props> = ({ entity, roles, onChangeEntity, isSkipRefresh }
           />
         </div>
       </div>
-      {isDisableRole(entity) && <AlertInfo text={t(RolesI18nKey.NotAvailableModel)} />}
+      {isDisableRole(entity) && view !== ApplicationRoute.Routes && (
+        <AlertInfo text={t(RolesI18nKey.NotAvailableModel)} />
+      )}
       {addModalState === PopUpState.Opened &&
         createPortal(
           <AddEntitiesGrid

@@ -99,6 +99,7 @@ const ViewContent: FC<Props> = ({
       {activeTab === EntityViewTab.Roles && (
         <EntityRoles
           entity={selectedEntity}
+          view={view}
           roles={roles || []}
           onChangeEntity={onChangeEntity}
           isSkipRefresh={isSkipRefresh}
