@@ -1,7 +1,7 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { isDialRoleShareKey } from '@/src/components/AddEntitiesTab/AddEntitiesView.utils';
+import { isDialRoleShareKey } from '@/src/components/AddEntitiesTab/utils';
 import AlertInfo from '@/src/components/Common/Alerts/AlertInfo';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import RolesGrid from '@/src/components/EntityView/Roles/RolesGrid';
