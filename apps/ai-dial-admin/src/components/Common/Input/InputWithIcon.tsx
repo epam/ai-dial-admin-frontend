@@ -12,7 +12,7 @@ interface Props extends InputProps {
 
 const InputWithIcon: FC<Props> = ({ iconBeforeInput, iconAfterInput, hideBorder, cssClass, ...props }) => {
   if (!iconBeforeInput && !iconAfterInput) {
-    return <Input cssClass={classNames(cssClass)} {...props} />;
+    return <Input cssClass={classNames('input-field', cssClass)} {...props} />;
   }
 
   return (
