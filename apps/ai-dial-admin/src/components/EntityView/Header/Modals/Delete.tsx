@@ -13,7 +13,6 @@ import { ButtonsI18nKey, DeleteI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
-import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { DialKey } from '@/src/models/dial/key';
@@ -66,7 +65,7 @@ const DeleteConfirmationModal = <T extends DialBaseEntity | DialKey>({
     view === ApplicationRoute.ApplicationRunners ? (
       <DeleteAppRunner entity={entity as DialApplicationScheme} isEntityView={true} />
     ) : view === ApplicationRoute.Adapters ? (
-      <DeleteAdapter entity={entity as DialAdapter} isEntityView={true} />
+      <DeleteAdapter entity={entity} isEntityView={true} />
     ) : view === ApplicationRoute.InterceptorTemplates ? (
       <DeleteInterceptorTemplate template={entity} />
     ) : null;

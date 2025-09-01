@@ -240,7 +240,7 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
     if (route === ApplicationRoute.Adapters) {
       return (
         <DuplicateAdapter
-          adapter={currentEntity as DialAdapter}
+          adapter={currentEntity}
           onDuplicate={onDuplicate as (entity: DialAdapter) => Promise<ServerActionResponse>}
           modalState={modalState}
           onClose={handleModalClose}
