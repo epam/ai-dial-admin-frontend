@@ -1,22 +1,21 @@
-import { FC, useCallback } from 'react';
+import { useCallback } from 'react';
 
 import Switch from '@/src/components/Common/Switch/Switch';
 import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
 import { FeaturesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { DialFeatures } from '@/src/models/dial/features';
 import { ApplicationRoute } from '@/src/types/routes';
 import { placeholdersMap } from './constants';
 import { getSwitchControls, getTextControls } from './utils';
 
-interface Props {
+interface Props<T> {
   view: ApplicationRoute;
-  entity: DialBaseEntity;
-  onChangeEntity: (entity: DialBaseEntity) => void;
+  entity: T;
+  onChangeEntity: (entity: T) => void;
 }
 
-const EntityFeatures: FC<Props> = ({ view, entity, onChangeEntity }) => {
+const EntityFeatures = <T extends { features?: DialFeatures }>({ view, entity, onChangeEntity }: Props<T>) => {
   const t = useI18n() as (key: string) => string;
   const switchKeys = getSwitchControls(view);
   const textKeys = getTextControls(view);

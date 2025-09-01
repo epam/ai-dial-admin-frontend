@@ -5,7 +5,6 @@ import { LIMIT_COLUMNS } from '@/src/components/EntityView/Roles/utils';
 import { NO_LIMITS_KEY } from '@/src/constants/role';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialRoleShare } from '@/src/models/dial/role-limits';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialKey } from '@/src/models/dial/key';
 import { DialModel } from '@/src/models/dial/model';
@@ -160,16 +159,16 @@ export const getAvailableEntities = (existingEntities: EntitiesGridData[], allEn
 /**
  * Get roles that are using the key
  *
- * @param {DialInterceptor} key - interceptor '/'
+ * @param {DialKey} key - interceptor '/'
  * @param {EntitiesGridData} allRoles - all available roles in application  '/'
  * @returns {EntitiesGridData[]} - array of relevant roles
  */
-export const getRelevantRolesForKey = (key: DialBaseEntity, allRoles: EntitiesGridData[]): EntitiesGridData[] => {
+export const getRelevantRolesForKey = (key: DialKey, allRoles: EntitiesGridData[]): EntitiesGridData[] => {
   const data: EntitiesGridData[] = [];
-  if (!(key as DialKey).roles) {
+  if (!key.roles) {
     return data;
   }
-  (key as DialKey).roles?.forEach((role) => {
+  key.roles?.forEach((role) => {
     const addedRole = allRoles.find((r) => r.name === role);
     data.push(addedRole as EntitiesGridData);
   });
@@ -179,16 +178,16 @@ export const getRelevantRolesForKey = (key: DialBaseEntity, allRoles: EntitiesGr
 /**
  * Get keys that are using the role
  *
- * @param {DialInterceptor} role - role '/'
+ * @param {DialRole} role - role '/'
  * @param {EntitiesGridData} allKeys - all available keys in application  '/'
  * @returns {EntitiesGridData[]} - array of relevant keys
  */
-export const getRelevantKeysForRole = (role: DialBaseEntity, allKeys: EntitiesGridData[]): EntitiesGridData[] => {
+export const getRelevantKeysForRole = (role: DialRole, allKeys: EntitiesGridData[]): EntitiesGridData[] => {
   const data: EntitiesGridData[] = [];
-  if (!(role as DialRole).grantedKeys) {
+  if (!role.grantedKeys) {
     return data;
   }
-  (role as DialRole).grantedKeys?.forEach((key) => {
+  role.grantedKeys?.forEach((key) => {
     const addedKey = allKeys.find((k) => k.name === key);
     if (addedKey) {
       data.push(addedKey);
@@ -198,7 +197,7 @@ export const getRelevantKeysForRole = (role: DialBaseEntity, allKeys: EntitiesGr
 };
 
 /**
- * Get models that are using the adpter
+ * Get models that are using the adapter
  *
  * @param {DialAdapter} adapter - adapter '/'
  * @param {EntitiesGridData[]} allEntities - all available models in adapter  '/'
