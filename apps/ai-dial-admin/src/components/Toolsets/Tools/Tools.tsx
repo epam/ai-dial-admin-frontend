@@ -37,6 +37,13 @@ const Tools: FC<Props> = ({ selectedToolset, onChangeToolset }) => {
     setModalState(PopUpState.Closed);
   }, [setModalState]);
 
+  const onAddTools = useCallback(
+    (tools: string[]) => {
+      onChangeToolset({ ...selectedToolset, allowedTools: [...(selectedToolset.allowedTools || []), ...tools] });
+    },
+    [onChangeToolset, selectedToolset],
+  );
+
   return (
     <>
       <div className="pt-3 w-full flex flex-col h-full">
@@ -73,7 +80,9 @@ const Tools: FC<Props> = ({ selectedToolset, onChangeToolset }) => {
           )}
         </div>
       </div>
-      {modalState === PopUpState.Opened && <AddToolsModal modalState={modalState} onClose={onCloseModal} />}
+      {modalState === PopUpState.Opened && (
+        <AddToolsModal modalState={modalState} onClose={onCloseModal} onSelectItems={onAddTools} />
+      )}
     </>
   );
 };

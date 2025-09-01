@@ -7,6 +7,7 @@ import MultiselectModal from '@/src/components/Common/Multiselect/Modal/Multisel
 
 interface Props {
   modalState: PopUpState;
+  onSelectItems?: (items: string[]) => void;
   onClose: () => void;
 }
 
@@ -17,6 +18,7 @@ const AddToolsModal = ({ ...props }: Props) => {
     <MultiselectModal
       addPlaceholder={t(EntityPlaceholdersI18nKey.ToolName)}
       heading={t(ToolsetI18nKey.AddTools)}
+      addTitle={t(ButtonsI18nKey.Add)}
       applyButtonText={t(ButtonsI18nKey.Add)}
       {...props}
     />
