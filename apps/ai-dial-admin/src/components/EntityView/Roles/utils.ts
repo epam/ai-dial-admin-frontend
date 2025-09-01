@@ -10,7 +10,8 @@ import {
   getSetNoLimitsOperation,
 } from '@/src/constants/grid-columns/actions';
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { DialBaseEntity, DialRoleLimits, DialRoleLimitsMap, DialRoleShareMap } from '@/src/models/dial/base-entity';
+import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { DialRoleLimits, DialRoleLimitsMap, DialRoleShareMap } from '@/src/models/dial/role-limits';
 import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
