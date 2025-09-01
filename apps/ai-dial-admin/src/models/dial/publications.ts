@@ -7,7 +7,7 @@ export interface Publication {
   path: string;
   requestName: string;
   author: string;
-  createdAt: number;
+  createdAt: string;
   status: string;
   action: ActionType;
   folderId: string;

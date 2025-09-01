@@ -177,6 +177,7 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
       rollbackEntityPerType(selectedActivity)
         .then((res) => {
           setIsLoading(false);
+          onCloseModal();
           if (res?.success) {
             showNotification(
               getSuccessNotification(
@@ -184,12 +185,7 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
                 t(ActivityAuditI18nKey.ResourceRollbackDescription),
               ),
             );
-            onCloseModal();
-            if (entity) {
-              router.refresh();
-            } else {
-              onRefresh();
-            }
+            onRefresh();
           } else {
             showNotification(
               getErrorNotification(
@@ -209,7 +205,7 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
           );
         });
     }
-  }, [selectedActivity, showNotification, t, onCloseModal, entity, router, onRefresh]);
+  }, [selectedActivity, showNotification, t, onCloseModal, onRefresh]);
 
   const systemRollback = useCallback(() => {
     router.push(`${ApplicationRoute.ActivityAudit}/${SYSTEM_ROLLBACK_ID}`);

@@ -7,6 +7,6 @@ export interface DialKey extends BaseEntity, ModifiedEntity {
   secured: boolean;
   roles?: string[];
   owner?: string;
-  expiresAt?: number;
-  keyGeneratedAt?: number;
+  expiresAt?: string;
+  keyGeneratedAt?: string;
 }

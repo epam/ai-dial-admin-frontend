@@ -71,7 +71,7 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
   );
 
   const onChangeExpiresAt = useCallback(
-    (expiresAt: number) => {
+    (expiresAt: string) => {
       onChangeKey({ ...entity, expiresAt });
     },
     [entity, onChangeKey],

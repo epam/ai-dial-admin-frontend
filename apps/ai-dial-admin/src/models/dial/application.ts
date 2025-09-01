@@ -16,9 +16,6 @@ export interface DialApplicationScheme extends ModifiedEntity {
   description?: string;
   title?: string;
   type?: TypeEntity;
-  properties?: Record<string, unknown>;
-  applications?: string[];
-  topics?: string[];
   'dial:applicationTypeEditorUrl'?: string;
   'dial:applicationTypeViewerUrl'?: string;
   'dial:applicationTypeDisplayName'?: string;
@@ -31,6 +28,9 @@ export interface DialApplicationScheme extends ModifiedEntity {
   'dial:applicationTypeRoutes'?: DialRoute[];
   'dial:applicationTypePlaybackSupport'?: boolean;
   'dial:applicationTypeIconUrl'?: string;
+  properties?: Record<string, unknown>;
+  applications?: string[];
+  topics?: string[];
 }
 
 export enum TypeEntity {

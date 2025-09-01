@@ -13,8 +13,8 @@ export interface BaseEndpointEntity {
 }
 
 export interface ModifiedEntity {
-  createdAt?: number;
-  updatedAt?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // TODO: rename to

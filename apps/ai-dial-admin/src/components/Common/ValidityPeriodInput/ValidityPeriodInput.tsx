@@ -14,7 +14,7 @@ import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { calculateExpirationDate } from '@/src/utils/keys';
 
 export interface Props {
-  onChange?: (value: number) => void;
+  onChange?: (value: string) => void;
 }
 
 const ValidityPeriodInput: FC<Props> = ({ onChange }) => {
@@ -31,7 +31,7 @@ const ValidityPeriodInput: FC<Props> = ({ onChange }) => {
   }, [t]);
 
   const [selectedValue, setSelectedValue] = useState('');
-  const [expirationTime, setExpirationTime] = useState<number>();
+  const [expirationTime, setExpirationTime] = useState<string>();
 
   const onChangeValue = useCallback(
     (value: string) => {
