@@ -1,10 +1,10 @@
 import { getButtonTitle, getAllAvailableDependencies, getAvailableData } from '../AddEntities.utils';
 import { ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import * as AddEntitiesUtils from '@/src/components/AddEntitiesTab/AddEntitiesView.utils';
+import * as AddEntitiesUtils from '@/src/components/AddEntitiesTab/utils';
 import { EntityType } from '@/src/types/entity-type';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-vi.mock('@/src/components/AddEntitiesTab/AddEntitiesView.utils');
+vi.mock('@/src/components/AddEntitiesTab/utils');
 
 const mockGetAvailableEntities = AddEntitiesUtils.getAvailableEntities;
 
