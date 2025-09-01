@@ -1,6 +1,6 @@
 import { ModelViewI18nKey } from '@/src/constants/i18n';
 import { NO_LIMITS_KEY } from '@/src/constants/role';
-import { ActivityAuditDiff, ActivityAuditSection } from '@/src/models/dial/activity-audit';
+import { ActivityAuditDiff, ActivityAuditSection } from '@/src/models/activity-audit';
 import { DialRoleLimits } from '@/src/models/dial/base-entity';
 import { DialModelEndpoint, DialModelPricing, PricingType } from '@/src/models/dial/model';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';

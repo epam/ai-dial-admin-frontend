@@ -10,7 +10,7 @@ import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
 import { CompareI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { ActivityAuditDiffSection } from '@/src/models/dial/activity-audit';
+import { ActivityAuditDiffSection } from '@/src/models/activity-audit';
 import { ActivityAuditResourceType, CompareView, DiffStatus, DiffView } from '@/src/types/activity-audit';
 
 interface Props {

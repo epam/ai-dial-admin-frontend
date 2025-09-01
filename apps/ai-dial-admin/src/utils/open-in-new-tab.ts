@@ -1,5 +1,5 @@
 import { ApplicationRoute } from '@/src/types/routes';
-import { DialActivity } from '@/src/models/dial/activity-audit';
+import { DialActivity } from '@/src/models/activity-audit';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';

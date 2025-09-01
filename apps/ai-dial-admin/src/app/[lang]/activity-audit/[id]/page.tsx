@@ -8,7 +8,7 @@ import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/cons
 import SystemRollback from '@/src/components/ActivityAudit/Rollback/SystemRollback';
 import AuditView from '@/src/components/ActivityAudit/View/AuditView';
 import Page403 from '@/src/components/Page403/Page403';
-import { DialActivity } from '@/src/models/dial/activity-audit';
+import { DialActivity } from '@/src/models/activity-audit';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { FilterDto, PageDto } from '@/src/models/request';
 import { logger } from '@/src/server/logger';
