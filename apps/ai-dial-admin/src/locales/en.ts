@@ -128,6 +128,7 @@ export default {
     NoInterceptorTemplates: 'No Interceptor Templates',
     NoDependencies: 'No Dependencies',
     NoToolsets: 'No Toolsets',
+    NoTools: 'No Tools',
     // add entity or entities
     AddModel: 'Add Model',
     AddApplication: 'Add Application',
@@ -343,6 +344,7 @@ export default {
     Dependencies: 'Dependencies',
     Routes: 'App Routes',
     Traces: 'Traces',
+    Tools: 'Tools Overview',
     Conversations: 'Conversations',
     Attachments: 'Attachments',
   },
@@ -757,6 +759,7 @@ export default {
     KeyValue: 'Enter value or generate',
     SelectPermission: 'Select permission',
     Key: 'Enter key',
+    ToolName: 'Enter tool name',
   },
   Error: {
     ServerError: 'Server Error',
@@ -797,6 +800,7 @@ export default {
     InterceptorTemplate: 'Interceptor template',
   },
   Toolset: {
-    MCP: 'MCP Container',
+    Tools: 'Tools',
+    AddTools: 'Add tools',
   },
 } as const;
