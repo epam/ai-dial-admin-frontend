@@ -33,7 +33,7 @@ const DuplicateKey: FC<Props> = ({ onDuplicate, modalState, onClose, entity, nam
   }, [clonedEntity.key, keys]);
 
   const onChangeExpiresAt = useCallback(
-    (expiresAt: number) => {
+    (expiresAt: string) => {
       setEntity({ ...clonedEntity, expiresAt });
     },
     [clonedEntity],

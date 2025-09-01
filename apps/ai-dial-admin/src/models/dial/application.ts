@@ -29,8 +29,8 @@ export interface DialApplicationScheme {
   'dial:applicationTypeIconUrl'?: string;
   properties?: Record<string, unknown>;
   applications?: string[];
-  createdAt?: number;
-  updatedAt?: number;
+  createdAt?: string;
+  updatedAt?: string;
   topics?: string[];
 }
 

@@ -8,8 +8,8 @@ export interface DialInterceptor extends DialBaseNamedEntity {
   forwardAuthToken?: boolean;
   entities?: string[];
   author?: string;
-  createdAt?: number;
-  updatedAt?: number;
+  createdAt?: string;
+  updatedAt?: string;
   defaults?: Record<string, DefaultsValue>;
   defaultsTemp?: DefaultTemp[];
   source?: {

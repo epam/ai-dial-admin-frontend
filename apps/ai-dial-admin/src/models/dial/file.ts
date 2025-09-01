@@ -5,15 +5,15 @@ export interface DialFile {
   nodeType: DialFileNodeType;
   parentPath?: string | null;
   resourceType?: DialFileResourceType;
-  updatedAt?: number;
-  createdAt?: number;
+  updatedAt?: string;
+  createdAt?: string;
   url?: string;
   children?: DialFile[];
   items?: DialFile[];
   path: string;
   name?: string;
   folderId: string;
-  updateTime: number;
+  updateTime: string;
   author?: string;
   nextToken?: string;
   extension?: string;
