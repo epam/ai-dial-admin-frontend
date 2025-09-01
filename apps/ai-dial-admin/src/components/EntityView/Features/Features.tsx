@@ -15,7 +15,7 @@ interface Props<T> {
   onChangeEntity: (entity: T) => void;
 }
 
-const EntityFeatures = <T extends { features: DialFeatures }>({ view, entity, onChangeEntity }: Props<T>) => {
+const EntityFeatures = <T extends { features?: DialFeatures }>({ view, entity, onChangeEntity }: Props<T>) => {
   const t = useI18n() as (key: string) => string;
   const switchKeys = getSwitchControls(view);
   const textKeys = getTextControls(view);
