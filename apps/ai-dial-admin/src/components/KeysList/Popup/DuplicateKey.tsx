@@ -34,7 +34,7 @@ const DuplicateKey: FC<Props> = ({ onDuplicate, modalState, onClose, entity, nam
   } as DialKey);
 
   const isValidKey = useMemo(() => {
-    return !keys.includes(clonedEntity.key);
+    return !keys.includes(clonedEntity.key || '');
   }, [clonedEntity.key, keys]);
 
   const onChangeExpiresAt = useCallback(
