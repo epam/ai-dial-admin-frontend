@@ -6,18 +6,10 @@ export interface DialToolset extends BaseEntity {
   iconUrl?: string;
   author?: string;
   topics?: string[];
+  endpoint?: string | null;
   maxRetryAttempts?: number;
-  // "endpoint": "http://sample-endpoint/call",
-  // "descriptionKeywords": [
-  //   "MCP",
-  //   "tool"
-  // ],
-  // "transport": "http", // HTTP or SSE
-  // "allowedTools": [
-  //   "first",
-  //   "second"
-  // ],
-  // "isPublic": false,
+  allowedTools?: string[];
+  descriptionKeywords?: string[];
   // "roleLimits": {
   //   "testRole1": {
   //     "minute": "128000",

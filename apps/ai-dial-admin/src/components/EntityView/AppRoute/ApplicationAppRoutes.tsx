@@ -3,7 +3,7 @@ import { FC, useMemo } from 'react';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialRole } from '@/src/models/dial/role';
 import EntityRoutes from './AppRoute';
-import { getAppRunner } from '@/src/components/ApplicationParametersTab/utils';
+import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 
 interface Props {
   roles?: DialRole[] | null;

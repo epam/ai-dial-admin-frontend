@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { getModels } from '@/src/app/[lang]/models/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
-import { getRelevantModelsForAdapter } from '@/src/components/AddEntitiesTab/AddEntitiesView.utils';
+import { getRelevantModelsForAdapter } from '@/src/components/AddEntitiesTab/utils';
 import { ENTITY_BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';

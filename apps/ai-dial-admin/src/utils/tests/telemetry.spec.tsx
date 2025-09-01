@@ -8,7 +8,7 @@ import {
   getFilterConditionConfig,
 } from '../telemetry';
 import { describe, test, vi, expect } from 'vitest';
-import { lineChartDefaultOptions } from '@/src/components/Charts/LineChart/line-chart-config';
+import { lineChartDefaultOptions } from '@/src/components/Charts/LineChart/constants';
 
 describe('Utils :: telemetry :: getTracesListingData', () => {
   test('returns correct result', () => {

@@ -13,7 +13,7 @@ import {
   getRelevantKeysForRole,
   isDialRoleShareKey,
   ROLES_ENTITIES_COLUMNS,
-} from '@/src/components/AddEntitiesTab/AddEntitiesView.utils';
+} from '@/src/components/AddEntitiesTab/utils';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';

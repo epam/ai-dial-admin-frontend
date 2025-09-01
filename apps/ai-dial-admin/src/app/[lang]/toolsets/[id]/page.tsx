@@ -1,7 +1,7 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { toolSetsApi } from '@/src/app/api/api';
+import { rolesApi, toolSetsApi } from '@/src/app/api/api';
 import Page403 from '@/src/components/Page403/Page403';
 import ToolsetView from '@/src/components/Toolsets/View/View';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
@@ -10,6 +10,7 @@ import { logger } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { DialRole } from '@/src/models/dial/role';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,11 +19,12 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   let toolSet: DialToolset | null = null;
   let toolSets: DialToolset[] | null = null;
+  let roles: DialRole[] | null = null;
   try {
     toolSet = await toolSetsApi.getToolset((await params.params).id, token);
     toolSets = await toolSetsApi.getToolsetList(token);
-
-    if (toolSet === void 0 || toolSets === void 0) {
+    roles = await rolesApi.getRolesList(token);
+    if (toolSet === void 0 || toolSets === void 0 || roles === void 0) {
       return <Page403 />;
     }
   } catch (e) {
@@ -35,7 +37,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   return (
     <SaveValidationContextProvider>
-      <ToolsetView names={toolSets?.map((t) => t.name || '') || []} originalToolset={toolSet} />
+      <ToolsetView names={toolSets?.map((t) => t.name || '') || []} originalToolset={toolSet} roles={roles} />
     </SaveValidationContextProvider>
   );
 }
