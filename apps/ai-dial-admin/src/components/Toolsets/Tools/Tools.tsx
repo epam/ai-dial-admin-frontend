@@ -1,17 +1,18 @@
 'use client';
 
 import { FC, useCallback, useMemo, useState } from 'react';
+import { IconPlus } from '@tabler/icons-react';
 
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import { ButtonsI18nKey, EntitiesI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialToolset } from '@/src/models/dial/toolset';
-import Search from '../../Common/Search/Search';
-import Button from '../../Common/Button/Button';
-import { IconPlus } from '@tabler/icons-react';
+import Search from '@/src/components/Common/Search/Search';
+import Button from '@/src/components/Common/Button/Button';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { PopUpState } from '@/src/types/pop-up';
 import AddToolsModal from './AddToolsModal';
+import ToolItem from './ToolItem';
 
 interface Props {
   selectedToolset: DialToolset;
@@ -69,14 +70,7 @@ const Tools: FC<Props> = ({ selectedToolset, onChangeToolset }) => {
           {!selectedToolset?.allowedTools || selectedToolset?.allowedTools.length === 0 ? (
             <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoTools)} />
           ) : (
-            filteredTools?.map((tool) => (
-              <div
-                key={tool}
-                className="p-3 mb-2 border border-border rounded flex flex-row items-center justify-between"
-              >
-                <span>{tool}</span>
-              </div>
-            ))
+            filteredTools?.map((tool) => <ToolItem key={tool} tool={tool} />)
           )}
         </div>
       </div>
