@@ -50,7 +50,7 @@ export const getKeyStatus = (
  * @param {string} period - time period
  * @returns {number} - timestamp of expiration date
  */
-export const calculateExpirationDate = (period: string): number => {
+export const calculateExpirationDate = (period: string): string => {
   const now = new Date();
 
   switch (period) {
@@ -74,5 +74,5 @@ export const calculateExpirationDate = (period: string): number => {
       break;
   }
 
-  return now.getTime();
+  return now.toISOString();
 };
