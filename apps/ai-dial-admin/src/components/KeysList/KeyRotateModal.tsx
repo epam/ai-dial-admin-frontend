@@ -22,7 +22,7 @@ export const KeyRotateModal: FC<Props> = ({ modalState, selectedKey, keys, onCon
   const [newKey, setNewKey] = useState({ ...selectedKey, key: '' });
 
   const onChangeExpiresAt = useCallback(
-    (expiresAt: number) => {
+    (expiresAt: string) => {
       setNewKey({ ...newKey, expiresAt });
     },
     [newKey],

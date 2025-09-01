@@ -94,7 +94,6 @@ export class BaseApi {
     return sendRequest(`${this.config.host || ''}${url}`, type, { ...getApiHeaders(token), ...initHeaders }, dto).then(
       (res) => {
         if (isFailedRequest(res)) {
-          logger.error(`Request error ${res}`);
           logger.error(`Request status ${res.status}`);
           logger.error(`Request error Url  ${res.url}`);
 
@@ -119,7 +118,6 @@ export class BaseApi {
 
   private handleResponse(res: Response, type: string): Promise<ServerActionResponse> {
     if (isFailedRequest(res)) {
-      logger.error(`Request error ${res}`);
       logger.error(`Request status ${res.status}`);
       logger.error(`Request error Url  ${res.url}`);
 

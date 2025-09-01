@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
-import ApplicationParametersTab from '../ApplicationParametersTab';
+import ApplicationParametersTab from '../ParametersTab';
 import { BasicI18nKey } from '@/src/constants/i18n';
 
 vi.mock('next-auth/react', () => ({

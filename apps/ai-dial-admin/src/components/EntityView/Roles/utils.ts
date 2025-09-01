@@ -10,10 +10,12 @@ import {
   getSetNoLimitsOperation,
 } from '@/src/constants/grid-columns/actions';
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { DialBaseEntity, DialRoleLimits, DialRoleLimitsMap, DialRoleShareMap } from '@/src/models/dial/base-entity';
+import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { DialRoleLimits, DialRoleLimitsMap, DialRoleShareMap } from '@/src/models/dial/role-limits';
 import { DialRole } from '@/src/models/dial/role';
-import { cellRenderParams } from './constants';
+import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import { cellRenderParams } from './constants';
 
 export const isDisableRole = (entity: DialBaseEntity) => {
   return !Object.keys(entity.roleLimits || {}).length && !entity.isPublic;
@@ -144,18 +146,26 @@ export const getRolesColumnDefs = (
   setNoLimits: (entity: DialRole) => void,
   resetToDefaultHidden: (api: GridApi, node: IRowNode) => boolean,
   isSetNoLimitsHidden: (api: GridApi, node: IRowNode) => boolean,
+  view: ApplicationRoute,
 ): ColDef[] => {
-  const actions = [
-    getOpenInNewTabOperation(open),
-    getResetOperation(resetToDefault, resetToDefaultHidden),
-    getSetNoLimitsOperation(setNoLimits, isSetNoLimitsHidden),
-  ];
+  const actions = [getOpenInNewTabOperation(open)];
+  const colDefs = [...SIMPLE_ENTITY_COLUMNS];
+
+  if (view !== ApplicationRoute.Routes) {
+    actions.push(
+      ...[
+        getResetOperation(resetToDefault, resetToDefaultHidden),
+        getSetNoLimitsOperation(setNoLimits, isSetNoLimitsHidden),
+      ],
+    );
+    colDefs.push(...LIMIT_COLUMNS(entity.defaultRoleLimit, onChangeLimits));
+  }
 
   if (!entity.isPublic) {
     actions.push(getRemoveOperation(remove));
   }
 
-  return [...SIMPLE_ENTITY_COLUMNS, ...LIMIT_COLUMNS(entity.defaultRoleLimit, onChangeLimits), ACTION_COLUMN(actions)];
+  return [...colDefs, ACTION_COLUMN(actions)];
 };
 
 export const isResetAvailable = (entity: DialBaseEntity): boolean => {

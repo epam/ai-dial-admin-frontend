@@ -7,7 +7,8 @@ import Button from '@/src/components/Common/Button/Button';
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { DefaultTemp, DialBaseEntity } from '@/src/models/dial/base-entity';
+import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { DefaultTemp } from '@/src/models/dial/defaults';
 import DefaultItem from './DefaultItem';
 import { convertDefaultsToArray } from './utils';
 

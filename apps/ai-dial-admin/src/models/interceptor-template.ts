@@ -5,6 +5,6 @@ export interface InterceptorTemplate {
   completionEndpoint?: string;
   configurationEndpoint?: string;
   interceptors?: string[];
-  updatedAt?: number;
-  createdAt?: number;
+  updatedAt?: string;
+  createdAt?: string;
 }

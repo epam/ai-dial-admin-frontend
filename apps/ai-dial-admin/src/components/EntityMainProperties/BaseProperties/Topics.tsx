@@ -7,10 +7,11 @@ import { useI18n } from '@/src/locales/client';
 
 interface Props<T> {
   entity: T;
-  onChange: (entity: T) => void;
+  readonly?: boolean;
+  onChange?: (entity: T) => void;
 }
 
-const TopicsControl = <T extends { topics?: string[] }>({ entity, onChange }: Props<T>) => {
+const TopicsControl = <T extends { topics?: string[] }>({ entity, onChange, ...props }: Props<T>) => {
   const t = useI18n();
 
   return (
@@ -21,12 +22,13 @@ const TopicsControl = <T extends { topics?: string[] }>({ entity, onChange }: Pr
       allItems={entity.topics}
       optional={true}
       onChangeItems={(topics: string[]) => {
-        onChange({ ...entity, topics });
+        onChange?.({ ...entity, topics });
       }}
       heading={t(EntityFieldsI18nKey.topics)}
       title={t(EntityFieldsI18nKey.topics)}
       addPlaceholder={t(EntityPlaceholdersI18nKey.Topic)}
       addTitle={t(TopicsI18nKey.AddTopic)}
+      {...props}
     />
   );
 };

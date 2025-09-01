@@ -1,14 +1,15 @@
-import { DefaultsValue, DefaultTemp, DialBaseNamedEntity } from './base-entity';
+import { DialBaseNamedEntity } from './base-entity';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { DefaultsValue, DefaultTemp } from '@/src/models/dial/defaults';
 
 export interface DialInterceptor extends DialBaseNamedEntity {
-  endpoint?: string;
+  endpoint?: string | null;
   configurationEndpoint?: string;
   forwardAuthToken?: boolean;
   entities?: string[];
   author?: string;
-  createdAt?: number;
-  updatedAt?: number;
+  createdAt?: string;
+  updatedAt?: string;
   defaults?: Record<string, DefaultsValue>;
   defaultsTemp?: DefaultTemp[];
   source?: {

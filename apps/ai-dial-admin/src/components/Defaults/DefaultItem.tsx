@@ -16,7 +16,7 @@ import {
 } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { DefaultsValue } from '@/src/models/dial/base-entity';
+import { DefaultsValue } from '@/src/models/dial/defaults';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { DefaultItemType } from './types';
 import { getDefaultValueByType, getDefaultValueType, getValueByType } from './utils';

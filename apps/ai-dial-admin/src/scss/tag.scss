@@ -1,7 +1,7 @@
 @layer components {
   .important-text-part {
     @apply text-primary;
-    @apply inline-block;
+    @apply inline-block break-words;
     @apply rounded border border-solid border-icon-secondary;
     @apply px-1 py-0.5;
   }

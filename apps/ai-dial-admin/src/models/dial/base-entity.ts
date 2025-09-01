@@ -1,14 +1,18 @@
+import { DefaultsValue, DefaultTemp } from '@/src/models/dial/defaults';
+import { DialRoleLimits, DialRoleLimitsMap, DialRoleShare, DialRoleShareMap } from '@/src/models/dial/role-limits';
+import { DialFeatures } from '@/src/models/dial/features';
+
 export interface DialBaseNamedEntity {
   name?: string;
   displayName?: string;
   description?: string;
   version?: string;
-  endpoint?: string;
+  endpoint?: string | null;
 }
 
-export interface DialBaseEntity extends DialBaseNamedEntity {
-  createdAt?: number;
-  updatedAt?: number;
+export interface DialBaseEntity extends DialBaseNamedEntity, EntityAttachment {
+  createdAt?: string;
+  updatedAt?: string;
   adapter?: string;
   author?: string;
   baseEndpoint?: string;
@@ -20,10 +24,8 @@ export interface DialBaseEntity extends DialBaseNamedEntity {
   defaultRoleLimit?: DialRoleLimits;
   defaultRoleShareResourceLimit?: DialRoleShare;
   forwardAuthToken?: boolean;
-  inputAttachmentTypes?: string[];
   topics?: string[];
   fieldsHashingOrder?: string[];
-  maxInputAttachments?: number | string;
   interceptors?: string[];
   features?: DialFeatures;
   dependencies?: string[];
@@ -31,45 +33,7 @@ export interface DialBaseEntity extends DialBaseNamedEntity {
   defaultsTemp?: DefaultTemp[];
 }
 
-export interface DefaultTemp {
-  key: string;
-  value: DefaultsValue;
-}
-
-export type DefaultsValue = string | number | boolean;
-
-export type DialRoleLimitsMap = Record<string, DialRoleLimits>;
-export type DialRoleShareMap = Record<string, DialRoleShare>;
-
-export interface DialRoleLimits {
-  day?: string | null;
-  minute?: string | null;
-  week?: string | null;
-  month?: string | null;
-}
-
-export interface DialRoleShare {
-  invitationTtl?: string | null;
-  maxAcceptedUsers?: string | null;
-}
-
-export interface DialFeatures {
-  truncatePromptEndpoint: string;
-  rateEndpoint: string;
-  configurationEndpoint: string;
-  tokenizeEndpoint: string;
-  toolsSupported: boolean;
-  systemPromptSupported: boolean;
-  urlAttachmentsSupported: boolean;
-  folderAttachmentsSupported: boolean;
-  seedSupported: boolean;
-  allowResume: boolean;
-  addonsSupported: boolean;
-  temperatureSupported: boolean;
-  accessibleByPerRequestKey: boolean;
-  parallelToolCallsSupported: boolean;
-  contentPartsSupported: boolean;
-  cacheSupported: boolean;
-  autoCachingSupported: boolean;
-  consentRequired: boolean;
+export interface EntityAttachment {
+  maxInputAttachments?: number | string;
+  inputAttachmentTypes?: string[];
 }

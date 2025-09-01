@@ -1,5 +1,5 @@
 import { NO_LIMITS_KEY } from '@/src/constants/role';
-import { ActivityAuditDiff, ActivityAuditDiffSection } from '@/src/models/dial/activity-audit';
+import { ActivityAuditDiff, ActivityAuditDiffSection } from '@/src/models/activity-audit';
 import { ActivityAuditResourceType, DiffStatus, DiffView } from '@/src/types/activity-audit';
 import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
 
