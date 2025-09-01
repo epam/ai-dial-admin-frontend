@@ -22,7 +22,7 @@ interface Props<T> {
   onChangeEntity: (entity: T) => void;
 }
 
-const EntityInterceptors = <T extends { interceptors: string[] }>({
+const EntityInterceptors = <T extends { interceptors?: string[] }>({
   entity,
   interceptors,
   onChangeEntity,
