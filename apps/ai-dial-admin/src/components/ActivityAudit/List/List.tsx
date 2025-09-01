@@ -205,7 +205,7 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
           );
         });
     }
-  }, [selectedActivity, showNotification, t, onCloseModal, entity, router, onRefresh]);
+  }, [selectedActivity, showNotification, t, onCloseModal, onRefresh]);
 
   const systemRollback = useCallback(() => {
     router.push(`${ApplicationRoute.ActivityAudit}/${SYSTEM_ROLLBACK_ID}`);
