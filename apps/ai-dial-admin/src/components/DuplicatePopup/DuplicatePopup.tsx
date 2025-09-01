@@ -7,7 +7,7 @@ import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialModel } from '@/src/models/dial/model';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -15,7 +15,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { duplicateModalDescriptionMap, duplicateModalTitleMap } from './constants';
 
-type ClonedEntity = DialBaseNamedEntity | DialModel;
+type ClonedEntity = BaseEntity | DialModel;
 interface Props {
   view: ApplicationRoute;
   modalState: PopUpState;

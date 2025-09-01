@@ -12,7 +12,7 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { ChatEntity } from '@/src/models/dial/base-entity';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import classNames from 'classnames';
@@ -21,12 +21,12 @@ import { getDisplayNameError, getVersionError } from './utils';
 
 interface Props {
   view: ApplicationRoute;
-  entity: DialBaseEntity;
+  entity: ChatEntity;
   names: string[];
   isUniqueNameError?: boolean;
   runners?: DialApplicationScheme[];
   isEntityImmutable?: boolean;
-  onChangeEntity: (entity: DialBaseEntity) => void;
+  onChangeEntity: (entity: ChatEntity) => void;
 }
 
 const EntityMainProperties: FC<Props> = ({
@@ -45,11 +45,13 @@ const EntityMainProperties: FC<Props> = ({
   const [displayNameError, setDisplayNameError] = useState<string | undefined>(void 0);
 
   const versionError = useMemo(() => {
-    return entity.displayName ? void 0 : getVersionError(view, isVersionOptional, entity.version as string, t);
-  }, [entity.version, entity.displayName, isVersionOptional, t, view]);
+    return entity.displayName
+      ? void 0
+      : getVersionError(view, isVersionOptional, (entity as DialModel).version as string, t);
+  }, [entity, isVersionOptional, t, view]);
 
   const onChangeName = useCallback(
-    (newEntity: DialBaseEntity) => {
+    (newEntity: ChatEntity) => {
       if (view === ApplicationRoute.Models) {
         (newEntity as DialModel).endpointDeploymentName = newEntity.name;
       }

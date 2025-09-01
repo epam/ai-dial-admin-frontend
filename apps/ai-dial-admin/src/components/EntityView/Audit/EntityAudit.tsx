@@ -1,4 +1,4 @@
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { FC, useState } from 'react';
 
 import ActivityAuditList from '@/src/components/ActivityAudit/List/List';
@@ -13,7 +13,7 @@ import { TabOrientation } from '@/src/types/tab';
 import { getAuditTabs } from './utils';
 
 interface Props {
-  entity: DialBaseEntity;
+  entity: BaseEntity;
   view: ApplicationRoute;
 }
 

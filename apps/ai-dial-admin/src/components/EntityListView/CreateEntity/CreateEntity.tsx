@@ -1,5 +1,5 @@
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import Button from '@/src/components/Common/Button/Button';
@@ -11,8 +11,7 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
-import { DialPrompt } from '@/src/models/dial/prompt';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -23,18 +22,23 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { RoutesForCheckingUniqueName } from './constants';
 import { DialRoute } from '@/src/models/dial/route';
 
-interface Props {
+interface CreatePromptEntity extends BaseEntity {
+  version?: string;
+  folderId?: string;
+}
+
+interface Props<T> {
   route: ApplicationRoute;
   modalState: PopUpState;
   names: string[];
   modalTitle: string;
   runners?: DialApplicationScheme[];
   versionsMap?: Record<string, string[]>;
-  createEntity: (entity: DialBaseEntity) => Promise<ServerActionResponse>;
+  createEntity: (entity: T) => Promise<ServerActionResponse>;
   onClose: () => void;
 }
 
-const CreateEntity: FC<Props> = ({
+const CreateEntity = <T extends CreatePromptEntity>({
   modalTitle,
   runners,
   route,
@@ -43,7 +47,7 @@ const CreateEntity: FC<Props> = ({
   versionsMap,
   onClose,
   createEntity,
-}) => {
+}: Props<T>) => {
   const t = useI18n();
   const router = useRouter();
   const { filePath, fetchFiles } = usePromptFolder();
@@ -51,14 +55,14 @@ const CreateEntity: FC<Props> = ({
 
   const { showNotification } = useNotification();
 
-  const [currentEntity, setEntity] = useState<DialBaseEntity>(
-    versionsMap ? { name: '', description: '', version: '1.0.0' } : { name: '', description: '' },
+  const [currentEntity, setEntity] = useState<T>(
+    versionsMap ? ({ name: '', description: '', version: '1.0.0' } as T) : ({ name: '', description: '' } as T),
   );
 
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean | undefined>(void 0);
 
   const onChangeEntity = useCallback(
-    (entity: DialBaseEntity) => {
+    (entity: BaseEntity) => {
       setEntity({ ...currentEntity, ...entity });
     },
     [currentEntity, setEntity],
@@ -79,7 +83,7 @@ const CreateEntity: FC<Props> = ({
     if (!isUnique) return;
 
     if (route === ApplicationRoute.Prompts) {
-      (entity as DialPrompt).folderId = filePath;
+      entity.folderId = filePath;
     }
     createEntity(entity).then((res) => {
       if (res.success) {
@@ -105,7 +109,11 @@ const CreateEntity: FC<Props> = ({
     dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!currentEntity.name });
 
     if (versionsMap) {
-      dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !!currentEntity.version });
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'version',
+        isValid: !!currentEntity.version,
+      });
     }
 
     if (route === ApplicationRoute.Routes) {

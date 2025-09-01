@@ -1,13 +1,12 @@
 import { ToolsetTransport } from '@/src/types/toolset';
-import { DialBaseNamedEntity } from './base-entity';
+import { BaseEntity, EntityRoleLimits } from '@/src/models/dial/base-entity';
 
-export interface DialToolset extends DialBaseNamedEntity {
+export interface DialToolset extends BaseEntity, EntityRoleLimits {
   transport?: ToolsetTransport;
-  iconUrl?: string;
-  author?: string;
-  topics?: string[];
-  endpoint?: string | null;
-  maxRetryAttempts?: number;
   allowedTools?: string[];
   descriptionKeywords?: string[];
+  iconUrl?: string;
+  author?: string;
+  endpoint?: string | null;
+  maxRetryAttempts?: number;
 }

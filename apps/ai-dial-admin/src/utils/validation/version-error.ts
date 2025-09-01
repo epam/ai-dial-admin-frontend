@@ -1,10 +1,10 @@
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { checkNameVersionCombination } from '@/src/utils/prompts/versions';
-import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 
 export const getPromptVersionError = (
   versionsMap: Record<string, string[]> | undefined,
-  entity: DialBaseNamedEntity,
+  entity: BaseEntity,
   t: (str: string) => string,
   version?: string,
 ) => {

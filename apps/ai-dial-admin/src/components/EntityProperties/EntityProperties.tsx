@@ -9,15 +9,15 @@ import EntityAttachments from '@/src/components/EntityView/Properties/EntityAtta
 import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
 import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { ChatEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
-  entity: DialBaseEntity;
+  entity: ChatEntity;
   names: string[];
   runners: DialApplicationScheme[];
   view: ApplicationRoute;
-  updateEntity: (entity: DialApplication) => void;
+  updateEntity: (entity: ChatEntity) => void;
 }
 
 const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntity }) => {
@@ -40,6 +40,7 @@ const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntit
           <ApplicationSource entity={entity} onChangeEntity={updateEntity} runners={runners} isEntityImmutable={true} />
         )}
         <EntityAttachments entity={entity} onChangeEntity={updateEntity} />
+
         {view === ApplicationRoute.Applications && <Defaults entity={entity} onChangeEntity={updateEntity} />}
       </div>
       <div className="flex flex-col gap-6 pt-3 lg:w-[35%]">

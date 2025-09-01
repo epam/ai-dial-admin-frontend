@@ -15,7 +15,7 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/activity-audit';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ActivityAuditEntity, CompareView, DiffView } from '@/src/types/activity-audit';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -35,7 +35,7 @@ interface Props {
   previousRevision: ActivityAuditEntity | null;
   isModalView?: boolean;
   hideComparator?: boolean;
-  entity?: DialBaseEntity;
+  entity?: BaseEntity;
 }
 
 const AuditView: FC<Props> = ({

@@ -13,8 +13,6 @@ import { ButtonsI18nKey, DeleteI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
-import { DialKey } from '@/src/models/dial/key';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -29,7 +27,7 @@ interface Props<T> {
   onCloseModal: () => void;
 }
 
-const DeleteConfirmationModal = <T extends DialBaseEntity | DialKey>({
+const DeleteConfirmationModal = <T extends object>({
   modalState,
   view,
   entity,

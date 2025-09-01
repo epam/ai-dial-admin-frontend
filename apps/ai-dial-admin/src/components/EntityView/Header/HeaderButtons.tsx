@@ -13,8 +13,6 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
-import { DialKey } from '@/src/models/dial/key';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
@@ -40,7 +38,7 @@ interface Props<T> {
   promptVersions?: string[];
 }
 
-const HeaderButtons = <T extends DialBaseEntity | DialKey>({
+const HeaderButtons = <T extends object>({
   view,
   entity,
   isChanged,

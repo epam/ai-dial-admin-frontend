@@ -19,7 +19,6 @@ import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -251,7 +250,7 @@ const BaseEntityList = <T extends object>({
       return (
         <DuplicateKey
           entity={currentEntity}
-          onDuplicate={onDuplicate as (entity: DialBaseEntity) => Promise<ServerActionResponse>}
+          onDuplicate={onDuplicate}
           modalState={modalState}
           names={names || []}
           keys={keys || []}
@@ -265,7 +264,7 @@ const BaseEntityList = <T extends object>({
         <DuplicatePrompt
           entity={currentEntity as DialPrompt}
           versionsMap={versionsMap as Record<string, string[]>}
-          onDuplicate={onDuplicate as (entity: DialBaseEntity) => Promise<ServerActionResponse>}
+          onDuplicate={onDuplicate}
           modalState={modalState}
           onClose={handleModalClose}
         />
@@ -276,7 +275,7 @@ const BaseEntityList = <T extends object>({
         view={route}
         names={names || []}
         entity={currentEntity}
-        onDuplicate={onDuplicate as (entity: DialBaseEntity) => Promise<ServerActionResponse>}
+        onDuplicate={onDuplicate}
         modalState={modalState}
         onClose={handleModalClose}
       />
@@ -314,7 +313,7 @@ const BaseEntityList = <T extends object>({
       </ListView>
       {modalType ? (
         <EntityListModals
-          entity={currentEntity as DialBaseEntity}
+          entity={currentEntity}
           route={route}
           initialPath={(currentEntity as DialPrompt)?.folderId}
           modalState={modalState}

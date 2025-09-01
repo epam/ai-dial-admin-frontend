@@ -14,8 +14,6 @@ import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
-import { DialKey } from '@/src/models/dial/key';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -34,7 +32,7 @@ interface Props<T> {
   promptVersions?: string[];
 }
 
-const ModifiedEntityButtons = <T extends DialBaseEntity | DialKey>({
+const ModifiedEntityButtons = <T extends object>({
   view,
   entity,
   onDiscard,

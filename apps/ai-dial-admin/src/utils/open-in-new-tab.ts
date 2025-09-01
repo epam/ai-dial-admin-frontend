@@ -1,7 +1,7 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { DialActivity } from '@/src/models/activity-audit';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
 import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
@@ -46,6 +46,6 @@ export const getEntityPath = (
       return `${encodeURIComponent((data as Container).id)}?entityType=${entityType || ''}`;
 
     default:
-      return encodeURIComponent((data as DialBaseNamedEntity).name || '');
+      return encodeURIComponent((data as BaseEntity).name || '');
   }
 };

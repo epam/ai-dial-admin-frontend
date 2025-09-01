@@ -13,7 +13,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAttachmentData } from '@/src/models/attachment-data';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
@@ -37,14 +37,14 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   view: ApplicationRoute;
-  originalEntity: DialBaseEntity;
+  originalEntity: BaseEntity;
   names: string[];
   roles?: DialRole[] | null;
   applicationSchemes?: DialApplicationScheme[] | null;
   interceptors?: DialInterceptor[] | null;
   applications?: DialApplication[] | null;
   models?: DialModel[] | null;
-  updateEntity: (entity: DialBaseEntity) => Promise<ServerActionResponse>;
+  updateEntity: (entity: BaseEntity) => Promise<ServerActionResponse>;
   removeEntity: (entity?: string) => Promise<ServerActionResponse>;
 }
 
@@ -181,7 +181,7 @@ const EntityView: FC<Props> = ({
   }, [handleModalOpen, onSave, selectedEntity, view]);
 
   const onChangeEntity = useCallback(
-    (entity: DialBaseEntity, skipRefresh?: boolean) => {
+    (entity: BaseEntity, skipRefresh?: boolean) => {
       setSelectedEntity(entity);
       setIsSkipRefresh(!!skipRefresh);
     },

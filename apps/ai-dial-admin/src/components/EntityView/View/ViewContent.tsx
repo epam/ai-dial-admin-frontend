@@ -13,7 +13,7 @@ import { EntityViewTab } from '@/src/components/EntityView/View/utils';
 import ModelProperties from '@/src/components/ModelView/ModelProperties/ModelProperties';
 import RouteProperties from '@/src/components/Routes/Properties/RouteProperties';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
@@ -30,10 +30,10 @@ interface Props {
   applications?: DialApplication[] | null;
   models?: DialModel[] | null;
   view: ApplicationRoute;
-  selectedEntity: DialBaseEntity;
+  selectedEntity: BaseEntity;
   jsonEditorEnabled: boolean;
   isSkipRefresh: boolean;
-  onChangeEntity: (entity: DialBaseEntity) => void;
+  onChangeEntity: (entity: BaseEntity) => void;
 }
 
 const ViewContent: FC<Props> = ({

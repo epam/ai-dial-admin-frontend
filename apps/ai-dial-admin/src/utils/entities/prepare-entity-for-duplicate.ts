@@ -1,5 +1,4 @@
 import { ApplicationRoute } from '@/src/types/routes';
-import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 
 export const prepareEntityForDuplicate = (route: ApplicationRoute, entity: BaseEntity) => {
@@ -12,7 +11,7 @@ export const prepareEntityForDuplicate = (route: ApplicationRoute, entity: BaseE
 
   if (route === ApplicationRoute.Interceptors) {
     return {
-      ...(entity as DialInterceptor),
+      ...entity,
       entities: [],
     };
   }

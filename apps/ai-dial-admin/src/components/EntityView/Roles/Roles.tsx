@@ -8,7 +8,7 @@ import RolesGrid from '@/src/components/EntityView/Roles/RolesGrid';
 import { isDisableRole, isResetToDefaultHidden, isSetNoLimitsHidden } from '@/src/components/EntityView/Roles/utils';
 import { EntitiesI18nKey, RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRoleLimits, DialRoleLimitsMap } from '@/src/models/dial/role-limits';
 import { DialRole } from '@/src/models/dial/role';
 import { PopUpState } from '@/src/types/pop-up';
@@ -17,11 +17,11 @@ import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import RolesDefaults from './RolesDefaults';
 
 interface Props {
-  entity: DialBaseEntity;
+  entity: EntityRoleLimits;
   view: ApplicationRoute;
   isSkipRefresh: boolean;
   roles: DialRole[];
-  onChangeEntity: (entity: DialBaseEntity, withRefresh?: boolean) => void;
+  onChangeEntity: (entity: EntityRoleLimits, withRefresh?: boolean) => void;
 }
 
 const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRefresh }) => {

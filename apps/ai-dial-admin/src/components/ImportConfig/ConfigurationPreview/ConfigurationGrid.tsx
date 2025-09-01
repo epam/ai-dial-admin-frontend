@@ -6,19 +6,19 @@ import { useI18n } from '@/src/locales/client';
 import Grid from '@/src/components/Grid/Grid';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import { getComponentColDefs } from '@/src/components/ImportConfig/ConfigurationPreview/ConfigurationPreview.utils';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { EntityType } from '@/src/types/entity-type';
 import { getEmptyDataTitleI18nKey } from '@/src/utils/entities/get-empty-data-title';
 
 interface Props {
   selectedTab: EntityType;
-  tabData: Record<string, DialBaseEntity[]>;
+  tabData: Record<string, BaseEntity[]>;
 }
 
 const ConfigurationGrid: FC<Props> = ({ selectedTab, tabData }) => {
   const t = useI18n() as (v: string) => string;
 
-  const [rowData, setRowData] = useState<DialBaseEntity[]>([]);
+  const [rowData, setRowData] = useState<BaseEntity[]>([]);
   const [colDefs, setColDefs] = useState<ColDef[]>([]);
 
   const emptyDataTitleI18nkKey = useMemo(() => {
