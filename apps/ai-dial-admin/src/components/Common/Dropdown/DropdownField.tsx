@@ -7,6 +7,7 @@ import { InputFieldBaseProps } from '@/src/components/Common/InputField/InputFie
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import Dropdown from './Dropdown';
 import DropdownMenuItem from './DropdownItem';
+import classNames from 'classnames';
 
 interface Props extends InputFieldBaseProps {
   items: DropdownItemsModel[];
@@ -32,7 +33,7 @@ const DropdownField: FC<Props> = ({
   ...props
 }) => {
   return (
-    <div className="flex flex-col w-full">
+    <div className={classNames('flex flex-col w-full', props.containerCssClass)}>
       <Field fieldTitle={fieldTitle} optional={optional} htmlFor={elementId} />
 
       <Dropdown

@@ -1,4 +1,4 @@
-import { lineChartDefaultOptions } from '@/src/components/Charts/LineChart/line-chart-config';
+import { lineChartDefaultOptions } from '@/src/components/Charts/LineChart/constants';
 import {
   filterConditionConfig,
   filterOperatorConfig,

@@ -450,4 +450,10 @@ export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
   { field: 'image', headerName: 'Interceptor Image' },
 ];
 
+export const MCP_CONTAINERS_COLUMNS: ColDef[] = [
+  NAME_COLUMN_WITH_SORT,
+  DESCRIPTION_COLUMN,
+  { field: 'image', headerName: 'MCP Image' },
+];
+
 export const SOURCE_RUNNERS_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, NAME_COLUMN, DESCRIPTION_COLUMN];

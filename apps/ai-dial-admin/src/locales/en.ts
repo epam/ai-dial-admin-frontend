@@ -142,6 +142,9 @@ export default {
     InterceptorName: 'Interceptor Name',
     ChangeIcon: 'Change icon',
     Source: 'Source',
+    ExternalEndpoint: 'External Endpoint',
+    InterceptorContainer: 'Interceptor Container',
+    InterceptorTemplate: 'Interceptor Template',
     Author: 'Author',
 
     // modals
@@ -715,6 +718,7 @@ export default {
     rewritePath: 'Rewrite path',
     response: 'Response',
     permissions: 'Permissions',
+    allowedTools: 'MCP Containers',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
@@ -791,5 +795,8 @@ export default {
     OpenContainer: 'Open container',
     Container: 'Container',
     InterceptorTemplate: 'Interceptor template',
+  },
+  Toolset: {
+    MCP: 'MCP Container',
   },
 } as const;

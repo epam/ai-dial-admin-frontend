@@ -7,7 +7,7 @@ export interface DialBaseNamedEntity {
   displayName?: string;
   description?: string;
   version?: string;
-  endpoint?: string;
+  endpoint?: string | null;
 }
 
 export interface DialBaseEntity extends DialBaseNamedEntity {

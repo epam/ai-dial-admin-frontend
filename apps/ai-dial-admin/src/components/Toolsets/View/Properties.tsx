@@ -9,6 +9,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
 import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import ToolsetType from './ToolsetType';
 
 interface Props {
   selectedToolset: DialToolset;
@@ -33,7 +34,13 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
             iconUrl={selectedToolset.iconUrl}
             onChange={(icon) => onChangeToolset({ ...selectedToolset, iconUrl: icon })}
           />
-          <TopicsControl entity={selectedToolset} onChange={onChangeToolset} />
+          <TopicsControl
+            entity={{ topics: selectedToolset?.descriptionKeywords }}
+            onChange={({ topics }) => {
+              onChangeToolset({ ...selectedToolset, descriptionKeywords: topics });
+            }}
+          />
+          <ToolsetType selectedToolset={selectedToolset} onChangeToolset={onChangeToolset} />
           <MaxRetryAttempts entity={selectedToolset} onChangeEntity={onChangeToolset} />
         </div>
       </div>
