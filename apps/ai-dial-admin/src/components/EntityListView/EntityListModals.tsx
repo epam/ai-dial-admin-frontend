@@ -10,7 +10,6 @@ import { BasicI18nKey, ButtonsI18nKey, DeleteI18nKey } from '@/src/constants/i18
 import { FileFolderContextType } from '@/src/context/FileFolderContext';
 import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
-import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ParsedPrompts } from '@/src/models/prompts';
 import { ImportFileType } from '@/src/types/import';
@@ -114,7 +113,7 @@ const EntityListModals: FC<Props> = ({
             onClose={handleClose}
           >
             {route === ApplicationRoute.ApplicationRunners ? (
-              <DeleteAppRunner entity={entity as DialApplicationScheme} />
+              <DeleteAppRunner entity={entity} />
             ) : route === ApplicationRoute.Adapters ? (
               <DeleteAdapter entity={entity} />
             ) : route === ApplicationRoute.InterceptorTemplates ? (

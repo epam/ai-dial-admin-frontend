@@ -52,7 +52,7 @@ interface Props<T> {
   context?: () => PromptFolderContextType | FileFolderContextType;
 }
 
-const EntityListHeaderButtons = <T extends DialBaseEntity | DialApplicationScheme>({
+const EntityListHeaderButtons = <T extends object>({
   names,
   keys,
   versionsMap,
