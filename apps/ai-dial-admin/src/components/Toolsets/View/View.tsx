@@ -6,37 +6,41 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
+import { removeToolset, updateToolset } from '@/src/app/[lang]/toolsets/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
-import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import EntityRoles from '@/src/components/EntityView/Roles/Roles';
+import { EntityViewTab, propertiesTabs, rolesTabs } from '@/src/components/EntityView/View/utils';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
+import { DialRole } from '@/src/models/dial/role';
+import { DialToolset } from '@/src/models/dial/toolset';
 import { TabModel } from '@/src/models/tab';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
-import { removeToolset, updateToolset } from '@/src/app/[lang]/toolsets/actions';
-import { DialToolset } from '@/src/models/dial/toolset';
 import ToolsetProperties from './Properties';
 
 interface Props {
   names: string[];
+  roles: DialRole[] | null | undefined;
   originalToolset: DialToolset;
 }
 
-const ToolsetView: FC<Props> = ({ names, originalToolset }) => {
+const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
 
-  const tabs: TabModel[] = [propertiesTabs(t)];
+  const tabs: TabModel[] = [propertiesTabs(t), rolesTabs(t)];
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedToolset, setSelectedToolset] = useState(cloneDeep(originalToolset));
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
+  const [isSkipRefresh, setIsSkipRefresh] = useState<boolean>(true);
   const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
@@ -70,11 +74,13 @@ const ToolsetView: FC<Props> = ({ names, originalToolset }) => {
       setKey((prevKey) => prevKey + 1);
     }
     setSelectedToolset(originalToolset);
+    setIsSkipRefresh(false);
   }, [setSelectedToolset, originalToolset, jsonEditorEnabled]);
 
   const onChangeToolset = useCallback(
-    (entity: DialToolset) => {
+    (entity: DialToolset, skipRefresh?: boolean) => {
       setSelectedToolset(entity);
+      setIsSkipRefresh(!!skipRefresh);
     },
     [setSelectedToolset],
   );
@@ -124,6 +130,16 @@ const ToolsetView: FC<Props> = ({ names, originalToolset }) => {
           <>
             {activeTab === EntityViewTab.Properties && (
               <ToolsetProperties names={names} selectedToolset={selectedToolset} onChangeToolset={onChangeToolset} />
+            )}
+
+            {activeTab === EntityViewTab.Roles && (
+              <EntityRoles
+                entity={selectedToolset}
+                view={ApplicationRoute.Toolsets}
+                roles={roles || []}
+                onChangeEntity={onChangeToolset}
+                isSkipRefresh={isSkipRefresh}
+              />
             )}
           </>
         )}
