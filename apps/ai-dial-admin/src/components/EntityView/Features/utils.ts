@@ -1,5 +1,5 @@
 import { ApplicationRoute } from '@/src/types/routes';
-import { DialFeatures } from '@/src/models/dial/base-entity';
+import { DialFeatures } from '@/src/models/dial/features';
 import {
   applicationSwitchFeatures,
   applicationTextFeatures,
