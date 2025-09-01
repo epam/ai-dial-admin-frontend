@@ -2,10 +2,18 @@ import { DefaultsValue, DefaultTemp } from '@/src/models/dial/default';
 import { DialRoleLimits, DialRoleLimitsMap, DialRoleShare, DialRoleShareMap } from '@/src/models/dial/role-limits';
 import { DialFeatures } from '@/src/models/dial/features';
 
-export interface DialBaseNamedEntity {
+export interface BaseEntity {
   name?: string;
   displayName?: string;
   description?: string;
+}
+
+export interface ModifiedEntity {
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface DialBaseNamedEntity extends BaseEntity {
   version?: string;
   endpoint?: string | null;
 }

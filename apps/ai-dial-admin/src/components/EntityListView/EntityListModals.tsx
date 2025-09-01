@@ -17,7 +17,6 @@ import { ParsedPrompts } from '@/src/models/prompts';
 import { ImportFileType } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
-import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { deleteModalTitleMap } from '@/src/components/EntityListView/constants';
 import ExportModal from '@/src/components/EntityListView/Export/ExportModal';
 import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
@@ -120,7 +119,7 @@ const EntityListModals: FC<Props> = ({
             ) : route === ApplicationRoute.Adapters ? (
               <DeleteAdapter entity={entity as DialAdapter} />
             ) : route === ApplicationRoute.InterceptorTemplates ? (
-              <DeleteInterceptorTemplate template={entity as InterceptorTemplate} />
+              <DeleteInterceptorTemplate template={entity} />
             ) : (
               <p className="text-secondary small-150 px-6 py-4">
                 <span>{t(DeleteI18nKey.Confirming)}</span>

@@ -17,7 +17,6 @@ import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { DialKey } from '@/src/models/dial/key';
-import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -69,7 +68,7 @@ const DeleteConfirmationModal = <T extends DialBaseEntity | DialKey>({
     ) : view === ApplicationRoute.Adapters ? (
       <DeleteAdapter entity={entity as DialAdapter} isEntityView={true} />
     ) : view === ApplicationRoute.InterceptorTemplates ? (
-      <DeleteInterceptorTemplate template={entity as InterceptorTemplate} />
+      <DeleteInterceptorTemplate template={entity} />
     ) : null;
 
   return (
