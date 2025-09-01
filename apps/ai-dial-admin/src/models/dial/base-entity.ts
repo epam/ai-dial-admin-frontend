@@ -1,3 +1,7 @@
+import { DefaultsValue, DefaultTemp } from '@/src/models/dial/default';
+import { DialRoleLimits, DialRoleLimitsMap, DialRoleShare, DialRoleShareMap } from '@/src/models/dial/role-limits';
+import { DialFeatures } from '@/src/models/dial/features';
+
 export interface DialBaseNamedEntity {
   name?: string;
   displayName?: string;
@@ -29,47 +33,4 @@ export interface DialBaseEntity extends DialBaseNamedEntity {
   dependencies?: string[];
   defaults?: Record<string, DefaultsValue>;
   defaultsTemp?: DefaultTemp[];
-}
-
-export interface DefaultTemp {
-  key: string;
-  value: DefaultsValue;
-}
-
-export type DefaultsValue = string | number | boolean;
-
-export type DialRoleLimitsMap = Record<string, DialRoleLimits>;
-export type DialRoleShareMap = Record<string, DialRoleShare>;
-
-export interface DialRoleLimits {
-  day?: string | null;
-  minute?: string | null;
-  week?: string | null;
-  month?: string | null;
-}
-
-export interface DialRoleShare {
-  invitationTtl?: string | null;
-  maxAcceptedUsers?: string | null;
-}
-
-export interface DialFeatures {
-  truncatePromptEndpoint: string;
-  rateEndpoint: string;
-  configurationEndpoint: string;
-  tokenizeEndpoint: string;
-  toolsSupported: boolean;
-  systemPromptSupported: boolean;
-  urlAttachmentsSupported: boolean;
-  folderAttachmentsSupported: boolean;
-  seedSupported: boolean;
-  allowResume: boolean;
-  addonsSupported: boolean;
-  temperatureSupported: boolean;
-  accessibleByPerRequestKey: boolean;
-  parallelToolCallsSupported: boolean;
-  contentPartsSupported: boolean;
-  cacheSupported: boolean;
-  autoCachingSupported: boolean;
-  consentRequired: boolean;
 }

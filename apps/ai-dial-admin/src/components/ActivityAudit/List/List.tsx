@@ -185,12 +185,7 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
                 t(ActivityAuditI18nKey.ResourceRollbackDescription),
               ),
             );
-
-            if (entity) {
-              router.refresh();
-            } else {
-              onRefresh();
-            }
+            onRefresh();
           } else {
             showNotification(
               getErrorNotification(

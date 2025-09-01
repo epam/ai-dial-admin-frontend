@@ -1,6 +1,6 @@
 import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
 import { ActivityAuditDiff } from '@/src/models/dial/activity-audit';
-import { DialRoleLimits } from '@/src/models/dial/base-entity';
+import { DialRoleLimits } from '@/src/models/dial/role-limits';
 import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus } from '@/src/types/activity-audit';
 import { describe, expect, test } from 'vitest';
 import {
