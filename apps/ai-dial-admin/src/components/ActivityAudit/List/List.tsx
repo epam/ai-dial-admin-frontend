@@ -25,7 +25,7 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/activity-audit';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { FilterDto } from '@/src/models/request';
 import { TimeRange } from '@/src/models/time-range';
 import { PopUpState } from '@/src/types/pop-up';
@@ -39,7 +39,7 @@ import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 
 interface Props {
-  entity?: DialBaseEntity | DialApplicationScheme;
+  entity?: BaseEntity | DialApplicationScheme;
 }
 
 const ActivityAuditList: FC<Props> = ({ entity }) => {
@@ -76,7 +76,7 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
             ? [
                 {
                   column: 'resourceId',
-                  value: (entity as DialApplicationScheme).$id || (entity as DialBaseEntity).name,
+                  value: (entity as DialApplicationScheme).$id || (entity as BaseEntity).name,
                   operator: 'eq',
                 } as FilterDto,
               ]

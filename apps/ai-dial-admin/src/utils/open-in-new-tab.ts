@@ -19,7 +19,7 @@ export const getUrnForEntity = (route?: ApplicationRoute, entity?: BaseEntity, e
 
 export const getEntityPath = (
   route?: ApplicationRoute,
-  data?: BaseEntity,
+  data?: unknown,
   forRemove?: boolean,
   entityType?: DEPLOYMENT_ENTITY,
 ) => {
@@ -46,6 +46,6 @@ export const getEntityPath = (
       return `${encodeURIComponent((data as Container).id)}?entityType=${entityType || ''}`;
 
     default:
-      return encodeURIComponent(data?.name || '');
+      return encodeURIComponent((data as BaseEntity)?.name || '');
   }
 };

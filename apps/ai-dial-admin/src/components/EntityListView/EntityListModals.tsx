@@ -12,7 +12,7 @@ import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ParsedPrompts } from '@/src/models/prompts';
 import { ImportFileType } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
@@ -33,7 +33,7 @@ export enum ModalType {
 }
 
 interface Props {
-  entity?: DialBaseEntity;
+  entity?: BaseEntity;
   route?: ApplicationRoute;
   initialPath?: string;
   modalState: PopUpState;
@@ -124,10 +124,8 @@ const EntityListModals: FC<Props> = ({
             ) : (
               <p className="text-secondary small-150 px-6 py-4">
                 <span>{t(DeleteI18nKey.Confirming)}</span>
-                {(entity as DialBaseEntity).displayName || entity?.name ? (
-                  <span className="important-text-part mr-1">
-                    {(entity as DialBaseEntity).displayName || entity?.name}
-                  </span>
+                {entity?.displayName || entity?.name ? (
+                  <span className="important-text-part mr-1">{entity?.displayName || entity?.name}</span>
                 ) : null}
                 <span>{t(deleteModalTitleMap[route as keyof typeof deleteModalTitleMap])}?</span>
               </p>

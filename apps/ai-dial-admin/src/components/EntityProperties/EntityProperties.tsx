@@ -9,11 +9,11 @@ import EntityAttachments from '@/src/components/EntityView/Properties/EntityAtta
 import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
 import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { ChatEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
-  entity: DialBaseEntity;
+  entity: ChatEntity;
   names: string[];
   runners: DialApplicationScheme[];
   view: ApplicationRoute;
@@ -45,9 +45,7 @@ const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntit
       <div className="flex flex-col gap-6 pt-3 lg:w-[35%]">
         <ForwardAuthTokenField view={view} entity={entity} onChangeEntity={updateEntity} />
 
-        {view === ApplicationRoute.Applications && (
-          <MaxRetryAttempts entity={entity as DialApplication} onChangeEntity={updateEntity} />
-        )}
+        {view === ApplicationRoute.Applications && <MaxRetryAttempts entity={entity} onChangeEntity={updateEntity} />}
       </div>
     </div>
   );

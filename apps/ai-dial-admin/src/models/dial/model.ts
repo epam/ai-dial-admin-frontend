@@ -1,4 +1,5 @@
 import { ChatEntity } from './base-entity';
+import { DialFeatures } from './features';
 
 export interface DialModel extends ChatEntity {
   type?: DialModelType;
@@ -9,6 +10,7 @@ export interface DialModel extends ChatEntity {
   limits?: DialModelLimit;
   pricing?: DialModelPricing;
   displayVersion?: string;
+  features?: DialFeatures;
 }
 
 export interface DialTokenizer {

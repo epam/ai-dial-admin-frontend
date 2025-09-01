@@ -9,7 +9,7 @@ import Popup from '@/src/components/Common/Popup/Popup';
 import { ActivityAuditI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/activity-audit';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { PopUpState } from '@/src/types/pop-up';
 import { getRevisionRouteForEntityType } from '@/src/utils/audit/get-revision-route';
@@ -21,7 +21,7 @@ interface Props {
   partialActivity?: DialActivity;
   currentState?: ActivityAuditEntity;
   rollBackState?: ActivityAuditEntity;
-  entity?: DialBaseEntity;
+  entity?: BaseEntity;
 }
 
 const ActivityDetails: FC<Props> = ({

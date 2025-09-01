@@ -12,7 +12,7 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import classNames from 'classnames';
@@ -21,12 +21,12 @@ import { getDisplayNameError, getVersionError } from './utils';
 
 interface Props {
   view: ApplicationRoute;
-  entity: DialBaseEntity;
+  entity: BaseEntity;
   names: string[];
   isUniqueNameError?: boolean;
   runners?: DialApplicationScheme[];
   isEntityImmutable?: boolean;
-  onChangeEntity: (entity: DialBaseEntity) => void;
+  onChangeEntity: (entity: BaseEntity) => void;
 }
 
 const EntityMainProperties: FC<Props> = ({
@@ -49,7 +49,7 @@ const EntityMainProperties: FC<Props> = ({
   }, [entity.version, entity.displayName, isVersionOptional, t, view]);
 
   const onChangeName = useCallback(
-    (newEntity: DialBaseEntity) => {
+    (newEntity: BaseEntity) => {
       if (view === ApplicationRoute.Models) {
         (newEntity as DialModel).endpointDeploymentName = newEntity.name;
       }

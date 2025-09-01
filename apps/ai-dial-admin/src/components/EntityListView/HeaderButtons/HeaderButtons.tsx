@@ -20,7 +20,7 @@ import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialKey } from '@/src/models/dial/key';
 import { ImportResult } from '@/src/models/import';
 import { ParsedPrompts } from '@/src/models/prompts';
@@ -53,7 +53,7 @@ interface Props<T> {
   context?: () => PromptFolderContextType | FileFolderContextType;
 }
 
-const EntityListHeaderButtons = <T extends DialBaseEntity | DialKey | DialApplicationScheme>({
+const EntityListHeaderButtons = <T extends BaseEntity | DialKey | DialApplicationScheme>({
   names,
   keys,
   versionsMap,
@@ -183,7 +183,7 @@ const EntityListHeaderButtons = <T extends DialBaseEntity | DialKey | DialApplic
         runners={runners}
         modalTitle={t(createModalTitleMap[route])}
         modalState={modalState}
-        createEntity={createEntity as (entity: DialBaseEntity) => Promise<ServerActionResponse>}
+        createEntity={createEntity as (entity: BaseEntity) => Promise<ServerActionResponse>}
         onClose={handleModalClose}
         names={names || []}
         versionsMap={versionsMap}
