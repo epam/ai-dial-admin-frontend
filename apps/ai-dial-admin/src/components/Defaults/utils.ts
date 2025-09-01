@@ -1,4 +1,4 @@
-import { DefaultsValue } from '@/src/models/dial/default';
+import { DefaultsValue } from '@/src/models/dial/defaults';
 import { BooleanType } from '@/src/types/boolean';
 import { DefaultItemType } from './types';
 
