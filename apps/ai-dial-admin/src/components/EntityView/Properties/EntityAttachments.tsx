@@ -6,14 +6,14 @@ import AttachmentInput from '@/src/components/Common/AttachmentInput/AttachmentI
 import { NumberInputField } from '@/src/components/Common/InputField/InputField';
 import { AttachmentsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { EntityAttachment } from '@/src/models/dial/base-entity';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getMaxAttachmentError } from '@/src/utils/validation/get-max-attachment-error';
 import { mimeMapping } from './constants';
 
 interface Props {
-  entity: DialBaseEntity;
-  onChangeEntity: (entity: DialBaseEntity) => void;
+  entity: EntityAttachment;
+  onChangeEntity: (entity: EntityAttachment) => void;
 }
 
 const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {

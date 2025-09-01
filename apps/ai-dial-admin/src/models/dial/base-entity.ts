@@ -1,4 +1,4 @@
-import { DefaultsValue, DefaultTemp } from '@/src/models/dial/default';
+import { DefaultsValue, DefaultTemp } from '@/src/models/dial/defaults';
 import { DialRoleLimits, DialRoleLimitsMap, DialRoleShare, DialRoleShareMap } from '@/src/models/dial/role-limits';
 import { DialFeatures } from '@/src/models/dial/features';
 
@@ -18,7 +18,7 @@ export interface DialBaseNamedEntity extends BaseEntity {
   endpoint?: string | null;
 }
 
-export interface DialBaseEntity extends DialBaseNamedEntity {
+export interface DialBaseEntity extends DialBaseNamedEntity, EntityAttachment {
   createdAt?: string;
   updatedAt?: string;
   adapter?: string;
@@ -32,13 +32,16 @@ export interface DialBaseEntity extends DialBaseNamedEntity {
   defaultRoleLimit?: DialRoleLimits;
   defaultRoleShareResourceLimit?: DialRoleShare;
   forwardAuthToken?: boolean;
-  inputAttachmentTypes?: string[];
   topics?: string[];
   fieldsHashingOrder?: string[];
-  maxInputAttachments?: number | string;
   interceptors?: string[];
   features?: DialFeatures;
   dependencies?: string[];
   defaults?: Record<string, DefaultsValue>;
   defaultsTemp?: DefaultTemp[];
+}
+
+export interface EntityAttachment {
+  maxInputAttachments?: number | string;
+  inputAttachmentTypes?: string[];
 }
