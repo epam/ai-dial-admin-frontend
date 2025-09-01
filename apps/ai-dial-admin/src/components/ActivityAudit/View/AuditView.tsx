@@ -82,16 +82,26 @@ const AuditView: FC<Props> = ({
   const resourceRollback = useCallback(() => {
     setIsLoading(true);
     rollbackEntityPerRevision(activity, activityRevision, previousRevision)
-      .then(() => {
+      .then((res) => {
         setIsLoading(false);
-        showNotification(
-          getSuccessNotification(
-            t(ActivityAuditI18nKey.ResourceRollback),
-            t(ActivityAuditI18nKey.ResourceRollbackDescription),
-          ),
-        );
+        if (res?.success) {
+          showNotification(
+            getSuccessNotification(
+              t(ActivityAuditI18nKey.ResourceRollback),
+              t(ActivityAuditI18nKey.ResourceRollbackDescription),
+            ),
+          );
+          router.push(ApplicationRoute.ActivityAudit);
+        } else {
+          showNotification(
+            getErrorNotification(
+              res?.errorHeader || t(ActivityAuditI18nKey.ResourceRollbackErrorTitle),
+              res?.errorMessage,
+            ),
+          );
+        }
+
         onCloseModal();
-        router.push(ApplicationRoute.ActivityAudit);
       })
       .catch(() => {
         setIsLoading(false);
