@@ -15,8 +15,8 @@ export interface DialApplicationResource {
   description: string;
   iconUrl: string;
   reference: string;
-  updateTime: number;
-  createdAt: number;
+  updateTime: string;
+  createdAt: string;
   maxRetryAttempts: number;
   forwardAuthToken: boolean;
   editorUrl: string;

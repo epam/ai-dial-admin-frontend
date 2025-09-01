@@ -16,7 +16,7 @@ export const getKeyStatus = (
   key: DialKey,
   t: (t: string, param?: Record<string, number>) => string,
 ): { status: string; title: string } => {
-  const expireTime = key.expiresAt as number;
+  const expireTime = new Date(key.expiresAt as string).getTime();
   const currentTime = new Date().getTime();
   if (!key.roles || key.roles?.length === 0) {
     return {
