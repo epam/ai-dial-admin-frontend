@@ -1,4 +1,4 @@
-import { DialFeatures } from '@/src/models/dial/base-entity';
+import { DialFeatures } from '@/src/models/dial/features';
 import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 
 export const modelsTextFeatures: (keyof DialFeatures)[] = [

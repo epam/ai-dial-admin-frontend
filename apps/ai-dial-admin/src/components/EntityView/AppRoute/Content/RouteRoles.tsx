@@ -19,7 +19,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
-import { DialRoleLimitsMap } from '@/src/models/dial/base-entity';
+import { DialRoleLimitsMap } from '@/src/models/dial/role-limits';
 
 interface Props {
   parentRoles?: string[];
