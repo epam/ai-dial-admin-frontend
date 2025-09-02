@@ -14,7 +14,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 interface Props {
   modalState: PopUpState;
   onClose: () => void;
-  adapter: DialAdapter;
+  adapter?: DialAdapter;
   onDuplicate: (entity: DialAdapter) => void;
 }
 
@@ -26,9 +26,9 @@ const DuplicateAdapter: FC<Props> = ({ onDuplicate, modalState, onClose, adapter
 
   // initial validation on creation adapter (disable save when no values entered yet)
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!entity.name });
-    dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!entity.displayName });
-    dispatch({ type: ValidationActionType.SetField, field: 'baseEndpoint', isValid: !!entity.baseEndpoint });
+    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!entity?.name });
+    dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!entity?.displayName });
+    dispatch({ type: ValidationActionType.SetField, field: 'baseEndpoint', isValid: !!entity?.baseEndpoint });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

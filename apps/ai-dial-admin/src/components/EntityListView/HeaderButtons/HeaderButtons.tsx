@@ -21,7 +21,6 @@ import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
-import { DialKey } from '@/src/models/dial/key';
 import { ImportResult } from '@/src/models/import';
 import { ParsedPrompts } from '@/src/models/prompts';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -53,7 +52,7 @@ interface Props<T> {
   context?: () => PromptFolderContextType | FileFolderContextType;
 }
 
-const EntityListHeaderButtons = <T extends DialBaseEntity | DialKey | DialApplicationScheme>({
+const EntityListHeaderButtons = <T extends object>({
   names,
   keys,
   versionsMap,

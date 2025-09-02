@@ -99,6 +99,7 @@ export enum EntitiesI18nKey {
   NoResource = 'Entities.NoResource',
   NoInterceptorTemplates = 'Entities.NoInterceptorTemplates',
   NoToolsets = 'Entities.NoToolsets',
+  NoTools = 'Entities.NoTools',
   NoDependencies = 'Entities.NoDependencies',
   AddModel = 'Entities.AddModel',
   AddApplication = 'Entities.AddApplication',
@@ -346,6 +347,7 @@ export enum TabsI18nKey {
   Traces = 'Tabs.Traces',
   Conversations = 'Tabs.Conversations',
   Attachments = 'Tabs.Attachments',
+  Tools = 'Tabs.Tools',
 }
 
 export enum InterceptorsI18nKey {
@@ -668,6 +670,7 @@ export enum EntityPlaceholdersI18nKey {
   Version = 'EntityPlaceholders.Version',
   KeyValue = 'EntityPlaceholders.KeyValue',
   Key = 'EntityPlaceholders.Key',
+  ToolName = 'EntityPlaceholders.ToolName',
 }
 
 export enum EntityFieldsI18nKey {
@@ -762,4 +765,9 @@ export enum EntityFieldsI18nKey {
   baseEndpoint = 'EntityFields.baseEndpoint',
   dependencies = 'EntityFields.dependencies',
   completionEndpoint = 'EntityFields.completionEndpoint',
+}
+
+export enum ToolsetI18nKey {
+  Tools = 'Toolset.Tools',
+  AddTools = 'Toolset.AddTools',
 }
