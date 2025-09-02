@@ -21,6 +21,7 @@ export enum EntityViewTab {
   Traces = 'Traces',
   Conversations = 'Conversations',
   Attachments = 'Attachments',
+  Tools = 'Tools',
 }
 
 export const propertiesTabs = (t: (stringToTranslate: string) => string) => ({
@@ -91,6 +92,11 @@ export const conversationsTabs = (t: (stringToTranslate: string) => string) => (
 export const attachmentsTabs = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Attachments,
   name: t(TabsI18nKey.Attachments),
+});
+
+export const toolsTabs = (t: (stringToTranslate: string) => string) => ({
+  id: EntityViewTab.Tools,
+  name: t(TabsI18nKey.Tools),
 });
 
 export const getViewTabs = (

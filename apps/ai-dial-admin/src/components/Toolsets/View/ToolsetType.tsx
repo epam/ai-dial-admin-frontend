@@ -47,15 +47,16 @@ const ToolsetType: FC<Props> = ({ selectedToolset, onChangeToolset }) => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-row gap-x-6">
-        <DropdownField
-          containerCssClass="w-[200px]"
-          selectedValue={selectedType}
-          elementId="type"
-          items={types}
-          fieldTitle={t(EntityFieldsI18nKey.type)}
-          onChange={onChangeType}
-        />
+      <div className="flex flex-row gap-x-3">
+        <div className="w-[150px]">
+          <DropdownField
+            selectedValue={selectedType}
+            elementId="type"
+            items={types}
+            fieldTitle={t(EntityFieldsI18nKey.type)}
+            onChange={onChangeType}
+          />
+        </div>
 
         <div className="flex-1 min-w-0">
           {selectedType === EntitiesI18nKey.ExternalEndpoint && (

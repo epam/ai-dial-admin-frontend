@@ -10,7 +10,7 @@ import { removeToolset, updateToolset } from '@/src/app/[lang]/toolsets/actions'
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
-import { EntityViewTab, propertiesTabs, rolesTabs } from '@/src/components/EntityView/View/utils';
+import { EntityViewTab, propertiesTabs, rolesTabs, toolsTabs } from '@/src/components/EntityView/View/utils';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -22,6 +22,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import ToolsetProperties from './Properties';
+import Tools from '../Tools/Tools';
 
 interface Props {
   names: string[];
@@ -34,7 +35,7 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
   const router = useRouter();
   const { showNotification } = useNotification();
 
-  const tabs: TabModel[] = [propertiesTabs(t), rolesTabs(t)];
+  const tabs: TabModel[] = [propertiesTabs(t), toolsTabs(t), rolesTabs(t)];
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedToolset, setSelectedToolset] = useState(cloneDeep(originalToolset));
@@ -130,6 +131,10 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
           <>
             {activeTab === EntityViewTab.Properties && (
               <ToolsetProperties names={names} selectedToolset={selectedToolset} onChangeToolset={onChangeToolset} />
+            )}
+
+            {activeTab === EntityViewTab.Tools && (
+              <Tools selectedToolset={selectedToolset} onChangeToolset={onChangeToolset} />
             )}
 
             {activeTab === EntityViewTab.Roles && (
