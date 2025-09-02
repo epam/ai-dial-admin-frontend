@@ -17,7 +17,6 @@ import { FileFolderContextType } from '@/src/context/FileFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
-import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
@@ -32,7 +31,6 @@ import { emptyDataTitleMap, listViewTitleMap } from './constants';
 import EntityListModals, { ModalType } from './EntityListModals';
 import EntityListHeaderButtons from './HeaderButtons/HeaderButtons';
 import DuplicateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Duplicate';
-import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { onOpenInNewTab, getEntityPath } from '@/src/utils/open-in-new-tab';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 
@@ -171,12 +169,14 @@ const BaseEntityList = <T extends BaseEntity>({
 
   const onMove = useCallback(
     (newPath: string) => {
+      if (!entityRef.current) return;
       const pathsToMove = getListOfPathsToMove(
         entityRef.current as DialFile,
         folderContext?.fetchedFoldersData as Record<string, DialFile[]>,
         null,
         route === ApplicationRoute.Files,
-      );
+      ) as string;
+
       moveFiles?.(pathsToMove, newPath).then((res) => {
         if (res.every((r) => r.success)) {
           folderContext?.fetchFiles?.(`${ROOT_FOLDER}/`, true);
@@ -214,11 +214,13 @@ const BaseEntityList = <T extends BaseEntity>({
   const toggleColumnsPanel = () => setShowColumnsPanel(!showColumnsPanel);
 
   const getDuplicateModal = () => {
+    if (!currentEntity) return null;
+
     if (route === ApplicationRoute.ApplicationRunners) {
       return (
         <DuplicateScheme
           entity={currentEntity}
-          onDuplicate={onDuplicate as (entity: DialApplicationScheme) => Promise<ServerActionResponse>}
+          onDuplicate={onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>}
           modalState={modalState}
           onClose={handleModalClose}
         />
@@ -229,7 +231,7 @@ const BaseEntityList = <T extends BaseEntity>({
       return (
         <DuplicateInterceptorTemplate
           template={currentEntity}
-          onDuplicate={onDuplicate as (template: InterceptorTemplate) => Promise<ServerActionResponse>}
+          onDuplicate={onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>}
           modalState={modalState}
           onClose={handleModalClose}
           names={names}
@@ -240,7 +242,7 @@ const BaseEntityList = <T extends BaseEntity>({
       return (
         <DuplicateAdapter
           adapter={currentEntity}
-          onDuplicate={onDuplicate as (entity: DialAdapter) => Promise<ServerActionResponse>}
+          onDuplicate={onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>}
           modalState={modalState}
           onClose={handleModalClose}
         />
@@ -251,7 +253,7 @@ const BaseEntityList = <T extends BaseEntity>({
       return (
         <DuplicateKey
           entity={currentEntity}
-          onDuplicate={onDuplicate}
+          onDuplicate={onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>}
           modalState={modalState}
           names={names || []}
           keys={keys || []}
@@ -265,7 +267,7 @@ const BaseEntityList = <T extends BaseEntity>({
         <DuplicatePrompt
           entity={currentEntity as DialPrompt}
           versionsMap={versionsMap as Record<string, string[]>}
-          onDuplicate={onDuplicate}
+          onDuplicate={onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>}
           modalState={modalState}
           onClose={handleModalClose}
         />
@@ -276,7 +278,7 @@ const BaseEntityList = <T extends BaseEntity>({
         view={route}
         names={names || []}
         entity={currentEntity}
-        onDuplicate={onDuplicate}
+        onDuplicate={onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>}
         modalState={modalState}
         onClose={handleModalClose}
       />
@@ -312,7 +314,7 @@ const BaseEntityList = <T extends BaseEntity>({
           gridApi={gridApi}
         />
       </ListView>
-      {modalType ? (
+      {modalType && currentEntity ? (
         <EntityListModals
           entity={currentEntity}
           route={route}
