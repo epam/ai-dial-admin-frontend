@@ -13,7 +13,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAttachmentData } from '@/src/models/attachment-data';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { BaseEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity, EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
@@ -173,7 +173,10 @@ const EntityView: FC<Props> = ({
   }, [selectedEntity, updateEntity, router, showNotification]);
 
   const onTryToSave = useCallback(() => {
-    if ((view === ApplicationRoute.Models || view === ApplicationRoute.Applications) && isDisableRole(selectedEntity)) {
+    if (
+      (view === ApplicationRoute.Models || view === ApplicationRoute.Applications) &&
+      isDisableRole(selectedEntity as EntityRoleLimits)
+    ) {
       handleModalOpen(ModalType.emptyRoles);
     } else {
       onSave();
