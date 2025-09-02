@@ -48,17 +48,11 @@ const Tools: FC<Props> = ({ selectedToolset, onChangeToolset }) => {
   return (
     <>
       <div className="pt-3 w-full flex flex-col h-full">
-        <div className="flex flex-row items-center mb-3">
+        <div className="flex flex-row items-center mb-3 justify-between">
           <h1>
             {t(ToolsetI18nKey.Tools)}
-            {selectedToolset.allowedTools?.length ? `${selectedToolset.allowedTools?.length}:` : ''}
+            {selectedToolset.allowedTools?.length ? `: ${selectedToolset.allowedTools?.length}` : ''}
           </h1>
-        </div>
-        <div className="flex flex-row items-center mb-3 justify-between">
-          <div className="w-[480px]">
-            <Search onChange={(search) => setPattern(search)} />
-          </div>
-
           <Button
             cssClass="primary"
             title={t(ButtonsI18nKey.Add)}
@@ -66,11 +60,20 @@ const Tools: FC<Props> = ({ selectedToolset, onChangeToolset }) => {
             onClick={onOpenModal}
           />
         </div>
+        <div className="flex flex-row items-center mb-3">
+          <div className="w-[480px]">
+            <Search onChange={(search) => setPattern(search)} />
+          </div>
+        </div>
         <div className="flex-1 min-h-0">
-          {!selectedToolset?.allowedTools || selectedToolset?.allowedTools.length === 0 ? (
+          {!filteredTools || filteredTools.length === 0 ? (
             <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoTools)} />
           ) : (
-            filteredTools?.map((tool) => <ToolItem key={tool} tool={tool} />)
+            <div className="h-full overflow-y-auto flex flex-col gap-y-3">
+              {filteredTools?.map((tool) => (
+                <ToolItem key={tool} tool={tool} />
+              ))}
+            </div>
           )}
         </div>
       </div>
