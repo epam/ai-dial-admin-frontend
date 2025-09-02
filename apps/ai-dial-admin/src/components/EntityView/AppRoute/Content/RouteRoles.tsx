@@ -36,7 +36,7 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
   const data = useMemo(() => {
     const userRoles = Object.keys(route.roleLimits || {});
     return roles.filter((role) =>
-      !route.isPublic ? parentRoles?.includes(role.name as string) : userRoles?.includes(role.name as string),
+      route.isPublic ? parentRoles?.includes(role.name as string) : userRoles?.includes(role.name as string),
     );
   }, [parentRoles, roles, route.isPublic, route.roleLimits]);
 
@@ -103,19 +103,19 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
           <Switch
             switchId="inheritedAppRoles"
             title={t(RoutesI18nKey.InheritApplicationRoles)}
-            isOn={!route.isPublic}
+            isOn={route.isPublic}
             onChange={() => {
               onChangeRoute({
                 ...route,
                 isPublic: !route.isPublic,
-                roleLimits: route.isPublic ? {} : route.roleLimits, // clear role limits if switching to public
+                roleLimits: !route.isPublic ? {} : route.roleLimits, // clear role limits if switching to public
               });
             }}
           />
         )}
         <div className="flex flex-row items-center w-full mt-4 mb-4 justify-between h-[38px]">
           <h1> {t(TabsI18nKey.Roles)}</h1>
-          {route.isPublic && !readonly && (
+          {!route.isPublic && !readonly && (
             <Button
               cssClass="secondary"
               iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
@@ -128,7 +128,7 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
           <div className="h-full">
             {data.length > 0 ? (
               <Grid columnDefs={columns} rowData={data} />
-            ) : iAppRunnerView ? (
+            ) : iAppRunnerView && route.isPublic ? (
               <NoDataContent
                 icon={<IconReplace width={60} height={60} />}
                 emptyDataTitle={t(RoutesI18nKey.InheritRolesWarning)}
