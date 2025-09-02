@@ -47,7 +47,7 @@ const EntityMainProperties: FC<Props> = ({
   const versionError = useMemo(() => {
     return entity.displayName
       ? void 0
-      : getVersionError(view, isVersionOptional, (entity as DialModel).version as string, t);
+      : getVersionError(view, isVersionOptional, (entity as DialModel).displayVersion as string, t);
   }, [entity, isVersionOptional, t, view]);
 
   const onChangeName = useCallback(
