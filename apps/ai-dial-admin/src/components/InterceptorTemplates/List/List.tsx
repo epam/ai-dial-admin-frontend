@@ -15,7 +15,7 @@ interface Props {
 }
 
 const List: FC<Props> = ({ route, data }) => {
-  const names = data.map((entity) => entity.name || '');
+  const names = (data?.filter((entity) => entity.name).map((entity) => entity.name) || []) as string[];
 
   return (
     <BaseEntityList

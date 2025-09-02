@@ -14,7 +14,8 @@ interface Props {
 }
 
 const ModelsList: FC<Props> = ({ data }) => {
-  const names = data.map((entity) => entity.displayName || '');
+  const names = (data?.filter((entity) => entity.displayName).map((entity) => entity.displayName) || []) as string[];
+
   const t = useI18n() as (str: string) => string;
 
   return (

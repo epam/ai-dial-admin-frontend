@@ -37,11 +37,13 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Routes);
   }
 
+  const names = (routes?.filter((entity) => entity.name).map((entity) => entity.name) || []) as string[];
+
   return (
     <SaveValidationContextProvider>
       <EntityView
         view={ApplicationRoute.Routes}
-        names={routes.map((model) => model.name || '')}
+        names={names}
         originalEntity={route}
         roles={roles}
         removeEntity={removeRoute}

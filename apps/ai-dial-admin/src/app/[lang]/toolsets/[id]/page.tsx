@@ -35,9 +35,11 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Toolsets);
   }
 
+  const names = (toolSets?.filter((entity) => entity.name).map((entity) => entity.name) || []) as string[];
+
   return (
     <SaveValidationContextProvider>
-      <ToolsetView names={toolSets?.map((t) => t.name || '') || []} originalToolset={toolSet} roles={roles} />
+      <ToolsetView names={names} originalToolset={toolSet} roles={roles} />
     </SaveValidationContextProvider>
   );
 }

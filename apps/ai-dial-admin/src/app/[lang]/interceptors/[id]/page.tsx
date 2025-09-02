@@ -42,10 +42,12 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Interceptors);
   }
 
+  const names = (interceptors?.filter((entity) => entity.name).map((entity) => entity.name) || []) as string[];
+
   return (
     <SaveValidationContextProvider>
       <InterceptorView
-        names={interceptors?.map((interceptor) => interceptor.name || '') || []}
+        names={names}
         originalInterceptor={interceptor}
         models={models || []}
         applications={applications || []}

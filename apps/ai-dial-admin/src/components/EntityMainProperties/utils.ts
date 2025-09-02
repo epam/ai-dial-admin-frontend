@@ -10,7 +10,7 @@ export const getDisplayNameError = (
   t: (str: string, param?: Record<string, number>) => string,
   version?: string,
 ) => {
-  const isWrongLength = isWrongLengthWithView(view, displayName);
+  const isWrongLength = !displayName ? false : isWrongLengthWithView(view, displayName);
   if (isWrongLength) {
     return t(ErrorI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS });
   }

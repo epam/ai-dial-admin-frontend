@@ -40,11 +40,13 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Models);
   }
 
+  const names = (models?.filter((entity) => entity.displayName).map((entity) => entity.displayName) || []) as string[];
+
   return (
     <SaveValidationContextProvider>
       <EntityView
         view={ApplicationRoute.Models}
-        names={models?.map((model) => model.displayName || '') || []}
+        names={names}
         roles={roles}
         interceptors={interceptors}
         originalEntity={model}

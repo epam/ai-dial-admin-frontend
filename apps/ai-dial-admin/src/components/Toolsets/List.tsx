@@ -13,7 +13,7 @@ interface Props {
 }
 
 const ToolsetsList: FC<Props> = ({ data }) => {
-  const names = data.map((entity) => entity.name || '');
+  const names = (data?.filter((entity) => entity.name).map((entity) => entity.name) || []) as string[];
 
   return (
     <BaseEntityList
