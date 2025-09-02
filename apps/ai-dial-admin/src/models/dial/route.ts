@@ -15,6 +15,7 @@ export interface DialRoute extends BaseEntity {
 
 // AppRoute - routes in the application or app runner
 export interface DialAppRoute extends DialRoute {
+  isPublic?: boolean;
   permissions?: RoutePermission[];
   attachmentPaths?: AttachmentPaths;
 }

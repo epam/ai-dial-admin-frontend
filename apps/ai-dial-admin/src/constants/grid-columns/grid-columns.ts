@@ -91,7 +91,7 @@ const DISPLAY_NAME_COLUMN_WITH_SORT: ColDef = { ...DISPLAY_NAME_COLUMN, sort: 'a
 export const NAME_COLUMN: ColDef = { field: 'name', colId: 'name', headerName: 'ID', hide: false };
 const NAME_COLUMN_WITH_SORT: ColDef = { ...NAME_COLUMN, sort: 'asc' };
 
-const TOPIC_COLUMN: ColDef = {
+export const TOPIC_COLUMN: ColDef = {
   field: 'topics',
   colId: 'topics',
   headerName: 'Topics',
@@ -120,10 +120,10 @@ export const TYPE_COLUMN = (t: (str: string) => string): ColDef => {
   };
 };
 
-export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN, NAME_COLUMN_WITH_SORT];
+export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [NAME_COLUMN_WITH_SORT, DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN];
 
-export const ENTITY_BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
-export const DEPENDENCIES_COLUMNS = [DISPLAY_NAME_COLUMN, VERSION_COLUMN, DESCRIPTION_COLUMN, NAME_COLUMN];
+export const ENTITY_BASE_COLUMNS: ColDef[] = [NAME_COLUMN, DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN];
+export const DEPENDENCIES_COLUMNS = [NAME_COLUMN, DISPLAY_NAME_COLUMN, VERSION_COLUMN, DESCRIPTION_COLUMN];
 
 export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   DISPLAY_NAME_COLUMN_WITH_SORT,
@@ -191,9 +191,9 @@ export const ACTIVITY_AUDIT_COLUMNS = (isSingleEntity?: boolean): ColDef[] => {
 };
 
 export const KEYS_COLUMNS: ColDef[] = [
+  NAME_COLUMN_WITH_SORT,
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
-  NAME_COLUMN_WITH_SORT,
   {
     ...CREATED_AT_COLUMN,
     hide: true,
