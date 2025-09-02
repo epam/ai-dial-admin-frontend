@@ -53,7 +53,7 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
           cssClass="secondary ml-2 h-[34px]"
           iconBefore={<IconCopy />}
           title={t(ButtonsI18nKey.Copy)}
-          onClick={() => navigator.clipboard.writeText(selectedKey.key)}
+          onClick={() => navigator.clipboard.writeText(selectedKey.key || '')}
         />
       ) : (
         <Button

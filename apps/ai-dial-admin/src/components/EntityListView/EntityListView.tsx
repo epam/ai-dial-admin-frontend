@@ -21,7 +21,6 @@ import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { DialFile } from '@/src/models/dial/file';
-import { DialKey } from '@/src/models/dial/key';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { PopUpState } from '@/src/types/pop-up';
@@ -54,7 +53,7 @@ interface Props<T> {
   context?: () => PromptFolderContextType | FileFolderContextType;
 }
 
-const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationScheme | InterceptorTemplate>({
+const BaseEntityList = <T extends object>({
   data,
   baseColumns,
   names,
@@ -218,7 +217,7 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
     if (route === ApplicationRoute.ApplicationRunners) {
       return (
         <DuplicateScheme
-          entity={currentEntity as DialApplicationScheme}
+          entity={currentEntity}
           onDuplicate={onDuplicate as (entity: DialApplicationScheme) => Promise<ServerActionResponse>}
           modalState={modalState}
           onClose={handleModalClose}
@@ -229,7 +228,7 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
     if (route === ApplicationRoute.InterceptorTemplates) {
       return (
         <DuplicateInterceptorTemplate
-          template={currentEntity as InterceptorTemplate}
+          template={currentEntity}
           onDuplicate={onDuplicate as (template: InterceptorTemplate) => Promise<ServerActionResponse>}
           modalState={modalState}
           onClose={handleModalClose}
@@ -240,7 +239,7 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
     if (route === ApplicationRoute.Adapters) {
       return (
         <DuplicateAdapter
-          adapter={currentEntity as DialAdapter}
+          adapter={currentEntity}
           onDuplicate={onDuplicate as (entity: DialAdapter) => Promise<ServerActionResponse>}
           modalState={modalState}
           onClose={handleModalClose}
@@ -251,8 +250,8 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
     if (route === ApplicationRoute.Keys) {
       return (
         <DuplicateKey
-          entity={currentEntity as DialKey}
-          onDuplicate={onDuplicate as (entity: DialKey) => Promise<ServerActionResponse>}
+          entity={currentEntity}
+          onDuplicate={onDuplicate as (entity: DialBaseEntity) => Promise<ServerActionResponse>}
           modalState={modalState}
           names={names || []}
           keys={keys || []}
