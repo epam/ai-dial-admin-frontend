@@ -13,9 +13,12 @@ interface Props {
 }
 
 const ApplicationRunnersList: FC<Props> = ({ data }) => {
-  const names = (data
-    ?.filter((entity) => entity['dial:applicationTypeDisplayName'])
-    .map((entity) => entity['dial:applicationTypeDisplayName']) || []) as string[];
+  const names = data?.reduce((acc, curr) => {
+    if (curr['dial:applicationTypeDisplayName'] != null) {
+      acc.push(curr['dial:applicationTypeDisplayName']);
+    }
+    return acc;
+  }, [] as string[]) as string[];
 
   return (
     <BaseEntityList

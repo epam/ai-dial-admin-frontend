@@ -12,7 +12,12 @@ interface Props {
 }
 
 const KeysList: FC<Props> = ({ data }) => {
-  const names = (data?.filter((entity) => entity.name).map((entity) => entity.name) || []) as string[];
+  const names = data?.reduce((acc, curr) => {
+    if (curr.name != null) {
+      acc.push(curr.name);
+    }
+    return acc;
+  }, [] as string[]) as string[];
 
   const keys = data.map((entity) => entity.key as string);
 

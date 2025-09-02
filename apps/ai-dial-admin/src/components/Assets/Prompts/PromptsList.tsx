@@ -15,7 +15,12 @@ const PromptsList: FC = () => {
   if (data == null) {
     return <Page403 />;
   }
-  const names = (data?.filter((entity) => entity.name).map((entity) => entity.name) || []) as string[];
+  const names = data?.reduce((acc, curr) => {
+    if (curr.name != null) {
+      acc.push(curr.name);
+    }
+    return acc;
+  }, [] as string[]) as string[];
 
   const versionsMap = getVersionsPerName(data || []);
   const filteredData = filterLatestVersions(data);

@@ -44,8 +44,13 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   if (role == null) {
     redirect(ApplicationRoute.Roles);
   }
-  const names = (roles?.filter((entity) => entity.name).map((entity) => entity.name) || []) as string[];
 
+  const names = roles?.reduce((acc, curr) => {
+    if (curr.name != null) {
+      acc.push(curr.name);
+    }
+    return acc;
+  }, [] as string[]) as string[];
   return (
     <SaveValidationContextProvider>
       <RolesView

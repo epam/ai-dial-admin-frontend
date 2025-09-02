@@ -35,8 +35,12 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Toolsets);
   }
 
-  const names = (toolSets?.filter((entity) => entity.name).map((entity) => entity.name) || []) as string[];
-
+  const names = toolSets?.reduce((acc, curr) => {
+    if (curr.name != null) {
+      acc.push(curr.name);
+    }
+    return acc;
+  }, [] as string[]) as string[];
   return (
     <SaveValidationContextProvider>
       <ToolsetView names={names} originalToolset={toolSet} roles={roles} />

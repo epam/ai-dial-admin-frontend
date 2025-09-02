@@ -52,8 +52,12 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Applications);
   }
 
-  const names = (applications?.filter((entity) => entity.displayName).map((entity) => entity.displayName) ||
-    []) as string[];
+  const names = applications?.reduce((acc, curr) => {
+    if (curr.displayName != null) {
+      acc.push(curr.displayName);
+    }
+    return acc;
+  }, [] as string[]) as string[];
 
   return (
     <SaveValidationContextProvider>
