@@ -38,7 +38,7 @@ const CreateKey: FC<Props> = ({ modalState, names, keys, onClose }) => {
   });
 
   const isValidKey = useMemo(() => {
-    return !keys.includes(currentKey.key);
+    return !keys.includes(currentKey.key || '');
   }, [currentKey.key, keys]);
 
   const onChangeKey = useCallback(

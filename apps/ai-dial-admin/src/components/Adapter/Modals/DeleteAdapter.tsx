@@ -10,7 +10,7 @@ import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialModel } from '@/src/models/dial/model';
 
 interface Props {
-  entity: DialAdapter;
+  entity?: DialAdapter;
   isEntityView?: boolean;
 }
 
@@ -24,7 +24,7 @@ const DeleteAdapter: FC<Props> = ({ entity, isEntityView }) => {
     setIsLoading(true);
     getModels().then((res) => {
       const models = res?.reduce((acc, curr) => {
-        if (entity.models?.includes(curr.name as string)) {
+        if (entity?.models?.includes(curr.name as string)) {
           acc.push(curr);
         }
         return acc;
@@ -39,7 +39,7 @@ const DeleteAdapter: FC<Props> = ({ entity, isEntityView }) => {
     <div className="flex flex-col text-secondary small-150 px-6 h-[300px]">
       <p>
         <span>{t(DeleteI18nKey.Confirming)}</span>
-        {isEntityView ? null : <span className="important-text-part mr-1">{entity.name}</span>}
+        {isEntityView ? null : <span className="important-text-part mr-1">{entity?.name}</span>}
         <span>{t(DeleteI18nKey.AdapterTitle)}?</span>
       </p>
       <p>{t(DeleteI18nKey.AdapterDescriptionWarning)}</p>

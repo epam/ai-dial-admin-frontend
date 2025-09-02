@@ -10,11 +10,4 @@ export interface DialToolset extends DialBaseNamedEntity {
   maxRetryAttempts?: number;
   allowedTools?: string[];
   descriptionKeywords?: string[];
-  // "roleLimits": {
-  //   "testRole1": {
-  //     "minute": "128000",
-  //     "day": "2000000"
-  //   }
-  // }
-  // + defaultRoleLimit, defaultRoleShareResourceLimit, roleShareResourceLimits
 }

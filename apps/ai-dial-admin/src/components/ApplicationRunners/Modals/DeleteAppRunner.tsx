@@ -9,7 +9,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 
 interface Props {
-  entity: DialApplicationScheme;
+  entity?: DialApplicationScheme;
   isEntityView?: boolean;
 }
 
@@ -23,7 +23,7 @@ const DeleteAppRunner: FC<Props> = ({ entity, isEntityView }) => {
     setIsLoading(true);
     getApplications().then((res) => {
       const apps = res?.reduce((acc, curr) => {
-        if (entity.applications?.includes(curr.name as string)) {
+        if (entity?.applications?.includes(curr.name as string)) {
           acc.push(curr);
         }
         return acc;
@@ -38,7 +38,7 @@ const DeleteAppRunner: FC<Props> = ({ entity, isEntityView }) => {
       <p>
         <span>{t(DeleteI18nKey.Confirming)}</span>
         {isEntityView ? null : (
-          <span className="important-text-part mr-1">{entity['dial:applicationTypeDisplayName']}</span>
+          <span className="important-text-part mr-1">{entity?.['dial:applicationTypeDisplayName']}</span>
         )}
         <span>{t(DeleteI18nKey.ApplicationRunnerTitle)}?</span>
       </p>
