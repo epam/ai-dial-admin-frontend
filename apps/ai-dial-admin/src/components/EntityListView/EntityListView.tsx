@@ -51,7 +51,7 @@ interface Props<T> {
   context?: () => PromptFolderContextType | FileFolderContextType;
 }
 
-const BaseEntityList = <T extends BaseEntity>({
+const BaseEntityList = <T extends object>({
   data,
   baseColumns,
   names,
@@ -175,7 +175,7 @@ const BaseEntityList = <T extends BaseEntity>({
         folderContext?.fetchedFoldersData as Record<string, DialFile[]>,
         null,
         route === ApplicationRoute.Files,
-      ) as string;
+      );
 
       moveFiles?.(pathsToMove, newPath).then((res) => {
         if (res.every((r) => r.success)) {
