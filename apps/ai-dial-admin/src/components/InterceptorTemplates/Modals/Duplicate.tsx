@@ -14,7 +14,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 interface Props {
   modalState: PopUpState;
   onClose: () => void;
-  template?: InterceptorTemplate;
+  template: InterceptorTemplate;
   onDuplicate: (template: InterceptorTemplate) => void;
   names?: string[];
 }
@@ -24,12 +24,12 @@ const DuplicateTemplate: FC<Props> = ({ onDuplicate, modalState, onClose, templa
 
   const [clonedTemplate, setTemplate] = useState<InterceptorTemplate>({
     ...template,
-    name: `${template?.name}_(copy)`,
+    name: `${template.name}_(copy)`,
   });
 
   // initial validation (disable save when no values entered yet)
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!template?.name });
+    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!template.name });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

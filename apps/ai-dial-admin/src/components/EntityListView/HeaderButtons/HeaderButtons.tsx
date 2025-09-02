@@ -36,6 +36,7 @@ import { getFormDataForImport } from './utils';
 import CreateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Create';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import ResetFiltersButton from './ResetFiltersButton';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 
 interface Props<T> {
   names?: string[];
@@ -51,7 +52,7 @@ interface Props<T> {
   context?: () => PromptFolderContextType | FileFolderContextType;
 }
 
-const EntityListHeaderButtons = <T extends object>({
+const EntityListHeaderButtons = <T extends BaseEntity>({
   names,
   keys,
   versionsMap,

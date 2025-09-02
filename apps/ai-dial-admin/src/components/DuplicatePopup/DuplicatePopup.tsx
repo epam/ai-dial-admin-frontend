@@ -20,7 +20,7 @@ interface Props {
   view: ApplicationRoute;
   modalState: PopUpState;
   names: string[];
-  entity?: ClonedEntity;
+  entity: ClonedEntity;
   onClose: () => void;
   onDuplicate: (entity: ClonedEntity) => void;
 }

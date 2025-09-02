@@ -34,7 +34,7 @@ interface Props<T> {
   modalTitle: string;
   runners?: DialApplicationScheme[];
   versionsMap?: Record<string, string[]>;
-  createEntity: (entity: T) => Promise<ServerActionResponse>;
+  createEntity?: (entity: T) => Promise<ServerActionResponse>;
   onClose: () => void;
 }
 
@@ -85,7 +85,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
     if (route === ApplicationRoute.Prompts) {
       entity.folderId = filePath;
     }
-    createEntity(entity).then((res) => {
+    createEntity?.(entity).then((res) => {
       if (res.success) {
         if (route === ApplicationRoute.Prompts) {
           fetchFiles(filePath);
@@ -100,7 +100,6 @@ const CreateEntity = <T extends CreatePromptEntity>({
   }, [currentEntity, showNotification, fetchFiles, filePath, onClose, route, router, createEntity]);
 
   useEffect(() => {
-    // setIsValidEntity(isValidFn(route, currentEntity, !!versionsMap, names));
     setIsUniqueNameError(void 0);
   }, [currentEntity, route, versionsMap, names]);
 

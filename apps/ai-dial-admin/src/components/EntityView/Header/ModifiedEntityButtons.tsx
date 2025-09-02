@@ -19,6 +19,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { generateNewInitialVersion } from '@/src/utils/prompts/versions';
 import { DialPrompt } from '@/src/models/dial/prompt';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 
 interface Props<T> {
   view: ApplicationRoute;
@@ -32,7 +33,7 @@ interface Props<T> {
   promptVersions?: string[];
 }
 
-const ModifiedEntityButtons = <T extends object>({
+const ModifiedEntityButtons = <T extends BaseEntity>({
   view,
   entity,
   onDiscard,

@@ -34,6 +34,7 @@ import EntityListHeaderButtons from './HeaderButtons/HeaderButtons';
 import DuplicateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Duplicate';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { onOpenInNewTab, getEntityPath } from '@/src/utils/open-in-new-tab';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 
 interface Props<T> {
   data: T[];
@@ -52,7 +53,7 @@ interface Props<T> {
   context?: () => PromptFolderContextType | FileFolderContextType;
 }
 
-const BaseEntityList = <T extends object>({
+const BaseEntityList = <T extends BaseEntity>({
   data,
   baseColumns,
   names,
