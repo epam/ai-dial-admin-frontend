@@ -172,24 +172,27 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
                 orientation={RadioFieldOrientation.Column}
                 onChange={onChangeExportFormat}
               />
-
-              <RadioField
-                radioButtons={exportTypes}
-                activeRadioButton={selectedExportType}
-                elementId="exportType"
-                fieldTitle={t(ExportI18nKey.ExportType)}
-                orientation={RadioFieldOrientation.Column}
-                onChange={onChangeExportType}
-              />
-
-              {selectedExportType === ExportType.Full && (
-                <div className="flex-1 min-h-0">
-                  <ExportDependencies
-                    selectedExportFormat={selectedExportFormat}
-                    dependencies={dependencies}
-                    onChangeConfig={(deps) => setDependencies(deps)}
+              {selectedExportFormat !== ExportFormat.ACTIVE_CONFIG && (
+                <>
+                  <RadioField
+                    radioButtons={exportTypes}
+                    activeRadioButton={selectedExportType}
+                    elementId="exportType"
+                    fieldTitle={t(ExportI18nKey.ExportType)}
+                    orientation={RadioFieldOrientation.Column}
+                    onChange={onChangeExportType}
                   />
-                </div>
+
+                  {selectedExportType === ExportType.Full && (
+                    <div className="flex-1 min-h-0">
+                      <ExportDependencies
+                        selectedExportFormat={selectedExportFormat}
+                        dependencies={dependencies}
+                        onChangeConfig={(deps) => setDependencies(deps)}
+                      />
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
