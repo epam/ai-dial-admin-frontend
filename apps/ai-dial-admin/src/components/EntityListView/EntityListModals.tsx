@@ -30,7 +30,7 @@ export enum ModalType {
 }
 
 interface Props {
-  entity: BaseEntity;
+  entity?: BaseEntity;
   route?: ApplicationRoute;
   initialPath?: string;
   modalState: PopUpState;
