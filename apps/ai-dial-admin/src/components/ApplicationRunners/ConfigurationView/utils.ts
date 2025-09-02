@@ -9,6 +9,8 @@ const fields: (keyof DialApplicationScheme)[] = [
   'topics',
   'updatedAt',
   'createdAt',
+  'title',
+  'type',
   'dial:applicationTypeRoutes',
   'dial:applicationTypeCompletionEndpoint',
   'dial:applicationTypeViewerUrl',
@@ -27,7 +29,7 @@ export const clearSchemeForEditor = (scheme: DialApplicationScheme) => {
   const clonedScheme = cloneDeep(scheme);
 
   fields.forEach((field) => {
-    if (clonedScheme[field]) {
+    if (clonedScheme[field] != null) {
       delete clonedScheme[field];
     }
   });
