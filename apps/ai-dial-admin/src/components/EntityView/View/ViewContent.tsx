@@ -13,7 +13,7 @@ import { EntityViewTab } from '@/src/components/EntityView/View/utils';
 import ModelProperties from '@/src/components/ModelView/ModelProperties/ModelProperties';
 import RouteProperties from '@/src/components/Routes/Properties/RouteProperties';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { BaseEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity, EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
@@ -79,7 +79,11 @@ const ViewContent: FC<Props> = ({
         </div>
       )}
       {activeTab === EntityViewTab.Features && (
-        <EntityFeatures entity={selectedEntity} onChangeEntity={onChangeEntity} view={view} />
+        <EntityFeatures
+          entity={selectedEntity as DialModel | DialApplication}
+          onChangeEntity={onChangeEntity}
+          view={view}
+        />
       )}
       {activeTab === EntityViewTab.Routes && (
         <ApplicationAppRoutes
@@ -98,15 +102,19 @@ const ViewContent: FC<Props> = ({
       )}
       {activeTab === EntityViewTab.Roles && (
         <EntityRoles
-          entity={selectedEntity}
+          entity={selectedEntity as EntityRoleLimits}
           view={view}
           roles={roles || []}
-          onChangeEntity={onChangeEntity}
+          onChangeEntity={onChangeEntity as (entity: EntityRoleLimits, withRefresh?: boolean) => void}
           isSkipRefresh={isSkipRefresh}
         />
       )}
       {activeTab === EntityViewTab.Interceptors && (
-        <EntityInterceptors entity={selectedEntity} interceptors={interceptors || []} onChangeEntity={onChangeEntity} />
+        <EntityInterceptors
+          entity={selectedEntity as DialModel | DialApplication}
+          interceptors={interceptors || []}
+          onChangeEntity={onChangeEntity}
+        />
       )}
       {activeTab === EntityViewTab.Dependencies && (
         <EntityDependencies
