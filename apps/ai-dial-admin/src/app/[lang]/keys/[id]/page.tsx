@@ -35,14 +35,15 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Keys);
   }
 
+  const names = keys?.reduce((acc, curr) => {
+    if (curr.name != null) {
+      acc.push(curr.name);
+    }
+    return acc;
+  }, [] as string[]) as string[];
   return (
     <SaveValidationContextProvider>
-      <KeyView
-        names={keys?.map((key) => key.name || '') || []}
-        keys={keys?.map((key) => key.key || '') || []}
-        originalKey={key}
-        roles={roles || []}
-      />
+      <KeyView names={names} keys={keys?.map((key) => key.key || '') || []} originalKey={key} roles={roles || []} />
     </SaveValidationContextProvider>
   );
 }

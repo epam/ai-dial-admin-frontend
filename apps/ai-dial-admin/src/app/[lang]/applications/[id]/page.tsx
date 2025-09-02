@@ -52,11 +52,18 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Applications);
   }
 
+  const names = applications?.reduce((acc, curr) => {
+    if (curr.displayName != null) {
+      acc.push(curr.displayName);
+    }
+    return acc;
+  }, [] as string[]) as string[];
+
   return (
     <SaveValidationContextProvider>
       <EntityView
         view={ApplicationRoute.Applications}
-        names={applications?.map((model) => model.displayName || '') || []}
+        names={names}
         roles={roles}
         interceptors={interceptors}
         applications={applications}

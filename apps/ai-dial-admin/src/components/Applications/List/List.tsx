@@ -14,7 +14,13 @@ interface Props {
 }
 
 const ApplicationsList: FC<Props> = ({ data, runners }) => {
-  const names = data.map((entity) => entity.displayName || '');
+  const names = data?.reduce((acc, curr) => {
+    if (curr.displayName != null) {
+      acc.push(curr.displayName);
+    }
+    return acc;
+  }, [] as string[]) as string[];
+
   const t = useI18n() as (stringToTranslate: string) => string;
 
   return (
