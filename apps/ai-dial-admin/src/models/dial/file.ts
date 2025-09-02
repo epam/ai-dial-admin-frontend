@@ -1,12 +1,12 @@
-export interface DialFile {
+import { ModifiedEntity } from '@/src/models/dial/base-entity';
+
+export interface DialFile extends ModifiedEntity {
   bucket?: string;
   contentLength?: number;
   contentType?: string;
   nodeType: DialFileNodeType;
   parentPath?: string | null;
   resourceType?: DialFileResourceType;
-  updatedAt?: string;
-  createdAt?: string;
   url?: string;
   children?: DialFile[];
   items?: DialFile[];

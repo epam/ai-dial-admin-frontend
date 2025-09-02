@@ -1,10 +1,7 @@
-export interface InterceptorTemplate {
-  name: string;
-  displayName?: string;
-  description?: string;
+import { BaseEntity, ModifiedEntity } from '@/src/models/dial/base-entity';
+
+export interface InterceptorTemplate extends BaseEntity, ModifiedEntity {
   completionEndpoint?: string;
   configurationEndpoint?: string;
   interceptors?: string[];
-  updatedAt?: string;
-  createdAt?: string;
 }

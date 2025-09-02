@@ -1,13 +1,12 @@
 import { ApplicationRoute } from '@/src/types/routes';
-import { DialRole } from '@/src/models/dial/role';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { DialKey } from '@/src/models/dial/key';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 
-export const prepareEntityForDuplicate = (route: ApplicationRoute, entity: unknown) => {
+export const prepareEntityForDuplicate = (route: ApplicationRoute, entity: BaseEntity) => {
   if (route === ApplicationRoute.Roles) {
     return {
-      name: (entity as DialRole).name,
-      description: (entity as DialRole).description,
+      name: entity.name,
+      description: entity.description,
     };
   }
 
@@ -20,7 +19,7 @@ export const prepareEntityForDuplicate = (route: ApplicationRoute, entity: unkno
 
   if (route === ApplicationRoute.Keys) {
     return {
-      ...(entity as DialKey),
+      ...entity,
       roles: [],
     };
   }
