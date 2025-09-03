@@ -35,14 +35,14 @@ const ApplicationParametersTab: FC<Props> = ({ entity, applicationSchemes, jsonE
 
   const generateTargetUrl = useCallback(() => {
     try {
-      const iframeUrl = `${frameConfig?.host}?authProvider=${frameConfig?.providerId}&theme=${frameConfig?.theme}`;
+      const iframeUrl = `${frameConfig?.host}?authProvider=${frameConfig?.providerId}&theme=${frameConfig?.theme}&appId=${entity?.name}`;
       return new URL(iframeUrl);
     } catch (error) {
       if (error) {
         setError(true);
       }
     }
-  }, [frameConfig]);
+  }, [frameConfig, entity]);
 
   return (
     <div className="flex w-full h-full">
