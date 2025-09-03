@@ -11,7 +11,7 @@ import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/gr
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, RoutesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { useI18n } from '@/src/locales/client';
+import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
 import { DialAppRoute } from '@/src/models/dial/route';
 import { PopUpState } from '@/src/types/pop-up';
@@ -32,7 +32,7 @@ interface Props {
 
 const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, onChangeRoute, roles }) => {
   const t = useI18n() as (str: string) => string;
-
+  const locale = useCurrentLocale();
   const data = useMemo(() => {
     const userRoles = Object.keys(route.roleLimits || {});
     return roles.filter((role) =>
@@ -83,9 +83,12 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
     [onCloseAddModal, onChangeRoute, route],
   );
 
-  const onOpen = (role: DialRole) => {
-    onOpenInNewTab(ApplicationRoute.Roles, role);
-  };
+  const onOpen = useCallback(
+    (role: DialRole) => {
+      onOpenInNewTab(locale, ApplicationRoute.Roles, role);
+    },
+    [locale],
+  );
 
   const columns = useMemo(() => {
     const actions = [getOpenInNewTabOperation(onOpen)];
@@ -94,7 +97,7 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
     }
 
     return [...SIMPLE_ENTITY_COLUMNS, ACTION_COLUMN(actions)];
-  }, [route, onRemoveRole]);
+  }, [onOpen, route.isPublic, onRemoveRole]);
 
   return (
     <>

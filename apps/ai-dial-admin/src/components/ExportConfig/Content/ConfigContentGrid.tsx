@@ -7,7 +7,7 @@ import NoDataContent from '@/src/components/Common/NoData/NoData';
 import { getDataWithoutItem } from '@/src/components/ExportConfig/Content/ConfigContent.utils';
 import { getActualColDefs } from '@/src/components/ExportConfig/ExportConfig.utils';
 import Grid from '@/src/components/Grid/Grid';
-import { useI18n } from '@/src/locales/client';
+import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { EntityType } from '@/src/types/entity-type';
 import { getEmptyDataTitleI18nKey } from '@/src/utils/entities/get-empty-data-title';
@@ -22,6 +22,7 @@ interface Props {
 
 const ConfigContentGrid: FC<Props> = ({ selectedTab, tabData, isFull, customExportData, setCustomExportData }) => {
   const t = useI18n() as (v: string) => string;
+  const locale = useCurrentLocale();
 
   const [gridApi, setGridApi] = useState<GridApi>();
 
@@ -57,7 +58,9 @@ const ConfigContentGrid: FC<Props> = ({ selectedTab, tabData, isFull, customExpo
 
   useEffect(() => {
     if (selectedTab) {
-      const columnDefs = isFull ? getActualColDefs(selectedTab, t) : getActualColDefs(selectedTab, t, onRemove);
+      const columnDefs = isFull
+        ? getActualColDefs(locale, selectedTab, t)
+        : getActualColDefs(locale, selectedTab, t, onRemove);
       const rowData = isFull ? tabData[selectedTab] || [] : customExportData?.[selectedTab] || [];
 
       if (isFull) {
@@ -81,7 +84,7 @@ const ConfigContentGrid: FC<Props> = ({ selectedTab, tabData, isFull, customExpo
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTab, isFull, customExportData]);
+  }, [locale, selectedTab, isFull, customExportData]);
 
   const onGridReady = (event: GridReadyEvent) => {
     setGridApi(event.api);

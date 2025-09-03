@@ -6,15 +6,25 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
 import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 
-export const onOpenInNewTab = (route?: ApplicationRoute, entity?: unknown, entityType?: DEPLOYMENT_ENTITY) => {
-  const url = getUrnForEntity(route, entity, entityType);
+export const onOpenInNewTab = (
+  locale: string,
+  route?: ApplicationRoute,
+  entity?: unknown,
+  entityType?: DEPLOYMENT_ENTITY,
+) => {
+  const url = getUrnForEntity(locale, route, entity, entityType);
   window.open(url, '_blank');
 };
 
-export const getUrnForEntity = (route?: ApplicationRoute, entity?: unknown, entityType?: DEPLOYMENT_ENTITY) => {
+export const getUrnForEntity = (
+  locale: string,
+  route?: ApplicationRoute,
+  entity?: unknown,
+  entityType?: DEPLOYMENT_ENTITY,
+) => {
   const path = getEntityPath(route, entity, false, entityType);
   const originalRoute = route?.split('/')?.[1];
-  return `/${originalRoute}/${path}`;
+  return `/en/${originalRoute}/${path}`;
 };
 
 export const getEntityPath = (

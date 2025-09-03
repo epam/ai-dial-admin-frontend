@@ -37,6 +37,7 @@ export const fulDependenciesConfig = {
  */
 export const getActualColDefs = (
   type: string,
+  locale: string,
   t: (v: string) => string,
   remove?: (entity: EntitiesGridData) => void,
 ): ColDef[] => {
@@ -75,7 +76,7 @@ export const getActualColDefs = (
     });
   }
 
-  const actions = [getOpenInNewTabOperation(openInNewTab)];
+  const actions = [getOpenInNewTabOperation((row: EntitiesGridData) => openInNewTab(locale, row))];
   if (remove) {
     actions.push(getRemoveOperation(remove));
   }
@@ -86,10 +87,11 @@ export const getActualColDefs = (
 /**
  * Open in new tab action for grid
  *
+ * @param {string} locale - current locale
  * @param {EntitiesGridData} row - row related to selected entity
  */
-const openInNewTab = (row: EntitiesGridData) => {
-  onOpenInNewTab(row.route, row);
+const openInNewTab = (locale: string, row: EntitiesGridData) => {
+  onOpenInNewTab(locale, row.route, row);
 };
 
 /**

@@ -4,7 +4,7 @@ import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { SourceI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
-import { useI18n } from '@/src/locales/client';
+import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { PopUpState } from '@/src/types/pop-up';
@@ -31,6 +31,7 @@ const Containers: FC<Props> = ({ entity, onChange, getContainers, fieldId }) => 
   const t = useI18n() as (key: string) => string;
   const { showNotification } = useNotification();
   const showNotificationRef = useRef(showNotification);
+  const locale = useCurrentLocale();
 
   const [modalState, setModalState] = useState(PopUpState.Closed);
   const [interceptorContainers, setInterceptorContainers] = useState<Container[]>([]);
@@ -62,8 +63,8 @@ const Containers: FC<Props> = ({ entity, onChange, getContainers, fieldId }) => 
   );
 
   const openContainer = useCallback(() => {
-    onOpenInNewTab(ApplicationRoute.InterceptorDeployments, selectedContainer, DEPLOYMENT_ENTITY.containers);
-  }, [selectedContainer]);
+    onOpenInNewTab(locale, ApplicationRoute.InterceptorDeployments, selectedContainer, DEPLOYMENT_ENTITY.containers);
+  }, [locale, selectedContainer]);
 
   useEffect(() => {
     const fetchContainers = async () => {

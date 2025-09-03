@@ -5,7 +5,7 @@ import { ENTITY_BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import Grid from '@/src/components/Grid/Grid';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
+import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
@@ -17,9 +17,10 @@ interface Props {
 
 const AdapterModelsGrid: FC<Props> = ({ models }) => {
   const t = useI18n() as (t: string) => string;
+  const locale = useCurrentLocale();
 
   const open = (model: DialModel) => {
-    onOpenInNewTab(ApplicationRoute.Models, model.name);
+    onOpenInNewTab(locale, ApplicationRoute.Models, model.name);
   };
 
   const rowData = models || [];

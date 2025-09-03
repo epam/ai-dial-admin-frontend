@@ -16,7 +16,7 @@ import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { FileFolderContextType } from '@/src/context/FileFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
-import { useI18n } from '@/src/locales/client';
+import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
@@ -69,6 +69,8 @@ const BaseEntityList = <T extends object>({
 }: Props<T>) => {
   const t = useI18n();
   const router = useRouter();
+  const locale = useCurrentLocale();
+
   const { showNotification } = useNotification();
   const folderContext = context?.();
   const gridOptions: GridOptions = {
@@ -188,9 +190,9 @@ const BaseEntityList = <T extends object>({
 
   const openInNewTab = useCallback(
     (entity: T) => {
-      onOpenInNewTab(route, entity);
+      onOpenInNewTab(locale, route, entity);
     },
-    [route],
+    [locale, route],
   );
 
   const closeColumnsPanel = useCallback(() => setShowColumnsPanel(false), [setShowColumnsPanel]);

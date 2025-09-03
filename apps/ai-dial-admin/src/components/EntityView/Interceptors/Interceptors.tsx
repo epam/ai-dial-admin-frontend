@@ -9,7 +9,7 @@ import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import Grid from '@/src/components/Grid/Grid';
 import { ButtonsI18nKey, EntitiesI18nKey, InterceptorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { useI18n } from '@/src/locales/client';
+import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -28,6 +28,7 @@ const EntityInterceptors = <T extends { interceptors?: string[] }>({
   onChangeEntity,
 }: Props<T>) => {
   const t = useI18n();
+  const locale = useCurrentLocale();
   const rowData = getInterceptorsGridData(interceptors, entity.interceptors);
   const [availableInterceptors, setAvailableInterceptors] = useState<DialInterceptor[]>([]);
   const [addModalState, setAddModalState] = useState(PopUpState.Closed);
@@ -79,7 +80,7 @@ const EntityInterceptors = <T extends { interceptors?: string[] }>({
   }, [setAddModalState]);
 
   const onOpen = (interceptor: DialInterceptor) => {
-    onOpenInNewTab(ApplicationRoute.Interceptors, interceptor);
+    onOpenInNewTab(locale, ApplicationRoute.Interceptors, interceptor);
   };
 
   const columns = getInterceptorsColumnDefs(onRemoveInterceptor, onOpen);

@@ -9,7 +9,7 @@ import { SourceI18nKey } from '@/src/constants/i18n';
 import { getErrorNotification } from '@/src/utils/notification';
 import { useNotification } from '@/src/context/NotificationContext';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { useI18n } from '@/src/locales/client';
+import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { IconExternalLink } from '@tabler/icons-react';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
@@ -28,7 +28,7 @@ interface Props {
 const Templates: FC<Props> = ({ entity, onChange, getRunners, fieldId }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
-
+  const locale = useCurrentLocale();
   const [modalState, setModalState] = useState(PopUpState.Closed);
   const [runners, setRunners] = useState<InterceptorTemplate[]>([]);
   const [selectedRunner, setSelectedRunner] = useState<InterceptorTemplate | null>(null);
@@ -59,8 +59,8 @@ const Templates: FC<Props> = ({ entity, onChange, getRunners, fieldId }) => {
   );
 
   const openTemplate = useCallback(() => {
-    onOpenInNewTab(ApplicationRoute.InterceptorTemplates, selectedRunner);
-  }, [selectedRunner]);
+    onOpenInNewTab(locale, ApplicationRoute.InterceptorTemplates, selectedRunner);
+  }, [selectedRunner, locale]);
 
   useEffect(() => {
     const fetchRunners = async () => {

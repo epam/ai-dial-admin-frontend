@@ -13,6 +13,7 @@ import {
   getPreviewOperation,
 } from '@/src/constants/grid-columns/actions';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { useCurrentLocale } from '@/src/locales/client';
 
 interface Props {
   files: Partial<DialFile | string>[];
@@ -20,13 +21,18 @@ interface Props {
 }
 
 const FilesList: FC<Props> = ({ files, action }) => {
+  const locale = useCurrentLocale();
+
   const download = useCallback((file: DialFile) => {
     window.open(`/${FILE_DOWNLOAD}/?path=${encodeURIComponent(file.path)}`, '_blank');
   }, []);
 
-  const openInNewTab = useCallback((file: DialFile) => {
-    onOpenInNewTab(ApplicationRoute.Files, file);
-  }, []);
+  const openInNewTab = useCallback(
+    (file: DialFile) => {
+      onOpenInNewTab(locale, ApplicationRoute.Files, file);
+    },
+    [locale],
+  );
 
   const preview = useCallback(async (file: DialFile) => {
     window.open(`/${FILE_PREVIEW}?path=${encodeURIComponent(file.path)}`, '_blank');

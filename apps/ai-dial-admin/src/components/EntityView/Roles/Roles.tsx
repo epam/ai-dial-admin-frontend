@@ -7,7 +7,7 @@ import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import RolesGrid from '@/src/components/EntityView/Roles/RolesGrid';
 import { isDisableRole, isResetToDefaultHidden, isSetNoLimitsHidden } from '@/src/components/EntityView/Roles/utils';
 import { EntitiesI18nKey, RolesI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
+import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRoleLimits, DialRoleLimitsMap } from '@/src/models/dial/role-limits';
 import { DialRole } from '@/src/models/dial/role';
@@ -26,6 +26,7 @@ interface Props {
 
 const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRefresh }) => {
   const t = useI18n();
+  const locale = useCurrentLocale();
 
   const [addModalState, setAddModalState] = useState(PopUpState.Closed);
   const [availableRoles, setAvailableRoles] = useState<DialRole[]>([]);
@@ -168,7 +169,7 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
   }, [setAddModalState]);
 
   const onOpen = (role: DialRole) => {
-    onOpenInNewTab(ApplicationRoute.Roles, role);
+    onOpenInNewTab(locale, ApplicationRoute.Roles, role);
   };
 
   return (

@@ -4,7 +4,7 @@ import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { useI18n } from '@/src/locales/client';
+import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { getInterceptorsList } from '@/src/app/[lang]/interceptors/actions';
@@ -21,13 +21,17 @@ interface Props {
 
 const Interceptors: FC<Props> = ({ interceptorList }) => {
   const t = useI18n() as (key: string) => string;
+  const locale = useCurrentLocale();
   const { showNotification } = useNotification();
 
   const [interceptors, setInterceptors] = useState<DialInterceptor[]>([]);
 
-  const onOpen = useCallback((interceptor: DialInterceptor) => {
-    onOpenInNewTab(ApplicationRoute.Interceptors, interceptor);
-  }, []);
+  const onOpen = useCallback(
+    (interceptor: DialInterceptor) => {
+      onOpenInNewTab(locale, ApplicationRoute.Interceptors, interceptor);
+    },
+    [locale],
+  );
 
   const colDefs = [...SIMPLE_ENTITY_COLUMNS, ACTION_COLUMN([getOpenInNewTabOperation(onOpen)])];
 

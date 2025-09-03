@@ -8,7 +8,7 @@ import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import { EntityFieldsI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { useI18n } from '@/src/locales/client';
+import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ActionType } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -36,6 +36,7 @@ interface Props {
 
 const PromptsProperties: FC<Props> = ({ prompt, action, collapsed }) => {
   const t = useI18n();
+  const locale = useCurrentLocale();
   const [isCollapsed, setIsCollapsed] = useState(collapsed);
 
   const toggleCollapse = useCallback(() => {
@@ -43,8 +44,8 @@ const PromptsProperties: FC<Props> = ({ prompt, action, collapsed }) => {
   }, []);
 
   const openPrompt = useCallback(() => {
-    onOpenInNewTab(ApplicationRoute.Prompts, prompt);
-  }, [prompt]);
+    onOpenInNewTab(locale, ApplicationRoute.Prompts, prompt);
+  }, [prompt, locale]);
 
   return (
     <div data-testid={'publication-prompt-view'} className="flex flex-col bg-layer-3 p-4">

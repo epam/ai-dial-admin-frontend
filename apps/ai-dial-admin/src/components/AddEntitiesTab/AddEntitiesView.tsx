@@ -10,7 +10,7 @@ import Grid from '@/src/components/Grid/Grid';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { useI18n } from '@/src/locales/client';
+import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialKey } from '@/src/models/dial/key';
 import { DialModel } from '@/src/models/dial/model';
@@ -51,6 +51,7 @@ const AddEntitiesView: FC<Props> = ({
   isSkipRefresh,
 }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
+  const locale = useCurrentLocale();
 
   const [gridApi, setGridApi] = useState<GridApi>();
   const allEntities = getEntitiesGridData(models, applications, roles, keys);
@@ -75,9 +76,12 @@ const AddEntitiesView: FC<Props> = ({
     [onAdd, onCloseModal],
   );
 
-  const onOpen = useCallback((row: EntitiesGridData) => {
-    onOpenInNewTab(row.route, row);
-  }, []);
+  const onOpen = useCallback(
+    (row: EntitiesGridData) => {
+      onOpenInNewTab(locale, row.route, row);
+    },
+    [locale],
+  );
 
   const onRemoveEntity = useCallback(
     (row: EntitiesGridData) => {

@@ -12,7 +12,7 @@ import AddEntitiesModal from '@/src/components/ExportConfig/AddEntities/AddEntit
 import { getActualColDefs, isEntityWithDependency } from '@/src/components/ExportConfig/ExportConfig.utils';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { useI18n } from '@/src/locales/client';
+import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { PopUpState } from '@/src/types/pop-up';
 import { getAvailableData, getButtonTitle } from './AddEntities.utils';
@@ -27,6 +27,7 @@ interface Props {
 
 const AddEntitiesButton: FC<Props> = ({ selectedTab, tabData, customExportData, setCustomExportData }) => {
   const t = useI18n() as (v: string) => string;
+  const locale = useCurrentLocale();
   const dropdownItems = [
     { id: EntityType.MODEL, name: t(MenuI18nKey.Models) },
     { id: EntityType.APPLICATION, name: t(MenuI18nKey.Applications) },
@@ -62,9 +63,9 @@ const AddEntitiesButton: FC<Props> = ({ selectedTab, tabData, customExportData, 
   useEffect(() => {
     if (selectedTab) {
       setButtonTitle(getButtonTitle(t, selectedTab, true));
-      setColumnDefs(getActualColDefs(selectedTab, t).slice(0, -1));
+      setColumnDefs(getActualColDefs(locale, selectedTab, t).slice(0, -1));
     }
-  }, [selectedTab, t]);
+  }, [locale, selectedTab, t]);
 
   return (
     <>

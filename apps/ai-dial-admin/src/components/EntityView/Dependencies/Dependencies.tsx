@@ -6,7 +6,7 @@ import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { DEPENDENCIES_COLUMNS, TYPE_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, MenuI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
+import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialModel } from '@/src/models/dial/model';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
@@ -24,6 +24,7 @@ interface Props {
 
 const EntityDependencies: FC<Props> = ({ entity, applications, models, onChangeEntity }) => {
   const t = useI18n() as (str: string) => string;
+  const locale = useCurrentLocale();
   const [rowData, setRowData] = useState<EntitiesGridData[]>([]);
   const [availableModels, setAvailableModels] = useState<DialModel[]>([]);
   const [availableApplications, setAvailableApplications] = useState<DialApplication[]>([]);
@@ -53,7 +54,7 @@ const EntityDependencies: FC<Props> = ({ entity, applications, models, onChangeE
 
   const onOpen = (entity: EntitiesGridData) => {
     const route = entity.type === MenuI18nKey.Models ? ApplicationRoute.Models : ApplicationRoute.Applications;
-    onOpenInNewTab(route, entity);
+    onOpenInNewTab(locale, route, entity);
   };
 
   const columns = [

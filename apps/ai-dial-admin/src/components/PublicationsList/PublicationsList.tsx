@@ -7,7 +7,7 @@ import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/EntityList
 import ListView from '@/src/components/ListView/ListView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { getPublicationColumns } from '@/src/constants/grid-columns/grid-columns';
-import { useI18n } from '@/src/locales/client';
+import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { Publication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab, getEntityPath } from '@/src/utils/open-in-new-tab';
@@ -20,12 +20,13 @@ interface BasePublicationsListProps<T> {
 const BasePublicationsList = <T extends Publication>({ data, route }: BasePublicationsListProps<T>) => {
   const t = useI18n();
   const router = useRouter();
+  const locale = useCurrentLocale();
 
   const openInNewTab = useCallback(
     (publication: Publication) => {
-      onOpenInNewTab(route, publication);
+      onOpenInNewTab(locale, route, publication);
     },
-    [route],
+    [locale, route],
   );
 
   const gridColumns = getPublicationColumns(openInNewTab);

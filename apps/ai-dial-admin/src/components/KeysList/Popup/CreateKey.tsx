@@ -7,7 +7,7 @@ import Popup from '@/src/components/Common/Popup/Popup';
 import KeyProperties from '@/src/components/KeysList/KeyProperties';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
-import { useI18n } from '@/src/locales/client';
+import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -25,6 +25,7 @@ interface Props {
 const CreateKey: FC<Props> = ({ modalState, names, keys, onClose }) => {
   const t = useI18n();
   const router = useRouter();
+  const locale = useCurrentLocale();
 
   const { showNotification } = useNotification();
   const { isValid, dispatch } = useSaveValidationContext();
@@ -51,13 +52,13 @@ const CreateKey: FC<Props> = ({ modalState, names, keys, onClose }) => {
   const onCreate = useCallback(() => {
     createKey(currentKey).then((res) => {
       if (res.success) {
-        router.push(getUrnForEntity(ApplicationRoute.Keys, currentKey));
+        router.push(getUrnForEntity(locale, ApplicationRoute.Keys, currentKey));
         onClose();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [currentKey, showNotification, onClose, router]);
+  }, [currentKey, locale, showNotification, onClose, router]);
 
   // initial validation (disable save when no values entered yet)
   useEffect(() => {
