@@ -35,7 +35,7 @@ const ApplicationParametersTab: FC<Props> = ({ entity, applicationSchemes, jsonE
 
   const generateTargetUrl = useCallback(() => {
     try {
-      const iframeUrl = `${frameConfig?.host}?authProvider=${frameConfig?.providerId}&theme=${frameConfig?.theme}&appId=${entity?.name}`;
+      const iframeUrl = `${frameConfig?.host}?authProvider=${frameConfig?.providerId}&theme=${frameConfig?.theme}&id=${entity?.name}`;
       return new URL(iframeUrl);
     } catch (error) {
       if (error) {
