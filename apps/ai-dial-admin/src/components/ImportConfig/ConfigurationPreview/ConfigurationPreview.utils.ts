@@ -3,7 +3,7 @@ import { isNull, startCase } from 'lodash';
 import { TabModel } from '@/src/models/tab';
 import { FileComponentItem, FileConfiguration } from '@/src/models/import';
 import { ImportConfigurationAction } from '@/src/types/import';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import {
   KEYS_COLUMNS,
   RUNNERS_COLUMNS,
@@ -36,7 +36,7 @@ const setFileConfiguration = (fileConfiguration: FileConfiguration): FileConfigu
   };
 };
 
-const getConfigurationTabs = (preview: Record<string, DialBaseEntity[]>, t: (v: string) => string): TabModel[] => {
+const getConfigurationTabs = (preview: Record<string, BaseEntity[]>, t: (v: string) => string): TabModel[] => {
   return getEntitiesList(t)
     ?.map((entityTab) => {
       const previewItem = preview[entityTab.id];
@@ -54,7 +54,7 @@ const getConfigurationTabs = (preview: Record<string, DialBaseEntity[]>, t: (v: 
 
 export const getConfigurationPreview = (configuration: FileConfiguration, t: (v: string) => string) => {
   const fileConfiguration = setFileConfiguration(configuration);
-  const previewData: Record<string, DialBaseEntity[]> = {};
+  const previewData: Record<string, BaseEntity[]> = {};
 
   Object.keys(fileConfiguration).forEach((configurationKey) => {
     if (fileConfiguration[configurationKey].length) {

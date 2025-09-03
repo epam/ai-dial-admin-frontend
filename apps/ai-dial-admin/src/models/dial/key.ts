@@ -1,6 +1,6 @@
-import { BaseEntity, ModifiedEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 
-export interface DialKey extends BaseEntity, ModifiedEntity {
+export interface DialKey extends BaseEntity {
   key?: string;
   project?: string;
   projectContactPoint?: string;

@@ -13,7 +13,7 @@ import { PopUpState } from '@/src/types/pop-up';
 interface Props {
   modalState: PopUpState;
   onClose: () => void;
-  entity?: DialApplicationScheme;
+  entity: DialApplicationScheme;
   onDuplicate: (entity: DialApplicationScheme) => void;
 }
 

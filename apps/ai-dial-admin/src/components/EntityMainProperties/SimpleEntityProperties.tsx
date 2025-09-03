@@ -3,7 +3,7 @@ import { FC, useCallback, useState } from 'react';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorForPath } from '@/src/utils/validation/path-error';
@@ -13,14 +13,15 @@ import VersionControl from '@/src/components/EntityMainProperties/BaseProperties
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getPromptVersionError } from '@/src/utils/validation/version-error';
+import { DialPrompt } from '@/src/models/dial/prompt';
 
 interface Props {
   view?: ApplicationRoute;
-  entity: DialBaseNamedEntity;
+  entity: BaseEntity;
   names: string[];
   versionsMap?: Record<string, string[]>;
   isEntityImmutable?: boolean;
-  onChangeEntity: (entity: DialBaseNamedEntity) => void;
+  onChangeEntity: (entity: BaseEntity) => void;
 }
 
 const SimpleEntityProperties: FC<Props> = ({
@@ -58,7 +59,7 @@ const SimpleEntityProperties: FC<Props> = ({
 
   const onChangeVersion = useCallback(
     (version?: string) => {
-      onChangeEntity({ ...entity, version });
+      onChangeEntity({ ...entity, version } as DialPrompt);
       validateVersion(version);
     },
     [entity, onChangeEntity, validateVersion],
@@ -93,7 +94,9 @@ const SimpleEntityProperties: FC<Props> = ({
         />
       )}
 
-      {versionsMap && <VersionControl version={entity.version} onChange={onChangeVersion} error={versionError} />}
+      {versionsMap && (
+        <VersionControl version={(entity as DialPrompt).version} onChange={onChangeVersion} error={versionError} />
+      )}
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
 

@@ -3,12 +3,12 @@ import { FC, useCallback } from 'react';
 import { NumberInputField } from '@/src/components/Common/InputField/InputField';
 import { EntityFieldsI18nKey, RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRoleLimits, DialRoleShare } from '@/src/models/dial/role-limits';
 
 interface Props {
-  entity: DialBaseEntity;
-  onChangeEntity: (entity: DialBaseEntity, withRefresh?: boolean) => void;
+  entity: EntityRoleLimits;
+  onChangeEntity: (entity: EntityRoleLimits, withRefresh?: boolean) => void;
 }
 
 const RolesDefaults: FC<Props> = ({ entity, onChangeEntity }) => {

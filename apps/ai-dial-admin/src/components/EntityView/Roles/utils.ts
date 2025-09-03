@@ -10,18 +10,18 @@ import {
   getSetNoLimitsOperation,
 } from '@/src/constants/grid-columns/actions';
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRoleLimits, DialRoleLimitsMap, DialRoleShareMap } from '@/src/models/dial/role-limits';
 import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { cellRenderParams } from './constants';
 
-export const isDisableRole = (entity: DialBaseEntity) => {
+export const isDisableRole = (entity: EntityRoleLimits) => {
   return !Object.keys(entity.roleLimits || {}).length && !entity.isPublic;
 };
 
-export const getRolesGridData = (entity: DialBaseEntity, roles: DialRole[]): RolesGridData[] => {
+export const getRolesGridData = (entity: EntityRoleLimits, roles: DialRole[]): RolesGridData[] => {
   if (entity.isPublic) {
     return getAllRolesWithLimits(roles, entity);
   }
@@ -29,7 +29,7 @@ export const getRolesGridData = (entity: DialBaseEntity, roles: DialRole[]): Rol
   return getRolesWithLimits(roles, entity.roleLimits, entity.roleShareResourceLimits);
 };
 
-const getAllRolesWithLimits = (roles: DialRole[], entity?: DialBaseEntity) => {
+const getAllRolesWithLimits = (roles: DialRole[], entity?: EntityRoleLimits) => {
   const data: RolesGridData[] = [];
   roles.forEach((role) => {
     const limit = entity?.roleLimits?.[role.name || ''];
@@ -138,7 +138,7 @@ export const LIMIT_COLUMNS = (
 ];
 
 export const getRolesColumnDefs = (
-  entity: DialBaseEntity,
+  entity: EntityRoleLimits,
   onChangeLimits: ((value: number, data: DialRole, token: string) => void) | undefined,
   remove: (entity: DialRole) => void,
   open: (entity: DialRole) => void,
@@ -168,7 +168,7 @@ export const getRolesColumnDefs = (
   return [...colDefs, ACTION_COLUMN(actions)];
 };
 
-export const isResetAvailable = (entity: DialBaseEntity): boolean => {
+export const isResetAvailable = (entity: EntityRoleLimits): boolean => {
   return (
     entity.roleLimits != null &&
     Object.values(entity.roleLimits).some((limit) => !isEqualSkippingUndefined(limit, entity.defaultRoleLimit))
@@ -195,7 +195,7 @@ export const isSetNoLimitsHidden = (api: GridApi, node: IRowNode) => {
   return !day && !minute && !month && !week;
 };
 
-export const isResetToDefaultHidden = (api: GridApi, node: IRowNode, entity: DialBaseEntity) => {
+export const isResetToDefaultHidden = (api: GridApi, node: IRowNode, entity: EntityRoleLimits) => {
   const month = api.getCellValue({
     colKey: api.getColumn('month') as Column,
     rowNode: node,

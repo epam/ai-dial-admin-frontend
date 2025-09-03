@@ -112,21 +112,22 @@ const EntityListModals: FC<Props> = ({
             confirmLabel={t(ButtonsI18nKey.Delete)}
             onClose={handleClose}
           >
-            {route === ApplicationRoute.ApplicationRunners ? (
-              <DeleteAppRunner entity={entity} />
-            ) : route === ApplicationRoute.Adapters ? (
-              <DeleteAdapter entity={entity} />
-            ) : route === ApplicationRoute.InterceptorTemplates ? (
-              <DeleteInterceptorTemplate template={entity} />
-            ) : (
-              <p className="text-secondary small-150 px-6 py-4">
-                <span>{t(DeleteI18nKey.Confirming)}</span>
-                {entity?.displayName || entity?.name ? (
-                  <span className="important-text-part mr-1">{entity?.displayName || entity?.name}</span>
-                ) : null}
-                <span>{t(deleteModalTitleMap[route as keyof typeof deleteModalTitleMap])}?</span>
-              </p>
-            )}
+            {entity &&
+              (route === ApplicationRoute.ApplicationRunners ? (
+                <DeleteAppRunner entity={entity} />
+              ) : route === ApplicationRoute.Adapters ? (
+                <DeleteAdapter entity={entity} />
+              ) : route === ApplicationRoute.InterceptorTemplates ? (
+                <DeleteInterceptorTemplate template={entity} />
+              ) : (
+                <p className="text-secondary small-150 px-6 py-4">
+                  <span>{t(DeleteI18nKey.Confirming)}</span>
+                  {entity.displayName || entity.name ? (
+                    <span className="important-text-part mr-1">{entity.displayName || entity.name}</span>
+                  ) : null}
+                  <span>{t(deleteModalTitleMap[route as keyof typeof deleteModalTitleMap])}?</span>
+                </p>
+              ))}
           </ConfirmationModal>,
           document.body,
         )}

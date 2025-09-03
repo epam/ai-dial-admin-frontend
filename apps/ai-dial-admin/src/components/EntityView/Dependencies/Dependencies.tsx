@@ -8,7 +8,6 @@ import { DEPENDENCIES_COLUMNS, TYPE_COLUMN } from '@/src/constants/grid-columns/
 import { EntitiesI18nKey, MenuI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { DialModel } from '@/src/models/dial/model';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -17,10 +16,10 @@ import AddDependenciesButton from './AddDependenciesModal/AddDependenciesButton'
 import { getDependenciesData } from './utils';
 
 interface Props {
-  entity: DialBaseEntity;
+  entity: DialApplication;
   applications: DialApplication[];
   models: DialModel[];
-  onChangeEntity: (entity: DialBaseEntity) => void;
+  onChangeEntity: (entity: DialApplication) => void;
 }
 
 const EntityDependencies: FC<Props> = ({ entity, applications, models, onChangeEntity }) => {
@@ -42,7 +41,7 @@ const EntityDependencies: FC<Props> = ({ entity, applications, models, onChangeE
   );
 
   const onRemoveDependency = useCallback(
-    (_: DialBaseEntity, index: number) => {
+    (_: DialApplication, index: number) => {
       entity.dependencies?.splice(index, 1);
       onChangeEntity({
         ...entity,

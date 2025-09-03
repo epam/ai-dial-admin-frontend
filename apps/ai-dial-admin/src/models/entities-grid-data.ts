@@ -1,9 +1,9 @@
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DiffStatus } from '@/src/types/activity-audit';
 import { EntityType } from '@/src/types/entity-type';
 import { ApplicationRoute } from '@/src/types/routes';
 
-export interface EntitiesGridData extends DialBaseEntity {
+export interface EntitiesGridData extends BaseEntity {
   type?: string;
   route?: ApplicationRoute;
   day?: string | null;

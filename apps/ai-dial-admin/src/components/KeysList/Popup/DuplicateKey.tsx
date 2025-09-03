@@ -15,7 +15,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 interface Props {
   modalState: PopUpState;
   onClose: () => void;
-  entity?: DialKey;
+  entity: DialKey;
   names: string[];
   keys: string[];
   onDuplicate: (entity: DialKey) => void;
@@ -27,11 +27,11 @@ const DuplicateKey: FC<Props> = ({ onDuplicate, modalState, onClose, entity, nam
   const { isValid, dispatch } = useSaveValidationContext();
 
   const [clonedEntity, setEntity] = useState<DialKey>({
-    ...(entity || {}),
+    ...entity,
     key: '',
     name: '',
     expiresAt: void 0,
-  } as DialKey);
+  });
 
   const isValidKey = useMemo(() => {
     return !keys.includes(clonedEntity.key || '');

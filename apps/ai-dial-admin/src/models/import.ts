@@ -1,5 +1,5 @@
 import { ImportStatus } from '@/src/types/import';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 
 export interface ImportResult {
   sourcePath: string;
@@ -11,5 +11,5 @@ export type FileConfiguration = Record<string, FileComponentItem[]>;
 
 export interface FileComponentItem {
   importAction: string;
-  value: DialBaseEntity;
+  value: BaseEntity;
 }

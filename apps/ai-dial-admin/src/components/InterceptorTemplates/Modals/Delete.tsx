@@ -11,7 +11,7 @@ import Loader from '@/src/components/Common/Loader/Loader';
 import Grid from '@/src/components/Grid/Grid';
 
 interface Props {
-  template?: InterceptorTemplate;
+  template: InterceptorTemplate;
 }
 
 const Delete: FC<Props> = ({ template }) => {
@@ -24,7 +24,7 @@ const Delete: FC<Props> = ({ template }) => {
     setIsLoading(true);
     getInterceptorsList().then((res) => {
       const interceptors = res?.reduce((acc, curr) => {
-        if (template?.interceptors?.includes(curr.name as string)) {
+        if (template.interceptors?.includes(curr.name as string)) {
           acc.push(curr);
         }
         return acc;
@@ -38,7 +38,7 @@ const Delete: FC<Props> = ({ template }) => {
     <div className="flex flex-col text-secondary small-150 px-6 max-h-[300px]">
       <p>
         <span>{t(DeleteI18nKey.Confirming)}</span>
-        <span className="important-text-part mr-1">{template?.name}</span>
+        <span className="important-text-part mr-1">{template.name}</span>
         <span>{t(DeleteI18nKey.InterceptorTemplateTitle)}?</span>
       </p>
       <p>{t(DeleteI18nKey.InterceptorTemplateDescriptionWarning)}</p>
