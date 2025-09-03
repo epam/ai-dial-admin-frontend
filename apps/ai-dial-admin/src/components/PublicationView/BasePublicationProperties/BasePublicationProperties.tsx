@@ -3,7 +3,7 @@ import { FC, ReactNode } from 'react';
 import classNames from 'classnames';
 
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
-import { EntitiesI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, EntityFieldsI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import { ACTION_I18N_KEYS } from '@/src/constants/publications';
 import { useI18n } from '@/src/locales/client';
 import { ActionType, ApplicationPublication, Publication } from '@/src/models/dial/publications';
@@ -36,7 +36,7 @@ const BasePublicationProperties: FC<Props> = ({ publication, children, applicati
         <div className="flex flex-row gap-8">
           {!application ? (
             <LabeledText label={t(PublicationsI18nKey.Action)}>
-              <p className="truncate items-center">
+              <p className="truncate items-center flex">
                 <span className={indicatorClassNames} />
                 {t(ACTION_I18N_KEYS[publication.action])}
               </p>
@@ -46,10 +46,13 @@ const BasePublicationProperties: FC<Props> = ({ publication, children, applicati
               <p className="truncate items-center">{runner?.['dial:applicationTypeDisplayName'] || runnerId}</p>
             </LabeledText>
           ) : null}
-          <LabeledText label={t(PublicationsI18nKey.Author)} text={publication.author} />
+          {publication.author && <LabeledText label={t(EntitiesI18nKey.Author)} text={publication.author} />}
         </div>
         <div className="flex flex-col sm:flex-row gap-8">
-          <LabeledText label={t(EntitiesI18nKey.CreatedAt)} text={formatDateTimeToLocalString(publication.createdAt)} />
+          <LabeledText
+            label={t(EntityFieldsI18nKey.createdAt)}
+            text={formatDateTimeToLocalString(publication.createdAt)}
+          />
           <LabeledText
             label={t(PublicationsI18nKey.FolderStorage)}
             text={removeTrailingSlash(decodeURIComponent(publication.folderId))}

@@ -3,7 +3,7 @@
 import { Dispatch, FC, SetStateAction, useCallback } from 'react';
 
 import { CreateFolderSteps } from '@/src/components/Common/FolderCreate/constants';
-import RulesItemBody from '@/src/components/Rules/RulesItemBody';
+import RulesItemBody from '@/src/components/Rules/Item/RulesItemBody';
 import { DialRule } from '@/src/models/dial/rule';
 import { Step, StepStatus } from '@/src/models/step';
 

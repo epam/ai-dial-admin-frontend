@@ -1,9 +1,7 @@
-import { FileFolderContextType } from '@/src/context/FileFolderContext';
-import { DialFile } from '@/src/models/dial/file';
-import { render } from '@testing-library/react';
-import { Dispatch, SetStateAction } from 'react';
-import { describe, expect, test } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
 import FolderList from './FolderList';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 
 const fakeContext = () => ({
   files: [],
@@ -13,16 +11,13 @@ const fakeContext = () => ({
   fetchFiles: () => [],
   toggleFolder: () => void 0,
   data: [],
-  exportFoldersData: {} as Record<string, DialFile[]>,
-  setExportFoldersData: (() => void 0) as Dispatch<SetStateAction<Record<string, DialFile[]>>>,
+  exportFoldersData: {},
+  setExportFoldersData: () => {},
 });
 
-describe('Common components - FolderList', () => {
-  test('Should render successfully', () => {
-    const context = fakeContext;
-    const { baseElement, getByTestId } = render(<FolderList context={context as () => FileFolderContextType} />);
-    expect(baseElement).toBeTruthy();
-    const list = getByTestId('folder-list');
-    expect(list).toBeTruthy();
+describe('FolderList', () => {
+  it('renders no data message when files are empty', () => {
+    render(<FolderList context={fakeContext} />);
+    expect(screen.getByText(EntitiesI18nKey.NoFolders)).toBeInTheDocument();
   });
 });

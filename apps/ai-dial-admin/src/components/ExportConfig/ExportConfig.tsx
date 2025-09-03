@@ -13,7 +13,7 @@ import {
 } from '@/src/components/ExportConfig/ExportConfig.utils';
 import PreviewModal from '@/src/components/ExportConfig/Preview/PreviewModal';
 import ExportDependencies from '@/src/components/ExportConfig/Structure/Dependencies';
-import { BasicI18nKey, ButtonsI18nKey, ExportI18nKey, ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ExportI18nKey, ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -25,6 +25,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { downloadFile } from '@/src/utils/download';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import NoPreview from '@/src/components/ExportConfig/Preview/NoPreview';
 
 interface Props {
   enableExportConfigMap?: boolean;
@@ -52,16 +53,26 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
     },
   ];
 
-  const exportFormats: RadioButtonModel[] = [
-    {
-      id: ExportFormat.ADMIN,
-      name: t(ImportI18nKey.DialArchive),
-    },
-    {
-      id: ExportFormat.CORE,
-      name: t(ImportI18nKey.DialCoreFile),
-    },
-  ];
+  const exportFormats: RadioButtonModel[] = useMemo(() => {
+    const formats = [
+      {
+        id: ExportFormat.ADMIN,
+        name: t(ImportI18nKey.DialArchive),
+      },
+      {
+        id: ExportFormat.CORE,
+        name: t(ImportI18nKey.DialCoreFile),
+      },
+    ];
+
+    if (enableExportConfigMap) {
+      formats.push({
+        id: ExportFormat.ACTIVE_CONFIG,
+        name: t(ExportI18nKey.ActiveConfig),
+      });
+    }
+    return formats;
+  }, [enableExportConfigMap, t]);
 
   const exportRequest = useMemo(() => {
     return {
@@ -82,24 +93,21 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
 
   const onExport = useCallback(
     (addSecrets: boolean) => {
-      const type = t(BasicI18nKey.Config);
+      const type = t(ExportI18nKey.Config);
       exportConfig({
         ...exportRequest,
         addSecrets,
       })
         .then(({ blob, fileName }) => {
           showNotification(
-            getSuccessNotification(
-              t(ExportI18nKey.ExportSuccessTitle, { type }),
-              t(ExportI18nKey.ExportSuccessDescription),
-            ),
+            getSuccessNotification(t(ExportI18nKey.SuccessTitle, { type }), t(ExportI18nKey.SuccessDescription)),
           );
 
           downloadFile(blob, fileName);
         })
         .catch(() => {
           showNotification(
-            getErrorNotification(t(ExportI18nKey.ExportErrorTitle, { type }), t(ExportI18nKey.ExportErrorDescription)),
+            getErrorNotification(t(ExportI18nKey.ErrorTitle, { type }), t(ExportI18nKey.ErrorDescription)),
           );
         });
     },
@@ -107,24 +115,29 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
   );
 
   const onExportMap = useCallback(() => {
-    const type = t(BasicI18nKey.Config);
+    const type = t(ExportI18nKey.Config);
     exportConfigMap()
       .then(({ blob, fileName }) => {
         showNotification(
-          getSuccessNotification(
-            t(ExportI18nKey.ExportSuccessTitle, { type }),
-            t(ExportI18nKey.ExportSuccessDescription),
-          ),
+          getSuccessNotification(t(ExportI18nKey.SuccessTitle, { type }), t(ExportI18nKey.SuccessDescription)),
         );
 
         downloadFile(blob, fileName);
       })
       .catch(() => {
         showNotification(
-          getErrorNotification(t(ExportI18nKey.ExportErrorTitle, { type }), t(ExportI18nKey.ExportErrorDescription)),
+          getErrorNotification(t(ExportI18nKey.ErrorTitle, { type }), t(ExportI18nKey.ErrorDescription)),
         );
       });
   }, [showNotification, t]);
+
+  const onTryExport = useCallback(() => {
+    if (selectedExportFormat === ExportFormat.ACTIVE_CONFIG) {
+      onExportMap();
+    } else {
+      setPreviewModalState(PopUpState.Opened);
+    }
+  }, [onExportMap, selectedExportFormat]);
 
   useEffect(() => {
     if (exportRequest.$type === ExportType.Full) {
@@ -139,23 +152,13 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
       <div className="flex flex-col w-full h-full rounded p-4 bg-layer-2">
         <div className="mb-4 flex flex-row items-center justify-between">
           <h1>{t(MenuI18nKey.ExportConfig)}</h1>
-          <div className="flex flex-row gap-4 items-center">
-            {enableExportConfigMap && (
-              <Button
-                cssClass="secondary"
-                iconBefore={<IconUpload {...BASE_ICON_PROPS} />}
-                title={t(ButtonsI18nKey.ExportConfigMap)}
-                onClick={onExportMap}
-              />
-            )}
-            <Button
-              cssClass="primary"
-              iconBefore={<IconUpload {...BASE_ICON_PROPS} />}
-              title={t(ButtonsI18nKey.Export)}
-              disable={isExportDisable}
-              onClick={() => setPreviewModalState(PopUpState.Opened)}
-            />
-          </div>
+          <Button
+            cssClass="primary"
+            iconBefore={<IconUpload {...BASE_ICON_PROPS} />}
+            title={t(ButtonsI18nKey.Export)}
+            disable={isExportDisable}
+            onClick={onTryExport}
+          />
         </div>
         <div className="flex-1 min-h-0 gap-x-3 flex flex-row w-full">
           <div className="border border-primary p-4 rounded w-[240px] flex flex-col">
@@ -169,34 +172,41 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
                 orientation={RadioFieldOrientation.Column}
                 onChange={onChangeExportFormat}
               />
-
-              <RadioField
-                radioButtons={exportTypes}
-                activeRadioButton={selectedExportType}
-                elementId="exportType"
-                fieldTitle={t(ExportI18nKey.ExportType)}
-                orientation={RadioFieldOrientation.Column}
-                onChange={onChangeExportType}
-              />
-
-              {selectedExportType === ExportType.Full && (
-                <div className="flex-1 min-h-0">
-                  <ExportDependencies
-                    selectedExportFormat={selectedExportFormat}
-                    dependencies={dependencies}
-                    onChangeConfig={(deps) => setDependencies(deps)}
+              {selectedExportFormat !== ExportFormat.ACTIVE_CONFIG && (
+                <>
+                  <RadioField
+                    radioButtons={exportTypes}
+                    activeRadioButton={selectedExportType}
+                    elementId="exportType"
+                    fieldTitle={t(ExportI18nKey.ExportType)}
+                    orientation={RadioFieldOrientation.Column}
+                    onChange={onChangeExportType}
                   />
-                </div>
+
+                  {selectedExportType === ExportType.Full && (
+                    <div className="flex-1 min-h-0">
+                      <ExportDependencies
+                        selectedExportFormat={selectedExportFormat}
+                        dependencies={dependencies}
+                        onChangeConfig={(deps) => setDependencies(deps)}
+                      />
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
-          <ConfigContent
-            selectedExportFormat={selectedExportFormat}
-            dependencies={dependencies}
-            selectedExportType={selectedExportType}
-            customExportData={customExportData}
-            setCustomExportData={setCustomExportData}
-          />
+          {selectedExportFormat === ExportFormat.ACTIVE_CONFIG ? (
+            <NoPreview />
+          ) : (
+            <ConfigContent
+              selectedExportFormat={selectedExportFormat}
+              dependencies={dependencies}
+              selectedExportType={selectedExportType}
+              customExportData={customExportData}
+              setCustomExportData={setCustomExportData}
+            />
+          )}
         </div>
       </div>
 

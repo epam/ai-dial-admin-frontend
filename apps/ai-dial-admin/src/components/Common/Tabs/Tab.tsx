@@ -36,7 +36,7 @@ const TabContent: FC<Props> = ({ tab, isActive, disabled, invalid, onClick, isHo
   }
 
   return (
-    <button data-testid="tab" className={tabClassNames} onClick={() => onClick(tab.id)}>
+    <button role="tab" className={tabClassNames} onClick={() => onClick(tab.id)}>
       <span>{tab.name}</span>
       {invalid && (
         <div className="text-error">

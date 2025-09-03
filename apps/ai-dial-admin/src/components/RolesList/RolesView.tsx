@@ -1,37 +1,41 @@
 'use client';
 
-import { cloneDeep, isEqual } from 'lodash';
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
-import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
+
+import classNames from 'classnames';
+import { cloneDeep } from 'lodash';
 
 import { removeRole, updateRole } from '@/src/app/[lang]/roles/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import {
-  getRelevantKeysForRole,
   getEntitiesForRole,
+  getRelevantKeysForRole,
+  isDialRoleShareKey,
   ROLES_ENTITIES_COLUMNS,
-} from '@/src/components/AddEntitiesTab/AddEntitiesView.utils';
-import { EntitiesGridData } from '@/src/models/entities-grid-data';
+} from '@/src/components/AddEntitiesTab/utils';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
-import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/entity-view';
-import { useNotification } from '@/src/context/NotificationContext';
-import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
-import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
+import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
+import EntityHeader from '@/src/components/EntityView/Header/Header';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
+import { KEYS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, KeysI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialRoleLimits, DialRoleLimitsMap } from '@/src/models/dial/base-entity';
 import { DialApplication } from '@/src/models/dial/application';
+import { DialRoleLimits } from '@/src/models/dial/role-limits';
+import { DialKey } from '@/src/models/dial/key';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
+import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { TabModel } from '@/src/models/tab';
+import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
-import { DialKey } from '@/src/models/dial/key';
-import { KEYS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { getErrorNotification } from '@/src/utils/notification';
-import EntityHeader from '@/src/components/EntityView/Header/Header';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   originalRole: DialRole;
@@ -50,6 +54,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
     propertiesTabs(t),
     { id: EntityViewTab.Entities, name: t(TabsI18nKey.Entities) },
     { id: EntityViewTab.Keys, name: t(TabsI18nKey.Keys) },
+    auditTabs(t),
   ];
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -77,7 +82,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
   }, [originalRole]);
 
   useEffect(() => {
-    setIsChanged(!isEqual(originalRole, selectedRole));
+    setIsChanged(!isEqualSkippingUndefined(originalRole, selectedRole));
   }, [selectedRole, originalRole]);
 
   const onChangeActiveTab = useCallback(
@@ -171,19 +176,30 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
   const onChangeRoleToken = useCallback(
     (value: number, data: DialRole, token: string) => {
       const name = data.name as string;
-      onChangeRole(
-        {
-          ...entityRef.current,
-          limits: {
-            ...entityRef.current.limits,
-            [name]: {
-              ...entityRef.current.limits?.[name],
-              [token]: value.toString(),
-            },
-          } as DialRoleLimitsMap,
+      const limits = entityRef.current.limits ?? {};
+      const share = entityRef.current.share ?? {};
+      const updatedLimits = {
+        ...limits,
+        [name]: {
+          ...limits[name],
+          [token]: value.toString(),
         },
-        true,
-      );
+      };
+
+      const updatedShare = {
+        ...share,
+        [name]: {
+          ...share[name],
+          [token]: value.toString(),
+        },
+      };
+
+      const updatedEntity = {
+        ...entityRef.current,
+        ...(isDialRoleShareKey(token) ? { share: updatedShare } : { limits: updatedLimits }),
+      };
+
+      onChangeRole(updatedEntity, true);
     },
     [onChangeRole],
   );
@@ -192,7 +208,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={headerClassName}>
         <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
-        <EntityViewHeaderButtons
+        <HeaderButtons
           view={ApplicationRoute.Roles}
           entity={selectedRole}
           isChanged={isChanged}
@@ -209,7 +225,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
         {jsonEditorEnabled ? (
           <JSONEditor
             key={key}
-            model={selectedRole}
+            entity={selectedRole}
             errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedRole}
             setIsChanged={setIsChanged}
@@ -218,9 +234,9 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
         ) : (
           <>
             {activeTab === EntityViewTab.Properties && (
-              <div className="h-full lg:w-[35%] mt-3">
+              <div className="lg:w-[35%] mt-3">
                 <EntityHeader entity={selectedRole} />
-                <div className="flex-1 min-h-0">
+                <div className="flex-1 min-h-0 pt-4">
                   <SimpleEntityProperties
                     entity={selectedRole}
                     onChangeEntity={onChangeRole}
@@ -255,6 +271,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
             getRelevantDataForEntity={getRelevantKeysForRole.bind(this, selectedRole)}
           />
         )}
+        {activeTab === EntityViewTab.Audit && <EntityAudit entity={selectedRole} view={ApplicationRoute.Roles} />}
       </div>
     </div>
   );

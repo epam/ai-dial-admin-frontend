@@ -10,12 +10,14 @@ vi.mock('re-resizable', () => ({
 
 describe('Sidebar', () => {
   test('renders left sidebar with content when open', () => {
-    render(<Sidebar isOpen={true} side={SideBarOrientation.Left} itemComponent={<span>Sidebar Content</span>} />);
+    render(
+      <Sidebar isSidebarOpen={true} side={SideBarOrientation.Left} itemComponent={<span>Sidebar Content</span>} />,
+    );
     expect(screen.getByText('Sidebar Content')).toBeInTheDocument();
   });
 
   test('renders right sidebar with content when open', () => {
-    render(<Sidebar isOpen={true} side={SideBarOrientation.Right} itemComponent={<span>Right Content</span>} />);
+    render(<Sidebar isSidebarOpen={true} side={SideBarOrientation.Right} itemComponent={<span>Right Content</span>} />);
     expect(screen.getByText('Right Content')).toBeInTheDocument();
   });
 });

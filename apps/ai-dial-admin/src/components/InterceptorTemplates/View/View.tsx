@@ -1,22 +1,24 @@
 'use client';
 
-import { FC, useCallback, useEffect, useState } from 'react';
-import { cloneDeep, isEqual } from 'lodash';
 import { useRouter } from 'next/navigation';
+import { FC, useCallback, useEffect, useState } from 'react';
 
-import { ApplicationRoute } from '@/src/types/routes';
-import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { useI18n } from '@/src/locales/client';
-import { EntityViewTab, interceptorsTabs, propertiesTabs } from '@/src/components/EntityView/entity-view';
+import { cloneDeep } from 'lodash';
+
 import { deleteInterceptorTemplate, updateInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
-import { getErrorNotification } from '@/src/utils/notification';
-import { useNotification } from '@/src/context/NotificationContext';
-
-import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
+import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import EntityHeader from '@/src/components/EntityView/Header/Header';
+import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
+import { auditTabs, EntityViewTab, interceptorsTabs, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import ExtendedProperties from '@/src/components/InterceptorTemplates/Properties/ExtendedProperties';
 import Interceptors from '@/src/components/InterceptorTemplates/View/Interceptors/Interceptors';
-import EntityHeader from '@/src/components/EntityView/Header/Header';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useI18n } from '@/src/locales/client';
+import { InterceptorTemplate } from '@/src/models/interceptor-template';
+import { ApplicationRoute } from '@/src/types/routes';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import { getErrorNotification } from '@/src/utils/notification';
 
 interface Props {
   route: ApplicationRoute;
@@ -32,7 +34,7 @@ const View: FC<Props> = ({ route, template }) => {
   const [isChanged, setIsChanged] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(cloneDeep(template));
 
-  const tabs = [propertiesTabs(t), interceptorsTabs(t)];
+  const tabs = [propertiesTabs(t), interceptorsTabs(t), auditTabs(t)];
 
   const onChangeActiveTab = useCallback(
     (tab: string) => {
@@ -58,7 +60,7 @@ const View: FC<Props> = ({ route, template }) => {
   useEffect(() => {
     const { updatedAt: __updateTemplate, ...restTemplate } = template;
     const { updatedAt: __updateSelected, ...restSelectedTemplate } = selectedTemplate;
-    setIsChanged(!isEqual(restTemplate, restSelectedTemplate));
+    setIsChanged(!isEqualSkippingUndefined(restTemplate, restSelectedTemplate));
   }, [template, selectedTemplate]);
 
   const onChange = useCallback((template: InterceptorTemplate) => {
@@ -69,7 +71,7 @@ const View: FC<Props> = ({ route, template }) => {
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className="flex flex-row min-h-[34px] justify-between">
         <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-        <EntityViewHeaderButtons
+        <HeaderButtons
           view={route}
           entity={selectedTemplate}
           isChanged={isChanged}
@@ -85,12 +87,15 @@ const View: FC<Props> = ({ route, template }) => {
         {activeTab === EntityViewTab.Properties && (
           <>
             <EntityHeader entity={selectedTemplate} />
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 pt-4">
               <ExtendedProperties template={selectedTemplate} onChange={onChange} />
             </div>
           </>
         )}
         {activeTab === EntityViewTab.Interceptors && <Interceptors interceptorList={selectedTemplate.interceptors} />}
+        {activeTab === EntityViewTab.Audit && (
+          <EntityAudit entity={selectedTemplate} view={ApplicationRoute.InterceptorTemplates} />
+        )}
       </div>
     </div>
   );

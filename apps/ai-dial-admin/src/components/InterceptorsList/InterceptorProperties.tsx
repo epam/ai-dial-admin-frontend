@@ -2,6 +2,8 @@
 
 import { FC } from 'react';
 
+import Defaults from '@/src/components/Defaults/Defaults';
+import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -10,7 +12,6 @@ import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templa
 import { INTERCEPTOR_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
 import { useI18n } from '@/src/locales/client';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
 import SourceField from '@/src/components/SourceField/SourceField';
@@ -24,8 +25,8 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
   const t = useI18n();
 
   return (
-    <div className="h-full flex flex-col pt-3 gap-10 divide-y divide-primary w-full">
-      <div className="flex">
+    <div className="h-full flex flex-col gap-10 divide-y divide-primary w-full">
+      <div className="flex flex-col gap-6">
         <div className="lg:w-[35%] flex flex-col gap-6 mt-3">
           <SimpleEntityProperties
             entity={selectedInterceptor}
@@ -34,24 +35,15 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
             isEntityImmutable={true}
             view={ApplicationRoute.Interceptors}
           />
-          <TextInputField
-            elementId="author"
-            fieldTitle={t(EntitiesI18nKey.Maintainer)}
-            placeholder={t(EntitiesI18nKey.MaintainerPlaceholder)}
-            value={selectedInterceptor.author}
-            optional={true}
-            onChange={(author) => onChangeInterceptor({ ...selectedInterceptor, author })}
+          <MaintainerControl entity={selectedInterceptor} onChangeEntity={onChangeInterceptor} />
+          <ForwardAuthTokenField
+            view={ApplicationRoute.Interceptors}
+            entity={selectedInterceptor}
+            onChangeEntity={onChangeInterceptor}
           />
-          <div className="w-full">
-            <ForwardAuthTokenField
-              view={ApplicationRoute.Interceptors}
-              entity={selectedInterceptor}
-              onChangeEntity={onChangeInterceptor}
-            />
-          </div>
         </div>
       </div>
-      <div className="flex flex-col pt-3 w-full">
+      <div className="flex flex-col gap-6 pt-3 w-full">
         <SourceField
           entity={selectedInterceptor}
           onChange={onChangeInterceptor}
@@ -61,6 +53,7 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
           fieldTitle={t(EntitiesI18nKey.SourceType)}
           sourceItems={INTERCEPTOR_SOURCE_ITEMS}
         />
+        <Defaults entity={selectedInterceptor} onChangeEntity={onChangeInterceptor} />
       </div>
     </div>
   );

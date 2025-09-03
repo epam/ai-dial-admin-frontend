@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useState } from 'react';
+import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '@/src/components/Common/Button/Button';
 import classNames from 'classnames';
 import { ButtonsI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
@@ -37,6 +37,10 @@ const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action 
   const [approveModalState, setIsOpenApproveModal] = useState(PopUpState.Closed);
   const [declineModalState, setIsOpenDeclineModal] = useState(PopUpState.Closed);
   const [declineReason, setDeclineReason] = useState('');
+  const isDeclineInvalid = useMemo(() => {
+    const value = declineReason.trim();
+    return !value || value.length >= 15;
+  }, [declineReason]);
 
   useEffect(() => {
     setKeys(getModalsTranslations(route, action));
@@ -110,7 +114,7 @@ const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action 
             heading={t(keys.DeclineModalTitle)}
             onConfirm={decline}
             modalState={declineModalState}
-            disableConfirmButton={!declineReason}
+            disableConfirmButton={isDeclineInvalid}
             onClose={() => {
               setIsOpenDeclineModal(PopUpState.Closed);
             }}

@@ -2,22 +2,22 @@
 
 import { FC } from 'react';
 import classNames from 'classnames';
-import { IconLoader } from '@tabler/icons-react';
+
+import LoaderIcon from '@/public/images/icons/loader.svg';
 
 interface Props {
   size?: number;
   loaderClassName?: string;
   containerClassName?: string;
-  dataTestId?: string;
 }
 
-const Loader: FC<Props> = ({ size = 18, loaderClassName = '', containerClassName = '', dataTestId }) => {
+const Loader: FC<Props> = ({ size = 18, loaderClassName = '', containerClassName = '' }) => {
   return (
     <div
-      data-testid={dataTestId}
+      role="loader"
       className={classNames('flex w-full items-center justify-center text-secondary', containerClassName || 'h-full')}
     >
-      <IconLoader
+      <LoaderIcon
         height={size}
         width={size}
         className={classNames('shrink-0 grow-0 basis-auto animate-spin-steps', loaderClassName)}

@@ -1,25 +1,27 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useState } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import { CreateI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialRoute } from '@/src/models/dial/route';
-import { FieldError } from '@/src/models/error';
 import { ApplicationRoute } from '@/src/types/routes';
-import { checkNameVersionCombination } from '@/src/utils/prompts/versions';
-import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import { getErrorForName } from '@/src/utils/validation/name-error';
 import { getErrorForPath } from '@/src/utils/validation/path-error';
+import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
+import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { getPromptVersionError } from '@/src/utils/validation/version-error';
+import { DialPrompt } from '@/src/models/dial/prompt';
 
 interface Props {
   view?: ApplicationRoute;
-  entity: DialBaseNamedEntity;
+  entity: BaseEntity;
   names: string[];
   versionsMap?: Record<string, string[]>;
   isEntityImmutable?: boolean;
-  onChangeEntity: (entity: DialBaseNamedEntity) => void;
+  onChangeEntity: (entity: BaseEntity) => void;
 }
 
 const SimpleEntityProperties: FC<Props> = ({
@@ -31,112 +33,80 @@ const SimpleEntityProperties: FC<Props> = ({
   versionsMap,
 }) => {
   const t = useI18n() as (t: string) => string;
+  const { dispatch } = useSaveValidationContext();
+
   const idTitleKey =
     view === ApplicationRoute.Prompts || view === ApplicationRoute.Files
-      ? CreateI18nKey.DisplayNameTitle
-      : CreateI18nKey.IdTitle;
+      ? EntityFieldsI18nKey.displayName
+      : EntityFieldsI18nKey.id;
 
   const idPlaceholderKey =
     view === ApplicationRoute.Prompts || view === ApplicationRoute.Files
-      ? CreateI18nKey.DisplayNamePlaceholder
-      : CreateI18nKey.IdPlaceholder;
-
-  const [nameError, setNameError] = useState<FieldError | null>(null);
-  const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
-  const [pathError, setPathError] = useState<FieldError | null>(null);
+      ? EntityPlaceholdersI18nKey.DisplayName
+      : EntityPlaceholdersI18nKey.Id;
 
   const [versionError, setVersionError] = useState<string | undefined>(void 0);
-  const [isValidVersion, setIsValidVersion] = useState(true);
+  const [pathError, setPathError] = useState<string | undefined>(void 0);
 
-  const onChangeName = useCallback(
-    (name: string) => {
-      onChangeEntity({ ...entity, name });
-      if (versionsMap) {
-        setIsValidVersion(!checkNameVersionCombination(versionsMap, name, entity.version as string));
-        setNameError(getErrorForName(name, names, t));
-      } else {
-        setNameError(getErrorForName(name, names, t));
-      }
+  const validateVersion = useCallback(
+    (version?: string) => {
+      const versionError = getPromptVersionError(versionsMap, entity, t, version);
+      setVersionError(versionError);
+      dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !versionError });
     },
-    [entity, onChangeEntity, names, versionsMap, t],
+    [dispatch, entity, t, versionsMap],
   );
 
   const onChangeVersion = useCallback(
-    (version: string) => {
-      onChangeEntity({ ...entity, version });
-      if (versionsMap) {
-        setIsValidVersion(!checkNameVersionCombination(versionsMap, entity.name as string, version));
-      }
+    (version?: string) => {
+      onChangeEntity({ ...entity, version } as DialPrompt);
+      validateVersion(version);
     },
-    [entity, onChangeEntity, versionsMap],
-  );
-
-  useEffect(() => {
-    if (versionsMap) {
-      setVersionError(isValidVersion ? void 0 : t(CreateI18nKey.NameVersionCombinationError));
-    }
-  }, [t, versionsMap, isValidVersion]);
-
-  const onChangeDescription = useCallback(
-    (description: string) => {
-      setDescriptionError(getErrorForDescription(description, t));
-      onChangeEntity({ ...entity, description });
-    },
-    [entity, onChangeEntity, t],
+    [entity, onChangeEntity, validateVersion],
   );
 
   const onChangePath = useCallback(
-    (path: string) => {
-      onChangeEntity({ ...entity, paths: [path] } as DialRoute);
-      setPathError(getErrorForPath(path, t));
+    (path?: string) => {
+      onChangeEntity({ ...entity, paths: path ? [path] : [] } as DialRoute);
+      const pathError = getErrorForPath(path, t);
+      setPathError(pathError?.text);
+      dispatch({ type: ValidationActionType.SetField, field: 'path', isValid: !pathError });
     },
-    [entity, onChangeEntity, t],
+    [dispatch, entity, onChangeEntity, t],
   );
 
   return (
     <div className="flex flex-col gap-6">
       {!isEntityImmutable && (
-        <TextInputField
-          elementId="name"
+        <IdControl
           fieldTitle={t(idTitleKey)}
           placeholder={t(idPlaceholderKey)}
-          value={entity.name}
-          errorText={nameError?.text}
-          invalid={!!nameError}
-          onChange={onChangeName}
+          entity={entity}
+          names={names}
+          onChangeEntity={onChangeEntity}
         />
       )}
+      {/* not need for prompts */}
+      {!versionsMap && (
+        <DisplayNameControl
+          displayName={entity.displayName}
+          onChange={(name) => onChangeEntity({ ...entity, displayName: name })}
+        />
+      )}
+
       {versionsMap && (
-        <TextInputField
-          elementId="version"
-          fieldTitle={t(CreateI18nKey.VersionTitle)}
-          placeholder={t(CreateI18nKey.VersionPlaceholder)}
-          disabled={isEntityImmutable}
-          errorText={versionError}
-          invalid={!isValidVersion}
-          value={entity.version}
-          onChange={onChangeVersion}
-        />
+        <VersionControl version={(entity as DialPrompt).version} onChange={onChangeVersion} error={versionError} />
       )}
-      <TextAreaField
-        elementId="description"
-        fieldTitle={t(CreateI18nKey.DescriptionTitle)}
-        placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
-        optional={true}
-        value={entity.description}
-        errorText={descriptionError?.text}
-        invalid={!!descriptionError}
-        onChange={onChangeDescription}
-        elementCssClass="w-full"
-      />
+
+      <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
 
       {view === ApplicationRoute.Routes && (
         <TextInputField
           elementId="path"
-          placeholder={t(RoutesI18nKey.PathPlaceholder)}
-          fieldTitle={t(RoutesI18nKey.PathTitle)}
+          placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
+          fieldTitle={t(EntityFieldsI18nKey.paths)}
           value={(entity as DialRoute).paths?.[0]}
-          errorText={pathError?.text}
+          errorText={pathError}
           invalid={!!pathError}
           onChange={onChangePath}
         />

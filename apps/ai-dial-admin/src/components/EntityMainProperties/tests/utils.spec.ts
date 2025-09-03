@@ -1,44 +1,61 @@
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getDisplayNameErrorKeyPerView, getVersionErrorKeyPerView } from '../utils';
+import { getDisplayNameError, getVersionError } from '../utils';
 import { describe, expect, test } from 'vitest';
 
-describe('EntityMainProperties :: errors :: getDisplayNameErrorKeyPerView', () => {
-  test('Should return key for model', () => {
-    const res = getDisplayNameErrorKeyPerView(ApplicationRoute.Models);
+const mockT = (key: string, params?: Record<string, number>) => {
+  if (params) {
+    return `${key}`;
+  }
+  return key;
+};
 
-    expect(res).toBe(CreateI18nKey.DisplayNameErrorModel);
+describe('EntityMainProperties :: errors :: getDisplayNameError', () => {
+  test('returns MinMaxLength error if name is too short', () => {
+    const result = getDisplayNameError(ApplicationRoute.Models, 'a', ['foo'], mockT);
+    expect(result).toBe(ErrorI18nKey.MinMaxLength);
   });
 
-  test('Should return key for application', () => {
-    const res = getDisplayNameErrorKeyPerView(ApplicationRoute.Applications);
 
-    expect(res).toBe(CreateI18nKey.DisplayNameErrorApplication);
+  test('returns DisplayNameErrorModel if view is Models, name exists in names, and no version', () => {
+    const result = getDisplayNameError(ApplicationRoute.Models, 'foo', ['foo', 'bar'], mockT, '');
+    expect(result).toBe(ErrorI18nKey.DisplayNameErrorModel);
   });
 
-  test('Should return empty string', () => {
-    const res = getDisplayNameErrorKeyPerView(ApplicationRoute.Keys);
+  test('returns empty string if view is Models, name exists in names, but version is present', () => {
+    const result = getDisplayNameError(ApplicationRoute.Models, 'foo', ['foo', 'bar'], mockT, '1.0');
+    expect(result).toBe('');
+  });
 
-    expect(res).toBe('');
+  test('returns empty string if view is Models, name does not exist in names', () => {
+    const result = getDisplayNameError(ApplicationRoute.Models, 'baz', ['foo', 'bar'], mockT, '');
+    expect(result).toBe('');
+  });
+
+  test('returns empty string for non-Models view', () => {
+    const result = getDisplayNameError(ApplicationRoute.Application, 'foo', ['foo', 'bar'], mockT, '');
+    expect(result).toBe('');
   });
 });
 
-describe('EntityMainProperties :: errors :: getVersionErrorKeyPerView', () => {
-  test('Should return key for model', () => {
-    const res = getVersionErrorKeyPerView(ApplicationRoute.Models);
-
-    expect(res).toBe(CreateI18nKey.VersionErrorModel);
+describe('EntityMainProperties :: errors :: getVersionError', () => {
+  test('Should return empty if version is optional', () => {
+    const result = getVersionError(ApplicationRoute.Models, true, '', mockT);
+    expect(result).toBe('');
   });
 
-  test('Should return key for application', () => {
-    const res = getVersionErrorKeyPerView(ApplicationRoute.Applications);
-
-    expect(res).toBe(CreateI18nKey.VersionErrorApplication);
+  test('Should return missing version error if required but not provided', () => {
+    const result = getVersionError(ApplicationRoute.Models, false, '', mockT);
+    expect(result).toBe(ErrorI18nKey.Version);
   });
 
-  test('Should return empty string', () => {
-    const res = getVersionErrorKeyPerView(ApplicationRoute.Keys);
+  test('Should return min/max length error if version is too short/long', () => {
+    const result = getVersionError(ApplicationRoute.Models, false, 'x', mockT);
+    expect(result).toBe(ErrorI18nKey.MinMaxLength);
+  });
 
-    expect(res).toBe('');
+  test('Should return empty if version is valid', () => {
+    const result = getVersionError(ApplicationRoute.Models, false, '1.2.3', mockT);
+    expect(result).toBe('');
   });
 });

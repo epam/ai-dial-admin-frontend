@@ -15,18 +15,11 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
-export default async function RootLayout({
-  children,
-  params,
-}: {
-  children: ReactNode;
-  params: Promise<{ lang: string }>;
-}) {
-  const { lang } = await params;
+export default async function RootLayout({ children }: { children: ReactNode }) {
   const themesConfig = await themesApi.getThemesConfiguration();
 
   return (
-    <html lang={lang}>
+    <html>
       <head>
         <link
           rel="icon"

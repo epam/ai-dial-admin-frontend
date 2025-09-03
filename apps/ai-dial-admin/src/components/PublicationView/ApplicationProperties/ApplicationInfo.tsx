@@ -1,49 +1,23 @@
 import { FC } from 'react';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import { CreateI18nKey, EntitiesI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
-import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
-import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
+import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
 import { DialApplicationResource } from '@/src/models/dial/application-resource';
+import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 
 interface Props {
   application: DialApplicationResource;
 }
 
 const ApplicationInfo: FC<Props> = ({ application }) => {
-  const t = useI18n();
-
   return application ? (
-    <div className="flex flex-col gap-y-6">
-      <TextInputField
-        elementId="displayName"
-        readonly={true}
-        fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
-        value={application?.displayName}
-      />
-      <TextInputField
-        readonly={true}
-        elementId="displayVersion"
-        fieldTitle={t(CreateI18nKey.VersionTitle)}
-        value={application?.displayVersion}
-      />
+    <div className="flex flex-col gap-y-6 w-full lg:w-[35%]">
+      <DisplayNameControl readonly={true} displayName={application?.displayName} />
+      <DescriptionControl entity={application} readonly={true} />
 
-      <TextInputField
-        readonly={true}
-        elementId="description"
-        fieldTitle={t(CreateI18nKey.DescriptionTitle)}
-        value={application?.description}
-      />
-
-      <EntityIcon fieldTitle={t(EntitiesI18nKey.Icon)} readonly={true} elementId="icon" entity={application} />
-
-      <Multiselect
-        readonly={true}
-        elementId="topics"
-        selectedItems={application?.descriptionKeywords}
-        title={t(TopicsI18nKey.Topics)}
-      />
+      <IconControl readonly={true} iconUrl={application.iconUrl} />
+      <TopicsControl readonly={true} entity={{ topics: application?.descriptionKeywords }} />
     </div>
   ) : null;
 };

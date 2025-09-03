@@ -2,6 +2,7 @@ import { FC, ReactNode } from 'react';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
+import classNames from 'classnames';
 
 interface Props {
   label: string;
@@ -12,16 +13,16 @@ interface Props {
 
 const LabeledText: FC<Props> = ({ label, text, children, copyButton }) => {
   return (
-    <div className="flex flex-col max-w-[200px]">
+    <div className={classNames('flex flex-col', children ? '' : 'max-w-[200px]')}>
       <label className="tiny mb-2 text-secondary">{label}</label>
       {children ? (
         children
       ) : (
-        <div className="flex flex-row">
+        <div className="flex flex-row items-center">
           <Tooltip tooltip={text}>{text}</Tooltip>
 
           {copyButton && (
-            <div className="ml-2">
+            <div className="ml-2 flex items-center justify-center">
               <CopyButton field={text || ''} title={label} />
             </div>
           )}

@@ -1,5 +1,5 @@
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import Button from '@/src/components/Common/Button/Button';
@@ -11,30 +11,34 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
-import { DialPrompt } from '@/src/models/dial/prompt';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { getErrorNotification } from '@/src/utils/notification';
-import { isValidEntity } from '@/src/utils/validation/is-valid-entity';
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { RoutesForCheckingUniqueName } from './constants';
+import { DialRoute } from '@/src/models/dial/route';
 
-interface Props {
+interface CreatePromptEntity extends BaseEntity {
+  version?: string;
+  folderId?: string;
+}
+
+interface Props<T> {
   route: ApplicationRoute;
   modalState: PopUpState;
   names: string[];
   modalTitle: string;
   runners?: DialApplicationScheme[];
   versionsMap?: Record<string, string[]>;
-  createEntity: (entity: DialBaseEntity) => Promise<ServerActionResponse>;
+  createEntity?: (entity: T) => Promise<ServerActionResponse>;
   onClose: () => void;
 }
 
-const RoutesForCheckingUniqueName = [ApplicationRoute.Models, ApplicationRoute.Applications, ApplicationRoute.Routes];
-
-const CreateEntity: FC<Props> = ({
+const CreateEntity = <T extends CreatePromptEntity>({
   modalTitle,
   runners,
   route,
@@ -43,26 +47,22 @@ const CreateEntity: FC<Props> = ({
   versionsMap,
   onClose,
   createEntity,
-}) => {
+}: Props<T>) => {
   const t = useI18n();
   const router = useRouter();
   const { filePath, fetchFiles } = usePromptFolder();
+  const { isValid, dispatch } = useSaveValidationContext();
 
   const { showNotification } = useNotification();
 
-  const [currentEntity, setEntity] = useState<DialBaseEntity>(
-    versionsMap
-      ? { name: '', description: '', version: '1.0.0' }
-      : {
-          name: '',
-          description: '',
-        },
+  const [currentEntity, setEntity] = useState<T>(
+    versionsMap ? ({ name: '', description: '', version: '1.0.0' } as T) : ({ name: '', description: '' } as T),
   );
-  const [isValid, setIsValid] = useState(false);
-  const [isUniqueNameError, setIsUniqueNameError] = useState(false);
+
+  const [isUniqueNameError, setIsUniqueNameError] = useState<boolean | undefined>(void 0);
 
   const onChangeEntity = useCallback(
-    (entity: DialBaseEntity) => {
+    (entity: BaseEntity) => {
       setEntity({ ...currentEntity, ...entity });
     },
     [currentEntity, setEntity],
@@ -73,19 +73,19 @@ const CreateEntity: FC<Props> = ({
       ...currentEntity,
       name: currentEntity.name?.trim(),
     };
+
     const isUnique = RoutesForCheckingUniqueName.includes(route)
       ? await checkIsUniqueDeploymentName(entity.name as string)
       : true;
 
     setIsUniqueNameError(!isUnique);
-    if (!isUnique) {
-      setIsValid(false);
-      return;
-    }
+
+    if (!isUnique) return;
+
     if (route === ApplicationRoute.Prompts) {
-      (entity as DialPrompt).folderId = filePath;
+      entity.folderId = filePath;
     }
-    createEntity(entity).then((res) => {
+    createEntity?.(entity).then((res) => {
       if (res.success) {
         if (route === ApplicationRoute.Prompts) {
           fetchFiles(filePath);
@@ -100,9 +100,30 @@ const CreateEntity: FC<Props> = ({
   }, [currentEntity, showNotification, fetchFiles, filePath, onClose, route, router, createEntity]);
 
   useEffect(() => {
-    setIsValid(isValidEntity(route, currentEntity, !!versionsMap, names));
-    setIsUniqueNameError(false);
+    setIsUniqueNameError(void 0);
   }, [currentEntity, route, versionsMap, names]);
+
+  // initial validation (disable save when no values entered yet)
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!currentEntity.name });
+
+    if (versionsMap) {
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'version',
+        isValid: !!currentEntity.version,
+      });
+    }
+
+    if (route === ApplicationRoute.Routes) {
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'path',
+        isValid: !!(currentEntity as DialRoute).paths?.length,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Popup onClose={onClose} heading={modalTitle} portalId="CreateEntity" state={modalState}>
@@ -128,7 +149,12 @@ const CreateEntity: FC<Props> = ({
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
         <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <Button cssClass="primary" title={t(ButtonsI18nKey.Create)} onClick={onCreate} disable={!isValid} />
+        <Button
+          cssClass="primary"
+          title={t(ButtonsI18nKey.Create)}
+          onClick={onCreate}
+          disable={(isUniqueNameError != null && !isUniqueNameError) || !isValid}
+        />
       </div>
     </Popup>
   );

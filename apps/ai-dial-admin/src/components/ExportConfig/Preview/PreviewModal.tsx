@@ -7,7 +7,7 @@ import Popup from '@/src/components/Common/Popup/Popup';
 import Switch from '@/src/components/Common/Switch/Switch';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import ConfigContentGrid from '@/src/components/ExportConfig/Content/ConfigContentGrid';
-import { getPreviewTabs } from '@/src/components/ExportConfig/Preview/PreviewModal.utils';
+import { getPreviewTabs } from '@/src/components/ExportConfig/Preview/utils';
 import { ButtonsI18nKey, ExportI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -69,7 +69,7 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, modalState, onClose
   return (
     <Popup
       onClose={onClose}
-      heading={t(ExportI18nKey.ExportFilePreview)}
+      heading={t(ExportI18nKey.FilePreview)}
       portalId="ExportFilePreview"
       state={modalState}
       containerClassName="h-[800px] lg:max-w-[75%] md:max-w-[90%]"

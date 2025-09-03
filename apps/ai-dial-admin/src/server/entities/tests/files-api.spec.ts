@@ -3,7 +3,8 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { FILES_URL, FilesApi } from '../files-api';
+import { FILE_IMPORT_URL, FILE_IMPORT_ZIP_URL, FILES_URL, FilesApi } from '../files-api';
+import { ImportFileType } from '@/src/types/import';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -51,5 +52,34 @@ describe('Server :: FilesApi', () => {
     await instance.moveFiles(TOKEN_MOCK, paths, '/new');
 
     expect(fetchMock).toHaveBeenCalledTimes(paths.length);
+  });
+
+  test('importFiles calls postFiles with FILE_IMPORT_ZIP_URL for ARCHIVE', async () => {
+    fetchMock.mockResponse({});
+    const formData = new FormData();
+
+    await instance.importFiles(TOKEN_MOCK, formData, ImportFileType.ARCHIVE);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${TEST_URL}${FILE_IMPORT_ZIP_URL}`,
+      expect.objectContaining({
+        method: 'POST',
+        body: formData,
+      }),
+    );
+  });
+
+  test('importFiles calls postFiles with FILE_IMPORT_URL for non-ARCHIVE', async () => {
+    fetchMock.mockResponse({});
+    const formData = new FormData();
+    await instance.importFiles(TOKEN_MOCK, formData, ImportFileType.FILES);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${TEST_URL}${FILE_IMPORT_URL}`,
+      expect.objectContaining({
+        method: 'POST',
+        body: formData,
+      }),
+    );
   });
 });

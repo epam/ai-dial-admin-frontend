@@ -4,13 +4,13 @@ import { FC, useState } from 'react';
 
 import classNames from 'classnames';
 
-import { FoldersI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useRuleFolder } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialRule } from '@/src/models/dial/rule';
 import { getFolderName } from '@/src/utils/files/folder';
-import RulesItem from './RulesItem';
-import { sortRules } from './rules';
+import RulesItem from '@/src/components/Rules/Item/RulesItem';
+import { sortRules } from '@/src/components/Rules/utils';
 
 interface Props {
   rulesMap?: Record<string, DialRule[]>;
@@ -38,7 +38,7 @@ const RulesList: FC<Props> = ({ rulesMap, isReadonly, onChange }) => {
     <div className="flex flex-col w-full h-full overflow-auto">
       {!isSingle && !isEmpty && (
         <div>
-          <span className={operatorNameClass}>{t(FoldersI18nKey.And)}</span>
+          <span className={operatorNameClass}>{t(BasicI18nKey.And)}</span>
         </div>
       )}
       {!isEmpty && rulesMap && (

@@ -1,6 +1,49 @@
 import { describe, expect, test, vi } from 'vitest';
+
+import { ErrorI18nKey } from '@/src/constants/i18n';
+import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { ErrorType } from '@/src/types/error-type';
-import { getErrorForName, forbiddenNameSymbols } from '../name-error';
+import { getErrorForDisplayName, getErrorForName, getErrorForUrlId } from '../name-error';
+
+const mockT = vi.fn().mockReturnValue('Translated Text');
+
+describe('Validation :: getErrorForUrlId', () => {
+  const t = (s: string) => s;
+  test('Should clear all field', () => {
+    const res1 = getErrorForUrlId('id', []);
+    const res2 = getErrorForUrlId('id', [], t);
+
+    expect(res1).toEqual({
+      text: '',
+      type: ErrorType.INVALID,
+    });
+
+    expect(res2).toEqual({
+      text: ErrorI18nKey.UrlField,
+      type: ErrorType.INVALID,
+    });
+  });
+
+  test('Should clear all field', () => {
+    const res1 = getErrorForUrlId(`https://ai-dial-test.com${new Array(851).fill('a').join()}`, []);
+    const res2 = getErrorForUrlId(`https://ai-dial-test.com${new Array(851).fill('a').join()}`, [], t);
+
+    expect(res1).toEqual({
+      text: '',
+      type: ErrorType.LENGTH,
+    });
+    expect(res2).toEqual({
+      text: ErrorI18nKey.Length,
+      type: ErrorType.LENGTH,
+    });
+  });
+
+  test('Should clear all field', () => {
+    const res = getErrorForUrlId('https://ai-dial-test.com');
+
+    expect(res).toBeNull();
+  });
+});
 
 describe('Utils :: validations :: getErrorForName', () => {
   const mockT = vi.fn().mockReturnValue('Translated Text');
@@ -49,8 +92,8 @@ describe('Utils :: validations :: getErrorForName', () => {
   });
 
   test('Should return translated error for not unique name', () => {
-    const res1 = getErrorForName('name', ['names'], mockT, true);
-    const res2 = getErrorForName('name', ['names'], void 0, true);
+    const res1 = getErrorForName('names', ['names'], mockT, true);
+    const res2 = getErrorForName('names', ['names'], void 0, true);
 
     expect(res1).toEqual({
       type: ErrorType.EXISTING,
@@ -63,7 +106,7 @@ describe('Utils :: validations :: getErrorForName', () => {
     });
   });
 
-  forbiddenNameSymbols.forEach((symbol) => {
+  FORBIDDEN_NAME_SYMBOLS.forEach((symbol) => {
     test(`Should return forbidden chars error for symbol: ${symbol}`, () => {
       const nameWithSymbol = `name${symbol}`;
       const res2 = getErrorForName(nameWithSymbol, ['names']);
@@ -82,5 +125,50 @@ describe('Utils :: validations :: getErrorForName', () => {
 
     expect(res1).toBeNull();
     expect(res2).toBeNull();
+  });
+});
+
+describe('getErrorForDisplayName', () => {
+  test('returns error if name is undefined', () => {
+    const result = getErrorForDisplayName(undefined);
+
+    expect(result).toBeNull();
+  });
+
+  test('returns error if name is too short', () => {
+    const result = getErrorForDisplayName('a', false, mockT);
+
+    expect(result).toEqual({
+      type: ErrorType.LENGTH,
+      text: 'Translated Text',
+    });
+  });
+
+  test('returns error if name is too long', () => {
+    const longName = 'a'.repeat(300);
+    const result = getErrorForDisplayName(longName, false, mockT);
+    expect(result).toEqual({
+      type: ErrorType.LENGTH,
+      text: 'Translated Text',
+    });
+  });
+
+  test('returns error if required and name is empty', () => {
+    const result = getErrorForDisplayName('', true, mockT);
+    expect(result).toMatchObject({
+      type: ErrorType.LENGTH,
+      text: 'Translated Text',
+    });
+  });
+
+  test('returns null if name is valid and required', () => {
+    expect(getErrorForDisplayName('abc', true, mockT)).toBeNull();
+    expect(getErrorForDisplayName('abcdef', true, mockT)).toBeNull();
+  });
+
+  test('returns null if name is valid and not required', () => {
+    const validName = 'validName';
+    const result = getErrorForDisplayName(validName, false, mockT);
+    expect(result).toBeNull();
   });
 });

@@ -8,7 +8,7 @@ import { isEqual } from 'lodash';
 import Button from '@/src/components/Common/Button/Button';
 import Field from '@/src/components/Common/Field/Field';
 import Tag from '@/src/components/Common/TagInput/Tag';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { AttachmentsI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
 
@@ -26,6 +26,7 @@ interface Props {
   elementId?: string;
   optional?: boolean;
   disable?: boolean;
+  inputClass?: string;
   onChange?: (values: string[]) => void;
 }
 
@@ -40,6 +41,7 @@ const AttachmentInput: FC<Props> = ({
   elementId,
   optional,
   disable,
+  inputClass,
   onChange,
 }) => {
   const t = useI18n();
@@ -170,8 +172,8 @@ const AttachmentInput: FC<Props> = ({
           <Tag key="all-values" tag={allValueLabel || ''} remove={() => removeAttachment(0)} />
         </div>
       ) : (
-        <div className={classNames('flex flex-row gap-2 items-center', disable && 'pointer-events-none')}>
-          <div className={classNames('input min-h-[38px] p-[6px] flex-1')}>
+        <div className={classNames('flex flex-row gap-2 items-center w-full', disable && 'pointer-events-none')}>
+          <div className={classNames('input min-h-[38px] p-[6px]', inputClass)}>
             <div
               ref={containerRef}
               className={classNames('flex flex-wrap items-start gap-2', wraps ? 'flex-col-reverse' : 'flex-row')}
@@ -199,7 +201,12 @@ const AttachmentInput: FC<Props> = ({
             </div>
           </div>
           {!allSelected && (
-            <Button cssClass="secondary" title={t(ButtonsI18nKey.UseAll)} onClick={handleSelectAll} disable={disable} />
+            <Button
+              cssClass="secondary"
+              title={t(AttachmentsI18nKey.UseAll)}
+              onClick={handleSelectAll}
+              disable={disable}
+            />
           )}
           {!!selected.length && (
             <Button cssClass="secondary" title={t(ButtonsI18nKey.None)} onClick={handleSelectNone} disable={disable} />

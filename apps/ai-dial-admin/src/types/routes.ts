@@ -14,6 +14,7 @@ export enum ApplicationRoute {
   Routes = '/routes',
   Dashboard = '/dashboard',
   UsageLog = '/usage-log',
+  Toolsets = '/toolsets',
   PromptPublications = '/prompt-publications',
   FilePublications = '/file-publications',
   ImportConfig = '/import-config',

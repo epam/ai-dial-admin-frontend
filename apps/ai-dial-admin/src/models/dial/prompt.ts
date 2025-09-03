@@ -1,7 +1,7 @@
-import { DialBaseEntity } from './base-entity';
+import { BaseEntity } from './base-entity';
 import { DialFile } from './file';
 
-export interface DialPrompt extends DialBaseEntity, DialFile {
+export interface DialPrompt extends DialFile, BaseEntity {
   version: string;
   status: PromptStatus;
   content: string;
@@ -10,7 +10,7 @@ export interface DialPrompt extends DialBaseEntity, DialFile {
   versions?: string[];
 }
 
-export enum PromptStatus {
+enum PromptStatus {
   pending = 'PENDING',
   approved = 'APPROVED',
 }

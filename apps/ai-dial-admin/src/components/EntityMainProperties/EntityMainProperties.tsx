@@ -1,34 +1,32 @@
 'use client';
 
 import { uniq } from 'lodash';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import ApplicationSource from '@/src/components/ApplicationSource/ApplicationSource';
+import ApplicationSource from '@/src/components/Applications/ApplicationSource/ApplicationSource';
 import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/AutocompleteField';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import { CreateI18nKey } from '@/src/constants/i18n';
-import { MAX_NAME_SYMBOLS, MIN_NAME_SYMBOLS } from '@/src/constants/validation';
+import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
+import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
+import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
-import { FieldError } from '@/src/models/error';
-import { ApplicationRoute } from '@/src/types/routes';
-import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import { getErrorForName, isWrongLengthWithView } from '@/src/utils/validation/name-error';
-import AdditionalProperties from './AdditionalProperties';
-import { getDisplayNameErrorKeyPerView, getVersionErrorKeyPerView } from './utils';
+import { ChatEntity } from '@/src/models/dial/base-entity';
 import { DialModel } from '@/src/models/dial/model';
+import { ApplicationRoute } from '@/src/types/routes';
 import classNames from 'classnames';
+import AdditionalProperties from './AdditionalProperties';
+import { getDisplayNameError, getVersionError } from './utils';
 
 interface Props {
   view: ApplicationRoute;
-  entity: DialBaseEntity;
+  entity: ChatEntity;
   names: string[];
+  isUniqueNameError?: boolean;
   runners?: DialApplicationScheme[];
   isEntityImmutable?: boolean;
-  isUniqueNameError?: boolean;
-  onChangeEntity: (entity: DialBaseEntity) => void;
+  onChangeEntity: (entity: ChatEntity) => void;
 }
 
 const EntityMainProperties: FC<Props> = ({
@@ -41,120 +39,90 @@ const EntityMainProperties: FC<Props> = ({
   isEntityImmutable = false,
 }) => {
   const t = useI18n() as (str: string, param?: Record<string, number>) => string;
+  const { dispatch } = useSaveValidationContext();
 
   const [isVersionOptional, setIsVersionOptional] = useState(true);
-
-  const [nameError, setNameError] = useState<FieldError | null>(null);
-  const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
-
-  const [isValidDisplayName, setIsValidDisplayName] = useState(true);
   const [displayNameError, setDisplayNameError] = useState<string | undefined>(void 0);
 
-  const [isValidVersion, setIsValidVersion] = useState(true);
-  const [versionError, setVersionError] = useState<string | undefined>(void 0);
-
-  useEffect(() => {
-    if (isUniqueNameError) {
-      setNameError(getErrorForName(void 0, void 0, t, true));
-    }
-  }, [isUniqueNameError, t]);
+  const versionError = useMemo(() => {
+    return entity.displayName
+      ? void 0
+      : getVersionError(view, isVersionOptional, (entity as DialModel).displayVersion as string, t);
+  }, [entity, isVersionOptional, t, view]);
 
   const onChangeName = useCallback(
-    (name: string) => {
-      const newEntity = { ...entity, name };
+    (newEntity: ChatEntity) => {
       if (view === ApplicationRoute.Models) {
-        (newEntity as DialModel).endpointDeploymentName = name;
+        (newEntity as DialModel).endpointDeploymentName = newEntity.name;
       }
-      setNameError(getErrorForName(name, void 0, t));
+
       onChangeEntity(newEntity);
     },
-    [entity, onChangeEntity, view, t],
+    [onChangeEntity, view],
   );
 
   const onChangeDisplayName = useCallback(
-    (name: string) => {
-      const displayName = name.trim();
-      const isIncludesDisplayName = names.includes(displayName);
-      setIsVersionOptional(!isIncludesDisplayName);
-      setIsValidDisplayName(
-        (!isIncludesDisplayName || (isIncludesDisplayName && !!(entity as DialModel).displayVersion)) &&
-          !isWrongLengthWithView(view, displayName),
-      );
+    (displayName: string) => {
+      setIsVersionOptional(!names.includes(displayName));
+      const error = getDisplayNameError(view, displayName as string, names, t, (entity as DialModel).displayVersion);
+      setDisplayNameError(error);
+
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'displayName',
+        isValid: !error,
+      });
+
       onChangeEntity({ ...entity, displayName });
     },
-    [names, entity, view, onChangeEntity],
+    [names, dispatch, view, t, onChangeEntity, entity],
   );
 
   useEffect(() => {
-    const errorKey = getDisplayNameErrorKeyPerView(view, isWrongLengthWithView(view, entity.displayName));
-
-    setDisplayNameError(
-      isValidDisplayName ? void 0 : errorKey ? t(errorKey, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS }) : '',
-    );
-  }, [entity.displayName, isValidDisplayName, t, view]);
+    if (view === ApplicationRoute.Models) {
+      dispatch({ type: ValidationActionType.SetField, field: 'displayVersion', isValid: !versionError });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [versionError, (entity as DialModel).displayVersion, t, view, dispatch]);
 
   const onChangeVersion = useCallback(
-    (displayVersion: string) => {
+    (displayVersion?: string) => {
       onChangeEntity({ ...entity, displayVersion } as DialModel);
-      if (!isVersionOptional && !isValidDisplayName && !!displayNameError) {
-        setIsValidDisplayName(!!displayVersion);
-      } else if (!isVersionOptional) {
-        const errorKey = getVersionErrorKeyPerView(view);
-        setVersionError(!displayVersion ? (errorKey ? t(errorKey) : '') : void 0);
-      } else {
-        const isLengthError = displayVersion != null ? isWrongLengthWithView(view, displayVersion) : false;
-        setIsValidVersion(!isLengthError);
-        setVersionError(
-          isLengthError ? t(CreateI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS }) : '',
-        );
-      }
+      const error = getDisplayNameError(view, entity.displayName as string, names, t, displayVersion);
+      setDisplayNameError(error);
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'displayName',
+        isValid: !error,
+      });
     },
-    [entity, onChangeEntity, displayNameError, t, view, isVersionOptional, isValidDisplayName, setIsValidDisplayName],
-  );
-
-  const onChangeDescription = useCallback(
-    (description: string) => {
-      setDescriptionError(getErrorForDescription(description, t));
-      onChangeEntity({ ...entity, description });
-    },
-    [entity, onChangeEntity, t],
+    [onChangeEntity, entity, view, names, t, dispatch],
   );
 
   return (
     <div className="w-full flex flex-col">
-      <div className={classNames('flex flex-col gap-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
+      <div className={classNames('flex flex-col gap-y-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
         {!isEntityImmutable && (
-          <TextInputField
-            fieldTitle={t(CreateI18nKey.IdTitle)}
-            elementId="id"
-            placeholder={t(CreateI18nKey.IdPlaceholder)}
-            value={entity.name}
-            onChange={onChangeName}
-            errorText={nameError?.text}
-            invalid={!!nameError}
-          />
+          <IdControl entity={entity} onChangeEntity={onChangeName} isUniqueNameError={isUniqueNameError} />
         )}
         <AutocompleteField
           elementId="displayName"
-          fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
-          placeholder={t(CreateI18nKey.DisplayNamePlaceholder)}
+          fieldTitle={t(EntityFieldsI18nKey.displayName)}
+          placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
           value={entity.displayName}
           errorText={displayNameError}
           onChange={onChangeDisplayName}
-          invalid={!isValidDisplayName}
+          invalid={!!displayNameError}
           items={uniq(names)}
+          optional={true}
         />
 
         {view === ApplicationRoute.Models && (
-          <TextInputField
-            elementId="displayVersion"
-            fieldTitle={t(CreateI18nKey.VersionTitle)}
-            placeholder={t(CreateI18nKey.VersionPlaceholder)}
-            optional={isVersionOptional}
-            value={(entity as DialModel).displayVersion}
+          <VersionControl
+            version={(entity as DialModel).displayVersion}
             onChange={onChangeVersion}
-            invalid={!isValidVersion}
-            errorText={versionError}
+            error={versionError}
+            optional={isVersionOptional}
           />
         )}
 
@@ -166,26 +134,19 @@ const EntityMainProperties: FC<Props> = ({
             onChangeEntity={onChangeEntity}
           />
         )}
-        <TextAreaField
-          elementId="description"
-          fieldTitle={t(CreateI18nKey.DescriptionTitle)}
-          placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
-          optional={true}
-          value={entity.description}
-          errorText={descriptionError?.text}
-          invalid={!!descriptionError}
-          onChange={onChangeDescription}
-          elementCssClass="w-full"
-        />
+
+        <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
       </div>
 
-      <AdditionalProperties
-        entity={entity}
-        onChangeEntity={onChangeEntity}
-        view={view}
-        isEntityImmutable={isEntityImmutable}
-        runners={runners}
-      />
+      <div className="mt-4">
+        <AdditionalProperties
+          entity={entity}
+          onChangeEntity={onChangeEntity}
+          view={view}
+          isEntityImmutable={isEntityImmutable}
+          runners={runners}
+        />
+      </div>
     </div>
   );
 };

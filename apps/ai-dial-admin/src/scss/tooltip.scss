@@ -1,0 +1,14 @@
+@layer components {
+  .tooltip {
+    @apply z-[55] break-words whitespace-pre-wrap rounded border border-primary bg-blackout px-2 py-1 tiny shadow max-w-[300px];
+  }
+}
+.tooltip-arrow {
+  @apply relative w-0 h-0 border-transparent border-b-primary border-l-[3px] border-r-[3px] border-b-[6px];
+
+  &::after {
+    @apply absolute top-[2px] left-[-2px] w-0 h-0 border-transparent;
+    @apply border-l-[2px] border-r-[2px] border-b-[4px] border-b-[var(--bg-layer-0,_#000000)];
+    content: '';
+  }
+}

@@ -46,7 +46,7 @@ const InputModal: FC<Props> = ({
         >
           <div
             className={classNames(
-              readonly ? 'border-0 p-0 !body' : '',
+              readonly ? 'input-disable' : '',
               'input input-field flex flex-row items-center w-full justify-between',
               inputCssClasses,
             )}
@@ -62,7 +62,7 @@ const InputModal: FC<Props> = ({
           <div
             className={classNames(
               'input flex flex-row items-center w-full justify-between',
-              readonly ? 'border-0 p-0' : '',
+              readonly ? 'input-disable' : '',
             )}
           >
             <AutocompleteInputValue selectedItems={value as string[]} />

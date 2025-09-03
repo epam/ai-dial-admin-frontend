@@ -1,4 +1,4 @@
-import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { SettingsModalI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { PopUpState } from '@/src/types/pop-up';
 import { fireEvent, render, screen } from '@testing-library/react';
 import SettingsModal from './SettingsModal';
@@ -20,12 +20,13 @@ describe('SettingsModal', () => {
   test('renders and allows theme selection and confirm', () => {
     render(<SettingsModal modalState={PopUpState.Opened} onClose={mockOnClose} onConfirm={mockOnConfirm} />);
 
-    expect(screen.getByText(BasicI18nKey.Settings)).toBeInTheDocument();
+    expect(screen.getByText(SettingsModalI18nKey.Settings)).toBeInTheDocument();
 
-    expect(screen.getByText(BasicI18nKey.Theme)).toBeInTheDocument();
+    expect(screen.getByText(SettingsModalI18nKey.Theme)).toBeInTheDocument();
     expect(screen.getByText('Light')).toBeInTheDocument();
 
-    const saveBtn = screen.getByText(ButtonsI18nKey.Save);
+    const saveBtn = screen.getByRole('button', { name: ButtonsI18nKey.Save });
+
     fireEvent.click(saveBtn);
 
     expect(mockOnConfirm).toHaveBeenCalledWith({ theme: 'light' });

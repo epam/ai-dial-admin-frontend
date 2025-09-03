@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 
 import { removeModel, updateModel } from '@/src/app/[lang]/models/actions';
 import { interceptorsApi, modelsApi, rolesApi } from '@/src/app/api/api';
-import EntityView from '@/src/components/EntityView/EntityView';
+import EntityView from '@/src/components/EntityView/View/EntityView';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
@@ -12,6 +12,7 @@ import { logger } from '@/src/server/logger';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import Page403 from '@/src/components/Page403/Page403';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,15 +40,24 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Models);
   }
 
+  const names = models?.reduce((acc, curr) => {
+    if (curr.displayName != null) {
+      acc.push(curr.displayName);
+    }
+    return acc;
+  }, [] as string[]) as string[];
+
   return (
-    <EntityView
-      view={ApplicationRoute.Models}
-      names={models?.map((model) => model.displayName || '') || []}
-      roles={roles}
-      interceptors={interceptors}
-      originalEntity={model}
-      removeEntity={removeModel}
-      updateEntity={updateModel}
-    />
+    <SaveValidationContextProvider>
+      <EntityView
+        view={ApplicationRoute.Models}
+        names={names}
+        roles={roles}
+        interceptors={interceptors}
+        originalEntity={model}
+        removeEntity={removeModel}
+        updateEntity={updateModel}
+      />
+    </SaveValidationContextProvider>
   );
 }

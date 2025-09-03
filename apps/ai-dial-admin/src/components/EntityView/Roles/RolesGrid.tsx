@@ -1,24 +1,26 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { GridApi, GridReadyEvent, IRowNode } from 'ag-grid-community';
-import { IconPlus, IconReload } from '@tabler/icons-react';
 
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { IconPlus, IconReload } from '@tabler/icons-react';
+import { GridApi, GridReadyEvent, IRowNode } from 'ag-grid-community';
+
 import Button from '@/src/components/Common/Button/Button';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
+import Switch from '@/src/components/Common/Switch/Switch';
 import Grid from '@/src/components/Grid/Grid';
 import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
-import { getRolesColumnDefs, getRolesGridData, isResetAvailable } from './utils';
+import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
-import Switch from '@/src/components/Common/Switch/Switch';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getRolesColumnDefs, getRolesGridData, isResetAvailable } from './utils';
 
 interface Props {
-  entity: DialBaseEntity;
+  entity: EntityRoleLimits;
   roles: DialRole[];
   isSkipRefresh: boolean;
-
-  onChangeEntity: (entity: DialBaseEntity, withRefresh?: boolean) => void;
+  view: ApplicationRoute;
+  onChangeEntity: (entity: EntityRoleLimits, withRefresh?: boolean) => void;
   onChangeTokensValue?: (value: number, data: DialRole, token: string) => void;
   onOpenAddModal?: () => void;
   onOpenInNewTab: (role: DialRole) => void;
@@ -33,6 +35,7 @@ interface Props {
 const RolesGrid: FC<Props> = ({
   entity,
   roles,
+  view,
   onChangeEntity,
   onChangeTokensValue,
   onOpenAddModal,
@@ -58,6 +61,7 @@ const RolesGrid: FC<Props> = ({
     onSetNoLimits,
     isResetToDefaultHidden,
     isSetNoLimitsHidden,
+    view,
   );
 
   const onGridReady = (event: GridReadyEvent) => {

@@ -3,6 +3,7 @@
 import { cookies, headers } from 'next/headers';
 
 import { applicationsApi } from '@/src/app/api/api';
+import { convertDefaultsToRecord } from '@/src/components/Defaults/utils';
 import { DEFAULT_ROLE_LIMITS } from '@/src/constants/role';
 import { DialApplication } from '@/src/models/dial/application';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -25,5 +26,11 @@ export async function createApplication(application: DialApplication) {
 
 export async function updateApplication(application: DialApplication) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return applicationsApi.updateApplication(application, token);
+  const app = {
+    ...application,
+    routes: application.routes?.map((route) => ({ ...route, name: route.displayName || route.name })),
+    defaults: convertDefaultsToRecord(application.defaultsTemp || []),
+  };
+  delete app.defaultsTemp;
+  return applicationsApi.updateApplication(app, token);
 }

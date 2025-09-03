@@ -1,13 +1,9 @@
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback } from 'react';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import { CreateI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
+import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { FieldError } from '@/src/models/error';
-import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import { getErrorForAppRunnerId } from './utils';
 import AppRunnerExtendedProperties from './ExtendedProperties';
 
 interface Props {
@@ -17,32 +13,18 @@ interface Props {
 }
 
 const SchemeProperties: FC<Props> = ({ runner, isImmutable, onChangeRunner }) => {
-  const t = useI18n() as (t: string) => string;
-
-  const [idError, setIdError] = useState<FieldError | null>(null);
-  const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
-
   const onChangeId = useCallback(
-    (id: string) => {
-      setIdError(getErrorForAppRunnerId(id, t));
+    (id?: string) => {
       onChangeRunner({
         ...runner,
-        $id: id.trim(),
+        $id: id,
       });
     },
-    [onChangeRunner, runner, t],
-  );
-
-  const onChangeDescription = useCallback(
-    (description: string) => {
-      setDescriptionError(getErrorForDescription(description, t));
-      onChangeRunner({ ...runner, description });
-    },
-    [runner, onChangeRunner, t],
+    [onChangeRunner, runner],
   );
 
   const onChangeName = useCallback(
-    (name: string) => {
+    (name?: string) => {
       onChangeRunner({ ...runner, 'dial:applicationTypeDisplayName': name });
     },
     [runner, onChangeRunner],
@@ -51,35 +33,12 @@ const SchemeProperties: FC<Props> = ({ runner, isImmutable, onChangeRunner }) =>
   return (
     <div className="flex flex-col gap-6 h-full">
       {!isImmutable && (
-        <TextInputField
-          elementId="id"
-          fieldTitle={t(CreateI18nKey.IdTitle)}
-          placeholder={t(CreateI18nKey.IdPlaceholder)}
-          value={runner.$id}
-          errorText={idError?.text}
-          invalid={!!idError}
-          onChange={onChangeId}
-        />
+        <IdControl isUrlId={true} entity={{ name: runner.$id }} onChangeEntity={(entity) => onChangeId(entity.name)} />
       )}
 
-      <TextInputField
-        elementId="name"
-        fieldTitle={t(CreateI18nKey.DisplayNameTitle)}
-        placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
-        value={runner['dial:applicationTypeDisplayName']}
-        onChange={onChangeName}
-      />
+      <DisplayNameControl displayName={runner['dial:applicationTypeDisplayName']} onChange={onChangeName} />
 
-      <TextAreaField
-        elementId="description"
-        fieldTitle={t(CreateI18nKey.DescriptionTitle)}
-        placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
-        optional={true}
-        errorText={descriptionError?.text}
-        invalid={!!descriptionError}
-        value={runner.description}
-        onChange={onChangeDescription}
-      />
+      <DescriptionControl entity={runner} onChangeEntity={onChangeRunner} />
 
       {isImmutable && <AppRunnerExtendedProperties runner={runner} onChangeRunner={onChangeRunner} />}
     </div>

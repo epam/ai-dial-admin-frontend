@@ -1,14 +1,25 @@
 import { FC, useCallback } from 'react';
 
-import { getModelsTopics } from '@/src/app/[lang]/models/actions';
+import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
-import { CreateI18nKey, EntitiesI18nKey, FeaturesI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
+import Switch from '@/src/components/Common/Switch/Switch';
+import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
+import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
+import EditorUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/EditorUrl';
+import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
+import ViewerUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ViewerUrl';
+import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
+import {
+  BasicI18nKey,
+  EntityFieldsI18nKey,
+  EntityPlaceholdersI18nKey,
+  FeaturesI18nKey,
+  TypeI18nKey,
+} from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme, TypeEntity } from '@/src/models/dial/application';
-import Switch from '@/src/components/Common/Switch/Switch';
-import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
+import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 
 interface Props {
   runner: DialApplicationScheme;
@@ -16,138 +27,152 @@ interface Props {
 }
 
 const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
-  const t = useI18n();
+  const t = useI18n() as (key: string) => string;
   const types: DropdownItemsModel[] = [
-    { id: TypeEntity.OBJECT, name: t(EntitiesI18nKey.ObjectType) },
-    { id: TypeEntity.BOOLEAN, name: t(EntitiesI18nKey.BooleanType) },
+    { id: BasicI18nKey.None, name: t(BasicI18nKey.None) },
+    { id: TypeEntity.OBJECT, name: t(TypeI18nKey.Object) },
+    { id: TypeEntity.BOOLEAN, name: t(TypeI18nKey.Boolean) },
   ];
 
-  const onChangeTopics = useCallback(
-    (topics: string[]) => {
-      onChangeRunner({ ...runner, topics });
+  const onChange = useCallback(
+    (value: string | string[] | boolean | undefined, key: keyof DialApplicationScheme) => {
+      onChangeRunner({ ...runner, [key]: value });
     },
     [runner, onChangeRunner],
   );
 
   const onChangeCompletionEndPoint = useCallback(
-    (endpoint: string) => {
-      onChangeRunner({ ...runner, 'dial:applicationTypeCompletionEndpoint': endpoint });
+    (endpoint?: string) => {
+      onChange(endpoint, 'dial:applicationTypeCompletionEndpoint');
     },
-    [runner, onChangeRunner],
+    [onChange],
+  );
+
+  const onChangeConfigurationEndpoint = useCallback(
+    (url?: string) => {
+      onChange(url, 'dial:applicationTypeConfigurationEndpoint');
+    },
+    [onChange],
+  );
+
+  const onChangeRateEndpoint = useCallback(
+    (url?: string) => {
+      onChange(url, 'dial:applicationTypeRateEndpoint');
+    },
+    [onChange],
+  );
+
+  const onChangePromptEndpoint = useCallback(
+    (url?: string) => {
+      onChange(url, 'dial:applicationTypeTruncatePromptEndpoint');
+    },
+    [onChange],
+  );
+
+  const onChangeTokenizeEndpoint = useCallback(
+    (url?: string) => {
+      onChange(url, 'dial:applicationTypeTokenizeEndpoint');
+    },
+    [onChange],
+  );
+
+  const onChangeViewerUrl = useCallback(
+    (url?: string) => {
+      onChange(url, 'dial:applicationTypeViewerUrl');
+    },
+    [onChange],
+  );
+
+  const onChangeEditorUrl = useCallback(
+    (url?: string) => {
+      onChange(url, 'dial:applicationTypeEditorUrl');
+    },
+    [onChange],
   );
 
   return (
     <div className="flex flex-col gap-6 h-full">
+      <IconControl
+        iconUrl={runner['dial:applicationTypeIconUrl']}
+        onChange={(icon: string) => {
+          onChange(icon, 'dial:applicationTypeIconUrl');
+        }}
+      />
       <TextInputField
         elementId="title"
-        fieldTitle={t(EntitiesI18nKey.Title)}
-        placeholder={t(EntitiesI18nKey.TitlePlaceholder)}
+        fieldTitle={t(EntityFieldsI18nKey.title)}
+        placeholder={t(EntityPlaceholdersI18nKey.Title)}
         value={runner.title}
         optional={true}
-        onChange={(title: string) => {
+        onChange={(title?: string) => {
           onChangeRunner({ ...runner, title });
         }}
       />
 
-      <DropdownField
-        selectedValue={runner.type}
-        elementId="type"
-        items={types}
-        fieldTitle={t(EntitiesI18nKey.Type)}
-        placeholder={t(EntitiesI18nKey.TypePlaceholder)}
-        onChange={(type: string) => {
-          onChangeRunner({ ...runner, type: type as TypeEntity });
-        }}
-      />
-      <Multiselect
-        elementId="topics"
-        selectedItems={runner.topics}
-        getItems={getModelsTopics}
-        onChangeItems={onChangeTopics}
-        heading={t(TopicsI18nKey.Topics)}
-        title={t(TopicsI18nKey.Topics)}
-        addPlaceholder={t(TopicsI18nKey.AddTopicPlaceholder)}
-        addTitle={t(TopicsI18nKey.AddTopic)}
-      />
+      <div className="lg:w-[35%]">
+        <DropdownField
+          selectedValue={runner.type || BasicI18nKey.None}
+          elementId="type"
+          items={types}
+          fieldTitle={t(EntityFieldsI18nKey.type)}
+          placeholder={t(EntityPlaceholdersI18nKey.Type)}
+          onChange={(type: string) => {
+            onChangeRunner({ ...runner, type: type === BasicI18nKey.None ? void 0 : (type as TypeEntity) });
+          }}
+        />
+      </div>
+      <TopicsControl entity={runner} onChange={onChangeRunner} />
 
-      <TextInputField
-        elementId="completionEndPoint"
-        fieldTitle={t(CreateI18nKey.CompletionEndpointTitle)}
-        placeholder={t(CreateI18nKey.CompletionEndpointPlaceholder)}
-        value={runner['dial:applicationTypeCompletionEndpoint']}
+      <CompletionEndpointControl
+        endpoint={runner['dial:applicationTypeCompletionEndpoint']}
         onChange={onChangeCompletionEndPoint}
       />
-
-      <TextInputField
-        elementId="configurationEndPoint"
-        fieldTitle={t(FeaturesI18nKey.configurationEndpoint)}
-        placeholder={t(EntitiesI18nKey.EndpointPlaceholder)}
-        value={runner['dial:applicationTypeConfigurationEndpoint']}
-        optional={true}
-        onChange={(url: string) => {
-          onChangeRunner({ ...runner, 'dial:applicationTypeConfigurationEndpoint': url });
-        }}
+      <ConfigurationEndpointControl
+        endpoint={runner['dial:applicationTypeConfigurationEndpoint']}
+        onChange={onChangeConfigurationEndpoint}
       />
-      <TextInputField
-        elementId="rateEndpoint"
+
+      <EndpointControl
+        id="rateEndpoint"
         fieldTitle={t(FeaturesI18nKey.rateEndpoint)}
-        placeholder={t(EntitiesI18nKey.EndpointPlaceholder)}
-        value={runner['dial:applicationTypeRateEndpoint']}
-        optional={true}
-        onChange={(url: string) => {
-          onChangeRunner({ ...runner, 'dial:applicationTypeRateEndpoint': url });
-        }}
+        placeholder={t(EntityPlaceholdersI18nKey.RateEndpoint)}
+        endpoint={runner['dial:applicationTypeRateEndpoint']}
+        onChange={onChangeRateEndpoint}
       />
 
-      <TextInputField
-        elementId="promptEndpoint"
+      <EndpointControl
+        id="promptEndpoint"
         fieldTitle={t(FeaturesI18nKey.truncatePromptEndpoint)}
-        placeholder={t(EntitiesI18nKey.EndpointPlaceholder)}
-        value={runner['dial:applicationTypeTruncatePromptEndpoint']}
-        optional={true}
-        onChange={(url: string) => {
-          onChangeRunner({ ...runner, 'dial:applicationTypeTruncatePromptEndpoint': url });
-        }}
+        placeholder={t(EntityPlaceholdersI18nKey.TruncatePromptEndpoint)}
+        endpoint={runner['dial:applicationTypeTruncatePromptEndpoint']}
+        onChange={onChangePromptEndpoint}
       />
 
-      <TextInputField
-        elementId="tokenizeEndpoint"
+      <EndpointControl
+        id="tokenizeEndpoint"
         fieldTitle={t(FeaturesI18nKey.tokenizeEndpoint)}
-        placeholder={t(EntitiesI18nKey.EndpointPlaceholder)}
-        value={runner['dial:applicationTypeTokenizeEndpoint']}
-        optional={true}
-        onChange={(url: string) => {
-          onChangeRunner({ ...runner, 'dial:applicationTypeTokenizeEndpoint': url });
-        }}
+        placeholder={t(EntityPlaceholdersI18nKey.TokenizeEndpoint)}
+        endpoint={runner['dial:applicationTypeTokenizeEndpoint']}
+        onChange={onChangeTokenizeEndpoint}
       />
 
-      <TextInputField
-        elementId="viewerUrl"
-        fieldTitle={t(CreateI18nKey.ViewerUrlTitle)}
-        placeholder={t(CreateI18nKey.ViewerUrlPlaceholder)}
-        value={runner['dial:applicationTypeViewerUrl']}
-        optional={true}
-        onChange={(url: string) => {
-          onChangeRunner({ ...runner, 'dial:applicationTypeViewerUrl': url });
-        }}
-      />
-
-      <TextInputField
-        elementId="editorUrl"
-        fieldTitle={t(CreateI18nKey.EditorUrlTitle)}
-        placeholder={t(CreateI18nKey.EditorUrlPlaceholder)}
-        value={runner['dial:applicationTypeEditorUrl']}
-        onChange={(url: string) => {
-          onChangeRunner({ ...runner, 'dial:applicationTypeEditorUrl': url });
-        }}
-      />
+      <ViewerUrlControl endpoint={runner['dial:applicationTypeViewerUrl']} onChange={onChangeViewerUrl} />
+      <EditorUrlControl endpoint={runner['dial:applicationTypeEditorUrl']} onChange={onChangeEditorUrl} />
 
       <Switch
         isOn={runner['dial:appendApplicationPropertiesHeader']}
-        title={t(CreateI18nKey.ApplicationPropertiesHeader)}
+        title={t(EntityFieldsI18nKey['dial:appendApplicationPropertiesHeader'])}
         switchId="appendApplicationPropertiesHeader"
         onChange={(value: boolean) => {
-          onChangeRunner({ ...runner, 'dial:appendApplicationPropertiesHeader': value });
+          onChange(value, 'dial:appendApplicationPropertiesHeader');
+        }}
+      />
+      <Switch
+        isOn={runner['dial:applicationTypePlaybackSupport']}
+        title={t(EntityFieldsI18nKey['dial:applicationTypePlaybackSupport'])}
+        switchId="applicationTypePlaybackSupport"
+        onChange={(value: boolean) => {
+          onChange(value, 'dial:applicationTypePlaybackSupport');
         }}
       />
     </div>

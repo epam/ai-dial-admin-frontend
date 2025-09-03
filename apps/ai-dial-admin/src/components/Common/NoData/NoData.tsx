@@ -1,16 +1,16 @@
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 import { IconClipboardX } from '@tabler/icons-react';
 
 interface Props {
+  icon?: ReactNode;
   emptyDataTitle: string;
-  dataTestId?: string;
 }
 
-const NoDataContent: FC<Props> = ({ emptyDataTitle, dataTestId }) => {
+const NoDataContent: FC<Props> = ({ icon, emptyDataTitle }) => {
   return (
-    <div data-testid={dataTestId} className="h-full w-full flex flex-col items-center justify-center text-secondary">
-      <IconClipboardX width={60} height={60} stroke={0.5} />
-      <span className="small mt-1 text-primary">{emptyDataTitle}</span>
+    <div className="h-full w-full flex flex-col items-center justify-center text-secondary">
+      {icon || <IconClipboardX width={60} height={60} />}
+      <span className="small mt-2 text-primary">{emptyDataTitle}</span>
     </div>
   );
 };

@@ -9,6 +9,8 @@ import {
   RULES_UPDATE_URL,
 } from '@/src/server/entities/folders-api';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { ImportFileType } from '@/src/types/import';
+import { PROMPT_IMPORT_JSON_URL, PROMPT_IMPORT_ZIP_URL } from '../prompts-api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
@@ -32,6 +34,38 @@ describe('Server :: FoldersApi', () => {
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({ path: '/some/path' }),
+      }),
+    );
+  });
+
+  test('calls postFiles with ZIP url if type is ARCHIVE', async () => {
+    fetchMock.mockResponseOnce({});
+
+    const formData = new FormData();
+
+    await instance.createFolder(TOKEN_MOCK, formData, ImportFileType.ARCHIVE);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${TEST_URL}${PROMPT_IMPORT_ZIP_URL}`,
+      expect.objectContaining({
+        method: 'POST',
+        body: formData,
+      }),
+    );
+  });
+
+  test('calls postFiles with JSON url if type is not ARCHIVE', async () => {
+    fetchMock.mockResponseOnce({});
+
+    const formData = new FormData();
+
+    await instance.createFolder(TOKEN_MOCK, formData, ImportFileType.FILES);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${TEST_URL}${PROMPT_IMPORT_JSON_URL}`,
+      expect.objectContaining({
+        method: 'POST',
+        body: formData,
       }),
     );
   });

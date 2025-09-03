@@ -1,5 +1,5 @@
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createKey } from '@/src/app/[lang]/keys/actions';
 import Button from '@/src/components/Common/Button/Button';
@@ -12,7 +12,8 @@ import { DialKey } from '@/src/models/dial/key';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
-import { isValidKey } from '@/src/utils/validation/is-valid-key';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   modalState: PopUpState;
@@ -26,6 +27,7 @@ const CreateKey: FC<Props> = ({ modalState, names, keys, onClose }) => {
   const router = useRouter();
 
   const { showNotification } = useNotification();
+  const { isValid, dispatch } = useSaveValidationContext();
 
   const [currentKey, setKey] = useState<DialKey>({
     name: '',
@@ -34,7 +36,10 @@ const CreateKey: FC<Props> = ({ modalState, names, keys, onClose }) => {
     project: '',
     secured: false,
   });
-  const [isValid, setIsValid] = useState(false);
+
+  const isValidKey = useMemo(() => {
+    return !keys.includes(currentKey.key || '');
+  }, [currentKey.key, keys]);
 
   const onChangeKey = useCallback(
     (entity: DialKey) => {
@@ -46,7 +51,7 @@ const CreateKey: FC<Props> = ({ modalState, names, keys, onClose }) => {
   const onCreate = useCallback(() => {
     createKey(currentKey).then((res) => {
       if (res.success) {
-        router.push(`${ApplicationRoute.Keys}/${currentKey.name}`);
+        router.push(getUrnForEntity(ApplicationRoute.Keys, currentKey));
         onClose();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
@@ -54,9 +59,13 @@ const CreateKey: FC<Props> = ({ modalState, names, keys, onClose }) => {
     });
   }, [currentKey, showNotification, onClose, router]);
 
+  // initial validation (disable save when no values entered yet)
   useEffect(() => {
-    setIsValid(isValidKey(currentKey, names) && !keys.includes(currentKey.key));
-  }, [currentKey, keys, names]);
+    dispatch({ type: ValidationActionType.SetField, field: 'key', isValid: !!currentKey.key });
+    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!currentKey.name });
+    dispatch({ type: ValidationActionType.SetField, field: 'project', isValid: !!currentKey.project });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Popup onClose={onClose} heading={t(CreateI18nKey.Key)} portalId="CreateKey" state={modalState}>
@@ -65,7 +74,12 @@ const CreateKey: FC<Props> = ({ modalState, names, keys, onClose }) => {
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
         <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <Button cssClass="primary" title={t(ButtonsI18nKey.Create)} onClick={onCreate} disable={!isValid} />
+        <Button
+          cssClass="primary"
+          title={t(ButtonsI18nKey.Create)}
+          onClick={onCreate}
+          disable={!isValid || !isValidKey}
+        />
       </div>
     </Popup>
   );

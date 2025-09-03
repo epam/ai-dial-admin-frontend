@@ -1,52 +1,35 @@
-import { FC, useState } from 'react';
+import { FC, useCallback } from 'react';
 
-import { CreateI18nKey } from '@/src/constants/i18n';
-import { FieldError } from '@/src/models/error';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { getUrlError } from '@/src/utils/validation/url-error';
-import { useI18n } from '@/src/locales/client';
-
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
+import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
+import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
 
 interface Props {
   entity: DialInterceptor;
   onChange: (entity: DialInterceptor) => void;
 }
 
-const InterceptorEndpoints: FC<Props> = ({ entity, onChange }) => {
-  const t = useI18n() as (key: string) => string;
+const Endpoints: FC<Props> = ({ entity, onChange }) => {
+  const onChangeCompletionEndpoint = useCallback(
+    (endpoint?: string) => {
+      onChange({ ...entity, endpoint });
+    },
+    [entity, onChange],
+  );
 
-  const [completionEndpointError, setCompletionEndpointError] = useState<FieldError | null>(null);
-  const [configurationEndpointError, setConfigurationEndpointError] = useState<FieldError | null>(null);
+  const onChangeConfigurationEndpoint = useCallback(
+    (configurationEndpoint?: string) => {
+      onChange({ ...entity, configurationEndpoint });
+    },
+    [entity, onChange],
+  );
 
   return (
     <div className="lg:w-[35%] flex flex-col gap-6">
-      <TextInputField
-        elementId="completionEndpoint"
-        fieldTitle={t(CreateI18nKey.CompletionEndpointTitle)}
-        placeholder={t(CreateI18nKey.CompletionEndpointPlaceholder)}
-        value={entity.endpoint}
-        errorText={completionEndpointError?.text}
-        invalid={!!completionEndpointError}
-        onChange={(endpoint) => {
-          setCompletionEndpointError(getUrlError(endpoint, t));
-          onChange({ ...entity, endpoint });
-        }}
-      />
-      <TextInputField
-        elementId="configurationEndpoint"
-        fieldTitle={t(CreateI18nKey.ConfigurationEndpointTitle)}
-        placeholder={t(CreateI18nKey.ConfigurationEndpointPlaceholder)}
-        value={(entity as DialInterceptor).configurationEndpoint}
-        errorText={configurationEndpointError?.text}
-        invalid={!!configurationEndpointError}
-        onChange={(configurationEndpoint) => {
-          setConfigurationEndpointError(getUrlError(configurationEndpoint, t));
-          onChange({ ...entity, configurationEndpoint });
-        }}
-      />
+      <CompletionEndpointControl endpoint={entity.endpoint} onChange={onChangeCompletionEndpoint} required={true} />
+      <ConfigurationEndpointControl endpoint={entity.configurationEndpoint} onChange={onChangeConfigurationEndpoint} />
     </div>
   );
 };
 
-export default InterceptorEndpoints;
+export default Endpoints;

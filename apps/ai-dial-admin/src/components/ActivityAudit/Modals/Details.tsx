@@ -3,13 +3,13 @@ import { FC, useEffect, useState } from 'react';
 import classNames from 'classnames';
 
 import { getActivityById, getRevisionDetails } from '@/src/app/[lang]/activity-audit/actions';
-import ActivityAuditView from '@/src/components/ActivityAuditView/ActivityAuditView';
+import AuditView from '@/src/components/ActivityAudit/View/AuditView';
 import Loader from '@/src/components/Common/Loader/Loader';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ActivityAuditI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialActivity } from '@/src/models/dial/activity-audit';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { DialActivity } from '@/src/models/activity-audit';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { PopUpState } from '@/src/types/pop-up';
 import { getRevisionRouteForEntityType } from '@/src/utils/audit/get-revision-route';
@@ -21,7 +21,7 @@ interface Props {
   partialActivity?: DialActivity;
   currentState?: ActivityAuditEntity;
   rollBackState?: ActivityAuditEntity;
-  entity?: DialBaseEntity;
+  entity?: BaseEntity;
 }
 
 const ActivityDetails: FC<Props> = ({
@@ -52,6 +52,7 @@ const ActivityDetails: FC<Props> = ({
           epochTimestampMs: activityDetails.epochTimestampMs,
           initiatedEmail: activityDetails.initiatedEmail,
           activityType: activityDetails.activityType,
+          resourceType: activityDetails.resourceType,
         } as DialActivity);
         const route = getRevisionRouteForEntityType(
           activityDetails?.resourceType,
@@ -91,7 +92,7 @@ const ActivityDetails: FC<Props> = ({
         {loading ? (
           <Loader />
         ) : (
-          <ActivityAuditView
+          <AuditView
             activity={activity || ({} as DialActivity)}
             activityRevision={activityRevision}
             previousRevision={previousRevision}

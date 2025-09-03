@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { applicationsApi, applicationRunnersApi } from '@/src/app/api/api';
-import ApplicationsList from '@/src/components/ApplicationsList/ApplicationsList';
+import ApplicationsList from '@/src/components/Applications/List/List';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -10,6 +10,7 @@ import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { logger } from '@/src/server/logger';
 import Page403 from '@/src/components/Page403/Page403';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,5 +36,9 @@ export default async function Page() {
     logger.error('Getting applications error', e);
   }
 
-  return <ApplicationsList data={data || []} runners={runners || []} />;
+  return (
+    <SaveValidationContextProvider>
+      <ApplicationsList data={data || []} runners={runners || []} />
+    </SaveValidationContextProvider>
+  );
 }

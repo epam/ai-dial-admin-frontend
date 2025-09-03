@@ -4,12 +4,12 @@ import { redirect } from 'next/navigation';
 import { ApplicationRoute } from '@/src/types/routes';
 
 import { activityAuditApi } from '@/src/app/api/api';
-import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/constants';
-import SystemRollback from '@/src/components/ActivityAudit/SystemRollback';
-import ActivityAuditView from '@/src/components/ActivityAuditView/ActivityAuditView';
+import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
+import SystemRollback from '@/src/components/ActivityAudit/Rollback/SystemRollback';
+import AuditView from '@/src/components/ActivityAudit/View/AuditView';
 import Page403 from '@/src/components/Page403/Page403';
-import { DialActivity } from '@/src/models/dial/activity-audit';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { DialActivity } from '@/src/models/activity-audit';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { FilterDto, PageDto } from '@/src/models/request';
 import { logger } from '@/src/server/logger';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
@@ -27,7 +27,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   let activityRevision: ActivityAuditEntity | null = null;
   let previousRevision: ActivityAuditEntity | null = null;
   let activities: PageDto<DialActivity> | null = null;
-  let entity: DialBaseEntity | undefined = void 0;
+  let entity: BaseEntity | undefined = void 0;
 
   try {
     const auditViewId = decodeURIComponent((await params.params).id);
@@ -65,7 +65,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       entity = (await activityAuditApi.getRevisionDetails(
         `${route}${activities.data?.[0].revision}`,
         token,
-      )) as DialBaseEntity;
+      )) as BaseEntity;
     }
 
     if (activity && route) {
@@ -81,7 +81,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   }
 
   return (
-    <ActivityAuditView
+    <AuditView
       activity={activity}
       activityRevision={activityRevision}
       previousRevision={previousRevision}

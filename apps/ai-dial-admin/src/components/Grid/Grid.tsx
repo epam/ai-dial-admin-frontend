@@ -28,6 +28,7 @@ import {
   themeBalham,
   TooltipModule,
   ColumnState,
+  EventApiModule,
 } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
 import { useCallback, useEffect, useState } from 'react';
@@ -36,7 +37,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { baseColumnComparator } from './comparators/base-column-comparator';
 import { getColumnsStateFromStorage, GridModel, saveColumnsStateToStorage } from './grid-columns';
 import { getRowHeight } from './grid-rows';
-import FloatingFilter from './FloatingFilter/FloatingFilterComponent';
+import FloatingFilter from './FloatingFilter/FloatingFilter';
 
 interface Props<T> {
   columnDefs?: ColDef[];
@@ -62,6 +63,7 @@ ModuleRegistry.registerModules([
   CellApiModule,
   InfiniteRowModelModule,
   RowStyleModule,
+  EventApiModule,
 ]);
 
 const GRID_THEME_COLORS = {
@@ -151,6 +153,17 @@ const Grid = <T extends object>({
     gridApi?.updateGridOptions({ columnDefs: columns, rowData });
   }, [columnDefs, gridApi, rowData]);
 
+  const tooltipRenderer = (params: { value: string }) => {
+    return (
+      <div className="tooltip relative break-words">
+        {params.value}
+        <div className="absolute left-1/2 top-[-6px]">
+          <div className="tooltip-arrow"></div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="ag-theme-balham-dark h-full overflow-x-auto" role="table">
       <AgGridReact
@@ -174,6 +187,7 @@ const Grid = <T extends object>({
           } as ITextFilterParams,
           comparator: baseColumnComparator.bind(this),
           tooltipValueGetter: (p: ITooltipParams) => p.data?.[(p.colDef as ColDef)?.field || ''],
+          tooltipComponent: tooltipRenderer,
         }}
         onGridSizeChanged={onGridSizeChanged}
         onFilterChanged={onStateChanged}

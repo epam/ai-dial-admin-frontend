@@ -1,5 +1,5 @@
 import { FC, useCallback, useState } from 'react';
-import { ButtonsI18nKey, FileUploadI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import IconGallery from '@/src/components/IconGallery/IconGallery';
 import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
@@ -27,7 +27,7 @@ const IconGalleryModal: FC<Props> = ({ modalState, selectedValue, onClose, onCha
   return (
     <Popup
       onClose={onClose}
-      heading={t(FileUploadI18nKey.IconModalHeader)}
+      heading={t(EntityFieldsI18nKey.iconUrl)}
       portalId="IconSelector"
       state={modalState}
       containerClassName={popupClassNames}

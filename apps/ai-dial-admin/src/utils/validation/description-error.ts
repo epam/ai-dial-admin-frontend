@@ -1,4 +1,4 @@
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey } from '@/src/constants/i18n';
 import { MAX_DESCRIPTION_SYMBOLS } from '@/src/constants/validation';
 import { ErrorType } from '@/src/types/error-type';
 
@@ -8,7 +8,7 @@ export const getErrorForDescription = (description?: string, t?: (str: string) =
   if (isWrongLength) {
     return {
       type: ErrorType.LENGTH,
-      text: t ? t(CreateI18nKey.DescriptionLengthError) : '',
+      text: t ? t(ErrorI18nKey.DescriptionLength) : '',
     };
   }
   return null;

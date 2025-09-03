@@ -12,7 +12,7 @@ interface Props extends InputProps {
 
 const InputWithIcon: FC<Props> = ({ iconBeforeInput, iconAfterInput, hideBorder, cssClass, ...props }) => {
   if (!iconBeforeInput && !iconAfterInput) {
-    return <Input cssClass={classNames(cssClass)} {...props} />;
+    return <Input cssClass={classNames('input-field', cssClass)} {...props} />;
   }
 
   return (
@@ -26,7 +26,7 @@ const InputWithIcon: FC<Props> = ({ iconBeforeInput, iconAfterInput, hideBorder,
       )}
     >
       {iconBeforeInput}
-      <Input cssClass={classNames('border-0 bg-transparent', cssClass)} {...props} />
+      <Input cssClass={classNames('border-0 bg-transparent', cssClass)} tooltipTriggerClassName={'flex-1'} {...props} />
       {iconAfterInput}
     </div>
   );

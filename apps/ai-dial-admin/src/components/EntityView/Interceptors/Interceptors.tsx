@@ -1,31 +1,35 @@
-import { RowDragEvent } from 'ag-grid-community';
-import { FC, useCallback, useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { IconPlus } from '@tabler/icons-react';
+import { RowDragEvent } from 'ag-grid-community';
+import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
-import NoDataContent from '@/src/components/Common/NoData/NoData';
-import Grid from '@/src/components/Grid/Grid';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { ButtonsI18nKey, EntitiesI18nKey, InterceptorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import Button from '@/src/components/Common/Button/Button';
-import { getInterceptorsColumnDefs, getInterceptorsGridData } from './utils';
-import { PopUpState } from '@/src/types/pop-up';
+import NoDataContent from '@/src/components/Common/NoData/NoData';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
+import Grid from '@/src/components/Grid/Grid';
+import { ButtonsI18nKey, EntitiesI18nKey, InterceptorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { useI18n } from '@/src/locales/client';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { getInterceptorsColumnDefs, getInterceptorsGridData } from './utils';
 
-interface Props {
-  entity: DialBaseEntity;
-  interceptors: DialBaseEntity[];
-  onChangeEntity: (entity: DialBaseEntity) => void;
+interface Props<T> {
+  entity: T;
+  interceptors: DialInterceptor[];
+  onChangeEntity: (entity: T) => void;
 }
 
-const EntityInterceptors: FC<Props> = ({ entity, interceptors, onChangeEntity }) => {
+const EntityInterceptors = <T extends { interceptors?: string[] }>({
+  entity,
+  interceptors,
+  onChangeEntity,
+}: Props<T>) => {
   const t = useI18n();
   const rowData = getInterceptorsGridData(interceptors, entity.interceptors);
-  const [availableInterceptors, setAvailableInterceptors] = useState<DialBaseEntity[]>([]);
+  const [availableInterceptors, setAvailableInterceptors] = useState<DialInterceptor[]>([]);
   const [addModalState, setAddModalState] = useState(PopUpState.Closed);
 
   useEffect(() => {
@@ -33,7 +37,7 @@ const EntityInterceptors: FC<Props> = ({ entity, interceptors, onChangeEntity })
   }, [entity, interceptors]);
 
   const onAddInterceptors = useCallback(
-    (interceptors: DialBaseEntity[]) => {
+    (interceptors: DialInterceptor[]) => {
       onChangeEntity({
         ...entity,
         interceptors: [...(entity.interceptors || []), ...interceptors.map((i) => i.name as string)],
@@ -44,7 +48,7 @@ const EntityInterceptors: FC<Props> = ({ entity, interceptors, onChangeEntity })
   );
 
   const onRemoveInterceptor = useCallback(
-    (_: DialBaseEntity, index: number) => {
+    (_: DialInterceptor, index: number) => {
       entity.interceptors?.splice(index, 1);
       onChangeEntity({
         ...entity,
@@ -74,7 +78,7 @@ const EntityInterceptors: FC<Props> = ({ entity, interceptors, onChangeEntity })
     setAddModalState(PopUpState.Closed);
   }, [setAddModalState]);
 
-  const onOpen = (interceptor: DialBaseEntity) => {
+  const onOpen = (interceptor: DialInterceptor) => {
     onOpenInNewTab(ApplicationRoute.Interceptors, interceptor);
   };
 

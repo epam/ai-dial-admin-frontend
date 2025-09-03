@@ -1,7 +1,6 @@
 import { ICellRendererParams } from 'ag-grid-community';
 import React, { ChangeEvent, useState } from 'react';
 
-import { PlaceholderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import Triangle from '@/public/images/icons/cell-triangle.svg';
 
@@ -15,12 +14,10 @@ interface EditableCellRendererParams extends ICellRendererParams {
 
 const EditableCellRenderer = (params: EditableCellRendererParams) => {
   const t = useI18n();
-  const placeholder = params.placeholder?.replace?.(' ', '');
-  const translatedPlaceholder = placeholder
-    ? t(PlaceholderI18nKey[placeholder as keyof typeof PlaceholderI18nKey])
-    : '';
+  const translatedPlaceholder = params.placeholder ? t(params.placeholder as any, {}) : '';
+
   const [value, setValue] = useState(
-    params.valueFormatter ? params.valueFormatter(params.value) : params.value || placeholder,
+    params.valueFormatter ? params.valueFormatter(params.value) : params.value || translatedPlaceholder,
   );
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -46,7 +43,7 @@ const EditableCellRenderer = (params: EditableCellRendererParams) => {
         onChange={handleChange}
         className="leading-[18px] h-[32px]"
       />
-      {params.defaultValue && params.defaultValue !== value && (
+      {!!params.defaultValue && params.defaultValue !== value && (
         <div className="absolute top-0 right-0 text-accent-tertiary">
           <Triangle />
         </div>

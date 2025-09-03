@@ -1,15 +1,15 @@
 'use client';
 
 import classNames from 'classnames';
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import { createPrompt, getPrompt, getPrompts, movePrompts, removePrompt } from '@/src/app/[lang]/prompts/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/entity-view';
-import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
+import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import PromptProperties from '@/src/components/PromptView/PromptProperties';
 import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/PromptView/utils';
@@ -22,6 +22,7 @@ import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor
 import { ApplicationRoute } from '@/src/types/routes';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { getErrorNotification } from '@/src/utils/notification';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   originalPrompt: DialPrompt;
@@ -57,7 +58,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
 
   useEffect(() => {
     if (Object.keys(selectedPrompt).length && originalPrompt) {
-      setIsChanged(!isEqual(originalPrompt, selectedPrompt));
+      setIsChanged(!isEqualSkippingUndefined(originalPrompt, selectedPrompt));
     }
   }, [selectedPrompt, originalPrompt]);
 
@@ -133,7 +134,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={headerClassName}>
         <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
-        <EntityViewHeaderButtons
+        <HeaderButtons
           view={ApplicationRoute.Prompts}
           entity={selectedPrompt}
           isChanged={isChanged}
@@ -152,7 +153,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
         {jsonEditorEnabled ? (
           <JSONEditor
             key={key}
-            model={selectedPrompt}
+            entity={selectedPrompt}
             errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedPrompt}
             setIsChanged={setIsChanged}

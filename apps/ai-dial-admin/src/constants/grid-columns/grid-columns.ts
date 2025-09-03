@@ -9,14 +9,15 @@ import {
   formatAttachment,
   getFormattedResourceType,
   numberValueFormatter,
+  priceValueFormatter,
 } from '@/src/constants/grid-columns/formatters';
-import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
 import { GridFilterType } from '@/src/types/grid-filter';
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
+import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
 
 const stringFilter: Partial<ColDef> = {
   filterParams: {
@@ -34,6 +35,27 @@ const stringFilter: Partial<ColDef> = {
 const dateTimeColumn: Partial<ColDef> = {
   valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
   tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
+};
+
+const numericColumn: Partial<ColDef> = {
+  cellClass: 'align-right',
+  headerClass: 'align-right',
+  comparator: numberValueComparator,
+  valueFormatter: (params) => numberValueFormatter(params),
+};
+
+const priceColumn: Partial<ColDef> = {
+  ...numericColumn,
+  headerComponentParams: {
+    innerHeaderComponent: HeaderWithHintButton,
+    innerHeaderComponentParams: {
+      hintText:
+        'The calculated price is an approximation. Since different models, applications, and configurations may have varying token usage and processing costs, it’s not possible to determine the exact final price in advance. \n' +
+        'The estimate gives you a general idea of expected costs, but the actual price may differ depending on how the chat unfolds (e.g., message length, complexity, model type, or additional features used).',
+      hintTitle: 'Total Price',
+    }, // TODO: Update when source of hints will be defined
+  },
+  valueFormatter: (params) => `$${priceValueFormatter(params)}`,
 };
 
 const CREATED_AT_COLUMN: ColDef = {
@@ -58,7 +80,7 @@ export const DESCRIPTION_COLUMN: ColDef = {
 };
 
 export const VERSION_COLUMN: ColDef = { field: 'version', colId: 'version', headerName: 'Version' };
-export const AUTHOR_COLUMN: ColDef = { field: 'author', colId: 'author', headerName: 'Author' };
+export const AUTHOR_COLUMN: ColDef = { field: 'author', colId: 'author', headerName: 'Author', hide: false };
 export const DISPLAY_NAME_COLUMN: ColDef = {
   field: 'displayName',
   colId: 'displayName',
@@ -69,13 +91,13 @@ const DISPLAY_NAME_COLUMN_WITH_SORT: ColDef = { ...DISPLAY_NAME_COLUMN, sort: 'a
 export const NAME_COLUMN: ColDef = { field: 'name', colId: 'name', headerName: 'ID', hide: false };
 const NAME_COLUMN_WITH_SORT: ColDef = { ...NAME_COLUMN, sort: 'asc' };
 
-const TOPIC_COLUMN: ColDef = {
+export const TOPIC_COLUMN: ColDef = {
   field: 'topics',
   colId: 'topics',
   headerName: 'Topics',
   cellRenderer: TopicsCellRenderer,
-  cellRendererParams: (params: { data?: DialBaseNamedEntity & { topics: string[] } }) => ({
-    topics: params.data?.topics || [],
+  cellRendererParams: (params: { data?: { topics?: string[]; descriptionKeywords?: string[] } }) => ({
+    topics: params.data?.topics || params.data?.descriptionKeywords || [],
   }),
 };
 
@@ -89,10 +111,20 @@ const ATTACHMENT_COLUMN = (t: (str: string) => string): ColDef => {
   };
 };
 
-export const SIMPLE_DESCRIPTION_COLUMNS: ColDef[] = [NAME_COLUMN_WITH_SORT, DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN];
-export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN];
+export const TYPE_COLUMN = (t: (str: string) => string): ColDef => {
+  return {
+    field: 'type',
+    headerName: 'Entity type',
+    valueFormatter: (params) => t(params.value),
+    tooltipValueGetter: (params) => t(params.value),
+  };
+};
 
-export const ENTITY_BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
+export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [NAME_COLUMN_WITH_SORT, DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN];
+
+export const ENTITY_BASE_COLUMNS: ColDef[] = [NAME_COLUMN, DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN];
+export const DEPENDENCIES_COLUMNS = [NAME_COLUMN, DISPLAY_NAME_COLUMN, VERSION_COLUMN, DESCRIPTION_COLUMN];
+
 export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   DISPLAY_NAME_COLUMN_WITH_SORT,
   { field: 'displayVersion', colId: 'displayVersion', headerName: 'Version', hide: false },
@@ -103,6 +135,7 @@ export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
     headerName: 'Adapter',
     hide: false,
   },
+  AUTHOR_COLUMN,
   { field: 'type', headerName: 'Type', hide: true },
   { field: 'overrideName', headerName: 'Override Name', hide: true },
   TOPIC_COLUMN,
@@ -121,6 +154,7 @@ export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   NAME_COLUMN,
   { field: 'endpoint', headerName: 'Endpoint', hide: false },
   TOPIC_COLUMN,
+  AUTHOR_COLUMN,
   ATTACHMENT_COLUMN(t),
   { field: 'maxInputAttachments', headerName: 'Max attachment number', hide: true },
   { field: 'forwardAuthToken', headerName: 'Forward auth token', hide: true },
@@ -158,6 +192,7 @@ export const ACTIVITY_AUDIT_COLUMNS = (isSingleEntity?: boolean): ColDef[] => {
 
 export const KEYS_COLUMNS: ColDef[] = [
   NAME_COLUMN_WITH_SORT,
+  DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
   {
     ...CREATED_AT_COLUMN,
@@ -202,7 +237,7 @@ export const RUNNERS_COLUMNS: ColDef[] = [
   TOPIC_COLUMN,
 ];
 
-export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, NAME_COLUMN, DESCRIPTION_COLUMN];
+export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
 
 export const PROMPTS_COLUMNS: ColDef[] = [
   { field: 'name', colId: 'name', headerName: 'Display Name' },
@@ -314,12 +349,110 @@ export const TELEMETRY_COLUMNS: ColDef[] = [
 
 export const TELEMETRY_GRID_COLUMNS: ColDef[] = [NAME_COLUMN, ...TELEMETRY_COLUMNS];
 
+export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
+  { field: 'completion_time', headerName: 'Completion Time', ...dateTimeColumn },
+  { field: 'trace_id', headerName: 'Trace ID' },
+  { field: 'topic', headerName: 'Topic' },
+  { field: 'reactions', headerName: 'Reactions', hide: true }, // TODO: not implemented
+  {
+    field: 'cached_prompt_tokens',
+    headerName: 'Cached Prompt Tokens',
+    hide: true,
+    ...numericColumn,
+  },
+  {
+    field: 'prompt_tokens',
+    headerName: 'Prompt Tokens',
+    ...numericColumn,
+  },
+  {
+    field: 'completion_tokens',
+    headerName: 'Completion Tokens',
+    ...numericColumn,
+  },
+  {
+    field: 'deployment_price',
+    headerName: 'Deployment Price',
+    ...priceColumn,
+  },
+  {
+    field: 'price',
+    headerName: 'Total Price',
+    ...priceColumn,
+  },
+  {
+    field: 'number_request_messages',
+    headerName: 'Number of Request Messages',
+    hide: true,
+    ...numericColumn,
+  },
+  { field: 'deployment', headerName: 'Deployment ID' },
+  { field: 'parent_deployment', headerName: 'Parent Deployment ID', hide: true },
+  { field: 'model', headerName: 'Model', hide: true },
+  { field: 'project_id', headerName: 'Project' },
+  { field: 'upstream', headerName: 'Upstream', hide: true },
+  { field: 'execution_path', headerName: 'Execution Path', hide: true },
+  { field: 'user_hash', headerName: 'User' },
+  { field: 'user_title', headerName: 'User Title', hide: true },
+  { field: 'language', headerName: 'Language', hide: true },
+  { field: 'duration', headerName: 'Duration', hide: true },
+  { field: 'response_id', headerName: 'Response ID', hide: true },
+  { field: 'chat_id', headerName: 'Conversation ID', hide: true },
+  { field: 'core_span_id', headerName: 'Core span ID', hide: true },
+  { field: 'core_parent_span_id', headerName: 'Core parent span ID' },
+];
+
+export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
+  { field: 'completion_time', headerName: 'Last activity', ...dateTimeColumn },
+  { field: 'chat_id', headerName: 'Conversation ID' },
+  { field: 'topic', headerName: 'Topic' },
+  {
+    field: 'cached_prompt_tokens',
+    headerName: 'Cached Prompt Tokens',
+    hide: true,
+    ...numericColumn,
+  },
+  {
+    field: 'prompt_tokens',
+    headerName: 'Prompt Tokens',
+    ...numericColumn,
+  },
+  {
+    field: 'completion_tokens',
+    headerName: 'Completion Tokens',
+    ...numericColumn,
+  },
+  {
+    field: 'deployment_price',
+    headerName: 'Total Price',
+    ...priceColumn,
+  },
+  {
+    field: 'number_request_messages',
+    headerName: 'Number of Request Messages',
+    hide: true,
+    ...numericColumn,
+  },
+
+  { field: 'deployment', headerName: 'Deployment ID' },
+  { field: 'project_id', headerName: 'Project' },
+  { field: 'user_hash', headerName: 'User' },
+  { field: 'user_title', headerName: 'User Title', hide: true },
+  { field: 'language', headerName: 'Language', hide: true },
+];
+
 export const PROJECT_GRID_COLUMNS: ColDef[] = [{ field: 'name', headerName: 'Project' }, ...TELEMETRY_COLUMNS];
 
 export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
   NAME_COLUMN_WITH_SORT,
   DESCRIPTION_COLUMN,
   { field: 'image', headerName: 'Interceptor Image' },
+];
+
+export const MCP_CONTAINERS_COLUMNS: ColDef[] = [
+  NAME_COLUMN_WITH_SORT,
+  DESCRIPTION_COLUMN,
+  { field: 'image', headerName: 'MCP Image' },
 ];
 
 export const SOURCE_RUNNERS_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, NAME_COLUMN, DESCRIPTION_COLUMN];

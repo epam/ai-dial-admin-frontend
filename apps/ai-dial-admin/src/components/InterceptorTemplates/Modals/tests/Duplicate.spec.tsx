@@ -1,9 +1,10 @@
-import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { describe, expect, test, vi } from 'vitest';
 
 import { PopUpState } from '@/src/types/pop-up';
 
+import { ButtonsI18nKey, DuplicateI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import Duplicate from '../Duplicate';
 
 describe('Duplicate InterceptorTemplate Modal', () => {
@@ -23,10 +24,10 @@ describe('Duplicate InterceptorTemplate Modal', () => {
     );
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'DuplicateEntity.InterceptorTemplate.Header' })).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('CreateEntity.id.placeholder')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Buttons.Cancel' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Buttons.Duplicate' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: DuplicateI18nKey.InterceptorTemplate })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Id)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Cancel })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate })).toBeInTheDocument();
   });
 
   test.skip('Should call onDuplicate when Duplicate button is clicked', async () => {
@@ -40,9 +41,9 @@ describe('Duplicate InterceptorTemplate Modal', () => {
       />,
     );
 
-    await user.clear(screen.getByPlaceholderText('CreateEntity.id.placeholder'));
-    await user.type(screen.getByPlaceholderText('CreateEntity.id.placeholder'), 't_copy');
-    await user.click(screen.getByRole('button', { name: 'Buttons.Duplicate' }));
+    await user.clear(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Id));
+    await user.type(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Id), 't_copy');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
 
     expect(onDuplicateMock).toHaveBeenCalled();
   });
@@ -58,7 +59,7 @@ describe('Duplicate InterceptorTemplate Modal', () => {
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Cancel }));
     expect(onCloseMock).toHaveBeenCalled();
   });
 });

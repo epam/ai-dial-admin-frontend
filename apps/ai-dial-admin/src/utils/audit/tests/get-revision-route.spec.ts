@@ -19,6 +19,12 @@ describe('Audit :: getRevisionRouteForEntityType', () => {
     expect(getRevisionRouteForEntityType(ActivityAuditResourceType.ADAPTER, id)).toBe(`/adapters/${id}/revision/`);
   });
 
+  test('returns correct route for INTERCEPTOR_TEMPLATE', () => {
+    expect(getRevisionRouteForEntityType(ActivityAuditResourceType.INTERCEPTOR_TEMPLATE, id)).toBe(
+      `/interceptor-runners/${id}/revision/`,
+    );
+  });
+
   test('returns correct route for INTERCEPTOR', () => {
     expect(getRevisionRouteForEntityType(ActivityAuditResourceType.INTERCEPTOR, id)).toBe(
       `/interceptors/${id}/revision/`,
@@ -86,6 +92,12 @@ describe('Audit :: getRevisionRouteForAllEntities', () => {
   test('returns correct route for APPLICATION_TYPE_SCHEMA', () => {
     expect(getRevisionRouteForAllEntities(ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA)).toBe(
       `/applicationTypeSchemas/revision/`,
+    );
+  });
+
+  test('returns correct route for INTERCEPTOR_TEMPLATE', () => {
+    expect(getRevisionRouteForAllEntities(ActivityAuditResourceType.INTERCEPTOR_TEMPLATE)).toBe(
+      `/interceptor-runners/revision/`,
     );
   });
 

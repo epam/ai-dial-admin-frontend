@@ -1,13 +1,13 @@
 'use client';
 
 import classNames from 'classnames';
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import Tabs from '@/src/components/Common/Tabs/Tabs';
-import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/entity-view';
-import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
+import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
 import { useFileFolder } from '@/src/context/FileFolderContext';
@@ -18,6 +18,7 @@ import { addTrailingSlash, changePath } from '@/src/utils/files/path';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   originalFile: DialFile;
@@ -40,7 +41,7 @@ const FileView: FC<Props> = ({ originalFile }) => {
   const headerClassName = classNames('flex flex-row min-h-[34px] justify-between');
 
   useEffect(() => {
-    setIsChanged(!isEqual(originalFile, selectedFile));
+    setIsChanged(!isEqualSkippingUndefined(originalFile, selectedFile));
   }, [selectedFile, originalFile]);
 
   const onChangeActiveTab = useCallback(
@@ -79,7 +80,7 @@ const FileView: FC<Props> = ({ originalFile }) => {
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={headerClassName}>
         <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={false} />
-        <EntityViewHeaderButtons
+        <HeaderButtons
           view={ApplicationRoute.Files}
           entity={selectedFile}
           isChanged={isChanged}

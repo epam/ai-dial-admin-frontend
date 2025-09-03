@@ -1,30 +1,31 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { IconRefresh } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { cloneDeep, isEqual } from 'lodash';
-import { useRouter } from 'next/navigation';
+import { cloneDeep } from 'lodash';
 
 import { removeKey, updateKey } from '@/src/app/[lang]/keys/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
-import { getRelevantRolesForKey } from '@/src/components/AddEntitiesTab/AddEntitiesView.utils';
-import { EntitiesGridData } from '@/src/models/entities-grid-data';
+import { getRelevantRolesForKey } from '@/src/components/AddEntitiesTab/utils';
 import Button from '@/src/components/Common/Button/Button';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
-import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { EntityViewTab, propertiesTabs, rolesTabs } from '@/src/components/EntityView/entity-view';
-import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
+import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import { auditTabs, EntityViewTab, propertiesTabs, rolesTabs } from '@/src/components/EntityView/View/utils';
+import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
+import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, KeysI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { DialRole } from '@/src/models/dial/role';
+import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { TabModel } from '@/src/models/tab';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
@@ -33,6 +34,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import KeyProperties from './KeyProperties';
 import KeyRotateModal from './KeyRotateModal';
 import KeyViewHeader from './KeyViewHeader';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   originalKey: DialKey;
@@ -46,7 +48,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
   const router = useRouter();
   const { showNotification } = useNotification();
 
-  const tabs: TabModel[] = [propertiesTabs(t), rolesTabs(t)];
+  const tabs: TabModel[] = [propertiesTabs(t), rolesTabs(t), auditTabs(t)];
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [confirmModalState, setConfirmModalState] = useState(PopUpState.Closed);
@@ -68,7 +70,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
   );
 
   useEffect(() => {
-    setIsChanged(!isEqual(originalKey, selectedKey));
+    setIsChanged(!isEqualSkippingUndefined(originalKey, selectedKey));
   }, [selectedKey, originalKey]);
 
   const onChangeActiveTab = useCallback(
@@ -162,7 +164,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
         <div className={headerClassName}>
           <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
-          <EntityViewHeaderButtons
+          <HeaderButtons
             view={ApplicationRoute.Keys}
             entity={selectedKey}
             isChanged={isChanged}
@@ -180,13 +182,13 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
               iconBefore={<IconRefresh {...BASE_ICON_PROPS} />}
               onClick={() => setRotateModalState(PopUpState.Opened)}
             />
-          </EntityViewHeaderButtons>
+          </HeaderButtons>
         </div>
         <div className="flex-1 overflow-auto mt-3 min-h-0">
           {jsonEditorEnabled ? (
             <JSONEditor
               key={key}
-              model={selectedKey}
+              entity={selectedKey}
               errorNotifications={errorNotifications}
               setSelectedEntity={setSelectedKey}
               setIsChanged={setIsChanged}
@@ -197,7 +199,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
               {activeTab === EntityViewTab.Properties && (
                 <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full">
                   <KeyViewHeader selectedKey={selectedKey} />
-                  <div className="mt-8 pt-8">
+                  <div className="pt-6 w-full">
                     <div className="lg:w-[35%]">
                       <KeyProperties
                         entity={selectedKey}
@@ -222,6 +224,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
                   getRelevantDataForEntity={getRelevantRolesForKey.bind(this, selectedKey)}
                 />
               )}
+              {activeTab === EntityViewTab.Audit && <EntityAudit entity={selectedKey} view={ApplicationRoute.Keys} />}
             </>
           )}
         </div>

@@ -1,19 +1,37 @@
-import { DialBaseNamedEntity, DialRoleLimitsMap } from './base-entity';
+import { DialRoleLimitsMap } from '@/src/models/dial/role-limits';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialModelEndpoint } from './model';
 
-export interface DialRoute extends DialBaseNamedEntity {
+export interface DialRoute extends BaseEntity {
   rewritePath?: boolean;
-  roleLimits?: DialRoleLimitsMap;
   response?: RouteResponse;
   paths?: string[];
   methods?: string[];
-  upstreams?: DialModelEndpoint[];
+  order?: number;
   maxRetryAttempts?: number;
+  roleLimits?: DialRoleLimitsMap;
+  upstreams?: DialModelEndpoint[];
 }
 
+// AppRoute - routes in the application or app runner
+export interface DialAppRoute extends DialRoute {
+  isPublic?: boolean;
+  permissions?: RoutePermission[];
+  attachmentPaths?: AttachmentPaths;
+}
+
+export interface AttachmentPaths {
+  requestBody: string[];
+  responseBody: string[];
+}
 export interface RouteResponse {
   status?: number | string;
   body?: string;
+}
+
+export enum RoutePermission {
+  READ = 'read',
+  WRITE = 'write',
 }
 
 export enum RouteOutput {

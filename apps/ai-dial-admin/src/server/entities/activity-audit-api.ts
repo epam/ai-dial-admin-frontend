@@ -1,6 +1,6 @@
 import { JWT } from 'next-auth/jwt';
 
-import { DialActivity } from '@/src/models/dial/activity-audit';
+import { DialActivity } from '@/src/models/activity-audit';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { API } from '../api';
 import { BaseApi } from '../base-api';

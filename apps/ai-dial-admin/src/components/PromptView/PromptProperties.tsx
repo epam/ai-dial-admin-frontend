@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { IconPlus } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 
-import AddVersionModal from '@/src/components/Common/AddVersionModal/AddVersionModal';
+import AddVersionModal from '@/src/components/PromptView/Modals/AddVersionModal';
 import Button from '@/src/components/Common/Button/Button';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
@@ -13,20 +13,27 @@ import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBas
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
 import MdEditor from '@/src/components/Common/MdEditor/MdEditor';
 import Switch from '@/src/components/Common/Switch/Switch';
-import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
-import { BasicI18nKey, ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
+import {
+  BasicI18nKey,
+  ButtonsI18nKey,
+  EntitiesI18nKey,
+  EntityFieldsI18nKey,
+  EntityPlaceholdersI18nKey,
+  FoldersI18nKey,
+  PromptsI18nKey,
+} from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
-import { FieldError } from '@/src/models/error';
 import { JSONEditorError } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
-import { getErrorForDescription } from '@/src/utils/validation/description-error';
+import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
+import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
 
 interface Props {
   prompt: DialPrompt;
@@ -59,17 +66,8 @@ const PromptProperties: FC<Props> = ({
   const versions: string[] = prompts?.map((prompt) => prompt.version) || [];
   const [modalState, setModalState] = useState(PopUpState.Closed);
 
-  const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
   const [isJSONContentMode, setJSONContentMode] = useState(false);
   const [jsonValue, setJsonValue] = useState<string | undefined>(undefined);
-
-  const onChangeDescription = useCallback(
-    (description: string) => {
-      setDescriptionError(getErrorForDescription(description, t));
-      onChangePrompt?.({ ...prompt, description });
-    },
-    [prompt, onChangePrompt, t],
-  );
 
   const onChangeContent = useCallback(
     (content: string) => {
@@ -162,43 +160,40 @@ const PromptProperties: FC<Props> = ({
 
   return (
     <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full">
-      <div className="flex flex-row gap-10">
-        {/* will be uncommented after BE implement author */}
+      <div className="flex flex-row gap-10 mb-6">
         {publication ? (
           <>
-            <LabeledText label={t(CreateI18nKey.DisplayNameTitle)} text={prompt.name} copyButton={true} />
-            {/* <LabeledText label="Author" text={publication.author} /> */}
+            <LabeledText label={t(EntityFieldsI18nKey.displayName)} text={prompt.name} copyButton={true} />
+            {prompt.author && <LabeledText label={t(EntitiesI18nKey.Author)} text={prompt.author} />}
             <LabeledText
-              label={t(EntitiesI18nKey.CreatedAt)}
+              label={t(EntityFieldsI18nKey.createdAt)}
               text={formatDateTimeToLocalString(publication.createdAt)}
             />
           </>
         ) : (
           <>
-            <LabeledText label={t(CreateI18nKey.DisplayNameTitle)} text={prompt.name} copyButton={true} />
-            {/* <LabeledText label="Author" text={prompt.author} /> */}
-            <LabeledText label={t(EntitiesI18nKey.UpdatedAt)} text={formatDateTimeToLocalString(prompt.updateTime)} />
+            <LabeledText label={t(EntityFieldsI18nKey.displayName)} text={prompt.name} copyButton={true} />
+            {prompt.author && <LabeledText label={t(EntitiesI18nKey.Author)} text={prompt.author} />}
+            <LabeledText
+              label={t(EntityFieldsI18nKey.updatedAt)}
+              text={formatDateTimeToLocalString(prompt.updateTime)}
+            />
           </>
         )}
       </div>
 
-      <div className="mt-8 pt-8">
+      <div className="pt-6">
         <div className="flex flex-col gap-6 pr-6">
           <div className="w-[105px]">
             {isImmutable ? (
-              <TextInputField
-                elementId="version"
-                fieldTitle={t(CreateI18nKey.VersionTitle)}
-                value={prompt.version}
-                disabled={isImmutable}
-              />
+              <VersionControl version={prompt.version} disabled={isImmutable} />
             ) : (
               <DropdownField
                 elementCssClass="lg:w-[35%]"
                 selectedValue={prompt.version}
                 elementId="version"
                 items={[...new Set([...versions, ...addedVersions])].map((v) => ({ id: v, name: v }))}
-                fieldTitle={t(CreateI18nKey.VersionTitle)}
+                fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
                 onChange={onChangeVersion}
               >
                 <Button
@@ -210,21 +205,12 @@ const PromptProperties: FC<Props> = ({
               </DropdownField>
             )}
           </div>
-          <TextAreaField
-            elementId="description"
-            elementCssClass="lg:w-[35%]"
-            fieldTitle={t(CreateI18nKey.DescriptionTitle)}
-            placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
-            optional={true}
-            disabled={isImmutable}
-            value={prompt.description}
-            errorText={descriptionError?.text}
-            invalid={!!descriptionError}
-            onChange={onChangeDescription}
-          />
+          <div className="lg:w-[35%]">
+            <DescriptionControl entity={prompt} onChangeEntity={onChangePrompt} disabled={isImmutable} />
+          </div>
           <div>
             <div className="flex justify-between mb-2">
-              <div className="tiny mb-2 text-secondary">{t(CreateI18nKey.ContentTitle)}</div>
+              <div className="tiny mb-2 text-secondary">{t(EntityFieldsI18nKey.content)}</div>
               <Switch
                 isOn={isJSONContentMode}
                 title="JSON"
@@ -244,16 +230,16 @@ const PromptProperties: FC<Props> = ({
             {isImmutable ? (
               <TextInputField
                 elementId="version"
-                fieldTitle={t(CreateI18nKey.StoragePathTitle)}
+                fieldTitle={t(FoldersI18nKey.Storage)}
                 value={prompt.path}
                 disabled={isImmutable}
               />
             ) : (
               <FilePath
                 value={prompt.folderId}
-                label={t(CreateI18nKey.StoragePathTitle)}
+                label={t(FoldersI18nKey.Storage)}
                 modalTitle={t(BasicI18nKey.MoveToFolder)}
-                placeholder={t(CreateI18nKey.StoragePathPlaceholder)}
+                placeholder={t(EntityPlaceholdersI18nKey.Path)}
                 onChange={onChangePath}
                 context={usePromptFolder}
               />

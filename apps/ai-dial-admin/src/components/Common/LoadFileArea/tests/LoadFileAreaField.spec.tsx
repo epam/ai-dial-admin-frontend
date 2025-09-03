@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import LoadFileAreaField from '../LoadFileAreaField';
-import { BasicI18nKey } from '../../../../constants/i18n';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 
 describe('Common components :: LoadFileAreaField', () => {
   test('Should render label and LoadFileArea', () => {
@@ -16,7 +16,7 @@ describe('Common components :: LoadFileAreaField', () => {
       />,
     );
     expect(screen.getByText('Files: 0')).toBeInTheDocument();
-    expect(screen.getByText(BasicI18nKey.Browse)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Browse })).toBeInTheDocument();
   });
 
   test('Should render delete and add buttons when files exist', () => {

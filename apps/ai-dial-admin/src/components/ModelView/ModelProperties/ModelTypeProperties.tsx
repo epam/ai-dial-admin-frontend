@@ -2,20 +2,20 @@
 
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import { getModelsTopics } from '@/src/app/[lang]/models/actions';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
+import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 import EntityAttachments from '@/src/components/EntityView/Properties/EntityAttachments';
-import EntityIcon from '@/src/components/EntityView/Properties/EntityIcon';
-import { EntitiesI18nKey, ModelViewI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
-import { RadioFieldOrientation } from '@/src/types/radio-orientation';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
+import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { RadioButtonModel } from '@/src/models/radio-button';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { useNotification } from '@/src/context/NotificationContext';
+import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { getErrorNotification } from '@/src/utils/notification';
 import { getModelContainers } from '@/src/app/[lang]/interceptors/actions';
 import SourceField from '@/src/components/SourceField/SourceField';
@@ -58,27 +58,20 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel, view }) => {
   );
 
   const onChangeOverrideName = useCallback(
-    (overrideName: string) => {
+    (overrideName?: string) => {
       onChangeModel({ ...model, overrideName });
     },
     [model, onChangeModel],
   );
 
-  const onChangeItems = useCallback(
-    (topics: string[]) => {
-      onChangeModel({ ...model, topics });
-    },
-    [model, onChangeModel],
-  );
-
   return (
-    <div className="w-full flex flex-col gap-5">
+    <div className="w-full flex flex-col gap-6">
       <div className="w-full lg:w-[35%]">
         <RadioField
           radioButtons={modelTypeRadio}
           activeRadioButton={model.type as string}
           elementId="type"
-          fieldTitle={t(ModelViewI18nKey.Type)}
+          fieldTitle={t(EntityFieldsI18nKey.type)}
           orientation={RadioFieldOrientation.Row}
           onChange={onChangeType}
         />
@@ -95,43 +88,23 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel, view }) => {
           adapters={adapters}
         />
       </div>
-      <div className="w-full flex flex-col gap-5 lg:w-[35%]">
+      <div className="w-full flex flex-col gap-6 lg:w-[35%]">
         <TextInputField
           elementId="overrideName"
-          fieldTitle={t(ModelViewI18nKey.OverrideName)}
-          placeholder={t(ModelViewI18nKey.OverrideNamePlaceholder)}
+          fieldTitle={t(EntityFieldsI18nKey.overrideName)}
+          placeholder={t(EntityPlaceholdersI18nKey.OverrideName)}
           value={model.overrideName}
           onChange={onChangeOverrideName}
           optional={true}
         />
         {model.type === DialModelType.Chat && (
           <>
-            <EntityIcon
-              fieldTitle={t(EntitiesI18nKey.Icon)}
-              elementId="icon"
-              entity={model}
-              onChangeEntity={onChangeModel}
-            />
-            <Multiselect
-              elementId="topics"
-              selectedItems={model.topics}
-              getItems={getModelsTopics}
-              allItems={model.topics}
-              optional={true}
-              onChangeItems={onChangeItems}
-              heading={t(TopicsI18nKey.Topics)}
-              title={t(TopicsI18nKey.Topics)}
-              addPlaceholder={t(TopicsI18nKey.AddTopicPlaceholder)}
-              addTitle={t(TopicsI18nKey.AddTopic)}
-            />
+            <IconControl iconUrl={model.iconUrl} onChange={(icon) => onChangeModel({ ...model, iconUrl: icon })} />
+            <TopicsControl entity={model} onChange={onChangeModel} />
           </>
         )}
       </div>
-      {model.type === DialModelType.Chat && (
-        <div className="w-full flex flex-col gap-5 lg:w-[75%]">
-          <EntityAttachments entity={model} onChangeEntity={onChangeModel} />
-        </div>
-      )}
+      {model.type === DialModelType.Chat && <EntityAttachments entity={model} onChangeEntity={onChangeModel} />}
     </div>
   );
 };

@@ -3,25 +3,26 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
-import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { ChatEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import SourceEntitySelector from '@/src/components/EntityMainProperties/SourceEntitySelector/SourceEntitySelector';
-import { SIMPLE_DESCRIPTION_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
+import { DialModel } from '@/src/models/dial/model';
 
 interface Props {
   view: ApplicationRoute;
-  entity: DialBaseEntity;
+  entity: ChatEntity;
   runners?: DialApplicationScheme[];
   isEntityImmutable?: boolean;
-  onChangeEntity: (entity: DialBaseEntity) => void;
+  onChangeEntity: (entity: ChatEntity) => void;
 }
 
 const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity, isEntityImmutable = false }) => {
@@ -49,29 +50,22 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
 
   const onChangeAdapter = useCallback(
     (adapter?: string) => {
-      onChangeEntity({ ...entity, adapter });
+      onChangeEntity({ ...entity, adapter } as DialModel);
     },
     [entity, onChangeEntity],
   );
 
   return (
     <div className="w-full flex flex-col gap-6">
-      <div className="flex flex-col lg:w-[35%] gap-6 mt-4">
+      <div className="flex flex-col lg:w-[35%] gap-6">
         {isEntityImmutable && isShowMaintainer ? (
-          <TextInputField
-            elementId="author"
-            fieldTitle={t(EntitiesI18nKey.Maintainer)}
-            placeholder={t(EntitiesI18nKey.MaintainerPlaceholder)}
-            value={entity.author}
-            optional={true}
-            onChange={(author) => onChangeEntity({ ...entity, author })}
-          />
+          <MaintainerControl entity={entity} onChangeEntity={onChangeEntity} />
         ) : null}
 
         {isShowCompletionEndpoint && isEntityImmutable ? (
           <ReadonlyField
             value={applicationRunner['dial:applicationTypeCompletionEndpoint']}
-            title={t(CreateI18nKey.CompletionEndpointTitle)}
+            title={t(EntityFieldsI18nKey.completionEndpoint)}
           />
         ) : null}
       </div>
@@ -80,10 +74,10 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
         <SourceEntitySelector
           route={ApplicationRoute.Adapters}
           buttonTitle={t(ButtonsI18nKey.OpenAdapter)}
-          columns={SIMPLE_DESCRIPTION_COLUMNS}
-          selectedValue={entity.adapter}
-          fieldTitle={t(CreateI18nKey.AdapterTitle)}
-          placeholder={t(CreateI18nKey.AdapterPlaceholder)}
+          columns={SIMPLE_ENTITY_COLUMNS}
+          selectedValue={(entity as DialModel).adapter}
+          fieldTitle={t(EntityFieldsI18nKey.adapter)}
+          placeholder={t(EntityPlaceholdersI18nKey.SelectAdapter)}
           onChangeValue={onChangeAdapter}
           isEntityImmutable={isEntityImmutable}
           sourceEntities={adapters}

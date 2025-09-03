@@ -6,7 +6,7 @@ import Dropdown from '@/src/components/Common/Dropdown/Dropdown';
 import DropdownMenuItem from '@/src/components/Common/Dropdown/DropdownItem';
 import Field from '@/src/components/Common/Field/Field';
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
-import { CreateI18nKey, KeysI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, KeysI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ValidityPeriods } from '@/src/types/key';
@@ -14,7 +14,7 @@ import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { calculateExpirationDate } from '@/src/utils/keys';
 
 export interface Props {
-  onChange?: (value: number) => void;
+  onChange?: (value: string) => void;
 }
 
 const ValidityPeriodInput: FC<Props> = ({ onChange }) => {
@@ -31,7 +31,7 @@ const ValidityPeriodInput: FC<Props> = ({ onChange }) => {
   }, [t]);
 
   const [selectedValue, setSelectedValue] = useState('');
-  const [expirationTime, setExpirationTime] = useState<number>();
+  const [expirationTime, setExpirationTime] = useState<string>();
 
   const onChangeValue = useCallback(
     (value: string) => {
@@ -53,7 +53,7 @@ const ValidityPeriodInput: FC<Props> = ({ onChange }) => {
   return (
     <div className="flex flex-row gap-6">
       <div className="flex flex-col">
-        <Field fieldTitle={t(CreateI18nKey.ValidityPeriodTitle)} />
+        <Field fieldTitle={t(KeysI18nKey.ValidityPeriod)} />
         <div className="w-[160px]">
           <Dropdown
             className="w-full flex items-center"
@@ -70,7 +70,7 @@ const ValidityPeriodInput: FC<Props> = ({ onChange }) => {
           </Dropdown>
         </div>
       </div>
-      <LabeledText label={t(KeysI18nKey.ExpirationTime)}>
+      <LabeledText label={t(EntityFieldsI18nKey.expiresAt)}>
         <div className="flex flex-1 items-center">
           {expirationTime ? formatDateTimeToLocalString(expirationTime) : ''}
         </div>

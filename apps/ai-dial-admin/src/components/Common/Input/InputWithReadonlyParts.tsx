@@ -46,8 +46,13 @@ const InputWithReadonlyParts: FC<Props> = ({
             cssClass={classNames('border-0 border-r rounded-none h-full')}
             value={prefixPart}
             inputId={prefixPart + 'prefix'}
+            tooltipTriggerClassName={'flex-1'}
           />
-          <Input cssClass={classNames('border-0 bg-transparent', cssClass)} {...props} />
+          <Input
+            cssClass={classNames('border-0 bg-transparent', cssClass)}
+            tooltipTriggerClassName={'flex-1'}
+            {...props}
+          />
           <p className="text-secondary small"> {postfixPart}</p>
         </div>
         <Button

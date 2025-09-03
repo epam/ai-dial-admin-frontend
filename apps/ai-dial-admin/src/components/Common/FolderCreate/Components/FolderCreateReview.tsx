@@ -3,7 +3,6 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
 import { CellValueChangedEvent, ColDef, GridApi, GridReadyEvent, RowClassRules } from 'ag-grid-community';
-import { isEqual } from 'lodash';
 
 import { previewPromptZip } from '@/src/app/[lang]/folders-storage/actions';
 import { CreateFolderSteps } from '@/src/components/Common/FolderCreate/constants';
@@ -15,7 +14,7 @@ import {
   readAllFiles,
   readJsonFiles,
 } from '@/src/components/Common/FolderCreate/utils';
-import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/EntityListHeaderButtons.utils';
+import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
 import {
   changeFilesMap,
   generateFileColumnsForImportGrid,
@@ -31,6 +30,7 @@ import { Step, StepStatus } from '@/src/models/step';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { PromptImportGridData } from '@/src/models/prompts';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   view?: ApplicationRoute;
@@ -123,7 +123,7 @@ const FolderCreateReview: FC<Props> = ({
 
   useEffect(() => {
     const prevFiles = prevFilesRef.current;
-    if (isEqual(prevFiles, files)) return;
+    if (isEqualSkippingUndefined(prevFiles, files)) return;
     prevFilesRef.current = files;
 
     if (isPromptReview && files.length) {

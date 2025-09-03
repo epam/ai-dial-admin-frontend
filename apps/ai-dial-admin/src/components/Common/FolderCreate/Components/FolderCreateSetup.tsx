@@ -9,7 +9,7 @@ import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import LoadFileAreaField from '@/src/components/Common/LoadFileArea/LoadFileAreaField';
 import RadioButton from '@/src/components/Common/RadioButton/RadioButton';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
-import { CreateI18nKey, FoldersI18nKey, ImportI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, FoldersI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_ZIP_TYPE } from '@/src/constants/request-headers';
 import { useI18n } from '@/src/locales/client';
 import { RadioButtonModel } from '@/src/models/radio-button';
@@ -78,9 +78,9 @@ const FolderCreateSetup: FC<Props> = ({
   );
 
   const changeName = useCallback(
-    (name: string) => {
-      setFolderName(name);
-      setCurrentSteps(files, name);
+    (name?: string) => {
+      setFolderName(name || '');
+      setCurrentSteps(files, name || '');
     },
     [setFolderName, setCurrentSteps, files],
   );
@@ -108,7 +108,7 @@ const FolderCreateSetup: FC<Props> = ({
     <>
       <div className="w-[50%]">
         <TextInputField
-          fieldTitle={t(CreateI18nKey.NameTitle)}
+          fieldTitle={t(EntityFieldsI18nKey.name)}
           elementId="name"
           placeholder={t(FoldersI18nKey.FolderCreatePlaceholder)}
           value={folderName}
@@ -135,8 +135,8 @@ const FolderCreateSetup: FC<Props> = ({
               fieldTitle={t(ImportI18nKey.File)}
               emptyTitle={t(ImportI18nKey.DropAnyFile)}
               iconBeforeInput={<IconFileTypeZip width={18} height={18} className="text-secondary" />}
-              fileFormatError={t(ImportI18nKey.ImportArchiveFileFormatError)}
-              fileCountError={t(ImportI18nKey.ImportArchiveDescription)}
+              fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
+              fileCountError={t(ImportI18nKey.ArchiveDescription)}
               acceptTypes="application/zip, .zip, application/x-zip-compressed"
               onChangeFile={changeFile}
               isMultiple={false}
@@ -146,13 +146,13 @@ const FolderCreateSetup: FC<Props> = ({
           {fileType === ImportFileType.FILES && (
             <LoadFileAreaField
               elementId="importFiles"
-              fieldTitle={t(ImportI18nKey.ImportFiles)}
+              fieldTitle={t(ImportI18nKey.Files)}
               emptyTitle={t(ImportI18nKey.DropAnyFile)}
               files={files}
               acceptTypes={view === ApplicationRoute.Prompts ? 'application/json' : '/'}
               onChangeFile={changeFile}
               dynamicIcon={getFileIcon}
-              errorText={t(ImportI18nKey.ImportFileError)}
+              errorText={t(ImportI18nKey.FileError)}
               maxFilesCount={30}
             />
           )}

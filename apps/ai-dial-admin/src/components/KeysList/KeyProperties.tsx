@@ -1,16 +1,17 @@
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Switch from '@/src/components/Common/Switch/Switch';
-import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 import ValidityPeriodInput from '@/src/components/Common/ValidityPeriodInput/ValidityPeriodInput';
-import { FieldError } from '@/src/models/error';
-import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import { getErrorForName } from '@/src/utils/validation/name-error';
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
+import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import KeyGenerateField from './KeyGenerateField';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
 
 interface Props {
   entity: DialKey;
@@ -22,38 +23,41 @@ interface Props {
 
 const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChangeKey }) => {
   const t = useI18n() as (t: string) => string;
+  const { dispatch } = useSaveValidationContext();
 
-  const [nameError, setNameError] = useState<FieldError | null>(null);
-  const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
+  const isValidKey = useMemo(() => {
+    return !!entity.key && !(entity.key.length > MAX_NAME_SYMBOLS);
+  }, [entity.key]);
 
-  const onChangeName = useCallback(
-    (name: string) => {
-      setNameError(getErrorForName(name, names, t));
-      onChangeKey({
-        ...entity,
-        name: name.trim(),
-      });
+  const [projectError, setProjectError] = useState<string | undefined>();
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'project', isValid: !projectError });
+  }, [entity.project, dispatch, projectError]);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'key', isValid: isValidKey });
+  }, [isValidKey, dispatch]);
+
+  const validateProject = useCallback(
+    (project?: string) => {
+      const error = project ? void 0 : t(ErrorI18nKey.RequiredField);
+      setProjectError(error);
+      dispatch({ type: ValidationActionType.SetField, field: 'project', isValid: !error });
     },
-    [onChangeKey, entity, names, t],
-  );
-
-  const onChangeDescription = useCallback(
-    (description: string) => {
-      setDescriptionError(getErrorForDescription(description, t));
-      onChangeKey({ ...entity, description });
-    },
-    [entity, onChangeKey, t],
+    [dispatch, t],
   );
 
   const onChangeProject = useCallback(
-    (project: string) => {
-      onChangeKey({ ...entity, project });
+    (project?: string) => {
+      onChangeKey({ ...entity, project: project || '' });
+      validateProject(project);
     },
-    [entity, onChangeKey],
+    [entity, onChangeKey, validateProject],
   );
 
   const onChangeProjectContactPoint = useCallback(
-    (projectContactPoint: string) => {
+    (projectContactPoint?: string) => {
       onChangeKey({ ...entity, projectContactPoint });
     },
     [entity, onChangeKey],
@@ -67,7 +71,7 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
   );
 
   const onChangeExpiresAt = useCallback(
-    (expiresAt: number) => {
+    (expiresAt: string) => {
       onChangeKey({ ...entity, expiresAt });
     },
     [entity, onChangeKey],
@@ -82,39 +86,30 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
 
   return (
     <div className="flex flex-col gap-6 h-full">
-      {!isKeyImmutable && (
-        <TextInputField
-          elementId="name"
-          fieldTitle={t(CreateI18nKey.IdTitle)}
-          placeholder={t(CreateI18nKey.IdPlaceholder)}
-          value={entity.name}
-          errorText={nameError?.text}
-          invalid={!!nameError}
-          onChange={onChangeName}
-        />
-      )}
-      <TextAreaField
-        elementId="description"
-        fieldTitle={t(CreateI18nKey.DescriptionTitle)}
-        placeholder={t(CreateI18nKey.DescriptionPlaceholder)}
-        optional={true}
-        value={entity.description}
-        errorText={descriptionError?.text}
-        invalid={!!descriptionError}
-        onChange={onChangeDescription}
+      {!isKeyImmutable && <IdControl entity={entity} names={names} onChangeEntity={onChangeKey} />}
+
+      <DisplayNameControl
+        displayName={entity.displayName}
+        onChange={(displayName) => onChangeKey({ ...entity, displayName })}
       />
+
+      <DescriptionControl entity={entity} onChangeEntity={onChangeKey} />
+
       <TextInputField
         elementId="project"
-        fieldTitle={t(CreateI18nKey.ProjectTitle)}
-        placeholder={t(CreateI18nKey.ProjectPlaceholder)}
+        fieldTitle={t(EntityFieldsI18nKey.project)}
+        placeholder={t(EntityPlaceholdersI18nKey.Project)}
         value={entity.project}
+        errorText={projectError}
         onChange={onChangeProject}
+        invalid={!!projectError}
       />
+
       {isKeyImmutable && (
         <TextInputField
           elementId="projectContact"
-          fieldTitle={t(CreateI18nKey.ProjectContactPointTitle)}
-          placeholder={t(CreateI18nKey.ProjectContactPointPlaceholder)}
+          fieldTitle={t(EntityFieldsI18nKey.projectContactPoint)}
+          placeholder={t(EntityPlaceholdersI18nKey.ContactPoint)}
           value={entity.projectContactPoint}
           onChange={onChangeProjectContactPoint}
         />
@@ -124,7 +119,7 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
       {isKeyImmutable && (
         <Switch
           isOn={entity.secured}
-          title={t(CreateI18nKey.SecuredTitle)}
+          title={t(EntityFieldsI18nKey.secured)}
           switchId="secured"
           onChange={onChangeSecured}
         />

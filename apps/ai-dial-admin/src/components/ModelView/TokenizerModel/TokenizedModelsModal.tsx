@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
-import { ButtonsI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModel } from '@/src/models/dial/model';
 import { PopUpState } from '@/src/types/pop-up';
@@ -39,7 +39,7 @@ const TokenizedModelsModal: FC<Props> = ({ model, modalState, onClose, onSelectM
   }, [model]);
 
   return (
-    <Popup onClose={onClose} heading={t(ModelViewI18nKey.TokenizerModel)} portalId="Model" state={modalState}>
+    <Popup onClose={onClose} heading={t(EntityFieldsI18nKey.tokenizerModel)} portalId="Model" state={modalState}>
       <div className="flex flex-col px-6 py-4 h-[400px]">
         <TokenizedModelsGrid selectedModel={selectedModel} onSelectModelId={onSelectModel} />
       </div>

@@ -1,4 +1,6 @@
-export interface DialApplicationResource {
+import { BaseEntity } from '@/src/models/dial/base-entity';
+
+export interface DialApplicationResource extends BaseEntity {
   applicationTypeSchemaId: string;
   descriptionKeywords: string[];
   inputAttachmentTypes: string[];
@@ -7,16 +9,10 @@ export interface DialApplicationResource {
   path: string;
   folderId: string;
   version: string;
-  name: string;
   author: string;
   endpoint: string;
-  displayName: string;
-  displayVersion: string;
-  description: string;
   iconUrl: string;
   reference: string;
-  updateTime: number;
-  createdAt: number;
   maxRetryAttempts: number;
   forwardAuthToken: boolean;
   editorUrl: string;

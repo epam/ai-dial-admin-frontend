@@ -3,13 +3,14 @@ import { redirect } from 'next/navigation';
 
 import { keysApi, rolesApi } from '@/src/app/api/api';
 import KeyView from '@/src/components/KeysList/KeyView';
+import Page403 from '@/src/components/Page403/Page403';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialKey } from '@/src/models/dial/key';
+import { DialRole } from '@/src/models/dial/role';
+import { logger } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { DialRole } from '@/src/models/dial/role';
-import { logger } from '@/src/server/logger';
-import Page403 from '@/src/components/Page403/Page403';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,12 +35,15 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Keys);
   }
 
+  const names = keys?.reduce((acc, curr) => {
+    if (curr.name != null) {
+      acc.push(curr.name);
+    }
+    return acc;
+  }, [] as string[]) as string[];
   return (
-    <KeyView
-      names={keys?.map((key) => key.name || '') || []}
-      keys={keys?.map((key) => key.key || '') || []}
-      originalKey={key}
-      roles={roles || []}
-    />
+    <SaveValidationContextProvider>
+      <KeyView names={names} keys={keys?.map((key) => key.key || '') || []} originalKey={key} roles={roles || []} />
+    </SaveValidationContextProvider>
   );
 }

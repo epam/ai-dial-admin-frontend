@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import Button from '@/src/components/Common/Button/Button';
 import PasswordInputField from '@/src/components/Common/PasswordInput/PasswordInputField';
 import { FieldError } from '@/src/models/error';
-import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { getErrorForKey } from './keys-list';
@@ -40,8 +40,8 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
       <div className="flex-1">
         <PasswordInputField
           elementId={'key'}
-          fieldTitle={t(CreateI18nKey.KeyTitle)}
-          placeholder={t(CreateI18nKey.KeyPlaceholder)}
+          fieldTitle={t(EntityFieldsI18nKey.keyValue)}
+          placeholder={t(EntityPlaceholdersI18nKey.KeyValue)}
           value={selectedKey.key}
           errorText={keyError?.text}
           invalid={!!keyError}
@@ -53,7 +53,7 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
           cssClass="secondary ml-2 h-[34px]"
           iconBefore={<IconCopy />}
           title={t(ButtonsI18nKey.Copy)}
-          onClick={() => navigator.clipboard.writeText(selectedKey.key)}
+          onClick={() => navigator.clipboard.writeText(selectedKey.key || '')}
         />
       ) : (
         <Button

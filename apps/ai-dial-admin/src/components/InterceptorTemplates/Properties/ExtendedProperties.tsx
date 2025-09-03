@@ -1,13 +1,10 @@
-import { FC, useState } from 'react';
+import { FC, useCallback } from 'react';
 
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { CreateI18nKey } from '@/src/constants/i18n';
-import { FieldError } from '@/src/models/error';
-import { getUrlError } from '@/src/utils/validation/url-error';
-import { useI18n } from '@/src/locales/client';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import BaseProperties from '@/src/components/InterceptorTemplates/Properties/BaseProperties';
+import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
+import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
 
 interface Props {
   template: InterceptorTemplate;
@@ -15,10 +12,19 @@ interface Props {
 }
 
 const ExtendedProperties: FC<Props> = ({ template, onChange }) => {
-  const t = useI18n() as (key: string) => string;
+  const onChangeCompletionEndpoint = useCallback(
+    (completionEndpoint?: string) => {
+      onChange({ ...template, completionEndpoint });
+    },
+    [template, onChange],
+  );
 
-  const [completionEndpointError, setCompletionEndpointError] = useState<FieldError | null>(null);
-  const [configurationEndpointError, setConfigurationEndpointError] = useState<FieldError | null>(null);
+  const onChangeConfigurationEndpoint = useCallback(
+    (configurationEndpoint?: string) => {
+      onChange({ ...template, configurationEndpoint });
+    },
+    [template, onChange],
+  );
 
   return (
     <div className="flex flex-col gap-6 mt-3">
@@ -26,29 +32,10 @@ const ExtendedProperties: FC<Props> = ({ template, onChange }) => {
         <BaseProperties template={template} setTemplate={onChange} isImmutable={true} />
       </div>
       <div className="lg:w-[35%] flex flex-col gap-6">
-        <TextInputField
-          elementId="completionEndpoint"
-          fieldTitle={t(CreateI18nKey.CompletionEndpointTitle)}
-          placeholder={t(CreateI18nKey.CompletionEndpointPlaceholder)}
-          value={template?.completionEndpoint}
-          errorText={completionEndpointError?.text}
-          invalid={!!completionEndpointError}
-          onChange={(completionEndpoint) => {
-            setCompletionEndpointError(getUrlError(completionEndpoint, t));
-            onChange({ ...template, completionEndpoint });
-          }}
-        />
-        <TextInputField
-          elementId="configurationEndpoint"
-          fieldTitle={t(CreateI18nKey.ConfigurationEndpointTitle)}
-          placeholder={t(CreateI18nKey.ConfigurationEndpointPlaceholder)}
-          value={template.configurationEndpoint}
-          errorText={configurationEndpointError?.text}
-          invalid={!!configurationEndpointError}
-          onChange={(configurationEndpoint) => {
-            setConfigurationEndpointError(getUrlError(configurationEndpoint, t));
-            onChange({ ...template, configurationEndpoint });
-          }}
+        <CompletionEndpointControl endpoint={template?.completionEndpoint} onChange={onChangeCompletionEndpoint} />
+        <ConfigurationEndpointControl
+          endpoint={template?.configurationEndpoint}
+          onChange={onChangeConfigurationEndpoint}
         />
       </div>
     </div>

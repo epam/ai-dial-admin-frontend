@@ -12,8 +12,9 @@ interface Props {
   placeholder?: string;
   isOpen?: boolean;
   prefix?: string;
+  disabled?: boolean;
   isMenu?: boolean;
-  multipleValues?: string[];
+  multipleValues?: string[] | null;
 }
 
 const DropdownSelectedItem: FC<Props> = ({
@@ -22,21 +23,30 @@ const DropdownSelectedItem: FC<Props> = ({
   placeholder,
   isMenu,
   prefix,
+  disabled,
   selectedClassName,
   multipleValues,
 }) => {
   const selectedClassNames =
     selectedClassName ||
-    classNames('flex flex-row w-full items-center', isMenu ? 'small-medium cursor-pointer' : 'input input-field');
+    classNames(
+      'flex flex-row w-full items-center',
+      isMenu ? 'small-medium cursor-pointer' : 'input input-field',
+      disabled ? 'input-disable' : '',
+    );
   const selectedValueClassNames = classNames(
-    'truncate flex-1 min-w-0 mr-2',
+    'truncate flex-1 min-w-0 mr-2 flex items-center',
     isMenu ? 'border-b-2bg-accent-primary-alpha border-b-accent-primary border-b-2 py-[13px]' : '',
   );
   return (
-    <div className={selectedClassNames} role="menuitem">
+    <div
+      className={selectedClassNames}
+      role="menuitem"
+      aria-label={selectedValue?.name || multipleValues?.join(', ') || placeholder}
+    >
       {selectedValue?.name ? (
         <>
-          <Tooltip tooltip={selectedValue?.name}>
+          <Tooltip tooltip={selectedValue?.name} triggerClassName="flex-1 min-w-0 flex items-center">
             {selectedValue.icon && <span className="mr-2 text-icon-primary">{selectedValue.icon}</span>}
             <span className={selectedValueClassNames}>
               {prefix}
@@ -48,14 +58,16 @@ const DropdownSelectedItem: FC<Props> = ({
         <div className="flex flex-1">
           {multipleValues.map((v) => {
             return (
-              <Tooltip key={v} tooltip={v}>
-                <span className="inline-block rounded border border-icon-secondary p-1 mr-1">{v}</span>
-              </Tooltip>
+              <div key={v}>
+                <Tooltip tooltip={v} triggerClassName="flex-1 min-w-0">
+                  <span className="inline-block rounded border border-icon-secondary p-1 mr-1">{v}</span>
+                </Tooltip>
+              </div>
             );
           })}
         </div>
       ) : (
-        <Tooltip tooltip={placeholder} triggerClassName="text-left">
+        <Tooltip tooltip={placeholder} triggerClassName="flex-1 min-w-0">
           <span className="flex-1 min-w-0 mr-2 text-secondary pointer-events-none">{placeholder}</span>
         </Tooltip>
       )}

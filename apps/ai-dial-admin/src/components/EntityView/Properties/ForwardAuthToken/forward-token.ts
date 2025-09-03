@@ -1,4 +1,4 @@
-import { CreateI18nKey, ForwardTokenI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, ForwardTokenI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export const NONE_ID = 'forwardFalse';
@@ -31,13 +31,13 @@ export const getAlertTitlePerView = (view: ApplicationRoute): string => {
 export const getDisplayNamePerView = (view: ApplicationRoute): string => {
   switch (view) {
     case ApplicationRoute.Models:
-      return CreateI18nKey.ModelDisplayName;
+      return EntitiesI18nKey.ModelDisplayName;
 
     case ApplicationRoute.Applications:
-      return CreateI18nKey.ApplicationDisplayName;
+      return EntitiesI18nKey.ApplicationDisplayName;
 
     case ApplicationRoute.Interceptors:
-      return CreateI18nKey.InterceptorName;
+      return EntitiesI18nKey.InterceptorName;
 
     default:
       return '';

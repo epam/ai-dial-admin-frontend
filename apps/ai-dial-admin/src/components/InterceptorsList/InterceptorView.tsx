@@ -1,17 +1,18 @@
 'use client';
 
 import classNames from 'classnames';
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import { removeInterceptor, updateInterceptor } from '@/src/app/[lang]/interceptors/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
-import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { getRelevantDataForInterceptor } from '@/src/components/AddEntitiesTab/AddEntitiesView.utils';
+import { getRelevantDataForInterceptor } from '@/src/components/AddEntitiesTab/utils';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
-import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/entity-view';
-import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
+import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
+import EntityHeader from '@/src/components/EntityView/Header/Header';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -19,12 +20,13 @@ import { useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
+import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { TabModel } from '@/src/models/tab';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import InterceptorProperties from './InterceptorProperties';
-import EntityHeader from '@/src/components/EntityView/Header/Header';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   originalInterceptor: DialInterceptor;
@@ -38,7 +40,11 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
   const router = useRouter();
   const { showNotification } = useNotification();
 
-  const tabs: TabModel[] = [propertiesTabs(t), { id: EntityViewTab.Entities, name: t(TabsI18nKey.Entities) }];
+  const tabs: TabModel[] = [
+    propertiesTabs(t),
+    { id: EntityViewTab.Entities, name: t(TabsI18nKey.Entities) },
+    auditTabs(t),
+  ];
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedInterceptor, setSelectedInterceptor] = useState(cloneDeep(originalInterceptor));
@@ -58,7 +64,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
   );
 
   useEffect(() => {
-    setIsChanged(!isEqual(originalInterceptor, selectedInterceptor));
+    setIsChanged(!isEqualSkippingUndefined(originalInterceptor, selectedInterceptor));
   }, [selectedInterceptor, originalInterceptor]);
 
   const onChangeActiveTab = useCallback(
@@ -126,7 +132,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={headerClassName}>
         <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
-        <EntityViewHeaderButtons
+        <HeaderButtons
           view={ApplicationRoute.Interceptors}
           entity={selectedInterceptor}
           isChanged={isChanged}
@@ -143,7 +149,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
         {jsonEditorEnabled ? (
           <JSONEditor
             key={key}
-            model={selectedInterceptor}
+            entity={selectedInterceptor}
             errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedInterceptor}
             setIsChanged={setIsChanged}
@@ -154,7 +160,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
             {activeTab === EntityViewTab.Properties && (
               <>
                 <EntityHeader entity={selectedInterceptor} />
-                <div className="flex-1 min-h-0">
+                <div className="flex-1 min-h-0 pt-4">
                   <InterceptorProperties
                     selectedInterceptor={selectedInterceptor}
                     onChangeInterceptor={onChangeInterceptor}
@@ -172,6 +178,9 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
                 getRelevantDataForEntity={getRelevantDataForInterceptor.bind(this, selectedInterceptor)}
                 onRemove={onRemoveEntity}
               />
+            )}
+            {activeTab === EntityViewTab.Audit && (
+              <EntityAudit entity={originalInterceptor} view={ApplicationRoute.Interceptors} />
             )}
           </>
         )}

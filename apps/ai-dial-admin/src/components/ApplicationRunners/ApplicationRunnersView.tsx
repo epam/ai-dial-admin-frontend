@@ -1,14 +1,23 @@
 'use client';
 
-import classNames from 'classnames';
-import { cloneDeep, isEqual } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
+import classNames from 'classnames';
+import { cloneDeep } from 'lodash';
+
 import { removeApplicationScheme, updateApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
-import { EntityViewTab, parametersTabs, propertiesTabs } from '@/src/components/EntityView/entity-view';
-import EntityViewHeaderButtons from '@/src/components/EntityView/EntityViewHeaderButtons';
+import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import {
+  appRouteTab,
+  auditTabs,
+  EntityViewTab,
+  parametersTabs,
+  propertiesTabs,
+} from '@/src/components/EntityView/View/utils';
+import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
+import EntityHeader from '@/src/components/EntityView/Header/Header';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -21,13 +30,16 @@ import { getErrorNotification } from '@/src/utils/notification';
 import AppRunnerApplications from './ConfigurationView/Applications';
 import SchemeParameters from './ConfigurationView/Parameters';
 import SchemeProperties from './ConfigurationView/Properties';
-import EntityHeader from '@/src/components/EntityView/Header/Header';
+import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import { DialRole } from '@/src/models/dial/role';
 
 interface Props {
   originalScheme: DialApplicationScheme;
+  roles: DialRole[] | null;
 }
 
-const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
+const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -36,6 +48,8 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
     propertiesTabs(t),
     parametersTabs(t),
     { id: EntityViewTab.Applications, name: t(TabsI18nKey.Applications) },
+    appRouteTab(t),
+    auditTabs(t),
   ];
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -56,7 +70,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
   );
 
   useEffect(() => {
-    setIsChanged(!isEqual(originalScheme, selectedScheme));
+    setIsChanged(!isEqualSkippingUndefined(originalScheme, selectedScheme));
   }, [selectedScheme, originalScheme]);
 
   const onChangeActiveTab = useCallback(
@@ -102,7 +116,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={headerClassName}>
         <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
-        <EntityViewHeaderButtons
+        <HeaderButtons
           view={ApplicationRoute.ApplicationRunners}
           entity={selectedScheme}
           isChanged={isChanged}
@@ -119,7 +133,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
         {jsonEditorEnabled ? (
           <JSONEditor
             key={key}
-            model={selectedScheme}
+            entity={selectedScheme}
             errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedScheme}
             setIsChanged={setIsChanged}
@@ -130,7 +144,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
             {activeTab === EntityViewTab.Properties && (
               <div className="pt-3 w-full lg:w-[35%]">
                 <EntityHeader entity={selectedScheme} />
-                <div className="flex-1 min-h-0">
+                <div className="flex-1 min-h-0 pt-4">
                   <SchemeProperties runner={selectedScheme} isImmutable={true} onChangeRunner={onChangeScheme} />
                 </div>
               </div>
@@ -142,6 +156,21 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
 
             {activeTab === EntityViewTab.Applications && (
               <AppRunnerApplications appRunner={selectedScheme} onChangeAppRunner={onChangeScheme} />
+            )}
+
+            {activeTab === EntityViewTab.Routes && (
+              <EntityRoutes
+                iAppRunnerView={true}
+                roles={roles}
+                routes={selectedScheme['dial:applicationTypeRoutes']}
+                onChangeRoutes={(routes) =>
+                  setSelectedScheme({ ...selectedScheme, ['dial:applicationTypeRoutes']: routes })
+                }
+              />
+            )}
+
+            {activeTab === EntityViewTab.Audit && (
+              <EntityAudit entity={selectedScheme} view={ApplicationRoute.ApplicationRunners} />
             )}
           </>
         )}

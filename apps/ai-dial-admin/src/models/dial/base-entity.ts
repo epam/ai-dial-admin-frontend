@@ -1,56 +1,43 @@
-export interface DialBaseNamedEntity {
-  name?: string;
-  description?: string;
-  version?: string;
-  endpoint?: string;
+import { DefaultsValue, DefaultTemp } from '@/src/models/dial/defaults';
+import { DialRoleLimits, DialRoleLimitsMap, DialRoleShare, DialRoleShareMap } from '@/src/models/dial/role-limits';
+import { DialFeatures } from '@/src/models/dial/features';
+
+export interface ModifiedEntity {
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export interface DialBaseEntity extends DialBaseNamedEntity {
-  createdAt?: number;
-  updatedAt?: number;
-  adapter?: string;
-  author?: string;
-  baseEndpoint?: string;
+export interface BaseEntity extends ModifiedEntity {
+  name?: string;
   displayName?: string;
-  iconUrl?: string;
+  description?: string;
+}
+
+export interface EntityDefaults {
+  defaults?: Record<string, DefaultsValue>;
+  defaultsTemp?: DefaultTemp[];
+}
+
+export interface EntityAttachment {
+  maxInputAttachments?: number | string;
+  inputAttachmentTypes?: string[];
+}
+
+export interface EntityRoleLimits {
   isPublic?: boolean;
   roleLimits?: DialRoleLimitsMap;
+  roleShareResourceLimits?: DialRoleShareMap;
   defaultRoleLimit?: DialRoleLimits;
-  forwardAuthToken?: boolean;
-  inputAttachmentTypes?: string[];
-  topics?: string[];
-  fieldsHashingOrder?: string[];
-  maxInputAttachments?: number | string;
-  interceptors?: string[];
+  defaultRoleShareResourceLimit?: DialRoleShare;
+}
+
+export interface ChatEntity extends BaseEntity, ModifiedEntity, EntityAttachment, EntityDefaults, EntityRoleLimits {
+  iconUrl?: string;
+  author?: string;
   features?: DialFeatures;
-}
-
-export type DialRoleLimitsMap = Record<string, DialRoleLimits>;
-
-export interface DialRoleLimits {
-  day?: string | null;
-  minute?: string | null;
-  week?: string | null;
-  month?: string | null;
-}
-
-export interface DialFeatures {
-  truncatePromptEndpoint: string;
-  rateEndpoint: string;
-  configurationEndpoint: string;
-  tokenizeEndpoint: string;
-  toolsSupported: boolean;
-  systemPromptSupported: boolean;
-  urlAttachmentsSupported: boolean;
-  folderAttachmentsSupported: boolean;
-  seedSupported: boolean;
-  allowResume: boolean;
-  addonsSupported: boolean;
-  temperatureSupported: boolean;
-  accessibleByPerRequestKey: boolean;
-  parallelToolCallsSupported: boolean;
-  contentPartsSupported: boolean;
-  cacheSupported: boolean;
-  autoCachingSupported: boolean;
-  consentRequired: boolean;
+  topics?: string[];
+  forwardAuthToken?: boolean;
+  maxRetryAttempts?: number;
+  interceptors?: string[];
+  endpoint?: string | null;
 }

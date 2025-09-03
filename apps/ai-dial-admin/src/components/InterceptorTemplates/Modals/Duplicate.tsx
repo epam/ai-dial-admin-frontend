@@ -1,15 +1,15 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
-import { ButtonsI18nKey, CreateI18nKey, DuplicateI18nKey } from '@/src/constants/i18n';
-import { PopUpState } from '@/src/types/pop-up';
-import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { FieldError } from '@/src/models/error';
+import { ButtonsI18nKey, DuplicateI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { getErrorForName } from '@/src/utils/validation/name-error';
+import { InterceptorTemplate } from '@/src/models/interceptor-template';
+import { PopUpState } from '@/src/types/pop-up';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   modalState: PopUpState;
@@ -18,42 +18,34 @@ interface Props {
   onDuplicate: (template: InterceptorTemplate) => void;
   names?: string[];
 }
-
-const DuplicateScheme: FC<Props> = ({ onDuplicate, modalState, onClose, template, names }) => {
+const DuplicateTemplate: FC<Props> = ({ onDuplicate, modalState, onClose, template, names }) => {
   const t = useI18n() as (t: string) => string;
+  const { isValid, dispatch } = useSaveValidationContext();
 
-  const [clonedTemplate, setTemplate] = useState<InterceptorTemplate>({ ...template, name: `${template.name}_(copy)` });
-  const [isValid, setIsValid] = useState(false);
-  const [nameError, setNameError] = useState<FieldError | null>(null);
+  const [clonedTemplate, setTemplate] = useState<InterceptorTemplate>({
+    ...template,
+    name: `${template.name}_(copy)`,
+  });
 
-  const onChangeName = useCallback(
-    (name: string) => {
-      setNameError(getErrorForName(name, names, t));
-      setTemplate({ ...clonedTemplate, name: name });
-    },
-    [names, t, clonedTemplate],
-  );
-
+  // initial validation (disable save when no values entered yet)
   useEffect(() => {
-    setIsValid(!getErrorForName(clonedTemplate.name, names, t));
-  }, [clonedTemplate, names, t]);
+    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!template.name });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Popup
       onClose={onClose}
       heading={t(DuplicateI18nKey.InterceptorTemplate)}
-      portalId="DuplicateKey"
+      portalId="DuplicateTemplate"
       state={modalState}
     >
-      <div className="flex flex-col px-6 py-4">
-        <TextInputField
-          fieldTitle={t(CreateI18nKey.IdTitle)}
-          elementId="name"
-          placeholder={t(CreateI18nKey.IdPlaceholder)}
-          value={clonedTemplate.name}
-          onChange={onChangeName}
-          errorText={nameError?.text}
-          invalid={!!nameError}
+      <div className="flex flex-col px-6 py-4 gap-y-6">
+        <IdControl entity={clonedTemplate} names={names} onChangeEntity={setTemplate} />
+
+        <DisplayNameControl
+          displayName={clonedTemplate.displayName}
+          onChange={(displayName) => setTemplate({ ...clonedTemplate, displayName })}
         />
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
@@ -76,4 +68,4 @@ const DuplicateScheme: FC<Props> = ({ onDuplicate, modalState, onClose, template
   );
 };
 
-export default DuplicateScheme;
+export default DuplicateTemplate;

@@ -1,32 +1,43 @@
-import { CreateI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey } from '@/src/constants/i18n';
+import { MAX_NAME_SYMBOLS, MIN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isWrongLengthWithView } from '@/src/utils/validation/name-error';
 
-export const getDisplayNameErrorKeyPerView = (view: ApplicationRoute, wrongLength?: boolean) => {
-  if (wrongLength) {
-    return CreateI18nKey.MinMaxLength;
+export const getDisplayNameError = (
+  view: ApplicationRoute,
+  displayName: string,
+  names: string[],
+  t: (str: string, param?: Record<string, number>) => string,
+  version?: string,
+) => {
+  const isWrongLength = !displayName ? false : isWrongLengthWithView(view, displayName);
+  if (isWrongLength) {
+    return t(ErrorI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS });
   }
 
-  switch (view) {
-    case ApplicationRoute.Models:
-      return CreateI18nKey.DisplayNameErrorModel;
-
-    case ApplicationRoute.Applications:
-      return CreateI18nKey.DisplayNameErrorApplication;
-
-    default:
-      return '';
+  if (view === ApplicationRoute.Models) {
+    return names.includes(displayName) && !version ? t(ErrorI18nKey.DisplayNameErrorModel) : '';
   }
+
+  return '';
 };
 
-export const getVersionErrorKeyPerView = (view: ApplicationRoute) => {
-  switch (view) {
-    case ApplicationRoute.Models:
-      return CreateI18nKey.VersionErrorModel;
+export const getVersionError = (
+  view: ApplicationRoute,
+  isVersionOptional: boolean,
+  displayVersion: string,
+  t: (str: string, param?: Record<string, number>) => string,
+) => {
+  if (!isVersionOptional) {
+    const hasDisplayVersion = !!displayVersion;
 
-    case ApplicationRoute.Applications:
-      return CreateI18nKey.VersionErrorApplication;
-
-    default:
-      return '';
+    const isLengthError = hasDisplayVersion ? isWrongLengthWithView(view, displayVersion) : false;
+    if (!hasDisplayVersion) {
+      return t(ErrorI18nKey.Version);
+    }
+    if (isLengthError) {
+      return t(ErrorI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS });
+    }
   }
+  return '';
 };

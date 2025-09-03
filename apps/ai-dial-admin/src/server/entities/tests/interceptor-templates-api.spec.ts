@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
-import { InterceptorTemplate } from '../../../models/interceptor-template';
-import { TEST_URL, TOKEN_MOCK } from '../../../utils/tests/mock/api.mock';
+import { InterceptorTemplate } from '@/src/models/interceptor-template';
+import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   DELETE_INTERCEPTOR_TEMPLATE_URL,
   INTERCEPTOR_TEMPLATE_URL,

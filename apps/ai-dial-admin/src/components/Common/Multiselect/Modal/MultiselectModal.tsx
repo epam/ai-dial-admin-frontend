@@ -23,6 +23,7 @@ interface Props {
   addPlaceholder?: string;
   allItems?: string[];
   draggable?: boolean;
+  applyButtonText?: string;
   onClose: () => void;
   onSelectItems?: (items: string[]) => void;
   getItems?: () => Promise<ServerActionResponse>;
@@ -37,6 +38,7 @@ const MultiselectModal: FC<Props> = ({
   onSelectItems,
   getItems,
   draggable,
+  applyButtonText,
   ...props
 }) => {
   const t = useI18n();
@@ -105,9 +107,9 @@ const MultiselectModal: FC<Props> = ({
         <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         <Button
           cssClass="primary"
-          title={t(ButtonsI18nKey.Apply)}
+          title={applyButtonText || t(ButtonsI18nKey.Apply)}
           onClick={onApply}
-          disable={!isValid || isEqual(newItems, selectedItems)}
+          disable={!isValid || (draggable && isEqual(newItems, selectedItems))}
         />
       </div>
     </Popup>

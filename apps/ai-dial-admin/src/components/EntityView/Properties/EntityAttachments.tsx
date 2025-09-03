@@ -1,21 +1,32 @@
 'use client';
 
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useEffect, useMemo } from 'react';
 
 import AttachmentInput from '@/src/components/Common/AttachmentInput/AttachmentInput';
 import { NumberInputField } from '@/src/components/Common/InputField/InputField';
-import { AttachmentsI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { AttachmentsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { EntityAttachment } from '@/src/models/dial/base-entity';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { getMaxAttachmentError } from '@/src/utils/validation/get-max-attachment-error';
 import { mimeMapping } from './constants';
 
 interface Props {
-  entity: DialBaseEntity;
-  onChangeEntity: (entity: DialBaseEntity) => void;
+  entity: EntityAttachment;
+  onChangeEntity: (entity: EntityAttachment) => void;
 }
 
 const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
-  const t = useI18n();
+  const t = useI18n() as (str: string, param?: Record<string, number>) => string;
+
+  const { dispatch } = useSaveValidationContext();
+  const error = useMemo(() => {
+    return getMaxAttachmentError(entity.maxInputAttachments, t);
+  }, [t, entity.maxInputAttachments]);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'maxRetryAttempts', isValid: !error });
+  }, [error, t, dispatch]);
 
   const onChangeAttachmentMax = useCallback(
     (value: number | string) => {
@@ -40,23 +51,27 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
   );
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6 w-full">
       <AttachmentInput
         initialValues={entity.inputAttachmentTypes}
         fieldTitle={t(AttachmentsI18nKey.Attachments)}
-        placeholder={t(AttachmentsI18nKey.EnterAttachmentsTypes)}
-        allValueLabel={t(ButtonsI18nKey.UseAllAttachment)}
+        placeholder={t(EntityPlaceholdersI18nKey.AttachmentsTypes)}
+        allValueLabel={t(AttachmentsI18nKey.UseAllAttachment)}
         availableItems={mimeMapping}
+        inputClass="lg:w-[35%] lg:flex-0"
         onChange={(values) => onChangeAttachmentTypes(values)}
       />
       {entity.inputAttachmentTypes?.length && (
         <div className="w-[148px]">
           <NumberInputField
             elementId="maxAttachment"
-            fieldTitle={t(AttachmentsI18nKey.AttachmentsMaxNumber)}
-            placeholder={t(AttachmentsI18nKey.AttachmentsMaxNumberPlaceholder)}
+            fieldTitle={t(AttachmentsI18nKey.MaxNumber)}
+            placeholder={t(EntityPlaceholdersI18nKey.Number)}
             value={entity.maxInputAttachments}
             onChange={onChangeAttachmentMax}
+            errorText={error}
+            invalid={!!error}
+            min={0}
           />
         </div>
       )}

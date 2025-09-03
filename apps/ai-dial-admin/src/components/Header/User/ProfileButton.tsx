@@ -23,9 +23,9 @@ const ProfileButton = () => {
       {userMenuOpen ? (
         <IconX className="text-secondary" width={24} height={24} id="close-icon" />
       ) : session?.user?.image ? (
-        <Image className="rounded" src={session?.user?.image} width={24} height={24} alt="User avatar" />
+        <Image role="img" className="rounded" src={session?.user?.image} width={24} height={24} alt="User avatar" />
       ) : (
-        <IconUser width={24} height={24} />
+        <IconUser role="img" width={24} height={24} />
       )}
     </button>
   );

@@ -2,7 +2,7 @@ import { FC, useCallback, useState } from 'react';
 
 import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
-import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { SettingsModalI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -31,11 +31,11 @@ const SettingsModal: FC<Props> = ({ onConfirm, modalState, onClose }) => {
   );
 
   return (
-    <Popup onClose={onClose} heading={t(BasicI18nKey.Settings)} portalId="SettingsModal" state={modalState}>
+    <Popup onClose={onClose} heading={t(SettingsModalI18nKey.Settings)} portalId="SettingsModal" state={modalState}>
       <div className="flex flex-col gap-4 py-6 px-6">
         <DropdownField
           elementId="themeSelector"
-          fieldTitle={t(BasicI18nKey.Theme)}
+          fieldTitle={t(SettingsModalI18nKey.Theme)}
           items={allThemes || []}
           selectedValue={selectedTheme?.id}
           onChange={onChangeTheme}

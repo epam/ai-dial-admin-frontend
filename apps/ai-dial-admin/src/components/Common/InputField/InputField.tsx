@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, useCallback } from 'react';
 
 import { FieldControlProps } from '@/src/models/field-control-props';
 import { BasicI18nKey } from '@/src/constants/i18n';
@@ -10,6 +10,7 @@ import ErrorText from '@/src/components/Common/ErrorText/ErrorText';
 import Field from '@/src/components/Common/Field/Field';
 import InputWithIcon from '@/src/components/Common/Input/InputWithIcon';
 import InputWithText from '@/src/components/Common/Input/InputWithText';
+import { getInputValue } from '@/src/components/Common/InputField/utils';
 
 export interface InputFieldBaseProps extends FieldControlProps {
   placeholder?: string;
@@ -24,6 +25,9 @@ export interface InputFieldBaseProps extends FieldControlProps {
   iconAfterInput?: ReactNode;
   iconBeforeInput?: ReactNode;
   textBeforeInput?: string;
+  min?: number;
+  max?: number;
+  tooltipTriggerClassName?: string;
 }
 
 export interface InputFieldProps extends InputFieldBaseProps {
@@ -74,15 +78,6 @@ export interface NumberInputFieldProps extends InputFieldBaseProps {
 }
 
 export const NumberInputField: FC<NumberInputFieldProps> = ({ onChange, value, ...props }) => {
-  const lessThanOnePattern = /^0+\.(\d+)?$/;
-  const leadingZerosPattern = /^0+/;
-
-  const getInputValue = (inputValue: string | number): string | number => {
-    return String(inputValue)?.match(lessThanOnePattern)
-      ? String(inputValue)?.replace(leadingZerosPattern, '0')
-      : Number(inputValue);
-  };
-
   return (
     <InputField
       type="number"
@@ -94,9 +89,17 @@ export const NumberInputField: FC<NumberInputFieldProps> = ({ onChange, value, .
 };
 
 export interface TextInputFieldProps extends InputFieldBaseProps {
-  onChange?: (value: string) => void;
+  onChange?: (value?: string) => void;
 }
 
 export const TextInputField: FC<TextInputFieldProps> = ({ onChange, ...props }) => {
-  return <InputField type="text" onChange={(v) => onChange?.(v as string)} {...props} />;
+  const onChangeValue = useCallback(
+    (value?: string | number) => {
+      const valueStr = (value as string).trim();
+      onChange?.(!valueStr ? void 0 : valueStr);
+    },
+    [onChange],
+  );
+
+  return <InputField type="text" onChange={onChangeValue} {...props} />;
 };

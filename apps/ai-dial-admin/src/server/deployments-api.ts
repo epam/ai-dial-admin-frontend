@@ -14,4 +14,8 @@ export class DeploymentsApi extends BaseApi {
   getModelContainers(token: JWT | null): Promise<Container[] | null> {
     return this.get(`${BASE_CONTAINERS_URL}?imageDefinitionType=NIM`, token);
   }
+
+  getMcpContainers(token: JWT | null): Promise<Container[] | null> {
+    return this.get(`${BASE_CONTAINERS_URL}?imageDefinitionType=MCP`, token);
+  }
 }

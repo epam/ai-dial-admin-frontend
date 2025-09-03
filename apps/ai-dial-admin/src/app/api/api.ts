@@ -16,6 +16,7 @@ import { TelemetryApi } from '@/src/server/telemetry-api';
 import { ThemesApi } from '@/src/server/themes-api';
 import { UtilityApi } from '@/src/server/utility-api';
 import { DeploymentsApi } from '@/src/server/deployments-api';
+import { ToolsetsApi } from '@/src/server/entities/toolsets-api';
 
 export const modelsApi = new ModelsApi({
   host: process.env.DIAL_ADMIN_API_URL,
@@ -85,4 +86,8 @@ export const interceptorTemplatesApi = new InterceptorTemplatesApi({
 
 export const deploymentsApi = new DeploymentsApi({
   host: process.env.DIAL_DEPLOYMENTS_API_URL,
+});
+
+export const toolSetsApi = new ToolsetsApi({
+  host: process.env.DIAL_ADMIN_API_URL,
 });

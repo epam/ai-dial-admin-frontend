@@ -1,17 +1,16 @@
-import { DialBaseEntity } from './base-entity';
-import { SOURCE_FIELD } from '@/src/components/SourceField/types';
+import { ChatEntity } from './base-entity';
 
-export interface DialModel extends DialBaseEntity {
+export interface DialModel extends ChatEntity {
   type?: DialModelType;
   endpointDeploymentName?: string;
-  upstreams?: DialModelEndpoint[];
   tokenizerModel?: string;
   overrideName?: string;
   limits?: DialModelLimit;
   pricing?: DialModelPricing;
-  maxRetryAttempts?: number;
+  fieldsHashingOrder?: string[];
   displayVersion?: string;
-  source?: SOURCE_FIELD;
+  adapter?: string;
+  upstreams?: DialModelEndpoint[];
 }
 
 export interface DialTokenizer {

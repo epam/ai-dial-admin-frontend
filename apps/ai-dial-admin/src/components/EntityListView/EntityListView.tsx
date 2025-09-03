@@ -1,12 +1,12 @@
 'use client';
 
-import { ColDef, GridOptions } from 'ag-grid-community';
+import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import DuplicateAdapter from '@/src/components/AdaptersList/Duplicate/DuplicateAdapter';
-import DuplicateScheme from '@/src/components/ApplicationRunners/ListView/Duplicate/DuplicateAppRunner';
-import DuplicateEntityPopup from '@/src/components/DuplicateEntityPopup/DuplicateEntityPopup';
+import DuplicateAdapter from '@/src/components/Adapter/Modals/DuplicateAdapter';
+import DuplicateScheme from '@/src/components/ApplicationRunners/Modals/DuplicateAppRunner';
+import DuplicatePopup from '@/src/components/DuplicatePopup/DuplicatePopup';
 import DuplicateKey from '@/src/components/KeysList/Popup/DuplicateKey';
 import ListView from '@/src/components/ListView/ListView';
 import DuplicatePrompt from '@/src/components/PromptView/Modals/DuplicatePrompt';
@@ -17,11 +17,8 @@ import { FileFolderContextType } from '@/src/context/FileFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
-import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { DialFile } from '@/src/models/dial/file';
-import { DialKey } from '@/src/models/dial/key';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { PopUpState } from '@/src/types/pop-up';
@@ -32,10 +29,10 @@ import { isAssetView } from '@/src/utils/is-asset-view';
 import { getErrorNotification } from '@/src/utils/notification';
 import { emptyDataTitleMap, listViewTitleMap } from './constants';
 import EntityListModals, { ModalType } from './EntityListModals';
-import EntityListHeaderButtons from './HeaderButtons/EntityListHeaderButtons';
+import EntityListHeaderButtons from './HeaderButtons/HeaderButtons';
 import DuplicateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Duplicate';
-import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { onOpenInNewTab, getEntityPath } from '@/src/utils/open-in-new-tab';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 
 interface Props<T> {
   data: T[];
@@ -54,7 +51,7 @@ interface Props<T> {
   context?: () => PromptFolderContextType | FileFolderContextType;
 }
 
-const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationScheme | InterceptorTemplate>({
+const BaseEntityList = <T extends object>({
   data,
   baseColumns,
   names,
@@ -90,12 +87,18 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
 
   const [showColumnsPanel, setShowColumnsPanel] = useState(false);
 
+  const [gridApi, setGridApi] = useState<GridApi | null>(null);
+
   const entityRef = useRef(currentEntity);
   const filesRef = useRef(folderContext?.fetchedFoldersData);
   useEffect(() => {
     entityRef.current = currentEntity;
     filesRef.current = folderContext?.fetchedFoldersData;
   }, [currentEntity, folderContext?.fetchedFoldersData]);
+
+  const onGridReady = useCallback((api: GridApi) => {
+    setGridApi(api);
+  }, []);
 
   const handleModalClose = useCallback(() => {
     setModalState(PopUpState.Closed);
@@ -166,12 +169,14 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
 
   const onMove = useCallback(
     (newPath: string) => {
+      if (!entityRef.current) return;
       const pathsToMove = getListOfPathsToMove(
         entityRef.current as DialFile,
         folderContext?.fetchedFoldersData as Record<string, DialFile[]>,
         null,
         route === ApplicationRoute.Files,
       );
+
       moveFiles?.(pathsToMove, newPath).then((res) => {
         if (res.every((r) => r.success)) {
           folderContext?.fetchFiles?.(`${ROOT_FOLDER}/`, true);
@@ -209,11 +214,13 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
   const toggleColumnsPanel = () => setShowColumnsPanel(!showColumnsPanel);
 
   const getDuplicateModal = () => {
+    if (!currentEntity) return null;
+
     if (route === ApplicationRoute.ApplicationRunners) {
       return (
         <DuplicateScheme
-          entity={currentEntity as DialApplicationScheme}
-          onDuplicate={onDuplicate as (entity: DialApplicationScheme) => Promise<ServerActionResponse>}
+          entity={currentEntity}
+          onDuplicate={onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>}
           modalState={modalState}
           onClose={handleModalClose}
         />
@@ -223,8 +230,8 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
     if (route === ApplicationRoute.InterceptorTemplates) {
       return (
         <DuplicateInterceptorTemplate
-          template={currentEntity as InterceptorTemplate}
-          onDuplicate={onDuplicate as (template: InterceptorTemplate) => Promise<ServerActionResponse>}
+          template={currentEntity}
+          onDuplicate={onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>}
           modalState={modalState}
           onClose={handleModalClose}
           names={names}
@@ -234,8 +241,8 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
     if (route === ApplicationRoute.Adapters) {
       return (
         <DuplicateAdapter
-          adapter={currentEntity as DialAdapter}
-          onDuplicate={onDuplicate as (entity: DialAdapter) => Promise<ServerActionResponse>}
+          adapter={currentEntity}
+          onDuplicate={onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>}
           modalState={modalState}
           onClose={handleModalClose}
         />
@@ -245,8 +252,8 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
     if (route === ApplicationRoute.Keys) {
       return (
         <DuplicateKey
-          entity={currentEntity as DialKey}
-          onDuplicate={onDuplicate as (entity: DialKey) => Promise<ServerActionResponse>}
+          entity={currentEntity}
+          onDuplicate={onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>}
           modalState={modalState}
           names={names || []}
           keys={keys || []}
@@ -260,18 +267,18 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
         <DuplicatePrompt
           entity={currentEntity as DialPrompt}
           versionsMap={versionsMap as Record<string, string[]>}
-          onDuplicate={onDuplicate as (entity: DialBaseEntity) => Promise<ServerActionResponse>}
+          onDuplicate={onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>}
           modalState={modalState}
           onClose={handleModalClose}
         />
       );
     }
     return (
-      <DuplicateEntityPopup
+      <DuplicatePopup
         view={route}
         names={names || []}
         entity={currentEntity}
-        onDuplicate={onDuplicate as (entity: DialBaseEntity) => Promise<ServerActionResponse>}
+        onDuplicate={onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>}
         modalState={modalState}
         onClose={handleModalClose}
       />
@@ -291,6 +298,7 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
         showFolders={showFolders}
         view={route}
         context={context}
+        onGridReady={onGridReady}
       >
         <EntityListHeaderButtons
           names={names}
@@ -303,11 +311,12 @@ const BaseEntityList = <T extends DialBaseEntity | DialKey | DialApplicationSche
           toggleColumnsPanel={toggleColumnsPanel}
           createEntity={createEntity}
           context={context}
+          gridApi={gridApi}
         />
       </ListView>
-      {modalType ? (
+      {modalType && currentEntity ? (
         <EntityListModals
-          entity={currentEntity as DialBaseEntity}
+          entity={currentEntity}
           route={route}
           initialPath={(currentEntity as DialPrompt)?.folderId}
           modalState={modalState}
