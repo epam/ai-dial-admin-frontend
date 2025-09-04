@@ -67,20 +67,20 @@ export class BaseApi {
     method?: string,
   ): Promise<ServerActionResponse> {
     return fileRequest(`${this.config.host || ''}${url}`, getAuthorizationHeader(token), dto, method).then((res) => {
-      return this.handleActionResponse(res, method || 'POST');
+      return this.handleResponse(res, method || 'POST');
     });
   }
 
-  protected getWithEtag<R extends object>(url: string, eTag: string, token?: JWT | null) {
-    return this.sendRequest<object, R>(url, 'GET', void 0, token, { [IF_NONE_MATCH]: eTag });
-  }
-
-  protected get<R extends object>(url: string, token?: JWT | null, headers?: HeadersInit) {
-    return this.sendRequest<object, R>(url, 'GET', void 0, token, headers);
+  protected get<R extends object>(url: string, token?: JWT | null, headers?: HeadersInit): Promise<R | null> {
+    return this.sendRequest<object, R>(url, 'GET', void 0, token, headers) as Promise<R | null>;
   }
 
   protected head<R extends object>(url: string, token?: JWT | null, headers?: HeadersInit): Promise<R | null> {
     return this.sendRequest<object, R>(url, 'HEAD', void 0, token, headers) as Promise<R | null>;
+  }
+
+  protected getActionWithEtag(url: string, etag: string, token?: JWT | null): Promise<ServerActionResponse> {
+    return this.sendActionRequest(url, 'GET', token, void 0, { [IF_NONE_MATCH]: etag });
   }
 
   protected getAction(url: string, token?: JWT | null): Promise<ServerActionResponse> {
@@ -98,8 +98,8 @@ export class BaseApi {
     dto?: T,
     initHeaders?: HeadersInit,
   ): Promise<ServerActionResponse> {
-    return this.sendServerRequest(url, type, token, dto, initHeaders).then((res) =>
-      this.handleActionResponse(res, type),
+    return sendRequest(`${this.config.host || ''}${url}`, type, { ...getApiHeaders(token), ...initHeaders }, dto).then(
+      (res) => this.handleResponse(res, type),
     );
   }
 
@@ -109,40 +109,34 @@ export class BaseApi {
     dto?: T,
     token?: JWT | null,
     initHeaders?: HeadersInit,
-  ) {
-    return this.sendServerRequest(url, type, token, dto, initHeaders).then((res) => {
-      if (isFailedRequest(res)) {
-        this.setLoggerRequestInfoError(res);
+  ): Promise<Response | R | null | undefined> {
+    return sendRequest(`${this.config.host || ''}${url}`, type, { ...getApiHeaders(token), ...initHeaders }, dto).then(
+      (res) => {
+        if (isFailedRequest(res)) {
+          logger.error(`Request status ${res.status}`);
+          logger.error(`Request error Url  ${res.url}`);
 
-        if (res.status === 403) {
-          return void 0;
+          if (res.status === 403) {
+            return void 0;
+          }
+
+          return res.text().then((error) => {
+            logger.error(`Request error ${res.status} ${error}`);
+            return null;
+          });
         }
 
-        return res.text().then((error) => {
-          this.setLoggerRequestError(error, res);
-          return null;
-        });
-      }
+        if (res.headers.get('content-type')?.includes('application/octet-stream')) {
+          return res;
+        }
 
-      if (res.headers.get('content-type')?.includes('application/octet-stream')) {
-        return { res };
-      }
-
-      return { res: getResponse<R>(type, res), headers: res.headers };
-    });
+        return getResponse<R>(type, res);
+      },
+    );
   }
 
-  protected sendServerRequest<T extends object>(
-    url: string,
-    type: string,
-    token?: JWT | null,
-    dto?: T,
-    initHeaders?: HeadersInit,
-  ): Promise<Response> {
-    return sendRequest(`${this.config.host || ''}${url}`, type, { ...getApiHeaders(token), ...initHeaders }, dto);
-  }
-
-  private handleActionResponse(res: Response, type: string): Promise<ServerActionResponse> {
+  private handleResponse(res: Response, type: string): Promise<ServerActionResponse> {
+    const etag = res.headers.get('etag') || undefined;
     if (isFailedRequest(res)) {
       this.setLoggerRequestInfoError(res);
 
@@ -155,13 +149,13 @@ export class BaseApi {
           errorMessage: getErrorMessage(errObject, res.status),
           errorHeader: getError(errObject),
           status: res.status,
-          etag: res.headers.get('etag') || undefined,
+          etag,
         };
       });
     }
 
     return getResponse<unknown>(type, res).then((r) => {
-      return { success: true, response: r };
+      return { success: true, response: r, etag };
     });
   }
 

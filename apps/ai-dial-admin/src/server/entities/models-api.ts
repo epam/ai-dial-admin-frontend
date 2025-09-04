@@ -33,7 +33,7 @@ export class ModelsApi extends BaseApi {
   }
 
   getModel(name: string, token: JWT | null, eTag: string) {
-    return this.getWithEtag(MODEL_URL(name), eTag || DEFAULT_ETAG, token);
+    return this.getActionWithEtag(MODEL_URL(name), eTag || DEFAULT_ETAG, token);
   }
 
   updateModel(model: DialModel, token: JWT | null, eTag?: string): Promise<ServerActionResponse> {

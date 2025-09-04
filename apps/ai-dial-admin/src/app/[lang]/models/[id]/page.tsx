@@ -30,9 +30,9 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   try {
     models = await modelsApi.getModelsList(token);
     model = await modelsApi.getModel((await params.params).id, token, etag).then((res) => {
-      etag = res?.headers?.get('etag') || '*';
+      etag = res?.etag || DEFAULT_ETAG;
 
-      return res?.res as DialModel | null;
+      return res?.response as DialModel | null;
     });
     roles = await rolesApi.getRolesList(token);
     interceptors = await interceptorsApi.getInterceptorsList(token);
@@ -40,7 +40,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       return <Page403 />;
     }
   } catch (e) {
-    logger.error('Getting model view data error', e);
+    logger.error(`Getting model view data error ${e}`);
   }
 
   if (model == null) {
