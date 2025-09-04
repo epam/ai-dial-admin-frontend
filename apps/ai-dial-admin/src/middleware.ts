@@ -11,7 +11,7 @@ const I18nMiddleware = createI18nMiddleware({
 });
 
 export const config = {
-  matcher: ['/((?!api|static|.+\\.[\\w]+$|_next/static|_next/image|images|favicon.svg|robots.txt).*)'],
+  matcher: ['/((?!api|static|.+\\.[\\w]+|_next/static|_next/image|images|favicon.svg|robots.txt).*)'],
 };
 
 async function middlewareFn(req: NextRequest) {
