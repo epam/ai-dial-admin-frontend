@@ -24,7 +24,7 @@ export const getUrnForEntity = (
 ) => {
   const path = getEntityPath(route, entity, false, entityType);
   const originalRoute = route?.split('/')?.[1];
-  return `/en/${originalRoute}/${path}`;
+  return `/${locale}/${originalRoute}/${path}`;
 };
 
 export const getEntityPath = (
