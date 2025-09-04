@@ -48,7 +48,7 @@ const SourceField = <T extends DialInterceptor | DialModel>({
   }, [entity, sourceItems]);
 
   return (
-    <div className="flex flex-col gap-6 mt-3">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-col max-w-fit">
         <Field fieldTitle={fieldTitle} optional={optional} htmlFor={elementId} />
         <DropdownField

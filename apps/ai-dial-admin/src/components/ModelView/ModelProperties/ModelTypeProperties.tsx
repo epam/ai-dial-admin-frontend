@@ -2,25 +2,27 @@
 
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
+import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
+import { DialModel, DialModelType } from '@/src/models/dial/model';
+import { RadioButtonModel } from '@/src/models/radio-button';
+import { DialAdapter } from '@/src/models/dial/adapter';
+import { RadioFieldOrientation } from '@/src/types/radio-orientation';
+import { ApplicationRoute } from '@/src/types/routes';
+import { useNotification } from '@/src/context/NotificationContext';
+import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
+import { getErrorNotification } from '@/src/utils/notification';
+import { getModelContainers } from '@/src/app/[lang]/interceptors/actions';
+import { useAppContext } from '@/src/context/AppContext';
+import { getSourceItems, MODELS_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
+import { useI18n } from '@/src/locales/client';
+
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 import EntityAttachments from '@/src/components/EntityView/Properties/EntityAttachments';
-import { EntitiesI18nKey } from '@/src/constants/i18n';
-import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
-import { DialModel, DialModelType } from '@/src/models/dial/model';
-import { RadioButtonModel } from '@/src/models/radio-button';
-import { DialAdapter } from '@/src/models/dial/adapter';
-import { useNotification } from '@/src/context/NotificationContext';
-import { RadioFieldOrientation } from '@/src/types/radio-orientation';
-import { getErrorNotification } from '@/src/utils/notification';
-import { getModelContainers } from '@/src/app/[lang]/interceptors/actions';
 import SourceField from '@/src/components/SourceField/SourceField';
-import { MODELS_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
-import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   model: DialModel;
@@ -31,6 +33,8 @@ interface Props {
 const ModelTypeProperties: FC<Props> = ({ model, onChangeModel, view }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
+  const { embeddedApps } = useAppContext();
+  const deploymentsEnabled = embeddedApps?.some((app) => app.name === 'mcp-plugin');
   const showNotificationRef = useRef(showNotification);
 
   const [adapters, setAdapters] = useState<DialAdapter[]>([]);
@@ -83,7 +87,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel, view }) => {
           getContainers={getModelContainers}
           elementId={'sourceType'}
           fieldTitle={t(EntitiesI18nKey.SourceType)}
-          sourceItems={MODELS_SOURCE_ITEMS}
+          sourceItems={getSourceItems(MODELS_SOURCE_ITEMS, deploymentsEnabled)}
           view={view}
           adapters={adapters}
         />

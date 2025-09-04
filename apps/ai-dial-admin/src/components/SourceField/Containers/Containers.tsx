@@ -5,14 +5,15 @@ import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 import { ApplicationRoute } from '@/src/types/routes';
 import { DialModel } from '@/src/models/dial/model';
 import { SourceI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
-import { useI18n } from '@/src/locales/client';
-import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { PopUpState } from '@/src/types/pop-up';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { useAppContext } from '@/src/context/AppContext';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { useI18n } from '@/src/locales/client';
 import { IconExternalLink } from '@tabler/icons-react';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { PopUpState } from '@/src/types/pop-up';
 
 import Button from '@/src/components/Common/Button/Button';
 import Field from '@/src/components/Common/Field/Field';
@@ -38,10 +39,12 @@ const Containers = <T extends DialInterceptor | DialModel>({
 }: Props<T>) => {
   const t = useI18n() as (key: string) => string;
   const { showNotification } = useNotification();
+  const { embeddedApps } = useAppContext();
+  const deploymentsEnabled = embeddedApps?.some((app) => app.name === 'mcp-plugin');
   const showNotificationRef = useRef(showNotification);
 
   const [modalState, setModalState] = useState(PopUpState.Closed);
-  const [containers, setcContainers] = useState<Container[]>([]);
+  const [containers, setContainers] = useState<Container[]>([]);
   const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
 
   const onOpenModal = useCallback(() => {
@@ -77,7 +80,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
     const fetchContainers = async () => {
       const containers = await getContainers();
       if (containers?.length) {
-        setcContainers(containers /*.filter((container) => container.status === 'running')*/ || []);
+        setContainers(containers.filter((container) => container.status === 'running') || []);
       }
     };
 
@@ -100,6 +103,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
             onOpenModal={onOpenModal}
             selectedValue={selectedContainer?.id}
             elementId={fieldId}
+            readonly={!deploymentsEnabled}
           >
             <SelectContainerModal
               selectedId={entity.source?.containerId}
@@ -110,7 +114,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
             />
           </InputModal>
         </div>
-        {entity.source?.containerId && (
+        {entity.source?.containerId && deploymentsEnabled && (
           <Button
             iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
             cssClass="secondary"

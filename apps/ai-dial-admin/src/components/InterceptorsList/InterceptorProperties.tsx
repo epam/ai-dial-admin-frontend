@@ -9,7 +9,8 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getInterceptorContainers } from '@/src/app/[lang]/interceptors/actions';
 import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
-import { INTERCEPTOR_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
+import { useAppContext } from '@/src/context/AppContext';
+import { getSourceItems, INTERCEPTOR_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
 import { useI18n } from '@/src/locales/client';
 
 import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
@@ -23,6 +24,8 @@ interface Props {
 }
 const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChangeInterceptor }) => {
   const t = useI18n();
+  const { embeddedApps } = useAppContext();
+  const deploymentsEnabled = embeddedApps?.some((app) => app.name === 'mcp-plugin');
 
   return (
     <div className="h-full flex flex-col gap-10 divide-y divide-primary w-full">
@@ -51,7 +54,7 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
           getRunners={getInterceptorTemplatesList}
           elementId={'sourceType'}
           fieldTitle={t(EntitiesI18nKey.SourceType)}
-          sourceItems={INTERCEPTOR_SOURCE_ITEMS}
+          sourceItems={getSourceItems(INTERCEPTOR_SOURCE_ITEMS, deploymentsEnabled)}
         />
         <Defaults entity={selectedInterceptor} onChangeEntity={onChangeInterceptor} />
       </div>

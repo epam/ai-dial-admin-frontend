@@ -10,3 +10,15 @@ export const MODELS_SOURCE_ITEMS: DropdownItemsModel[] = [
   { id: SOURCE_TYPE.ENDPOINTS, name: 'External Endpoint' },
   { id: SOURCE_TYPE.CONTAINER, name: 'Model Container' },
 ];
+
+export const getSourceItems = (items: DropdownItemsModel[], deploymentsEnabled?: boolean) => {
+  if (!deploymentsEnabled) {
+    return items.map((item) => {
+      if (item.id === SOURCE_TYPE.CONTAINER) {
+        item.disabled = true;
+      }
+      return item;
+    });
+  }
+  return items;
+};
