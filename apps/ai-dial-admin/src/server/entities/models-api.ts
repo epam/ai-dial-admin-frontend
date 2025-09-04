@@ -2,8 +2,9 @@ import { JWT } from 'next-auth/jwt';
 
 import { DialModel } from '@/src/models/dial/model';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { API } from '../api';
-import { BaseApi } from '../base-api';
+import { API } from '@/src/server/api';
+import { BaseApi } from '@/src/server/base-api';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const MODELS_URL = `${API}/models`;
 export const MODELS_TOPICS = `${API}/topics`;
@@ -31,11 +32,11 @@ export class ModelsApi extends BaseApi {
     return this.deleteAction(MODEL_URL(modelName), token);
   }
 
-  getModel(name: string, token: JWT | null): Promise<DialModel | null> {
-    return this.get(MODEL_URL(name), token);
+  getModel(name: string, token: JWT | null, eTag: string) {
+    return this.getWithEtag(MODEL_URL(name), eTag || DEFAULT_ETAG, token);
   }
 
-  updateModel(model: DialModel, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putAction(MODEL_URL(model.name), model, token);
+  updateModel(model: DialModel, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
+    return this.putAction(MODEL_URL(model.name), model, token, { 'If-Match': eTag });
   }
 }

@@ -7,6 +7,7 @@ import { logger } from './logger';
 import { sendRequest } from '@/src/utils/api/send-request';
 import { getApiHeaders, getAuthorizationHeader } from '@/src/utils/auth/api-headers';
 import { fileRequest } from '@/src/utils/api/file-request';
+import { DEFAULT_ETAG, IF_MATCH } from '@/src/constants/api-headers';
 
 export interface BaseApiConfig {
   host?: string;
@@ -23,8 +24,21 @@ export class BaseApi {
     return this.sendActionRequest(url, 'DELETE', token);
   }
 
-  protected async putAction<T extends object>(url: string, dto: T, token?: JWT | null): Promise<ServerActionResponse> {
-    return this.sendActionRequest<T>(url, 'PUT', token, dto);
+  protected async putActionWithEtag<T extends object>(
+    url: string,
+    dto: T,
+    token?: JWT | null,
+    etag?: string,
+  ): Promise<ServerActionResponse> {
+    return this.putAction<T>(url, dto, token, { [IF_MATCH]: etag || DEFAULT_ETAG });
+  }
+  protected async putAction<T extends object>(
+    url: string,
+    dto: T,
+    token?: JWT | null,
+    initHeaders?: HeadersInit,
+  ): Promise<ServerActionResponse> {
+    return this.sendActionRequest<T>(url, 'PUT', token, dto, initHeaders);
   }
 
   protected async post<T extends object, R>(
@@ -33,7 +47,9 @@ export class BaseApi {
     token?: JWT | null,
     initHeaders?: HeadersInit,
   ): Promise<R | null> {
-    return this.sendRequest<object, R>(url, 'POST', dto, token, initHeaders) as Promise<R | null>;
+    return this.sendRequest<object, R>(url, 'POST', dto, token, initHeaders).then(
+      (res) => res?.res,
+    ) as Promise<R | null>;
   }
 
   protected async postAction<T extends object>(
@@ -56,8 +72,12 @@ export class BaseApi {
     });
   }
 
-  protected get<R extends object>(url: string, token?: JWT | null, headers?: HeadersInit): Promise<R | null> {
-    return this.sendRequest<object, R>(url, 'GET', void 0, token, headers) as Promise<R | null>;
+  protected getWithEtag<R extends object>(url: string, eTag: string, token?: JWT | null) {
+    return this.sendRequest<object, R>(url, 'GET', void 0, token, { 'If-None-Match': eTag });
+  }
+
+  protected get<R extends object>(url: string, token?: JWT | null, headers?: HeadersInit) {
+    return this.sendRequest<object, R>(url, 'GET', void 0, token, headers).then((res) => res?.res);
   }
 
   protected head<R extends object>(url: string, token?: JWT | null, headers?: HeadersInit): Promise<R | null> {
@@ -90,11 +110,12 @@ export class BaseApi {
     dto?: T,
     token?: JWT | null,
     initHeaders?: HeadersInit,
-  ): Promise<Response | R | null | undefined> {
+  ): Promise<{ res: any; headers?: Headers } | undefined | null> {
     return sendRequest(`${this.config.host || ''}${url}`, type, { ...getApiHeaders(token), ...initHeaders }, dto).then(
       (res) => {
         if (isFailedRequest(res)) {
-          logger.error(`Request status ${res.status}`);
+          logger.error(`Request status ${res.status} ${initHeaders?.['If-None-Match'] || ''}`);
+          logger.error(`Request status ${res.status} ${initHeaders?.['If-Match'] || ''}`);
           logger.error(`Request error Url  ${res.url}`);
 
           if (res.status === 403) {
@@ -108,10 +129,10 @@ export class BaseApi {
         }
 
         if (res.headers.get('content-type')?.includes('application/octet-stream')) {
-          return res;
+          return { res };
         }
 
-        return getResponse<R>(type, res);
+        return { res: getResponse<R>(type, res), headers: res.headers };
       },
     );
   }
@@ -131,6 +152,7 @@ export class BaseApi {
           errorMessage: getErrorMessage(errObject, res.status),
           errorHeader: getError(errObject),
           status: res.status,
+          etag: res.headers.get('etag') || undefined,
         };
       });
     }

@@ -4,21 +4,23 @@ import { redirect } from 'next/navigation';
 import { removeModel, updateModel } from '@/src/app/[lang]/models/actions';
 import { interceptorsApi, modelsApi, rolesApi } from '@/src/app/api/api';
 import EntityView from '@/src/components/EntityView/View/EntityView';
+import Page403 from '@/src/components/Page403/Page403';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
-import { ApplicationRoute } from '@/src/types/routes';
 import { logger } from '@/src/server/logger';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
+import { filterDisplayNames } from '@/src/utils/entities/filter-names';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import Page403 from '@/src/components/Page403/Page403';
-import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page(params: { params: Promise<{ id: string }> }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
+  let etag = '*';
   let models: DialModel[] | null = [];
   let model: DialModel | null = null;
   let roles: DialRole[] | null = [];
@@ -26,7 +28,11 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   try {
     models = await modelsApi.getModelsList(token);
-    model = await modelsApi.getModel((await params.params).id, token);
+    model = await modelsApi.getModel((await params.params).id, token, etag).then((res) => {
+      etag = res?.headers?.get('etag') || '*';
+
+      return res?.res as DialModel | null;
+    });
     roles = await rolesApi.getRolesList(token);
     interceptors = await interceptorsApi.getInterceptorsList(token);
     if (models === void 0 || model === void 0 || roles === void 0 || interceptors === void 0) {
@@ -40,18 +46,13 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Models);
   }
 
-  const names = models?.reduce((acc, curr) => {
-    if (curr.displayName != null) {
-      acc.push(curr.displayName);
-    }
-    return acc;
-  }, [] as string[]) as string[];
-
+  const names = filterDisplayNames(models);
   return (
     <SaveValidationContextProvider>
       <EntityView
         view={ApplicationRoute.Models}
         names={names}
+        etag={etag}
         roles={roles}
         interceptors={interceptors}
         originalEntity={model}

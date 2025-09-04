@@ -39,12 +39,13 @@ interface Props {
   view: ApplicationRoute;
   originalEntity: BaseEntity;
   names: string[];
+  etag?: string;
   roles?: DialRole[] | null;
   applicationSchemes?: DialApplicationScheme[] | null;
   interceptors?: DialInterceptor[] | null;
   applications?: DialApplication[] | null;
   models?: DialModel[] | null;
-  updateEntity: (entity: BaseEntity) => Promise<ServerActionResponse>;
+  updateEntity: (entity: BaseEntity, etag?: string) => Promise<ServerActionResponse>;
   removeEntity: (entity?: string) => Promise<ServerActionResponse>;
 }
 
@@ -53,6 +54,7 @@ const EntityView: FC<Props> = ({
   names,
   applicationSchemes,
   view,
+  etag,
   updateEntity,
   removeEntity,
   ...props
@@ -163,14 +165,14 @@ const EntityView: FC<Props> = ({
   }, [setSelectedEntity, originalEntity, jsonEditorEnabled]);
 
   const onSave = useCallback(() => {
-    updateEntity(selectedEntity).then((res) => {
+    updateEntity(selectedEntity, etag).then((res) => {
       if (res.success) {
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedEntity, updateEntity, router, showNotification]);
+  }, [selectedEntity, updateEntity, etag, router, showNotification]);
 
   const onTryToSave = useCallback(() => {
     if (
