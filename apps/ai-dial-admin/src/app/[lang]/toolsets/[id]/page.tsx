@@ -19,12 +19,16 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   let toolSet: DialToolset | null = null;
   let toolSets: DialToolset[] | null = null;
+  let tools: DialToolset[] | null = null;
   let roles: DialRole[] | null = null;
+
   try {
     toolSet = await toolSetsApi.getToolset((await params.params).id, token);
+    tools = await toolSetsApi.getTools((await params.params).id, token);
+
     toolSets = await toolSetsApi.getToolsetList(token);
     roles = await rolesApi.getRolesList(token);
-    if (toolSet === void 0 || toolSets === void 0 || roles === void 0) {
+    if (toolSet === void 0 || toolSets === void 0 || roles === void 0 || tools === void 0) {
       return <Page403 />;
     }
   } catch (e) {
@@ -41,6 +45,8 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     }
     return acc;
   }, [] as string[]) as string[];
+  console.log('tools', tools);
+
   return (
     <SaveValidationContextProvider>
       <ToolsetView names={names} originalToolset={toolSet} roles={roles} />
