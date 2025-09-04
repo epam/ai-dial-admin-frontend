@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { ChangeEvent, FC, useCallback } from 'react';
 
 interface Props {
-  title: string;
+  title?: string;
   switchId: string;
   isOn?: boolean;
   disabled?: boolean;

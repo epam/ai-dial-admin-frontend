@@ -770,4 +770,6 @@ export enum EntityFieldsI18nKey {
 export enum ToolsetI18nKey {
   Tools = 'Toolset.Tools',
   AddTools = 'Toolset.AddTools',
+  UseAllTools = 'Toolset.UseAllTools',
+  AddedManually = 'Toolset.AddedManually',
 }

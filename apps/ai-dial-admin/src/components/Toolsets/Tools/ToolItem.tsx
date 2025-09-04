@@ -1,15 +1,35 @@
 'use client';
 
 import { FC } from 'react';
+import { useI18n } from '@/src/locales/client';
+import { ToolsetI18nKey } from '@/src/constants/i18n';
+import Switch from '@/src/components/Common/Switch/Switch';
 
 interface Props {
   tool: string;
+  isAddedManual: boolean;
+  hideSwitch: boolean;
+  isEnabled?: boolean;
+  onChangeIsEnabled: (isEnabled: boolean) => void;
 }
 
-const ToolItem: FC<Props> = ({ tool }) => {
+const ToolItem: FC<Props> = ({ tool, hideSwitch, isEnabled, isAddedManual, onChangeIsEnabled }) => {
+  const t = useI18n();
+
   return (
     <div className="p-3 mb-2 border border-primary rounded flex flex-row items-center justify-between">
-      <span>{tool}</span>
+      <div className="flex flex-row items-center">
+        <span>{tool}</span>
+        {isAddedManual && (
+          <span className="ml-4 tiny h-[22px] block px-2 py-1 border border-accent-primary bg-accent-primary-alpha rounded">
+            {t(ToolsetI18nKey.AddedManually)}
+          </span>
+        )}
+      </div>
+
+      {(!hideSwitch || !isAddedManual) && (
+        <Switch switchId={tool} isOn={isEnabled} onChange={(value) => onChangeIsEnabled(value)} />
+      )}
     </div>
   );
 };

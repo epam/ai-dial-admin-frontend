@@ -802,5 +802,7 @@ export default {
   Toolset: {
     Tools: 'Tools',
     AddTools: 'Add tools',
+    UseAllTools: 'Use all available tools',
+    AddedManually: 'Added manually',
   },
 } as const;
