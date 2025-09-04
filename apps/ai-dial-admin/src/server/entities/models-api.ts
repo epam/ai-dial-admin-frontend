@@ -36,7 +36,7 @@ export class ModelsApi extends BaseApi {
     return this.getWithEtag(MODEL_URL(name), eTag || DEFAULT_ETAG, token);
   }
 
-  updateModel(model: DialModel, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
-    return this.putAction(MODEL_URL(model.name), model, token, { 'If-Match': eTag });
+  updateModel(model: DialModel, token: JWT | null, eTag?: string): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(MODEL_URL(model.name), model, token, eTag);
   }
 }
