@@ -7,13 +7,13 @@ import Switch from '@/src/components/Common/Switch/Switch';
 
 interface Props {
   tool: string;
-  isAddedManual: boolean;
-  hideSwitch: boolean;
+  readonly: boolean;
+  isAddedManual?: boolean;
   isEnabled?: boolean;
   onChangeIsEnabled: (isEnabled: boolean) => void;
 }
 
-const ToolItem: FC<Props> = ({ tool, hideSwitch, isEnabled, isAddedManual, onChangeIsEnabled }) => {
+const ToolItem: FC<Props> = ({ tool, isAddedManual, isEnabled, readonly, onChangeIsEnabled }) => {
   const t = useI18n();
 
   return (
@@ -27,9 +27,7 @@ const ToolItem: FC<Props> = ({ tool, hideSwitch, isEnabled, isAddedManual, onCha
         )}
       </div>
 
-      {(hideSwitch || !isAddedManual) && (
-        <Switch switchId={tool} isOn={isEnabled} onChange={(value) => onChangeIsEnabled(value)} />
-      )}
+      {!readonly && <Switch switchId={tool} isOn={isEnabled} onChange={(value) => onChangeIsEnabled(value)} />}
     </div>
   );
 };

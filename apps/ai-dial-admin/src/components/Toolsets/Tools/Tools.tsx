@@ -31,7 +31,8 @@ const Tools: FC<Props> = ({ selectedToolset, onChangeToolset }) => {
 
   const filteredTools = useMemo(() => {
     const patternLower = pattern.toLowerCase();
-    return [...(availableTools || []), ...(selectedToolset.allowedTools || [])]?.filter(
+    const manual = selectedToolset.allowedTools?.filter((t) => !availableTools.includes(t)) || [];
+    return [...(availableTools || []), ...manual]?.filter(
       (tool) => tool.toLowerCase().includes(patternLower) && tool !== '',
     );
   }, [pattern, selectedToolset]);
@@ -50,7 +51,10 @@ const Tools: FC<Props> = ({ selectedToolset, onChangeToolset }) => {
 
   const onAddTools = useCallback(
     (tools: string[]) => {
-      onChangeToolset({ ...selectedToolset, allowedTools: [...(selectedToolset.allowedTools || []), ...tools] });
+      onChangeToolset({
+        ...selectedToolset,
+        allowedTools: [...(selectedToolset.allowedTools?.filter((t) => t !== '') || []), ...tools],
+      });
     },
     [onChangeToolset, selectedToolset],
   );
@@ -58,7 +62,10 @@ const Tools: FC<Props> = ({ selectedToolset, onChangeToolset }) => {
   const onChangeTools = useCallback(
     (value: boolean, tool: string) => {
       if (value) {
-        onChangeToolset({ ...selectedToolset, allowedTools: [...(selectedToolset.allowedTools || []), ...tool] });
+        onChangeToolset({
+          ...selectedToolset,
+          allowedTools: [...(selectedToolset.allowedTools?.filter((t) => t !== '') || []), tool],
+        });
       } else {
         onChangeToolset({
           ...selectedToolset,
@@ -107,10 +114,11 @@ const Tools: FC<Props> = ({ selectedToolset, onChangeToolset }) => {
             <div className="h-full overflow-y-auto flex flex-col gap-y-3 pr-2">
               {filteredTools?.map((tool) => (
                 <ToolItem
-                  hideSwitch={useAllTools}
                   key={tool}
                   tool={tool}
+                  isEnabled={selectedToolset.allowedTools?.includes(tool)}
                   isAddedManual={!availableTools.includes(tool)}
+                  readonly={useAllTools || !availableTools.includes(tool)}
                   onChangeIsEnabled={(v) => onChangeTools(v, tool)}
                 />
               ))}
