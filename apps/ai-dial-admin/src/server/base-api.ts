@@ -7,7 +7,7 @@ import { logger } from './logger';
 import { sendRequest } from '@/src/utils/api/send-request';
 import { getApiHeaders, getAuthorizationHeader } from '@/src/utils/auth/api-headers';
 import { fileRequest } from '@/src/utils/api/file-request';
-import { DEFAULT_ETAG, IF_MATCH } from '@/src/constants/api-headers';
+import { DEFAULT_ETAG, IF_MATCH, IF_NONE_MATCH } from '@/src/constants/api-headers';
 
 export interface BaseApiConfig {
   host?: string;
@@ -32,6 +32,7 @@ export class BaseApi {
   ): Promise<ServerActionResponse> {
     return this.putAction<T>(url, dto, token, { [IF_MATCH]: etag || DEFAULT_ETAG });
   }
+
   protected async putAction<T extends object>(
     url: string,
     dto: T,
@@ -47,9 +48,7 @@ export class BaseApi {
     token?: JWT | null,
     initHeaders?: HeadersInit,
   ): Promise<R | null> {
-    return this.sendRequest<object, R>(url, 'POST', dto, token, initHeaders).then(
-      (res) => res?.res,
-    ) as Promise<R | null>;
+    return this.sendRequest<object, R>(url, 'POST', dto, token, initHeaders) as Promise<R | null>;
   }
 
   protected async postAction<T extends object>(
@@ -68,16 +67,16 @@ export class BaseApi {
     method?: string,
   ): Promise<ServerActionResponse> {
     return fileRequest(`${this.config.host || ''}${url}`, getAuthorizationHeader(token), dto, method).then((res) => {
-      return this.handleResponse(res, method || 'POST');
+      return this.handleActionResponse(res, method || 'POST');
     });
   }
 
   protected getWithEtag<R extends object>(url: string, eTag: string, token?: JWT | null) {
-    return this.sendRequest<object, R>(url, 'GET', void 0, token, { 'If-None-Match': eTag });
+    return this.sendRequest<object, R>(url, 'GET', void 0, token, { [IF_NONE_MATCH]: eTag });
   }
 
   protected get<R extends object>(url: string, token?: JWT | null, headers?: HeadersInit) {
-    return this.sendRequest<object, R>(url, 'GET', void 0, token, headers).then((res) => res?.res);
+    return this.sendRequest<object, R>(url, 'GET', void 0, token, headers);
   }
 
   protected head<R extends object>(url: string, token?: JWT | null, headers?: HeadersInit): Promise<R | null> {
@@ -99,8 +98,8 @@ export class BaseApi {
     dto?: T,
     initHeaders?: HeadersInit,
   ): Promise<ServerActionResponse> {
-    return sendRequest(`${this.config.host || ''}${url}`, type, { ...getApiHeaders(token), ...initHeaders }, dto).then(
-      (res) => this.handleResponse(res, type),
+    return this.sendServerRequest(url, type, token, dto, initHeaders).then((res) =>
+      this.handleActionResponse(res, type),
     );
   }
 
@@ -110,42 +109,46 @@ export class BaseApi {
     dto?: T,
     token?: JWT | null,
     initHeaders?: HeadersInit,
-  ): Promise<{ res: any; headers?: Headers } | undefined | null> {
-    return sendRequest(`${this.config.host || ''}${url}`, type, { ...getApiHeaders(token), ...initHeaders }, dto).then(
-      (res) => {
-        if (isFailedRequest(res)) {
-          logger.error(`Request status ${res.status} ${initHeaders?.['If-None-Match'] || ''}`);
-          logger.error(`Request status ${res.status} ${initHeaders?.['If-Match'] || ''}`);
-          logger.error(`Request error Url  ${res.url}`);
+  ) {
+    return this.sendServerRequest(url, type, token, dto, initHeaders).then((res) => {
+      if (isFailedRequest(res)) {
+        this.setLoggerRequestInfoError(res);
 
-          if (res.status === 403) {
-            return void 0;
-          }
-
-          return res.text().then((error) => {
-            logger.error(`Request error ${res.status} ${error}`);
-            return null;
-          });
+        if (res.status === 403) {
+          return void 0;
         }
 
-        if (res.headers.get('content-type')?.includes('application/octet-stream')) {
-          return { res };
-        }
+        return res.text().then((error) => {
+          this.setLoggerRequestError(error, res);
+          return null;
+        });
+      }
 
-        return { res: getResponse<R>(type, res), headers: res.headers };
-      },
-    );
+      if (res.headers.get('content-type')?.includes('application/octet-stream')) {
+        return { res };
+      }
+
+      return { res: getResponse<R>(type, res), headers: res.headers };
+    });
   }
 
-  private handleResponse(res: Response, type: string): Promise<ServerActionResponse> {
+  protected sendServerRequest<T extends object>(
+    url: string,
+    type: string,
+    token?: JWT | null,
+    dto?: T,
+    initHeaders?: HeadersInit,
+  ): Promise<Response> {
+    return sendRequest(`${this.config.host || ''}${url}`, type, { ...getApiHeaders(token), ...initHeaders }, dto);
+  }
+
+  private handleActionResponse(res: Response, type: string): Promise<ServerActionResponse> {
     if (isFailedRequest(res)) {
-      logger.error(`Request status ${res.status}`);
-      logger.error(`Request error Url  ${res.url}`);
+      this.setLoggerRequestInfoError(res);
 
       return res.text().then((error) => {
         const errObject = getParsedError(error);
-        logger.error(`Request error ${res.status}`);
-        logger.error(`${errObject.error} ${errObject.message}`);
+        this.setLoggerRequestError(error, res);
 
         return {
           success: false,
@@ -160,6 +163,17 @@ export class BaseApi {
     return getResponse<unknown>(type, res).then((r) => {
       return { success: true, response: r };
     });
+  }
+
+  private setLoggerRequestInfoError(res: Response) {
+    logger.error(`Request status ${res.status}`);
+    logger.error(`Request error Url  ${res.url}`);
+  }
+
+  private setLoggerRequestError(error: string, res: Response) {
+    const errObject = getParsedError(error);
+    logger.error(`Request error ${res.status}`);
+    logger.error(`${errObject.error} ${errObject.message}`);
   }
 }
 
