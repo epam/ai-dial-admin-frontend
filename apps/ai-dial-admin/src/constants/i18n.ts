@@ -772,4 +772,10 @@ export enum ToolsetI18nKey {
   AddTools = 'Toolset.AddTools',
   UseAllTools = 'Toolset.UseAllTools',
   AddedManually = 'Toolset.AddedManually',
+  Warning = 'Toolset.Warning',
+  View = 'Toolset.View',
+  AllTools = 'Toolset.AllTools',
+  Enabled = 'Toolset.Enabled',
+  Disabled = 'Toolset.Disabled',
+  AutoDetected = 'Toolset.AutoDetected',
 }

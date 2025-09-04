@@ -14,9 +14,20 @@ import { PopUpState } from '@/src/types/pop-up';
 import AddToolsModal from './AddToolsModal';
 import ToolItem from './ToolItem';
 import Switch from '@/src/components/Common/Switch/Switch';
+import ToolsFilter from './Filter/ToolsFilter';
+import { ToolFilter } from './type';
+import { isEqual } from 'lodash';
+import { getFilteredTools } from './utils';
 
 // TODO: remove after support api
 const availableTools = ['Browser', 'Calculator', 'Calendar', 'Email'];
+const filtersConfiguration = [
+  ToolFilter.Enabled,
+  ToolFilter.Disabled,
+  ToolFilter.AutoDetected,
+  ToolFilter.AddedManually,
+];
+
 interface Props {
   selectedToolset: DialToolset;
   onChangeToolset: (toolset: DialToolset) => void;
@@ -26,16 +37,19 @@ const Tools: FC<Props> = ({ selectedToolset, onChangeToolset }) => {
   const t = useI18n();
 
   const [modalState, setModalState] = useState(PopUpState.Closed);
+  const [selectedFilters, setSelectedFilters] = useState(filtersConfiguration);
   const [pattern, setPattern] = useState('');
   const [useAllTools, setUseAllTools] = useState(false);
 
   const filteredTools = useMemo(() => {
     const patternLower = pattern.toLowerCase();
     const manual = selectedToolset.allowedTools?.filter((t) => !availableTools.includes(t)) || [];
-    return [...(availableTools || []), ...manual]?.filter(
+    const tools = [...(availableTools || []), ...manual]?.filter(
       (tool) => tool.toLowerCase().includes(patternLower) && tool !== '',
     );
-  }, [pattern, selectedToolset]);
+
+    return getFilteredTools(tools, selectedFilters, availableTools);
+  }, [pattern, selectedToolset, selectedFilters]);
 
   useEffect(() => {
     setUseAllTools(!selectedToolset.allowedTools || selectedToolset.allowedTools.length === 0);
@@ -57,6 +71,25 @@ const Tools: FC<Props> = ({ selectedToolset, onChangeToolset }) => {
       });
     },
     [onChangeToolset, selectedToolset],
+  );
+
+  const onSelectAll = useCallback(() => {
+    if (isEqual(filtersConfiguration, selectedFilters)) {
+      setSelectedFilters([]);
+    } else {
+      setSelectedFilters(filtersConfiguration);
+    }
+  }, [selectedFilters]);
+
+  const onSelectFilter = useCallback(
+    (value: boolean | undefined, filter: ToolFilter) => {
+      if (value) {
+        setSelectedFilters((prev) => [...prev, filter]);
+      } else {
+        setSelectedFilters((prev) => prev.filter((f) => f !== filter));
+      }
+    },
+    [setSelectedFilters],
   );
 
   const onChangeTools = useCallback(
@@ -98,13 +131,22 @@ const Tools: FC<Props> = ({ selectedToolset, onChangeToolset }) => {
           <div className="w-[480px]">
             <Search onChange={(search) => setPattern(search)} />
           </div>
+
           {!useAllTools && (
-            <Button
-              cssClass="primary"
-              title={t(ButtonsI18nKey.Add)}
-              iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-              onClick={onOpenModal}
-            />
+            <div className="flex items-center gap-x-6">
+              <ToolsFilter
+                isAllSelected={isEqual(filtersConfiguration, selectedFilters)}
+                onSelectAll={onSelectAll}
+                selectedFilters={selectedFilters}
+                onSelectFilter={onSelectFilter}
+              />
+              <Button
+                cssClass="primary"
+                title={t(ButtonsI18nKey.Add)}
+                iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+                onClick={onOpenModal}
+              />
+            </div>
           )}
         </div>
         <div className="flex-1 min-h-0">
@@ -125,6 +167,7 @@ const Tools: FC<Props> = ({ selectedToolset, onChangeToolset }) => {
             </div>
           )}
         </div>
+        {useAllTools && <span className="tiny mt-3 text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
       </div>
       {modalState === PopUpState.Opened && (
         <AddToolsModal modalState={modalState} onClose={onCloseModal} onSelectItems={onAddTools} />

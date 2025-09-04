@@ -804,5 +804,11 @@ export default {
     AddTools: 'Add tools',
     UseAllTools: 'Use all available tools',
     AddedManually: 'Added manually',
+    View: 'View',
+    AllTools: 'All tools',
+    Warning: 'List of tools from external endpoint may not display some tools. Add the missing tools manually.',
+    Enabled: 'Enabled',
+    Disabled: 'Disabled',
+    AutoDetected: 'Auto-detected',
   },
 } as const;
