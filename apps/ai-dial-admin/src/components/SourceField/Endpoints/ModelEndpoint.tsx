@@ -1,10 +1,12 @@
 import { FC, useCallback, useMemo } from 'react';
-import InputWithReadonlyParts from '@/src/components/Common/Input/InputWithReadonlyParts';
-import { EntitiesI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+
+import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { DialModel } from '@/src/models/dial/model';
-import { useI18n } from '@/src/locales/client';
-import { splitEndpoint } from '@/src/components/ModelView/ModelProperties/utils';
 import { DialAdapter } from '@/src/models/dial/adapter';
+import { splitEndpoint } from '@/src/components/ModelView/ModelProperties/utils';
+import { useI18n } from '@/src/locales/client';
+
+import InputWithReadonlyParts from '@/src/components/Common/Input/InputWithReadonlyParts';
 
 interface Props {
   model: DialModel;
@@ -31,13 +33,11 @@ const ModelEndpoint: FC<Props> = ({ model, adapters, onChange }) => {
       <InputWithReadonlyParts
         inputId="endpoint"
         value={model.endpointDeploymentName}
-        fullValue={model.endpoint}
-        title={t(EntitiesI18nKey.Endpoint)}
-        postfixPart={postfixPart}
+        fullValue={`${prefixPart}${model.endpointDeploymentName ? model.endpointDeploymentName + '/' : ''}${postfixPart}`}
+        title={t(EntityFieldsI18nKey.endpoint)}
+        postfixPart={`/${postfixPart}`}
         prefixPart={prefixPart}
         onChange={onChangeEndpoint}
-        invalid={!model.endpointDeploymentName}
-        errorText={t(ErrorI18nKey.IncorrectModelEndpointAlias)}
       />
     </div>
   );
