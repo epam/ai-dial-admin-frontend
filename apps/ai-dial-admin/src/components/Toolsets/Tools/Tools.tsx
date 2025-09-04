@@ -43,12 +43,10 @@ const Tools: FC<Props> = ({ selectedToolset, onChangeToolset }) => {
 
   const filteredTools = useMemo(() => {
     const patternLower = pattern.toLowerCase();
-    const manual = selectedToolset.allowedTools?.filter((t) => !availableTools.includes(t)) || [];
-    const tools = [...(availableTools || []), ...manual]?.filter(
+
+    return getFilteredTools(selectedToolset.allowedTools || [], selectedFilters, availableTools).filter(
       (tool) => tool.toLowerCase().includes(patternLower) && tool !== '',
     );
-
-    return getFilteredTools(tools, selectedFilters, availableTools);
   }, [pattern, selectedToolset, selectedFilters]);
 
   useEffect(() => {
