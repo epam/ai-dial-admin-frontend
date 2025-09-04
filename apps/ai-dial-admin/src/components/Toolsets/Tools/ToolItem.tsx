@@ -19,7 +19,7 @@ const ToolItem: FC<Props> = ({ tool, hideSwitch, isEnabled, isAddedManual, onCha
   return (
     <div className="p-3 mb-2 border border-primary rounded flex flex-row items-center justify-between">
       <div className="flex flex-row items-center">
-        <span>{tool}</span>
+        <h3>{tool}</h3>
         {isAddedManual && (
           <span className="ml-4 tiny h-[22px] block px-2 py-1 border border-accent-primary bg-accent-primary-alpha rounded">
             {t(ToolsetI18nKey.AddedManually)}
@@ -27,7 +27,7 @@ const ToolItem: FC<Props> = ({ tool, hideSwitch, isEnabled, isAddedManual, onCha
         )}
       </div>
 
-      {(!hideSwitch || !isAddedManual) && (
+      {(hideSwitch || !isAddedManual) && (
         <Switch switchId={tool} isOn={isEnabled} onChange={(value) => onChangeIsEnabled(value)} />
       )}
     </div>

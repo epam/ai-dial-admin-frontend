@@ -20,5 +20,8 @@ export async function updateToolset(toolSet: DialToolset) {
 
 export async function createToolset(toolSet: DialToolset) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return toolSetsApi.createToolset({ ...toolSet, transport: ToolsetTransport.HTTP }, token);
+  return toolSetsApi.createToolset(
+    { ...toolSet, allowedTools: toolSet.allowedTools?.filter((tool) => tool !== ''), transport: ToolsetTransport.SSE },
+    token,
+  );
 }
