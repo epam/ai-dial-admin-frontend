@@ -11,6 +11,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { DialRole } from '@/src/models/dial/role';
+import { filterNames } from '@/src/utils/entities/filter-names';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,12 +40,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Toolsets);
   }
 
-  const names = toolSets?.reduce((acc, curr) => {
-    if (curr.name != null) {
-      acc.push(curr.name);
-    }
-    return acc;
-  }, [] as string[]) as string[];
+  const names = filterNames(toolSets);
 
   return (
     <SaveValidationContextProvider>

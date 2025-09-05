@@ -12,6 +12,7 @@ import { logger } from '@/src/server/logger';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { filterNames } from '@/src/utils/entities/filter-names';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,12 +43,8 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Interceptors);
   }
 
-  const names = interceptors?.reduce((acc, curr) => {
-    if (curr.name != null) {
-      acc.push(curr.name);
-    }
-    return acc;
-  }, [] as string[]) as string[];
+  const names = filterNames(interceptors);
+
   return (
     <SaveValidationContextProvider>
       <InterceptorView

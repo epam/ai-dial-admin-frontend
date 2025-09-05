@@ -5,19 +5,14 @@ import { AUTHOR_COLUMN, SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-colum
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
+import { filterNames } from '@/src/utils/entities/filter-names';
 
 interface Props {
   data: DialInterceptor[];
 }
 
 const InterceptorsList: FC<Props> = async ({ data }) => {
-  const names = data?.reduce((acc, curr) => {
-    if (curr.name != null) {
-      acc.push(curr.name);
-    }
-    return acc;
-  }, [] as string[]) as string[];
-
+  const names = filterNames(data)
   return (
     <BaseEntityList
       baseColumns={[...SIMPLE_ENTITY_COLUMNS, AUTHOR_COLUMN]}
