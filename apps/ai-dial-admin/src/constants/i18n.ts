@@ -99,6 +99,7 @@ export enum EntitiesI18nKey {
   NoResource = 'Entities.NoResource',
   NoInterceptorTemplates = 'Entities.NoInterceptorTemplates',
   NoToolsets = 'Entities.NoToolsets',
+  NoTools = 'Entities.NoTools',
   NoDependencies = 'Entities.NoDependencies',
   AddModel = 'Entities.AddModel',
   AddApplication = 'Entities.AddApplication',
@@ -107,8 +108,12 @@ export enum EntitiesI18nKey {
   Source = 'Entities.Source',
   Endpoints = 'Entities.Endpoints',
   AppRunner = 'Entities.AppRunner',
+  ExternalEndpoint = 'Entities.ExternalEndpoint',
+  InterceptorContainer = 'Entities.InterceptorContainer',
+  InterceptorTemplate = 'Entities.InterceptorTemplate',
   InterceptorName = 'Entities.InterceptorName',
   ModelDisplayName = 'Entities.ModelDisplayName',
+  Author = 'Entities.Author',
   ApplicationDisplayName = 'Entities.ApplicationDisplayName',
   ChangeIcon = 'Entities.ChangeIcon',
   SaveChangesTitle = 'Entities.SaveChangesTitle',
@@ -342,6 +347,7 @@ export enum TabsI18nKey {
   Traces = 'Tabs.Traces',
   Conversations = 'Tabs.Conversations',
   Attachments = 'Tabs.Attachments',
+  Tools = 'Tabs.Tools',
 }
 
 export enum InterceptorsI18nKey {
@@ -419,7 +425,6 @@ export enum PublicationsI18nKey {
   OpenPrompt = 'Publications.Prompt.OpenPrompt',
   Action = 'Publications.Action',
   Runner = 'Publications.Runner',
-  Author = 'Publications.Author',
   FolderStorage = 'Publications.FolderStorage',
   FilesListTitle = 'Publications.Files.FilesListTitle',
 }
@@ -665,6 +670,7 @@ export enum EntityPlaceholdersI18nKey {
   Version = 'EntityPlaceholders.Version',
   KeyValue = 'EntityPlaceholders.KeyValue',
   Key = 'EntityPlaceholders.Key',
+  ToolName = 'EntityPlaceholders.ToolName',
 }
 
 export enum EntityFieldsI18nKey {
@@ -679,6 +685,7 @@ export enum EntityFieldsI18nKey {
   author = 'EntityFields.author',
   endpoint = 'EntityFields.endpoint',
   permissions = 'EntityFields.permissions',
+  allowedTools = 'EntityFields.allowedTools',
   displayName = 'EntityFields.displayName',
   displayVersion = 'EntityFields.displayVersion',
   adapter = 'EntityFields.adapter',
@@ -758,4 +765,17 @@ export enum EntityFieldsI18nKey {
   baseEndpoint = 'EntityFields.baseEndpoint',
   dependencies = 'EntityFields.dependencies',
   completionEndpoint = 'EntityFields.completionEndpoint',
+}
+
+export enum ToolsetI18nKey {
+  Tools = 'Toolset.Tools',
+  AddTools = 'Toolset.AddTools',
+  UseAllTools = 'Toolset.UseAllTools',
+  AddedManually = 'Toolset.AddedManually',
+  Warning = 'Toolset.Warning',
+  View = 'Toolset.View',
+  AllTools = 'Toolset.AllTools',
+  Enabled = 'Toolset.Enabled',
+  Disabled = 'Toolset.Disabled',
+  AutoDetected = 'Toolset.AutoDetected',
 }

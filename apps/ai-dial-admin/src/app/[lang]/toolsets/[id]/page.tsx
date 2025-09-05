@@ -1,16 +1,17 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { toolSetsApi } from '@/src/app/api/api';
-import EntityView from '@/src/components/EntityView/View/EntityView';
+import { rolesApi, toolSetsApi } from '@/src/app/api/api';
 import Page403 from '@/src/components/Page403/Page403';
+import ToolsetView from '@/src/components/Toolsets/View/View';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
-import { DialToolset } from '@/src/models/dial/toolset';
+import { DialToolset, Tools } from '@/src/models/dial/toolset';
 import { logger } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { removeToolset, updateToolset } from '../actions';
+import { DialRole } from '@/src/models/dial/role';
+import { filterNames } from '@/src/utils/entities/filter-names';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,11 +20,16 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   let toolSet: DialToolset | null = null;
   let toolSets: DialToolset[] | null = null;
+  let tools: Tools[] | null = null;
+  let roles: DialRole[] | null = null;
+
   try {
     toolSet = await toolSetsApi.getToolset((await params.params).id, token);
-    toolSets = await toolSetsApi.getToolsetList(token);
+    tools = await toolSetsApi.getTools((await params.params).id, token);
 
-    if (toolSet === void 0 || toolSets === void 0) {
+    toolSets = await toolSetsApi.getToolsetList(token);
+    roles = await rolesApi.getRolesList(token);
+    if (toolSet === void 0 || toolSets === void 0 || roles === void 0 || tools === void 0) {
       return <Page403 />;
     }
   } catch (e) {
@@ -34,15 +40,11 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Toolsets);
   }
 
+  const names = filterNames(toolSets);
+
   return (
     <SaveValidationContextProvider>
-      <EntityView
-        view={ApplicationRoute.Toolsets}
-        names={toolSets?.map((t) => t.name || '') || []}
-        originalEntity={toolSet}
-        removeEntity={removeToolset}
-        updateEntity={updateToolset}
-      />
+      <ToolsetView names={names} originalToolset={toolSet} roles={roles} />
     </SaveValidationContextProvider>
   );
 }

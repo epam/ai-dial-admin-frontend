@@ -24,8 +24,8 @@ import { ActivityAuditI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialActivity } from '@/src/models/dial/activity-audit';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { DialActivity } from '@/src/models/activity-audit';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { FilterDto } from '@/src/models/request';
 import { TimeRange } from '@/src/models/time-range';
 import { PopUpState } from '@/src/types/pop-up';
@@ -37,9 +37,10 @@ import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 
 interface Props {
-  entity?: DialBaseEntity | DialApplicationScheme;
+  entity?: BaseEntity | DialApplicationScheme;
 }
 
 const ActivityAuditList: FC<Props> = ({ entity }) => {
@@ -76,7 +77,7 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
             ? [
                 {
                   column: 'resourceId',
-                  value: (entity as DialApplicationScheme).$id || (entity as DialBaseEntity).name,
+                  value: (entity as DialApplicationScheme).$id || (entity as BaseEntity).name,
                   operator: 'eq',
                 } as FilterDto,
               ]
@@ -174,19 +175,24 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
     if (selectedActivity) {
       setIsLoading(true);
       rollbackEntityPerType(selectedActivity)
-        .then(() => {
+        .then((res) => {
           setIsLoading(false);
-          showNotification(
-            getSuccessNotification(
-              t(ActivityAuditI18nKey.ResourceRollback),
-              t(ActivityAuditI18nKey.ResourceRollbackDescription),
-            ),
-          );
           onCloseModal();
-          if (entity) {
-            router.refresh();
-          } else {
+          if (res?.success) {
+            showNotification(
+              getSuccessNotification(
+                t(ActivityAuditI18nKey.ResourceRollback),
+                t(ActivityAuditI18nKey.ResourceRollbackDescription),
+              ),
+            );
             onRefresh();
+          } else {
+            showNotification(
+              getErrorNotification(
+                res?.errorHeader || t(ActivityAuditI18nKey.ResourceRollbackErrorTitle),
+                res?.errorMessage,
+              ),
+            );
           }
         })
         .catch(() => {
@@ -199,7 +205,7 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
           );
         });
     }
-  }, [selectedActivity, showNotification, t, onCloseModal, entity, router, onRefresh]);
+  }, [selectedActivity, showNotification, t, onCloseModal, onRefresh]);
 
   const systemRollback = useCallback(() => {
     router.push(`${ApplicationRoute.ActivityAudit}/${SYSTEM_ROLLBACK_ID}`);
@@ -254,7 +260,9 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
                 <span>{t(ActivityAuditI18nKey.ConfirmRollbackDescriptionPart1)}</span>
                 <span className="important-text-part mx-1">{selectedActivity?.activityType}</span>
                 <span>{t(ActivityAuditI18nKey.ConfirmRollbackDescriptionPart2)}</span>
-                <span className="important-text-part mx-1">{selectedActivity?.resourceId}</span>
+                <Tooltip tooltip={selectedActivity?.resourceId || ''} triggerClassName="flex-1">
+                  <span className="important-text-part mx-1">{selectedActivity?.resourceId}</span>
+                </Tooltip>
                 <span>{t(ActivityAuditI18nKey.ConfirmRollbackDescriptionPart3)}</span>
                 <span className="important-text-part">
                   {formatDateTimeToLocalString(selectedActivity?.epochTimestampMs)}

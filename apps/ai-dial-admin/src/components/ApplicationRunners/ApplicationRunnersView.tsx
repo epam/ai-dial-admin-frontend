@@ -32,12 +32,14 @@ import SchemeParameters from './ConfigurationView/Parameters';
 import SchemeProperties from './ConfigurationView/Properties';
 import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import { DialRole } from '@/src/models/dial/role';
 
 interface Props {
   originalScheme: DialApplicationScheme;
+  roles: DialRole[] | null;
 }
 
-const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
+const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -45,8 +47,8 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
   const tabs: TabModel[] = [
     propertiesTabs(t),
     parametersTabs(t),
-    appRouteTab(t),
     { id: EntityViewTab.Applications, name: t(TabsI18nKey.Applications) },
+    appRouteTab(t),
     auditTabs(t),
   ];
 
@@ -131,7 +133,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
         {jsonEditorEnabled ? (
           <JSONEditor
             key={key}
-            model={selectedScheme}
+            entity={selectedScheme}
             errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedScheme}
             setIsChanged={setIsChanged}
@@ -159,6 +161,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme }) => {
             {activeTab === EntityViewTab.Routes && (
               <EntityRoutes
                 iAppRunnerView={true}
+                roles={roles}
                 routes={selectedScheme['dial:applicationTypeRoutes']}
                 onChangeRoutes={(routes) =>
                   setSelectedScheme({ ...selectedScheme, ['dial:applicationTypeRoutes']: routes })

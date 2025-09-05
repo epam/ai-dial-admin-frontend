@@ -1,14 +1,15 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { isDialRoleShareKey } from '@/src/components/AddEntitiesTab/AddEntitiesView.utils';
+import { isDialRoleShareKey } from '@/src/components/AddEntitiesTab/utils';
 import AlertInfo from '@/src/components/Common/Alerts/AlertInfo';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import RolesGrid from '@/src/components/EntityView/Roles/RolesGrid';
 import { isDisableRole, isResetToDefaultHidden, isSetNoLimitsHidden } from '@/src/components/EntityView/Roles/utils';
 import { EntitiesI18nKey, RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialBaseEntity, DialRoleLimits, DialRoleLimitsMap } from '@/src/models/dial/base-entity';
+import { EntityRoleLimits } from '@/src/models/dial/base-entity';
+import { DialRoleLimits, DialRoleLimitsMap } from '@/src/models/dial/role-limits';
 import { DialRole } from '@/src/models/dial/role';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -16,13 +17,14 @@ import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import RolesDefaults from './RolesDefaults';
 
 interface Props {
-  entity: DialBaseEntity;
+  entity: EntityRoleLimits;
+  view: ApplicationRoute;
   isSkipRefresh: boolean;
   roles: DialRole[];
-  onChangeEntity: (entity: DialBaseEntity, withRefresh?: boolean) => void;
+  onChangeEntity: (entity: EntityRoleLimits, withRefresh?: boolean) => void;
 }
 
-const EntityRoles: FC<Props> = ({ entity, roles, onChangeEntity, isSkipRefresh }) => {
+const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRefresh }) => {
   const t = useI18n();
 
   const [addModalState, setAddModalState] = useState(PopUpState.Closed);
@@ -172,10 +174,11 @@ const EntityRoles: FC<Props> = ({ entity, roles, onChangeEntity, isSkipRefresh }
   return (
     <div className="h-full flex flex-col pt-3">
       <div className="flex flex-col flex-1 min-h-0 divide-y divide-primary">
-        <RolesDefaults entity={entity} onChangeEntity={onChangeEntity} />
+        {view !== ApplicationRoute.Routes && <RolesDefaults entity={entity} onChangeEntity={onChangeEntity} />}
 
         <div className="flex-1 min-h-0 pt-8 mb-4">
           <RolesGrid
+            view={view}
             entity={entity}
             roles={roles}
             onChangeEntity={onChangeEntity}
@@ -192,7 +195,9 @@ const EntityRoles: FC<Props> = ({ entity, roles, onChangeEntity, isSkipRefresh }
           />
         </div>
       </div>
-      {isDisableRole(entity) && <AlertInfo text={t(RolesI18nKey.NotAvailableModel)} />}
+      {isDisableRole(entity) && view !== ApplicationRoute.Routes && (
+        <AlertInfo text={t(RolesI18nKey.NotAvailableModel)} />
+      )}
       {addModalState === PopUpState.Opened &&
         createPortal(
           <AddEntitiesGrid

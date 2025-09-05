@@ -11,6 +11,7 @@ import { logger } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { filterNames } from '@/src/utils/entities/filter-names';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,14 +36,11 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Keys);
   }
 
+  const names = filterNames(keys);
+
   return (
     <SaveValidationContextProvider>
-      <KeyView
-        names={keys?.map((key) => key.name || '') || []}
-        keys={keys?.map((key) => key.key || '') || []}
-        originalKey={key}
-        roles={roles || []}
-      />
+      <KeyView names={names} keys={keys?.map((key) => key.key || '') || []} originalKey={key} roles={roles || []} />
     </SaveValidationContextProvider>
   );
 }

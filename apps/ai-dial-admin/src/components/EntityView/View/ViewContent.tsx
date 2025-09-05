@@ -1,7 +1,7 @@
 'use client';
 import { FC, useCallback } from 'react';
 
-import ApplicationParametersTab from '@/src/components/ApplicationParametersTab/ApplicationParametersTab';
+import ApplicationParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import EntityProperties from '@/src/components/EntityProperties/EntityProperties';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityDependencies from '@/src/components/EntityView/Dependencies/Dependencies';
@@ -13,7 +13,7 @@ import { EntityViewTab } from '@/src/components/EntityView/View/utils';
 import ModelProperties from '@/src/components/ModelView/ModelProperties/ModelProperties';
 import RouteProperties from '@/src/components/Routes/Properties/RouteProperties';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity, EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
@@ -30,10 +30,10 @@ interface Props {
   applications?: DialApplication[] | null;
   models?: DialModel[] | null;
   view: ApplicationRoute;
-  selectedEntity: DialBaseEntity;
+  selectedEntity: BaseEntity;
   jsonEditorEnabled: boolean;
   isSkipRefresh: boolean;
-  onChangeEntity: (entity: DialBaseEntity) => void;
+  onChangeEntity: (entity: BaseEntity) => void;
 }
 
 const ViewContent: FC<Props> = ({
@@ -79,7 +79,11 @@ const ViewContent: FC<Props> = ({
         </div>
       )}
       {activeTab === EntityViewTab.Features && (
-        <EntityFeatures entity={selectedEntity} onChangeEntity={onChangeEntity} view={view} />
+        <EntityFeatures
+          entity={selectedEntity as DialModel | DialApplication}
+          onChangeEntity={onChangeEntity}
+          view={view}
+        />
       )}
       {activeTab === EntityViewTab.Routes && (
         <ApplicationAppRoutes
@@ -98,14 +102,19 @@ const ViewContent: FC<Props> = ({
       )}
       {activeTab === EntityViewTab.Roles && (
         <EntityRoles
-          entity={selectedEntity}
+          entity={selectedEntity as EntityRoleLimits}
+          view={view}
           roles={roles || []}
-          onChangeEntity={onChangeEntity}
+          onChangeEntity={onChangeEntity as (entity: EntityRoleLimits, withRefresh?: boolean) => void}
           isSkipRefresh={isSkipRefresh}
         />
       )}
       {activeTab === EntityViewTab.Interceptors && (
-        <EntityInterceptors entity={selectedEntity} interceptors={interceptors || []} onChangeEntity={onChangeEntity} />
+        <EntityInterceptors
+          entity={selectedEntity as DialModel | DialApplication}
+          interceptors={interceptors || []}
+          onChangeEntity={onChangeEntity}
+        />
       )}
       {activeTab === EntityViewTab.Dependencies && (
         <EntityDependencies

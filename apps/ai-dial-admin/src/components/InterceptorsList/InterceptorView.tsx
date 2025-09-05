@@ -7,7 +7,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { removeInterceptor, updateInterceptor } from '@/src/app/[lang]/interceptors/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
-import { getRelevantDataForInterceptor } from '@/src/components/AddEntitiesTab/AddEntitiesView.utils';
+import { getRelevantDataForInterceptor } from '@/src/components/AddEntitiesTab/utils';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';

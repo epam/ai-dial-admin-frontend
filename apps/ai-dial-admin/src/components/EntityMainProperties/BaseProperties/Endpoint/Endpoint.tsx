@@ -7,7 +7,7 @@ import { FieldError } from '@/src/models/error';
 import { getUrlError } from '@/src/utils/validation/url-error';
 
 export interface EndpointControlProps {
-  endpoint?: string;
+  endpoint?: string | null;
   required?: boolean;
   textBeforeInput?: string;
   disabled?: boolean;
@@ -40,6 +40,9 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, o
     if (required) {
       dispatch({ type: ValidationActionType.SetField, field: id, isValid: !!endpoint });
     }
+    return () => {
+      dispatch({ type: ValidationActionType.SetField, field: id, isValid: true });
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [required]);
 

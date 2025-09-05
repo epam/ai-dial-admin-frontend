@@ -20,8 +20,6 @@ import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
-import { DialKey } from '@/src/models/dial/key';
 import { ImportResult } from '@/src/models/import';
 import { ParsedPrompts } from '@/src/models/prompts';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -38,6 +36,7 @@ import { getFormDataForImport } from './utils';
 import CreateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Create';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import ResetFiltersButton from './ResetFiltersButton';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 
 interface Props<T> {
   names?: string[];
@@ -53,7 +52,7 @@ interface Props<T> {
   context?: () => PromptFolderContextType | FileFolderContextType;
 }
 
-const EntityListHeaderButtons = <T extends DialBaseEntity | DialKey | DialApplicationScheme>({
+const EntityListHeaderButtons = <T extends BaseEntity>({
   names,
   keys,
   versionsMap,
@@ -183,7 +182,7 @@ const EntityListHeaderButtons = <T extends DialBaseEntity | DialKey | DialApplic
         runners={runners}
         modalTitle={t(createModalTitleMap[route])}
         modalState={modalState}
-        createEntity={createEntity as (entity: DialBaseEntity) => Promise<ServerActionResponse>}
+        createEntity={createEntity}
         onClose={handleModalClose}
         names={names || []}
         versionsMap={versionsMap}

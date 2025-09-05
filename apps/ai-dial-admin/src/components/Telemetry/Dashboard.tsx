@@ -14,11 +14,11 @@ import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
 import { useI18n } from '@/src/locales/client';
 import TelemetryControls from '@/src/components/Telemetry/TelemetryControls/TelemetryControls';
 import { ApplicationRoute } from '@/src/types/routes';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 
 interface Props {
   route: ApplicationRoute;
-  entity?: DialBaseEntity;
+  entity?: BaseEntity;
 }
 
 const Dashboard: FC<Props> = ({ route, entity }) => {

@@ -1,27 +1,17 @@
 import { ToolsetTransport } from '@/src/types/toolset';
-import { DialBaseNamedEntity } from './base-entity';
+import { BaseEntity, EntityRoleLimits } from '@/src/models/dial/base-entity';
 
-export interface DialToolset extends DialBaseNamedEntity {
+export interface DialToolset extends BaseEntity, EntityRoleLimits {
   transport?: ToolsetTransport;
-  // "endpoint": "http://sample-endpoint/call",
-  // "iconUrl": "https://sample-endpoint/icon.png",
-  // "descriptionKeywords": [
-  //   "MCP",
-  //   "tool"
-  // ],
-  // "maxRetryAttempts": 3,
-  // "transport": "http", // HTTP or SSE
-  // "allowedTools": [
-  //   "first",
-  //   "second"
-  // ],
-  // "author": "test-author",
-  // "isPublic": false,
-  // "roleLimits": {
-  //   "testRole1": {
-  //     "minute": "128000",
-  //     "day": "2000000"
-  //   }
-  // }
-  // + defaultRoleLimit, defaultRoleShareResourceLimit, roleShareResourceLimits
+  allowedTools?: string[];
+  descriptionKeywords?: string[];
+  iconUrl?: string;
+  author?: string;
+  endpoint?: string | null;
+  maxRetryAttempts?: number;
+}
+
+export interface Tools {
+  name: string;
+  description: string;
 }

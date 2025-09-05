@@ -17,7 +17,7 @@ import Tabs from '@/src/components/Common/Tabs/Tabs';
 import { getConfigurationPreview } from '@/src/components/ImportConfig/ConfigurationPreview/ConfigurationPreview.utils';
 import { FileConfiguration } from '@/src/models/import';
 import ConfigurationGrid from '@/src/components/ImportConfig/ConfigurationPreview/ConfigurationGrid';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { EntityType } from '@/src/types/entity-type';
 
 interface Props {
@@ -34,7 +34,7 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
 
   const [tabs, setTabs] = useState<TabModel[]>([]);
   const [selectedTab, setSelectedTab] = useState('');
-  const [data, setData] = useState<Record<string, DialBaseEntity[]>>({});
+  const [data, setData] = useState<Record<string, BaseEntity[]>>({});
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {

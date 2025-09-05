@@ -12,6 +12,7 @@ import { DialRole } from '@/src/models/dial/role';
 import { logger } from '@/src/server/logger';
 import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { filterNames } from '@/src/utils/entities/filter-names';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,11 +38,13 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Routes);
   }
 
+  const names = filterNames(routes);
+
   return (
     <SaveValidationContextProvider>
       <EntityView
         view={ApplicationRoute.Routes}
-        names={routes.map((model) => model.name || '')}
+        names={names}
         originalEntity={route}
         roles={roles}
         removeEntity={removeRoute}

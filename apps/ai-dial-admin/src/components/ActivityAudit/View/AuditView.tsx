@@ -14,8 +14,8 @@ import { ActivityAuditI18nKey, ButtonsI18nKey, EntityFieldsI18nKey } from '@/src
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialActivity } from '@/src/models/dial/activity-audit';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { DialActivity } from '@/src/models/activity-audit';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ActivityAuditEntity, CompareView, DiffView } from '@/src/types/activity-audit';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -35,7 +35,7 @@ interface Props {
   previousRevision: ActivityAuditEntity | null;
   isModalView?: boolean;
   hideComparator?: boolean;
-  entity?: DialBaseEntity;
+  entity?: BaseEntity;
 }
 
 const AuditView: FC<Props> = ({
@@ -82,16 +82,26 @@ const AuditView: FC<Props> = ({
   const resourceRollback = useCallback(() => {
     setIsLoading(true);
     rollbackEntityPerRevision(activity, activityRevision, previousRevision)
-      .then(() => {
+      .then((res) => {
         setIsLoading(false);
-        showNotification(
-          getSuccessNotification(
-            t(ActivityAuditI18nKey.ResourceRollback),
-            t(ActivityAuditI18nKey.ResourceRollbackDescription),
-          ),
-        );
+        if (res?.success) {
+          showNotification(
+            getSuccessNotification(
+              t(ActivityAuditI18nKey.ResourceRollback),
+              t(ActivityAuditI18nKey.ResourceRollbackDescription),
+            ),
+          );
+          router.push(ApplicationRoute.ActivityAudit);
+        } else {
+          showNotification(
+            getErrorNotification(
+              res?.errorHeader || t(ActivityAuditI18nKey.ResourceRollbackErrorTitle),
+              res?.errorMessage,
+            ),
+          );
+        }
+
         onCloseModal();
-        router.push(ApplicationRoute.ActivityAudit);
       })
       .catch(() => {
         setIsLoading(false);

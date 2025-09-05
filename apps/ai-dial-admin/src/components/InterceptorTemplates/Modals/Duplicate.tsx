@@ -22,7 +22,10 @@ const DuplicateTemplate: FC<Props> = ({ onDuplicate, modalState, onClose, templa
   const t = useI18n() as (t: string) => string;
   const { isValid, dispatch } = useSaveValidationContext();
 
-  const [clonedTemplate, setTemplate] = useState<InterceptorTemplate>({ ...template, name: `${template.name}_(copy)` });
+  const [clonedTemplate, setTemplate] = useState<InterceptorTemplate>({
+    ...template,
+    name: `${template.name}_(copy)`,
+  });
 
   // initial validation (disable save when no values entered yet)
   useEffect(() => {

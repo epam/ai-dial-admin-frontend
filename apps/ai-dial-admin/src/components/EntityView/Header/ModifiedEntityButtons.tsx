@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 import classNames from 'classnames';
 
 import Button from '@/src/components/Common/Button/Button';
-import { showEditorErrorNotifications } from '@/src/components/JSONEditor/JSONEditor.utils';
+import { showEditorErrorNotifications } from '@/src/components/JSONEditor/utils';
 import AddVersionModal from '@/src/components/PromptView/Modals/AddVersionModal';
 import { ButtonsI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -14,12 +14,11 @@ import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
-import { DialKey } from '@/src/models/dial/key';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { generateNewInitialVersion } from '@/src/utils/prompts/versions';
+import { DialPrompt } from '@/src/models/dial/prompt';
 
 interface Props<T> {
   view: ApplicationRoute;
@@ -32,7 +31,7 @@ interface Props<T> {
   promptVersions?: string[];
 }
 
-const ModifiedEntityButtons = <T extends DialBaseEntity | DialKey>({
+const ModifiedEntityButtons = <T extends object>({
   view,
   entity,
   onDiscard,
@@ -111,7 +110,7 @@ const ModifiedEntityButtons = <T extends DialBaseEntity | DialKey>({
           <AddVersionModal
             heading={t(PromptsI18nKey.NewVersionSave)}
             modalState={versionModalState}
-            prefilledVersion={generateNewInitialVersion(entity.version)}
+            prefilledVersion={generateNewInitialVersion((entity as DialPrompt).version)}
             existingVersions={promptVersions || []}
             onClose={() => setVersionModalState(PopUpState.Closed)}
             onConfirm={onTryToSave}

@@ -13,6 +13,7 @@ import { DialKey } from '@/src/models/dial/key';
 import { logger } from '@/src/server/logger';
 import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { filterNames } from '@/src/utils/entities/filter-names';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,10 +46,12 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Roles);
   }
 
+  const names = filterNames(roles);
+
   return (
     <SaveValidationContextProvider>
       <RolesView
-        names={roles?.map((role) => role.name || '') || []}
+        names={names}
         originalRole={role}
         models={models || []}
         applications={applications || []}

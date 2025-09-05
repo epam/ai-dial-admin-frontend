@@ -3,7 +3,7 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { useTheme } from '@/src/context/ThemeContext';
-import { getFrameConfig, getAppRunner } from '@/src/components/ApplicationParametersTab/utils';
+import { getFrameConfig, getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import FrameRenderer from '@/src/components/FrameRenderer/FrameRenderer';
 import NoData from '@/src/components/Common/NoData/NoData';
 import { BasicI18nKey } from '@/src/constants/i18n';
@@ -35,14 +35,14 @@ const ApplicationParametersTab: FC<Props> = ({ entity, applicationSchemes, jsonE
 
   const generateTargetUrl = useCallback(() => {
     try {
-      const iframeUrl = `${frameConfig?.host}?authProvider=${frameConfig?.providerId}&theme=${frameConfig?.theme}`;
+      const iframeUrl = `${frameConfig?.host}?authProvider=${frameConfig?.providerId}&theme=${frameConfig?.theme}&id=${entity?.name}`;
       return new URL(iframeUrl);
     } catch (error) {
       if (error) {
         setError(true);
       }
     }
-  }, [frameConfig]);
+  }, [frameConfig, entity]);
 
   return (
     <div className="flex w-full h-full">

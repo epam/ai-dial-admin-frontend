@@ -128,6 +128,7 @@ export default {
     NoInterceptorTemplates: 'No Interceptor Templates',
     NoDependencies: 'No Dependencies',
     NoToolsets: 'No Toolsets',
+    NoTools: 'No Tools',
     // add entity or entities
     AddModel: 'Add Model',
     AddApplication: 'Add Application',
@@ -142,6 +143,10 @@ export default {
     InterceptorName: 'Interceptor Name',
     ChangeIcon: 'Change icon',
     Source: 'Source',
+    ExternalEndpoint: 'External Endpoint',
+    InterceptorContainer: 'Interceptor Container',
+    InterceptorTemplate: 'Interceptor Template',
+    Author: 'Author',
 
     // modals
     SaveChangesTitle: 'Save Changes',
@@ -339,6 +344,7 @@ export default {
     Dependencies: 'Dependencies',
     Routes: 'App Routes',
     Traces: 'Traces',
+    Tools: 'Tools Overview',
     Conversations: 'Conversations',
     Attachments: 'Attachments',
   },
@@ -453,7 +459,6 @@ export default {
       UnpublishApproveDescription: 'Are you sure that you want to unpublish application?',
     },
     Action: 'Action',
-    Author: 'Author',
     Runner: 'Runner',
     FolderStorage: 'Folder Storage',
   },
@@ -715,6 +720,7 @@ export default {
     rewritePath: 'Rewrite path',
     response: 'Response',
     permissions: 'Permissions',
+    allowedTools: 'MCP Containers',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
@@ -753,6 +759,7 @@ export default {
     KeyValue: 'Enter value or generate',
     SelectPermission: 'Select permission',
     Key: 'Enter key',
+    ToolName: 'Enter tool name',
   },
   Error: {
     ServerError: 'Server Error',
@@ -791,5 +798,17 @@ export default {
     OpenContainer: 'Open container',
     Container: 'Container',
     InterceptorTemplate: 'Interceptor template',
+  },
+  Toolset: {
+    Tools: 'Tools',
+    AddTools: 'Add tools',
+    UseAllTools: 'Use all available tools',
+    AddedManually: 'Added manually',
+    View: 'View',
+    AllTools: 'All tools',
+    Warning: 'List of tools from external endpoint may not display some tools. Add the missing tools manually.',
+    Enabled: 'Enabled',
+    Disabled: 'Disabled',
+    AutoDetected: 'Auto-detected',
   },
 } as const;

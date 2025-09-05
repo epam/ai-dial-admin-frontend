@@ -9,15 +9,15 @@ import {
   ForwardTokenI18nKey,
 } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { ChatEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';
 import { FC, useCallback, useState } from 'react';
 import { getAlertTitlePerView, getDisplayNamePerView, NONE_ID, USE_ID } from './forward-token';
 
 interface Props {
   view: ApplicationRoute;
-  entity: DialBaseEntity;
-  onChangeEntity: (entity: DialBaseEntity) => void;
+  entity: ChatEntity;
+  onChangeEntity: (entity: ChatEntity) => void;
 }
 
 const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {

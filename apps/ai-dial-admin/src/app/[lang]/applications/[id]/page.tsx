@@ -14,6 +14,7 @@ import { logger } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { filterDisplayNames } from '@/src/utils/entities/filter-names';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,11 +53,13 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Applications);
   }
 
+  const names = filterDisplayNames(applications);
+
   return (
     <SaveValidationContextProvider>
       <EntityView
         view={ApplicationRoute.Applications}
-        names={applications?.map((model) => model.displayName || '') || []}
+        names={names}
         roles={roles}
         interceptors={interceptors}
         applications={applications}

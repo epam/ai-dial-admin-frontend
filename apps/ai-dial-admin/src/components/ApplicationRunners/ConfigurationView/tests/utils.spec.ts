@@ -6,7 +6,7 @@ describe('ApplicationRunner :: clearSchemeForEditor', () => {
     const res = clearSchemeForEditor({
       $id: '$id',
       $schema: '$schema',
-      description: 'description',
+      description: '',
       applications: ['app1', 'app2'],
       topics: ['topic1', 'topic2'],
       ['dial:applicationTypeCompletionEndpoint']: 'dial:applicationTypeCompletionEndpoint',

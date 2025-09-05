@@ -1,5 +1,5 @@
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
-import { clearResolvedErrors } from '@/src/components/JSONEditor/JSONEditor.utils';
+import { clearResolvedErrors } from '@/src/components/JSONEditor/utils';
 import { useNotification } from '@/src/context/NotificationContext';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
@@ -11,6 +11,7 @@ interface Props<T> {
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
   setJsonErrors?: (error: JSONEditorError[]) => void;
 }
+
 const JSONEditor = <T extends object>({
   entity,
   errorNotifications,

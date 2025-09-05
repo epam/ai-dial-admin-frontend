@@ -48,7 +48,7 @@ const DuplicateAdapter: FC<Props> = ({ onDuplicate, modalState, onClose, adapter
   );
 
   return (
-    <Popup onClose={onClose} heading={t(DuplicateI18nKey.AdapterHeader)} portalId="DuplicateKey" state={modalState}>
+    <Popup onClose={onClose} heading={t(DuplicateI18nKey.AdapterHeader)} portalId="DuplicateAdapter" state={modalState}>
       <div className="flex flex-col gap-3 px-6 py-4 ">
         <IdControl entity={entity} onChangeEntity={setEntity} />
 

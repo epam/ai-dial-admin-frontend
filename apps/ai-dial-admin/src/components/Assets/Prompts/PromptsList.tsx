@@ -9,13 +9,15 @@ import Page403 from '@/src/components/Page403/Page403';
 import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import { ApplicationRoute } from '@/src/types/routes';
 import { filterLatestVersions, getVersionsPerName } from './utils';
+import { filterNames } from '@/src/utils/entities/filter-names';
 
 const PromptsList: FC = () => {
   const { data } = usePromptFolder();
   if (data == null) {
     return <Page403 />;
   }
-  const names = data?.map((entity) => entity.name || '');
+  const names = filterNames(data);
+
   const versionsMap = getVersionsPerName(data || []);
   const filteredData = filterLatestVersions(data);
 

@@ -7,6 +7,7 @@ import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
+import { filterDisplayNames } from '@/src/utils/entities/filter-names';
 
 interface Props {
   data: DialApplication[];
@@ -14,7 +15,7 @@ interface Props {
 }
 
 const ApplicationsList: FC<Props> = ({ data, runners }) => {
-  const names = data.map((entity) => entity.displayName || '');
+  const names = filterDisplayNames(data);
   const t = useI18n() as (stringToTranslate: string) => string;
 
   return (

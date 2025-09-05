@@ -1,26 +1,25 @@
-import { fireEvent, render } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
 import Switch from './Switch';
-import { describe, expect, test } from 'vitest';
 
-describe('Common components - Switch', () => {
-  test('Should render successfully', () => {
-    const { baseElement } = render(<Switch switchId="switch" title="AAA" isOn={true} />);
-
-    expect(baseElement).toBeTruthy();
+describe('Switch', () => {
+  it('renders with title', () => {
+    render(<Switch title="Test Switch" switchId="switch1" />);
+    expect(screen.getByText('Test Switch')).toBeInTheDocument();
   });
 
-  test('Should check OnChange', () => {
-    let value = false;
-    const onChange = (v: boolean) => {
-      value = v;
-    };
+  it('calls onChange with toggled value', () => {
+    const onChange = vi.fn();
+    render(<Switch title="Test Switch" switchId="switch2" isOn={false} onChange={onChange} />);
+    const checkbox = screen.getByRole('checkbox');
+    fireEvent.click(checkbox);
+    expect(onChange).toHaveBeenCalledWith(true);
+  });
 
-    const { baseElement } = render(<Switch switchId="switch" title="AAA" isOn={value} onChange={onChange} />);
-    const input = baseElement.getElementsByTagName('input')[0];
-
-    expect(input).toBeTruthy();
-    expect(input.checked).toBeFalsy();
-    fireEvent.click(input);
-    expect(value).toBeTruthy();
+  it('is disabled when disabled prop is true', () => {
+    const onChange = vi.fn();
+    render(<Switch title="Disabled Switch" switchId="switch3" disabled onChange={onChange} />);
+    const checkbox = screen.getByRole('checkbox');
+    expect(checkbox).toBeDisabled();
   });
 });

@@ -8,7 +8,7 @@ import CreateRoute from '@/src/components/EntityView/AppRoute/CreateRoute';
 import { ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { DialRoleLimitsMap } from '@/src/models/dial/base-entity';
+import { DialRoleLimitsMap } from '@/src/models/dial/role-limits';
 import { DialRole } from '@/src/models/dial/role';
 import { DialAppRoute } from '@/src/models/dial/route';
 import { PopUpState } from '@/src/types/pop-up';

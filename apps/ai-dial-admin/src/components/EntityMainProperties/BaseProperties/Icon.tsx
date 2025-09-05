@@ -7,18 +7,16 @@ import IconGalleryModal from '@/src/components/IconGallery/IconGalleryModal';
 import InputModal from '@/src/components/Common/InputModal/InputModal';
 import { PopUpState } from '@/src/types/pop-up';
 import { useAppContext } from '@/src/context/AppContext';
-import { BasicI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
-  fieldTitle: string;
   iconUrl?: string;
-  elementId: string;
   readonly?: boolean;
   onChange?: (iconUrl: string) => void;
 }
 
-const EntityIcon: FC<Props> = ({ fieldTitle, elementId, iconUrl, readonly, onChange }) => {
+const IconControl: FC<Props> = ({ iconUrl, readonly, onChange }) => {
   const t = useI18n();
   const { themeUrl } = useAppContext();
   const value = iconUrl ? (iconUrl.startsWith('https://') ? iconUrl : `${themeUrl}/${iconUrl}`) : '';
@@ -35,7 +33,7 @@ const EntityIcon: FC<Props> = ({ fieldTitle, elementId, iconUrl, readonly, onCha
 
   return (
     <div className="flex flex-col md:max-w-[180px]">
-      <Field fieldTitle={fieldTitle} htmlFor={elementId} />
+      <Field fieldTitle={t(EntityFieldsI18nKey.iconUrl)} htmlFor="icon" />
       {value.length === 0 ? (
         readonly ? (
           t(BasicI18nKey.None)
@@ -56,4 +54,4 @@ const EntityIcon: FC<Props> = ({ fieldTitle, elementId, iconUrl, readonly, onCha
   );
 };
 
-export default EntityIcon;
+export default IconControl;

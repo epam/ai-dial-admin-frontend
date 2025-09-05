@@ -7,7 +7,7 @@ import {
   getViewDetailsOperation,
 } from '@/src/constants/grid-columns/actions';
 import { ACTIVITY_AUDIT_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { DialActivity } from '@/src/models/dial/activity-audit';
+import { DialActivity } from '@/src/models/activity-audit';
 import { GridFilter } from '@/src/models/grid-filter';
 import { FilterDto } from '@/src/models/request';
 import { TimeRange } from '@/src/models/time-range';

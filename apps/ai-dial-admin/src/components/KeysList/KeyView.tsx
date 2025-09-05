@@ -10,7 +10,7 @@ import { cloneDeep } from 'lodash';
 
 import { removeKey, updateKey } from '@/src/app/[lang]/keys/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
-import { getRelevantRolesForKey } from '@/src/components/AddEntitiesTab/AddEntitiesView.utils';
+import { getRelevantRolesForKey } from '@/src/components/AddEntitiesTab/utils';
 import Button from '@/src/components/Common/Button/Button';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import Tabs from '@/src/components/Common/Tabs/Tabs';

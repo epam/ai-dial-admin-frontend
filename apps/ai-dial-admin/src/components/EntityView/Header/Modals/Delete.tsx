@@ -13,11 +13,6 @@ import { ButtonsI18nKey, DeleteI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
-import { DialAdapter } from '@/src/models/dial/adapter';
-import { DialApplicationScheme } from '@/src/models/dial/application';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
-import { DialKey } from '@/src/models/dial/key';
-import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -32,7 +27,7 @@ interface Props<T> {
   onCloseModal: () => void;
 }
 
-const DeleteConfirmationModal = <T extends DialBaseEntity | DialKey>({
+const DeleteConfirmationModal = <T extends object>({
   modalState,
   view,
   entity,
@@ -65,11 +60,11 @@ const DeleteConfirmationModal = <T extends DialBaseEntity | DialKey>({
 
   const deleteModalContent =
     view === ApplicationRoute.ApplicationRunners ? (
-      <DeleteAppRunner entity={entity as DialApplicationScheme} isEntityView={true} />
+      <DeleteAppRunner entity={entity} isEntityView={true} />
     ) : view === ApplicationRoute.Adapters ? (
-      <DeleteAdapter entity={entity as DialAdapter} isEntityView={true} />
+      <DeleteAdapter entity={entity} isEntityView={true} />
     ) : view === ApplicationRoute.InterceptorTemplates ? (
-      <DeleteInterceptorTemplate template={entity as InterceptorTemplate} />
+      <DeleteInterceptorTemplate template={entity} />
     ) : null;
 
   return (

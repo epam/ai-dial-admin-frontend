@@ -6,7 +6,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { INTERCEPTOR_TEMPLATES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { createInterceptorTemplate, deleteInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
-
+import { filterNames } from '@/src/utils/entities/filter-names';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 
 interface Props {
@@ -15,7 +15,7 @@ interface Props {
 }
 
 const List: FC<Props> = ({ route, data }) => {
-  const names = data.map((entity) => entity.name || '');
+  const names = filterNames(data);
 
   return (
     <BaseEntityList

@@ -52,7 +52,7 @@ describe('ModelsList', () => {
     ];
     render(<ModelsList data={data} />);
     expect(screen.getByText('BaseEntityListMock')).toBeInTheDocument();
-    expect(screen.getByText('Model One,Model Two,')).toBeInTheDocument();
+    expect(screen.getByText('Model One,Model Two')).toBeInTheDocument();
     expect(screen.getByText('/models')).toBeInTheDocument();
     expect(screen.getByText('ID,Name,Type,Version')).toBeInTheDocument();
   });

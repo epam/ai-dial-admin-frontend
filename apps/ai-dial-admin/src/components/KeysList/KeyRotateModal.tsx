@@ -19,10 +19,10 @@ interface Props {
 
 export const KeyRotateModal: FC<Props> = ({ modalState, selectedKey, keys, onConfirm, onClose }) => {
   const t = useI18n() as (t: string) => string;
-  const [newKey, setNewKey] = useState({ ...selectedKey, key: '' });
+  const [newKey, setNewKey] = useState({ ...selectedKey, key: '' } as DialKey);
 
   const onChangeExpiresAt = useCallback(
-    (expiresAt: number) => {
+    (expiresAt: string) => {
       setNewKey({ ...newKey, expiresAt });
     },
     [newKey],

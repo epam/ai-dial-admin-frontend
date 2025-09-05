@@ -19,7 +19,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
-import { DialRoleLimitsMap } from '@/src/models/dial/base-entity';
+import { DialRoleLimitsMap } from '@/src/models/dial/role-limits';
 
 interface Props {
   parentRoles?: string[];
@@ -32,14 +32,13 @@ interface Props {
 
 const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, onChangeRoute, roles }) => {
   const t = useI18n() as (str: string) => string;
-  const [isInherited, setIsInherited] = useState((Object.keys(route.roleLimits || {}) || []).length === 0);
 
   const data = useMemo(() => {
     const userRoles = Object.keys(route.roleLimits || {});
     return roles.filter((role) =>
-      isInherited ? parentRoles?.includes(role.name as string) : userRoles?.includes(role.name as string),
+      route.isPublic ? parentRoles?.includes(role.name as string) : userRoles?.includes(role.name as string),
     );
-  }, [parentRoles, roles, isInherited, route.roleLimits]);
+  }, [parentRoles, roles, route.isPublic, route.roleLimits]);
 
   const availableRoles = useMemo(() => {
     const userRoles = Object.keys(route.roleLimits || {});
@@ -90,12 +89,12 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
 
   const columns = useMemo(() => {
     const actions = [getOpenInNewTabOperation(onOpen)];
-    if (!isInherited) {
+    if (!route.isPublic) {
       actions.push(getRemoveOperation(onRemoveRole));
     }
 
     return [...SIMPLE_ENTITY_COLUMNS, ACTION_COLUMN(actions)];
-  }, [isInherited, onRemoveRole]);
+  }, [route, onRemoveRole]);
 
   return (
     <>
@@ -104,19 +103,19 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
           <Switch
             switchId="inheritedAppRoles"
             title={t(RoutesI18nKey.InheritApplicationRoles)}
-            isOn={isInherited}
-            onChange={(value) => {
+            isOn={route.isPublic}
+            onChange={() => {
               onChangeRoute({
                 ...route,
-                roleLimits: {},
+                isPublic: !route.isPublic,
+                roleLimits: !route.isPublic ? {} : route.roleLimits, // clear role limits if switching to public
               });
-              setIsInherited(value);
             }}
           />
         )}
         <div className="flex flex-row items-center w-full mt-4 mb-4 justify-between h-[38px]">
           <h1> {t(TabsI18nKey.Roles)}</h1>
-          {!isInherited && !readonly && (
+          {!route.isPublic && !readonly && (
             <Button
               cssClass="secondary"
               iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
@@ -129,7 +128,7 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
           <div className="h-full">
             {data.length > 0 ? (
               <Grid columnDefs={columns} rowData={data} />
-            ) : iAppRunnerView ? (
+            ) : iAppRunnerView && route.isPublic ? (
               <NoDataContent
                 icon={<IconReplace width={60} height={60} />}
                 emptyDataTitle={t(RoutesI18nKey.InheritRolesWarning)}

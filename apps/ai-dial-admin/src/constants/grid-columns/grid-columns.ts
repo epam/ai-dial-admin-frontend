@@ -11,7 +11,6 @@ import {
   numberValueFormatter,
   priceValueFormatter,
 } from '@/src/constants/grid-columns/formatters';
-import { DialBaseNamedEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
 import { GridFilterType } from '@/src/types/grid-filter';
@@ -81,7 +80,7 @@ export const DESCRIPTION_COLUMN: ColDef = {
 };
 
 export const VERSION_COLUMN: ColDef = { field: 'version', colId: 'version', headerName: 'Version' };
-export const AUTHOR_COLUMN: ColDef = { field: 'author', colId: 'author', headerName: 'Author' };
+export const AUTHOR_COLUMN: ColDef = { field: 'author', colId: 'author', headerName: 'Author', hide: false };
 export const DISPLAY_NAME_COLUMN: ColDef = {
   field: 'displayName',
   colId: 'displayName',
@@ -92,13 +91,13 @@ const DISPLAY_NAME_COLUMN_WITH_SORT: ColDef = { ...DISPLAY_NAME_COLUMN, sort: 'a
 export const NAME_COLUMN: ColDef = { field: 'name', colId: 'name', headerName: 'ID', hide: false };
 const NAME_COLUMN_WITH_SORT: ColDef = { ...NAME_COLUMN, sort: 'asc' };
 
-const TOPIC_COLUMN: ColDef = {
+export const TOPIC_COLUMN: ColDef = {
   field: 'topics',
   colId: 'topics',
   headerName: 'Topics',
   cellRenderer: TopicsCellRenderer,
-  cellRendererParams: (params: { data?: DialBaseNamedEntity & { topics: string[] } }) => ({
-    topics: params.data?.topics || [],
+  cellRendererParams: (params: { data?: { topics?: string[]; descriptionKeywords?: string[] } }) => ({
+    topics: params.data?.topics || params.data?.descriptionKeywords || [],
   }),
 };
 
@@ -121,10 +120,10 @@ export const TYPE_COLUMN = (t: (str: string) => string): ColDef => {
   };
 };
 
-export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN, NAME_COLUMN_WITH_SORT];
+export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [NAME_COLUMN_WITH_SORT, DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN];
 
-export const ENTITY_BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
-export const DEPENDENCIES_COLUMNS = [DISPLAY_NAME_COLUMN, VERSION_COLUMN, DESCRIPTION_COLUMN, NAME_COLUMN];
+export const ENTITY_BASE_COLUMNS: ColDef[] = [NAME_COLUMN, DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN];
+export const DEPENDENCIES_COLUMNS = [NAME_COLUMN, DISPLAY_NAME_COLUMN, VERSION_COLUMN, DESCRIPTION_COLUMN];
 
 export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   DISPLAY_NAME_COLUMN_WITH_SORT,
@@ -136,6 +135,7 @@ export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
     headerName: 'Adapter',
     hide: false,
   },
+  AUTHOR_COLUMN,
   { field: 'type', headerName: 'Type', hide: true },
   { field: 'overrideName', headerName: 'Override Name', hide: true },
   TOPIC_COLUMN,
@@ -154,6 +154,7 @@ export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   NAME_COLUMN,
   { field: 'endpoint', headerName: 'Endpoint', hide: false },
   TOPIC_COLUMN,
+  AUTHOR_COLUMN,
   ATTACHMENT_COLUMN(t),
   { field: 'maxInputAttachments', headerName: 'Max attachment number', hide: true },
   { field: 'forwardAuthToken', headerName: 'Forward auth token', hide: true },
@@ -190,9 +191,9 @@ export const ACTIVITY_AUDIT_COLUMNS = (isSingleEntity?: boolean): ColDef[] => {
 };
 
 export const KEYS_COLUMNS: ColDef[] = [
+  NAME_COLUMN_WITH_SORT,
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
-  NAME_COLUMN_WITH_SORT,
   {
     ...CREATED_AT_COLUMN,
     hide: true,
@@ -241,14 +242,14 @@ export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH
 export const PROMPTS_COLUMNS: ColDef[] = [
   { field: 'name', colId: 'name', headerName: 'Display Name' },
   { field: 'version', headerName: 'Version' },
-  // AUTHOR_COLUMN,
+  AUTHOR_COLUMN,
   UPDATED_AT_COLUMN,
 ];
 
 export const FILES_COLUMNS: ColDef[] = [
   { field: 'name', colId: 'name', headerName: 'Display Name' },
   { field: 'extension', headerName: 'Extension' },
-  // AUTHOR_COLUMN,
+  AUTHOR_COLUMN,
 ];
 
 export const EXPORT_COLUMNS = (onChange: (value: string, name: string) => void, route?: ApplicationRoute): ColDef[] => [
@@ -271,13 +272,13 @@ export const EXPORT_COLUMNS = (onChange: (value: string, name: string) => void, 
         headerName: 'Extension',
         field: 'extension',
       },
-  // AUTHOR_COLUMN,
+  AUTHOR_COLUMN,
   UPDATED_AT_COLUMN,
 ];
 
 export const PUBLICATION_COLUMNS: ColDef[] = [
   { field: 'requestName', headerName: 'Name' },
-  // AUTHOR_COLUMN,
+  AUTHOR_COLUMN,
   { ...CREATED_AT_COLUMN, sort: 'asc' },
 ];
 
@@ -446,6 +447,12 @@ export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
   NAME_COLUMN_WITH_SORT,
   DESCRIPTION_COLUMN,
   { field: 'image', headerName: 'Interceptor Image' },
+];
+
+export const MCP_CONTAINERS_COLUMNS: ColDef[] = [
+  NAME_COLUMN_WITH_SORT,
+  DESCRIPTION_COLUMN,
+  { field: 'image', headerName: 'MCP Image' },
 ];
 
 export const SOURCE_RUNNERS_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, NAME_COLUMN, DESCRIPTION_COLUMN];

@@ -1,9 +1,10 @@
 import { NO_LIMITS_KEY } from '@/src/constants/role';
-import { ActivityAuditDiff, ActivityAuditDiffSection } from '@/src/models/dial/activity-audit';
+import { ActivityAuditDiff, ActivityAuditDiffSection } from '@/src/models/activity-audit';
 import { ActivityAuditResourceType, DiffStatus, DiffView } from '@/src/types/activity-audit';
 import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
 
 export const roleLimitsKeys = ['minute', 'day', 'week', 'month'];
+export const roleShareLimitsKeys = ['maxAcceptedUsers', 'invitationTtl'];
 
 const getRowDataByParameter = (
   data?: ActivityAuditDiff[],
@@ -16,7 +17,7 @@ const getRowDataByParameter = (
       const valueMap: Record<string, string> = {};
       item.value.split(',').forEach((pair) => {
         const [key, val] = pair.split(':').map((s) => s.trim());
-        valueMap[key as keyof typeof valueMap] = val;
+        valueMap[key] = val;
       });
 
       const newObj: Record<string, string> = {
@@ -25,6 +26,9 @@ const getRowDataByParameter = (
 
       if (item.parameter) {
         roleLimitsKeys.forEach((key) => {
+          newObj[key] = valueMap[key] || NO_LIMITS_KEY;
+        });
+        roleShareLimitsKeys.forEach((key) => {
           newObj[key] = valueMap[key] || NO_LIMITS_KEY;
         });
       }

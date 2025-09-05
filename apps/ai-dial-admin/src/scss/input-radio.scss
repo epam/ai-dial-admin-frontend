@@ -23,6 +23,12 @@
 
     &:disabled {
       @apply pointer-events-none;
+      &:checked {
+        @apply border-primary;
+        &:after {
+          @apply bg-controls-disable;
+        }
+      }
     }
   }
 }

@@ -10,14 +10,11 @@ import { BasicI18nKey, ButtonsI18nKey, DeleteI18nKey } from '@/src/constants/i18
 import { FileFolderContextType } from '@/src/context/FileFolderContext';
 import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
-import { DialAdapter } from '@/src/models/dial/adapter';
-import { DialApplicationScheme } from '@/src/models/dial/application';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ParsedPrompts } from '@/src/models/prompts';
 import { ImportFileType } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
-import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { deleteModalTitleMap } from '@/src/components/EntityListView/constants';
 import ExportModal from '@/src/components/EntityListView/Export/ExportModal';
 import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
@@ -33,7 +30,7 @@ export enum ModalType {
 }
 
 interface Props {
-  entity?: DialBaseEntity;
+  entity?: BaseEntity;
   route?: ApplicationRoute;
   initialPath?: string;
   modalState: PopUpState;
@@ -115,23 +112,22 @@ const EntityListModals: FC<Props> = ({
             confirmLabel={t(ButtonsI18nKey.Delete)}
             onClose={handleClose}
           >
-            {route === ApplicationRoute.ApplicationRunners ? (
-              <DeleteAppRunner entity={entity as DialApplicationScheme} />
-            ) : route === ApplicationRoute.Adapters ? (
-              <DeleteAdapter entity={entity as DialAdapter} />
-            ) : route === ApplicationRoute.InterceptorTemplates ? (
-              <DeleteInterceptorTemplate template={entity as InterceptorTemplate} />
-            ) : (
-              <p className="text-secondary small-150 px-6 py-4">
-                <span>{t(DeleteI18nKey.Confirming)}</span>
-                {(entity as DialBaseEntity).displayName || entity?.name ? (
-                  <span className="important-text-part mr-1">
-                    {(entity as DialBaseEntity).displayName || entity?.name}
-                  </span>
-                ) : null}
-                <span>{t(deleteModalTitleMap[route as keyof typeof deleteModalTitleMap])}?</span>
-              </p>
-            )}
+            {entity &&
+              (route === ApplicationRoute.ApplicationRunners ? (
+                <DeleteAppRunner entity={entity} />
+              ) : route === ApplicationRoute.Adapters ? (
+                <DeleteAdapter entity={entity} />
+              ) : route === ApplicationRoute.InterceptorTemplates ? (
+                <DeleteInterceptorTemplate template={entity} />
+              ) : (
+                <p className="text-secondary small-150 px-6 py-4">
+                  <span>{t(DeleteI18nKey.Confirming)}</span>
+                  {entity.displayName || entity.name ? (
+                    <span className="important-text-part mr-1">{entity.displayName || entity.name}</span>
+                  ) : null}
+                  <span>{t(deleteModalTitleMap[route as keyof typeof deleteModalTitleMap])}?</span>
+                </p>
+              ))}
           </ConfirmationModal>,
           document.body,
         )}

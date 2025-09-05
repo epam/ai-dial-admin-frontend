@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import ViewHeader from '../Header';
-import { DialActivity } from '@/src/models/dial/activity-audit';
+import { DialActivity } from '@/src/models/activity-audit';
 import { ActivityAuditResourceType, ActivityAuditType } from '@/src/types/activity-audit';
 import { ActivityAuditI18nKey } from '@/src/constants/i18n';
 

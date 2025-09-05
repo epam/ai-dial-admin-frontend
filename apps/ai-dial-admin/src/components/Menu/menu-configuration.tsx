@@ -154,10 +154,10 @@ export const MENU_CONFIGURATION = (iconSize: number): MenuGroupConfiguration[] =
         key: MenuI18nKey.ActivityAudit,
         href: ApplicationRoute.ActivityAudit,
       },
-      {
+      /*{
         key: MenuI18nKey.UsageLog,
         href: ApplicationRoute.UsageLog,
-      },
+      },*/
     ],
   },
 ];

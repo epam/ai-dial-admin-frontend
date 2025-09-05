@@ -13,6 +13,11 @@ export async function removeToolset(name?: string) {
   return toolSetsApi.removeToolset(token, name);
 }
 
+export async function getTools(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return toolSetsApi.getTools(name, token);
+}
+
 export async function updateToolset(toolSet: DialToolset) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return toolSetsApi.updateToolset(toolSet, token);
@@ -20,5 +25,8 @@ export async function updateToolset(toolSet: DialToolset) {
 
 export async function createToolset(toolSet: DialToolset) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return toolSetsApi.createToolset({ ...toolSet, transport: ToolsetTransport.HTTP }, token);
+  return toolSetsApi.createToolset(
+    { ...toolSet, allowedTools: toolSet.allowedTools?.filter((tool) => tool !== ''), transport: ToolsetTransport.SSE },
+    token,
+  );
 }

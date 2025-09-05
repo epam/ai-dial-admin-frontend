@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 
 import { IconChevronDown, IconChevronRight, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
@@ -7,60 +7,65 @@ import Button from '@/src/components/Common/Button/Button';
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { DefaultsValue, DialBaseEntity } from '@/src/models/dial/base-entity';
+import { EntityDefaults } from '@/src/models/dial/base-entity';
+import { DefaultTemp } from '@/src/models/dial/defaults';
 import DefaultItem from './DefaultItem';
-import { convertDefaultsToArray, convertDefaultsToRecord } from './utils';
+import { convertDefaultsToArray } from './utils';
 
 interface Props {
-  entity: DialBaseEntity;
-  onChangeEntity: (entity: DialBaseEntity) => void;
-}
-
-interface InnerDefault {
-  key: string;
-  value: DefaultsValue;
+  entity: EntityDefaults;
+  onChangeEntity: (entity: EntityDefaults) => void;
 }
 
 const Defaults: FC<Props> = ({ entity, onChangeEntity }) => {
   const t = useI18n();
 
-  const [defaultItems, setDefaultItems] = useState<InnerDefault[]>([]);
-  const isAddDisable = useMemo(() => defaultItems.some((i) => i.key === ''), [defaultItems]);
+  const [defaultItems, setDefaultItems] = useState<DefaultTemp[]>([]);
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const [count, setCount] = useState(0);
 
   const toggleCollapse = useCallback(() => {
     setIsCollapsed((prev) => !prev);
   }, []);
 
   const onAddItem = useCallback(() => {
-    const defaults = { ...entity.defaults, '': '' };
-    onChangeEntity({ ...entity, defaults });
-  }, [entity, onChangeEntity]);
+    const defaultsTemp = [...defaultItems, { key: '', value: '' }];
+    onChangeEntity({ ...entity, defaultsTemp });
+  }, [defaultItems, entity, onChangeEntity]);
 
   const onRemoveItem = useCallback(
     (index: number) => {
-      const innerDefaults = [...defaultItems];
-      innerDefaults.splice(index, 1);
-      const defaults = convertDefaultsToRecord(innerDefaults);
-      onChangeEntity({ ...entity, defaults });
+      const defaultsTemp = [...defaultItems];
+      defaultsTemp.splice(index, 1);
+      onChangeEntity({ ...entity, defaultsTemp });
     },
     [defaultItems, entity, onChangeEntity],
   );
 
   const onChangeDefaultItem = useCallback(
-    (item: InnerDefault, index: number) => {
-      const innerDefaults = [...defaultItems];
-      innerDefaults.splice(index, 1, item);
-      const defaults = convertDefaultsToRecord(innerDefaults);
-      onChangeEntity({ ...entity, defaults });
+    (item: DefaultTemp, index: number) => {
+      const defaultsTemp = [...defaultItems];
+      defaultsTemp.splice(index, 1, item);
+      onChangeEntity({ ...entity, defaultsTemp });
     },
     [defaultItems, entity, onChangeEntity],
   );
 
   useEffect(() => {
-    const converted = convertDefaultsToArray(entity.defaults || {});
-    setDefaultItems(converted);
-  }, [entity.defaults]);
+    if (entity.defaultsTemp) {
+      setDefaultItems(entity.defaultsTemp || []);
+    } else {
+      setDefaultItems(convertDefaultsToArray(entity.defaults || {}));
+    }
+  }, [entity.defaults, entity.defaultsTemp]);
+
+  useEffect(() => {
+    if (defaultItems.length === 1 && !defaultItems[0].key && !defaultItems[0].value) {
+      setCount(0);
+    } else {
+      setCount(defaultItems.length);
+    }
+  }, [defaultItems]);
 
   return (
     <div className="flex flex-col p-4 rounded border border-primary">
@@ -70,7 +75,7 @@ const Defaults: FC<Props> = ({ entity, onChangeEntity }) => {
             {isCollapsed ? <IconChevronRight {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
           </i>
           <h3 className="mx-2">
-            {t(EntityFieldsI18nKey.defaults)}: {defaultItems.length}
+            {t(EntityFieldsI18nKey.defaults)}: {count}
           </h3>
         </div>
       </button>
@@ -84,7 +89,6 @@ const Defaults: FC<Props> = ({ entity, onChangeEntity }) => {
             title={t(ButtonsI18nKey.AddDefault)}
             iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
             onClick={onAddItem}
-            disable={isAddDisable}
           />
         </div>
       </div>

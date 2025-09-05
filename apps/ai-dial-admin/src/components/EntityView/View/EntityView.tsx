@@ -13,7 +13,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAttachmentData } from '@/src/models/attachment-data';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DialBaseEntity } from '@/src/models/dial/base-entity';
+import { BaseEntity, EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
@@ -37,14 +37,15 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   view: ApplicationRoute;
-  originalEntity: DialBaseEntity;
+  originalEntity: BaseEntity;
   names: string[];
+  etag?: string;
   roles?: DialRole[] | null;
   applicationSchemes?: DialApplicationScheme[] | null;
   interceptors?: DialInterceptor[] | null;
   applications?: DialApplication[] | null;
   models?: DialModel[] | null;
-  updateEntity: (entity: DialBaseEntity) => Promise<ServerActionResponse>;
+  updateEntity: (entity: BaseEntity, etag?: string) => Promise<ServerActionResponse>;
   removeEntity: (entity?: string) => Promise<ServerActionResponse>;
 }
 
@@ -53,6 +54,7 @@ const EntityView: FC<Props> = ({
   names,
   applicationSchemes,
   view,
+  etag,
   updateEntity,
   removeEntity,
   ...props
@@ -163,17 +165,20 @@ const EntityView: FC<Props> = ({
   }, [setSelectedEntity, originalEntity, jsonEditorEnabled]);
 
   const onSave = useCallback(() => {
-    updateEntity(selectedEntity).then((res) => {
+    updateEntity(selectedEntity, etag).then((res) => {
       if (res.success) {
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedEntity, updateEntity, router, showNotification]);
+  }, [selectedEntity, updateEntity, etag, router, showNotification]);
 
   const onTryToSave = useCallback(() => {
-    if ((view === ApplicationRoute.Models || view === ApplicationRoute.Applications) && isDisableRole(selectedEntity)) {
+    if (
+      (view === ApplicationRoute.Models || view === ApplicationRoute.Applications) &&
+      isDisableRole(selectedEntity as EntityRoleLimits)
+    ) {
       handleModalOpen(ModalType.emptyRoles);
     } else {
       onSave();
@@ -181,7 +186,7 @@ const EntityView: FC<Props> = ({
   }, [handleModalOpen, onSave, selectedEntity, view]);
 
   const onChangeEntity = useCallback(
-    (entity: DialBaseEntity, skipRefresh?: boolean) => {
+    (entity: BaseEntity, skipRefresh?: boolean) => {
       setSelectedEntity(entity);
       setIsSkipRefresh(!!skipRefresh);
     },

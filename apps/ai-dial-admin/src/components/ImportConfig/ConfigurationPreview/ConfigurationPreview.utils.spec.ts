@@ -54,7 +54,7 @@ describe('ConfigurationPreview.utils', () => {
     ['ROUTE', 'ROLE', 'INTERCEPTOR'].forEach((type) => {
       const cols = getComponentColDefs(type, t);
       expect(cols[0].field).toBe('action');
-      expect(cols[1].field).toBe('displayName');
+      expect(cols[1].field).toBe('name');
     });
   });
 
@@ -67,12 +67,12 @@ describe('ConfigurationPreview.utils', () => {
   test('getComponentColDefs returns correct columns for KEY', () => {
     const cols = getComponentColDefs(EntityType.KEY, t);
     expect(cols[0].field).toBe('action');
-    expect(cols[1].field).toBe('displayName');
+    expect(cols[1].field).toBe('name');
   });
 
   test('getComponentColDefs returns ENTITY_BASE_COLUMNS for unknown type', () => {
     const cols = getComponentColDefs('UNKNOWN', t);
     expect(cols[0].field).toBe('action');
-    expect(cols[1].field).toBe('displayName');
+    expect(cols[1].field).toBe('name');
   });
 });
