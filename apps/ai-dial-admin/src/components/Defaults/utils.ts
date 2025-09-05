@@ -13,6 +13,9 @@ export const convertDefaultsToArray = (defaults: Record<string, DefaultsValue>) 
     key,
     value,
   }));
+  if (array.length === 0) {
+    array.push({ key: '', value: '' });
+  }
   return array;
 };
 
@@ -28,11 +31,10 @@ export const convertDefaultsToRecord = (
   const record: Record<string, string | number | boolean> = {};
 
   for (const { key, value } of defaults) {
-    if (key) {
+    if (key && typeof value === 'number' ? !isNaN(value) : true) {
       record[key] = value;
     }
   }
-
   return record;
 };
 
@@ -57,12 +59,12 @@ export const getDefaultValueType = (value?: DefaultsValue): keyof typeof Default
  * @param {DefaultItemType} type - type (string | number | boolean )
  * @returns {DefaultsValue} - correct type value
  */
-export const getDefaultValueByType = (type: DefaultItemType): DefaultsValue => {
+export const getDefaultValueByType = (type: DefaultItemType): DefaultsValue | undefined => {
   switch (type) {
     case DefaultItemType.boolean:
       return false;
     case DefaultItemType.number:
-      return 0;
+      return undefined;
     default:
       return '';
   }
@@ -78,10 +80,10 @@ export const getDefaultValueByType = (type: DefaultItemType): DefaultsValue => {
 export const getValueByType = (value?: DefaultsValue, type?: DefaultItemType): DefaultsValue => {
   switch (type) {
     case DefaultItemType.boolean:
-      return value !== BooleanType.false;
+      return value === BooleanType.true;
     case DefaultItemType.number:
       return Number(value);
     default:
-      return String(value);
+      return value || '';
   }
 };
