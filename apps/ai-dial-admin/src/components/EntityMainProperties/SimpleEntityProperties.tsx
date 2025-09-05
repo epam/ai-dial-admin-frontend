@@ -14,6 +14,8 @@ import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getPromptVersionError } from '@/src/utils/validation/version-error';
 import { DialPrompt } from '@/src/models/dial/prompt';
+import EndpointControl from './BaseProperties/Endpoint/Endpoint';
+import { Toolset } from '../../models/dial/toolset';
 
 interface Props {
   view?: ApplicationRoute;
@@ -75,6 +77,13 @@ const SimpleEntityProperties: FC<Props> = ({
     [dispatch, entity, onChangeEntity, t],
   );
 
+  const onChangeEndpoint = useCallback(
+    (endpoint?: string) => {
+      onChangeEntity({ ...entity, endpoint } as Toolset);
+    },
+    [entity, onChangeEntity],
+  );
+
   return (
     <div className="flex flex-col gap-6">
       {!isEntityImmutable && (
@@ -109,6 +118,17 @@ const SimpleEntityProperties: FC<Props> = ({
           errorText={pathError}
           invalid={!!pathError}
           onChange={onChangePath}
+        />
+      )}
+
+      {view === ApplicationRoute.Toolsets && (
+        <EndpointControl
+          id="endpoint"
+          required={true}
+          placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+          fieldTitle={t(EntityFieldsI18nKey.baseEndpoint)}
+          endpoint={(entity as Toolset).endpoint}
+          onChange={onChangeEndpoint}
         />
       )}
     </div>
