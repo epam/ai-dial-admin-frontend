@@ -1,27 +1,26 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { IconPlus } from '@tabler/icons-react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import NoDataContent from '@/src/components/Common/NoData/NoData';
-import { ButtonsI18nKey, EntitiesI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
-import { Toolset, Tool } from '@/src/models/dial/toolset';
-import Search from '@/src/components/Common/Search/Search';
-import Button from '@/src/components/Common/Button/Button';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { PopUpState } from '@/src/types/pop-up';
-import AddToolsModal from './AddToolsModal';
-import ToolItem from './ToolItem';
-import Switch from '@/src/components/Common/Switch/Switch';
-import ToolsFilter from './Filter/ToolsFilter';
-import { ToolFilter } from './type';
-import { isEqual } from 'lodash';
-import { getFilteredTools } from './utils';
+import { getTools } from '@/src//app/[lang]/toolsets/actions';
 import AlertInfo from '@/src/components/Common/Alerts/AlertInfo';
-import { getTools } from '../../../app/[lang]/toolsets/actions';
-import Loader from '../../Common/Loader/Loader';
-import { isEqualSkippingUndefined } from '../../../utils/is-equals-entity';
+import Button from '@/src/components/Common/Button/Button';
+import Loader from '@/src/components/Common/Loader/Loader';
+import NoDataContent from '@/src/components/Common/NoData/NoData';
+import Search from '@/src/components/Common/Search/Search';
+import Switch from '@/src/components/Common/Switch/Switch';
+import { ButtonsI18nKey, EntitiesI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { useI18n } from '@/src/locales/client';
+import { Tool, Toolset } from '@/src/models/dial/toolset';
+import { PopUpState } from '@/src/types/pop-up';
+import { isEqual } from 'lodash';
+import AddToolsModal from './AddToolsModal';
+import ToolsFilter from './Filter/ToolsFilter';
+import ToolItem from './ToolItem';
+import { ToolFilter } from './type';
+import { getFilteredTools } from './utils';
 
 const filtersConfiguration = [
   ToolFilter.Enabled,
@@ -47,9 +46,7 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
   const [availableTools, setAvailableTools] = useState<Tool[]>([]);
 
   const isNotSavedToolset = useMemo(() => {
-    const clonedOriginal = { ...originalToolset, allowedTools: [] };
-    const clonedEditable = { ...selectedToolset, allowedTools: [] };
-    return !isEqualSkippingUndefined(clonedOriginal, clonedEditable);
+    return originalToolset.endpoint !== selectedToolset.endpoint;
   }, [originalToolset, selectedToolset]);
 
   const filteredTools = useMemo(() => {
@@ -58,7 +55,8 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
     return getFilteredTools(selectedToolset.allowedTools || [], selectedFilters, availableTools).filter(
       (tool) => tool.toLowerCase().includes(patternLower) && tool !== '',
     );
-  }, [pattern, selectedToolset.allowedTools, selectedFilters, availableTools]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pattern, isNotSavedToolset, selectedToolset.allowedTools, selectedFilters, availableTools]);
 
   useEffect(() => {
     if (selectedToolset.name) {
