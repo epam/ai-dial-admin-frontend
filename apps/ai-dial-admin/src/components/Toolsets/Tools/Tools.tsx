@@ -55,14 +55,13 @@ const ToolView: FC<Props> = ({ selectedToolset, isNotSavedToolset, onChangeTools
 
   useEffect(() => {
     if (selectedToolset.name) {
-      setIsLoading(false);
+      setIsLoading(true);
       getTools(selectedToolset.name).then((tools) => {
-        console.log(tools);
-        setIsLoading(true);
+        setIsLoading(false);
         setAvailableTools(tools || []);
       });
     }
-  }, [selectedToolset]);
+  }, [selectedToolset.name, selectedToolset.endpoint]);
 
   useEffect(() => {
     setUseAllTools(!selectedToolset.allowedTools || selectedToolset.allowedTools.length === 0);
@@ -81,6 +80,16 @@ const ToolView: FC<Props> = ({ selectedToolset, isNotSavedToolset, onChangeTools
       onChangeToolset({
         ...selectedToolset,
         allowedTools: [...(selectedToolset.allowedTools?.filter((t) => t !== '') || []), ...tools],
+      });
+    },
+    [onChangeToolset, selectedToolset],
+  );
+
+  const onRemoveTool = useCallback(
+    (tool: string) => {
+      onChangeToolset({
+        ...selectedToolset,
+        allowedTools: [...(selectedToolset.allowedTools?.filter((t) => t !== tool) || [])],
       });
     },
     [onChangeToolset, selectedToolset],
@@ -177,6 +186,7 @@ const ToolView: FC<Props> = ({ selectedToolset, isNotSavedToolset, onChangeTools
                   <ToolItem
                     key={tool}
                     tool={tool}
+                    onRemoveTool={onRemoveTool}
                     isEnabled={selectedToolset.allowedTools?.includes(tool)}
                     isAddedManual={!availableTools.some((t) => t.name === tool)}
                     readonly={useAllTools || !availableTools.some((t) => t.name === tool)}

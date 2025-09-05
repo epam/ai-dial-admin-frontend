@@ -192,6 +192,7 @@ export enum ButtonsI18nKey {
   OpenWithoutSave = 'Buttons.OpenWithoutSave',
   LeaveWithoutSave = 'Buttons.LeaveWithoutSave',
   Next = 'Buttons.Next',
+  Remove = 'Buttons.Remove',
   Previous = 'Buttons.Previous',
   Finish = 'Buttons.Finish',
   Publish = 'Buttons.Publish',

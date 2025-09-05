@@ -239,6 +239,7 @@ export default {
     Update: 'Update',
     Save: 'Save',
     Move: 'Move',
+    Remove: 'Remove',
     SaveAsNewVersion: 'Save as new version',
     Discard: 'Discard',
     Apply: 'Apply',
