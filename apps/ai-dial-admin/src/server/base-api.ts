@@ -7,6 +7,7 @@ import { logger } from './logger';
 import { sendRequest } from '@/src/utils/api/send-request';
 import { getApiHeaders, getAuthorizationHeader } from '@/src/utils/auth/api-headers';
 import { fileRequest } from '@/src/utils/api/file-request';
+import { DEFAULT_ETAG, IF_MATCH, IF_NONE_MATCH } from '@/src/constants/api-headers';
 
 export interface BaseApiConfig {
   host?: string;
@@ -23,8 +24,22 @@ export class BaseApi {
     return this.sendActionRequest(url, 'DELETE', token);
   }
 
-  protected async putAction<T extends object>(url: string, dto: T, token?: JWT | null): Promise<ServerActionResponse> {
-    return this.sendActionRequest<T>(url, 'PUT', token, dto);
+  protected async putActionWithEtag<T extends object>(
+    url: string,
+    dto: T,
+    token?: JWT | null,
+    etag?: string,
+  ): Promise<ServerActionResponse> {
+    return this.putAction<T>(url, dto, token, { [IF_MATCH]: etag || DEFAULT_ETAG });
+  }
+
+  protected async putAction<T extends object>(
+    url: string,
+    dto: T,
+    token?: JWT | null,
+    initHeaders?: HeadersInit,
+  ): Promise<ServerActionResponse> {
+    return this.sendActionRequest<T>(url, 'PUT', token, dto, initHeaders);
   }
 
   protected async post<T extends object, R>(
@@ -62,6 +77,10 @@ export class BaseApi {
 
   protected head<R extends object>(url: string, token?: JWT | null, headers?: HeadersInit): Promise<R | null> {
     return this.sendRequest<object, R>(url, 'HEAD', void 0, token, headers) as Promise<R | null>;
+  }
+
+  protected getActionWithEtag(url: string, etag: string, token?: JWT | null): Promise<ServerActionResponse> {
+    return this.sendActionRequest(url, 'GET', token, void 0, { [IF_NONE_MATCH]: etag });
   }
 
   protected getAction(url: string, token?: JWT | null): Promise<ServerActionResponse> {
@@ -117,27 +136,38 @@ export class BaseApi {
   }
 
   private handleResponse(res: Response, type: string): Promise<ServerActionResponse> {
+    const etag = res.headers.get('etag') || undefined;
     if (isFailedRequest(res)) {
-      logger.error(`Request status ${res.status}`);
-      logger.error(`Request error Url  ${res.url}`);
+      this.setLoggerRequestInfoError(res);
 
       return res.text().then((error) => {
         const errObject = getParsedError(error);
-        logger.error(`Request error ${res.status}`);
-        logger.error(`${errObject.error} ${errObject.message}`);
+        this.setLoggerRequestError(error, res);
 
         return {
           success: false,
           errorMessage: getErrorMessage(errObject, res.status),
           errorHeader: getError(errObject),
           status: res.status,
+          etag,
         };
       });
     }
 
     return getResponse<unknown>(type, res).then((r) => {
-      return { success: true, response: r };
+      return { success: true, response: r, etag };
     });
+  }
+
+  private setLoggerRequestInfoError(res: Response) {
+    logger.error(`Request status ${res.status}`);
+    logger.error(`Request error Url  ${res.url}`);
+  }
+
+  private setLoggerRequestError(error: string, res: Response) {
+    const errObject = getParsedError(error);
+    logger.error(`Request error ${res.status}`);
+    logger.error(`${errObject.error} ${errObject.message}`);
   }
 }
 

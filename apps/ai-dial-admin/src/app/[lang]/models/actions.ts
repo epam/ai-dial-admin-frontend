@@ -34,14 +34,15 @@ export async function removeModel(name?: string) {
   return modelsApi.removeModel(token, name);
 }
 
-export async function updateModel(model: DialModel) {
+// TODO: etag is optional - refactor when backend integration will be ready
+export async function updateModel(model: DialModel, etag?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const newModel = {
     ...model,
     defaults: convertDefaultsToRecord(model.defaultsTemp || []),
   };
   delete model.defaultsTemp;
-  return modelsApi.updateModel(newModel, token);
+  return modelsApi.updateModel(newModel, token, etag);
 }
 
 export async function createModel(model: DialModel) {
