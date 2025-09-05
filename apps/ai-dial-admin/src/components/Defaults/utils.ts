@@ -84,6 +84,6 @@ export const getValueByType = (value?: DefaultsValue, type?: DefaultItemType): D
     case DefaultItemType.number:
       return Number(value);
     default:
-      return value || '';
+      return value ? String(value) : '';
   }
 };

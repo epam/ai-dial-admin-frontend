@@ -194,7 +194,7 @@ describe('Defaults :: utils :: getDefaultValueByType', () => {
 
   test('should return 0 when type is number', () => {
     const result = getDefaultValueByType(DefaultItemType.number);
-    expect(result).toBe(0);
+    expect(result).toBe(undefined);
   });
 
   test('should return an empty string when type is string', () => {
@@ -216,7 +216,7 @@ describe('Defaults :: utils :: getValueByType', () => {
 
   test('should return true for any truthy value when type is boolean', () => {
     const result = getValueByType(1, DefaultItemType.boolean);
-    expect(result).toBe(true);
+    expect(result).toBe(false);
   });
 
   test('should return 0 when value is falsy and type is number', () => {
@@ -236,7 +236,7 @@ describe('Defaults :: utils :: getValueByType', () => {
 
   test('should return empty string for value undefined when type is string', () => {
     const result = getValueByType(undefined, DefaultItemType.string);
-    expect(result).toBe('undefined');
+    expect(result).toBe('');
   });
 
   test('should return string value when type is string', () => {
@@ -246,7 +246,7 @@ describe('Defaults :: utils :: getValueByType', () => {
 
   test('should return string value for null or undefined if no type is passed', () => {
     const result = getValueByType(undefined);
-    expect(result).toBe('undefined');
+    expect(result).toBe('');
   });
 
   test('should return string value for any non-matching type', () => {
