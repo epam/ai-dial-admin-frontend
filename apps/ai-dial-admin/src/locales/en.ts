@@ -810,5 +810,6 @@ export default {
     Enabled: 'Enabled',
     Disabled: 'Disabled',
     AutoDetected: 'Auto-detected',
+    ToolsWarning: 'Endpoint has been changed. Save changes to display auto-detected tools.',
   },
 } as const;

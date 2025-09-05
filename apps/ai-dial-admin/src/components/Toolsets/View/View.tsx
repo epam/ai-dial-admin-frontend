@@ -15,19 +15,19 @@ import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
-import { DialToolset } from '@/src/models/dial/toolset';
+import { Toolset } from '@/src/models/dial/toolset';
 import { TabModel } from '@/src/models/tab';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import ToolsetProperties from './Properties';
-import Tools from '../Tools/Tools';
+import Tool from '../Tools/Tools';
 
 interface Props {
   names: string[];
   roles: DialRole[] | null | undefined;
-  originalToolset: DialToolset;
+  originalToolset: Toolset;
 }
 
 const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
@@ -79,7 +79,7 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
   }, [setSelectedToolset, originalToolset, jsonEditorEnabled]);
 
   const onChangeToolset = useCallback(
-    (entity: DialToolset, skipRefresh?: boolean) => {
+    (entity: Toolset, skipRefresh?: boolean) => {
       setSelectedToolset(entity);
       setIsSkipRefresh(!!skipRefresh);
     },
@@ -134,7 +134,7 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
             )}
 
             {activeTab === EntityViewTab.Tools && (
-              <Tools selectedToolset={selectedToolset} onChangeToolset={onChangeToolset} />
+              <Tool isNotSavedToolset={isChanged} selectedToolset={selectedToolset} onChangeToolset={onChangeToolset} />
             )}
 
             {activeTab === EntityViewTab.Roles && (

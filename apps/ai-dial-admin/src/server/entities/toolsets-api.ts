@@ -1,6 +1,6 @@
 import { JWT } from 'next-auth/jwt';
 
-import { DialToolset, Tools } from '@/src/models/dial/toolset';
+import { Toolset, Tool } from '@/src/models/dial/toolset';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -10,15 +10,15 @@ export const TOOLSET_URL = (name?: string) => `${TOOLSETS_URL}/${name}`;
 export const TOOLS_URL = (name?: string) => `${TOOLSET_URL(name)}/discovered-tools`;
 
 export class ToolsetsApi extends BaseApi {
-  getToolsetList(token: JWT | null): Promise<DialToolset[] | null> {
+  getToolsetList(token: JWT | null): Promise<Toolset[] | null> {
     return this.get(TOOLSETS_URL, token);
   }
 
-  getToolset(name: string, token: JWT | null): Promise<DialToolset | null> {
+  getToolset(name: string, token: JWT | null): Promise<Toolset | null> {
     return this.get(TOOLSET_URL(name), token);
   }
 
-  getTools(name: string, token: JWT | null): Promise<Tools[] | null> {
+  getTools(name: string, token: JWT | null): Promise<Tool[] | null> {
     return this.get(TOOLS_URL(name), token);
   }
 
@@ -26,11 +26,11 @@ export class ToolsetsApi extends BaseApi {
     return this.deleteAction(TOOLSET_URL(name), token);
   }
 
-  createToolset(toolset: DialToolset, token: JWT | null): Promise<ServerActionResponse> {
+  createToolset(toolset: Toolset, token: JWT | null): Promise<ServerActionResponse> {
     return this.postAction(TOOLSETS_URL, toolset, token);
   }
 
-  updateToolset(toolset: DialToolset, token: JWT | null): Promise<ServerActionResponse> {
+  updateToolset(toolset: Toolset, token: JWT | null): Promise<ServerActionResponse> {
     return this.putAction(TOOLSET_URL(toolset.name), toolset, token);
   }
 }

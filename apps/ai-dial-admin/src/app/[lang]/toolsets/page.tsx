@@ -6,7 +6,7 @@ import Page403 from '@/src/components/Page403/Page403';
 import ToolsetsList from '@/src/components/Toolsets/List';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
-import { DialToolset } from '@/src/models/dial/toolset';
+import { Toolset } from '@/src/models/dial/toolset';
 import { logger } from '@/src/server/logger';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
@@ -23,7 +23,7 @@ export default async function Page() {
     return redirect(SIGN_IN_LINK);
   }
 
-  let data: DialToolset[] | null = [];
+  let data: Toolset[] | null = [];
 
   try {
     data = await toolSetsApi.getToolsetList(token);

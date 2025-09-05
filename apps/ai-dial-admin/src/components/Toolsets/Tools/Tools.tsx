@@ -6,7 +6,7 @@ import { IconPlus } from '@tabler/icons-react';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import { ButtonsI18nKey, EntitiesI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialToolset } from '@/src/models/dial/toolset';
+import { Toolset, Tool } from '@/src/models/dial/toolset';
 import Search from '@/src/components/Common/Search/Search';
 import Button from '@/src/components/Common/Button/Button';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -18,9 +18,8 @@ import ToolsFilter from './Filter/ToolsFilter';
 import { ToolFilter } from './type';
 import { isEqual } from 'lodash';
 import { getFilteredTools } from './utils';
+import AlertInfo from '@/src/components/Common/Alerts/AlertInfo';
 
-// TODO: remove after support api
-const availableTools = ['Browser', 'Calculator', 'Calendar', 'Email'];
 const filtersConfiguration = [
   ToolFilter.Enabled,
   ToolFilter.Disabled,
@@ -29,17 +28,20 @@ const filtersConfiguration = [
 ];
 
 interface Props {
-  selectedToolset: DialToolset;
-  onChangeToolset: (toolset: DialToolset) => void;
+  isNotSavedToolset: boolean;
+  selectedToolset: Toolset;
+  onChangeToolset: (toolset: Toolset) => void;
 }
 
-const Tools: FC<Props> = ({ selectedToolset, onChangeToolset }) => {
+const Tool: FC<Props> = ({ selectedToolset, isNotSavedToolset, onChangeToolset }) => {
   const t = useI18n();
 
   const [modalState, setModalState] = useState(PopUpState.Closed);
   const [selectedFilters, setSelectedFilters] = useState(filtersConfiguration);
   const [pattern, setPattern] = useState('');
   const [useAllTools, setUseAllTools] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [availableTools, setAvailableTools] = useState<Tool[]>([]);
 
   const filteredTools = useMemo(() => {
     const patternLower = pattern.toLowerCase();
@@ -113,7 +115,7 @@ const Tools: FC<Props> = ({ selectedToolset, onChangeToolset }) => {
         <div className="flex flex-row items-center mb-3">
           <h1 className="mr-4">
             {t(ToolsetI18nKey.Tools)}
-            {selectedToolset.allowedTools?.length ? `: ${selectedToolset.allowedTools?.length}` : ''}
+            {`: ${selectedToolset.allowedTools?.length ? selectedToolset.allowedTools?.length : availableTools.length}`}
           </h1>
 
           <Switch
@@ -165,7 +167,8 @@ const Tools: FC<Props> = ({ selectedToolset, onChangeToolset }) => {
             </div>
           )}
         </div>
-        {useAllTools && <span className="tiny mt-3 text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
+        {!useAllTools && <span className="tiny mt-3 text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
+        {isNotSavedToolset && <AlertInfo text={t(ToolsetI18nKey.ToolsWarning)} />}
       </div>
       {modalState === PopUpState.Opened && (
         <AddToolsModal modalState={modalState} onClose={onCloseModal} onSelectItems={onAddTools} />
@@ -174,4 +177,4 @@ const Tools: FC<Props> = ({ selectedToolset, onChangeToolset }) => {
   );
 };
 
-export default Tools;
+export default Tool;

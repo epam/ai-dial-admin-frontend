@@ -778,4 +778,5 @@ export enum ToolsetI18nKey {
   Enabled = 'Toolset.Enabled',
   Disabled = 'Toolset.Disabled',
   AutoDetected = 'Toolset.AutoDetected',
+  ToolsWarning = 'Toolset.ToolsWarning',
 }

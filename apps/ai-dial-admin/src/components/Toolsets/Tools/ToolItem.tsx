@@ -17,7 +17,7 @@ const ToolItem: FC<Props> = ({ tool, isAddedManual, isEnabled, readonly, onChang
   const t = useI18n();
 
   return (
-    <div className="p-3 mb-2 border border-primary rounded flex flex-row items-center justify-between">
+    <div className="p-3 mb-2 border border-primary rounded flex flex-row items-center justify-between hover:border-hover cursor-pointer">
       <div className="flex flex-row items-center">
         <h3>{tool}</h3>
         {isAddedManual && (
