@@ -30,13 +30,13 @@ describe('Server :: ModelsApi', () => {
   test('Should calls getModel', async () => {
     fetch.mockResponseOnce(JSON.stringify(modelMock));
 
-    const result = await instance.getModel('test-model', TOKEN_MOCK);
+    const result = await instance.getModel('test-model', TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/models/test-model'),
       expect.objectContaining({ method: 'GET' }),
     );
-    expect(result).toEqual(JSON.stringify(modelMock));
+    expect(result.response).toEqual(JSON.stringify(modelMock));
   });
 
   test('Should calls createModel', async () => {
