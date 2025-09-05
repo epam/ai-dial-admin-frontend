@@ -22,7 +22,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import ToolsetProperties from './Properties';
-import Tool from '../Tools/Tools';
+import Tool from '@/src/components/Toolsets/Tools/Tools';
 
 interface Props {
   names: string[];

@@ -19,7 +19,7 @@ export class ToolsetsApi extends BaseApi {
   }
 
   getTools(name: string, token: JWT | null): Promise<Tool[] | null> {
-    return this.get(TOOLS_URL(name), token);
+    return this.get(TOOLS_URL(name), token).then((res) => (res as { tools: Tool[] }).tools || []);
   }
 
   removeToolset(token: JWT | null, name?: string): Promise<ServerActionResponse> {

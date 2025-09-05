@@ -19,6 +19,8 @@ import { ToolFilter } from './type';
 import { isEqual } from 'lodash';
 import { getFilteredTools } from './utils';
 import AlertInfo from '@/src/components/Common/Alerts/AlertInfo';
+import { getTools } from '../../../app/[lang]/toolsets/actions';
+import Loader from '../../Common/Loader/Loader';
 
 const filtersConfiguration = [
   ToolFilter.Enabled,
@@ -33,7 +35,7 @@ interface Props {
   onChangeToolset: (toolset: Toolset) => void;
 }
 
-const Tool: FC<Props> = ({ selectedToolset, isNotSavedToolset, onChangeToolset }) => {
+const ToolView: FC<Props> = ({ selectedToolset, isNotSavedToolset, onChangeToolset }) => {
   const t = useI18n();
 
   const [modalState, setModalState] = useState(PopUpState.Closed);
@@ -49,7 +51,18 @@ const Tool: FC<Props> = ({ selectedToolset, isNotSavedToolset, onChangeToolset }
     return getFilteredTools(selectedToolset.allowedTools || [], selectedFilters, availableTools).filter(
       (tool) => tool.toLowerCase().includes(patternLower) && tool !== '',
     );
-  }, [pattern, selectedToolset, selectedFilters]);
+  }, [pattern, selectedToolset.allowedTools, selectedFilters, availableTools]);
+
+  useEffect(() => {
+    if (selectedToolset.name) {
+      setIsLoading(false);
+      getTools(selectedToolset.name).then((tools) => {
+        console.log(tools);
+        setIsLoading(true);
+        setAvailableTools(tools || []);
+      });
+    }
+  }, [selectedToolset]);
 
   useEffect(() => {
     setUseAllTools(!selectedToolset.allowedTools || selectedToolset.allowedTools.length === 0);
@@ -111,65 +124,72 @@ const Tool: FC<Props> = ({ selectedToolset, isNotSavedToolset, onChangeToolset }
 
   return (
     <>
-      <div className="pt-3 w-full flex flex-col h-full">
-        <div className="flex flex-row items-center mb-3">
-          <h1 className="mr-4">
-            {t(ToolsetI18nKey.Tools)}
-            {`: ${selectedToolset.allowedTools?.length ? selectedToolset.allowedTools?.length : availableTools.length}`}
-          </h1>
+      {isLoading ? (
+        <Loader size={40} />
+      ) : (
+        <div className="pt-3 w-full flex flex-col h-full">
+          <div className="flex flex-row items-center mb-3">
+            <h1 className="mr-4">
+              {t(ToolsetI18nKey.Tools)}
+              {`: ${selectedToolset.allowedTools?.length ? selectedToolset.allowedTools?.length : availableTools.length}`}
+            </h1>
 
-          <Switch
-            switchId="useAllTools"
-            title={t(ToolsetI18nKey.UseAllTools)}
-            isOn={useAllTools}
-            onChange={(value) =>
-              onChangeToolset({ ...selectedToolset, allowedTools: value ? [] : ['' /* to trigger validation error */] })
-            }
-          />
-        </div>
-        <div className="flex flex-row items-center mb-3 justify-between">
-          <div className="w-[480px]">
-            <Search onChange={(search) => setPattern(search)} />
+            <Switch
+              switchId="useAllTools"
+              title={t(ToolsetI18nKey.UseAllTools)}
+              isOn={useAllTools}
+              onChange={(value) =>
+                onChangeToolset({
+                  ...selectedToolset,
+                  allowedTools: value ? [] : ['' /* to trigger validation error */],
+                })
+              }
+            />
           </div>
+          <div className="flex flex-row items-center mb-3 justify-between">
+            <div className="w-[480px]">
+              <Search onChange={(search) => setPattern(search)} />
+            </div>
 
-          {!useAllTools && (
-            <div className="flex items-center gap-x-6">
-              <ToolsFilter
-                isAllSelected={isEqual(filtersConfiguration, selectedFilters)}
-                onSelectAll={onSelectAll}
-                selectedFilters={selectedFilters}
-                onSelectFilter={onSelectFilter}
-              />
-              <Button
-                cssClass="primary"
-                title={t(ButtonsI18nKey.Add)}
-                iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-                onClick={onOpenModal}
-              />
-            </div>
-          )}
-        </div>
-        <div className="flex-1 min-h-0">
-          {!filteredTools || filteredTools.length === 0 ? (
-            <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoTools)} />
-          ) : (
-            <div className="h-full overflow-y-auto flex flex-col gap-y-3 pr-2">
-              {filteredTools?.map((tool) => (
-                <ToolItem
-                  key={tool}
-                  tool={tool}
-                  isEnabled={selectedToolset.allowedTools?.includes(tool)}
-                  isAddedManual={!availableTools.includes(tool)}
-                  readonly={useAllTools || !availableTools.includes(tool)}
-                  onChangeIsEnabled={(v) => onChangeTools(v, tool)}
+            {!useAllTools && (
+              <div className="flex items-center gap-x-6">
+                <ToolsFilter
+                  isAllSelected={isEqual(filtersConfiguration, selectedFilters)}
+                  onSelectAll={onSelectAll}
+                  selectedFilters={selectedFilters}
+                  onSelectFilter={onSelectFilter}
                 />
-              ))}
-            </div>
-          )}
+                <Button
+                  cssClass="primary"
+                  title={t(ButtonsI18nKey.Add)}
+                  iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+                  onClick={onOpenModal}
+                />
+              </div>
+            )}
+          </div>
+          <div className="flex-1 min-h-0">
+            {!filteredTools || filteredTools.length === 0 ? (
+              <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoTools)} />
+            ) : (
+              <div className="h-full overflow-y-auto flex flex-col gap-y-3 pr-2">
+                {filteredTools?.map((tool) => (
+                  <ToolItem
+                    key={tool}
+                    tool={tool}
+                    isEnabled={selectedToolset.allowedTools?.includes(tool)}
+                    isAddedManual={!availableTools.some((t) => t.name === tool)}
+                    readonly={useAllTools || !availableTools.some((t) => t.name === tool)}
+                    onChangeIsEnabled={(v) => onChangeTools(v, tool)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+          {!useAllTools && <span className="tiny mt-3 mb-3 text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
+          {isNotSavedToolset && <AlertInfo text={t(ToolsetI18nKey.ToolsWarning)} />}
         </div>
-        {!useAllTools && <span className="tiny mt-3 text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
-        {isNotSavedToolset && <AlertInfo text={t(ToolsetI18nKey.ToolsWarning)} />}
-      </div>
+      )}
       {modalState === PopUpState.Opened && (
         <AddToolsModal modalState={modalState} onClose={onCloseModal} onSelectItems={onAddTools} />
       )}
@@ -177,4 +197,4 @@ const Tool: FC<Props> = ({ selectedToolset, isNotSavedToolset, onChangeToolset }
   );
 };
 
-export default Tool;
+export default ToolView;
