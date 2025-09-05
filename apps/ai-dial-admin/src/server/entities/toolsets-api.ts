@@ -1,6 +1,6 @@
 import { JWT } from 'next-auth/jwt';
 
-import { DialToolset } from '@/src/models/dial/toolset';
+import { DialToolset, Tools } from '@/src/models/dial/toolset';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -18,7 +18,7 @@ export class ToolsetsApi extends BaseApi {
     return this.get(TOOLSET_URL(name), token);
   }
 
-  getTools(name: string, token: JWT | null): Promise<DialToolset | null> {
+  getTools(name: string, token: JWT | null): Promise<Tools[] | null> {
     return this.get(TOOLS_URL(name), token);
   }
 

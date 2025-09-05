@@ -5,7 +5,7 @@ import { rolesApi, toolSetsApi } from '@/src/app/api/api';
 import Page403 from '@/src/components/Page403/Page403';
 import ToolsetView from '@/src/components/Toolsets/View/View';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
-import { DialToolset } from '@/src/models/dial/toolset';
+import { DialToolset, Tools } from '@/src/models/dial/toolset';
 import { logger } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -19,7 +19,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   let toolSet: DialToolset | null = null;
   let toolSets: DialToolset[] | null = null;
-  let tools: DialToolset[] | null = null;
+  let tools: Tools[] | null = null;
   let roles: DialRole[] | null = null;
 
   try {
