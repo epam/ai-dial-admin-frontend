@@ -1,12 +1,13 @@
 import { JWT } from 'next-auth/jwt';
 
-import { DialToolset } from '@/src/models/dial/toolset';
+import { DialToolset, Tools } from '@/src/models/dial/toolset';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
 import { ServerActionResponse } from '@/src/models/server-action';
 
 export const TOOLSETS_URL = `${API}/toolSets`;
 export const TOOLSET_URL = (name?: string) => `${TOOLSETS_URL}/${name}`;
+export const TOOLS_URL = (name?: string) => `${TOOLSET_URL(name)}/discovered-tools`;
 
 export class ToolsetsApi extends BaseApi {
   getToolsetList(token: JWT | null): Promise<DialToolset[] | null> {
@@ -15,6 +16,10 @@ export class ToolsetsApi extends BaseApi {
 
   getToolset(name: string, token: JWT | null): Promise<DialToolset | null> {
     return this.get(TOOLSET_URL(name), token);
+  }
+
+  getTools(name: string, token: JWT | null): Promise<Tools[] | null> {
+    return this.get(TOOLS_URL(name), token);
   }
 
   removeToolset(token: JWT | null, name?: string): Promise<ServerActionResponse> {

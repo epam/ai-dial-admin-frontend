@@ -10,3 +10,8 @@ export interface DialToolset extends BaseEntity, EntityRoleLimits {
   endpoint?: string | null;
   maxRetryAttempts?: number;
 }
+
+export interface Tools {
+  name: string;
+  description: string;
+}
