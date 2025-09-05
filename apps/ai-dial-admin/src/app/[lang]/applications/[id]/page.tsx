@@ -14,6 +14,7 @@ import { logger } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { filterDisplayNames } from '@/src/utils/entities/filter-names';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,12 +53,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Applications);
   }
 
-  const names = applications?.reduce((acc, curr) => {
-    if (curr.displayName != null) {
-      acc.push(curr.displayName);
-    }
-    return acc;
-  }, [] as string[]) as string[];
+  const names = filterDisplayNames(applications);
 
   return (
     <SaveValidationContextProvider>
