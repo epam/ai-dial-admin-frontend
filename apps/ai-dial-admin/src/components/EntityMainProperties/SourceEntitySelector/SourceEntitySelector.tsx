@@ -1,25 +1,24 @@
 'use client';
 
+import { IconExternalLink } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { IconExternalLink } from '@tabler/icons-react';
 
+import Button from '@/src/components/Common/Button/Button';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import ErrorText from '@/src/components/Common/ErrorText/ErrorText';
 import Field from '@/src/components/Common/Field/Field';
 import InputModal from '@/src/components/Common/InputModal/InputModal';
 import { ErrorI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { PopUpState } from '@/src/types/pop-up';
-import SelectSourceEntityModal from './SelectSourceEntityModal';
-import Button from '@/src/components/Common/Button/Button';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { ApplicationRoute } from '@/src/types/routes';
 import classNames from 'classnames';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import SelectSourceEntityModal from './SelectSourceEntityModal';
 
 interface Props {
   fieldTitle: string;
@@ -48,7 +47,6 @@ const SourceEntitySelector: FC<Props> = ({
 }) => {
   const t = useI18n();
   const currentLocale = useCurrentLocale();
-  const { dispatch } = useSaveValidationContext();
 
   const [modalState, setIsModalState] = useState(PopUpState.Closed);
   const [valueTitle, setValueTitle] = useState('');
@@ -56,10 +54,6 @@ const SourceEntitySelector: FC<Props> = ({
   const errorText = useMemo(() => {
     return !optional ? (selectedValue ? '' : t(ErrorI18nKey.RequiredField)) : void 0;
   }, [optional, selectedValue, t]);
-
-  useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'sourceEntitySelector', isValid: !errorText });
-  }, [errorText, t, dispatch]);
 
   const onOpenModal = useCallback(() => {
     setIsModalState(PopUpState.Opened);
