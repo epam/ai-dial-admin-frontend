@@ -20,6 +20,7 @@ export default defineConfig([
     '**/node_modules',
     '**/next',
     '**/.next',
+    '**/next-env.d.ts',
     '**/**.config.js',
     '**/**.config.mjs',
     '**/jest.config.ts',
