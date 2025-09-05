@@ -173,6 +173,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
           radioButtons={outputRadio}
           activeRadioButton={route.response ? outputRadio[1].id : outputRadio[0].id}
           elementId="output"
+          disabled={readonly}
           fieldTitle={t(RoutesI18nKey.Output)}
           orientation={RadioFieldOrientation.Row}
           onChange={onChangeOutput}
