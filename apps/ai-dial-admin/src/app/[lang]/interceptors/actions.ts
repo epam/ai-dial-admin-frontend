@@ -23,7 +23,7 @@ export async function updateInterceptor(interceptor: DialInterceptor) {
     ...interceptor,
     defaults: convertDefaultsToRecord(interceptor.defaultsTemp || []),
   };
-  delete interceptor.defaultsTemp;
+  delete newInterceptor.defaultsTemp;
   return interceptorsApi.updateInterceptor(newInterceptor, token);
 }
 

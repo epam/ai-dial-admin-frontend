@@ -4,7 +4,7 @@ import { FC } from 'react';
 
 import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
 import { getInterceptorContainers } from '@/src/app/[lang]/interceptors/actions';
-import Defaults from '@/src/components/Defaults/Defaults';
+// import Defaults from '@/src/components/Defaults/Defaults';
 import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
 import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
@@ -50,7 +50,7 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
           elementId={'sourceType'}
           fieldTitle={t(EntitiesI18nKey.SourceType)}
         />
-        <Defaults entity={selectedInterceptor} onChangeEntity={onChangeInterceptor} />
+        {/* <Defaults entity={selectedInterceptor} onChangeEntity={onChangeInterceptor} /> */}
       </div>
     </div>
   );
