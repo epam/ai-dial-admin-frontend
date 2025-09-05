@@ -55,8 +55,7 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
     return getFilteredTools(selectedToolset.allowedTools || [], selectedFilters, availableTools).filter(
       (tool) => tool.toLowerCase().includes(patternLower) && tool !== '',
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pattern, isNotSavedToolset, selectedToolset.allowedTools, selectedFilters, availableTools]);
+  }, [pattern, selectedToolset.allowedTools, selectedFilters, availableTools]);
 
   useEffect(() => {
     if (selectedToolset.name) {
@@ -66,7 +65,7 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
         setAvailableTools(tools || []);
       });
     }
-  }, [selectedToolset.name, selectedToolset.endpoint]);
+  }, [selectedToolset.name, isNotSavedToolset, selectedToolset.endpoint]);
 
   useEffect(() => {
     setUseAllTools(!selectedToolset.allowedTools || selectedToolset.allowedTools.length === 0);
