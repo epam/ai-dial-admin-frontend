@@ -3,12 +3,13 @@
 import classNames from 'classnames';
 import { FC } from 'react';
 
+import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { IconCopy } from '@tabler/icons-react';
+import { useI18n } from '@/src/locales/client';
+
 import Input, { InputProps } from './Input';
 import Field from '@/src/components/Common/Field/Field';
-import { IconCopy } from '@tabler/icons-react';
 import Button from '@/src/components/Common/Button/Button';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
 import ErrorText from '../ErrorText/ErrorText';
 
 interface Props extends InputProps {
@@ -42,12 +43,15 @@ const InputWithReadonlyParts: FC<Props> = ({
             invalid ? 'input-error' : '',
           )}
         >
-          <Input
-            cssClass={classNames('border-0 border-r rounded-none h-full')}
-            value={prefixPart}
-            inputId={prefixPart + 'prefix'}
-            tooltipTriggerClassName={'flex-1'}
-          />
+          {prefixPart && (
+            <Input
+              cssClass={classNames('border-0 border-r rounded-none h-full')}
+              value={prefixPart}
+              inputId={prefixPart + 'prefix'}
+              tooltipTriggerClassName={'flex-1'}
+              disabled={true}
+            />
+          )}
           <Input
             cssClass={classNames('border-0 bg-transparent', cssClass)}
             tooltipTriggerClassName={'flex-1'}

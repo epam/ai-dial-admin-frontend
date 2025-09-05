@@ -211,11 +211,14 @@ export default {
     Toolsets: 'Create Toolset',
     Prompt: 'Create Prompt',
     Route: 'Create Route',
-    Adapter: 'Create Adapter',
     InterceptorContainer: 'Select Interceptor Container',
     InterceptorTemplate: {
       Create: 'Create Interceptor Template',
       Select: 'Select Interceptor Template',
+    },
+    Adapter: {
+      Create: 'Create Adapter',
+      Select: 'Select Adapter',
     },
   },
   Type: {
@@ -796,8 +799,10 @@ export default {
   Source: {
     OpenTemplate: 'Open template',
     OpenContainer: 'Open container',
+    OpenAdapter: 'Open adapter',
     Container: 'Container',
     InterceptorTemplate: 'Interceptor template',
+    Adapter: 'Adapter',
   },
   Toolset: {
     Tools: 'Tools',

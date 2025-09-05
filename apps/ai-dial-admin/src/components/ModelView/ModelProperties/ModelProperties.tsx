@@ -19,9 +19,10 @@ interface Props {
   model: DialModel;
   modelsNames: string[];
   updateModel: (model: DialModel) => void;
+  view?: ApplicationRoute;
 }
 
-const ModelProperties: FC<Props> = ({ model, modelsNames, updateModel }) => {
+const ModelProperties: FC<Props> = ({ model, modelsNames, updateModel, view }) => {
   const t = useI18n();
 
   return (
@@ -33,7 +34,7 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, updateModel }) => {
         names={modelsNames}
         isEntityImmutable={true}
       />
-      <ModelTypeProperties model={model} onChangeModel={updateModel} />
+      <ModelTypeProperties model={model} onChangeModel={updateModel} view={view} />
       <Defaults entity={model} onChangeEntity={updateModel} />
       <UpstreamEndpoints entity={model} onChangeEntity={updateModel} isKeyOptional={true} />
       <TokenizerModelSwitch model={model} onChangeModel={updateModel} />

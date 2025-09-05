@@ -2,7 +2,7 @@ import { FC, useState } from 'react';
 
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { PopUpState } from '@/src/types/pop-up';
-import { InterceptorTemplate } from '@/src/models/interceptor-template';
+import { DialAdapter } from '@/src/models/dial/adapter';
 import { useI18n } from '@/src/locales/client';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
 import { SOURCE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -14,13 +14,13 @@ import Popup from '@/src/components/Common/Popup/Popup';
 
 interface Props {
   selected?: string;
-  runners?: InterceptorTemplate[];
+  adapters?: DialAdapter[];
   modalState: PopUpState;
   onClose: () => void;
   onApply: (name?: string) => void;
 }
 
-const SelectRunnerModal: FC<Props> = ({ selected, runners, modalState, onClose, onApply }) => {
+const SelectAdapterModal: FC<Props> = ({ selected, adapters, modalState, onClose, onApply }) => {
   const t = useI18n();
 
   const [selectedRunner, setSelectedRunner] = useState(selected);
@@ -28,8 +28,8 @@ const SelectRunnerModal: FC<Props> = ({ selected, runners, modalState, onClose, 
   return (
     <Popup
       onClose={onClose}
-      heading={t(CreateI18nKey.SelectInterceptorTemplate)}
-      portalId="SelectRunnerModal"
+      heading={t(CreateI18nKey.SelectAdapter)}
+      portalId="SelectAdapterModal"
       state={modalState}
       containerClassName={'h-[750px] lg:max-w-[65%]'}
     >
@@ -55,7 +55,7 @@ const SelectRunnerModal: FC<Props> = ({ selected, runners, modalState, onClose, 
             onGridReady: (event) => {
               event.api?.updateGridOptions({
                 columnDefs: SOURCE_COLUMNS,
-                rowData: runners,
+                rowData: adapters,
               });
               event.api.forEachNode((node) => {
                 if (node.data.name === selectedRunner) {
@@ -79,4 +79,4 @@ const SelectRunnerModal: FC<Props> = ({ selected, runners, modalState, onClose, 
   );
 };
 
-export default SelectRunnerModal;
+export default SelectAdapterModal;

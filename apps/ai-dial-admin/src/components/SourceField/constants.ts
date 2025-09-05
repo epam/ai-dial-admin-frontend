@@ -9,6 +9,7 @@ export const INTERCEPTOR_SOURCE_ITEMS: DropdownItemsModel[] = [
 export const MODELS_SOURCE_ITEMS: DropdownItemsModel[] = [
   { id: SOURCE_TYPE.ENDPOINTS, name: 'External Endpoint' },
   { id: SOURCE_TYPE.CONTAINER, name: 'Model Container' },
+  { id: SOURCE_TYPE.ADAPTER, name: 'Adapter' },
 ];
 
 export const getSourceItems = (items: DropdownItemsModel[], deploymentsEnabled?: boolean) => {

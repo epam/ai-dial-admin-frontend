@@ -4,6 +4,8 @@ import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 import { ApplicationRoute } from '@/src/types/routes';
 import { DialModel } from '@/src/models/dial/model';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { PopUpState } from '@/src/types/pop-up';
 import { SourceI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { getErrorNotification } from '@/src/utils/notification';
@@ -12,8 +14,6 @@ import { useAppContext } from '@/src/context/AppContext';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { IconExternalLink } from '@tabler/icons-react';
-import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { PopUpState } from '@/src/types/pop-up';
 
 import Button from '@/src/components/Common/Button/Button';
 import Field from '@/src/components/Common/Field/Field';
@@ -21,6 +21,7 @@ import InputModal from '@/src/components/Common/InputModal/InputModal';
 import SelectContainerModal from '@/src/components/SourceField/Containers/SelectContainerModal';
 import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
 import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
+import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
 
 interface Props<T> {
   entity: T;
@@ -126,16 +127,11 @@ const Containers = <T extends DialInterceptor | DialModel>({
       {entity.source?.containerId && (
         <>
           {view === ApplicationRoute.Models ? (
-            <div className="lg:w-[35%] flex flex-col gap-6">
-              <CompletionEndpointControl
-                endpoint={entity.source.completionEndpointPath}
-                textBeforeInput={selectedContainer?.url}
-                onChange={(completionEndpointPath) => {
-                  onChange({
-                    ...entity,
-                    source: { ...entity.source, $type: SOURCE_TYPE.CONTAINER, completionEndpointPath },
-                  });
-                }}
+            <div className="flex flex-col gap-6">
+              <ModelEndpoint
+                model={entity}
+                prefix={selectedContainer?.url}
+                onChange={onChange as (entity: DialModel) => void}
               />
             </div>
           ) : (

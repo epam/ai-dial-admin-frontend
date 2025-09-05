@@ -220,6 +220,8 @@ export enum CreateI18nKey {
   Interceptor = 'CreateEntity.Interceptor',
   CreateInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Create',
   SelectInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Select',
+  CreateAdapter = 'CreateEntity.Adapter.Create',
+  SelectAdapter = 'CreateEntity.Adapter.Select',
   InterceptorContainer = 'CreateEntity.InterceptorContainer',
 }
 
@@ -616,8 +618,10 @@ export enum ErrorI18nKey {
 export enum SourceI18nKey {
   OpenTemplate = 'Source.OpenTemplate',
   OpenContainer = 'Source.OpenContainer',
+  OpenAdapter = 'Source.OpenAdapter',
   Container = 'Source.Container',
   InterceptorTemplate = 'Source.InterceptorTemplate',
+  Adapter = 'Source.Adapter',
 }
 
 export enum TypeI18nKey {
