@@ -21,6 +21,7 @@ import { getFilteredTools } from './utils';
 import AlertInfo from '@/src/components/Common/Alerts/AlertInfo';
 import { getTools } from '../../../app/[lang]/toolsets/actions';
 import Loader from '../../Common/Loader/Loader';
+import { isEqualSkippingUndefined } from '../../../utils/is-equals-entity';
 
 const filtersConfiguration = [
   ToolFilter.Enabled,
@@ -30,12 +31,12 @@ const filtersConfiguration = [
 ];
 
 interface Props {
-  isNotSavedToolset: boolean;
+  originalToolset: Toolset;
   selectedToolset: Toolset;
   onChangeToolset: (toolset: Toolset) => void;
 }
 
-const ToolView: FC<Props> = ({ selectedToolset, isNotSavedToolset, onChangeToolset }) => {
+const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset }) => {
   const t = useI18n();
 
   const [modalState, setModalState] = useState(PopUpState.Closed);
@@ -44,6 +45,12 @@ const ToolView: FC<Props> = ({ selectedToolset, isNotSavedToolset, onChangeTools
   const [useAllTools, setUseAllTools] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [availableTools, setAvailableTools] = useState<Tool[]>([]);
+
+  const isNotSavedToolset = useMemo(() => {
+    const clonedOriginal = { ...originalToolset, allowedTools: [] };
+    const clonedEditable = { ...selectedToolset, allowedTools: [] };
+    return !isEqualSkippingUndefined(clonedOriginal, clonedEditable);
+  }, [originalToolset, selectedToolset]);
 
   const filteredTools = useMemo(() => {
     const patternLower = pattern.toLowerCase();
@@ -136,7 +143,7 @@ const ToolView: FC<Props> = ({ selectedToolset, isNotSavedToolset, onChangeTools
       {isLoading ? (
         <Loader size={40} />
       ) : (
-        <div className="pt-3 w-full flex flex-col h-full">
+        <div className="pt-3 w-full flex flex-col h-full gap-y-2">
           <div className="flex flex-row items-center mb-3">
             <h1 className="mr-4">
               {t(ToolsetI18nKey.Tools)}
@@ -196,7 +203,7 @@ const ToolView: FC<Props> = ({ selectedToolset, isNotSavedToolset, onChangeTools
               </div>
             )}
           </div>
-          {!useAllTools && <span className="tiny mt-3 mb-3 text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
+          {!useAllTools && <span className="tiny text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
           {isNotSavedToolset && <AlertInfo text={t(ToolsetI18nKey.ToolsWarning)} />}
         </div>
       )}

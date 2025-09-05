@@ -134,7 +134,11 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
             )}
 
             {activeTab === EntityViewTab.Tools && (
-              <Tool isNotSavedToolset={isChanged} selectedToolset={selectedToolset} onChangeToolset={onChangeToolset} />
+              <Tool
+                originalToolset={originalToolset}
+                selectedToolset={selectedToolset}
+                onChangeToolset={onChangeToolset}
+              />
             )}
 
             {activeTab === EntityViewTab.Roles && (

@@ -21,28 +21,30 @@ const ToolItem: FC<Props> = ({ tool, isAddedManual, onRemoveTool, isEnabled, rea
   const t = useI18n();
 
   return (
-    <div className="p-3 group h-[56px] mb-2 gro border border-primary rounded flex flex-row items-center justify-between hover:border-hover cursor-pointer">
-      <div className="flex flex-row items-center">
-        <h3>{tool}</h3>
-        {isAddedManual && (
-          <span className="ml-4 tiny h-[22px] block px-2 py-1 border border-accent-primary bg-accent-primary-alpha rounded">
-            {t(ToolsetI18nKey.AddedManually)}
-          </span>
-        )}
-      </div>
-      <div className="flex flex-row items-center">
-        {isAddedManual && (
-          <div className="invisible group-hover:visible">
-            <Button
-              cssClass="secondary"
-              title={t(ButtonsI18nKey.Delete)}
-              iconBefore={<IconTrash {...BASE_ICON_PROPS} />}
-              onClick={() => onRemoveTool?.(tool)}
-            />
-          </div>
-        )}
+    <div className="w-full h-[56px]">
+      <div className="p-3 h-full group mb-2 border border-primary rounded flex flex-row items-center justify-between hover:border-hover cursor-pointer">
+        <div className="flex flex-row items-center">
+          <h3>{tool}</h3>
+          {isAddedManual && (
+            <span className="ml-4 tiny h-[22px] block px-2 py-1 border border-accent-primary bg-accent-primary-alpha rounded">
+              {t(ToolsetI18nKey.AddedManually)}
+            </span>
+          )}
+        </div>
+        <div className="flex flex-row items-center">
+          {isAddedManual && (
+            <div className="invisible group-hover:visible">
+              <Button
+                cssClass="secondary"
+                title={t(ButtonsI18nKey.Delete)}
+                iconBefore={<IconTrash {...BASE_ICON_PROPS} />}
+                onClick={() => onRemoveTool?.(tool)}
+              />
+            </div>
+          )}
 
-        {!readonly && <Switch switchId={tool} isOn={isEnabled} onChange={(value) => onChangeIsEnabled(value)} />}
+          {!readonly && <Switch switchId={tool} isOn={isEnabled} onChange={(value) => onChangeIsEnabled(value)} />}
+        </div>
       </div>
     </div>
   );

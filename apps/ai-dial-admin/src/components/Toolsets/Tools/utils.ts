@@ -18,7 +18,7 @@ export const getFilteredTools = (tools: string[], selectedFilters: ToolFilter[],
   }
 
   if (selectedFilters.includes(ToolFilter.AddedManually)) {
-    filteredTools.push(...tools.filter((t) => !availableTools.includes(t)));
+    filteredTools.push(...tools.filter((t) => !availableTools.some((a) => a.name === t)));
   }
 
   return uniq(filteredTools);
