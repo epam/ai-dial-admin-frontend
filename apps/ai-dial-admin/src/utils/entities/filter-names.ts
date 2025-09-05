@@ -10,3 +10,14 @@ export const filterDisplayNames = (entities?: BaseEntity[] | null): string[] => 
     }, [] as string[]) as string[]) || []
   );
 };
+
+export const filterNames = (entities?: BaseEntity[] | null): string[] => {
+  return (
+    (entities?.reduce((acc, curr) => {
+      if (curr.name != null) {
+        acc.push(curr.name);
+      }
+      return acc;
+    }, [] as string[]) as string[]) || []
+  );
+};

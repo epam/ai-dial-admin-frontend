@@ -6,19 +6,14 @@ import { KEYS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { DialKey } from '@/src/models/dial/key';
 import { ApplicationRoute } from '@/src/types/routes';
+import { filterNames } from '@/src/utils/entities/filter-names';
 
 interface Props {
   data: DialKey[];
 }
 
 const KeysList: FC<Props> = ({ data }) => {
-  const names = data?.reduce((acc, curr) => {
-    if (curr.name != null) {
-      acc.push(curr.name);
-    }
-    return acc;
-  }, [] as string[]) as string[];
-
+  const names = filterNames(data);
   const keys = data.map((entity) => entity.key as string);
 
   return (
