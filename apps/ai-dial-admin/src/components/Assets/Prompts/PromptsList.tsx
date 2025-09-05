@@ -16,7 +16,7 @@ const PromptsList: FC = () => {
   if (data == null) {
     return <Page403 />;
   }
-  const names = filterNames(data)
+  const names = filterNames(data);
 
   const versionsMap = getVersionsPerName(data || []);
   const filteredData = filterLatestVersions(data);
