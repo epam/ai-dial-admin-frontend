@@ -4,7 +4,7 @@ import { ToolFilter } from './type';
 
 describe('getFilteredTools', () => {
   const tools = ['toolA', 'toolB', 'toolC'];
-  const availableTools = ['toolA', 'toolC', 'toolD'];
+  const availableTools = [{ name: 'toolA' }, { name: 'toolC' }, { name: 'toolD' }];
 
   it('returns enabled tools', () => {
     const result = getFilteredTools(tools, [ToolFilter.Enabled], availableTools);
@@ -27,7 +27,11 @@ describe('getFilteredTools', () => {
   });
 
   it('returns unique tools when multiple filters', () => {
-    const result = getFilteredTools(tools, [ToolFilter.Enabled, ToolFilter.Disabled, ToolFilter.AutoDetected, ToolFilter.AddedManually], availableTools);
+    const result = getFilteredTools(
+      tools,
+      [ToolFilter.Enabled, ToolFilter.Disabled, ToolFilter.AutoDetected, ToolFilter.AddedManually],
+      availableTools,
+    );
     expect(result.sort()).toEqual(['toolA', 'toolB', 'toolC', 'toolD'].sort());
   });
 
