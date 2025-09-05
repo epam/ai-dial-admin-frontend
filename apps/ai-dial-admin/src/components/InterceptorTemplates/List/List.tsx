@@ -15,7 +15,7 @@ interface Props {
 }
 
 const List: FC<Props> = ({ route, data }) => {
-  const names = filterNames(data)
+  const names = filterNames(data);
 
   return (
     <BaseEntityList

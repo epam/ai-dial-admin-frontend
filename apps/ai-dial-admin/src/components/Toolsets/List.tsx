@@ -14,7 +14,7 @@ interface Props {
 }
 
 const ToolsetsList: FC<Props> = ({ data }) => {
-  const names = filterNames(data)
+  const names = filterNames(data);
   return (
     <BaseEntityList
       baseColumns={[...SIMPLE_ENTITY_COLUMNS, AUTHOR_COLUMN, TOPIC_COLUMN]}

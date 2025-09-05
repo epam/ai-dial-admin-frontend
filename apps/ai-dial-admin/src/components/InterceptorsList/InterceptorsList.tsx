@@ -12,7 +12,7 @@ interface Props {
 }
 
 const InterceptorsList: FC<Props> = async ({ data }) => {
-  const names = filterNames(data)
+  const names = filterNames(data);
   return (
     <BaseEntityList
       baseColumns={[...SIMPLE_ENTITY_COLUMNS, AUTHOR_COLUMN]}
