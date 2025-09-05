@@ -45,7 +45,6 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     }
     return acc;
   }, [] as string[]) as string[];
-  console.log('tools', tools);
 
   return (
     <SaveValidationContextProvider>

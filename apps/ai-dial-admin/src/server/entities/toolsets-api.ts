@@ -7,7 +7,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 
 export const TOOLSETS_URL = `${API}/toolSets`;
 export const TOOLSET_URL = (name?: string) => `${TOOLSETS_URL}/${name}`;
-export const TOOLS_URL = (name?: string) => `${TOOLSET_URL(name)}/tools`;
+export const TOOLS_URL = (name?: string) => `${TOOLSET_URL(name)}/discovered-tools`;
 
 export class ToolsetsApi extends BaseApi {
   getToolsetList(token: JWT | null): Promise<DialToolset[] | null> {
