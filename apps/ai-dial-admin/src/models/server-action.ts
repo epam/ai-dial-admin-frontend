@@ -4,4 +4,5 @@ export interface ServerActionResponse {
   errorHeader?: string;
   errorMessage?: string;
   status?: number;
+  etag?: string;
 }
