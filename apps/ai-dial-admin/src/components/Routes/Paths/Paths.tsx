@@ -13,11 +13,12 @@ import Path from './Path';
 interface Props {
   title: string;
   readonly?: boolean;
+  optional?: boolean;
   paths?: string[];
   onChangePaths: (path: string[]) => void;
 }
 
-const Paths: FC<Props> = ({ title, readonly, paths, onChangePaths }) => {
+const Paths: FC<Props> = ({ title, optional, readonly, paths, onChangePaths }) => {
   const t = useI18n();
 
   const onAddPath = useCallback(() => {
@@ -45,7 +46,12 @@ const Paths: FC<Props> = ({ title, readonly, paths, onChangePaths }) => {
   const onChangePath = useCallback(
     (index: number, value?: string) => {
       const newPaths = [...(paths || [])];
-      newPaths[index] = value || '';
+
+      if (!value) {
+        newPaths.splice(index, 1);
+      } else {
+        newPaths[index] = value;
+      }
       onChangePaths(newPaths);
     },
     [paths, onChangePaths],
@@ -78,6 +84,7 @@ const Paths: FC<Props> = ({ title, readonly, paths, onChangePaths }) => {
             key={'path ' + index}
             path={path}
             index={index}
+            optional={optional}
             fieldTitle={title}
             allPaths={paths}
             onRemove={onRemove}

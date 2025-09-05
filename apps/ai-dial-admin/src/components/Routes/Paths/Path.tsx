@@ -8,30 +8,32 @@ import { EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { isValidRoutePath } from '@/src/utils/validation/path-error';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   index: number;
   fieldTitle: string;
   path: string;
+  optional?: boolean;
   readonly?: boolean;
   allPaths?: string[];
   onRemove: (index: number) => void;
   onChangePath: (index: number, value?: string) => void;
 }
 
-const Path: FC<Props> = ({ index, path, readonly, fieldTitle, allPaths, onRemove, onChangePath }) => {
+const Path: FC<Props> = ({ index, path, readonly, optional, fieldTitle, allPaths, onRemove, onChangePath }) => {
   const t = useI18n();
-
+  const { dispatch } = useSaveValidationContext();
   const [isEmptyPath, setIsEmptyPath] = useState(true);
   const [isInvalidPath, setIsInvalidPath] = useState(false);
   const isAllEmptyValues = !allPaths?.some((v) => v !== '');
   const error = useMemo(() => {
-    return isEmptyPath && index === 0 && isAllEmptyValues
+    return isEmptyPath && index === 0 && isAllEmptyValues && !optional
       ? t(ErrorI18nKey.RequiredProperty)
       : isInvalidPath
         ? t(ErrorI18nKey.InvalidPath)
         : '';
-  }, [index, isAllEmptyValues, isEmptyPath, isInvalidPath, t]);
+  }, [index, optional, isAllEmptyValues, isEmptyPath, isInvalidPath, t]);
 
   const removeButtonClass = classNames(
     'cursor-pointer ml-[10px]',
@@ -49,6 +51,14 @@ const Path: FC<Props> = ({ index, path, readonly, fieldTitle, allPaths, onRemove
     setIsEmptyPath(path === '');
     setIsInvalidPath(!isValidRoutePath(path));
   }, [path]);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'path ' + index, isValid: !error });
+    return () => {
+      dispatch({ type: ValidationActionType.SetField, field: 'path ' + index, isValid: true });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [error]);
 
   return (
     <div className="flex items-center">
