@@ -52,7 +52,7 @@ const ModelEndpoint: FC<Props> = ({ model, prefix, onChange }) => {
 
   const onChangeType = useCallback(
     (type: string) => {
-      const endpoint = `${name}${type === DialModelType.Chat ? '/chat/completions' : '/embeddings'}`;
+      const endpoint = `${name}${getEndpointPostfix(type as DialModelType)}`;
       if (prefix) {
         onChange({
           ...model,
