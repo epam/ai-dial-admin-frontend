@@ -16,7 +16,6 @@ describe('EntityMainProperties :: errors :: getDisplayNameError', () => {
     expect(result).toBe(ErrorI18nKey.MinMaxLength);
   });
 
-
   test('returns DisplayNameErrorModel if view is Models, name exists in names, and no version', () => {
     const result = getDisplayNameError(ApplicationRoute.Models, 'foo', ['foo', 'bar'], mockT, '');
     expect(result).toBe(ErrorI18nKey.DisplayNameErrorModel);
