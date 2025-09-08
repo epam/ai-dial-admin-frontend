@@ -42,7 +42,7 @@ const Switch: FC<Props> = ({ title, switchId, isOn = false, disabled, onChange }
         <span
           className={classNames(
             'size-3 rounded-full',
-            disabled ? (isOn ? 'bg-layer-4' : 'bg-controls-disable') : 'bg-controls-enable-primary',
+            disabled ? (!isOn ? 'bg-layer-4' : 'bg-controls-disable') : 'bg-controls-enable-primary',
           )}
         ></span>
       </label>
