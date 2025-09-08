@@ -91,7 +91,7 @@ describe('Prompts utils :: generateNewInitialVersion', () => {
     const res = generateNewInitialVersion('1.0.1');
     expect(res).toEqual('1.0.2');
   });
-   test('Should return unchanged version', () => {
+  test('Should return unchanged version', () => {
     const res = generateNewInitialVersion('someVersion');
     expect(res).toEqual('someVersion');
   });
