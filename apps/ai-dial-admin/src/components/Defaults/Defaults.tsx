@@ -29,7 +29,7 @@ const Defaults: FC<Props> = ({ entity, onChangeEntity }) => {
   }, []);
 
   const onAddItem = useCallback(() => {
-    const defaultsTemp = [...defaultItems, { key: '', value: '' }];
+    const defaultsTemp = [...defaultItems, { key: '', value: '', type: 'string' }];
     onChangeEntity({ ...entity, defaultsTemp });
   }, [defaultItems, entity, onChangeEntity]);
 
