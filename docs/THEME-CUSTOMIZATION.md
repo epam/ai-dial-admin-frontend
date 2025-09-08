@@ -16,6 +16,6 @@ When this service is deployed, provide a `THEMES_CONFIG_URL` environment variabl
 THEMES_CONFIG_URL=https://your-config-host.com
 ```
 
-After setting the `THEMES_CONFIG_URL` environment variable, you can [add and customize themes](https://github.com/epam/ai-dial-chat-themes/blob/development/static/config.json). 
+After setting the `THEMES_CONFIG_URL` environment variable, you can [add and customize themes](https://github.com/epam/ai-dial-chat-themes/blob/development/static/config.json).
 
 > Please note that after making modifications, you need to redeploy the server with themes for the changes to take effect. There is a default cache period of 24 hours, after which the new settings will be applied automatically.
