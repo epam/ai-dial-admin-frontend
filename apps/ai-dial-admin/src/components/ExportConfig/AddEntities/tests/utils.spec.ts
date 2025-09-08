@@ -1,4 +1,4 @@
-import { getButtonTitle, getAllAvailableDependencies, getAvailableData } from '../AddEntities.utils';
+import { getButtonTitle, getAllAvailableDependencies, getAvailableData } from '../utils';
 import { ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import * as AddEntitiesUtils from '@/src/components/AddEntitiesTab/utils';
@@ -29,6 +29,11 @@ describe('Export Config Utils :: getButtonTitle', () => {
   test('Should return title for roles (full)', () => {
     const res = getButtonTitle(mockTranslate, EntityType.ROLE, true);
     expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Roles.toLowerCase()}`);
+  });
+
+  test('Should return title for adapter (full)', () => {
+    const res = getButtonTitle(mockTranslate, EntityType.ADAPTER, true);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Adapters.toLowerCase()}`);
   });
 
   test('Should return title for application runners (full)', () => {
@@ -64,6 +69,11 @@ describe('Export Config Utils :: getButtonTitle', () => {
   test('Should return only label (not full) for interceptors', () => {
     const res = getButtonTitle(mockTranslate, EntityType.INTERCEPTOR, false);
     expect(res).toBe(MenuI18nKey.Interceptors);
+  });
+
+  test('Should return only label (not full) for Toolsets', () => {
+    const res = getButtonTitle(mockTranslate, EntityType.TOOLSET, false);
+    expect(res).toBe(MenuI18nKey.Toolsets);
   });
 
   test('Should return empty string for undefined tab', () => {
@@ -172,6 +182,21 @@ describe('Export Config Utils :: getAvailableData', () => {
     const result = getAvailableData(EntityType.ROUTE, tabData, customExportData, 'ROUTE');
 
     expect(result).toEqual(['filtered-routes']);
+  });
+
+  test('should filter and return available TOOLSET entities', () => {
+    const tabData = {
+      TOOLSET: [entity('r1', MenuI18nKey.Toolsets)],
+    };
+    const customExportData = {
+      TOOLSET: [entity('r2', MenuI18nKey.Toolsets)],
+    };
+
+    mockGetAvailableEntities.mockReturnValue(['filtered-toolsets']);
+
+    const result = getAvailableData(EntityType.TOOLSET, tabData, customExportData, 'TOOLSET');
+
+    expect(result).toEqual(['filtered-toolsets']);
   });
 
   test('should return unfiltered data for non-MODEL/APPLICATION/ROUTE types', () => {

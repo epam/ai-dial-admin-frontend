@@ -11,7 +11,7 @@ import Switch from '@/src/components/Common/Switch/Switch';
 import {
   getAllAvailableDependencies,
   getButtonTitle,
-} from '@/src/components/ExportConfig/AddEntities/AddEntities.utils';
+} from '@/src/components/ExportConfig/AddEntities/utils';
 import Grid from '@/src/components/Grid/Grid';
 import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey, ExportI18nKey } from '@/src/constants/i18n';

@@ -5,6 +5,7 @@ import {
   getApplicationsForEntitiesGrid,
   getModelsForEntitiesGrid,
   getRoutesForEntitiesGrid,
+  getToolsetsForEntitiesGrid,
 } from '@/src/utils/entities/entities-list-view';
 import { DialModel } from '@/src/models/dial/model';
 import { EntityType } from '@/src/types/entity-type';
@@ -99,7 +100,9 @@ export const getPreviewTabs = (
         allEntities.push(...getRoutesForEntitiesGrid(data[key]));
       }
 
-      console.log('key', key);
+      if (key === 'toolSets') {
+        allEntities.push(...getToolsetsForEntitiesGrid(data[key]));
+      }
     }
   });
 

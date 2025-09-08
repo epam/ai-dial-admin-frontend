@@ -15,7 +15,7 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { PopUpState } from '@/src/types/pop-up';
-import { getAvailableData, getButtonTitle } from './AddEntities.utils';
+import { getAvailableData, getButtonTitle } from './utils';
 import { EntityType } from '@/src/types/entity-type';
 
 interface Props {
