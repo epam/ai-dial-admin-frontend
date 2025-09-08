@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 import classNames from 'classnames';
 
 import Button from '@/src/components/Common/Button/Button';
-import { showEditorErrorNotifications } from '@/src/components/JSONEditor/utils';
+import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
 import AddVersionModal from '@/src/components/PromptView/Modals/AddVersionModal';
 import { ButtonsI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -23,7 +23,6 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 interface Props<T> {
   view: ApplicationRoute;
   entity: T;
-  jsonEditorEnabled: boolean;
   onDiscard: () => void;
   onSave: (newVersion?: string) => void;
   setErrorNotifications?: (notification: JSONEditorErrorNotification[]) => void;
@@ -36,7 +35,6 @@ const ModifiedEntityButtons = <T extends object>({
   entity,
   onDiscard,
   onSave,
-  jsonEditorEnabled,
   setErrorNotifications,
   contentJsonErrors,
   promptVersions,
@@ -47,23 +45,18 @@ const ModifiedEntityButtons = <T extends object>({
   const { isValid, jsonErrors } = useSaveValidationContext();
 
   const [versionModalState, setVersionModalState] = useState(PopUpState.Closed);
-  const [isValidJSON, setIsValidJSON] = useState<boolean>(true);
 
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
   const [buttonsClassNames, setButtonsClassNames] = useState('');
-
-  useEffect(() => {
-    setIsValidJSON(!jsonErrors?.length);
-  }, [jsonErrors]);
 
   const onTryToSave = useCallback(
     (newVersion?: string) => {
       if (newVersion) {
         setVersionModalState(PopUpState.Closed);
       }
+
       if (jsonErrors?.length || contentJsonErrors?.length) {
-        setIsValidJSON(false);
         const errors = (jsonErrors?.length ? jsonErrors : contentJsonErrors) as JSONEditorError[];
         const errorNotifications = showEditorErrorNotifications({
           errors,
@@ -95,14 +88,14 @@ const ModifiedEntityButtons = <T extends object>({
             cssClass={classNames('secondary', buttonsClassNames)}
             title={t(ButtonsI18nKey.SaveAsNewVersion)}
             onClick={() => setVersionModalState(PopUpState.Opened)}
-            disable={(jsonEditorEnabled && !!jsonErrors?.length) || !isValid}
+            disable={!isValid}
           />
         )}
         <Button
           cssClass={classNames('primary', buttonsClassNames)}
           title={t(ButtonsI18nKey.Save)}
           onClick={() => onTryToSave()}
-          disable={(jsonEditorEnabled && !!jsonErrors?.length) || !isValid}
+          disable={!isValid}
         />
       </div>
       {versionModalState === PopUpState.Opened &&

@@ -9,7 +9,7 @@ import { cloneDeep } from 'lodash';
 import { removeToolset, updateToolset } from '@/src/app/[lang]/toolsets/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
-import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JSONEditor';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import { EntityViewTab, propertiesTabs, rolesTabs, toolsTabs } from '@/src/components/EntityView/View/utils';
 import Tool from '@/src/components/Toolsets/Tools/Tools';

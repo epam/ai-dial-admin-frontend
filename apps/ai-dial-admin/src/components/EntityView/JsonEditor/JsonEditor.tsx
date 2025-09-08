@@ -1,10 +1,12 @@
 'use client';
 
-import { Dispatch, SetStateAction, useCallback } from 'react';
+import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
 
-import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
-import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
+import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
+import { clearResolvedErrors } from '@/src/components/EntityView/JsonEditor/utils';
+import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 
 interface Props<T> {
   entity: T;
@@ -13,8 +15,15 @@ interface Props<T> {
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
 }
 
-const EntityJsonEditor = <T extends object>({ ...props }: Props<T>) => {
+const EntityJsonEditor = <T extends object>({
+  entity,
+  errorNotifications,
+  setSelectedEntity,
+  setIsChanged,
+}: Props<T>) => {
   const { dispatch } = useSaveValidationContext();
+  const { removeNotification } = useNotification();
+  const [entityModel, setEntityModel] = useState<string>('');
 
   const setJsonErrors = useCallback(
     (errors: JSONEditorError[]) => {
@@ -23,7 +32,42 @@ const EntityJsonEditor = <T extends object>({ ...props }: Props<T>) => {
     [dispatch],
   );
 
-  return <JSONEditor setJsonErrors={setJsonErrors} {...props} />;
+  useEffect(() => {
+    if (entity) {
+      setEntityModel(JSON.stringify(entity, null, 4));
+    }
+  }, [entity, setEntityModel]);
+
+  const onChangeJSON = useCallback(
+    (updatedConfig?: string) => {
+      if (updatedConfig) {
+        try {
+          setSelectedEntity(JSON.parse(updatedConfig));
+        } catch (error) {
+          if (error) {
+            setIsChanged?.(true);
+          }
+        }
+      }
+    },
+    [setSelectedEntity, setIsChanged],
+  );
+
+  const onValidateJSON = useCallback(
+    (errors?: JSONEditorError[]) => {
+      // 768 - validation $schema field. $schema uses in App Runner and it'e not real JSON scheme
+      const filteredErrors = errors?.filter((error) => error.code !== '768');
+      clearResolvedErrors({ errorNotifications, errors: filteredErrors, removeNotification });
+      setJsonErrors?.(filteredErrors ?? []);
+    },
+    [setJsonErrors, errorNotifications, removeNotification],
+  );
+
+  if (!entityModel) {
+    return null;
+  }
+
+  return <JsonEditorBase value={entityModel} onChange={onChangeJSON} onValidateJSON={onValidateJSON} />;
 };
 
 export default EntityJsonEditor;

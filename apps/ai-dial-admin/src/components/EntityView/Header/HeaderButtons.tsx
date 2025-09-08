@@ -94,7 +94,6 @@ const HeaderButtons = <T extends object>({
         {isChanged ? (
           <ModifiedEntityButtons
             entity={entity}
-            jsonEditorEnabled={jsonEditorEnabled}
             onDiscard={onDiscard}
             onSave={onSave}
             view={view}
