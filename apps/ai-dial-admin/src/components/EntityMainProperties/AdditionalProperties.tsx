@@ -28,8 +28,12 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
   const isShowMaintainer =
     view === ApplicationRoute.Applications || view === ApplicationRoute.Models || ApplicationRoute.Interceptors;
 
+  if (!isShowMaintainer || !isShowCompletionEndpoint) {
+    return null;
+  }
+
   return (
-    <div className="w-full flex flex-col gap-6">
+    <div className="w-full flex flex-col">
       <div className="flex flex-col lg:w-[35%] gap-6">
         {isEntityImmutable && isShowMaintainer ? (
           <MaintainerControl entity={entity} onChangeEntity={onChangeEntity} />

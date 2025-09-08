@@ -212,6 +212,7 @@ export default {
     Prompt: 'Create Prompt',
     Route: 'Create Route',
     InterceptorContainer: 'Select Interceptor Container',
+    SelectContainer: 'Select Container',
     InterceptorTemplate: {
       Create: 'Create Interceptor Template',
       Select: 'Select Interceptor Template',
@@ -725,6 +726,7 @@ export default {
     response: 'Response',
     permissions: 'Permissions',
     allowedTools: 'MCP Containers',
+    container: 'Container',
   },
   EntityPlaceholders: {
     Project: 'Enter project',

@@ -6,7 +6,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { DialModel } from '@/src/models/dial/model';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { PopUpState } from '@/src/types/pop-up';
-import { BasicI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
@@ -104,19 +104,13 @@ const Containers = <T extends DialInterceptor | DialModel>({
         {isModal ? (
           <div className="flex flex-col w-full">
             <DropdownField
-              items={[
-                { id: BasicI18nKey.None, name: t(BasicI18nKey.None) },
-                ...(containers.length
-                  ? containers.map((container) => {
-                      return { id: container.id, name: container.name };
-                    })
-                  : []),
-              ]}
+              items={containers.map((container) => ({ id: container.id, name: container.name }))}
               onChange={onSelect}
               elementId={'source-type'}
-              selectedValue={
-                containers.find((container) => container.id === entity.source?.containerId)?.name || BasicI18nKey.None
-              }
+              selectedValue={containers.find((container) => container.id === entity.source?.containerId)?.name}
+              placeholder={t(CreateI18nKey.SelectContainer)}
+              fieldTitle={t(EntityFieldsI18nKey.container)}
+              readonly={!deploymentsEnabled}
             />
           </div>
         ) : (

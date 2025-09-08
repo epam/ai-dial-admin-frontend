@@ -223,6 +223,7 @@ export enum CreateI18nKey {
   SelectInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Select',
   CreateAdapter = 'CreateEntity.Adapter.Create',
   SelectAdapter = 'CreateEntity.Adapter.Select',
+  SelectContainer = 'CreateEntity.SelectContainer',
   InterceptorContainer = 'CreateEntity.InterceptorContainer',
 }
 
@@ -770,6 +771,7 @@ export enum EntityFieldsI18nKey {
   baseEndpoint = 'EntityFields.baseEndpoint',
   dependencies = 'EntityFields.dependencies',
   completionEndpoint = 'EntityFields.completionEndpoint',
+  container = 'EntityFields.container',
 }
 
 export enum ToolsetI18nKey {

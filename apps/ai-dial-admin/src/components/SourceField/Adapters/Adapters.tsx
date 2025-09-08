@@ -7,7 +7,7 @@ import { DialModel } from '@/src/models/dial/model';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { BasicI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { getErrorNotification } from '@/src/utils/notification';
 import { useNotification } from '@/src/context/NotificationContext';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
@@ -100,19 +100,15 @@ const Adapters = <T extends DialModel | DialInterceptor>({
         {isModal ? (
           <div className="flex flex-col w-full">
             <DropdownField
-              items={[
-                { id: BasicI18nKey.None, name: t(BasicI18nKey.None) },
-                ...(adapters.length
-                  ? adapters.map((adapter) => {
-                      return { id: adapter.name as string, name: adapter.displayName || adapter.name || '' };
-                    })
-                  : []),
-              ]}
+              items={adapters.map((adapter) => ({
+                id: adapter.name as string,
+                name: adapter.displayName || adapter.name || '',
+              }))}
               onChange={onSelect}
               elementId={'source-type'}
-              selectedValue={
-                adapters.find((adapter) => adapter.name === entity.source?.adapterName)?.name || BasicI18nKey.None
-              }
+              selectedValue={adapters.find((adapter) => adapter.name === entity.source?.adapterName)?.name}
+              placeholder={t(CreateI18nKey.SelectAdapter)}
+              fieldTitle={t(EntityFieldsI18nKey.adapter)}
             />
           </div>
         ) : (
