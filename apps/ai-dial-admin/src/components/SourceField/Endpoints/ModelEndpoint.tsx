@@ -102,7 +102,7 @@ const ModelEndpoint: FC<Props> = ({ model, prefix, onChange }) => {
             value={name}
             fullValue={`${prefix}${model.source?.completionEndpointPath}`}
             title={t(EntityFieldsI18nKey.endpoint)}
-            postfixPart={postfix}
+            postfixPart={`/${postfix}`}
             prefixPart={prefix}
             onChange={onChangePath}
           />
@@ -112,7 +112,7 @@ const ModelEndpoint: FC<Props> = ({ model, prefix, onChange }) => {
             value={name}
             fullValue={`${model.endpoint}`}
             title={t(EntityFieldsI18nKey.endpoint)}
-            postfixPart={postfix}
+            postfixPart={`/${postfix}`}
             onChange={onChangeEndpoint}
           />
         )}

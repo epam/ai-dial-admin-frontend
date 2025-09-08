@@ -10,5 +10,5 @@ export const splitEndpoint = (model: DialModel, adapters: DialAdapter[]): [strin
 };
 
 export const getEndpointPostfix = (type?: DialModelType) => {
-  return type === DialModelType.Chat ? '/chat/completions' : '/embeddings';
+  return type === DialModelType.Chat ? 'chat/completions' : 'embeddings';
 };
