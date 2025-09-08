@@ -748,6 +748,7 @@ export default {
     UpstreamEndpoint: 'Enter upstream endpoint',
     UpstreamKey: 'Enter upstream key',
     Value: 'Enter value',
+    Select: 'Select value',
     OverrideName: 'Enter override name',
     Number: 'Enter number',
     AttachmentsTypes: 'Enter attachments types',

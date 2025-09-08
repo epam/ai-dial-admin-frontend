@@ -657,6 +657,7 @@ export enum EntityPlaceholdersI18nKey {
   UpstreamEndpoint = 'EntityPlaceholders.UpstreamEndpoint',
   UpstreamKey = 'EntityPlaceholders.UpstreamKey',
   Value = 'EntityPlaceholders.Value',
+  Select = 'EntityPlaceholders.Select',
   OverrideName = 'EntityPlaceholders.OverrideName',
   Number = 'EntityPlaceholders.Number',
   AttachmentsTypes = 'EntityPlaceholders.AttachmentsTypes',

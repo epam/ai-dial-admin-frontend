@@ -5,6 +5,7 @@ import { Tool } from '@/src/models/dial/toolset';
 export const getFilteredTools = (tools: string[], selectedFilters: ToolFilter[], availableTools: Tool[]) => {
   const filteredTools: string[] = [];
   const availableToolsKeys = availableTools.map((t) => t.name);
+
   if (selectedFilters.includes(ToolFilter.Enabled)) {
     filteredTools.push(...availableToolsKeys.filter((t) => tools.includes(t)));
   }
@@ -21,5 +22,5 @@ export const getFilteredTools = (tools: string[], selectedFilters: ToolFilter[],
     filteredTools.push(...tools.filter((t) => !availableTools.some((a) => a.name === t)));
   }
 
-  return uniq(filteredTools);
+  return uniq([...availableToolsKeys, ...tools]).filter((t) => filteredTools.includes(t));
 };
