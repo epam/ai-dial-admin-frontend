@@ -1,4 +1,4 @@
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 
 import { EntityFieldsI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
@@ -18,10 +18,18 @@ interface Props {
 
 const ModelEndpoint: FC<Props> = ({ model, prefix, onChange }) => {
   const t = useI18n();
-  const postfix = model.type === DialModelType.Chat ? '/chat/completions' : '/embeddings';
+
+  const modelTypeRadio: RadioButtonModel[] = [
+    { id: DialModelType.Chat, name: t(ModelViewI18nKey.Chat) },
+    { id: DialModelType.Embedding, name: t(ModelViewI18nKey.Embedding) },
+  ];
+
+  const [postfix, setPostfix] = useState('');
+  const [name, setName] = useState('');
 
   const onChangePath = useCallback(
     (value: string) => {
+      setName(value);
       onChange({
         ...model,
         source: { ...(model.source as SOURCE_FIELD), completionEndpointPath: `${value}${postfix}` },
@@ -29,8 +37,10 @@ const ModelEndpoint: FC<Props> = ({ model, prefix, onChange }) => {
     },
     [model, onChange, postfix],
   );
+
   const onChangeEndpoint = useCallback(
     (value: string) => {
+      setName(value);
       onChange({
         ...model,
         endpoint: `${value}${postfix}`,
@@ -39,17 +49,38 @@ const ModelEndpoint: FC<Props> = ({ model, prefix, onChange }) => {
     [model, onChange, postfix],
   );
 
-  const modelTypeRadio: RadioButtonModel[] = [
-    { id: DialModelType.Chat, name: t(ModelViewI18nKey.Chat) },
-    { id: DialModelType.Embedding, name: t(ModelViewI18nKey.Embedding) },
-  ];
-
   const onChangeType = useCallback(
     (type: string) => {
-      onChange({ ...model, type: type as DialModelType });
+      const endpoint = `${name}${type === DialModelType.Chat ? '/chat/completions' : '/embeddings'}`;
+      if (prefix) {
+        onChange({
+          ...model,
+          source: {
+            ...(model.source as SOURCE_FIELD),
+            completionEndpointPath: endpoint,
+          },
+          type: type as DialModelType,
+        });
+      } else {
+        onChange({
+          ...model,
+          endpoint,
+          type: type as DialModelType,
+        });
+      }
     },
-    [model, onChange],
+    [name, prefix, onChange, model],
   );
+
+  useEffect(() => {
+    const postfix = model.type === DialModelType.Chat ? '/chat/completions' : '/embeddings';
+    const name = prefix
+      ? model.source?.completionEndpointPath?.split(postfix)[0] || ''
+      : model.endpoint?.split(postfix)[0] || '';
+
+    setPostfix(postfix);
+    setName(name);
+  }, [model, prefix]);
 
   return (
     <div className="w-full flex flex-col gap-6">
@@ -67,7 +98,7 @@ const ModelEndpoint: FC<Props> = ({ model, prefix, onChange }) => {
         {prefix ? (
           <InputWithReadonlyParts
             inputId="endpoint"
-            value={model.source?.completionEndpointPath?.split(postfix)[0]}
+            value={name}
             fullValue={`${prefix}${model.source?.completionEndpointPath}`}
             title={t(EntityFieldsI18nKey.endpoint)}
             postfixPart={postfix}
@@ -77,7 +108,7 @@ const ModelEndpoint: FC<Props> = ({ model, prefix, onChange }) => {
         ) : (
           <InputWithReadonlyParts
             inputId="endpoint"
-            value={model.endpoint?.split(postfix)[0]}
+            value={name}
             fullValue={`${model.endpoint}`}
             title={t(EntityFieldsI18nKey.endpoint)}
             postfixPart={postfix}

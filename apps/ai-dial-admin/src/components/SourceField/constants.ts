@@ -6,10 +6,12 @@ export const INTERCEPTOR_SOURCE_ITEMS: DropdownItemsModel[] = [
   { id: SOURCE_TYPE.CONTAINER, name: 'Interceptor Container' },
   { id: SOURCE_TYPE.RUNNER, name: 'Interceptor Template' },
 ];
+
 export const MODELS_SOURCE_ITEMS: DropdownItemsModel[] = [
-  { id: SOURCE_TYPE.ENDPOINTS, name: 'External Endpoint' },
-  { id: SOURCE_TYPE.CONTAINER, name: 'Model Container' },
+  // NOTE: Keep order
   { id: SOURCE_TYPE.ADAPTER, name: 'Adapter' },
+  { id: SOURCE_TYPE.CONTAINER, name: 'Model Container' },
+  { id: SOURCE_TYPE.ENDPOINTS, name: 'External Endpoint' },
 ];
 
 export const getSourceItems = (items: DropdownItemsModel[], deploymentsEnabled?: boolean) => {

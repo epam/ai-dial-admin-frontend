@@ -113,11 +113,13 @@ const Adapters = <T extends DialModel | DialInterceptor>({ entity, onChange, get
           />
         )}
       </div>
-      <ModelEndpoint
-        model={entity}
-        prefix={selectedAdapter?.baseEndpoint}
-        onChange={onChange as (entity: DialModel) => void}
-      />
+      {entity.source?.adapterName && selectedAdapter && (
+        <ModelEndpoint
+          model={entity}
+          prefix={selectedAdapter?.baseEndpoint}
+          onChange={onChange as (entity: DialModel) => void}
+        />
+      )}
     </div>
   );
 };
