@@ -11,7 +11,7 @@ import Tabs from '@/src/components/Common/Tabs/Tabs';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
-import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JSONEditor';
+import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';

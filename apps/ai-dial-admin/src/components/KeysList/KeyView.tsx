@@ -16,7 +16,7 @@ import ConfirmationModal from '@/src/components/Common/ConfirmationModal/Confirm
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
-import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JSONEditor';
+import EntityJsonEditor from  '@/src/components/EntityView/JsonEditor/JsonEditor';;
 import { auditTabs, EntityViewTab, propertiesTabs, rolesTabs } from '@/src/components/EntityView/View/utils';
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, KeysI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
