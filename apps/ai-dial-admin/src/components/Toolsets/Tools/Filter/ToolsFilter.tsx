@@ -20,7 +20,7 @@ interface Props {
 const ToolsFilter: FC<Props> = ({ isAllSelected, onSelectFilter, selectedFilters, onSelectAll }) => {
   const t = useI18n();
   return (
-    <Dropdown trigger={<SelectedFilter />} listClassName="w-[200px]">
+    <Dropdown trigger={<SelectedFilter selectedFilters={selectedFilters} />} listClassName="w-[200px]">
       <div className="bg-layer-0 rounded flex flex-col w-[200px]">
         <div className="py-2 px-4">
           <Checkbox

@@ -21,7 +21,7 @@ describe('Server :: InterceptorTemplatesApi', () => {
     displayName: 'template name',
     description: 'template description',
     completionEndpoint: 'completionEndpoint',
-    configurationEndpoint: 'configurationEndpoint'
+    configurationEndpoint: 'configurationEndpoint',
   };
 
   beforeEach(() => {
@@ -90,5 +90,4 @@ describe('Server :: InterceptorTemplatesApi', () => {
       expect.objectContaining({ method: 'DELETE' }),
     );
   });
-
 });

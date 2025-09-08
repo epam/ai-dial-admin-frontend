@@ -12,12 +12,7 @@ describe('isEqualSkippingUndefined', () => {
   });
 
   test('returns true for nested objects with undefined fields', () => {
-    expect(
-      isEqualSkippingUndefined(
-        { a: 1, b: { c: 2, d: undefined } },
-        { a: 1, b: { c: 2 } }
-      )
-    ).toBe(true);
+    expect(isEqualSkippingUndefined({ a: 1, b: { c: 2, d: undefined } }, { a: 1, b: { c: 2 } })).toBe(true);
   });
 
   test('returns false for objects with different values', () => {
@@ -36,11 +31,6 @@ describe('isEqualSkippingUndefined', () => {
   });
 
   test('returns true for arrays with undefined elements skipped', () => {
-    expect(
-      isEqualSkippingUndefined(
-        { arr: [1, undefined, 3] },
-        { arr: [1, 3] }
-      )
-    ).toBe(false); // Arrays are compared strictly, so this is false
+    expect(isEqualSkippingUndefined({ arr: [1, undefined, 3] }, { arr: [1, 3] })).toBe(false); // Arrays are compared strictly, so this is false
   });
 });

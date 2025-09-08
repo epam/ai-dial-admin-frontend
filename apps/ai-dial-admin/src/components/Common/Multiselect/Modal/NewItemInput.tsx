@@ -29,13 +29,15 @@ const NewItemInput: FC<Props> = ({
 }) => {
   const getItemContent = () => {
     return (
-      <div className="flex flex-row gap-x-2 items-center">
-        <Input
-          inputId={'item ' + index}
-          value={value}
-          placeholder={placeholder}
-          onChange={(v) => onChangeItem(v, index)}
-        />
+      <div className="flex flex-row gap-x-2 items-center w-full">
+        <div className="flex-1">
+          <Input
+            inputId={'item ' + index}
+            value={value}
+            placeholder={placeholder}
+            onChange={(v) => onChangeItem(v, index)}
+          />
+        </div>
 
         <div
           className={classNames('cursor-pointer', !value ? 'text-secondary' : 'text-error')}

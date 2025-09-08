@@ -15,9 +15,9 @@ describe('Export config :: actions :: getDashboardData', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (getUserToken ).mockResolvedValue(TOKEN_MOCK);
-    (getIsEnableAuthToggle ).mockReturnValue(true);
-    (telemetryApi.getDashboardData ).mockResolvedValue(mockDashboardData);
+    getUserToken.mockResolvedValue(TOKEN_MOCK);
+    getIsEnableAuthToggle.mockReturnValue(true);
+    telemetryApi.getDashboardData.mockResolvedValue(mockDashboardData);
   });
 
   test('should call getUserToken and fetch dashboard data', async () => {
