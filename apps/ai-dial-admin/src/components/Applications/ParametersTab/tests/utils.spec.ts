@@ -77,9 +77,7 @@ describe('getScheme', () => {
 
   test('returns undefined when no matching scheme is found', () => {
     const entity = { customAppSchemaId: 'unknown-id', editorUrl: 'https://unknown.url' };
-    const schemes = [
-      { $id: 'scheme-123', 'dial:applicationTypeEditorUrl': 'https://url1' },
-    ];
+    const schemes = [{ $id: 'scheme-123', 'dial:applicationTypeEditorUrl': 'https://url1' }];
 
     const result = getAppRunner(entity, schemes);
     expect(result).toBeUndefined();

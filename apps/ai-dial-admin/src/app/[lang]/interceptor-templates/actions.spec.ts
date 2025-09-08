@@ -1,7 +1,13 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
-import { getInterceptorTemplatesList, getInterceptorTemplate, createInterceptorTemplate, updateInterceptorTemplate, deleteInterceptorTemplate } from './actions';
+import {
+  getInterceptorTemplatesList,
+  getInterceptorTemplate,
+  createInterceptorTemplate,
+  updateInterceptorTemplate,
+  deleteInterceptorTemplate,
+} from './actions';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();

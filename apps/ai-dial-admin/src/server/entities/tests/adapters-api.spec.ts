@@ -8,7 +8,6 @@ import { AdaptersApi } from '../adapters-api';
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
 
-
 const adapter: DialAdapter = {
   name: 'test-adapter',
   description: 'Test adapter',

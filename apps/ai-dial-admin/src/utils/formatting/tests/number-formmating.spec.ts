@@ -54,7 +54,7 @@ describe('Utils ::formatting :: formatNumberByDelimiter', () => {
     expect(result).toBe('4,444,444.22');
   });
 
-    test('Should return formatted string', () => {
+  test('Should return formatted string', () => {
     const result = formatNumberByDelimiter('rherger');
     expect(result).toBe('');
   });
