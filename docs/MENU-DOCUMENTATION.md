@@ -16,6 +16,9 @@ This documentation describes the structure and contents of the menu items array 
   - **Applications**
     - **Key**: `Applications`
     - **Description**: Navigate to the applications page to manage and view all applications.
+  - **Toolsets**
+    - **Key**: `Toolsets`
+    - **Description**: Navigate to the toolsets page to manage reusable components used in application logic.
   - **Interceptors**
     - **Key**: `Interceptors`
     - **Description**: View and configure interceptors that modify application behavior.
@@ -30,6 +33,9 @@ This documentation describes the structure and contents of the menu items array 
   - **Application Runners**
     - **Key**: `ApplicationRunners`
     - **Description**: Navigate to the page for managing and running applications.
+  - **Interceptor Templates**
+    - **Key**: `InterceptorTemplates`
+    - **Description**: Create and manage templates for interceptors that can be reused across applications.
   - **Adapters**
     - **Key**: `Adapters`
     - **Description**: Navigate to the adapters page to configure integrations and connectors.
