@@ -4,7 +4,7 @@ import { FC } from 'react';
 
 import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMainProperties';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
-import { DialToolset } from '@/src/models/dial/toolset';
+import { Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
 import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
@@ -12,9 +12,9 @@ import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/
 import ToolsetType from './ToolsetType';
 
 interface Props {
-  selectedToolset: DialToolset;
+  selectedToolset: Toolset;
   names: string[];
-  onChangeToolset: (toolset: DialToolset) => void;
+  onChangeToolset: (toolset: Toolset) => void;
 }
 
 const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset }) => {

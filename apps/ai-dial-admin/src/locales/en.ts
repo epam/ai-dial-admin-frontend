@@ -239,6 +239,7 @@ export default {
     Update: 'Update',
     Save: 'Save',
     Move: 'Move',
+    Remove: 'Remove',
     SaveAsNewVersion: 'Save as new version',
     Discard: 'Discard',
     Apply: 'Apply',
@@ -810,5 +811,6 @@ export default {
     Enabled: 'Enabled',
     Disabled: 'Disabled',
     AutoDetected: 'Auto-detected',
+    ToolsWarning: 'Endpoint has been changed. Save changes to display auto-detected tools.',
   },
 } as const;

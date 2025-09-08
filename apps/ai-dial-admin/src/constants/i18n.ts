@@ -192,6 +192,7 @@ export enum ButtonsI18nKey {
   OpenWithoutSave = 'Buttons.OpenWithoutSave',
   LeaveWithoutSave = 'Buttons.LeaveWithoutSave',
   Next = 'Buttons.Next',
+  Remove = 'Buttons.Remove',
   Previous = 'Buttons.Previous',
   Finish = 'Buttons.Finish',
   Publish = 'Buttons.Publish',
@@ -778,4 +779,5 @@ export enum ToolsetI18nKey {
   Enabled = 'Toolset.Enabled',
   Disabled = 'Toolset.Disabled',
   AutoDetected = 'Toolset.AutoDetected',
+  ToolsWarning = 'Toolset.ToolsWarning',
 }

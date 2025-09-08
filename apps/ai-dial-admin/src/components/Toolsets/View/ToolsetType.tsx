@@ -5,15 +5,15 @@ import { FC } from 'react';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
 import { EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialToolset } from '@/src/models/dial/toolset';
+import { Toolset } from '@/src/models/dial/toolset';
 import { RadioButtonModel } from '@/src/models/radio-button';
 import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { ToolsetTransport } from '@/src/types/toolset';
 import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
 
 interface Props {
-  selectedToolset: DialToolset;
-  onChangeToolset: (toolset: DialToolset) => void;
+  selectedToolset: Toolset;
+  onChangeToolset: (toolset: Toolset) => void;
 }
 
 const ToolsetType: FC<Props> = ({ selectedToolset, onChangeToolset }) => {

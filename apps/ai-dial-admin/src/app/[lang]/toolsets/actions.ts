@@ -3,7 +3,7 @@
 import { cookies, headers } from 'next/headers';
 
 import { toolSetsApi } from '@/src/app/api/api';
-import { DialToolset } from '@/src/models/dial/toolset';
+import { Toolset } from '@/src/models/dial/toolset';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { ToolsetTransport } from '@/src/types/toolset';
@@ -18,12 +18,12 @@ export async function getTools(name: string) {
   return toolSetsApi.getTools(name, token);
 }
 
-export async function updateToolset(toolSet: DialToolset) {
+export async function updateToolset(toolSet: Toolset) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return toolSetsApi.updateToolset(toolSet, token);
 }
 
-export async function createToolset(toolSet: DialToolset) {
+export async function createToolset(toolSet: Toolset) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return toolSetsApi.createToolset(
     { ...toolSet, allowedTools: toolSet.allowedTools?.filter((tool) => tool !== ''), transport: ToolsetTransport.SSE },
