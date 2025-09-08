@@ -7,6 +7,7 @@ import { NumberInputField, TextInputField } from '@/src/components/Common/InputF
 import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationSchemeControl } from './models';
+import { ControlType } from './types';
 
 interface Props {
   control: DialApplicationSchemeControl;
@@ -17,7 +18,7 @@ const SimpleTypeControls: FC<Props> = ({ control }) => {
 
   return (
     <>
-      {control.type === 'string' && (
+      {control.type === ControlType.string && (
         <div className="w-[35%]">
           <TextInputField
             elementId={control.id}
@@ -28,7 +29,7 @@ const SimpleTypeControls: FC<Props> = ({ control }) => {
           />
         </div>
       )}
-      {control.type === 'number' && (
+      {control.type === ControlType.number && (
         <div className="w-[120px]">
           <NumberInputField
             elementId={control.id}
@@ -39,7 +40,7 @@ const SimpleTypeControls: FC<Props> = ({ control }) => {
           />
         </div>
       )}
-      {control.type === 'boolean' && (
+      {control.type === ControlType.boolean && (
         <div className="w-[35%]">
           <DropdownField
             elementId={control.id}

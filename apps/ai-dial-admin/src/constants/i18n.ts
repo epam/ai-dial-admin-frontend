@@ -108,7 +108,6 @@ export enum EntitiesI18nKey {
   Source = 'Entities.Source',
   Endpoints = 'Entities.Endpoints',
   AppRunner = 'Entities.AppRunner',
-  Schema = 'Entities.Schema',
   ExternalEndpoint = 'Entities.ExternalEndpoint',
   InterceptorContainer = 'Entities.InterceptorContainer',
   InterceptorTemplate = 'Entities.InterceptorTemplate',

@@ -147,7 +147,6 @@ export default {
     InterceptorContainer: 'Interceptor Container',
     InterceptorTemplate: 'Interceptor Template',
     Author: 'Author',
-    Schema: 'Schema',
 
     // modals
     SaveChangesTitle: 'Save Changes',

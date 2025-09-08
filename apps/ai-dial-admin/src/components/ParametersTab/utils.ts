@@ -4,6 +4,7 @@ import {
   DialApplicationSchemePropertyType,
 } from '@/src/models/dial/application';
 import { DialApplicationSchemeControl, SchemeTypeDefinition } from './models';
+import { ControlType } from './types';
 
 export const generateControlsFromScheme = (scheme: DialApplicationScheme): DialApplicationSchemeControl[] => {
   const controls: DialApplicationSchemeControl[] = [];
@@ -15,7 +16,7 @@ export const generateControlsFromScheme = (scheme: DialApplicationScheme): DialA
     const value = properties[key];
 
     const type = value.type || getType(value);
-    if (type === 'array') {
+    if (type === ControlType.array) {
       control.itemsTypes = getItemsTypes(value);
     }
     if (type === void 0) {
@@ -37,7 +38,7 @@ export const generateControlsFromScheme = (scheme: DialApplicationScheme): DialA
 export const getType = (property: DialApplicationSchemeProperty): string | undefined => {
   if (property.items || property.oneOf?.length) return undefined;
 
-  const types = extractTypes(property.anyOf ?? []).filter((t) => t !== 'null');
+  const types = extractTypes(property.anyOf ?? []).filter((t) => t !== ControlType.null);
 
   return types.length === 1 ? types[0] : undefined;
 };
@@ -48,10 +49,10 @@ export const getTypes = (property: DialApplicationSchemeProperty): SchemeTypeDef
   const generateTypeObjects = (typesArray: DialApplicationSchemePropertyType[] | undefined, isMultiple: boolean) => {
     typesArray?.forEach((p) => {
       if (p.type || p.$ref) {
-        const type = p.type === 'array' ? p.items?.type || p.items?.$ref : p.type || p.$ref;
+        const type = p.type === ControlType.array ? p.items?.type || p.items?.$ref : p.type || p.$ref;
         types.push({
           type,
-          isArray: p.type === 'array',
+          isArray: p.type === ControlType.array,
           isMultiple,
         });
       }
@@ -88,4 +89,4 @@ export const extractTypes = (typeArray: DialApplicationSchemePropertyType[]) =>
   typeArray.map((p) => p.type || p.$ref || '').filter(Boolean);
 
 export const getIsNullable = (property: DialApplicationSchemeProperty): boolean =>
-  property.anyOf?.some((p) => p.type === 'null') ?? false;
+  property.anyOf?.some((p) => p.type === ControlType.null) ?? false;
