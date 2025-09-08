@@ -12,7 +12,11 @@ export const convertDefaultsToArray = (defaults: Record<string, DefaultsValue>) 
   const array = Object.entries(defaults || {}).map(([key, value]) => ({
     key,
     value,
+    type: typeof value,
   }));
+  if (array.length === 0) {
+    array.push({ key: '', value: '', type: 'string' });
+  }
   return array;
 };
 
@@ -23,16 +27,17 @@ export const convertDefaultsToArray = (defaults: Record<string, DefaultsValue>) 
  * @returns {Record<string, DefaultsValue>} - record with string keys and values that can be string | number | boolean
  */
 export const convertDefaultsToRecord = (
-  defaults: { key: string; value: DefaultsValue }[],
+  defaults: { key: string; value: DefaultsValue; type: string }[],
 ): Record<string, DefaultsValue> => {
   const record: Record<string, string | number | boolean> = {};
 
-  for (const { key, value } of defaults) {
-    if (key) {
+  for (const { key, value, type } of defaults) {
+    const correctValue =
+      type === 'number' ? (value != null && value !== '' ? Number(value) : undefined) : String(value);
+    if (key && (typeof correctValue === 'number' ? !isNaN(correctValue) : correctValue)) {
       record[key] = value;
     }
   }
-
   return record;
 };
 
@@ -57,15 +62,8 @@ export const getDefaultValueType = (value?: DefaultsValue): keyof typeof Default
  * @param {DefaultItemType} type - type (string | number | boolean )
  * @returns {DefaultsValue} - correct type value
  */
-export const getDefaultValueByType = (type: DefaultItemType): DefaultsValue => {
-  switch (type) {
-    case DefaultItemType.boolean:
-      return false;
-    case DefaultItemType.number:
-      return 0;
-    default:
-      return '';
-  }
+export const getDefaultValueByType = (type: DefaultItemType): DefaultsValue | undefined => {
+  return type === DefaultItemType.boolean ? false : '';
 };
 
 /**
@@ -75,13 +73,13 @@ export const getDefaultValueByType = (type: DefaultItemType): DefaultsValue => {
  * @param {?DefaultItemType} [type] - type (string | number | boolean )
  * @returns {DefaultsValue} - correct type value
  */
-export const getValueByType = (value?: DefaultsValue, type?: DefaultItemType): DefaultsValue => {
+export const getValueByType = (value?: DefaultsValue, type?: string): DefaultsValue => {
   switch (type) {
     case DefaultItemType.boolean:
-      return value !== BooleanType.false;
+      return value === BooleanType.true;
     case DefaultItemType.number:
-      return Number(value);
+      return value === '' ? '' : Number(value);
     default:
-      return String(value);
+      return value || '';
   }
 };

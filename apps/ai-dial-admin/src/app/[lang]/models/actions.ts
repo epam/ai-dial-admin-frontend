@@ -40,7 +40,7 @@ export async function updateModel(model: DialModel) {
     ...model,
     defaults: convertDefaultsToRecord(model.defaultsTemp || []),
   };
-  delete model.defaultsTemp;
+  delete newModel.defaultsTemp;
   return modelsApi.updateModel(newModel, token);
 }
 

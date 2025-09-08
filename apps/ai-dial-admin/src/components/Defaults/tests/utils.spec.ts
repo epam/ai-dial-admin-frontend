@@ -13,7 +13,7 @@ import { BooleanType } from '@/src/types/boolean';
 describe('Defaults :: utils :: convertDefaultsToArray', () => {
   test('should convert an empty object to an array with one empty item', () => {
     const result = convertDefaultsToArray({});
-    expect(result).toEqual([]);
+    expect(result).toEqual([{ key: '', value: '', type: 'string' }]);
   });
 
   test('should convert a record with string values to an array', () => {
@@ -24,8 +24,8 @@ describe('Defaults :: utils :: convertDefaultsToArray', () => {
 
     const result = convertDefaultsToArray(defaults);
     expect(result).toEqual([
-      { key: 'name', value: 'Alice' },
-      { key: 'email', value: 'alice@example.com' },
+      { key: 'name', value: 'Alice', type: 'string' },
+      { key: 'email', value: 'alice@example.com', type: 'string' },
     ]);
   });
 
@@ -37,8 +37,8 @@ describe('Defaults :: utils :: convertDefaultsToArray', () => {
 
     const result = convertDefaultsToArray(defaults);
     expect(result).toEqual([
-      { key: 'age', value: 30 },
-      { key: 'salary', value: 50000 },
+      { key: 'age', value: 30, type: 'number' },
+      { key: 'salary', value: 50000, type: 'number' },
     ]);
   });
 
@@ -50,8 +50,8 @@ describe('Defaults :: utils :: convertDefaultsToArray', () => {
 
     const result = convertDefaultsToArray(defaults);
     expect(result).toEqual([
-      { key: 'isActive', value: true },
-      { key: 'isVerified', value: false },
+      { key: 'isActive', value: true, type: 'boolean' },
+      { key: 'isVerified', value: false, type: 'boolean' },
     ]);
   });
 
@@ -64,9 +64,9 @@ describe('Defaults :: utils :: convertDefaultsToArray', () => {
 
     const result = convertDefaultsToArray(defaults);
     expect(result).toEqual([
-      { key: 'username', value: 'john_doe' },
-      { key: 'age', value: 25 },
-      { key: 'isAdmin', value: true },
+      { key: 'username', value: 'john_doe', type: 'string' },
+      { key: 'age', value: 25, type: 'number' },
+      { key: 'isAdmin', value: true, type: 'boolean' },
     ]);
   });
 });
@@ -187,14 +187,14 @@ describe('Defaults :: utils :: getDefaultValueType', () => {
 });
 
 describe('Defaults :: utils :: getDefaultValueByType', () => {
-  test('should return true when type is boolean', () => {
+  test('should return false when type is boolean', () => {
     const result = getDefaultValueByType(DefaultItemType.boolean);
     expect(result).toBe(false);
   });
 
-  test('should return 0 when type is number', () => {
+  test('should empty string when type is number', () => {
     const result = getDefaultValueByType(DefaultItemType.number);
-    expect(result).toBe(0);
+    expect(result).toBe('');
   });
 
   test('should return an empty string when type is string', () => {
@@ -216,12 +216,12 @@ describe('Defaults :: utils :: getValueByType', () => {
 
   test('should return true for any truthy value when type is boolean', () => {
     const result = getValueByType(1, DefaultItemType.boolean);
-    expect(result).toBe(true);
+    expect(result).toBe(false);
   });
 
-  test('should return 0 when value is falsy and type is number', () => {
+  test('should return empty string when value is falsy and type is number', () => {
     const result = getValueByType('', DefaultItemType.number);
-    expect(result).toBe(0);
+    expect(result).toBe('');
   });
 
   test('should return correct number for number type', () => {
@@ -236,21 +236,21 @@ describe('Defaults :: utils :: getValueByType', () => {
 
   test('should return empty string for value undefined when type is string', () => {
     const result = getValueByType(undefined, DefaultItemType.string);
-    expect(result).toBe('undefined');
+    expect(result).toBe('');
   });
 
-  test('should return string value when type is string', () => {
+  test('should return value when type is string', () => {
     const result = getValueByType(42, DefaultItemType.string);
-    expect(result).toBe('42');
+    expect(result).toBe(42);
   });
 
   test('should return string value for null or undefined if no type is passed', () => {
     const result = getValueByType(undefined);
-    expect(result).toBe('undefined');
+    expect(result).toBe('');
   });
 
-  test('should return string value for any non-matching type', () => {
+  test('should return value for any non-matching type', () => {
     const result = getValueByType(true, 'invalid-type' as DefaultItemType);
-    expect(result).toBe('true');
+    expect(result).toBe(true);
   });
 });
