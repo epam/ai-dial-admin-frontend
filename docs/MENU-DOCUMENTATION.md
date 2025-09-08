@@ -3,9 +3,11 @@
 This documentation describes the structure and contents of the menu items array used in the application. Each entry corresponds to a menu section with various properties, including its title, description, icon, and links to different routes.
 
 ---
+
 ## Menu Sections
 
 ### 1. **Entities**
+
 - **Description**: A section that manages entities like models, applications, and routes.
 - **Items**:
   - **Models**
@@ -25,6 +27,7 @@ This documentation describes the structure and contents of the menu items array 
     - **Description**: Navigate to the routes page to manage the routes in the system.
 
 ### 2. **Builders**
+
 - **Description**: A section that provides access to tools for building applications.
 - **Items**:
   - **Application Runners**
@@ -38,6 +41,7 @@ This documentation describes the structure and contents of the menu items array 
     - **Description**: Navigate to the adapters page to configure integrations and connectors.
 
 ### 3. **Assets**
+
 - **Description**: A section for managing assets like prompts and files.
 - **Items**:
   - **Prompts**
@@ -48,6 +52,7 @@ This documentation describes the structure and contents of the menu items array 
     - **Description**: Navigate to the files page for uploading and managing system files.
 
 ### 4. **Access Management**
+
 - **Description**: A section for managing roles, keys, and folder storage.
 - **Items**:
   - **Roles**
@@ -61,6 +66,7 @@ This documentation describes the structure and contents of the menu items array 
     - **Description**: Manage folder storage and organization for different assets and files.
 
 ### 5. **Approvals**
+
 - **Description**: A section for managing prompt and file approvals.
 - **Items**:
   - **Application Publications**
@@ -74,6 +80,7 @@ This documentation describes the structure and contents of the menu items array 
     - **Description**: Navigate to the file publications page to review and approve files before they are shared.
 
 ### 6. **Audit**
+
 - **Description**: A section for accessing telemetry data, logs and audit.
 - **Items**:
   - **Dashboard**
