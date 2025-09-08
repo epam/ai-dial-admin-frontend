@@ -15,7 +15,7 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { Tool, Toolset } from '@/src/models/dial/toolset';
 import { PopUpState } from '@/src/types/pop-up';
-import { isEqual } from 'lodash';
+import { isEqual, uniq } from 'lodash';
 import AddToolsModal from './AddToolsModal';
 import ToolsFilter from './Filter/ToolsFilter';
 import ToolItem from './ToolItem';
@@ -48,6 +48,11 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
   const isNotSavedToolset = useMemo(() => {
     return originalToolset.endpoint !== selectedToolset.endpoint;
   }, [originalToolset, selectedToolset]);
+
+  const toolsCount = useMemo(() => {
+    return uniq([...availableTools.map((t) => t.name), ...(selectedToolset.allowedTools || []).filter((t) => t !== '')])
+      .length;
+  }, [selectedToolset.allowedTools, availableTools]);
 
   const filteredTools = useMemo(() => {
     const patternLower = pattern.toLowerCase();
@@ -144,7 +149,7 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
           <div className="flex flex-row items-center mb-3">
             <h1 className="mr-4">
               {t(ToolsetI18nKey.Tools)}
-              {`: ${selectedToolset.allowedTools?.length ?? availableTools.length}`}
+              {`: ${toolsCount}`}
             </h1>
 
             <Switch

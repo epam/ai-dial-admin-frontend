@@ -39,6 +39,10 @@ export const MENU_CONFIGURATION = (iconSize: number): MenuGroupConfiguration[] =
         href: ApplicationRoute.Applications,
       },
       {
+        key: MenuI18nKey.Toolsets,
+        href: ApplicationRoute.Toolsets,
+      },
+      {
         key: MenuI18nKey.Interceptors,
         href: ApplicationRoute.Interceptors,
       },
