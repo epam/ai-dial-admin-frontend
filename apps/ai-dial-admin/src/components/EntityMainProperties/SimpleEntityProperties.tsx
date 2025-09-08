@@ -15,7 +15,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { getPromptVersionError } from '@/src/utils/validation/version-error';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import EndpointControl from './BaseProperties/Endpoint/Endpoint';
-import { Toolset } from '../../models/dial/toolset';
+import { Toolset } from '@/src/models/dial/toolset';
 
 interface Props {
   view?: ApplicationRoute;
