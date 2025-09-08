@@ -144,7 +144,7 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
           <div className="flex flex-row items-center mb-3">
             <h1 className="mr-4">
               {t(ToolsetI18nKey.Tools)}
-              {`: ${selectedToolset.allowedTools?.length ? selectedToolset.allowedTools?.length : availableTools.length}`}
+              {`: ${selectedToolset.allowedTools?.length ?? availableTools.length}`}
             </h1>
 
             <Switch

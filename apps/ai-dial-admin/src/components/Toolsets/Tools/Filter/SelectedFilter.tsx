@@ -4,7 +4,7 @@ import { FC, useMemo } from 'react';
 
 import { useI18n } from '@/src/locales/client';
 import { ToolsetI18nKey } from '@/src/constants/i18n';
-import { ToolFilter } from '../type';
+import { ToolFilter } from '@/src/components/Toolsets/Tools/type';
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 
 interface Props {

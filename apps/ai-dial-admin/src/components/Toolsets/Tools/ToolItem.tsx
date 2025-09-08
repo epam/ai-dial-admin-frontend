@@ -4,9 +4,9 @@ import { FC } from 'react';
 import { useI18n } from '@/src/locales/client';
 import { ButtonsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import Switch from '@/src/components/Common/Switch/Switch';
-import Button from '../../Common/Button/Button';
+import Button from '@/src/components/Common/Button/Button';
 import { IconTrash } from '@tabler/icons-react';
-import { BASE_ICON_PROPS } from '../../../constants/main-layout';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
 interface Props {
   tool: string;
