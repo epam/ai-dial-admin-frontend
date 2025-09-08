@@ -76,8 +76,8 @@ const ModelEndpoint: FC<Props> = ({ model, prefix, onChange }) => {
   useEffect(() => {
     const postfix = getEndpointPostfix(model.type);
     const name = prefix
-      ? model.source?.completionEndpointPath?.split(postfix)[0] || ''
-      : model.endpoint?.split(postfix)[0] || '';
+      ? model.source?.completionEndpointPath?.split(`/${postfix}`)[0] || ''
+      : model.endpoint?.split(`/${postfix}`)[0] || '';
 
     setPostfix(postfix);
     setName(name);
