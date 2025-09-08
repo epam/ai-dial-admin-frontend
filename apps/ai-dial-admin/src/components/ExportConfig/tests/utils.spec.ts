@@ -1,6 +1,6 @@
 import { EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { ExportFormat, ExportType } from '@/src/types/export';
-import { getComponents, getComponentTypes, isEntityWithDependency } from '../ExportConfig.utils';
+import { getComponents, getComponentTypes, isEntityWithDependency } from '../utils';
 import { EntityType } from '@/src/types/entity-type';
 import { describe, expect, test } from 'vitest';
 
@@ -31,12 +31,11 @@ describe('Export Config Utils :: getComponentTypes', () => {
       EntityType.APPLICATION,
       EntityType.MODEL,
       EntityType.ROUTE,
+      EntityType.TOOLSET,
       EntityType.ROLE,
       EntityType.KEY,
       EntityType.APPLICATION_TYPE_SCHEMA,
       EntityType.INTERCEPTOR,
-      // EntityType.PROMPT,
-      // EntityType.FILE,
     ]);
   });
 
@@ -60,13 +59,12 @@ describe('Export Config Utils :: getComponentTypes', () => {
       EntityType.APPLICATION,
       EntityType.MODEL,
       EntityType.ROUTE,
+      EntityType.TOOLSET,
       EntityType.ROLE,
       EntityType.KEY,
       EntityType.APPLICATION_TYPE_SCHEMA,
       EntityType.INTERCEPTOR,
       EntityType.ADAPTER,
-      // EntityType.PROMPT,
-      // EntityType.FILE,
     ]);
   });
 
@@ -114,6 +112,7 @@ describe('Export Config Utils :: getComponents', () => {
         { name: 'Model', type: MenuI18nKey.Models, dependencies: [EntityType.ROLE] },
         { name: 'Application', type: MenuI18nKey.Applications, dependencies: [EntityType.ROLE] },
         { name: 'Route', type: MenuI18nKey.Routes, dependencies: [EntityType.ROLE] },
+        { name: 'Toolsets', type: MenuI18nKey.Toolsets, dependencies: [EntityType.ROLE] },
       ],
       [EntityType.ROLE]: [{ name: 'role', type: MenuI18nKey.Roles }],
     });
@@ -122,6 +121,7 @@ describe('Export Config Utils :: getComponents', () => {
       { name: 'Model', type: EntityType.MODEL, dependencies: [EntityType.ROLE] },
       { name: 'Application', type: EntityType.APPLICATION, dependencies: [EntityType.ROLE] },
       { name: 'Route', type: EntityType.ROUTE, dependencies: [EntityType.ROLE] },
+      { name: 'Toolsets', type: EntityType.TOOLSET, dependencies: [EntityType.ROLE] },
       { name: 'role', type: EntityType.ROLE, dependencies: [] },
     ]);
   });
@@ -135,7 +135,7 @@ describe('Export Config Utils :: getComponents', () => {
       {
         name: 'Model',
         type: EntityType.MODEL,
-        dependencies: [EntityType.APPLICATION, EntityType.MODEL, EntityType.ROUTE],
+        dependencies: [EntityType.APPLICATION, EntityType.MODEL, EntityType.ROUTE, EntityType.TOOLSET],
       },
     ]);
   });

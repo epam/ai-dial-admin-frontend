@@ -40,6 +40,10 @@ export const getEmptyDataTitleI18nKey = (type?: EntityType): string => {
     return EntitiesI18nKey.NoApplications;
   }
 
+  if (type === EntityType.TOOLSET) {
+    return EntitiesI18nKey.NoToolsets;
+  }
+
   if (type === EntityType.ROUTE) {
     return EntitiesI18nKey.NoRoutes;
   }

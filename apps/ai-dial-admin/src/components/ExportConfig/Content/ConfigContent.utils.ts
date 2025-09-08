@@ -1,4 +1,4 @@
-import { fulDependenciesConfig } from '@/src/components/ExportConfig/ExportConfig.utils';
+import { fulDependenciesConfig } from '@/src/components/ExportConfig/utils';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';

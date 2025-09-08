@@ -98,6 +98,8 @@ export const getPreviewTabs = (
       if (key === 'routes') {
         allEntities.push(...getRoutesForEntitiesGrid(data[key]));
       }
+
+      console.log('key', key);
     }
   });
 

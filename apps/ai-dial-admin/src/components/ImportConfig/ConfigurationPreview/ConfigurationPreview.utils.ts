@@ -136,7 +136,12 @@ export const getComponentColDefs = (type: string, t: (v: string) => string): Col
     return [getComponentActionColumn(), ...APPLICATIONS_COLUMNS(t)];
   }
 
-  if (type === EntityType.ROUTE || type === EntityType.ROLE || type === EntityType.INTERCEPTOR) {
+  if (
+    type === EntityType.ROUTE ||
+    type === EntityType.ROLE ||
+    type === EntityType.INTERCEPTOR ||
+    type === EntityType.TOOLSET
+  ) {
     return [getComponentActionColumn(), ...SIMPLE_ENTITY_COLUMNS];
   }
 

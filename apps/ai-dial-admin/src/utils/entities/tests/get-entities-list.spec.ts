@@ -21,6 +21,7 @@ describe('Utils :: getEntitiesList', () => {
       { id: EntityType.APPLICATION_TYPE_SCHEMA, name: `translated:${MenuI18nKey.ApplicationRunners}` },
       { id: EntityType.INTERCEPTOR, name: `translated:${MenuI18nKey.Interceptors}` },
       { id: EntityType.PROMPT, name: `translated:${MenuI18nKey.Prompts}` },
+      { id: EntityType.TOOLSET, name: `translated:${MenuI18nKey.Toolsets}` },
       { id: EntityType.FILE, name: `translated:${MenuI18nKey.Files}` },
     ]);
   });
@@ -36,5 +37,6 @@ describe('Utils :: getEntitiesList', () => {
     expect(t).toHaveBeenCalledWith(MenuI18nKey.Interceptors);
     expect(t).toHaveBeenCalledWith(MenuI18nKey.Prompts);
     expect(t).toHaveBeenCalledWith(MenuI18nKey.Files);
+    expect(t).toHaveBeenCalledWith(MenuI18nKey.Toolsets);
   });
 });

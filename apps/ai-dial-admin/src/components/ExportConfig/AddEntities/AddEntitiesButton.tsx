@@ -9,7 +9,7 @@ import Button from '@/src/components/Common/Button/Button';
 import Dropdown from '@/src/components/Common/Dropdown/Dropdown';
 import DropdownMenuItem from '@/src/components/Common/Dropdown/DropdownItem';
 import AddEntitiesModal from '@/src/components/ExportConfig/AddEntities/AddEntitiesModal';
-import { getActualColDefs, isEntityWithDependency } from '@/src/components/ExportConfig/ExportConfig.utils';
+import { getActualColDefs, isEntityWithDependency } from '@/src/components/ExportConfig/utils';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -31,6 +31,7 @@ const AddEntitiesButton: FC<Props> = ({ selectedTab, tabData, customExportData, 
     { id: EntityType.MODEL, name: t(MenuI18nKey.Models) },
     { id: EntityType.APPLICATION, name: t(MenuI18nKey.Applications) },
     { id: EntityType.ROUTE, name: t(MenuI18nKey.Routes) },
+    { id: EntityType.TOOLSET, name: t(MenuI18nKey.Toolsets) },
   ];
   const [buttonTitle, setButtonTitle] = useState('');
   const [modalState, setModalState] = useState(PopUpState.Closed);

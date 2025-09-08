@@ -8,6 +8,7 @@ import { DialRole } from '@/src/models/dial/role';
 import { DialRoute } from '@/src/models/dial/route';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ApplicationRoute } from '@/src/types/routes';
+import { Toolset } from '../../models/dial/toolset';
 
 /**
  * Get list of DialModel with type and route for entities view
@@ -30,6 +31,20 @@ export const getApplicationsForEntitiesGrid = (applications?: DialApplication[] 
     ...application,
     type: MenuI18nKey.Applications,
     route: ApplicationRoute.Applications,
+  }));
+};
+
+/**
+ * Get list of Toolset with type and toolsets for entities view
+ *
+ * @param {?(Toolset[] | null)} [toolsets] - DialRoute array
+ * @returns {EntitiesGridData[]} - EntitiesGridData array
+ */
+export const getToolsetsForEntitiesGrid = (toolsets?: Toolset[] | null): EntitiesGridData[] => {
+  return [...(toolsets || [])].map((toolset) => ({
+    ...toolset,
+    type: MenuI18nKey.Toolsets,
+    route: ApplicationRoute.Toolsets,
   }));
 };
 

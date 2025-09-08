@@ -6,11 +6,7 @@ import { exportConfig, exportConfigMap } from '@/src/app/[lang]/export-config/ac
 import Button from '@/src/components/Common/Button/Button';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
 import ConfigContent from '@/src/components/ExportConfig/Content/ConfigContent';
-import {
-  fulDependenciesConfig,
-  getComponents,
-  getComponentTypes,
-} from '@/src/components/ExportConfig/ExportConfig.utils';
+import { fulDependenciesConfig, getComponents, getComponentTypes } from '@/src/components/ExportConfig/utils';
 import PreviewModal from '@/src/components/ExportConfig/Preview/PreviewModal';
 import ExportDependencies from '@/src/components/ExportConfig/Structure/Dependencies';
 import { ButtonsI18nKey, ExportI18nKey, ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';

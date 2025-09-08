@@ -57,6 +57,9 @@ export const getButtonTitle = (t: (v: string) => string, selectedTab?: EntityTyp
   if (selectedTab === EntityType.ADAPTER) {
     entity = t(MenuI18nKey.Adapters);
   }
+  if (selectedTab === EntityType.TOOLSET) {
+    entity = t(MenuI18nKey.Toolsets);
+  }
 
   return full ? `${t(ButtonsI18nKey.Add)} ${entity.toLowerCase()}` : entity;
 };
@@ -80,6 +83,11 @@ export const getAvailableData = (
   if (id === EntityType.ROUTE) {
     entityData = entityData.filter((data) => data.type === MenuI18nKey.Routes);
     existingData = existingData.filter((data) => data.type === MenuI18nKey.Routes);
+  }
+
+  if (id === EntityType.TOOLSET) {
+    entityData = entityData.filter((data) => data.type === MenuI18nKey.Toolsets);
+    existingData = existingData.filter((data) => data.type === MenuI18nKey.Toolsets);
   }
   return getAvailableEntities(existingData, entityData);
 };
