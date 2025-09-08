@@ -165,6 +165,7 @@ const EntityView: FC<Props> = ({
   }, [setSelectedEntity, originalEntity, jsonEditorEnabled]);
 
   const onSave = useCallback(() => {
+    console.log('Saving entity', selectedEntity, etag);
     updateEntity(selectedEntity, etag).then((res) => {
       if (res.success) {
         router.refresh();

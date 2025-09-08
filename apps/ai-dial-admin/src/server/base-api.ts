@@ -137,6 +137,7 @@ export class BaseApi {
 
   private handleResponse(res: Response, type: string): Promise<ServerActionResponse> {
     const etag = res.headers.get('etag') || undefined;
+    console.log('Response etag:', res.headers);
     if (isFailedRequest(res)) {
       this.setLoggerRequestInfoError(res);
 

@@ -31,7 +31,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     models = await modelsApi.getModelsList(token);
     model = await modelsApi.getModel((await params.params).id, token, etag).then((res) => {
       etag = res?.etag || DEFAULT_ETAG;
-
+      console.log('Fetched model with etag:', res?.etag);
       return res?.response as DialModel | null;
     });
     roles = await rolesApi.getRolesList(token);

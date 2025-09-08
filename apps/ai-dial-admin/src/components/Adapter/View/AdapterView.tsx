@@ -9,20 +9,21 @@ import { removeAdapter, updateAdapter } from '@/src/app/[lang]/adapters/actions'
 import AdapterModels from '@/src/components/Adapter/ModelsView/AdapterModels';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
-import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
-import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
-import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
+import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
+import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { TabModel } from '@/src/models/tab';
-import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
+import { JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import AdapterProperties from './AdapterProperties';
-import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   originalAdapter: DialAdapter;
@@ -32,6 +33,7 @@ const AdapterView: FC<Props> = ({ originalAdapter }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
+  const { dispatch } = useSaveValidationContext();
 
   const tabs: TabModel[] = [propertiesTabs(t), { id: EntityViewTab.Models, name: t(TabsI18nKey.Models) }, auditTabs(t)];
 
@@ -39,7 +41,6 @@ const AdapterView: FC<Props> = ({ originalAdapter }) => {
   const [selectedAdapter, setSelectedAdapter] = useState(cloneDeep(originalAdapter));
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
-  const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
 
@@ -65,14 +66,14 @@ const AdapterView: FC<Props> = ({ originalAdapter }) => {
 
   const onDiscard = useCallback(() => {
     if (jsonEditorEnabled) {
-      setJsonErrors([]);
+      dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
     setSelectedAdapter(originalAdapter);
-  }, [setSelectedAdapter, originalAdapter, jsonEditorEnabled]);
+  }, [jsonEditorEnabled, originalAdapter, dispatch]);
 
   const onChangeAdapter = useCallback(
     (entity: DialAdapter) => {
@@ -108,19 +109,17 @@ const AdapterView: FC<Props> = ({ originalAdapter }) => {
           removeEntity={removeAdapter}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          jsonErrors={jsonErrors}
           setErrorNotifications={setErrorNotifications}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
         {jsonEditorEnabled ? (
-          <JSONEditor
+          <EntityJsonEditor
             key={key}
             entity={selectedAdapter}
             errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedAdapter}
             setIsChanged={setIsChanged}
-            setJsonErrors={setJsonErrors}
           />
         ) : (
           <>
