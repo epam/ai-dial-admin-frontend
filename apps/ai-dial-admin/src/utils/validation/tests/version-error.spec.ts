@@ -2,7 +2,6 @@ import { ErrorI18nKey } from '@/src/constants/i18n';
 import { describe, expect, test } from 'vitest';
 import { getPromptVersionError } from '../version-error';
 
-
 describe('getPromptVersionError', () => {
   const t = (key: string) => key;
 

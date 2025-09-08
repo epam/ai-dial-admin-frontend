@@ -29,7 +29,7 @@ describe('Server :: Publications', () => {
     );
   });
 
-    test('Should calls application publications  list', async () => {
+  test('Should calls application publications  list', async () => {
     const mockPublications: Publication[] = [
       { id: '10', title: 'App 1' },
       { id: '20', title: 'App 2' },
