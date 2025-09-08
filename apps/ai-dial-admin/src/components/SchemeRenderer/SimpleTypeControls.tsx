@@ -6,11 +6,11 @@ import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { NumberInputField, TextInputField } from '@/src/components/Common/InputField/InputField';
 import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialApplicationSchemeControl } from './models';
-import { ControlType } from './types';
+import { SchemeParameterControl } from './models';
+import { SchemeParameterType } from './types';
 
 interface Props {
-  control: DialApplicationSchemeControl;
+  control: SchemeParameterControl;
 }
 
 const SimpleTypeControls: FC<Props> = ({ control }) => {
@@ -18,7 +18,7 @@ const SimpleTypeControls: FC<Props> = ({ control }) => {
 
   return (
     <>
-      {control.type === ControlType.string && (
+      {control.type === SchemeParameterType.string && (
         <div className="w-[35%]">
           <TextInputField
             elementId={control.id}
@@ -29,7 +29,7 @@ const SimpleTypeControls: FC<Props> = ({ control }) => {
           />
         </div>
       )}
-      {control.type === ControlType.number && (
+      {control.type === SchemeParameterType.number && (
         <div className="w-[120px]">
           <NumberInputField
             elementId={control.id}
@@ -40,7 +40,7 @@ const SimpleTypeControls: FC<Props> = ({ control }) => {
           />
         </div>
       )}
-      {control.type === ControlType.boolean && (
+      {control.type === SchemeParameterType.boolean && (
         <div className="w-[35%]">
           <DropdownField
             elementId={control.id}

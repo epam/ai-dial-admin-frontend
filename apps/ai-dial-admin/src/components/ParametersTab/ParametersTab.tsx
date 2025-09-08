@@ -2,18 +2,11 @@
 
 import { FC } from 'react';
 
-import { IconPlus } from '@tabler/icons-react';
-
-import Button from '@/src/components/Common/Button/Button';
 import NoData from '@/src/components/Common/NoData/NoData';
-import TagInput from '@/src/components/Common/TagInput/TagInput';
-import { BasicI18nKey, ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import SchemeRenderer from '@/src/components/SchemeRenderer/SchemeRenderer';
+import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import SimpleTypeControls from './SimpleTypeControls';
-import { generateControlsFromScheme } from './utils';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { ControlType } from './types';
 
 interface Props {
   scheme: DialApplicationScheme;
@@ -21,8 +14,6 @@ interface Props {
 
 const ParametersTab: FC<Props> = ({ scheme }) => {
   const t = useI18n();
-  const controls = generateControlsFromScheme(scheme);
-  const simpleControlTypes = [ControlType.string, ControlType.number, ControlType.boolean] as string[];
 
   return (
     <div className="flex flex-col w-full h-full min-h-0 overflow-auto bg-layer-3 p-4">
@@ -32,47 +23,7 @@ const ParametersTab: FC<Props> = ({ scheme }) => {
         <div className="flex flex-col gap-6">
           <h1>{t(EntityFieldsI18nKey.scheme)}</h1>
           <div className="flex flex-col gap-8">
-            {controls.map((control) => {
-              if (control.type && simpleControlTypes.includes(control.type)) {
-                return <SimpleTypeControls key={control.id} control={control} />;
-              }
-
-              if (control.type === ControlType.array && control.itemsTypes?.length === 1) {
-                const type = control.itemsTypes[0];
-                return (
-                  <div key={control.id} className="flex flex-col gap-2">
-                    {simpleControlTypes.includes(type) && (
-                      <SimpleTypeControls key={control.id} control={{ ...control, type }} />
-                    )}
-                    {!simpleControlTypes.includes(type) && <div>{control.id}</div>}
-                    <div>
-                      <Button
-                        disable={true}
-                        cssClass="tertiary"
-                        title={t(ButtonsI18nKey.Add)}
-                        iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-                      />
-                    </div>
-                  </div>
-                );
-              }
-              if (control.types?.length) {
-                if (control.types.every((t) => t.type === ControlType.string)) {
-                  return (
-                    <div key={control.id} className="w-[35%]">
-                      <TagInput
-                        elementId={control.id}
-                        fieldTitle={control.label}
-                        optional={control.optional}
-                        placeholder={t(EntityPlaceholdersI18nKey.Value)}
-                        disabled={true}
-                      />
-                    </div>
-                  );
-                }
-              }
-              return <div key={control.id}>{control.label} </div>;
-            })}
+            <SchemeRenderer scheme={scheme} />
           </div>
         </div>
       )}

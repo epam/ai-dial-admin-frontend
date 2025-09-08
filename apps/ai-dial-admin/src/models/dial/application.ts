@@ -1,5 +1,6 @@
 import { ChatEntity, ModifiedEntity } from './base-entity';
 import { DialRoute } from './route';
+import { DialScheme } from './scheme';
 
 export interface DialApplication extends ChatEntity {
   customAppSchemaId?: string;
@@ -9,7 +10,7 @@ export interface DialApplication extends ChatEntity {
   dependencies?: string[];
 }
 
-export interface DialApplicationScheme extends ModifiedEntity {
+export interface DialApplicationScheme extends ModifiedEntity, DialScheme {
   $schema?: string;
   $id?: string;
   description?: string;
@@ -27,9 +28,6 @@ export interface DialApplicationScheme extends ModifiedEntity {
   'dial:applicationTypeRoutes'?: DialRoute[];
   'dial:applicationTypePlaybackSupport'?: boolean;
   'dial:applicationTypeIconUrl'?: string;
-  properties?: Record<string, DialApplicationSchemeProperty>;
-  $defs?: Record<string, unknown>;
-  required?: string[];
   applications?: string[];
   topics?: string[];
 }
@@ -37,19 +35,4 @@ export interface DialApplicationScheme extends ModifiedEntity {
 export enum TypeEntity {
   OBJECT = 'object',
   BOOLEAN = 'boolean',
-}
-
-export interface DialApplicationSchemeProperty {
-  title: string;
-  type?: string;
-  anyOf?: DialApplicationSchemePropertyType[];
-  oneOf?: DialApplicationSchemePropertyType[];
-  items?: DialApplicationSchemeProperty;
-  $ref?: string;
-}
-
-export interface DialApplicationSchemePropertyType {
-  type?: string;
-  items?: DialApplicationSchemeProperty;
-  $ref?: string;
 }

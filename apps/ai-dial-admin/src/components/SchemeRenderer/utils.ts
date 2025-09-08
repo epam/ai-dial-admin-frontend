@@ -1,22 +1,18 @@
-import {
-  DialApplicationScheme,
-  DialApplicationSchemeProperty,
-  DialApplicationSchemePropertyType,
-} from '@/src/models/dial/application';
-import { DialApplicationSchemeControl, SchemeTypeDefinition } from './models';
-import { ControlType } from './types';
+import { DialScheme, DialSchemeProperty, DialSchemePropertyType } from '@/src/models/dial/scheme';
+import { SchemeParameterControl, SchemeTypeDefinition } from './models';
+import { SchemeParameterType } from './types';
 
-export const generateControlsFromScheme = (scheme: DialApplicationScheme): DialApplicationSchemeControl[] => {
-  const controls: DialApplicationSchemeControl[] = [];
+export const generateControlsFromScheme = (scheme: DialScheme): SchemeParameterControl[] => {
+  const controls: SchemeParameterControl[] = [];
   const requiredProperties = scheme.required || [];
   const properties = scheme.properties;
 
   for (const key in properties) {
-    const control = {} as DialApplicationSchemeControl;
+    const control = {} as SchemeParameterControl;
     const value = properties[key];
 
     const type = value.type || getType(value);
-    if (type === ControlType.array) {
+    if (type === SchemeParameterType.array) {
       control.itemsTypes = getItemsTypes(value);
     }
     if (type === void 0) {
@@ -35,24 +31,24 @@ export const generateControlsFromScheme = (scheme: DialApplicationScheme): DialA
   return controls;
 };
 
-export const getType = (property: DialApplicationSchemeProperty): string | undefined => {
+export const getType = (property: DialSchemeProperty): string | undefined => {
   if (property.items || property.oneOf?.length) return undefined;
 
-  const types = extractTypes(property.anyOf ?? []).filter((t) => t !== ControlType.null);
+  const types = extractTypes(property.anyOf ?? []).filter((t) => t !== SchemeParameterType.null);
 
   return types.length === 1 ? types[0] : undefined;
 };
 
-export const getTypes = (property: DialApplicationSchemeProperty): SchemeTypeDefinition[] => {
+export const getTypes = (property: DialSchemeProperty): SchemeTypeDefinition[] => {
   const types: SchemeTypeDefinition[] = [];
 
-  const generateTypeObjects = (typesArray: DialApplicationSchemePropertyType[] | undefined, isMultiple: boolean) => {
+  const generateTypeObjects = (typesArray: DialSchemePropertyType[] | undefined, isMultiple: boolean) => {
     typesArray?.forEach((p) => {
       if (p.type || p.$ref) {
-        const type = p.type === ControlType.array ? p.items?.type || p.items?.$ref : p.type || p.$ref;
+        const type = p.type === SchemeParameterType.array ? p.items?.type || p.items?.$ref : p.type || p.$ref;
         types.push({
           type,
-          isArray: p.type === ControlType.array,
+          isArray: p.type === SchemeParameterType.array,
           isMultiple,
         });
       }
@@ -65,7 +61,7 @@ export const getTypes = (property: DialApplicationSchemeProperty): SchemeTypeDef
   return types;
 };
 
-export const getItemsTypes = (property: DialApplicationSchemeProperty): string[] => {
+export const getItemsTypes = (property: DialSchemeProperty): string[] => {
   const types: string[] = [];
 
   if (property.items?.anyOf) {
@@ -85,8 +81,8 @@ export const getItemsTypes = (property: DialApplicationSchemeProperty): string[]
   return types;
 };
 
-export const extractTypes = (typeArray: DialApplicationSchemePropertyType[]) =>
+export const extractTypes = (typeArray: DialSchemePropertyType[]) =>
   typeArray.map((p) => p.type || p.$ref || '').filter(Boolean);
 
-export const getIsNullable = (property: DialApplicationSchemeProperty): boolean =>
-  property.anyOf?.some((p) => p.type === ControlType.null) ?? false;
+export const getIsNullable = (property: DialSchemeProperty): boolean =>
+  property.anyOf?.some((p) => p.type === SchemeParameterType.null) ?? false;

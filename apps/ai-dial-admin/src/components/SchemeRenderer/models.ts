@@ -1,4 +1,4 @@
-export interface DialApplicationSchemeControl {
+export interface SchemeParameterControl {
   label: string;
   id: string;
   type?: string;
