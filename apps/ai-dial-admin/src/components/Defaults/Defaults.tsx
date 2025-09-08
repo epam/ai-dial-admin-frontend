@@ -22,6 +22,7 @@ const Defaults: FC<Props> = ({ entity, onChangeEntity }) => {
 
   const [defaultItems, setDefaultItems] = useState<DefaultTemp[]>([]);
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const [count, setCount] = useState(0);
 
   const toggleCollapse = useCallback(() => {
     setIsCollapsed((prev) => !prev);
@@ -58,6 +59,14 @@ const Defaults: FC<Props> = ({ entity, onChangeEntity }) => {
     }
   }, [entity.defaults, entity.defaultsTemp]);
 
+  useEffect(() => {
+    if (defaultItems.length === 1 && !defaultItems[0].key && !defaultItems[0].value) {
+      setCount(0);
+    } else {
+      setCount(defaultItems.length);
+    }
+  }, [defaultItems]);
+
   return (
     <div className="flex flex-col p-4 rounded border border-primary">
       <button className="flex items-center justify-between" onClick={toggleCollapse}>
@@ -66,7 +75,7 @@ const Defaults: FC<Props> = ({ entity, onChangeEntity }) => {
             {isCollapsed ? <IconChevronRight {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
           </i>
           <h3 className="mx-2">
-            {t(EntityFieldsI18nKey.defaults)}: {defaultItems.length}
+            {t(EntityFieldsI18nKey.defaults)}: {count}
           </h3>
         </div>
       </button>

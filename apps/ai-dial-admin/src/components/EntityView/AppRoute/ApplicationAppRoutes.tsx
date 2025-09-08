@@ -14,8 +14,11 @@ interface Props {
 
 const ApplicationAppRoutes: FC<Props> = ({ selectedEntity, applicationRunners, onChangeEntity, ...props }) => {
   const routes = useMemo(() => {
+    if (!selectedEntity.customAppSchemaId) {
+      return selectedEntity.routes || [];
+    }
     const appRunners = getAppRunner(selectedEntity, applicationRunners);
-    return appRunners?.['dial:applicationTypeRoutes'] || selectedEntity.routes || [];
+    return appRunners?.['dial:applicationTypeRoutes'] || [];
   }, [applicationRunners, selectedEntity]);
 
   return (

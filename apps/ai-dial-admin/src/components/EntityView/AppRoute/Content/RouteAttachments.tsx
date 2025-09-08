@@ -42,6 +42,7 @@ const RouteAttachments: FC<Props> = ({ route, readonly, onChangeRoute }) => {
           title={t(RoutesI18nKey.RequestAttachmentPaths)}
           paths={route.attachmentPaths?.requestBody}
           readonly={readonly}
+          optional={true}
           onChangePaths={onChangeRequest}
         />
       </div>
@@ -49,6 +50,7 @@ const RouteAttachments: FC<Props> = ({ route, readonly, onChangeRoute }) => {
         <Paths
           title={t(RoutesI18nKey.ResponseAttachmentPaths)}
           readonly={readonly}
+          optional={true}
           paths={route.attachmentPaths?.responseBody}
           onChangePaths={onChangeResponse}
         />

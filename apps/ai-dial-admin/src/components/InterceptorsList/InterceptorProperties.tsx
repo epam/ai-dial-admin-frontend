@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import Defaults from '@/src/components/Defaults/Defaults';
+// import Defaults from '@/src/components/Defaults/Defaults';
 import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -56,7 +56,7 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
           fieldTitle={t(EntitiesI18nKey.SourceType)}
           sourceItems={getSourceItems(INTERCEPTOR_SOURCE_ITEMS, deploymentsEnabled)}
         />
-        <Defaults entity={selectedInterceptor} onChangeEntity={onChangeInterceptor} />
+        {/* <Defaults entity={selectedInterceptor} onChangeEntity={onChangeInterceptor} /> */}
       </div>
     </div>
   );

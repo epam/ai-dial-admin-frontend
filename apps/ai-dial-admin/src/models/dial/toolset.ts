@@ -1,7 +1,7 @@
 import { ToolsetTransport } from '@/src/types/toolset';
 import { BaseEntity, EntityRoleLimits } from '@/src/models/dial/base-entity';
 
-export interface DialToolset extends BaseEntity, EntityRoleLimits {
+export interface Toolset extends BaseEntity, EntityRoleLimits {
   transport?: ToolsetTransport;
   allowedTools?: string[];
   descriptionKeywords?: string[];
@@ -9,4 +9,9 @@ export interface DialToolset extends BaseEntity, EntityRoleLimits {
   author?: string;
   endpoint?: string | null;
   maxRetryAttempts?: number;
+}
+
+export interface Tool {
+  name: string;
+  description: string;
 }

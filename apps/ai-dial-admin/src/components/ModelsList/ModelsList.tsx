@@ -8,18 +8,14 @@ import { ApplicationRoute } from '@/src/types/routes';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { useI18n } from '@/src/locales/client';
 import { MODELS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { filterDisplayNames } from '@/src/utils/entities/filter-names';
 
 interface Props {
   data: DialModel[];
 }
 
 const ModelsList: FC<Props> = ({ data }) => {
-  const names = data?.reduce((acc, curr) => {
-    if (curr.displayName != null) {
-      acc.push(curr.displayName);
-    }
-    return acc;
-  }, [] as string[]) as string[];
+  const names = filterDisplayNames(data);
 
   const t = useI18n() as (str: string) => string;
 
