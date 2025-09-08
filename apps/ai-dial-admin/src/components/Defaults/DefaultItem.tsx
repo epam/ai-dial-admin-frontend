@@ -19,12 +19,13 @@ import { useI18n } from '@/src/locales/client';
 import { DefaultsValue } from '@/src/models/dial/defaults';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { DefaultItemType } from './types';
-import { getDefaultValueByType, getDefaultValueType, getValueByType } from './utils';
+import { getDefaultValueByType, getValueByType } from './utils';
 import { BooleanType } from '@/src/types/boolean';
 
 interface DefaultItem {
   key: string;
   value: DefaultsValue;
+  type: string;
 }
 
 interface Props {
@@ -67,14 +68,14 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
     ],
     [t],
   );
-  const type = useMemo(() => types.find((t) => t.id === getDefaultValueType(item.value)), [item.value, types]);
 
   const onChangeValue = useCallback(
     (v?: string | number | boolean, newType?: string) => {
-      const value = getValueByType(v, (newType || type?.id) as DefaultItemType);
-      changeItem({ ...item, value }, index);
+      const type = newType || item.type;
+      const value = getValueByType(v, type);
+      changeItem({ ...item, value, type }, index);
     },
-    [type?.id, changeItem, item, index],
+    [changeItem, item, index],
   );
 
   const onChangeKey = useCallback(
@@ -86,12 +87,12 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
 
   const onChangeType = useCallback(
     (newType: string) => {
-      if (newType !== type?.id) {
+      if (newType !== item.type) {
         const value = getDefaultValueByType(newType as DefaultItemType);
         onChangeValue(value, newType);
       }
     },
-    [onChangeValue, type],
+    [item.type, onChangeValue],
   );
 
   return (
@@ -107,7 +108,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
           />
         </div>
         <div className={classNames('min-w-[384px]')}>
-          {type?.id === DefaultItemType.string && (
+          {item.type === DefaultItemType.string && (
             <TextInputField
               elementId={'entity-default-value ' + index}
               value={item.value as string}
@@ -116,7 +117,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
               onChange={onChangeValue}
             />
           )}
-          {type?.id === DefaultItemType.number && (
+          {item.type === DefaultItemType.number && (
             <NumberInputField
               elementId={'entity-default-value ' + index}
               value={item.value as string}
@@ -125,7 +126,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
               onChange={onChangeValue}
             />
           )}
-          {type?.id === DefaultItemType.boolean && (
+          {item.type === DefaultItemType.boolean && (
             <DropdownField
               selectedValue={item.value.toString()}
               elementId={'entity-default-value ' + index}
@@ -137,7 +138,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
         </div>
         <div className={classNames('min-w-[136px]')}>
           <DropdownField
-            selectedValue={type?.id}
+            selectedValue={item.type}
             elementId={'entity-default-type ' + index}
             items={types}
             fieldTitle={isFirstLine ? t(EntityFieldsI18nKey.type) : ''}
