@@ -22,6 +22,7 @@ import SelectContainerModal from '@/src/components/SourceField/Containers/Select
 import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
 import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
 import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
+import { isDeploymentsEnabled } from '@/src/utils/plugins';
 
 interface Props<T> {
   entity: T;
@@ -41,7 +42,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
   const t = useI18n() as (key: string) => string;
   const { showNotification } = useNotification();
   const { embeddedApps } = useAppContext();
-  const deploymentsEnabled = embeddedApps?.some((app) => app.name === 'mcp-plugin');
+  const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
   const showNotificationRef = useRef(showNotification);
 
   const [modalState, setModalState] = useState(PopUpState.Closed);

@@ -2,8 +2,7 @@
 
 import { FC, useCallback } from 'react';
 
-import { EntitiesI18nKey } from '@/src/constants/i18n';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
@@ -17,17 +16,17 @@ import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/
 import EntityAttachments from '@/src/components/EntityView/Properties/EntityAttachments';
 import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
 import SourceField from '@/src/components/SourceField/SourceField';
+import { isDeploymentsEnabled } from '@/src/utils/plugins';
 
 interface Props {
   model: DialModel;
   onChangeModel: (model: DialModel) => void;
-  view?: ApplicationRoute;
 }
 
-const ModelTypeProperties: FC<Props> = ({ model, onChangeModel, view }) => {
+const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
   const t = useI18n();
   const { embeddedApps } = useAppContext();
-  const deploymentsEnabled = embeddedApps?.some((app) => app.name === 'mcp-plugin');
+  const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
 
   const onChangeOverrideName = useCallback(
     (overrideName?: string) => {
@@ -39,7 +38,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel, view }) => {
     <div className="w-full flex flex-col gap-6">
       <div className="w-full">
         <SourceField
-          view={view}
+          view={ApplicationRoute.Models}
           entity={model}
           elementId={'sourceType'}
           onChange={onChangeModel}

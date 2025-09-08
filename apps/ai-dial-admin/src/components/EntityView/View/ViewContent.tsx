@@ -52,7 +52,7 @@ const ViewContent: FC<Props> = ({
 }) => {
   const getPropertiesView = useCallback(() => {
     if (view === ApplicationRoute.Models) {
-      return <ModelProperties model={selectedEntity} modelsNames={names} updateModel={onChangeEntity} view={view} />;
+      return <ModelProperties model={selectedEntity} modelsNames={names} updateModel={onChangeEntity} />;
     }
 
     if (view === ApplicationRoute.Routes) {

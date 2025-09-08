@@ -16,6 +16,7 @@ import { useI18n } from '@/src/locales/client';
 import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
 import SourceField from '@/src/components/SourceField/SourceField';
+import { isDeploymentsEnabled } from '@/src/utils/plugins';
 
 interface Props {
   selectedInterceptor: DialInterceptor;
@@ -25,7 +26,7 @@ interface Props {
 const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChangeInterceptor }) => {
   const t = useI18n();
   const { embeddedApps } = useAppContext();
-  const deploymentsEnabled = embeddedApps?.some((app) => app.name === 'mcp-plugin');
+  const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
 
   return (
     <div className="h-full flex flex-col gap-10 divide-y divide-primary w-full">

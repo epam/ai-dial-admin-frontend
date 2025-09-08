@@ -9,6 +9,7 @@ import { useI18n } from '@/src/locales/client';
 
 import RadioField from '@/src/components/Common/RadioField/RadioField';
 import InputWithReadonlyParts from '@/src/components/Common/Input/InputWithReadonlyParts';
+import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
 
 interface Props {
   model: DialModel;
@@ -73,7 +74,7 @@ const ModelEndpoint: FC<Props> = ({ model, prefix, onChange }) => {
   );
 
   useEffect(() => {
-    const postfix = model.type === DialModelType.Chat ? '/chat/completions' : '/embeddings';
+    const postfix = getEndpointPostfix(model.type);
     const name = prefix
       ? model.source?.completionEndpointPath?.split(postfix)[0] || ''
       : model.endpoint?.split(postfix)[0] || '';
