@@ -1,3 +1,4 @@
+import { uniq } from 'lodash';
 import { ToolFilter } from './type';
 import { Tool } from '@/src/models/dial/toolset';
 
@@ -21,5 +22,5 @@ export const getFilteredTools = (tools: string[], selectedFilters: ToolFilter[],
     filteredTools.push(...tools.filter((t) => !availableTools.some((a) => a.name === t)));
   }
 
-  return [...availableToolsKeys, ...tools].filter((t) => filteredTools.includes(t));
+  return uniq([...availableToolsKeys, ...tools]).filter((t) => filteredTools.includes(t));
 };
