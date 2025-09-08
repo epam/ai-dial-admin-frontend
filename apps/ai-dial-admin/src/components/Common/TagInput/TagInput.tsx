@@ -16,6 +16,7 @@ interface Props {
   optional?: boolean;
   errorText?: string;
   invalid?: boolean;
+  disabled?: boolean;
   onChange?: (tags: string[]) => void;
 }
 
@@ -27,6 +28,7 @@ const TagInput: FC<Props> = ({
   placeholder,
   errorText,
   invalid,
+  disabled,
   onChange,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -89,6 +91,7 @@ const TagInput: FC<Props> = ({
             onKeyDown={handleKeyDown}
             className={classNames('outline-none border-none w-full min-w-[100px] flex-1 p-1')}
             placeholder={placeholder}
+            disabled={disabled}
           />
         </div>
       </div>
