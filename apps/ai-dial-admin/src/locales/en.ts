@@ -147,6 +147,7 @@ export default {
     InterceptorContainer: 'Interceptor Container',
     InterceptorTemplate: 'Interceptor Template',
     Author: 'Author',
+    Schema: 'Schema',
 
     // modals
     SaveChangesTitle: 'Save Changes',
@@ -743,6 +744,7 @@ export default {
     UpstreamEndpoint: 'Enter upstream endpoint',
     UpstreamKey: 'Enter upstream key',
     Value: 'Enter value',
+    Select: 'Select value',
     OverrideName: 'Enter override name',
     Number: 'Enter number',
     AttachmentsTypes: 'Enter attachments types',

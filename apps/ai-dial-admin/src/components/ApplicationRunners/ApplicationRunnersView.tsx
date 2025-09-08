@@ -8,7 +8,10 @@ import { cloneDeep } from 'lodash';
 
 import { removeApplicationScheme, updateApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
+import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import EntityHeader from '@/src/components/EntityView/Header/Header';
+import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import {
   appRouteTab,
   auditTabs,
@@ -16,23 +19,20 @@ import {
   parametersTabs,
   propertiesTabs,
 } from '@/src/components/EntityView/View/utils';
-import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
-import EntityHeader from '@/src/components/EntityView/Header/Header';
 import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
+import ParametersTab from '@/src/components/ParametersTab/ParametersTab';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { DialRole } from '@/src/models/dial/role';
 import { TabModel } from '@/src/models/tab';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import AppRunnerApplications from './ConfigurationView/Applications';
-import SchemeParameters from './ConfigurationView/Parameters';
 import SchemeProperties from './ConfigurationView/Properties';
-import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
-import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { DialRole } from '@/src/models/dial/role';
 
 interface Props {
   originalScheme: DialApplicationScheme;
@@ -150,9 +150,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
               </div>
             )}
 
-            {activeTab === EntityViewTab.Parameters && (
-              <SchemeParameters scheme={selectedScheme} onChangeScheme={onChangeScheme} />
-            )}
+            {activeTab === EntityViewTab.Parameters && <ParametersTab scheme={selectedScheme} />}
 
             {activeTab === EntityViewTab.Applications && (
               <AppRunnerApplications appRunner={selectedScheme} onChangeAppRunner={onChangeScheme} />

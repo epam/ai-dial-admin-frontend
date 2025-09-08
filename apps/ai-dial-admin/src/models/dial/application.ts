@@ -27,7 +27,9 @@ export interface DialApplicationScheme extends ModifiedEntity {
   'dial:applicationTypeRoutes'?: DialRoute[];
   'dial:applicationTypePlaybackSupport'?: boolean;
   'dial:applicationTypeIconUrl'?: string;
-  properties?: Record<string, unknown>;
+  properties?: Record<string, DialApplicationSchemeProperty>;
+  $defs?: Record<string, unknown>;
+  required?: string[];
   applications?: string[];
   topics?: string[];
 }
@@ -35,4 +37,19 @@ export interface DialApplicationScheme extends ModifiedEntity {
 export enum TypeEntity {
   OBJECT = 'object',
   BOOLEAN = 'boolean',
+}
+
+export interface DialApplicationSchemeProperty {
+  title: string;
+  type?: string;
+  anyOf?: DialApplicationSchemePropertyType[];
+  oneOf?: DialApplicationSchemePropertyType[];
+  items?: DialApplicationSchemeProperty;
+  $ref?: string;
+}
+
+export interface DialApplicationSchemePropertyType {
+  type?: string;
+  items?: DialApplicationSchemeProperty;
+  $ref?: string;
 }
