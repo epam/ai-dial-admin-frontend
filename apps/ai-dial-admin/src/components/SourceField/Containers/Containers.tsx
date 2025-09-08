@@ -6,11 +6,12 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { DialModel } from '@/src/models/dial/model';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { PopUpState } from '@/src/types/pop-up';
-import { SourceI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { useAppContext } from '@/src/context/AppContext';
+import { isDeploymentsEnabled } from '@/src/utils/plugins';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { IconExternalLink } from '@tabler/icons-react';
@@ -22,7 +23,7 @@ import SelectContainerModal from '@/src/components/SourceField/Containers/Select
 import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
 import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
 import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
-import { isDeploymentsEnabled } from '@/src/utils/plugins';
+import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 
 interface Props<T> {
   entity: T;
@@ -30,6 +31,7 @@ interface Props<T> {
   getContainers: () => Promise<Container[] | null>;
   fieldId?: string;
   view?: ApplicationRoute;
+  isModal?: boolean;
 }
 
 const Containers = <T extends DialInterceptor | DialModel>({
@@ -38,6 +40,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
   getContainers,
   fieldId,
   view,
+  isModal,
 }: Props<T>) => {
   const t = useI18n() as (key: string) => string;
   const { showNotification } = useNotification();
@@ -98,25 +101,45 @@ const Containers = <T extends DialInterceptor | DialModel>({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex lg:flex-row flex-col gap-2 items-end">
-        <div className="flex flex-col lg:w-[35%]">
-          <Field fieldTitle={t(SourceI18nKey.Container)} htmlFor={fieldId} />
-          <InputModal
-            modalState={modalState}
-            onOpenModal={onOpenModal}
-            selectedValue={selectedContainer?.id}
-            elementId={fieldId}
-            readonly={!deploymentsEnabled}
-          >
-            <SelectContainerModal
-              selectedId={entity.source?.containerId}
-              onClose={onCloseModal}
-              onApply={onSelect}
-              interceptorContainers={containers}
-              modalState={modalState}
+        {isModal ? (
+          <div className="flex flex-col w-full">
+            <DropdownField
+              items={[
+                { id: BasicI18nKey.None, name: t(BasicI18nKey.None) },
+                ...(containers.length
+                  ? containers.map((container) => {
+                      return { id: container.id, name: container.name };
+                    })
+                  : []),
+              ]}
+              onChange={onSelect}
+              elementId={'source-type'}
+              selectedValue={
+                containers.find((container) => container.id === entity.source?.containerId)?.name || BasicI18nKey.None
+              }
             />
-          </InputModal>
-        </div>
-        {entity.source?.containerId && deploymentsEnabled && (
+          </div>
+        ) : (
+          <div className="flex flex-col lg:w-[35%]">
+            <Field fieldTitle={t(SourceI18nKey.Container)} htmlFor={fieldId} />
+            <InputModal
+              modalState={modalState}
+              onOpenModal={onOpenModal}
+              selectedValue={selectedContainer?.id}
+              elementId={fieldId}
+              readonly={!deploymentsEnabled}
+            >
+              <SelectContainerModal
+                selectedId={entity.source?.containerId}
+                onClose={onCloseModal}
+                onApply={onSelect}
+                interceptorContainers={containers}
+                modalState={modalState}
+              />
+            </InputModal>
+          </div>
+        )}
+        {entity.source?.containerId && deploymentsEnabled && !isModal && (
           <Button
             iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
             cssClass="secondary"
@@ -125,7 +148,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
           />
         )}
       </div>
-      {entity.source?.containerId && (
+      {entity.source?.containerId && !isModal && (
         <>
           {view === ApplicationRoute.Models ? (
             <div className="flex flex-col gap-6">

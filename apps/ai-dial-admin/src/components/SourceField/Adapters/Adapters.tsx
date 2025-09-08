@@ -7,6 +7,7 @@ import { DialModel } from '@/src/models/dial/model';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { BasicI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { getErrorNotification } from '@/src/utils/notification';
 import { useNotification } from '@/src/context/NotificationContext';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
@@ -20,16 +21,24 @@ import SelectAdapterModal from '@/src/components/SourceField/Adapters/SelectAdap
 import Button from '@/src/components/Common/Button/Button';
 import Field from '@/src/components/Common/Field/Field';
 import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
-import { SourceI18nKey } from '@/src/constants/i18n';
+import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
+import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
 
 interface Props<T> {
   entity: T;
   onChange: (entity: T) => void;
   getAdapters: () => Promise<ServerActionResponse | null>;
   fieldId?: string;
+  isModal?: boolean;
 }
 
-const Adapters = <T extends DialModel | DialInterceptor>({ entity, onChange, getAdapters, fieldId }: Props<T>) => {
+const Adapters = <T extends DialModel | DialInterceptor>({
+  entity,
+  onChange,
+  getAdapters,
+  fieldId,
+  isModal,
+}: Props<T>) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const showNotificationRef = useRef(showNotification);
@@ -51,11 +60,12 @@ const Adapters = <T extends DialModel | DialInterceptor>({ entity, onChange, get
       onChange({
         ...entity,
         endpoint: '',
-        configurationEndpoint: '',
         source: {
           ...entity.source,
           $type: entity.source?.$type || SOURCE_TYPE.ADAPTER,
           adapterName: name,
+          completionEndpointPath:
+            entity.source?.completionEndpointPath || getEndpointPostfix((entity as DialModel).type),
         },
       });
       onCloseModal();
@@ -87,24 +97,44 @@ const Adapters = <T extends DialModel | DialInterceptor>({ entity, onChange, get
   return (
     <div className="flex flex-col gap-6">
       <div className="flex lg:flex-row flex-col gap-2 items-end">
-        <div className="flex flex-col lg:w-[35%]">
-          <Field fieldTitle={t(SourceI18nKey.Adapter)} htmlFor={fieldId} />
-          <InputModal
-            modalState={modalState}
-            onOpenModal={onOpenModal}
-            selectedValue={selectedAdapter?.name}
-            elementId={fieldId}
-          >
-            <SelectAdapterModal
-              selected={entity.source?.adapterName}
-              onClose={onCloseModal}
-              onApply={onSelect}
-              adapters={adapters}
-              modalState={modalState}
+        {isModal ? (
+          <div className="flex flex-col w-full">
+            <DropdownField
+              items={[
+                { id: BasicI18nKey.None, name: t(BasicI18nKey.None) },
+                ...(adapters.length
+                  ? adapters.map((adapter) => {
+                      return { id: adapter.name as string, name: adapter.displayName || adapter.name || '' };
+                    })
+                  : []),
+              ]}
+              onChange={onSelect}
+              elementId={'source-type'}
+              selectedValue={
+                adapters.find((adapter) => adapter.name === entity.source?.adapterName)?.name || BasicI18nKey.None
+              }
             />
-          </InputModal>
-        </div>
-        {entity.source?.adapterName && (
+          </div>
+        ) : (
+          <div className="flex flex-col lg:w-[35%]">
+            <Field fieldTitle={t(SourceI18nKey.Adapter)} htmlFor={fieldId} />
+            <InputModal
+              modalState={modalState}
+              onOpenModal={onOpenModal}
+              selectedValue={selectedAdapter?.name}
+              elementId={fieldId}
+            >
+              <SelectAdapterModal
+                selected={entity.source?.adapterName}
+                onClose={onCloseModal}
+                onApply={onSelect}
+                adapters={adapters}
+                modalState={modalState}
+              />
+            </InputModal>
+          </div>
+        )}
+        {entity.source?.adapterName && !isModal && (
           <Button
             iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
             cssClass="secondary"
@@ -113,7 +143,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({ entity, onChange, get
           />
         )}
       </div>
-      {entity.source?.adapterName && selectedAdapter && (
+      {entity.source?.adapterName && selectedAdapter && !isModal && (
         <ModelEndpoint
           model={entity}
           prefix={selectedAdapter?.baseEndpoint}

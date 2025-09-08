@@ -12,7 +12,7 @@ describe('splitEndpoint', () => {
 
     const [base, postfix] = splitEndpoint(model, adapters);
     expect(base).toBe('https://api.example.com');
-    expect(postfix).toBe('chat/completions');
+    expect(postfix).toBe('/chat/completions');
   });
 
   test('returns correct baseEndpoint and postfix for embedding model', () => {
@@ -24,7 +24,7 @@ describe('splitEndpoint', () => {
 
     const [base, postfix] = splitEndpoint(model, adapters);
     expect(base).toBe('https://api.example.com');
-    expect(postfix).toBe('embeddings');
+    expect(postfix).toBe('/embeddings');
   });
 
   test('returns empty baseEndpoint if no adapter matches', () => {
@@ -36,7 +36,7 @@ describe('splitEndpoint', () => {
 
     const [base, postfix] = splitEndpoint(model, adapters);
     expect(base).toBe('');
-    expect(postfix).toBe('chat/completions');
+    expect(postfix).toBe('/chat/completions');
   });
 
   test('handles missing endpoint gracefully', () => {
@@ -48,6 +48,6 @@ describe('splitEndpoint', () => {
 
     const [base, postfix] = splitEndpoint(model, adapters);
     expect(base).toBe('');
-    expect(postfix).toBe('chat/completions');
+    expect(postfix).toBe('/chat/completions');
   });
 });

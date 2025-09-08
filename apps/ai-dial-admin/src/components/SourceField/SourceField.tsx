@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -17,6 +17,8 @@ import Containers from '@/src/components/SourceField/Containers/Containers';
 import Templates from '@/src/components/SourceField/Template/Templates';
 import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
 import Adapters from '@/src/components/SourceField/Adapters/Adapters';
+import { isValidSourceField } from '@/src/components/SourceField/utils';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props<T> {
   entity: T;
@@ -30,6 +32,7 @@ interface Props<T> {
   optional?: boolean;
   view?: ApplicationRoute;
   adapters?: DialAdapter[];
+  isModal?: boolean;
 }
 
 const SourceField = <T extends DialInterceptor | DialModel>({
@@ -43,12 +46,29 @@ const SourceField = <T extends DialInterceptor | DialModel>({
   optional,
   view,
   sourceItems,
+  isModal,
 }: Props<T>) => {
+  const { dispatch } = useSaveValidationContext();
+
   const [source, setSource] = useState(sourceItems[0].id);
 
+  const onChangeEntity = useCallback(
+    (entity: T) => {
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'source',
+        isValid: isValidSourceField(entity),
+      });
+      onChange(entity);
+    },
+    [dispatch, onChange],
+  );
+
   useEffect(() => {
-    setSource(entity.source?.$type || sourceItems[0].id);
-  }, [entity, sourceItems]);
+    if (entity.source?.$type) {
+      setSource(entity.source.$type);
+    }
+  }, [entity, onChangeEntity, sourceItems]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -59,7 +79,7 @@ const SourceField = <T extends DialInterceptor | DialModel>({
           items={sourceItems}
           onChange={(source) => {
             setSource(source as SOURCE_TYPE);
-            onChange({ ...entity, source: { $type: source as SOURCE_TYPE } });
+            onChangeEntity({ ...entity, source: { $type: source as SOURCE_TYPE } });
           }}
           elementId={elementId}
           selectedValue={source}
@@ -69,26 +89,33 @@ const SourceField = <T extends DialInterceptor | DialModel>({
       {source === SOURCE_TYPE.ENDPOINTS && (
         <>
           {view === ApplicationRoute.Models ? (
-            <ModelEndpoint model={entity} onChange={onChange as (entity: DialModel) => void} />
+            <ModelEndpoint model={entity} onChange={onChangeEntity as (entity: DialModel) => void} isModal={isModal} />
           ) : (
-            <InterceptorEndpoints entity={entity} onChange={onChange as (entity: DialInterceptor) => void} />
+            <InterceptorEndpoints entity={entity} onChange={onChangeEntity as (entity: DialInterceptor) => void} />
           )}
         </>
       )}
       {source === SOURCE_TYPE.CONTAINER && (
         <Containers
           entity={entity}
-          onChange={onChange}
+          onChange={onChangeEntity}
           getContainers={getContainers}
           fieldId={'containers'}
           view={view}
+          isModal={isModal}
         />
       )}
       {source === SOURCE_TYPE.RUNNER && getRunners && (
-        <Templates entity={entity} onChange={onChange} getRunners={getRunners} fieldId={'templates'} />
+        <Templates entity={entity} onChange={onChangeEntity} getRunners={getRunners} fieldId={'templates'} />
       )}
       {source === SOURCE_TYPE.ADAPTER && getAdapters && (
-        <Adapters entity={entity} onChange={onChange} getAdapters={getAdapters} fieldId={'adapters'} />
+        <Adapters
+          entity={entity}
+          onChange={onChangeEntity}
+          getAdapters={getAdapters}
+          fieldId={'adapters'}
+          isModal={isModal}
+        />
       )}
     </div>
   );

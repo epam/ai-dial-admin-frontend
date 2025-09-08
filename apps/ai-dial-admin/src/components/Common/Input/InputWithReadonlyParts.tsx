@@ -18,6 +18,7 @@ interface Props extends InputProps {
   fullValue?: string;
   prefixPart?: string;
   postfixPart?: string;
+  hideCopyButton?: boolean;
 }
 
 const InputWithReadonlyParts: FC<Props> = ({
@@ -28,6 +29,7 @@ const InputWithReadonlyParts: FC<Props> = ({
   cssClass,
   title,
   invalid,
+  hideCopyButton,
   ...props
 }) => {
   const t = useI18n();
@@ -59,12 +61,14 @@ const InputWithReadonlyParts: FC<Props> = ({
           />
           <p className="text-secondary small"> {postfixPart}</p>
         </div>
-        <Button
-          cssClass="secondary ml-2 h-[34px]"
-          iconBefore={<IconCopy />}
-          title={t(ButtonsI18nKey.Copy)}
-          onClick={() => navigator.clipboard.writeText(fullValue || '')}
-        />
+        {!hideCopyButton && (
+          <Button
+            cssClass="secondary ml-2 h-[34px]"
+            iconBefore={<IconCopy />}
+            title={t(ButtonsI18nKey.Copy)}
+            onClick={() => navigator.clipboard.writeText(fullValue || '')}
+          />
+        )}
       </div>
       {invalid && <ErrorText errorText={errorText} />}
     </div>
