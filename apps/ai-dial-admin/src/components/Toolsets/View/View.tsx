@@ -27,10 +27,9 @@ import ToolsetProperties from './Properties';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
-import Popup from '../../Common/Popup/Popup';
-import { PopUpState } from '../../../types/pop-up';
-import ConfirmationModal from '../../Common/ConfirmationModal/ConfirmationModal';
-import { ButtonsI18nKey, RolesI18nKey } from '../../../constants/i18n';
+import { PopUpState } from '@/src/types/pop-up';
+import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
+import { ButtonsI18nKey, RolesI18nKey } from '@/src/constants/i18n';
 import { createPortal } from 'react-dom';
 
 interface Props {
