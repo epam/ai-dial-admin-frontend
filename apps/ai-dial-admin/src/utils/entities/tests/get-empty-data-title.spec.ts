@@ -52,6 +52,12 @@ describe('Export Config Utils :: getEmptyDataTitleI18nKey', () => {
     expect(res).toEqual(EntitiesI18nKey.NoApplications);
   });
 
+  test('Should return key for toolsets', () => {
+    const res = getEmptyDataTitleI18nKey(EntityType.TOOLSET);
+
+    expect(res).toEqual(EntitiesI18nKey.NoToolsets);
+  });
+
   test('Should return key for routes', () => {
     const res = getEmptyDataTitleI18nKey(EntityType.ROUTE);
 

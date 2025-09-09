@@ -13,10 +13,11 @@ beforeEach(() => {
 
 describe('Export Config Utils :: getPreviewTabs', () => {
   test('should return tabs and convertedData correctly with roles, keys, applicationRunners, and models', () => {
-    const mockEntities: any[] = [{ id: 'e1' }, { id: 'e2' }];
+    const mockEntities: any[] = [{ id: 'e1' }, { id: 'e2' }, { id: 'e3' }];
     entitiesUtils.getApplicationsForEntitiesGrid.mockReturnValue([]);
     entitiesUtils.getModelsForEntitiesGrid.mockReturnValue(mockEntities);
     entitiesUtils.getRoutesForEntitiesGrid.mockReturnValue([]);
+    entitiesUtils.getToolsetsForEntitiesGrid.mockReturnValue([]);
 
     const data = {
       roles: [{ id: 'role1' }],
@@ -26,12 +27,13 @@ describe('Export Config Utils :: getPreviewTabs', () => {
       applications: [{ id: 'application1' }],
       prompts: [{ id: 'prompt1' }],
       routes: [{ id: 'route1' }],
+      toolSets: [{ id: 'toolSet1' }],
     };
 
     const { tabs, convertedData } = getPreviewTabs(data, true, ExportFormat.CORE, t);
 
     expect(tabs).toEqual([
-      { id: 'ENTITIES', name: 'translated(Menu.Entities): 2' },
+      { id: 'ENTITIES', name: 'translated(Menu.Entities): 3' },
       { id: 'ROLE', name: 'translated(Menu.Roles): 1' },
       { id: 'KEY', name: 'translated(Menu.Keys): 2' },
       { id: 'APPLICATION_TYPE_SCHEMA', name: 'translated(Menu.ApplicationRunners): 1' },
@@ -49,6 +51,7 @@ describe('Export Config Utils :: getPreviewTabs', () => {
     entitiesUtils.getApplicationsForEntitiesGrid.mockReturnValue([]);
     entitiesUtils.getModelsForEntitiesGrid.mockReturnValue([]);
     entitiesUtils.getRoutesForEntitiesGrid.mockReturnValue([]);
+    entitiesUtils.getToolsetsForEntitiesGrid.mockReturnValue([]);
 
     const data = {
       roles: [],
@@ -98,6 +101,7 @@ describe('Export Config Utils :: getPreviewTabs', () => {
     entitiesUtils.getApplicationsForEntitiesGrid.mockReturnValue(mockEntitiesFromApplications);
     entitiesUtils.getModelsForEntitiesGrid.mockReturnValue([]);
     entitiesUtils.getRoutesForEntitiesGrid.mockReturnValue(mockEntitiesFromRoutes);
+    entitiesUtils.getToolsetsForEntitiesGrid.mockReturnValue([]);
 
     const data = {
       applications: [{ id: 'application1' }],

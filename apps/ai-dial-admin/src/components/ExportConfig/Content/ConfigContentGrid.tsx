@@ -4,8 +4,8 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, 
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
 import NoDataContent from '@/src/components/Common/NoData/NoData';
-import { getDataWithoutItem } from '@/src/components/ExportConfig/Content/ConfigContent.utils';
-import { getActualColDefs } from '@/src/components/ExportConfig/ExportConfig.utils';
+import { getDataWithoutItem } from '@/src/components/ExportConfig/Content/utils';
+import { getActualColDefs } from '@/src/components/ExportConfig/utils';
 import Grid from '@/src/components/Grid/Grid';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';

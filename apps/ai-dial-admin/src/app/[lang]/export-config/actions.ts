@@ -11,6 +11,7 @@ import {
   modelsApi,
   rolesApi,
   routesApi,
+  toolSetsApi,
   utilityApi,
 } from '@/src/app/api/api';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
@@ -26,6 +27,7 @@ import {
   getRolesForEntitiesGrid,
   getRoutesForEntitiesGrid,
   getRunnersForEntitiesGrid,
+  getToolsetsForEntitiesGrid,
 } from '@/src/utils/entities/entities-list-view';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
@@ -48,15 +50,17 @@ export async function previewExportConfig(exportConfig: ExportRequest) {
 export async function getEntities(type: string): Promise<EntitiesGridData[]> {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   if (type === EntityType.ENTITIES) {
-    const [routes, applications, models] = await Promise.all([
+    const [routes, applications, models, toolsets] = await Promise.all([
       routesApi.getRoutesList(token),
       applicationsApi.getApplicationsList(token),
       modelsApi.getModelsList(token),
+      toolSetsApi.getToolsetList(token),
     ]);
     return [
       ...getModelsForEntitiesGrid(models),
       ...getApplicationsForEntitiesGrid(applications),
       ...getRoutesForEntitiesGrid(routes),
+      ...getToolsetsForEntitiesGrid(toolsets),
     ];
   }
   if (type === EntityType.ROLE) {

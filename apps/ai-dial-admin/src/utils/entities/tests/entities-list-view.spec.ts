@@ -10,6 +10,7 @@ import {
   getRolesForEntitiesGrid,
   getRoutesForEntitiesGrid,
   getRunnersForEntitiesGrid,
+  getToolsetsForEntitiesGrid,
 } from '../entities-list-view';
 
 describe('Utils :: getModelsForEntitiesGrid', () => {
@@ -79,6 +80,22 @@ describe('Utils :: getRunnersForEntitiesGrid', () => {
     expect(res1).toEqual([
       { $id: 'runner', type: MenuI18nKey.ApplicationRunners, route: ApplicationRoute.ApplicationRunners },
     ]);
+  });
+});
+
+describe('Utils :: getToolsetsForEntitiesGrid', () => {
+  test('Should return empty array', () => {
+    const res1 = getToolsetsForEntitiesGrid(null);
+    const res2 = getToolsetsForEntitiesGrid();
+
+    expect(res1).toEqual([]);
+    expect(res2).toEqual([]);
+  });
+
+  test('Should return array with type and route', () => {
+    const res1 = getToolsetsForEntitiesGrid([{ name: 'route' }]);
+
+    expect(res1).toEqual([{ name: 'route', type: MenuI18nKey.Toolsets, route: ApplicationRoute.Toolsets }]);
   });
 });
 

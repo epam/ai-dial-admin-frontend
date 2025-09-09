@@ -59,13 +59,15 @@ describe('Export config :: actions :: getEntities', () => {
     api.routesApi.getRoutesList.mockResolvedValue(['route1']);
     api.applicationsApi.getApplicationsList.mockResolvedValue(['app1']);
     api.modelsApi.getModelsList.mockResolvedValue(['model1']);
+    api.toolSetsApi.getToolsetList.mockResolvedValue(['toolset1']);
 
     entityUtils.getRoutesForEntitiesGrid.mockReturnValue([{ id: 'route' }]);
     entityUtils.getApplicationsForEntitiesGrid.mockReturnValue([{ id: 'app' }]);
     entityUtils.getModelsForEntitiesGrid.mockReturnValue([{ id: 'model' }]);
+    entityUtils.getToolsetsForEntitiesGrid.mockReturnValue([{ id: 'toolset' }]);
 
     const result = await getEntities(EntityType.ENTITIES);
-    expect(result).toEqual([{ id: 'model' }, { id: 'app' }, { id: 'route' }]);
+    expect(result).toEqual([{ id: 'model' }, { id: 'app' }, { id: 'route' }, { id: 'toolset' }]);
   });
 
   test('should return ROLE entities', async () => {

@@ -14,6 +14,7 @@ import { createRoute, removeRoute, updateRoute } from '@/src/app/[lang]/routes/a
 import { DialActivity } from '@/src/models/activity-audit';
 import { ActivityAuditEntity, ActivityAuditResourceType, ActivityAuditType } from '@/src/types/activity-audit';
 import { getRevisionRouteForEntityType } from './get-revision-route';
+import { createToolset, removeToolset, updateToolset } from '@/src/app/[lang]/toolsets/actions';
 
 export const rollbackEntityPerRevision = async (
   activity: DialActivity,
@@ -65,6 +66,8 @@ export const getUpdateAction = (type?: ActivityAuditResourceType) => {
       return updateRole;
     case ActivityAuditResourceType.ROUTE:
       return updateRoute;
+    case ActivityAuditResourceType.TOOLSETS:
+      return updateToolset;
     case ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA:
       return updateApplicationScheme;
     default:
@@ -88,6 +91,8 @@ export const getCreateAction = (type?: ActivityAuditResourceType) => {
       return createRole;
     case ActivityAuditResourceType.ROUTE:
       return createRoute;
+    case ActivityAuditResourceType.TOOLSETS:
+      return createToolset;
     case ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA:
       return createApplicationScheme;
     default:
@@ -111,6 +116,8 @@ export const getDeleteAction = (type?: ActivityAuditResourceType) => {
       return removeRole;
     case ActivityAuditResourceType.ROUTE:
       return removeRoute;
+    case ActivityAuditResourceType.TOOLSETS:
+      return removeToolset;
     case ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA:
       return removeApplicationScheme;
     default:

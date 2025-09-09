@@ -8,10 +8,7 @@ import Button from '@/src/components/Common/Button/Button';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Popup from '@/src/components/Common/Popup/Popup';
 import Switch from '@/src/components/Common/Switch/Switch';
-import {
-  getAllAvailableDependencies,
-  getButtonTitle,
-} from '@/src/components/ExportConfig/AddEntities/AddEntities.utils';
+import { getAllAvailableDependencies, getButtonTitle } from '@/src/components/ExportConfig/AddEntities/utils';
 import Grid from '@/src/components/Grid/Grid';
 import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey, ExportI18nKey } from '@/src/constants/i18n';

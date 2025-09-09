@@ -16,6 +16,8 @@ export const getRevisionRouteForEntityType = (type?: string, id?: string): strin
       return `/roles/${id}/revision/`;
     case ActivityAuditResourceType.ROUTE:
       return `/routes/${id}/revision/`;
+    case ActivityAuditResourceType.TOOLSETS:
+      return `/toolSets/${id}/revision/`;
     case ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA:
       return `/applicationTypeSchemas/snapshot?id=${id}&revision=`;
     case ActivityAuditResourceType.INTERCEPTOR_TEMPLATE:
@@ -41,6 +43,8 @@ export const getRevisionRouteForAllEntities = (type?: string): string | null => 
       return `/roles/revision/`;
     case ActivityAuditResourceType.ROUTE:
       return `/routes/revision/`;
+    case ActivityAuditResourceType.TOOLSETS:
+      return `/toolSets/revision/`;
     case ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA:
       return `/applicationTypeSchemas/revision/`;
     case ActivityAuditResourceType.INTERCEPTOR_TEMPLATE:
