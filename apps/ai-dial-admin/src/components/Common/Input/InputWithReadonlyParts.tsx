@@ -3,12 +3,13 @@
 import classNames from 'classnames';
 import { FC } from 'react';
 
+import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { IconCopy } from '@tabler/icons-react';
+import { useI18n } from '@/src/locales/client';
+
 import Input, { InputProps } from './Input';
 import Field from '@/src/components/Common/Field/Field';
-import { IconCopy } from '@tabler/icons-react';
 import Button from '@/src/components/Common/Button/Button';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
 import ErrorText from '../ErrorText/ErrorText';
 
 interface Props extends InputProps {
@@ -17,6 +18,7 @@ interface Props extends InputProps {
   fullValue?: string;
   prefixPart?: string;
   postfixPart?: string;
+  hideCopyButton?: boolean;
 }
 
 const InputWithReadonlyParts: FC<Props> = ({
@@ -27,6 +29,7 @@ const InputWithReadonlyParts: FC<Props> = ({
   cssClass,
   title,
   invalid,
+  hideCopyButton,
   ...props
 }) => {
   const t = useI18n();
@@ -42,13 +45,15 @@ const InputWithReadonlyParts: FC<Props> = ({
             invalid ? 'input-error' : '',
           )}
         >
-          <Input
-            cssClass={classNames('border-0 border-r rounded-none h-full')}
-            value={prefixPart}
-            disabled={true}
-            inputId={prefixPart + 'prefix'}
-            tooltipTriggerClassName={'flex-1'}
-          />
+          {prefixPart && (
+            <Input
+              cssClass={classNames('border-0 border-r rounded-none h-full')}
+              value={prefixPart}
+              inputId={prefixPart + 'prefix'}
+              tooltipTriggerClassName={'flex-1'}
+              disabled={true}
+            />
+          )}
           <Input
             cssClass={classNames('border-0 bg-transparent', cssClass)}
             tooltipTriggerClassName={'flex-1'}
@@ -56,12 +61,14 @@ const InputWithReadonlyParts: FC<Props> = ({
           />
           <p className="text-secondary small"> {postfixPart}</p>
         </div>
-        <Button
-          cssClass="secondary ml-2 h-[34px]"
-          iconBefore={<IconCopy />}
-          title={t(ButtonsI18nKey.Copy)}
-          onClick={() => navigator.clipboard.writeText(fullValue || '')}
-        />
+        {!hideCopyButton && (
+          <Button
+            cssClass="secondary ml-2 h-[34px]"
+            iconBefore={<IconCopy />}
+            title={t(ButtonsI18nKey.Copy)}
+            onClick={() => navigator.clipboard.writeText(fullValue || '')}
+          />
+        )}
       </div>
       {invalid && <ErrorText errorText={errorText} />}
     </div>

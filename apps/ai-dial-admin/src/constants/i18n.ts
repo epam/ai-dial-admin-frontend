@@ -221,7 +221,9 @@ export enum CreateI18nKey {
   Interceptor = 'CreateEntity.Interceptor',
   CreateInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Create',
   SelectInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Select',
-  InterceptorContainer = 'CreateEntity.InterceptorContainer',
+  CreateAdapter = 'CreateEntity.Adapter.Create',
+  SelectAdapter = 'CreateEntity.Adapter.Select',
+  SelectContainer = 'CreateEntity.SelectContainer',
 }
 
 export enum UpstreamEndpointsI18nKey {
@@ -617,8 +619,10 @@ export enum ErrorI18nKey {
 export enum SourceI18nKey {
   OpenTemplate = 'Source.OpenTemplate',
   OpenContainer = 'Source.OpenContainer',
+  OpenAdapter = 'Source.OpenAdapter',
   Container = 'Source.Container',
   InterceptorTemplate = 'Source.InterceptorTemplate',
+  Adapter = 'Source.Adapter',
 }
 
 export enum TypeI18nKey {
@@ -767,6 +771,7 @@ export enum EntityFieldsI18nKey {
   baseEndpoint = 'EntityFields.baseEndpoint',
   dependencies = 'EntityFields.dependencies',
   completionEndpoint = 'EntityFields.completionEndpoint',
+  container = 'EntityFields.container',
 }
 
 export enum ToolsetI18nKey {

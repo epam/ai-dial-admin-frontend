@@ -66,7 +66,7 @@ export const createModalTitleMap: Record<string, CreateI18nKey> = {
   [ApplicationRoute.Interceptors]: CreateI18nKey.Interceptor,
   [ApplicationRoute.Prompts]: CreateI18nKey.Prompt,
   [ApplicationRoute.Routes]: CreateI18nKey.Route,
-  [ApplicationRoute.Adapters]: CreateI18nKey.Adapter,
+  [ApplicationRoute.Adapters]: CreateI18nKey.CreateAdapter,
   [ApplicationRoute.Toolsets]: CreateI18nKey.Toolsets,
   [ApplicationRoute.InterceptorTemplates]: CreateI18nKey.CreateInterceptorTemplate,
 };

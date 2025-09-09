@@ -21,10 +21,15 @@ import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { RoutesForCheckingUniqueName } from './constants';
 import { DialRoute } from '@/src/models/dial/route';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { isValidSourceField } from '@/src/components/SourceField/utils';
+import { DialModel, DialModelType } from '@/src/models/dial/model';
+import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
 
 interface CreatePromptEntity extends BaseEntity {
   version?: string;
   folderId?: string;
+  source?: unknown;
 }
 
 interface Props<T> {
@@ -56,7 +61,15 @@ const CreateEntity = <T extends CreatePromptEntity>({
   const { showNotification } = useNotification();
 
   const [currentEntity, setEntity] = useState<T>(
-    versionsMap ? ({ name: '', description: '', version: '1.0.0' } as T) : ({ name: '', description: '' } as T),
+    route === ApplicationRoute.Models
+      ? ({
+          name: '',
+          description: '',
+          source: { $type: SOURCE_TYPE.ADAPTER, completionEndpointPath: getEndpointPostfix(DialModelType.Chat) },
+        } as T)
+      : versionsMap
+        ? ({ name: '', description: '', version: '1.0.0' } as T)
+        : ({ name: '', description: '' } as T),
   );
 
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean | undefined>(void 0);
@@ -107,6 +120,14 @@ const CreateEntity = <T extends CreatePromptEntity>({
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!currentEntity.name });
 
+    if (route === ApplicationRoute.Models) {
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'source',
+        isValid: isValidSourceField(currentEntity as DialModel),
+      });
+    }
+
     if (versionsMap) {
       dispatch({
         type: ValidationActionType.SetField,
@@ -144,6 +165,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
             names={names}
             isUniqueNameError={isUniqueNameError}
             onChangeEntity={onChangeEntity}
+            isModal={true}
           />
         )}
       </div>

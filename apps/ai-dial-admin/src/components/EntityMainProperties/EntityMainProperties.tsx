@@ -8,7 +8,7 @@ import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/Aut
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
@@ -18,6 +18,12 @@ import { ApplicationRoute } from '@/src/types/routes';
 import classNames from 'classnames';
 import AdditionalProperties from './AdditionalProperties';
 import { getDisplayNameError, getVersionError } from './utils';
+import SourceField from '@/src/components/SourceField/SourceField';
+import { getModelContainers } from '@/src/app/[lang]/interceptors/actions';
+import { getSourceItems, MODELS_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
+import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
+import { isDeploymentsEnabled } from '@/src/utils/plugins';
+import { useAppContext } from '@/src/context/AppContext';
 
 interface Props {
   view: ApplicationRoute;
@@ -27,6 +33,7 @@ interface Props {
   runners?: DialApplicationScheme[];
   isEntityImmutable?: boolean;
   onChangeEntity: (entity: ChatEntity) => void;
+  isModal?: boolean;
 }
 
 const EntityMainProperties: FC<Props> = ({
@@ -37,9 +44,12 @@ const EntityMainProperties: FC<Props> = ({
   isUniqueNameError,
   onChangeEntity,
   isEntityImmutable = false,
+  isModal,
 }) => {
   const t = useI18n() as (str: string, param?: Record<string, number>) => string;
   const { dispatch } = useSaveValidationContext();
+  const { embeddedApps } = useAppContext();
+  const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
 
   const [isVersionOptional, setIsVersionOptional] = useState(true);
   const [displayNameError, setDisplayNameError] = useState<string | undefined>(void 0);
@@ -100,7 +110,7 @@ const EntityMainProperties: FC<Props> = ({
   );
 
   return (
-    <div className="w-full flex flex-col">
+    <div className="w-full flex flex-col gap-y-6">
       <div className={classNames('flex flex-col gap-y-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
         {!isEntityImmutable && (
           <IdControl entity={entity} onChangeEntity={onChangeName} isUniqueNameError={isUniqueNameError} />
@@ -138,15 +148,27 @@ const EntityMainProperties: FC<Props> = ({
         <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
       </div>
 
-      <div className="mt-4">
-        <AdditionalProperties
+      <AdditionalProperties
+        entity={entity}
+        onChangeEntity={onChangeEntity}
+        view={view}
+        isEntityImmutable={isEntityImmutable}
+        runners={runners}
+      />
+
+      {view === ApplicationRoute.Models && (
+        <SourceField
+          view={ApplicationRoute.Models}
           entity={entity}
-          onChangeEntity={onChangeEntity}
-          view={view}
-          isEntityImmutable={isEntityImmutable}
-          runners={runners}
+          elementId={'sourceType'}
+          onChange={onChangeEntity}
+          getContainers={getModelContainers}
+          fieldTitle={t(EntitiesI18nKey.SourceType)}
+          sourceItems={getSourceItems(MODELS_SOURCE_ITEMS, deploymentsEnabled)}
+          getAdapters={getModelsAdapters}
+          isModal={isModal}
         />
-      </div>
+      )}
     </div>
   );
 };

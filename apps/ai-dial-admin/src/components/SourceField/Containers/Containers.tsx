@@ -1,16 +1,19 @@
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { SourceI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { useNotification } from '@/src/context/NotificationContext';
-import { useI18n } from '@/src/locales/client';
 import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { ApplicationRoute } from '@/src/types/routes';
+import { DialModel } from '@/src/models/dial/model';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { PopUpState } from '@/src/types/pop-up';
-import { ApplicationRoute } from '@/src/types/routes';
+import { CreateI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { useAppContext } from '@/src/context/AppContext';
+import { isDeploymentsEnabled } from '@/src/utils/plugins';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { useI18n } from '@/src/locales/client';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import Button from '@/src/components/Common/Button/Button';
@@ -19,21 +22,34 @@ import InputModal from '@/src/components/Common/InputModal/InputModal';
 import SelectContainerModal from '@/src/components/SourceField/Containers/SelectContainerModal';
 import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
 import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
+import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
+import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 
-interface Props {
-  entity: DialInterceptor;
-  onChange: (entity: DialInterceptor) => void;
+interface Props<T> {
+  entity: T;
+  onChange: (entity: T) => void;
   getContainers: () => Promise<Container[] | null>;
   fieldId?: string;
+  view?: ApplicationRoute;
+  isModal?: boolean;
 }
 
-const Containers: FC<Props> = ({ entity, onChange, getContainers, fieldId }) => {
+const Containers = <T extends DialInterceptor | DialModel>({
+  entity,
+  onChange,
+  getContainers,
+  fieldId,
+  view,
+  isModal,
+}: Props<T>) => {
   const t = useI18n() as (key: string) => string;
   const { showNotification } = useNotification();
+  const { embeddedApps } = useAppContext();
+  const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
   const showNotificationRef = useRef(showNotification);
 
   const [modalState, setModalState] = useState(PopUpState.Closed);
-  const [interceptorContainers, setInterceptorContainers] = useState<Container[]>([]);
+  const [containers, setContainers] = useState<Container[]>([]);
   const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
 
   const onOpenModal = useCallback(() => {
@@ -69,7 +85,7 @@ const Containers: FC<Props> = ({ entity, onChange, getContainers, fieldId }) => 
     const fetchContainers = async () => {
       const containers = await getContainers();
       if (containers?.length) {
-        setInterceptorContainers(containers.filter((container) => container.status === 'running') || []);
+        setContainers(containers.filter((container) => container.status === 'running') || []);
       }
     };
 
@@ -79,32 +95,45 @@ const Containers: FC<Props> = ({ entity, onChange, getContainers, fieldId }) => 
   }, [getContainers]);
 
   useEffect(() => {
-    setSelectedContainer(
-      interceptorContainers?.find((container) => container.id === entity.source?.containerId) || null,
-    );
-  }, [interceptorContainers, selectedContainer, entity]);
+    setSelectedContainer(containers?.find((container) => container.id === entity.source?.containerId) || null);
+  }, [containers, selectedContainer, entity]);
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex lg:flex-row flex-col gap-2 items-end">
-        <div className="flex flex-col lg:w-[35%]">
-          <Field fieldTitle={t(SourceI18nKey.Container)} htmlFor={fieldId} />
-          <InputModal
-            modalState={modalState}
-            onOpenModal={onOpenModal}
-            selectedValue={selectedContainer?.id}
-            elementId={fieldId}
-          >
-            <SelectContainerModal
-              selectedId={entity.source?.containerId}
-              onClose={onCloseModal}
-              onApply={onSelect}
-              interceptorContainers={interceptorContainers}
-              modalState={modalState}
+        {isModal ? (
+          <div className="flex flex-col w-full">
+            <DropdownField
+              items={containers.map((container) => ({ id: container.id, name: container.name }))}
+              onChange={onSelect}
+              elementId={'source-type'}
+              selectedValue={containers.find((container) => container.id === entity.source?.containerId)?.name}
+              placeholder={t(CreateI18nKey.SelectContainer)}
+              fieldTitle={t(EntityFieldsI18nKey.container)}
+              readonly={!deploymentsEnabled}
             />
-          </InputModal>
-        </div>
-        {entity.source?.containerId && (
+          </div>
+        ) : (
+          <div className="flex flex-col lg:w-[35%]">
+            <Field fieldTitle={t(SourceI18nKey.Container)} htmlFor={fieldId} />
+            <InputModal
+              modalState={modalState}
+              onOpenModal={onOpenModal}
+              selectedValue={selectedContainer?.id}
+              elementId={fieldId}
+              readonly={!deploymentsEnabled}
+            >
+              <SelectContainerModal
+                selectedId={entity.source?.containerId}
+                onClose={onCloseModal}
+                onApply={onSelect}
+                interceptorContainers={containers}
+                modalState={modalState}
+              />
+            </InputModal>
+          </div>
+        )}
+        {entity.source?.containerId && deploymentsEnabled && !isModal && (
           <Button
             iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
             cssClass="secondary"
@@ -113,30 +142,42 @@ const Containers: FC<Props> = ({ entity, onChange, getContainers, fieldId }) => 
           />
         )}
       </div>
-      {entity.source?.containerId && (
-        <div className="lg:w-[35%] flex flex-col gap-6">
-          <CompletionEndpointControl
-            endpoint={entity.source.completionEndpointPath}
-            textBeforeInput={selectedContainer?.url}
-            onChange={(completionEndpointPath) => {
-              onChange({
-                ...entity,
-                source: { ...entity.source, $type: SOURCE_TYPE.CONTAINER, completionEndpointPath },
-              });
-            }}
-          />
+      {entity.source?.containerId && !isModal && (
+        <>
+          {view === ApplicationRoute.Models ? (
+            <div className="flex flex-col gap-6">
+              <ModelEndpoint
+                model={entity}
+                prefix={selectedContainer?.url}
+                onChange={onChange as (entity: DialModel) => void}
+              />
+            </div>
+          ) : (
+            <div className="lg:w-[35%] flex flex-col gap-6">
+              <CompletionEndpointControl
+                endpoint={entity.source.completionEndpointPath}
+                textBeforeInput={selectedContainer?.url}
+                onChange={(completionEndpointPath) => {
+                  onChange({
+                    ...entity,
+                    source: { ...entity.source, $type: SOURCE_TYPE.CONTAINER, completionEndpointPath },
+                  });
+                }}
+              />
 
-          <ConfigurationEndpointControl
-            endpoint={entity.source.configurationEndpointPath}
-            textBeforeInput={selectedContainer?.url}
-            onChange={(configurationEndpointPath) => {
-              onChange({
-                ...entity,
-                source: { ...entity.source, $type: SOURCE_TYPE.CONTAINER, configurationEndpointPath },
-              });
-            }}
-          />
-        </div>
+              <ConfigurationEndpointControl
+                endpoint={entity.source.configurationEndpointPath}
+                textBeforeInput={selectedContainer?.url}
+                onChange={(configurationEndpointPath) => {
+                  onChange({
+                    ...entity,
+                    source: { ...entity.source, $type: SOURCE_TYPE.CONTAINER, configurationEndpointPath },
+                  });
+                }}
+              />
+            </div>
+          )}
+        </>
       )}
     </div>
   );

@@ -62,7 +62,7 @@ const CreateAdapter: FC<Props> = ({ modalState, onClose, names }) => {
   }, [currentAdapter, router, onClose, showNotification]);
 
   return (
-    <Popup onClose={onClose} heading={t(CreateI18nKey.Adapter)} portalId="CreateRunner" state={modalState}>
+    <Popup onClose={onClose} heading={t(CreateI18nKey.CreateAdapter)} portalId="CreateRunner" state={modalState}>
       <div className="flex flex-col px-6 py-4">
         <AdapterProperties entity={currentAdapter} names={names} onChangeAdapter={onChangeAdapter} />
       </div>
