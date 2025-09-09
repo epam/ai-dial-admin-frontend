@@ -15,26 +15,27 @@ import Button from '@/src/components/Common/Button/Button';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
-import { auditTabs, EntityViewTab, propertiesTabs, rolesTabs } from '@/src/components/EntityView/View/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
-import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
+import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import { auditTabs, EntityViewTab, propertiesTabs, rolesTabs } from '@/src/components/EntityView/View/utils';
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, KeysI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { DialRole } from '@/src/models/dial/role';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { TabModel } from '@/src/models/tab';
-import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
+import { JSONEditorErrorNotification } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import KeyProperties from './KeyProperties';
 import KeyRotateModal from './KeyRotateModal';
 import KeyViewHeader from './KeyViewHeader';
-import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   originalKey: DialKey;
@@ -47,7 +48,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
   const t = useI18n() as (str: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
-
+  const { dispatch } = useSaveValidationContext();
   const tabs: TabModel[] = [propertiesTabs(t), rolesTabs(t), auditTabs(t)];
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -56,7 +57,6 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
   const [selectedKey, setSelectedKey] = useState(cloneDeep(originalKey));
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
-  const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
 
@@ -82,14 +82,14 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
 
   const onDiscard = useCallback(() => {
     if (jsonEditorEnabled) {
-      setJsonErrors([]);
+      dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
     setSelectedKey(originalKey);
-  }, [setSelectedKey, originalKey, jsonEditorEnabled]);
+  }, [jsonEditorEnabled, originalKey, dispatch]);
 
   const onChangeKey = useCallback(
     (entity: DialKey) => {
@@ -173,7 +173,6 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
             onSave={onTryToSaveKey}
             jsonEditorEnabled={jsonEditorEnabled}
             toggleJsonEditor={toggleJsonEditor}
-            jsonErrors={jsonErrors}
             setErrorNotifications={setErrorNotifications}
           >
             <Button
@@ -186,13 +185,12 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
         </div>
         <div className="flex-1 overflow-auto mt-3 min-h-0">
           {jsonEditorEnabled ? (
-            <JSONEditor
+            <EntityJsonEditor
               key={key}
               entity={selectedKey}
               errorNotifications={errorNotifications}
               setSelectedEntity={setSelectedKey}
               setIsChanged={setIsChanged}
-              setJsonErrors={setJsonErrors}
             />
           ) : (
             <>

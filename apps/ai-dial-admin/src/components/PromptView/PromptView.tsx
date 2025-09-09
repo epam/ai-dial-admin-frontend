@@ -7,22 +7,23 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { createPrompt, getPrompt, getPrompts, movePrompts, removePrompt } from '@/src/app/[lang]/prompts/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
-import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
+import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import PromptProperties from '@/src/components/PromptView/PromptProperties';
 import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/PromptView/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { useNotification } from '@/src/context/NotificationContext';
 import { usePromptFolder } from '@/src/context/PromptFolderContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
-import { getErrorNotification } from '@/src/utils/notification';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import { getErrorNotification } from '@/src/utils/notification';
+import { getEntityPath } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   originalPrompt: DialPrompt;
@@ -35,13 +36,12 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
   const router = useRouter();
   const { fetchFiles } = usePromptFolder();
   const { showNotification } = useNotification();
-
+  const { dispatch } = useSaveValidationContext();
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedPrompt, setSelectedPrompt] = useState(cloneDeep(originalPrompt));
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
   const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
-  const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [contentJsonErrors, setContentJsonErrors] = useState<JSONEditorError[]>([]);
 
   const [key, setKey] = useState(0);
@@ -71,7 +71,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
 
   const onDiscard = useCallback(() => {
     if (jsonEditorEnabled) {
-      setJsonErrors([]);
+      dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
       // TODO: Revisit solution
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
@@ -80,7 +80,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
     }
     setSelectedPrompt(cloneDeep(originalPrompt));
     setAddedVersions([]);
-  }, [setSelectedPrompt, originalPrompt, jsonEditorEnabled]);
+  }, [jsonEditorEnabled, originalPrompt, dispatch]);
 
   const onSave = useCallback(
     (newVersion?: string) => {
@@ -143,7 +143,6 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
           removeEntity={removePrompt}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          jsonErrors={jsonErrors}
           contentJsonErrors={contentJsonErrors}
           setErrorNotifications={setErrorNotifications}
           promptVersions={prompts?.map((prompt) => prompt.version) || []}
@@ -151,13 +150,12 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
         {jsonEditorEnabled ? (
-          <JSONEditor
+          <EntityJsonEditor
             key={key}
             entity={selectedPrompt}
             errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedPrompt}
             setIsChanged={setIsChanged}
-            setJsonErrors={setJsonErrors}
           />
         ) : (
           <>
