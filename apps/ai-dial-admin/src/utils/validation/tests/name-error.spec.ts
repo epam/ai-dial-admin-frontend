@@ -26,7 +26,7 @@ describe('Validation :: getErrorForUrlId', () => {
     });
 
     expect(res3).toEqual({
-     text: ErrorI18nKey.Length,
+      text: ErrorI18nKey.Length,
       type: ErrorType.LENGTH,
     });
 
