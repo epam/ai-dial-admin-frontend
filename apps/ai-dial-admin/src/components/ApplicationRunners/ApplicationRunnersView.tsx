@@ -12,6 +12,7 @@ import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
+import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import {
   appRouteTab,
   auditTabs,
@@ -19,15 +20,15 @@ import {
   parametersTabs,
   propertiesTabs,
 } from '@/src/components/EntityView/View/utils';
-import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import ParametersTab from '@/src/components/ParametersTab/ParametersTab';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialRole } from '@/src/models/dial/role';
 import { TabModel } from '@/src/models/tab';
-import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
+import { JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
@@ -43,6 +44,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
+  const { dispatch } = useSaveValidationContext();
 
   const tabs: TabModel[] = [
     propertiesTabs(t),
@@ -56,7 +58,6 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
   const [selectedScheme, setSelectedScheme] = useState(cloneDeep(originalScheme));
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
-  const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
 
@@ -82,14 +83,14 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
 
   const onDiscard = useCallback(() => {
     if (jsonEditorEnabled) {
-      setJsonErrors([]);
+      dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
     setSelectedScheme(originalScheme);
-  }, [setSelectedScheme, originalScheme, jsonEditorEnabled]);
+  }, [jsonEditorEnabled, originalScheme, dispatch]);
 
   const onChangeScheme = useCallback(
     (entity: DialApplicationScheme) => {
@@ -125,19 +126,17 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
           removeEntity={removeApplicationScheme}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          jsonErrors={jsonErrors}
           setErrorNotifications={setErrorNotifications}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
         {jsonEditorEnabled ? (
-          <JSONEditor
+          <EntityJsonEditor
             key={key}
             entity={selectedScheme}
             errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedScheme}
             setIsChanged={setIsChanged}
-            setJsonErrors={setJsonErrors}
           />
         ) : (
           <>

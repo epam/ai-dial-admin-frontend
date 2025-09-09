@@ -1,26 +1,36 @@
-import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
-import { clearResolvedErrors } from '@/src/components/JSONEditor/utils';
-import { useNotification } from '@/src/context/NotificationContext';
-import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
+'use client';
+
 import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
+
+import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
+import { clearResolvedErrors } from '@/src/components/EntityView/JsonEditor/utils';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 
 interface Props<T> {
   entity: T;
   errorNotifications: JSONEditorErrorNotification[];
   setSelectedEntity: Dispatch<SetStateAction<T>>;
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
-  setJsonErrors?: Dispatch<SetStateAction<JSONEditorError[]>>;
 }
 
-const JSONEditor = <T extends object>({
+const EntityJsonEditor = <T extends object>({
   entity,
   errorNotifications,
   setSelectedEntity,
   setIsChanged,
-  setJsonErrors,
 }: Props<T>) => {
+  const { dispatch } = useSaveValidationContext();
   const { removeNotification } = useNotification();
   const [entityModel, setEntityModel] = useState<string>('');
+
+  const setJsonErrors = useCallback(
+    (errors: JSONEditorError[]) => {
+      dispatch({ type: ValidationActionType.SetJsonEditor, errors });
+    },
+    [dispatch],
+  );
 
   useEffect(() => {
     if (entity) {
@@ -60,4 +70,4 @@ const JSONEditor = <T extends object>({
   return <JsonEditorBase value={entityModel} onChange={onChangeJSON} onValidateJSON={onValidateJSON} />;
 };
 
-export default JSONEditor;
+export default EntityJsonEditor;

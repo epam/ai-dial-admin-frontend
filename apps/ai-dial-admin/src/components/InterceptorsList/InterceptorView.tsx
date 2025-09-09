@@ -13,7 +13,6 @@ import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
-import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -22,11 +21,13 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { TabModel } from '@/src/models/tab';
-import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
+import { JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import InterceptorProperties from './InterceptorProperties';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   originalInterceptor: DialInterceptor;
@@ -39,6 +40,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
+  const { dispatch } = useSaveValidationContext();
 
   const tabs: TabModel[] = [
     propertiesTabs(t),
@@ -50,7 +52,6 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
   const [selectedInterceptor, setSelectedInterceptor] = useState(cloneDeep(originalInterceptor));
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
-  const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
 
@@ -76,14 +77,14 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
 
   const onDiscard = useCallback(() => {
     if (jsonEditorEnabled) {
-      setJsonErrors([]);
+      dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
     setSelectedInterceptor(originalInterceptor);
-  }, [setSelectedInterceptor, originalInterceptor, jsonEditorEnabled]);
+  }, [jsonEditorEnabled, originalInterceptor, dispatch]);
 
   const onChangeInterceptor = useCallback(
     (entity: DialInterceptor) => {
@@ -141,19 +142,17 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
           removeEntity={removeInterceptor}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          jsonErrors={jsonErrors}
           setErrorNotifications={setErrorNotifications}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
         {jsonEditorEnabled ? (
-          <JSONEditor
+          <EntityJsonEditor
             key={key}
             entity={selectedInterceptor}
             errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedInterceptor}
             setIsChanged={setIsChanged}
-            setJsonErrors={setJsonErrors}
           />
         ) : (
           <>

@@ -9,20 +9,21 @@ import { cloneDeep } from 'lodash';
 import { removeToolset, updateToolset } from '@/src/app/[lang]/toolsets/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
+import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import { EntityViewTab, propertiesTabs, rolesTabs, toolsTabs } from '@/src/components/EntityView/View/utils';
-import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
+import Tool from '@/src/components/Toolsets/Tools/Tools';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
 import { Toolset } from '@/src/models/dial/toolset';
 import { TabModel } from '@/src/models/tab';
-import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
+import { JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import ToolsetProperties from './Properties';
-import Tool from '@/src/components/Toolsets/Tools/Tools';
 
 interface Props {
   names: string[];
@@ -34,6 +35,7 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
+  const { dispatch } = useSaveValidationContext();
 
   const tabs: TabModel[] = [propertiesTabs(t), toolsTabs(t), rolesTabs(t)];
 
@@ -42,7 +44,6 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
   const [isSkipRefresh, setIsSkipRefresh] = useState<boolean>(true);
-  const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
 
@@ -68,7 +69,7 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
 
   const onDiscard = useCallback(() => {
     if (jsonEditorEnabled) {
-      setJsonErrors([]);
+      dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
@@ -76,7 +77,7 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
     }
     setSelectedToolset(originalToolset);
     setIsSkipRefresh(false);
-  }, [setSelectedToolset, originalToolset, jsonEditorEnabled]);
+  }, [jsonEditorEnabled, originalToolset, dispatch]);
 
   const onChangeToolset = useCallback(
     (entity: Toolset, skipRefresh?: boolean) => {
@@ -112,20 +113,18 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
           onSave={onSave}
           removeEntity={removeToolset}
           jsonEditorEnabled={jsonEditorEnabled}
-          jsonErrors={jsonErrors}
           toggleJsonEditor={toggleJsonEditor}
           setErrorNotifications={setErrorNotifications}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
         {jsonEditorEnabled ? (
-          <JSONEditor
+          <EntityJsonEditor
             key={key}
             entity={selectedToolset}
             errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedToolset}
             setIsChanged={setIsChanged}
-            setJsonErrors={setJsonErrors}
           />
         ) : (
           <>
