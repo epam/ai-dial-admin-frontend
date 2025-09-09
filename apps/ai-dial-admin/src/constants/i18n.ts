@@ -775,7 +775,6 @@ export enum EntityFieldsI18nKey {
   baseEndpoint = 'EntityFields.baseEndpoint',
   dependencies = 'EntityFields.dependencies',
   completionEndpoint = 'EntityFields.completionEndpoint',
-  container = 'EntityFields.container',
 }
 
 export enum ToolsetI18nKey {
