@@ -5,7 +5,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { useI18n } from '@/src/locales/client';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
-import { SOURCE_RUNNERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { SOURCE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 import Grid from '@/src/components/Grid/Grid';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
@@ -28,14 +28,14 @@ const SelectRunnerModal: FC<Props> = ({ selected, runners, modalState, onClose, 
   return (
     <Popup
       onClose={onClose}
-      heading={t(CreateI18nKey.CreateInterceptorTemplate)}
+      heading={t(CreateI18nKey.SelectInterceptorTemplate)}
       portalId="SelectRunnerModal"
       state={modalState}
       containerClassName={'h-[750px] lg:max-w-[65%]'}
     >
       <div className="flex flex-col px-6 py-4 flex-1 min-h-0">
         <Grid
-          columnDefs={SOURCE_RUNNERS_COLUMNS}
+          columnDefs={SOURCE_COLUMNS}
           additionalGridOptions={{
             rowSelection: { mode: 'singleRow', enableClickSelection: true },
             selectionColumnDef: {
@@ -54,7 +54,7 @@ const SelectRunnerModal: FC<Props> = ({ selected, runners, modalState, onClose, 
             },
             onGridReady: (event) => {
               event.api?.updateGridOptions({
-                columnDefs: SOURCE_RUNNERS_COLUMNS,
+                columnDefs: SOURCE_COLUMNS,
                 rowData: runners,
               });
               event.api.forEachNode((node) => {

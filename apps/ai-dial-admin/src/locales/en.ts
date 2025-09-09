@@ -211,11 +211,14 @@ export default {
     Toolsets: 'Create Toolset',
     Prompt: 'Create Prompt',
     Route: 'Create Route',
-    Adapter: 'Create Adapter',
-    InterceptorContainer: 'Select Interceptor Container',
+    SelectContainer: 'Select Container',
     InterceptorTemplate: {
       Create: 'Create Interceptor Template',
       Select: 'Select Interceptor Template',
+    },
+    Adapter: {
+      Create: 'Create Adapter',
+      Select: 'Select Adapter',
     },
   },
   Type: {
@@ -722,6 +725,7 @@ export default {
     response: 'Response',
     permissions: 'Permissions',
     allowedTools: 'MCP Containers',
+    container: 'Container',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
@@ -762,6 +766,7 @@ export default {
     SelectPermission: 'Select permission',
     Key: 'Enter key',
     ToolName: 'Enter tool name',
+    Hour: 'h',
   },
   Error: {
     ServerError: 'Server Error',
@@ -798,8 +803,10 @@ export default {
   Source: {
     OpenTemplate: 'Open template',
     OpenContainer: 'Open container',
+    OpenAdapter: 'Open adapter',
     Container: 'Container',
     InterceptorTemplate: 'Interceptor template',
+    Adapter: 'Adapter',
   },
   Toolset: {
     Tools: 'Tools',

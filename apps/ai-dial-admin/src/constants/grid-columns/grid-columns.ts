@@ -446,7 +446,7 @@ export const PROJECT_GRID_COLUMNS: ColDef[] = [{ field: 'name', headerName: 'Pro
 export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
   NAME_COLUMN_WITH_SORT,
   DESCRIPTION_COLUMN,
-  { field: 'image', headerName: 'Interceptor Image' },
+  { field: 'image', headerName: 'Image' },
 ];
 
 export const MCP_CONTAINERS_COLUMNS: ColDef[] = [
@@ -455,4 +455,4 @@ export const MCP_CONTAINERS_COLUMNS: ColDef[] = [
   { field: 'image', headerName: 'MCP Image' },
 ];
 
-export const SOURCE_RUNNERS_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, NAME_COLUMN, DESCRIPTION_COLUMN];
+export const SOURCE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, NAME_COLUMN, DESCRIPTION_COLUMN];

@@ -16,7 +16,7 @@ interface Props {
 
 const Textarea: FC<Props> = ({ value, textareaId, placeholder, cssClass = '', disabled, invalid, onChange }) => {
   return (
-    <Tooltip tooltip={value}>
+    <Tooltip tooltip={value} triggerClassName={'flex'}>
       <textarea
         id={textareaId}
         placeholder={placeholder}

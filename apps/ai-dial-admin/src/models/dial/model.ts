@@ -1,4 +1,5 @@
 import { ChatEntity } from './base-entity';
+import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 
 export interface DialModel extends ChatEntity {
   type?: DialModelType;
@@ -9,8 +10,8 @@ export interface DialModel extends ChatEntity {
   pricing?: DialModelPricing;
   fieldsHashingOrder?: string[];
   displayVersion?: string;
-  adapter?: string;
   upstreams?: DialModelEndpoint[];
+  source?: SOURCE_FIELD;
 }
 
 export interface DialTokenizer {

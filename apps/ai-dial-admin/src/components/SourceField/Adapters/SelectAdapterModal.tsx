@@ -2,10 +2,10 @@ import { FC, useState } from 'react';
 
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { PopUpState } from '@/src/types/pop-up';
-import { Container } from '@/src/models/deployments';
+import { DialAdapter } from '@/src/models/dial/adapter';
 import { useI18n } from '@/src/locales/client';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
-import { SOURCE_CONTAINERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { SOURCE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 import Grid from '@/src/components/Grid/Grid';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
@@ -13,52 +13,52 @@ import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 
 interface Props {
-  selectedId?: string;
-  interceptorContainers?: Container[];
+  selected?: string;
+  adapters?: DialAdapter[];
   modalState: PopUpState;
   onClose: () => void;
-  onApply: (id?: string) => void;
+  onApply: (name?: string) => void;
 }
 
-const SelectContainerModal: FC<Props> = ({ selectedId, interceptorContainers, modalState, onClose, onApply }) => {
+const SelectAdapterModal: FC<Props> = ({ selected, adapters, modalState, onClose, onApply }) => {
   const t = useI18n();
 
-  const [selectedContainer, setSelectedContainer] = useState(selectedId);
+  const [selectedRunner, setSelectedRunner] = useState(selected);
 
   return (
     <Popup
       onClose={onClose}
-      heading={t(CreateI18nKey.SelectContainer)}
-      portalId="entityNameToken"
+      heading={t(CreateI18nKey.SelectAdapter)}
+      portalId="SelectAdapterModal"
       state={modalState}
       containerClassName={'h-[750px] lg:max-w-[65%]'}
     >
       <div className="flex flex-col px-6 py-4 flex-1 min-h-0">
         <Grid
-          columnDefs={SOURCE_CONTAINERS_COLUMNS}
+          columnDefs={SOURCE_COLUMNS}
           additionalGridOptions={{
             rowSelection: { mode: 'singleRow', enableClickSelection: true },
             selectionColumnDef: {
               ...RADIO_BUTTON_COL_DEF,
-              cellRenderer: (data: { data?: { id: string; name: string; image: string }; id: string }) => (
+              cellRenderer: (data: { data?: { name: string }; name: string }) => (
                 <RadioButtonRenderer
-                  inputId={data.data?.id || data.id}
-                  isChecked={data.data?.id === selectedContainer}
+                  inputId={data.data?.name || data.name}
+                  isChecked={data.data?.name === selectedRunner}
                 />
               ),
             },
             onRowSelected: (event) => {
               if (event.node.isSelected()) {
-                setSelectedContainer(event.data.id);
+                setSelectedRunner(event.data.name);
               }
             },
             onGridReady: (event) => {
               event.api?.updateGridOptions({
-                columnDefs: SOURCE_CONTAINERS_COLUMNS,
-                rowData: interceptorContainers,
+                columnDefs: SOURCE_COLUMNS,
+                rowData: adapters,
               });
               event.api.forEachNode((node) => {
-                if (node.data.id === selectedContainer) {
+                if (node.data.name === selectedRunner) {
                   node.setSelected(true);
                 }
               });
@@ -71,12 +71,12 @@ const SelectContainerModal: FC<Props> = ({ selectedId, interceptorContainers, mo
         <Button
           cssClass="primary"
           title={t(ButtonsI18nKey.Apply)}
-          disable={!selectedContainer}
-          onClick={() => onApply(selectedContainer)}
+          disable={!selectedRunner}
+          onClick={() => onApply(selectedRunner)}
         />
       </div>
     </Popup>
   );
 };
 
-export default SelectContainerModal;
+export default SelectAdapterModal;

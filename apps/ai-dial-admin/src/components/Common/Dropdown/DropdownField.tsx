@@ -17,6 +17,7 @@ interface Props extends InputFieldBaseProps {
   onChange: (value: string) => void;
   prefix?: string;
   children?: ReactNode;
+  listClassName?: string;
 }
 
 const DropdownField: FC<Props> = ({
