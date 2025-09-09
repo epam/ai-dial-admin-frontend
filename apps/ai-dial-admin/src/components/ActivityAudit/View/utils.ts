@@ -313,9 +313,9 @@ const generateStringFromObject = (value?: object, t?: (str: string) => string): 
  * @param {(str: string) => string} t - translation
  * @returns {string} - string with values and translation
  */
-const convertPricing = (value: DialModelPricing, t: (str: string) => string): string => {
-  const isToken = value.unit === PricingType.Token;
-  return Object.entries(value)
+const convertPricing = (value: DialModelPricing | undefined, t: (str: string) => string): string => {
+  const isToken = value?.unit === PricingType.Token;
+  return Object.entries(value || {})
     .map(([key, value]) => {
       return key === EntityParameterKeys.UNIT
         ? value === PricingType.Token

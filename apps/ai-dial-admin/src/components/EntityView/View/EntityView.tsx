@@ -2,14 +2,15 @@
 
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
+import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { ModalType } from '@/src/components/EntityView/Modals/constants';
 import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
 import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
 import { EntityViewTab, getIsParametersTabAvailable, getViewTabs } from '@/src/components/EntityView/View/utils';
-import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAttachmentData } from '@/src/models/attachment-data';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
@@ -18,9 +19,10 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
+import { JSONEditorErrorNotification } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import {
   VisualizerConnectorEvents,
@@ -33,7 +35,6 @@ import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 import ViewContent from './ViewContent';
-import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
   view: ApplicationRoute;
@@ -60,7 +61,7 @@ const EntityView: FC<Props> = ({
   ...props
 }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
-
+  const { dispatch } = useSaveValidationContext();
   const isParametersTabAvailable = getIsParametersTabAvailable(originalEntity as DialApplication, applicationSchemes);
 
   const tabs = getViewTabs(t, view, isParametersTabAvailable);
@@ -78,7 +79,6 @@ const EntityView: FC<Props> = ({
   const [isSkipRefresh, setIsSkipRefresh] = useState<boolean>(true);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
   const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
-  const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [key, setKey] = useState(0);
 
   const { visualizerConnector } = useAppContext();
@@ -153,7 +153,7 @@ const EntityView: FC<Props> = ({
 
   const onDiscard = useCallback(() => {
     if (jsonEditorEnabled) {
-      setJsonErrors([]);
+      dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
       // TODO: Revisit solution
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
@@ -162,7 +162,7 @@ const EntityView: FC<Props> = ({
     }
     setSelectedEntity(cloneDeep(originalEntity));
     setIsSkipRefresh(false);
-  }, [setSelectedEntity, originalEntity, jsonEditorEnabled]);
+  }, [jsonEditorEnabled, originalEntity, dispatch]);
 
   const onSave = useCallback(() => {
     updateEntity(selectedEntity, etag).then((res) => {
@@ -257,20 +257,18 @@ const EntityView: FC<Props> = ({
             removeEntity={removeEntity}
             jsonEditorEnabled={jsonEditorEnabled}
             toggleJsonEditor={toggleJsonEditor}
-            jsonErrors={jsonErrors}
             setErrorNotifications={setErrorNotifications}
           />
         </div>
 
         <div className="flex-1 overflow-auto mt-3 min-h-0">
           {jsonEditorEnabled && activeTab !== EntityViewTab.Parameters ? (
-            <JSONEditor
+            <EntityJsonEditor
               key={key}
               entity={selectedEntity}
               errorNotifications={errorNotifications}
               setSelectedEntity={setSelectedEntity}
               setIsChanged={setIsChanged}
-              setJsonErrors={setJsonErrors}
             />
           ) : (
             <ViewContent

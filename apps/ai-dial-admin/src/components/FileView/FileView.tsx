@@ -89,7 +89,6 @@ const FileView: FC<Props> = ({ originalFile }) => {
           removeEntity={removeFile}
           hideJsonEditor={true}
           jsonEditorEnabled={false}
-          jsonErrors={null}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">

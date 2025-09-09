@@ -20,7 +20,6 @@ import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
-import JSONEditor from '@/src/components/JSONEditor/JSONEditor';
 import { KEYS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, KeysI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -32,10 +31,12 @@ import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { TabModel } from '@/src/models/tab';
-import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
+import { JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   originalRole: DialRole;
@@ -49,6 +50,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
   const t = useI18n() as (str: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
+  const { dispatch } = useSaveValidationContext();
 
   const tabs: TabModel[] = [
     propertiesTabs(t),
@@ -61,7 +63,6 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
   const [selectedRole, setSelectedRole] = useState(cloneDeep(originalRole));
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
-  const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
   const [isSkipRefresh, setIsSkipRefresh] = useState<boolean>(true);
@@ -94,7 +95,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
 
   const onDiscard = useCallback(() => {
     if (jsonEditorEnabled) {
-      setJsonErrors([]);
+      dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
@@ -102,7 +103,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
     }
     setIsSkipRefresh(false);
     setSelectedRole(originalRole);
-  }, [setSelectedRole, originalRole, jsonEditorEnabled]);
+  }, [jsonEditorEnabled, originalRole, dispatch]);
 
   const onChangeRole = useCallback(
     (entity: DialRole, skipRefresh?: boolean) => {
@@ -217,19 +218,17 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
           removeEntity={removeRole}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          jsonErrors={jsonErrors}
           setErrorNotifications={setErrorNotifications}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
         {jsonEditorEnabled ? (
-          <JSONEditor
+          <EntityJsonEditor
             key={key}
             entity={selectedRole}
             errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedRole}
             setIsChanged={setIsChanged}
-            setJsonErrors={setJsonErrors}
           />
         ) : (
           <>

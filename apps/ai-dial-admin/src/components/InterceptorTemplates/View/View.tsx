@@ -80,7 +80,6 @@ const View: FC<Props> = ({ route, template }) => {
           removeEntity={deleteInterceptorTemplate}
           hideJsonEditor={true}
           jsonEditorEnabled={false}
-          jsonErrors={null}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
