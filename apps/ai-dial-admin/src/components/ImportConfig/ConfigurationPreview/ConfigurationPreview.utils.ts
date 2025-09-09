@@ -98,6 +98,10 @@ export const getConfigurationPreview = (configuration: FileConfiguration, t: (v:
       if (configurationKey === 'files') {
         previewData[EntityType.FILE] = configurationItems;
       }
+
+      if (configurationKey === 'toolsets') {
+        previewData[EntityType.TOOLSET] = configurationItems;
+      }
     }
   });
 
