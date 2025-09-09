@@ -68,6 +68,7 @@ const DropdownMenuItem = forwardRef<HTMLButtonElement, DropdownMenuItemProps & B
           aria-label={dropdownItem?.name}
           className={classNames(
             menuItemClassNames,
+            dropdownItem?.disabled && 'hidden',
             isMenu ? 'h-[44px] pl-6' : 'h-[34px]',
             'w-full px-3',
             disabled && '!cursor-not-allowed',

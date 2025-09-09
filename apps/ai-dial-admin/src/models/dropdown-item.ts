@@ -5,4 +5,5 @@ export interface DropdownItemsModel {
   name: string;
   icon?: ReactNode;
   description?: string;
+  disabled?: boolean;
 }
