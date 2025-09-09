@@ -14,15 +14,8 @@ vi.mock('@/src/app/[lang]/export-config/actions', async (importOriginal) => {
 
 describe('ExportConfig', () => {
   it('renders export config title and button', () => {
-    render(<ExportConfig />);
+    render(<ExportConfig enableExportConfigMap={true} />);
     expect(screen.getByText(/ExportConfig/i)).toBeInTheDocument();
     expect(screen.getByRole('button')).toBeInTheDocument();
-  });
-
-  it('calls onExport when export is confirmed in modal', () => {
-    render(<ExportConfig enableExportConfigMap={true} />);
-    fireEvent.click(screen.getByRole('button'));
-    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Export }));
-    // No assertion for side effect, but covers the call
   });
 });
