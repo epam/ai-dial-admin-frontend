@@ -152,7 +152,7 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
             )}
 
             {activeTab === EntityViewTab.Audit && (
-              <EntityAudit entity={selectedAdapter} view={ApplicationRoute.Toolsets} />
+              <EntityAudit entity={selectedToolset} view={ApplicationRoute.Toolsets} />
             )}
           </>
         )}

@@ -670,6 +670,8 @@ export default {
     weight: 'Weight',
     tier: 'Tier',
     overrideName: 'Override name',
+    allowedTools: 'Allowed tools',
+    transport: 'Transport',
     properties: 'Properties',
     enabled: 'Default tokens enabled',
     minute: 'Tokens per minute',
@@ -723,9 +725,7 @@ export default {
     content: 'Content',
     rewritePath: 'Rewrite path',
     response: 'Response',
-    permissions: 'Permissions',
-    allowedTools: 'MCP Containers',
-    container: 'Container',
+    permissions: 'Permissions'
   },
   EntityPlaceholders: {
     Project: 'Enter project',

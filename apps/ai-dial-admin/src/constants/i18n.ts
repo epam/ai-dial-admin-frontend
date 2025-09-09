@@ -720,6 +720,8 @@ export enum EntityFieldsI18nKey {
   keyValue = 'EntityFields.keyValue',
   weight = 'EntityFields.weight',
   tier = 'EntityFields.tier',
+  transport = 'EntityFields.transport',
+  allowedTools = 'EntityFields.allowedTools',
   overrideName = 'EntityFields.overrideName',
   properties = 'EntityFields.properties',
   enabled = 'EntityFields.enabled',
