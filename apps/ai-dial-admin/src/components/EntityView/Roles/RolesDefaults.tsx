@@ -1,7 +1,7 @@
 import { FC, useCallback } from 'react';
 
 import { NumberInputField } from '@/src/components/Common/InputField/InputField';
-import { EntityFieldsI18nKey, RolesI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRoleLimits, DialRoleShare } from '@/src/models/dial/role-limits';
@@ -78,6 +78,7 @@ const RolesDefaults: FC<Props> = ({ entity, onChangeEntity }) => {
             placeholder={t(RolesI18nKey.NoLimits)}
             fieldTitle={t(EntityFieldsI18nKey.invitationTtl)}
             onChange={(value) => onChangeDefaultRoleShareResourceLimit(value, 'invitationTtl')}
+            iconAfterInput={<span className="small text-secondary">{t(EntityPlaceholdersI18nKey.Hour)}</span>}
           />
           <NumberInputField
             elementId="maxAcceptedUsers"

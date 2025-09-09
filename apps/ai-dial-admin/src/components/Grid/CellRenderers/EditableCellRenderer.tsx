@@ -1,8 +1,10 @@
-import { ICellRendererParams } from 'ag-grid-community';
-import React, { ChangeEvent, useState } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 
-import { useI18n } from '@/src/locales/client';
+import { ICellRendererParams } from 'ag-grid-community';
+
 import Triangle from '@/public/images/icons/cell-triangle.svg';
+import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_VALUE } from '@/src/components/EntityView/Roles/constants';
+import { useI18n } from '@/src/locales/client';
 
 interface EditableCellRendererParams extends ICellRendererParams {
   placeholder?: string;
@@ -12,38 +14,56 @@ interface EditableCellRendererParams extends ICellRendererParams {
   onChange?: (value: number | string, data: unknown, column: string, index?: number) => void;
 }
 
-const EditableCellRenderer = (params: EditableCellRendererParams) => {
-  const t = useI18n();
-  const translatedPlaceholder = params.placeholder ? t(params.placeholder as any, {}) : '';
-
-  const [value, setValue] = useState(
-    params.valueFormatter ? params.valueFormatter(params.value) : params.value || translatedPlaceholder,
-  );
+const EditableCellRenderer = ({
+  value,
+  placeholder,
+  defaultValue,
+  inputType = 'text',
+  valueFormatter,
+  onChange,
+  setValue,
+  colDef,
+  data,
+}: EditableCellRendererParams) => {
+  const t = useI18n() as (s: string) => string;
+  const translatedPlaceholder = placeholder ? t(placeholder) : '';
+  const initialValue = valueFormatter ? valueFormatter(value) : value || translatedPlaceholder;
+  const [inputValue, setInputValue] = useState(initialValue);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const inputValue = event.target.value;
-    if (params.valueFormatter) {
-      const value = params.valueFormatter(inputValue);
-      setValue(value);
-      params.setValue?.(value);
-    } else {
-      setValue(inputValue);
-      params.setValue?.(inputValue);
+    const newValue = event.target.value;
+    const formattedValue = valueFormatter ? valueFormatter(newValue) : newValue;
+
+    setInputValue(formattedValue);
+
+    if (onChange) {
+      onChange(formattedValue, data, colDef?.field as string);
     }
-    params.onChange?.(inputValue, params.data, params.colDef?.field as string);
+    if (setValue) {
+      setValue(formattedValue);
+    }
   };
+
+  useEffect(() => {
+    const formattedValue = valueFormatter ? valueFormatter(value) : value || translatedPlaceholder;
+    setInputValue(formattedValue);
+  }, [value, valueFormatter, translatedPlaceholder]);
 
   return (
     <>
       <input
         id="editable-cell-renderer"
-        type={params.inputType || 'text'}
-        value={value == null ? '' : value}
+        type={inputType}
+        value={
+          inputValue == null || inputValue === NO_LIMITS_VALUE || inputValue === NO_LIMITS_ACCEPTED_USERS
+            ? ''
+            : inputValue
+        }
         placeholder={translatedPlaceholder}
         onChange={handleChange}
         className="leading-[18px] h-[32px]"
       />
-      {!!params.defaultValue && params.defaultValue !== value && (
+      {defaultValue !== inputValue && (
         <div className="absolute top-0 right-0 text-accent-tertiary">
           <Triangle />
         </div>
