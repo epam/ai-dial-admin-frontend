@@ -9,12 +9,13 @@ import { isDisableRole, isResetToDefaultHidden, isSetNoLimitsHidden } from '@/sr
 import { EntitiesI18nKey, RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
-import { DialRoleLimits, DialRoleLimitsMap } from '@/src/models/dial/role-limits';
 import { DialRole } from '@/src/models/dial/role';
+import { DialRoleLimits, DialRoleLimitsMap, DialRoleShare, DialRoleShareMap } from '@/src/models/dial/role-limits';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import RolesDefaults from './RolesDefaults';
+import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_VALUE } from './constants';
 
 interface Props {
   entity: EntityRoleLimits;
@@ -74,11 +75,11 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
 
   const onAddRoles = useCallback(
     (roles: DialRole[]) => {
-      const newRoles = {} as Record<string, DialRoleLimits>;
+      const newRoles = {} as DialRoleLimitsMap;
+      const newRoleShare = {} as DialRoleShareMap;
       roles.forEach((role) => {
-        newRoles[role.name as string] = {
-          ...entity.defaultRoleLimit,
-        };
+        newRoles[role.name as string] = {};
+        newRoleShare[role.name as string] = {};
       });
 
       onChangeEntity({
@@ -87,6 +88,10 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
           ...entity.roleLimits,
           ...newRoles,
         } as DialRoleLimitsMap,
+        roleShareResourceLimits: {
+          ...entity.roleShareResourceLimits,
+          ...newRoleShare,
+        },
       });
       setAddModalState(PopUpState.Closed);
     },
@@ -110,33 +115,33 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
 
   const onResetToDefaultRole = useCallback(
     (role: DialRole) => {
-      const defaultRoleLimit = entity.defaultRoleLimit;
       onChangeEntity({
         ...entity,
         roleLimits: {
           ...entityRef.current.roleLimits,
-          [role.name as string]: {
-            ...entityRef.current.roleLimits?.[role.name as string],
-            ...defaultRoleLimit,
-          },
+          [role.name as string]: {},
         } as DialRoleLimitsMap,
+        roleShareResourceLimits: {
+          ...entityRef.current.roleShareResourceLimits,
+          [role.name as string]: {},
+        },
       });
     },
     [onChangeEntity, entity],
   );
 
   const onResetAllRolesToDefault = useCallback(() => {
-    const defaultRoleLimit = entity.defaultRoleLimit;
     const updatedRoleLimits: Record<string, DialRoleLimits> = {};
+    const updatedRoleShareResourceLimits: Record<string, DialRoleShare> = {};
 
     Object.keys(entityRef.current.roleLimits || {}).forEach((roleName) => {
-      updatedRoleLimits[roleName] = {
-        ...defaultRoleLimit,
-      };
+      updatedRoleLimits[roleName] = {};
+      updatedRoleShareResourceLimits[roleName] = {};
     });
     onChangeEntity({
       ...entity,
       roleLimits: updatedRoleLimits,
+      roleShareResourceLimits: updatedRoleShareResourceLimits,
     });
   }, [onChangeEntity, entity]);
 
@@ -148,12 +153,19 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
           ...entityRef.current.roleLimits,
           [role.name as string]: {
             ...entityRef.current.roleLimits?.[role.name as string],
-            day: null,
-            minute: null,
-            month: null,
-            week: null,
+            day: NO_LIMITS_VALUE,
+            minute: NO_LIMITS_VALUE,
+            month: NO_LIMITS_VALUE,
+            week: NO_LIMITS_VALUE,
           },
         } as DialRoleLimitsMap,
+        roleShareResourceLimits: {
+          ...entityRef.current.roleShareResourceLimits,
+          [role.name as string]: {
+            invitationTtl: NO_LIMITS_VALUE,
+            maxAcceptedUsers: NO_LIMITS_ACCEPTED_USERS,
+          },
+        } as DialRoleShareMap,
       });
     },
     [onChangeEntity, entity],
