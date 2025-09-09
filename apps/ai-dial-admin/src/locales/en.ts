@@ -766,6 +766,7 @@ export default {
     SelectPermission: 'Select permission',
     Key: 'Enter key',
     ToolName: 'Enter tool name',
+    Hour: 'h',
   },
   Error: {
     ServerError: 'Server Error',
