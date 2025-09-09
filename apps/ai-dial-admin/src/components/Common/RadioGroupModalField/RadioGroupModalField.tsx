@@ -5,6 +5,7 @@ import InputModal from '@/src/components/Common/InputModal/InputModal';
 import { RadioButtonWithContent } from '@/src/components/Common/RadioGroup/RadioGroup';
 import { PopUpState } from '@/src/types/pop-up';
 import RadioGroupModal from './RadioGroupModal';
+import classNames from 'classnames';
 
 interface Props {
   title: string;
@@ -15,6 +16,7 @@ interface Props {
   customInputValue?: string;
   selectedRadioValue: string;
   valueCssClasses?: string;
+  inputCssClasses?: string;
   isValid: boolean;
   disabled?: boolean;
   radioButtons: RadioButtonWithContent[];
@@ -27,26 +29,28 @@ const RadioGroupModalField: FC<Props> = ({
   title,
   popupTitle,
   elementId,
-  portalId,
   disabled,
   customInputValue,
   selectedInputValue,
   selectedRadioValue,
   valueCssClasses,
-  isValid,
   radioButtons,
-  onChangeRadioField,
   onApply,
   onClose,
+  inputCssClasses,
+  ...props
 }) => {
   const [modalState, setIsModalState] = useState(PopUpState.Closed);
+
   const onOpenModal = useCallback(() => {
     setIsModalState(PopUpState.Opened);
   }, [setIsModalState]);
+
   const onCloseModal = useCallback(() => {
     setIsModalState(PopUpState.Closed);
     onClose?.();
   }, [setIsModalState, onClose]);
+
   const onApplyModal = useCallback(() => {
     onApply();
     onCloseModal();
@@ -60,20 +64,18 @@ const RadioGroupModalField: FC<Props> = ({
         modalState={modalState}
         selectedValue={customInputValue ?? radioButtons.find(({ id }) => id === selectedInputValue)?.name}
         valueCssClasses={valueCssClasses}
-        inputCssClasses="py-2 px-3"
+        inputCssClasses={classNames(inputCssClasses, 'py-2 px-3')}
         onOpenModal={onOpenModal}
       >
         <RadioGroupModal
           title={popupTitle ?? title}
           modalState={modalState}
           elementId={elementId}
-          portalId={portalId}
           selectedValue={selectedRadioValue}
-          isValid={isValid}
           radioButtons={radioButtons}
           onApply={onApplyModal}
           onClose={onCloseModal}
-          onChangeRadioField={onChangeRadioField}
+          {...props}
         />
       </InputModal>
     </div>
