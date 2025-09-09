@@ -727,7 +727,7 @@ export default {
     content: 'Content',
     rewritePath: 'Rewrite path',
     response: 'Response',
-    permissions: 'Permissions'
+    permissions: 'Permissions',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
