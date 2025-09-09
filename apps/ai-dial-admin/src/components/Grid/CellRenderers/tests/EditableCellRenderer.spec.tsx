@@ -59,7 +59,7 @@ describe('EditableCellRenderer', () => {
     const input = screen.getByRole('textbox');
     fireEvent.change(input, { target: { value: 'xyz' } });
     expect(setValue).toHaveBeenCalledWith('f:xyz');
-    expect(onChange).toHaveBeenCalledWith('xyz', { bar: 2 }, 'col2');
+    expect(onChange).toHaveBeenCalledWith('f:xyz', { bar: 2 }, 'col2');
   });
 
   test('shows triangle icon if defaultValue is set and not equal to value', () => {
