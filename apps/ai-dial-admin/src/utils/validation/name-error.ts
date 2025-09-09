@@ -23,7 +23,7 @@ export const getErrorForUrlId = (
   }
 
   const isWrongId = id && !isValidHttpUrl(id);
-  const isWrongLength = !id || id.length ===0 || id.length > MAX_URL_ID_SYMBOLS;
+  const isWrongLength = !id || id.length === 0 || id.length > MAX_URL_ID_SYMBOLS;
   if (isWrongId) {
     return {
       type: ErrorType.INVALID,
