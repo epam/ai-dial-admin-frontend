@@ -24,6 +24,7 @@ import CompletionEndpointControl from '@/src/components/EntityMainProperties/Bas
 import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
 import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
+import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
 
 interface Props<T> {
   entity: T;
@@ -62,7 +63,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
 
   const onSelect = useCallback(
     (id?: string) => {
-      onChange({
+      const updatedEntity = {
         ...entity,
         endpoint: '',
         configurationEndpoint: '',
@@ -71,10 +72,15 @@ const Containers = <T extends DialInterceptor | DialModel>({
           $type: entity.source?.$type || SOURCE_TYPE.CONTAINER,
           containerId: id,
         },
-      });
+      };
+      if (view === ApplicationRoute.Models) {
+        updatedEntity.source.completionEndpointPath =
+          entity.source?.completionEndpointPath || getEndpointPostfix((entity as DialModel).type);
+      }
+      onChange(updatedEntity);
       onCloseModal();
     },
-    [entity, onChange, onCloseModal],
+    [entity, onChange, onCloseModal, view],
   );
 
   const openContainer = useCallback(() => {
@@ -148,7 +154,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
             <div className="flex flex-col gap-6">
               <ModelEndpoint
                 model={entity}
-                prefix={selectedContainer?.url}
+                prefix={`${selectedContainer?.url}/`}
                 onChange={onChange as (entity: DialModel) => void}
               />
             </div>
