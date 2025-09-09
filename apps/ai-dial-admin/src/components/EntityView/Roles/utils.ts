@@ -30,50 +30,46 @@ export const getRolesGridData = (entity: EntityRoleLimits, roles: DialRole[]): R
 };
 
 const getAllRolesWithLimits = (roles: DialRole[], entity?: EntityRoleLimits) => {
-  const data: RolesGridData[] = [];
-  roles.forEach((role) => {
+  return roles.map((role) => {
     const limit = entity?.roleLimits?.[role.name || ''];
     const share = entity?.roleShareResourceLimits?.[role.name || ''];
-    data.push({
-      ...role,
-      day: getLimitData(limit?.day, entity?.defaultRoleLimit?.day),
-      minute: getLimitData(limit?.minute, entity?.defaultRoleLimit?.minute),
-      week: getLimitData(limit?.week, entity?.defaultRoleLimit?.week),
-      month: getLimitData(limit?.month, entity?.defaultRoleLimit?.month),
-      invitationTtl: getLimitData(share?.invitationTtl, entity?.defaultRoleShareResourceLimit?.invitationTtl),
-      maxAcceptedUsers: getLimitData(share?.maxAcceptedUsers, entity?.defaultRoleShareResourceLimit?.maxAcceptedUsers),
-    });
+    return mapRoleData(role, limit, share, entity);
   });
-  return data;
+};
+
+const getRolesWithLimits = (roles: DialRole[], entity?: EntityRoleLimits) => {
+  if (!entity?.roleLimits) return [];
+
+  return Object.keys(entity.roleLimits)
+    .map((roleName) => {
+      const role = roles.find((role) => role.name === roleName);
+      if (!role) return null;
+
+      const limit = entity?.roleLimits?.[roleName];
+      const share = entity?.roleShareResourceLimits?.[roleName];
+      return mapRoleData(role, limit, share, entity);
+    })
+    .filter((data) => data !== null);
 };
 
 const getLimitData = (value?: string | null, defaultValue?: string | null) => {
   return value === null && defaultValue !== null ? null : value || defaultValue;
 };
 
-const getRolesWithLimits = (roles: DialRole[], entity?: EntityRoleLimits) => {
-  if (entity?.roleLimits == null) {
-    return [];
-  }
-  const data: RolesGridData[] = [];
-
-  Object.keys(entity?.roleLimits).forEach((roleName) => {
-    const role = roles.find((role) => role.name === roleName);
-    const limit = entity?.roleLimits?.[roleName];
-    const share = entity?.roleShareResourceLimits?.[roleName];
-    data.push({
-      ...role,
-      day: getLimitData(limit?.day, entity?.defaultRoleLimit?.day),
-      minute: getLimitData(limit?.minute, entity?.defaultRoleLimit?.minute),
-      week: getLimitData(limit?.week, entity?.defaultRoleLimit?.week),
-      month: getLimitData(limit?.month, entity?.defaultRoleLimit?.month),
-      invitationTtl: getLimitData(share?.invitationTtl, entity?.defaultRoleShareResourceLimit?.invitationTtl),
-      maxAcceptedUsers: getLimitData(share?.maxAcceptedUsers, entity?.defaultRoleShareResourceLimit?.maxAcceptedUsers),
-    });
-  });
-
-  return data;
-};
+const mapRoleData = (
+  role: DialRole,
+  limit: DialRoleLimits | undefined,
+  share: DialRoleShare | undefined,
+  entity: EntityRoleLimits | undefined,
+): RolesGridData => ({
+  ...role,
+  day: getLimitData(limit?.day, entity?.defaultRoleLimit?.day),
+  minute: getLimitData(limit?.minute, entity?.defaultRoleLimit?.minute),
+  week: getLimitData(limit?.week, entity?.defaultRoleLimit?.week),
+  month: getLimitData(limit?.month, entity?.defaultRoleLimit?.month),
+  invitationTtl: getLimitData(share?.invitationTtl, entity?.defaultRoleShareResourceLimit?.invitationTtl),
+  maxAcceptedUsers: getLimitData(share?.maxAcceptedUsers, entity?.defaultRoleShareResourceLimit?.maxAcceptedUsers),
+});
 
 export const LIMIT_COLUMNS = (
   defaultValues?: DialRoleLimits & DialRoleShare,
