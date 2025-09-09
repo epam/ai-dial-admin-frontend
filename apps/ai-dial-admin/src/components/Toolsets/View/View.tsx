@@ -11,7 +11,7 @@ import Tabs from '@/src/components/Common/Tabs/Tabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
-import { EntityViewTab, propertiesTabs, rolesTabs, toolsTabs } from '@/src/components/EntityView/View/utils';
+import { auditTabs, EntityViewTab, propertiesTabs, rolesTabs, toolsTabs } from '@/src/components/EntityView/View/utils';
 import Tool from '@/src/components/Toolsets/Tools/Tools';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -24,6 +24,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import ToolsetProperties from './Properties';
+import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 
 interface Props {
   names: string[];
@@ -37,7 +38,7 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
 
-  const tabs: TabModel[] = [propertiesTabs(t), toolsTabs(t), rolesTabs(t)];
+  const tabs: TabModel[] = [propertiesTabs(t), toolsTabs(t), rolesTabs(t), auditTabs(t)];
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedToolset, setSelectedToolset] = useState(cloneDeep(originalToolset));
@@ -148,6 +149,10 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
                 onChangeEntity={onChangeToolset}
                 isSkipRefresh={isSkipRefresh}
               />
+            )}
+
+            {activeTab === EntityViewTab.Audit && (
+              <EntityAudit entity={selectedAdapter} view={ApplicationRoute.Toolsets} />
             )}
           </>
         )}

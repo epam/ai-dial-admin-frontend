@@ -27,7 +27,7 @@ describe('getSystemRollbackColumns', () => {
   });
 
   test('returns SIMPLE_ENTITY_COLUMNS for TOOLSET', () => {
-    const cols = getSystemRollbackColumns(ActivityAuditResourceType.TOOLSETS, t);
+    const cols = getSystemRollbackColumns(ActivityAuditResourceType.TOOLSET, t);
     expect(cols).toEqual(SIMPLE_ENTITY_COLUMNS);
   });
 
