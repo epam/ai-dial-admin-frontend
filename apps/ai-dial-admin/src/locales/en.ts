@@ -643,6 +643,7 @@ export default {
     endpointDeploymentName: 'Endpoint deployment name',
     endpoint: 'Endpoint',
     keyValue: 'Key value',
+    container: 'Container',
     name: 'Name',
     id: 'ID',
     displayName: 'Display name',
