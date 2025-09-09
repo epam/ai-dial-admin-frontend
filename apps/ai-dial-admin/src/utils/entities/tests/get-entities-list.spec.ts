@@ -10,18 +10,18 @@ describe('Utils :: getEntitiesList', () => {
     const entities = getEntitiesList(t);
 
     expect(Array.isArray(entities)).toBe(true);
-    expect(entities).toHaveLength(9);
+    expect(entities).toHaveLength(10);
 
     expect(entities).toEqual([
       { id: EntityType.MODEL, name: `translated:${MenuI18nKey.Models}` },
       { id: EntityType.APPLICATION, name: `translated:${MenuI18nKey.Applications}` },
+      { id: EntityType.TOOLSET, name: `translated:${MenuI18nKey.Toolsets}` },
       { id: EntityType.ROUTE, name: `translated:${MenuI18nKey.Routes}` },
       { id: EntityType.ROLE, name: `translated:${MenuI18nKey.Roles}` },
       { id: EntityType.KEY, name: `translated:${MenuI18nKey.Keys}` },
       { id: EntityType.APPLICATION_TYPE_SCHEMA, name: `translated:${MenuI18nKey.ApplicationRunners}` },
       { id: EntityType.INTERCEPTOR, name: `translated:${MenuI18nKey.Interceptors}` },
       { id: EntityType.PROMPT, name: `translated:${MenuI18nKey.Prompts}` },
-      { id: EntityType.TOOLSET, name: `translated:${MenuI18nKey.Toolsets}` },
       { id: EntityType.FILE, name: `translated:${MenuI18nKey.Files}` },
     ]);
   });
