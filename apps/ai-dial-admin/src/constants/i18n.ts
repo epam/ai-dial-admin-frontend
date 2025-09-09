@@ -224,7 +224,6 @@ export enum CreateI18nKey {
   CreateAdapter = 'CreateEntity.Adapter.Create',
   SelectAdapter = 'CreateEntity.Adapter.Select',
   SelectContainer = 'CreateEntity.SelectContainer',
-  InterceptorContainer = 'CreateEntity.InterceptorContainer',
 }
 
 export enum UpstreamEndpointsI18nKey {

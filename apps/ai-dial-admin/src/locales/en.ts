@@ -211,7 +211,6 @@ export default {
     Toolsets: 'Create Toolset',
     Prompt: 'Create Prompt',
     Route: 'Create Route',
-    InterceptorContainer: 'Select Interceptor Container',
     SelectContainer: 'Select Container',
     InterceptorTemplate: {
       Create: 'Create Interceptor Template',

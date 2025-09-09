@@ -28,7 +28,7 @@ const SelectContainerModal: FC<Props> = ({ selectedId, interceptorContainers, mo
   return (
     <Popup
       onClose={onClose}
-      heading={t(CreateI18nKey.InterceptorContainer)}
+      heading={t(CreateI18nKey.SelectContainer)}
       portalId="entityNameToken"
       state={modalState}
       containerClassName={'h-[750px] lg:max-w-[65%]'}
