@@ -113,7 +113,9 @@ export const getComponents = (
     data.forEach((entity) => {
       const dependencies =
         (entity.dependencies?.flatMap((d) =>
-          d === EntityType.ENTITIES ? [EntityType.APPLICATION, EntityType.MODEL, EntityType.ROUTE] : [d],
+          d === EntityType.ENTITIES
+            ? [EntityType.APPLICATION, EntityType.MODEL, EntityType.ROUTE, EntityType.TOOLSET]
+            : [d],
         ) as EntityType[]) || [];
       components.push({
         dependencies,
@@ -143,6 +145,10 @@ const getComponentKey = (data: EntitiesGridData, key: string): string => {
     return EntityType.ROUTE;
   }
 
+  if (data.type === MenuI18nKey.Toolsets) {
+    return EntityType.TOOLSET;
+  }
+
   return key;
 };
 
@@ -165,7 +171,7 @@ export const getComponentTypes = (
   const isCoreFormat = selectedFormat === ExportFormat.CORE;
   const types: EntityType[] = [];
   if (config.entities) {
-    types.push(...[EntityType.APPLICATION, EntityType.MODEL, EntityType.ROUTE]);
+    types.push(...[EntityType.APPLICATION, EntityType.MODEL, EntityType.ROUTE, EntityType.TOOLSET]);
   }
 
   if (config.roles) {

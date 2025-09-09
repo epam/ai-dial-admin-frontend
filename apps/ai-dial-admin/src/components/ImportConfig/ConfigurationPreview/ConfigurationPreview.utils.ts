@@ -98,6 +98,10 @@ export const getConfigurationPreview = (configuration: FileConfiguration, t: (v:
       if (configurationKey === 'files') {
         previewData[EntityType.FILE] = configurationItems;
       }
+
+      if (configurationKey === 'toolsets') {
+        previewData[EntityType.TOOLSET] = configurationItems;
+      }
     }
   });
 
@@ -136,7 +140,12 @@ export const getComponentColDefs = (type: string, t: (v: string) => string): Col
     return [getComponentActionColumn(), ...APPLICATIONS_COLUMNS(t)];
   }
 
-  if (type === EntityType.ROUTE || type === EntityType.ROLE || type === EntityType.INTERCEPTOR) {
+  if (
+    type === EntityType.ROUTE ||
+    type === EntityType.ROLE ||
+    type === EntityType.INTERCEPTOR ||
+    type === EntityType.TOOLSET
+  ) {
     return [getComponentActionColumn(), ...SIMPLE_ENTITY_COLUMNS];
   }
 

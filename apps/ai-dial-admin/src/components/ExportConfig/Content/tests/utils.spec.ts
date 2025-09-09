@@ -1,7 +1,7 @@
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { EntityType } from '@/src/types/entity-type';
 import { ExportFormat, ExportType } from '@/src/types/export';
-import { getActualTabs, getDataWithoutItem } from '../ConfigContent.utils';
+import { getActualTabs, getDataWithoutItem } from '../utils';
 
 import { describe, expect, test } from 'vitest';
 

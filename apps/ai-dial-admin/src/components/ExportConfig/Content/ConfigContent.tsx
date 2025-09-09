@@ -5,7 +5,7 @@ import { getEntities } from '@/src/app/[lang]/export-config/actions';
 import Loader from '@/src/components/Common/Loader/Loader';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import AddEntitiesButton from '@/src/components/ExportConfig/AddEntities/AddEntitiesButton';
-import { getActualTabs } from '@/src/components/ExportConfig/Content/ConfigContent.utils';
+import { getActualTabs } from '@/src/components/ExportConfig/Content/utils';
 import ConfigContentGrid from '@/src/components/ExportConfig/Content/ConfigContentGrid';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';

@@ -4,6 +4,7 @@ export const SYSTEM_ROLLBACK_ID = 'system-rollback';
 export const SYSTEM_ROLLBACK_ENTITIES = [
   ActivityAuditResourceType.MODEL,
   ActivityAuditResourceType.APPLICATION,
+  ActivityAuditResourceType.TOOLSETS,
   ActivityAuditResourceType.ROUTE,
   ActivityAuditResourceType.ROLE,
   ActivityAuditResourceType.KEY,

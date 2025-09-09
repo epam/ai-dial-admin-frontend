@@ -5,6 +5,7 @@ export const getEntitiesList = (t: (v: string) => string) => {
   return [
     { id: EntityType.MODEL, name: t(MenuI18nKey.Models) },
     { id: EntityType.APPLICATION, name: t(MenuI18nKey.Applications) },
+    { id: EntityType.TOOLSET, name: t(MenuI18nKey.Toolsets) },
     { id: EntityType.ROUTE, name: t(MenuI18nKey.Routes) },
     { id: EntityType.ROLE, name: t(MenuI18nKey.Roles) },
     { id: EntityType.KEY, name: t(MenuI18nKey.Keys) },
