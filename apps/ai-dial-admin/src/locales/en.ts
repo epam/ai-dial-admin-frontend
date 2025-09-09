@@ -319,6 +319,8 @@ export default {
     SetNoLimits: 'Set no limits',
     AvailableSpecificRoles: 'Make available to specific roles',
     NotAvailableModel: 'This model will not be available to any end-users.',
+    NotAvailableApplication: 'This application will not be available to any end-users.',
+    NotAvailableToolSet: 'This toolset will not be available to any end-users.',
     SaveWithEmptyRolesTitle: 'Roles Are Not Assigned',
     SaveWithEmptyRolesDescription: 'Entity without assigned roles will not be available to end-users.',
     SaveProceedWithConfiguration: 'Are you sure you want to proceed with this configuration?',

@@ -296,6 +296,8 @@ export enum RolesI18nKey {
   SaveWithEmptyRolesDescription = 'Roles.SaveWithEmptyRolesDescription',
   SaveProceedWithConfiguration = 'Roles.SaveProceedWithConfiguration',
   NotAvailableModel = 'Roles.NotAvailableModel',
+  NotAvailableApplication = 'Roles.NotAvailableApplication',
+  NotAvailableToolSet = 'Roles.NotAvailableToolSet',
 }
 
 export enum ForwardTokenI18nKey {
