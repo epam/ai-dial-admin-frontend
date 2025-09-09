@@ -19,6 +19,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import classNames from 'classnames';
 import SelectSourceEntityModal from './SelectSourceEntityModal';
+import { useSaveValidationContext, ValidationActionType } from '../../../context/SaveValidationContext';
 
 interface Props {
   fieldTitle: string;
@@ -47,6 +48,7 @@ const SourceEntitySelector: FC<Props> = ({
 }) => {
   const t = useI18n();
   const currentLocale = useCurrentLocale();
+  const { dispatch } = useSaveValidationContext();
 
   const [modalState, setIsModalState] = useState(PopUpState.Closed);
   const [valueTitle, setValueTitle] = useState('');
@@ -62,6 +64,11 @@ const SourceEntitySelector: FC<Props> = ({
   const onCloseModal = useCallback(() => {
     setIsModalState(PopUpState.Closed);
   }, [setIsModalState]);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'sourceEntitySelector', isValid: !errorText });
+    return () => dispatch({ type: ValidationActionType.SetField, field: 'sourceEntitySelector', isValid: true });
+  }, [errorText, t, dispatch]);
 
   const dropdownItems = useMemo(() => {
     return (
@@ -133,6 +140,7 @@ const SourceEntitySelector: FC<Props> = ({
       placeholder={placeholder}
       onChange={onChange}
       optional={optional}
+      errorText={errorText}
     />
   );
 };

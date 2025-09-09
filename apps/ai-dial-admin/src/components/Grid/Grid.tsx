@@ -176,7 +176,6 @@ const Grid = <T extends object>({
         tooltipShowDelay={500}
         defaultColDef={{
           minWidth: 150,
-          flex: 1,
           floatingFilter: true,
           floatingFilterComponent: FloatingFilter,
           resizable: true,
