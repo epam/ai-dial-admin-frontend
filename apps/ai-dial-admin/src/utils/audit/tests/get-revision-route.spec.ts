@@ -43,6 +43,10 @@ describe('Audit :: getRevisionRouteForEntityType', () => {
     expect(getRevisionRouteForEntityType(ActivityAuditResourceType.ROUTE, id)).toBe(`/routes/${id}/revision/`);
   });
 
+  test('returns correct route for TOOLSET', () => {
+    expect(getRevisionRouteForEntityType(ActivityAuditResourceType.TOOLSET, id)).toBe(`/toolSets/${id}/revision/`);
+  });
+
   test('returns correct route for APPLICATION_TYPE_SCHEMA', () => {
     expect(getRevisionRouteForEntityType(ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA, id)).toBe(
       `/applicationTypeSchemas/snapshot?id=${id}&revision=`,
@@ -79,6 +83,10 @@ describe('Audit :: getRevisionRouteForAllEntities', () => {
 
   test('returns correct route for KEY', () => {
     expect(getRevisionRouteForAllEntities(ActivityAuditResourceType.KEY)).toBe(`/keys/revision/`);
+  });
+
+  test('returns correct route for TOOLSET', () => {
+    expect(getRevisionRouteForAllEntities(ActivityAuditResourceType.TOOLSET)).toBe(`/toolSets/revision/`);
   });
 
   test('returns correct route for ROLE', () => {
