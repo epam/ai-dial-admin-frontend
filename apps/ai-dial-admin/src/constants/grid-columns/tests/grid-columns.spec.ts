@@ -21,7 +21,7 @@ describe('Constants :: grid columns', () => {
     const t = (s: string) => s;
     const cols = MODELS_COLUMNS(t);
     expect(Array.isArray(cols)).toBe(true);
-    expect(cols.some((c) => c.field === 'adapter')).toBe(true);
+    expect(cols.some((c) => c.field === 'source.adapterName')).toBe(true);
     expect(cols.some((c) => c.field === 'type')).toBe(true);
     expect(cols.some((c) => c.field === 'pricing.prompt')).toBe(true);
   });
