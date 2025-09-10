@@ -1,10 +1,12 @@
 import Big from 'big.js';
-import { ValueFormatterParams } from 'ag-grid-community';
+import { ITooltipParams, ValueFormatterParams } from 'ag-grid-community';
 
 import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
 import { AttachmentsI18nKey } from '@/src/constants/i18n';
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { formatNumberByDelimiter } from '@/src/utils/formatting/number-formatting';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { ApplicationRoute } from '@/src/types/routes';
 
 export const getFormattedResourceType = (value: string): string => {
   if (value === ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA) {
@@ -48,4 +50,32 @@ export const numberValueFormatter = (params: ValueFormatterParams) => {
   }
 
   return number;
+};
+
+export const sourceTypeFormatter = (value: string, view?: ApplicationRoute) => {
+  if (value === SOURCE_TYPE.ADAPTER) {
+    return 'Adapter';
+  } else if (value === SOURCE_TYPE.CONTAINER) {
+    return view === ApplicationRoute.Models ? 'Deployment model' : 'Interceptor deployment';
+  } else if (value === SOURCE_TYPE.ENDPOINTS) {
+    return 'Endpoint';
+  } else if (value === SOURCE_TYPE.RUNNER) {
+    return 'Interceptor Template';
+  } else {
+    return value;
+  }
+};
+
+export const sourceValueFormatter = (params: ValueFormatterParams | ITooltipParams) => {
+  if (params.data.source.$type === SOURCE_TYPE.ADAPTER) {
+    return params.data.source.adapterName;
+  } else if (params.data.source.$type === SOURCE_TYPE.RUNNER) {
+    return params.data.source.runnerName;
+  } else if (params.data.source.$type === SOURCE_TYPE.CONTAINER) {
+    return params.data.source.containerId;
+  } else if (params.data.source.$type === SOURCE_TYPE.ENDPOINTS) {
+    return params.data.endpoint;
+  } else {
+    return params.value;
+  }
 };

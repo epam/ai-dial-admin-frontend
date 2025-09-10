@@ -8,12 +8,14 @@ import {
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { describe, expect, test } from 'vitest';
 import { getSystemRollbackColumns } from '../utils';
+import { ApplicationRoute } from '@/src/types/routes';
 
 describe('getSystemRollbackColumns', () => {
   const t = (s: string) => `t:${s}`;
+  const view = ApplicationRoute.Models;
 
   test('returns SIMPLE_ENTITY_COLUMNS for ADAPTER', () => {
-    const cols = getSystemRollbackColumns(ActivityAuditResourceType.ADAPTER, t);
+    const cols = getSystemRollbackColumns(ActivityAuditResourceType.ADAPTER, t, view);
     expect(cols).toEqual(SIMPLE_ENTITY_COLUMNS);
   });
 
@@ -39,7 +41,7 @@ describe('getSystemRollbackColumns', () => {
 
   test('returns SIMPLE_ENTITY_COLUMNS for MODEL', () => {
     const cols = getSystemRollbackColumns(ActivityAuditResourceType.MODEL, t);
-    expect(cols.length).toEqual(16);
+    expect(cols.length).toEqual(17);
   });
 
   test('returns SIMPLE_ENTITY_COLUMNS for APPLICATION', () => {
