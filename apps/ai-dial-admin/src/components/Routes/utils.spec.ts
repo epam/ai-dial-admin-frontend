@@ -64,12 +64,7 @@ describe('Routes :: handleRouteOutputChange', () => {
     };
     const newRoute = handleRouteOutputChange(route, RouteOutput.UPSTREAMS);
     expect(newRoute).toEqual({
-      upstreams: [
-        {
-          endpoint: '',
-          key: void 0,
-        },
-      ],
+      upstreams: [],
       response: void 0,
     });
   });
