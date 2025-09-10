@@ -2,19 +2,19 @@
 
 import { FC } from 'react';
 
-// import Defaults from '@/src/components/Defaults/Defaults';
+import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
+import { getInterceptorContainers } from '@/src/app/[lang]/interceptors/actions';
+import Defaults from '@/src/components/Defaults/Defaults';
 import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
+import { getSourceItems, INTERCEPTOR_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
+import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getInterceptorContainers } from '@/src/app/[lang]/interceptors/actions';
-import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
-import { useAppContext } from '@/src/context/AppContext';
-import { getSourceItems, INTERCEPTOR_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
-import { useI18n } from '@/src/locales/client';
 
-import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
+import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
 import SourceField from '@/src/components/SourceField/SourceField';
 import { isDeploymentsEnabled } from '@/src/utils/plugins';
 
@@ -57,7 +57,7 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
           fieldTitle={t(EntitiesI18nKey.SourceType)}
           sourceItems={getSourceItems(INTERCEPTOR_SOURCE_ITEMS, deploymentsEnabled)}
         />
-        {/* <Defaults entity={selectedInterceptor} onChangeEntity={onChangeInterceptor} /> */}
+        <Defaults entity={selectedInterceptor} onChangeEntity={onChangeInterceptor} />
       </div>
     </div>
   );
