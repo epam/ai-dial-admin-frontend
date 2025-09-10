@@ -23,7 +23,7 @@ describe('Utils :: getEntitiesList', () => {
       { id: EntityType.INTERCEPTOR, name: `translated:${MenuI18nKey.Interceptors}` },
       { id: EntityType.PROMPT, name: `translated:${MenuI18nKey.Prompts}` },
       { id: EntityType.FILE, name: `translated:${MenuI18nKey.Files}` },
-      { id: EntityType.ADAPTER, name: `translated:${MenuI18nKey.Adapters}`},
+      { id: EntityType.ADAPTER, name: `translated:${MenuI18nKey.Adapters}` },
     ]);
   });
 
