@@ -485,6 +485,8 @@ export enum ImportI18nKey {
   FileError = 'Import.FileError',
   FileErrorType = 'Import.FileErrorType',
   ArchiveErrorTitle = 'Import.ArchiveErrorTitle',
+  Update = 'Import.Update',
+  Create = 'Import.Create',
 }
 
 export enum ExportI18nKey {
