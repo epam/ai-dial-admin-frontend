@@ -9,6 +9,7 @@ import { DialModel, PricingType } from '@/src/models/dial/model';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { IconCurrencyDollar } from '@tabler/icons-react';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { getMultipliedValue } from './utils';
 
 interface Props {
   model: DialModel;
@@ -85,20 +86,20 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
       <NumberInputField
         elementId="promptsPrice"
         fieldTitle={t(ModelViewI18nKey.PromptPrice)}
-        value={isTokenType ? Number(model.pricing?.prompt) * 1000000 : model.pricing?.prompt}
-        containerCssClass="w-[120px] lg:w-auto lg:max-w-[120px]"
+        value={getMultipliedValue(model.pricing?.prompt, isTokenType)}
         onChange={onChangePrompt}
+        containerCssClass="w-[120px] lg:w-auto lg:max-w-[120px]"
         iconBeforeInput={<IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} />}
         disabled={activeType === BasicI18nKey.None}
       />
       <NumberInputField
         elementId="completionsPrice"
-        iconBeforeInput={<IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} />}
         fieldTitle={t(ModelViewI18nKey.CompletionPrice)}
-        containerCssClass="w-[120px] lg:w-auto lg:max-w-[120px]"
-        disabled={activeType === BasicI18nKey.None}
+        value={getMultipliedValue(model.pricing?.completion, isTokenType)}
         onChange={onChangeCompletion}
-        value={isTokenType ? Number(model.pricing?.completion) * 1000000 : model.pricing?.completion}
+        containerCssClass="w-[120px] lg:w-auto lg:max-w-[120px]"
+        iconBeforeInput={<IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} />}
+        disabled={activeType === BasicI18nKey.None}
       />
     </div>
   );

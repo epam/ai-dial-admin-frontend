@@ -530,6 +530,8 @@ export default {
     FileError: 'File could not be processed, as it is larger than 512 mb. Remove it to move on.',
     FileErrorType: 'This file type is not supported',
     ArchiveErrorTitle: 'Importing archive failed',
+    Update: 'Update',
+    Create: 'Create',
   },
   Export: {
     Config: 'Config',

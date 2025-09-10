@@ -51,6 +51,10 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
     dispatch({ type: ValidationActionType.SetField, field: 'status', isValid: !statusError });
   }, [dispatch, statusError]);
 
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'methods', isValid: !!route.methods?.length });
+  }, [dispatch, route.methods]);
+
   const selectedPermissions = useMemo(() => {
     const values = (route as DialAppRoute).permissions?.map(
       (p) => permissionsItems.find((i) => i.id === p)?.name as string,
@@ -167,6 +171,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
           heading={t(EntityFieldsI18nKey.methods)}
           title={t(EntityFieldsI18nKey.methods)}
           allItems={methods}
+          errorText={route.methods?.length ? '' : t(ErrorI18nKey.EmptyField)}
         />
 
         <RadioField
