@@ -21,15 +21,12 @@ import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { RoutesForCheckingUniqueName } from './constants';
 import { DialRoute } from '@/src/models/dial/route';
-import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { isValidSourceField } from '@/src/components/SourceField/utils';
-import { DialModel, DialModelType } from '@/src/models/dial/model';
-import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
+import { DialModel } from '@/src/models/dial/model';
 
 interface CreatePromptEntity extends BaseEntity {
   version?: string;
   folderId?: string;
-  source?: unknown;
 }
 
 interface Props<T> {
@@ -65,7 +62,6 @@ const CreateEntity = <T extends CreatePromptEntity>({
       ? ({
           name: '',
           description: '',
-          source: { $type: SOURCE_TYPE.ADAPTER, completionEndpointPath: getEndpointPostfix(DialModelType.Chat) },
         } as T)
       : versionsMap
         ? ({ name: '', description: '', version: '1.0.0' } as T)
