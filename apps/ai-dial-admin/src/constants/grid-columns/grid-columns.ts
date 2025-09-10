@@ -131,7 +131,7 @@ export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   DESCRIPTION_COLUMN,
   NAME_COLUMN,
   {
-    field: 'adapter',
+    field: 'source.adapterName',
     headerName: 'Adapter',
     hide: false,
   },
