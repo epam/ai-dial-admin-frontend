@@ -16,6 +16,13 @@ import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { cellRenderParams } from './constants';
+import { RolesI18nKey } from '@/src/constants/i18n';
+
+export const getNoAvailableTitle = (view: ApplicationRoute) => {
+  if (view === ApplicationRoute.Models) return RolesI18nKey.NotAvailableModel;
+  if (view === ApplicationRoute.Applications) return RolesI18nKey.NotAvailableApplication;
+  return RolesI18nKey.NotAvailableToolSet;
+};
 
 export const isDisableRole = (entity: EntityRoleLimits) => {
   return !Object.keys(entity.roleLimits || {}).length && !entity.isPublic;

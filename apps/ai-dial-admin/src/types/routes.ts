@@ -24,4 +24,5 @@ export enum ApplicationRoute {
   Forbidden = '/forbidden',
   InterceptorTemplates = '/interceptor-templates',
   InterceptorDeployments = '/interceptor-deployments',
+  ModelDeployments = '/model-deployments',
 }

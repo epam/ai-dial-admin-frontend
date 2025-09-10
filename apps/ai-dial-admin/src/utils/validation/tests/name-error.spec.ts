@@ -12,6 +12,8 @@ describe('Validation :: getErrorForUrlId', () => {
   test('Should clear all field', () => {
     const res1 = getErrorForUrlId('id', []);
     const res2 = getErrorForUrlId('id', [], t);
+    const res3 = getErrorForUrlId('', [], t);
+    const res4 = getErrorForUrlId(void 0, [], t);
 
     expect(res1).toEqual({
       text: '',
@@ -21,6 +23,16 @@ describe('Validation :: getErrorForUrlId', () => {
     expect(res2).toEqual({
       text: ErrorI18nKey.UrlField,
       type: ErrorType.INVALID,
+    });
+
+    expect(res3).toEqual({
+      text: ErrorI18nKey.Length,
+      type: ErrorType.LENGTH,
+    });
+
+    expect(res4).toEqual({
+      text: ErrorI18nKey.Length,
+      type: ErrorType.LENGTH,
     });
   });
 

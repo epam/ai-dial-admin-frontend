@@ -1,5 +1,26 @@
-import { getRolesGridData, isDisableRole, isResetAvailable } from '@/src/components/EntityView/Roles/utils';
+import {
+  getRolesGridData,
+  isDisableRole,
+  getNoAvailableTitle,
+  isResetAvailable,
+} from '@/src/components/EntityView/Roles/utils';
+import { ApplicationRoute } from '@/src/types/routes';
+import { RolesI18nKey } from '@/src/constants/i18n';
 import { describe, expect, test } from 'vitest';
+
+describe('getNoAvailableTitle', () => {
+  test('returns NotAvailableModel for Models view', () => {
+    expect(getNoAvailableTitle(ApplicationRoute.Models)).toBe(RolesI18nKey.NotAvailableModel);
+  });
+
+  test('returns NotAvailableApplication for Applications view', () => {
+    expect(getNoAvailableTitle(ApplicationRoute.Applications)).toBe(RolesI18nKey.NotAvailableApplication);
+  });
+
+  test('returns NotAvailableApplication for Toolsets view', () => {
+    expect(getNoAvailableTitle(ApplicationRoute.Toolsets)).toBe(RolesI18nKey.NotAvailableToolSet);
+  });
+});
 
 describe('Roles View :: isResetAvailable', () => {
   test('Should return true', () => {
