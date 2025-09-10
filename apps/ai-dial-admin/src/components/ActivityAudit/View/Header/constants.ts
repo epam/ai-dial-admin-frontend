@@ -11,5 +11,5 @@ export const auditResourceRoute: Record<ActivityAuditResourceType, ApplicationRo
   [ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA]: ApplicationRoute.ApplicationRunners,
   [ActivityAuditResourceType.ROUTE]: ApplicationRoute.Routes,
   [ActivityAuditResourceType.INTERCEPTOR_TEMPLATE]: ApplicationRoute.InterceptorTemplates,
-  [ActivityAuditResourceType.TOOLSETS]: ApplicationRoute.Toolsets,
+  [ActivityAuditResourceType.TOOLSET]: ApplicationRoute.Toolsets,
 };

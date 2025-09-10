@@ -25,8 +25,13 @@ export async function updateToolset(toolSet: Toolset) {
 
 export async function createToolset(toolSet: Toolset) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const transport =
+    toolSet.endpoint?.includes('http') || toolSet.endpoint?.includes('https')
+      ? ToolsetTransport.HTTP
+      : ToolsetTransport.SSE;
+
   return toolSetsApi.createToolset(
-    { ...toolSet, allowedTools: toolSet.allowedTools?.filter((tool) => tool !== ''), transport: ToolsetTransport.SSE },
+    { ...toolSet, allowedTools: toolSet.allowedTools?.filter((tool) => tool !== ''), transport },
     token,
   );
 }

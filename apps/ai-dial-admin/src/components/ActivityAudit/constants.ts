@@ -9,6 +9,7 @@ export const sorts = [
 
 export enum EntityParameterKeys {
   TOPICS = 'topics',
+  TOOLS = 'allowedTools',
   HASHING_ORDER = 'fieldsHashingOrder',
   LIMITS = 'limits',
   PRICING = 'pricing',

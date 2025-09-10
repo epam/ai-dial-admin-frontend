@@ -4,7 +4,7 @@ export const SYSTEM_ROLLBACK_ID = 'system-rollback';
 export const SYSTEM_ROLLBACK_ENTITIES = [
   ActivityAuditResourceType.MODEL,
   ActivityAuditResourceType.APPLICATION,
-  ActivityAuditResourceType.TOOLSETS,
+  ActivityAuditResourceType.TOOLSET,
   ActivityAuditResourceType.ROUTE,
   ActivityAuditResourceType.ROLE,
   ActivityAuditResourceType.KEY,
@@ -24,5 +24,5 @@ export const SYSTEM_ROLLBACK_TAB_NAME: Record<ActivityAuditResourceType, string>
   [ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA]: 'ApplicationRunners',
   [ActivityAuditResourceType.ROUTE]: 'Routes',
   [ActivityAuditResourceType.INTERCEPTOR_TEMPLATE]: 'InterceptorTemplates',
-  [ActivityAuditResourceType.TOOLSETS]: 'Toolsets',
+  [ActivityAuditResourceType.TOOLSET]: 'Toolsets',
 };
