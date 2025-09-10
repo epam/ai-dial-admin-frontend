@@ -1,5 +1,6 @@
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 import { BaseEntity, EntityDefaults } from '@/src/models/dial/base-entity';
+import { DialFeatures } from './features';
 
 export interface DialInterceptor extends BaseEntity, EntityDefaults {
   configurationEndpoint?: string;
@@ -8,4 +9,5 @@ export interface DialInterceptor extends BaseEntity, EntityDefaults {
   endpoint?: string | null;
   forwardAuthToken?: boolean;
   author?: string;
+  features?: DialFeatures;
 }

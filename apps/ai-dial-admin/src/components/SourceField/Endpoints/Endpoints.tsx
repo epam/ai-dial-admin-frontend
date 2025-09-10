@@ -3,6 +3,7 @@ import { FC, useCallback } from 'react';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
 import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
+import { DialFeatures } from '@/src/models/dial/features';
 
 interface Props {
   entity: DialInterceptor;
@@ -19,7 +20,12 @@ const Endpoints: FC<Props> = ({ entity, onChange }) => {
 
   const onChangeConfigurationEndpoint = useCallback(
     (configurationEndpoint?: string) => {
-      onChange({ ...entity, configurationEndpoint });
+      onChange({
+        ...entity,
+        features: {
+          configurationEndpoint: configurationEndpoint,
+        } as DialFeatures,
+      });
     },
     [entity, onChange],
   );
@@ -27,7 +33,10 @@ const Endpoints: FC<Props> = ({ entity, onChange }) => {
   return (
     <div className="lg:w-[35%] flex flex-col gap-6">
       <CompletionEndpointControl endpoint={entity.endpoint} onChange={onChangeCompletionEndpoint} required={true} />
-      <ConfigurationEndpointControl endpoint={entity.configurationEndpoint} onChange={onChangeConfigurationEndpoint} />
+      <ConfigurationEndpointControl
+        endpoint={entity.features?.configurationEndpoint}
+        onChange={onChangeConfigurationEndpoint}
+      />
     </div>
   );
 };
