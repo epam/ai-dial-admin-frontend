@@ -66,7 +66,7 @@ const SourceField = <T extends DialInterceptor | DialModel>({
 
   const onChangeSource = useCallback(
     (sourceType: string) => {
-      if (sourceType != source) {
+      if (sourceType !== source) {
         setSource(sourceType as SOURCE_TYPE);
         onChangeEntity({ ...entity, source: { $type: sourceType as SOURCE_TYPE }, endpoint: null });
       }
