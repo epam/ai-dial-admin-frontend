@@ -4,11 +4,14 @@ import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { Container } from '@/src/models/deployments';
-import { DialModel } from '@/src/models/dial/model';
+import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { isValidSourceField } from '@/src/components/SourceField/utils';
+import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
 
 import Field from '@/src/components/Common/Field/Field';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
@@ -17,8 +20,6 @@ import Containers from '@/src/components/SourceField/Containers/Containers';
 import Templates from '@/src/components/SourceField/Template/Templates';
 import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
 import Adapters from '@/src/components/SourceField/Adapters/Adapters';
-import { isValidSourceField } from '@/src/components/SourceField/utils';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props<T> {
   entity: T;
@@ -49,7 +50,6 @@ const SourceField = <T extends DialInterceptor | DialModel>({
   isModal,
 }: Props<T>) => {
   const { dispatch } = useSaveValidationContext();
-
   const [source, setSource] = useState(sourceItems[0].id);
 
   const onChangeEntity = useCallback(
@@ -65,7 +65,12 @@ const SourceField = <T extends DialInterceptor | DialModel>({
   );
 
   useEffect(() => {
-    if (entity.source?.$type) {
+    if (!entity.source) {
+      onChangeEntity({
+        ...entity,
+        source: { $type: sourceItems[0].id, completionEndpointPath: getEndpointPostfix(DialModelType.Chat) },
+      });
+    } else {
       setSource(entity.source.$type);
     }
   }, [entity, onChangeEntity, sourceItems]);
@@ -79,7 +84,7 @@ const SourceField = <T extends DialInterceptor | DialModel>({
           items={sourceItems}
           onChange={(source) => {
             setSource(source as SOURCE_TYPE);
-            onChangeEntity({ ...entity, source: { $type: source as SOURCE_TYPE } });
+            onChangeEntity({ ...entity, source: { ...entity.source, $type: source as SOURCE_TYPE } });
           }}
           elementId={elementId}
           selectedValue={source}
