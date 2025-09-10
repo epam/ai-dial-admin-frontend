@@ -10,8 +10,6 @@ export interface SOURCE_FIELD {
   runnerName?: string;
   adapterName?: string;
   containerId?: string;
-  endpointDeploymentName?: string;
   completionEndpointPath?: string;
   configurationEndpointPath?: string;
-  endpoint?: string;
 }

@@ -10,6 +10,8 @@ import {
   getFormattedResourceType,
   numberValueFormatter,
   priceValueFormatter,
+  sourceTypeFormatter,
+  sourceValueFormatter,
 } from '@/src/constants/grid-columns/formatters';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
@@ -111,6 +113,27 @@ const ATTACHMENT_COLUMN = (t: (str: string) => string): ColDef => {
   };
 };
 
+const SOURCE_TYPE_COLUMN = (view?: ApplicationRoute): ColDef => ({
+  field: 'source.$type',
+  headerName: 'Source type',
+  hide: false,
+  valueFormatter: ({ value }) => sourceTypeFormatter(value, view),
+  tooltipValueGetter: ({ value }) => sourceTypeFormatter(value, view),
+});
+
+const SOURCE_VALUE_COLUMN: ColDef = {
+  field: 'endpoint',
+  headerName: 'Source',
+  hide: false,
+  valueFormatter: (params) => sourceValueFormatter(params),
+  tooltipValueGetter: (params) => sourceValueFormatter(params),
+};
+
+export const SOURCE_FIELD_COLUMNS = (view?: ApplicationRoute): ColDef[] => [
+  SOURCE_TYPE_COLUMN(view),
+  SOURCE_VALUE_COLUMN,
+];
+
 export const TYPE_COLUMN = (t: (str: string) => string): ColDef => {
   return {
     field: 'type',
@@ -125,16 +148,12 @@ export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [NAME_COLUMN_WITH_SORT, DISPLAY_N
 export const ENTITY_BASE_COLUMNS: ColDef[] = [NAME_COLUMN, DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN];
 export const DEPENDENCIES_COLUMNS = [NAME_COLUMN, DISPLAY_NAME_COLUMN, VERSION_COLUMN, DESCRIPTION_COLUMN];
 
-export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
+export const MODELS_COLUMNS = (t: (str: string) => string, view?: ApplicationRoute): ColDef[] => [
   DISPLAY_NAME_COLUMN_WITH_SORT,
   { field: 'displayVersion', colId: 'displayVersion', headerName: 'Version', hide: false },
   DESCRIPTION_COLUMN,
   NAME_COLUMN,
-  {
-    field: 'source.adapterName',
-    headerName: 'Adapter',
-    hide: false,
-  },
+  ...SOURCE_FIELD_COLUMNS(view),
   AUTHOR_COLUMN,
   { field: 'type', headerName: 'Type', hide: true },
   { field: 'overrideName', headerName: 'Override Name', hide: true },
