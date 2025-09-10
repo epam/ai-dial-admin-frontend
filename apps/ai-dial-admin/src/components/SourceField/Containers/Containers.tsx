@@ -84,8 +84,10 @@ const Containers = <T extends DialInterceptor | DialModel>({
   );
 
   const openContainer = useCallback(() => {
-    onOpenInNewTab(ApplicationRoute.InterceptorDeployments, selectedContainer, DEPLOYMENT_ENTITY.containers);
-  }, [selectedContainer]);
+    const route =
+      view === ApplicationRoute.Models ? ApplicationRoute.ModelDeployments : ApplicationRoute.InterceptorDeployments;
+    onOpenInNewTab(route, selectedContainer, DEPLOYMENT_ENTITY.containers);
+  }, [selectedContainer, view]);
 
   useEffect(() => {
     const fetchContainers = async () => {
@@ -113,7 +115,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
               items={containers.map((container) => ({ id: container.id, name: container.name }))}
               onChange={onSelect}
               elementId={'source-type'}
-              selectedValue={containers.find((container) => container.id === entity.source?.containerId)?.name}
+              selectedValue={containers.find((container) => container.id === entity.source?.containerId)?.id}
               placeholder={t(CreateI18nKey.SelectContainer)}
               fieldTitle={t(EntityFieldsI18nKey.container)}
               readonly={!deploymentsEnabled}
@@ -125,7 +127,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
             <InputModal
               modalState={modalState}
               onOpenModal={onOpenModal}
-              selectedValue={selectedContainer?.id}
+              selectedValue={selectedContainer?.name}
               elementId={fieldId}
               readonly={!deploymentsEnabled}
             >
