@@ -29,12 +29,7 @@ export const handleRouteOutputChange = (route: DialRoute, output: string) => {
   }
   return {
     ...route,
-    upstreams: [
-      {
-        endpoint: '',
-        key: void 0,
-      },
-    ],
+    upstreams: [],
     response: void 0,
   };
 };
