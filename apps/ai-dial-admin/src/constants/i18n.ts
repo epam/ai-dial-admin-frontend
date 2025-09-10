@@ -296,6 +296,8 @@ export enum RolesI18nKey {
   SaveWithEmptyRolesDescription = 'Roles.SaveWithEmptyRolesDescription',
   SaveProceedWithConfiguration = 'Roles.SaveProceedWithConfiguration',
   NotAvailableModel = 'Roles.NotAvailableModel',
+  NotAvailableApplication = 'Roles.NotAvailableApplication',
+  NotAvailableToolSet = 'Roles.NotAvailableToolSet',
 }
 
 export enum ForwardTokenI18nKey {
@@ -720,6 +722,7 @@ export enum EntityFieldsI18nKey {
   keyValue = 'EntityFields.keyValue',
   weight = 'EntityFields.weight',
   tier = 'EntityFields.tier',
+  transport = 'EntityFields.transport',
   overrideName = 'EntityFields.overrideName',
   properties = 'EntityFields.properties',
   enabled = 'EntityFields.enabled',
