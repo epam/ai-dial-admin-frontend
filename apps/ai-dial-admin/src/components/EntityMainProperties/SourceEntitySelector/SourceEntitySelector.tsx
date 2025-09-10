@@ -19,7 +19,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import classNames from 'classnames';
 import SelectSourceEntityModal from './SelectSourceEntityModal';
-import { useSaveValidationContext, ValidationActionType } from '../../../context/SaveValidationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   fieldTitle: string;
