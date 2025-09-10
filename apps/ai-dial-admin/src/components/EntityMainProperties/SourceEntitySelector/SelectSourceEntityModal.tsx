@@ -35,6 +35,13 @@ const SelectSourceEntityModal: FC<Props> = ({
 
   const [selectedEntity, setSelectedEntity] = useState(selectedId);
 
+  const isSelectedNode = (data?: DialApplicationScheme | DialAdapter) => {
+    const runner = data as DialApplicationScheme;
+    const adapter = data as DialAdapter;
+    const id = selectedEntity || t(BasicI18nKey.None);
+    return runner?.$id === id || adapter?.name === id;
+  };
+
   return (
     <Popup
       onClose={onClose}
@@ -50,15 +57,13 @@ const SelectSourceEntityModal: FC<Props> = ({
             rowSelection: { mode: 'singleRow', enableClickSelection: true },
             selectionColumnDef: {
               ...RADIO_BUTTON_COL_DEF,
-              cellRenderer: (data: { data?: DialApplicationScheme | DialAdapter; id: string }) => (
-                <RadioButtonRenderer
-                  inputId={(data.data as DialApplicationScheme)?.$id || (data.data as DialAdapter)?.name || data.id}
-                  isChecked={
-                    (data.data as DialApplicationScheme)?.$id === selectedEntity ||
-                    (data.data as DialAdapter)?.name === selectedEntity
-                  }
-                />
-              ),
+              cellRenderer: (data: { data?: DialApplicationScheme | DialAdapter; id: string }) => {
+                const runner = data.data as DialApplicationScheme;
+                const adapter = data.data as DialAdapter;
+                const isActive = isSelectedNode(data.data);
+
+                return <RadioButtonRenderer inputId={runner?.$id || adapter?.name || data.id} isChecked={isActive} />;
+              },
             },
             onRowSelected: (event) => {
               if (event.node.isSelected()) {
@@ -68,10 +73,17 @@ const SelectSourceEntityModal: FC<Props> = ({
             onGridReady: (event) => {
               event.api?.updateGridOptions({
                 columnDefs: columns,
-                rowData: [{ ['dial:applicationTypeDisplayName']: t(BasicI18nKey.None) }, ...(sourceEntities || [])],
+                rowData: [
+                  {
+                    ['dial:applicationTypeDisplayName']: t(BasicI18nKey.None),
+                    $id: t(BasicI18nKey.None),
+                    name: t(BasicI18nKey.None),
+                  },
+                  ...(sourceEntities || []),
+                ],
               });
               event.api.forEachNode((node) => {
-                if (node.data.$id === selectedEntity || node.data.name === selectedEntity) {
+                if (isSelectedNode(node.data)) {
                   node.setSelected(true);
                 }
               });
