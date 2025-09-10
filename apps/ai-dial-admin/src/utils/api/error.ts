@@ -16,7 +16,7 @@ export const getErrorMessage = (parsedError: ErrorObject, status: number): strin
   return typeof mess === 'object' || !mess ? `Error status: ${status}` : mess;
 };
 
-interface ErrorObject {
+export interface ErrorObject {
   message?: string;
   status?: number;
   error?: string;

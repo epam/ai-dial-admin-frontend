@@ -13,5 +13,6 @@ export const getEntitiesList = (t: (v: string) => string) => {
     { id: EntityType.INTERCEPTOR, name: t(MenuI18nKey.Interceptors) },
     { id: EntityType.PROMPT, name: t(MenuI18nKey.Prompts) },
     { id: EntityType.FILE, name: t(MenuI18nKey.Files) },
+    { id: EntityType.ADAPTER, name: t(MenuI18nKey.Adapters) },
   ];
 };

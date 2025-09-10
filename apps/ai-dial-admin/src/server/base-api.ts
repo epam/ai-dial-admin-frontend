@@ -2,7 +2,7 @@ import { JWT } from 'next-auth/jwt';
 
 import { ServerActionResponse } from '@/src/models/server-action';
 import { streamRequest } from '@/src/utils/api/create-stream-request';
-import { getError, getErrorMessage, getParsedError } from '@/src/utils/api/error';
+import { ErrorObject, getError, getErrorMessage, getParsedError } from '@/src/utils/api/error';
 import { logger } from './logger';
 import { sendRequest } from '@/src/utils/api/send-request';
 import { getApiHeaders, getAuthorizationHeader } from '@/src/utils/auth/api-headers';
@@ -156,6 +156,15 @@ export class BaseApi {
     }
 
     return getResponse<unknown>(type, res).then((r) => {
+      if ((r as ErrorObject).error) {
+        return {
+          success: false,
+          errorMessage: getErrorMessage(r as ErrorObject, res.status),
+          errorHeader: getError(r as ErrorObject),
+          status: res.status,
+          etag,
+        };
+      }
       return { success: true, response: r, etag };
     });
   }

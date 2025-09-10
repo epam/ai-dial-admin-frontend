@@ -7,9 +7,10 @@ import RouteContent from '@/src/components/EntityView/AppRoute/Content/RouteCont
 import CreateRoute from '@/src/components/EntityView/AppRoute/CreateRoute';
 import { ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialRoleLimitsMap } from '@/src/models/dial/role-limits';
 import { DialRole } from '@/src/models/dial/role';
+import { DialRoleLimitsMap } from '@/src/models/dial/role-limits';
 import { DialAppRoute } from '@/src/models/dial/route';
 import { PopUpState } from '@/src/types/pop-up';
 import AppRouteList from './AppRouteList';
@@ -25,7 +26,7 @@ interface Props {
 
 const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunnerView, routes, onChangeRoutes }) => {
   const t = useI18n() as (str: string) => string;
-
+  const { dispatch } = useSaveValidationContext();
   const [modalState, setModalState] = useState(PopUpState.Closed);
 
   const [activeRoute, setActiveRoute] = useState<string | undefined>(undefined);
@@ -62,16 +63,24 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
   const onCreate = useCallback(
     (name: string) => {
       handleModalClose();
-      onChangeRoutes([...(routes || []), { name, displayName: name } as DialAppRoute]);
+      onChangeRoutes([...(routes || []), { name, displayName: name, upstreams: [] } as DialAppRoute]);
     },
     [handleModalClose, onChangeRoutes, routes],
   );
 
   const onRemoveRoute = useCallback(
     (name?: string) => {
-      onChangeRoutes(routes?.filter((route) => route.name !== name) || []);
+      const newRoutes = routes?.filter((route) => route.name !== name) || [];
+      const statusErrors = newRoutes.some(
+        (r) => r.response?.status && (+r.response?.status < 100 || +r.response?.status > 999),
+      );
+      const methodErrors = newRoutes.some((r) => !r.methods?.length);
+
+      dispatch({ type: ValidationActionType.SetField, field: 'status', isValid: !statusErrors });
+      dispatch({ type: ValidationActionType.SetField, field: 'methods', isValid: !methodErrors });
+      onChangeRoutes(newRoutes);
     },
-    [onChangeRoutes, routes],
+    [dispatch, onChangeRoutes, routes],
   );
 
   return (
