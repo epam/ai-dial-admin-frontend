@@ -34,6 +34,7 @@ const setFileConfiguration = (fileConfiguration: FileConfiguration): FileConfigu
     interceptors: fileConfiguration.interceptors || [],
     prompts: fileConfiguration.prompts || [],
     files: fileConfiguration.files || [],
+    adapters: fileConfiguration.adapters || [],
   };
 };
 
@@ -139,15 +140,6 @@ export const getComponentColDefs = (type: string, t: (v: string) => string): Col
 
   if (type === EntityType.APPLICATION) {
     return [getComponentActionColumn(), ...APPLICATIONS_COLUMNS(t)];
-  }
-
-  if (
-    type === EntityType.ROUTE ||
-    type === EntityType.ROLE ||
-    type === EntityType.INTERCEPTOR ||
-    type === EntityType.TOOLSET
-  ) {
-    return [getComponentActionColumn(), ...SIMPLE_ENTITY_COLUMNS];
   }
 
   if (type === EntityType.APPLICATION_TYPE_SCHEMA) {
