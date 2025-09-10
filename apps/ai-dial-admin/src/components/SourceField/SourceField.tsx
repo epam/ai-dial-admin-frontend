@@ -64,6 +64,16 @@ const SourceField = <T extends DialInterceptor | DialModel>({
     [dispatch, onChange],
   );
 
+  const onChangeSource = useCallback(
+    (sourceType: string) => {
+      if (sourceType !== source) {
+        setSource(sourceType as SOURCE_TYPE);
+        onChangeEntity({ ...entity, source: { $type: sourceType as SOURCE_TYPE }, endpoint: null });
+      }
+    },
+    [entity, onChangeEntity, source],
+  );
+
   useEffect(() => {
     if (entity.source?.$type) {
       setSource(entity.source.$type);
@@ -77,10 +87,7 @@ const SourceField = <T extends DialInterceptor | DialModel>({
         <DropdownField
           listClassName={'w-fit'}
           items={sourceItems}
-          onChange={(source) => {
-            setSource(source as SOURCE_TYPE);
-            onChangeEntity({ ...entity, source: { $type: source as SOURCE_TYPE } });
-          }}
+          onChange={onChangeSource}
           elementId={elementId}
           selectedValue={source}
         />
