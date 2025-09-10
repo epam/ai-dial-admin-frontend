@@ -5,7 +5,12 @@ import { isDialRoleShareKey } from '@/src/components/AddEntitiesTab/utils';
 import AlertInfo from '@/src/components/Common/Alerts/AlertInfo';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import RolesGrid from '@/src/components/EntityView/Roles/RolesGrid';
-import { isDisableRole, isResetToDefaultHidden, isSetNoLimitsHidden } from '@/src/components/EntityView/Roles/utils';
+import {
+  getNoAvailableTitle,
+  isDisableRole,
+  isResetToDefaultHidden,
+  isSetNoLimitsHidden,
+} from '@/src/components/EntityView/Roles/utils';
 import { EntitiesI18nKey, RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
@@ -207,9 +212,7 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
           />
         </div>
       </div>
-      {isDisableRole(entity) && view !== ApplicationRoute.Routes && (
-        <AlertInfo text={t(RolesI18nKey.NotAvailableModel)} />
-      )}
+      {isDisableRole(entity) && view !== ApplicationRoute.Routes && <AlertInfo text={t(getNoAvailableTitle(view))} />}
       {addModalState === PopUpState.Opened &&
         createPortal(
           <AddEntitiesGrid

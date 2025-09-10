@@ -1,4 +1,10 @@
-import { KEYS_COLUMNS, RUNNERS_COLUMNS, SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import {
+  KEYS_COLUMNS,
+  RUNNERS_COLUMNS,
+  MODELS_COLUMNS,
+  APPLICATIONS_COLUMNS,
+  SIMPLE_ENTITY_COLUMNS,
+} from '@/src/constants/grid-columns/grid-columns';
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { describe, expect, test } from 'vitest';
 import { getSystemRollbackColumns } from '../utils';
@@ -27,8 +33,18 @@ describe('getSystemRollbackColumns', () => {
   });
 
   test('returns SIMPLE_ENTITY_COLUMNS for TOOLSET', () => {
-    const cols = getSystemRollbackColumns(ActivityAuditResourceType.TOOLSETS, t);
+    const cols = getSystemRollbackColumns(ActivityAuditResourceType.TOOLSET, t);
     expect(cols).toEqual(SIMPLE_ENTITY_COLUMNS);
+  });
+
+  test('returns SIMPLE_ENTITY_COLUMNS for MODEL', () => {
+    const cols = getSystemRollbackColumns(ActivityAuditResourceType.MODEL, t);
+    expect(cols.length).toEqual(16);
+  });
+
+  test('returns SIMPLE_ENTITY_COLUMNS for APPLICATION', () => {
+    const cols = getSystemRollbackColumns(ActivityAuditResourceType.APPLICATION, t);
+    expect(cols.length).toEqual(9);
   });
 
   test('returns KEYS_COLUMNS for KEY', () => {

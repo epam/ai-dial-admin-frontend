@@ -11,7 +11,7 @@ import Tabs from '@/src/components/Common/Tabs/Tabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
-import { EntityViewTab, propertiesTabs, rolesTabs, toolsTabs } from '@/src/components/EntityView/View/utils';
+import { auditTabs, EntityViewTab, propertiesTabs, rolesTabs, toolsTabs } from '@/src/components/EntityView/View/utils';
 import Tool from '@/src/components/Toolsets/Tools/Tools';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -24,6 +24,13 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import ToolsetProperties from './Properties';
+import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
+import { EntityRoleLimits } from '@/src/models/dial/base-entity';
+import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
+import { PopUpState } from '@/src/types/pop-up';
+import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
+import { ButtonsI18nKey, RolesI18nKey } from '@/src/constants/i18n';
+import { createPortal } from 'react-dom';
 
 interface Props {
   names: string[];
@@ -37,9 +44,10 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
 
-  const tabs: TabModel[] = [propertiesTabs(t), toolsTabs(t), rolesTabs(t)];
+  const tabs: TabModel[] = [propertiesTabs(t), toolsTabs(t), rolesTabs(t), auditTabs(t)];
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
+  const [modalState, setModalState] = useState(PopUpState.Closed);
   const [selectedToolset, setSelectedToolset] = useState(cloneDeep(originalToolset));
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
@@ -101,6 +109,14 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
     });
   }, [selectedToolset, router, showNotification]);
 
+  const onTryToSave = useCallback(() => {
+    if (isDisableRole(selectedToolset as EntityRoleLimits)) {
+      setModalState(PopUpState.Opened);
+    } else {
+      onSave();
+    }
+  }, [onSave, selectedToolset]);
+
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={headerClassName}>
@@ -110,7 +126,7 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
           entity={selectedToolset}
           isChanged={isChanged}
           onDiscard={onDiscard}
-          onSave={onSave}
+          onSave={onTryToSave}
           removeEntity={removeToolset}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
@@ -149,6 +165,30 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
                 isSkipRefresh={isSkipRefresh}
               />
             )}
+
+            {activeTab === EntityViewTab.Audit && (
+              <EntityAudit entity={selectedToolset} view={ApplicationRoute.Toolsets} />
+            )}
+
+            {modalState === PopUpState.Opened &&
+              createPortal(
+                <ConfirmationModal
+                  modalState={modalState}
+                  heading={t(RolesI18nKey.SaveWithEmptyRolesTitle)}
+                  confirmLabel={t(ButtonsI18nKey.Save)}
+                  cancelLabel={t(ButtonsI18nKey.ContinueEditing)}
+                  containerClassName="lg:!max-w-[440px]"
+                  onConfirm={() => onSave()}
+                  onClose={() => setModalState(PopUpState.Closed)}
+                  onCancel={() => setModalState(PopUpState.Closed)}
+                >
+                  <div className="text-secondary small-150 px-6 py-4">
+                    <p className="mb-2">{t(RolesI18nKey.SaveWithEmptyRolesDescription)}</p>
+                    <p className="small-text-semi">{t(RolesI18nKey.SaveProceedWithConfiguration)}</p>
+                  </div>
+                </ConfirmationModal>,
+                document.body,
+              )}
           </>
         )}
       </div>

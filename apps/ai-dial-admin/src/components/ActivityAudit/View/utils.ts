@@ -15,6 +15,7 @@ const appRunnerParameterKeys = ['properties', '$defs'];
 
 const arrayParameterKeys = [
   EntityParameterKeys.TOPICS,
+  EntityParameterKeys.TOOLS,
   EntityParameterKeys.HASHING_ORDER,
   EntityParameterKeys.PATHS,
   EntityParameterKeys.METHODS,

@@ -66,7 +66,7 @@ export const getUpdateAction = (type?: ActivityAuditResourceType) => {
       return updateRole;
     case ActivityAuditResourceType.ROUTE:
       return updateRoute;
-    case ActivityAuditResourceType.TOOLSETS:
+    case ActivityAuditResourceType.TOOLSET:
       return updateToolset;
     case ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA:
       return updateApplicationScheme;
@@ -91,7 +91,7 @@ export const getCreateAction = (type?: ActivityAuditResourceType) => {
       return createRole;
     case ActivityAuditResourceType.ROUTE:
       return createRoute;
-    case ActivityAuditResourceType.TOOLSETS:
+    case ActivityAuditResourceType.TOOLSET:
       return createToolset;
     case ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA:
       return createApplicationScheme;
@@ -116,7 +116,7 @@ export const getDeleteAction = (type?: ActivityAuditResourceType) => {
       return removeRole;
     case ActivityAuditResourceType.ROUTE:
       return removeRoute;
-    case ActivityAuditResourceType.TOOLSETS:
+    case ActivityAuditResourceType.TOOLSET:
       return removeToolset;
     case ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA:
       return removeApplicationScheme;
