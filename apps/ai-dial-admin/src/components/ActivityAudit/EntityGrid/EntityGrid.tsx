@@ -101,6 +101,7 @@ const AuditEntityGrid: FC<Props> = ({
           domLayout: 'autoHeight',
           onGridReady,
           onCellClicked: activity && onRowClicked,
+          enableCellTextSelection: true,
         }}
       />
       {detailsModalState === PopUpState.Opened &&
