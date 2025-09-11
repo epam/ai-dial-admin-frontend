@@ -67,6 +67,9 @@ export const sourceTypeFormatter = (value: string, view?: ApplicationRoute) => {
 };
 
 export const sourceValueFormatter = (params: ValueFormatterParams | ITooltipParams) => {
+  if (!params.data?.source?.$type) {
+    return params.value;
+  }
   if (params.data.source.$type === SOURCE_TYPE.ADAPTER) {
     return params.data.source.adapterName;
   } else if (params.data.source.$type === SOURCE_TYPE.RUNNER) {
@@ -75,7 +78,5 @@ export const sourceValueFormatter = (params: ValueFormatterParams | ITooltipPara
     return params.data.source.containerId;
   } else if (params.data.source.$type === SOURCE_TYPE.ENDPOINTS) {
     return params.data.endpoint;
-  } else {
-    return params.value;
   }
 };
