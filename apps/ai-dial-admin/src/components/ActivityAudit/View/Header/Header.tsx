@@ -21,7 +21,7 @@ interface Props {
   children?: ReactNode;
 }
 const ViewHeader: FC<Props> = ({ activity, isModalView, children }) => {
-  const t = useI18n();
+  const t = useI18n() as (key: string) => string;
   const currentLocale = useCurrentLocale();
 
   const openResourceInNewTab = (activity: DialActivity) => {
@@ -39,7 +39,7 @@ const ViewHeader: FC<Props> = ({ activity, isModalView, children }) => {
   };
 
   return (
-    <div className="flex flex-row w-full justify-between flex-wrap">
+    <div className="flex flex-row w-full justify-between flex-wrap lg:flex-nowrap">
       <div className="flex flex-row gap-10 w-full flex-wrap">
         {activity.activityType && (
           <LabeledText label={t(ActivityAuditI18nKey.ActivityType)} text={activity.activityType} />
@@ -47,7 +47,7 @@ const ViewHeader: FC<Props> = ({ activity, isModalView, children }) => {
         {activity.resourceType && (
           <LabeledText
             label={t(ActivityAuditI18nKey.ResourceType)}
-            text={getFormattedResourceType(activity.resourceType)}
+            text={getFormattedResourceType(activity.resourceType, t)}
           />
         )}
         {activity.resourceId && (
