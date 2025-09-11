@@ -23,21 +23,6 @@ const getConfigurationItems = (componentItems: FileComponentItem[], t: (v: strin
   }));
 };
 
-const setFileConfiguration = (fileConfiguration: FileConfiguration): FileConfiguration => {
-  return {
-    models: fileConfiguration.models || [],
-    applications: fileConfiguration.applications || [],
-    routes: fileConfiguration.routes || [],
-    roles: fileConfiguration.roles || [],
-    keys: fileConfiguration.keys || [],
-    applicationRunners: fileConfiguration.applicationRunners || [],
-    interceptors: fileConfiguration.interceptors || [],
-    prompts: fileConfiguration.prompts || [],
-    files: fileConfiguration.files || [],
-    adapters: fileConfiguration.adapters || [],
-  };
-};
-
 const getConfigurationTabs = (preview: Record<string, BaseEntity[]>, t: (v: string) => string): TabModel[] => {
   return getEntitiesList(t)
     ?.map((entityTab) => {
@@ -55,12 +40,11 @@ const getConfigurationTabs = (preview: Record<string, BaseEntity[]>, t: (v: stri
 };
 
 export const getConfigurationPreview = (configuration: FileConfiguration, t: (v: string) => string) => {
-  const fileConfiguration = setFileConfiguration(configuration);
   const previewData: Record<string, BaseEntity[]> = {};
 
-  Object.keys(fileConfiguration).forEach((configurationKey) => {
-    if (fileConfiguration[configurationKey].length) {
-      const configurationItems = getConfigurationItems(fileConfiguration[configurationKey], t);
+  Object.keys(configuration).forEach((configurationKey) => {
+    if (configuration[configurationKey]) {
+      const configurationItems = getConfigurationItems(configuration[configurationKey], t);
       if (configurationKey === 'models') {
         previewData[EntityType.MODEL] = configurationItems;
       }
@@ -101,7 +85,7 @@ export const getConfigurationPreview = (configuration: FileConfiguration, t: (v:
         previewData[EntityType.FILE] = configurationItems;
       }
 
-      if (configurationKey === 'toolsets') {
+      if (configurationKey === 'toolSets') {
         previewData[EntityType.TOOLSET] = configurationItems;
       }
     }
