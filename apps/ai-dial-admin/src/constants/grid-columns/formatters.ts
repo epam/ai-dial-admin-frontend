@@ -78,5 +78,7 @@ export const sourceValueFormatter = (params: ValueFormatterParams | ITooltipPara
     return params.data.source.containerId;
   } else if (params.data.source.$type === SOURCE_TYPE.ENDPOINTS) {
     return params.data.endpoint;
+  } else {
+    return params.value;
   }
 };
