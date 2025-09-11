@@ -1,5 +1,4 @@
 export enum EntityType {
-  ENTITIES = 'ENTITIES',
   MODEL = 'MODEL',
   APPLICATION = 'APPLICATION',
   ROUTE = 'ROUTE',

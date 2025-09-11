@@ -21,7 +21,6 @@ interface Props {
 const ExportDependencies: FC<Props> = ({ selectedExportFormat, dependencies, onChangeConfig }) => {
   const t = useI18n();
 
-  // TODO: supprt toogles and  ExportFormat.ADMIN
   const switches: SwitcherData[] = useMemo(() => {
     const res: SwitcherData[] = [
       { key: 'models', label: MenuI18nKey.Models },

@@ -103,16 +103,22 @@ export const getPreviewTabs = (
       if (key === 'toolSets') {
         allEntities.push(...getToolsetsForEntitiesGrid(data[key]));
       }
+
+      console.log('key', key);
+
+      // if (key === 'toolSets') {
+      //   allEntities.push(...getToolsetsForEntitiesGrid(data[key]));
+      // }
     }
   });
 
-  if (allEntities.length > 0) {
-    convertedData[EntityType.ENTITIES] = allEntities;
-    tabs.unshift({
-      id: EntityType.ENTITIES,
-      name: `${t(MenuI18nKey.Entities)}: ${allEntities.length}`,
-    });
-  }
+  // if (allEntities.length > 0) {
+  //   convertedData[EntityType.ENTITIES] = allEntities;
+  //   tabs.unshift({
+  //     id: EntityType.ENTITIES,
+  //     name: `${t(MenuI18nKey.Entities)}: ${allEntities.length}`,
+  //   });
+  // }
 
   return { tabs, convertedData };
 };

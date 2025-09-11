@@ -20,6 +20,7 @@ describe('Utils :: getEntitiesList', () => {
       { id: EntityType.ROLE, name: `translated:${MenuI18nKey.Roles}` },
       { id: EntityType.KEY, name: `translated:${MenuI18nKey.Keys}` },
       { id: EntityType.APPLICATION_TYPE_SCHEMA, name: `translated:${MenuI18nKey.ApplicationRunners}` },
+      { id: EntityType.INTERCEPTOR_RUNNER, name: `translated:${MenuI18nKey.InterceptorTemplates}` },
       { id: EntityType.INTERCEPTOR, name: `translated:${MenuI18nKey.Interceptors}` },
       { id: EntityType.PROMPT, name: `translated:${MenuI18nKey.Prompts}` },
       { id: EntityType.FILE, name: `translated:${MenuI18nKey.Files}` },
