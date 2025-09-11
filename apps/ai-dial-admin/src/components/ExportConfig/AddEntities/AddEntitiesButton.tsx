@@ -61,14 +61,13 @@ const AddEntitiesButton: FC<Props> = ({ selectedTab, tabData, customExportData, 
 
   return (
     <>
-      (
       <Button
         title={buttonTitle}
         iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
         cssClass="secondary"
         onClick={() => onClick(selectedTab)}
       />
-      )
+
       {modalState === PopUpState.Opened &&
         createPortal(
           <AddEntitiesModal
