@@ -27,7 +27,7 @@ const FilledInput: FC<Props> = ({
   return (
     <div
       className={classNames(
-        'input-field flex flex-row items-center p-0',
+        'input-field flex flex-row items-center p-0 w-full',
         iconAfterInput ? 'pr-2' : '',
         iconBeforeInput ? 'pl-2' : '',
         props.disabled ? 'bg-layer-3 text-secondary' : '',
@@ -39,7 +39,11 @@ const FilledInput: FC<Props> = ({
           {isInvalid ? <IconExclamationCircle {...BASE_ICON_PROPS} /> : iconBeforeInput}
         </div>
       </Tooltip>
-      <Input cssClass={classNames('border-0 bg-transparent', isInvalid ? 'text-error' : '', cssClass)} {...props} />
+      <Input
+        tooltipTriggerClassName="flex-1 min-w-0"
+        cssClass={classNames('border-0 bg-transparent', isInvalid ? 'text-error' : '', cssClass)}
+        {...props}
+      />
       <div className="flex items-center">{iconAfterInput}</div>
     </div>
   );
