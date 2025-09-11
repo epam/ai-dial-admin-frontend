@@ -7,6 +7,7 @@ import classNames from 'classnames';
 
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { NumberInputField, TextInputField } from '@/src/components/Common/InputField/InputField';
+import JsonEditorInput from '@/src/components/Common/JsonEditorInput/JsonEditorInput';
 import {
   BasicI18nKey,
   BooleanI18nKey,
@@ -18,9 +19,9 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DefaultsValue } from '@/src/models/dial/defaults';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
+import { BooleanType } from '@/src/types/boolean';
 import { DefaultItemType } from './types';
 import { getDefaultValueByType, getValueByType } from './utils';
-import { BooleanType } from '@/src/types/boolean';
 
 interface DefaultItem {
   key: string;
@@ -52,6 +53,10 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
         id: DefaultItemType.boolean,
         name: t(TypeI18nKey.Boolean),
       },
+      {
+        id: DefaultItemType.object,
+        name: t(TypeI18nKey.Object),
+      },
     ],
     [t],
   );
@@ -70,7 +75,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
   );
 
   const onChangeValue = useCallback(
-    (v?: string | number | boolean, newType?: string) => {
+    (v?: string | number | boolean | object, newType?: string) => {
       const type = newType || item.type;
       const value = getValueByType(v, type);
       changeItem({ ...item, value, type }, index);
@@ -107,7 +112,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
             onChange={onChangeKey}
           />
         </div>
-        <div className={classNames('min-w-[384px]')}>
+        <div className={classNames('w-[384px]')}>
           {item.type === DefaultItemType.string && (
             <TextInputField
               elementId={'entity-default-value ' + index}
@@ -133,6 +138,14 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
               items={booleans}
               fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
               onChange={onChangeValue}
+            />
+          )}
+          {item.type === DefaultItemType.object && (
+            <JsonEditorInput
+              elementId={'entity-default-value ' + index}
+              value={item.value as object}
+              fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
+              onChangeValue={onChangeValue}
             />
           )}
         </div>

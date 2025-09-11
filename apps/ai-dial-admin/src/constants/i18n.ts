@@ -685,6 +685,7 @@ export enum EntityPlaceholdersI18nKey {
   Key = 'EntityPlaceholders.Key',
   ToolName = 'EntityPlaceholders.ToolName',
   Hour = 'EntityPlaceholders.Hour',
+  Object = 'EntityPlaceholders.Object',
 }
 
 export enum EntityFieldsI18nKey {
