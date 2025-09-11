@@ -13,3 +13,16 @@ export const auditResourceRoute: Record<ActivityAuditResourceType, ApplicationRo
   [ActivityAuditResourceType.INTERCEPTOR_TEMPLATE]: ApplicationRoute.InterceptorTemplates,
   [ActivityAuditResourceType.TOOLSETS]: ApplicationRoute.Toolsets,
 };
+
+export const routeAuditResource: Partial<Record<ApplicationRoute, ActivityAuditResourceType>> = {
+  [ApplicationRoute.Models]: ActivityAuditResourceType.MODEL,
+  [ApplicationRoute.Applications]: ActivityAuditResourceType.APPLICATION,
+  [ApplicationRoute.Adapters]: ActivityAuditResourceType.ADAPTER,
+  [ApplicationRoute.Interceptors]: ActivityAuditResourceType.INTERCEPTOR,
+  [ApplicationRoute.Keys]: ActivityAuditResourceType.KEY,
+  [ApplicationRoute.Roles]: ActivityAuditResourceType.ROLE,
+  [ApplicationRoute.ApplicationRunners]: ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA,
+  [ApplicationRoute.Routes]: ActivityAuditResourceType.ROUTE,
+  [ApplicationRoute.InterceptorTemplates]: ActivityAuditResourceType.INTERCEPTOR_TEMPLATE,
+  [ApplicationRoute.Toolsets]: ActivityAuditResourceType.TOOLSET,
+};
