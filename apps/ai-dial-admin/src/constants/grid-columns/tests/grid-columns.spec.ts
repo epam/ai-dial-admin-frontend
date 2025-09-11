@@ -1,15 +1,15 @@
 import {
-  PROMPTS_COLUMNS,
-  EXPORT_COLUMNS,
-  PUBLICATION_COLUMNS,
   ENTITIES_COLUMNS,
-  TELEMETRY_GRID_COLUMNS,
-  PROJECT_GRID_COLUMNS,
-  MODELS_COLUMNS,
+  EXPORT_COLUMNS,
   KEYS_COLUMNS,
+  MODELS_COLUMNS,
+  PROJECT_GRID_COLUMNS,
+  PROMPTS_COLUMNS,
+  PUBLICATION_COLUMNS,
+  TELEMETRY_GRID_COLUMNS,
 } from '../grid-columns';
-import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test, vi } from 'vitest';
+import { ApplicationRoute } from '@/src/types/routes';
 
 vi.mock('@/src/constants/ag-grid', () => ({
   ACTION_COLUMN: vi.fn((actions) => ({ colId: 'actions', actions })),
@@ -19,9 +19,10 @@ vi.mock('@/src/constants/ag-grid', () => ({
 describe('Constants :: grid columns', () => {
   test('MODELS_COLUMNS returns expected columns', () => {
     const t = (s: string) => s;
-    const cols = MODELS_COLUMNS(t);
+    const cols = MODELS_COLUMNS(t, ApplicationRoute.Models);
     expect(Array.isArray(cols)).toBe(true);
-    expect(cols.some((c) => c.field === 'source.adapterName')).toBe(true);
+    expect(cols.some((c) => c.field === 'source.$type')).toBe(true);
+    expect(cols.some((c) => c.field === 'endpoint')).toBe(true);
     expect(cols.some((c) => c.field === 'type')).toBe(true);
     expect(cols.some((c) => c.field === 'pricing.prompt')).toBe(true);
   });

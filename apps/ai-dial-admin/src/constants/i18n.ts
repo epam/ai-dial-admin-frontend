@@ -492,6 +492,8 @@ export enum ImportI18nKey {
   FileError = 'Import.FileError',
   FileErrorType = 'Import.FileErrorType',
   ArchiveErrorTitle = 'Import.ArchiveErrorTitle',
+  Update = 'Import.Update',
+  Create = 'Import.Create',
 }
 
 export enum ExportI18nKey {
@@ -680,6 +682,7 @@ export enum EntityPlaceholdersI18nKey {
   Key = 'EntityPlaceholders.Key',
   ToolName = 'EntityPlaceholders.ToolName',
   Hour = 'EntityPlaceholders.Hour',
+  Object = 'EntityPlaceholders.Object',
 }
 
 export enum EntityFieldsI18nKey {

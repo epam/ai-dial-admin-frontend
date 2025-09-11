@@ -29,7 +29,10 @@ export async function updateApplication(application: DialApplication) {
   const app = {
     ...application,
     routes: application.routes?.map((route) => ({ ...route, name: route.displayName || route.name })),
-    defaults: convertDefaultsToRecord(application.defaultsTemp || []),
+    defaults: {
+      ...application.defaults,
+      ...convertDefaultsToRecord(application.defaultsTemp || []),
+    },
   };
   delete app.defaultsTemp;
   return applicationsApi.updateApplication(app, token);

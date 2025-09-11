@@ -13,7 +13,7 @@ export const isValidSourceField = (entity: DialModel | DialInterceptor): boolean
     return !!source.adapterName && !!source.completionEndpointPath;
   }
   if (source?.$type === SOURCE_TYPE.RUNNER) {
-    return !!source.runnerName && !!source.completionEndpointPath;
+    return !!source.runnerName;
   }
   if (source?.$type === SOURCE_TYPE.ENDPOINTS) {
     return getUrlError(entity.endpoint as string, void 0, true) === null;

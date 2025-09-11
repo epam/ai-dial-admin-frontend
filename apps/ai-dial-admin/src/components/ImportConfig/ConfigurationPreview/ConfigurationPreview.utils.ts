@@ -5,15 +5,16 @@ import { FileComponentItem, FileConfiguration } from '@/src/models/import';
 import { ImportConfigurationAction } from '@/src/types/import';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import {
-  KEYS_COLUMNS,
-  RUNNERS_COLUMNS,
-  MODELS_COLUMNS,
   APPLICATIONS_COLUMNS,
+  KEYS_COLUMNS,
+  MODELS_COLUMNS,
+  RUNNERS_COLUMNS,
   SIMPLE_ENTITY_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
 import StatusCellRenderer from '@/src/components/Grid/CellRenderers/StatusCellRenderer';
 import { EntityType } from '@/src/types/entity-type';
 import { getEntitiesList } from '@/src/utils/entities/get-entities-list';
+import { ApplicationRoute } from '@/src/types/routes';
 
 const getConfigurationItems = (componentItems: FileComponentItem[], t: (v: string) => string) => {
   return componentItems?.map((componentItem) => ({
@@ -33,6 +34,7 @@ const setFileConfiguration = (fileConfiguration: FileConfiguration): FileConfigu
     interceptors: fileConfiguration.interceptors || [],
     prompts: fileConfiguration.prompts || [],
     files: fileConfiguration.files || [],
+    adapters: fileConfiguration.adapters || [],
   };
 };
 
@@ -133,20 +135,11 @@ const getComponentActionColumn = (): ColDef => {
 
 export const getComponentColDefs = (type: string, t: (v: string) => string): ColDef[] => {
   if (type === EntityType.MODEL) {
-    return [getComponentActionColumn(), ...MODELS_COLUMNS(t)];
+    return [getComponentActionColumn(), ...MODELS_COLUMNS(t, ApplicationRoute.Models)];
   }
 
   if (type === EntityType.APPLICATION) {
     return [getComponentActionColumn(), ...APPLICATIONS_COLUMNS(t)];
-  }
-
-  if (
-    type === EntityType.ROUTE ||
-    type === EntityType.ROLE ||
-    type === EntityType.INTERCEPTOR ||
-    type === EntityType.TOOLSET
-  ) {
-    return [getComponentActionColumn(), ...SIMPLE_ENTITY_COLUMNS];
   }
 
   if (type === EntityType.APPLICATION_TYPE_SCHEMA) {

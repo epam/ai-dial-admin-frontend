@@ -538,6 +538,8 @@ export default {
     FileError: 'File could not be processed, as it is larger than 512 mb. Remove it to move on.',
     FileErrorType: 'This file type is not supported',
     ArchiveErrorTitle: 'Importing archive failed',
+    Update: 'Update',
+    Create: 'Create',
   },
   Export: {
     Config: 'Config',
@@ -770,6 +772,7 @@ export default {
     Key: 'Enter key',
     ToolName: 'Enter tool name',
     Hour: 'h',
+    Object: 'Object value',
   },
   Error: {
     ServerError: 'Server Error',

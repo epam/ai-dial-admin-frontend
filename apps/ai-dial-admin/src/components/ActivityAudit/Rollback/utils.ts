@@ -4,10 +4,11 @@ import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import {
   APPLICATIONS_COLUMNS,
   KEYS_COLUMNS,
+  MODELS_COLUMNS,
   RUNNERS_COLUMNS,
   SIMPLE_ENTITY_COLUMNS,
-  MODELS_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
+import { ApplicationRoute } from '@/src/types/routes';
 
 export const getSystemRollbackColumns = (
   type: ActivityAuditResourceType,
@@ -15,7 +16,7 @@ export const getSystemRollbackColumns = (
 ): ColDef[] => {
   switch (type) {
     case ActivityAuditResourceType.MODEL:
-      return MODELS_COLUMNS(t);
+      return MODELS_COLUMNS(t, ApplicationRoute.Models);
     case ActivityAuditResourceType.APPLICATION:
       return APPLICATIONS_COLUMNS(t);
     case ActivityAuditResourceType.ADAPTER:

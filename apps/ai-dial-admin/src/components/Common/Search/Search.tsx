@@ -20,16 +20,18 @@ const Search: FC<Props> = ({ initialPattern, onChange }) => {
   }, [initialPattern]);
 
   return (
-    <InputWithIcon
-      inputId="search"
-      placeholder={t(BasicI18nKey.Search)}
-      iconBeforeInput={<IconSearch {...BASE_ICON_PROPS} />}
-      value={pattern}
-      onChange={(value) => {
-        setPattern(value);
-        onChange(value);
-      }}
-    />
+    <div className="min-h-[38px]">
+      <InputWithIcon
+        inputId="search"
+        placeholder={t(BasicI18nKey.Search)}
+        iconBeforeInput={<IconSearch {...BASE_ICON_PROPS} />}
+        value={pattern}
+        onChange={(value) => {
+          setPattern(value);
+          onChange(value);
+        }}
+      />
+    </div>
   );
 };
 

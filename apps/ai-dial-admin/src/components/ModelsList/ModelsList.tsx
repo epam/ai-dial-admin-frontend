@@ -22,7 +22,7 @@ const ModelsList: FC<Props> = ({ data }) => {
   return (
     <BaseEntityList
       names={names}
-      baseColumns={MODELS_COLUMNS(t)}
+      baseColumns={MODELS_COLUMNS(t, ApplicationRoute.Models)}
       data={data}
       route={ApplicationRoute.Models}
       createEntity={createModel}
