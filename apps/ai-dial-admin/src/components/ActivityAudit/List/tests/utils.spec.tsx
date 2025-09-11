@@ -23,8 +23,9 @@ describe('Activity Audit List utils :: getActivityAuditColumns', () => {
     const openMock = vi.fn();
     const rollbackMock = vi.fn();
     const viewDetails = vi.fn();
+    const t = (s: string) => s;
 
-    const cols = getActivityAuditColumns(openMock, rollbackMock, viewDetails);
+    const cols = getActivityAuditColumns(t, openMock, rollbackMock, viewDetails);
 
     expect(cols).toHaveLength(3);
     expect(cols[0]).toEqual({ colId: 'a' });

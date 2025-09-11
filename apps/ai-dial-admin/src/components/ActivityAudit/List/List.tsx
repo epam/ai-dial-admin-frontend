@@ -44,7 +44,7 @@ interface Props {
 }
 
 const ActivityAuditList: FC<Props> = ({ entity }) => {
-  const t = useI18n();
+  const t = useI18n() as (key: string) => string;
   const router = useRouter();
 
   const { showNotification } = useNotification();
@@ -143,8 +143,8 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
   }, []);
 
   const columnDefs = entity
-    ? getActivityAuditColumns(void 0, onOpenConfirmationModal, onOpenDetailsModal, true)
-    : getActivityAuditColumns(openInNewTab, onOpenConfirmationModal, void 0);
+    ? getActivityAuditColumns(t, void 0, onOpenConfirmationModal, onOpenDetailsModal, true)
+    : getActivityAuditColumns(t, openInNewTab, onOpenConfirmationModal, void 0);
 
   const onRefresh = useCallback(() => {
     if (gridApi) {

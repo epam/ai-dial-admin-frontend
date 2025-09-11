@@ -21,7 +21,7 @@ interface Props {
   children?: ReactNode;
 }
 const ViewHeader: FC<Props> = ({ activity, isModalView, children }) => {
-  const t = useI18n();
+  const t = useI18n() as (key: string) => string;
   const currentLocale = useCurrentLocale();
 
   const openResourceInNewTab = (activity: DialActivity) => {
@@ -47,7 +47,7 @@ const ViewHeader: FC<Props> = ({ activity, isModalView, children }) => {
         {activity.resourceType && (
           <LabeledText
             label={t(ActivityAuditI18nKey.ResourceType)}
-            text={getFormattedResourceType(activity.resourceType)}
+            text={getFormattedResourceType(activity.resourceType, t)}
           />
         )}
         {activity.resourceId && (
