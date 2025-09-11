@@ -21,7 +21,10 @@ export async function updateInterceptor(interceptor: DialInterceptor) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const newInterceptor = {
     ...interceptor,
-    defaults: convertDefaultsToRecord(interceptor.defaultsTemp || []),
+    defaults: {
+      ...interceptor.defaults,
+      ...convertDefaultsToRecord(interceptor.defaultsTemp || []),
+    },
   };
   delete newInterceptor.defaultsTemp;
   return interceptorsApi.updateInterceptor(newInterceptor, token);

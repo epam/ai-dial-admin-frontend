@@ -759,6 +759,9 @@ export default {
     KeyValue: 'Enter value or generate',
     SelectPermission: 'Select permission',
     Key: 'Enter key',
+    ToolName: 'Enter tool name',
+    Hour: 'h',
+    Object: 'Object value',
   },
   Error: {
     ServerError: 'Server Error',

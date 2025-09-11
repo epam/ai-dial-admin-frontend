@@ -4,4 +4,4 @@ export interface DefaultTemp {
   type: string;
 }
 
-export type DefaultsValue = string | number | boolean;
+export type DefaultsValue = string | number | boolean | object;
