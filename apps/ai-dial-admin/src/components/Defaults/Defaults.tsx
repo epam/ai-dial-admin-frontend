@@ -55,7 +55,8 @@ const Defaults: FC<Props> = ({ entity, onChangeEntity }) => {
     if (entity.defaultsTemp) {
       setDefaultItems(entity.defaultsTemp || []);
     } else {
-      setDefaultItems(convertDefaultsToArray(entity.defaults || {}));
+      const defaults = convertDefaultsToArray(entity.defaults || {});
+      setDefaultItems(defaults);
     }
   }, [entity.defaults, entity.defaultsTemp]);
 

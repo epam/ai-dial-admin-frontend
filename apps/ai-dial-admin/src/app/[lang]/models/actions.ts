@@ -38,7 +38,10 @@ export async function updateModel(model: DialModel) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const newModel = {
     ...model,
-    defaults: convertDefaultsToRecord(model.defaultsTemp || []),
+    defaults: {
+      ...model.defaults,
+      ...convertDefaultsToRecord(model.defaultsTemp || []),
+    },
   };
   delete newModel.defaultsTemp;
   return modelsApi.updateModel(newModel, token);

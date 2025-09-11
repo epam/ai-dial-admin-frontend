@@ -2,6 +2,7 @@ import { DialBaseEntity } from '@/src/models/dial/base-entity';
 import { FC, useState } from 'react';
 
 import ActivityAuditList from '@/src/components/ActivityAudit/List/List';
+import { routeAuditResource } from '@/src/components/ActivityAudit/View/Header/constants';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import { EntityViewTab } from '@/src/components/EntityView/View/utils';
 import Dashboard from '@/src/components/Telemetry/Dashboard';
@@ -39,7 +40,9 @@ const EntityAudit: FC<Props> = ({ entity, view }) => {
       </div>
       <div className="flex flex-col flex-1 min-h-0 w-full relative">
         {activeTab === EntityViewTab.Dashboard && <Dashboard entity={entity} route={view} />}
-        {activeTab === EntityViewTab.Activities && <ActivityAuditList entity={entity} />}
+        {activeTab === EntityViewTab.Activities && (
+          <ActivityAuditList entity={entity} entityType={routeAuditResource[view]} />
+        )}
       </div>
     </div>
   );

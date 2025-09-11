@@ -29,7 +29,7 @@ export const convertDefaultsToArray = (defaults: Record<string, DefaultsValue>) 
 export const convertDefaultsToRecord = (
   defaults: { key: string; value: DefaultsValue; type: string }[],
 ): Record<string, DefaultsValue> => {
-  const record: Record<string, string | number | boolean> = {};
+  const record: Record<string, string | number | boolean | object> = {};
 
   for (const { key, value, type } of defaults) {
     const correctValue =
@@ -79,6 +79,8 @@ export const getValueByType = (value?: DefaultsValue, type?: string): DefaultsVa
       return value === BooleanType.true;
     case DefaultItemType.number:
       return value === '' ? '' : Number(value);
+    case DefaultItemType.object:
+      return {};
     default:
       return value || '';
   }

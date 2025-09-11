@@ -39,7 +39,7 @@ const ViewHeader: FC<Props> = ({ activity, isModalView, children }) => {
   };
 
   return (
-    <div className="flex flex-row w-full justify-between flex-wrap">
+    <div className="flex flex-row w-full justify-between flex-wrap lg:flex-nowrap">
       <div className="flex flex-row gap-10 w-full flex-wrap">
         {activity.activityType && (
           <LabeledText label={t(ActivityAuditI18nKey.ActivityType)} text={activity.activityType} />

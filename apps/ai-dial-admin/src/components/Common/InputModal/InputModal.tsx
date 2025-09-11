@@ -54,7 +54,11 @@ const InputModal: FC<Props> = ({
             <Tooltip tooltip={value}>
               <span className={valueCssClasses}>{value}</span>
             </Tooltip>
-            {!readonly && <OpenPopup />}
+            {!readonly && (
+              <div className="flex-shrink-0">
+                <OpenPopup />
+              </div>
+            )}
           </div>
         </button>
       ) : (
