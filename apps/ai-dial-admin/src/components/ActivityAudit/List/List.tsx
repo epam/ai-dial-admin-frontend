@@ -41,9 +41,10 @@ import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 
 interface Props {
   entity?: BaseEntity | DialApplicationScheme;
+  entityType?: string;
 }
 
-const ActivityAuditList: FC<Props> = ({ entity }) => {
+const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
   const t = useI18n() as (key: string) => string;
   const router = useRouter();
 
@@ -80,6 +81,11 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
                   value: (entity as DialApplicationScheme).$id || (entity as BaseEntity).name,
                   operator: 'eq',
                 } as FilterDto,
+                {
+                  column: 'resourceType',
+                  value: entityType,
+                  operator: 'eq',
+                } as FilterDto,
               ]
             : []),
           ...getGridFilters(params.filterModel, actualTimeRange),
@@ -102,7 +108,7 @@ const ActivityAuditList: FC<Props> = ({ entity }) => {
           });
       },
     }),
-    [timePeriod, timeRange, gridApi, entity, router],
+    [timePeriod, timeRange, gridApi, entity, entityType, router],
   );
 
   useEffect(() => {
