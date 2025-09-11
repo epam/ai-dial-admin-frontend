@@ -24,5 +24,4 @@ export const routeAuditResource: Partial<Record<ApplicationRoute, ActivityAuditR
   [ApplicationRoute.ApplicationRunners]: ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA,
   [ApplicationRoute.Routes]: ActivityAuditResourceType.ROUTE,
   [ApplicationRoute.InterceptorTemplates]: ActivityAuditResourceType.INTERCEPTOR_TEMPLATE,
-  [ApplicationRoute.Toolsets]: ActivityAuditResourceType.TOOLSET,
 };
