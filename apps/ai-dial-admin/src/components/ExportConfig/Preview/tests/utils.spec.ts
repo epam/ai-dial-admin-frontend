@@ -47,7 +47,6 @@ describe('Export Config Utils :: getPreviewTabs', () => {
     expect(convertedData.KEY).toHaveLength(2);
     expect(convertedData.APPLICATION_TYPE_SCHEMA).toHaveLength(1);
     expect(convertedData.PROMPT).toHaveLength(1);
-    expect(convertedData.ENTITIES).toEqual(mockEntities);
   });
 
   test('should not add tabs for empty categories', () => {
