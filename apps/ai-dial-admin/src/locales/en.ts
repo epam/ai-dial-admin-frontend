@@ -772,6 +772,7 @@ export default {
     Key: 'Enter key',
     ToolName: 'Enter tool name',
     Hour: 'h',
+    Object: 'Object value',
   },
   Error: {
     ServerError: 'Server Error',
