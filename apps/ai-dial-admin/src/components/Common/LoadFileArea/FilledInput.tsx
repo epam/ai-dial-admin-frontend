@@ -40,7 +40,8 @@ const FilledInput: FC<Props> = ({
         </div>
       </Tooltip>
       <Input
-        cssClass={classNames('border-0 bg-transparent flex-1 min-w-0', isInvalid ? 'text-error' : '', cssClass)}
+        tooltipTriggerClassName="flex-1 min-w-0"
+        cssClass={classNames('border-0 bg-transparent', isInvalid ? 'text-error' : '', cssClass)}
         {...props}
       />
       <div className="flex items-center">{iconAfterInput}</div>
