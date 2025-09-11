@@ -24,6 +24,7 @@ import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
  * @returns {ColDef[]} - columns
  */
 export const getActivityAuditColumns = (
+  t: (key: string) => string,
   open?: (activity: DialActivity) => void,
   resourceRollback?: (activity: DialActivity) => void,
   viewDetails?: (activity: DialActivity) => void,
@@ -40,7 +41,7 @@ export const getActivityAuditColumns = (
     actions.push(getResourceRollbackOperation(resourceRollback));
   }
 
-  return [...ACTIVITY_AUDIT_COLUMNS(isSingleEntity), ACTION_COLUMN(actions)];
+  return [...ACTIVITY_AUDIT_COLUMNS(t, isSingleEntity), ACTION_COLUMN(actions)];
 };
 
 /**

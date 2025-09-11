@@ -113,12 +113,12 @@ const ATTACHMENT_COLUMN = (t: (str: string) => string): ColDef => {
   };
 };
 
-const SOURCE_TYPE_COLUMN = (view?: ApplicationRoute): ColDef => ({
+const SOURCE_TYPE_COLUMN = (t: (key: string) => string, view?: ApplicationRoute): ColDef => ({
   field: 'source.$type',
   headerName: 'Source type',
   hide: false,
-  valueFormatter: ({ value }) => sourceTypeFormatter(value, view),
-  tooltipValueGetter: ({ value }) => sourceTypeFormatter(value, view),
+  valueFormatter: ({ value }) => sourceTypeFormatter(value, t, view),
+  tooltipValueGetter: ({ value }) => sourceTypeFormatter(value, t, view),
 });
 
 const SOURCE_VALUE_COLUMN: ColDef = {
@@ -129,8 +129,8 @@ const SOURCE_VALUE_COLUMN: ColDef = {
   tooltipValueGetter: (params) => sourceValueFormatter(params),
 };
 
-export const SOURCE_FIELD_COLUMNS = (view?: ApplicationRoute): ColDef[] => [
-  SOURCE_TYPE_COLUMN(view),
+export const SOURCE_FIELD_COLUMNS = (t: (key: string) => string, view?: ApplicationRoute): ColDef[] => [
+  SOURCE_TYPE_COLUMN(t, view),
   SOURCE_VALUE_COLUMN,
 ];
 
@@ -153,7 +153,7 @@ export const MODELS_COLUMNS = (t: (str: string) => string, view?: ApplicationRou
   { field: 'displayVersion', colId: 'displayVersion', headerName: 'Version', hide: false },
   DESCRIPTION_COLUMN,
   NAME_COLUMN,
-  ...SOURCE_FIELD_COLUMNS(view),
+  ...SOURCE_FIELD_COLUMNS(t, view),
   AUTHOR_COLUMN,
   { field: 'type', headerName: 'Type', hide: true },
   { field: 'overrideName', headerName: 'Override Name', hide: true },
@@ -179,14 +179,14 @@ export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   { field: 'forwardAuthToken', headerName: 'Forward auth token', hide: true },
 ];
 
-export const ACTIVITY_AUDIT_COLUMNS = (isSingleEntity?: boolean): ColDef[] => {
+export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?: boolean): ColDef[] => {
   const columns: ColDef[] = [
     { field: 'activityType', headerName: 'Activity type', ...stringFilter },
     {
       field: 'resourceType',
       headerName: 'Resource type',
-      valueFormatter: ({ value }) => getFormattedResourceType(value),
-      tooltipValueGetter: ({ value }) => getFormattedResourceType(value),
+      valueFormatter: ({ value }) => getFormattedResourceType(value, t),
+      tooltipValueGetter: ({ value }) => getFormattedResourceType(value, t),
       ...stringFilter,
     },
     { field: 'resourceId', headerName: 'Resource identifier', ...stringFilter },
