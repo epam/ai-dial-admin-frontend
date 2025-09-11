@@ -10,7 +10,7 @@ describe('Utils :: getEntitiesList', () => {
     const entities = getEntitiesList(t);
 
     expect(Array.isArray(entities)).toBe(true);
-    expect(entities).toHaveLength(11);
+    expect(entities).toHaveLength(12);
 
     expect(entities).toEqual([
       { id: EntityType.MODEL, name: `translated:${MenuI18nKey.Models}` },
