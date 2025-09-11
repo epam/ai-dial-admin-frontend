@@ -7,16 +7,18 @@ import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { filterNames } from '@/src/utils/entities/filter-names';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
   data: DialInterceptor[];
 }
 
 const InterceptorsList: FC<Props> = ({ data }) => {
+  const t = useI18n() as (key: string) => string;
   const names = filterNames(data);
   return (
     <BaseEntityList
-      baseColumns={[...SIMPLE_ENTITY_COLUMNS, ...SOURCE_FIELD_COLUMNS(ApplicationRoute.Interceptors), AUTHOR_COLUMN]}
+      baseColumns={[...SIMPLE_ENTITY_COLUMNS, ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Interceptors), AUTHOR_COLUMN]}
       names={names}
       data={data}
       route={ApplicationRoute.Interceptors}

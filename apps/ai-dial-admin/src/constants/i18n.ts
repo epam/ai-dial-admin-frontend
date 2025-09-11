@@ -626,6 +626,9 @@ export enum SourceI18nKey {
   OpenAdapter = 'Source.OpenAdapter',
   Container = 'Source.Container',
   InterceptorTemplate = 'Source.InterceptorTemplate',
+  ModelDeployment = 'Source.ModelDeployment',
+  InterceptorDeployment = 'Source.InterceptorDeployment',
+  Endpoint = 'Source.Endpoint',
   Adapter = 'Source.Adapter',
 }
 

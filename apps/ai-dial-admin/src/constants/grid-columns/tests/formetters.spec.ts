@@ -1,4 +1,3 @@
-import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   formatAttachment,
@@ -8,22 +7,26 @@ import {
   sourceTypeFormatter,
   sourceValueFormatter,
 } from '../formatters';
-import { SOURCE_TYPE } from '../../../components/SourceField/types';
-import { ApplicationRoute } from '../../../types/routes';
+import { ActivityAuditResourceType } from '@/src/types/activity-audit';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { ApplicationRoute } from '@/src/types/routes';
+import { EntitiesI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+
+const t = (s: string) => s;
 
 describe('Formatters :: getFormattedResourceType', () => {
   test('Should return Application Runner', () => {
-    const res = getFormattedResourceType(ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA);
-    expect(res).toBe('Application Runner');
+    const res = getFormattedResourceType(ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA, t);
+    expect(res).toBe(EntitiesI18nKey.AppRunner);
   });
 
   test('Should return Application Runner', () => {
-    const res = getFormattedResourceType(ActivityAuditResourceType.INTERCEPTOR_TEMPLATE);
-    expect(res).toBe('Interceptor Template');
+    const res = getFormattedResourceType(ActivityAuditResourceType.INTERCEPTOR_TEMPLATE, t);
+    expect(res).toBe(EntitiesI18nKey.InterceptorTemplate);
   });
 
   test('Should return Application', () => {
-    const res = getFormattedResourceType(ActivityAuditResourceType.APPLICATION);
+    const res = getFormattedResourceType(ActivityAuditResourceType.APPLICATION, t);
     expect(res).toBe('Application');
   });
 });
@@ -152,23 +155,25 @@ describe('Formatters :: sourceValueFormatter', () => {
 
 describe('Formatters :: sourceTypeFormatter', () => {
   test('formats source type for ADAPTER type', () => {
-    expect(sourceTypeFormatter(SOURCE_TYPE.ADAPTER)).toBe('Adapter');
+    expect(sourceTypeFormatter(SOURCE_TYPE.ADAPTER, t)).toBe(SourceI18nKey.Adapter);
   });
 
   test('formats source type for RUNNER type', () => {
-    expect(sourceTypeFormatter(SOURCE_TYPE.RUNNER)).toBe('Interceptor Template');
+    expect(sourceTypeFormatter(SOURCE_TYPE.RUNNER, t)).toBe(SourceI18nKey.InterceptorTemplate);
   });
 
   test('formats source type for ENDPOINT type', () => {
-    expect(sourceTypeFormatter(SOURCE_TYPE.ENDPOINTS)).toBe('Endpoint');
+    expect(sourceTypeFormatter(SOURCE_TYPE.ENDPOINTS, t)).toBe(SourceI18nKey.Endpoint);
   });
 
   test('formats source type for CONTAINER type', () => {
-    expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, ApplicationRoute.Interceptors)).toBe('Interceptor deployment');
-    expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, ApplicationRoute.Models)).toBe('Deployment model');
+    expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Interceptors)).toBe(
+      SourceI18nKey.InterceptorDeployment,
+    );
+    expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Models)).toBe(SourceI18nKey.ModelDeployment);
   });
 
   test('formats source type for unknown type', () => {
-    expect(sourceTypeFormatter('UNKNOWN' as SOURCE_TYPE)).toBe('UNKNOWN');
+    expect(sourceTypeFormatter('UNKNOWN' as SOURCE_TYPE, t)).toBe('UNKNOWN');
   });
 });

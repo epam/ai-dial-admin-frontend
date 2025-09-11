@@ -2,18 +2,18 @@ import Big from 'big.js';
 import { ITooltipParams, ValueFormatterParams } from 'ag-grid-community';
 
 import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
-import { AttachmentsI18nKey } from '@/src/constants/i18n';
+import { AttachmentsI18nKey, EntitiesI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { formatNumberByDelimiter } from '@/src/utils/formatting/number-formatting';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ApplicationRoute } from '@/src/types/routes';
 
-export const getFormattedResourceType = (value: string): string => {
+export const getFormattedResourceType = (value: string, t: (key: string) => string): string => {
   if (value === ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA) {
-    return 'Application Runner';
+    return t(EntitiesI18nKey.AppRunner);
   }
   if (value === ActivityAuditResourceType.INTERCEPTOR_TEMPLATE) {
-    return 'Interceptor Template';
+    return t(EntitiesI18nKey.InterceptorTemplate);
   }
   return value;
 };
@@ -52,15 +52,15 @@ export const numberValueFormatter = (params: ValueFormatterParams) => {
   return number;
 };
 
-export const sourceTypeFormatter = (value: string, view?: ApplicationRoute) => {
+export const sourceTypeFormatter = (value: string, t: (key: string) => string, view?: ApplicationRoute) => {
   if (value === SOURCE_TYPE.ADAPTER) {
-    return 'Adapter';
+    return t(SourceI18nKey.Adapter);
   } else if (value === SOURCE_TYPE.CONTAINER) {
-    return view === ApplicationRoute.Models ? 'Deployment model' : 'Interceptor deployment';
+    return view === ApplicationRoute.Models ? t(SourceI18nKey.ModelDeployment) : t(SourceI18nKey.InterceptorDeployment);
   } else if (value === SOURCE_TYPE.ENDPOINTS) {
-    return 'Endpoint';
+    return t(SourceI18nKey.Endpoint);
   } else if (value === SOURCE_TYPE.RUNNER) {
-    return 'Interceptor Template';
+    return t(SourceI18nKey.InterceptorTemplate);
   } else {
     return value;
   }
