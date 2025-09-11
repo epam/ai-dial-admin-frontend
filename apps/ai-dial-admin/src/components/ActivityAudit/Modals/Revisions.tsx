@@ -90,7 +90,7 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, moda
       state={modalState}
       dividers={true}
     >
-      <div className="flex flex-col">
+      <div className="flex flex-1 flex-col min-h-0">
         <div className="flex flex-row gap-4 bg-layer-2 h-[84px] py-3 px-6">
           <DatePicker
             onCalendarClose={fetchNewData}
