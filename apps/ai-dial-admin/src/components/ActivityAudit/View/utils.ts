@@ -367,11 +367,13 @@ const compareSeparateObjects = (
     key === EntityParameterKeys.ENTITIES ||
     key === EntityParameterKeys.KEYS ||
     key === EntityParameterKeys.ROLES ||
-    key === EntityParameterKeys.MODELS ||
     key === EntityParameterKeys.ROUTES ||
     key === EntityParameterKeys.DEPENDENCIES
   ) {
     compareEntities(diffs, val1 as string[], val2 as string[], isCurrent);
+  }
+  if (key === EntityParameterKeys.MODELS) {
+    compareModels(diffs, val1 as string[], val2 as string[], isCurrent);
   }
 };
 
@@ -475,6 +477,64 @@ const compareEntities = (diffs: ActivityAuditDiff[], val1: string[], val2: strin
     } else {
       diffs.push({ parameter: value1 || '', value: value1 || '' });
     }
+  }
+};
+
+/**
+ * Compare models
+ *
+ * @param {ActivityAuditDiff[]} diffs - result array
+ * @param {string[]} val1 - first value to compare
+ * @param {string[]} val2 - second value to compare
+ */
+const compareModels = (diffs: ActivityAuditDiff[], val1: string[], val2: string[], isCurrent?: boolean) => {
+  const sortedVal1 = [...val1].sort();
+  const sortedVal2 = [...val2].sort();
+
+  let i = 0;
+  let j = 0;
+
+  while (i < sortedVal1.length || j < sortedVal2.length) {
+    const value1 = sortedVal1[i] || '';
+    const value2 = sortedVal2[j] || '';
+
+    if (value1 === value2) {
+      diffs.push({ parameter: value1, value: value1, status: DiffStatus.MIRROR });
+      i++;
+      j++;
+    } else if (value1 < value2) {
+      diffs.push({
+        parameter: '',
+        value: value1,
+        status: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED,
+      });
+      i++;
+    } else {
+      diffs.push({
+        parameter: value2,
+        value: value2,
+        status: isCurrent ? DiffStatus.MIRROR : DiffStatus.ADDED,
+      });
+      j++;
+    }
+  }
+
+  while (i < sortedVal1.length) {
+    diffs.push({
+      parameter: '',
+      value: sortedVal1[i],
+      status: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED,
+    });
+    i++;
+  }
+
+  while (j < sortedVal2.length) {
+    diffs.push({
+      parameter: '',
+      value: sortedVal2[j],
+      status: isCurrent ? DiffStatus.MIRROR : DiffStatus.ADDED,
+    });
+    j++;
   }
 };
 
