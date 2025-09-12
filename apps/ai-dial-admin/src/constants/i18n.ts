@@ -114,6 +114,7 @@ export enum EntitiesI18nKey {
   InterceptorName = 'Entities.InterceptorName',
   ModelDisplayName = 'Entities.ModelDisplayName',
   Author = 'Entities.Author',
+  JSONEditor = 'Entities.JSONEditor',
   ApplicationDisplayName = 'Entities.ApplicationDisplayName',
   ChangeIcon = 'Entities.ChangeIcon',
   SaveChangesTitle = 'Entities.SaveChangesTitle',

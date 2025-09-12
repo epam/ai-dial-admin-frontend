@@ -8,7 +8,7 @@ import classNames from 'classnames';
 
 import Button from '@/src/components/Common/Button/Button';
 import Switch from '@/src/components/Common/Switch/Switch';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
@@ -116,7 +116,7 @@ const HeaderButtons = <T extends object>({
               <div className={editorClassNames}>
                 <Switch
                   isOn={jsonEditorEnabled}
-                  title="JSON Editor"
+                  title={t(EntitiesI18nKey.JSONEditor)}
                   switchId="jsonEditor"
                   onChange={toggleJsonEditor}
                 />

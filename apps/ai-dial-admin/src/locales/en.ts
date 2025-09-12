@@ -147,6 +147,7 @@ export default {
     InterceptorContainer: 'Interceptor Container',
     InterceptorTemplate: 'Interceptor Template',
     Author: 'Author',
+    JSONEditor: 'JSON Editor',
 
     // modals
     SaveChangesTitle: 'Save Changes',
