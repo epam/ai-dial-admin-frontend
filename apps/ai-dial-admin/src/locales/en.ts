@@ -732,6 +732,10 @@ export default {
     rewritePath: 'Rewrite path',
     response: 'Response',
     permissions: 'Permissions',
+    SourceType: 'Source Type',
+    SourceAdapter: 'Adapter',
+    SourceInterceptorTemplate: 'Interceptor Template',
+    SourceContainer: 'Container',
   },
   EntityPlaceholders: {
     Project: 'Enter project',

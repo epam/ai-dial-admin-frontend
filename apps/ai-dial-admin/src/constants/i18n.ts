@@ -783,6 +783,10 @@ export enum EntityFieldsI18nKey {
   dependencies = 'EntityFields.dependencies',
   completionEndpoint = 'EntityFields.completionEndpoint',
   container = 'EntityFields.container',
+  $type = 'EntityFields.SourceType',
+  adapterName = 'EntityFields.SourceAdapter',
+  runnerName = 'EntityFields.SourceInterceptorTemplate',
+  containerId = 'EntityFields.SourceContainer',
 }
 
 export enum ToolsetI18nKey {
