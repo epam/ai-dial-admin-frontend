@@ -3,6 +3,7 @@ import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import ExtraDataCellRenderer from '@/src/components/Grid/CellRenderers/ExtraDataCellRenderer';
 import PasswordCellRenderer from '@/src/components/Grid/CellRenderers/PasswordCellRenderer';
 import { FeaturesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { sourceTypeFormatter } from '@/src/constants/grid-columns/formatters';
 
 export const INTERCEPTORS_DIFF_COLUMNS = [
   { field: 'parameter', headerName: 'Order', width: 90, maxWidth: 90 },
@@ -31,6 +32,10 @@ export const RESOURCE_DIFF_COLUMNS = (t: (stringToTranslate: string) => string):
   {
     field: 'value',
     headerName: 'Value',
+    valueFormatter: (params) =>
+      params.data.parameter === '$type' ? sourceTypeFormatter(params.value, t) : params.value,
+    tooltipValueGetter: (params) =>
+      params.data.parameter === '$type' ? sourceTypeFormatter(params.value, t) : params.value,
     cellRendererSelector: (params: ICellRendererParams) => {
       switch (params.data?.parameter) {
         case 'key':
