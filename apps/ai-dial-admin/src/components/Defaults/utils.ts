@@ -80,7 +80,7 @@ export const getValueByType = (value?: DefaultsValue, type?: string): DefaultsVa
     case DefaultItemType.number:
       return value === '' ? '' : Number(value);
     case DefaultItemType.object:
-      return {};
+      return value || {};
     default:
       return value || '';
   }
