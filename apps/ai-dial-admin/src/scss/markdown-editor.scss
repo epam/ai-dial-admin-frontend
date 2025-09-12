@@ -1,53 +1,38 @@
-.react-mde {
-  // fix locking scroll
-  .CodeMirror-scroll {
-    overscroll-behavior: contain;
-    touch-action: auto;
+.wmde-markdown {
+  ul,
+  ol {
+    padding-left: 1.2em;
+    list-style: initial;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
   }
 
-  @apply border-primary !important;
-
-  .mde-header {
-    @apply bg-transparent text-secondary border-b-primary;
-    @apply border-b-primary;
-    @apply min-h-[34px];
-
-    .mde-tabs button {
-      @apply h-[24px];
-      @apply text-primary small;
-      @apply px-2;
-      &.selected {
-        @apply bg-layer-2;
-      }
-    }
-
-    .mde-header-group {
-      @apply p-0;
-      .mde-header-item button {
-        @apply text-secondary;
-      }
-    }
+  li {
+    margin-bottom: 0.3em;
   }
 
-  .mde-preview {
-    @apply overflow-x-auto;
-    @apply min-h-[250px] !important;
-    @apply h-[250px];
-    ol,
-    ul {
-      list-style: unset;
-    }
-    .mde-preview-content pre {
-      background-color: unset;
-    }
+  ol,
+  ul {
+    padding-left: 1.5em;
+    margin: 0.5em 0;
   }
 
-  // hide icon
-  .mde-header-group:nth-of-type(2) .mde-header-item:nth-child(4) {
-    display: none;
+  ol {
+    list-style-type: decimal;
   }
 
-  .mde-text {
-    @apply min-h-[250px];
+  ul {
+    list-style-type: disc;
+  }
+
+  .task-list-item {
+    @apply flex items-start;
+    input[type='checkbox'],
+    input[type='checkbox'][disabled] {
+      margin-right: 0.5em;
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
   }
 }
