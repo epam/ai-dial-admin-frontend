@@ -816,7 +816,7 @@ export default {
     OpenAdapter: 'Open adapter',
     Container: 'Container',
     InterceptorTemplate: 'Interceptor template',
-    DeploymentModel: 'Deployment model',
+    ModelDeployment: 'Deployment model',
     InterceptorDeployment: 'Interceptor deployment',
     Endpoint: 'Endpoint',
     Adapter: 'Adapter',
