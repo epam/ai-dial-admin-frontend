@@ -36,6 +36,7 @@ const separateObjectParameterKeys = [
   EntityParameterKeys.ROLES,
   EntityParameterKeys.MODELS,
   EntityParameterKeys.DEPENDENCIES,
+  EntityParameterKeys.SOURCE,
 ];
 
 /**
@@ -174,6 +175,14 @@ const compareObjectTypes = (
     compareStringArray(diffMap.properties, key, val1, val2, isCurrent, t);
   } else if (arrayObjectParameterKeys.includes(key)) {
     compareObjectArray(diffMap, key, val1 as object[], val2 as object[], isCurrent);
+  } else if (key === EntityParameterKeys.SOURCE) {
+    const { completionEndpointPath: __completionEndpointPath1, ...value1 } = val1 as {
+      completionEndpointPath?: string;
+    };
+    const { completionEndpointPath: __completionEndpointPath2, ...value2 } = val2 as {
+      completionEndpointPath?: string;
+    };
+    compareSimpleObjects(diffMap.properties, value1, value2, isCurrent);
   } else if (
     !diffMap[key] &&
     (separateObjectParameterKeys.includes(key) ||
@@ -213,6 +222,11 @@ const fillObjectTypes = (
     fillStringArray(diffMap.properties, key, value, t);
   } else if (arrayObjectParameterKeys.includes(key)) {
     fillObjectArray(diffMap, key, value as object[]);
+  } else if (key === EntityParameterKeys.SOURCE) {
+    const { completionEndpointPath: __completionEndpointPath1, ...value1 } = value as {
+      completionEndpointPath?: string;
+    };
+    fillSimpleObjects(diffMap.properties, value1);
   } else if (
     !diffMap[key] &&
     (separateObjectParameterKeys.includes(key) ||
@@ -1009,7 +1023,17 @@ export const isPathKey = (key: string): boolean => {
  * @returns {number} - compare result
  */
 export const sortKeys = (a: string, b: string): number => {
-  const priorityKeys = ['displayName', 'dial:applicationTypeDisplayName', 'name', '$id', 'version', 'displayVersion'];
+  const priorityKeys = [
+    'displayName',
+    'dial:applicationTypeDisplayName',
+    'name',
+    '$id',
+    'version',
+    'displayVersion',
+    'description',
+    'source',
+    'endpoint',
+  ];
 
   const aIndex = priorityKeys.indexOf(a);
   const bIndex = priorityKeys.indexOf(b);
