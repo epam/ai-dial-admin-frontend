@@ -1023,7 +1023,16 @@ export const isPathKey = (key: string): boolean => {
  * @returns {number} - compare result
  */
 export const sortKeys = (a: string, b: string): number => {
-  const priorityKeys = ['displayName', 'dial:applicationTypeDisplayName', 'name', '$id', 'version', 'displayVersion'];
+  const priorityKeys = [
+    'displayName',
+    'dial:applicationTypeDisplayName',
+    'name',
+    '$id',
+    'version',
+    'displayVersion',
+    'source',
+    'endpoint',
+  ];
 
   const aIndex = priorityKeys.indexOf(a);
   const bIndex = priorityKeys.indexOf(b);
