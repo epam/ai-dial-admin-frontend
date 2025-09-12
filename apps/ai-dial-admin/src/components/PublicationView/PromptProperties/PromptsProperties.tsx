@@ -47,13 +47,9 @@ const PromptsProperties: FC<Props> = ({ prompt, action, collapsed }) => {
   }, [prompt]);
 
   return (
-    <div data-testid={'publication-prompt-view'} className="flex flex-col bg-layer-3 p-4">
+    <div className="flex flex-col bg-layer-3 p-4">
       <div className="flex flex-row justify-between">
-        <button
-          data-testid={'publication-prompt-collapse-button'}
-          className={'flex items-center'}
-          onClick={toggleCollapse}
-        >
+        <button className={'flex items-center'} onClick={toggleCollapse}>
           <i className="text-icon-secondary">
             {isCollapsed ? <IconChevronRight {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
           </i>
@@ -67,15 +63,11 @@ const PromptsProperties: FC<Props> = ({ prompt, action, collapsed }) => {
               title={t(PublicationsI18nKey.OpenPrompt)}
               iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
               onClick={openPrompt}
-              dataTestId={'publication-prompt-open-button'}
             />
           )}
         </div>
       </div>
-      <div
-        data-testid={'publication-prompt-content'}
-        className={classNames('flex flex-col h-full justify-between', isCollapsed && 'hidden')}
-      >
+      <div className={classNames('flex flex-col h-full justify-between', isCollapsed && 'hidden')}>
         <div className="mt-4">
           <LabeledText label={t(EntityFieldsI18nKey.displayVersion)} text={prompt.version as string} />
         </div>

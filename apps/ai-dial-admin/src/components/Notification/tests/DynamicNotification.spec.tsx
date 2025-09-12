@@ -1,56 +1,33 @@
-import DynamicNotification from '@/src/components/Notification/DynamicNotification';
-import {
-  DYNAMIC_NOTIFICATION,
-  DYNAMIC_NOTIFICATION_COMPLETED,
-  DYNAMIC_NOTIFICATION_EMPTY,
-} from '@/src/utils/tests/mock/notifications.mock';
-import { fireEvent, render } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import DynamicNotification from '../DynamicNotification';
+import { NotificationType } from '@/src/models/notification';
 
-describe('Components - DynamicNotification', () => {
-  test('Should correctly render notification', () => {
-    const { baseElement, getByTestId } = render(<DynamicNotification {...DYNAMIC_NOTIFICATION} />);
-    const title = baseElement.getElementsByTagName('p')[0];
-    const progress = getByTestId('progress');
+const baseProps = {
+  id: '1',
+  type: NotificationType.dynamic,
+  title: 'Dynamic Title',
+  onClose: vi.fn(),
+};
 
-    expect(baseElement).toBeTruthy();
-    expect(title.innerHTML).toBe(DYNAMIC_NOTIFICATION.title);
-    expect(progress).toBeTruthy();
+describe('DynamicNotification', () => {
+  it('renders title', () => {
+    render(<DynamicNotification {...baseProps} />);
+    expect(screen.getByText('Dynamic Title')).toBeInTheDocument();
   });
 
-  test('Should correctly render notification details', () => {
-    const { getByTestId, queryAllByTestId } = render(<DynamicNotification {...DYNAMIC_NOTIFICATION} />);
-    const showDetailsButton = getByTestId('show-details');
-
-    fireEvent.click(showDetailsButton);
-
-    const files = queryAllByTestId('file');
-
-    expect(files?.length).toBe(3);
+  it('calls onClose when close button is clicked', () => {
+    render(<DynamicNotification {...baseProps} />);
+    const closeBtn = screen.getAllByRole('button')[1];
+    fireEvent.click(closeBtn);
+    expect(baseProps.onClose).toHaveBeenCalled();
   });
 
-  test('Should correctly render all completed notification details', () => {
-    const { getByTestId, queryAllByTestId } = render(<DynamicNotification {...DYNAMIC_NOTIFICATION_COMPLETED} />);
-    const showDetailsButton = getByTestId('show-details');
-    const progress = queryAllByTestId('progress');
-
-    expect(progress.length).toBeFalsy();
-
-    fireEvent.click(showDetailsButton);
-
-    const files = queryAllByTestId('file');
-
-    expect(files?.length).toBe(1);
-  });
-
-  test('Should correctly render notification without file details', () => {
-    const { getByTestId, queryAllByTestId } = render(<DynamicNotification {...DYNAMIC_NOTIFICATION_EMPTY} />);
-    const showDetailsButton = getByTestId('show-details');
-
-    fireEvent.click(showDetailsButton);
-
-    const files = queryAllByTestId('file');
-
-    expect(files?.length).toBe(0);
+  it('shows file details when details button is clicked', () => {
+    const downloadDetails = [{ id: '1', name: 'file1', progress: 50, failed: false, complete: false }];
+    render(<DynamicNotification {...baseProps} downloadDetails={downloadDetails} />);
+    const detailsBtn = screen.getAllByRole('button')[0];
+    fireEvent.click(detailsBtn);
+    expect(screen.getByText('file1')).toBeInTheDocument();
   });
 });

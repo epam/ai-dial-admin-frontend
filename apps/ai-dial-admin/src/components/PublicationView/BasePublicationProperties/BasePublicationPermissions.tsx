@@ -60,7 +60,6 @@ const BasePublicationPermissions: FC<Props> = ({ rules, folderId, showCompare })
             title={t(ButtonsI18nKey.ReviewStructure)}
             iconBefore={<IconBrandStackshare {...BASE_ICON_PROPS} />}
             onClick={() => setStructureModalState(PopUpState.Opened)}
-            dataTestId={'publication-permissions-review-structure-button'}
           />
         )}
         {showCompareButton && (
@@ -69,7 +68,6 @@ const BasePublicationPermissions: FC<Props> = ({ rules, folderId, showCompare })
             title={t(CompareI18nKey.CompareChanges)}
             iconBefore={<IconReplace {...BASE_ICON_PROPS} />}
             onClick={() => setCompareModalState(PopUpState.Opened)}
-            dataTestId={'publication-permissions-compare-changes-button'}
           />
         )}
       </div>
@@ -81,7 +79,6 @@ const BasePublicationPermissions: FC<Props> = ({ rules, folderId, showCompare })
             compareRules={compareRules}
             modalState={compareModalState}
             onClose={() => setCompareModalState(PopUpState.Closed)}
-            dataTestId={'publication-permissions-compare-modal'}
           />,
           document.body,
         )}
@@ -91,7 +88,6 @@ const BasePublicationPermissions: FC<Props> = ({ rules, folderId, showCompare })
             isLoading={isLoading}
             modalState={structureModalState}
             onClose={() => setStructureModalState(PopUpState.Closed)}
-            dataTestId={'publication-permissions-structure-modal'}
           />,
           document.body,
         )}

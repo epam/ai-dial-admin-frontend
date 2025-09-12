@@ -1,78 +1,38 @@
-import { getRules } from '@/src/app/[lang]/folders-storage/actions';
-import BasePublicationPermissions from '@/src/components/PublicationView/BasePublicationProperties/BasePublicationPermissions';
-import { fireEvent, render, waitFor } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import BasePublicationPermissions from '../BasePublicationPermissions';
+import { PopUpState } from '@/src/types/pop-up';
+import { ButtonsI18nKey } from '../../../../constants/i18n';
 
-vi.mock('@/src/app/[lang]/folders-storage/actions');
-const mockedGetRules = getRules;
+const rules = [{ id: 'r1' }];
+const folderId = '/folder';
 
-describe('Components - BasePublicationPermissions', () => {
-  test('Should correctly render BasePublicationPermissions component', async () => {
-    mockedGetRules.mockResolvedValue({
-      id: [{ id: 'rule-1' }],
-    });
-    const { getByTestId, findByTestId } = render(
-      <BasePublicationPermissions rules={[]} folderId={'id'} showCompare={true} />,
-    );
-    const reviewStructureButton = getByTestId('publication-permissions-review-structure-button');
-    expect(reviewStructureButton).toBeTruthy();
-
-    const compareChangesButton = await findByTestId('publication-permissions-compare-changes-button');
-    expect(compareChangesButton).toBeTruthy();
-  });
-
-  test('Should not render compare button inside BasePublicationPermissions component if rules same', async () => {
-    mockedGetRules.mockResolvedValue({
-      id: [],
-    });
-    const { getByTestId, queryByTestId } = render(
-      <BasePublicationPermissions rules={[]} folderId={'id'} showCompare={true} />,
-    );
-    const reviewStructureButton = getByTestId('publication-permissions-review-structure-button');
-    expect(reviewStructureButton).toBeTruthy();
-
+describe('BasePublicationPermissions', () => {
+  it('renders structure and compare buttons', async () => {
+    render(<BasePublicationPermissions rules={rules} folderId={folderId} showCompare={true} />);
     await waitFor(() => {
-      expect(queryByTestId('publication-permissions-compare-changes-button')).toBeNull();
+      expect(screen.getByText(ButtonsI18nKey.ReviewStructure)).toBeInTheDocument();
+      expect(screen.getByText(/CompareChanges/)).toBeInTheDocument();
     });
   });
 
-  test('Should not render compare button inside BasePublicationPermissions component if props are invalid', async () => {
-    mockedGetRules.mockResolvedValue({
-      id: [{ id: 'rule-1' }],
-    });
-    const { getByTestId, queryByTestId } = render(
-      <BasePublicationPermissions rules={[]} folderId={'id'} showCompare={false} />,
-    );
-    const reviewStructureButton = getByTestId('publication-permissions-review-structure-button');
-    expect(reviewStructureButton).toBeTruthy();
-
-    await waitFor(() => {
-      expect(queryByTestId('publication-permissions-compare-changes-button')).toBeNull();
-    });
+  it('opens RulesStructure modal on structure button click', async () => {
+    render(<BasePublicationPermissions rules={rules} folderId={folderId} showCompare={true} />);
+    const structureBtn = await screen.findByText(ButtonsI18nKey.ReviewStructure);
+    fireEvent.click(structureBtn);
+    expect(screen.getByText('RulesStructure ' + PopUpState.Opened)).toBeInTheDocument();
   });
 
-  test('Should open structure modal', () => {
-    const { getByTestId } = render(<BasePublicationPermissions rules={[]} folderId={'id'} showCompare={true} />);
-
-    const reviewStructureButton = getByTestId('publication-permissions-review-structure-button');
-    fireEvent.click(reviewStructureButton);
-
-    const structureModal = getByTestId('publication-permissions-structure-modal');
-    expect(structureModal).toBeTruthy();
+  it('opens RulesCompare modal on compare button click', async () => {
+    render(<BasePublicationPermissions rules={rules} folderId={folderId} showCompare={true} />);
+    const compareBtn = await screen.findByText(/CompareChanges/);
+    fireEvent.click(compareBtn);
+    expect(screen.getByText('RulesCompare ' + PopUpState.Opened)).toBeInTheDocument();
   });
 
-  test('Should open compare modal', async () => {
-    mockedGetRules.mockResolvedValue({
-      id: [{ id: 'rule-1' }],
-    });
-    const { getByTestId, findByTestId } = render(
-      <BasePublicationPermissions rules={[]} folderId={'id'} showCompare={true} />,
-    );
-
-    const compareChangesButton = await findByTestId('publication-permissions-compare-changes-button');
-    fireEvent.click(compareChangesButton);
-
-    const compareModal = getByTestId('publication-permissions-compare-modal');
-    expect(compareModal).toBeTruthy();
+  it('does not show buttons for ROOT_FOLDER', async () => {
+    render(<BasePublicationPermissions rules={rules} folderId={'root/'} showCompare={true} />);
+    expect(screen.queryByText(ButtonsI18nKey.ReviewStructure)).not.toBeInTheDocument();
+    expect(screen.queryByText(/CompareChanges/)).not.toBeInTheDocument();
   });
 });

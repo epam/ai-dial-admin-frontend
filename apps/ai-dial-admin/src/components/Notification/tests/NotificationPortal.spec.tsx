@@ -1,16 +1,37 @@
-import NotificationPortal from '@/src/components/Notification/NotificationPortal';
-import { NOTIFICATIONS } from '@/src/utils/tests/mock/notifications.mock';
-import { render } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import NotificationPortal from '../NotificationPortal';
+import { NotificationType } from '@/src/models/notification';
 
-describe('Components - NotificationPortal', () => {
-  test('Should correctly render notification portal', () => {
-    const { getByTestId } = render(<NotificationPortal notifications={NOTIFICATIONS} />);
+describe('NotificationPortal', () => {
+  it('renders Notification for non-dynamic notifications', () => {
+    render(
+      <NotificationPortal
+        notifications={[{ id: '1', type: NotificationType.success, title: 'Success', onClose: vi.fn() }]}
+      />,
+    );
+    expect(screen.getByText('Success')).toBeInTheDocument();
+  });
 
-    const notification = getByTestId('notification');
-    const dynamicNotification = getByTestId('notification-dynamic');
+  it('renders DynamicNotification for dynamic notifications', () => {
+    render(
+      <NotificationPortal
+        notifications={[{ id: '2', type: NotificationType.dynamic, title: 'Dynamic', onClose: vi.fn() }]}
+      />,
+    );
+    expect(screen.getByText('Dynamic')).toBeInTheDocument();
+  });
 
-    expect(notification).toBeTruthy();
-    expect(dynamicNotification).toBeTruthy();
+  it('renders multiple notifications', () => {
+    render(
+      <NotificationPortal
+        notifications={[
+          { id: '1', type: NotificationType.success, title: 'Success', onClose: vi.fn() },
+          { id: '2', type: NotificationType.dynamic, title: 'Dynamic', onClose: vi.fn() },
+        ]}
+      />,
+    );
+    expect(screen.getByText('Success')).toBeInTheDocument();
+    expect(screen.getByText('Dynamic')).toBeInTheDocument();
   });
 });

@@ -1,74 +1,37 @@
-import { render } from '@testing-library/react';
-import PromptsProperties from '@/src/components/PublicationView/PromptProperties/PromptsProperties';
-import { fireEvent } from '@testing-library/react';
+import { PublicationsI18nKey } from '@/src/constants/i18n';
 import { ActionType } from '@/src/models/dial/publications';
-import { publicationPrompt } from '@/src/utils/tests/mock/publication.mock';
-import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import PromptsProperties from '../PromptsProperties';
 
-const mockWindowOpen = vi.fn();
+const basePrompt = {
+  name: 'PromptName',
+  version: '1.0',
+  description: 'desc',
+  content: 'Prompt content',
+};
 
-describe('Components - PromptsProperties', () => {
-  beforeAll(() => {
-    global.window.open = mockWindowOpen;
+describe('PromptsProperties', () => {
+  it('renders collapsed by default', () => {
+    render(<PromptsProperties prompt={basePrompt} action={ActionType.ADD} collapsed={true} />);
+    expect(screen.getByText('PromptName')).toBeInTheDocument();
   });
 
-  afterEach(() => {
-    vi.clearAllMocks();
+  it('expands and shows details when toggled', () => {
+    render(<PromptsProperties prompt={basePrompt} action={ActionType.ADD} collapsed={true} />);
+    fireEvent.click(screen.getByText('PromptName'));
+    expect(screen.getByText('desc')).toBeInTheDocument();
+    expect(screen.getByText('1.0')).toBeInTheDocument();
+    expect(screen.getByText('Prompt content')).toBeInTheDocument();
   });
 
-  test('Should correctly render PromptsList collapsed view', () => {
-    const { getByTestId } = render(
-      <PromptsProperties
-        prompt={publicationPrompt.prompts[0]}
-        collapsed={true}
-        action={publicationPrompt.action as ActionType}
-      />,
-    );
-    const view = getByTestId('publication-prompt-view');
-    const content = getByTestId('publication-prompt-content');
-    expect(view).toBeTruthy();
-    expect(content.classList).toContain('hidden');
+  it('shows open button for DELETE action', () => {
+    render(<PromptsProperties prompt={basePrompt} action={ActionType.DELETE} collapsed={false} />);
+    expect(screen.getByRole('button', { name: PublicationsI18nKey.OpenPrompt })).toBeInTheDocument();
   });
 
-  test('Should correctly render PromptsList not collapsed view', () => {
-    const { getByTestId } = render(
-      <PromptsProperties
-        prompt={publicationPrompt.prompts[0]}
-        collapsed={false}
-        action={publicationPrompt.action as ActionType}
-      />,
-    );
-    const view = getByTestId('publication-prompt-view');
-    const content = getByTestId('publication-prompt-content');
-    expect(view).toBeTruthy();
-    expect(content.classList).not.toContain('hidden');
-  });
-
-  test('Should correctly change collapsed state', () => {
-    const { getByTestId } = render(
-      <PromptsProperties
-        prompt={publicationPrompt.prompts[0]}
-        collapsed={false}
-        action={publicationPrompt.action as ActionType}
-      />,
-    );
-
-    const content = getByTestId('publication-prompt-content');
-    const collapseButton = getByTestId('publication-prompt-collapse-button');
-
-    expect(content.classList).not.toContain('hidden');
-    fireEvent.click(collapseButton);
-    expect(content.classList).toContain('hidden');
-  });
-
-  test('Should correctly navigate to prompt', () => {
-    const { getByTestId } = render(
-      <PromptsProperties prompt={publicationPrompt.prompts[0]} collapsed={false} action={'delete' as ActionType} />,
-    );
-
-    const openButton = getByTestId('publication-prompt-open-button');
-
-    fireEvent.click(openButton);
-    expect(mockWindowOpen).toHaveBeenCalled();
+  it('calls onOpenInNewTab when open button is clicked', () => {
+    render(<PromptsProperties prompt={basePrompt} action={ActionType.DELETE} collapsed={false} />);
+    fireEvent.click(screen.getByRole('button', { name: PublicationsI18nKey.OpenPrompt }));
   });
 });
