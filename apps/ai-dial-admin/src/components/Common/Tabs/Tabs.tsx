@@ -20,7 +20,7 @@ interface Props {
 const Tabs: FC<Props> = ({ tabs, activeTab, onClick, jsonEditorEnabled, orientation = TabOrientation.Horizontal }) => {
   const isHorizontal = orientation === TabOrientation.Horizontal;
   const staticTabsClassnames = classNames(
-    'flex gap-3',
+    'flex gap-3 flex-wrap',
     isHorizontal ? 'flex-row' : 'flex-col',
     jsonEditorEnabled ? 'hidden' : '',
   );
