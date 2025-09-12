@@ -15,14 +15,15 @@ import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/gr
 import { EntityType } from '@/src/types/entity-type';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
-// until BE implement
-export const fulDependenciesConfig = {
-  entities: true,
+export const fulDependenciesConfig: ExportDependenciesConfig = {
+  applications: true,
+  interceptorsTemplates: true,
+  models: true,
+  routes: true,
+  toolSets: true,
   roles: true,
-  // files: true,
   interceptors: true,
   keys: true,
-  // prompts: true,
   runners: true,
   adapters: true,
 };
@@ -41,18 +42,16 @@ export const getActualColDefs = (
   remove?: (entity: EntitiesGridData) => void,
 ): ColDef[] => {
   let columns: ColDef[] = [...ENTITY_BASE_COLUMNS];
-  if (type === EntityType.ENTITIES) {
-    columns = [
-      {
-        field: 'type',
-        headerName: 'Entity type',
-        valueFormatter: (params) => t(params.value),
-        tooltipValueGetter: (params) => t(params.value),
-      },
-      ...ENTITY_BASE_COLUMNS,
-    ];
+  if (type === EntityType.MODEL || type === EntityType.APPLICATION) {
+    columns = [...ENTITY_BASE_COLUMNS];
   }
-  if (type === EntityType.ROLE || type === EntityType.INTERCEPTOR) {
+  if (
+    type === EntityType.ROLE ||
+    type === EntityType.INTERCEPTOR ||
+    type === EntityType.TOOLSET ||
+    type === EntityType.ROUTE ||
+    type === EntityType.INTERCEPTOR_RUNNER
+  ) {
     columns = [...SIMPLE_ENTITY_COLUMNS];
   }
   if (type === EntityType.KEY) {
@@ -64,6 +63,7 @@ export const getActualColDefs = (
   if (type === EntityType.ADAPTER) {
     columns = [...SIMPLE_ENTITY_COLUMNS];
   }
+
   if (remove && isEntityWithDependency(type)) {
     columns.push({
       field: 'dependencies',
@@ -111,12 +111,7 @@ export const getComponents = (
 
   Object.entries(data).forEach(([key, data]) => {
     data.forEach((entity) => {
-      const dependencies =
-        (entity.dependencies?.flatMap((d) =>
-          d === EntityType.ENTITIES
-            ? [EntityType.APPLICATION, EntityType.MODEL, EntityType.ROUTE, EntityType.TOOLSET]
-            : [d],
-        ) as EntityType[]) || [];
+      const dependencies = (entity.dependencies?.flatMap((d) => [d]) as EntityType[]) || [];
       components.push({
         dependencies,
         name: entity.$id || entity.name,
@@ -170,8 +165,20 @@ export const getComponentTypes = (
   }
   const isCoreFormat = selectedFormat === ExportFormat.CORE;
   const types: EntityType[] = [];
-  if (config.entities) {
-    types.push(...[EntityType.APPLICATION, EntityType.MODEL, EntityType.ROUTE, EntityType.TOOLSET]);
+  if (config.models) {
+    types.push(EntityType.MODEL);
+  }
+
+  if (config.applications) {
+    types.push(EntityType.APPLICATION);
+  }
+
+  if (config.toolSets) {
+    types.push(EntityType.TOOLSET);
+  }
+
+  if (config.routes) {
+    types.push(EntityType.ROUTE);
   }
 
   if (config.roles) {
@@ -189,18 +196,15 @@ export const getComponentTypes = (
   if (config.interceptors) {
     types.push(EntityType.INTERCEPTOR);
   }
+
   if (!isCoreFormat) {
     if (config.adapters) {
       types.push(EntityType.ADAPTER);
     }
-    // until BE implement
 
-    // if (config.prompts) {
-    //   types.push(EntityType.PROMPT);
-    // }
-    // if (config.files) {
-    //   types.push(EntityType.FILE);
-    // }
+    if (config.interceptorsTemplates) {
+      types.push(EntityType.INTERCEPTOR_RUNNER);
+    }
   }
 
   return types;
@@ -213,5 +217,11 @@ export const getComponentTypes = (
  * @returns {boolean} - true if EntityType have dependencies
  */
 export const isEntityWithDependency = (entity: string): boolean => {
-  return entity === EntityType.ENTITIES || entity === EntityType.ROLE || entity === EntityType.KEY;
+  return (
+    entity === EntityType.MODEL ||
+    entity === EntityType.APPLICATION ||
+    entity === EntityType.TOOLSET ||
+    entity === EntityType.ROLE ||
+    entity === EntityType.KEY
+  );
 };

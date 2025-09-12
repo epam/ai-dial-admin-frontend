@@ -11,9 +11,29 @@ const mockGetAvailableEntities = AddEntitiesUtils.getAvailableEntities;
 describe('Export Config Utils :: getButtonTitle', () => {
   const mockTranslate = (v: string) => v;
 
-  test('Should return title for entities (full)', () => {
-    const res = getButtonTitle(mockTranslate, EntityType.ENTITIES, true);
-    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Entities.toLowerCase()}`);
+  test('Should return title for MODEL (full)', () => {
+    const res = getButtonTitle(mockTranslate, EntityType.MODEL, true);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Models.toLowerCase()}`);
+  });
+
+  test('Should return title for APPLICATION (full)', () => {
+    const res = getButtonTitle(mockTranslate, EntityType.APPLICATION, true);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Applications.toLowerCase()}`);
+  });
+
+  test('Should return title for ROUTE (full)', () => {
+    const res = getButtonTitle(mockTranslate, EntityType.ROUTE, true);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Routes.toLowerCase()}`);
+  });
+
+  test('Should return title for TOOLSET (full)', () => {
+    const res = getButtonTitle(mockTranslate, EntityType.TOOLSET, true);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.Toolsets.toLowerCase()}`);
+  });
+
+  test('Should return title for INTERCEPTOR_RUNNER (full)', () => {
+    const res = getButtonTitle(mockTranslate, EntityType.INTERCEPTOR_RUNNER, true);
+    expect(res).toBe(`${ButtonsI18nKey.Add} ${MenuI18nKey.InterceptorTemplates.toLowerCase()}`);
   });
 
   test('Should return title for key (full)', () => {
@@ -90,14 +110,22 @@ describe('Export Config Utils :: getButtonTitle', () => {
 describe('Export Config Utils :: getAllAvailableDependencies', () => {
   test('returns correct dependencies for ROLE', () => {
     const result = getAllAvailableDependencies(EntityType.ROLE);
-    expect(result).toEqual([EntityType.ENTITIES, EntityType.APPLICATION_TYPE_SCHEMA, EntityType.INTERCEPTOR]);
+    expect(result).toEqual([
+      EntityType.MODEL,
+      EntityType.APPLICATION,
+      EntityType.TOOLSET,
+      EntityType.ROUTE,
+      EntityType.APPLICATION_TYPE_SCHEMA,
+      EntityType.INTERCEPTOR,
+    ]);
   });
 
   test('returns correct dependencies for KEY', () => {
     const result = getAllAvailableDependencies(EntityType.KEY);
     expect(result).toEqual([
       EntityType.ROLE,
-      EntityType.ENTITIES,
+      EntityType.MODEL,
+      EntityType.APPLICATION,
       EntityType.APPLICATION_TYPE_SCHEMA,
       EntityType.INTERCEPTOR,
     ]);
@@ -110,7 +138,12 @@ describe('Export Config Utils :: getAllAvailableDependencies', () => {
 
   test('returns correct dependencies for APPLICATION', () => {
     const result = getAllAvailableDependencies(EntityType.APPLICATION);
-    expect(result).toEqual([EntityType.ENTITIES, EntityType.APPLICATION_TYPE_SCHEMA, EntityType.INTERCEPTOR]);
+    expect(result).toEqual([
+      EntityType.MODEL,
+      EntityType.APPLICATION,
+      EntityType.APPLICATION_TYPE_SCHEMA,
+      EntityType.INTERCEPTOR,
+    ]);
   });
 
   test('returns empty array for undefined input', () => {

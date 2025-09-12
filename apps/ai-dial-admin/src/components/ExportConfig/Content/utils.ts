@@ -51,8 +51,38 @@ export const getActualTabs = (
   const dependencies = exportType === ExportType.Custom ? fulDependenciesConfig : config;
   const isCoreFormat = selectedFormat === ExportFormat.CORE;
   const tabs: TabModel[] = [];
-  if (dependencies.entities) {
-    tabs.push({ id: EntityType.ENTITIES, name: t(MenuI18nKey.Entities) });
+  if (dependencies.models) {
+    tabs.push({ id: EntityType.MODEL, name: t(MenuI18nKey.Models) });
+  }
+
+  if (dependencies.applications) {
+    tabs.push({ id: EntityType.APPLICATION, name: t(MenuI18nKey.Applications) });
+  }
+
+  if (dependencies.toolSets) {
+    tabs.push({ id: EntityType.TOOLSET, name: t(MenuI18nKey.Toolsets) });
+  }
+
+  if (dependencies.interceptors) {
+    tabs.push({ id: EntityType.INTERCEPTOR, name: t(MenuI18nKey.Interceptors) });
+  }
+
+  if (dependencies.routes) {
+    tabs.push({ id: EntityType.ROUTE, name: t(MenuI18nKey.Routes) });
+  }
+
+  if (dependencies.runners) {
+    tabs.push({ id: EntityType.APPLICATION_TYPE_SCHEMA, name: t(MenuI18nKey.ApplicationRunners) });
+  }
+
+  if (!isCoreFormat) {
+    if (dependencies.adapters) {
+      tabs.push({ id: EntityType.ADAPTER, name: t(MenuI18nKey.Adapters) });
+    }
+
+    if (dependencies.interceptorsTemplates) {
+      tabs.push({ id: EntityType.INTERCEPTOR_RUNNER, name: t(MenuI18nKey.InterceptorTemplates) });
+    }
   }
 
   if (dependencies.roles) {
@@ -61,29 +91,6 @@ export const getActualTabs = (
 
   if (dependencies.keys) {
     tabs.push({ id: EntityType.KEY, name: t(MenuI18nKey.Keys) });
-  }
-
-  if (dependencies.runners) {
-    tabs.push({ id: EntityType.APPLICATION_TYPE_SCHEMA, name: t(MenuI18nKey.ApplicationRunners) });
-  }
-
-  if (dependencies.interceptors) {
-    tabs.push({ id: EntityType.INTERCEPTOR, name: t(MenuI18nKey.Interceptors) });
-  }
-
-  if (!isCoreFormat) {
-    if (dependencies.adapters) {
-      tabs.push({ id: EntityType.ADAPTER, name: t(MenuI18nKey.Adapters) });
-    }
-
-    //todo when BE implement
-
-    // if (dependencies.prompts) {
-    //   tabs.push({ id: EntityType.PROMPT, name: t(MenuI18nKey.Prompts) });
-    // }
-    // if (dependencies.files) {
-    //   tabs.push({ id: EntityType.FILE, name: t(MenuI18nKey.Files) });
-    // }
   }
 
   return tabs;

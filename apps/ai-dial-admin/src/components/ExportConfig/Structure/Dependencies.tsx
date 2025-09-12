@@ -23,22 +23,29 @@ const ExportDependencies: FC<Props> = ({ selectedExportFormat, dependencies, onC
 
   const switches: SwitcherData[] = useMemo(() => {
     const res: SwitcherData[] = [
-      { key: 'entities', label: MenuI18nKey.Entities },
+      { key: 'models', label: MenuI18nKey.Models },
+      { key: 'applications', label: MenuI18nKey.Applications },
+      { key: 'toolSets', label: MenuI18nKey.Toolsets },
+      { key: 'interceptors', label: MenuI18nKey.Interceptors },
+      { key: 'routes', label: MenuI18nKey.Routes },
+      { key: 'runners', label: MenuI18nKey.ApplicationRunners },
       { key: 'roles', label: MenuI18nKey.Roles },
       { key: 'keys', label: MenuI18nKey.Keys },
-      { key: 'runners', label: MenuI18nKey.ApplicationRunners },
-      { key: 'interceptors', label: MenuI18nKey.Interceptors },
     ];
 
     if (selectedExportFormat === ExportFormat.ADMIN) {
-      res.push(...([{ key: 'adapters', label: MenuI18nKey.Adapters }] as SwitcherData[]));
+      res.splice(6, 0, { key: 'adapters', label: MenuI18nKey.Adapters });
+    }
+
+    if (selectedExportFormat === ExportFormat.ADMIN) {
+      res.splice(7, 0, { key: 'interceptorsTemplates', label: MenuI18nKey.InterceptorTemplates });
     }
     return res;
   }, [selectedExportFormat]);
 
   return (
     <div className="flex flex-col h-full">
-      <Field fieldTitle={t(ExportI18nKey.Dependencies)} htmlFor="dependencies" />
+      <Field fieldTitle={t(ExportI18nKey.Resources)} htmlFor="dependencies" />
       <div className="flex flex-col gap-y-4 flex-1 min-h-0">
         {switches.map(({ key, label }) => (
           <Switch

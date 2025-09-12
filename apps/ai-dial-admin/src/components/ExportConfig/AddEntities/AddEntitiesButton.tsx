@@ -6,17 +6,14 @@ import { IconPlus } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 
 import Button from '@/src/components/Common/Button/Button';
-import Dropdown from '@/src/components/Common/Dropdown/Dropdown';
-import DropdownMenuItem from '@/src/components/Common/Dropdown/DropdownItem';
 import AddEntitiesModal from '@/src/components/ExportConfig/AddEntities/AddEntitiesModal';
 import { getActualColDefs, isEntityWithDependency } from '@/src/components/ExportConfig/utils';
-import { MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
+import { EntityType } from '@/src/types/entity-type';
 import { PopUpState } from '@/src/types/pop-up';
 import { getAvailableData, getButtonTitle } from './utils';
-import { EntityType } from '@/src/types/entity-type';
 
 interface Props {
   selectedTab: EntityType;
@@ -27,12 +24,7 @@ interface Props {
 
 const AddEntitiesButton: FC<Props> = ({ selectedTab, tabData, customExportData, setCustomExportData }) => {
   const t = useI18n() as (v: string) => string;
-  const dropdownItems = [
-    { id: EntityType.MODEL, name: t(MenuI18nKey.Models) },
-    { id: EntityType.APPLICATION, name: t(MenuI18nKey.Applications) },
-    { id: EntityType.ROUTE, name: t(MenuI18nKey.Routes) },
-    { id: EntityType.TOOLSET, name: t(MenuI18nKey.Toolsets) },
-  ];
+
   const [buttonTitle, setButtonTitle] = useState('');
   const [modalState, setModalState] = useState(PopUpState.Closed);
   const [availableEntities, setAvailableEntities] = useState<EntitiesGridData[]>([]);
@@ -69,26 +61,13 @@ const AddEntitiesButton: FC<Props> = ({ selectedTab, tabData, customExportData, 
 
   return (
     <>
-      {selectedTab === EntityType.ENTITIES ? (
-        <Dropdown
-          selectedClassName="input flex items-center font-semibold py-[9px] cursor-pointer"
-          selectedValue={{
-            id: EntityType.ENTITIES,
-            name: buttonTitle,
-          }}
-        >
-          {dropdownItems.map((item) => (
-            <DropdownMenuItem key={item.name} dropdownItem={item} onClick={() => onClick(item.id)} />
-          ))}
-        </Dropdown>
-      ) : (
-        <Button
-          title={buttonTitle}
-          iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-          cssClass="secondary"
-          onClick={() => onClick(selectedTab)}
-        />
-      )}
+      <Button
+        title={buttonTitle}
+        iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+        cssClass="secondary"
+        onClick={() => onClick(selectedTab)}
+      />
+
       {modalState === PopUpState.Opened &&
         createPortal(
           <AddEntitiesModal

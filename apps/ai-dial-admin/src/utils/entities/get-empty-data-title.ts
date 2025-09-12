@@ -48,8 +48,8 @@ export const getEmptyDataTitleI18nKey = (type?: EntityType): string => {
     return EntitiesI18nKey.NoRoutes;
   }
 
-  if (type === EntityType.ENTITIES) {
-    return EntitiesI18nKey.NoEntities;
+  if (type === EntityType.INTERCEPTOR_RUNNER) {
+    return EntitiesI18nKey.NoInterceptorTemplates;
   }
 
   return BasicI18nKey.NoData;
