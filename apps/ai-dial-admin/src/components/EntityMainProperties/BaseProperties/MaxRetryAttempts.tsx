@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
-import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 
@@ -15,7 +15,6 @@ const MaxRetryAttempts = <T extends { maxRetryAttempts?: number }>({ entity, onC
   const t = useI18n();
 
   const items: DropdownItemsModel[] = [
-    { id: '0', name: t(BasicI18nKey.None) },
     { id: '1', name: '1' },
     { id: '2', name: '2' },
     { id: '3', name: '3' },
@@ -23,7 +22,7 @@ const MaxRetryAttempts = <T extends { maxRetryAttempts?: number }>({ entity, onC
     { id: '5', name: '5' },
   ];
 
-  const activeMaxAttempts = entity?.maxRetryAttempts?.toString() || '0';
+  const activeMaxAttempts = entity?.maxRetryAttempts?.toString() || '1';
   const onChange = useCallback(
     (value: string) => {
       onChangeEntity({ ...entity, maxRetryAttempts: Number(value) } as T);

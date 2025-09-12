@@ -8,29 +8,27 @@ import { cloneDeep } from 'lodash';
 
 import { removeToolset, updateToolset } from '@/src/app/[lang]/toolsets/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
+import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import EntityRolesModal from '@/src/components/EntityView/Modals/EmptyRoles/EmptyRoles';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
+import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
 import { auditTabs, EntityViewTab, propertiesTabs, rolesTabs, toolsTabs } from '@/src/components/EntityView/View/utils';
 import Tool from '@/src/components/Toolsets/Tools/Tools';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
+import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
 import { Toolset } from '@/src/models/dial/toolset';
 import { TabModel } from '@/src/models/tab';
 import { JSONEditorErrorNotification } from '@/src/types/editor';
+import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import ToolsetProperties from './Properties';
-import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
-import { EntityRoleLimits } from '@/src/models/dial/base-entity';
-import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
-import { PopUpState } from '@/src/types/pop-up';
-import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
-import { ButtonsI18nKey, RolesI18nKey } from '@/src/constants/i18n';
-import { createPortal } from 'react-dom';
 
 interface Props {
   names: string[];
@@ -106,6 +104,7 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
+      setModalState(PopUpState.Closed);
     });
   }, [selectedToolset, router, showNotification]);
 
@@ -122,7 +121,7 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
       <div className={headerClassName}>
         <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
         <HeaderButtons
-          view={ApplicationRoute.ApplicationRunners}
+          view={ApplicationRoute.Toolsets}
           entity={selectedToolset}
           isChanged={isChanged}
           onDiscard={onDiscard}
@@ -170,25 +169,14 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
               <EntityAudit entity={selectedToolset} view={ApplicationRoute.Toolsets} />
             )}
 
-            {modalState === PopUpState.Opened &&
-              createPortal(
-                <ConfirmationModal
-                  modalState={modalState}
-                  heading={t(RolesI18nKey.SaveWithEmptyRolesTitle)}
-                  confirmLabel={t(ButtonsI18nKey.Save)}
-                  cancelLabel={t(ButtonsI18nKey.ContinueEditing)}
-                  containerClassName="lg:!max-w-[440px]"
-                  onConfirm={() => onSave()}
-                  onClose={() => setModalState(PopUpState.Closed)}
-                  onCancel={() => setModalState(PopUpState.Closed)}
-                >
-                  <div className="text-secondary small-150 px-6 py-4">
-                    <p className="mb-2">{t(RolesI18nKey.SaveWithEmptyRolesDescription)}</p>
-                    <p className="small-text-semi">{t(RolesI18nKey.SaveProceedWithConfiguration)}</p>
-                  </div>
-                </ConfirmationModal>,
-                document.body,
-              )}
+            {modalState === PopUpState.Opened && (
+              <EntityRolesModal
+                modalState={modalState}
+                onConfirm={() => onSave()}
+                onClose={() => setModalState(PopUpState.Closed)}
+                onCancel={() => setModalState(PopUpState.Closed)}
+              />
+            )}
           </>
         )}
       </div>
