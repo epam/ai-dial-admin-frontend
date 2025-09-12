@@ -14,8 +14,8 @@ import { ActionType } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
-function formatPromptText(input: string): ReactNode {
-  const parts = input.split(/({{.*?}})/);
+function formatPromptText(input?: string): ReactNode {
+  const parts = input?.split(/({{.*?}})/) || [];
   return parts.map((part, index) => {
     if (part.startsWith('{{') && part.endsWith('}}')) {
       return (
