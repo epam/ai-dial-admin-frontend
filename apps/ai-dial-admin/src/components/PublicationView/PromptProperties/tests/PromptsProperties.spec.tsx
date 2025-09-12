@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest';
 import PromptsProperties from '../PromptsProperties';
 
 const basePrompt = {
-
   name: 'PromptName',
   version: '1.0',
   description: 'desc',

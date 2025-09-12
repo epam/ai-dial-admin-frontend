@@ -100,7 +100,6 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route }) => {
           title={t(TelemetryI18nKey.AddFilter)}
           iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
           cssClass="tertiary"
-          dataTestId={'dashboard-add-filter'}
         />
       </AddFilter>
     </>
