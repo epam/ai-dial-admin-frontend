@@ -1,29 +1,19 @@
-import { FC, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import ReactMde from 'react-mde';
-import 'react-mde/lib/styles/css/react-mde-all.css';
+import '@uiw/react-markdown-preview/markdown.css';
+import MDEditor from '@uiw/react-md-editor';
+import '@uiw/react-md-editor/markdown-editor.css';
+
+import { FC } from 'react';
 
 interface Props {
   content: string;
   onChangeContent?: (content: string) => void;
 }
 
-enum SelectedContentView {
-  WRITE = 'write',
-  PREVIEW = 'preview',
-}
-
 const MdEditor: FC<Props> = ({ content, onChangeContent }) => {
-  const [selectedTab, setSelectedTab] = useState(SelectedContentView.WRITE);
-
   return (
-    <ReactMde
-      value={content}
-      onChange={onChangeContent}
-      selectedTab={selectedTab}
-      onTabChange={(tab) => setSelectedTab(tab as SelectedContentView)}
-      generateMarkdownPreview={(markdown: string) => Promise.resolve(<ReactMarkdown>{markdown}</ReactMarkdown>)}
-    />
+    <div data-color-mode="dark">
+      <MDEditor value={content} onChange={(v) => onChangeContent?.(v || '')} />
+    </div>
   );
 };
 
