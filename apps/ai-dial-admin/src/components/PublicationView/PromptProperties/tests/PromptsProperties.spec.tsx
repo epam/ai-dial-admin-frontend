@@ -10,8 +10,8 @@ describe('PromptsPropertiesList', () => {
       content: 'content',
     };
     render(<PromptsPropertiesList publication={publication as any} />);
-    expect(screen.getByText('PromptsProperties Prompt1')).toBeInTheDocument();
-    expect(screen.getByText('PromptsProperties Prompt2')).toBeInTheDocument();
+    expect(screen.getByText('Prompt1')).toBeInTheDocument();
+    expect(screen.getByText('Prompt2')).toBeInTheDocument();
   });
 
   it('renders nothing if no prompts', () => {
