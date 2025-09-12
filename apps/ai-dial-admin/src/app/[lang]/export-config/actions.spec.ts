@@ -55,19 +55,44 @@ describe('Export config :: actions :: getEntities', () => {
     getUserToken.mockResolvedValue(TOKEN_MOCK);
   });
 
-  test('should return combined ENTITIES data', async () => {
+  test('should return ROUTE entities', async () => {
     api.routesApi.getRoutesList.mockResolvedValue(['route1']);
-    api.applicationsApi.getApplicationsList.mockResolvedValue(['app1']);
-    api.modelsApi.getModelsList.mockResolvedValue(['model1']);
-    api.toolSetsApi.getToolsetList.mockResolvedValue(['toolset1']);
-
     entityUtils.getRoutesForEntitiesGrid.mockReturnValue([{ id: 'route' }]);
+
+    const result = await getEntities(EntityType.ROUTE);
+    expect(result).toEqual([{ id: 'route' }]);
+  });
+
+  test('should return APPLICATION entities', async () => {
+    api.applicationsApi.getApplicationsList.mockResolvedValue(['app1']);
     entityUtils.getApplicationsForEntitiesGrid.mockReturnValue([{ id: 'app' }]);
+
+    const result = await getEntities(EntityType.APPLICATION);
+    expect(result).toEqual([{ id: 'app' }]);
+  });
+
+  test('should return INTERCEPTOR_RUNNER entities', async () => {
+    api.interceptorTemplatesApi.getInterceptorTemplatesList.mockResolvedValue(['runner1']);
+    entityUtils.getTemplatesForEntitiesGrid.mockReturnValue([{ id: 'runner' }]);
+
+    const result = await getEntities(EntityType.INTERCEPTOR_RUNNER);
+    expect(result).toEqual([{ id: 'runner' }]);
+  });
+
+  test('should return MODEL entities', async () => {
+    api.modelsApi.getModelsList.mockResolvedValue(['model1']);
     entityUtils.getModelsForEntitiesGrid.mockReturnValue([{ id: 'model' }]);
+
+    const result = await getEntities(EntityType.MODEL);
+    expect(result).toEqual([{ id: 'model' }]);
+  });
+
+  test('should return TOOLSET entities', async () => {
+    api.toolSetsApi.getToolsetList.mockResolvedValue(['toolset1']);
     entityUtils.getToolsetsForEntitiesGrid.mockReturnValue([{ id: 'toolset' }]);
 
-    const result = await getEntities(EntityType.ENTITIES);
-    expect(result).toEqual([{ id: 'model' }, { id: 'app' }, { id: 'route' }, { id: 'toolset' }]);
+    const result = await getEntities(EntityType.TOOLSET);
+    expect(result).toEqual([{ id: 'toolset' }]);
   });
 
   test('should return ROLE entities', async () => {

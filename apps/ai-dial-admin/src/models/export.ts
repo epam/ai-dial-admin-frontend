@@ -2,13 +2,15 @@ import { ExportFormat, ExportType } from '@/src/types/export';
 import { EntityType } from '@/src/types/entity-type';
 
 export interface ExportDependenciesConfig {
-  entities?: boolean;
+  models?: boolean;
+  applications?: boolean;
+  toolSets?: boolean;
+  routes?: boolean;
   roles?: boolean;
   keys?: boolean;
   runners?: boolean;
   interceptors?: boolean;
-  prompts?: boolean;
-  files?: boolean;
+  interceptorsTemplates?: boolean;
   adapters?: boolean;
 }
 

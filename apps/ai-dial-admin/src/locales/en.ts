@@ -550,6 +550,7 @@ export default {
     Custom: 'Custom',
     ActiveConfig: 'Active Config',
     Dependencies: 'Dependencies',
+    Resources: 'Resources',
     FilePreview: 'Export File Preview',
     IncludeSecrets: 'Include secrets',
     IncludeDependencies: 'Include related dependencies',

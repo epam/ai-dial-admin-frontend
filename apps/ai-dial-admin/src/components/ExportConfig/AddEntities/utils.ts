@@ -5,10 +5,23 @@ import { EntityType } from '@/src/types/entity-type';
 
 export const getAllAvailableDependencies = (selectedTab?: EntityType): EntityType[] => {
   if (selectedTab === EntityType.ROLE) {
-    return [EntityType.ENTITIES, EntityType.APPLICATION_TYPE_SCHEMA, EntityType.INTERCEPTOR];
+    return [
+      EntityType.MODEL,
+      EntityType.APPLICATION,
+      EntityType.TOOLSET,
+      EntityType.ROUTE,
+      EntityType.APPLICATION_TYPE_SCHEMA,
+      EntityType.INTERCEPTOR,
+    ];
   }
   if (selectedTab === EntityType.KEY) {
-    return [EntityType.ROLE, EntityType.ENTITIES, EntityType.APPLICATION_TYPE_SCHEMA, EntityType.INTERCEPTOR];
+    return [
+      EntityType.ROLE,
+      EntityType.MODEL,
+      EntityType.APPLICATION,
+      EntityType.APPLICATION_TYPE_SCHEMA,
+      EntityType.INTERCEPTOR,
+    ];
   }
 
   if (selectedTab === EntityType.MODEL) {
@@ -16,7 +29,7 @@ export const getAllAvailableDependencies = (selectedTab?: EntityType): EntityTyp
   }
 
   if (selectedTab === EntityType.APPLICATION) {
-    return [EntityType.ENTITIES, EntityType.APPLICATION_TYPE_SCHEMA, EntityType.INTERCEPTOR];
+    return [EntityType.MODEL, EntityType.APPLICATION, EntityType.APPLICATION_TYPE_SCHEMA, EntityType.INTERCEPTOR];
   }
 
   return [];
@@ -24,9 +37,7 @@ export const getAllAvailableDependencies = (selectedTab?: EntityType): EntityTyp
 
 export const getButtonTitle = (t: (v: string) => string, selectedTab?: EntityType, full?: boolean) => {
   let entity = '';
-  if (selectedTab === EntityType.ENTITIES) {
-    entity = t(MenuI18nKey.Entities);
-  }
+
   if (selectedTab === EntityType.ROLE) {
     entity = t(MenuI18nKey.Roles);
   }
@@ -59,6 +70,10 @@ export const getButtonTitle = (t: (v: string) => string, selectedTab?: EntityTyp
   }
   if (selectedTab === EntityType.TOOLSET) {
     entity = t(MenuI18nKey.Toolsets);
+  }
+
+  if (selectedTab === EntityType.INTERCEPTOR_RUNNER) {
+    entity = t(MenuI18nKey.InterceptorTemplates);
   }
 
   return full ? `${t(ButtonsI18nKey.Add)} ${entity.toLowerCase()}` : entity;

@@ -20,7 +20,7 @@ const Textarea: FC<Props> = ({ value, textareaId, placeholder, cssClass = '', di
       <textarea
         id={textareaId}
         placeholder={placeholder}
-        value={value || void 0}
+        value={value == null ? '' : value}
         disabled={disabled}
         className={classNames(invalid ? 'input-error' : '', cssClass)}
         onChange={(event) => onChange?.(event.currentTarget.value)}

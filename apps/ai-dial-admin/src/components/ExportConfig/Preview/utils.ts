@@ -28,7 +28,6 @@ export const getPreviewTabs = (
 ): { tabs: TabModel[]; convertedData: Record<string, EntitiesGridData[]> } => {
   const tabs: TabModel[] = [];
   const convertedData: Record<string, EntitiesGridData[]> = {};
-  const allEntities: EntitiesGridData[] = [];
 
   Object.keys(data).forEach((key) => {
     if (data[key].length > 0) {
@@ -89,30 +88,39 @@ export const getPreviewTabs = (
       }
 
       if (key === 'applications') {
-        allEntities.push(...getApplicationsForEntitiesGrid(data[key]));
+        convertedData[EntityType.APPLICATION] = getApplicationsForEntitiesGrid(data[key]);
+
+        tabs.push({
+          id: EntityType.APPLICATION,
+          name: `${t(MenuI18nKey.Applications)}: ${data[key].length}`,
+        });
       }
 
       if (key === 'models') {
-        allEntities.push(...getModelsForEntitiesGrid(data[key] as DialModel[]));
+        convertedData[EntityType.MODEL] = getModelsForEntitiesGrid(data[key] as DialModel[]);
+        tabs.push({
+          id: EntityType.MODEL,
+          name: `${t(MenuI18nKey.Models)}: ${data[key].length}`,
+        });
       }
 
       if (key === 'routes') {
-        allEntities.push(...getRoutesForEntitiesGrid(data[key]));
+        convertedData[EntityType.ROUTE] = getRoutesForEntitiesGrid(data[key] as DialModel[]);
+        tabs.push({
+          id: EntityType.ROUTE,
+          name: `${t(MenuI18nKey.Routes)}: ${data[key].length}`,
+        });
       }
 
       if (key === 'toolSets') {
-        allEntities.push(...getToolsetsForEntitiesGrid(data[key]));
+        convertedData[EntityType.TOOLSET] = getToolsetsForEntitiesGrid(data[key]);
+        tabs.push({
+          id: EntityType.TOOLSET,
+          name: `${t(MenuI18nKey.Toolsets)}: ${data[key].length}`,
+        });
       }
     }
   });
-
-  if (allEntities.length > 0) {
-    convertedData[EntityType.ENTITIES] = allEntities;
-    tabs.unshift({
-      id: EntityType.ENTITIES,
-      name: `${t(MenuI18nKey.Entities)}: ${allEntities.length}`,
-    });
-  }
 
   return { tabs, convertedData };
 };

@@ -7,6 +7,7 @@ import {
   applicationRunnersApi,
   applicationsApi,
   interceptorsApi,
+  interceptorTemplatesApi,
   keysApi,
   modelsApi,
   rolesApi,
@@ -27,6 +28,7 @@ import {
   getRolesForEntitiesGrid,
   getRoutesForEntitiesGrid,
   getRunnersForEntitiesGrid,
+  getTemplatesForEntitiesGrid,
   getToolsetsForEntitiesGrid,
 } from '@/src/utils/entities/entities-list-view';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -49,20 +51,32 @@ export async function previewExportConfig(exportConfig: ExportRequest) {
 
 export async function getEntities(type: string): Promise<EntitiesGridData[]> {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  if (type === EntityType.ENTITIES) {
-    const [routes, applications, models, toolsets] = await Promise.all([
-      routesApi.getRoutesList(token),
-      applicationsApi.getApplicationsList(token),
-      modelsApi.getModelsList(token),
-      toolSetsApi.getToolsetList(token),
-    ]);
-    return [
-      ...getModelsForEntitiesGrid(models),
-      ...getApplicationsForEntitiesGrid(applications),
-      ...getRoutesForEntitiesGrid(routes),
-      ...getToolsetsForEntitiesGrid(toolsets),
-    ];
+
+  if (type === EntityType.MODEL) {
+    const models = await modelsApi.getModelsList(token);
+    return getModelsForEntitiesGrid(models);
   }
+
+  if (type === EntityType.APPLICATION) {
+    const applications = await applicationsApi.getApplicationsList(token);
+    return getApplicationsForEntitiesGrid(applications);
+  }
+
+  if (type === EntityType.TOOLSET) {
+    const toolsets = await toolSetsApi.getToolsetList(token);
+    return getToolsetsForEntitiesGrid(toolsets);
+  }
+
+  if (type === EntityType.ROUTE) {
+    const routes = await routesApi.getRoutesList(token);
+    return getRoutesForEntitiesGrid(routes);
+  }
+
+  if (type === EntityType.INTERCEPTOR_RUNNER) {
+    const runners = await interceptorTemplatesApi.getInterceptorTemplatesList(token);
+    return getTemplatesForEntitiesGrid(runners);
+  }
+
   if (type === EntityType.ROLE) {
     const roles = await rolesApi.getRolesList(token);
     return getRolesForEntitiesGrid(roles);

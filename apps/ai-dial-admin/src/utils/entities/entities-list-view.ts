@@ -8,7 +8,8 @@ import { DialRole } from '@/src/models/dial/role';
 import { DialRoute } from '@/src/models/dial/route';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ApplicationRoute } from '@/src/types/routes';
-import { Toolset } from '../../models/dial/toolset';
+import { Toolset } from '@/src/models/dial/toolset';
+import { InterceptorTemplate } from '@/src/models/interceptor-template';
 
 /**
  * Get list of DialModel with type and route for entities view
@@ -89,6 +90,20 @@ export const getRunnersForEntitiesGrid = (runners?: DialApplicationScheme[] | nu
     ...runner,
     type: MenuI18nKey.ApplicationRunners,
     route: ApplicationRoute.ApplicationRunners,
+  }));
+};
+
+/**
+ * Get list of InterceptorTemplate with type and route for entities view
+ *
+ * @param {?(InterceptorTemplate[] | null)} [templates] - InterceptorTemplate array
+ * @returns {EntitiesGridData[]} - EntitiesGridData array
+ */
+export const getTemplatesForEntitiesGrid = (templates?: InterceptorTemplate[] | null): EntitiesGridData[] => {
+  return [...(templates || [])].map((template) => ({
+    ...template,
+    type: MenuI18nKey.InterceptorTemplates,
+    route: ApplicationRoute.InterceptorTemplates,
   }));
 };
 

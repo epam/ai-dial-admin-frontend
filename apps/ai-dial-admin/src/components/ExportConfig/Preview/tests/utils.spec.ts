@@ -33,18 +33,20 @@ describe('Export Config Utils :: getPreviewTabs', () => {
     const { tabs, convertedData } = getPreviewTabs(data, true, ExportFormat.CORE, t);
 
     expect(tabs).toEqual([
-      { id: 'ENTITIES', name: 'translated(Menu.Entities): 3' },
       { id: 'ROLE', name: 'translated(Menu.Roles): 1' },
       { id: 'KEY', name: 'translated(Menu.Keys): 2' },
+      { id: 'MODEL', name: 'translated(Menu.Models): 1' },
       { id: 'APPLICATION_TYPE_SCHEMA', name: 'translated(Menu.ApplicationRunners): 1' },
+      { id: 'APPLICATION', name: 'translated(Menu.Applications): 1' },
       { id: 'PROMPT', name: 'translated(Menu.Prompts): 1' },
+      { id: 'ROUTE', name: 'translated(Menu.Routes): 1' },
+      { id: 'TOOL_SET', name: 'translated(Menu.Toolsets): 1' },
     ]);
 
     expect(convertedData.ROLE).toHaveLength(1);
     expect(convertedData.KEY).toHaveLength(2);
     expect(convertedData.APPLICATION_TYPE_SCHEMA).toHaveLength(1);
     expect(convertedData.PROMPT).toHaveLength(1);
-    expect(convertedData.ENTITIES).toEqual(mockEntities);
   });
 
   test('should not add tabs for empty categories', () => {
@@ -110,8 +112,9 @@ describe('Export Config Utils :: getPreviewTabs', () => {
 
     const { tabs, convertedData } = getPreviewTabs(data, false, ExportFormat.ADMIN, t);
 
-    expect(tabs).toEqual([{ id: 'ENTITIES', name: 'translated(Menu.Entities): 2' }]);
-
-    expect(convertedData.ENTITIES).toEqual([{ id: 'app1' }, { id: 'route1' }]);
+    expect(tabs).toEqual([
+      { id: 'APPLICATION', name: 'translated(Menu.Applications): 1' },
+      { id: 'ROUTE', name: 'translated(Menu.Routes): 1' },
+    ]);
   });
 });

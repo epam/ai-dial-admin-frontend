@@ -14,7 +14,11 @@ describe('Export Config Utils :: getComponentTypes', () => {
   test('Should return entities, role, key, runner, interceptor for core format', () => {
     const res = getComponentTypes(
       {
-        entities: true,
+        models: true,
+        applications: true,
+        toolSets: true,
+        routes: true,
+        interceptorsTemplates: true,
         roles: true,
         keys: true,
         runners: true,
@@ -28,10 +32,10 @@ describe('Export Config Utils :: getComponentTypes', () => {
     );
 
     expect(res).toEqual([
-      EntityType.APPLICATION,
       EntityType.MODEL,
-      EntityType.ROUTE,
+      EntityType.APPLICATION,
       EntityType.TOOLSET,
+      EntityType.ROUTE,
       EntityType.ROLE,
       EntityType.KEY,
       EntityType.APPLICATION_TYPE_SCHEMA,
@@ -42,7 +46,11 @@ describe('Export Config Utils :: getComponentTypes', () => {
   test('Should return all valid types including adapter for non-core format', () => {
     const res = getComponentTypes(
       {
-        entities: true,
+        models: true,
+        applications: true,
+        toolSets: true,
+        routes: true,
+        interceptorsTemplates: true,
         roles: true,
         keys: true,
         runners: true,
@@ -56,15 +64,16 @@ describe('Export Config Utils :: getComponentTypes', () => {
     );
 
     expect(res).toEqual([
-      EntityType.APPLICATION,
       EntityType.MODEL,
-      EntityType.ROUTE,
+      EntityType.APPLICATION,
       EntityType.TOOLSET,
+      EntityType.ROUTE,
       EntityType.ROLE,
       EntityType.KEY,
       EntityType.APPLICATION_TYPE_SCHEMA,
       EntityType.INTERCEPTOR,
       EntityType.ADAPTER,
+      EntityType.INTERCEPTOR_RUNNER,
     ]);
   });
 
@@ -128,14 +137,14 @@ describe('Export Config Utils :: getComponents', () => {
 
   test('Should return tabs for custom core config with correct dependencies', () => {
     const res = getComponents(ExportType.Custom, {
-      [EntityType.ENTITIES]: [{ name: 'Model', type: MenuI18nKey.Models, dependencies: [EntityType.ENTITIES] }],
+      [EntityType.ENTITIES]: [{ name: 'Model', type: MenuI18nKey.Models, dependencies: [EntityType.APPLICATION] }],
     });
 
     expect(res).toEqual([
       {
         name: 'Model',
         type: EntityType.MODEL,
-        dependencies: [EntityType.APPLICATION, EntityType.MODEL, EntityType.ROUTE, EntityType.TOOLSET],
+        dependencies: [EntityType.APPLICATION],
       },
     ]);
   });
