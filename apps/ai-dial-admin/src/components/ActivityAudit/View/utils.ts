@@ -1030,6 +1030,7 @@ export const sortKeys = (a: string, b: string): number => {
     '$id',
     'version',
     'displayVersion',
+    'description',
     'source',
     'endpoint',
   ];
