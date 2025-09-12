@@ -504,6 +504,7 @@ export enum ExportI18nKey {
   FullConfig = 'Export.FullConfig',
   Custom = 'Export.Custom',
   Dependencies = 'Export.Dependencies',
+  Resources = 'Export.Resources',
   SuccessTitle = 'Export.SuccessTitle',
   SuccessDescription = 'Export.SuccessDescription',
   ErrorTitle = 'Export.ErrorTitle',

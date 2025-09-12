@@ -64,10 +64,10 @@ describe('Export Config Utils :: getEmptyDataTitleI18nKey', () => {
     expect(res).toEqual(EntitiesI18nKey.NoRoutes);
   });
 
-  test('Should return key for routes', () => {
-    const res = getEmptyDataTitleI18nKey(EntityType.ENTITIES);
+  test('Should return key for INTERCEPTOR_RUNNER', () => {
+    const res = getEmptyDataTitleI18nKey(EntityType.INTERCEPTOR_RUNNER);
 
-    expect(res).toEqual(EntitiesI18nKey.NoEntities);
+    expect(res).toEqual(EntitiesI18nKey.NoInterceptorTemplates);
   });
 
   test('Should return key for routes', () => {

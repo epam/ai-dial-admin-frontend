@@ -4,9 +4,11 @@ import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { getPrompt } from '@/src/app/[lang]/prompts/actions';
 import DuplicateAdapter from '@/src/components/Adapter/Modals/DuplicateAdapter';
 import DuplicateScheme from '@/src/components/ApplicationRunners/Modals/DuplicateAppRunner';
 import DuplicatePopup from '@/src/components/DuplicatePopup/DuplicatePopup';
+import DuplicateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Duplicate';
 import DuplicateKey from '@/src/components/KeysList/Popup/DuplicateKey';
 import ListView from '@/src/components/ListView/ListView';
 import DuplicatePrompt from '@/src/components/PromptView/Modals/DuplicatePrompt';
@@ -18,6 +20,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -27,12 +30,10 @@ import { prepareEntityForDuplicate } from '@/src/utils/entities/prepare-entity-f
 import { getListOfPathsToMove } from '@/src/utils/files/path';
 import { isAssetView } from '@/src/utils/is-asset-view';
 import { getErrorNotification } from '@/src/utils/notification';
+import { getEntityPath, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { emptyDataTitleMap, listViewTitleMap } from './constants';
 import EntityListModals, { ModalType } from './EntityListModals';
 import EntityListHeaderButtons from './HeaderButtons/HeaderButtons';
-import DuplicateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Duplicate';
-import { onOpenInNewTab, getEntityPath } from '@/src/utils/open-in-new-tab';
-import { BaseEntity } from '@/src/models/dial/base-entity';
 
 interface Props<T> {
   data: T[];
@@ -91,6 +92,7 @@ const BaseEntityList = <T extends object>({
 
   const entityRef = useRef(currentEntity);
   const filesRef = useRef(folderContext?.fetchedFoldersData);
+
   useEffect(() => {
     entityRef.current = currentEntity;
     filesRef.current = folderContext?.fetchedFoldersData;
@@ -151,8 +153,16 @@ const BaseEntityList = <T extends object>({
 
   const onDuplicate = useCallback(
     (clonedEntity: T) => {
-      createEntity?.(prepareEntityForDuplicate(route, clonedEntity) as T).then((res) => {
-        if (res.success) {
+      const duplicate = async () => {
+        let prevPromptData = null;
+
+        if (route === ApplicationRoute.Prompts) {
+          const { folderId, name, version } = entityRef.current as DialPrompt;
+          prevPromptData = await getPrompt(folderId, name as string, version);
+        }
+        const preparedEntity = prepareEntityForDuplicate(route, clonedEntity, prevPromptData) as T;
+        const res = await createEntity?.(preparedEntity);
+        if (res?.success) {
           handleModalClose();
           setCurrentEntity(void 0);
           if (route === ApplicationRoute.Prompts) {
@@ -160,9 +170,10 @@ const BaseEntityList = <T extends object>({
           }
           router.refresh();
         } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+          showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage));
         }
-      });
+      };
+      duplicate();
     },
     [createEntity, route, handleModalClose, router, folderContext, showNotification],
   );

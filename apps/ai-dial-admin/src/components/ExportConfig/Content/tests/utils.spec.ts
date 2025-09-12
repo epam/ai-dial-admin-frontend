@@ -68,12 +68,16 @@ describe('Config content Utils :: getActualTabs', () => {
     const res = getActualTabs(ExportType.Custom, ExportFormat.ADMIN, { roles: true, files: true }, mockTranslate);
 
     expect(res).toEqual([
-      { id: EntityType.ENTITIES, name: MenuI18nKey.Entities },
+      { id: EntityType.MODEL, name: MenuI18nKey.Models },
+      { id: EntityType.APPLICATION, name: MenuI18nKey.Applications },
+      { id: EntityType.TOOLSET, name: MenuI18nKey.Toolsets },
+      { id: EntityType.INTERCEPTOR, name: MenuI18nKey.Interceptors },
+      { id: EntityType.ROUTE, name: MenuI18nKey.Routes },
+      { id: EntityType.APPLICATION_TYPE_SCHEMA, name: MenuI18nKey.ApplicationRunners },
+      { id: EntityType.ADAPTER, name: MenuI18nKey.Adapters },
+      { id: EntityType.INTERCEPTOR_RUNNER, name: MenuI18nKey.InterceptorTemplates },
       { id: EntityType.ROLE, name: MenuI18nKey.Roles },
       { id: EntityType.KEY, name: MenuI18nKey.Keys },
-      { id: EntityType.APPLICATION_TYPE_SCHEMA, name: MenuI18nKey.ApplicationRunners },
-      { id: EntityType.INTERCEPTOR, name: MenuI18nKey.Interceptors },
-      { id: EntityType.ADAPTER, name: MenuI18nKey.Adapters },
     ]);
   });
 
@@ -94,7 +98,11 @@ describe('Config content Utils :: getActualTabs', () => {
       ExportType.FULL,
       ExportFormat.ADMIN,
       {
-        entities: true,
+        models: true,
+        applications: true,
+        toolSets: true,
+        routes: true,
+        interceptorsTemplates: true,
         roles: true,
         keys: true,
         runners: true,
@@ -105,12 +113,16 @@ describe('Config content Utils :: getActualTabs', () => {
     );
 
     expect(res).toEqual([
-      { id: EntityType.ENTITIES, name: MenuI18nKey.Entities },
+      { id: EntityType.MODEL, name: MenuI18nKey.Models },
+      { id: EntityType.APPLICATION, name: MenuI18nKey.Applications },
+      { id: EntityType.TOOLSET, name: MenuI18nKey.Toolsets },
+      { id: EntityType.INTERCEPTOR, name: MenuI18nKey.Interceptors },
+      { id: EntityType.ROUTE, name: MenuI18nKey.Routes },
+      { id: EntityType.APPLICATION_TYPE_SCHEMA, name: MenuI18nKey.ApplicationRunners },
+      { id: EntityType.ADAPTER, name: MenuI18nKey.Adapters },
+      { id: EntityType.INTERCEPTOR_RUNNER, name: MenuI18nKey.InterceptorTemplates },
       { id: EntityType.ROLE, name: MenuI18nKey.Roles },
       { id: EntityType.KEY, name: MenuI18nKey.Keys },
-      { id: EntityType.APPLICATION_TYPE_SCHEMA, name: MenuI18nKey.ApplicationRunners },
-      { id: EntityType.INTERCEPTOR, name: MenuI18nKey.Interceptors },
-      { id: EntityType.ADAPTER, name: MenuI18nKey.Adapters },
     ]);
   });
 });
