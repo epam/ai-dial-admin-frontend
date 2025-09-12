@@ -122,7 +122,7 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
       <div className={headerClassName}>
         <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
         <HeaderButtons
-          view={ApplicationRoute.ApplicationRunners}
+          view={ApplicationRoute.Toolsets}
           entity={selectedToolset}
           isChanged={isChanged}
           onDiscard={onDiscard}
