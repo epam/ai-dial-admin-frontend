@@ -35,11 +35,9 @@ const ExportDependencies: FC<Props> = ({ selectedExportFormat, dependencies, onC
 
     if (selectedExportFormat === ExportFormat.ADMIN) {
       res.splice(6, 0, { key: 'adapters', label: MenuI18nKey.Adapters });
-    }
-
-    if (selectedExportFormat === ExportFormat.ADMIN) {
       res.splice(7, 0, { key: 'interceptorsTemplates', label: MenuI18nKey.InterceptorTemplates });
     }
+
     return res;
   }, [selectedExportFormat]);
 

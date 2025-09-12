@@ -76,15 +76,9 @@ const DuplicatePopup: FC<Props> = ({ onDuplicate, names, view, modalState, onClo
         </div>
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <Button
-          dataTestId="cancelBtn"
-          cssClass="secondary"
-          title={t(ButtonsI18nKey.Cancel)}
-          onClick={() => onClose()}
-        />
+        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
 
         <Button
-          dataTestId="duplicateBtn"
           cssClass="primary"
           title={t(ButtonsI18nKey.Duplicate)}
           disable={!isValid}

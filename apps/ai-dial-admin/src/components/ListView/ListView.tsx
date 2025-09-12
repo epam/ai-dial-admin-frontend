@@ -21,7 +21,6 @@ interface Props<T> {
   view?: ApplicationRoute;
   toggleColumnsPanel?: () => void;
   context?: () => PromptFolderContextType | FileFolderContextType;
-  dataTestId?: string;
   onGridReady?: (gridApi: GridApi) => void;
 }
 
@@ -37,14 +36,10 @@ const ListView = <T extends object>({
   view,
   toggleColumnsPanel,
   context,
-  dataTestId,
   onGridReady,
 }: Props<T>) => {
   return (
-    <div
-      className={classNames('flex flex-col bg-layer-2 rounded flex-1 min-h-0', title ? 'p-4' : '')}
-      data-testid={dataTestId}
-    >
+    <div className={classNames('flex flex-col bg-layer-2 rounded flex-1 min-h-0', title ? 'p-4' : '')}>
       <div className="flex flex-row justify-between mb-3">
         {title && <h1>{title}</h1>}
         {children}

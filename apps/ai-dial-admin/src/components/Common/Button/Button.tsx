@@ -11,7 +11,6 @@ interface Props {
   iconAfter?: ReactNode;
   onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
   ref?: Ref<HTMLButtonElement>;
-  dataTestId?: string;
   hideTitleOnMobile?: boolean;
   ariaLabel?: string;
 }
@@ -22,7 +21,6 @@ const Button: FC<Props> = ({
   ref,
   onClick,
   disable,
-  dataTestId,
   iconAfter,
   iconBefore,
   hideTitleOnMobile,
@@ -38,7 +36,6 @@ const Button: FC<Props> = ({
 
   return (
     <button
-      data-testid={dataTestId}
       ref={ref}
       type="button"
       className={btnClassNames}

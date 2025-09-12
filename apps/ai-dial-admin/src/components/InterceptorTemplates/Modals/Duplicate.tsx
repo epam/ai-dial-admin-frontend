@@ -49,16 +49,10 @@ const DuplicateTemplate: FC<Props> = ({ onDuplicate, modalState, onClose, templa
         />
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <Button
-          cssClass="secondary"
-          dataTestId="cancelBtn"
-          title={t(ButtonsI18nKey.Cancel)}
-          onClick={() => onClose()}
-        />
+        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
 
         <Button
           cssClass="primary"
-          dataTestId="duplicateBtn"
           title={t(ButtonsI18nKey.Duplicate)}
           disable={!isValid}
           onClick={() => onDuplicate(clonedTemplate)}

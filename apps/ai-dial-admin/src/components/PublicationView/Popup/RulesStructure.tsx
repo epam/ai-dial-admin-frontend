@@ -14,11 +14,10 @@ import { PopUpState } from '@/src/types/pop-up';
 interface Props {
   isLoading: boolean;
   modalState: PopUpState;
-  dataTestId: string;
   onClose: () => void;
 }
 
-const RulesStructure: FC<Props> = ({ isLoading, modalState, dataTestId, onClose }) => {
+const RulesStructure: FC<Props> = ({ isLoading, modalState, onClose }) => {
   const t = useI18n();
 
   const containerClassName = classNames('lg:max-w-[75%] md:max-w-[90%] h-[584px]');
@@ -29,7 +28,6 @@ const RulesStructure: FC<Props> = ({ isLoading, modalState, dataTestId, onClose 
       portalId="RulesStructure"
       state={modalState}
       containerClassName={containerClassName}
-      dataTestId={dataTestId}
     >
       {isLoading ? (
         <Loader size={50} />
