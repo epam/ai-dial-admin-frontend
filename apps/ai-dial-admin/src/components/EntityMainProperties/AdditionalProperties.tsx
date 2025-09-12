@@ -28,8 +28,8 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
   const isShowMaintainer =
     view === ApplicationRoute.Applications ||
     view === ApplicationRoute.Models ||
-    ApplicationRoute.Interceptors ||
-    ApplicationRoute.Toolsets;
+    view === ApplicationRoute.Interceptors ||
+    view === ApplicationRoute.Toolsets;
 
   if (!isShowMaintainer || !isShowCompletionEndpoint) {
     return null;
