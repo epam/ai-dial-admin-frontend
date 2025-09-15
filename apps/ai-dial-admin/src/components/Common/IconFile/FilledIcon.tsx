@@ -1,6 +1,6 @@
 import { IconTrashX, IconRefreshDot } from '@tabler/icons-react';
 import Image from 'next/image';
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 
 import ContextMenu, { ContextMenuItem } from '@/src/components/Common/ContextMenu/ContextMenu';
 import IconGalleryModal from '@/src/components/IconGallery/IconGalleryModal';
@@ -19,6 +19,10 @@ const FilledIcon: FC<Props> = ({ readonly, fileUrl, onChange }) => {
   const t = useI18n();
   const [src, setSrc] = useState(fileUrl);
   const [modalState, setIsModalState] = useState(PopUpState.Closed);
+
+  useEffect(() => {
+    setSrc(fileUrl);
+  }, [fileUrl]);
 
   const onClose = useCallback(() => {
     setIsModalState(PopUpState.Closed);

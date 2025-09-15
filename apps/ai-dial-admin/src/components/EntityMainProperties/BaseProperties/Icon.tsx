@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useMemo, useState } from 'react';
 import Field from '@/src/components/Common/Field/Field';
 import FilledIcon from '@/src/components/Common/IconFile/FilledIcon';
 import IconGalleryModal from '@/src/components/IconGallery/IconGalleryModal';
@@ -19,8 +19,10 @@ interface Props {
 const IconControl: FC<Props> = ({ iconUrl, readonly, onChange }) => {
   const t = useI18n();
   const { themeUrl } = useAppContext();
-  const value = iconUrl ? (iconUrl.startsWith('https://') ? iconUrl : `${themeUrl}/${iconUrl}`) : '';
-
+  const value = useMemo(
+    () => (iconUrl ? (iconUrl.startsWith('https://') ? iconUrl : `${themeUrl}/${iconUrl}`) : ''),
+    [iconUrl, themeUrl],
+  );
   const [modalState, setIsModalState] = useState(PopUpState.Closed);
 
   const onCloseModal = useCallback(() => {
