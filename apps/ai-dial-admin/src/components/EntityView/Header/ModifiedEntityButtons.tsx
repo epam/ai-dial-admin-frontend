@@ -10,11 +10,11 @@ import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEd
 import AddVersionModal from '@/src/components/PromptView/Modals/AddVersionModal';
 import { ButtonsI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
-import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
+import { JSONEditorError } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { generateNewInitialVersion } from '@/src/utils/prompts/versions';
@@ -25,24 +25,14 @@ interface Props<T> {
   entity: T;
   onDiscard: () => void;
   onSave: (newVersion?: string) => void;
-  setErrorNotifications?: (notification: JSONEditorErrorNotification[]) => void;
-  contentJsonErrors?: JSONEditorError[] | null;
   promptVersions?: string[];
 }
 
-const ModifiedEntityButtons = <T extends object>({
-  view,
-  entity,
-  onDiscard,
-  onSave,
-  setErrorNotifications,
-  contentJsonErrors,
-  promptVersions,
-}: Props<T>) => {
+const ModifiedEntityButtons = <T extends object>({ view, entity, onDiscard, onSave, promptVersions }: Props<T>) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
   const { showNotification } = useNotification();
 
-  const { isValid, jsonErrors } = useSaveValidationContext();
+  const { isValid, jsonErrors, dispatch } = useSaveValidationContext();
 
   const [versionModalState, setVersionModalState] = useState(PopUpState.Closed);
 
@@ -56,19 +46,19 @@ const ModifiedEntityButtons = <T extends object>({
         setVersionModalState(PopUpState.Closed);
       }
 
-      if (jsonErrors?.length || contentJsonErrors?.length) {
-        const errors = (jsonErrors?.length ? jsonErrors : contentJsonErrors) as JSONEditorError[];
+      if (jsonErrors?.length) {
+        const errors = jsonErrors as JSONEditorError[];
         const errorNotifications = showEditorErrorNotifications({
           errors,
           showNotification,
           t,
         });
-        setErrorNotifications?.(errorNotifications);
+        dispatch({ type: ValidationActionType.SetJsonEditorNotifications, errors: errorNotifications });
       } else {
         onSave(newVersion);
       }
     },
-    [jsonErrors, contentJsonErrors, showNotification, t, setErrorNotifications, onSave],
+    [jsonErrors, showNotification, t, dispatch, onSave],
   );
 
   useEffect(() => {

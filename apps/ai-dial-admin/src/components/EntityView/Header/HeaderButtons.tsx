@@ -13,7 +13,6 @@ import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { JSONEditorError } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
@@ -34,7 +33,6 @@ interface Props<T> {
   onSave: (newVersion?: string) => void;
   removeEntity: (entity?: string) => Promise<ServerActionResponse>;
   toggleJsonEditor?: () => void;
-  contentJsonErrors?: JSONEditorError[] | null;
   promptVersions?: string[];
 }
 
@@ -49,7 +47,6 @@ const HeaderButtons = <T extends object>({
   toggleJsonEditor,
   hideJsonEditor,
   children,
-  contentJsonErrors,
   promptVersions,
 }: Props<T>) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
@@ -100,7 +97,6 @@ const HeaderButtons = <T extends object>({
             onDiscard={onDiscard}
             onSave={onSave}
             view={view}
-            contentJsonErrors={contentJsonErrors}
             promptVersions={promptVersions}
           />
         ) : (

@@ -40,9 +40,7 @@ export class UtilityApi extends BaseApi {
     return this.exportConfig(exportConfig, token).then(async (res) => {
       const arrayBuffer = await res.blob.arrayBuffer();
       const jsonString = new TextDecoder().decode(arrayBuffer);
-      const data = JSON.parse(jsonString);
-
-      return data;
+      return JSON.parse(jsonString);
     });
   }
 

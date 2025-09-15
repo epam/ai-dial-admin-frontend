@@ -5,12 +5,14 @@ import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor
 export enum ValidationActionType {
   SetField = 'SET_FIELD_VALIDATION',
   SetJsonEditor = 'SET_JSON_EDITOR_VALIDATION',
+  SetJsonEditorNotifications = 'SET_JSON_EDITOR_NOTIFICATIONS',
   Reset = 'RESET',
 }
 
 type ValidationAction =
   | { type: ValidationActionType.SetField; field: string; isValid: boolean }
   | { type: ValidationActionType.SetJsonEditor; errors: JSONEditorError[] | null }
+  | { type: ValidationActionType.SetJsonEditorNotifications; errors: JSONEditorErrorNotification[] }
   | { type: ValidationActionType.Reset };
 
 interface ValidationState {
@@ -45,6 +47,13 @@ const validationReducer = (state: ValidationState, action: ValidationAction): Va
       return {
         ...state,
         jsonErrors: action.errors,
+      };
+    }
+
+    case ValidationActionType.SetJsonEditorNotifications: {
+      return {
+        ...state,
+        jsonErrorNotifications: action.errors,
       };
     }
 

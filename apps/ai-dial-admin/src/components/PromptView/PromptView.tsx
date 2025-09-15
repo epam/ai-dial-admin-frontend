@@ -41,8 +41,6 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
   const [selectedPrompt, setSelectedPrompt] = useState(cloneDeep(originalPrompt));
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
-  const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
-  const [contentJsonErrors, setContentJsonErrors] = useState<JSONEditorError[]>([]);
 
   const [key, setKey] = useState(0);
   const [addedVersions, setAddedVersions] = useState<string[]>([]);
@@ -143,8 +141,6 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
           removeEntity={removePrompt}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          contentJsonErrors={contentJsonErrors}
-          setErrorNotifications={setErrorNotifications}
           promptVersions={prompts?.map((prompt) => prompt.version) || []}
         />
       </div>
@@ -153,7 +149,6 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
           <EntityJsonEditor
             key={key}
             entity={selectedPrompt}
-            errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedPrompt}
             setIsChanged={setIsChanged}
           />
@@ -167,7 +162,6 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
                 getPrompt={getPrompt}
                 addedVersions={addedVersions}
                 setAddedVersions={setAddedVersions}
-                setContentJsonErrors={setContentJsonErrors}
                 setSelectedPrompt={setSelectedPrompt}
               />
             )}
