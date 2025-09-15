@@ -36,11 +36,22 @@ export class UtilityApi extends BaseApi {
     return this.postFiles(url, file, token);
   }
 
+  getCoreEntity(exportConfig: ExportRequest, token: JWT | null) {
+    return this.exportConfig(exportConfig, token).then(async (res) => {
+      const arrayBuffer = await res.blob.arrayBuffer();
+      const jsonString = new TextDecoder().decode(arrayBuffer);
+      const data = JSON.parse(jsonString);
+
+      return data;
+    });
+  }
+
   exportConfig(exportConfig: ExportRequest, token: JWT | null): Promise<{ blob: Blob; fileName: string }> {
     return this.sendRequest(EXPORT_CONFIG_URL, 'POST', exportConfig, token).then(async (res) => {
       return { blob: await (res as Response)?.blob?.(), fileName: getFileName(res as Response) || '' };
     });
   }
+
   exportConfigMap(token: JWT | null): Promise<{ blob: Blob; fileName: string }> {
     return this.sendRequest(EXPORT_CONFIG_MAP_URL, 'POST', { addSecrets: true }, token).then(async (res) => {
       return { blob: await (res as Response)?.blob?.(), fileName: getFileName(res as Response) || '' };

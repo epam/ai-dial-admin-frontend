@@ -23,7 +23,6 @@ import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
 import { Toolset } from '@/src/models/dial/toolset';
 import { TabModel } from '@/src/models/tab';
-import { JSONEditorErrorNotification } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -50,7 +49,6 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
   const [isSkipRefresh, setIsSkipRefresh] = useState<boolean>(true);
-  const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
 
   useEffect(() => {
@@ -129,7 +127,6 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
           removeEntity={removeToolset}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          setErrorNotifications={setErrorNotifications}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
@@ -137,7 +134,6 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
           <EntityJsonEditor
             key={key}
             entity={selectedToolset}
-            errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedToolset}
             setIsChanged={setIsChanged}
           />

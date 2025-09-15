@@ -115,6 +115,8 @@ export enum EntitiesI18nKey {
   ModelDisplayName = 'Entities.ModelDisplayName',
   Author = 'Entities.Author',
   JSONEditor = 'Entities.JSONEditor',
+  Admin = 'Entities.Admin',
+  Core = 'Entities.Core',
   ApplicationDisplayName = 'Entities.ApplicationDisplayName',
   ChangeIcon = 'Entities.ChangeIcon',
   SaveChangesTitle = 'Entities.SaveChangesTitle',

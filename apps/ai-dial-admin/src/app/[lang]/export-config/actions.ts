@@ -32,6 +32,15 @@ import {
   getToolsetsForEntitiesGrid,
 } from '@/src/utils/entities/entities-list-view';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { ExportFormat, ExportType } from '@/src/types/export';
+
+export async function getCoreEntity(name: string, type: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return await utilityApi.getCoreEntity(
+    { $type: ExportType.Custom, exportFormat: ExportFormat.CORE, components: [{ type, name }], componentTypes: [] },
+    token,
+  );
+}
 
 export async function exportConfig(exportConfig: ExportRequest) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());

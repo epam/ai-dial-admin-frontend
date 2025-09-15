@@ -19,7 +19,6 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { JSONEditorErrorNotification } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -78,7 +77,6 @@ const EntityView: FC<Props> = ({
   const [isIframeChanged, setIsIframeChanged] = useState<boolean>(false);
   const [isSkipRefresh, setIsSkipRefresh] = useState<boolean>(true);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
-  const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
 
   const { visualizerConnector } = useAppContext();
@@ -257,7 +255,6 @@ const EntityView: FC<Props> = ({
             removeEntity={removeEntity}
             jsonEditorEnabled={jsonEditorEnabled}
             toggleJsonEditor={toggleJsonEditor}
-            setErrorNotifications={setErrorNotifications}
           />
         </div>
 
@@ -266,7 +263,6 @@ const EntityView: FC<Props> = ({
             <EntityJsonEditor
               key={key}
               entity={selectedEntity}
-              errorNotifications={errorNotifications}
               setSelectedEntity={setSelectedEntity}
               setIsChanged={setIsChanged}
             />

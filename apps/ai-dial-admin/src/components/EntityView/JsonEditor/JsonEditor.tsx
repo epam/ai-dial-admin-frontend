@@ -10,18 +10,13 @@ import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor
 
 interface Props<T> {
   entity: T;
-  errorNotifications: JSONEditorErrorNotification[];
+  errorNotifications?: JSONEditorErrorNotification[];
   setSelectedEntity: Dispatch<SetStateAction<T>>;
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
 }
 
-const EntityJsonEditor = <T extends object>({
-  entity,
-  errorNotifications,
-  setSelectedEntity,
-  setIsChanged,
-}: Props<T>) => {
-  const { dispatch } = useSaveValidationContext();
+const EntityJsonEditor = <T extends object>({ entity, setSelectedEntity, setIsChanged }: Props<T>) => {
+  const { dispatch, jsonErrorNotifications } = useSaveValidationContext();
   const { removeNotification } = useNotification();
   const [entityModel, setEntityModel] = useState<string>('');
 
@@ -57,10 +52,10 @@ const EntityJsonEditor = <T extends object>({
     (errors?: JSONEditorError[]) => {
       // 768 - validation $schema field. $schema uses in App Runner and it'e not real JSON scheme
       const filteredErrors = errors?.filter((error) => error.code !== '768');
-      clearResolvedErrors({ errorNotifications, errors: filteredErrors, removeNotification });
+      clearResolvedErrors({ errorNotifications: jsonErrorNotifications, errors: filteredErrors, removeNotification });
       setJsonErrors?.(filteredErrors ?? []);
     },
-    [setJsonErrors, errorNotifications, removeNotification],
+    [setJsonErrors, jsonErrorNotifications, removeNotification],
   );
 
   if (!entityModel) {

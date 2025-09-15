@@ -28,7 +28,6 @@ import { DialKey } from '@/src/models/dial/key';
 import { DialRole } from '@/src/models/dial/role';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { TabModel } from '@/src/models/tab';
-import { JSONEditorErrorNotification } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -57,7 +56,6 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
   const [selectedKey, setSelectedKey] = useState(cloneDeep(originalKey));
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
-  const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
 
   useEffect(() => {
@@ -173,7 +171,6 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
             onSave={onTryToSaveKey}
             jsonEditorEnabled={jsonEditorEnabled}
             toggleJsonEditor={toggleJsonEditor}
-            setErrorNotifications={setErrorNotifications}
           >
             <Button
               cssClass="primary"
@@ -188,7 +185,6 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
             <EntityJsonEditor
               key={key}
               entity={selectedKey}
-              errorNotifications={errorNotifications}
               setSelectedEntity={setSelectedKey}
               setIsChanged={setIsChanged}
             />

@@ -21,7 +21,6 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { TabModel } from '@/src/models/tab';
-import { JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import InterceptorProperties from './InterceptorProperties';
@@ -52,7 +51,6 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
   const [selectedInterceptor, setSelectedInterceptor] = useState(cloneDeep(originalInterceptor));
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
-  const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
 
   useEffect(() => {
@@ -142,7 +140,6 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
           removeEntity={removeInterceptor}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          setErrorNotifications={setErrorNotifications}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
@@ -150,7 +147,6 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
           <EntityJsonEditor
             key={key}
             entity={selectedInterceptor}
-            errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedInterceptor}
             setIsChanged={setIsChanged}
           />

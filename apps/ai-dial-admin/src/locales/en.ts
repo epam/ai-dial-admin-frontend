@@ -148,6 +148,8 @@ export default {
     InterceptorTemplate: 'Interceptor Template',
     Author: 'Author',
     JSONEditor: 'JSON Editor',
+    Admin: 'Admin format',
+    Core: 'Core format',
 
     // modals
     SaveChangesTitle: 'Save Changes',

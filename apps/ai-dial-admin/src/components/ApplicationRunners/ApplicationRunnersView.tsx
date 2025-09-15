@@ -28,7 +28,6 @@ import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialRole } from '@/src/models/dial/role';
 import { TabModel } from '@/src/models/tab';
-import { JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
@@ -58,7 +57,6 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
   const [selectedScheme, setSelectedScheme] = useState(cloneDeep(originalScheme));
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
-  const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
 
   useEffect(() => {
@@ -126,7 +124,6 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
           removeEntity={removeApplicationScheme}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          setErrorNotifications={setErrorNotifications}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
@@ -134,7 +131,6 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
           <EntityJsonEditor
             key={key}
             entity={selectedScheme}
-            errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedScheme}
             setIsChanged={setIsChanged}
           />

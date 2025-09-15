@@ -31,7 +31,6 @@ import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { TabModel } from '@/src/models/tab';
-import { JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -63,7 +62,6 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
   const [selectedRole, setSelectedRole] = useState(cloneDeep(originalRole));
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
-  const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
   const [isSkipRefresh, setIsSkipRefresh] = useState<boolean>(true);
 
@@ -218,7 +216,6 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
           removeEntity={removeRole}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          setErrorNotifications={setErrorNotifications}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
@@ -226,7 +223,6 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
           <EntityJsonEditor
             key={key}
             entity={selectedRole}
-            errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedRole}
             setIsChanged={setIsChanged}
           />
