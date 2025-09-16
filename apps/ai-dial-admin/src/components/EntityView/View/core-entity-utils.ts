@@ -1,6 +1,6 @@
 import { EntityType } from '@/src/types/entity-type';
 import { ApplicationRoute } from '@/src/types/routes';
-import { BaseEntity } from '../../../models/dial/base-entity';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 
 interface FileRecord {
   models?: Record<string, object>;
