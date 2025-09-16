@@ -93,6 +93,7 @@ const List: FC<Props> = ({ route, getData, query, columnDefs, title, emptyDataTi
       showColumnsPanel={showColumnsPanel}
       toggleColumnsPanel={toggleColumnsPanel}
       view={route}
+      storageKey={`${route}/${title}`}
       onGridReady={onGridReady}
     >
       <div className="flex gap-4">

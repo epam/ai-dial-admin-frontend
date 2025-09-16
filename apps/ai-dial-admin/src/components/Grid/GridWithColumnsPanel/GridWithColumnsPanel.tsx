@@ -11,7 +11,6 @@ import ColumnsPanel from '@/src/components/Grid/ColumnsPanel/ColumnsPanel';
 import Grid from '@/src/components/Grid/Grid';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
-import { ApplicationRoute } from '@/src/types/routes';
 import { getColumnVisibilityFromStorage, saveColumnVisibilityToStorage } from '../grid-columns';
 
 interface Props<T> {
@@ -20,7 +19,7 @@ interface Props<T> {
   emptyDataTitle: string;
   additionalGridOptions?: GridOptions;
   showColumnsPanel?: boolean;
-  view?: ApplicationRoute;
+  storageKey?: string;
   toggleColumnsPanel?: () => void;
   onGridReady?: (gridApi: GridApi) => void;
 }
@@ -31,7 +30,7 @@ const GridWithColumnsPanel = <T extends object>({
   emptyDataTitle,
   additionalGridOptions,
   showColumnsPanel,
-  view,
+  storageKey,
   toggleColumnsPanel,
   onGridReady,
 }: Props<T>) => {
@@ -52,7 +51,7 @@ const GridWithColumnsPanel = <T extends object>({
 
   useEffect(() => {
     if (colDefs == null || colDefs.length === 0) {
-      const storageColumns = view ? getColumnVisibilityFromStorage(columnDefs, view) : null;
+      const storageColumns = storageKey ? getColumnVisibilityFromStorage(columnDefs, storageKey) : null;
       setColDefs(
         !(storageColumns && columnDefs.length > storageColumns?.length)
           ? storageColumns || [...columnDefs]
@@ -62,7 +61,7 @@ const GridWithColumnsPanel = <T extends object>({
         storageColumns ? storageColumns?.some((c, index) => c.hide !== columnDefs[index].hide) : false,
       );
     }
-  }, [colDefs, columnDefs, view]);
+  }, [colDefs, columnDefs, storageKey]);
 
   useEffect(() => {
     setPanelContainerClassNames(
@@ -82,19 +81,19 @@ const GridWithColumnsPanel = <T extends object>({
     (id?: string) => {
       const newColDefs = colDefs.map((c) => (c.field === id ? { ...c, hide: !c.hide } : c));
       setColDefs(newColDefs);
-      if (view) {
-        saveColumnVisibilityToStorage(newColDefs, view);
+      if (storageKey) {
+        saveColumnVisibilityToStorage(newColDefs, storageKey);
       }
       setShowResetButton(newColDefs.some((c, index) => c.hide !== columnDefs[index].hide));
     },
-    [colDefs, columnDefs, view],
+    [colDefs, columnDefs, storageKey],
   );
 
   const resetToDefault = () => {
     setColDefs([...columnDefs]);
 
-    if (view) {
-      saveColumnVisibilityToStorage(columnDefs, view);
+    if (storageKey) {
+      saveColumnVisibilityToStorage(columnDefs, storageKey);
     }
     setShowResetButton(false);
   };
@@ -107,13 +106,13 @@ const GridWithColumnsPanel = <T extends object>({
       const updatedColDefs = [...colDefs];
       const [removedColDef] = updatedColDefs.splice(index, 1);
       updatedColDefs.splice(atIndex, 0, removedColDef);
-      if (view) {
-        saveColumnVisibilityToStorage(updatedColDefs, view);
+      if (storageKey) {
+        saveColumnVisibilityToStorage(updatedColDefs, storageKey);
       }
       setColDefs(updatedColDefs);
       setShowResetButton(checkColDefsChanges(updatedColDefs, columnDefs));
     },
-    [findColumn, colDefs, setShowResetButton, columnDefs, view],
+    [findColumn, colDefs, setShowResetButton, columnDefs, storageKey],
   );
 
   return (
@@ -126,7 +125,7 @@ const GridWithColumnsPanel = <T extends object>({
             columnDefs={colDefs}
             rowData={data}
             additionalGridOptions={additionalGridOptions}
-            view={view}
+            storageKey={storageKey}
             onGridReady={onGridReady}
           />
           {showColumnsPanel && (

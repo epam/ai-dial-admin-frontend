@@ -19,6 +19,7 @@ interface Props<T> {
   showColumnsPanel?: boolean;
   showFolders?: boolean;
   view?: ApplicationRoute;
+  storageKey?: string;
   toggleColumnsPanel?: () => void;
   context?: () => PromptFolderContextType | FileFolderContextType;
   onGridReady?: (gridApi: GridApi) => void;
@@ -34,6 +35,7 @@ const ListView = <T extends object>({
   showColumnsPanel,
   showFolders,
   view,
+  storageKey,
   toggleColumnsPanel,
   context,
   onGridReady,
@@ -59,7 +61,7 @@ const ListView = <T extends object>({
           emptyDataTitle={emptyDataTitle}
           showColumnsPanel={showColumnsPanel}
           toggleColumnsPanel={toggleColumnsPanel}
-          view={view}
+          storageKey={storageKey || view}
           onGridReady={onGridReady}
         />
       </div>

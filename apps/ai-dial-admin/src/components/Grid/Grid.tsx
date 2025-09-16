@@ -33,7 +33,6 @@ import {
 import { AgGridReact } from 'ag-grid-react';
 import { useCallback, useEffect, useState } from 'react';
 
-import { ApplicationRoute } from '@/src/types/routes';
 import { baseColumnComparator } from './comparators/base-column-comparator';
 import { getColumnsStateFromStorage, GridModel, saveColumnsStateToStorage } from './grid-columns';
 import { getRowHeight } from './grid-rows';
@@ -43,7 +42,7 @@ interface Props<T> {
   columnDefs?: ColDef[];
   rowData?: T[];
   additionalGridOptions?: GridOptions;
-  view?: ApplicationRoute;
+  storageKey?: string;
   onGridReady?: (gridApi: GridApi) => void;
 }
 
@@ -90,7 +89,7 @@ const Grid = <T extends object>({
   columnDefs,
   rowData,
   additionalGridOptions,
-  view,
+  storageKey,
   onGridReady: gridReadyCb,
 }: Props<T>) => {
   const [rowHeight, setRowHeight] = useState(getRowHeight());
@@ -98,17 +97,17 @@ const Grid = <T extends object>({
 
   const onStateChanged = useCallback(
     (e: AgGridEvent) => {
-      if (view) {
+      if (storageKey) {
         const columns = e.api.getColumnState();
         const filters = e.api.getFilterModel();
         const model: GridModel = {
           columns,
           filters,
         };
-        saveColumnsStateToStorage(view, model);
+        saveColumnsStateToStorage(storageKey, model);
       }
     },
-    [view],
+    [storageKey],
   );
 
   const onGridSizeChanged = useCallback(
@@ -120,8 +119,8 @@ const Grid = <T extends object>({
   );
 
   const setGridColumnsState = (e: GridReadyEvent, defaultSorts: ColumnState[]) => {
-    if (view) {
-      const model = getColumnsStateFromStorage(view, defaultSorts);
+    if (storageKey) {
+      const model = getColumnsStateFromStorage(storageKey, defaultSorts);
       e.api.setFilterModel(model.filters);
       e.api.applyColumnState({ state: model.columns });
     } else {
