@@ -10,7 +10,7 @@ import {
   getListOfPathsToMove,
   getPathSegments,
   isFolder,
-  removeTrailingSlash
+  removeTrailingSlash,
 } from '@/src/utils/files/path';
 import { describe, expect, test, vi } from 'vitest';
 import * as findFolderChildrenModule from '../folder';
@@ -257,7 +257,6 @@ describe('Utils :: files :: checkSelectedPath', () => {
     expect(result).toBe(true);
   });
 });
-
 
 describe('Utils :: files :: changeFolderName', () => {
   test('Should rename last folder in a multi-level path', () => {
