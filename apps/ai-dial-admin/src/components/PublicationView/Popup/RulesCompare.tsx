@@ -13,11 +13,10 @@ interface Props {
   rules: DialRule[];
   compareRules: DialRule[];
   modalState: PopUpState;
-  dataTestId: string;
   onClose: () => void;
 }
 
-const RulesCompare: FC<Props> = ({ rules, compareRules, modalState, dataTestId, onClose }) => {
+const RulesCompare: FC<Props> = ({ rules, compareRules, modalState, onClose }) => {
   const t = useI18n();
   const containerClassName = classNames('lg:max-w-[75%] md:max-w-[90%] min-h-[200px]');
 
@@ -28,7 +27,6 @@ const RulesCompare: FC<Props> = ({ rules, compareRules, modalState, dataTestId, 
       portalId="RulesCompare"
       state={modalState}
       containerClassName={containerClassName}
-      dataTestId={dataTestId}
     >
       <div className="flex flex-1 flex-row px-6 min-h-0 divide-tertiary divide-x">
         <RulesItem

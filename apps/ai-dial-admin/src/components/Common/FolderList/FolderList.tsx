@@ -1,77 +1,130 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 
 import { IconCaretDownFilled, IconCaretRightFilled, IconDotsVertical, IconFolder, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import { createFolderWithFiles } from '@/src/app/[lang]/folders-storage/actions';
 import FolderActions from '@/src/components/Common/FolderCreate/Components/FolderActions';
-import FolderCreateModal from '@/src/components/Common/FolderCreate/Components/FolderCreateModal';
 import {
   getAddChildOperation,
   getAddSiblingOperation,
+  getDeleteFolderOperation,
   getManageFolderOperation,
+  getMoveFolderOperation,
+  getRenameFolderOperation,
 } from '@/src/components/Common/FolderCreate/utils';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
-import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
+import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { EntitiesI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { FileFolderContextType } from '@/src/context/FileFolderContext';
-import { useNotification } from '@/src/context/NotificationContext';
 import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
 import { RuleFolderContextType } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
-import { DialRule } from '@/src/models/dial/rule';
-import { ParsedPrompts } from '@/src/models/prompts';
-import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getFolderName } from '@/src/utils/files/folder';
 import { addTrailingSlash, getFolderNameAndPath, isFolder } from '@/src/utils/files/path';
-import { getSuccessNotification } from '@/src/utils/notification';
+import FolderListModals, { ModalType } from './Modals/FolderListModals';
 
 interface Props {
   disableAutoFetch?: boolean;
   initialPath?: string;
   view?: ApplicationRoute;
   context?: () => PromptFolderContextType | FileFolderContextType | RuleFolderContextType;
+  isFolderMove?: boolean;
+  folderPath?: string;
+  isFolderDelete?: boolean;
 }
 
-const FolderList: FC<Props> = ({ context, initialPath, view, disableAutoFetch }) => {
+const FolderList: FC<Props> = ({
+  context,
+  initialPath,
+  view,
+  disableAutoFetch,
+  isFolderMove,
+  folderPath,
+  isFolderDelete,
+}) => {
   const t = useI18n();
-  const { showNotification } = useNotification();
   const folderContext = context?.();
+
   const [modalState, setModalState] = useState(PopUpState.Closed);
+  const [modalType, setModalType] = useState<ModalType | undefined>(void 0);
+
   const [selectedFolder, setSelectedFolder] = useState<string>();
 
   const showFolderActions = view === ApplicationRoute.Prompts;
 
-  const openModal = (path: string) => {
-    setSelectedFolder(path);
-    setModalState(PopUpState.Opened);
-  };
-
-  const onCloseModal = useCallback(() => {
-    setModalState(PopUpState.Closed);
-  }, [setModalState]);
-
-  const openFolderStorage = (path: string) => {
-    window.open(`${ApplicationRoute.FoldersStorage}?path=${encodeURIComponent(path)}`, '_blank');
-  };
-
   const folderCreateItems = (node: DialFolder) => {
     const items = [
-      getAddSiblingOperation(() => openModal(addTrailingSlash(getFolderNameAndPath(node.path).path))),
-      getAddChildOperation(() => openModal(node.path)),
+      getAddSiblingOperation(() => openCreateFolderModal(addTrailingSlash(getFolderNameAndPath(node.path).path))),
+      getAddChildOperation(() => openCreateFolderModal(node.path)),
     ];
     return node.name === ROOT_FOLDER ? [items[1]] : items;
   };
 
   const folderManageItems = (node: DialFolder) => {
-    return [getManageFolderOperation(() => openFolderStorage(node.path))];
+    const items = [
+      getRenameFolderOperation(() => openRenameFolderModal(node.path)),
+      getMoveFolderOperation(() => openMoveFolderModal(node)),
+      getManageFolderOperation(() => openFolderStorage(node.path)),
+      getDeleteFolderOperation(() => openDeleteFolderModalState(node)),
+    ];
+    return node.name === ROOT_FOLDER ? [items[2]] : items;
   };
+
+  const handleModalClose = useCallback(() => {
+    setModalState(PopUpState.Closed);
+    setModalType(void 0);
+  }, []);
+
+  const handleModalOpen = useCallback((modalType: ModalType) => {
+    setModalType(modalType);
+    setModalState(PopUpState.Opened);
+  }, []);
+
+  const openFolderStorage = (path: string) => {
+    window.open(`${ApplicationRoute.FoldersStorage}?path=${encodeURIComponent(path)}`, '_blank');
+  };
+
+  const openCreateFolderModal = useCallback(
+    (path: string) => {
+      setSelectedFolder(path);
+      handleModalOpen(ModalType.create);
+    },
+    [handleModalOpen],
+  );
+
+  const openRenameFolderModal = useCallback(
+    (path: string) => {
+      setSelectedFolder(path);
+      handleModalOpen(ModalType.rename);
+    },
+    [handleModalOpen],
+  );
+
+  const openMoveFolderModal = useCallback(
+    (node: DialFolder) => {
+      if (folderContext?.expandedFolders.has(node.path)) {
+        folderContext.toggleFolder(node);
+      }
+      setSelectedFolder(node.path);
+      handleModalOpen(ModalType.move);
+    },
+    [folderContext, handleModalOpen],
+  );
+
+  const openDeleteFolderModalState = useCallback(
+    (node: DialFolder) => {
+      folderContext?.toggleFolder(node);
+      setSelectedFolder(node.path);
+      handleModalOpen(ModalType.delete);
+    },
+    [folderContext, handleModalOpen],
+  );
 
   useEffect(() => {
     const context = folderContext as RuleFolderContextType;
@@ -88,7 +141,7 @@ const FolderList: FC<Props> = ({ context, initialPath, view, disableAutoFetch })
 
   const getFolderClassNames = (node: DialFile, level: number) => {
     const isSelected = folderContext?.filePath === node.path;
-    const baseClass = `group flex justify-between py-2 pl-${level * 5}`;
+    const baseClass = `flex justify-between pl-${level * 5}`;
     const selectedClass = isSelected
       ? 'bg-accent-primary-alpha border-l-2 border-l-accent-primary rounded'
       : 'border-l-2 border-l-transparent';
@@ -96,82 +149,104 @@ const FolderList: FC<Props> = ({ context, initialPath, view, disableAutoFetch })
       !node.children?.some((c) => isFolder(c.nodeType)) && folderContext?.fetchedFoldersData[node.path]
         ? 'text-transparent'
         : '';
-
-    return {
-      baseClass,
-      selectedClass,
-      iconClass,
-    };
+    return { baseClass, selectedClass, iconClass };
   };
 
-  const createFolder = useCallback(
-    (fileType: ImportFileType, file: File | File[] | ParsedPrompts, rules: DialRule[], path: string) => {
-      const body = getFormDataForImport(path, file, fileType, ConflictResolutionPolicy.SKIP, rules);
-
-      createFolderWithFiles(body, fileType).then((res) => {
-        if (res.success) {
-          folderContext?.fetchFiles(`${addTrailingSlash(getFolderNameAndPath(path).path)}`);
-          showNotification(getSuccessNotification(t(FoldersI18nKey.FolderCreateSuccess)));
+  const renderTree = (nodes: DialFile[], level: number, rootFolderPath?: string) => {
+    if (rootFolderPath) {
+      const findRootNode = (nodes: DialFile[]): DialFile | null => {
+        for (const node of nodes) {
+          if (node.path === rootFolderPath) {
+            return node;
+          }
+          if (node.children) {
+            const found = findRootNode(node.children);
+            if (found) return found;
+          }
         }
-      });
-      onCloseModal();
-    },
-    [onCloseModal, folderContext, showNotification, t],
-  );
+        return null;
+      };
 
-  const renderTree = (nodes: DialFile[], level: number) => {
+      const rootNode = findRootNode(nodes);
+      if (!rootNode) return null;
+      return renderTree([rootNode], level);
+    }
+
     return nodes?.map((node) => {
       const { path, nodeType, children, name } = node;
       const { baseClass, selectedClass, iconClass } = getFolderClassNames(node, level);
+      const isExpanded = folderContext?.expandedFolders.has(path);
+      const isMoveError =
+        isFolderMove &&
+        path === folderContext?.filePath &&
+        children?.some((c) => getFolderName(c.path) === getFolderName(folderPath || ''));
+      const isMovableFolder = isFolderMove && folderPath === path;
 
       return (
         <div key={path} className="small-medium cursor-pointer text-secondary">
           {isFolder(nodeType) && (
-            <div className={`${baseClass} ${selectedClass}`}>
-              <div className="flex-1 flex flex-row" onClick={() => folderContext?.toggleFolder(node)}>
-                <div className={classNames(iconClass, 'flex items-center justify-center')}>
-                  {folderContext?.expandedFolders.has(path) ? (
-                    <IconCaretDownFilled {...BASE_ICON_PROPS} widths={10} height={10} />
-                  ) : (
-                    <IconCaretRightFilled {...BASE_ICON_PROPS} widths={10} height={10} />
-                  )}
+            <div className="flex flex-col">
+              <div
+                className={`group ${baseClass} ${selectedClass} ${isMovableFolder && 'pointer-events-none'} ${isMoveError ? 'bg-error border-l-error' : ''} py-2`}
+              >
+                <div className="flex-1 flex flex-row truncate" onClick={() => folderContext?.toggleFolder(node)}>
+                  <div className={classNames(iconClass, 'flex items-center justify-center')}>
+                    {isExpanded ? (
+                      <IconCaretDownFilled {...BASE_ICON_PROPS} widths={10} height={10} className="flex-shrink-0" />
+                    ) : (
+                      <IconCaretRightFilled {...BASE_ICON_PROPS} widths={10} height={10} className="flex-shrink-0" />
+                    )}
+                  </div>
+                  <IconFolder
+                    {...BASE_ICON_PROPS}
+                    className={classNames(
+                      'flex-shrink-0',
+                      isMoveError ? 'text-error' : '',
+                      isMovableFolder || isFolderDelete ? 'text-accent-primary' : '',
+                    )}
+                  />
+                  <Tooltip tooltip={name}>
+                    <span className="pl-2 text-primary truncate">{name}</span>
+                  </Tooltip>
                 </div>
-                <IconFolder {...BASE_ICON_PROPS} />
-                <span className="pl-2 text-primary">{name}</span>
+
+                {showFolderActions && (
+                  <div className="invisible group-hover:visible text-primary mx-2 flex flex-row gap-2">
+                    <FolderActions items={folderCreateItems(node)} icon={<IconPlus {...BASE_ICON_PROPS} />} />
+                    <FolderActions items={folderManageItems(node)} icon={<IconDotsVertical {...BASE_ICON_PROPS} />} />
+                  </div>
+                )}
               </div>
-              {showFolderActions && (
-                <div className="invisible group-hover:visible text-primary mx-2 flex flex-row gap-2">
-                  <FolderActions items={folderCreateItems(node)} icon={<IconPlus {...BASE_ICON_PROPS} />} />
-                  <FolderActions items={folderManageItems(node)} icon={<IconDotsVertical {...BASE_ICON_PROPS} />} />
+
+              {isMoveError && (
+                <div className={`${baseClass} tiny text-error`}>
+                  <span className="pl-11">{t(FoldersI18nKey.MoveFolderError)}</span>
                 </div>
               )}
             </div>
           )}
-          {folderContext?.expandedFolders.has(path) && children && (
-            <div key={`${path}-children`}>{renderTree(children, level + 1)}</div>
-          )}
+
+          {isExpanded && children && <div key={`${path}-children`}>{renderTree(children, level + 1)}</div>}
         </div>
       );
     });
   };
+
   return (
     <div className="flex-1 w-full overflow-y-auto">
       {!folderContext?.files?.length ? (
         <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoFolders)} />
       ) : (
-        renderTree(folderContext?.files, 0)
+        renderTree(folderContext?.files, 0, isFolderDelete ? initialPath : void 0)
       )}
-      {modalState === PopUpState.Opened &&
-        createPortal(
-          <FolderCreateModal
-            view={view}
-            folderPath={selectedFolder}
-            modalState={modalState}
-            onClose={onCloseModal}
-            onApply={createFolder}
-          />,
-          document.body,
-        )}
+      <FolderListModals
+        view={view}
+        modalState={modalState}
+        modalType={modalType}
+        selectedFolder={selectedFolder}
+        context={context}
+        handleClose={handleModalClose}
+      />
     </div>
   );
 };

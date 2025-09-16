@@ -1,6 +1,5 @@
 import { ColDef, ColumnState, FilterModel } from 'ag-grid-community';
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
-import { ApplicationRoute } from '@/src/types/routes';
 import { keyBy, map } from 'lodash';
 
 const COLUMNS_KEY = 'gridColumns';
@@ -11,23 +10,23 @@ export interface GridModel {
   filters: FilterModel;
 }
 
-export const saveColumnsStateToStorage = (entityType: ApplicationRoute, model: GridModel) => {
-  setToLocalStorage(`${GRID_COLUMNS_KEY}${entityType}`, JSON.stringify(model));
+export const saveColumnsStateToStorage = (storageKey: string, model: GridModel) => {
+  setToLocalStorage(`${GRID_COLUMNS_KEY}${storageKey}`, JSON.stringify(model));
 };
 
-export const getColumnsStateFromStorage = (entityType: ApplicationRoute, defaultSorts: ColumnState[]): GridModel => {
-  const model = getFromLocalStorage(`${GRID_COLUMNS_KEY}${entityType}`) || '{}';
+export const getColumnsStateFromStorage = (storageKey: string, defaultSorts: ColumnState[]): GridModel => {
+  const model = getFromLocalStorage(`${GRID_COLUMNS_KEY}${storageKey}`) || '{}';
   const parsed = JSON.parse(model);
   return Object.values(parsed).length > 0 ? parsed : { columns: defaultSorts, filters: [] };
 };
 
-export const saveColumnVisibilityToStorage = (colDefs: ColDef[], entityType: ApplicationRoute) => {
+export const saveColumnVisibilityToStorage = (colDefs: ColDef[], storageKey: string) => {
   const columns = colDefs.map((c) => ({ field: c.field, hide: c.hide }));
-  setToLocalStorage(`${COLUMNS_KEY}${entityType}`, JSON.stringify(columns));
+  setToLocalStorage(`${COLUMNS_KEY}${storageKey}`, JSON.stringify(columns));
 };
 
-export const getColumnVisibilityFromStorage = (colDefs: ColDef[], entityType: ApplicationRoute): ColDef[] | null => {
-  const columns = getFromLocalStorage(`${COLUMNS_KEY}${entityType}`);
+export const getColumnVisibilityFromStorage = (colDefs: ColDef[], storageKey: string): ColDef[] | null => {
+  const columns = getFromLocalStorage(`${COLUMNS_KEY}${storageKey}`);
   if (!columns) {
     return null;
   }

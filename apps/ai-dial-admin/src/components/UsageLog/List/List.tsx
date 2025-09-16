@@ -7,7 +7,7 @@ import { TelemetryData, TelemetryQuery } from '@/src/models/telemetry';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { getTracesListingData } from '@/src/utils/telemetry';
 import { useI18n } from '@/src/locales/client';
-import { IconColumns2, IconFileArrowRight } from '@tabler/icons-react';
+import { IconColumns2 } from '@tabler/icons-react';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 
@@ -93,6 +93,7 @@ const List: FC<Props> = ({ route, getData, query, columnDefs, title, emptyDataTi
       showColumnsPanel={showColumnsPanel}
       toggleColumnsPanel={toggleColumnsPanel}
       view={route}
+      storageKey={`${route}/${title}`}
       onGridReady={onGridReady}
     >
       <div className="flex gap-4">
@@ -105,14 +106,6 @@ const List: FC<Props> = ({ route, getData, query, columnDefs, title, emptyDataTi
             onClick={onToggleColumnsPanel}
           />
         )}
-        <Button
-          cssClass="secondary"
-          title={t(ButtonsI18nKey.Export)}
-          iconBefore={<IconFileArrowRight {...BASE_ICON_PROPS} />}
-          onClick={() => {
-            /*TODO: Export*/
-          }}
-        />
       </div>
     </ListView>
   );

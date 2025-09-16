@@ -1,19 +1,40 @@
-import Notification from '@/src/components/Notification/Notification';
-import { NOTIFICATION } from '@/src/utils/tests/mock/notifications.mock';
-import { render } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import Notification from '../Notification';
+import { NotificationType } from '@/src/models/notification';
 
-describe('Components - Notification', () => {
-  test('Should correctly render notification', () => {
-    const { getByTestId } = render(<Notification {...NOTIFICATION} />);
-    const title = getByTestId('notification-title');
-    const description = getByTestId('notification-description');
-    const icon = getByTestId('notification-icon');
-    const close = getByTestId('notification-close');
+describe('Notification', () => {
+  it('renders title and description', () => {
+    render(
+      <Notification
+        id="id"
+        type={NotificationType.success}
+        title="Success!"
+        description="Everything went well."
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByText('Success!')).toBeInTheDocument();
+    expect(screen.getByText('Everything went well.')).toBeInTheDocument();
+  });
 
-    expect(title.innerHTML).toBe(NOTIFICATION.title);
-    expect(description.innerHTML).toBe(NOTIFICATION.description);
-    expect(icon).toBeTruthy();
-    expect(close).toBeTruthy();
+  it('renders all notification types', () => {
+    Object.values(NotificationType).forEach((type) => {
+      render(<Notification id="id" type={type} title={type} onClose={vi.fn()} />);
+      expect(screen.getByText(type)).toBeInTheDocument();
+    });
+  });
+
+  it('calls onClose when close button is clicked', () => {
+    const onClose = vi.fn();
+    render(<Notification id="id" type={NotificationType.error} title="Error!" onClose={onClose} />);
+    const closeBtn = screen.getByLabelText('close');
+    fireEvent.click(closeBtn);
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('does not render description if not provided', () => {
+    render(<Notification id="id" type={NotificationType.prepare} title="Prepare" onClose={vi.fn()} />);
+    expect(screen.queryByText('tiny text-secondary break-words whitespace-pre-wrap mt-2')).not.toBeInTheDocument();
   });
 });

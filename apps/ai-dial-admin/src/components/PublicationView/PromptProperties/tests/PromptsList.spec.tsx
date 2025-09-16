@@ -1,15 +1,22 @@
-import { render } from '@testing-library/react';
-import PromptsPropertiesList from '@/src/components/PublicationView/PromptProperties/PromptsPropertiesList';
-import { Publication } from '@/src/models/dial/publications';
-import { publicationPrompt } from '@/src/utils/tests/mock/publication.mock';
-import { describe, expect, test } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+import PromptsPropertiesList from '../PromptsPropertiesList';
 
-describe('Components - PromptsList', () => {
-  test('Should correctly render PromptsList component', () => {
-    const { getAllByTestId } = render(<PromptsPropertiesList publication={publicationPrompt as Publication} />);
-    const view = getAllByTestId('publication-prompt-view');
+describe('PromptsPropertiesList', () => {
+  it('renders a list of PromptsProperties for each prompt', () => {
+    const publication = {
+      prompts: [{ name: 'Prompt1' }, { name: 'Prompt2' }],
+      action: 'UPDATE',
+      content: 'content',
+    };
+    render(<PromptsPropertiesList publication={publication as any} />);
+    expect(screen.getByText('Prompt1')).toBeInTheDocument();
+    expect(screen.getByText('Prompt2')).toBeInTheDocument();
+  });
 
-    expect(view).toBeTruthy();
-    expect(view.length).toBe(1);
+  it('renders nothing if no prompts', () => {
+    const publication = { prompts: [], action: 'UPDATE' };
+    const { container } = render(<PromptsPropertiesList publication={publication as any} />);
+    expect(container).toBeEmptyDOMElement();
   });
 });

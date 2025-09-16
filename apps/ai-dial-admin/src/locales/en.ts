@@ -562,7 +562,6 @@ export default {
     ErrorTitle: '{type} export failed',
     ErrorDescription: 'Error occurred while exporting, please try again',
     Included: 'Included',
-    Folders: 'Folders',
     NoPreview: 'Preview is not available for Active Config format',
   },
   Folder: {
@@ -600,6 +599,12 @@ export default {
     FolderCreatePlaceholder: 'Enter folder name',
     FolderCreateSuccess: 'Folder created successfully',
     Storage: 'Storage folder',
+    Rename: 'Rename',
+    FolderName: 'Folder name',
+    RenameFolderError: 'This name is used by another folder in the current directory.',
+    MoveFolderError: 'This folder contains subfolder with the same name.',
+    DeleteFolder: 'Confirm Deleting Folder',
+    Folders: 'Folders',
   },
   ActivityAudit: {
     ResourceDiff: 'Resource diff',

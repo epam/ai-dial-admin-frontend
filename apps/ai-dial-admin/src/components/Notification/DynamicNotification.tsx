@@ -44,24 +44,16 @@ const DynamicNotification: FC<NotificationConfig> = ({ type, title, onClose, dow
   }, [files]);
 
   return (
-    <div
-      data-testid={'notification-dynamic'}
-      className="flex flex-col layer-3 py-2 w-[400px] bg-layer-3 [&:not(:last-child)]:mb-4 rounded shadow"
-    >
+    <div className="flex flex-col layer-3 py-2 w-[400px] bg-layer-3 [&:not(:last-child)]:mb-4 rounded shadow">
       <div className="flex flex-row w-full items-center [&:not(:only-child)]:mb-2 px-4">
         <div className="flex items-center relative w-full pr-5">
           <p className="small-text-semi truncate w-full">{title}</p>
-          <Button
-            dataTestId={'show-details'}
-            cssClass={iconClassNames}
-            onClick={showDetails}
-            iconBefore={Icon}
-          ></Button>
+          <Button cssClass={iconClassNames} onClick={showDetails} iconBefore={Icon}></Button>
           <Button cssClass={'absolute right-0'} onClick={onClose} iconBefore={<IconX height={18} width={18} />} />
         </div>
       </div>
       {progress !== null && (
-        <div data-testid={'progress'} className="px-4">
+        <div className="px-4">
           <div className="relative w-full h-0.5 bg-layer-2 px-4">
             <div className="absolute top-0 left-0 h-0.5 bg-controls-accent" style={{ width: `${progress}%` }}></div>
           </div>
@@ -83,7 +75,7 @@ const File: FC<FileDetails> = ({ name, progress, failed, complete, onCancel }) =
   const fileProgress = `${progress}%`;
 
   return (
-    <div data-testid={'file'} className="flex flex-row content-between w-full mt-2 items-center">
+    <div className="flex flex-row content-between w-full mt-2 items-center">
       <p className="w-full tiny text-secondary">{name}</p>
       <div className="flex flex-row items-center content-between">
         {progress && !failed && !complete && (

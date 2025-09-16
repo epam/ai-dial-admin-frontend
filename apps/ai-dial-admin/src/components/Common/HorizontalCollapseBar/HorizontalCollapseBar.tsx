@@ -28,10 +28,7 @@ const HorizontalCollapseBar: FC<Props> = ({ containerClass, children, width, tit
 
   return (
     <div
-      className={classNames(
-        `border border-transparent rounded p-4 mr-4 flex flex-col justify-between overflow-y-auto`,
-        containerClass,
-      )}
+      className={classNames(`border rounded p-4 mr-4 flex flex-col justify-between overflow-y-auto`, containerClass)}
       style={{ width: `${containerWidth}px` }}
     >
       <div className={classNames('flex-1 min-h-0 overflow-auto', bodyClass)}> {children}</div>

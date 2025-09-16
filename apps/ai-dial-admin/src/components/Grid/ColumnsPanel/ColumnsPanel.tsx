@@ -40,7 +40,7 @@ const ColumnsPanel: FC<Props> = ({
   );
 
   const headerClassNames = classNames('flex flex-row justify-between py-4 px-6 items-center h-[70px]');
-  const bodyClassNames = classNames('flex-1 flex flex-col p-6');
+  const bodyClassNames = classNames('flex-1 flex flex-col p-6 overflow-y-auto');
 
   const [, drop] = useDrop(() => ({ accept: 'column' }));
 
