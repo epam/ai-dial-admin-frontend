@@ -7,7 +7,7 @@ import FolderList from '@/src/components/Common/FolderList/FolderList';
 import HorizontalCollapseBar from '@/src/components/Common/HorizontalCollapseBar/HorizontalCollapseBar';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { generateExportList } from '@/src/components/EntityListView/Export/export';
-import { BasicI18nKey, ButtonsI18nKey, ExportI18nKey, FoldersI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, FoldersI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { FileFolderContextType } from '@/src/context/FileFolderContext';
 import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
@@ -38,7 +38,7 @@ const ExportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
     >
       <div className="flex px-6 py-4 flex-1 flex-col min-h-0">
         <div className="flex flex-1 min-h-0">
-          <HorizontalCollapseBar width="360" title={t(ExportI18nKey.Folders)} containerClass="border-primary">
+          <HorizontalCollapseBar width="360" title={t(FoldersI18nKey.Folders)} containerClass="border-primary">
             <FolderList context={context} />
           </HorizontalCollapseBar>
           <ExportGrid context={context} route={route} />

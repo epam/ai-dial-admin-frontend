@@ -513,7 +513,6 @@ export enum ExportI18nKey {
   IncludeSecrets = 'Export.IncludeSecrets',
   IncludeDependencies = 'Export.IncludeDependencies',
   Included = 'Export.Included',
-  Folders = 'Export.Folders',
   ActiveConfig = 'Export.ActiveConfig',
   NoPreview = 'Export.NoPreview',
 }
@@ -529,7 +528,7 @@ export enum FoldersI18nKey {
   ReviewStructure = 'Folder.ReviewStructure',
   Proposed = 'Folder.Proposed',
   Current = 'Folder.Current',
-
+  Folders = 'Folder.Folders',
   AttributeTitle = 'Folder.AttributeTitle',
   AttributePlaceholder = 'Folder.AttributePlaceholder',
   OperationTitle = 'Folder.OperationTitle',
@@ -550,6 +549,11 @@ export enum FoldersI18nKey {
   FolderCreatePlaceholder = 'Folder.FolderCreatePlaceholder',
   FolderCreateSuccess = 'Folder.FolderCreateSuccess',
   Storage = 'Folder.Storage',
+  Rename = 'Folder.Rename',
+  FolderName = 'Folder.FolderName',
+  RenameFolderError = 'Folder.RenameFolderError',
+  MoveFolderError = 'Folder.MoveFolderError',
+  DeleteFolder = 'Folder.DeleteFolder',
 }
 
 export enum ActivityAuditI18nKey {

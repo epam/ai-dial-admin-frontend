@@ -1,4 +1,5 @@
 import { DialFile, DialFileNodeType } from '@/src/models/dial/file';
+import { DialFolder } from '@/src/models/dial/folder';
 import { DialRule } from '@/src/models/dial/rule';
 
 /**
@@ -96,4 +97,62 @@ export const fillFolderRules = (path: string, rules: Record<string, DialRule[]> 
   }
 
   return result;
+};
+
+/**
+ * Generate list of paths for all given folder siblings
+ *
+ * @param {string} path - folder path
+ * @param {DialFolder} folder - root folder
+ * @returns {string[]} - array of string paths
+ */
+export const findFolderSiblings = (path: string, folder: DialFolder): string[] => {
+  const traverse = (node: DialFolder, parent: DialFolder | null): string[] | null => {
+    if (node.path === path) {
+      if (!parent || !parent.children) return [];
+      return parent.children
+        .filter((sibling) => sibling.path !== path && sibling.nodeType === DialFileNodeType.FOLDER)
+        .map((sibling) => sibling.path);
+    }
+
+    if (node.children) {
+      for (const child of node.children) {
+        const result = traverse(child, node);
+        if (result !== null) return result;
+      }
+    }
+
+    return null;
+  };
+
+  const result = traverse(folder, null);
+  return result ?? [];
+};
+
+/**
+ * Generate list of paths for all given folder siblings
+ *
+ * @param {string} path - folder path
+ * @param {DialFolder} folder - root folder
+ * @returns {string[]} - array of string paths
+ */
+export const findFolderChildren = (path: string, folder: DialFolder): string[] => {
+  const traverse = (node: DialFolder): string[] | null => {
+    if (node.path === path) {
+      if (!node.children) return [];
+      return node.children.filter((child) => child.nodeType === DialFileNodeType.FOLDER).map((child) => child.path);
+    }
+
+    if (node.children) {
+      for (const child of node.children) {
+        const result = traverse(child);
+        if (result !== null) return result;
+      }
+    }
+
+    return null;
+  };
+
+  const result = traverse(folder);
+  return result ?? [];
 };

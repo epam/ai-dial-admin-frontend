@@ -7,7 +7,7 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { mergeFiles } from '@/src/utils/files/folder';
 
 export interface PromptFolderContextType {
-  fetchFiles: (path: string, refreshData?: boolean) => void;
+  fetchFiles: (path: string, refreshData?: boolean, resetFolder?: boolean) => void;
   files: DialPrompt[];
   expandedFolders: Set<string>;
   filePath: string;
@@ -30,7 +30,7 @@ export const PromptFolderProvider = ({ children }: { children: ReactNode }) => {
   const [exportFoldersData, setExportFoldersData] = useState<Record<string, DialPrompt[]>>({});
   const [data, setData] = useState<DialPrompt[] | null>([]);
 
-  const fetchFiles = (path: string, refreshData?: boolean) => {
+  const fetchFiles = (path: string, refreshData?: boolean, resetFolder?: boolean) => {
     if (refreshData) {
       setFetchedFoldersData({});
       setExpandedFolders(new Set());
@@ -53,7 +53,7 @@ export const PromptFolderProvider = ({ children }: { children: ReactNode }) => {
         ...prev,
         [path]: folderPrompts,
       }));
-      if (!filePath) {
+      if (!filePath || resetFolder) {
         setFilePath(path);
       }
     });

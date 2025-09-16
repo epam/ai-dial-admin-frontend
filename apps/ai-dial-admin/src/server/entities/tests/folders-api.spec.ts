@@ -3,16 +3,17 @@ import { DialRule } from '@/src/models/dial/rule';
 import { ServerActionResponse } from '@/src/models/server-action';
 import {
   FOLDER_CREATE_URL,
+  FOLDERS_MOVE_URL,
   FOLDERS_URL,
   FoldersApi,
   PREVIEW_PROMPT_ZIP,
   RULES_UPDATE_URL,
 } from '@/src/server/entities/folders-api';
-import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { ImportFileType } from '@/src/types/import';
-import { PROMPT_IMPORT_JSON_URL, PROMPT_IMPORT_ZIP_URL } from '../prompts-api';
+import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
+import { PROMPT_IMPORT_JSON_URL, PROMPT_IMPORT_ZIP_URL } from '../prompts-api';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -126,6 +127,40 @@ describe('Server :: FoldersApi', () => {
       expect.objectContaining({
         method: 'POST',
         body: {},
+      }),
+    );
+  });
+
+  test('Should calls deleteFolder and returns response', async () => {
+    const mockResponse: ServerActionResponse = { success: true };
+    fetchMock.mockResponseOnce(JSON.stringify(mockResponse));
+
+    await instance.deleteFolder(TOKEN_MOCK, 'path');
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${TEST_URL}${FOLDERS_URL}?path=path`,
+      expect.objectContaining({
+        method: 'DELETE',
+        body: undefined,
+      }),
+    );
+  });
+
+  test('Should calls changeFolder and returns response', async () => {
+    const mockResponse: ServerActionResponse = { success: true };
+    fetchMock.mockResponseOnce(JSON.stringify(mockResponse));
+
+    await instance.changeFolder(TOKEN_MOCK, 'oldPath', 'newPath', 'prompt');
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${TEST_URL}${FOLDERS_MOVE_URL}`,
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          oldPath: 'oldPath',
+          newPath: 'newPath',
+          resourceTypes: ['prompt'],
+        }),
       }),
     );
   });

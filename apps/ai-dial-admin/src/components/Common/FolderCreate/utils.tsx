@@ -1,15 +1,15 @@
-import { IconExternalLink } from '@tabler/icons-react';
+import { IconExternalLink, IconFolderShare, IconPencilMinus, IconTrashX } from '@tabler/icons-react';
 
 import AddChildIcon from '@/public/images/icons/add-child.svg';
 import AddSiblingIcon from '@/public/images/icons/add-sibling.svg';
 import { isInvalidJson, isLargeFile } from '@/src/components/EntityListView/Import/import';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { DialFile } from '@/src/models/dial/file';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { ParsedPrompts, PromptImportGridData } from '@/src/models/prompts';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
 import { FolderOperationDeclaration, ZipFilePreview } from './models';
 import { FolderOperation } from './types';
-import { DialFile } from '@/src/models/dial/file';
 
 export const getAddSiblingOperation = (onClick: () => void): FolderOperationDeclaration => {
   return {
@@ -31,6 +31,30 @@ export const getManageFolderOperation = (onClick: () => void): FolderOperationDe
   return {
     icon: <IconExternalLink {...BASE_ICON_PROPS} />,
     id: FolderOperation.Manage_folder,
+    onClick,
+  };
+};
+
+export const getRenameFolderOperation = (onClick: () => void): FolderOperationDeclaration => {
+  return {
+    icon: <IconPencilMinus {...BASE_ICON_PROPS} />,
+    id: FolderOperation.Rename,
+    onClick,
+  };
+};
+
+export const getMoveFolderOperation = (onClick: () => void): FolderOperationDeclaration => {
+  return {
+    icon: <IconFolderShare {...BASE_ICON_PROPS} />,
+    id: FolderOperation.Move_to,
+    onClick,
+  };
+};
+
+export const getDeleteFolderOperation = (onClick: () => void): FolderOperationDeclaration => {
+  return {
+    icon: <IconTrashX {...BASE_ICON_PROPS} />,
+    id: FolderOperation.Delete,
     onClick,
   };
 };

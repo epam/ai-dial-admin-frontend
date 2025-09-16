@@ -1,0 +1,118 @@
+import { FC, useEffect, useMemo, useState } from 'react';
+
+import { GridApi, GridReadyEvent } from 'ag-grid-community';
+import classNames from 'classnames';
+
+import Button from '@/src/components/Common/Button/Button';
+import FolderList from '@/src/components/Common/FolderList/FolderList';
+import { generatePromptRowDataForDelete } from '@/src/components/Common/FolderList/utils';
+import HorizontalCollapseBar from '@/src/components/Common/HorizontalCollapseBar/HorizontalCollapseBar';
+import NoData from '@/src/components/Common/NoData/NoData';
+import Popup from '@/src/components/Common/Popup/Popup';
+import TopicsCellRenderer from '@/src/components/Grid/CellRenderers/TopicCellRenderer';
+import Grid from '@/src/components/Grid/Grid';
+import { NAME_COLUMN } from '@/src/constants/grid-columns/grid-columns';
+import { BasicI18nKey, ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { FileFolderContextType } from '@/src/context/FileFolderContext';
+import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
+import { RuleFolderContextType } from '@/src/context/RuleFolderContext';
+import { useI18n } from '@/src/locales/client';
+import { DialFile } from '@/src/models/dial/file';
+import { DialPrompt } from '@/src/models/dial/prompt';
+import { PopUpState } from '@/src/types/pop-up';
+
+interface Props {
+  modalState: PopUpState;
+  selectedFolder?: string;
+  context?: () => PromptFolderContextType | FileFolderContextType | RuleFolderContextType;
+  onClose: () => void;
+  onApply?: () => void;
+}
+
+const DeleteFolder: FC<Props> = ({ modalState, selectedFolder, context, onClose, onApply }) => {
+  const t = useI18n();
+  const containerClassName = classNames('h-[750px] lg:max-w-[65%]');
+
+  const folderContext = context?.();
+  const filePath = folderContext?.filePath as string;
+
+  const [gridApi, setGridApi] = useState<GridApi>();
+  const [rowData, setRowData] = useState<DialFile[]>([]);
+  const columnDefs = useMemo(() => {
+    return [
+      NAME_COLUMN,
+      {
+        headerName: 'Version',
+        field: 'version',
+        filter: true,
+        cellRenderer: TopicsCellRenderer,
+        cellRendererParams: (params: { data?: { versions?: string[] } }) => ({
+          topics: params.data?.versions || [],
+        }),
+      },
+    ];
+  }, []);
+
+  const onGridReady = (event: GridReadyEvent) => {
+    setGridApi(event.api);
+
+    event.api?.updateGridOptions({
+      columnDefs,
+      rowData,
+    });
+  };
+
+  useEffect(() => {
+    gridApi?.updateGridOptions({
+      rowData,
+      columnDefs,
+    });
+  }, [gridApi, columnDefs, rowData]);
+
+  useEffect(() => {
+    setRowData(generatePromptRowDataForDelete(folderContext?.fetchedFoldersData[filePath] as DialPrompt[]));
+  }, [filePath, folderContext?.fetchedFoldersData]);
+
+  return (
+    <Popup
+      onClose={onClose}
+      heading={t(FoldersI18nKey.DeleteFolder)}
+      portalId="DeleteFolder"
+      state={modalState}
+      containerClassName={containerClassName}
+    >
+      <div className="flex px-6 py-4 flex-1 flex-col min-h-0">
+        <div className="flex flex-1 min-h-0">
+          <HorizontalCollapseBar width="360" title={t(FoldersI18nKey.Folders)} containerClass="border-primary">
+            <FolderList context={context} isFolderDelete={true} initialPath={selectedFolder} />
+          </HorizontalCollapseBar>
+          <div className="flex-1 min-h-0">
+            {rowData.length ? (
+              <Grid
+                additionalGridOptions={{
+                  onGridReady,
+                }}
+              />
+            ) : (
+              <NoData emptyDataTitle={t(BasicI18nKey.NoData)} />
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
+        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <Button
+          cssClass="primary"
+          title={t(ButtonsI18nKey.Delete)}
+          onClick={() => {
+            onApply?.();
+            onClose();
+          }}
+          disable={false}
+        />
+      </div>
+    </Popup>
+  );
+};
+
+export default DeleteFolder;
