@@ -21,6 +21,7 @@ import JsonToggles from './JsonToggle';
 import DeleteConfirmationModal from './Modals/Delete';
 import ModifiedEntityButtons from './ModifiedEntityButtons';
 import { getEntityFromFile, getExportType } from './utils';
+import { ExportFormat } from '../../../types/export';
 
 interface Props<T> {
   view: ApplicationRoute;
@@ -28,12 +29,14 @@ interface Props<T> {
   isChanged: boolean;
   jsonEditorEnabled: boolean;
   hideJsonEditor?: boolean;
+  promptVersions?: string[];
+  selectedFormat?: ExportFormat;
+  setSelectedFormat?: (format: ExportFormat) => void;
   children?: ReactNode;
   onDiscard: () => void;
   onSave: (newVersion?: string) => void;
   removeEntity: (entity?: string) => Promise<ServerActionResponse>;
   toggleJsonEditor?: () => void;
-  promptVersions?: string[];
 }
 
 const HeaderButtons = <T extends object>({
@@ -44,10 +47,10 @@ const HeaderButtons = <T extends object>({
   onSave,
   removeEntity,
   jsonEditorEnabled,
-  toggleJsonEditor,
   hideJsonEditor,
   children,
   promptVersions,
+  ...props
 }: Props<T>) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
   const isSimple = isSimpleEntity(view);
@@ -112,9 +115,7 @@ const HeaderButtons = <T extends object>({
                 {children}
               </div>
             )}
-            {!hideJsonEditor && (
-              <JsonToggles jsonEditorEnabled={jsonEditorEnabled} toggleJsonEditor={toggleJsonEditor} />
-            )}
+            {!hideJsonEditor && <JsonToggles jsonEditorEnabled={jsonEditorEnabled} {...props} />}
           </div>
         )}
       </div>

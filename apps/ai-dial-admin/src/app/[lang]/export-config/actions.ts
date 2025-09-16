@@ -18,6 +18,7 @@ import {
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportRequest } from '@/src/models/export';
 import { EntityType } from '@/src/types/entity-type';
+import { ExportFormat, ExportType } from '@/src/types/export';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import {
   getAdaptersForEntitiesGrid,
@@ -32,7 +33,6 @@ import {
   getToolsetsForEntitiesGrid,
 } from '@/src/utils/entities/entities-list-view';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { ExportFormat, ExportType } from '@/src/types/export';
 
 export async function getCoreEntity(name: string, type: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());

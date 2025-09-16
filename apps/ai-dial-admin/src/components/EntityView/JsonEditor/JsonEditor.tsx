@@ -9,7 +9,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 
 interface Props<T> {
-  entity: T;
+  entity: T | null;
   errorNotifications?: JSONEditorErrorNotification[];
   setSelectedEntity: Dispatch<SetStateAction<T>>;
   setIsChanged?: Dispatch<SetStateAction<boolean>>;

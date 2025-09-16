@@ -23,7 +23,7 @@ interface Props {
 
 const JsonToggles: FC<Props> = ({ jsonEditorEnabled, selectedFormat, setSelectedFormat, toggleJsonEditor }) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
-  const staticEditorClassNames = 'pl-6';
+  const staticEditorClassNames = 'pl-6 flex flex-row gap-x-3';
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
   const [editorClassNames, setEditorClassNames] = useState(staticEditorClassNames);
@@ -50,23 +50,22 @@ const JsonToggles: FC<Props> = ({ jsonEditorEnabled, selectedFormat, setSelected
 
   return (
     <div className={editorClassNames}>
-      <Dropdown
-        trigger={
-          <div className="bg-layer-4 cursor-pointer h-[22px] px-1 small rounded flex items-center justify-center">
-            {selectedFormat == ExportFormat.CORE ? t(EntitiesI18nKey.Core) : t(EntitiesI18nKey.Admin)}
-          </div>
-        }
-        listClassName="w-[200px]"
-      >
-        {items.map((item, i) => (
-          <DropdownMenuItem
-            className="gap-0"
-            key={i}
-            dropdownItem={item}
-            onClick={() => setSelectedFormat?.(item.id as ExportFormat)}
-          />
-        ))}
-      </Dropdown>
+      {jsonEditorEnabled && (
+        <Dropdown
+          selectedValue={selectedFormat == ExportFormat.CORE ? items[0] : items[1]}
+          selectedClassName="bg-layer-4 cursor-pointer h-[22px] px-1 small rounded flex items-center justify-center"
+        >
+          {items.map((item, i) => (
+            <DropdownMenuItem
+              className="gap-0"
+              key={i}
+              dropdownItem={item}
+              isActiveItem={selectedFormat === item.id}
+              onClick={() => setSelectedFormat?.(item.id as ExportFormat)}
+            />
+          ))}
+        </Dropdown>
+      )}
       <Switch
         isOn={jsonEditorEnabled}
         title={t(EntitiesI18nKey.JSONEditor)}
