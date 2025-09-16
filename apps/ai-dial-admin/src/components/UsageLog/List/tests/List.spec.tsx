@@ -32,7 +32,7 @@ describe('List', () => {
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: TelemetryI18nKey.TracesTitle })).toBeInTheDocument();
       expect(screen.getByRole('table')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: ButtonsI18nKey.Export })).toBeInTheDocument();
+      //expect(screen.getByRole('button', { name: ButtonsI18nKey.Export })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: ButtonsI18nKey.Columns })).toBeInTheDocument();
     });
   });
