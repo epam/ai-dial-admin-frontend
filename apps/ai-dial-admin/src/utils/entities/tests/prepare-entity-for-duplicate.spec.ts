@@ -42,7 +42,15 @@ describe('Utils :: prepareEntityForDuplicate', () => {
   });
 
   test('Should return original entity', () => {
-    const result = prepareEntityForDuplicate(ApplicationRoute.Model, entity);
+    const result = prepareEntityForDuplicate(ApplicationRoute.Models, entity);
     expect(result).toEqual(entity);
+  });
+
+  test('Should return original entity', () => {
+    const result1= prepareEntityForDuplicate(ApplicationRoute.Prompts, entity);
+    expect(result1).toEqual({ ...entity, description: void 0, content: void 0 });
+
+    const result2 = prepareEntityForDuplicate(ApplicationRoute.Prompts, entity, { description: 'description', content: 'content' } as any);
+    expect(result2).toEqual({ ...entity, description: 'description', content: 'content' });
   });
 });
