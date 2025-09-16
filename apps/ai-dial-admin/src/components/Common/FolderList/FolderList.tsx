@@ -13,6 +13,7 @@ import {
   getRenameFolderOperation,
 } from '@/src/components/Common/FolderCreate/utils';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
+import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { EntitiesI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -188,22 +189,25 @@ const FolderList: FC<Props> = ({
               <div
                 className={`group ${baseClass} ${selectedClass} ${isMovableFolder && 'pointer-events-none'} ${isMoveError ? 'bg-error border-l-error' : ''} py-2`}
               >
-                <div className="flex-1 flex flex-row" onClick={() => folderContext?.toggleFolder(node)}>
+                <div className="flex-1 flex flex-row truncate" onClick={() => folderContext?.toggleFolder(node)}>
                   <div className={classNames(iconClass, 'flex items-center justify-center')}>
                     {isExpanded ? (
-                      <IconCaretDownFilled {...BASE_ICON_PROPS} widths={10} height={10} />
+                      <IconCaretDownFilled {...BASE_ICON_PROPS} widths={10} height={10} className="flex-shrink-0" />
                     ) : (
-                      <IconCaretRightFilled {...BASE_ICON_PROPS} widths={10} height={10} />
+                      <IconCaretRightFilled {...BASE_ICON_PROPS} widths={10} height={10} className="flex-shrink-0" />
                     )}
                   </div>
                   <IconFolder
                     {...BASE_ICON_PROPS}
                     className={classNames(
+                      'flex-shrink-0',
                       isMoveError ? 'text-error' : '',
                       isMovableFolder || isFolderDelete ? 'text-accent-primary' : '',
                     )}
                   />
-                  <span className="pl-2 text-primary">{name}</span>
+                  <Tooltip tooltip={name}>
+                    <span className="pl-2 text-primary truncate">{name}</span>
+                  </Tooltip>
                 </div>
 
                 {showFolderActions && (
