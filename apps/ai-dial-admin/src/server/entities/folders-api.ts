@@ -7,8 +7,10 @@ import { DialRule } from '@/src/models/dial/rule';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { PROMPT_IMPORT_JSON_URL, PROMPT_IMPORT_ZIP_URL } from './prompts-api';
+import { ResourceType } from '@/src/types/folder';
 
 export const FOLDERS_URL = `${API}/folders`;
+export const FOLDERS_MOVE_URL = `${FOLDERS_URL}/move`;
 export const RULES_UPDATE_URL = `${FOLDERS_URL}/updateRules`;
 export const FOLDER_CREATE_URL = `${FOLDERS_URL}/upload`;
 export const PREVIEW_PROMPT_ZIP = `${API}/prompts/import/zip/preview`;
@@ -39,5 +41,26 @@ export class FoldersApi extends BaseApi {
 
   previewPromptZipFiles(token: JWT | null, body: FormData): Promise<ServerActionResponse> {
     return this.postFiles(`${PREVIEW_PROMPT_ZIP}`, body, token, 'POST');
+  }
+
+  deleteFolder(token: JWT | null, path: string): Promise<ServerActionResponse> {
+    return this.deleteAction(`${FOLDERS_URL}?path=${path}`, token);
+  }
+
+  changeFolder(
+    token: JWT | null,
+    oldPath: string,
+    newPath: string,
+    resourceType: ResourceType,
+  ): Promise<ServerActionResponse> {
+    return this.postAction(
+      `${FOLDERS_MOVE_URL}`,
+      {
+        oldPath,
+        newPath,
+        resourceTypes: [resourceType],
+      },
+      token,
+    );
   }
 }

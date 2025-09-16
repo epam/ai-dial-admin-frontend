@@ -1,4 +1,6 @@
 import { DialFile, DialFileNodeType } from '@/src/models/dial/file';
+import { DialFolder } from '@/src/models/dial/folder';
+import { findFolderChildren, getFolderName } from './folder';
 
 export const isFolder = (type?: DialFileNodeType) => type === DialFileNodeType.FOLDER;
 
@@ -21,6 +23,11 @@ export const checkPaths = (initialPath?: string, filePath?: string) => {
   return !filePath || removeTrailingSlash(filePath) === initialPath;
 };
 
+export const checkSelectedPath = (initialPath: string, filePath: string, files: DialFolder[]) => {
+  const children = findFolderChildren(filePath, files[0]).map((c) => getFolderName(c));
+  return children.includes(getFolderName(initialPath));
+};
+
 export const getFolderNameAndPath = (fullPath: string) => {
   const parts = fullPath.split('/').filter(Boolean);
   const name = parts.pop() || '';
@@ -32,6 +39,14 @@ export const changePath = (oldPath: string, newPath: string) => {
   const parts = oldPath.split('/').filter((p) => p != null);
   const fileName = parts.pop();
   return `${newPath}/${fileName}`;
+};
+
+export const changeFolderName = (oldPath: string, newFolderName: string): string => {
+  const parts = oldPath.split('/').filter((p) => p !== '');
+  if (parts.length === 0) return oldPath;
+
+  parts[parts.length - 1] = newFolderName;
+  return parts.join('/') + '/';
 };
 
 export const getListOfPathsToMove = (
