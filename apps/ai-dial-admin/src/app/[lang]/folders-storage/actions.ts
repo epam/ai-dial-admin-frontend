@@ -6,6 +6,7 @@ import { foldersApi } from '@/src/app/api/api';
 import { DialRule } from '@/src/models/dial/rule';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { ResourceType } from '@/src/types/folder';
 
 export async function getFolders(path: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -30,4 +31,14 @@ export async function createFolderWithFiles(body: FormData, type?: string) {
 export async function previewPromptZip(body: FormData) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return foldersApi.previewPromptZipFiles(token, body);
+}
+
+export async function removeFolder(path: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return foldersApi.deleteFolder(token, path);
+}
+
+export async function changeFolder(oldPath: string, newPath: string, resourceType: ResourceType) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return foldersApi.changeFolder(token, oldPath, newPath, resourceType);
 }

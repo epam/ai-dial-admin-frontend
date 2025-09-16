@@ -1,15 +1,19 @@
 import { DialFileNodeType } from '@/src/models/dial/file';
+import { DialFolder } from '@/src/models/dial/folder';
 import {
   addTrailingSlash,
+  changeFolderName,
   changePath,
   checkPaths,
+  checkSelectedPath,
   getFolderNameAndPath,
   getListOfPathsToMove,
   getPathSegments,
   isFolder,
-  removeTrailingSlash,
+  removeTrailingSlash
 } from '@/src/utils/files/path';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
+import * as findFolderChildrenModule from '../folder';
 
 describe('Utils :: files :: changePath', () => {
   test('Should change folder path', () => {
@@ -189,5 +193,105 @@ describe('Utils :: file :: getPathSegments', () => {
     const input = 'a';
     const expected = ['a/'];
     expect(getPathSegments(input)).toEqual(expected);
+  });
+});
+
+describe('Utils :: files :: checkSelectedPath', () => {
+  test('returns true when initialPath is a direct folder child of filePath', () => {
+    const files: DialFolder[] = [
+      {
+        path: '/root',
+        nodeType: DialFileNodeType.FOLDER,
+        children: [],
+      },
+    ];
+
+    vi.spyOn(findFolderChildrenModule, 'findFolderChildren').mockReturnValue(['/root/folder1', '/root/folder2']);
+
+    const result = checkSelectedPath('/root/folder1', '/root', files);
+    expect(result).toBe(true);
+  });
+
+  test('returns false when initialPath is not a direct folder child of filePath', () => {
+    const files: DialFolder[] = [
+      {
+        path: '/root',
+        nodeType: DialFileNodeType.FOLDER,
+        children: [],
+      },
+    ];
+
+    vi.spyOn(findFolderChildrenModule, 'findFolderChildren').mockReturnValue(['/root/folder1']);
+
+    const result = checkSelectedPath('/root/folder2', '/root', files);
+    expect(result).toBe(false);
+  });
+
+  test('returns false when findFolderChildren returns empty array', () => {
+    const files: DialFolder[] = [
+      {
+        path: '/root',
+        nodeType: DialFileNodeType.FOLDER,
+        children: [],
+      },
+    ];
+
+    vi.spyOn(findFolderChildrenModule, 'findFolderChildren').mockReturnValue([]);
+
+    const result = checkSelectedPath('/root/folder1', '/root', files);
+    expect(result).toBe(false);
+  });
+
+  test('compares folder names correctly even with full paths', () => {
+    const files: DialFolder[] = [
+      {
+        path: '/project',
+        nodeType: DialFileNodeType.FOLDER,
+        children: [],
+      },
+    ];
+
+    vi.spyOn(findFolderChildrenModule, 'findFolderChildren').mockReturnValue(['/project/src', '/project/tests']);
+
+    const result = checkSelectedPath('/project/tests', '/project', files);
+    expect(result).toBe(true);
+  });
+});
+
+
+describe('Utils :: files :: changeFolderName', () => {
+  test('Should rename last folder in a multi-level path', () => {
+    const result = changeFolderName('folder1/folder2/final/', 'renamed');
+    expect(result).toBe('folder1/folder2/renamed/');
+  });
+
+  test('Should rename root-level folder', () => {
+    const result = changeFolderName('root/', 'newRoot');
+    expect(result).toBe('newRoot/');
+  });
+
+  test('Should handle paths without trailing slash', () => {
+    const result = changeFolderName('folder1/folder2/final', 'renamed');
+    expect(result).toBe('folder1/folder2/renamed/');
+  });
+
+  test('Should handle single folder with no slashes', () => {
+    const result = changeFolderName('folder', 'renamed');
+    expect(result).toBe('renamed/');
+  });
+
+  test('Should handle empty path by returning it unchanged', () => {
+    const result = changeFolderName('', 'renamed');
+    expect(result).toBe('');
+  });
+
+  test('Should handle path with multiple slashes', () => {
+    const result = changeFolderName('///folder1///folder2///final///', 'newFolder');
+    expect(result).toBe('folder1/folder2/newFolder/');
+  });
+
+  test('Should handle path with only slashes', () => {
+    const result = changeFolderName('////', 'newName');
+    expect(result).toBe('////');
   });
 });

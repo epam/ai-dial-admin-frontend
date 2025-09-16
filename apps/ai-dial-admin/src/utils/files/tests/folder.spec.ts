@@ -1,8 +1,16 @@
 import { DialFileNodeType } from '@/src/models/dial/file';
+import { DialFolder } from '@/src/models/dial/folder';
 import { describe, expect, test } from 'vitest';
-import { fillChildren, fillFolderRules, getFolderName, mergeFiles } from '../folder';
+import {
+  fillChildren,
+  fillFolderRules,
+  findFolderChildren,
+  findFolderSiblings,
+  getFolderName,
+  mergeFiles,
+} from '../folder';
 
-describe('Context Utils :: getFolderName', () => {
+describe('Folder Utils :: getFolderName', () => {
   test('Should return correct folder name with trailing slash', () => {
     const res = getFolderName('public/folder1/');
     expect(res).toEqual('folder1');
@@ -13,7 +21,7 @@ describe('Context Utils :: getFolderName', () => {
   });
 });
 
-describe('Context Utils :: fillChildren', () => {
+describe('Folder Utils :: fillChildren', () => {
   test('Should return correct folder array with names', () => {
     const res = fillChildren([{ path: 'public/folder1' }, { path: 'public/folder2' }]);
     expect(res).toEqual([
@@ -23,7 +31,7 @@ describe('Context Utils :: fillChildren', () => {
   });
 });
 
-describe('Context Utils :: mergeFiles', () => {
+describe('Folder Utils :: mergeFiles', () => {
   test('should create a new folder node if existingFiles is empty', () => {
     const newFiles = [{ name: 'file1', path: 'somePath/folder/file1', nodeType: DialFileNodeType.ITEM }];
     const result = mergeFiles([], newFiles, 'somePath/folder');
@@ -105,7 +113,7 @@ describe('Context Utils :: mergeFiles', () => {
   });
 });
 
-describe('Context Utils :: fillFolderRules', () => {
+describe('Folder Utils :: fillFolderRules', () => {
   test('creates all folder levels when rules is empty', () => {
     const path = 'folder/folder2/lastFolder/';
     const rules = {};
@@ -168,5 +176,152 @@ describe('Context Utils :: fillFolderRules', () => {
     const result = fillFolderRules(path, null);
 
     expect(result).toEqual(rules);
+  });
+});
+
+describe('Folder Utils :: findFolderSiblings', () => {
+  const mockTree: DialFolder = {
+    path: '/root',
+    nodeType: DialFileNodeType.FOLDER,
+    children: [
+      {
+        path: '/root/folder1',
+        nodeType: DialFileNodeType.FOLDER,
+        children: [
+          {
+            path: '/root/folder1/sub1',
+            nodeType: DialFileNodeType.FOLDER,
+            children: [],
+          },
+        ],
+      },
+      {
+        path: '/root/folder2',
+        nodeType: DialFileNodeType.FOLDER,
+        children: [],
+      },
+      {
+        path: '/root/file1.txt',
+        nodeType: DialFileNodeType.FILE,
+      },
+    ],
+  };
+
+  test('returns sibling folders for a folder with siblings', () => {
+    const result = findFolderSiblings('/root/folder1', mockTree);
+    expect(result).toEqual(['/root/folder2']);
+  });
+
+  test('returns empty array if folder has no siblings', () => {
+    const result = findFolderSiblings('/root/folder2', mockTree);
+    expect(result).toEqual(['/root/folder1']);
+  });
+
+  test('returns empty array if folder is root', () => {
+    const result = findFolderSiblings('/root', mockTree);
+    expect(result).toEqual([]);
+  });
+
+  test('returns empty array if folder path not found', () => {
+    const result = findFolderSiblings('/nonexistent', mockTree);
+    expect(result).toEqual([]);
+  });
+
+  test('does not include FILE siblings', () => {
+    const folderWithFileSibling: DialFolder = {
+      path: '/parent',
+      nodeType: DialFileNodeType.FOLDER,
+      children: [
+        {
+          path: '/parent/folderA',
+          nodeType: DialFileNodeType.FOLDER,
+          children: [],
+        },
+        {
+          path: '/parent/fileA.txt',
+          nodeType: DialFileNodeType.FILE,
+        },
+      ],
+    };
+    const result = findFolderSiblings('/parent/folderA', folderWithFileSibling);
+    expect(result).toEqual([]);
+  });
+});
+
+describe('Folder Utils :: findFolderChildren', () => {
+  const mockTree: DialFolder = {
+    path: '/root',
+    nodeType: DialFileNodeType.FOLDER,
+    children: [
+      {
+        path: '/root/folder1',
+        nodeType: DialFileNodeType.FOLDER,
+        children: [
+          {
+            path: '/root/folder1/sub1',
+            nodeType: DialFileNodeType.FOLDER,
+            children: [],
+          },
+          {
+            path: '/root/folder1/file1.txt',
+            nodeType: DialFileNodeType.FILE,
+          },
+        ],
+      },
+      {
+        path: '/root/folder2',
+        nodeType: DialFileNodeType.FOLDER,
+        children: [],
+      },
+    ],
+  };
+
+  test('returns children folder paths for a folder with children', () => {
+    const result = findFolderChildren('/root/folder1', mockTree);
+    expect(result).toEqual(['/root/folder1/sub1']);
+  });
+
+  test('returns empty array if folder has no children', () => {
+    const result = findFolderChildren('/root/folder2', mockTree);
+    expect(result).toEqual([]);
+  });
+
+  test('returns empty array if folder has only file children', () => {
+    const folderWithOnlyFiles: DialFolder = {
+      path: '/files',
+      nodeType: DialFileNodeType.FOLDER,
+      children: [
+        {
+          path: '/files/fileA.txt',
+          nodeType: DialFileNodeType.FILE,
+        },
+        {
+          path: '/files/fileB.md',
+          nodeType: DialFileNodeType.FILE,
+        },
+      ],
+    };
+    const result = findFolderChildren('/files', folderWithOnlyFiles);
+    expect(result).toEqual([]);
+  });
+
+  test('returns empty array if folder path not found', () => {
+    const result = findFolderChildren('/nonexistent', mockTree);
+    expect(result).toEqual([]);
+  });
+
+  test('returns empty array if root has no children', () => {
+    const emptyRoot: DialFolder = {
+      path: '/empty',
+      nodeType: DialFileNodeType.FOLDER,
+      children: [],
+    };
+    const result = findFolderChildren('/empty', emptyRoot);
+    expect(result).toEqual([]);
+  });
+
+  test('returns nested children correctly from deeper nodes', () => {
+    const result = findFolderChildren('/root', mockTree);
+    expect(result).toEqual(['/root/folder1', '/root/folder2']);
   });
 });
