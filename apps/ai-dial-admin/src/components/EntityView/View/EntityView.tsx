@@ -36,7 +36,7 @@ import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { getEntityFromFile, getExportType } from '../Header/utils';
+import { getEntityFromFile, getExportType } from './core-entity-utils';
 import { getFileFromEntity } from './core-entity-utils';
 import ViewContent from './ViewContent';
 

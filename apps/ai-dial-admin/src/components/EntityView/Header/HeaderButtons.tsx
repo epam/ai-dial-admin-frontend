@@ -13,15 +13,13 @@ import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { ExportFormat } from '@/src/types/export';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
-import { getCoreEntity } from '../../../app/[lang]/export-config/actions';
 import JsonToggles from './JsonToggle';
 import DeleteConfirmationModal from './Modals/Delete';
 import ModifiedEntityButtons from './ModifiedEntityButtons';
-import { getEntityFromFile, getExportType } from './utils';
-import { ExportFormat } from '../../../types/export';
 
 interface Props<T> {
   view: ApplicationRoute;
@@ -56,22 +54,12 @@ const HeaderButtons = <T extends object>({
   const isSimple = isSimpleEntity(view);
 
   const [modalState, setIsOpenModal] = useState(PopUpState.Closed);
-  const [coreEntity, setCoreEntity] = useState<T | null>(null);
   const staticContainerClassnames = 'flex flex-row gap-3 divide-x divide-primary lg:h-[35px]';
 
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
   const [containerClassNames, setContainerClassNames] = useState(staticContainerClassnames);
   const [buttonsClassNames, setButtonsClassNames] = useState('');
-
-  useEffect(() => {
-    const name = (entity as { name: string })?.name;
-    if (!coreEntity && name) {
-      getCoreEntity(name, getExportType(view)).then((data) => {
-        setCoreEntity(getEntityFromFile(view, name, data) as T);
-      });
-    }
-  }, [coreEntity, entity, view]);
 
   const onOpenModal = useCallback(() => {
     setIsOpenModal(PopUpState.Opened);

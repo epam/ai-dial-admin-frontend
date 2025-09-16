@@ -57,7 +57,6 @@ const JsonToggles: FC<Props> = ({ jsonEditorEnabled, selectedFormat, setSelected
         >
           {items.map((item, i) => (
             <DropdownMenuItem
-              className="gap-0"
               key={i}
               dropdownItem={item}
               isActiveItem={selectedFormat === item.id}
