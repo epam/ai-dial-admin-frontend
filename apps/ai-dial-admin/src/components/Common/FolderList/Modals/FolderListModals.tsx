@@ -122,7 +122,7 @@ const FolderListModals: FC<Props> = ({ modalState, modalType, view, selectedFold
         createPortal(
           <RenameFolder
             currentPath={selectedFolder}
-            siblings={findFolderSiblings(selectedFolder as string, folderContext?.files[0] as DialFolder)}
+            siblings={findFolderSiblings(selectedFolder, folderContext?.files[0] as DialFolder)}
             modalState={modalState}
             onClose={handleClose}
             onApply={renameFolder}
