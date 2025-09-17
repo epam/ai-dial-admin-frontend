@@ -27,9 +27,9 @@ import InterceptorProperties from './InterceptorProperties';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { getCoreEntity } from '../../app/[lang]/export-config/actions';
-import { ExportFormat } from '../../types/export';
-import { getEntityFromFile, getExportType } from '../EntityView/View/core-entity-utils';
+import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
+import { ExportFormat } from '@/src/types/export';
+import { getEntityFromFile, getExportType } from '@/src/components/EntityView/View/core-entity-utils';
 
 interface Props {
   originalInterceptor: DialInterceptor;
@@ -81,8 +81,11 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
   );
 
   useEffect(() => {
-    setIsChanged(!isEqualSkippingUndefined(originalInterceptor, selectedInterceptor));
-  }, [selectedInterceptor, originalInterceptor]);
+    const isEqualAdminInterceptor = isEqualSkippingUndefined(originalInterceptor, selectedInterceptor);
+    const isEqualCoreInterceptor = isEqualSkippingUndefined(selectedInterceptor, coreInterceptor);
+
+    setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreInterceptor : !isEqualAdminInterceptor);
+  }, [selectedFormat, originalInterceptor, selectedInterceptor, coreInterceptor]);
 
   const onChangeActiveTab = useCallback(
     (tab: string) => {

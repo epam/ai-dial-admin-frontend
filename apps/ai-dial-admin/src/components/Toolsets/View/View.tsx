@@ -28,6 +28,9 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import ToolsetProperties from './Properties';
+import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
+import { ExportFormat } from '@/src/types/export';
+import { getEntityFromFile, getExportType } from '@/src/components/EntityView/View/core-entity-utils';
 
 interface Props {
   names: string[];
@@ -50,15 +53,34 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
   const [isSkipRefresh, setIsSkipRefresh] = useState<boolean>(true);
   const [key, setKey] = useState(0);
-
-  useEffect(() => {
-    setSelectedToolset(cloneDeep(originalToolset));
-  }, [originalToolset]);
-
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
+  const [coreToolset, setCoreToolset] = useState<Toolset | null>(null);
   const headerClassName = classNames(
     'flex flex-row min-h-[34px]',
     jsonEditorEnabled ? 'justify-end' : 'justify-between',
   );
+
+  useEffect(() => {
+    const name = (originalToolset as { name: string })?.name;
+    if (!coreToolset && name) {
+      getCoreEntity(name, getExportType(ApplicationRoute.Interceptors)).then((data) => {
+        setCoreToolset(getEntityFromFile(ApplicationRoute.Interceptors, name, data) as Toolset);
+      });
+    }
+  }, [coreToolset, originalToolset]);
+
+  useEffect(() => {
+    setSelectedToolset(
+      selectedFormat === ExportFormat.CORE ? cloneDeep(coreToolset as Toolset) : cloneDeep(originalToolset),
+    );
+  }, [selectedFormat, coreToolset, originalToolset]);
+
+  useEffect(() => {
+    const isEqualAdminInterceptor = isEqualSkippingUndefined(originalToolset, selectedToolset);
+    const isEqualCoreInterceptor = isEqualSkippingUndefined(selectedToolset, coreToolset);
+
+    setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreInterceptor : !isEqualAdminInterceptor);
+  }, [selectedFormat, originalToolset, selectedToolset, coreToolset]);
 
   useEffect(() => {
     setIsChanged(!isEqualSkippingUndefined(originalToolset, selectedToolset));
@@ -127,6 +149,8 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
           removeEntity={removeToolset}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
+          selectedFormat={selectedFormat}
+          setSelectedFormat={setSelectedFormat}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">

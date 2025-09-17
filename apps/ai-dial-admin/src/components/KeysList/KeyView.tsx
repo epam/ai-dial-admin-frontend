@@ -35,6 +35,9 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import KeyProperties from './KeyProperties';
 import KeyRotateModal from './KeyRotateModal';
 import KeyViewHeader from './KeyViewHeader';
+import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
+import { ExportFormat } from '@/src/types/export';
+import { getEntityFromFile, getExportType } from '@/src/components/EntityView/View/core-entity-utils';
 
 interface Props {
   originalKey: DialKey;
@@ -57,10 +60,8 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
   const [key, setKey] = useState(0);
-
-  useEffect(() => {
-    setSelectedKey(cloneDeep(originalKey));
-  }, [originalKey]);
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
+  const [coreKey, setCoreKey] = useState<DialKey | null>(null);
 
   const headerClassName = classNames(
     'flex flex-row min-h-[34px]',
@@ -68,8 +69,24 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
   );
 
   useEffect(() => {
-    setIsChanged(!isEqualSkippingUndefined(originalKey, selectedKey));
-  }, [selectedKey, originalKey]);
+    const name = (originalKey as { name: string })?.name;
+    if (!coreKey && name) {
+      getCoreEntity(name, getExportType(ApplicationRoute.Interceptors)).then((data) => {
+        setCoreKey(getEntityFromFile(ApplicationRoute.Interceptors, name, data) as DialKey);
+      });
+    }
+  }, [coreKey, originalKey]);
+
+  useEffect(() => {
+    setSelectedKey(selectedFormat === ExportFormat.CORE ? cloneDeep(coreKey as DialKey) : cloneDeep(originalKey));
+  }, [selectedFormat, coreKey, originalKey]);
+
+  useEffect(() => {
+    const isEqualAdminInterceptor = isEqualSkippingUndefined(originalKey, selectedKey);
+    const isEqualCoreInterceptor = isEqualSkippingUndefined(selectedKey, coreKey);
+
+    setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreInterceptor : !isEqualAdminInterceptor);
+  }, [selectedFormat, originalKey, selectedKey, coreKey]);
 
   const onChangeActiveTab = useCallback(
     (tab: string) => {
@@ -171,6 +188,8 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
             onSave={onTryToSaveKey}
             jsonEditorEnabled={jsonEditorEnabled}
             toggleJsonEditor={toggleJsonEditor}
+            selectedFormat={selectedFormat}
+            setSelectedFormat={setSelectedFormat}
           >
             <Button
               cssClass="primary"

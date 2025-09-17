@@ -6,17 +6,16 @@ import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBas
 import { clearResolvedErrors } from '@/src/components/EntityView/JsonEditor/utils';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
+import { JSONEditorError } from '@/src/types/editor';
 
 interface Props<T> {
   entity: T | null;
-  errorNotifications?: JSONEditorErrorNotification[];
   setSelectedEntity: Dispatch<SetStateAction<T>>;
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
 }
 
 const EntityJsonEditor = <T extends object>({ entity, setSelectedEntity, setIsChanged }: Props<T>) => {
-  const { dispatch, jsonErrorNotifications } = useSaveValidationContext();
+  const { dispatch, jsonErrorNotifications } = useSaveValidationContext();  
   const { removeNotification } = useNotification();
   const [entityModel, setEntityModel] = useState<string>('');
 

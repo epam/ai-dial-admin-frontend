@@ -33,6 +33,9 @@ import { getErrorNotification } from '@/src/utils/notification';
 import AppRunnerApplications from './ConfigurationView/Applications';
 import SchemeParameters from './ConfigurationView/Parameters';
 import SchemeProperties from './ConfigurationView/Properties';
+import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
+import { ExportFormat } from '@/src/types/export';
+import { getEntityFromFile, getExportType } from '@/src/components/EntityView/View/core-entity-utils';
 
 interface Props {
   originalScheme: DialApplicationScheme;
@@ -58,10 +61,23 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
   const [key, setKey] = useState(0);
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
+  const [coreRunner, setCoreRunner] = useState<DialApplicationScheme | null>(null);
 
   useEffect(() => {
-    setSelectedScheme(cloneDeep(originalScheme));
-  }, [originalScheme]);
+    const name = (originalScheme as { name: string })?.name;
+    if (!coreRunner && name) {
+      getCoreEntity(name, getExportType(ApplicationRoute.Interceptors)).then((data) => {
+        setCoreRunner(getEntityFromFile(ApplicationRoute.Interceptors, name, data) as DialApplicationScheme);
+      });
+    }
+  }, [coreRunner, originalScheme]);
+
+  useEffect(() => {
+    setSelectedScheme(
+      selectedFormat === ExportFormat.CORE ? cloneDeep(coreRunner as DialApplicationScheme) : cloneDeep(originalScheme),
+    );
+  }, [selectedFormat, coreRunner, originalScheme]);
 
   const headerClassName = classNames(
     'flex flex-row min-h-[34px]',
@@ -69,8 +85,11 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
   );
 
   useEffect(() => {
-    setIsChanged(!isEqualSkippingUndefined(originalScheme, selectedScheme));
-  }, [selectedScheme, originalScheme]);
+    const isEqualAdminRunner = isEqualSkippingUndefined(originalScheme, selectedScheme);
+    const isEqualCoreRunner = isEqualSkippingUndefined(selectedScheme, coreRunner);
+
+    setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreRunner : !isEqualAdminRunner);
+  }, [selectedFormat, originalScheme, selectedScheme, coreRunner]);
 
   const onChangeActiveTab = useCallback(
     (tab: string) => {
@@ -124,6 +143,8 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
           removeEntity={removeApplicationScheme}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
+          selectedFormat={selectedFormat}
+          setSelectedFormat={setSelectedFormat}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
