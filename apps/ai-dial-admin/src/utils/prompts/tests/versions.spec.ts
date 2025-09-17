@@ -84,6 +84,21 @@ describe('Prompts utils :: getInitialVersion', () => {
     const res = getInitialVersion({ versions: ['1.0.1', '1.0.2', '1.0.3'] }, 'versions');
     expect(res).toEqual('1.0.4');
   });
+
+  test('Should return latest version + 1', () => {
+    const res = getInitialVersion({ versions: ['2.0.1', '1.0.2', '1.0.3'] }, 'versions');
+    expect(res).toEqual('2.0.2');
+  });
+
+  test('Should return latest version + 1', () => {
+    const res = getInitialVersion({ versions: [] }, 'versions');
+    expect(res).toEqual('');
+  });
+
+  test('Should return empty string', () => {
+    const res = getInitialVersion({ versions1: ['1.0.1', '1.0.2', '1.0.3'] }, 'versions');
+    expect(res).toEqual('');
+  });
 });
 
 describe('Prompts utils :: generateNewInitialVersion', () => {
@@ -94,6 +109,11 @@ describe('Prompts utils :: generateNewInitialVersion', () => {
   test('Should return unchanged version', () => {
     const res = generateNewInitialVersion('someVersion');
     expect(res).toEqual('someVersion');
+  });
+
+  test('Should return unchanged version', () => {
+    const res = generateNewInitialVersion();
+    expect(res).toEqual('');
   });
 });
 

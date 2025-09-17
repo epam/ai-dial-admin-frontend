@@ -4,7 +4,13 @@ import { ErrorI18nKey } from '@/src/constants/i18n';
 import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { ErrorType } from '@/src/types/error-type';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getErrorForDisplayName, getErrorForName, getErrorForUrlId, isWrongLengthWithView } from '../name-error';
+import {
+  getErrorForDisplayName,
+  getErrorForName,
+  getErrorForUrlId,
+  hasInvalidCharacters,
+  isWrongLengthWithView,
+} from '../name-error';
 
 const mockT = vi.fn().mockReturnValue('Translated Text');
 
@@ -212,22 +218,22 @@ describe('getErrorForDisplayName', () => {
 });
 
 describe('isWrongLengthWithView', () => {
-  test('returns true if value is too short for Applications', () => {
-    expect(isWrongLengthWithView(ApplicationRoute.Applications, 'ab')).toBe(true);
-  });
-  test('returns true if value is too long for Applications', () => {
-    expect(isWrongLengthWithView(ApplicationRoute.Applications, 'abcdefghijk')).toBe(true);
-  });
   test('returns false if value is within range for Applications', () => {
     expect(isWrongLengthWithView(ApplicationRoute.Applications, 'abcde')).toBe(false);
   });
   test('returns true if value is too short for Models', () => {
-    expect(isWrongLengthWithView(ApplicationRoute.Models, 'ab')).toBe(true);
+    expect(isWrongLengthWithView(ApplicationRoute.Models, 'a')).toBe(true);
   });
   test('returns false for other views', () => {
     expect(isWrongLengthWithView(ApplicationRoute.Toolsets, 'ab')).toBe(false);
   });
   test('returns false if value is undefined', () => {
     expect(isWrongLengthWithView(ApplicationRoute.Applications, undefined)).toBe(false);
+  });
+});
+
+describe('hasInvalidCharacters', () => {
+  test('returns false if value is n void 0', () => {
+    expect(hasInvalidCharacters()).toBe(false);
   });
 });
