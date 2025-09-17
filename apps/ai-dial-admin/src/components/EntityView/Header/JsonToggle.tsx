@@ -13,15 +13,18 @@ import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ExportFormat } from '@/src/types/export';
+import { ApplicationRoute } from '@/src/types/routes';
 
+const ONLY_ADMIN_ENTITIES = [ApplicationRoute.Adapters, ApplicationRoute.InterceptorTemplates];
 interface Props {
+  view: ApplicationRoute;
   selectedFormat?: ExportFormat;
   setSelectedFormat?: (format: ExportFormat) => void;
   jsonEditorEnabled: boolean;
   toggleJsonEditor?: () => void;
 }
 
-const JsonToggles: FC<Props> = ({ jsonEditorEnabled, selectedFormat, setSelectedFormat, toggleJsonEditor }) => {
+const JsonToggles: FC<Props> = ({ view, jsonEditorEnabled, selectedFormat, setSelectedFormat, toggleJsonEditor }) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
   const staticEditorClassNames = 'pl-6 flex flex-row gap-x-3';
   const isTablet = useIsOnlyTabletScreen();
@@ -50,7 +53,7 @@ const JsonToggles: FC<Props> = ({ jsonEditorEnabled, selectedFormat, setSelected
 
   return (
     <div className={editorClassNames}>
-      {jsonEditorEnabled && (
+      {jsonEditorEnabled && !ONLY_ADMIN_ENTITIES.includes(view) && (
         <Dropdown
           selectedValue={selectedFormat == ExportFormat.CORE ? items[0] : items[1]}
           selectedClassName="bg-layer-4 cursor-pointer h-[22px] px-1 small rounded flex items-center justify-center"

@@ -15,7 +15,7 @@ interface Props<T> {
 }
 
 const EntityJsonEditor = <T extends object>({ entity, setSelectedEntity, setIsChanged }: Props<T>) => {
-  const { dispatch, jsonErrorNotifications } = useSaveValidationContext();  
+  const { dispatch, jsonErrorNotifications } = useSaveValidationContext();
   const { removeNotification } = useNotification();
   const [entityModel, setEntityModel] = useState<string>('');
 

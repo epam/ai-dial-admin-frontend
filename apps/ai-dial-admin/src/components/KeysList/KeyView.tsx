@@ -82,10 +82,10 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
   }, [selectedFormat, coreKey, originalKey]);
 
   useEffect(() => {
-    const isEqualAdminInterceptor = isEqualSkippingUndefined(originalKey, selectedKey);
-    const isEqualCoreInterceptor = isEqualSkippingUndefined(selectedKey, coreKey);
+    const isEqualAdminKey = isEqualSkippingUndefined(originalKey, selectedKey);
+    const isEqualCorKey = isEqualSkippingUndefined(selectedKey, coreKey);
 
-    setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreInterceptor : !isEqualAdminInterceptor);
+    setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCorKey : !isEqualAdminKey);
   }, [selectedFormat, originalKey, selectedKey, coreKey]);
 
   const onChangeActiveTab = useCallback(

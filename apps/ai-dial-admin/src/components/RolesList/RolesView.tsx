@@ -90,10 +90,10 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
   }, [selectedFormat, coreRole, originalRole]);
 
   useEffect(() => {
-    const isEqualAdminInterceptor = isEqualSkippingUndefined(originalRole, selectedRole);
-    const isEqualCoreInterceptor = isEqualSkippingUndefined(selectedRole, coreRole);
+    const isEqualAdminRole = isEqualSkippingUndefined(originalRole, selectedRole);
+    const isEqualCoreRole = isEqualSkippingUndefined(selectedRole, coreRole);
 
-    setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreInterceptor : !isEqualAdminInterceptor);
+    setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreRole : !isEqualAdminRole);
   }, [selectedFormat, originalRole, selectedRole, coreRole]);
 
   useEffect(() => {

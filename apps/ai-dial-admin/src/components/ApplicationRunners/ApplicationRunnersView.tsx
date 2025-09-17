@@ -57,7 +57,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
   ];
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
-  const [selectedScheme, setSelectedScheme] = useState(cloneDeep(originalScheme));
+  const [selectedRunner, setSelectedRunner] = useState(cloneDeep(originalScheme));
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
   const [key, setKey] = useState(0);
@@ -74,7 +74,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
   }, [coreRunner, originalScheme]);
 
   useEffect(() => {
-    setSelectedScheme(
+    setSelectedRunner(
       selectedFormat === ExportFormat.CORE ? cloneDeep(coreRunner as DialApplicationScheme) : cloneDeep(originalScheme),
     );
   }, [selectedFormat, coreRunner, originalScheme]);
@@ -85,11 +85,11 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
   );
 
   useEffect(() => {
-    const isEqualAdminRunner = isEqualSkippingUndefined(originalScheme, selectedScheme);
-    const isEqualCoreRunner = isEqualSkippingUndefined(selectedScheme, coreRunner);
+    const isEqualAdminRunner = isEqualSkippingUndefined(originalScheme, selectedRunner);
+    const isEqualCoreRunner = isEqualSkippingUndefined(selectedRunner, coreRunner);
 
     setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreRunner : !isEqualAdminRunner);
-  }, [selectedFormat, originalScheme, selectedScheme, coreRunner]);
+  }, [selectedFormat, originalScheme, selectedRunner, coreRunner]);
 
   const onChangeActiveTab = useCallback(
     (tab: string) => {
@@ -106,14 +106,14 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
-    setSelectedScheme(originalScheme);
+    setSelectedRunner(originalScheme);
   }, [jsonEditorEnabled, originalScheme, dispatch]);
 
   const onChangeScheme = useCallback(
     (entity: DialApplicationScheme) => {
-      setSelectedScheme(entity);
+      setSelectedRunner(entity);
     },
-    [setSelectedScheme],
+    [setSelectedRunner],
   );
 
   const toggleJsonEditor = useCallback(() => {
@@ -121,14 +121,14 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
   }, [setJsonEditorEnabled]);
 
   const onSave = useCallback(() => {
-    updateApplicationScheme(selectedScheme).then((res) => {
+    updateApplicationScheme(selectedRunner).then((res) => {
       if (res.success) {
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedScheme, router, showNotification]);
+  }, [selectedRunner, router, showNotification]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
@@ -136,7 +136,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
         <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
         <HeaderButtons
           view={ApplicationRoute.ApplicationRunners}
-          entity={selectedScheme}
+          entity={selectedRunner}
           isChanged={isChanged}
           onDiscard={onDiscard}
           onSave={onSave}
@@ -151,42 +151,42 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
         {jsonEditorEnabled ? (
           <EntityJsonEditor
             key={key}
-            entity={selectedScheme}
-            setSelectedEntity={setSelectedScheme}
+            entity={selectedRunner}
+            setSelectedEntity={setSelectedRunner}
             setIsChanged={setIsChanged}
           />
         ) : (
           <>
             {activeTab === EntityViewTab.Properties && (
               <div className="pt-3 w-full lg:w-[35%]">
-                <EntityHeader entity={selectedScheme} />
+                <EntityHeader entity={selectedRunner} />
                 <div className="flex-1 min-h-0 pt-4">
-                  <SchemeProperties runner={selectedScheme} isImmutable={true} onChangeRunner={onChangeScheme} />
+                  <SchemeProperties runner={selectedRunner} isImmutable={true} onChangeRunner={onChangeScheme} />
                 </div>
               </div>
             )}
 
             {activeTab === EntityViewTab.Parameters && (
-              <SchemeParameters scheme={selectedScheme} onChangeScheme={onChangeScheme} />
+              <SchemeParameters scheme={selectedRunner} onChangeScheme={onChangeScheme} />
             )}
 
             {activeTab === EntityViewTab.Applications && (
-              <AppRunnerApplications appRunner={selectedScheme} onChangeAppRunner={onChangeScheme} />
+              <AppRunnerApplications appRunner={selectedRunner} onChangeAppRunner={onChangeScheme} />
             )}
 
             {activeTab === EntityViewTab.Routes && (
               <EntityRoutes
                 iAppRunnerView={true}
                 roles={roles}
-                routes={selectedScheme['dial:applicationTypeRoutes']}
+                routes={selectedRunner['dial:applicationTypeRoutes']}
                 onChangeRoutes={(routes) =>
-                  setSelectedScheme({ ...selectedScheme, ['dial:applicationTypeRoutes']: routes })
+                  setSelectedRunner({ ...selectedRunner, ['dial:applicationTypeRoutes']: routes })
                 }
               />
             )}
 
             {activeTab === EntityViewTab.Audit && (
-              <EntityAudit entity={selectedScheme} view={ApplicationRoute.ApplicationRunners} />
+              <EntityAudit entity={selectedRunner} view={ApplicationRoute.ApplicationRunners} />
             )}
           </>
         )}

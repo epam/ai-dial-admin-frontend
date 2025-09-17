@@ -104,7 +104,7 @@ const HeaderButtons = <T extends object>({
                 {children}
               </div>
             )}
-            {!hideJsonEditor && <JsonToggles jsonEditorEnabled={jsonEditorEnabled} {...props} />}
+            {!hideJsonEditor && <JsonToggles view={view} jsonEditorEnabled={jsonEditorEnabled} {...props} />}
           </div>
         )}
       </div>
