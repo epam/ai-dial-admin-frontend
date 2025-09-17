@@ -11,7 +11,7 @@ describe('Utils :: date :: getKeyStatus', () => {
     vi.clearAllMocks();
   });
 
-  test.skip('returns NO_ROLES if roles are missing or empty', () => {
+  test('returns NO_ROLES if roles are missing or empty', () => {
     const key: Partial<DialKey> = {
       expiresAt: Date.now() + 10000000,
       roles: [],
@@ -25,7 +25,7 @@ describe('Utils :: date :: getKeyStatus', () => {
     expect(mockTranslate).toHaveBeenCalledWith(KeysI18nKey.NoRoles);
   });
 
-  test.skip('returns EXPIRED if expiresAt is in the past', () => {
+  test('returns EXPIRED if expiresAt is in the past', () => {
     const key: Partial<DialKey> = {
       expiresAt: Date.now() - 1000,
       roles: ['admin'],
@@ -39,7 +39,7 @@ describe('Utils :: date :: getKeyStatus', () => {
     expect(mockTranslate).toHaveBeenCalledWith(KeysI18nKey.Expired);
   });
 
-  test.skip('returns ALMOST_EXPIRED if expires in less than 7 days', () => {
+  test('returns ALMOST_EXPIRED if expires in less than 7 days', () => {
     const twoDaysFromNow = Date.now() + 2 * 24 * 60 * 60 * 1000;
     const key: Partial<DialKey> = {
       expiresAt: twoDaysFromNow,
@@ -56,7 +56,7 @@ describe('Utils :: date :: getKeyStatus', () => {
     });
   });
 
-  test.skip('returns VALID if expires in more than 7 days', () => {
+  test('returns VALID if expires in more than 7 days', () => {
     const tenDaysFromNow = Date.now() + 10 * 24 * 60 * 60 * 1000;
     const key: Partial<DialKey> = {
       expiresAt: tenDaysFromNow,
@@ -83,37 +83,37 @@ describe('Utils :: date :: calculateExpirationDate', () => {
     vi.useRealTimers();
   });
 
-  test.skip('returns timestamp + 1 day for DAY period', () => {
+  test('returns timestamp + 1 day for DAY period', () => {
     const result = calculateExpirationDate(ValidityPeriods.DAY);
     const expected = Date.UTC(2025, 0, 2);
     expect(result).toBe(expected);
   });
 
-  test.skip('returns timestamp + 7 days for WEEK period', () => {
+  test('returns timestamp + 7 days for WEEK period', () => {
     const result = calculateExpirationDate(ValidityPeriods.WEEK);
     const expected = Date.UTC(2025, 0, 8);
     expect(result).toBe(expected);
   });
 
-  test.skip('returns timestamp + 1 month for MONTH period', () => {
+  test('returns timestamp + 1 month for MONTH period', () => {
     const result = calculateExpirationDate(ValidityPeriods.MONTH);
     const expected = Date.UTC(2025, 1, 1);
     expect(result).toBe(expected);
   });
 
-  test.skip('returns timestamp + 3 months for THREE_MONTHS period', () => {
+  test('returns timestamp + 3 months for THREE_MONTHS period', () => {
     const result = calculateExpirationDate(ValidityPeriods.THREE_MONTHS);
     const expected = Date.UTC(2025, 3, 1);
     expect(result).toBe(expected);
   });
 
-  test.skip('returns timestamp + 6 months for SIX_MONTHS period', () => {
+  test('returns timestamp + 6 months for SIX_MONTHS period', () => {
     const result = calculateExpirationDate(ValidityPeriods.SIX_MONTHS);
     const expected = Date.UTC(2025, 6, 1);
     expect(result).toBe(expected);
   });
 
-  test.skip('returns timestamp + 1 year for YEAR period', () => {
+  test('returns timestamp + 1 year for YEAR period', () => {
     const result = calculateExpirationDate(ValidityPeriods.YEAR);
     const expected = Date.UTC(2026, 0, 1);
     expect(result).toBe(expected);

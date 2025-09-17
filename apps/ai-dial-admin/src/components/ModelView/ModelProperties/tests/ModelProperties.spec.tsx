@@ -1,22 +1,31 @@
-import { DialModel, DialModelType } from '@/src/models/dial/model';
-import { render } from '@testing-library/react';
-import { fireEvent } from '@testing-library/dom';
-import { describe, expect, test } from 'vitest';
-import ModelTypeProperties from '../ModelTypeProperties';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import ModelProperties from '../ModelProperties';
+import { ApplicationRoute } from '@/src/types/routes';
 
-describe('ModelProperties :: ModelTypeProperties', () => {
-  test('Should render successfully', () => {
-    let model = { type: DialModelType.Chat, overrideName: 'Override Name', topics: [] } as DialModel;
-    const onChangeModel = (m: DialModel) => {
-      model = m;
-    };
-    const { baseElement, getByTestId } = render(<ModelTypeProperties model={model} onChangeModel={onChangeModel} />);
+const mockUpdateModel = vi.fn();
+const baseModel = {
+  name: 'model-1',
+  displayName: 'Test Model',
+  fieldsHashingOrder: ['field1', 'field2'],
+};
 
-    expect(baseElement).toBeTruthy();
+describe('ModelProperties', () => {
+  beforeEach(() => {
+    mockUpdateModel.mockClear();
+  });
 
-    const overrideNameControl = getByTestId('overrideName');
-    expect(model.overrideName).toBe('Override Name');
-    fireEvent.change(overrideNameControl, { target: { value: 'New Override Name' } });
-    expect(model.overrideName).toBe('New Override Name');
+  it('renders all main subcomponents', () => {
+    render(
+      <ModelProperties
+        model={baseModel as any}
+        modelsNames={['Test Model', 'Other Model']}
+        updateModel={mockUpdateModel}
+      />,
+    );
+    // EntityMainProperties
+    expect(screen.getByDisplayValue('Test Model')).toBeInTheDocument();
+    // ForwardAuthTokenField
+    expect(screen.getAllByRole('textbox').length).toBeGreaterThan(0);
   });
 });
