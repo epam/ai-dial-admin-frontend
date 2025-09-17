@@ -20,7 +20,6 @@ import {
   parametersTabs,
   propertiesTabs,
 } from '@/src/components/EntityView/View/utils';
-import ParametersTab from '@/src/components/ParametersTab/ParametersTab';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -33,6 +32,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import AppRunnerApplications from './ConfigurationView/Applications';
+import SchemeParameters from './ConfigurationView/Parameters';
 import SchemeProperties from './ConfigurationView/Properties';
 
 interface Props {
@@ -149,7 +149,9 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
               </div>
             )}
 
-            {activeTab === EntityViewTab.Parameters && <ParametersTab scheme={selectedScheme} />}
+            {activeTab === EntityViewTab.Parameters && (
+              <SchemeParameters scheme={selectedScheme} onChangeScheme={onChangeScheme} />
+            )}
 
             {activeTab === EntityViewTab.Applications && (
               <AppRunnerApplications appRunner={selectedScheme} onChangeAppRunner={onChangeScheme} />
