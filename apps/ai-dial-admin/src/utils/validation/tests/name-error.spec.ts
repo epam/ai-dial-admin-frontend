@@ -7,7 +7,7 @@ import { getErrorForDisplayName, getErrorForName, getErrorForUrlId } from '../na
 
 const mockT = vi.fn().mockReturnValue('Translated Text');
 
-describe('Validation :: getErrorForUrlId', () => {
+describe('getErrorForUrlId', () => {
   const t = (s: string) => s;
   test('Should clear all field', () => {
     const res1 = getErrorForUrlId('id', []);
@@ -57,7 +57,7 @@ describe('Validation :: getErrorForUrlId', () => {
   });
 });
 
-describe('Utils :: validations :: getErrorForName', () => {
+describe('getErrorForName', () => {
   const mockT = vi.fn().mockReturnValue('Translated Text');
   test('Should return translated error', () => {
     const res1 = getErrorForName('name', ['name'], mockT);

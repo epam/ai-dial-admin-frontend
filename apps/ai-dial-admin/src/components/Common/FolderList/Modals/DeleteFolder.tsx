@@ -1,6 +1,6 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 
-import { GridApi, GridReadyEvent } from 'ag-grid-community';
+import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import classNames from 'classnames';
 
 import Button from '@/src/components/Common/Button/Button';
@@ -11,7 +11,6 @@ import NoData from '@/src/components/Common/NoData/NoData';
 import Popup from '@/src/components/Common/Popup/Popup';
 import TopicsCellRenderer from '@/src/components/Grid/CellRenderers/TopicCellRenderer';
 import Grid from '@/src/components/Grid/Grid';
-import { NAME_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { BasicI18nKey, ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { FileFolderContextType } from '@/src/context/FileFolderContext';
 import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
@@ -38,9 +37,9 @@ const DeleteFolder: FC<Props> = ({ modalState, selectedFolder, context, onClose,
 
   const [gridApi, setGridApi] = useState<GridApi>();
   const [rowData, setRowData] = useState<DialFile[]>([]);
-  const columnDefs = useMemo(() => {
+  const columnDefs: ColDef[] = useMemo(() => {
     return [
-      NAME_COLUMN,
+      { field: 'name', colId: 'name', headerName: 'Display name', hide: false },
       {
         headerName: 'Version',
         field: 'version',
@@ -81,7 +80,8 @@ const DeleteFolder: FC<Props> = ({ modalState, selectedFolder, context, onClose,
       state={modalState}
       containerClassName={containerClassName}
     >
-      <div className="flex px-6 py-4 flex-1 flex-col min-h-0">
+      <div className="flex flex-col gap-4 px-6 py-4 flex-1 min-h-0">
+        <div className="text-secondary text-sm">{t(FoldersI18nKey.DeleteFolderDescription)}</div>
         <div className="flex flex-1 min-h-0">
           <HorizontalCollapseBar width="360" title={t(FoldersI18nKey.Folders)} containerClass="border-primary">
             <FolderList context={context} isFolderDelete={true} initialPath={selectedFolder} />
