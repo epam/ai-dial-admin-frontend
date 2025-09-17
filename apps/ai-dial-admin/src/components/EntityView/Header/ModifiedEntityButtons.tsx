@@ -23,12 +23,20 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 interface Props<T> {
   view: ApplicationRoute;
   entity: T;
+  promptVersions?: string[];
+  jsonEditorEnabled?: boolean;
   onDiscard: () => void;
   onSave: (newVersion?: string) => void;
-  promptVersions?: string[];
 }
 
-const ModifiedEntityButtons = <T extends object>({ view, entity, onDiscard, onSave, promptVersions }: Props<T>) => {
+const ModifiedEntityButtons = <T extends object>({
+  view,
+  entity,
+  jsonEditorEnabled,
+  onDiscard,
+  onSave,
+  promptVersions,
+}: Props<T>) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
   const { showNotification } = useNotification();
 
@@ -78,14 +86,14 @@ const ModifiedEntityButtons = <T extends object>({ view, entity, onDiscard, onSa
             cssClass={classNames('secondary', buttonsClassNames)}
             title={t(ButtonsI18nKey.SaveAsNewVersion)}
             onClick={() => setVersionModalState(PopUpState.Opened)}
-            disable={!isValid}
+            disable={jsonEditorEnabled ? false : !isValid}
           />
         )}
         <Button
           cssClass={classNames('primary', buttonsClassNames)}
           title={t(ButtonsI18nKey.Save)}
           onClick={() => onTryToSave()}
-          disable={!isValid}
+          disable={jsonEditorEnabled ? false : !isValid}
         />
       </div>
       {versionModalState === PopUpState.Opened &&

@@ -27,6 +27,9 @@ import InterceptorProperties from './InterceptorProperties';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { getCoreEntity } from '../../app/[lang]/export-config/actions';
+import { ExportFormat } from '../../types/export';
+import { getEntityFromFile, getExportType } from '../EntityView/View/core-entity-utils';
 
 interface Props {
   originalInterceptor: DialInterceptor;
@@ -52,10 +55,25 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
   const [key, setKey] = useState(0);
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
+  const [coreInterceptor, setCoreInterceptor] = useState<DialInterceptor | null>(null);
 
   useEffect(() => {
-    setSelectedInterceptor(cloneDeep(originalInterceptor));
-  }, [originalInterceptor]);
+    const name = (originalInterceptor as { name: string })?.name;
+    if (!coreInterceptor && name) {
+      getCoreEntity(name, getExportType(ApplicationRoute.Interceptors)).then((data) => {
+        setCoreInterceptor(getEntityFromFile(ApplicationRoute.Interceptors, name, data) as DialInterceptor);
+      });
+    }
+  }, [coreInterceptor, originalInterceptor]);
+
+  useEffect(() => {
+    setSelectedInterceptor(
+      selectedFormat === ExportFormat.CORE
+        ? cloneDeep(coreInterceptor as DialInterceptor)
+        : cloneDeep(originalInterceptor),
+    );
+  }, [selectedFormat, coreInterceptor, originalInterceptor]);
 
   const headerClassName = classNames(
     'flex flex-row min-h-[34px]',
@@ -140,6 +158,8 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
           removeEntity={removeInterceptor}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
+          selectedFormat={selectedFormat}
+          setSelectedFormat={setSelectedFormat}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
