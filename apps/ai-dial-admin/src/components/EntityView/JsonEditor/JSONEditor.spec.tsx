@@ -14,7 +14,7 @@ describe('JSONEditor', () => {
 
   it('renders nothing if model is not provided', () => {
     // @ts-expect-error purposely omitting model
-    const { container } = render(<JSONEditor  setSelectedEntity={mockSetSelectedEntity} />);
+    const { container } = render(<JSONEditor setSelectedEntity={mockSetSelectedEntity} />);
     expect(container.firstChild).toBeNull();
   });
 });

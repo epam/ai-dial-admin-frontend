@@ -71,8 +71,8 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
   useEffect(() => {
     const name = (originalKey as { name: string })?.name;
     if (!coreKey && name) {
-      getCoreEntity(name, getExportType(ApplicationRoute.Interceptors)).then((data) => {
-        setCoreKey(getEntityFromFile(ApplicationRoute.Interceptors, name, data) as DialKey);
+      getCoreEntity(name, getExportType(ApplicationRoute.Keys)).then((data) => {
+        setCoreKey(getEntityFromFile(ApplicationRoute.Keys, name, data) as DialKey);
       });
     }
   }, [coreKey, originalKey]);

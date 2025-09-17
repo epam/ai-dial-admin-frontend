@@ -79,8 +79,8 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
   useEffect(() => {
     const name = (originalRole as { name: string })?.name;
     if (!coreRole && name) {
-      getCoreEntity(name, getExportType(ApplicationRoute.Interceptors)).then((data) => {
-        setCoreRole(getEntityFromFile(ApplicationRoute.Interceptors, name, data) as DialRole);
+      getCoreEntity(name, getExportType(ApplicationRoute.Roles)).then((data) => {
+        setCoreRole(getEntityFromFile(ApplicationRoute.Roles, name, data) as DialRole);
       });
     }
   }, [coreRole, originalRole]);

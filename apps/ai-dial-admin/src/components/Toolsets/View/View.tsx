@@ -63,8 +63,8 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
   useEffect(() => {
     const name = (originalToolset as { name: string })?.name;
     if (!coreToolset && name) {
-      getCoreEntity(name, getExportType(ApplicationRoute.Interceptors)).then((data) => {
-        setCoreToolset(getEntityFromFile(ApplicationRoute.Interceptors, name, data) as Toolset);
+      getCoreEntity(name, getExportType(ApplicationRoute.Toolsets)).then((data) => {
+        setCoreToolset(getEntityFromFile(ApplicationRoute.Toolsets, name, data) as Toolset);
       });
     }
   }, [coreToolset, originalToolset]);

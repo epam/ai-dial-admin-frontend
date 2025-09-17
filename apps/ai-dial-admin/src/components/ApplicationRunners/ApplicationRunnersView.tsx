@@ -65,10 +65,10 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
   const [coreRunner, setCoreRunner] = useState<DialApplicationScheme | null>(null);
 
   useEffect(() => {
-    const name = (originalScheme as { name: string })?.name;
+    const name = originalScheme?.$id;
     if (!coreRunner && name) {
-      getCoreEntity(name, getExportType(ApplicationRoute.Interceptors)).then((data) => {
-        setCoreRunner(getEntityFromFile(ApplicationRoute.Interceptors, name, data) as DialApplicationScheme);
+      getCoreEntity(name, getExportType(ApplicationRoute.ApplicationRunners)).then((data) => {
+        setCoreRunner(getEntityFromFile(ApplicationRoute.ApplicationRunners, name, data) as DialApplicationScheme);
       });
     }
   }, [coreRunner, originalScheme]);
