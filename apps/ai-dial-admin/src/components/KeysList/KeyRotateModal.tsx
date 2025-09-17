@@ -37,7 +37,6 @@ export const KeyRotateModal: FC<Props> = ({ modalState, selectedKey, keys, onCon
 
   return (
     <Popup
-      dataTestId="keyRotateModal"
       heading={t(EntityFieldsI18nKey.keyValue)}
       portalId="KeyRotateModal"
       state={modalState}
