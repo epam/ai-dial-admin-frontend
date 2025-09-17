@@ -6,6 +6,7 @@ import { PopUpState } from '@/src/types/pop-up';
 
 describe('RenameFolder', () => {
   const baseProps = {
+    currentPath: 'path',
     modalState: PopUpState.Opened,
     onClose: vi.fn(),
     onApply: vi.fn(),

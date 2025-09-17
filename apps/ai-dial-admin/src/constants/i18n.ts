@@ -557,6 +557,7 @@ export enum FoldersI18nKey {
   RenameFolderError = 'Folder.RenameFolderError',
   MoveFolderError = 'Folder.MoveFolderError',
   DeleteFolder = 'Folder.DeleteFolder',
+  DeleteFolderDescription = 'Folder.DeleteFolderDescription',
 }
 
 export enum ActivityAuditI18nKey {

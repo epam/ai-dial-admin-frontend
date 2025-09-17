@@ -15,6 +15,7 @@ import Button from '@/src/components/Common/Button/Button';
 import ListView from '@/src/components/ListView/ListView';
 import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/ResetFiltersButton';
 import Loader from '@/src/components/Common/Loader/Loader';
+import Page403 from '@/src/components/Page403/Page403';
 
 interface Props {
   route: ApplicationRoute;
@@ -64,9 +65,12 @@ const List: FC<Props> = ({ route, getData, query, columnDefs, title, emptyDataTi
       const response = await getData(query);
       if (response.success) {
         const data = getTracesListingData(response.response as TelemetryData);
+        if (data === void 0) {
+          return <Page403 />;
+        }
         setData(data);
       } else {
-        setData(void 0);
+        setData([]);
       }
       setLoading(false);
     };

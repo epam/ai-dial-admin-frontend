@@ -1,6 +1,6 @@
 'use client';
 
-import { Dispatch, FC, SetStateAction, useCallback, useEffect } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
 
 import { IconFileTypeZip } from '@tabler/icons-react';
 
@@ -17,6 +17,7 @@ import { Step, StepStatus } from '@/src/models/step';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getIcon } from '@/src/utils/files/icon';
+import { getErrorForFolderName } from '@/src/utils/validation/folder-error';
 
 interface Props {
   view?: ApplicationRoute;
@@ -47,13 +48,15 @@ const FolderCreateSetup: FC<Props> = ({
 }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
 
+  const [nameErrorText, setNameErrorText] = useState('');
+
   const getFileIcon = (name: string) => {
     return getIcon(getNameExtensionFromFile(name).extension);
   };
 
   const setCurrentSteps = useCallback(
-    (allFiles: File[], name: string) => {
-      const status = allFiles.length && name ? StepStatus.VALID : StepStatus.INVALID;
+    (allFiles: File[], name: string, errorText?: string) => {
+      const status = allFiles.length && name && !errorText ? StepStatus.VALID : StepStatus.INVALID;
       setSteps((prev) => {
         const setupStepIndex = prev.findIndex((step) => step.id === CreateFolderSteps.FOLDER_SETUP);
         return prev.map((item, i) => {
@@ -79,10 +82,12 @@ const FolderCreateSetup: FC<Props> = ({
 
   const changeName = useCallback(
     (name?: string) => {
+      const error = getErrorForFolderName(name, void 0, t, true);
+      setNameErrorText(error?.text || '');
       setFolderName(name || '');
-      setCurrentSteps(files, name || '');
+      setCurrentSteps(files, name || '', error?.text);
     },
-    [setFolderName, setCurrentSteps, files],
+    [t, setFolderName, setCurrentSteps, files],
   );
 
   const changeFile = useCallback(
@@ -113,6 +118,8 @@ const FolderCreateSetup: FC<Props> = ({
           placeholder={t(FoldersI18nKey.FolderCreatePlaceholder)}
           value={folderName}
           onChange={changeName}
+          invalid={!!nameErrorText}
+          errorText={nameErrorText}
         />
       </div>
       <div className="flex-1 flex flex-col min-h-0">
