@@ -29,7 +29,12 @@ import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor'
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { ExportFormat } from '@/src/types/export';
-import { getEntityFromFile, getExportType } from '@/src/components/EntityView/View/core-entity-utils';
+import {
+  getEntityFromFile,
+  getExportType,
+  getFileFromEntity,
+} from '@/src/components/EntityView/View/core-entity-utils';
+import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 
 interface Props {
   originalInterceptor: DialInterceptor;
@@ -139,14 +144,19 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
   );
 
   const onSave = useCallback(() => {
-    updateInterceptor(selectedInterceptor).then((res) => {
+    const req =
+      selectedFormat === ExportFormat.CORE
+        ? updateCoreEntity(getFileFromEntity(ApplicationRoute.Interceptors, selectedInterceptor))
+        : updateInterceptor(selectedInterceptor);
+
+    req.then((res) => {
       if (res.success) {
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedInterceptor, router, showNotification]);
+  }, [selectedFormat, selectedInterceptor, router, showNotification]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">

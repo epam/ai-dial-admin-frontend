@@ -35,7 +35,12 @@ import SchemeParameters from './ConfigurationView/Parameters';
 import SchemeProperties from './ConfigurationView/Properties';
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { ExportFormat } from '@/src/types/export';
-import { getEntityFromFile, getExportType } from '@/src/components/EntityView/View/core-entity-utils';
+import {
+  getEntityFromFile,
+  getExportType,
+  getFileFromEntity,
+} from '@/src/components/EntityView/View/core-entity-utils';
+import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 
 interface Props {
   originalScheme: DialApplicationScheme;
@@ -121,14 +126,19 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
   }, [setJsonEditorEnabled]);
 
   const onSave = useCallback(() => {
-    updateApplicationScheme(selectedRunner).then((res) => {
+    const req =
+      selectedFormat === ExportFormat.CORE
+        ? updateCoreEntity(getFileFromEntity(ApplicationRoute.ApplicationRunners, selectedRunner))
+        : updateApplicationScheme(selectedRunner);
+
+    req.then((res) => {
       if (res.success) {
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedRunner, router, showNotification]);
+  }, [selectedFormat, selectedRunner, router, showNotification]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">

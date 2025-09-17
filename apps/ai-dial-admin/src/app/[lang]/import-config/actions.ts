@@ -13,7 +13,7 @@ import { ConflictResolutionPolicy } from '@/src/types/import';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
-export async function updateCoreEntity(file: Record<string, object>) {
+export async function updateCoreEntity(file: Record<string, unknown>) {
   const body = new FormData();
 
   const jsonString = JSON.stringify(file);
