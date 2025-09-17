@@ -48,8 +48,14 @@ const FolderListModals: FC<Props> = ({ modalState, modalType, view, selectedFold
   const { showNotification } = useNotification();
 
   const createFolder = useCallback(
-    (fileType: ImportFileType, file: File | File[] | ParsedPrompts, rules: DialRule[], path: string) => {
-      const body = getFormDataForImport(path, file, fileType, ConflictResolutionPolicy.SKIP, rules);
+    (
+      fileType: ImportFileType,
+      file: File | File[] | ParsedPrompts,
+      rules: DialRule[],
+      path: string,
+      ignorePaths?: boolean,
+    ) => {
+      const body = getFormDataForImport(path, file, fileType, ConflictResolutionPolicy.SKIP, rules, ignorePaths);
 
       createFolderWithFiles(body, fileType).then((res) => {
         if (res.success) {

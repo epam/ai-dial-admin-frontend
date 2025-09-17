@@ -28,7 +28,13 @@ interface Props {
   folderPath?: string;
   view?: ApplicationRoute;
   onClose: () => void;
-  onApply?: (fileType: ImportFileType, file: File | File[] | ParsedPrompts, rules: DialRule[], path: string) => void;
+  onApply?: (
+    fileType: ImportFileType,
+    file: File | File[] | ParsedPrompts,
+    rules: DialRule[],
+    path: string,
+    ignorePaths?: boolean,
+  ) => void;
 }
 
 const FolderCreateModal: FC<Props> = ({ modalState, folderPath, view, onClose, onApply }) => {
@@ -40,6 +46,7 @@ const FolderCreateModal: FC<Props> = ({ modalState, folderPath, view, onClose, o
   const [steps, setSteps] = useState(CREATE_FOLDER_STEPS(t));
   const [currentStep, setCurrentStep] = useState<Step>(steps[0]);
 
+  const [ignorePaths, setIgnorePaths] = useState(false);
   const [fileType, setFileType] = useState(fileTypes[0].id);
 
   const [zipFile, setZipFile] = useState<File | null>();
@@ -54,12 +61,12 @@ const FolderCreateModal: FC<Props> = ({ modalState, folderPath, view, onClose, o
     if (isPromptView) {
       const type = fileType === ImportFileType.FILES ? ImportFileType.JSON : fileType;
       if (type === ImportFileType.ARCHIVE) {
-        onApply?.(type, zipFile as File, rules, `${folderPath}${folderName}`);
+        onApply?.(type, zipFile as File, rules, `${folderPath}${folderName}`, ignorePaths);
       } else {
         const jsonFile = {
           prompts: Array.from(editedFileMap.values()).flatMap((value) => value.files as DialPrompt[]),
         };
-        onApply?.(type as ImportFileType, jsonFile, rules, `${folderPath}${folderName}`);
+        onApply?.(type as ImportFileType, jsonFile, rules, `${folderPath}${folderName}`, ignorePaths);
       }
     }
   };
@@ -91,6 +98,8 @@ const FolderCreateModal: FC<Props> = ({ modalState, folderPath, view, onClose, o
             setCurrentStep={setCurrentStep}
             folderName={folderName}
             setFolderName={setFolderName}
+            ignorePaths={ignorePaths}
+            setIgnorePaths={setIgnorePaths}
           />
         </div>
         <div

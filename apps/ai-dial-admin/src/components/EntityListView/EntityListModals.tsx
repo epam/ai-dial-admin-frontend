@@ -42,6 +42,7 @@ interface Props {
     file: File | File[] | ParsedPrompts,
     resolution: string,
     path: string,
+    ignorePaths?: boolean,
   ) => void;
   handleExport?: (paths: string[]) => void;
   handleMove?: (path: string) => void;
