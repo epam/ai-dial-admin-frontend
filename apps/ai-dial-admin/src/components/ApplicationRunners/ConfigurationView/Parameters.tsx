@@ -26,7 +26,7 @@ const SchemeParameters: FC<Props> = ({ scheme, onChangeScheme }) => {
       <div className="flex flex-col flex-1 min-h-0 mt-3 w-full">
         <h1 className="mb-3">{t(EntityFieldsI18nKey.scheme)}</h1>
 
-        <EntityJsonEditor key={0} entity={editorScheme} errorNotifications={[]} setSelectedEntity={setEditorScheme} />
+        <EntityJsonEditor key={0} entity={editorScheme} setSelectedEntity={setEditorScheme} />
       </div>
     </div>
   );
