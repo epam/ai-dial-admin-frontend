@@ -11,9 +11,9 @@ const file = {
   routes: { testEntity: entity },
   roles: { testEntity: entity },
   keys: { testEntity: entity },
-  applicationTypeSchemas: { testEntity: entity },
+  applicationTypeSchemas: [entity],
   interceptors: { testEntity: entity },
-};
+} as any;
 
 describe('getEntityFromFile', () => {
   it('returns entity from models', () => {
@@ -68,7 +68,7 @@ describe('getFileFromEntity', () => {
   });
   it('returns applicationTypeSchemas record for ApplicationRunners route', () => {
     expect(getFileFromEntity(ApplicationRoute.ApplicationRunners, entity as any)).toEqual({
-      applicationTypeSchemas: { testEntity: entity },
+      applicationTypeSchemas: [entity],
     });
   });
   it('returns interceptors record for Interceptors route', () => {

@@ -157,7 +157,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [setConfirmModalState, selectedKey, router, showNotification]);
+  }, [selectedFormat, setConfirmModalState, selectedKey, router, showNotification]);
 
   const onRotateKey = useCallback(
     (key: DialKey) => {
