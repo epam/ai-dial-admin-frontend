@@ -8,9 +8,10 @@ import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
 import { getFolderName } from '@/src/utils/files/folder';
 import { changeFolderName } from '@/src/utils/files/path';
+import { getErrorForFolderName } from '@/src/utils/validation/folder-error';
 
 interface Props {
-  currentPath?: string;
+  currentPath: string;
   siblings?: string[];
   modalState: PopUpState;
   onClose: () => void;
@@ -18,23 +19,23 @@ interface Props {
 }
 
 const RenameFolder: FC<Props> = ({ currentPath, siblings = [], modalState, onClose, onApply }) => {
-  const t = useI18n();
-  const [newName, setNewName] = useState('');
+  const t = useI18n() as (str: string) => string;
+  const [newName, setNewName] = useState(getFolderName(currentPath) || '');
   const [isDisabled, setIsDisabled] = useState(true);
   const [errorText, setErrorText] = useState('');
 
   const existingNames = useMemo(
-    () => [...siblings, currentPath].map((folder) => getFolderName(folder || '')),
+    () => [...siblings, currentPath].map((folder) => getFolderName(folder)),
     [currentPath, siblings],
   );
 
   const onChangeName = useCallback(
     (value?: string) => {
-      const error = existingNames.includes(value) ? t(FoldersI18nKey.RenameFolderError) : '';
+      const error = getErrorForFolderName(value, existingNames, t, true);
 
       setNewName(value || '');
       setIsDisabled(!value?.length || !!error);
-      setErrorText(error);
+      setErrorText(error?.text || '');
     },
     [existingNames, t],
   );

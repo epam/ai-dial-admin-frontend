@@ -601,6 +601,7 @@ export default {
     RenameFolderError: 'This name is used by another folder in the current directory.',
     MoveFolderError: 'This folder contains subfolder with the same name.',
     DeleteFolder: 'Confirm Deleting Folder',
+    DeleteFolderDescription: 'Are you sure that you want to delete all subfolders and prompts?',
     Folders: 'Folders',
   },
   ActivityAudit: {
