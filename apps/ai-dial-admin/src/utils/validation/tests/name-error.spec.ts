@@ -3,13 +3,14 @@ import { describe, expect, test, vi } from 'vitest';
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { ErrorType } from '@/src/types/error-type';
-import { getErrorForDisplayName, getErrorForName, getErrorForUrlId } from '../name-error';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getErrorForDisplayName, getErrorForName, getErrorForUrlId, isWrongLengthWithView } from '../name-error';
 
 const mockT = vi.fn().mockReturnValue('Translated Text');
 
 describe('Validation :: getErrorForUrlId', () => {
   const t = (s: string) => s;
-  test('Should clear all field', () => {
+  test('Should return invalid error', () => {
     const res1 = getErrorForUrlId('id', []);
     const res2 = getErrorForUrlId('id', [], t);
     const res3 = getErrorForUrlId('', [], t);
@@ -36,7 +37,7 @@ describe('Validation :: getErrorForUrlId', () => {
     });
   });
 
-  test('Should clear all field', () => {
+  test('Should return length error', () => {
     const res1 = getErrorForUrlId(`https://ai-dial-test.com${new Array(851).fill('a').join()}`, []);
     const res2 = getErrorForUrlId(`https://ai-dial-test.com${new Array(851).fill('a').join()}`, [], t);
 
@@ -50,10 +51,24 @@ describe('Validation :: getErrorForUrlId', () => {
     });
   });
 
-  test('Should clear all field', () => {
+  test('Should return null', () => {
     const res = getErrorForUrlId('https://ai-dial-test.com');
 
     expect(res).toBeNull();
+  });
+
+  test('Should return EXISTING error', () => {
+    const res1 = getErrorForUrlId(`id`, ['id']);
+    const res2 = getErrorForUrlId(`id`, ['id'], t);
+
+    expect(res1).toEqual({
+      text: '',
+      type: ErrorType.EXISTING,
+    });
+    expect(res2).toEqual({
+      text: ErrorI18nKey.NameExists,
+      type: ErrorType.EXISTING,
+    });
   });
 });
 
@@ -132,11 +147,17 @@ describe('Utils :: validations :: getErrorForName', () => {
 
   test('Should allow forbidden symbols when checkForbiddenChars is false', () => {
     const nameWithForbiddenSymbol = 'name%';
-    const res1 = getErrorForName(nameWithForbiddenSymbol, ['names'], mockT, false, false);
-    const res2 = getErrorForName(nameWithForbiddenSymbol, ['names'], undefined, false, false);
+    const res1 = getErrorForName(nameWithForbiddenSymbol, ['names'], mockT, false, true);
+    const res2 = getErrorForName(nameWithForbiddenSymbol, ['names'], undefined, false, true);
 
-    expect(res1).toBeNull();
-    expect(res2).toBeNull();
+    expect(res1).toEqual({
+      type: ErrorType.FORBIDDEN_CHARS,
+      text: 'Translated Text',
+    });
+    expect(res2).toEqual({
+      type: ErrorType.FORBIDDEN_CHARS,
+      text: '',
+    });
   });
 });
 
@@ -148,11 +169,16 @@ describe('getErrorForDisplayName', () => {
   });
 
   test('returns error if name is too short', () => {
-    const result = getErrorForDisplayName('a', false, mockT);
+    const result1 = getErrorForDisplayName('a', false, mockT);
+    const result2 = getErrorForDisplayName('a', false, void 0);
 
-    expect(result).toEqual({
+    expect(result1).toEqual({
       type: ErrorType.LENGTH,
       text: 'Translated Text',
+    });
+    expect(result2).toEqual({
+      type: ErrorType.LENGTH,
+      text: '',
     });
   });
 
@@ -182,5 +208,26 @@ describe('getErrorForDisplayName', () => {
     const validName = 'validName';
     const result = getErrorForDisplayName(validName, false, mockT);
     expect(result).toBeNull();
+  });
+});
+
+describe('isWrongLengthWithView', () => {
+  test('returns true if value is too short for Applications', () => {
+    expect(isWrongLengthWithView(ApplicationRoute.Applications, 'ab')).toBe(true);
+  });
+  test('returns true if value is too long for Applications', () => {
+    expect(isWrongLengthWithView(ApplicationRoute.Applications, 'abcdefghijk')).toBe(true);
+  });
+  test('returns false if value is within range for Applications', () => {
+    expect(isWrongLengthWithView(ApplicationRoute.Applications, 'abcde')).toBe(false);
+  });
+  test('returns true if value is too short for Models', () => {
+    expect(isWrongLengthWithView(ApplicationRoute.Models, 'ab')).toBe(true);
+  });
+  test('returns false for other views', () => {
+    expect(isWrongLengthWithView(ApplicationRoute.Toolsets, 'ab')).toBe(false);
+  });
+  test('returns false if value is undefined', () => {
+    expect(isWrongLengthWithView(ApplicationRoute.Applications, undefined)).toBe(false);
   });
 });
