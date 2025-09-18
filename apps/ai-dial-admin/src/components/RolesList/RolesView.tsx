@@ -31,12 +31,19 @@ import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { TabModel } from '@/src/models/tab';
-import { JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
+import { ExportFormat } from '@/src/types/export';
+import {
+  getEntityFromFile,
+  getExportType,
+  getFileFromEntity,
+} from '@/src/components/EntityView/View/core-entity-utils';
+import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 
 interface Props {
   originalRole: DialRole;
@@ -63,10 +70,10 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
   const [selectedRole, setSelectedRole] = useState(cloneDeep(originalRole));
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
-  const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
   const [isSkipRefresh, setIsSkipRefresh] = useState<boolean>(true);
-
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
+  const [coreRole, setCoreRole] = useState<DialKey | null>(null);
   const entityRef = useRef(selectedRole);
 
   const headerClassName = classNames(
@@ -75,16 +82,28 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
   );
 
   useEffect(() => {
+    const name = (originalRole as { name: string })?.name;
+    if (!coreRole && name) {
+      getCoreEntity(name, getExportType(ApplicationRoute.Roles)).then((data) => {
+        setCoreRole(getEntityFromFile(ApplicationRoute.Roles, name, data) as DialRole);
+      });
+    }
+  }, [coreRole, originalRole]);
+
+  useEffect(() => {
+    setSelectedRole(selectedFormat === ExportFormat.CORE ? cloneDeep(coreRole as DialRole) : cloneDeep(originalRole));
+  }, [selectedFormat, coreRole, originalRole]);
+
+  useEffect(() => {
+    const isEqualAdminRole = isEqualSkippingUndefined(originalRole, selectedRole);
+    const isEqualCoreRole = isEqualSkippingUndefined(selectedRole, coreRole);
+
+    setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreRole : !isEqualAdminRole);
+  }, [selectedFormat, originalRole, selectedRole, coreRole]);
+
+  useEffect(() => {
     entityRef.current = selectedRole;
   }, [selectedRole]);
-
-  useEffect(() => {
-    setSelectedRole(cloneDeep(originalRole));
-  }, [originalRole]);
-
-  useEffect(() => {
-    setIsChanged(!isEqualSkippingUndefined(originalRole, selectedRole));
-  }, [selectedRole, originalRole]);
 
   const onChangeActiveTab = useCallback(
     (tab: string) => {
@@ -165,14 +184,19 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
   );
 
   const onSave = useCallback(() => {
-    updateRole(selectedRole).then((res) => {
+    const req =
+      selectedFormat === ExportFormat.CORE
+        ? updateCoreEntity(getFileFromEntity(ApplicationRoute.Roles, selectedRole))
+        : updateRole(selectedRole);
+
+    req.then((res) => {
       if (res.success) {
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedRole, router, showNotification]);
+  }, [selectedFormat, selectedRole, router, showNotification]);
 
   const onChangeRoleToken = useCallback(
     (value: number, data: DialRole, token: string) => {
@@ -218,7 +242,8 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
           removeEntity={removeRole}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          setErrorNotifications={setErrorNotifications}
+          selectedFormat={selectedFormat}
+          setSelectedFormat={setSelectedFormat}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
@@ -226,7 +251,6 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
           <EntityJsonEditor
             key={key}
             entity={selectedRole}
-            errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedRole}
             setIsChanged={setIsChanged}
           />

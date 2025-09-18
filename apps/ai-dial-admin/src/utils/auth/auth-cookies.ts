@@ -76,6 +76,7 @@ const getCustomCookiePrefix = (firstPrefix?: string | boolean, secondPrefix?: st
   const prefix = [firstPrefix, secondPrefix].filter(Boolean).join('-');
   return prefix ? `${prefix}-` : '';
 };
+
 const cookiePrefix = process.env.NEXTAUTH_COOKIE_PREFIX;
 const customCookiePrefix = getCustomCookiePrefix(isSecure && '__Secure', cookiePrefix);
 const csrfPrefix = getCustomCookiePrefix(isSecure && '__Host', cookiePrefix);
