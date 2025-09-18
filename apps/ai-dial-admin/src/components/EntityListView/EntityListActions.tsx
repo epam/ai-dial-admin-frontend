@@ -5,9 +5,12 @@ import { Dispatch, SetStateAction, useCallback, useEffect, useRef } from 'react'
 
 import { getPrompt } from '@/src/app/[lang]/prompts/actions';
 import { ROOT_FOLDER } from '@/src/constants/file';
+import { PromptsI18nKey } from '@/src/constants/i18n';
 import { FileFolderContextType } from '@/src/context/FileFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
+import { useI18n } from '@/src/locales/client';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -16,12 +19,11 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { prepareEntityForDuplicate } from '@/src/utils/entities/prepare-entity-for-duplicate';
 import { getListOfPathsToBulkDelete, getListOfPathsToMove } from '@/src/utils/files/path';
 import { isAssetView } from '@/src/utils/is-asset-view';
-import { getErrorNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import EntityListBulkButtons from './EntityListBulkButtons';
 import EntityListModals, { ModalType } from './EntityListModals';
 import { getDuplicateModal } from './utils';
-import { BaseEntity } from '@/src/models/dial/base-entity';
-import EntityListBulkButtons from './EntityListBulkButtons';
 
 interface Props<T> {
   names?: string[];
@@ -62,6 +64,7 @@ const EntityListActions = <T extends object>({
   setCurrentEntity,
   setIsBulkView,
 }: Props<T>) => {
+  const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const folderContext = context?.();
@@ -143,12 +146,15 @@ const EntityListActions = <T extends object>({
   const onDeleteBulk = useCallback(() => {
     bulkDelete?.(getListOfPathsToBulkDelete(folderContext?.bulkSelectedData)).then((res) => {
       if (res.success) {
+        showNotification(
+          getSuccessNotification(t(PromptsI18nKey.DeleteSuccessTitle), t(PromptsI18nKey.DeleteSuccessDescription)),
+        );
         setIsBulkView(false);
         folderContext?.setBulkSelectedData({});
         folderContext?.fetchFiles?.(`${ROOT_FOLDER}/`, true);
       }
     });
-  }, [bulkDelete, folderContext, setIsBulkView]);
+  }, [bulkDelete, folderContext, setIsBulkView, showNotification, t]);
 
   return (
     <>

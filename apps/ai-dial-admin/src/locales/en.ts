@@ -478,6 +478,8 @@ export default {
     NewVersionCreate: 'Create new version',
     NewVersionSave: 'Save as New Version',
     NewVersionSaveDescription: 'Create a new version to save changes.',
+    DeleteSuccessTitle: 'Prompts deleted successfully',
+    DeleteSuccessDescription: 'You can restore them using rollback',
   },
   Keys: {
     SaveWithoutRoles: 'Save without adding Roles',

@@ -453,6 +453,8 @@ export enum PromptsI18nKey {
   NewVersionCreate = 'Prompts.NewVersionCreate',
   NewVersionSave = 'Prompts.NewVersionSave',
   NewVersionSaveDescription = 'Prompts.NewVersionSaveDescription',
+  DeleteSuccessTitle = 'Prompts.DeleteSuccessTitle',
+  DeleteSuccessDescription = 'Prompts.DeleteSuccessDescription',
 }
 
 export enum ImportI18nKey {
