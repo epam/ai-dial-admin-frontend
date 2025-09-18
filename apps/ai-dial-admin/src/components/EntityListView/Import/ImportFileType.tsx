@@ -1,16 +1,19 @@
-import { FC } from 'react';
+import { Dispatch, FC, SetStateAction } from 'react';
 
 import { IconFileTypeZip } from '@tabler/icons-react';
 
 import Json from '@/public/images/icons/file/json.svg';
+import Field from '@/src/components/Common/Field/Field';
 import LoadFileAreaField from '@/src/components/Common/LoadFileArea/LoadFileAreaField';
 import RadioButton from '@/src/components/Common/RadioButton/RadioButton';
-import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
+import Switch from '@/src/components/Common/Switch/Switch';
 import { ImportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { RadioButtonModel } from '@/src/models/radio-button';
 import { ImportFileType } from '@/src/types/import';
+import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { getIcon } from '@/src/utils/files/icon';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   files: File[];
@@ -20,6 +23,9 @@ interface Props {
   changeFileType: (type: string) => void;
   isInvalid?: (file: File) => boolean;
   maxFilesCount?: number;
+  ignorePaths?: boolean;
+  setIgnorePaths?: Dispatch<SetStateAction<boolean>>;
+  route?: ApplicationRoute;
 }
 
 const ImportFileTypeSelector: FC<Props> = ({
@@ -30,6 +36,9 @@ const ImportFileTypeSelector: FC<Props> = ({
   changeFileType,
   isInvalid,
   maxFilesCount,
+  ignorePaths,
+  setIgnorePaths,
+  route,
 }) => {
   const t = useI18n();
 
@@ -39,17 +48,32 @@ const ImportFileTypeSelector: FC<Props> = ({
 
   return (
     <div className="flex flex-col h-full">
-      <h3 className="pt-6 pb-4">{t(ImportI18nKey.FileType)}</h3>
-      {fileTypes.map((type) => (
-        <RadioButton
-          key={type.id}
-          inputId={type.id}
-          title={type.name}
-          description={type.description}
-          checked={type.id === fileType}
-          onChange={() => changeFileType(type.id)}
-        />
-      ))}
+      <div className="flex flex-col gap-4 mt-6">
+        <div className="flex flex-col">
+          <Field fieldTitle={t(ImportI18nKey.FileType)} />
+          {fileTypes.map((type) => (
+            <RadioButton
+              key={type.id}
+              inputId={type.id}
+              title={type.name}
+              description={type.description}
+              checked={type.id === fileType}
+              onChange={() => changeFileType(type.id)}
+            />
+          ))}
+        </div>
+        <div className="flex flex-col">
+          <Field
+            fieldTitle={route === ApplicationRoute.Prompts ? t(ImportI18nKey.PathsPrompt) : t(ImportI18nKey.PathsFile)}
+          />
+          <Switch
+            isOn={ignorePaths}
+            title={t(ImportI18nKey.PathsIgnore)}
+            switchId="ignorePaths"
+            onChange={setIgnorePaths}
+          />
+        </div>
+      </div>
       <div className="mt-6 flex-1 min-h-0">
         {fileType === ImportFileType.ARCHIVE && (
           <LoadFileAreaField

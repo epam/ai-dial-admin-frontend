@@ -497,6 +497,9 @@ export enum ImportI18nKey {
   ArchiveErrorTitle = 'Import.ArchiveErrorTitle',
   Update = 'Import.Update',
   Create = 'Import.Create',
+  PathsIgnore = 'Import.PathsIgnore',
+  PathsPrompt = 'Import.PathsPrompt',
+  PathsFile = 'Import.PathsFile',
 }
 
 export enum ExportI18nKey {
