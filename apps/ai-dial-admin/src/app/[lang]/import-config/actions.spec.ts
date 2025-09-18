@@ -10,7 +10,7 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, vi, test } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { importJsonConfigs, importZipConfig, previewJsonConfigs, previewZipConfig } from './actions';
+import { importJsonConfigs, importZipConfig, previewJsonConfigs, previewZipConfig, updateCoreEntity } from './actions';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
