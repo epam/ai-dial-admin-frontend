@@ -11,7 +11,7 @@ import {
   getListOfPathsToMove,
   getPathSegments,
   isFolder,
-  removeTrailingSlash
+  removeTrailingSlash,
 } from '@/src/utils/files/path';
 import { describe, expect, test, vi } from 'vitest';
 import * as findFolderChildrenModule from '../folder';
@@ -116,17 +116,11 @@ describe('Utils :: files :: getListOfPathsToBulkDelete', () => {
         { path: 'folder1/file1', name: 'file1', nodeType: 'item' },
         { path: 'folder1/file2', name: 'file2', nodeType: 'item' },
       ],
-      'folder2/': [
-        { path: 'folder2/file3', name: 'file3', nodeType: 'item' },
-      ],
+      'folder2/': [{ path: 'folder2/file3', name: 'file3', nodeType: 'item' }],
     };
 
     const res = getListOfPathsToBulkDelete(record);
-    expect(res).toEqual([
-      { path: 'folder1/file1' },
-      { path: 'folder1/file2' },
-      { path: 'folder2/file3' },
-    ]);
+    expect(res).toEqual([{ path: 'folder1/file1' }, { path: 'folder1/file2' }, { path: 'folder2/file3' }]);
   });
 
   test('Should return all paths from a record of DialPrompts', () => {
@@ -138,10 +132,7 @@ describe('Utils :: files :: getListOfPathsToBulkDelete', () => {
     };
 
     const res = getListOfPathsToBulkDelete(record);
-    expect(res).toEqual([
-      { path: 'folder1/prompt1' },
-      { path: 'folder1/prompt2' },
-    ]);
+    expect(res).toEqual([{ path: 'folder1/prompt1' }, { path: 'folder1/prompt2' }]);
   });
 
   test('Should return empty array for empty record', () => {
