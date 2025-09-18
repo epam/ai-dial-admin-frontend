@@ -7,10 +7,11 @@ import {
   checkPaths,
   checkSelectedPath,
   getFolderNameAndPath,
+  getListOfPathsToBulkDelete,
   getListOfPathsToMove,
   getPathSegments,
   isFolder,
-  removeTrailingSlash,
+  removeTrailingSlash
 } from '@/src/utils/files/path';
 import { describe, expect, test, vi } from 'vitest';
 import * as findFolderChildrenModule from '../folder';
@@ -104,6 +105,52 @@ describe('Utils :: files :: getListOfPathsToMove', () => {
 
   test('Should return  empty array', () => {
     const res = getListOfPathsToMove({ name: 'name.txt', folderId: 'folder' }, null, null, true);
+    expect(res).toEqual([]);
+  });
+});
+
+describe('Utils :: files :: getListOfPathsToBulkDelete', () => {
+  test('Should return all paths from a record of DialFiles', () => {
+    const record = {
+      'folder1/': [
+        { path: 'folder1/file1', name: 'file1', nodeType: 'item' },
+        { path: 'folder1/file2', name: 'file2', nodeType: 'item' },
+      ],
+      'folder2/': [
+        { path: 'folder2/file3', name: 'file3', nodeType: 'item' },
+      ],
+    };
+
+    const res = getListOfPathsToBulkDelete(record);
+    expect(res).toEqual([
+      { path: 'folder1/file1' },
+      { path: 'folder1/file2' },
+      { path: 'folder2/file3' },
+    ]);
+  });
+
+  test('Should return all paths from a record of DialPrompts', () => {
+    const record = {
+      'folder1/': [
+        { path: 'folder1/prompt1', name: 'prompt1', prompt: 'Write a poem' },
+        { path: 'folder1/prompt2', name: 'prompt2', prompt: 'Write code' },
+      ],
+    };
+
+    const res = getListOfPathsToBulkDelete(record);
+    expect(res).toEqual([
+      { path: 'folder1/prompt1' },
+      { path: 'folder1/prompt2' },
+    ]);
+  });
+
+  test('Should return empty array for empty record', () => {
+    const res = getListOfPathsToBulkDelete({});
+    expect(res).toEqual([]);
+  });
+
+  test('Should return empty array for undefined record', () => {
+    const res = getListOfPathsToBulkDelete();
     expect(res).toEqual([]);
   });
 });
