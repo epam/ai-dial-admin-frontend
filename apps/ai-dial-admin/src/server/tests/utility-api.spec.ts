@@ -29,6 +29,15 @@ describe('Server :: UtilityApi', () => {
     expect(res).toEqual({ response: JSON.stringify({ success: true }), success: true });
   });
 
+  test('should import json config', async () => {
+    const formData = new FormData();
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+
+    const res = await instance.importJsonConfigs('/fake-url', TOKEN_MOCK, formData);
+    expect(res).toEqual({ response: JSON.stringify({ success: true }), success: true });
+    expect(fetch).toHaveBeenCalled();
+  });
+
   test('should import zip config', async () => {
     const formData = new FormData();
     fetch.mockResponseOnce(JSON.stringify({ success: true }));

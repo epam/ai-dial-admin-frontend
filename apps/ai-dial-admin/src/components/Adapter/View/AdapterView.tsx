@@ -19,7 +19,6 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { TabModel } from '@/src/models/tab';
-import { JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
@@ -41,7 +40,6 @@ const AdapterView: FC<Props> = ({ originalAdapter }) => {
   const [selectedAdapter, setSelectedAdapter] = useState(cloneDeep(originalAdapter));
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
-  const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
 
   useEffect(() => {
@@ -109,7 +107,6 @@ const AdapterView: FC<Props> = ({ originalAdapter }) => {
           removeEntity={removeAdapter}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          setErrorNotifications={setErrorNotifications}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
@@ -117,7 +114,6 @@ const AdapterView: FC<Props> = ({ originalAdapter }) => {
           <EntityJsonEditor
             key={key}
             entity={selectedAdapter}
-            errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedAdapter}
             setIsChanged={setIsChanged}
           />

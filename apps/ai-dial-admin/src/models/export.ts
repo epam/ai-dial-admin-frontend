@@ -25,5 +25,5 @@ export interface ExportRequest {
 export interface ExportRequestComponent {
   name?: string;
   type: string;
-  dependencies: EntityType[];
+  dependencies?: EntityType[];
 }

@@ -7,14 +7,14 @@ const mockSetSelectedEntity = vi.fn();
 
 describe('JSONEditor', () => {
   it('renders JsonEditorBase when model is provided', () => {
-    render(<JSONEditor entity={entity} errorNotifications={[]} setSelectedEntity={mockSetSelectedEntity} />);
+    render(<JSONEditor entity={entity} setSelectedEntity={mockSetSelectedEntity} />);
     // Should render `Loading...` from JsonEditorBase
     expect(screen.getByText('Loading...')).toBeTruthy();
   });
 
   it('renders nothing if model is not provided', () => {
     // @ts-expect-error purposely omitting model
-    const { container } = render(<JSONEditor errorNotifications={[]} setSelectedEntity={mockSetSelectedEntity} />);
+    const { container } = render(<JSONEditor setSelectedEntity={mockSetSelectedEntity} />);
     expect(container.firstChild).toBeNull();
   });
 });
