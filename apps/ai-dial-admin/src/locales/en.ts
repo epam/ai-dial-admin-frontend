@@ -540,6 +540,9 @@ export default {
     ArchiveErrorTitle: 'Importing archive failed',
     Update: 'Update',
     Create: 'Create',
+    PathsIgnore: 'Ignore paths',
+    PathsPrompt: 'Prompt paths',
+    PathsFile: 'File paths',
   },
   Export: {
     Config: 'Config',

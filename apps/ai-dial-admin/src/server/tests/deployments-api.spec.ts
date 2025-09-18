@@ -19,6 +19,17 @@ describe('DeploymentsApi', () => {
     );
   });
 
+  it('calls getModelContainers with correct URL and token', async () => {
+    fetch.mockResponseOnce(['container2']);
+    await instance.getModelContainers(TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`${BASE_CONTAINERS_URL}?imageDefinitionType=NIM`),
+      expect.objectContaining({
+        method: 'GET',
+      }),
+    );
+  });
+
   it('calls getMcpContainers with correct URL and token', async () => {
     fetch.mockResponseOnce(['container2']);
     await instance.getMcpContainers(TOKEN_MOCK);

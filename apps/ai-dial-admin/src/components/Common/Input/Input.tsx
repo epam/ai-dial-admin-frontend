@@ -110,7 +110,6 @@ const Input: FC<InputProps> = ({
         type={type}
         autoComplete="off"
         id={inputId}
-        data-testid={inputId}
         placeholder={placeholder}
         value={value as string | number}
         disabled={disabled}

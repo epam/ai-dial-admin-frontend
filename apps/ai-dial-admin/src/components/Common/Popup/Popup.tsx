@@ -26,7 +26,6 @@ interface Props extends FormHTMLAttributes<HTMLFormElement> {
   children: ReactNode[];
   dividers?: boolean;
   onClose: () => void;
-  dataTestId?: string;
 }
 
 const PopupView: FC<Props> = ({
@@ -39,7 +38,6 @@ const PopupView: FC<Props> = ({
   overlayClassName,
   containerClassName,
   dividers = true,
-  dataTestId,
 }) => {
   const t = useI18n();
   const { refs, context } = useFloating({
@@ -76,7 +74,6 @@ const PopupView: FC<Props> = ({
               )}
               ref={refs.setFloating}
               {...getFloatingProps()}
-              data-testid={dataTestId}
             >
               {
                 <div className="flex flex-row justify-between py-4 px-6 items-center mb-2">

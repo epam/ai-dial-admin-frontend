@@ -1,6 +1,7 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 
 describe('Entity list view :: getEntityPath', () => {
   const data = {
@@ -10,6 +11,14 @@ describe('Entity list view :: getEntityPath', () => {
     path: 'path',
     activityId: 'id',
   };
+
+  test('Should return id field for ApplicationRunners', () => {
+    const res1 = getEntityPath(ApplicationRoute.Models, data);
+    expect(res1).toEqual('name');
+
+    const res2 = getEntityPath(ApplicationRoute.Models, { data, name: undefined });
+    expect(res2).toBe('');
+  });
 
   test('Should return id field for ApplicationRunners', () => {
     const result = getEntityPath(ApplicationRoute.ApplicationRunners, data);
@@ -39,5 +48,17 @@ describe('Entity list view :: getEntityPath', () => {
   test('Should return id field for activity audit', () => {
     const result = getEntityPath(ApplicationRoute.ActivityAudit, data);
     expect(result).toEqual('id');
+  });
+
+  test('Should return id field for InterceptorDeployments', () => {
+    const res1 = getEntityPath(
+      ApplicationRoute.InterceptorDeployments,
+      { data, id: 'id' },
+      void 0,
+      DEPLOYMENT_ENTITY.images,
+    );
+    expect(res1).toEqual('id?entityType=images');
+    const res2 = getEntityPath(ApplicationRoute.InterceptorDeployments, { data, id: 'id' }, void 0);
+    expect(res2).toEqual('id?entityType=');
   });
 });

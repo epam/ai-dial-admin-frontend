@@ -9,8 +9,10 @@ export const getFormDataForImport = (
   fileType: ImportFileType,
   resolutionStrategy: string,
   rules?: DialRule[],
+  flatImport?: boolean,
 ): FormData => {
-  const config: { path: string; conflictResolutionStrategy: string; rules?: DialRule[] } = {
+  const config: { path: string; conflictResolutionStrategy: string; rules?: DialRule[]; flatImport?: boolean } = {
+    flatImport,
     path,
     conflictResolutionStrategy:
       resolutionStrategy === ConflictResolutionPolicy.MANUAL ? ConflictResolutionPolicy.SKIP : resolutionStrategy,
