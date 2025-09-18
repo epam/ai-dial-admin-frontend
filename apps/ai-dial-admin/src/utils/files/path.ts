@@ -1,5 +1,6 @@
 import { DialFile, DialFileNodeType } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
+import { DialPrompt } from '@/src/models/dial/prompt';
 import { findFolderChildren, getFolderName } from './folder';
 
 export const isFolder = (type?: DialFileNodeType) => type === DialFileNodeType.FOLDER;
@@ -61,6 +62,20 @@ export const getListOfPathsToMove = (
       ?.filter((p) => p.name === (withExtension ? `${file.name}${file.extension}` : file.name))
       .map((p) => p.path) || []
   );
+};
+
+export const getListOfPathsToBulkDelete = (
+  record?: Record<string, DialFile[]> | Record<string, DialPrompt[]>,
+): { path: string }[] => {
+  const result: { path: string }[] = [];
+
+  for (const folder in record) {
+    record[folder].forEach((item) => {
+      result.push({ path: item.path });
+    });
+  }
+
+  return result;
 };
 
 export const getPathSegments = (fullPath: string): string[] => {

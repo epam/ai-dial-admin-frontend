@@ -206,6 +206,7 @@ export enum ButtonsI18nKey {
   OpenAdapter = 'Buttons.OpenAdapter',
   OpenAppRunner = 'Buttons.OpenAppRunner',
   None = 'Buttons.None',
+  BulkActions = 'Buttons.BulkActions',
 }
 
 export enum CreateI18nKey {

@@ -16,15 +16,16 @@ import { ImportFileType } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { deleteModalTitleMap } from '@/src/components/EntityListView/constants';
-import ExportModal from '@/src/components/EntityListView/Export/ExportModal';
 import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
 import DeleteInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Delete';
+import DeleteFolder from '../Common/FolderList/Modals/DeleteFolder';
 
 export enum ModalType {
   create = 'create',
   export = 'export',
   import = 'import',
   delete = 'delete',
+  deleteBulk = 'deleteBulk',
   duplicate = 'duplicate',
   move = 'move',
 }
@@ -44,9 +45,9 @@ interface Props {
     path: string,
     ignorePaths?: boolean,
   ) => void;
-  handleExport?: (paths: string[]) => void;
   handleMove?: (path: string) => void;
   handleDelete?: () => void;
+  handleDeleteBulk?: () => void;
   handleClose: () => void;
   context?: () => PromptFolderContextType | FileFolderContextType;
 }
@@ -60,34 +61,17 @@ const EntityListModals: FC<Props> = ({
   createModal,
   duplicateModal,
   handleImport,
-  handleExport,
   handleMove,
   handleDelete,
+  handleDeleteBulk,
   handleClose,
   context,
 }) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
-  const folderContext = context?.();
 
   return (
     <>
       {modalState === PopUpState.Opened && modalType === ModalType.create && createPortal(createModal, document.body)}
-      {modalState === PopUpState.Opened &&
-        modalType === ModalType.export &&
-        createPortal(
-          <ExportModal
-            route={route}
-            context={context}
-            modalState={modalState}
-            onClose={() => {
-              handleClose();
-              folderContext?.setExportFoldersData({});
-            }}
-            onApply={handleExport}
-          />,
-          document.body,
-        )}
-
       {modalState === PopUpState.Opened &&
         modalType === ModalType.import &&
         createPortal(
@@ -145,6 +129,18 @@ const EntityListModals: FC<Props> = ({
             onApply={handleMove as () => void}
             initialPath={initialPath}
             context={context}
+          />,
+          document.body,
+        )}
+      {modalState === PopUpState.Opened &&
+        modalType === ModalType.deleteBulk &&
+        createPortal(
+          <DeleteFolder
+            modalState={modalState}
+            onClose={handleClose}
+            onApply={handleDeleteBulk}
+            context={context}
+            isBulkDelete={true}
           />,
           document.body,
         )}

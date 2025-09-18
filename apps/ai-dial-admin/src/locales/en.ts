@@ -275,6 +275,7 @@ export default {
     OpenAppRunner: 'Open Application Runner',
     OpenAdapter: 'Open Adapter',
     None: 'None',
+    BulkActions: 'Bulk actions',
   },
   Compare: {
     CompareChanges: 'Compare changes',

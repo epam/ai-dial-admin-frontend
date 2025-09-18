@@ -4,6 +4,7 @@ import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import classNames from 'classnames';
 
 import FolderList from '@/src/components/Common/FolderList/FolderList';
+import ExportGrid from '@/src/components/ExportAssets/ExportGrid';
 import GridWithColumnsPanel from '@/src/components/Grid/GridWithColumnsPanel/GridWithColumnsPanel';
 import { FileFolderContextType } from '@/src/context/FileFolderContext';
 import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
@@ -23,6 +24,7 @@ interface Props<T> {
   toggleColumnsPanel?: () => void;
   context?: () => PromptFolderContextType | FileFolderContextType;
   onGridReady?: (gridApi: GridApi) => void;
+  isBulkView?: boolean;
 }
 
 const ListView = <T extends object>({
@@ -39,6 +41,7 @@ const ListView = <T extends object>({
   toggleColumnsPanel,
   context,
   onGridReady,
+  isBulkView,
 }: Props<T>) => {
   return (
     <div className={classNames('flex flex-col bg-layer-2 rounded flex-1 min-h-0', title ? 'p-4' : '')}>
@@ -52,18 +55,22 @@ const ListView = <T extends object>({
             <FolderList context={context} view={view} />
           </div>
         )}
-        <GridWithColumnsPanel
-          columnDefs={columnDefs}
-          data={data}
-          additionalGridOptions={{
-            ...additionalGridOptions,
-          }}
-          emptyDataTitle={emptyDataTitle}
-          showColumnsPanel={showColumnsPanel}
-          toggleColumnsPanel={toggleColumnsPanel}
-          storageKey={storageKey || view}
-          onGridReady={onGridReady}
-        />
+        {isBulkView ? (
+          <ExportGrid context={context} route={view} />
+        ) : (
+          <GridWithColumnsPanel
+            columnDefs={columnDefs}
+            data={data}
+            additionalGridOptions={{
+              ...additionalGridOptions,
+            }}
+            emptyDataTitle={emptyDataTitle}
+            showColumnsPanel={showColumnsPanel}
+            toggleColumnsPanel={toggleColumnsPanel}
+            storageKey={storageKey || view}
+            onGridReady={onGridReady}
+          />
+        )}
       </div>
     </div>
   );

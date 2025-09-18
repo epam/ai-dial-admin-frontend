@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { createPrompt, movePrompts, removePrompt } from '@/src/app/[lang]/prompts/actions';
+import { bulkDeletePrompts, createPrompt, movePrompts, removePrompt } from '@/src/app/[lang]/prompts/actions';
 import { PROMPTS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import Page403 from '@/src/components/Page403/Page403';
@@ -31,6 +31,7 @@ const PromptsList: FC = () => {
       createEntity={createPrompt}
       removeEntity={removePrompt}
       moveFiles={movePrompts}
+      bulkDelete={bulkDeletePrompts}
       context={usePromptFolder}
       showFolders={true}
       showExport={true}
