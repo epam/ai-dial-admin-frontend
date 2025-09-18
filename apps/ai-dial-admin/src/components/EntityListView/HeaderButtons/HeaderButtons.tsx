@@ -111,8 +111,9 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
       file: File | File[] | ParsedPrompts,
       conflictResolutionStrategy: string,
       path: string,
+      ignorePaths?: boolean,
     ) => {
-      const body = getFormDataForImport(path, file, fileType, conflictResolutionStrategy);
+      const body = getFormDataForImport(path, file, fileType, conflictResolutionStrategy, void 0, ignorePaths);
       const folderName = getFolderName(path) || '';
       const prepareNotificationId = showNotification(
         getPrepareNotification(
