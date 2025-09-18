@@ -37,7 +37,6 @@ const RadioButton: FC<Props> = ({
         <input
           type="radio"
           id={inputId}
-          data-testid={inputId}
           checked={checked}
           disabled={disabled}
           className={classNames(cssClass, title && 'mr-2', 'cursor-pointer')}
