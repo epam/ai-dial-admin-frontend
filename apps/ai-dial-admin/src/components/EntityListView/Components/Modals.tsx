@@ -6,6 +6,10 @@ import DeleteAdapter from '@/src/components/Adapter/Modals/DeleteAdapter';
 import DeleteAppRunner from '@/src/components/ApplicationRunners/Modals/DeleteAppRunner';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import FilePathModal from '@/src/components/Common/FilePath/FilePathModal';
+import DeleteFolder from '@/src/components/Common/FolderList/Modals/DeleteFolder';
+import { deleteModalTitleMap } from '@/src/components/EntityListView/constants';
+import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
+import DeleteInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Delete';
 import { BasicI18nKey, ButtonsI18nKey, DeleteI18nKey } from '@/src/constants/i18n';
 import { FileFolderContextType } from '@/src/context/FileFolderContext';
 import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
@@ -15,10 +19,6 @@ import { ParsedPrompts } from '@/src/models/prompts';
 import { ImportFileType } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
-import { deleteModalTitleMap } from '@/src/components/EntityListView/constants';
-import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
-import DeleteInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Delete';
-import DeleteFolder from '../Common/FolderList/Modals/DeleteFolder';
 
 export enum ModalType {
   create = 'create',
@@ -52,7 +52,7 @@ interface Props {
   context?: () => PromptFolderContextType | FileFolderContextType;
 }
 
-const EntityListModals: FC<Props> = ({
+const Modals: FC<Props> = ({
   entity,
   route,
   initialPath,
@@ -148,4 +148,4 @@ const EntityListModals: FC<Props> = ({
   );
 };
 
-export default EntityListModals;
+export default Modals;

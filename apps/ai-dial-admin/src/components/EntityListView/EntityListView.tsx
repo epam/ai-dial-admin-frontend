@@ -17,8 +17,8 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getEntityPath, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { emptyDataTitleMap, listViewTitleMap } from './constants';
-import EntityListActions from './EntityListActions';
-import { ModalType } from './EntityListModals';
+import Actions from './Components/Actions';
+import { ModalType } from './Components/Modals';
 import EntityListHeaderButtons from './HeaderButtons/HeaderButtons';
 
 interface Props<T> {
@@ -169,7 +169,7 @@ const BaseEntityList = <T extends object>({
           gridApi={gridApi}
         />
       </ListView>
-      <EntityListActions
+      <Actions
         names={names}
         keys={keys}
         route={route}

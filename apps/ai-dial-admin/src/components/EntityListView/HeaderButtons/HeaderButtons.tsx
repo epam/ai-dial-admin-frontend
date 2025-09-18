@@ -12,7 +12,7 @@ import CreateAppRunner from '@/src/components/ApplicationRunners/Modals/CreateAp
 import Button from '@/src/components/Common/Button/Button';
 import { createModalTitleMap } from '@/src/components/EntityListView/constants';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
-import EntityListModals, { ModalType } from '@/src/components/EntityListView/EntityListModals';
+import Modals, { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { getImportResults } from '@/src/components/EntityListView/Import/import';
 import CreateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Create';
 import CreateKey from '@/src/components/KeysList/Popup/CreateKey';
@@ -211,7 +211,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
         </>
       )}
 
-      <EntityListModals
+      <Modals
         route={route}
         modalState={modalState}
         modalType={modalType}

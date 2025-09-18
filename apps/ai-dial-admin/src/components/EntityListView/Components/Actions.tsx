@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Dispatch, SetStateAction, useCallback, useEffect, useRef } from 'react';
 
 import { getPrompt } from '@/src/app/[lang]/prompts/actions';
+import { getDuplicateModal } from '@/src/components/EntityListView/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { PromptsI18nKey } from '@/src/constants/i18n';
 import { FileFolderContextType } from '@/src/context/FileFolderContext';
@@ -21,9 +22,8 @@ import { getListOfPathsToBulkDelete, getListOfPathsToMove } from '@/src/utils/fi
 import { isAssetView } from '@/src/utils/is-asset-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import EntityListBulkButtons from './EntityListBulkButtons';
-import EntityListModals, { ModalType } from './EntityListModals';
-import { getDuplicateModal } from './utils';
+import BulkButtons from './BulkButtons';
+import Modals, { ModalType } from './Modals';
 
 interface Props<T> {
   names?: string[];
@@ -45,7 +45,7 @@ interface Props<T> {
   setIsBulkView: Dispatch<SetStateAction<boolean>>;
 }
 
-const EntityListActions = <T extends object>({
+const Actions = <T extends object>({
   names,
   keys,
   route,
@@ -159,7 +159,7 @@ const EntityListActions = <T extends object>({
   return (
     <>
       {modalType && (isBulkView ? true : currentEntity) ? (
-        <EntityListModals
+        <Modals
           entity={currentEntity}
           route={route}
           initialPath={(currentEntity as DialPrompt)?.folderId}
@@ -183,7 +183,7 @@ const EntityListActions = <T extends object>({
         />
       ) : null}
       {isBulkView && (
-        <EntityListBulkButtons
+        <BulkButtons
           route={route}
           context={context}
           setModalState={setModalState}
@@ -195,4 +195,4 @@ const EntityListActions = <T extends object>({
   );
 };
 
-export default EntityListActions;
+export default Actions;

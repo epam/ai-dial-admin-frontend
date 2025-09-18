@@ -1,4 +1,4 @@
-import { DialFile } from '@/src/models/dial/file';
+import { DialFile, DialFileNodeType } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 
 export const generatePromptRowDataForDelete = (prompts: DialPrompt[]): DialPrompt[] => {
@@ -34,7 +34,7 @@ export const generateFolderListFromBulkPaths = (paths: string[]) => {
         const newNode = {
           name: part,
           path: parts.slice(0, index + 1).join('/') + '/',
-          nodeType: 'folder',
+          nodeType: DialFileNodeType.FOLDER,
           children: [],
         } as unknown as DialFile;
 

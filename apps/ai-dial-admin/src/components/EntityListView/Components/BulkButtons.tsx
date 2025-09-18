@@ -18,7 +18,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { downloadFile } from '@/src/utils/download';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { ModalType } from './EntityListModals';
+import { ModalType } from './Modals';
 
 interface Props {
   route: ApplicationRoute;
@@ -28,7 +28,7 @@ interface Props {
   setIsBulkView: Dispatch<SetStateAction<boolean>>;
 }
 
-const EntityListBulkButtons = ({ route, context, setModalState, setModalType, setIsBulkView }: Props) => {
+const BulkButtons = ({ route, context, setModalState, setModalType, setIsBulkView }: Props) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const folderContext = context?.();
@@ -96,4 +96,4 @@ const EntityListBulkButtons = ({ route, context, setModalState, setModalType, se
   );
 };
 
-export default EntityListBulkButtons;
+export default BulkButtons;
