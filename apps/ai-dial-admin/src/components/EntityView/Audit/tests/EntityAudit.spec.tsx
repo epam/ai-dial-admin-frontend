@@ -3,6 +3,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import { ApplicationRoute } from '@/src/types/routes';
 import EntityAudit from '../EntityAudit';
+import { TabsI18nKey } from '@/src/constants/i18n';
 
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: vi.fn(() => {
@@ -16,6 +17,10 @@ describe('EntityAudit', () => {
 
     render(<EntityAudit entity={entity} view={ApplicationRoute.Models} />);
 
+    expect(screen.getByRole('tab', { name: TabsI18nKey.Activities })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: TabsI18nKey.Dashboard })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: TabsI18nKey.Traces })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: TabsI18nKey.Conversations })).toBeInTheDocument();
     expect(screen.getByRole('dashboards')).toBeInTheDocument();
   });
 
@@ -24,6 +29,7 @@ describe('EntityAudit', () => {
 
     render(<EntityAudit entity={entity} view={ApplicationRoute.Roles} />);
 
+    expect(screen.getByRole('tab', { name: TabsI18nKey.Activities })).toBeInTheDocument();
     expect(screen.getByRole('activities')).toBeInTheDocument();
   });
 });

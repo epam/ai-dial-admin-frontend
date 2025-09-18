@@ -1,16 +1,16 @@
-import { render, screen } from '@testing-library/react';
+import { getByRole, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 
 import { ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
+import UsageLog from './UsageLog';
+import { EntityViewTab } from '@/src/components/EntityView/View/utils';
 
 vi.mock('@/src/app/[lang]/dashboard/actions', () => ({
   getDashboardData: vi.fn(() => Promise.resolve({ data: null })),
 }));
-
-import UsageLog from './UsageLog';
 
 describe('UsageLog', () => {
   const user = userEvent.setup();
@@ -24,6 +24,15 @@ describe('UsageLog', () => {
     await user.click(refreshButton);
 
     expect(vi.mocked(getDashboardData)).toHaveBeenCalled();
+  });
+
+  test('renders UsageLog with perdefined entity', async () => {
+    render(<UsageLog route={ApplicationRoute.Models} entityView={EntityViewTab.Traces} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: TelemetryI18nKey.TracesTitle })).toBeInTheDocument();
+      expect(screen.queryByRole('tab')).toBeFalsy();
+    });
   });
 
   test('renders TimeFilter component', async () => {

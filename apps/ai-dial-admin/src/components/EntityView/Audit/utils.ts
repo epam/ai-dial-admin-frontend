@@ -1,4 +1,4 @@
-import { activitiesTabs, dashboardTabs } from '@/src/components/EntityView/View/utils';
+import { activitiesTabs, conversationsTabs, dashboardTabs, tracesTabs } from '@/src/components/EntityView/View/utils';
 import { TabModel } from '@/src/models/tab';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -10,7 +10,7 @@ export const getAuditTabs = (
   const tabs: TabModel[] = [];
 
   if (featureFlags.dashboardEnabled && (view === ApplicationRoute.Models || view === ApplicationRoute.Applications)) {
-    tabs.push(dashboardTabs(t));
+    tabs.push(dashboardTabs(t), tracesTabs(t), conversationsTabs(t));
   }
 
   tabs.push(activitiesTabs(t));

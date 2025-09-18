@@ -20,30 +20,34 @@ import Button from '@/src/components/Common/Button/Button';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import List from '@/src/components/UsageLog/List/List';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
+import { BaseEntity } from '@/src/models/dial/base-entity';
+import classNames from 'classnames';
 
 interface Props {
   route: ApplicationRoute;
+  entity?: BaseEntity;
+  entityView?: EntityViewTab;
 }
 
-const UsageLog: FC<Props> = ({ route }) => {
+const UsageLog: FC<Props> = ({ route, entity, entityView }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const tabs = [tracesTabs(t), conversationsTabs(t)];
 
-  const [activeTab, setActiveTab] = useState(EntityViewTab.Traces);
+  const [activeTab, setActiveTab] = useState(entityView || EntityViewTab.Traces);
   const [timePeriod, setTimePeriod] = useState(DEFAULT_TIME_PERIOD);
   const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
 
   const getData = useCallback(
     (query: TelemetryQuery) => {
       if (typeof query.query.from === 'string') {
-        query.query.where = getFormattedFilters(timeRange, [], null);
+        query.query.where = getFormattedFilters(timeRange, [], entity?.name || null);
       } else {
-        query.query.from.where = getFormattedFilters(timeRange, [], null);
+        query.query.from.where = getFormattedFilters(timeRange, [], entity?.name || null);
       }
 
       return getDashboardData(query);
     },
-    [timeRange],
+    [entity?.name, timeRange],
   );
 
   const onTimePeriodChange = useCallback((period: string) => {
@@ -71,8 +75,8 @@ const UsageLog: FC<Props> = ({ route }) => {
   return (
     <div className="flex flex-col h-full w-full bg-layer-2 rounded p-4">
       <div className="flex flex-row min-h-[34px] justify-between">
-        <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
-        <div className="flex items-center gap-4">
+        {!entityView && <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />}
+        <div className={classNames('flex items-center gap-4', entityView && 'justify-between w-full')}>
           <TimeFilter
             timePeriod={timePeriod}
             onTimePeriodChange={onTimePeriodChange}
