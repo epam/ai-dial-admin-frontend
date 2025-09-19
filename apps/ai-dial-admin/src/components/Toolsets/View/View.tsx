@@ -139,12 +139,12 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
   }, [selectedFormat, selectedToolset, router, showNotification]);
 
   const onTryToSave = useCallback(() => {
-    if (isDisableRole(selectedToolset as EntityRoleLimits)) {
+    if (selectedFormat !== ExportFormat.CORE && isDisableRole(selectedToolset as EntityRoleLimits)) {
       setModalState(PopUpState.Opened);
     } else {
       onSave();
     }
-  }, [onSave, selectedToolset]);
+  }, [onSave, selectedFormat, selectedToolset]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">

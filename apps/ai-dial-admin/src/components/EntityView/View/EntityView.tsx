@@ -201,13 +201,14 @@ const EntityView: FC<Props> = ({
   const onTryToSave = useCallback(() => {
     if (
       (view === ApplicationRoute.Models || view === ApplicationRoute.Applications) &&
+      selectedFormat !== ExportFormat.CORE &&
       isDisableRole(selectedEntity as EntityRoleLimits)
     ) {
       handleModalOpen(ModalType.emptyRoles);
     } else {
       onSave();
     }
-  }, [handleModalOpen, onSave, selectedEntity, view]);
+  }, [handleModalOpen, selectedFormat, onSave, selectedEntity, view]);
 
   const onChangeEntity = useCallback(
     (entity: BaseEntity, skipRefresh?: boolean) => {
