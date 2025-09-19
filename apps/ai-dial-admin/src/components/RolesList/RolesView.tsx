@@ -116,6 +116,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
     if (jsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
+      setSelectedFormat(ExportFormat.ADMIN);
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
