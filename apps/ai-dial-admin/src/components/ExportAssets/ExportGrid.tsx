@@ -102,7 +102,11 @@ const ExportGrid: FC<Props> = ({ route, context }) => {
       rowData,
     });
     event.api.forEachNode((node) => {
-      if (folderContext?.bulkSelectedData[filePath]?.some((file) => file.path === node.data.path)) {
+      if (
+        folderContext?.bulkSelectedData[filePath]?.some(
+          (file) => file.folderId + file.name === node.data.folderId + node.data.name,
+        )
+      ) {
         node.setSelected(true);
       }
     });
@@ -115,7 +119,11 @@ const ExportGrid: FC<Props> = ({ route, context }) => {
         columnDefs,
       });
       gridApi?.forEachNode((node) => {
-        if (folderContext?.bulkSelectedData[filePath]?.some((file) => file.path === node.data.path)) {
+        if (
+          folderContext?.bulkSelectedData[filePath]?.some(
+            (file) => file.folderId + file.name === node.data.folderId + node.data.name,
+          )
+        ) {
           node.setSelected(true);
         }
       });
