@@ -1,38 +1,24 @@
 'use client';
 
-import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
-import { getPrompt } from '@/src/app/[lang]/prompts/actions';
-import DuplicateAdapter from '@/src/components/Adapter/Modals/DuplicateAdapter';
-import DuplicateScheme from '@/src/components/ApplicationRunners/Modals/DuplicateAppRunner';
-import DuplicatePopup from '@/src/components/DuplicatePopup/DuplicatePopup';
-import DuplicateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Duplicate';
-import DuplicateKey from '@/src/components/KeysList/Popup/DuplicateKey';
+import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
+
 import ListView from '@/src/components/ListView/ListView';
-import DuplicatePrompt from '@/src/components/PromptView/Modals/DuplicatePrompt';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
-import { ROOT_FOLDER } from '@/src/constants/file';
 import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { FileFolderContextType } from '@/src/context/FileFolderContext';
-import { useNotification } from '@/src/context/NotificationContext';
 import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { BaseEntity } from '@/src/models/dial/base-entity';
-import { DialFile } from '@/src/models/dial/file';
-import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
-import { prepareEntityForDuplicate } from '@/src/utils/entities/prepare-entity-for-duplicate';
-import { getListOfPathsToMove } from '@/src/utils/files/path';
-import { isAssetView } from '@/src/utils/is-asset-view';
-import { getErrorNotification } from '@/src/utils/notification';
 import { getEntityPath, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { emptyDataTitleMap, listViewTitleMap } from './constants';
-import EntityListModals, { ModalType } from './EntityListModals';
+import Actions from './Components/Actions';
+import { ModalType } from './Components/Modals';
 import EntityListHeaderButtons from './HeaderButtons/HeaderButtons';
 
 interface Props<T> {
@@ -46,6 +32,7 @@ interface Props<T> {
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
   removeEntity: (entity?: string) => Promise<ServerActionResponse>;
   moveFiles?: (paths: string[], newPath: string) => Promise<ServerActionResponse[]>;
+  bulkDelete?: (paths: { path: string }[]) => Promise<ServerActionResponse>;
   showColumnsButton?: boolean;
   showFolders?: boolean;
   showExport?: boolean;
@@ -63,6 +50,7 @@ const BaseEntityList = <T extends object>({
   createEntity,
   removeEntity,
   moveFiles,
+  bulkDelete,
   showColumnsButton,
   showFolders,
   showExport,
@@ -70,8 +58,6 @@ const BaseEntityList = <T extends object>({
 }: Props<T>) => {
   const t = useI18n();
   const router = useRouter();
-  const { showNotification } = useNotification();
-  const folderContext = context?.();
   const gridOptions: GridOptions = {
     onCellClicked: (e) => {
       if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
@@ -89,22 +75,10 @@ const BaseEntityList = <T extends object>({
   const [showColumnsPanel, setShowColumnsPanel] = useState(false);
 
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
-
-  const entityRef = useRef(currentEntity);
-  const filesRef = useRef(folderContext?.fetchedFoldersData);
-
-  useEffect(() => {
-    entityRef.current = currentEntity;
-    filesRef.current = folderContext?.fetchedFoldersData;
-  }, [currentEntity, folderContext?.fetchedFoldersData]);
+  const [isBulkView, setIsBulkView] = useState(false);
 
   const onGridReady = useCallback((api: GridApi) => {
     setGridApi(api);
-  }, []);
-
-  const handleModalClose = useCallback(() => {
-    setModalState(PopUpState.Closed);
-    setModalType(void 0);
   }, []);
 
   const handleModalOpen = useCallback((modalType: ModalType) => {
@@ -136,67 +110,6 @@ const BaseEntityList = <T extends object>({
     [handleModalOpen],
   );
 
-  const onConfirm = useCallback(() => {
-    removeEntity(getEntityPath(route, currentEntity, true)).then((res) => {
-      if (res.success) {
-        handleModalClose();
-        setCurrentEntity(void 0);
-        if (isAssetView(route)) {
-          folderContext?.fetchFiles?.(folderContext?.filePath);
-        }
-        router.refresh();
-      } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
-      }
-    });
-  }, [currentEntity, folderContext, handleModalClose, removeEntity, route, router, showNotification]);
-
-  const onDuplicate = useCallback(
-    (clonedEntity: T) => {
-      const duplicate = async () => {
-        let prevPromptData = null;
-
-        if (route === ApplicationRoute.Prompts) {
-          const { folderId, name, version } = entityRef.current as DialPrompt;
-          prevPromptData = await getPrompt(folderId, name as string, version);
-        }
-        const preparedEntity = prepareEntityForDuplicate(route, clonedEntity, prevPromptData) as T;
-        const res = await createEntity?.(preparedEntity);
-        if (res?.success) {
-          handleModalClose();
-          setCurrentEntity(void 0);
-          if (route === ApplicationRoute.Prompts) {
-            folderContext?.fetchFiles?.(folderContext?.filePath);
-          }
-          router.refresh();
-        } else {
-          showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage));
-        }
-      };
-      duplicate();
-    },
-    [createEntity, route, handleModalClose, router, folderContext, showNotification],
-  );
-
-  const onMove = useCallback(
-    (newPath: string) => {
-      if (!entityRef.current) return;
-      const pathsToMove = getListOfPathsToMove(
-        entityRef.current as DialFile,
-        folderContext?.fetchedFoldersData as Record<string, DialFile[]>,
-        null,
-        route === ApplicationRoute.Files,
-      );
-
-      moveFiles?.(pathsToMove, newPath).then((res) => {
-        if (res.every((r) => r.success)) {
-          folderContext?.fetchFiles?.(`${ROOT_FOLDER}/`, true);
-        }
-      });
-    },
-    [route, folderContext, moveFiles],
-  );
-
   const openInNewTab = useCallback(
     (entity: T) => {
       onOpenInNewTab(route, entity);
@@ -224,78 +137,6 @@ const BaseEntityList = <T extends object>({
 
   const toggleColumnsPanel = () => setShowColumnsPanel(!showColumnsPanel);
 
-  const getDuplicateModal = () => {
-    if (!currentEntity) return null;
-
-    if (route === ApplicationRoute.ApplicationRunners) {
-      return (
-        <DuplicateScheme
-          entity={currentEntity}
-          onDuplicate={onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>}
-          modalState={modalState}
-          onClose={handleModalClose}
-        />
-      );
-    }
-
-    if (route === ApplicationRoute.InterceptorTemplates) {
-      return (
-        <DuplicateInterceptorTemplate
-          template={currentEntity}
-          onDuplicate={onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>}
-          modalState={modalState}
-          onClose={handleModalClose}
-          names={names}
-        />
-      );
-    }
-    if (route === ApplicationRoute.Adapters) {
-      return (
-        <DuplicateAdapter
-          adapter={currentEntity}
-          onDuplicate={onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>}
-          modalState={modalState}
-          onClose={handleModalClose}
-        />
-      );
-    }
-
-    if (route === ApplicationRoute.Keys) {
-      return (
-        <DuplicateKey
-          entity={currentEntity}
-          onDuplicate={onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>}
-          modalState={modalState}
-          names={names || []}
-          keys={keys || []}
-          onClose={handleModalClose}
-        />
-      );
-    }
-
-    if (route === ApplicationRoute.Prompts) {
-      return (
-        <DuplicatePrompt
-          entity={currentEntity as DialPrompt}
-          versionsMap={versionsMap as Record<string, string[]>}
-          onDuplicate={onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>}
-          modalState={modalState}
-          onClose={handleModalClose}
-        />
-      );
-    }
-    return (
-      <DuplicatePopup
-        view={route}
-        names={names || []}
-        entity={currentEntity}
-        onDuplicate={onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>}
-        modalState={modalState}
-        onClose={handleModalClose}
-      />
-    );
-  };
-
   return (
     <>
       <ListView
@@ -310,6 +151,7 @@ const BaseEntityList = <T extends object>({
         view={route}
         context={context}
         onGridReady={onGridReady}
+        isBulkView={isBulkView}
       >
         <EntityListHeaderButtons
           names={names}
@@ -322,23 +164,30 @@ const BaseEntityList = <T extends object>({
           toggleColumnsPanel={toggleColumnsPanel}
           createEntity={createEntity}
           context={context}
+          setIsBulkView={setIsBulkView}
+          isBulkView={isBulkView}
           gridApi={gridApi}
         />
       </ListView>
-      {modalType && currentEntity ? (
-        <EntityListModals
-          entity={currentEntity}
-          route={route}
-          initialPath={(currentEntity as DialPrompt)?.folderId}
-          modalState={modalState}
-          modalType={modalType}
-          duplicateModal={getDuplicateModal()}
-          handleClose={handleModalClose}
-          handleDelete={onConfirm}
-          handleMove={onMove}
-          context={context}
-        />
-      ) : null}
+      <Actions
+        names={names}
+        keys={keys}
+        route={route}
+        versionsMap={versionsMap}
+        createEntity={createEntity}
+        removeEntity={removeEntity}
+        moveFiles={moveFiles}
+        bulkDelete={bulkDelete}
+        context={context}
+        modalState={modalState}
+        setModalState={setModalState}
+        modalType={modalType}
+        setModalType={setModalType}
+        currentEntity={currentEntity}
+        setCurrentEntity={setCurrentEntity}
+        isBulkView={isBulkView}
+        setIsBulkView={setIsBulkView}
+      />
     </>
   );
 };

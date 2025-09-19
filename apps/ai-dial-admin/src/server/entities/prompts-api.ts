@@ -14,6 +14,7 @@ export const PROMPT_LIST_URL = `${PROMPTS_URL}/list`;
 export const PROMPT_GET_URL = `${PROMPTS_URL}/get`;
 export const PROMPT_CREATE_URL = `${PROMPTS_URL}/create`;
 export const PROMPT_DELETE_URL = `${PROMPTS_URL}/delete`;
+export const PROMPT_DELETE_BULK_URL = `${PROMPT_DELETE_URL}/bulk`;
 export const PROMPT_VERSIONS_URL = `${PROMPTS_URL}/versions`;
 export const PROMPT_MOVE_URL = `${PROMPTS_URL}/move`;
 export const PROMPT_EXPORT_URL = `${PROMPTS_URL}/export`;
@@ -89,5 +90,9 @@ export class PromptsApi extends BaseApi {
       body,
       token,
     );
+  }
+
+  bulkDeletePrompts(token: JWT | null, paths: { path: string }[]): Promise<ServerActionResponse> {
+    return this.postAction(PROMPT_DELETE_BULK_URL, { paths }, token);
   }
 }

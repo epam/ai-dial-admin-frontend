@@ -209,6 +209,7 @@ export enum ButtonsI18nKey {
   OpenAdapter = 'Buttons.OpenAdapter',
   OpenAppRunner = 'Buttons.OpenAppRunner',
   None = 'Buttons.None',
+  BulkActions = 'Buttons.BulkActions',
 }
 
 export enum CreateI18nKey {
@@ -455,6 +456,8 @@ export enum PromptsI18nKey {
   NewVersionCreate = 'Prompts.NewVersionCreate',
   NewVersionSave = 'Prompts.NewVersionSave',
   NewVersionSaveDescription = 'Prompts.NewVersionSaveDescription',
+  DeleteSuccessTitle = 'Prompts.DeleteSuccessTitle',
+  DeleteSuccessDescription = 'Prompts.DeleteSuccessDescription',
 }
 
 export enum ImportI18nKey {

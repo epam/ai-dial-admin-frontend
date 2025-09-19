@@ -1,3 +1,4 @@
+import { DialFile, DialFileNodeType } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 
 export const generatePromptRowDataForDelete = (prompts: DialPrompt[]): DialPrompt[] => {
@@ -17,4 +18,34 @@ export const generatePromptRowDataForDelete = (prompts: DialPrompt[]): DialPromp
   }, new Map<string, DialPrompt>());
 
   return promptMap ? Array.from(promptMap.values()) : [];
+};
+
+export const generateFolderListFromBulkPaths = (paths: string[]) => {
+  const root: DialFile[] = [];
+
+  paths.forEach((path) => {
+    const parts = path.split('/').filter(Boolean);
+    let currentNode = root;
+
+    parts.forEach((part, index) => {
+      let existingNode = currentNode.find((node) => node.name === part);
+
+      if (!existingNode) {
+        const newNode = {
+          name: part,
+          path: parts.slice(0, index + 1).join('/') + '/',
+          nodeType: DialFileNodeType.FOLDER,
+          children: [],
+        } as unknown as DialFile;
+
+        currentNode.push(newNode);
+        existingNode = newNode;
+      }
+      if (existingNode.children) {
+        currentNode = existingNode.children;
+      }
+    });
+  });
+
+  return root;
 };

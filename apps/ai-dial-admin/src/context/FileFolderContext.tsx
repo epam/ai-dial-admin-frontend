@@ -13,8 +13,8 @@ export interface FileFolderContextType {
   toggleFolder: (folder: DialFile) => void;
   data: DialFile[] | null;
   fetchedFoldersData: Record<string, DialFile[]>;
-  exportFoldersData: Record<string, DialFile[]>;
-  setExportFoldersData: Dispatch<SetStateAction<Record<string, DialFile[]>>>;
+  bulkSelectedData: Record<string, DialFile[]>;
+  setBulkSelectedData: Dispatch<SetStateAction<Record<string, DialFile[]>>>;
 }
 
 const FileFolderContext = createContext<FileFolderContextType | undefined>(undefined);
@@ -26,7 +26,7 @@ export const FileFolderProvider = ({ children }: { children: ReactNode }) => {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
   const [fetchedFoldersData, setFetchedFoldersData] = useState<Record<string, DialFile[]>>({});
-  const [exportFoldersData, setExportFoldersData] = useState<Record<string, DialFile[]>>({});
+  const [bulkSelectedData, setBulkSelectedData] = useState<Record<string, DialFile[]>>({});
   const [data, setData] = useState<DialFile[] | null>([]);
 
   const fetchFiles = (path: string, refreshData?: boolean) => {
@@ -78,8 +78,8 @@ export const FileFolderProvider = ({ children }: { children: ReactNode }) => {
     toggleFolder,
     data,
     fetchedFoldersData,
-    exportFoldersData,
-    setExportFoldersData,
+    bulkSelectedData,
+    setBulkSelectedData,
   };
   return <FileFolderContext.Provider value={value}>{children}</FileFolderContext.Provider>;
 };

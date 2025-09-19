@@ -14,8 +14,8 @@ export interface PromptFolderContextType {
   toggleFolder: (folder: DialFile) => void;
   data: DialPrompt[] | null;
   fetchedFoldersData: Record<string, DialPrompt[]>;
-  exportFoldersData: Record<string, DialPrompt[]>;
-  setExportFoldersData: Dispatch<SetStateAction<Record<string, DialPrompt[]>>>;
+  bulkSelectedData: Record<string, DialPrompt[]>;
+  setBulkSelectedData: Dispatch<SetStateAction<Record<string, DialPrompt[]>>>;
 }
 
 const PromptFolderContext = createContext<PromptFolderContextType | undefined>(undefined);
@@ -27,7 +27,7 @@ export const PromptFolderProvider = ({ children }: { children: ReactNode }) => {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
   const [fetchedFoldersData, setFetchedFoldersData] = useState<Record<string, DialPrompt[]>>({});
-  const [exportFoldersData, setExportFoldersData] = useState<Record<string, DialPrompt[]>>({});
+  const [bulkSelectedData, setBulkSelectedData] = useState<Record<string, DialPrompt[]>>({});
   const [data, setData] = useState<DialPrompt[] | null>([]);
 
   const fetchFiles = (path: string, refreshData?: boolean, resetFolder?: boolean) => {
@@ -85,8 +85,8 @@ export const PromptFolderProvider = ({ children }: { children: ReactNode }) => {
     toggleFolder,
     data,
     fetchedFoldersData,
-    exportFoldersData,
-    setExportFoldersData,
+    bulkSelectedData,
+    setBulkSelectedData,
   };
   return <PromptFolderContext.Provider value={value}>{children}</PromptFolderContext.Provider>;
 };
