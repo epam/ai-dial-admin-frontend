@@ -50,9 +50,10 @@ const ExportGrid: FC<Props> = ({ route, context }) => {
       const exportedIndex = exportRef.current[filePath]?.findIndex((prompt) => prompt.name === name);
       if (exportedIndex != null && exportedIndex > -1) {
         const fetched = fetchedRef.current[filePath].filter((prompt) => prompt.name === name);
+        const exported = exportRef.current[filePath].filter((p) => p.name !== name);
         folderContext?.setBulkSelectedData({
           ...exportRef.current,
-          [filePath]: fetched,
+          [filePath]: [...exported, ...fetched],
         } as Record<string, DialPrompt[]>);
       }
     } else {
