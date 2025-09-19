@@ -34,12 +34,14 @@ import {
 } from '@/src/utils/entities/entities-list-view';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
+const exportedEntity = {
+  $type: ExportType.Custom,
+  exportFormat: ExportFormat.CORE,
+  componentTypes: [],
+};
 export async function getCoreEntity(name: string, type: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return await utilityApi.getCoreEntity(
-    { $type: ExportType.Custom, exportFormat: ExportFormat.CORE, components: [{ type, name }], componentTypes: [] },
-    token,
-  );
+  return await utilityApi.getCoreEntity({ ...exportedEntity, components: [{ type, name }] }, token);
 }
 
 export async function exportConfig(exportConfig: ExportRequest) {
