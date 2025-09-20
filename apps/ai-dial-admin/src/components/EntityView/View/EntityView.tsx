@@ -173,6 +173,7 @@ const EntityView: FC<Props> = ({
     if (jsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
+      setSelectedFormat(ExportFormat.ADMIN);
       // TODO: Revisit solution
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
