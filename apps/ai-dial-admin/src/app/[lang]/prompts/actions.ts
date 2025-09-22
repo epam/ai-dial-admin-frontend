@@ -47,3 +47,8 @@ export async function exportPrompts(paths: string[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return await promptsApi.exportPrompts(token, paths);
 }
+
+export async function bulkDeletePrompts(paths: { path: string }[]) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return await promptsApi.bulkDeletePrompts(token, paths);
+}

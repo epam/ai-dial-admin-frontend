@@ -22,6 +22,7 @@ describe('isEqualSkippingUndefined', () => {
 
   test('returns true for both undefined or empty', () => {
     expect(isEqualSkippingUndefined(undefined, undefined)).toBe(true);
+    expect(isEqualSkippingUndefined(null, null)).toBe(true);
     expect(isEqualSkippingUndefined({}, {})).toBe(true);
   });
 

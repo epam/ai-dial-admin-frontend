@@ -1,5 +1,7 @@
 'use client';
 
+import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
+import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
@@ -19,7 +21,7 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { JSONEditorErrorNotification } from '@/src/types/editor';
+import { ExportFormat } from '@/src/types/export';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -34,6 +36,8 @@ import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
+import { getEntityFromFile, getExportType } from './core-entity-utils';
+import { getFileFromEntity } from './core-entity-utils';
 import ViewContent from './ViewContent';
 
 interface Props {
@@ -52,7 +56,6 @@ interface Props {
 
 const EntityView: FC<Props> = ({
   originalEntity,
-  names,
   applicationSchemes,
   view,
   etag,
@@ -78,14 +81,26 @@ const EntityView: FC<Props> = ({
   const [isIframeChanged, setIsIframeChanged] = useState<boolean>(false);
   const [isSkipRefresh, setIsSkipRefresh] = useState<boolean>(true);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
-  const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
+  const [coreEntity, setCoreEntity] = useState<BaseEntity | null>(null);
   const [key, setKey] = useState(0);
 
   const { visualizerConnector } = useAppContext();
 
   useEffect(() => {
-    setSelectedEntity(cloneDeep(originalEntity));
-  }, [originalEntity]);
+    const name = (originalEntity as { name: string })?.name;
+    if (!coreEntity && name) {
+      getCoreEntity(name, getExportType(view)).then((data) => {
+        setCoreEntity(getEntityFromFile(view, name, data) as BaseEntity);
+      });
+    }
+  }, [coreEntity, originalEntity, view]);
+
+  useEffect(() => {
+    setSelectedEntity(
+      selectedFormat === ExportFormat.CORE ? cloneDeep(coreEntity as BaseEntity) : cloneDeep(originalEntity),
+    );
+  }, [selectedFormat, coreEntity, originalEntity]);
 
   const headerClassName = classNames(
     'flex flex-row min-h-[34px]',
@@ -122,8 +137,11 @@ const EntityView: FC<Props> = ({
   }, []);
 
   useEffect(() => {
-    setIsChanged(!isEqualSkippingUndefined(originalEntity, selectedEntity));
-  }, [selectedEntity, originalEntity]);
+    const isEqualAdminEntity = isEqualSkippingUndefined(selectedEntity, originalEntity);
+    const isEqualCoreEntity = isEqualSkippingUndefined(selectedEntity, coreEntity);
+
+    setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreEntity : !isEqualAdminEntity);
+  }, [selectedEntity, originalEntity, coreEntity, selectedFormat]);
 
   useEffect(() => {
     window.addEventListener('message', handleMessage);
@@ -155,6 +173,7 @@ const EntityView: FC<Props> = ({
     if (jsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
+      setSelectedFormat(ExportFormat.ADMIN);
       // TODO: Revisit solution
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
@@ -165,25 +184,32 @@ const EntityView: FC<Props> = ({
   }, [jsonEditorEnabled, originalEntity, dispatch]);
 
   const onSave = useCallback(() => {
-    updateEntity(selectedEntity, etag).then((res) => {
+    const req =
+      selectedFormat === ExportFormat.CORE
+        ? updateCoreEntity(getFileFromEntity(view, selectedEntity))
+        : updateEntity(selectedEntity, etag);
+
+    req.then((res) => {
       if (res.success) {
+        setCoreEntity(null);
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedEntity, updateEntity, etag, router, showNotification]);
+  }, [selectedFormat, view, selectedEntity, updateEntity, etag, router, showNotification]);
 
   const onTryToSave = useCallback(() => {
     if (
       (view === ApplicationRoute.Models || view === ApplicationRoute.Applications) &&
+      selectedFormat !== ExportFormat.CORE &&
       isDisableRole(selectedEntity as EntityRoleLimits)
     ) {
       handleModalOpen(ModalType.emptyRoles);
     } else {
       onSave();
     }
-  }, [handleModalOpen, onSave, selectedEntity, view]);
+  }, [handleModalOpen, selectedFormat, onSave, selectedEntity, view]);
 
   const onChangeEntity = useCallback(
     (entity: BaseEntity, skipRefresh?: boolean) => {
@@ -257,7 +283,8 @@ const EntityView: FC<Props> = ({
             removeEntity={removeEntity}
             jsonEditorEnabled={jsonEditorEnabled}
             toggleJsonEditor={toggleJsonEditor}
-            setErrorNotifications={setErrorNotifications}
+            selectedFormat={selectedFormat}
+            setSelectedFormat={setSelectedFormat}
           />
         </div>
 
@@ -266,7 +293,6 @@ const EntityView: FC<Props> = ({
             <EntityJsonEditor
               key={key}
               entity={selectedEntity}
-              errorNotifications={errorNotifications}
               setSelectedEntity={setSelectedEntity}
               setIsChanged={setIsChanged}
             />
@@ -275,7 +301,6 @@ const EntityView: FC<Props> = ({
               view={view}
               applicationSchemes={applicationSchemes}
               activeTab={activeTab}
-              names={names}
               selectedEntity={selectedEntity}
               jsonEditorEnabled={jsonEditorEnabled}
               isSkipRefresh={isSkipRefresh}

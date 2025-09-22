@@ -147,6 +147,9 @@ export default {
     InterceptorContainer: 'Interceptor Container',
     InterceptorTemplate: 'Interceptor Template',
     Author: 'Author',
+    JSONEditor: 'JSON Editor',
+    Admin: 'Admin format',
+    Core: 'Core format',
 
     // modals
     SaveChangesTitle: 'Save Changes',
@@ -275,6 +278,7 @@ export default {
     OpenAppRunner: 'Open Application Runner',
     OpenAdapter: 'Open Adapter',
     None: 'None',
+    BulkActions: 'Bulk actions',
   },
   Compare: {
     CompareChanges: 'Compare changes',
@@ -479,6 +483,8 @@ export default {
     NewVersionCreate: 'Create new version',
     NewVersionSave: 'Save as New Version',
     NewVersionSaveDescription: 'Create a new version to save changes.',
+    DeleteSuccessTitle: 'Prompts deleted successfully',
+    DeleteSuccessDescription: 'You can restore them using rollback',
   },
   Keys: {
     SaveWithoutRoles: 'Save without adding Roles',

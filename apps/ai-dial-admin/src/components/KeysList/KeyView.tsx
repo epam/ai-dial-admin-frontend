@@ -28,7 +28,6 @@ import { DialKey } from '@/src/models/dial/key';
 import { DialRole } from '@/src/models/dial/role';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { TabModel } from '@/src/models/tab';
-import { JSONEditorErrorNotification } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -36,6 +35,14 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import KeyProperties from './KeyProperties';
 import KeyRotateModal from './KeyRotateModal';
 import KeyViewHeader from './KeyViewHeader';
+import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
+import { ExportFormat } from '@/src/types/export';
+import {
+  getEntityFromFile,
+  getExportType,
+  getFileFromEntity,
+} from '@/src/components/EntityView/View/core-entity-utils';
+import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 
 interface Props {
   originalKey: DialKey;
@@ -57,12 +64,9 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
   const [selectedKey, setSelectedKey] = useState(cloneDeep(originalKey));
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
-  const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
-
-  useEffect(() => {
-    setSelectedKey(cloneDeep(originalKey));
-  }, [originalKey]);
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
+  const [coreKey, setCoreKey] = useState<DialKey | null>(null);
 
   const headerClassName = classNames(
     'flex flex-row min-h-[34px]',
@@ -70,8 +74,24 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
   );
 
   useEffect(() => {
-    setIsChanged(!isEqualSkippingUndefined(originalKey, selectedKey));
-  }, [selectedKey, originalKey]);
+    const name = (originalKey as { name: string })?.name;
+    if (!coreKey && name) {
+      getCoreEntity(name, getExportType(ApplicationRoute.Keys)).then((data) => {
+        setCoreKey(getEntityFromFile(ApplicationRoute.Keys, name, data) as DialKey);
+      });
+    }
+  }, [coreKey, originalKey]);
+
+  useEffect(() => {
+    setSelectedKey(selectedFormat === ExportFormat.CORE ? cloneDeep(coreKey as DialKey) : cloneDeep(originalKey));
+  }, [selectedFormat, coreKey, originalKey]);
+
+  useEffect(() => {
+    const isEqualAdminKey = isEqualSkippingUndefined(originalKey, selectedKey);
+    const isEqualCorKey = isEqualSkippingUndefined(selectedKey, coreKey);
+
+    setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCorKey : !isEqualAdminKey);
+  }, [selectedFormat, originalKey, selectedKey, coreKey]);
 
   const onChangeActiveTab = useCallback(
     (tab: string) => {
@@ -84,6 +104,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
     if (jsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
+      setSelectedFormat(ExportFormat.ADMIN);
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
@@ -125,14 +146,19 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
 
   const onSaveKey = useCallback(() => {
     setConfirmModalState(PopUpState.Closed);
-    updateKey(selectedKey).then((res) => {
+    const req =
+      selectedFormat === ExportFormat.CORE
+        ? updateCoreEntity(getFileFromEntity(ApplicationRoute.Keys, selectedKey))
+        : updateKey(selectedKey);
+
+    req.then((res) => {
       if (res.success) {
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [setConfirmModalState, selectedKey, router, showNotification]);
+  }, [selectedFormat, setConfirmModalState, selectedKey, router, showNotification]);
 
   const onRotateKey = useCallback(
     (key: DialKey) => {
@@ -173,7 +199,8 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
             onSave={onTryToSaveKey}
             jsonEditorEnabled={jsonEditorEnabled}
             toggleJsonEditor={toggleJsonEditor}
-            setErrorNotifications={setErrorNotifications}
+            selectedFormat={selectedFormat}
+            setSelectedFormat={setSelectedFormat}
           >
             <Button
               cssClass="primary"
@@ -188,7 +215,6 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
             <EntityJsonEditor
               key={key}
               entity={selectedKey}
-              errorNotifications={errorNotifications}
               setSelectedEntity={setSelectedKey}
               setIsChanged={setIsChanged}
             />

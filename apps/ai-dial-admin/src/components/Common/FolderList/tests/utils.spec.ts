@@ -1,6 +1,7 @@
+import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { describe, expect, test } from 'vitest';
-import { generatePromptRowDataForDelete } from '../utils';
+import { generateFolderListFromBulkPaths, generatePromptRowDataForDelete } from '../utils';
 
 describe('Utils :: generatePromptRowDataForDelete', () => {
   test('should group prompts by name and collect versions', () => {
@@ -60,5 +61,121 @@ describe('Utils :: generatePromptRowDataForDelete', () => {
     const result = generatePromptRowDataForDelete(input as DialPrompt[]);
     expect(result.length).toBe(1);
     expect(result[0].versions).toEqual(['v1', null, undefined]);
+  });
+});
+
+describe('generateFolderListFromBulkPaths', () => {
+  test('should return an empty array when given no paths', () => {
+    const result = generateFolderListFromBulkPaths([]);
+    expect(result).toEqual([]);
+  });
+
+  test('should generate a single-level folder structure', () => {
+    const paths = ['public/'];
+    const result = generateFolderListFromBulkPaths(paths);
+
+    expect(result).toEqual([
+      {
+        name: 'public',
+        path: 'public/',
+        nodeType: DialFileNodeType.FOLDER,
+        children: [],
+      },
+    ]);
+  });
+
+  test('should generate a nested folder structure for deep paths', () => {
+    const paths = ['public/child/grand/'];
+    const result = generateFolderListFromBulkPaths(paths);
+
+    expect(result).toEqual([
+      {
+        name: 'public',
+        path: 'public/',
+        nodeType: DialFileNodeType.FOLDER,
+        children: [
+          {
+            name: 'child',
+            path: 'public/child/',
+            nodeType: DialFileNodeType.FOLDER,
+            children: [
+              {
+                name: 'grand',
+                path: 'public/child/grand/',
+                nodeType: DialFileNodeType.FOLDER,
+                children: [],
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+  });
+
+  test('should merge overlapping paths into shared folders', () => {
+    const paths = ['public/child/grand/', 'public/child/other/'];
+    const result = generateFolderListFromBulkPaths(paths);
+
+    expect(result).toEqual([
+      {
+        name: 'public',
+        path: 'public/',
+        nodeType: DialFileNodeType.FOLDER,
+        children: [
+          {
+            name: 'child',
+            path: 'public/child/',
+            nodeType: DialFileNodeType.FOLDER,
+            children: [
+              {
+                name: 'grand',
+                path: 'public/child/grand/',
+                nodeType: DialFileNodeType.FOLDER,
+                children: [],
+              },
+              {
+                name: 'other',
+                path: 'public/child/other/',
+                nodeType: DialFileNodeType.FOLDER,
+                children: [],
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+  });
+
+  test('should handle sibling root folders correctly', () => {
+    const paths = ['public/', 'assets/', 'content/posts/'];
+    const result = generateFolderListFromBulkPaths(paths);
+
+    expect(result).toEqual([
+      {
+        name: 'public',
+        path: 'public/',
+        nodeType: DialFileNodeType.FOLDER,
+        children: [],
+      },
+      {
+        name: 'assets',
+        path: 'assets/',
+        nodeType: DialFileNodeType.FOLDER,
+        children: [],
+      },
+      {
+        name: 'content',
+        path: 'content/',
+        nodeType: DialFileNodeType.FOLDER,
+        children: [
+          {
+            name: 'posts',
+            path: 'content/posts/',
+            nodeType: DialFileNodeType.FOLDER,
+            children: [],
+          },
+        ],
+      },
+    ]);
   });
 });

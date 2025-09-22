@@ -31,12 +31,13 @@ import { Publication } from '@/src/models/dial/publications';
 import { JSONEditorError } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
-import { ModalType } from '@/src/components/EntityListView/EntityListModals';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import CompareVersions from '@/src/components/PromptView/Modals/CompareVersions';
+import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 
 interface Props {
   prompt: DialPrompt;
@@ -47,7 +48,6 @@ interface Props {
   publication?: Publication;
   addedVersions: string[];
   setAddedVersions: Dispatch<SetStateAction<string[]>>;
-  setContentJsonErrors: Dispatch<SetStateAction<JSONEditorError[]>>;
   setSelectedPrompt: Dispatch<SetStateAction<DialPrompt>>;
 }
 
@@ -60,11 +60,11 @@ const PromptProperties: FC<Props> = ({
   publication,
   addedVersions,
   setAddedVersions,
-  setContentJsonErrors,
   setSelectedPrompt,
 }) => {
   const t = useI18n() as (t: string) => string;
   const router = useRouter();
+  const { dispatch } = useSaveValidationContext();
 
   const versions: string[] = prompts?.map((prompt) => prompt.version) || [];
   const [modalState, setModalState] = useState(PopUpState.Closed);
@@ -130,10 +130,10 @@ const PromptProperties: FC<Props> = ({
     (value: boolean) => {
       setJSONContentMode(value);
       if (!value) {
-        setContentJsonErrors([]);
+        dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       }
     },
-    [setContentJsonErrors],
+    [dispatch],
   );
 
   const onChangeJsonValue = useCallback(
@@ -146,9 +146,9 @@ const PromptProperties: FC<Props> = ({
 
   const onValidateJSON = useCallback(
     (errors?: JSONEditorError[]) => {
-      setContentJsonErrors(errors || []);
+      dispatch({ type: ValidationActionType.SetJsonEditor, errors: errors || [] });
     },
-    [setContentJsonErrors],
+    [dispatch],
   );
 
   useEffect(() => {

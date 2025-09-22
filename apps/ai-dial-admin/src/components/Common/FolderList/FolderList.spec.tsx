@@ -11,8 +11,8 @@ const fakeContext = () => ({
   fetchFiles: () => [],
   toggleFolder: () => void 0,
   data: [],
-  exportFoldersData: {},
-  setExportFoldersData: () => {},
+  bulkSelectedData: {},
+  setBulkSelectedData: () => {},
 });
 
 describe('FolderList', () => {

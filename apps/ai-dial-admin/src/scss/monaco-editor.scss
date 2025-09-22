@@ -7,13 +7,15 @@
   @apply bg-transparent bg-none
 }
 
-.monaco-diff-editor .monaco-sash.mac.vertical {
+.monaco-diff-editor .monaco-sash.mac.vertical,
+.monaco-diff-editor .monaco-editor .scroll-decoration {
   @apply hidden
 }
 
 .monaco-diff-editor.side-by-side .editor.modified,
 .monaco-diff-editor.side-by-side .editor.original {
-  @apply border-none shadow-none
+  @apply border-none !shadow-none
+
 }
 
 .monaco-diff-editor.side-by-side .editor.original {

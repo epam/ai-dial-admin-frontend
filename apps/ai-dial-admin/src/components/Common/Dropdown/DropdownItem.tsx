@@ -73,7 +73,7 @@ const DropdownMenuItem = forwardRef<HTMLButtonElement, DropdownMenuItemProps & B
             'w-full px-3',
             disabled && '!cursor-not-allowed',
             className,
-            isActiveItem ? 'border-l-2 bg-accent-primary-alpha border-l-accent-primary' : '',
+            isActiveItem ? ' bg-accent-primary-alpha border-l-accent-primary' : 'border-l-transparent',
           )}
           tabIndex={isActive ? 0 : -1}
           disabled={disabled}
