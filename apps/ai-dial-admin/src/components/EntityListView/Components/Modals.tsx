@@ -9,6 +9,7 @@ import FilePathModal from '@/src/components/Common/FilePath/FilePathModal';
 import DeleteFolder from '@/src/components/Common/FolderList/Modals/DeleteFolder';
 import { deleteModalTitleMap } from '@/src/components/EntityListView/constants';
 import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
+import ExportModal from '@/src/components/EntityListView/Export/ExportModal';
 import DeleteInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Delete';
 import { BasicI18nKey, ButtonsI18nKey, DeleteI18nKey } from '@/src/constants/i18n';
 import { FileFolderContextType } from '@/src/context/FileFolderContext';
@@ -28,6 +29,8 @@ export enum ModalType {
   deleteBulk = 'deleteBulk',
   duplicate = 'duplicate',
   move = 'move',
+  addVersion = 'add-version',
+  compareVersions = 'compare-versions',
 }
 
 interface Props {
@@ -38,6 +41,7 @@ interface Props {
   modalType?: ModalType;
   createModal?: ReactNode;
   duplicateModal?: ReactNode;
+  handleExport?: (fileType?: ImportFileType) => void;
   handleImport?: (
     fileType: ImportFileType,
     file: File | File[] | ParsedPrompts,
@@ -60,6 +64,7 @@ const Modals: FC<Props> = ({
   modalType,
   createModal,
   duplicateModal,
+  handleExport,
   handleImport,
   handleMove,
   handleDelete,
@@ -142,6 +147,12 @@ const Modals: FC<Props> = ({
             context={context}
             isBulkDelete={true}
           />,
+          document.body,
+        )}
+      {modalState === PopUpState.Opened &&
+        modalType === ModalType.export &&
+        createPortal(
+          <ExportModal route={route} modalState={modalState} onClose={handleClose} onApply={handleExport} />,
           document.body,
         )}
     </>
