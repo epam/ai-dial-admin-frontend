@@ -445,6 +445,8 @@ export enum CompareI18nKey {
   Current = 'Compare.Current',
   Before = 'Compare.Before',
   After = 'Compare.After',
+  CompareVersions = 'Compare.CompareVersions',
+  Version = 'Compare.Version',
 }
 
 export enum PromptsI18nKey {
