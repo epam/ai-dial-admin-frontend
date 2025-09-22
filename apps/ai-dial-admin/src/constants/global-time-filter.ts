@@ -10,4 +10,5 @@ export const timePeriodOptionsConfig = [
   { id: '24h', name: 'Last 24h', offset: 24 * 60 * 60 * 1000 },
   { id: '2d', name: 'Last 2d', offset: 2 * 24 * 60 * 60 * 1000 },
   { id: '7d', name: 'Last 7d', offset: 7 * 24 * 60 * 60 * 1000 },
+  { id: '30d', name: 'Last 30d', offset: 30 * 24 * 60 * 60 * 1000 },
 ];
