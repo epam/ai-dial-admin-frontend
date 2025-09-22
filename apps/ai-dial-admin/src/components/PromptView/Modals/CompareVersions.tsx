@@ -22,7 +22,7 @@ interface Props {
 
 const CompareVersions: FC<Props> = ({ heading, modalState, onClose, prompts, prompt }) => {
   const t = useI18n();
-  const containerClassName = classNames('h-[90%] min-w-[95%] ');
+  const containerClassName = classNames('h-[93%] min-w-[92%]');
   const versions = prompts?.map((prompt) => prompt.version) as string[];
 
   const [original, setOriginal] = useState<DialPrompt | null>(null);
