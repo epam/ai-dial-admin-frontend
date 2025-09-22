@@ -134,6 +134,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
   );
 
   const toggleJsonEditor = useCallback(() => {
+    setSelectedFormat(ExportFormat.ADMIN);
     setJsonEditorEnabled((prev) => !prev);
   }, [setJsonEditorEnabled]);
 

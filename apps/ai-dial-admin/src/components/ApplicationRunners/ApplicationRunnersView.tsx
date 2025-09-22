@@ -123,6 +123,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
   );
 
   const toggleJsonEditor = useCallback(() => {
+    setSelectedFormat(ExportFormat.ADMIN);
     setJsonEditorEnabled((prev) => !prev);
   }, [setJsonEditorEnabled]);
 

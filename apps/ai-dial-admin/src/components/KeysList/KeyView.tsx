@@ -120,6 +120,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
   );
 
   const toggleJsonEditor = useCallback(() => {
+    setSelectedFormat(ExportFormat.ADMIN);
     setJsonEditorEnabled((prev) => !prev);
   }, [setJsonEditorEnabled]);
 

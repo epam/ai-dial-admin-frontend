@@ -119,6 +119,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
   );
 
   const toggleJsonEditor = useCallback(() => {
+    setSelectedFormat(ExportFormat.ADMIN);
     setJsonEditorEnabled((prev) => !prev);
   }, [setJsonEditorEnabled]);
 
