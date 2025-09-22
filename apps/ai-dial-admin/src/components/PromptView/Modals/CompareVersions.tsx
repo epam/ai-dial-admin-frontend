@@ -79,7 +79,7 @@ const CompareVersions: FC<Props> = ({ heading, modalState, onClose, prompts, pro
         </div>
 
         {(original?.author || modified?.author) && (
-          <LabeledText label={'Author'}>
+          <LabeledText label={t(EntityFieldsI18nKey.author)}>
             <div className="flex">
               <p className="flex-1 body text-primary">{original?.author || t(BasicI18nKey.None)}</p>
               <p className="flex-1 body text-primary">{modified?.author || t(BasicI18nKey.None)}</p>

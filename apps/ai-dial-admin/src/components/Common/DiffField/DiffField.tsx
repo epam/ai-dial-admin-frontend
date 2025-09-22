@@ -4,7 +4,7 @@ import { DiffEditor, Monaco } from '@monaco-editor/react';
 
 import { EDITOR_THEMES } from '@/src/types/editor';
 import { useTheme } from '@/src/context/ThemeContext';
-import { getDiffEditorTheme } from '@/src/constants/editor';
+import { diffEditorOptions, getDiffEditorTheme } from '@/src/constants/editor';
 
 import Field from '@/src/components/Common/Field/Field';
 
@@ -32,26 +32,7 @@ const DiffField: FC<Props> = ({ original, modified, fieldTitle, cssClass }) => {
         beforeMount={handleBeforeMount}
         height="100%"
         theme={currentTheme}
-        options={{
-          glyphMargin: false,
-          minimap: { enabled: false },
-          formatOnType: true,
-          formatOnPaste: true,
-          selectOnLineNumbers: false,
-          automaticLayout: true,
-          scrollBeyondLastLine: false,
-          wordWrap: 'on',
-          smoothScrolling: true,
-          overviewRulerLanes: 0,
-          readOnly: true,
-          renderIndicators: false,
-          renderOverviewRuler: false,
-          scrollbar: {
-            horizontal: 'hidden',
-            verticalScrollbarSize: 4,
-            verticalSliderSize: 4,
-          },
-        }}
+        options={diffEditorOptions}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { IconPlus, IconReplace } from '@tabler/icons-react';
@@ -66,12 +66,19 @@ const PromptProperties: FC<Props> = ({
   const router = useRouter();
   const { dispatch } = useSaveValidationContext();
 
-  const versions: string[] = prompts?.map((prompt) => prompt.version) || [];
   const [modalState, setModalState] = useState(PopUpState.Closed);
   const [modalType, setModalType] = useState<ModalType>();
 
   const [isJSONContentMode, setJSONContentMode] = useState(false);
   const [jsonValue, setJsonValue] = useState<string | undefined>(undefined);
+
+  const versions = useMemo(() => {
+    return prompts?.map((prompt) => prompt.version) || [];
+  }, [prompts]);
+
+  const items = useMemo(() => {
+    return [...new Set([...versions, ...addedVersions])].map((v) => ({ id: v, name: v }));
+  }, [addedVersions, versions]);
 
   const onChangeContent = useCallback(
     (content: string) => {
@@ -199,7 +206,7 @@ const PromptProperties: FC<Props> = ({
                   elementCssClass="lg:w-[35%]"
                   selectedValue={prompt.version}
                   elementId="version"
-                  items={[...new Set([...versions, ...addedVersions])].map((v) => ({ id: v, name: v }))}
+                  items={items}
                   fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
                   onChange={onChangeVersion}
                 >

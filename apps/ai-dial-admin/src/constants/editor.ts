@@ -1,4 +1,4 @@
-import { JSONEditorThemeConfig, EDITOR_THEMES } from '@/src/types/editor';
+import { JSONEditorThemeConfig, EDITOR_THEMES, EditorOptions } from '@/src/types/editor';
 
 const DEFAULT_COLORS = {
   'editor.foreground': '#F3F4F6',
@@ -89,4 +89,33 @@ export const EDITOR_THEMES_CONFIG: Record<EDITOR_THEMES, JSONEditorThemeConfig> 
       'diffEditor.removedTextBackground': '#F3D6D8',
     },
   },
+};
+
+const defaultOptions: EditorOptions = {
+  minimap: { enabled: false },
+  selectOnLineNumbers: false,
+  automaticLayout: true,
+  scrollBeyondLastLine: false,
+  wordWrap: 'on',
+  smoothScrolling: true,
+  overviewRulerLanes: 0,
+  scrollbar: {
+    horizontal: 'hidden',
+    verticalScrollbarSize: 4,
+    verticalSliderSize: 4,
+  },
+};
+
+export const diffEditorOptions: EditorOptions = {
+  ...defaultOptions,
+  readOnly: true,
+  renderIndicators: false,
+  renderOverviewRuler: false,
+  glyphMargin: false,
+};
+
+export const editorOptions: EditorOptions = {
+  ...defaultOptions,
+  formatOnType: true,
+  formatOnPaste: true,
 };
