@@ -15,8 +15,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getGridFileData } from '@/src/utils/files/grid-data';
-import { changeExportFileData, changeExportPromptData, generatePromptRowDataForExportGrid } from './export';
+import { changeExportGridData, getExportGridData } from './export';
 
 interface Props {
   route?: ApplicationRoute;
@@ -135,14 +134,12 @@ const ExportGrid: FC<Props> = ({ route, context }) => {
   }, [filePath]);
 
   useEffect(() => {
-    setRowData(
-      route === ApplicationRoute.Prompts
-        ? generatePromptRowDataForExportGrid(
-            folderContext?.fetchedFoldersData[filePath] as DialPrompt[],
-            folderContext?.bulkSelectedData[filePath] as DialPrompt[],
-          )
-        : getGridFileData((folderContext?.fetchedFoldersData[filePath] as DialFile[]) || []),
+    const rowData: (DialPrompt | DialFile)[] = getExportGridData(
+      route,
+      folderContext?.fetchedFoldersData[filePath],
+      folderContext?.bulkSelectedData[filePath],
     );
+    setRowData(rowData);
   }, [filePath, folderContext?.fetchedFoldersData, folderContext?.bulkSelectedData, route]);
 
   return (
@@ -162,19 +159,13 @@ const ExportGrid: FC<Props> = ({ route, context }) => {
               setIsSkipRefresh(true);
               const selectedRows = event.api.getSelectedRows();
               folderContext?.setBulkSelectedData(
-                route === ApplicationRoute.Prompts
-                  ? changeExportPromptData(
-                      selectedRows as DialPrompt[],
-                      folderContext?.fetchedFoldersData as Record<string, DialPrompt[]>,
-                      folderContext?.filePath,
-                      folderContext?.bulkSelectedData as Record<string, DialPrompt[]>,
-                    )
-                  : (changeExportFileData(
-                      selectedRows as DialFile[],
-                      folderContext?.fetchedFoldersData as Record<string, DialFile[]>,
-                      folderContext?.filePath,
-                      folderContext?.bulkSelectedData as Record<string, DialFile[]>,
-                    ) as Record<string, DialPrompt[]>),
+                changeExportGridData(
+                  route,
+                  folderContext?.fetchedFoldersData,
+                  folderContext?.bulkSelectedData,
+                  selectedRows,
+                  folderContext?.filePath,
+                ),
               );
             },
             onGridReady,

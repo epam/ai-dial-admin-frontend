@@ -3,12 +3,16 @@
 import { useRouter } from 'next/navigation';
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { exportFiles } from '@/src/app/[lang]/files/actions';
-import { exportPrompts, getPrompt } from '@/src/app/[lang]/prompts/actions';
-import { getDuplicateModal } from '@/src/components/EntityListView/utils';
+import { getPrompt } from '@/src/app/[lang]/prompts/actions';
+import {
+  getDuplicateModal,
+  getExportFunction,
+  getJsonFileName,
+  getNotificationType,
+} from '@/src/components/EntityListView/utils';
 import { generateExportList } from '@/src/components/ExportAssets/export';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { ExportI18nKey, MenuI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
+import { ExportI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { FileFolderContextType } from '@/src/context/FileFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
@@ -68,7 +72,7 @@ const Actions = <T extends object>({
   setCurrentEntity,
   setIsBulkView,
 }: Props<T>) => {
-  const t = useI18n();
+  const t = useI18n() as (s: string, params?: Record<string, string>) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
   const folderContext = context?.();
@@ -166,10 +170,10 @@ const Actions = <T extends object>({
 
   const onExport = useCallback(
     (exportType?: ImportFileType) => {
-      const type = t(route === ApplicationRoute.Prompts ? MenuI18nKey.Prompts : MenuI18nKey.Files);
-      const exportFunction = route === ApplicationRoute.Prompts ? exportPrompts : exportFiles;
+      const type = t(getNotificationType(route));
+      const exportFunction = getExportFunction(route);
 
-      exportFunction(exportData, exportType)
+      exportFunction?.(exportData, exportType)
         .then((res) => {
           showNotification(
             getSuccessNotification(t(ExportI18nKey.SuccessTitle, { type }), t(ExportI18nKey.SuccessDescription)),
@@ -181,7 +185,7 @@ const Actions = <T extends object>({
             const { blob, fileName } = res as { blob: Blob; fileName: string };
             downloadFile(blob, fileName);
           } else {
-            downloadJson(res, route === ApplicationRoute.Prompts ? 'prompts' : 'files');
+            downloadJson(res, getJsonFileName(route));
           }
         })
         .catch(() => {

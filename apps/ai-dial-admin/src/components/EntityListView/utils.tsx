@@ -1,12 +1,16 @@
+import { exportFiles } from '@/src/app/[lang]/files/actions';
+import { exportPrompts } from '@/src/app/[lang]/prompts/actions';
 import DuplicateAdapter from '@/src/components/Adapter/Modals/DuplicateAdapter';
 import DuplicateScheme from '@/src/components/ApplicationRunners/Modals/DuplicateAppRunner';
 import DuplicatePopup from '@/src/components/DuplicatePopup/DuplicatePopup';
 import DuplicateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Duplicate';
 import DuplicateKey from '@/src/components/KeysList/Popup/DuplicateKey';
 import DuplicatePrompt from '@/src/components/PromptView/Modals/DuplicatePrompt';
+import { MenuI18nKey } from '@/src/constants/i18n';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { ImportFileType } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -89,4 +93,64 @@ export const getDuplicateModal = <T extends object>(
       onClose={handleModalClose}
     />
   );
+};
+
+/**
+ * Get notification title for success import
+ *
+ * @param {?ApplicationRoute} [route] - application route
+ * @returns {string} - title
+ */
+export const getNotificationType = (route?: ApplicationRoute): string => {
+  if (route === ApplicationRoute.Prompts) {
+    return MenuI18nKey.Prompts;
+  }
+  if (route === ApplicationRoute.Files) {
+    return MenuI18nKey.Files;
+  }
+
+  if (route === ApplicationRoute.AssetsApplications) {
+    return MenuI18nKey.Applications;
+  }
+
+  return '';
+};
+
+/**
+ * Get correct export function for assets
+ *
+ * @param {?ApplicationRoute} [route] - application route
+ * @returns {((paths: string[], type?: ImportFileType | undefined) => Promise<unknown>) | null} - export function
+ */
+export const getExportFunction = (
+  route?: ApplicationRoute,
+): ((paths: string[], type?: ImportFileType | undefined) => Promise<unknown>) | null => {
+  if (route === ApplicationRoute.Prompts) {
+    return exportPrompts;
+  }
+  if (route === ApplicationRoute.Files) {
+    return exportFiles;
+  }
+  return null;
+};
+
+/**
+ * Generate name for exported json file based on route
+ *
+ * @param {?ApplicationRoute} [route] - application route
+ * @returns {string} - file name
+ */
+export const getJsonFileName = (route?: ApplicationRoute): string => {
+  if (route === ApplicationRoute.Prompts) {
+    return 'prompts';
+  }
+  if (route === ApplicationRoute.Files) {
+    return 'files';
+  }
+
+  if (route === ApplicationRoute.AssetsApplications) {
+    return 'applications';
+  }
+
+  return '';
 };

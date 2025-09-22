@@ -1,72 +1,46 @@
-import { IconExternalLink, IconFolderShare, IconPencilMinus, IconTrashX } from '@tabler/icons-react';
+import { ColDef } from 'ag-grid-community';
 
-import AddChildIcon from '@/public/images/icons/add-child.svg';
-import AddSiblingIcon from '@/public/images/icons/add-sibling.svg';
-import { isInvalidJson, isLargeFile } from '@/src/components/EntityListView/Import/import';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import {
+  generateFileColumnsForImportGrid,
+  generatePromptColumnsForImportGrid,
+  isInvalidJson,
+  isLargeFile,
+} from '@/src/components/EntityListView/Import/import';
 import { DialFile } from '@/src/models/dial/file';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { ParsedPrompts, PromptImportGridData } from '@/src/models/prompts';
+import { ImportFileType } from '@/src/types/import';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
-import { FolderOperationDeclaration, ZipFilePreview } from './models';
-import { FolderOperation } from './types';
+import { ZipFilePreview } from './models';
 
-export const getAddSiblingOperation = (onClick: () => void): FolderOperationDeclaration => {
-  return {
-    icon: <AddSiblingIcon {...BASE_ICON_PROPS} />,
-    id: FolderOperation.Add_sibling,
-    onClick,
-  };
-};
-
-export const getAddChildOperation = (onClick: () => void): FolderOperationDeclaration => {
-  return {
-    icon: <AddChildIcon {...BASE_ICON_PROPS} />,
-    id: FolderOperation.Add_child,
-    onClick,
-  };
-};
-
-export const getManageFolderOperation = (onClick: () => void): FolderOperationDeclaration => {
-  return {
-    icon: <IconExternalLink {...BASE_ICON_PROPS} />,
-    id: FolderOperation.Manage_folder,
-    onClick,
-  };
-};
-
-export const getRenameFolderOperation = (onClick: () => void): FolderOperationDeclaration => {
-  return {
-    icon: <IconPencilMinus {...BASE_ICON_PROPS} />,
-    id: FolderOperation.Rename,
-    onClick,
-  };
-};
-
-export const getMoveFolderOperation = (onClick: () => void): FolderOperationDeclaration => {
-  return {
-    icon: <IconFolderShare {...BASE_ICON_PROPS} />,
-    id: FolderOperation.Move_to,
-    onClick,
-  };
-};
-
-export const getDeleteFolderOperation = (onClick: () => void): FolderOperationDeclaration => {
-  return {
-    icon: <IconTrashX {...BASE_ICON_PROPS} />,
-    id: FolderOperation.Delete,
-    onClick,
-  };
-};
-
+/**
+ * Check is import prompt preview has errors
+ *
+ * @param {PromptImportGridData} data - prompts
+ * @returns {boolean} - return true if has errors
+ */
 export const isErrorPromptReview = (data: PromptImportGridData): boolean => {
   return !data.version || !data.promptName || !!data.invalid;
 };
 
+/**
+ *  Check is import file preview has errors
+ *
+ * @param {FileImportGridData} data - files
+ * @returns {boolean} - return true if has errors
+ */
 export const isErrorFileReview = (data: FileImportGridData): boolean => {
   return !data.name || !!data.invalid;
 };
 
+/**
+ * Read prompts and check validity
+ *
+ * @async
+ * @param {File[]} files - prompts
+ * @returns {Promise<Map<string, FileImportMap>>} - mapping file name and all prompts related to this file, tagged with validity flag
+ */
 export const readJsonFiles = async (files: File[]): Promise<Map<string, FileImportMap>> => {
   const results = new Map<string, FileImportMap>();
 
@@ -99,6 +73,12 @@ export const readJsonFiles = async (files: File[]): Promise<Map<string, FileImpo
   return results;
 };
 
+/**
+ * Read files and check validity
+ *
+ * @param {File[]} files - files
+ * @returns {Map<string, FileImportMap>} - mapping file name with validity flag
+ */
 export const readAllFiles = (files: File[]): Map<string, FileImportMap> => {
   const results = new Map<string, FileImportMap>();
   files.map((file) => {
@@ -108,6 +88,12 @@ export const readAllFiles = (files: File[]): Map<string, FileImportMap> => {
   return results;
 };
 
+/**
+ * Check prompts preview and generate list of prompts name+version
+ *
+ * @param {ZipFilePreview[]} preview - zip file preview with prompts
+ * @returns {Map<string, FileImportMap>} - mapping with filename as key, and list of prompts as value
+ */
 export const generatePreviewData = (preview: ZipFilePreview[]): Map<string, FileImportMap> => {
   const resultMap = new Map();
 
@@ -123,4 +109,46 @@ export const generatePreviewData = (preview: ZipFilePreview[]): Map<string, File
   });
 
   return resultMap;
+};
+
+/**
+ * Generate columns for import grid base on route
+ *
+ * @param {(value: string, data: unknown, field: string) => void} changeFileFunc - function for file change
+ * @param {string} fileType - file type
+ * @param {?ApplicationRoute} [route] - route
+ * @returns {ColDef[]} - columns for grid
+ */
+export const generateColumnsForImportGrid = (
+  changeFileFunc: (value: string, data: unknown, field: string) => void,
+  fileType: string,
+  route?: ApplicationRoute,
+): ColDef[] => {
+  if (route === ApplicationRoute.Prompts) {
+    return generatePromptColumnsForImportGrid(changeFileFunc, true, fileType === ImportFileType.ARCHIVE);
+  }
+  if (route === ApplicationRoute.Files) {
+    return generateFileColumnsForImportGrid(changeFileFunc, true, fileType === ImportFileType.ARCHIVE);
+  }
+  return [];
+};
+
+/**
+ * Check if import data has errors
+ *
+ * @param {(PromptImportGridData | FileImportGridData)} data - import data
+ * @param {?ApplicationRoute} [route] - route
+ * @returns {boolean} - return true if errors exist
+ */
+export const isErrorRowForImport = (
+  data: PromptImportGridData | FileImportGridData,
+  route?: ApplicationRoute,
+): boolean => {
+  if (route === ApplicationRoute.Prompts) {
+    return isErrorPromptReview(data as PromptImportGridData);
+  }
+  if (route === ApplicationRoute.Files) {
+    return isErrorFileReview(data as FileImportGridData);
+  }
+  return false;
 };
