@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import VersionsControl from '@/src/components/PromptView/Modals/VesionsControl';
+import VersionsControl from '@/src/components/PromptView/Modals/VersionsControl';
 
 describe('Common components - VersionsControl', () => {
   const onChange = vi.fn();

@@ -9,7 +9,7 @@ import { useI18n } from '@/src/locales/client';
 
 import Popup from '@/src/components/Common/Popup/Popup';
 import DiffField from '@/src/components/Common/DiffField/DiffField';
-import VersionsControl from '@/src/components/PromptView/Modals/VesionsControl';
+import VersionsControl from '@/src/components/PromptView/Modals/VersionsControl';
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
 
 interface Props {
