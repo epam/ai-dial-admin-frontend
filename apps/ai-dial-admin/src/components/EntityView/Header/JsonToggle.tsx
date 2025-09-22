@@ -15,7 +15,13 @@ import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 
-const ONLY_ADMIN_ENTITIES = [ApplicationRoute.Adapters, ApplicationRoute.InterceptorTemplates];
+const ONLY_ADMIN_ENTITIES = [
+  ApplicationRoute.Adapters,
+  ApplicationRoute.InterceptorTemplates,
+  ApplicationRoute.Prompts,
+  ApplicationRoute.Files,
+];
+
 interface Props {
   view: ApplicationRoute;
   selectedFormat?: ExportFormat;

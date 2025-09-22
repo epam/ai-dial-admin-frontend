@@ -120,6 +120,7 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
   );
 
   const toggleJsonEditor = useCallback(() => {
+    setSelectedFormat(ExportFormat.ADMIN);
     setJsonEditorEnabled((prev) => !prev);
   }, [setJsonEditorEnabled]);
 
