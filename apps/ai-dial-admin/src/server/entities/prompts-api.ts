@@ -18,6 +18,7 @@ export const PROMPT_DELETE_BULK_URL = `${PROMPT_DELETE_URL}/bulk`;
 export const PROMPT_VERSIONS_URL = `${PROMPTS_URL}/versions`;
 export const PROMPT_MOVE_URL = `${PROMPTS_URL}/move`;
 export const PROMPT_EXPORT_URL = `${PROMPTS_URL}/export`;
+export const PROMPT_EXPORT_JSON_URL = `${PROMPT_EXPORT_URL}/json`;
 export const PROMPT_IMPORT_ZIP_URL = `${PROMPTS_URL}/import/zip`;
 export const PROMPT_IMPORT_JSON_URL = `${PROMPTS_URL}/import/json`;
 
@@ -78,9 +79,16 @@ export class PromptsApi extends BaseApi {
     return Promise.all(requests);
   }
 
-  exportPrompts(token: JWT | null, paths?: string[]): Promise<{ blob: Blob; fileName: string }> {
-    return this.sendRequest(PROMPT_EXPORT_URL, 'POST', { paths }, token).then(async (res) => {
-      return { blob: await (res as Response).blob(), fileName: getFileName(res as Response) || '' };
+  exportPrompts(
+    token: JWT | null,
+    paths?: string[],
+    type?: ImportFileType,
+  ): Promise<{ blob: Blob; fileName: string } | unknown> {
+    const url = type === ImportFileType.ARCHIVE ? PROMPT_EXPORT_URL : PROMPT_EXPORT_JSON_URL;
+    return this.sendRequest(url, 'POST', { paths }, token).then(async (res) => {
+      return type === ImportFileType.ARCHIVE
+        ? { blob: await (res as Response).blob(), fileName: getFileName(res as Response) || '' }
+        : res;
     });
   }
 
