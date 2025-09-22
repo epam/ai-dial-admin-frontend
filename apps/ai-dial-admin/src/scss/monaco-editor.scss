@@ -3,30 +3,26 @@
     .line-insert,
     .line-delete,
     .view-overlays .current-line-exact {
-      @apply border-none
+      @apply border-none;
     }
 
     .diagonal-fill {
-      @apply bg-transparent bg-none
+      @apply bg-transparent bg-none;
     }
 
     .scroll-decoration,
     .monaco-sash.mac.vertical {
-      @apply hidden
+      @apply hidden;
     }
   }
 
   &.side-by-side {
     .editor.modified,
     .editor.original {
-      @apply border-none !shadow-none
+      @apply border-none !shadow-none;
     }
     .editor.original {
-      @apply -ml-6
+      @apply -ml-6;
     }
   }
 }
-
-
-
-
