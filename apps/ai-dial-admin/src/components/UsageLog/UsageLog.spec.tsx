@@ -38,18 +38,18 @@ describe('UsageLog', () => {
   test('renders TimeFilter component', async () => {
     render(<UsageLog route={ApplicationRoute.UsageLog} />);
 
-    const menu = screen.getByRole('menuitem', { name: /Last 2 d/i });
+    const menu = screen.getByRole('menuitem', { name: /Last 2d/i });
 
     expect(menu).toBeInTheDocument();
 
     await user.click(menu);
 
-    const menuItem = screen.getByRole('menuitem', { name: /Last 1 h/i });
+    const menuItem = screen.getByRole('menuitem', { name: /Last 1h/i });
 
     expect(menuItem).toBeInTheDocument();
 
     await user.click(menuItem);
 
-    expect(screen.getByRole('menuitem', { name: /Last 1 h/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /Last 1h/i })).toBeInTheDocument();
   });
 });
