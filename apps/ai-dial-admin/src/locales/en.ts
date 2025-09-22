@@ -230,6 +230,7 @@ export default {
     String: 'String',
     Number: 'Number',
     JSON: 'JSON',
+    Archive: 'Archive',
   },
   Boolean: {
     true: 'True',

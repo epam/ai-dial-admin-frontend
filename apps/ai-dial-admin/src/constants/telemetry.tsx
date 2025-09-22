@@ -39,14 +39,14 @@ export const filterConditionConfig = [
 
 export const refreshOptionsConfig = [
   { id: 'off', name: 'Off', timeout: null },
-  { id: '30s', name: '30 sec', timeout: 30 * 1000 },
-  { id: '1m', name: '1 min', timeout: 60 * 1000 },
-  { id: '5m', name: '5 min', timeout: 5 * 60 * 1000 },
-  { id: '15m', name: '15 min', timeout: 15 * 60 * 1000 },
-  { id: '30m', name: '30 min', timeout: 30 * 60 * 1000 },
-  { id: '1h', name: '1 h', timeout: 60 * 60 * 1000 },
-  { id: '2h', name: '2 h', timeout: 2 * 60 * 60 * 1000 },
-  { id: '1d', name: '1 d', timeout: 24 * 60 * 60 * 1000 },
+  { id: '30s', name: '30s', timeout: 30 * 1000 },
+  { id: '1m', name: '1m', timeout: 60 * 1000 },
+  { id: '5m', name: '5m', timeout: 5 * 60 * 1000 },
+  { id: '15m', name: '15m', timeout: 15 * 60 * 1000 },
+  { id: '30m', name: '30m', timeout: 30 * 60 * 1000 },
+  { id: '1h', name: '1h', timeout: 60 * 60 * 1000 },
+  { id: '2h', name: '2h', timeout: 2 * 60 * 60 * 1000 },
+  { id: '1d', name: '1d', timeout: 24 * 60 * 60 * 1000 },
 ];
 
 export const UNIQ_USERS_QUERY: TelemetryQuery = {

@@ -1,12 +1,14 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Dispatch, SetStateAction, useCallback, useEffect, useRef } from 'react';
+import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { getPrompt } from '@/src/app/[lang]/prompts/actions';
+import { exportFiles } from '@/src/app/[lang]/files/actions';
+import { exportPrompts, getPrompt } from '@/src/app/[lang]/prompts/actions';
 import { getDuplicateModal } from '@/src/components/EntityListView/utils';
+import { generateExportList } from '@/src/components/ExportAssets/export';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { PromptsI18nKey } from '@/src/constants/i18n';
+import { ExportI18nKey, MenuI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { FileFolderContextType } from '@/src/context/FileFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
@@ -15,8 +17,10 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { ImportFileType } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
+import { downloadFile, downloadJson } from '@/src/utils/download';
 import { prepareEntityForDuplicate } from '@/src/utils/entities/prepare-entity-for-duplicate';
 import { getListOfPathsToBulkDelete, getListOfPathsToMove } from '@/src/utils/files/path';
 import { isAssetView } from '@/src/utils/is-asset-view';
@@ -71,6 +75,10 @@ const Actions = <T extends object>({
 
   const entityRef = useRef(currentEntity);
   const filesRef = useRef(folderContext?.fetchedFoldersData);
+
+  const exportData = useMemo(() => {
+    return generateExportList(folderContext?.bulkSelectedData);
+  }, [folderContext?.bulkSelectedData]);
 
   useEffect(() => {
     entityRef.current = currentEntity;
@@ -156,6 +164,40 @@ const Actions = <T extends object>({
     });
   }, [bulkDelete, folderContext, setIsBulkView, showNotification, t]);
 
+  const onExport = useCallback(
+    (exportType?: ImportFileType) => {
+      const type = t(route === ApplicationRoute.Prompts ? MenuI18nKey.Prompts : MenuI18nKey.Files);
+      const exportFunction = route === ApplicationRoute.Prompts ? exportPrompts : exportFiles;
+
+      exportFunction(exportData, exportType)
+        .then((res) => {
+          showNotification(
+            getSuccessNotification(t(ExportI18nKey.SuccessTitle, { type }), t(ExportI18nKey.SuccessDescription)),
+          );
+          if (
+            route === ApplicationRoute.Files ||
+            (route === ApplicationRoute.Prompts && exportType === ImportFileType.ARCHIVE)
+          ) {
+            const { blob, fileName } = res as { blob: Blob; fileName: string };
+            downloadFile(blob, fileName);
+          } else {
+            downloadJson(res, route === ApplicationRoute.Prompts ? 'prompts' : 'files');
+          }
+        })
+        .catch(() => {
+          showNotification(
+            getErrorNotification(t(ExportI18nKey.ErrorTitle, { type }), t(ExportI18nKey.ErrorDescription)),
+          );
+        })
+        .finally(() => {
+          handleModalClose();
+          folderContext?.setBulkSelectedData({});
+          setIsBulkView(false);
+        });
+    },
+    [exportData, folderContext, handleModalClose, route, setIsBulkView, showNotification, t],
+  );
+
   return (
     <>
       {modalType && (isBulkView ? true : currentEntity) ? (
@@ -175,6 +217,7 @@ const Actions = <T extends object>({
             handleModalClose,
             onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>,
           )}
+          handleExport={onExport}
           handleClose={handleModalClose}
           handleDelete={onDelete}
           handleDeleteBulk={onDeleteBulk}
@@ -184,11 +227,13 @@ const Actions = <T extends object>({
       ) : null}
       {isBulkView && (
         <BulkButtons
+          itemsCount={exportData.length}
           route={route}
           context={context}
           setModalState={setModalState}
           setModalType={setModalType}
           setIsBulkView={setIsBulkView}
+          handleExport={onExport}
         />
       )}
     </>

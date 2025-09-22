@@ -655,6 +655,7 @@ export enum TypeI18nKey {
   String = 'Type.String',
   Number = 'Type.Number',
   JSON = 'Type.JSON',
+  Archive = 'Type.Archive',
 }
 
 export enum BooleanI18nKey {
