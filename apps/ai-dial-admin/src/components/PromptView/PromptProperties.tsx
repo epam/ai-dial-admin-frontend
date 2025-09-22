@@ -1,7 +1,7 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { IconPlus } from '@tabler/icons-react';
+import { IconPlus, IconReplace } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 
 import AddVersionModal from '@/src/components/PromptView/Modals/AddVersionModal';
@@ -16,6 +16,7 @@ import Switch from '@/src/components/Common/Switch/Switch';
 import {
   BasicI18nKey,
   ButtonsI18nKey,
+  CompareI18nKey,
   EntitiesI18nKey,
   EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
@@ -30,10 +31,12 @@ import { Publication } from '@/src/models/dial/publications';
 import { JSONEditorError } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
+import { ModalType } from '@/src/components/EntityListView/EntityListModals';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
+import CompareVersions from '@/src/components/PromptView/Modals/CompareVersions';
 
 interface Props {
   prompt: DialPrompt;
@@ -65,6 +68,7 @@ const PromptProperties: FC<Props> = ({
 
   const versions: string[] = prompts?.map((prompt) => prompt.version) || [];
   const [modalState, setModalState] = useState(PopUpState.Closed);
+  const [modalType, setModalType] = useState<ModalType>();
 
   const [isJSONContentMode, setJSONContentMode] = useState(false);
   const [jsonValue, setJsonValue] = useState<string | undefined>(undefined);
@@ -103,13 +107,15 @@ const PromptProperties: FC<Props> = ({
     [getPrompt, prompt, setSelectedPrompt, router, onChangePrompt],
   );
 
-  const onOpenModal = useCallback(() => {
-    setModalState(PopUpState.Opened);
-  }, [setModalState]);
-
-  const onCloseModal = useCallback(() => {
+  const handleModalClose = useCallback(() => {
     setModalState(PopUpState.Closed);
-  }, [setModalState]);
+    setModalType(void 0);
+  }, []);
+
+  const handleModalOpen = useCallback((modalType: ModalType) => {
+    setModalType(modalType);
+    setModalState(PopUpState.Opened);
+  }, []);
 
   const onAddVersion = useCallback(
     (version: string) => {
@@ -184,25 +190,35 @@ const PromptProperties: FC<Props> = ({
 
       <div className="pt-6">
         <div className="flex flex-col gap-6 pr-6">
-          <div className="w-[105px]">
-            {isImmutable ? (
-              <VersionControl version={prompt.version} disabled={isImmutable} />
-            ) : (
-              <DropdownField
-                elementCssClass="lg:w-[35%]"
-                selectedValue={prompt.version}
-                elementId="version"
-                items={[...new Set([...versions, ...addedVersions])].map((v) => ({ id: v, name: v }))}
-                fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
-                onChange={onChangeVersion}
-              >
-                <Button
-                  cssClass="tertiary w-full"
-                  iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-                  title={t(ButtonsI18nKey.Create)}
-                  onClick={onOpenModal}
-                />
-              </DropdownField>
+          <div className="flex items-end gap-4">
+            <div className="w-[105px]">
+              {isImmutable ? (
+                <VersionControl version={prompt.version} disabled={isImmutable} />
+              ) : (
+                <DropdownField
+                  elementCssClass="lg:w-[35%]"
+                  selectedValue={prompt.version}
+                  elementId="version"
+                  items={[...new Set([...versions, ...addedVersions])].map((v) => ({ id: v, name: v }))}
+                  fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
+                  onChange={onChangeVersion}
+                >
+                  <Button
+                    cssClass="tertiary w-full"
+                    iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+                    title={t(ButtonsI18nKey.Create)}
+                    onClick={() => handleModalOpen(ModalType.addVersion)}
+                  />
+                </DropdownField>
+              )}
+            </div>
+            {!!prompts?.length && prompts.length > 1 && (
+              <Button
+                cssClass="secondary"
+                iconBefore={<IconReplace {...BASE_ICON_PROPS} />}
+                title={t(CompareI18nKey.CompareVersions)}
+                onClick={() => handleModalOpen(ModalType.compareVersions)}
+              />
             )}
           </div>
           <div className="lg:w-[35%]">
@@ -248,13 +264,26 @@ const PromptProperties: FC<Props> = ({
         </div>
       </div>
       {modalState === PopUpState.Opened &&
+        modalType === ModalType.addVersion &&
         createPortal(
           <AddVersionModal
             heading={t(PromptsI18nKey.NewVersionCreate)}
             modalState={modalState}
             existingVersions={[...versions, ...addedVersions]}
-            onClose={onCloseModal}
+            onClose={handleModalClose}
             onConfirm={onAddVersion}
+          />,
+          document.body,
+        )}
+      {modalState === PopUpState.Opened &&
+        modalType === ModalType.compareVersions &&
+        createPortal(
+          <CompareVersions
+            heading={t(CompareI18nKey.CompareVersions)}
+            modalState={modalState}
+            onClose={handleModalClose}
+            prompts={prompts}
+            prompt={prompt}
           />,
           document.body,
         )}

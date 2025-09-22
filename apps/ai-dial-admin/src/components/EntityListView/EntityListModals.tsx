@@ -27,6 +27,8 @@ export enum ModalType {
   delete = 'delete',
   duplicate = 'duplicate',
   move = 'move',
+  addVersion = 'add-version',
+  compareVersions = 'compare-versions',
 }
 
 interface Props {

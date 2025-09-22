@@ -283,6 +283,8 @@ export default {
     Current: 'Current state',
     Before: 'Before',
     After: 'After',
+    CompareVersions: 'Compare versions',
+    Version: 'Version',
   },
   UpstreamEndpoints: {
     Upstream: 'Upstream',

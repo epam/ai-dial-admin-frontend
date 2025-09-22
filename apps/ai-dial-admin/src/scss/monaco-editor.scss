@@ -1,0 +1,24 @@
+.monaco-diff-editor .monaco-editor .line-insert,
+.monaco-diff-editor .monaco-editor .line-delete,
+.monaco-diff-editor .monaco-editor .view-overlays .current-line-exact {
+  @apply border-none
+}
+.monaco-diff-editor .monaco-editor .diagonal-fill {
+  @apply bg-transparent bg-none
+}
+
+.monaco-diff-editor .monaco-sash.mac.vertical {
+  @apply hidden
+}
+
+.monaco-diff-editor.side-by-side .editor.modified,
+.monaco-diff-editor.side-by-side .editor.original {
+  @apply border-none shadow-none
+}
+
+.monaco-diff-editor.side-by-side .editor.original {
+  @apply -ml-6
+}
+
+
+
