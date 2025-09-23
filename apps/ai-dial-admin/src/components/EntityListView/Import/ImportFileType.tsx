@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction } from 'react';
+import { Dispatch, FC, SetStateAction, useMemo } from 'react';
 
 import { IconFileTypeZip } from '@tabler/icons-react';
 
@@ -42,6 +42,16 @@ const ImportFileTypeSelector: FC<Props> = ({
 }) => {
   const t = useI18n();
 
+  const ignorePathsTitle = useMemo(() => {
+    if (route === ApplicationRoute.Prompts) {
+      return t(ImportI18nKey.PathsPrompt);
+    }
+    if (route === ApplicationRoute.Files) {
+      return t(ImportI18nKey.PathsFile);
+    }
+    return '';
+  }, [t, route]);
+
   const getFileIcon = (name: string) => {
     return getIcon(getNameExtensionFromFile(name).extension);
   };
@@ -62,17 +72,17 @@ const ImportFileTypeSelector: FC<Props> = ({
             />
           ))}
         </div>
-        <div className="flex flex-col">
-          <Field
-            fieldTitle={route === ApplicationRoute.Prompts ? t(ImportI18nKey.PathsPrompt) : t(ImportI18nKey.PathsFile)}
-          />
-          <Switch
-            isOn={ignorePaths}
-            title={t(ImportI18nKey.PathsIgnore)}
-            switchId="ignorePaths"
-            onChange={setIgnorePaths}
-          />
-        </div>
+        {route === ApplicationRoute.Prompts && (
+          <div className="flex flex-col">
+            <Field fieldTitle={ignorePathsTitle} />
+            <Switch
+              isOn={ignorePaths}
+              title={t(ImportI18nKey.PathsIgnore)}
+              switchId="ignorePaths"
+              onChange={setIgnorePaths}
+            />
+          </div>
+        )}
       </div>
       <div className="mt-6 flex-1 min-h-0">
         {fileType === ImportFileType.ARCHIVE && (

@@ -89,7 +89,7 @@ const DeleteFolder: FC<Props> = ({ modalState, selectedFolder, isBulkDelete, con
     >
       <div className="flex flex-col gap-4 px-6 py-4 flex-1 min-h-0">
         <div className="text-secondary text-sm">{t(FoldersI18nKey.DeleteFolderDescription)}</div>
-        <div className="flex flex-1 min-h-0">
+        <div className="flex flex-row gap-4 flex-1 min-h-0">
           <HorizontalCollapseBar width="360" title={t(FoldersI18nKey.Folders)} containerClass="border-primary">
             <FolderList
               context={context}

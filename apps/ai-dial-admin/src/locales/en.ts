@@ -615,6 +615,7 @@ export default {
     DeleteFolder: 'Confirm Deleting Folder',
     DeleteFolderDescription: 'Are you sure that you want to delete all subfolders and prompts?',
     Folders: 'Folders',
+    CollapseAll: 'Collapse all folders',
   },
   ActivityAudit: {
     ResourceDiff: 'Resource diff',

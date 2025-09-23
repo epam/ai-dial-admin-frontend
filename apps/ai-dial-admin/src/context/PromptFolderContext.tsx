@@ -11,7 +11,7 @@ export interface PromptFolderContextType {
   files: DialPrompt[];
   expandedFolders: Set<string>;
   filePath: string;
-  toggleFolder: (folder: DialFile) => void;
+  toggleFolder: (folder: DialFile, skipFetch?: boolean, collapseAll?: boolean) => void;
   data: DialPrompt[] | null;
   fetchedFoldersData: Record<string, DialPrompt[]>;
   bulkSelectedData: Record<string, DialPrompt[]>;
@@ -59,9 +59,9 @@ export const PromptFolderProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const toggleFolder = (folder: DialFile, skipFetch?: boolean) => {
+  const toggleFolder = (folder: DialFile, skipFetch?: boolean, collapseAll?: boolean) => {
     const folderPath = folder.path;
-    const newExpanded = new Set(expandedFolders);
+    const newExpanded = new Set(collapseAll ? [] : expandedFolders);
     setFilePath(folderPath);
     if (newExpanded.has(folderPath)) {
       newExpanded.delete(folderPath);

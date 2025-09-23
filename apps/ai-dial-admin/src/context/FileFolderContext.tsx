@@ -10,7 +10,7 @@ export interface FileFolderContextType {
   files: DialFile[];
   expandedFolders: Set<string>;
   filePath: string;
-  toggleFolder: (folder: DialFile) => void;
+  toggleFolder: (folder: DialFile, skipFetch?: boolean, collapseAll?: boolean) => void;
   data: DialFile[] | null;
   fetchedFoldersData: Record<string, DialFile[]>;
   bulkSelectedData: Record<string, DialFile[]>;
@@ -51,17 +51,16 @@ export const FileFolderProvider = ({ children }: { children: ReactNode }) => {
       }
     });
   };
-
-  const toggleFolder = (folder: DialFile) => {
+  const toggleFolder = (folder: DialFile, skipFetch?: boolean, collapseAll?: boolean) => {
     const folderPath = folder.path;
-    const newExpanded = new Set(expandedFolders);
+    const newExpanded = new Set(collapseAll ? [] : expandedFolders);
     setFilePath(folderPath);
     if (newExpanded.has(folderPath)) {
       newExpanded.delete(folderPath);
       setData(fetchedFoldersData[folderPath]);
     } else {
       newExpanded.add(folderPath);
-      if (!fetchedFoldersData[folderPath]) {
+      if (!fetchedFoldersData[folderPath] && !skipFetch) {
         fetchFiles(folderPath);
       } else {
         setData(fetchedFoldersData[folderPath]);
