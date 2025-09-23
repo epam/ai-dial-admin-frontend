@@ -11,7 +11,7 @@ import {
   getManageFolderOperation,
   getMoveFolderOperation,
   getRenameFolderOperation,
-} from '@/src/components/Common/FolderCreate/utils';
+} from '@/src/components/Common/FolderCreate/Components/Operations';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import { ROOT_FOLDER } from '@/src/constants/file';

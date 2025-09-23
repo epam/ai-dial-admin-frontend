@@ -1,9 +1,11 @@
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
+import { ResourceType } from '@/src/types/folder';
+import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
-import { generateFolderListFromBulkPaths, generatePromptRowDataForDelete } from '../utils';
+import { generateFolderListFromBulkPaths, generatePromptRowDataForDelete, getResourceTypeByView } from '../utils';
 
-describe('Utils :: generatePromptRowDataForDelete', () => {
+describe('generatePromptRowDataForDelete', () => {
   test('should group prompts by name and collect versions', () => {
     const input: DialPrompt[] = [
       { id: '1', name: 'PromptA', version: 'v1' },
@@ -177,5 +179,30 @@ describe('generateFolderListFromBulkPaths', () => {
         ],
       },
     ]);
+  });
+});
+
+describe('getResourceTypeByView', () => {
+  test('should return ResourceType.PROMPT when route is Prompts', () => {
+    const result = getResourceTypeByView(ApplicationRoute.Prompts);
+    expect(result).toBe(ResourceType.PROMPT);
+  });
+
+  test('should return ResourceType.FILE when route is Files', () => {
+    const result = getResourceTypeByView(ApplicationRoute.Files);
+    expect(result).toBe(ResourceType.FILE);
+  });
+
+  test('should return ResourceType.APPLICATION when route is AssetsApplications', () => {
+    const result = getResourceTypeByView(ApplicationRoute.AssetsApplications);
+    expect(result).toBe(ResourceType.APPLICATION);
+  });
+
+  test('should return an empty string when route is undefined or not matching any of the routes', () => {
+    const resultWithUndefinedRoute = getResourceTypeByView();
+    const resultWithUnknownRoute = getResourceTypeByView('SomeOtherRoute' as ApplicationRoute);
+
+    expect(resultWithUndefinedRoute).toBe('');
+    expect(resultWithUnknownRoute).toBe('');
   });
 });

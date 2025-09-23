@@ -38,7 +38,7 @@ const BulkButtons = ({
   const folderContext = context?.();
 
   const bulkExport = () => {
-    if (route === ApplicationRoute.Prompts) {
+    if (route === ApplicationRoute.Prompts || route === ApplicationRoute.AssetsApplications) {
       setModalType(ModalType.export);
       setModalState(PopUpState.Opened);
     } else {
@@ -59,7 +59,7 @@ const BulkButtons = ({
         disable={!itemsCount}
         onClick={bulkExport}
       />
-      {route === ApplicationRoute.Prompts && (
+      {(route === ApplicationRoute.Prompts || route === ApplicationRoute.AssetsApplications) && (
         <Button
           cssClass="secondary"
           title={t(ButtonsI18nKey.Delete)}
