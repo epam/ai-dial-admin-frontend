@@ -271,29 +271,33 @@ export const FILES_COLUMNS: ColDef[] = [
   AUTHOR_COLUMN,
 ];
 
-export const EXPORT_COLUMNS = (onChange: (value: string, name: string) => void, route?: ApplicationRoute): ColDef[] => [
-  NAME_COLUMN_WITH_SORT,
-  route === ApplicationRoute.Prompts
-    ? {
-        headerName: 'Version',
-        field: 'version',
-        sortable: true,
-        filter: true,
-        cellClass: NO_BORDER_CLASS,
-        cellRenderer: SelectCellRenderer,
-        cellRendererParams: {
-          getItems: (data: DialPrompt) => data.versions?.map((v) => ({ id: v, name: v })),
-          onChange,
-          isMulti: true,
-        },
-      }
-    : {
-        headerName: 'Extension',
-        field: 'extension',
+export const EXPORT_COLUMNS = (onChange: (value: string, name: string) => void, route?: ApplicationRoute): ColDef[] => {
+  const columns: ColDef[] = [NAME_COLUMN_WITH_SORT, AUTHOR_COLUMN, UPDATED_AT_COLUMN];
+
+  if (route === ApplicationRoute.Prompts) {
+    columns.splice(1, 0, {
+      headerName: 'Version',
+      field: 'version',
+      sortable: true,
+      filter: true,
+      cellClass: NO_BORDER_CLASS,
+      cellRenderer: SelectCellRenderer,
+      cellRendererParams: {
+        getItems: (data: DialPrompt) => data.versions?.map((v) => ({ id: v, name: v })),
+        onChange,
+        isMulti: true,
       },
-  AUTHOR_COLUMN,
-  UPDATED_AT_COLUMN,
-];
+    });
+  }
+  if (route === ApplicationRoute.Files) {
+    columns.splice(1, 0, {
+      headerName: 'Extension',
+      field: 'extension',
+    });
+  }
+
+  return columns;
+};
 
 export const PUBLICATION_COLUMNS: ColDef[] = [
   { field: 'requestName', headerName: 'Name' },

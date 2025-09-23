@@ -1,27 +1,31 @@
 'use client';
 import { createContext, Dispatch, ReactNode, useContext, useReducer } from 'react';
-import { JSONEditorError } from '@/src/types/editor';
+import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 
 export enum ValidationActionType {
   SetField = 'SET_FIELD_VALIDATION',
   SetJsonEditor = 'SET_JSON_EDITOR_VALIDATION',
+  SetJsonEditorNotifications = 'SET_JSON_EDITOR_NOTIFICATIONS',
   Reset = 'RESET',
 }
 
 type ValidationAction =
   | { type: ValidationActionType.SetField; field: string; isValid: boolean }
   | { type: ValidationActionType.SetJsonEditor; errors: JSONEditorError[] | null }
+  | { type: ValidationActionType.SetJsonEditorNotifications; errors: JSONEditorErrorNotification[] }
   | { type: ValidationActionType.Reset };
 
 interface ValidationState {
   fieldValidations: Map<string, boolean>;
   isValid: boolean;
   jsonErrors: JSONEditorError[] | null;
+  jsonErrorNotifications: JSONEditorErrorNotification[];
 }
 
 interface SaveValidationContextType {
   isValid: boolean;
   dispatch: Dispatch<ValidationAction>;
+  jsonErrorNotifications: JSONEditorErrorNotification[];
   jsonErrors: JSONEditorError[] | null;
 }
 
@@ -46,6 +50,13 @@ const validationReducer = (state: ValidationState, action: ValidationAction): Va
       };
     }
 
+    case ValidationActionType.SetJsonEditorNotifications: {
+      return {
+        ...state,
+        jsonErrorNotifications: action.errors,
+      };
+    }
+
     case ValidationActionType.Reset: {
       return {
         ...state,
@@ -62,6 +73,7 @@ const initialState: ValidationState = {
   fieldValidations: new Map(),
   isValid: true,
   jsonErrors: [],
+  jsonErrorNotifications: [],
 };
 
 const SaveValidationContext = createContext<SaveValidationContextType | undefined>(undefined);
@@ -70,7 +82,14 @@ export const SaveValidationContextProvider = ({ children }: { children: ReactNod
   const [state, dispatch] = useReducer(validationReducer, initialState);
 
   return (
-    <SaveValidationContext.Provider value={{ isValid: state.isValid, dispatch, jsonErrors: state.jsonErrors }}>
+    <SaveValidationContext.Provider
+      value={{
+        isValid: state.isValid,
+        jsonErrorNotifications: state.jsonErrorNotifications,
+        dispatch,
+        jsonErrors: state.jsonErrors,
+      }}
+    >
       {children}
     </SaveValidationContext.Provider>
   );

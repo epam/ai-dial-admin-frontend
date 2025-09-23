@@ -1,4 +1,34 @@
-import { JSONEditorThemeConfig, EDITOR_THEMES } from '@/src/types/editor';
+import { JSONEditorThemeConfig, EDITOR_THEMES, EditorOptions } from '@/src/types/editor';
+
+const DEFAULT_COLORS = {
+  'editor.foreground': '#F3F4F6',
+  'editor.background': '#141A23',
+  'editorCursor.foreground': '#F3F4F6',
+  'editor.selectionBackground': '#5C8DEA2B',
+  'editorLineNumber.foreground': '#333942',
+  'scrollbarSlider.background': '#222932',
+  'scrollbarSlider.hoverBackground': '#333942',
+  'scrollbarSlider.activeBackground': '#333942',
+  'diffEditor.insertedTextBackground': '#1D3841',
+  'diffEditor.removedTextBackground': '#402027',
+  'diffEditor.insertedTextBorder': '#37BABC',
+  'diffEditor.removedTextBorder': '#F76464',
+  'diffEditor.insertedLineBackground': '#00000000',
+  'diffEditor.removedLineBackground': '#00000000',
+  'editor.lineHighlightBorder': '#00000000',
+};
+
+export const getDiffEditorTheme = (theme: EDITOR_THEMES): JSONEditorThemeConfig => {
+  const template = EDITOR_THEMES_CONFIG[theme];
+
+  switch (theme) {
+    case EDITOR_THEMES.dark:
+      return { ...template, colors: { ...template.colors, 'editor.background': '#222932' } };
+    case EDITOR_THEMES.light:
+    case EDITOR_THEMES['light-orange']:
+      return { ...template, colors: { ...template.colors, 'editor.background': '#FCFCFC' } };
+  }
+};
 
 export const EDITOR_THEMES_CONFIG: Record<EDITOR_THEMES, JSONEditorThemeConfig> = {
   [EDITOR_THEMES.dark]: {
@@ -14,14 +44,7 @@ export const EDITOR_THEMES_CONFIG: Record<EDITOR_THEMES, JSONEditorThemeConfig> 
       { token: 'delimiter.parenthesis', foreground: '#A972FF' },
     ],
     colors: {
-      'editor.foreground': '#F76464',
-      'editor.background': '#141A23',
-      'editorCursor.foreground': '#F3F4F6',
-      'editor.selectionBackground': '#5C8DEA2B',
-      'editorLineNumber.foreground': '#333942',
-      'scrollbarSlider.background': '#333942',
-      'scrollbarSlider.hoverBackground': '#333942',
-      'scrollbarSlider.activeBackground': '#333942',
+      ...DEFAULT_COLORS,
     },
   },
   [EDITOR_THEMES.light]: {
@@ -37,14 +60,12 @@ export const EDITOR_THEMES_CONFIG: Record<EDITOR_THEMES, JSONEditorThemeConfig> 
       { token: 'delimiter.parenthesis', foreground: '#843EF3' },
     ],
     colors: {
-      'editor.foreground': '#AE2F2F',
+      ...DEFAULT_COLORS,
+      'editor.foreground': '#141A23',
       'editor.background': '#F3F4F6',
       'editorCursor.foreground': '#141A23',
-      'editor.selectionBackground': '#5C8DEA2B',
-      'editorLineNumber.foreground': '#333942',
-      'scrollbarSlider.background': '#333942',
-      'scrollbarSlider.hoverBackground': '#333942',
-      'scrollbarSlider.activeBackground': '#333942',
+      'diffEditor.insertedTextBackground': '#CEEBEE',
+      'diffEditor.removedTextBackground': '#F3D6D8',
     },
   },
   [EDITOR_THEMES['light-orange']]: {
@@ -60,14 +81,41 @@ export const EDITOR_THEMES_CONFIG: Record<EDITOR_THEMES, JSONEditorThemeConfig> 
       { token: 'delimiter.parenthesis', foreground: '#843EF3' },
     ],
     colors: {
-      'editor.foreground': '#AE2F2F',
+      ...DEFAULT_COLORS,
+      'editor.foreground': '#141A23',
       'editor.background': '#F3F4F6',
       'editorCursor.foreground': '#141A23',
-      'editor.selectionBackground': '#5C8DEA2B',
-      'editorLineNumber.foreground': '#333942',
-      'scrollbarSlider.background': '#333942',
-      'scrollbarSlider.hoverBackground': '#333942',
-      'scrollbarSlider.activeBackground': '#333942',
+      'diffEditor.insertedTextBackground': '#CEEBEE',
+      'diffEditor.removedTextBackground': '#F3D6D8',
     },
   },
+};
+
+const defaultOptions: EditorOptions = {
+  minimap: { enabled: false },
+  selectOnLineNumbers: false,
+  automaticLayout: true,
+  scrollBeyondLastLine: false,
+  wordWrap: 'on',
+  smoothScrolling: true,
+  overviewRulerLanes: 0,
+  scrollbar: {
+    horizontal: 'hidden',
+    verticalScrollbarSize: 4,
+    verticalSliderSize: 4,
+  },
+};
+
+export const diffEditorOptions: EditorOptions = {
+  ...defaultOptions,
+  readOnly: true,
+  renderIndicators: false,
+  renderOverviewRuler: false,
+  glyphMargin: false,
+};
+
+export const editorOptions: EditorOptions = {
+  ...defaultOptions,
+  formatOnType: true,
+  formatOnPaste: true,
 };

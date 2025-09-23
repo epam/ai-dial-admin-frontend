@@ -38,12 +38,12 @@ const SimpleEntityProperties: FC<Props> = ({
   const { dispatch } = useSaveValidationContext();
 
   const idTitleKey =
-    view === ApplicationRoute.Prompts || view === ApplicationRoute.Files
+    view === ApplicationRoute.Prompts || view === ApplicationRoute.Files || view === ApplicationRoute.AssetsApplications
       ? EntityFieldsI18nKey.displayName
       : EntityFieldsI18nKey.id;
 
   const idPlaceholderKey =
-    view === ApplicationRoute.Prompts || view === ApplicationRoute.Files
+    view === ApplicationRoute.Prompts || view === ApplicationRoute.Files || view === ApplicationRoute.AssetsApplications
       ? EntityPlaceholdersI18nKey.DisplayName
       : EntityPlaceholdersI18nKey.Id;
 

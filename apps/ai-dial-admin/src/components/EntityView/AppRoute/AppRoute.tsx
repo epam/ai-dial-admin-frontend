@@ -86,7 +86,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
   return (
     <>
       <div className="flex flex-row gap-4 h-full w-full">
-        <HorizontalCollapseBar width="296" title={t(TabsI18nKey.Routes)} containerClass="bg-layer-3">
+        <HorizontalCollapseBar width="296" title={t(TabsI18nKey.Routes)} containerClass="bg-layer-3 mr-4">
           <div className="h-full relative flex flex-col">
             <div className="flex flex-row flex-wrap justify-between items-center mb-6">
               <h1>{t(TabsI18nKey.Routes)}</h1>

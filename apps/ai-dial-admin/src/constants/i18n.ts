@@ -114,6 +114,9 @@ export enum EntitiesI18nKey {
   InterceptorName = 'Entities.InterceptorName',
   ModelDisplayName = 'Entities.ModelDisplayName',
   Author = 'Entities.Author',
+  JSONEditor = 'Entities.JSONEditor',
+  Admin = 'Entities.Admin',
+  Core = 'Entities.Core',
   ApplicationDisplayName = 'Entities.ApplicationDisplayName',
   ChangeIcon = 'Entities.ChangeIcon',
   SaveChangesTitle = 'Entities.SaveChangesTitle',
@@ -206,6 +209,7 @@ export enum ButtonsI18nKey {
   OpenAdapter = 'Buttons.OpenAdapter',
   OpenAppRunner = 'Buttons.OpenAppRunner',
   None = 'Buttons.None',
+  BulkActions = 'Buttons.BulkActions',
 }
 
 export enum CreateI18nKey {
@@ -441,6 +445,8 @@ export enum CompareI18nKey {
   Current = 'Compare.Current',
   Before = 'Compare.Before',
   After = 'Compare.After',
+  CompareVersions = 'Compare.CompareVersions',
+  Version = 'Compare.Version',
 }
 
 export enum PromptsI18nKey {
@@ -452,6 +458,8 @@ export enum PromptsI18nKey {
   NewVersionCreate = 'Prompts.NewVersionCreate',
   NewVersionSave = 'Prompts.NewVersionSave',
   NewVersionSaveDescription = 'Prompts.NewVersionSaveDescription',
+  DeleteSuccessTitle = 'Prompts.DeleteSuccessTitle',
+  DeleteSuccessDescription = 'Prompts.DeleteSuccessDescription',
 }
 
 export enum ImportI18nKey {
@@ -558,6 +566,7 @@ export enum FoldersI18nKey {
   MoveFolderError = 'Folder.MoveFolderError',
   DeleteFolder = 'Folder.DeleteFolder',
   DeleteFolderDescription = 'Folder.DeleteFolderDescription',
+  CollapseAll = 'Folder.CollapseAll',
 }
 
 export enum ActivityAuditI18nKey {
@@ -647,6 +656,7 @@ export enum TypeI18nKey {
   String = 'Type.String',
   Number = 'Type.Number',
   JSON = 'Type.JSON',
+  Archive = 'Type.Archive',
 }
 
 export enum BooleanI18nKey {

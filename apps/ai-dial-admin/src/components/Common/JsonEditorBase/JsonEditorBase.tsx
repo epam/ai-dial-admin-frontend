@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { EDITOR_THEMES_CONFIG } from '@/src/constants/editor';
+import { EDITOR_THEMES_CONFIG, editorOptions } from '@/src/constants/editor';
 import { useTheme } from '@/src/context/ThemeContext';
 import { EDITOR_THEMES } from '@/src/types/editor';
 import { Editor, Monaco, OnValidate } from '@monaco-editor/react';
@@ -46,20 +46,7 @@ const JsonEditorBase: FC<Props> = ({ value, onChange, onValidateJSON, options })
       theme={currentTheme}
       onValidate={onValidateJSON}
       options={{
-        minimap: { enabled: false },
-        formatOnType: true,
-        formatOnPaste: true,
-        selectOnLineNumbers: false,
-        automaticLayout: true,
-        scrollBeyondLastLine: false,
-        wordWrap: 'on',
-        smoothScrolling: true,
-        overviewRulerLanes: 0,
-        scrollbar: {
-          horizontal: 'hidden',
-          verticalScrollbarSize: 4,
-          verticalSliderSize: 4,
-        },
+        ...editorOptions,
         ...(options ?? {}),
       }}
     />

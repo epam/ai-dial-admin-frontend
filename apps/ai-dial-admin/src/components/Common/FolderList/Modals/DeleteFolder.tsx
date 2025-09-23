@@ -23,12 +23,13 @@ import { PopUpState } from '@/src/types/pop-up';
 interface Props {
   modalState: PopUpState;
   selectedFolder?: string;
+  isBulkDelete?: boolean;
   context?: () => PromptFolderContextType | FileFolderContextType | RuleFolderContextType;
   onClose: () => void;
   onApply?: () => void;
 }
 
-const DeleteFolder: FC<Props> = ({ modalState, selectedFolder, context, onClose, onApply }) => {
+const DeleteFolder: FC<Props> = ({ modalState, selectedFolder, isBulkDelete, context, onClose, onApply }) => {
   const t = useI18n();
   const containerClassName = classNames('h-[750px] lg:max-w-[65%]');
 
@@ -69,8 +70,14 @@ const DeleteFolder: FC<Props> = ({ modalState, selectedFolder, context, onClose,
   }, [gridApi, columnDefs, rowData]);
 
   useEffect(() => {
-    setRowData(generatePromptRowDataForDelete(folderContext?.fetchedFoldersData[filePath] as DialPrompt[]));
-  }, [filePath, folderContext?.fetchedFoldersData]);
+    setRowData(
+      generatePromptRowDataForDelete(
+        isBulkDelete
+          ? (folderContext as PromptFolderContextType)?.bulkSelectedData[filePath]
+          : (folderContext?.fetchedFoldersData[filePath] as DialPrompt[]),
+      ),
+    );
+  }, [filePath, folderContext, folderContext?.fetchedFoldersData, isBulkDelete]);
 
   return (
     <Popup
@@ -82,9 +89,14 @@ const DeleteFolder: FC<Props> = ({ modalState, selectedFolder, context, onClose,
     >
       <div className="flex flex-col gap-4 px-6 py-4 flex-1 min-h-0">
         <div className="text-secondary text-sm">{t(FoldersI18nKey.DeleteFolderDescription)}</div>
-        <div className="flex flex-1 min-h-0">
+        <div className="flex flex-row gap-4 flex-1 min-h-0">
           <HorizontalCollapseBar width="360" title={t(FoldersI18nKey.Folders)} containerClass="border-primary">
-            <FolderList context={context} isFolderDelete={true} initialPath={selectedFolder} />
+            <FolderList
+              context={context}
+              isFolderDelete={true}
+              initialPath={selectedFolder}
+              isBulkDelete={isBulkDelete}
+            />
           </HorizontalCollapseBar>
           <div className="flex-1 min-h-0">
             {rowData.length ? (

@@ -1,6 +1,6 @@
 'use client';
 
-import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { IconFileTypeZip } from '@tabler/icons-react';
 
@@ -53,6 +53,26 @@ const FolderCreateSetup: FC<Props> = ({
   setIgnorePaths,
 }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
+
+  const ignorePathsTitle = useMemo(() => {
+    if (view === ApplicationRoute.Prompts) {
+      return t(ImportI18nKey.PathsPrompt);
+    }
+    if (view === ApplicationRoute.Files) {
+      return t(ImportI18nKey.PathsFile);
+    }
+    return '';
+  }, [t, view]);
+
+  const acceptTypes = useMemo(() => {
+    if (view === ApplicationRoute.Prompts) {
+      return 'application/json';
+    }
+    if (view === ApplicationRoute.Files) {
+      return '/';
+    }
+    return '';
+  }, [view]);
 
   const [nameErrorText, setNameErrorText] = useState('');
 
@@ -144,9 +164,7 @@ const FolderCreateSetup: FC<Props> = ({
             ))}
           </div>
           <div className="flex flex-col">
-            <Field
-              fieldTitle={view === ApplicationRoute.Prompts ? t(ImportI18nKey.PathsPrompt) : t(ImportI18nKey.PathsFile)}
-            />
+            <Field fieldTitle={ignorePathsTitle} />
             <Switch
               isOn={ignorePaths}
               title={t(ImportI18nKey.PathsIgnore)}
@@ -177,7 +195,7 @@ const FolderCreateSetup: FC<Props> = ({
               fieldTitle={t(ImportI18nKey.Files)}
               emptyTitle={t(ImportI18nKey.DropAnyFile)}
               files={files}
-              acceptTypes={view === ApplicationRoute.Prompts ? 'application/json' : '/'}
+              acceptTypes={acceptTypes}
               onChangeFile={changeFile}
               dynamicIcon={getFileIcon}
               errorText={t(ImportI18nKey.FileError)}

@@ -21,13 +21,20 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { TabModel } from '@/src/models/tab';
-import { JSONEditorErrorNotification } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import InterceptorProperties from './InterceptorProperties';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
+import { ExportFormat } from '@/src/types/export';
+import {
+  getEntityFromFile,
+  getExportType,
+  getFileFromEntity,
+} from '@/src/components/EntityView/View/core-entity-utils';
+import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 
 interface Props {
   originalInterceptor: DialInterceptor;
@@ -52,12 +59,26 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
   const [selectedInterceptor, setSelectedInterceptor] = useState(cloneDeep(originalInterceptor));
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
-  const [errorNotifications, setErrorNotifications] = useState<JSONEditorErrorNotification[]>([]);
   const [key, setKey] = useState(0);
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
+  const [coreInterceptor, setCoreInterceptor] = useState<DialInterceptor | null>(null);
 
   useEffect(() => {
-    setSelectedInterceptor(cloneDeep(originalInterceptor));
-  }, [originalInterceptor]);
+    const name = (originalInterceptor as { name: string })?.name;
+    if (!coreInterceptor && name) {
+      getCoreEntity(name, getExportType(ApplicationRoute.Interceptors)).then((data) => {
+        setCoreInterceptor(getEntityFromFile(ApplicationRoute.Interceptors, name, data) as DialInterceptor);
+      });
+    }
+  }, [coreInterceptor, originalInterceptor]);
+
+  useEffect(() => {
+    setSelectedInterceptor(
+      selectedFormat === ExportFormat.CORE
+        ? cloneDeep(coreInterceptor as DialInterceptor)
+        : cloneDeep(originalInterceptor),
+    );
+  }, [selectedFormat, coreInterceptor, originalInterceptor]);
 
   const headerClassName = classNames(
     'flex flex-row min-h-[34px]',
@@ -65,8 +86,11 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
   );
 
   useEffect(() => {
-    setIsChanged(!isEqualSkippingUndefined(originalInterceptor, selectedInterceptor));
-  }, [selectedInterceptor, originalInterceptor]);
+    const isEqualAdminInterceptor = isEqualSkippingUndefined(originalInterceptor, selectedInterceptor);
+    const isEqualCoreInterceptor = isEqualSkippingUndefined(selectedInterceptor, coreInterceptor);
+
+    setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreInterceptor : !isEqualAdminInterceptor);
+  }, [selectedFormat, originalInterceptor, selectedInterceptor, coreInterceptor]);
 
   const onChangeActiveTab = useCallback(
     (tab: string) => {
@@ -79,6 +103,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
     if (jsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
+      setSelectedFormat(ExportFormat.ADMIN);
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
@@ -94,6 +119,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
   );
 
   const toggleJsonEditor = useCallback(() => {
+    setSelectedFormat(ExportFormat.ADMIN);
     setJsonEditorEnabled((prev) => !prev);
   }, [setJsonEditorEnabled]);
 
@@ -120,14 +146,19 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
   );
 
   const onSave = useCallback(() => {
-    updateInterceptor(selectedInterceptor).then((res) => {
+    const req =
+      selectedFormat === ExportFormat.CORE
+        ? updateCoreEntity(getFileFromEntity(ApplicationRoute.Interceptors, selectedInterceptor))
+        : updateInterceptor(selectedInterceptor);
+
+    req.then((res) => {
       if (res.success) {
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedInterceptor, router, showNotification]);
+  }, [selectedFormat, selectedInterceptor, router, showNotification]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
@@ -142,7 +173,8 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
           removeEntity={removeInterceptor}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          setErrorNotifications={setErrorNotifications}
+          selectedFormat={selectedFormat}
+          setSelectedFormat={setSelectedFormat}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
@@ -150,7 +182,6 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
           <EntityJsonEditor
             key={key}
             entity={selectedInterceptor}
-            errorNotifications={errorNotifications}
             setSelectedEntity={setSelectedInterceptor}
             setIsChanged={setIsChanged}
           />

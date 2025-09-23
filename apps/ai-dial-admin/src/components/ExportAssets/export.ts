@@ -1,6 +1,8 @@
 import { STRINGS_DELIMITER } from '@/src/constants/prompt';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getGridFileData } from '@/src/utils/files/grid-data';
 
 /**
  * Converts array of DialPrompt into correct row data, joining multiple versions of prompts into one
@@ -156,4 +158,64 @@ export const generateExportList = (promptsToExport?: Record<string, DialFile[]>)
     promptsToExport[folder].forEach((prompt) => result.push(prompt.path));
   }
   return result;
+};
+
+/**
+ * Generate row data for export grid based on route
+ *
+ * @param {?ApplicationRoute} [route] - application route
+ * @param {?(DialPrompt | DialFile)[]} [fetched] - fetched data for selected folder
+ * @param {?(DialPrompt | DialFile)[]} [selected] - already selected data for selected folder
+ * @returns {(DialPrompt | DialFile)[]} - array of export data
+ */
+export const getExportGridData = (
+  route?: ApplicationRoute,
+  fetched?: (DialPrompt | DialFile)[],
+  selected?: (DialPrompt | DialFile)[],
+): (DialPrompt | DialFile)[] => {
+  if (route === ApplicationRoute.Prompts) {
+    return generatePromptRowDataForExportGrid(fetched as DialPrompt[], selected as DialPrompt[]);
+  }
+
+  if (route === ApplicationRoute.Files) {
+    return getGridFileData(fetched as DialFile[]);
+  }
+  return [];
+};
+
+/**
+ * Generate changed export grid data base on route
+ *
+ * @param {?ApplicationRoute} [route] - application route
+ * @param {?Record<string, (DialPrompt | DialFile)[]>} [fetched] - fetched data for selected folder
+ * @param {?Record<string, (DialPrompt | DialFile)[]>} [selected] - already selected data for selected folder
+ * @param {?(DialPrompt | DialFile)[]} [selectedRows] - selected rows from grid
+ * @param {?string} [filePath] - current folder path
+ * @returns {Record<string, DialPrompt[]>} - array of export data
+ */
+export const changeExportGridData = (
+  route?: ApplicationRoute,
+  fetched?: Record<string, (DialPrompt | DialFile)[]>,
+  selected?: Record<string, (DialPrompt | DialFile)[]>,
+  selectedRows?: (DialPrompt | DialFile)[],
+  filePath?: string,
+): Record<string, DialPrompt[]> => {
+  if (route === ApplicationRoute.Prompts) {
+    return changeExportPromptData(
+      selectedRows as DialPrompt[],
+      fetched as Record<string, DialPrompt[]>,
+      filePath as string,
+      selected as Record<string, DialPrompt[]>,
+    );
+  }
+
+  if (route === ApplicationRoute.Files) {
+    return changeExportFileData(
+      selectedRows as DialFile[],
+      fetched as Record<string, DialFile[]>,
+      filePath as string,
+      selected as Record<string, DialFile[]>,
+    ) as Record<string, DialPrompt[]>;
+  }
+  return {};
 };

@@ -1,32 +1,37 @@
-import { FC } from 'react';
+'use client';
+
+import { FC, useState } from 'react';
 
 import classNames from 'classnames';
 
 import Button from '@/src/components/Common/Button/Button';
-import FolderList from '@/src/components/Common/FolderList/FolderList';
-import HorizontalCollapseBar from '@/src/components/Common/HorizontalCollapseBar/HorizontalCollapseBar';
 import Popup from '@/src/components/Common/Popup/Popup';
-import { generateExportList } from '@/src/components/EntityListView/Export/export';
-import { BasicI18nKey, ButtonsI18nKey, FoldersI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
-import { FileFolderContextType } from '@/src/context/FileFolderContext';
-import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
+import RadioField from '@/src/components/Common/RadioField/RadioField';
+import { ButtonsI18nKey, ExportI18nKey, FoldersI18nKey, PromptsI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { ImportFileType as FileType, ImportFileType } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
-import ExportGrid from './ExportGrid';
+import { RadioButtonModel } from '@/src/models/radio-button';
+import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 
 interface Props {
   modalState: PopUpState;
   route?: ApplicationRoute;
-  context?: () => PromptFolderContextType | FileFolderContextType;
   onClose: () => void;
-  onApply?: (promptPaths: string[]) => void;
+  onApply?: (fileType: FileType) => void;
 }
 
-const ExportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }) => {
-  const t = useI18n();
-  const folderContext = context?.();
-  const containerClassName = classNames('h-[750px] lg:max-w-[65%]');
+const ExportModal: FC<Props> = ({ modalState, route, onClose, onApply }) => {
+  const containerClassName = classNames('lg:max-w-[450px]');
+  const t = useI18n() as (stringToTranslate: string) => string;
+
+  const exportTypeRadio: RadioButtonModel[] = [
+    { id: ImportFileType.ARCHIVE, name: t(TypeI18nKey.Archive) },
+    { id: ImportFileType.JSON, name: t(TypeI18nKey.JSON) },
+  ];
+
+  const [exportType, setExportType] = useState(exportTypeRadio[0].id);
 
   return (
     <Popup
@@ -36,28 +41,22 @@ const ExportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
       state={modalState}
       containerClassName={containerClassName}
     >
-      <div className="flex px-6 py-4 flex-1 flex-col min-h-0">
-        <div className="flex flex-1 min-h-0">
-          <HorizontalCollapseBar width="360" title={t(FoldersI18nKey.Folders)} containerClass="border-primary">
-            <FolderList context={context} />
-          </HorizontalCollapseBar>
-          <ExportGrid context={context} route={route} />
-        </div>
-        <div className="pt-4 text-secondary">
-          {generateExportList(folderContext?.exportFoldersData).length} {t(BasicI18nKey.Selected)}
-        </div>
+      <div className="flex px-6 py-6 flex-1 flex-col min-h-0">
+        <RadioField
+          radioButtons={exportTypeRadio}
+          activeRadioButton={exportType}
+          elementId="type"
+          fieldTitle={t(ExportI18nKey.ExportFormat)}
+          orientation={RadioFieldOrientation.Column}
+          onChange={setExportType}
+        />
       </div>
-      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
+      <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
         <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         <Button
           cssClass="primary"
           title={t(ButtonsI18nKey.Export)}
-          onClick={() => {
-            onApply?.(generateExportList(folderContext?.exportFoldersData));
-            folderContext?.setExportFoldersData({});
-            onClose();
-          }}
-          disable={Object.keys(folderContext?.exportFoldersData || {}).length === 0}
+          onClick={() => onApply?.(exportType as ImportFileType)}
         />
       </div>
     </Popup>
