@@ -193,6 +193,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
 
     req.then((res) => {
       if (res.success) {
+        setCoreRole(null);
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));

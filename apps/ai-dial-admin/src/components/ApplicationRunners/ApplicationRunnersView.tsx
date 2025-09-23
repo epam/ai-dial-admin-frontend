@@ -135,6 +135,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
 
     req.then((res) => {
       if (res.success) {
+        setCoreRunner(null);
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));

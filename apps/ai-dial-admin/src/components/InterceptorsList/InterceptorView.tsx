@@ -153,6 +153,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
 
     req.then((res) => {
       if (res.success) {
+        setCoreInterceptor(null);
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
