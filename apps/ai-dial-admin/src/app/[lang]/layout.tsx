@@ -10,6 +10,7 @@ import Header from '@/src/components/Header/Header';
 import Menu from '@/src/components/Menu/Menu';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { AppContextProvider, EmbeddedApp } from '@/src/context/AppContext';
+import { AppsFolderProvider } from '@/src/context/AppsFolderContext';
 import { FileFolderProvider } from '@/src/context/FileFolderContext';
 import { I18nProvider } from '@/src/context/I18nProvider';
 import { NextAuthProvider } from '@/src/context/NextAuthProvider';
@@ -52,21 +53,23 @@ export default async function Layout({ children, params }: { children: ReactNode
           <RuleFolderProvider attributes={process.env.PUBLICATION_FILTERS}>
             <FileFolderProvider>
               <PromptFolderProvider>
-                <I18nProvider locale={lang}>
-                  <NotificationProvider>
-                    <div className={classNames('flex flex-col h-full w-full')}>
-                      <Header isEnableAuth={isEnableAuth} />
-                      <div className="flex-1 min-h-0">
-                        <div className="flex flex-row h-full relative">
-                          <Menu disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)} />
-                          <Content isEnableAuth={isEnableAuth} beVersion={beVersion}>
-                            {children}
-                          </Content>
+                <AppsFolderProvider>
+                  <I18nProvider locale={lang}>
+                    <NotificationProvider>
+                      <div className={classNames('flex flex-col h-full w-full')}>
+                        <Header isEnableAuth={isEnableAuth} />
+                        <div className="flex-1 min-h-0">
+                          <div className="flex flex-row h-full relative">
+                            <Menu disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)} />
+                            <Content isEnableAuth={isEnableAuth} beVersion={beVersion}>
+                              {children}
+                            </Content>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </NotificationProvider>
-                </I18nProvider>
+                    </NotificationProvider>
+                  </I18nProvider>
+                </AppsFolderProvider>
               </PromptFolderProvider>
             </FileFolderProvider>
           </RuleFolderProvider>

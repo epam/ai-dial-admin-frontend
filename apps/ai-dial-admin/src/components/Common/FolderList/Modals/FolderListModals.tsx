@@ -9,11 +9,10 @@ import { getResourceTypeByView } from '@/src/components/Common/FolderList/utils'
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { BasicI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
-import { FileFolderContextType } from '@/src/context/FileFolderContext';
+import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
-import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
-import { RuleFolderContextType } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
+import { DialFile } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
 import { DialRule } from '@/src/models/dial/rule';
 import { ParsedPrompts } from '@/src/models/prompts';
@@ -39,7 +38,7 @@ interface Props {
   view?: ApplicationRoute;
   selectedFolder?: string;
   handleClose: () => void;
-  context?: () => PromptFolderContextType | FileFolderContextType | RuleFolderContextType;
+  context?: () => AssetsFolderContext<DialFile>;
 }
 
 const FolderListModals: FC<Props> = ({ modalState, modalType, view, selectedFolder = '', handleClose, context }) => {

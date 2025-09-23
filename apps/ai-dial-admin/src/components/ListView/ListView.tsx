@@ -13,8 +13,7 @@ import ExportGrid from '@/src/components/ExportAssets/ExportGrid';
 import GridWithColumnsPanel from '@/src/components/Grid/GridWithColumnsPanel/GridWithColumnsPanel';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { FoldersI18nKey } from '@/src/constants/i18n';
-import { FileFolderContextType } from '@/src/context/FileFolderContext';
-import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
+import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -31,7 +30,7 @@ interface Props<T> {
   view?: ApplicationRoute;
   storageKey?: string;
   toggleColumnsPanel?: () => void;
-  context?: () => PromptFolderContextType | FileFolderContextType;
+  context?: () => AssetsFolderContext<DialFile>;
   onGridReady?: (gridApi: GridApi) => void;
   isBulkView?: boolean;
 }

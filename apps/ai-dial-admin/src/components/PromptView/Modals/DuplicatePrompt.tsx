@@ -14,8 +14,10 @@ import {
   FoldersI18nKey,
   PromptsI18nKey,
 } from '@/src/constants/i18n';
+import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
 import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
+import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { RadioButtonModel } from '@/src/models/radio-button';
 import { PopUpState } from '@/src/types/pop-up';
@@ -114,7 +116,7 @@ const DuplicatePrompt: FC<Props> = ({ modalState, entity, versionsMap, onDuplica
             modalTitle={t(BasicI18nKey.MoveToFolder)}
             placeholder={t(EntityPlaceholdersI18nKey.Path)}
             onChange={onChangePath}
-            context={usePromptFolder}
+            context={usePromptFolder as () => AssetsFolderContext<DialPrompt | DialFile>}
           />
         )}
       </div>

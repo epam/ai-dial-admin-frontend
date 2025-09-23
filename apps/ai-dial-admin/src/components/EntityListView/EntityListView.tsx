@@ -8,17 +8,19 @@ import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import ListView from '@/src/components/ListView/ListView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { FileFolderContextType } from '@/src/context/FileFolderContext';
-import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
+import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { DialAssetApp } from '@/src/models/dial/asset-app';
+import { DialFile } from '@/src/models/dial/file';
+import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getEntityPath, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { emptyDataTitleMap, listViewTitleMap } from './constants';
 import Actions from './Components/Actions';
 import { ModalType } from './Components/Modals';
+import { emptyDataTitleMap, listViewTitleMap } from './constants';
 import EntityListHeaderButtons from './HeaderButtons/HeaderButtons';
 
 interface Props<T> {
@@ -36,7 +38,7 @@ interface Props<T> {
   showColumnsButton?: boolean;
   showFolders?: boolean;
   showExport?: boolean;
-  context?: () => PromptFolderContextType | FileFolderContextType;
+  context?: () => AssetsFolderContext<DialFile | DialPrompt | DialAssetApp>;
 }
 
 const BaseEntityList = <T extends object>({
@@ -127,7 +129,7 @@ const BaseEntityList = <T extends object>({
   const getColumns = () => {
     if (route === ApplicationRoute.Prompts) {
       return ENTITIES_COLUMNS(baseColumns, onOpenDeleteModal, onOpenDuplicateModal, openInNewTab, onOpenMoveModal);
-    } else if (route === ApplicationRoute.Files) {
+    } else if (route === ApplicationRoute.Files || route === ApplicationRoute.AssetsApplications) {
       return ENTITIES_COLUMNS(baseColumns, onOpenDeleteModal, void 0, openInNewTab, onOpenMoveModal);
     }
     return ENTITIES_COLUMNS(baseColumns, onOpenDeleteModal, onOpenDuplicateModal, openInNewTab);

@@ -13,9 +13,8 @@ import {
 import { generateExportList } from '@/src/components/ExportAssets/export';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { ExportI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
-import { FileFolderContextType } from '@/src/context/FileFolderContext';
+import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
-import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialFile } from '@/src/models/dial/file';
@@ -42,7 +41,7 @@ interface Props<T> {
   removeEntity: (entity?: string) => Promise<ServerActionResponse>;
   moveFiles?: (paths: string[], newPath: string) => Promise<ServerActionResponse[]>;
   bulkDelete?: (paths: { path: string }[]) => Promise<ServerActionResponse>;
-  context?: () => PromptFolderContextType | FileFolderContextType;
+  context?: () => AssetsFolderContext<DialFile>;
   modalState: PopUpState;
   modalType?: ModalType;
   currentEntity?: T;

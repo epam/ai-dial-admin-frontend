@@ -12,9 +12,7 @@ import Popup from '@/src/components/Common/Popup/Popup';
 import TopicsCellRenderer from '@/src/components/Grid/CellRenderers/TopicCellRenderer';
 import Grid from '@/src/components/Grid/Grid';
 import { BasicI18nKey, ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
-import { FileFolderContextType } from '@/src/context/FileFolderContext';
-import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
-import { RuleFolderContextType } from '@/src/context/RuleFolderContext';
+import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
@@ -24,7 +22,7 @@ interface Props {
   modalState: PopUpState;
   selectedFolder?: string;
   isBulkDelete?: boolean;
-  context?: () => PromptFolderContextType | FileFolderContextType | RuleFolderContextType;
+  context?: () => AssetsFolderContext<DialFile>;
   onClose: () => void;
   onApply?: () => void;
 }
@@ -73,7 +71,7 @@ const DeleteFolder: FC<Props> = ({ modalState, selectedFolder, isBulkDelete, con
     setRowData(
       generatePromptRowDataForDelete(
         isBulkDelete
-          ? (folderContext as PromptFolderContextType)?.bulkSelectedData[filePath]
+          ? (folderContext?.bulkSelectedData[filePath] as DialPrompt[])
           : (folderContext?.fetchedFoldersData[filePath] as DialPrompt[]),
       ),
     );
