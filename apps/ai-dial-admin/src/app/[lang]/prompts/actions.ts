@@ -43,7 +43,12 @@ export async function importPrompts(body: FormData, fileType: ImportFileType) {
   return promptsApi.importPrompts(token, body, fileType);
 }
 
-export async function exportPrompts(paths: string[]) {
+export async function exportPrompts(paths: string[], type?: ImportFileType) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return await promptsApi.exportPrompts(token, paths);
+  return await promptsApi.exportPrompts(token, paths, type);
+}
+
+export async function bulkDeletePrompts(paths: { path: string }[]) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return await promptsApi.bulkDeletePrompts(token, paths);
 }

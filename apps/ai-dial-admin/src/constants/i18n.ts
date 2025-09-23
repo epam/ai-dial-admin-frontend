@@ -209,6 +209,7 @@ export enum ButtonsI18nKey {
   OpenAdapter = 'Buttons.OpenAdapter',
   OpenAppRunner = 'Buttons.OpenAppRunner',
   None = 'Buttons.None',
+  BulkActions = 'Buttons.BulkActions',
 }
 
 export enum CreateI18nKey {
@@ -444,6 +445,8 @@ export enum CompareI18nKey {
   Current = 'Compare.Current',
   Before = 'Compare.Before',
   After = 'Compare.After',
+  CompareVersions = 'Compare.CompareVersions',
+  Version = 'Compare.Version',
 }
 
 export enum PromptsI18nKey {
@@ -455,6 +458,8 @@ export enum PromptsI18nKey {
   NewVersionCreate = 'Prompts.NewVersionCreate',
   NewVersionSave = 'Prompts.NewVersionSave',
   NewVersionSaveDescription = 'Prompts.NewVersionSaveDescription',
+  DeleteSuccessTitle = 'Prompts.DeleteSuccessTitle',
+  DeleteSuccessDescription = 'Prompts.DeleteSuccessDescription',
 }
 
 export enum ImportI18nKey {
@@ -497,6 +502,9 @@ export enum ImportI18nKey {
   ArchiveErrorTitle = 'Import.ArchiveErrorTitle',
   Update = 'Import.Update',
   Create = 'Import.Create',
+  PathsIgnore = 'Import.PathsIgnore',
+  PathsPrompt = 'Import.PathsPrompt',
+  PathsFile = 'Import.PathsFile',
 }
 
 export enum ExportI18nKey {
@@ -558,6 +566,7 @@ export enum FoldersI18nKey {
   MoveFolderError = 'Folder.MoveFolderError',
   DeleteFolder = 'Folder.DeleteFolder',
   DeleteFolderDescription = 'Folder.DeleteFolderDescription',
+  CollapseAll = 'Folder.CollapseAll',
 }
 
 export enum ActivityAuditI18nKey {
@@ -647,6 +656,7 @@ export enum TypeI18nKey {
   String = 'Type.String',
   Number = 'Type.Number',
   JSON = 'Type.JSON',
+  Archive = 'Type.Archive',
 }
 
 export enum BooleanI18nKey {

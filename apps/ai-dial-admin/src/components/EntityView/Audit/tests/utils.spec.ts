@@ -10,6 +10,8 @@ describe('getAuditTabs', () => {
     const tabs = getAuditTabs(t, { dashboardEnabled: true }, ApplicationRoute.Models);
     expect(tabs).toEqual([
       { id: 'Dashboard', name: TabsI18nKey.Dashboard },
+      { id: 'Traces', name: TabsI18nKey.Traces },
+      { id: 'Conversations', name: TabsI18nKey.Conversations },
       { id: 'Activities', name: TabsI18nKey.Activities },
     ]);
   });
@@ -18,6 +20,8 @@ describe('getAuditTabs', () => {
     const tabs = getAuditTabs(t, { dashboardEnabled: true }, ApplicationRoute.Applications);
     expect(tabs).toEqual([
       { id: 'Dashboard', name: TabsI18nKey.Dashboard },
+      { id: 'Traces', name: TabsI18nKey.Traces },
+      { id: 'Conversations', name: TabsI18nKey.Conversations },
       { id: 'Activities', name: TabsI18nKey.Activities },
     ]);
   });

@@ -1,21 +1,23 @@
 'use client';
 
-import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { IconFileTypeZip } from '@tabler/icons-react';
 
+import Field from '@/src/components/Common/Field/Field';
 import { CreateFolderSteps } from '@/src/components/Common/FolderCreate/constants';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import LoadFileAreaField from '@/src/components/Common/LoadFileArea/LoadFileAreaField';
 import RadioButton from '@/src/components/Common/RadioButton/RadioButton';
-import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
-import { EntityFieldsI18nKey, FoldersI18nKey, ImportI18nKey } from '@/src/constants/i18n';
+import Switch from '@/src/components/Common/Switch/Switch';
+import { FoldersI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_ZIP_TYPE } from '@/src/constants/request-headers';
 import { useI18n } from '@/src/locales/client';
 import { RadioButtonModel } from '@/src/models/radio-button';
 import { Step, StepStatus } from '@/src/models/step';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { getIcon } from '@/src/utils/files/icon';
 import { getErrorForFolderName } from '@/src/utils/validation/folder-error';
 
@@ -31,6 +33,8 @@ interface Props {
   setCurrentStep: Dispatch<SetStateAction<Step>>;
   setFolderName: Dispatch<SetStateAction<string>>;
   folderName: string;
+  ignorePaths?: boolean;
+  setIgnorePaths?: Dispatch<SetStateAction<boolean>>;
 }
 
 const FolderCreateSetup: FC<Props> = ({
@@ -45,8 +49,30 @@ const FolderCreateSetup: FC<Props> = ({
   setCurrentStep,
   setFolderName,
   folderName,
+  ignorePaths,
+  setIgnorePaths,
 }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
+
+  const ignorePathsTitle = useMemo(() => {
+    if (view === ApplicationRoute.Prompts) {
+      return t(ImportI18nKey.PathsPrompt);
+    }
+    if (view === ApplicationRoute.Files) {
+      return t(ImportI18nKey.PathsFile);
+    }
+    return '';
+  }, [t, view]);
+
+  const acceptTypes = useMemo(() => {
+    if (view === ApplicationRoute.Prompts) {
+      return 'application/json';
+    }
+    if (view === ApplicationRoute.Files) {
+      return '/';
+    }
+    return '';
+  }, [view]);
 
   const [nameErrorText, setNameErrorText] = useState('');
 
@@ -113,7 +139,7 @@ const FolderCreateSetup: FC<Props> = ({
     <>
       <div className="w-[50%]">
         <TextInputField
-          fieldTitle={t(EntityFieldsI18nKey.name)}
+          fieldTitle={t(FoldersI18nKey.FolderName)}
           elementId="name"
           placeholder={t(FoldersI18nKey.FolderCreatePlaceholder)}
           value={folderName}
@@ -123,17 +149,30 @@ const FolderCreateSetup: FC<Props> = ({
         />
       </div>
       <div className="flex-1 flex flex-col min-h-0">
-        <h3 className="pt-6 pb-4">{t(ImportI18nKey.FileType)}</h3>
-        {fileTypes.map((type) => (
-          <RadioButton
-            key={type.id}
-            inputId={type.id}
-            title={type.name}
-            description={type.description}
-            checked={type.id === fileType}
-            onChange={() => setFileType(type.id)}
-          />
-        ))}
+        <div className="flex flex-col gap-4 mt-6">
+          <div className="flex flex-col">
+            <Field fieldTitle={t(ImportI18nKey.FileType)} />
+            {fileTypes.map((type) => (
+              <RadioButton
+                key={type.id}
+                inputId={type.id}
+                title={type.name}
+                description={type.description}
+                checked={type.id === fileType}
+                onChange={() => setFileType(type.id)}
+              />
+            ))}
+          </div>
+          <div className="flex flex-col">
+            <Field fieldTitle={ignorePathsTitle} />
+            <Switch
+              isOn={ignorePaths}
+              title={t(ImportI18nKey.PathsIgnore)}
+              switchId="ignorePaths"
+              onChange={setIgnorePaths}
+            />
+          </div>
+        </div>
         <div className="mt-2 flex-1 min-h-0">
           {fileType === ImportFileType.ARCHIVE && (
             <LoadFileAreaField
@@ -156,7 +195,7 @@ const FolderCreateSetup: FC<Props> = ({
               fieldTitle={t(ImportI18nKey.Files)}
               emptyTitle={t(ImportI18nKey.DropAnyFile)}
               files={files}
-              acceptTypes={view === ApplicationRoute.Prompts ? 'application/json' : '/'}
+              acceptTypes={acceptTypes}
               onChangeFile={changeFile}
               dynamicIcon={getFileIcon}
               errorText={t(ImportI18nKey.FileError)}

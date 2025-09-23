@@ -35,7 +35,12 @@ import SchemeParameters from './ConfigurationView/Parameters';
 import SchemeProperties from './ConfigurationView/Properties';
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { ExportFormat } from '@/src/types/export';
-import { getEntityFromFile, getExportType } from '@/src/components/EntityView/View/core-entity-utils';
+import {
+  getEntityFromFile,
+  getExportType,
+  getFileFromEntity,
+} from '@/src/components/EntityView/View/core-entity-utils';
+import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 
 interface Props {
   originalScheme: DialApplicationScheme;
@@ -65,10 +70,10 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
   const [coreRunner, setCoreRunner] = useState<DialApplicationScheme | null>(null);
 
   useEffect(() => {
-    const name = (originalScheme as { name: string })?.name;
+    const name = originalScheme?.$id;
     if (!coreRunner && name) {
-      getCoreEntity(name, getExportType(ApplicationRoute.Interceptors)).then((data) => {
-        setCoreRunner(getEntityFromFile(ApplicationRoute.Interceptors, name, data) as DialApplicationScheme);
+      getCoreEntity(name, getExportType(ApplicationRoute.ApplicationRunners)).then((data) => {
+        setCoreRunner(getEntityFromFile(ApplicationRoute.ApplicationRunners, name, data) as DialApplicationScheme);
       });
     }
   }, [coreRunner, originalScheme]);
@@ -102,6 +107,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
     if (jsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
+      setSelectedFormat(ExportFormat.ADMIN);
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
@@ -117,18 +123,24 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
   );
 
   const toggleJsonEditor = useCallback(() => {
+    setSelectedFormat(ExportFormat.ADMIN);
     setJsonEditorEnabled((prev) => !prev);
   }, [setJsonEditorEnabled]);
 
   const onSave = useCallback(() => {
-    updateApplicationScheme(selectedRunner).then((res) => {
+    const req =
+      selectedFormat === ExportFormat.CORE
+        ? updateCoreEntity(getFileFromEntity(ApplicationRoute.ApplicationRunners, selectedRunner))
+        : updateApplicationScheme(selectedRunner);
+
+    req.then((res) => {
       if (res.success) {
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedRunner, router, showNotification]);
+  }, [selectedFormat, selectedRunner, router, showNotification]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">

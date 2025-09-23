@@ -32,7 +32,13 @@ interface Props {
   route?: ApplicationRoute;
   context?: () => PromptFolderContextType | FileFolderContextType;
   onClose: () => void;
-  onApply?: (fileType: FileType, file: File | File[] | ParsedPrompts, resolution: string, path: string) => void;
+  onApply?: (
+    fileType: FileType,
+    file: File | File[] | ParsedPrompts,
+    resolution: string,
+    path: string,
+    ignorePaths?: boolean,
+  ) => void;
 }
 
 const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }) => {
@@ -46,6 +52,7 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
   const [steps, setSteps] = useState(IMPORT_STEPS(t));
   const [currentStep, setCurrentStep] = useState<Step>(steps[0]);
 
+  const [ignorePaths, setIgnorePaths] = useState(false);
   const [fileType, setFileType] = useState(fileTypes[0].id);
   const [resolution, setResolution] = useState(resolutions[0].id);
 
@@ -174,13 +181,13 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
 
   const onFinishClick = () => {
     if (fileType === FileType.ARCHIVE) {
-      onApply?.(fileType, zipFile as File, resolution, folderContext?.filePath as string);
+      onApply?.(fileType, zipFile as File, resolution, folderContext?.filePath as string, ignorePaths);
     } else if (fileType === FileType.JSON) {
       const map = resolution === ConflictResolutionPolicy.MANUAL ? editedFileMap : jsonFileMap;
       const jsonFile = {
         prompts: Array.from(map.values()).flatMap((value) => value.files as DialPrompt[]),
       };
-      onApply?.(fileType, jsonFile, resolution, folderContext?.filePath as string);
+      onApply?.(fileType, jsonFile, resolution, folderContext?.filePath as string, ignorePaths);
     } else if (fileType === FileType.FILES) {
       const map = resolution === ConflictResolutionPolicy.MANUAL ? editedFileMap : separateFileMap;
       onApply?.(
@@ -188,6 +195,7 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
         Array.from(map.values()).flatMap((value) => value.files as unknown as File[]),
         resolution,
         folderContext?.filePath as string,
+        ignorePaths,
       );
     }
   };
@@ -238,6 +246,9 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
             changeFile={changeFile}
             isInvalid={isInvalidFile}
             maxFilesCount={MAX_FILES_COUNT}
+            ignorePaths={ignorePaths}
+            setIgnorePaths={setIgnorePaths}
+            route={route}
           />
         </div>
         {currentStep.id === ImportSteps.PROPERTIES && (

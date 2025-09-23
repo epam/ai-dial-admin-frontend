@@ -36,7 +36,7 @@ export const getExportType = (route: ApplicationRoute): string => {
   }
 };
 
-export const getFileFromEntity = (route: ApplicationRoute, entity: BaseEntity): FileRecord => {
+export const getFileFromEntity = (route: ApplicationRoute, entity: BaseEntity) => {
   switch (route) {
     case ApplicationRoute.Models:
       return { models: { [entity.name as string]: entity } };
@@ -51,7 +51,7 @@ export const getFileFromEntity = (route: ApplicationRoute, entity: BaseEntity): 
     case ApplicationRoute.Keys:
       return { keys: { [entity.name as string]: entity } };
     case ApplicationRoute.ApplicationRunners:
-      return { applicationTypeSchemas: { [entity.name as string]: entity } };
+      return { applicationTypeSchemas: [entity] };
     case ApplicationRoute.Interceptors:
       return { interceptors: { [entity.name as string]: entity } };
 
@@ -75,7 +75,7 @@ export const getEntityFromFile = (route: ApplicationRoute, name: string, file: F
     case ApplicationRoute.Keys:
       return file.keys?.[name];
     case ApplicationRoute.ApplicationRunners:
-      return file.applicationTypeSchemas?.[name];
+      return file.applicationTypeSchemas?.[0];
     case ApplicationRoute.Interceptors:
       return file.interceptors?.[name];
     default:

@@ -37,7 +37,12 @@ import KeyRotateModal from './KeyRotateModal';
 import KeyViewHeader from './KeyViewHeader';
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { ExportFormat } from '@/src/types/export';
-import { getEntityFromFile, getExportType } from '@/src/components/EntityView/View/core-entity-utils';
+import {
+  getEntityFromFile,
+  getExportType,
+  getFileFromEntity,
+} from '@/src/components/EntityView/View/core-entity-utils';
+import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 
 interface Props {
   originalKey: DialKey;
@@ -71,8 +76,8 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
   useEffect(() => {
     const name = (originalKey as { name: string })?.name;
     if (!coreKey && name) {
-      getCoreEntity(name, getExportType(ApplicationRoute.Interceptors)).then((data) => {
-        setCoreKey(getEntityFromFile(ApplicationRoute.Interceptors, name, data) as DialKey);
+      getCoreEntity(name, getExportType(ApplicationRoute.Keys)).then((data) => {
+        setCoreKey(getEntityFromFile(ApplicationRoute.Keys, name, data) as DialKey);
       });
     }
   }, [coreKey, originalKey]);
@@ -99,6 +104,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
     if (jsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
+      setSelectedFormat(ExportFormat.ADMIN);
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
@@ -114,6 +120,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
   );
 
   const toggleJsonEditor = useCallback(() => {
+    setSelectedFormat(ExportFormat.ADMIN);
     setJsonEditorEnabled((prev) => !prev);
   }, [setJsonEditorEnabled]);
 
@@ -140,14 +147,19 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
 
   const onSaveKey = useCallback(() => {
     setConfirmModalState(PopUpState.Closed);
-    updateKey(selectedKey).then((res) => {
+    const req =
+      selectedFormat === ExportFormat.CORE
+        ? updateCoreEntity(getFileFromEntity(ApplicationRoute.Keys, selectedKey))
+        : updateKey(selectedKey);
+
+    req.then((res) => {
       if (res.success) {
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [setConfirmModalState, selectedKey, router, showNotification]);
+  }, [selectedFormat, setConfirmModalState, selectedKey, router, showNotification]);
 
   const onRotateKey = useCallback(
     (key: DialKey) => {

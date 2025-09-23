@@ -38,7 +38,12 @@ import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor'
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { ExportFormat } from '@/src/types/export';
-import { getEntityFromFile, getExportType } from '@/src/components/EntityView/View/core-entity-utils';
+import {
+  getEntityFromFile,
+  getExportType,
+  getFileFromEntity,
+} from '@/src/components/EntityView/View/core-entity-utils';
+import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 
 interface Props {
   originalRole: DialRole;
@@ -79,8 +84,8 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
   useEffect(() => {
     const name = (originalRole as { name: string })?.name;
     if (!coreRole && name) {
-      getCoreEntity(name, getExportType(ApplicationRoute.Interceptors)).then((data) => {
-        setCoreRole(getEntityFromFile(ApplicationRoute.Interceptors, name, data) as DialRole);
+      getCoreEntity(name, getExportType(ApplicationRoute.Roles)).then((data) => {
+        setCoreRole(getEntityFromFile(ApplicationRoute.Roles, name, data) as DialRole);
       });
     }
   }, [coreRole, originalRole]);
@@ -111,6 +116,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
     if (jsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
+      setSelectedFormat(ExportFormat.ADMIN);
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
@@ -128,6 +134,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
   );
 
   const toggleJsonEditor = useCallback(() => {
+    setSelectedFormat(ExportFormat.ADMIN);
     setJsonEditorEnabled((prev) => !prev);
   }, [setJsonEditorEnabled]);
 
@@ -179,14 +186,19 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
   );
 
   const onSave = useCallback(() => {
-    updateRole(selectedRole).then((res) => {
+    const req =
+      selectedFormat === ExportFormat.CORE
+        ? updateCoreEntity(getFileFromEntity(ApplicationRoute.Roles, selectedRole))
+        : updateRole(selectedRole);
+
+    req.then((res) => {
       if (res.success) {
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedRole, router, showNotification]);
+  }, [selectedFormat, selectedRole, router, showNotification]);
 
   const onChangeRoleToken = useCallback(
     (value: number, data: DialRole, token: string) => {

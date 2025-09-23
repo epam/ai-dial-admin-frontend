@@ -173,6 +173,7 @@ const EntityView: FC<Props> = ({
     if (jsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
+      setSelectedFormat(ExportFormat.ADMIN);
       // TODO: Revisit solution
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
@@ -201,13 +202,14 @@ const EntityView: FC<Props> = ({
   const onTryToSave = useCallback(() => {
     if (
       (view === ApplicationRoute.Models || view === ApplicationRoute.Applications) &&
+      selectedFormat !== ExportFormat.CORE &&
       isDisableRole(selectedEntity as EntityRoleLimits)
     ) {
       handleModalOpen(ModalType.emptyRoles);
     } else {
       onSave();
     }
-  }, [handleModalOpen, onSave, selectedEntity, view]);
+  }, [handleModalOpen, selectedFormat, onSave, selectedEntity, view]);
 
   const onChangeEntity = useCallback(
     (entity: BaseEntity, skipRefresh?: boolean) => {
@@ -218,6 +220,7 @@ const EntityView: FC<Props> = ({
   );
 
   const toggleJsonEditor = useCallback(() => {
+    setSelectedFormat(ExportFormat.ADMIN);
     setJsonEditorEnabled((prev) => !prev);
   }, [setJsonEditorEnabled]);
 

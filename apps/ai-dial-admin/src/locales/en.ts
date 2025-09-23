@@ -230,6 +230,7 @@ export default {
     String: 'String',
     Number: 'Number',
     JSON: 'JSON',
+    Archive: 'Archive',
   },
   Boolean: {
     true: 'True',
@@ -278,6 +279,7 @@ export default {
     OpenAppRunner: 'Open Application Runner',
     OpenAdapter: 'Open Adapter',
     None: 'None',
+    BulkActions: 'Bulk actions',
   },
   Compare: {
     CompareChanges: 'Compare changes',
@@ -286,6 +288,8 @@ export default {
     Current: 'Current state',
     Before: 'Before',
     After: 'After',
+    CompareVersions: 'Compare versions',
+    Version: 'Version',
   },
   UpstreamEndpoints: {
     Upstream: 'Upstream',
@@ -480,6 +484,8 @@ export default {
     NewVersionCreate: 'Create new version',
     NewVersionSave: 'Save as New Version',
     NewVersionSaveDescription: 'Create a new version to save changes.',
+    DeleteSuccessTitle: 'Prompts deleted successfully',
+    DeleteSuccessDescription: 'You can restore them using rollback',
   },
   Keys: {
     SaveWithoutRoles: 'Save without adding Roles',
@@ -543,6 +549,9 @@ export default {
     ArchiveErrorTitle: 'Importing archive failed',
     Update: 'Update',
     Create: 'Create',
+    PathsIgnore: 'Ignore paths',
+    PathsPrompt: 'Prompt paths',
+    PathsFile: 'File paths',
   },
   Export: {
     Config: 'Config',
@@ -606,6 +615,7 @@ export default {
     DeleteFolder: 'Confirm Deleting Folder',
     DeleteFolderDescription: 'Are you sure that you want to delete all subfolders and prompts?',
     Folders: 'Folders',
+    CollapseAll: 'Collapse all folders',
   },
   ActivityAudit: {
     ResourceDiff: 'Resource diff',

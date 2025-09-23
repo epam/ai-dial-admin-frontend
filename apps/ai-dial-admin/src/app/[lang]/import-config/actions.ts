@@ -12,16 +12,10 @@ import {
 import { ConflictResolutionPolicy } from '@/src/types/import';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { getCoreFileFormat } from '@/src/utils/get-core-file';
 
-export async function updateCoreEntity(file: Record<string, object>) {
-  const body = new FormData();
-
-  const jsonString = JSON.stringify(file);
-
-  const blob = new Blob([jsonString], { type: 'application/json' });
-  body.append('file', blob);
-  body.append('resolutionPolicy', ConflictResolutionPolicy.OVERRIDE.toUpperCase());
-  return importJsonConfigs(body);
+export async function updateCoreEntity(file: Record<string, unknown>) {
+  return importJsonConfigs(getCoreFileFormat(file, ConflictResolutionPolicy.OVERRIDE));
 }
 
 export async function importJsonConfigs(file: FormData) {

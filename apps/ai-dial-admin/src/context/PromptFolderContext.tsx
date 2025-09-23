@@ -11,11 +11,11 @@ export interface PromptFolderContextType {
   files: DialPrompt[];
   expandedFolders: Set<string>;
   filePath: string;
-  toggleFolder: (folder: DialFile) => void;
+  toggleFolder: (folder: DialFile, skipFetch?: boolean, collapseAll?: boolean) => void;
   data: DialPrompt[] | null;
   fetchedFoldersData: Record<string, DialPrompt[]>;
-  exportFoldersData: Record<string, DialPrompt[]>;
-  setExportFoldersData: Dispatch<SetStateAction<Record<string, DialPrompt[]>>>;
+  bulkSelectedData: Record<string, DialPrompt[]>;
+  setBulkSelectedData: Dispatch<SetStateAction<Record<string, DialPrompt[]>>>;
 }
 
 const PromptFolderContext = createContext<PromptFolderContextType | undefined>(undefined);
@@ -27,7 +27,7 @@ export const PromptFolderProvider = ({ children }: { children: ReactNode }) => {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
   const [fetchedFoldersData, setFetchedFoldersData] = useState<Record<string, DialPrompt[]>>({});
-  const [exportFoldersData, setExportFoldersData] = useState<Record<string, DialPrompt[]>>({});
+  const [bulkSelectedData, setBulkSelectedData] = useState<Record<string, DialPrompt[]>>({});
   const [data, setData] = useState<DialPrompt[] | null>([]);
 
   const fetchFiles = (path: string, refreshData?: boolean, resetFolder?: boolean) => {
@@ -59,9 +59,9 @@ export const PromptFolderProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const toggleFolder = (folder: DialFile, skipFetch?: boolean) => {
+  const toggleFolder = (folder: DialFile, skipFetch?: boolean, collapseAll?: boolean) => {
     const folderPath = folder.path;
-    const newExpanded = new Set(expandedFolders);
+    const newExpanded = new Set(collapseAll ? [] : expandedFolders);
     setFilePath(folderPath);
     if (newExpanded.has(folderPath)) {
       newExpanded.delete(folderPath);
@@ -85,8 +85,8 @@ export const PromptFolderProvider = ({ children }: { children: ReactNode }) => {
     toggleFolder,
     data,
     fetchedFoldersData,
-    exportFoldersData,
-    setExportFoldersData,
+    bulkSelectedData,
+    setBulkSelectedData,
   };
   return <PromptFolderContext.Provider value={value}>{children}</PromptFolderContext.Provider>;
 };

@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { IconCaretDownFilled, IconCaretRightFilled, IconDotsVertical, IconFolder, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
@@ -11,7 +11,7 @@ import {
   getManageFolderOperation,
   getMoveFolderOperation,
   getRenameFolderOperation,
-} from '@/src/components/Common/FolderCreate/utils';
+} from '@/src/components/Common/FolderCreate/Components/Operations';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import { ROOT_FOLDER } from '@/src/constants/file';
@@ -28,6 +28,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
 import { addTrailingSlash, getFolderNameAndPath, isFolder } from '@/src/utils/files/path';
 import FolderListModals, { ModalType } from './Modals/FolderListModals';
+import { generateFolderListFromBulkPaths } from './utils';
 
 interface Props {
   disableAutoFetch?: boolean;
@@ -37,6 +38,7 @@ interface Props {
   isFolderMove?: boolean;
   folderPath?: string;
   isFolderDelete?: boolean;
+  isBulkDelete?: boolean;
 }
 
 const FolderList: FC<Props> = ({
@@ -47,6 +49,7 @@ const FolderList: FC<Props> = ({
   isFolderMove,
   folderPath,
   isFolderDelete,
+  isBulkDelete,
 }) => {
   const t = useI18n();
   const folderContext = context?.();
@@ -55,6 +58,16 @@ const FolderList: FC<Props> = ({
   const [modalType, setModalType] = useState<ModalType | undefined>(void 0);
 
   const [selectedFolder, setSelectedFolder] = useState<string>();
+
+  const folderData = useMemo(() => {
+    return isBulkDelete
+      ? generateFolderListFromBulkPaths(Object.keys((folderContext as PromptFolderContextType).bulkSelectedData) || [])
+      : (folderContext?.files as DialFile[]);
+  }, [folderContext, isBulkDelete]);
+
+  const rootFolder = useMemo(() => {
+    return isFolderDelete && !isBulkDelete ? initialPath : void 0;
+  }, [initialPath, isBulkDelete, isFolderDelete]);
 
   const showFolderActions = view === ApplicationRoute.Prompts;
 
@@ -133,11 +146,12 @@ const FolderList: FC<Props> = ({
     } else if (
       !disableAutoFetch &&
       !initialPath &&
+      !isBulkDelete &&
       (folderContext?.files == null || folderContext?.files?.length === 0)
     ) {
       folderContext?.fetchFiles(`${ROOT_FOLDER}/`);
     }
-  }, [folderContext, disableAutoFetch, initialPath]);
+  }, [folderContext, disableAutoFetch, initialPath, isBulkDelete]);
 
   const getFolderClassNames = (node: DialFile, level: number) => {
     const isSelected = folderContext?.filePath === node.path;
@@ -146,7 +160,10 @@ const FolderList: FC<Props> = ({
       ? 'bg-accent-primary-alpha border-l-2 border-l-accent-primary rounded'
       : 'border-l-2 border-l-transparent';
     const iconClass =
-      !node.children?.some((c) => isFolder(c.nodeType)) && folderContext?.fetchedFoldersData[node.path]
+      !node.children?.some((c) => isFolder(c.nodeType)) &&
+      (isBulkDelete
+        ? (folderContext as PromptFolderContextType)?.bulkSelectedData[node.path]
+        : folderContext?.fetchedFoldersData[node.path])
         ? 'text-transparent'
         : '';
     return { baseClass, selectedClass, iconClass };
@@ -234,10 +251,10 @@ const FolderList: FC<Props> = ({
 
   return (
     <div className="flex-1 w-full overflow-y-auto">
-      {!folderContext?.files?.length ? (
+      {!folderContext?.files?.length && !isBulkDelete ? (
         <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoFolders)} />
       ) : (
-        renderTree(folderContext?.files, 0, isFolderDelete ? initialPath : void 0)
+        renderTree(folderData, 0, rootFolder)
       )}
       <FolderListModals
         view={view}

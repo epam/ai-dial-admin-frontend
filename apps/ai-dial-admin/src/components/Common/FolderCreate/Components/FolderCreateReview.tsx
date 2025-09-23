@@ -8,18 +8,18 @@ import { previewPromptZip } from '@/src/app/[lang]/folders-storage/actions';
 import { CreateFolderSteps } from '@/src/components/Common/FolderCreate/constants';
 import { ZipFilePreview } from '@/src/components/Common/FolderCreate/models';
 import {
+  generateColumnsForImportGrid,
   generatePreviewData,
   isErrorFileReview,
   isErrorPromptReview,
+  isErrorRowForImport,
   readAllFiles,
   readJsonFiles,
 } from '@/src/components/Common/FolderCreate/utils';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
 import {
   changeFilesMap,
-  generateFileColumnsForImportGrid,
   generateFileRowDataForImportGrid,
-  generatePromptColumnsForImportGrid,
   generatePromptRowDataForImportGrid,
 } from '@/src/components/EntityListView/Import/import';
 import Grid from '@/src/components/Grid/Grid';
@@ -57,7 +57,6 @@ const FolderCreateReview: FC<Props> = ({
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [count, setCount] = useState<number>(0);
 
-  const isPromptReview = view === ApplicationRoute.Prompts;
   const prevFilesRef = useRef<File[]>([]);
 
   const changeFile = useCallback(
@@ -67,21 +66,17 @@ const FolderCreateReview: FC<Props> = ({
     [setEditedFileMap],
   );
 
-  const columnDefs: ColDef[] = isPromptReview
-    ? generatePromptColumnsForImportGrid(changeFile, true, fileType === ImportFileType.ARCHIVE)
-    : generateFileColumnsForImportGrid(changeFile, true, fileType === ImportFileType.ARCHIVE);
+  const columnDefs: ColDef[] = generateColumnsForImportGrid(changeFile, fileType, view);
 
   const rowClassRules: RowClassRules = {
-    'ag-error-row': (params) => {
-      return isPromptReview ? isErrorPromptReview(params.data) : isErrorFileReview(params.data);
-    },
+    'ag-error-row': (params) => isErrorRowForImport(params.data),
   };
 
   const setErrorState = (event: GridReadyEvent | CellValueChangedEvent) => {
     let isError = false;
 
     event.api?.forEachNode((node) => {
-      if (isPromptReview ? isErrorPromptReview(node.data) : isErrorFileReview(node.data)) {
+      if (isErrorRowForImport(node.data)) {
         isError = true;
       }
     });
@@ -126,7 +121,7 @@ const FolderCreateReview: FC<Props> = ({
     if (isEqualSkippingUndefined(prevFiles, files)) return;
     prevFilesRef.current = files;
 
-    if (isPromptReview && files.length) {
+    if (view === ApplicationRoute.Prompts && files.length) {
       if (fileType === ImportFileType.ARCHIVE) {
         const body = getFormDataForImport('public/', files[0], fileType, ConflictResolutionPolicy.SKIP);
         previewPromptZip(body).then((data) => {
@@ -140,24 +135,24 @@ const FolderCreateReview: FC<Props> = ({
           setEditedFileMap(result);
         });
       }
-    } else if (!isPromptReview && files.length) {
+    } else if (view === ApplicationRoute.Files && files.length) {
       if (fileType !== ImportFileType.ARCHIVE) {
         setEditedFileMap(readAllFiles(files));
       }
     } else if (!files.length) {
       setEditedFileMap(new Map());
     }
-  }, [files, isPromptReview, setEditedFileMap, fileType]);
+  }, [files, setEditedFileMap, fileType, view]);
 
   useEffect(() => {
     if (currentStep.id !== CreateFolderSteps.FILE_REVIEW && editedFileMap.size !== 0) {
       let rowData: (PromptImportGridData | FileImportGridData)[] = [];
       let isError;
 
-      if (isPromptReview) {
+      if (view === ApplicationRoute.Prompts) {
         rowData = generatePromptRowDataForImportGrid(editedFileMap, [], t);
         isError = (rowData as PromptImportGridData[]).some((r) => isErrorPromptReview(r));
-      } else {
+      } else if (view === ApplicationRoute.Files) {
         rowData = generateFileRowDataForImportGrid(editedFileMap, [], t);
         isError = (rowData as FileImportGridData[]).some((r) => isErrorFileReview(r));
       }

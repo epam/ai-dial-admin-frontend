@@ -1,42 +1,41 @@
 'use client';
 
-import { MouseEvent, useCallback, useState } from 'react';
+import { Dispatch, MouseEvent, SetStateAction, useCallback, useState } from 'react';
 
-import { IconFileArrowLeft, IconFileArrowRight, IconPlus, IconColumns2 } from '@tabler/icons-react';
+import { IconColumns2, IconFileArrowLeft, IconPlus, IconSquareCheck } from '@tabler/icons-react';
 import { GridApi } from 'ag-grid-community';
 
-import { exportFiles, importFiles } from '@/src/app/[lang]/files/actions';
-import { exportPrompts, importPrompts } from '@/src/app/[lang]/prompts/actions';
+import { importFiles } from '@/src/app/[lang]/files/actions';
+import { importPrompts } from '@/src/app/[lang]/prompts/actions';
 import CreateAdapter from '@/src/components/Adapter/Modals/CreateAdapter';
 import CreateAppRunner from '@/src/components/ApplicationRunners/Modals/CreateAppRunner';
 import Button from '@/src/components/Common/Button/Button';
+import { createModalTitleMap } from '@/src/components/EntityListView/constants';
+import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
+import Modals, { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { getImportResults } from '@/src/components/EntityListView/Import/import';
+import CreateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Create';
 import CreateKey from '@/src/components/KeysList/Popup/CreateKey';
-import { ButtonsI18nKey, ExportI18nKey, ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { FileFolderContextType } from '@/src/context/FileFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ImportResult } from '@/src/models/import';
 import { ParsedPrompts } from '@/src/models/prompts';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
-import { downloadFile } from '@/src/utils/download';
 import { getFolderName } from '@/src/utils/files/folder';
-import { getErrorNotification, getPrepareNotification, getSuccessNotification } from '@/src/utils/notification';
-import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
-import { createModalTitleMap } from '@/src/components/EntityListView/constants';
-import EntityListModals, { ModalType } from '@/src/components/EntityListView/EntityListModals';
-import { getFormDataForImport } from './utils';
-import CreateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Create';
-import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { getErrorNotification, getPrepareNotification } from '@/src/utils/notification';
 import ResetFiltersButton from './ResetFiltersButton';
-import { BaseEntity } from '@/src/models/dial/base-entity';
+import { getFormDataForImport } from './utils';
 
 interface Props<T> {
   names?: string[];
@@ -50,6 +49,8 @@ interface Props<T> {
   toggleColumnsPanel: () => void;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
   context?: () => PromptFolderContextType | FileFolderContextType;
+  setIsBulkView?: Dispatch<SetStateAction<boolean>>;
+  isBulkView?: boolean;
 }
 
 const EntityListHeaderButtons = <T extends BaseEntity>({
@@ -64,6 +65,8 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
   toggleColumnsPanel,
   createEntity,
   context,
+  setIsBulkView,
+  isBulkView,
 }: Props<T>) => {
   const t = useI18n() as (t: string, options?: Record<string, string | number>) => string;
   const { showNotification, removeNotification } = useNotification();
@@ -82,37 +85,15 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
     setModalState(PopUpState.Opened);
   }, []);
 
-  const onExport = useCallback(
-    (promptPaths: string[]) => {
-      const type = t(route === ApplicationRoute.Prompts ? MenuI18nKey.Prompts : MenuI18nKey.Files);
-      const exportFunction = route === ApplicationRoute.Prompts ? exportPrompts : exportFiles;
-
-      exportFunction(promptPaths)
-        .then(({ blob, fileName }) => {
-          showNotification(
-            getSuccessNotification(t(ExportI18nKey.SuccessTitle, { type }), t(ExportI18nKey.SuccessDescription)),
-          );
-
-          downloadFile(blob, fileName);
-        })
-        .catch(() => {
-          showNotification(
-            getErrorNotification(t(ExportI18nKey.ErrorTitle, { type }), t(ExportI18nKey.ErrorDescription)),
-          );
-        });
-      handleModalClose();
-    },
-    [handleModalClose, route, showNotification, t],
-  );
-
   const onImport = useCallback(
     (
       fileType: ImportFileType,
       file: File | File[] | ParsedPrompts,
       conflictResolutionStrategy: string,
       path: string,
+      ignorePaths?: boolean,
     ) => {
-      const body = getFormDataForImport(path, file, fileType, conflictResolutionStrategy);
+      const body = getFormDataForImport(path, file, fileType, conflictResolutionStrategy, void 0, ignorePaths);
       const folderName = getFolderName(path) || '';
       const prepareNotificationId = showNotification(
         getPrepareNotification(
@@ -201,38 +182,40 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
           onClick={onToggleColumnsPanel}
         />
       )}
-
-      {showExportImportButtons && (
+      {!isBulkView && (
         <>
-          <Button
-            cssClass="secondary"
-            title={t(ButtonsI18nKey.Export)}
-            iconBefore={<IconFileArrowRight {...BASE_ICON_PROPS} />}
-            onClick={() => handleModalOpen(ModalType.export)}
-          />
-          <Button
-            cssClass="secondary"
-            title={t(ButtonsI18nKey.Import)}
-            iconBefore={<IconFileArrowLeft {...BASE_ICON_PROPS} />}
-            onClick={() => handleModalOpen(ModalType.import)}
-          />
+          {showExportImportButtons && (
+            <>
+              <Button
+                cssClass="secondary"
+                title={t(ButtonsI18nKey.BulkActions)}
+                iconBefore={<IconSquareCheck {...BASE_ICON_PROPS} />}
+                onClick={() => setIsBulkView?.(true)}
+              />
+              <Button
+                cssClass="secondary"
+                title={t(ButtonsI18nKey.Import)}
+                iconBefore={<IconFileArrowLeft {...BASE_ICON_PROPS} />}
+                onClick={() => handleModalOpen(ModalType.import)}
+              />
+            </>
+          )}
+          {!!createEntity && (
+            <Button
+              cssClass="primary"
+              title={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}
+              iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+              onClick={() => handleModalOpen(ModalType.create)}
+            />
+          )}
         </>
       )}
-      {!!createEntity && (
-        <Button
-          cssClass="primary"
-          title={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}
-          iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-          onClick={() => handleModalOpen(ModalType.create)}
-        />
-      )}
 
-      <EntityListModals
+      <Modals
         route={route}
         modalState={modalState}
         modalType={modalType}
         createModal={<SaveValidationContextProvider>{getCreateModal()}</SaveValidationContextProvider>}
-        handleExport={onExport}
         handleImport={onImport}
         handleClose={handleModalClose}
         context={context}

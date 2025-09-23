@@ -30,7 +30,12 @@ import { getErrorNotification } from '@/src/utils/notification';
 import ToolsetProperties from './Properties';
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { ExportFormat } from '@/src/types/export';
-import { getEntityFromFile, getExportType } from '@/src/components/EntityView/View/core-entity-utils';
+import {
+  getEntityFromFile,
+  getExportType,
+  getFileFromEntity,
+} from '@/src/components/EntityView/View/core-entity-utils';
+import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 
 interface Props {
   names: string[];
@@ -63,8 +68,8 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
   useEffect(() => {
     const name = (originalToolset as { name: string })?.name;
     if (!coreToolset && name) {
-      getCoreEntity(name, getExportType(ApplicationRoute.Interceptors)).then((data) => {
-        setCoreToolset(getEntityFromFile(ApplicationRoute.Interceptors, name, data) as Toolset);
+      getCoreEntity(name, getExportType(ApplicationRoute.Toolsets)).then((data) => {
+        setCoreToolset(getEntityFromFile(ApplicationRoute.Toolsets, name, data) as Toolset);
       });
     }
   }, [coreToolset, originalToolset]);
@@ -97,6 +102,7 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
     if (jsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
+      setSelectedFormat(ExportFormat.ADMIN);
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
@@ -114,11 +120,17 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
   );
 
   const toggleJsonEditor = useCallback(() => {
+    setSelectedFormat(ExportFormat.ADMIN);
     setJsonEditorEnabled((prev) => !prev);
   }, [setJsonEditorEnabled]);
 
   const onSave = useCallback(() => {
-    updateToolset(selectedToolset).then((res) => {
+    const req =
+      selectedFormat === ExportFormat.CORE
+        ? updateCoreEntity(getFileFromEntity(ApplicationRoute.Toolsets, selectedToolset))
+        : updateToolset(selectedToolset);
+
+    req.then((res) => {
       if (res.success) {
         router.refresh();
       } else {
@@ -126,15 +138,15 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
       }
       setModalState(PopUpState.Closed);
     });
-  }, [selectedToolset, router, showNotification]);
+  }, [selectedFormat, selectedToolset, router, showNotification]);
 
   const onTryToSave = useCallback(() => {
-    if (isDisableRole(selectedToolset as EntityRoleLimits)) {
+    if (selectedFormat !== ExportFormat.CORE && isDisableRole(selectedToolset as EntityRoleLimits)) {
       setModalState(PopUpState.Opened);
     } else {
       onSave();
     }
-  }, [onSave, selectedToolset]);
+  }, [onSave, selectedFormat, selectedToolset]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">

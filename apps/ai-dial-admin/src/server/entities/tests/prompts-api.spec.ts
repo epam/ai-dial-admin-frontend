@@ -3,7 +3,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { PROMPT_DELETE_URL, PROMPT_LIST_URL, PromptsApi } from '../prompts-api';
+import { PROMPT_DELETE_BULK_URL, PROMPT_DELETE_URL, PROMPT_LIST_URL, PromptsApi } from '../prompts-api';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -53,5 +53,21 @@ describe('Server :: PromptsApi', () => {
     await instance.movePrompts(TOKEN_MOCK, paths, '/new');
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  test('Should calls bulkDeletePrompts and sends POST request and returns response', async () => {
+    const mockResponse: ServerActionResponse = { success: true };
+    fetchMock.mockResponse(JSON.stringify(mockResponse));
+
+    const paths = [{ path: '/old/prompt1' }, { path: '/old/prompt2' }];
+    await instance.bulkDeletePrompts(TOKEN_MOCK, paths);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${TEST_URL}${PROMPT_DELETE_BULK_URL}`,
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ paths: [{ path: '/old/prompt1' }, { path: '/old/prompt2' }] }),
+      }),
+    );
   });
 });
