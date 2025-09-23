@@ -15,13 +15,13 @@ import InputWithReadonlyParts from '@/src/components/Common/Input/InputWithReado
 import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
 
 interface Props {
-  model: DialModel;
+  entity: DialModel;
   prefix?: string;
   onChange: (model: DialModel) => void;
   isModal?: boolean;
 }
 
-const ModelEndpoint: FC<Props> = ({ model, prefix, onChange, isModal }) => {
+const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
   const t = useI18n() as (key: string) => string;
 
   const modelTypeRadio: RadioButtonModel[] = [
@@ -37,24 +37,24 @@ const ModelEndpoint: FC<Props> = ({ model, prefix, onChange, isModal }) => {
   useEffect(() => {
     if (prefix) {
       // NOTE: due to not required id part, ensure no double slashes in path
-      const path = model.source?.completionEndpointPath;
+      const path = entity.source?.completionEndpointPath;
       const clearedPath = path?.startsWith('/') ? path.slice(1) : path;
 
       setFullValue(`${prefix}${clearedPath}`);
     } else {
-      setFullValue(model.endpoint as string);
+      setFullValue(entity.endpoint as string);
     }
-  }, [model, prefix]);
+  }, [entity, prefix]);
 
   const onChangePath = useCallback(
     (value: string) => {
       setName(value);
       onChange({
-        ...model,
-        source: { ...(model.source as SOURCE_FIELD), completionEndpointPath: `${value}${postfix}` },
+        ...entity,
+        source: { ...(entity.source as SOURCE_FIELD), completionEndpointPath: `${value}${postfix}` },
       });
     },
-    [model, onChange, postfix],
+    [entity, onChange, postfix],
   );
 
   const onChangeEndpoint = useCallback(
@@ -63,11 +63,11 @@ const ModelEndpoint: FC<Props> = ({ model, prefix, onChange, isModal }) => {
       setEndpointError(error);
       setName(value);
       onChange({
-        ...model,
+        ...entity,
         endpoint: `${value}${postfix}`,
       });
     },
-    [model, onChange, postfix, t],
+    [entity, onChange, postfix, t],
   );
 
   const onChangeType = useCallback(
@@ -75,33 +75,33 @@ const ModelEndpoint: FC<Props> = ({ model, prefix, onChange, isModal }) => {
       const endpoint = `${name}${getEndpointPostfix(type as DialModelType)}`;
       if (prefix) {
         onChange({
-          ...model,
+          ...entity,
           source: {
-            ...(model.source as SOURCE_FIELD),
+            ...(entity.source as SOURCE_FIELD),
             completionEndpointPath: endpoint,
           },
           type: type as DialModelType,
         });
       } else {
         onChange({
-          ...model,
+          ...entity,
           endpoint,
           type: type as DialModelType,
         });
       }
     },
-    [name, prefix, onChange, model],
+    [name, prefix, onChange, entity],
   );
 
   useEffect(() => {
-    const postfix = getEndpointPostfix(isModal ? DialModelType.Chat : model.type);
+    const postfix = getEndpointPostfix(isModal ? DialModelType.Chat : entity.type);
     const name = prefix
-      ? model.source?.completionEndpointPath?.split(postfix)[0] || ''
-      : model.endpoint?.split(postfix)[0] || '';
+      ? entity.source?.completionEndpointPath?.split(postfix)[0] || ''
+      : entity.endpoint?.split(postfix)[0] || '';
 
     setPostfix(postfix);
     setName(name);
-  }, [isModal, model, prefix]);
+  }, [isModal, entity, prefix]);
 
   return (
     <div className="w-full flex flex-col gap-6">
@@ -109,7 +109,7 @@ const ModelEndpoint: FC<Props> = ({ model, prefix, onChange, isModal }) => {
         <div className="w-full lg:w-[35%]">
           <RadioField
             radioButtons={modelTypeRadio}
-            activeRadioButton={model.type as string}
+            activeRadioButton={entity.type as string}
             elementId="type"
             fieldTitle={t(EntityFieldsI18nKey.type)}
             orientation={RadioFieldOrientation.Row}

@@ -16,12 +16,10 @@ import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/u
 
 import Field from '@/src/components/Common/Field/Field';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
-import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
 import Containers from '@/src/components/SourceField/Containers/Containers';
 import Templates from '@/src/components/SourceField/Template/Templates';
-import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
 import Adapters from '@/src/components/SourceField/Adapters/Adapters';
-import ToolsetType from '@/src/components/Toolsets/View/ToolsetType';
+import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
 
 interface Props<T> {
   entity: T;
@@ -104,43 +102,22 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
       </div>
 
       {source === SOURCE_TYPE.ENDPOINTS && (
-        <>
-          {view === ApplicationRoute.Models && (
-            <ModelEndpoint model={entity} onChange={onChangeEntity as (entity: DialModel) => void} isModal={isModal} />
-          )}
-          {view === ApplicationRoute.Toolsets && (
-            <ToolsetType
-              selectedToolset={entity as Toolset}
-              onChangeToolset={onChangeEntity as (entity: Toolset) => void}
-              isModal={isModal}
-            />
-          )}
-          {view === ApplicationRoute.Interceptors && (
-            <Endpoints entity={entity} onChange={onChangeEntity as (entity: DialInterceptor) => void} />
-          )}
-        </>
+        <Endpoints entity={entity} onChange={onChangeEntity} view={view} isModal={isModal} />
       )}
       {source === SOURCE_TYPE.CONTAINER && (
         <Containers
           entity={entity}
           onChange={onChangeEntity}
           getContainers={getContainers}
-          fieldId={'containers'}
           view={view}
           isModal={isModal}
         />
       )}
       {source === SOURCE_TYPE.RUNNER && getRunners && (
-        <Templates entity={entity} onChange={onChangeEntity} getRunners={getRunners} fieldId={'templates'} />
+        <Templates entity={entity} onChange={onChangeEntity} getRunners={getRunners} />
       )}
       {source === SOURCE_TYPE.ADAPTER && getAdapters && (
-        <Adapters
-          entity={entity}
-          onChange={onChangeEntity}
-          getAdapters={getAdapters}
-          fieldId={'adapters'}
-          isModal={isModal}
-        />
+        <Adapters entity={entity} onChange={onChangeEntity} getAdapters={getAdapters} isModal={isModal} />
       )}
     </div>
   );

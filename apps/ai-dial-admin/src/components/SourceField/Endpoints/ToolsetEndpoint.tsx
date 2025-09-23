@@ -15,13 +15,13 @@ import RadioField from '@/src/components/Common/RadioField/RadioField';
 import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
 
 interface Props {
-  selectedToolset: Toolset;
-  onChangeToolset: (toolset: Toolset) => void;
+  entity: Toolset;
+  onChange: (toolset: Toolset) => void;
   prefix?: string;
   isModal?: boolean;
 }
 
-const ToolsetType: FC<Props> = ({ selectedToolset, onChangeToolset, prefix, isModal }) => {
+const ToolsetEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) => {
   const t = useI18n();
   const transportOptions: RadioButtonModel[] = [
     { id: ToolsetTransport.HTTP, name: ToolsetTransport.HTTP.toUpperCase() },
@@ -37,11 +37,11 @@ const ToolsetType: FC<Props> = ({ selectedToolset, onChangeToolset, prefix, isMo
           textBeforeInput={prefix}
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
-          endpoint={selectedToolset.source?.completionEndpointPath}
+          endpoint={entity.source?.completionEndpointPath}
           onChange={(completionEndpointPath) =>
-            onChangeToolset({
-              ...selectedToolset,
-              source: { ...selectedToolset.source, completionEndpointPath } as SOURCE_FIELD,
+            onChange({
+              ...entity,
+              source: { ...entity.source, completionEndpointPath } as SOURCE_FIELD,
             })
           }
         />
@@ -51,20 +51,20 @@ const ToolsetType: FC<Props> = ({ selectedToolset, onChangeToolset, prefix, isMo
           required={true}
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
-          endpoint={selectedToolset.endpoint}
-          onChange={(endpoint) => onChangeToolset({ ...selectedToolset, endpoint })}
+          endpoint={entity.endpoint}
+          onChange={(endpoint) => onChange({ ...entity, endpoint })}
         />
       )}
       <RadioField
         fieldTitle={t(EntityFieldsI18nKey.transport)}
         elementId="transport"
-        activeRadioButton={selectedToolset.transport || ToolsetTransport.SSE}
+        activeRadioButton={entity.transport || ToolsetTransport.SSE}
         radioButtons={transportOptions}
         orientation={RadioFieldOrientation.Column}
-        onChange={(transport) => onChangeToolset({ ...selectedToolset, transport: transport as ToolsetTransport })}
+        onChange={(transport) => onChange({ ...entity, transport: transport as ToolsetTransport })}
       />
     </div>
   );
 };
 
-export default ToolsetType;
+export default ToolsetEndpoint;

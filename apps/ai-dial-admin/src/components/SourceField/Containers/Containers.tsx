@@ -7,7 +7,6 @@ import { DialModel } from '@/src/models/dial/model';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { PopUpState } from '@/src/types/pop-up';
 import { CreateI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
-import { Toolset } from '@/src/models/dial/toolset';
 import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
 import { useNotification } from '@/src/context/NotificationContext';
 import { getErrorNotification } from '@/src/utils/notification';
@@ -22,17 +21,13 @@ import Button from '@/src/components/Common/Button/Button';
 import Field from '@/src/components/Common/Field/Field';
 import InputModal from '@/src/components/Common/InputModal/InputModal';
 import SelectContainerModal from '@/src/components/SourceField/Containers/SelectContainerModal';
-import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
-import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
-import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
-import ToolsetType from '@/src/components/Toolsets/View/ToolsetType';
+import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
 
 interface Props<T> {
   entity: T;
   onChange: (entity: T) => void;
   getContainers: () => Promise<Container[] | null>;
-  fieldId?: string;
   view?: ApplicationRoute;
   isModal?: boolean;
 }
@@ -41,7 +36,6 @@ const Containers = <T extends DialInterceptor | DialModel>({
   entity,
   onChange,
   getContainers,
-  fieldId,
   view,
   isModal,
 }: Props<T>) => {
@@ -129,12 +123,12 @@ const Containers = <T extends DialInterceptor | DialModel>({
           </div>
         ) : (
           <div className="flex flex-col lg:w-[35%]">
-            <Field fieldTitle={t(SourceI18nKey.Container)} htmlFor={fieldId} />
+            <Field fieldTitle={t(SourceI18nKey.Container)} htmlFor={'containers'} />
             <InputModal
               modalState={modalState}
               onOpenModal={onOpenModal}
               selectedValue={selectedContainer?.name}
-              elementId={fieldId}
+              elementId={'containers'}
               readonly={!deploymentsEnabled}
             >
               <SelectContainerModal
@@ -156,52 +150,8 @@ const Containers = <T extends DialInterceptor | DialModel>({
           />
         )}
       </div>
-      {entity.source?.containerId && !isModal && (
-        <>
-          {view === ApplicationRoute.Models && (
-            <div className="flex flex-col gap-6">
-              <ModelEndpoint
-                model={entity}
-                prefix={`${selectedContainer?.url}/`}
-                onChange={onChange as (entity: DialModel) => void}
-              />
-            </div>
-          )}
-          {view === ApplicationRoute.Interceptors && (
-            <div className="lg:w-[35%] flex flex-col gap-6">
-              <CompletionEndpointControl
-                endpoint={entity.source.completionEndpointPath}
-                textBeforeInput={selectedContainer?.url}
-                onChange={(completionEndpointPath) => {
-                  onChange({
-                    ...entity,
-                    source: { ...entity.source, $type: SOURCE_TYPE.CONTAINER, completionEndpointPath },
-                  });
-                }}
-              />
-
-              <ConfigurationEndpointControl
-                endpoint={entity.source.configurationEndpointPath}
-                textBeforeInput={selectedContainer?.url}
-                onChange={(configurationEndpointPath) => {
-                  onChange({
-                    ...entity,
-                    source: { ...entity.source, $type: SOURCE_TYPE.CONTAINER, configurationEndpointPath },
-                  });
-                }}
-              />
-            </div>
-          )}
-          {view === ApplicationRoute.Toolsets && (
-            <div className="flex flex-col gap-6">
-              <ToolsetType
-                selectedToolset={entity}
-                prefix={selectedContainer?.url}
-                onChangeToolset={onChange as (entity: Toolset) => void}
-              />
-            </div>
-          )}
-        </>
+      {entity.source?.containerId && selectedContainer && !isModal && (
+        <Endpoints entity={entity} onChange={onChange} view={view} prefix={`${selectedContainer?.url}/`} />
       )}
     </div>
   );

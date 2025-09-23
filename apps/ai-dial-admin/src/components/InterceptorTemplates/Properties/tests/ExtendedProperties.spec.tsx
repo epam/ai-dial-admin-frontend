@@ -7,7 +7,7 @@ import ExtendedProperties from '../ExtendedProperties';
 import { CreateI18nKey, EntityFieldsI18nKey, FeaturesI18nKey } from '@/src/constants/i18n';
 
 describe('Interceptor Template ExtendedProperties', () => {
-  test('Should render BaseProperties and SourceField with External Endpoints', () => {
+  test('Should render BaseProperties and SourceField with External InterceptorEndpoint', () => {
     const template: InterceptorTemplate = {
       name: 'test-template',
       displayName: 'Test Template',
