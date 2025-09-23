@@ -19,11 +19,12 @@ import classNames from 'classnames';
 import AdditionalProperties from './AdditionalProperties';
 import { getDisplayNameError, getVersionError } from './utils';
 import SourceField from '@/src/components/SourceField/SourceField';
-import { getModelContainers } from '@/src/app/[lang]/interceptors/actions';
-import { getSourceItems, MODELS_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
+import { getSourceItems } from '@/src/components/SourceField/constants';
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import { isDeploymentsEnabled } from '@/src/utils/plugins';
 import { useAppContext } from '@/src/context/AppContext';
+import { getModelContainers } from '@/src/app/[lang]/models/actions';
+import { getToolsetContainers } from '@/src/app/[lang]/toolsets/actions';
 
 interface Props {
   view: ApplicationRoute;
@@ -156,15 +157,15 @@ const EntityMainProperties: FC<Props> = ({
         runners={runners}
       />
 
-      {view === ApplicationRoute.Models && (
+      {(view === ApplicationRoute.Models || view === ApplicationRoute.Toolsets) && (
         <SourceField
-          view={ApplicationRoute.Models}
+          view={view}
           entity={entity}
           elementId={'sourceType'}
           onChange={onChangeEntity}
-          getContainers={getModelContainers}
+          getContainers={view === ApplicationRoute.Models ? getModelContainers : getToolsetContainers}
           fieldTitle={t(EntitiesI18nKey.SourceType)}
-          sourceItems={getSourceItems(MODELS_SOURCE_ITEMS, deploymentsEnabled)}
+          sourceItems={getSourceItems(view, deploymentsEnabled)}
           getAdapters={getModelsAdapters}
           isModal={isModal}
         />

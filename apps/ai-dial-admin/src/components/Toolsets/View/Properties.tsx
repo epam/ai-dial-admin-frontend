@@ -9,7 +9,6 @@ import { ApplicationRoute } from '@/src/types/routes';
 import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
 import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
-import ToolsetType from './ToolsetType';
 
 interface Props {
   selectedToolset: Toolset;
@@ -40,7 +39,6 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
               onChangeToolset({ ...selectedToolset, descriptionKeywords: topics });
             }}
           />
-          <ToolsetType selectedToolset={selectedToolset} onChangeToolset={onChangeToolset} />
           <MaxRetryAttempts entity={selectedToolset} onChangeEntity={onChangeToolset} />
         </div>
       </div>

@@ -7,6 +7,8 @@ import { DialModel } from '@/src/models/dial/model';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { PopUpState } from '@/src/types/pop-up';
 import { CreateI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { Toolset } from '@/src/models/dial/toolset';
+import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
 import { useNotification } from '@/src/context/NotificationContext';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
@@ -24,7 +26,7 @@ import CompletionEndpointControl from '@/src/components/EntityMainProperties/Bas
 import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
 import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
-import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
+import ToolsetType from '@/src/components/Toolsets/View/ToolsetType';
 
 interface Props<T> {
   entity: T;
@@ -85,7 +87,11 @@ const Containers = <T extends DialInterceptor | DialModel>({
 
   const openContainer = useCallback(() => {
     const route =
-      view === ApplicationRoute.Models ? ApplicationRoute.ModelDeployments : ApplicationRoute.InterceptorDeployments;
+      view === ApplicationRoute.Models
+        ? ApplicationRoute.ModelDeployments
+        : view === ApplicationRoute.Interceptors
+          ? ApplicationRoute.InterceptorDeployments
+          : ApplicationRoute.McpDeployments;
     onOpenInNewTab(route, selectedContainer, DEPLOYMENT_ENTITY.containers);
   }, [selectedContainer, view]);
 
@@ -152,7 +158,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
       </div>
       {entity.source?.containerId && !isModal && (
         <>
-          {view === ApplicationRoute.Models ? (
+          {view === ApplicationRoute.Models && (
             <div className="flex flex-col gap-6">
               <ModelEndpoint
                 model={entity}
@@ -160,7 +166,8 @@ const Containers = <T extends DialInterceptor | DialModel>({
                 onChange={onChange as (entity: DialModel) => void}
               />
             </div>
-          ) : (
+          )}
+          {view === ApplicationRoute.Interceptors && (
             <div className="lg:w-[35%] flex flex-col gap-6">
               <CompletionEndpointControl
                 endpoint={entity.source.completionEndpointPath}
@@ -182,6 +189,15 @@ const Containers = <T extends DialInterceptor | DialModel>({
                     source: { ...entity.source, $type: SOURCE_TYPE.CONTAINER, configurationEndpointPath },
                   });
                 }}
+              />
+            </div>
+          )}
+          {view === ApplicationRoute.Toolsets && (
+            <div className="flex flex-col gap-6">
+              <ToolsetType
+                selectedToolset={entity}
+                prefix={selectedContainer?.url}
+                onChangeToolset={onChange as (entity: Toolset) => void}
               />
             </div>
           )}

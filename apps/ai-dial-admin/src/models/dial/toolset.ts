@@ -1,5 +1,6 @@
 import { ToolsetTransport } from '@/src/types/toolset';
 import { BaseEntity, EntityRoleLimits } from '@/src/models/dial/base-entity';
+import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 
 export interface Toolset extends BaseEntity, EntityRoleLimits {
   transport?: ToolsetTransport;
@@ -9,6 +10,7 @@ export interface Toolset extends BaseEntity, EntityRoleLimits {
   author?: string;
   endpoint?: string | null;
   maxRetryAttempts?: number;
+  source?: SOURCE_FIELD;
 }
 
 export interface Tool {

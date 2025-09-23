@@ -6,7 +6,7 @@ import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templa
 import { getInterceptorContainers } from '@/src/app/[lang]/interceptors/actions';
 import Defaults from '@/src/components/Defaults/Defaults';
 import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
-import { getSourceItems, INTERCEPTOR_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
+import { getSourceItems } from '@/src/components/SourceField/constants';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
@@ -55,7 +55,7 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
           getRunners={getInterceptorTemplatesList}
           elementId={'sourceType'}
           fieldTitle={t(EntitiesI18nKey.SourceType)}
-          sourceItems={getSourceItems(INTERCEPTOR_SOURCE_ITEMS, deploymentsEnabled)}
+          sourceItems={getSourceItems(ApplicationRoute.Interceptors, deploymentsEnabled)}
         />
         <Defaults entity={selectedInterceptor} onChangeEntity={onChangeInterceptor} />
       </div>

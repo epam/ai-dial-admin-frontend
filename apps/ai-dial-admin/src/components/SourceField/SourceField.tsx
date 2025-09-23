@@ -9,17 +9,19 @@ import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { Toolset } from '@/src/models/dial/toolset';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { isValidSourceField } from '@/src/components/SourceField/utils';
 import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
 
 import Field from '@/src/components/Common/Field/Field';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
-import InterceptorEndpoints from '@/src/components/SourceField/Endpoints/Endpoints';
+import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
 import Containers from '@/src/components/SourceField/Containers/Containers';
 import Templates from '@/src/components/SourceField/Template/Templates';
 import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
 import Adapters from '@/src/components/SourceField/Adapters/Adapters';
+import ToolsetType from '@/src/components/Toolsets/View/ToolsetType';
 
 interface Props<T> {
   entity: T;
@@ -36,7 +38,7 @@ interface Props<T> {
   isModal?: boolean;
 }
 
-const SourceField = <T extends DialInterceptor | DialModel>({
+const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
   entity,
   onChange,
   getContainers,
@@ -78,12 +80,15 @@ const SourceField = <T extends DialInterceptor | DialModel>({
     if (!entity.source) {
       onChangeEntity({
         ...entity,
-        source: { $type: sourceItems[0].id, completionEndpointPath: getEndpointPostfix(DialModelType.Chat) },
+        source: {
+          $type: sourceItems[0].id,
+          completionEndpointPath: view === ApplicationRoute.Models ? getEndpointPostfix(DialModelType.Chat) : '',
+        },
       });
     } else {
       setSource(entity.source.$type);
     }
-  }, [entity, onChangeEntity, sourceItems]);
+  }, [entity, onChangeEntity, sourceItems, view]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -100,10 +105,17 @@ const SourceField = <T extends DialInterceptor | DialModel>({
 
       {source === SOURCE_TYPE.ENDPOINTS && (
         <>
-          {view === ApplicationRoute.Models ? (
+          {view === ApplicationRoute.Models && (
             <ModelEndpoint model={entity} onChange={onChangeEntity as (entity: DialModel) => void} isModal={isModal} />
-          ) : (
-            <InterceptorEndpoints entity={entity} onChange={onChangeEntity as (entity: DialInterceptor) => void} />
+          )}
+          {view === ApplicationRoute.Toolsets && (
+            <ToolsetType
+              selectedToolset={entity as Toolset}
+              onChangeToolset={onChangeEntity as (entity: Toolset) => void}
+            />
+          )}
+          {view === ApplicationRoute.Interceptors && (
+            <Endpoints entity={entity} onChange={onChangeEntity as (entity: DialInterceptor) => void} />
           )}
         </>
       )}
