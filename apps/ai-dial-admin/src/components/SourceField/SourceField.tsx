@@ -112,6 +112,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
             <ToolsetType
               selectedToolset={entity as Toolset}
               onChangeToolset={onChangeEntity as (entity: Toolset) => void}
+              isModal={isModal}
             />
           )}
           {view === ApplicationRoute.Interceptors && (

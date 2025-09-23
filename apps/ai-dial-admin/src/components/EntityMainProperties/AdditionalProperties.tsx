@@ -6,10 +6,13 @@ import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { ChatEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';
+import { Toolset } from '@/src/models/dial/toolset';
 import { useI18n } from '@/src/locales/client';
 
 import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
 import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
+import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
+import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 
 interface Props {
   view: ApplicationRoute;
@@ -17,9 +20,17 @@ interface Props {
   runners?: DialApplicationScheme[];
   isEntityImmutable?: boolean;
   onChangeEntity: (entity: ChatEntity) => void;
+  isModal?: boolean;
 }
 
-const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity, isEntityImmutable = false }) => {
+const AdditionalProperties: FC<Props> = ({
+  view,
+  entity,
+  runners,
+  onChangeEntity,
+  isEntityImmutable = false,
+  isModal,
+}) => {
   const t = useI18n() as (str: string, param?: Record<string, number>) => string;
 
   const applicationRunner = runners?.find((runner) => runner.$id === (entity as DialApplication).customAppSchemaId);
@@ -31,7 +42,7 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
     view === ApplicationRoute.Interceptors ||
     view === ApplicationRoute.Toolsets;
 
-  if (!isShowMaintainer && !isShowCompletionEndpoint) {
+  if ((!isShowMaintainer && !isShowCompletionEndpoint) || isModal) {
     return null;
   }
 
@@ -48,6 +59,17 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
             title={t(EntityFieldsI18nKey.completionEndpoint)}
           />
         ) : null}
+        {view == ApplicationRoute.Toolsets && !isModal && (
+          <>
+            <IconControl iconUrl={entity.iconUrl} onChange={(icon) => onChangeEntity({ ...entity, iconUrl: icon })} />
+            <TopicsControl
+              entity={{ topics: (entity as Toolset)?.descriptionKeywords }}
+              onChange={({ topics }) => {
+                onChangeEntity({ ...entity, descriptionKeywords: topics } as Toolset);
+              }}
+            />
+          </>
+        )}
       </div>
     </div>
   );

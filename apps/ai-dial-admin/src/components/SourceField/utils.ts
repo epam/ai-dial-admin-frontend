@@ -7,7 +7,7 @@ export const isValidSourceField = (entity: DialModel | DialInterceptor): boolean
   const source = entity.source;
 
   if (source?.$type === SOURCE_TYPE.CONTAINER) {
-    return !!source.containerId && !!source.completionEndpointPath;
+    return !!source.containerId;
   }
   if (source?.$type === SOURCE_TYPE.ADAPTER) {
     return !!source.adapterName && !!source.completionEndpointPath;
