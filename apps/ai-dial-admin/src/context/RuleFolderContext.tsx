@@ -15,7 +15,7 @@ export interface RuleFolderContextType {
   files: DialFolder[];
   expandedFolders: Set<string>;
   filePath: string;
-  toggleFolder: (folder: DialFolder) => void;
+  toggleFolder: (folder: DialFile, skipFetch?: boolean, collapseAll?: boolean) => void;
   fetchedFoldersData: Record<string, DialFolder[]>;
   fetchedFoldersRule?: Record<string, Record<string, DialRule[]>>;
   currentFolder?: DialFolder;
@@ -157,9 +157,9 @@ export const RuleFolderProvider = ({ children, attributes }: { children: ReactNo
     });
   };
 
-  const toggleFolder = (folder: DialFolder, skipFetch?: boolean) => {
+  const toggleFolder = (folder: DialFolder, skipFetch?: boolean, collapseAll?: boolean) => {
     const folderPath = folder.path;
-    const newExpanded = new Set(expandedFolders);
+    const newExpanded = new Set(collapseAll ? [] : expandedFolders);
     setFilePath(folderPath);
     setCurrentFolder(folder);
     if (newExpanded.has(folderPath)) {
