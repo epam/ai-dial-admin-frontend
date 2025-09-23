@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { modelsApi } from '@/src/app/api/api';
-import ModelsList from '@/src/components/Models/ModelsList';
+import ModelsList from '@/src/components/Models/List/List';
 import Page403 from '@/src/components/Page403/Page403';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { DialModel } from '@/src/models/dial/model';
