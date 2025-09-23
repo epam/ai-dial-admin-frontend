@@ -23,7 +23,7 @@ import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { TabModel } from '@/src/models/tab';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
-import InterceptorProperties from './InterceptorProperties';
+import InterceptorProperties from './Properties';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';

@@ -1,7 +1,7 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import InterceptorsList from '@/src/components/InterceptorsList/InterceptorsList';
+import InterceptorsList from '@/src/components/Interceptors/List/List';
 import { interceptorsApi } from '@/src/app/api/api';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { getUserToken } from '@/src/utils/auth/auth-request';
