@@ -132,6 +132,7 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
 
     req.then((res) => {
       if (res.success) {
+        setCoreToolset(null);
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));

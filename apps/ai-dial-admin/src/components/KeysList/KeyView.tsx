@@ -154,6 +154,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
 
     req.then((res) => {
       if (res.success) {
+        setCoreKey(null);
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
