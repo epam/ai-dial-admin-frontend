@@ -201,7 +201,7 @@ describe('getResourceTypeByView', () => {
   test('should return an empty string when route is undefined or not matching any of the routes', () => {
     const resultWithUndefinedRoute = getResourceTypeByView();
     const resultWithUnknownRoute = getResourceTypeByView('SomeOtherRoute' as ApplicationRoute);
-    
+
     expect(resultWithUndefinedRoute).toBe('');
     expect(resultWithUnknownRoute).toBe('');
   });
