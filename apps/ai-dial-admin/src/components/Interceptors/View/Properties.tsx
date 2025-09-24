@@ -49,6 +49,7 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
       </div>
       <div className="flex flex-col gap-6 w-full">
         <SourceField
+          view={ApplicationRoute.Interceptors}
           entity={selectedInterceptor}
           onChange={onChangeInterceptor}
           getContainers={getInterceptorContainers}
