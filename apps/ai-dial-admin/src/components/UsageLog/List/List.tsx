@@ -5,7 +5,7 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { TelemetryData, TelemetryQuery } from '@/src/models/telemetry';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { getTracesListingData } from '@/src/utils/telemetry';
+import { getListingData } from '@/src/utils/telemetry';
 import { useI18n } from '@/src/locales/client';
 import { IconColumns2 } from '@tabler/icons-react';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -64,7 +64,7 @@ const List: FC<Props> = ({ route, getData, query, columnDefs, title, emptyDataTi
       setLoading(true);
       const response = await getData(query);
       if (response.success) {
-        const data = getTracesListingData(response.response as TelemetryData);
+        const data = getListingData(response.response as TelemetryData);
         if (data === void 0) {
           return <Page403 />;
         }

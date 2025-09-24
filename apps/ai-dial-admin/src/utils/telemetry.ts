@@ -77,22 +77,11 @@ const getFormattedTimeFilter = (timePeriod: TimeRange) => {
   ];
 };
 
-export const getLineChartData = (data: TelemetryData): Record<string, string>[] => {
+export const getListingData = (data: TelemetryData): Record<string, string>[] => {
   return (
     data.data?.map((row) => {
       return (row as string[]).reduce((acc: Record<string, string>, value, index) => {
-        acc[data.headers[index]] = value;
-        return acc;
-      }, {});
-    }) || []
-  );
-};
-
-export const getTracesListingData = (data: TelemetryData): Record<string, string>[] => {
-  return (
-    data.data?.map((row) => {
-      return (row as string[]).reduce((acc: Record<string, string>, value, index) => {
-        acc[data.headers[index]] = value;
+        acc[data.headers[index]] = value === 'undefined' ? '' : value;
         return acc;
       }, {});
     }) || []

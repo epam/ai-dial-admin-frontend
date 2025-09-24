@@ -1,8 +1,7 @@
 import {
-  getTracesListingData,
+  getListingData,
   getGridData,
   getSingleValueChartData,
-  getLineChartData,
   prepareChartData,
   getFilterTypeConfig,
   getFilterConditionConfig,
@@ -10,9 +9,9 @@ import {
 import { describe, test, vi, expect } from 'vitest';
 import { lineChartDefaultOptions } from '@/src/components/Charts/LineChart/constants';
 
-describe('Utils :: telemetry :: getTracesListingData', () => {
+describe('Utils :: telemetry :: getListingData', () => {
   test('returns correct result', () => {
-    const result = getTracesListingData({
+    const result = getListingData({
       headers: ['header1', 'header2'],
       data: [
         ['value1', 'value2'],
@@ -26,7 +25,7 @@ describe('Utils :: telemetry :: getTracesListingData', () => {
   });
 
   test('returns empty array for empty data', () => {
-    const result = getTracesListingData({ headers: [], data: [] });
+    const result = getListingData({ headers: [], data: [] });
     expect(result).toEqual([]);
   });
 });
@@ -62,9 +61,9 @@ describe('Utils :: telemetry :: getSingleValueChartData', () => {
   });
 });
 
-describe('Utils :: telemetry :: getLineChartData', () => {
+describe('Utils :: telemetry :: getListingData', () => {
   test('returns correct result', () => {
-    const result = getLineChartData({
+    const result = getListingData({
       headers: ['time', 'requests'],
       data: [
         ['2023-10-01T00:00:00Z', '100'],
@@ -78,7 +77,7 @@ describe('Utils :: telemetry :: getLineChartData', () => {
   });
 
   test('returns empty array for empty data', () => {
-    const result = getLineChartData({ headers: [], data: [] });
+    const result = getListingData({ headers: [], data: [] });
     expect(result).toEqual([]);
   });
 });

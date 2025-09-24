@@ -8,7 +8,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { refreshOptionsConfig, SYSTEM_USAGE_QUERY } from '@/src/constants/telemetry';
 import Loader from '@/src/components/Common/Loader/Loader';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
-import { getLineChartData, prepareChartData } from '@/src/utils/telemetry';
+import { getListingData, prepareChartData } from '@/src/utils/telemetry';
 
 interface Props {
   getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
@@ -27,7 +27,7 @@ const LineChart: FC<Props> = ({ getData, refreshTime }) => {
       const response = await getData(SYSTEM_USAGE_QUERY);
 
       if (response.success) {
-        const data = getLineChartData(response.response as TelemetryData);
+        const data = getListingData(response.response as TelemetryData);
         setData(data);
         setOptions(prepareChartData(data));
       } else {

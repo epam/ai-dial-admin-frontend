@@ -1,0 +1,42 @@
+import { FC, useCallback } from 'react';
+import { IconCurrencyDollar } from '@tabler/icons-react';
+
+import { NumberInputField } from '@/src/components/Common/InputField/InputField';
+import { RolesI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+import { DialRoleLimits } from '@/src/models/dial/role-limits';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+
+interface Props {
+  controlClassName?: string;
+  elementId: string;
+  fieldKey: keyof DialRoleLimits;
+  fieldTitle: string;
+  limits?: DialRoleLimits;
+  isCostInputs?: boolean;
+  onChange: (limits: DialRoleLimits) => void;
+}
+
+const LimitControl: FC<Props> = ({ limits, controlClassName, isCostInputs, onChange, fieldKey, ...props }) => {
+  const t = useI18n();
+
+  const onChangeLimit = useCallback(
+    (value: number | string, key: keyof DialRoleLimits) => {
+      onChange({ ...limits, [key]: value });
+    },
+    [limits, onChange],
+  );
+
+  return (
+    <NumberInputField
+      containerCssClass={controlClassName}
+      placeholder={t(RolesI18nKey.NoLimits)}
+      value={limits?.[fieldKey]}
+      onChange={(value) => onChangeLimit(value, fieldKey)}
+      iconBeforeInput={isCostInputs ? <IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} /> : null}
+      {...props}
+    />
+  );
+};
+
+export default LimitControl;
