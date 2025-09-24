@@ -2,21 +2,21 @@
 
 import { FC } from 'react';
 
-import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
-import { getInterceptorContainers } from '@/src/app/[lang]/interceptors/actions';
-import Defaults from '@/src/components/Defaults/Defaults';
-import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
-import { getSourceItems, INTERCEPTOR_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
-import { useAppContext } from '@/src/context/AppContext';
-import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
+import { getInterceptorContainers } from '@/src/app/[lang]/interceptors/actions';
+import { getSourceItems } from '@/src/components/SourceField/constants';
+import { useAppContext } from '@/src/context/AppContext';
+import { isDeploymentsEnabled } from '@/src/utils/plugins';
+import { useI18n } from '@/src/locales/client';
 
+import Defaults from '@/src/components/Defaults/Defaults';
+import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
 import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
 import SourceField from '@/src/components/SourceField/SourceField';
-import { isDeploymentsEnabled } from '@/src/utils/plugins';
 
 interface Props {
   selectedInterceptor: DialInterceptor;
@@ -29,7 +29,7 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
   const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
 
   return (
-    <div className="h-full flex flex-col gap-10 divide-y divide-primary w-full">
+    <div className="h-full flex flex-col gap-6 w-full">
       <div className="flex flex-col gap-6">
         <div className="lg:w-[35%] flex flex-col gap-6 mt-3">
           <SimpleEntityProperties
@@ -47,7 +47,7 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
           />
         </div>
       </div>
-      <div className="flex flex-col gap-6 pt-3 w-full">
+      <div className="flex flex-col gap-6 w-full">
         <SourceField
           entity={selectedInterceptor}
           onChange={onChangeInterceptor}
@@ -55,7 +55,7 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
           getRunners={getInterceptorTemplatesList}
           elementId={'sourceType'}
           fieldTitle={t(EntitiesI18nKey.SourceType)}
-          sourceItems={getSourceItems(INTERCEPTOR_SOURCE_ITEMS, deploymentsEnabled)}
+          sourceItems={getSourceItems(ApplicationRoute.Interceptors, deploymentsEnabled)}
         />
         <Defaults entity={selectedInterceptor} onChangeEntity={onChangeInterceptor} />
       </div>

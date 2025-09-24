@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { rolesApi } from '@/src/app/api/api';
-import RolesList from '@/src/components/RolesList/RolesList';
+import RolesList from '@/src/components/Roles/List/List';
 import { DialRole } from '@/src/models/dial/role';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';

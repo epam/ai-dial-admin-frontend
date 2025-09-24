@@ -136,7 +136,7 @@ export default {
 
     // entity control
     SourceType: 'Source type',
-    Endpoints: 'Endpoints',
+    Endpoints: 'InterceptorEndpoint',
     AppRunner: 'Application runner',
     ModelDisplayName: 'Model display name',
     ApplicationDisplayName: 'Application display name',
@@ -294,7 +294,7 @@ export default {
   UpstreamEndpoints: {
     Upstream: 'Upstream',
     AddUpstream: 'Add Upstream',
-    Endpoints: 'Upstream Endpoints',
+    Endpoints: 'Upstream InterceptorEndpoint',
     Keys: 'Keys',
   },
   ModelView: {
@@ -324,6 +324,7 @@ export default {
     AddRoles: 'Add Roles',
     ResetToDefaultLimits: 'Reset to default limits',
     SetNoLimits: 'Set no limits',
+    SetCostLimits: 'Set cost limits',
     AvailableSpecificRoles: 'Make available to specific roles',
     NotAvailableModel: 'This model will not be available to any end-users.',
     NotAvailableApplication: 'This application will not be available to any end-users.',

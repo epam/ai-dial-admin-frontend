@@ -39,8 +39,3 @@ export async function getInterceptorContainers() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return deploymentsApi.getInterceptorContainers(token);
 }
-
-export async function getModelContainers() {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return deploymentsApi.getModelContainers(token);
-}

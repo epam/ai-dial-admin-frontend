@@ -116,7 +116,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!currentEntity.name });
 
-    if (route === ApplicationRoute.Models) {
+    if (route === ApplicationRoute.Models || route === ApplicationRoute.Toolsets) {
       dispatch({
         type: ValidationActionType.SetField,
         field: 'source',

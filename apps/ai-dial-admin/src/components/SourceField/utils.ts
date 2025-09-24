@@ -2,12 +2,13 @@ import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { getUrlError } from '@/src/utils/validation/url-error';
 import { DialModel } from '@/src/models/dial/model';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { Toolset } from '@/src/models/dial/toolset';
 
-export const isValidSourceField = (entity: DialModel | DialInterceptor): boolean => {
+export const isValidSourceField = (entity: DialModel | DialInterceptor | Toolset): boolean => {
   const source = entity.source;
 
   if (source?.$type === SOURCE_TYPE.CONTAINER) {
-    return !!source.containerId && !!source.completionEndpointPath;
+    return !!source.containerId;
   }
   if (source?.$type === SOURCE_TYPE.ADAPTER) {
     return !!source.adapterName && !!source.completionEndpointPath;
