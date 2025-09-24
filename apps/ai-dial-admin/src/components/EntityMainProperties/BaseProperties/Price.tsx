@@ -9,19 +9,20 @@ interface Props {
   fieldTitle?: string;
   placeholder?: string;
   value?: string | null;
+  controlClassName?: string;
+  disabled?: boolean;
   onChange?: (value: string | number) => void;
 }
 
-const PriceControl: FC<Props> = ({ elementId, fieldTitle, ...props }) => {
+const PriceControl: FC<Props> = ({ elementId, fieldTitle, controlClassName, ...props }) => {
   return (
     <NumberInputField
       elementId={elementId}
       fieldTitle={fieldTitle}
-      containerCssClass="w-[120px] lg:w-auto lg:max-w-[120px]"
+      containerCssClass={controlClassName}
       iconBeforeInput={<IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} />}
       {...props}
     />
   );
 };
-// disabled={activeType === BasicI18nKey.None}
 export default PriceControl;

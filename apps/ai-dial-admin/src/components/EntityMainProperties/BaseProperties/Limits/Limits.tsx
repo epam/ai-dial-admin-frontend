@@ -6,12 +6,13 @@ import { DialRoleLimits } from '@/src/models/dial/role-limits';
 import LimitControl from './Limit';
 
 interface Props {
+  controlClassName?: string;
   limits?: DialRoleLimits;
   isCostInputs?: boolean;
   onChangeLimits: (limits: DialRoleLimits) => void;
 }
 
-const LimitsControl: FC<Props> = ({ limits, isCostInputs, onChangeLimits }) => {
+const LimitsControl: FC<Props> = ({ limits, onChangeLimits, ...props }) => {
   const t = useI18n();
 
   return (
@@ -21,8 +22,8 @@ const LimitsControl: FC<Props> = ({ limits, isCostInputs, onChangeLimits }) => {
         fieldKey="minute"
         limits={limits}
         fieldTitle={t(EntityFieldsI18nKey.minute)}
-        isCostInputs={isCostInputs}
         onChange={onChangeLimits}
+        {...props}
       />
 
       <LimitControl
@@ -30,8 +31,8 @@ const LimitsControl: FC<Props> = ({ limits, isCostInputs, onChangeLimits }) => {
         fieldKey="day"
         limits={limits}
         fieldTitle={t(EntityFieldsI18nKey.day)}
-        isCostInputs={isCostInputs}
         onChange={onChangeLimits}
+        {...props}
       />
 
       <LimitControl
@@ -39,8 +40,8 @@ const LimitsControl: FC<Props> = ({ limits, isCostInputs, onChangeLimits }) => {
         fieldKey="week"
         limits={limits}
         fieldTitle={t(EntityFieldsI18nKey.week)}
-        isCostInputs={isCostInputs}
         onChange={onChangeLimits}
+        {...props}
       />
 
       <LimitControl
@@ -48,8 +49,8 @@ const LimitsControl: FC<Props> = ({ limits, isCostInputs, onChangeLimits }) => {
         fieldKey="month"
         limits={limits}
         fieldTitle={t(EntityFieldsI18nKey.month)}
-        isCostInputs={isCostInputs}
         onChange={onChangeLimits}
+        {...props}
       />
     </div>
   );

@@ -15,17 +15,19 @@ interface Props {
 
 const RoleProperties: FC<Props> = ({ selectedRole, names, onChangeRole }) => {
   return (
-    <div className="lg:w-[35%] mt-3">
-      <EntityHeader entity={selectedRole} />
-      <div className="flex-1 min-h-0 pt-4">
-        <SimpleEntityProperties
-          entity={selectedRole}
-          onChangeEntity={onChangeRole}
-          names={names}
-          isEntityImmutable={true}
-        />
-        <RoleCostLimit selectedRole={selectedRole} onChangeRole={onChangeRole} />
+    <div className="w-full mt-3 flex flex-col">
+      <div className="lg:w-[35%] mt-3 w-full">
+        <EntityHeader entity={selectedRole} />
+        <div className="flex-1 min-h-0 pt-4">
+          <SimpleEntityProperties
+            entity={selectedRole}
+            onChangeEntity={onChangeRole}
+            names={names}
+            isEntityImmutable={true}
+          />
+        </div>
       </div>
+      <RoleCostLimit selectedRole={selectedRole} onChangeRole={onChangeRole} />
     </div>
   );
 };

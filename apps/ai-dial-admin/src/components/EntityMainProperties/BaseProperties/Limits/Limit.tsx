@@ -8,6 +8,7 @@ import PriceControl from '../Price';
 import { NO_LIMITS_VALUE } from '@/src/components/EntityView/Roles/constants';
 
 interface Props {
+  controlClassName?: string;
   elementId: string;
   fieldKey: keyof DialRoleLimits;
   fieldTitle: string;
@@ -16,7 +17,7 @@ interface Props {
   onChange: (limits: DialRoleLimits) => void;
 }
 
-const LimitControl: FC<Props> = ({ limits, isCostInputs, onChange, fieldKey, ...props }) => {
+const LimitControl: FC<Props> = ({ limits, controlClassName, isCostInputs, onChange, fieldKey, ...props }) => {
   const t = useI18n();
 
   const onChangeLimit = useCallback(
@@ -28,6 +29,7 @@ const LimitControl: FC<Props> = ({ limits, isCostInputs, onChange, fieldKey, ...
 
   return isCostInputs ? (
     <PriceControl
+      controlClassName={controlClassName}
       placeholder={t(RolesI18nKey.NoLimits)}
       value={limits?.[fieldKey] === NO_LIMITS_VALUE ? '' : (limits?.[fieldKey] as string | null)}
       onChange={(value) => onChangeLimit(value, fieldKey)}
@@ -35,6 +37,7 @@ const LimitControl: FC<Props> = ({ limits, isCostInputs, onChange, fieldKey, ...
     />
   ) : (
     <NumberInputField
+      containerCssClass={controlClassName}
       placeholder={t(RolesI18nKey.NoLimits)}
       value={limits?.[fieldKey]}
       onChange={(value) => onChangeLimit(value, fieldKey)}
