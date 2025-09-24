@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation';
 
 import PromptsList from '@/src/components/Assets/Prompts/PromptsList';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
-import { PromptFolderProvider } from '@/src/context/PromptFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
@@ -22,9 +21,7 @@ export default async function Page() {
 
   return (
     <SaveValidationContextProvider>
-      <PromptFolderProvider>
-        <PromptsList />
-      </PromptFolderProvider>
+      <PromptsList />
     </SaveValidationContextProvider>
   );
 }
