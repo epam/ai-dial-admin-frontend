@@ -1,12 +1,14 @@
 import { redirect } from 'next/navigation';
-import { ApplicationRoute } from '@/src/types/routes';
-import { DialFile } from '@/src/models/dial/file';
+
 import { getFiles } from '@/src/app/[lang]/files/actions';
-import { addTrailingSlash, getFolderNameAndPath } from '@/src/utils/files/path';
-import FileView from '@/src/components/FileView/FileView';
-import { logger } from '@/src/server/logger';
+import FileView from '@/src/components/Assets/FileView/FileView';
 import Page403 from '@/src/components/Page403/Page403';
+import { FileFolderProvider } from '@/src/context/FileFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { DialFile } from '@/src/models/dial/file';
+import { logger } from '@/src/server/logger';
+import { ApplicationRoute } from '@/src/types/routes';
+import { addTrailingSlash, getFolderNameAndPath } from '@/src/utils/files/path';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +33,9 @@ export default async function Page(params: { searchParams: Promise<{ path: strin
 
   return (
     <SaveValidationContextProvider>
-      <FileView originalFile={file}></FileView>
+      <FileFolderProvider>
+        <FileView originalFile={file} />
+      </FileFolderProvider>
     </SaveValidationContextProvider>
   );
 }

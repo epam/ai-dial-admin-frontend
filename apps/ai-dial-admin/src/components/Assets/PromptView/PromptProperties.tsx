@@ -15,8 +15,6 @@ import Switch from '@/src/components/Common/Switch/Switch';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
-import AddVersionModal from '@/src/components/PromptView/Modals/AddVersionModal';
-import CompareVersions from '@/src/components/PromptView/Modals/CompareVersions';
 import {
   BasicI18nKey,
   ButtonsI18nKey,
@@ -40,6 +38,8 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
+import AddVersionModal from './Modals/AddVersionModal';
+import CompareVersions from './Modals/CompareVersions';
 
 interface Props {
   prompt: DialPrompt;
@@ -71,7 +71,7 @@ const PromptProperties: FC<Props> = ({
   const [modalState, setModalState] = useState(PopUpState.Closed);
   const [modalType, setModalType] = useState<ModalType>();
 
-  const [isJSONContentMode, setJSONContentMode] = useState(false);
+  const [isJSONContentMode, setIsJSONContentMode] = useState(false);
   const [jsonValue, setJsonValue] = useState<string | undefined>(undefined);
 
   const versions = useMemo(() => {
@@ -98,11 +98,11 @@ const PromptProperties: FC<Props> = ({
 
   const onChangeVersion = useCallback(
     async (version: string) => {
-      const found = await getPrompt?.(prompt.folderId as string, prompt.name as string, version);
+      const found = await getPrompt?.(prompt.folderId, prompt.name as string, version);
       if (found) {
         setSelectedPrompt({} as DialPrompt);
         router.push(
-          `${ApplicationRoute.Prompts}/${`${encodeURIComponent((found as DialPrompt).name as string)}?path=${encodeURIComponent((found as DialPrompt).path)}`}`,
+          `${ApplicationRoute.Prompts}/${`${encodeURIComponent((found as DialPrompt).name as string)}?path=${encodeURIComponent(found.path)}`}`,
         );
       } else {
         const path = modifyNameVersionInPrompt(prompt.path, void 0, version);
@@ -137,7 +137,7 @@ const PromptProperties: FC<Props> = ({
 
   const onChangeContentMode = useCallback(
     (value: boolean) => {
-      setJSONContentMode(value);
+      setIsJSONContentMode(value);
       if (!value) {
         dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       }

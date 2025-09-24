@@ -5,11 +5,11 @@ import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import classNames from 'classnames';
 
 import FolderCollapse from '@/public/images/icons/folder-collapse.svg';
+import ExportGrid from '@/src/components/Assets/ExportAssets/ExportGrid';
 import Button from '@/src/components/Common/Button/Button';
 import FolderList from '@/src/components/Common/FolderList/FolderList';
 import HorizontalCollapseBar from '@/src/components/Common/HorizontalCollapseBar/HorizontalCollapseBar';
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
-import ExportGrid from '@/src/components/ExportAssets/ExportGrid';
 import GridWithColumnsPanel from '@/src/components/Grid/GridWithColumnsPanel/GridWithColumnsPanel';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { FoldersI18nKey } from '@/src/constants/i18n';

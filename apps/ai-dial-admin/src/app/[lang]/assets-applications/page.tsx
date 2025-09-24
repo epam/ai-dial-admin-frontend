@@ -7,6 +7,7 @@ import { SaveValidationContextProvider } from '@/src/context/SaveValidationConte
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { AppsFolderProvider } from '@/src/context/AppsFolderContext';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +22,9 @@ export default async function Page() {
 
   return (
     <SaveValidationContextProvider>
-      <AppsList />
+      <AppsFolderProvider>
+        <AppsList />
+      </AppsFolderProvider>
     </SaveValidationContextProvider>
   );
 }

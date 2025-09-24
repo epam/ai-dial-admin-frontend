@@ -4,13 +4,13 @@ import { useRouter } from 'next/navigation';
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { getPrompt } from '@/src/app/[lang]/prompts/actions';
+import { generateExportList } from '@/src/components/Assets/ExportAssets/export';
 import {
   getDuplicateModal,
   getExportFunction,
   getJsonFileName,
   getNotificationType,
 } from '@/src/components/EntityListView/utils';
-import { generateExportList } from '@/src/components/ExportAssets/export';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { ExportI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';

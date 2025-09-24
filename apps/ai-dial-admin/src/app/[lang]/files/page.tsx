@@ -1,11 +1,12 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
+import FilesList from '@/src/components/Assets/Files/FilesList';
+import { SIGN_IN_LINK } from '@/src/constants/auth';
+import { FileFolderProvider } from '@/src/context/FileFolderContext';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { SIGN_IN_LINK } from '@/src/constants/auth';
-import FilesList from '@/src/components/Assets/Files/FilesList';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,5 +19,9 @@ export default async function Page() {
     return redirect(SIGN_IN_LINK);
   }
 
-  return <FilesList />;
+  return (
+    <FileFolderProvider>
+      <FilesList />
+    </FileFolderProvider>
+  );
 }
