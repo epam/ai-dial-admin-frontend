@@ -1,11 +1,11 @@
 import { FC, useCallback } from 'react';
+import { IconCurrencyDollar } from '@tabler/icons-react';
 
 import { NumberInputField } from '@/src/components/Common/InputField/InputField';
 import { RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRoleLimits } from '@/src/models/dial/role-limits';
-import PriceControl from '../Price';
-import { NO_LIMITS_VALUE } from '@/src/components/EntityView/Roles/constants';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
 interface Props {
   controlClassName?: string;
@@ -27,20 +27,13 @@ const LimitControl: FC<Props> = ({ limits, controlClassName, isCostInputs, onCha
     [limits, onChange],
   );
 
-  return isCostInputs ? (
-    <PriceControl
-      controlClassName={controlClassName}
-      placeholder={t(RolesI18nKey.NoLimits)}
-      value={limits?.[fieldKey] === NO_LIMITS_VALUE ? '' : (limits?.[fieldKey] as string | null)}
-      onChange={(value) => onChangeLimit(value, fieldKey)}
-      {...props}
-    />
-  ) : (
+  return (
     <NumberInputField
       containerCssClass={controlClassName}
       placeholder={t(RolesI18nKey.NoLimits)}
       value={limits?.[fieldKey]}
       onChange={(value) => onChangeLimit(value, fieldKey)}
+      iconBeforeInput={isCostInputs ? <IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} /> : null}
       {...props}
     />
   );
