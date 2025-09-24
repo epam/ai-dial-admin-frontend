@@ -1,7 +1,6 @@
 'use client';
 
 import { FC, ReactNode, useCallback } from 'react';
-import { IconCurrencyDollar } from '@tabler/icons-react';
 
 import { FieldControlProps } from '@/src/models/field-control-props';
 import { BasicI18nKey } from '@/src/constants/i18n';
@@ -12,7 +11,6 @@ import Field from '@/src/components/Common/Field/Field';
 import InputWithIcon from '@/src/components/Common/Input/InputWithIcon';
 import InputWithText from '@/src/components/Common/Input/InputWithText';
 import { getInputValue } from '@/src/components/Common/InputField/utils';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
 export interface InputFieldBaseProps extends FieldControlProps {
   placeholder?: string;
@@ -76,17 +74,15 @@ const InputField: FC<InputFieldProps> = ({
 };
 
 export interface NumberInputFieldProps extends InputFieldBaseProps {
-  isCostInputs?: boolean;
   onChange?: (value: number | string) => void;
 }
 
-export const NumberInputField: FC<NumberInputFieldProps> = ({ onChange, value, isCostInputs, ...props }) => {
+export const NumberInputField: FC<NumberInputFieldProps> = ({ onChange, value, ...props }) => {
   return (
     <InputField
       type="number"
       onChange={(inputValue) => onChange?.(getInputValue(inputValue))}
       value={value}
-      iconBeforeInput={isCostInputs ? <IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} /> : null}
       {...props}
     />
   );
