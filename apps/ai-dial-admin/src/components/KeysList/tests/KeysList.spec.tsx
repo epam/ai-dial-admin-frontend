@@ -1,28 +1,20 @@
-import { render } from '@testing-library/react';
-import { fireEvent } from '@testing-library/dom';
-import { DialKey } from '../../../models/dial/key';
-import KeyProperties from '../KeyProperties';
+import { render, screen } from '@testing-library/react';
 import KeysList from '../KeysList';
-import KeyView from '../KeyView';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
+import { EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 
-vi.mock('react-dnd', () => ({
-  useDrag: () => [{ isDragging: false }, vi.fn()],
-  useDrop: () => [{ isOver: false }, vi.fn()],
-}));
+describe('KeysList', () => {
+  test('renders BaseEntityList with correct props', () => {
+    const data = [{ id: '1', name: 'Key One' }, { id: '2', name: 'Key Two' }, { id: '3' }];
 
-describe('KeysList - List view', () => {
-  test('Should render successfully', () => {
-    const { baseElement } = render(<KeysList data={[{ key: 'key', project: 'project', secured: false }]} />);
-    expect(baseElement).toBeTruthy();
+    render(<KeysList data={data} />);
+    expect(screen.getByText(MenuI18nKey.Keys)).toBeInTheDocument();
+    expect(screen.getByRole('table')).toBeInTheDocument();
   });
-});
 
-describe('KeyView - view', () => {
-  test('Should render successfully', () => {
-    const { baseElement } = render(
-      <KeyView names={[]} originalKey={{ key: 'key', project: 'project', secured: false }} roles={[]} />,
-    );
-    expect(baseElement).toBeTruthy();
+  test('renders with empty data', () => {
+    render(<KeysList data={[]} />);
+    expect(screen.getByText(MenuI18nKey.Keys)).toBeInTheDocument();
+    expect(screen.getByText(EntitiesI18nKey.NoKeys)).toBeInTheDocument();
   });
 });

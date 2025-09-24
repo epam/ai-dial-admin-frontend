@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { applicationsApi, keysApi, modelsApi, rolesApi } from '@/src/app/api/api';
-import RolesView from '@/src/components/RolesList/RolesView';
+import RolesView from '@/src/components/Roles/View/View';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
