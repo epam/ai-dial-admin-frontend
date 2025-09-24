@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { cookies, headers } from 'next/headers';
 
 import { applicationsApi, interceptorsApi, modelsApi } from '@/src/app/api/api';
-import InterceptorView from '@/src/components/InterceptorsList/InterceptorView';
+import InterceptorView from '@/src/components/Interceptors/View/View';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';

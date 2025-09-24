@@ -23,10 +23,9 @@ interface Props<T> {
   entity: T;
   onChange: (entity: T) => void;
   getRunners: () => Promise<InterceptorTemplate[] | null>;
-  fieldId?: string;
 }
 
-const Templates = <T extends DialModel | DialInterceptor>({ entity, onChange, getRunners, fieldId }: Props<T>) => {
+const Templates = <T extends DialModel | DialInterceptor>({ entity, onChange, getRunners }: Props<T>) => {
   const t = useI18n();
   const { showNotification } = useNotification();
 
@@ -82,12 +81,12 @@ const Templates = <T extends DialModel | DialInterceptor>({ entity, onChange, ge
     <div className="flex flex-col gap-6">
       <div className="flex lg:flex-row flex-col gap-2 items-end">
         <div className="flex flex-col lg:w-[35%]">
-          <Field fieldTitle={t(SourceI18nKey.InterceptorTemplate)} htmlFor={fieldId} />
+          <Field fieldTitle={t(SourceI18nKey.InterceptorTemplate)} htmlFor={'templates'} />
           <InputModal
             modalState={modalState}
             onOpenModal={onOpenModal}
             selectedValue={selectedRunner?.name}
-            elementId={fieldId}
+            elementId={'templates'}
           >
             <SelectRunnerModal
               selected={entity.source?.runnerName}

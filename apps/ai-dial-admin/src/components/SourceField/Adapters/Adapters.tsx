@@ -28,17 +28,10 @@ interface Props<T> {
   entity: T;
   onChange: (entity: T) => void;
   getAdapters: () => Promise<ServerActionResponse | null>;
-  fieldId?: string;
   isModal?: boolean;
 }
 
-const Adapters = <T extends DialModel | DialInterceptor>({
-  entity,
-  onChange,
-  getAdapters,
-  fieldId,
-  isModal,
-}: Props<T>) => {
+const Adapters = <T extends DialModel | DialInterceptor>({ entity, onChange, getAdapters, isModal }: Props<T>) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const showNotificationRef = useRef(showNotification);
@@ -113,12 +106,12 @@ const Adapters = <T extends DialModel | DialInterceptor>({
           </div>
         ) : (
           <div className="flex flex-col lg:w-[35%]">
-            <Field fieldTitle={t(SourceI18nKey.Adapter)} htmlFor={fieldId} />
+            <Field fieldTitle={t(SourceI18nKey.Adapter)} htmlFor={'adapters'} />
             <InputModal
               modalState={modalState}
               onOpenModal={onOpenModal}
               selectedValue={selectedAdapter?.name}
-              elementId={fieldId}
+              elementId={'adapters'}
             >
               <SelectAdapterModal
                 selected={entity.source?.adapterName}
@@ -141,7 +134,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
       </div>
       {entity.source?.adapterName && selectedAdapter && !isModal && (
         <ModelEndpoint
-          model={entity}
+          entity={entity}
           prefix={selectedAdapter?.baseEndpoint}
           onChange={onChange as (entity: DialModel) => void}
         />

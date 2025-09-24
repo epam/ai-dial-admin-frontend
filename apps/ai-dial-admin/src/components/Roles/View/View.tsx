@@ -15,11 +15,9 @@ import {
   ROLES_ENTITIES_COLUMNS,
 } from '@/src/components/AddEntitiesTab/utils';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
-import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
-import EntityHeader from '@/src/components/EntityView/Header/Header';
 import { KEYS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, KeysI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -44,6 +42,7 @@ import {
   getFileFromEntity,
 } from '@/src/components/EntityView/View/core-entity-utils';
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
+import RoleProperties from './Properties';
 
 interface Props {
   originalRole: DialRole;
@@ -260,17 +259,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
         ) : (
           <>
             {activeTab === EntityViewTab.Properties && (
-              <div className="lg:w-[35%] mt-3">
-                <EntityHeader entity={selectedRole} />
-                <div className="flex-1 min-h-0 pt-4">
-                  <SimpleEntityProperties
-                    entity={selectedRole}
-                    onChangeEntity={onChangeRole}
-                    names={names}
-                    isEntityImmutable={true}
-                  />
-                </div>
-              </div>
+              <RoleProperties selectedRole={selectedRole} names={names} onChangeRole={onChangeRole} />
             )}
           </>
         )}

@@ -1,43 +1,42 @@
-import { FC, useCallback } from 'react';
-
+import { ApplicationRoute } from '@/src/types/routes';
+import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
+import { DialModel } from '@/src/models/dial/model';
+import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
+import { Toolset } from '@/src/models/dial/toolset';
+import InterceptorEndpoint from '@/src/components/SourceField/Endpoints/InterceptorEndpoint';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
-import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
-import { DialFeatures } from '@/src/models/dial/features';
 
-interface Props {
-  entity: DialInterceptor;
-  onChange: (entity: DialInterceptor) => void;
+interface Props<T> {
+  entity: T;
+  onChange: (entity: T) => void;
+  view?: ApplicationRoute;
+  isModal?: boolean;
+  prefix?: string;
 }
 
-const Endpoints: FC<Props> = ({ entity, onChange }) => {
-  const onChangeCompletionEndpoint = useCallback(
-    (endpoint?: string) => {
-      onChange({ ...entity, endpoint });
-    },
-    [entity, onChange],
-  );
-
-  const onChangeConfigurationEndpoint = useCallback(
-    (configurationEndpoint?: string) => {
-      onChange({
-        ...entity,
-        features: {
-          configurationEndpoint: configurationEndpoint,
-        } as DialFeatures,
-      });
-    },
-    [entity, onChange],
-  );
-
+const Endpoints = <T extends object>({ entity, onChange, view, isModal, prefix }: Props<T>) => {
   return (
-    <div className="lg:w-[35%] flex flex-col gap-6">
-      <CompletionEndpointControl endpoint={entity.endpoint} onChange={onChangeCompletionEndpoint} required={true} />
-      <ConfigurationEndpointControl
-        endpoint={entity.features?.configurationEndpoint}
-        onChange={onChangeConfigurationEndpoint}
-      />
-    </div>
+    <>
+      {view === ApplicationRoute.Models && (
+        <ModelEndpoint
+          entity={entity}
+          onChange={onChange as (entity: DialModel) => void}
+          isModal={isModal}
+          prefix={prefix}
+        />
+      )}
+      {view === ApplicationRoute.Toolsets && (
+        <ToolsetEndpoint
+          entity={entity as Toolset}
+          onChange={onChange as (entity: Toolset) => void}
+          isModal={isModal}
+          prefix={prefix}
+        />
+      )}
+      {view === ApplicationRoute.Interceptors && (
+        <InterceptorEndpoint entity={entity} onChange={onChange as (entity: DialInterceptor) => void} prefix={prefix} />
+      )}
+    </>
   );
 };
 

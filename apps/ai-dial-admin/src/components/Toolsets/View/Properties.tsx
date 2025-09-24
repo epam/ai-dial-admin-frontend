@@ -6,10 +6,7 @@ import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMa
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
-import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
 import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
-import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
-import ToolsetType from './ToolsetType';
 
 interface Props {
   selectedToolset: Toolset;
@@ -30,17 +27,6 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
           view={ApplicationRoute.Toolsets}
         />
         <div className="flex flex-col gap-y-6 lg:w-[35%] mt-6">
-          <IconControl
-            iconUrl={selectedToolset.iconUrl}
-            onChange={(icon) => onChangeToolset({ ...selectedToolset, iconUrl: icon })}
-          />
-          <TopicsControl
-            entity={{ topics: selectedToolset?.descriptionKeywords }}
-            onChange={({ topics }) => {
-              onChangeToolset({ ...selectedToolset, descriptionKeywords: topics });
-            }}
-          />
-          <ToolsetType selectedToolset={selectedToolset} onChangeToolset={onChangeToolset} />
           <MaxRetryAttempts entity={selectedToolset} onChangeEntity={onChangeToolset} />
         </div>
       </div>

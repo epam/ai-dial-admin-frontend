@@ -11,7 +11,7 @@ interface Props {
   data: DialRoute[];
 }
 
-const RoutesList: FC<Props> = async ({ data }) => {
+const RoutesList: FC<Props> = ({ data }) => {
   const names = filterNames(data);
   return (
     <BaseEntityList
