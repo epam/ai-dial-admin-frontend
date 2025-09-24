@@ -324,6 +324,7 @@ export default {
     AddRoles: 'Add Roles',
     ResetToDefaultLimits: 'Reset to default limits',
     SetNoLimits: 'Set no limits',
+    SetCostLimits: 'Set cost limits',
     AvailableSpecificRoles: 'Make available to specific roles',
     NotAvailableModel: 'This model will not be available to any end-users.',
     NotAvailableApplication: 'This application will not be available to any end-users.',
