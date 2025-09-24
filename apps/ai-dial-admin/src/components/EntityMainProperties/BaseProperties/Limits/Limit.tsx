@@ -1,11 +1,10 @@
 import { FC, useCallback } from 'react';
 
 import { NumberInputField } from '@/src/components/Common/InputField/InputField';
+import { NO_LIMITS_VALUE } from '@/src/components/EntityView/Roles/constants';
 import { RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRoleLimits } from '@/src/models/dial/role-limits';
-import PriceControl from '../Price';
-import { NO_LIMITS_VALUE } from '@/src/components/EntityView/Roles/constants';
 
 interface Props {
   controlClassName?: string;
@@ -17,7 +16,7 @@ interface Props {
   onChange: (limits: DialRoleLimits) => void;
 }
 
-const LimitControl: FC<Props> = ({ limits, controlClassName, isCostInputs, onChange, fieldKey, ...props }) => {
+const LimitControl: FC<Props> = ({ limits, controlClassName, onChange, fieldKey, ...props }) => {
   const t = useI18n();
 
   const onChangeLimit = useCallback(
@@ -27,19 +26,11 @@ const LimitControl: FC<Props> = ({ limits, controlClassName, isCostInputs, onCha
     [limits, onChange],
   );
 
-  return isCostInputs ? (
-    <PriceControl
-      controlClassName={controlClassName}
-      placeholder={t(RolesI18nKey.NoLimits)}
-      value={limits?.[fieldKey] === NO_LIMITS_VALUE ? '' : (limits?.[fieldKey] as string | null)}
-      onChange={(value) => onChangeLimit(value, fieldKey)}
-      {...props}
-    />
-  ) : (
+  return (
     <NumberInputField
       containerCssClass={controlClassName}
       placeholder={t(RolesI18nKey.NoLimits)}
-      value={limits?.[fieldKey]}
+      value={limits?.[fieldKey] === NO_LIMITS_VALUE ? '' : (limits?.[fieldKey] as string | null)}
       onChange={(value) => onChangeLimit(value, fieldKey)}
       {...props}
     />
