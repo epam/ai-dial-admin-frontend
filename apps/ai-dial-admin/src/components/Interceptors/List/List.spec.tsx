@@ -18,4 +18,3 @@ describe('InterceptorsList', () => {
     expect(screen.getByText(EntitiesI18nKey.NoInterceptors)).toBeInTheDocument();
   });
 });
-

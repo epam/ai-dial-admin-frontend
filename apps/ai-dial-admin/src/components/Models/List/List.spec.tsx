@@ -18,4 +18,3 @@ describe('ModelsList', () => {
     expect(screen.getByText(EntitiesI18nKey.NoModels)).toBeInTheDocument();
   });
 });
-

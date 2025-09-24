@@ -18,4 +18,3 @@ describe('RoutesList', () => {
     expect(screen.getByText(EntitiesI18nKey.NoRoutes)).toBeInTheDocument();
   });
 });
-

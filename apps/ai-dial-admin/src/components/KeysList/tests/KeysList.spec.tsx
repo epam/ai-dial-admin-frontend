@@ -18,4 +18,3 @@ describe('KeysList', () => {
     expect(screen.getByText(EntitiesI18nKey.NoKeys)).toBeInTheDocument();
   });
 });
-
