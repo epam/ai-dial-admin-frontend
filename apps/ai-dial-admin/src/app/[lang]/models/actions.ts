@@ -2,7 +2,7 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { modelsApi, adaptersApi } from '@/src/app/api/api';
+import { modelsApi, adaptersApi, deploymentsApi } from '@/src/app/api/api';
 import { DEFAULT_ROLE_LIMITS } from '@/src/constants/role';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -59,4 +59,8 @@ export async function createModel(model: DialModel) {
     },
     token,
   );
+}
+export async function getModelContainers() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return deploymentsApi.getModelContainers(token);
 }

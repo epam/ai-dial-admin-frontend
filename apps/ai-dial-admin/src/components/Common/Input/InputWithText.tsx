@@ -26,7 +26,12 @@ const InputWithText: FC<Props> = ({ textBeforeInput, cssClass, value, ...props }
         <p className="overflow-hidden overflow-ellipsis items-center px-4 py-3 bg-layer-3 small text-secondary max-w-[50%]">
           {textBeforeInput}
         </p>
-        <Input cssClass={classNames('border-0 bg-transparent', cssClass)} value={value} {...props} />
+        <Input
+          cssClass={classNames('border-0 bg-transparent', cssClass)}
+          value={value}
+          {...props}
+          tooltipTriggerClassName={'flex'}
+        />
       </Tooltip>
     </div>
   );

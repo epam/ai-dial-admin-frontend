@@ -179,4 +179,5 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
   },
   [ApplicationRoute.InterceptorDeployments]: null,
   [ApplicationRoute.ModelDeployments]: null,
+  [ApplicationRoute.McpDeployments]: null,
 };
