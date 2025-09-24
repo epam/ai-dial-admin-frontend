@@ -5,6 +5,7 @@ import { FC } from 'react';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import { DialRole } from '@/src/models/dial/role';
+import RoleCostLimit from './CostLimits';
 
 interface Props {
   selectedRole: DialRole;
@@ -23,6 +24,7 @@ const RoleProperties: FC<Props> = ({ selectedRole, names, onChangeRole }) => {
           names={names}
           isEntityImmutable={true}
         />
+        <RoleCostLimit selectedRole={selectedRole} onChangeRole={onChangeRole} />
       </div>
     </div>
   );
