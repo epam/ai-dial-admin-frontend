@@ -8,14 +8,14 @@ import ConfirmationModal from '@/src/components/Common/ConfirmationModal/Confirm
 import FilePathModal from '@/src/components/Common/FilePath/FilePathModal';
 import DeleteFolder from '@/src/components/Common/FolderList/Modals/DeleteFolder';
 import { deleteModalTitleMap } from '@/src/components/EntityListView/constants';
-import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
 import ExportModal from '@/src/components/EntityListView/Export/ExportModal';
+import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
 import DeleteInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Delete';
 import { BasicI18nKey, ButtonsI18nKey, DeleteI18nKey } from '@/src/constants/i18n';
-import { FileFolderContextType } from '@/src/context/FileFolderContext';
-import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
+import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
+import { DialFile } from '@/src/models/dial/file';
 import { ParsedPrompts } from '@/src/models/prompts';
 import { ImportFileType } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
@@ -53,7 +53,7 @@ interface Props {
   handleDelete?: () => void;
   handleDeleteBulk?: () => void;
   handleClose: () => void;
-  context?: () => PromptFolderContextType | FileFolderContextType;
+  context?: () => AssetsFolderContext<DialFile>;
 }
 
 const Modals: FC<Props> = ({

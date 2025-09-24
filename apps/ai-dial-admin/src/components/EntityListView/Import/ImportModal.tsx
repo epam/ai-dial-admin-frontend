@@ -10,8 +10,7 @@ import { getMultipleImportStatus, isInvalidJson, isLargeFile } from '@/src/compo
 import { FoldersI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { IMPORT_FILE_TYPES, IMPORT_RESOLUTIONS, IMPORT_STEPS } from '@/src/constants/import';
 import { APPLICATION_ZIP_TYPE } from '@/src/constants/request-headers';
-import { FileFolderContextType } from '@/src/context/FileFolderContext';
-import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
+import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
@@ -30,7 +29,7 @@ const MAX_FILES_COUNT = 30;
 interface Props {
   modalState: PopUpState;
   route?: ApplicationRoute;
-  context?: () => PromptFolderContextType | FileFolderContextType;
+  context?: () => AssetsFolderContext<DialFile>;
   onClose: () => void;
   onApply?: (
     fileType: FileType,

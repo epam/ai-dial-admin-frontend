@@ -1,22 +1,21 @@
+import { DeploymentsApi } from '@/src/server/deployments-api';
 import { ActivityAuditApi } from '@/src/server/entities/activity-audit-api';
 import { AdaptersApi } from '@/src/server/entities/adapters-api';
 import { ApplicationRunnersApi } from '@/src/server/entities/application-runners-api';
 import { ApplicationsApi } from '@/src/server/entities/applications-api';
-import { FilesApi } from '@/src/server/entities/files-api';
+import { AssetsApi } from '@/src/server/entities/assets-api';
 import { FoldersApi } from '@/src/server/entities/folders-api';
+import { InterceptorTemplatesApi } from '@/src/server/entities/interceptor-templates-api';
 import { InterceptorsApi } from '@/src/server/entities/interceptors-api';
 import { KeysApi } from '@/src/server/entities/keys-api';
 import { ModelsApi } from '@/src/server/entities/models-api';
-import { PromptsApi } from '@/src/server/entities/prompts-api';
 import { PublicationsApi } from '@/src/server/entities/publications-api';
 import { RolesApi } from '@/src/server/entities/roles-api';
 import { RoutesApi } from '@/src/server/entities/routes-api';
-import { InterceptorTemplatesApi } from '@/src/server/entities/interceptor-templates-api';
+import { ToolsetsApi } from '@/src/server/entities/toolsets-api';
 import { TelemetryApi } from '@/src/server/telemetry-api';
 import { ThemesApi } from '@/src/server/themes-api';
 import { UtilityApi } from '@/src/server/utility-api';
-import { DeploymentsApi } from '@/src/server/deployments-api';
-import { ToolsetsApi } from '@/src/server/entities/toolsets-api';
 
 export const modelsApi = new ModelsApi({
   host: process.env.DIAL_ADMIN_API_URL,
@@ -54,15 +53,7 @@ export const routesApi = new RoutesApi({
   host: process.env.DIAL_ADMIN_API_URL,
 });
 
-export const promptsApi = new PromptsApi({
-  host: process.env.DIAL_ADMIN_API_URL,
-});
-
 export const publicationsApi = new PublicationsApi({
-  host: process.env.DIAL_ADMIN_API_URL,
-});
-
-export const filesApi = new FilesApi({
   host: process.env.DIAL_ADMIN_API_URL,
 });
 
@@ -89,5 +80,9 @@ export const deploymentsApi = new DeploymentsApi({
 });
 
 export const toolSetsApi = new ToolsetsApi({
+  host: process.env.DIAL_ADMIN_API_URL,
+});
+
+export const assetsApi = new AssetsApi({
   host: process.env.DIAL_ADMIN_API_URL,
 });

@@ -1,16 +1,16 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
-import { PopUpState } from '@/src/types/pop-up';
+
 import classNames from 'classnames';
 
-import { DialPrompt } from '@/src/models/dial/prompt';
-import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { getPrompt } from '@/src/app/[lang]/prompts/actions';
-import { useI18n } from '@/src/locales/client';
-
-import Popup from '@/src/components/Common/Popup/Popup';
 import DiffField from '@/src/components/Common/DiffField/DiffField';
-import VersionsControl from '@/src/components/PromptView/Modals/VersionsControl';
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
+import Popup from '@/src/components/Common/Popup/Popup';
+import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+import { DialPrompt } from '@/src/models/dial/prompt';
+import { PopUpState } from '@/src/types/pop-up';
+import VersionsControl from './VersionsControl';
 
 interface Props {
   heading: string;

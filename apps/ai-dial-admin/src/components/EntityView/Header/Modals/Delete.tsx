@@ -23,7 +23,7 @@ interface Props<T> {
   modalState: PopUpState;
   view: ApplicationRoute;
   entity: T;
-  removeEntity: (entity?: string) => Promise<ServerActionResponse>;
+  removeEntity: (entity: string) => Promise<ServerActionResponse>;
   onCloseModal: () => void;
 }
 

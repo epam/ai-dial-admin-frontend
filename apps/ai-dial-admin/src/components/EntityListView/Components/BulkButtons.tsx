@@ -7,18 +7,18 @@ import { IconFileArrowRight, IconTrashX, IconX } from '@tabler/icons-react';
 import Button from '@/src/components/Common/Button/Button';
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { FileFolderContextType } from '@/src/context/FileFolderContext';
-import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
+import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
+import { DialFile } from '@/src/models/dial/file';
+import { ImportFileType } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ModalType } from './Modals';
-import { ImportFileType } from '@/src/types/import';
 
 interface Props {
   route: ApplicationRoute;
   itemsCount: number;
-  context?: () => PromptFolderContextType | FileFolderContextType;
+  context?: () => AssetsFolderContext<DialFile>;
   setModalState: Dispatch<SetStateAction<PopUpState>>;
   setModalType: Dispatch<SetStateAction<ModalType | undefined>>;
   setIsBulkView: Dispatch<SetStateAction<boolean>>;
