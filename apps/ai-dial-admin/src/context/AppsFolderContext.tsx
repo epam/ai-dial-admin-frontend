@@ -5,6 +5,6 @@ import { DialAssetApp } from '@/src/models/dial/asset-app';
 import { createFolderContext } from './AssetsFolderContext';
 
 export const { Provider: AppsFolderProvider, useFolderContext: useAppsFolder } = createFolderContext<DialAssetApp>(
-  getApps,
+  getApps as (path: string) => Promise<DialAssetApp[] | null | undefined>,
   'useAppsFolder',
 );

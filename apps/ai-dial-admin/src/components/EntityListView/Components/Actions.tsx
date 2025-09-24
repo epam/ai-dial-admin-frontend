@@ -38,7 +38,7 @@ interface Props<T> {
   route: ApplicationRoute;
   versionsMap?: Record<string, string[]>;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
-  removeEntity: (entity?: string) => Promise<ServerActionResponse>;
+  removeEntity: (entity: string) => Promise<ServerActionResponse>;
   moveFiles?: (paths: string[], newPath: string) => Promise<ServerActionResponse[]>;
   bulkDelete?: (paths: { path: string }[]) => Promise<ServerActionResponse>;
   context?: () => AssetsFolderContext<DialFile>;

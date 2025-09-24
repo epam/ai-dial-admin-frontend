@@ -261,6 +261,7 @@ export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH
 export const PROMPTS_COLUMNS: ColDef[] = [
   { field: 'name', colId: 'name', headerName: 'Display Name' },
   { field: 'version', headerName: 'Version' },
+  AUTHOR_COLUMN,
   UPDATED_AT_COLUMN,
 ];
 

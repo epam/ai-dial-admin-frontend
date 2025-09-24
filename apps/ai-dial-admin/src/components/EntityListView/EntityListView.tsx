@@ -32,7 +32,7 @@ interface Props<T> {
   runners?: DialApplicationScheme[];
   route: ApplicationRoute;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
-  removeEntity: (entity?: string) => Promise<ServerActionResponse>;
+  removeEntity: (entity: string) => Promise<ServerActionResponse>;
   moveFiles?: (paths: string[], newPath: string) => Promise<ServerActionResponse[]>;
   bulkDelete?: (paths: { path: string }[]) => Promise<ServerActionResponse>;
   showColumnsButton?: boolean;
