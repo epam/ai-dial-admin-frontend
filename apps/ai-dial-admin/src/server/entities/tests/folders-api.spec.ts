@@ -8,12 +8,13 @@ import {
   FoldersApi,
   PREVIEW_PROMPT_ZIP,
   RULES_UPDATE_URL,
+  PROMPT_IMPORT_JSON_URL,
+  PROMPT_IMPORT_ZIP_URL,
 } from '@/src/server/entities/folders-api';
 import { ImportFileType } from '@/src/types/import';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { PROMPT_IMPORT_JSON_URL, PROMPT_IMPORT_ZIP_URL } from '../prompts-api';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();

@@ -1,10 +1,9 @@
+import { useRouter } from 'next/navigation';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { IconPlus, IconReplace } from '@tabler/icons-react';
-import { useRouter } from 'next/navigation';
 
-import AddVersionModal from '@/src/components/PromptView/Modals/AddVersionModal';
 import Button from '@/src/components/Common/Button/Button';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
@@ -13,6 +12,9 @@ import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBas
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
 import MdEditor from '@/src/components/Common/MdEditor/MdEditor';
 import Switch from '@/src/components/Common/Switch/Switch';
+import { ModalType } from '@/src/components/EntityListView/Components/Modals';
+import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
+import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
 import {
   BasicI18nKey,
   ButtonsI18nKey,
@@ -24,8 +26,11 @@ import {
   PromptsI18nKey,
 } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
 import { usePromptFolder } from '@/src/context/PromptFolderContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
+import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
 import { JSONEditorError } from '@/src/types/editor';
@@ -33,11 +38,8 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
-import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
-import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import CompareVersions from '@/src/components/PromptView/Modals/CompareVersions';
-import { ModalType } from '@/src/components/EntityListView/Components/Modals';
+import AddVersionModal from './Modals/AddVersionModal';
+import CompareVersions from './Modals/CompareVersions';
 
 interface Props {
   prompt: DialPrompt;
@@ -69,7 +71,7 @@ const PromptProperties: FC<Props> = ({
   const [modalState, setModalState] = useState(PopUpState.Closed);
   const [modalType, setModalType] = useState<ModalType>();
 
-  const [isJSONContentMode, setJSONContentMode] = useState(false);
+  const [isJSONContentMode, setIsJSONContentMode] = useState(false);
   const [jsonValue, setJsonValue] = useState<string | undefined>(undefined);
 
   const versions = useMemo(() => {
@@ -96,11 +98,11 @@ const PromptProperties: FC<Props> = ({
 
   const onChangeVersion = useCallback(
     async (version: string) => {
-      const found = await getPrompt?.(prompt.folderId as string, prompt.name as string, version);
+      const found = await getPrompt?.(prompt.folderId, prompt.name as string, version);
       if (found) {
         setSelectedPrompt({} as DialPrompt);
         router.push(
-          `${ApplicationRoute.Prompts}/${`${encodeURIComponent((found as DialPrompt).name as string)}?path=${encodeURIComponent((found as DialPrompt).path)}`}`,
+          `${ApplicationRoute.Prompts}/${`${encodeURIComponent((found as DialPrompt).name as string)}?path=${encodeURIComponent(found.path)}`}`,
         );
       } else {
         const path = modifyNameVersionInPrompt(prompt.path, void 0, version);
@@ -135,7 +137,7 @@ const PromptProperties: FC<Props> = ({
 
   const onChangeContentMode = useCallback(
     (value: boolean) => {
-      setJSONContentMode(value);
+      setIsJSONContentMode(value);
       if (!value) {
         dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       }
@@ -264,7 +266,7 @@ const PromptProperties: FC<Props> = ({
                 modalTitle={t(BasicI18nKey.MoveToFolder)}
                 placeholder={t(EntityPlaceholdersI18nKey.Path)}
                 onChange={onChangePath}
-                context={usePromptFolder}
+                context={usePromptFolder as () => AssetsFolderContext<DialPrompt | DialFile>}
               />
             )}
           </div>

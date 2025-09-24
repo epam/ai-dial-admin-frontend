@@ -4,10 +4,11 @@ import { GridApi, IRowNode } from 'ag-grid-community';
 
 import Field from '@/src/components/Common/Field/Field';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
-import { FILES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { getGridFileColumns, getGridFileData } from '@/src/utils/files/grid-data';
+import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
 import Grid from '@/src/components/Grid/Grid';
 import { FILE_DOWNLOAD, FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
+import { getDownloadOperation, getPreviewOperation } from '@/src/constants/grid-columns/actions';
+import { FILES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import {
   BasicI18nKey,
   EntitiesI18nKey,
@@ -18,8 +19,7 @@ import {
 import { useFileFolder } from '@/src/context/FileFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
-import { getDownloadOperation, getPreviewOperation } from '@/src/constants/grid-columns/actions';
-import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
+import { getGridFileColumns, getGridFileData } from '@/src/utils/files/grid-data';
 
 interface Props {
   file: DialFile;

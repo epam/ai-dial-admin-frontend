@@ -4,10 +4,9 @@ import Button from '@/src/components/Common/Button/Button';
 import FolderList from '@/src/components/Common/FolderList/FolderList';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { FileFolderContextType } from '@/src/context/FileFolderContext';
-import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
-import { RuleFolderContextType } from '@/src/context/RuleFolderContext';
+import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
+import { DialFile } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
 import { PopUpState } from '@/src/types/pop-up';
 import { checkPaths, checkSelectedPath, removeTrailingSlash } from '@/src/utils/files/path';
@@ -18,7 +17,7 @@ interface Props {
   initialPath?: string;
   onClose: () => void;
   onApply: (filePath: string) => void;
-  context?: () => PromptFolderContextType | FileFolderContextType | RuleFolderContextType;
+  context?: () => AssetsFolderContext<DialFile>;
   isFolderMove?: boolean;
 }
 
