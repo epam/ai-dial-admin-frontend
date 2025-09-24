@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation';
 
 import PromptView from '@/src/components/Assets/PromptView/PromptView';
 import Page403 from '@/src/components/Page403/Page403';
-import { PromptFolderProvider } from '@/src/context/PromptFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
@@ -45,9 +44,7 @@ export default async function Page(params: {
 
   return (
     <SaveValidationContextProvider>
-      <PromptFolderProvider>
-        <PromptView originalPrompt={prompt} prompts={prompts} />
-      </PromptFolderProvider>
+      <PromptView originalPrompt={prompt} prompts={prompts} />
     </SaveValidationContextProvider>
   );
 }
