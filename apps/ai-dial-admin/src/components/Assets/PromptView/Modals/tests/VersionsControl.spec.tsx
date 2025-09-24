@@ -3,7 +3,6 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import VersionsControl from '../VersionsControl';
 
-
 describe('Common components - VersionsControl', () => {
   const onChange = vi.fn();
   const user = userEvent.setup();
