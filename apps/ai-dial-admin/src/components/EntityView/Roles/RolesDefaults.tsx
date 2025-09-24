@@ -4,7 +4,8 @@ import { NumberInputField } from '@/src/components/Common/InputField/InputField'
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
-import { DialRoleLimits, DialRoleShare } from '@/src/models/dial/role-limits';
+import { DialRoleShare } from '@/src/models/dial/role-limits';
+import LimitsControl from '@/src/components/EntityMainProperties/BaseProperties/Limits/Limits';
 
 interface Props {
   entity: EntityRoleLimits;
@@ -13,16 +14,6 @@ interface Props {
 
 const RolesDefaults: FC<Props> = ({ entity, onChangeEntity }) => {
   const t = useI18n();
-
-  const onChangeDefaultLimit = useCallback(
-    (value: number | string, key: keyof DialRoleLimits) => {
-      onChangeEntity({
-        ...entity,
-        defaultRoleLimit: { ...entity.defaultRoleLimit, [key]: value },
-      });
-    },
-    [entity, onChangeEntity],
-  );
 
   const onChangeDefaultRoleShareResourceLimit = useCallback(
     (value: number | string, key: keyof DialRoleShare) => {
@@ -38,36 +29,10 @@ const RolesDefaults: FC<Props> = ({ entity, onChangeEntity }) => {
     <div className="flex flex-row gap-6 mb-8">
       <div className="flex flex-col p-4 bg-layer-3">
         <div className="mb-4 small">{t(RolesI18nKey.DefaultLimits)}</div>
-        <div className="flex flex-row gap-x-3">
-          <NumberInputField
-            elementId="minute"
-            value={entity.defaultRoleLimit?.minute}
-            placeholder={t(RolesI18nKey.NoLimits)}
-            fieldTitle={t(EntityFieldsI18nKey.minute)}
-            onChange={(value) => onChangeDefaultLimit(value, 'minute')}
-          />
-          <NumberInputField
-            elementId="day"
-            placeholder={t(RolesI18nKey.NoLimits)}
-            value={entity.defaultRoleLimit?.day}
-            fieldTitle={t(EntityFieldsI18nKey.day)}
-            onChange={(value) => onChangeDefaultLimit(value, 'day')}
-          />
-          <NumberInputField
-            elementId="week"
-            placeholder={t(RolesI18nKey.NoLimits)}
-            value={entity.defaultRoleLimit?.week}
-            fieldTitle={t(EntityFieldsI18nKey.week)}
-            onChange={(value) => onChangeDefaultLimit(value, 'week')}
-          />
-          <NumberInputField
-            elementId="month"
-            placeholder={t(RolesI18nKey.NoLimits)}
-            value={entity.defaultRoleLimit?.month}
-            fieldTitle={t(EntityFieldsI18nKey.month)}
-            onChange={(value) => onChangeDefaultLimit(value, 'month')}
-          />
-        </div>
+        <LimitsControl
+          limits={entity.defaultRoleLimit}
+          onChangeLimits={(defaultRoleLimit) => onChangeEntity({ ...entity, defaultRoleLimit })}
+        />
       </div>
       <div className="flex flex-col p-4 bg-layer-3">
         <div className="mb-4 small">{t(RolesI18nKey.DefaultInvitations)}</div>
