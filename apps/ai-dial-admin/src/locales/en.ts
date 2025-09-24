@@ -136,7 +136,7 @@ export default {
 
     // entity control
     SourceType: 'Source type',
-    Endpoints: 'Endpoints',
+    Endpoints: 'InterceptorEndpoint',
     AppRunner: 'Application runner',
     ModelDisplayName: 'Model display name',
     ApplicationDisplayName: 'Application display name',
@@ -294,7 +294,7 @@ export default {
   UpstreamEndpoints: {
     Upstream: 'Upstream',
     AddUpstream: 'Add Upstream',
-    Endpoints: 'Upstream Endpoints',
+    Endpoints: 'Upstream InterceptorEndpoint',
     Keys: 'Keys',
   },
   ModelView: {
