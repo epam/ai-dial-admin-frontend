@@ -1,14 +1,12 @@
 import { FC, useCallback } from 'react';
 
-import classNames from 'classnames';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
-import { NumberInputField } from '@/src/components/Common/InputField/InputField';
+import PriceControl from '@/src/components/EntityMainProperties/BaseProperties/Price';
 import { BasicI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModel, PricingType } from '@/src/models/dial/model';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
-import { IconCurrencyDollar } from '@tabler/icons-react';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import classNames from 'classnames';
 import { getMultipliedValue } from './utils';
 
 interface Props {
@@ -83,22 +81,22 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
           onChange={onChangePricingType}
         />
       </div>
-      <NumberInputField
+
+      <PriceControl
         elementId="promptsPrice"
         fieldTitle={t(ModelViewI18nKey.PromptPrice)}
         value={getMultipliedValue(model.pricing?.prompt, isTokenType)}
         onChange={onChangePrompt}
-        containerCssClass="w-[120px] lg:w-auto lg:max-w-[120px]"
-        iconBeforeInput={<IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} />}
+        controlClassName="w-[120px] lg:w-auto lg:max-w-[120px]"
         disabled={activeType === BasicI18nKey.None}
       />
-      <NumberInputField
+
+      <PriceControl
         elementId="completionsPrice"
         fieldTitle={t(ModelViewI18nKey.CompletionPrice)}
         value={getMultipliedValue(model.pricing?.completion, isTokenType)}
         onChange={onChangeCompletion}
-        containerCssClass="w-[120px] lg:w-auto lg:max-w-[120px]"
-        iconBeforeInput={<IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} />}
+        controlClassName="w-[120px] lg:w-auto lg:max-w-[120px]"
         disabled={activeType === BasicI18nKey.None}
       />
     </div>
