@@ -2,21 +2,21 @@
 
 import { FC } from 'react';
 
-import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
-import { getInterceptorContainers } from '@/src/app/[lang]/interceptors/actions';
-import Defaults from '@/src/components/Defaults/Defaults';
-import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
-import { getSourceItems } from '@/src/components/SourceField/constants';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
-import { useAppContext } from '@/src/context/AppContext';
-import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
+import { getInterceptorContainers } from '@/src/app/[lang]/interceptors/actions';
+import { getSourceItems } from '@/src/components/SourceField/constants';
+import { useAppContext } from '@/src/context/AppContext';
+import { isDeploymentsEnabled } from '@/src/utils/plugins';
+import { useI18n } from '@/src/locales/client';
 
+import Defaults from '@/src/components/Defaults/Defaults';
+import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
 import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
 import SourceField from '@/src/components/SourceField/SourceField';
-import { isDeploymentsEnabled } from '@/src/utils/plugins';
 
 interface Props {
   selectedInterceptor: DialInterceptor;
