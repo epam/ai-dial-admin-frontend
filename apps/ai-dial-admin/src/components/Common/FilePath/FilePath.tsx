@@ -5,11 +5,11 @@ import { createPortal } from 'react-dom';
 import Button from '@/src/components/Common/Button/Button';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
-import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
-import { FileFolderContextType } from '@/src/context/FileFolderContext';
-import FilePathModal from './FilePathModal';
+import { DialFile } from '@/src/models/dial/file';
 import { PopUpState } from '@/src/types/pop-up';
+import FilePathModal from './FilePathModal';
 
 interface Props {
   label: string;
@@ -18,7 +18,7 @@ interface Props {
   disabled?: boolean;
   value?: string;
   onChange: (value: string) => void;
-  context: () => PromptFolderContextType | FileFolderContextType;
+  context: () => AssetsFolderContext<DialFile>;
 }
 
 const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, onChange, context }) => {

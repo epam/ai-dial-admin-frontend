@@ -1,20 +1,21 @@
+import { DialAssetApp } from '@/src/models/dial/asset-app';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { compareVersions } from '@/src/utils/prompts/versions';
 
-export const filterLatestVersions = (data: DialPrompt[]) => {
+export const filterLatestVersions = (data: (DialPrompt | DialAssetApp)[]) => {
   const latestVersions: Record<string, DialPrompt> = {};
 
   data?.forEach((item) => {
     const name = item.name as string;
     if (!latestVersions[name] || item.updateTime > latestVersions[name].updateTime) {
-      latestVersions[name] = item;
+      latestVersions[name] = item as DialPrompt;
     }
   });
 
   return Object.values(latestVersions);
 };
 
-export const getVersionsPerName = (data: DialPrompt[]) => {
+export const getVersionsPerName = (data: (DialPrompt | DialAssetApp)[]) => {
   const versionsPerName: Record<string, string[]> = {};
 
   data.forEach((item) => {

@@ -33,7 +33,7 @@ interface Props<T> {
   children?: ReactNode;
   onDiscard: () => void;
   onSave: (newVersion?: string) => void;
-  removeEntity: (entity?: string) => Promise<ServerActionResponse>;
+  removeEntity: (entity: string) => Promise<ServerActionResponse>;
   toggleJsonEditor?: () => void;
 }
 

@@ -1,17 +1,16 @@
 'use client';
 
-import classNames from 'classnames';
-import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
+
+import classNames from 'classnames';
+import { cloneDeep } from 'lodash';
 
 import { createPrompt, getPrompt, getPrompts, movePrompts, removePrompt } from '@/src/app/[lang]/prompts/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
-import PromptProperties from '@/src/components/PromptView/PromptProperties';
-import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/PromptView/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { useNotification } from '@/src/context/NotificationContext';
 import { usePromptFolder } from '@/src/context/PromptFolderContext';
@@ -23,6 +22,8 @@ import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import PromptProperties from './PromptProperties';
+import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from './utils';
 
 interface Props {
   originalPrompt: DialPrompt;

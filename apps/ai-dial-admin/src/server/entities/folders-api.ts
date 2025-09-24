@@ -6,7 +6,6 @@ import { DialFolder } from '@/src/models/dial/folder';
 import { DialRule } from '@/src/models/dial/rule';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
-import { PROMPT_IMPORT_JSON_URL, PROMPT_IMPORT_ZIP_URL } from './prompts-api';
 import { ResourceType } from '@/src/types/folder';
 
 export const FOLDERS_URL = `${API}/folders`;
@@ -14,6 +13,10 @@ export const FOLDERS_MOVE_URL = `${FOLDERS_URL}/move`;
 export const RULES_UPDATE_URL = `${FOLDERS_URL}/updateRules`;
 export const FOLDER_CREATE_URL = `${FOLDERS_URL}/upload`;
 export const PREVIEW_PROMPT_ZIP = `${API}/prompts/import/zip/preview`;
+// delete after add create folder for files, applications
+export const PROMPTS_URL = `${API}/prompts`;
+export const PROMPT_IMPORT_ZIP_URL = `${PROMPTS_URL}/import/zip`;
+export const PROMPT_IMPORT_JSON_URL = `${PROMPTS_URL}/import/json`;
 
 export class FoldersApi extends BaseApi {
   getFolders(token: JWT | null, path: string): Promise<DialFolder[] | null | undefined> {

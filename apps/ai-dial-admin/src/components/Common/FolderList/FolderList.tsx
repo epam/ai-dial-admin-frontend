@@ -17,8 +17,7 @@ import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { EntitiesI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { FileFolderContextType } from '@/src/context/FileFolderContext';
-import { PromptFolderContextType } from '@/src/context/PromptFolderContext';
+import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
 import { RuleFolderContextType } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
@@ -34,7 +33,7 @@ interface Props {
   disableAutoFetch?: boolean;
   initialPath?: string;
   view?: ApplicationRoute;
-  context?: () => PromptFolderContextType | FileFolderContextType | RuleFolderContextType;
+  context?: () => AssetsFolderContext<DialFile> | RuleFolderContextType;
   isFolderMove?: boolean;
   folderPath?: string;
   isFolderDelete?: boolean;
@@ -61,7 +60,9 @@ const FolderList: FC<Props> = ({
 
   const folderData = useMemo(() => {
     return isBulkDelete
-      ? generateFolderListFromBulkPaths(Object.keys((folderContext as PromptFolderContextType).bulkSelectedData) || [])
+      ? generateFolderListFromBulkPaths(
+          Object.keys((folderContext as AssetsFolderContext<DialFile>)?.bulkSelectedData) || [],
+        )
       : (folderContext?.files as DialFile[]);
   }, [folderContext, isBulkDelete]);
 
@@ -162,7 +163,7 @@ const FolderList: FC<Props> = ({
     const iconClass =
       !node.children?.some((c) => isFolder(c.nodeType)) &&
       (isBulkDelete
-        ? (folderContext as PromptFolderContextType)?.bulkSelectedData[node.path]
+        ? (folderContext as AssetsFolderContext<DialFile>)?.bulkSelectedData[node.path]
         : folderContext?.fetchedFoldersData[node.path])
         ? 'text-transparent'
         : '';
@@ -261,7 +262,7 @@ const FolderList: FC<Props> = ({
         modalState={modalState}
         modalType={modalType}
         selectedFolder={selectedFolder}
-        context={context}
+        context={context as () => AssetsFolderContext<DialFile>}
         handleClose={handleModalClose}
       />
     </div>

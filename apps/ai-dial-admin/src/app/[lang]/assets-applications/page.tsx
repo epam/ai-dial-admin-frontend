@@ -1,12 +1,13 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import FilesList from '@/src/components/Assets/Files/FilesList';
+import AppsList from '@/src/components/Assets/Apps/AppsList';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
-import { FileFolderProvider } from '@/src/context/FileFolderContext';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { AppsFolderProvider } from '@/src/context/AppsFolderContext';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,8 +21,10 @@ export default async function Page() {
   }
 
   return (
-    <FileFolderProvider>
-      <FilesList />
-    </FileFolderProvider>
+    <SaveValidationContextProvider>
+      <AppsFolderProvider>
+        <AppsList />
+      </AppsFolderProvider>
+    </SaveValidationContextProvider>
   );
 }

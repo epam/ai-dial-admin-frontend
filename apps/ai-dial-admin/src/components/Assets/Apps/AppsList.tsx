@@ -2,20 +2,20 @@
 
 import { FC } from 'react';
 
-import { bulkDeletePrompts, createPrompt, movePrompts, removePrompt } from '@/src/app/[lang]/prompts/actions';
+import { bulkDeleteApps, moveApps, removeApp } from '@/src/app/[lang]/assets-applications/actions';
 import { filterLatestVersions, getVersionsPerName } from '@/src/components/Assets/utils';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import Page403 from '@/src/components/Page403/Page403';
-import { PROMPTS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { APPS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { useAppsFolder } from '@/src/context/AppsFolderContext';
 import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
-import { usePromptFolder } from '@/src/context/PromptFolderContext';
+import { DialAssetApp } from '@/src/models/dial/asset-app';
 import { DialFile } from '@/src/models/dial/file';
-import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { filterNames } from '@/src/utils/entities/filter-names';
 
-const PromptsList: FC = () => {
-  const { data } = usePromptFolder();
+const AppsList: FC = () => {
+  const { data } = useAppsFolder();
   if (data == null) {
     return <Page403 />;
   }
@@ -26,20 +26,18 @@ const PromptsList: FC = () => {
 
   return (
     <BaseEntityList
-      baseColumns={PROMPTS_COLUMNS}
+      baseColumns={APPS_COLUMNS}
       names={names}
       versionsMap={versionsMap}
       data={filteredData}
-      route={ApplicationRoute.Prompts}
-      createEntity={createPrompt}
-      removeEntity={removePrompt}
-      moveFiles={movePrompts}
-      bulkDelete={bulkDeletePrompts}
-      context={usePromptFolder as () => AssetsFolderContext<DialFile | DialPrompt>}
+      route={ApplicationRoute.AssetsApplications}
+      removeEntity={removeApp}
+      moveFiles={moveApps}
+      bulkDelete={bulkDeleteApps}
+      context={useAppsFolder as () => AssetsFolderContext<DialAssetApp | DialFile>}
       showFolders={true}
-      showExport={true}
     />
   );
 };
 
-export default PromptsList;
+export default AppsList;

@@ -5,20 +5,20 @@ import { createPortal } from 'react-dom';
 
 import classNames from 'classnames';
 
+import AddVersionModal from '@/src/components/Assets/PromptView/Modals/AddVersionModal';
 import Button from '@/src/components/Common/Button/Button';
 import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
-import AddVersionModal from '@/src/components/PromptView/Modals/AddVersionModal';
 import { ButtonsI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
+import { DialPrompt } from '@/src/models/dial/prompt';
 import { JSONEditorError } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { generateNewInitialVersion } from '@/src/utils/prompts/versions';
-import { DialPrompt } from '@/src/models/dial/prompt';
 
 interface Props<T> {
   view: ApplicationRoute;

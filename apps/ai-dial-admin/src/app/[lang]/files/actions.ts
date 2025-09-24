@@ -2,32 +2,33 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { filesApi } from '@/src/app/api/api';
+import { assetsApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { ImportFileType } from '@/src/types/import';
+import { ResourceType } from '@/src/types/folder';
 
 export async function getFiles(path: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return filesApi.getFilesList(token, path);
+  return assetsApi.getAssetList(token, path, ResourceType.FILE);
 }
 
-export async function removeFile(path?: string) {
+export async function removeFile(path: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return filesApi.removeFile(token, path);
+  return assetsApi.removeAsset(token, path, ResourceType.FILE);
 }
 
 export async function moveFiles(paths: string[], newPath: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return filesApi.moveFiles(token, paths, newPath);
+  return assetsApi.moveAssets(token, paths, newPath, ResourceType.FILE);
 }
 
 export async function importFiles(body: FormData, fileType: ImportFileType) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return filesApi.importFiles(token, body, fileType);
+  return assetsApi.importAssets(token, body, fileType, ResourceType.FILE);
 }
 
 export async function exportFiles(paths: string[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return await filesApi.exportFiles(token, paths);
+  return await assetsApi.exportFiles(token, paths);
 }

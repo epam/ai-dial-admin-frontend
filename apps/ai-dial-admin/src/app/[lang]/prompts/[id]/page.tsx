@@ -1,16 +1,18 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { promptsApi } from '@/src/app/api/api';
-import PromptView from '@/src/components/PromptView/PromptView';
+import PromptView from '@/src/components/Assets/PromptView/PromptView';
+import Page403 from '@/src/components/Page403/Page403';
+import { PromptFolderProvider } from '@/src/context/PromptFolderContext';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { ApplicationRoute } from '@/src/types/routes';
 import { logger } from '@/src/server/logger';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { DialFileNodeType } from '@/src/models/dial/file';
-import Page403 from '@/src/components/Page403/Page403';
-import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { assetsApi } from '@/src/app/api/api';
+import { ResourceType } from '@/src/types/folder';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,14 +29,13 @@ export default async function Page(params: {
     const path = decodeURIComponent((await params.searchParams).path);
     const name = decodeURIComponent((await params.params).id);
 
-    prompt = await promptsApi.getPrompt(token, path);
+    prompt = await assetsApi.getAsset(token, path, ResourceType.PROMPT);
     if (prompt === void 0) {
       return <Page403 />;
     }
-    prompts =
-      (await promptsApi.getPromptsList(token, `${prompt?.folderId}/`))?.filter(
-        (p) => p.nodeType === DialFileNodeType.ITEM && p.name === name,
-      ) || [];
+    prompts = ((await assetsApi.getAssetList(token, `${prompt?.folderId}/`, ResourceType.PROMPT))?.filter(
+      (p) => p.nodeType === DialFileNodeType.ITEM && p.name === name,
+    ) || []) as DialPrompt[];
   } catch (e) {
     logger.error('Getting prompt view data error', e);
   }
@@ -44,7 +45,9 @@ export default async function Page(params: {
 
   return (
     <SaveValidationContextProvider>
-      <PromptView originalPrompt={prompt} prompts={prompts} />
+      <PromptFolderProvider>
+        <PromptView originalPrompt={prompt} prompts={prompts} />
+      </PromptFolderProvider>
     </SaveValidationContextProvider>
   );
 }

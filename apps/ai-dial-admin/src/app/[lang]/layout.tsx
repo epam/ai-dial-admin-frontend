@@ -10,11 +10,9 @@ import Header from '@/src/components/Header/Header';
 import Menu from '@/src/components/Menu/Menu';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { AppContextProvider, EmbeddedApp } from '@/src/context/AppContext';
-import { FileFolderProvider } from '@/src/context/FileFolderContext';
 import { I18nProvider } from '@/src/context/I18nProvider';
 import { NextAuthProvider } from '@/src/context/NextAuthProvider';
 import { NotificationProvider } from '@/src/context/NotificationContext';
-import { PromptFolderProvider } from '@/src/context/PromptFolderContext';
 import { RuleFolderProvider } from '@/src/context/RuleFolderContext';
 import { ThemeProvider } from '@/src/context/ThemeContext';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -50,25 +48,21 @@ export default async function Layout({ children, params }: { children: ReactNode
       >
         <ThemeProvider themesConfiguration={themesConfiguration} themeImages={process.env.THEMES_CONFIG_IMAGES}>
           <RuleFolderProvider attributes={process.env.PUBLICATION_FILTERS}>
-            <FileFolderProvider>
-              <PromptFolderProvider>
-                <I18nProvider locale={lang}>
-                  <NotificationProvider>
-                    <div className={classNames('flex flex-col h-full w-full')}>
-                      <Header isEnableAuth={isEnableAuth} />
-                      <div className="flex-1 min-h-0">
-                        <div className="flex flex-row h-full relative">
-                          <Menu disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)} />
-                          <Content isEnableAuth={isEnableAuth} beVersion={beVersion}>
-                            {children}
-                          </Content>
-                        </div>
-                      </div>
+            <I18nProvider locale={lang}>
+              <NotificationProvider>
+                <div className={classNames('flex flex-col h-full w-full')}>
+                  <Header isEnableAuth={isEnableAuth} />
+                  <div className="flex-1 min-h-0">
+                    <div className="flex flex-row h-full relative">
+                      <Menu disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)} />
+                      <Content isEnableAuth={isEnableAuth} beVersion={beVersion}>
+                        {children}
+                      </Content>
                     </div>
-                  </NotificationProvider>
-                </I18nProvider>
-              </PromptFolderProvider>
-            </FileFolderProvider>
+                  </div>
+                </div>
+              </NotificationProvider>
+            </I18nProvider>
           </RuleFolderProvider>
         </ThemeProvider>
       </AppContextProvider>

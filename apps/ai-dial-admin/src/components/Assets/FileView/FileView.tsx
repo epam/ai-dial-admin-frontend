@@ -1,24 +1,25 @@
 'use client';
 
-import classNames from 'classnames';
-import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import Tabs from '@/src/components/Common/Tabs/Tabs';
-import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
-import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
-import { useI18n } from '@/src/locales/client';
-import { ApplicationRoute } from '@/src/types/routes';
-import { useFileFolder } from '@/src/context/FileFolderContext';
-import { DialFile } from '@/src/models/dial/file';
-import FileProperties from './FileProperties';
+import classNames from 'classnames';
+import { cloneDeep } from 'lodash';
+
 import { moveFiles, removeFile } from '@/src/app/[lang]/files/actions';
-import { addTrailingSlash, changePath } from '@/src/utils/files/path';
+import Tabs from '@/src/components/Common/Tabs/Tabs';
+import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
+import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { useFileFolder } from '@/src/context/FileFolderContext';
+import { useI18n } from '@/src/locales/client';
+import { DialFile } from '@/src/models/dial/file';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
+import { addTrailingSlash, changePath } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import FileProperties from './FileProperties';
 
 interface Props {
   originalFile: DialFile;
