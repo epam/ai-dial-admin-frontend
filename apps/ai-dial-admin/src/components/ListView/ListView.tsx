@@ -6,6 +6,7 @@ import classNames from 'classnames';
 
 import FolderCollapse from '@/public/images/icons/folder-collapse.svg';
 import ExportGrid from '@/src/components/Assets/ExportAssets/ExportGrid';
+import Button from '@/src/components/Common/Button/Button';
 import FolderList from '@/src/components/Common/FolderList/FolderList';
 import HorizontalCollapseBar from '@/src/components/Common/HorizontalCollapseBar/HorizontalCollapseBar';
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
@@ -16,7 +17,6 @@ import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';
-import { DialButton } from '@epam/ai-dial-ui-kit';
 
 interface Props<T> {
   emptyDataTitle: string;
@@ -80,7 +80,7 @@ const ListView = <T extends object>({
                 tooltip={isCollapseDisable ? '' : t(FoldersI18nKey.CollapseAll)}
                 placement={'top'}
               >
-                <DialButton
+                <Button
                   cssClass={isCollapseDisable ? 'text-controls-disable' : 'hover:text-icon-accent-primary'}
                   onClick={collapseFolders}
                   iconBefore={<FolderCollapse width={24} height={24} />}
