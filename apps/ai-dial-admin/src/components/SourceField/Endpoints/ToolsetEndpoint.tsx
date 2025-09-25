@@ -1,18 +1,17 @@
 'use client';
 
-import { FC } from 'react';
 import classNames from 'classnames';
+import { FC } from 'react';
 
-import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { Toolset } from '@/src/models/dial/toolset';
-import { RadioButtonModel } from '@/src/models/radio-button';
-import { RadioFieldOrientation } from '@/src/types/radio-orientation';
-import { ToolsetTransport } from '@/src/types/toolset';
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';
+import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { Toolset } from '@/src/models/dial/toolset';
+import { ToolsetTransport } from '@/src/types/toolset';
 
-import RadioField from '@/src/components/Common/RadioField/RadioField';
+import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
+import { DropdownItemsModel } from '@/src/models/dropdown-item';
 
 interface Props {
   entity: Toolset;
@@ -23,7 +22,7 @@ interface Props {
 
 const ToolsetEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) => {
   const t = useI18n();
-  const transportOptions: RadioButtonModel[] = [
+  const transportOptions: DropdownItemsModel[] = [
     { id: ToolsetTransport.HTTP, name: ToolsetTransport.HTTP.toUpperCase() },
     { id: ToolsetTransport.SSE, name: ToolsetTransport.SSE.toUpperCase() },
   ];
@@ -55,12 +54,11 @@ const ToolsetEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) => {
           onChange={(endpoint) => onChange({ ...entity, endpoint })}
         />
       )}
-      <RadioField
+      <DropdownField
         fieldTitle={t(EntityFieldsI18nKey.transport)}
+        selectedValue={entity.transport || ToolsetTransport.SSE}
         elementId="transport"
-        activeRadioButton={entity.transport || ToolsetTransport.SSE}
-        radioButtons={transportOptions}
-        orientation={RadioFieldOrientation.Column}
+        items={transportOptions}
         onChange={(transport) => onChange({ ...entity, transport: transport as ToolsetTransport })}
       />
     </div>
