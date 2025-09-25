@@ -1,8 +1,8 @@
 import { FC, ReactNode } from 'react';
-
-import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import classNames from 'classnames';
 import { DialTooltip } from '@epam/ai-dial-ui-kit';
+
+import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 
 interface Props {
   label: string;
