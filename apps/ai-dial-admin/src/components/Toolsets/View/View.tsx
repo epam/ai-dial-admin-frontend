@@ -87,10 +87,6 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
     setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreToolset : !isEqualAdminToolset);
   }, [selectedFormat, originalToolset, selectedToolset, coreToolset]);
 
-  useEffect(() => {
-    setIsChanged(!isEqualSkippingUndefined(originalToolset, selectedToolset));
-  }, [selectedToolset, originalToolset]);
-
   const onChangeActiveTab = useCallback(
     (tab: string) => {
       setActiveTab(tab as EntityViewTab);
