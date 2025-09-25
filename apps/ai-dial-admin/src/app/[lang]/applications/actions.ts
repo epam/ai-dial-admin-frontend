@@ -26,13 +26,13 @@ export async function createApplication(application: DialApplication) {
 
 export async function updateApplication(application: DialApplication) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const defaults = application.defaultsTemp
+    ? { ...convertDefaultsToRecord(application.defaultsTemp) }
+    : { ...application.defaults };
   const app = {
     ...application,
     routes: application.routes?.map((route) => ({ ...route, name: route.displayName || route.name })),
-    defaults: {
-      ...application.defaults,
-      ...convertDefaultsToRecord(application.defaultsTemp || []),
-    },
+    defaults,
   };
   delete app.defaultsTemp;
   return applicationsApi.updateApplication(app, token);
