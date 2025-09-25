@@ -19,12 +19,12 @@ export async function removeInterceptor(name?: string) {
 
 export async function updateInterceptor(interceptor: DialInterceptor) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const defaults = interceptor.defaultsTemp
+    ? { ...convertDefaultsToRecord(interceptor.defaultsTemp) }
+    : { ...interceptor.defaults };
   const newInterceptor = {
     ...interceptor,
-    defaults: {
-      ...interceptor.defaults,
-      ...convertDefaultsToRecord(interceptor.defaultsTemp || []),
-    },
+    defaults,
   };
   delete newInterceptor.defaultsTemp;
   return interceptorsApi.updateInterceptor(newInterceptor, token);
