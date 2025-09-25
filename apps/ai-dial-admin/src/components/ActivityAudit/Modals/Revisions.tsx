@@ -2,12 +2,12 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { IconCaretDownFilled, IconCaretRightFilled } from '@tabler/icons-react';
 import classNames from 'classnames';
+import { DialButton } from '@epam/ai-dial-ui-kit';
 
 import { getRevisions } from '@/src/app/[lang]/activity-audit/actions';
 import { sorts } from '@/src/components/ActivityAudit/constants';
 import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
 import { groupByDay } from '@/src/components/ActivityAudit/List/utils';
-import Button from '@/src/components/Common/Button/Button';
 import DatePicker from '@/src/components/Common/DatePicker/DatePicker';
 import Loader from '@/src/components/Common/Loader/Loader';
 import Popup from '@/src/components/Common/Popup/Popup';
@@ -163,9 +163,9 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, moda
       </div>
 
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <Button
-          cssClass="primary"
+        <DialButton cssClass="dial-secondary-button" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton
+          cssClass="dial-primary-button"
           title={t(ButtonsI18nKey.Apply)}
           onClick={() => onApply(revisions, selectedRevision)}
           disable={!selectedRevision}

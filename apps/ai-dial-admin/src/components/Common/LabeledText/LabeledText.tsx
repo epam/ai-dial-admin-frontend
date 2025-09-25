@@ -1,8 +1,8 @@
 import { FC, ReactNode } from 'react';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import classNames from 'classnames';
+import { DialTooltip } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   label: string;
@@ -19,7 +19,7 @@ const LabeledText: FC<Props> = ({ label, text, children, copyButton }) => {
         children
       ) : (
         <div className="flex flex-row items-center">
-          <Tooltip tooltip={text}>{text}</Tooltip>
+          <DialTooltip tooltip={text}>{text}</DialTooltip>
 
           {copyButton && (
             <div className="ml-2 flex items-center justify-center">

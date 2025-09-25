@@ -6,8 +6,8 @@ import { createPortal } from 'react-dom';
 
 import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
+import { DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { ActivityAuditI18nKey, ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
@@ -131,9 +131,9 @@ const AuditView: FC<Props> = ({
             <div className="flex flex-row items-center gap-4 flex-wrap">
               <CompareControl compareView={compareView} setCompareView={setCompareView} />
               <FilterControl diffView={diffView} setDiffView={setDiffView} />
-              <Button
+              <DialButton
                 iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
-                cssClass="secondary"
+                cssClass="dial-secondary-button"
                 title={t(ActivityAuditI18nKey.RollbackResource)}
                 onClick={onOpenModal}
               />

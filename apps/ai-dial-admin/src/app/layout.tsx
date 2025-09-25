@@ -1,9 +1,10 @@
 import { Inter } from 'next/font/google';
-
-import '@/src/app/[lang]/global.scss';
 import { ReactNode } from 'react';
+
 import { getIconPath } from '@/src/utils/themes/icon-path';
 import { themesApi } from './api/api';
+
+import '@/src/app/[lang]/global.scss';
 
 export const metadata = {
   title: process.env.APP_NAME || 'AI Dial Admin',

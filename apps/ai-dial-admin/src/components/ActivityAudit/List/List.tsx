@@ -7,12 +7,12 @@ import { createPortal } from 'react-dom';
 import { IconRefresh, IconRestore } from '@tabler/icons-react';
 import { GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
 import classNames from 'classnames';
+import { DialButton } from '@epam/ai-dial-ui-kit';
 
 import { getActivities } from '@/src/app/[lang]/activity-audit/actions';
 import { getActivityAuditColumns, getGridFilters } from '@/src/components/ActivityAudit/List/utils';
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
 import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
-import Button from '@/src/components/Common/Button/Button';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
 import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/EntityListView/constants';
@@ -235,16 +235,16 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
             timeRange={timeRange}
             onTimeRangeChange={onTimeRangeChange}
           />
-          <Button
-            cssClass="secondary"
+          <DialButton
+            cssClass="dial-secondary-button"
             title={t(ButtonsI18nKey.Refresh)}
             iconBefore={<IconRefresh {...BASE_ICON_PROPS} />}
             onClick={onRefresh}
           />
           {!entity && (
-            <Button
+            <DialButton
               iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
-              cssClass="secondary"
+              cssClass="dial-secondary-button"
               title={t(ActivityAuditI18nKey.RollbackSystem)}
               onClick={systemRollback}
             />
