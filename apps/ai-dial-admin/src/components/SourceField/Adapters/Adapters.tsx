@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import classNames from 'classnames';
 
 import { PopUpState } from '@/src/types/pop-up';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
@@ -28,10 +29,17 @@ interface Props<T> {
   entity: T;
   onChange: (entity: T) => void;
   getAdapters: () => Promise<ServerActionResponse | null>;
+  errorText?: string;
   isModal?: boolean;
 }
 
-const Adapters = <T extends DialModel | DialInterceptor>({ entity, onChange, getAdapters, isModal }: Props<T>) => {
+const Adapters = <T extends DialModel | DialInterceptor>({
+  entity,
+  onChange,
+  getAdapters,
+  errorText,
+  isModal,
+}: Props<T>) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const showNotificationRef = useRef(showNotification);
@@ -89,7 +97,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({ entity, onChange, get
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex lg:flex-row flex-col gap-2 items-end">
+      <div className="flex lg:flex-row flex-col gap-2">
         {isModal ? (
           <div className="flex flex-col w-full">
             <DropdownField
@@ -112,6 +120,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({ entity, onChange, get
               onOpenModal={onOpenModal}
               selectedValue={selectedAdapter?.name}
               elementId={'adapters'}
+              errorText={errorText}
             >
               <SelectAdapterModal
                 selected={entity.source?.adapterName}
@@ -126,7 +135,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({ entity, onChange, get
         {entity.source?.adapterName && !isModal && (
           <Button
             iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
-            cssClass="secondary"
+            cssClass={classNames('secondary', errorText ? 'self-center mt-[3px]' : 'self-end')}
             title={t(SourceI18nKey.OpenAdapter)}
             onClick={() => openAdapter()}
           />
