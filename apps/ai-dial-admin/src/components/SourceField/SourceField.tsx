@@ -85,7 +85,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
         ...entity,
         source: {
           $type: sourceItems[0].id,
-          completionEndpointPath: view === ApplicationRoute.Models ? getEndpointPostfix(DialModelType.Chat) : '',
+          completionEndpointPath: view === ApplicationRoute.Models ? getEndpointPostfix(DialModelType.Chat) : null,
         },
       });
     } else {
