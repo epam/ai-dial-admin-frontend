@@ -25,7 +25,7 @@ import { Toolset } from '@/src/models/dial/toolset';
 import { TabModel } from '@/src/models/tab';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import { clearAdminFields, isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import ToolsetProperties from './Properties';
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
@@ -82,8 +82,7 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
 
   useEffect(() => {
     const isEqualAdminToolset = isEqualSkippingUndefined(originalToolset, selectedToolset);
-    const isEqualCoreToolset = isEqualSkippingUndefined(selectedToolset, coreToolset);
-
+    const isEqualCoreToolset = isEqualSkippingUndefined(clearAdminFields(selectedToolset), coreToolset);
     setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreToolset : !isEqualAdminToolset);
   }, [selectedFormat, originalToolset, selectedToolset, coreToolset]);
 
