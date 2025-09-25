@@ -52,7 +52,6 @@ const ToolsetEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) => {
           fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
           endpoint={entity.endpoint}
           onChange={(endpoint) => onChange({ ...entity, endpoint })}
-          isModal={isModal}
         />
       )}
       <DropdownField

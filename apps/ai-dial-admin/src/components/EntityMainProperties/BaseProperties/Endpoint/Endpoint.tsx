@@ -20,10 +20,9 @@ export interface Props extends EndpointControlProps {
   placeholder: string;
   elementCssClass?: string;
   iconAfterInput?: React.ReactNode;
-  isModal?: boolean;
 }
 
-const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, onChange, isModal, ...props }) => {
+const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, onChange, ...props }) => {
   const t = useI18n() as (t: string) => string;
   const { dispatch } = useSaveValidationContext();
   const [endpointError, setEndpointError] = useState<FieldError | null>(null);
@@ -39,9 +38,6 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, o
 
   useEffect(() => {
     if (required) {
-      if (!isModal) {
-        validateEndpoint(endpoint || '');
-      }
       dispatch({ type: ValidationActionType.SetField, field: id, isValid: !!endpoint });
     }
     return () => {
