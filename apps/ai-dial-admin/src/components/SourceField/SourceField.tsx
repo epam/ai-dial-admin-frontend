@@ -103,7 +103,11 @@ const SourceField = <T extends DialInterceptor | DialModel>({
           {view === ApplicationRoute.Models ? (
             <ModelEndpoint model={entity} onChange={onChangeEntity as (entity: DialModel) => void} isModal={isModal} />
           ) : (
-            <InterceptorEndpoints entity={entity} onChange={onChangeEntity as (entity: DialInterceptor) => void} />
+            <InterceptorEndpoints
+              entity={entity}
+              onChange={onChangeEntity as (entity: DialInterceptor) => void}
+              isModal={isModal}
+            />
           )}
         </>
       )}
@@ -118,7 +122,13 @@ const SourceField = <T extends DialInterceptor | DialModel>({
         />
       )}
       {source === SOURCE_TYPE.RUNNER && getRunners && (
-        <Templates entity={entity} onChange={onChangeEntity} getRunners={getRunners} fieldId={'templates'} />
+        <Templates
+          entity={entity}
+          onChange={onChangeEntity}
+          getRunners={getRunners}
+          fieldId={'templates'}
+          isModal={isModal}
+        />
       )}
       {source === SOURCE_TYPE.ADAPTER && getAdapters && (
         <Adapters
