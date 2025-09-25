@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { isEqual } from 'lodash';
 
-const ADMIN_KEYS = ['source'];
-
 export const isEqualSkippingUndefined = (obj1?: Record<string, any> | null, obj2?: Record<string, any> | null) => {
   const clearedObj1 = { ...obj1 };
   clearFields(clearedObj1);
@@ -20,16 +18,4 @@ const clearFields = (obj: Record<string, any>) => {
       clearFields(obj[key]);
     }
   });
-};
-
-export const clearAdminFields = (obj: Record<string, any>) => {
-  const adminObj = { ...obj };
-
-  Object.keys(adminObj).forEach((key) => {
-    if (ADMIN_KEYS.includes(key)) {
-      delete adminObj[key];
-    }
-  });
-
-  return adminObj;
 };
