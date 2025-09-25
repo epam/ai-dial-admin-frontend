@@ -152,6 +152,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
             names={names}
             onChangeEntity={onChangeEntity}
             versionsMap={versionsMap}
+            isModal={true}
           />
         ) : (
           <EntityMainProperties

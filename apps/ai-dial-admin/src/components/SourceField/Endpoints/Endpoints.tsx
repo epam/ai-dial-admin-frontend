@@ -34,7 +34,12 @@ const Endpoints = <T extends object>({ entity, onChange, view, isModal, prefix }
         />
       )}
       {view === ApplicationRoute.Interceptors && (
-        <InterceptorEndpoint entity={entity} onChange={onChange as (entity: DialInterceptor) => void} prefix={prefix} />
+        <InterceptorEndpoint
+          entity={entity}
+          onChange={onChange as (entity: DialInterceptor) => void}
+          prefix={prefix}
+          isModal={isModal}
+        />
       )}
     </>
   );
