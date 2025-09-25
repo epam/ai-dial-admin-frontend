@@ -23,9 +23,10 @@ interface Props<T> {
   entity: T;
   onChange: (entity: T) => void;
   getRunners: () => Promise<InterceptorTemplate[] | null>;
+  errorText?: string;
 }
 
-const Templates = <T extends DialModel | DialInterceptor>({ entity, onChange, getRunners }: Props<T>) => {
+const Templates = <T extends DialModel | DialInterceptor>({ entity, onChange, getRunners, errorText }: Props<T>) => {
   const t = useI18n();
   const { showNotification } = useNotification();
 
@@ -87,6 +88,7 @@ const Templates = <T extends DialModel | DialInterceptor>({ entity, onChange, ge
             onOpenModal={onOpenModal}
             selectedValue={selectedRunner?.name}
             elementId={'templates'}
+            errorText={errorText}
           >
             <SelectRunnerModal
               selected={entity.source?.runnerName}

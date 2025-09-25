@@ -1,13 +1,15 @@
 import { FC, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
+import classNames from 'classnames';
+
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 import AutocompleteInputValue from '@/src/components/Common/AutocompleteInput/AutocompleteInputValue';
+import ErrorText from '@/src/components/Common/ErrorText/ErrorText';
+import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
-import classNames from 'classnames';
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 
 interface Props {
   modalState: PopUpState;
@@ -18,6 +20,7 @@ interface Props {
   valueCssClasses?: string;
   inputCssClasses?: string;
   elementId?: string;
+  errorText?: string;
 }
 
 const InputModal: FC<Props> = ({
@@ -29,6 +32,7 @@ const InputModal: FC<Props> = ({
   inputCssClasses,
   onOpenModal,
   elementId,
+  errorText,
 }) => {
   const t = useI18n();
 
@@ -37,30 +41,34 @@ const InputModal: FC<Props> = ({
   return (
     <>
       {typeof value === 'string' || selectedValue?.length === 0 ? (
-        <button
-          type="button"
-          className="w-full"
-          onClick={readonly ? void 0 : onOpenModal}
-          aria-label="open-popup"
-          id={elementId}
-        >
-          <div
-            className={classNames(
-              readonly ? 'input-disable' : '',
-              'input input-field flex flex-row items-center w-full justify-between',
-              inputCssClasses,
-            )}
+        <>
+          <button
+            type="button"
+            className="w-full"
+            onClick={readonly ? void 0 : onOpenModal}
+            aria-label="open-popup"
+            id={elementId}
           >
-            <Tooltip tooltip={value}>
-              <span className={valueCssClasses}>{value}</span>
-            </Tooltip>
-            {!readonly && (
-              <div className="flex-shrink-0">
-                <OpenPopup />
-              </div>
-            )}
-          </div>
-        </button>
+            <div
+              className={classNames(
+                readonly ? 'input-disable' : '',
+                'input input-field flex flex-row items-center w-full justify-between',
+                inputCssClasses,
+                errorText ? 'input-error' : '',
+              )}
+            >
+              <Tooltip tooltip={value}>
+                <span className={valueCssClasses}>{value}</span>
+              </Tooltip>
+              {!readonly && (
+                <div className="flex-shrink-0">
+                  <OpenPopup />
+                </div>
+              )}
+            </div>
+          </button>
+          {errorText && <ErrorText errorText={errorText} />}
+        </>
       ) : (
         <div className="w-full" onClick={readonly ? void 0 : onOpenModal}>
           <div

@@ -30,6 +30,7 @@ interface Props<T> {
   getContainers: () => Promise<Container[] | null>;
   view?: ApplicationRoute;
   isModal?: boolean;
+  errorText?: string;
 }
 
 const Containers = <T extends DialInterceptor | DialModel>({
@@ -38,6 +39,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
   getContainers,
   view,
   isModal,
+  errorText,
 }: Props<T>) => {
   const t = useI18n() as (key: string) => string;
   const { showNotification } = useNotification();
@@ -130,6 +132,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
               selectedValue={selectedContainer?.name}
               elementId={'containers'}
               readonly={!deploymentsEnabled}
+              errorText={errorText}
             >
               <SelectContainerModal
                 selectedId={entity.source?.containerId}
