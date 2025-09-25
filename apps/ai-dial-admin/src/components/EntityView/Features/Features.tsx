@@ -53,7 +53,6 @@ const EntityFeatures = <T extends { features?: DialFeatures }>({ view, entity, o
           <EndpointControl
             key={key}
             id={key}
-            required={true}
             fieldTitle={t(FeaturesI18nKey[key as keyof typeof FeaturesI18nKey])}
             placeholder={t(placeholdersMap[key])}
             endpoint={entity.features?.[key] as string}
