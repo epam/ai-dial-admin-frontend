@@ -712,6 +712,8 @@ export enum EntityPlaceholdersI18nKey {
 export enum EntityFieldsI18nKey {
   roleLimits = 'EntityFields.roleLimits',
   isPublic = 'EntityFields.isPublic',
+  apiKeyHeader = 'EntityFields.apiKeyHeader',
+  costLimit = 'EntityFields.costLimit',
   defaultRoleLimit = 'EntityFields.defaultRoleLimit',
   fieldsHashingOrder = 'EntityFields.fieldsHashingOrder',
   endpointDeploymentName = 'EntityFields.endpointDeploymentName',
@@ -821,4 +823,5 @@ export enum ToolsetI18nKey {
   Disabled = 'Toolset.Disabled',
   AutoDetected = 'Toolset.AutoDetected',
   ToolsWarning = 'Toolset.ToolsWarning',
+  Authentication = 'Toolset.Authentication',
 }

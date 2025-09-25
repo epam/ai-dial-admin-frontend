@@ -19,6 +19,7 @@ export enum EntityParameterKeys {
   ROLE_LIMITS = 'roleLimits',
   DEFAULT_ROLE_LIMIT = 'defaultRoleLimit',
   ROLE_SHARE_LIMITS = 'roleShareResourceLimits',
+  COST_LIMIT = 'costLimit',
   DEFAULT_ROLE_SHARE_LIMIT = 'defaultRoleShareResourceLimit',
   UPSTREAMS = 'upstreams',
   FEATURES = 'features',
