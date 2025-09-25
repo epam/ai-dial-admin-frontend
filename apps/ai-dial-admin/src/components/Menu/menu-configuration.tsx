@@ -76,10 +76,10 @@ export const MENU_CONFIGURATION = (iconSize: number): MenuGroupConfiguration[] =
     descriptionKey: MenuI18nKey.AssetsDescription,
     icon: <IconFolders width={iconSize} height={iconSize} />,
     items: [
-      // {
-      //   key: MenuI18nKey.Applications,
-      //   href: ApplicationRoute.AssetsApplications,
-      // },
+      {
+        key: MenuI18nKey.Applications,
+        href: ApplicationRoute.AssetsApplications,
+      },
       {
         key: MenuI18nKey.Prompts,
         href: ApplicationRoute.Prompts,

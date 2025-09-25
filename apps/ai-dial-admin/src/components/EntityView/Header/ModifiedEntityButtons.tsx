@@ -15,7 +15,6 @@ import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { JSONEditorError } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { generateNewInitialVersion } from '@/src/utils/prompts/versions';
@@ -23,7 +22,7 @@ import { generateNewInitialVersion } from '@/src/utils/prompts/versions';
 interface Props<T> {
   view: ApplicationRoute;
   entity: T;
-  promptVersions?: string[];
+  existingVersions?: string[];
   jsonEditorEnabled?: boolean;
   onDiscard: () => void;
   onSave: (newVersion?: string) => void;
@@ -35,7 +34,7 @@ const ModifiedEntityButtons = <T extends object>({
   jsonEditorEnabled,
   onDiscard,
   onSave,
-  promptVersions,
+  existingVersions,
 }: Props<T>) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
   const { showNotification } = useNotification();
@@ -55,7 +54,7 @@ const ModifiedEntityButtons = <T extends object>({
       }
 
       if (jsonErrors?.length) {
-        const errors = jsonErrors as JSONEditorError[];
+        const errors = jsonErrors;
         const errorNotifications = showEditorErrorNotifications({
           errors,
           showNotification,
@@ -102,7 +101,7 @@ const ModifiedEntityButtons = <T extends object>({
             heading={t(PromptsI18nKey.NewVersionSave)}
             modalState={versionModalState}
             prefilledVersion={generateNewInitialVersion((entity as DialPrompt).version)}
-            existingVersions={promptVersions || []}
+            existingVersions={existingVersions || []}
             onClose={() => setVersionModalState(PopUpState.Closed)}
             onConfirm={onTryToSave}
           />,

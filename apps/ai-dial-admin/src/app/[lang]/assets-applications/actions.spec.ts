@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { getApps, removeApp, moveApps, bulkDeleteApps } from './actions';
+import { getApps, removeApp, moveApps, bulkDeleteApps, getApp } from './actions';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -17,6 +17,18 @@ describe('Assets application server actions', () => {
 
       const call = fetch.mock.calls[0][1];
       expect(call?.method).toBe('POST');
+    });
+  });
+
+  test('Should call get app', async () => {
+    fetch.mockResponse(JSON.stringify({ data: 'response' }));
+    getApp('path', 'app', '1.0.0').then(() => {
+      expect(fetch.mock.calls.length).toEqual(2);
+
+      const call = fetch.mock.calls[0][1];
+      const call2 = fetch.mock.calls[1][1];
+      expect(call?.method).toBe('POST');
+      expect(call2?.method).toBe('POST');
     });
   });
 

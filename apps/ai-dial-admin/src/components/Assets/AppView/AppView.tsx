@@ -6,51 +6,49 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
-import { createPrompt, getPrompt, getPrompts, movePrompts, removePrompt } from '@/src/app/[lang]/prompts/actions';
+import { getApps, moveApps, removeApp, updateApp } from '@/src/app/[lang]/assets-applications/actions';
 import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
+import { useAppsFolder } from '@/src/context/AppsFolderContext';
 import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
-import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
+import { DialAssetApp } from '@/src/models/dial/asset-app';
 import { DialFile } from '@/src/models/dial/file';
-import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import PromptProperties from './PromptProperties';
-import { addNewVersion } from './utils';
+import AppProperties from './AppProperties';
 
 interface Props {
-  originalPrompt: DialPrompt;
-  prompts?: DialPrompt[] | null;
+  originalApp: DialAssetApp;
+  apps?: DialAssetApp[] | null;
 }
 
-const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
+const AppView: FC<Props> = ({ originalApp, apps }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const tabs = [propertiesTabs(t)];
   const router = useRouter();
-  const { fetchFiles } = usePromptFolder();
+  const { fetchFiles } = useAppsFolder();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
-  const [selectedPrompt, setSelectedPrompt] = useState(cloneDeep(originalPrompt));
+  const [selectedApp, setSelectedApp] = useState(cloneDeep(originalApp));
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
 
   const [key, setKey] = useState(0);
-  const [addedVersions, setAddedVersions] = useState<string[]>([]);
 
   useEffect(() => {
-    setSelectedPrompt(cloneDeep(originalPrompt));
-  }, [originalPrompt]);
+    setSelectedApp(cloneDeep(originalApp));
+  }, [originalApp]);
 
   const headerClassName = classNames(
     'flex flex-row min-h-[34px]',
@@ -58,10 +56,10 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
   );
 
   useEffect(() => {
-    if (Object.keys(selectedPrompt).length && originalPrompt) {
-      setIsChanged(!isEqualSkippingUndefined(originalPrompt, selectedPrompt));
+    if (Object.keys(selectedApp).length && originalApp) {
+      setIsChanged(!isEqualSkippingUndefined(originalApp, selectedApp));
     }
-  }, [selectedPrompt, originalPrompt]);
+  }, [selectedApp, originalApp]);
 
   const onChangeActiveTab = useCallback(
     (tab: string) => {
@@ -79,52 +77,45 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
-    setSelectedPrompt(cloneDeep(originalPrompt));
-    setAddedVersions([]);
-  }, [jsonEditorEnabled, originalPrompt, dispatch]);
+    setSelectedApp(cloneDeep(originalApp));
+  }, [jsonEditorEnabled, originalApp, dispatch]);
 
-  const onSave = useCallback(
-    (newVersion?: string) => {
-      const isNeedToMove = getIsNeedToMove(selectedPrompt, originalPrompt);
-      let updatedEntity = getEntityForUpdate(selectedPrompt, originalPrompt);
-
-      if (newVersion) {
-        updatedEntity = addNewVersion(updatedEntity as DialPrompt, newVersion);
-      }
-      createPrompt(updatedEntity as DialPrompt).then((res) => {
-        if (res.success) {
-          if (isNeedToMove) {
-            const responsePrompt = res.response as DialPrompt;
-            getPrompts(addTrailingSlash(responsePrompt.folderId)).then((prompts) => {
-              const pathsToMove = getListOfPathsToMove(responsePrompt, null, prompts || []);
-              const newPath = removeTrailingSlash(selectedPrompt.folderId);
-              movePrompts(pathsToMove, newPath).then((r) => {
-                if (r.every((response) => response.success)) {
-                  router.push(
-                    `${ApplicationRoute.Prompts}/${getEntityPath(ApplicationRoute.Prompts, { name: (res.response as DialPrompt).name, path: changePath((res.response as DialPrompt).path, newPath) })}`,
-                  );
-                  fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
-                }
-              });
+  const onSave = useCallback(() => {
+    const isNeedToMove = getIsNeedToMove(selectedApp, originalApp);
+    const updatedEntity = getEntityForUpdate(selectedApp, originalApp);
+    updateApp(updatedEntity).then((res) => {
+      if (res.success) {
+        if (isNeedToMove) {
+          getApps(addTrailingSlash(updatedEntity.folderId)).then((apps) => {
+            const pathsToMove = getListOfPathsToMove(updatedEntity, null, apps || []);
+            const newPath = removeTrailingSlash(selectedApp.folderId);
+            moveApps(pathsToMove, newPath).then((r) => {
+              if (r.every((response) => response.success)) {
+                router.push(
+                  `${ApplicationRoute.AssetsApplications}/${getEntityPath(ApplicationRoute.AssetsApplications, { name: updatedEntity.name, path: changePath(updatedEntity.path, newPath) })}`,
+                );
+                fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
+              }
             });
-          } else {
-            fetchFiles(updatedEntity.folderId);
-            router.push(`${ApplicationRoute.Prompts}/${getEntityPath(ApplicationRoute.Prompts, res.response)}`);
-          }
-          router.refresh();
+          });
         } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+          fetchFiles(updatedEntity.folderId);
+          router.push(
+            `${ApplicationRoute.AssetsApplications}/${getEntityPath(ApplicationRoute.AssetsApplications, updatedEntity)}`,
+          );
         }
-      });
-    },
-    [selectedPrompt, originalPrompt, router, fetchFiles, showNotification],
-  );
+        router.refresh();
+      } else {
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+      }
+    });
+  }, [selectedApp, originalApp, router, fetchFiles, showNotification]);
 
   const onChangeEntity = useCallback(
-    (entity: DialPrompt) => {
-      setSelectedPrompt(entity);
+    (entity: DialAssetApp) => {
+      setSelectedApp(entity);
     },
-    [setSelectedPrompt],
+    [setSelectedApp],
   );
 
   const toggleJsonEditor = useCallback(() => {
@@ -137,36 +128,33 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
         <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
         <HeaderButtons
           view={ApplicationRoute.Prompts}
-          entity={selectedPrompt}
+          entity={selectedApp}
           isChanged={isChanged}
           onSave={onSave}
           onDiscard={onDiscard}
-          removeEntity={removePrompt}
+          removeEntity={removeApp}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          existingVersions={prompts?.map((prompt) => prompt.version) || []}
-          context={usePromptFolder as () => AssetsFolderContext<DialFile | DialPrompt>}
+          existingVersions={apps?.map((app) => app.version) || []}
+          context={useAppsFolder as () => AssetsFolderContext<DialFile | DialAssetApp>}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
         {jsonEditorEnabled ? (
           <EntityJsonEditor
             key={key}
-            entity={selectedPrompt}
-            setSelectedEntity={setSelectedPrompt}
+            entity={selectedApp}
+            setSelectedEntity={setSelectedApp}
             setIsChanged={setIsChanged}
           />
         ) : (
           <>
             {activeTab === EntityViewTab.Properties && (
-              <PromptProperties
-                prompt={selectedPrompt}
-                prompts={prompts || []}
-                onChangePrompt={onChangeEntity}
-                getPrompt={getPrompt}
-                addedVersions={addedVersions}
-                setAddedVersions={setAddedVersions}
-                setSelectedPrompt={setSelectedPrompt}
+              <AppProperties
+                app={selectedApp}
+                apps={apps || []}
+                onChangeApp={onChangeEntity}
+                setSelectedApp={setSelectedApp}
               />
             )}
           </>
@@ -176,4 +164,4 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
   );
 };
 
-export default PromptView;
+export default AppView;

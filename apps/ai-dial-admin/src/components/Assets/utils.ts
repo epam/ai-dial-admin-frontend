@@ -33,3 +33,14 @@ export const getVersionsPerName = (data: (DialPrompt | DialAssetApp)[]) => {
 
   return versionsPerName;
 };
+
+export const getIsNeedToMove = (entity: DialPrompt | DialAssetApp, initialEntity?: DialPrompt | DialAssetApp) => {
+  return entity.folderId !== initialEntity?.folderId;
+};
+
+export const getEntityForUpdate = (entity: DialPrompt | DialAssetApp, initialEntity?: DialPrompt | DialAssetApp) => {
+  return {
+    ...entity,
+    folderId: (initialEntity as DialPrompt | DialAssetApp)?.folderId,
+  };
+};
