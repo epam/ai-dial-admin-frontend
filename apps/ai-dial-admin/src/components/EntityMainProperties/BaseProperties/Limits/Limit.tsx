@@ -6,6 +6,7 @@ import { RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRoleLimits } from '@/src/models/dial/role-limits';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { NO_LIMITS_VALUE } from '@/src/components/EntityView/Roles/constants';
 
 interface Props {
   controlClassName?: string;
@@ -31,7 +32,7 @@ const LimitControl: FC<Props> = ({ limits, controlClassName, isCostInputs, onCha
     <NumberInputField
       containerCssClass={controlClassName}
       placeholder={t(RolesI18nKey.NoLimits)}
-      value={limits?.[fieldKey]}
+      value={limits?.[fieldKey] === NO_LIMITS_VALUE ? '' : (limits?.[fieldKey] as string | null)}
       onChange={(value) => onChangeLimit(value, fieldKey)}
       iconBeforeInput={isCostInputs ? <IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} /> : null}
       {...props}
