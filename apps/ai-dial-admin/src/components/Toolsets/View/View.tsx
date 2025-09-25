@@ -83,7 +83,6 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
   useEffect(() => {
     const isEqualAdminToolset = isEqualSkippingUndefined(originalToolset, selectedToolset);
     const isEqualCoreToolset = isEqualSkippingUndefined(selectedToolset, coreToolset);
-
     setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreToolset : !isEqualAdminToolset);
   }, [selectedFormat, originalToolset, selectedToolset, coreToolset]);
 
