@@ -647,6 +647,7 @@ export enum SourceI18nKey {
   InterceptorTemplate = 'Source.InterceptorTemplate',
   ModelDeployment = 'Source.ModelDeployment',
   InterceptorDeployment = 'Source.InterceptorDeployment',
+  MCPDeployment = 'Source.MCPDeployment',
   Endpoint = 'Source.Endpoint',
   Adapter = 'Source.Adapter',
 }

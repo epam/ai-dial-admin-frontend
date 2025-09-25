@@ -38,6 +38,7 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, o
 
   useEffect(() => {
     if (required) {
+      validateEndpoint(endpoint || '');
       dispatch({ type: ValidationActionType.SetField, field: id, isValid: !!endpoint });
     }
     return () => {
@@ -58,7 +59,7 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, o
     <TextInputField
       textBeforeInput={textBeforeInput}
       elementId={id}
-      value={endpoint}
+      value={endpoint || ''}
       optional={!required}
       errorText={endpointError?.text}
       invalid={!!endpointError}

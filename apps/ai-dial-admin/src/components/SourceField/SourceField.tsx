@@ -13,13 +13,14 @@ import { Toolset } from '@/src/models/dial/toolset';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { isValidSourceField } from '@/src/components/SourceField/utils';
 import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
-
 import Field from '@/src/components/Common/Field/Field';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import Containers from '@/src/components/SourceField/Containers/Containers';
 import Templates from '@/src/components/SourceField/Template/Templates';
 import Adapters from '@/src/components/SourceField/Adapters/Adapters';
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
+import { ErrorI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 
 interface Props<T> {
   entity: T;
@@ -49,19 +50,23 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
   sourceItems,
   isModal,
 }: Props<T>) => {
+  const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const [source, setSource] = useState(sourceItems[0].id);
+  const [errorText, setErrorText] = useState('');
 
   const onChangeEntity = useCallback(
     (entity: T) => {
+      const isValid = isValidSourceField(entity);
+      setErrorText(isValid ? '' : t(ErrorI18nKey.RequiredField));
       dispatch({
         type: ValidationActionType.SetField,
         field: 'source',
-        isValid: isValidSourceField(entity),
+        isValid,
       });
       onChange(entity);
     },
-    [dispatch, onChange],
+    [dispatch, onChange, t],
   );
 
   const onChangeSource = useCallback(
@@ -111,10 +116,16 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
           getContainers={getContainers}
           view={view}
           isModal={isModal}
+          errorText={source === SOURCE_TYPE.CONTAINER ? errorText : ''}
         />
       )}
       {source === SOURCE_TYPE.RUNNER && getRunners && (
-        <Templates entity={entity} onChange={onChangeEntity} getRunners={getRunners} />
+        <Templates
+          entity={entity}
+          onChange={onChangeEntity}
+          getRunners={getRunners}
+          errorText={source === SOURCE_TYPE.RUNNER ? errorText : ''}
+        />
       )}
       {source === SOURCE_TYPE.ADAPTER && getAdapters && (
         <Adapters entity={entity} onChange={onChangeEntity} getAdapters={getAdapters} isModal={isModal} />
