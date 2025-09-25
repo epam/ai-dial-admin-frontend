@@ -5,4 +5,5 @@ export interface DialAssetApp extends DialFile, DialApplication {
   version: string;
   children?: DialAssetApp[];
   versions?: string[];
+  applicationTypeSchemaId?: string;
 }

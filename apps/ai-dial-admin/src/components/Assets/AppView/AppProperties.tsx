@@ -72,7 +72,7 @@ const AppProperties: FC<Props> = ({ app, apps, onChangeApp, setSelectedApp }) =>
 
         <IconControl iconUrl={app.iconUrl} onChange={(icon) => onChangeApp({ ...app, iconUrl: icon })} />
         <div className="lg:w-[35%]">
-          <TopicsControl entity={app} onChange={onChangeApp} />
+          <TopicsControl entity={app} onChange={onChangeApp} view={ApplicationRoute.AssetsApplications} />
         </div>
 
         <div className="lg:w-[35%]">

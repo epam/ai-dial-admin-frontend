@@ -11,6 +11,7 @@ import { DialAssetApp } from '@/src/models/dial/asset-app';
 import { ApplicationRoute } from '@/src/types/routes';
 import { removeTrailingSlash } from '@/src/utils/files/path';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   app: DialAssetApp;
@@ -19,13 +20,6 @@ interface Props {
 const AppHeader: FC<Props> = ({ app }) => {
   const t = useI18n() as (t: string) => string;
   const currentLocale = useCurrentLocale();
-
-  const openRunnerInNewTab = useCallback(
-    (runnerId: string) => {
-      window.open(`/${currentLocale}${ApplicationRoute.ApplicationRunners}/${encodeURIComponent(runnerId)}`, '_blank');
-    },
-    [currentLocale],
-  );
 
   const openFolderStorageInNewTab = useCallback(
     (path: string) => {
@@ -37,11 +31,14 @@ const AppHeader: FC<Props> = ({ app }) => {
   return (
     <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary mb-3">
       <LabeledText label={t(EntityFieldsI18nKey.displayName)} text={app.name} copyButton={true} />
-      {app.customAppSchemaId && (
+      {app.applicationTypeSchemaId && (
         <LabeledText label={t(PublicationsI18nKey.Runner)}>
           <div className="flex flex-row gap-1 items-center">
-            <Tooltip tooltip={app.customAppSchemaId}>{app.customAppSchemaId}</Tooltip>
-            <button onClick={() => openRunnerInNewTab(app.customAppSchemaId as string)} className="text-secondary">
+            <Tooltip tooltip={app.applicationTypeSchemaId}>{app.applicationTypeSchemaId}</Tooltip>
+            <button
+              onClick={() => onOpenInNewTab(ApplicationRoute.ApplicationRunners, { $id: app.applicationTypeSchemaId })}
+              className="text-secondary"
+            >
               <IconExternalLink {...BASE_ICON_PROPS} />
             </button>
           </div>
