@@ -10,17 +10,18 @@ import { DialAdapter } from '@/src/models/dial/adapter';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { Toolset } from '@/src/models/dial/toolset';
+import { ErrorI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { isValidSourceField } from '@/src/components/SourceField/utils';
 import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
+import { useI18n } from '@/src/locales/client';
+
 import Field from '@/src/components/Common/Field/Field';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import Containers from '@/src/components/SourceField/Containers/Containers';
 import Templates from '@/src/components/SourceField/Template/Templates';
 import Adapters from '@/src/components/SourceField/Adapters/Adapters';
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
-import { ErrorI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
 
 interface Props<T> {
   entity: T;
@@ -57,23 +58,27 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
 
   const onChangeEntity = useCallback(
     (entity: T) => {
-      const isValid = isValidSourceField(entity);
-      setErrorText(isValid ? '' : t(ErrorI18nKey.RequiredField));
-      dispatch({
-        type: ValidationActionType.SetField,
-        field: 'source',
-        isValid,
-      });
       onChange(entity);
     },
-    [dispatch, onChange, t],
+    [onChange],
   );
+
+  useEffect(() => {
+    const isValid = isValidSourceField(entity);
+
+    setErrorText(isValid ? '' : t(ErrorI18nKey.RequiredField));
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: 'source',
+      isValid,
+    });
+  }, [dispatch, entity, t]);
 
   const onChangeSource = useCallback(
     (sourceType: string) => {
       if (sourceType !== source) {
         setSource(sourceType as SOURCE_TYPE);
-        onChangeEntity({ ...entity, source: { ...entity.source, $type: sourceType as SOURCE_TYPE }, endpoint: null });
+        onChangeEntity({ ...entity, source: { ...entity.source, $type: sourceType as SOURCE_TYPE }, endpoint: '' });
       }
     },
     [entity, onChangeEntity, source],
@@ -81,17 +86,22 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
 
   useEffect(() => {
     if (!entity.source) {
-      onChangeEntity({
+      const entityWithSource = {
         ...entity,
         source: {
           $type: sourceItems[0].id,
-          completionEndpointPath: view === ApplicationRoute.Models ? getEndpointPostfix(DialModelType.Chat) : null,
         },
-      });
+      };
+
+      if (view === ApplicationRoute.Models) {
+        entityWithSource.source.completionEndpointPath = getEndpointPostfix(DialModelType.Chat);
+      }
+
+      onChangeEntity(entityWithSource);
     } else {
       setSource(entity.source.$type);
     }
-  }, [entity, onChangeEntity, sourceItems, view]);
+  }, [entity, isModal, onChangeEntity, sourceItems, view]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -125,10 +135,17 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
           onChange={onChangeEntity}
           getRunners={getRunners}
           errorText={source === SOURCE_TYPE.RUNNER ? errorText : ''}
+          isModal={isModal}
         />
       )}
       {source === SOURCE_TYPE.ADAPTER && getAdapters && (
-        <Adapters entity={entity} onChange={onChangeEntity} getAdapters={getAdapters} isModal={isModal} />
+        <Adapters
+          entity={entity}
+          onChange={onChangeEntity}
+          getAdapters={getAdapters}
+          isModal={isModal}
+          errorText={source === SOURCE_TYPE.ADAPTER ? errorText : ''}
+        />
       )}
     </div>
   );
