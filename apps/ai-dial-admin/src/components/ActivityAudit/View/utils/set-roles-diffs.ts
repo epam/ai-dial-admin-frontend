@@ -66,7 +66,7 @@ export const setRolesDiffs = (
   }
 };
 
-const mergeLimits = (limits: ActivityAuditDiff[], shareLimits: ActivityAuditDiff[]) => {
+export const mergeLimits = (limits: ActivityAuditDiff[], shareLimits: ActivityAuditDiff[]) => {
   const mergedMap = new Map();
 
   const mergeValues = (value1: string, value2: string) => {
