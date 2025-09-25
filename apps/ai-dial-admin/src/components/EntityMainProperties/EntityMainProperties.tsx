@@ -137,6 +137,8 @@ const EntityMainProperties: FC<Props> = ({
           />
         )}
 
+        <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
+
         {view === ApplicationRoute.Applications && !isEntityImmutable && (
           <ApplicationSource
             entity={entity}
@@ -145,8 +147,6 @@ const EntityMainProperties: FC<Props> = ({
             onChangeEntity={onChangeEntity}
           />
         )}
-
-        <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
       </div>
 
       <AdditionalProperties
