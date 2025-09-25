@@ -1,7 +1,7 @@
 import { FC, useCallback, useState } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialRoute } from '@/src/models/dial/route';
@@ -16,6 +16,12 @@ import { getPromptVersionError } from '@/src/utils/validation/version-error';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import EndpointControl from './BaseProperties/Endpoint/Endpoint';
 import { Toolset } from '@/src/models/dial/toolset';
+import { useAppContext } from '@/src/context/AppContext';
+import { isDeploymentsEnabled } from '@/src/utils/plugins';
+import SourceField from '@/src/components/SourceField/SourceField';
+import { getInterceptorContainers } from '@/src/app/[lang]/interceptors/actions';
+import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
+import { getSourceItems, INTERCEPTOR_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
 
 interface Props {
   view?: ApplicationRoute;
@@ -24,6 +30,7 @@ interface Props {
   versionsMap?: Record<string, string[]>;
   isEntityImmutable?: boolean;
   onChangeEntity: (entity: BaseEntity) => void;
+  isModal?: boolean;
 }
 
 const SimpleEntityProperties: FC<Props> = ({
@@ -33,9 +40,12 @@ const SimpleEntityProperties: FC<Props> = ({
   onChangeEntity,
   isEntityImmutable = false,
   versionsMap,
+  isModal,
 }) => {
   const t = useI18n() as (t: string) => string;
   const { dispatch } = useSaveValidationContext();
+  const { embeddedApps } = useAppContext();
+  const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
 
   const idTitleKey =
     view === ApplicationRoute.Prompts || view === ApplicationRoute.Files
@@ -118,6 +128,20 @@ const SimpleEntityProperties: FC<Props> = ({
           errorText={pathError}
           invalid={!!pathError}
           onChange={onChangePath}
+        />
+      )}
+
+      {view === ApplicationRoute.Interceptors && isModal && (
+        <SourceField
+          view={ApplicationRoute.Interceptors}
+          entity={entity}
+          onChange={onChangeEntity}
+          getContainers={getInterceptorContainers}
+          getRunners={getInterceptorTemplatesList}
+          elementId={'sourceType'}
+          fieldTitle={t(EntitiesI18nKey.SourceType)}
+          sourceItems={getSourceItems(INTERCEPTOR_SOURCE_ITEMS, deploymentsEnabled)}
+          isModal={isModal}
         />
       )}
 

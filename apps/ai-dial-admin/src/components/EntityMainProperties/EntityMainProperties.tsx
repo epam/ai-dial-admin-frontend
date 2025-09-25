@@ -154,6 +154,7 @@ const EntityMainProperties: FC<Props> = ({
         view={view}
         isEntityImmutable={isEntityImmutable}
         runners={runners}
+        isModal={isModal}
       />
 
       {view === ApplicationRoute.Models && (
