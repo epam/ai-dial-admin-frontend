@@ -251,7 +251,7 @@ const FolderList: FC<Props> = ({
   };
 
   return (
-    <div className="flex-1 w-full overflow-y-auto">
+    <div className="flex-1 w-full h-full overflow-y-auto">
       {!folderContext?.files?.length && !isBulkDelete ? (
         <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoFolders)} />
       ) : (

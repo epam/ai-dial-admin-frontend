@@ -839,6 +839,7 @@ export default {
     InterceptorTemplate: 'Interceptor template',
     ModelDeployment: 'Deployment model',
     InterceptorDeployment: 'Interceptor deployment',
+    MCPDeployment: 'MCP deployment',
     Endpoint: 'Endpoint',
     Adapter: 'Adapter',
   },
