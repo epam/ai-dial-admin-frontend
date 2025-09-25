@@ -153,7 +153,7 @@ export class AssetsApi extends BaseApi {
   // PROMPT SPECIFIC
 
   createPrompt(prompt: DialPrompt, token: JWT | null): Promise<ServerActionResponse> {
-    const url = this.buildUrl(ResourceType.PROMPT, ResourceOperation.GET);
+    const url = this.buildUrl(ResourceType.PROMPT, ResourceOperation.CREATE);
     return this.postAction(
       url,
       { ...prompt, content: prompt.content || '', folderId: prompt.folderId || ROOT_FOLDER },

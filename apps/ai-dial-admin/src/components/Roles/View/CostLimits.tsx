@@ -26,13 +26,28 @@ const RoleCostLimit: FC<Props> = ({ selectedRole, onChangeRole }) => {
     );
   }, [selectedRole.costLimit]);
 
+  const toggleCostLimit = (value: boolean) => {
+    setCostLimitExist(value);
+    if (!value) {
+      onChangeRole({
+        ...selectedRole,
+        costLimit: {
+          minute: NO_LIMITS_VALUE,
+          day: NO_LIMITS_VALUE,
+          week: NO_LIMITS_VALUE,
+          month: NO_LIMITS_VALUE,
+        },
+      });
+    }
+  };
+
   return (
     <div className="w-full mt-6">
       <Switch
         switchId="costLimit"
         title={t(RolesI18nKey.SetCostLimits)}
         isOn={costLimitExist}
-        onChange={(value) => setCostLimitExist(value)}
+        onChange={toggleCostLimit}
       />
       {costLimitExist && (
         <div className="flex flex-row gap-x-6 mt-3 pl-[46px]">
