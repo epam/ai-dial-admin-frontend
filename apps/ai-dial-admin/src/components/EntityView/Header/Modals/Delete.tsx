@@ -10,9 +10,10 @@ import ConfirmationModal from '@/src/components/Common/ConfirmationModal/Confirm
 import { deleteModalTitleMap } from '@/src/components/EntityListView/constants';
 import DeleteInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Delete';
 import { ButtonsI18nKey, DeleteI18nKey } from '@/src/constants/i18n';
+import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
-import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
+import { DialFile } from '@/src/models/dial/file';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -25,6 +26,7 @@ interface Props<T> {
   entity: T;
   removeEntity: (entity: string) => Promise<ServerActionResponse>;
   onCloseModal: () => void;
+  context?: () => AssetsFolderContext<DialFile>;
 }
 
 const DeleteConfirmationModal = <T extends object>({
@@ -33,11 +35,12 @@ const DeleteConfirmationModal = <T extends object>({
   entity,
   removeEntity,
   onCloseModal,
+  context,
 }: Props<T>) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
-  const { fetchFiles, filePath } = usePromptFolder();
+  const folderContext = context?.();
 
   const onConfirmRemoving = useCallback(() => {
     const removeKey = getEntityPath(view, entity, true);
@@ -46,8 +49,8 @@ const DeleteConfirmationModal = <T extends object>({
       if (res.success) {
         onCloseModal();
 
-        if (view === ApplicationRoute.Prompts) {
-          fetchFiles(filePath);
+        if (view === ApplicationRoute.Prompts || view === ApplicationRoute.AssetsApplications) {
+          folderContext?.fetchFiles(folderContext?.filePath);
         }
 
         router.push(view);
@@ -56,7 +59,7 @@ const DeleteConfirmationModal = <T extends object>({
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [onCloseModal, showNotification, router, entity, view, removeEntity, fetchFiles, filePath]);
+  }, [view, entity, removeEntity, onCloseModal, router, folderContext, showNotification]);
 
   const deleteModalContent =
     view === ApplicationRoute.ApplicationRunners ? (
