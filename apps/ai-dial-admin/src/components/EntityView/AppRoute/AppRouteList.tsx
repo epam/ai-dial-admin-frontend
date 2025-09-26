@@ -1,15 +1,15 @@
 import { FC } from 'react';
+import { IconDotsVertical, IconTrash } from '@tabler/icons-react';
+import classNames from 'classnames';
 
-import FolderActions from '@/src/components/Common/FolderCreate/Components/FolderActions';
-import { FolderOperationDeclaration } from '@/src/components/Common/FolderCreate/models';
-import { FolderOperation } from '@/src/components/Common/FolderCreate/types';
+import ActionsDropdown from '@/src/components/Common/ActionsDropdown/ActionsDropdown';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialAppRoute } from '@/src/models/dial/route';
-import { IconDotsVertical, IconTrash } from '@tabler/icons-react';
-import classNames from 'classnames';
+import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
+import { ActionMenuOperation } from '@/src/types/action-menu-operations';
 
 interface Props {
   activeRoute?: string;
@@ -26,10 +26,10 @@ const AppRouteList: FC<Props> = ({ routes, activeRoute, onRemove, onClick }) => 
     'cursor-pointer small hover:text-accent-primary',
   );
 
-  const getOperation = (onClick: (id?: string) => void): FolderOperationDeclaration => {
+  const getOperation = (onClick: () => void): ActionMenuOperationDeclaration<DialAppRoute> => {
     return {
       icon: <IconTrash {...BASE_ICON_PROPS} />,
-      id: FolderOperation.Delete,
+      id: ActionMenuOperation.Delete,
       onClick,
     };
   };
@@ -54,7 +54,7 @@ const AppRouteList: FC<Props> = ({ routes, activeRoute, onRemove, onClick }) => 
                   {route.name}
                 </span>
                 <div className="invisible group-hover:visible text-primary mx-2 flex flex-row gap-2">
-                  <FolderActions
+                  <ActionsDropdown
                     items={[getOperation(() => onRemove(route.name))]}
                     icon={<IconDotsVertical {...BASE_ICON_PROPS} />}
                   />

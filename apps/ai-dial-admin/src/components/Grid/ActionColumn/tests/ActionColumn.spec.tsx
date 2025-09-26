@@ -1,7 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
 import ActionColumn from '../ActionColumn';
-import ActionItem from '../ActionItem';
 
 describe('ActionColumn', () => {
   const baseProps = {
@@ -26,26 +25,5 @@ describe('ActionColumn', () => {
     const { container } = render(<ActionColumn {...baseProps} data={null} />);
 
     expect(container.querySelector('.tabler-icon-dots')).toBeNull();
-  });
-});
-
-describe('ActionItem', () => {
-  test('renders icon and id, calls onClick with entity and rowIndex', () => {
-    const onClick = vi.fn();
-    const item = {
-      id: 'edit',
-      icon: <span>icon</span>,
-      onClick,
-    };
-    const entity = { name: 'entity1' };
-    const rowIndex = 3;
-
-    render(<ActionItem item={item} entity={entity} rowIndex={rowIndex} />);
-
-    expect(screen.getByText('icon')).toBeInTheDocument();
-    expect(screen.getByText('edit')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByText('edit').closest('div')!);
-    expect(onClick).toHaveBeenCalledWith(entity, rowIndex);
   });
 });

@@ -14,29 +14,29 @@ import { GridApi, IRowNode } from 'ag-grid-community';
 
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { EntityOperationDeclaration } from '@/src/models/entity-operations';
-import { EntityOperation } from '@/src/types/entity-operations';
+import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
+import { ActionMenuOperation } from '@/src/types/action-menu-operations';
 
-export function getResourceRollbackOperation<T>(onClick: (entity: T) => void): EntityOperationDeclaration<T> {
+export function getResourceRollbackOperation<T>(onClick: (entity: T) => void): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconRefresh {...BASE_ICON_PROPS} />,
-    id: EntityOperation.Resource_rollback,
+    id: ActionMenuOperation.Resource_rollback,
     onClick,
   };
 }
 
-export function getDeleteOperation<T>(onClick: (entity: T) => void): EntityOperationDeclaration<T> {
+export function getDeleteOperation<T>(onClick: (entity: T) => void): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconTrashX {...BASE_ICON_PROPS} />,
-    id: EntityOperation.Delete,
+    id: ActionMenuOperation.Delete,
     onClick,
   };
 }
 
-export function getRemoveOperation<T>(onClick: (entity: T, index: number) => void): EntityOperationDeclaration<T> {
+export function getRemoveOperation<T>(onClick: (entity: T, index: number) => void): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconTrash {...BASE_ICON_PROPS} />,
-    id: EntityOperation.Remove,
+    id: ActionMenuOperation.Remove,
     onClick,
   };
 }
@@ -44,10 +44,10 @@ export function getRemoveOperation<T>(onClick: (entity: T, index: number) => voi
 export function getResetOperation<T>(
   onClick: (entity: T) => void,
   hidden?: (api: GridApi, node: IRowNode) => boolean,
-): EntityOperationDeclaration<T> {
+): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconReload {...BASE_ICON_PROPS} />,
-    id: EntityOperation.Reset_to_default_limits,
+    id: ActionMenuOperation.Reset_to_default_limits,
     hidden,
     onClick,
   };
@@ -56,19 +56,19 @@ export function getResetOperation<T>(
 export function getSetNoLimitsOperation<T>(
   onClick: (entity: T) => void,
   hidden?: (api: GridApi, node: IRowNode) => boolean,
-): EntityOperationDeclaration<T> {
+): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconInfinity {...BASE_ICON_PROPS} />,
-    id: EntityOperation.Set_no_limits,
+    id: ActionMenuOperation.Set_no_limits,
     hidden,
     onClick,
   };
 }
 
-export function getDuplicateOperation<T>(onClick: (entity: T) => void): EntityOperationDeclaration<T> {
+export function getDuplicateOperation<T>(onClick: (entity: T) => void): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconCopy {...BASE_ICON_PROPS} />,
-    id: EntityOperation.Duplicate,
+    id: ActionMenuOperation.Duplicate,
     onClick,
   };
 }
@@ -76,10 +76,10 @@ export function getDuplicateOperation<T>(onClick: (entity: T) => void): EntityOp
 export function getOpenInNewTabOperation<T>(
   onClick: (entity: T) => void,
   hidden?: (api: GridApi, node: IRowNode) => boolean,
-): EntityOperationDeclaration<T> {
+): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconExternalLink {...BASE_ICON_PROPS} />,
-    id: EntityOperation.Open_in_new_tab,
+    id: ActionMenuOperation.Open_in_new_tab,
     onClick,
     hidden,
   };
@@ -88,27 +88,27 @@ export function getOpenInNewTabOperation<T>(
 export function getViewDetailsOperation<T>(
   onClick: (entity: T) => void,
   hidden?: (api: GridApi, node: IRowNode) => boolean,
-): EntityOperationDeclaration<T> {
+): ActionMenuOperationDeclaration<T> {
   return {
     icon: <OpenPopup {...BASE_ICON_PROPS} />,
-    id: EntityOperation.View_details,
+    id: ActionMenuOperation.View_details,
     onClick,
     hidden,
   };
 }
 
-export function getMoveOperation<T>(onClick: (entity: T) => void): EntityOperationDeclaration<T> {
+export function getMoveOperation<T>(onClick: (entity: T) => void): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconFolderShare {...BASE_ICON_PROPS} />,
-    id: EntityOperation.Move,
+    id: ActionMenuOperation.Move,
     onClick,
   };
 }
 
-export function getDownloadOperation<T>(onClick: (entity: T) => void): EntityOperationDeclaration<T> {
+export function getDownloadOperation<T>(onClick: (entity: T) => void): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconDownload {...BASE_ICON_PROPS} />,
-    id: EntityOperation.Download,
+    id: ActionMenuOperation.Download,
     onClick,
   };
 }
@@ -116,10 +116,10 @@ export function getDownloadOperation<T>(onClick: (entity: T) => void): EntityOpe
 export function getPreviewOperation<T>(
   onClick: (entity: T) => void,
   hidden?: (api: GridApi, node: IRowNode) => boolean,
-): EntityOperationDeclaration<T> {
+): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconEye {...BASE_ICON_PROPS} />,
-    id: EntityOperation.Preview,
+    id: ActionMenuOperation.Preview,
     onClick,
     hidden,
   };

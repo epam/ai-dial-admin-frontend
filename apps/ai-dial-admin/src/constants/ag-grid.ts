@@ -1,7 +1,7 @@
 import { ColDef } from 'ag-grid-community';
 
 import ActionColumn from '@/src/components/Grid/ActionColumn/ActionColumn';
-import { EntityOperationDeclaration } from '@/src/models/entity-operations';
+import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 
 export const PAGE_SIZE = 100;
 export const CACHE_LIMIT = 1000;
@@ -30,7 +30,7 @@ export const UTILITY_COLUMN: ColDef = {
   suppressHeaderMenuButton: true,
 };
 
-export const ACTION_COLUMN = <T>(items: EntityOperationDeclaration<T>[]): ColDef => ({
+export const ACTION_COLUMN = <T>(items: ActionMenuOperationDeclaration<T>[]): ColDef => ({
   ...UTILITY_COLUMN,
   field: ACTIONS_COLUMN_CEL_ID,
   cellRenderer: ActionColumn,
