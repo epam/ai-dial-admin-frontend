@@ -2,54 +2,54 @@ import { IconExternalLink, IconFolderShare, IconPencilMinus, IconTrashX } from '
 
 import AddChildIcon from '@/public/images/icons/add-child.svg';
 import AddSiblingIcon from '@/public/images/icons/add-sibling.svg';
-import { FolderOperationDeclaration } from '@/src/components/Common/FolderCreate/models';
-import { FolderOperation } from '@/src/components/Common/FolderCreate/types';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { ActionMenuOperation } from '@/src/types/action-menu-operations';
+import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 
-export const getAddSiblingOperation = (onClick: () => void): FolderOperationDeclaration => {
+export const getAddSiblingOperation = <T extends object>(onClick: () => void): ActionMenuOperationDeclaration<T> => {
   return {
     icon: <AddSiblingIcon {...BASE_ICON_PROPS} />,
-    id: FolderOperation.Add_sibling,
+    id: ActionMenuOperation.Add_sibling,
     onClick,
   };
 };
 
-export const getAddChildOperation = (onClick: () => void): FolderOperationDeclaration => {
+export const getAddChildOperation = <T extends object>(onClick: () => void): ActionMenuOperationDeclaration<T> => {
   return {
     icon: <AddChildIcon {...BASE_ICON_PROPS} />,
-    id: FolderOperation.Add_child,
+    id: ActionMenuOperation.Add_child,
     onClick,
   };
 };
 
-export const getManageFolderOperation = (onClick: () => void): FolderOperationDeclaration => {
+export const getManageFolderOperation = <T extends object>(onClick: () => void): ActionMenuOperationDeclaration<T> => {
   return {
     icon: <IconExternalLink {...BASE_ICON_PROPS} />,
-    id: FolderOperation.Manage_folder,
+    id: ActionMenuOperation.Manage_folder,
     onClick,
   };
 };
 
-export const getRenameFolderOperation = (onClick: () => void): FolderOperationDeclaration => {
+export const getRenameFolderOperation = <T extends object>(onClick: () => void): ActionMenuOperationDeclaration<T> => {
   return {
     icon: <IconPencilMinus {...BASE_ICON_PROPS} />,
-    id: FolderOperation.Rename,
+    id: ActionMenuOperation.Rename,
     onClick,
   };
 };
 
-export const getMoveFolderOperation = (onClick: () => void): FolderOperationDeclaration => {
+export const getMoveFolderOperation = <T extends object>(onClick: () => void): ActionMenuOperationDeclaration<T> => {
   return {
     icon: <IconFolderShare {...BASE_ICON_PROPS} />,
-    id: FolderOperation.Move_to,
+    id: ActionMenuOperation.Move_to,
     onClick,
   };
 };
 
-export const getDeleteFolderOperation = (onClick: () => void): FolderOperationDeclaration => {
+export const getDeleteFolderOperation = <T extends object>(onClick: () => void): ActionMenuOperationDeclaration<T> => {
   return {
     icon: <IconTrashX {...BASE_ICON_PROPS} />,
-    id: FolderOperation.Delete,
+    id: ActionMenuOperation.Delete,
     onClick,
   };
 };
