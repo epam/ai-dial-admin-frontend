@@ -7,6 +7,7 @@ import EntityHeader from '@/src/components/EntityView/Header/Header';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
+import Authentication from './Authentication';
 
 interface Props {
   selectedToolset: Toolset;
@@ -27,6 +28,7 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
           view={ApplicationRoute.Toolsets}
         />
         <div className="flex flex-col gap-y-6 lg:w-[35%] mt-6">
+          <Authentication toolset={selectedToolset} onChange={onChangeToolset} />
           <MaxRetryAttempts entity={selectedToolset} onChangeEntity={onChangeToolset} />
         </div>
       </div>
