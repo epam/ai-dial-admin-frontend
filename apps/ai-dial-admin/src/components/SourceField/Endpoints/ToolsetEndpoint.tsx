@@ -1,17 +1,17 @@
 'use client';
 
-import classNames from 'classnames';
 import { FC } from 'react';
+import classNames from 'classnames';
 
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ToolsetTransport } from '@/src/types/toolset';
-
-import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
-import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
+import { useI18n } from '@/src/locales/client';
+
+import { TextInputField } from '@/src/components/Common/InputField/InputField';
+import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 
 interface Props {
   entity: Toolset;
@@ -30,27 +30,26 @@ const ToolsetEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) => {
   return (
     <div className={classNames('flex flex-col gap-6', !isModal && 'lg:w-[35%]')}>
       {prefix ? (
-        <EndpointControl
-          id="endpoint"
-          required={true}
+        <TextInputField
+          elementId={'endpoint'}
           textBeforeInput={prefix}
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
-          endpoint={entity.source?.completionEndpointPath}
+          value={entity.source?.completionEndpointPath}
           onChange={(completionEndpointPath) =>
             onChange({
               ...entity,
               source: { ...entity.source, completionEndpointPath } as SOURCE_FIELD,
             })
           }
+          tooltipTriggerClassName={'flex-1'}
         />
       ) : (
-        <EndpointControl
-          id="endpoint"
-          required={true}
+        <TextInputField
+          elementId="endpoint"
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
-          endpoint={entity.endpoint}
+          value={entity.endpoint}
           onChange={(endpoint) => onChange({ ...entity, endpoint })}
         />
       )}
