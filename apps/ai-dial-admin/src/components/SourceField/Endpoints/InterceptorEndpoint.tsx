@@ -6,14 +6,16 @@ import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 
 import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
 import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
+import classNames from 'classnames';
 
 interface Props {
   entity: DialInterceptor;
   onChange: (entity: DialInterceptor) => void;
   prefix?: string;
+  isModal?: boolean;
 }
 
-const InterceptorEndpoint: FC<Props> = ({ entity, onChange, prefix }) => {
+const InterceptorEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) => {
   const onChangeCompletionEndpoint = useCallback(
     (endpoint?: string) => {
       onChange({ ...entity, endpoint });
@@ -34,7 +36,7 @@ const InterceptorEndpoint: FC<Props> = ({ entity, onChange, prefix }) => {
   );
 
   return (
-    <div className="lg:w-[35%] flex flex-col gap-6">
+    <div className={classNames('flex flex-col gap-6', !isModal && 'lg:w-[35%]')}>
       {prefix ? (
         <>
           <CompletionEndpointControl

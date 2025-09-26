@@ -6,8 +6,10 @@ import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
+import { DialAssetApp } from '@/src/models/dial/asset-app';
 import { DialFile } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
+import { DialPrompt } from '@/src/models/dial/prompt';
 import { PopUpState } from '@/src/types/pop-up';
 import { checkPaths, checkSelectedPath, removeTrailingSlash } from '@/src/utils/files/path';
 
@@ -17,7 +19,7 @@ interface Props {
   initialPath?: string;
   onClose: () => void;
   onApply: (filePath: string) => void;
-  context?: () => AssetsFolderContext<DialFile>;
+  context?: () => AssetsFolderContext<DialFile | DialPrompt | DialAssetApp>;
   isFolderMove?: boolean;
 }
 

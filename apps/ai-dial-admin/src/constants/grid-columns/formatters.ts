@@ -63,6 +63,8 @@ export const sourceTypeFormatter = (value: string, t: (key: string) => string, v
         return t(SourceI18nKey.InterceptorDeployment);
       case ApplicationRoute.Toolsets:
         return t(SourceI18nKey.MCPDeployment);
+      default:
+        return value;
     }
   } else if (value === SOURCE_TYPE.ENDPOINTS) {
     return t(SourceI18nKey.Endpoint);

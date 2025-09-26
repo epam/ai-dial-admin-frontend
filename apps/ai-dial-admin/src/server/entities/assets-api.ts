@@ -1,5 +1,6 @@
 import { JWT } from 'next-auth/jwt';
 
+import { DEFAULT_ETAG, IF_MATCH, IF_NONE_MATCH } from '@/src/constants/api-headers';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { DialAssetApp } from '@/src/models/dial/asset-app';
 import { DialFile } from '@/src/models/dial/file';
@@ -25,6 +26,7 @@ export enum ResourceOperation {
   IMPORT_ZIP = 'import/zip',
   IMPORT_JSON = 'import/json',
   DOWNLOAD = 'download',
+  UPDATE = 'update',
 }
 
 export const ResourceBasePaths: Record<ResourceType, string> = {
@@ -81,7 +83,22 @@ export class AssetsApi extends BaseApi {
 
   getAsset(token: JWT | null, path: string, type: ResourceType): Promise<DialPrompt | null> {
     const url = this.buildUrl(type, ResourceOperation.GET);
-    return this.post(url, { path }, token);
+    return this.post(
+      url,
+      { path },
+      token,
+      type === ResourceType.APPLICATION ? { [IF_NONE_MATCH]: DEFAULT_ETAG } : void 0,
+    );
+  }
+
+  updateAsset(token: JWT | null, asset: DialAssetApp, type: ResourceType): Promise<ServerActionResponse> {
+    const url = this.buildUrl(type, ResourceOperation.UPDATE);
+    return this.postAction(
+      url,
+      { ...asset },
+      token,
+      type === ResourceType.APPLICATION ? { [IF_MATCH]: DEFAULT_ETAG } : void 0,
+    );
   }
 
   removeAsset(token: JWT | null, path: string, type: ResourceType): Promise<ServerActionResponse> {
@@ -89,7 +106,12 @@ export class AssetsApi extends BaseApi {
       return this.deleteAction(`${ResourceBasePaths[type]}?path=${path}`, token);
     } else {
       const url = this.buildUrl(type, ResourceOperation.DELETE);
-      return this.postAction(url, { path }, token);
+      return this.postAction(
+        url,
+        { path },
+        token,
+        type === ResourceType.APPLICATION ? { [IF_MATCH]: DEFAULT_ETAG } : void 0,
+      );
     }
   }
 
@@ -131,7 +153,7 @@ export class AssetsApi extends BaseApi {
   // PROMPT SPECIFIC
 
   createPrompt(prompt: DialPrompt, token: JWT | null): Promise<ServerActionResponse> {
-    const url = this.buildUrl(ResourceType.PROMPT, ResourceOperation.GET);
+    const url = this.buildUrl(ResourceType.PROMPT, ResourceOperation.CREATE);
     return this.postAction(
       url,
       { ...prompt, content: prompt.content || '', folderId: prompt.folderId || ROOT_FOLDER },

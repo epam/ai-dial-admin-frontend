@@ -1,4 +1,4 @@
-export enum EntityOperation {
+export enum ActionMenuOperation {
   Delete = 'Delete',
   Duplicate = 'Duplicate',
   Open_in_new_tab = 'Open in a new tab',
@@ -13,4 +13,9 @@ export enum EntityOperation {
   Preview = 'Preview',
   Resource_rollback = 'Resource rollback',
   View_details = 'View details',
+  Add_child = 'Add child',
+  Add_sibling = 'Add sibling',
+  Manage_folder = 'Manage permissions',
+  Rename = 'Rename',
+  Move_to = 'Move to',
 }

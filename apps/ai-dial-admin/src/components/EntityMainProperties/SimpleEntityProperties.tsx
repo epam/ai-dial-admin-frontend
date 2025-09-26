@@ -1,7 +1,7 @@
 import { FC, useCallback, useState } from 'react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialRoute } from '@/src/models/dial/route';
@@ -14,8 +14,12 @@ import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getPromptVersionError } from '@/src/utils/validation/version-error';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import EndpointControl from './BaseProperties/Endpoint/Endpoint';
-import { Toolset } from '@/src/models/dial/toolset';
+import { getInterceptorContainers } from '@/src/app/[lang]/interceptors/actions';
+import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
+import { getSourceItems } from '@/src/components/SourceField/constants';
+import SourceField from '@/src/components/SourceField/SourceField';
+import { useAppContext } from '@/src/context/AppContext';
+import { isDeploymentsEnabled } from '@/src/utils/plugins';
 
 interface Props {
   view?: ApplicationRoute;
@@ -24,6 +28,7 @@ interface Props {
   versionsMap?: Record<string, string[]>;
   isEntityImmutable?: boolean;
   onChangeEntity: (entity: BaseEntity) => void;
+  isModal?: boolean;
 }
 
 const SimpleEntityProperties: FC<Props> = ({
@@ -33,9 +38,12 @@ const SimpleEntityProperties: FC<Props> = ({
   onChangeEntity,
   isEntityImmutable = false,
   versionsMap,
+  isModal,
 }) => {
   const t = useI18n() as (t: string) => string;
   const { dispatch } = useSaveValidationContext();
+  const { embeddedApps } = useAppContext();
+  const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
 
   const idTitleKey =
     view === ApplicationRoute.Prompts || view === ApplicationRoute.Files || view === ApplicationRoute.AssetsApplications
@@ -77,13 +85,6 @@ const SimpleEntityProperties: FC<Props> = ({
     [dispatch, entity, onChangeEntity, t],
   );
 
-  const onChangeEndpoint = useCallback(
-    (endpoint?: string) => {
-      onChangeEntity({ ...entity, endpoint } as Toolset);
-    },
-    [entity, onChangeEntity],
-  );
-
   return (
     <div className="flex flex-col gap-6">
       {!isEntityImmutable && (
@@ -109,6 +110,20 @@ const SimpleEntityProperties: FC<Props> = ({
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
 
+      {view === ApplicationRoute.Interceptors && isModal && (
+        <SourceField
+          view={ApplicationRoute.Interceptors}
+          entity={entity}
+          onChange={onChangeEntity}
+          getContainers={getInterceptorContainers}
+          getRunners={getInterceptorTemplatesList}
+          elementId={'sourceType'}
+          fieldTitle={t(EntitiesI18nKey.SourceType)}
+          sourceItems={getSourceItems(ApplicationRoute.Interceptors, deploymentsEnabled)}
+          isModal={isModal}
+        />
+      )}
+
       {view === ApplicationRoute.Routes && (
         <TextInputField
           elementId="path"
@@ -118,17 +133,6 @@ const SimpleEntityProperties: FC<Props> = ({
           errorText={pathError}
           invalid={!!pathError}
           onChange={onChangePath}
-        />
-      )}
-
-      {view === ApplicationRoute.Toolsets && (
-        <EndpointControl
-          id="endpoint"
-          required={true}
-          placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
-          fieldTitle={t(EntityFieldsI18nKey.baseEndpoint)}
-          endpoint={(entity as Toolset).endpoint}
-          onChange={onChangeEndpoint}
         />
       )}
     </div>

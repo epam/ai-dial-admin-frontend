@@ -9,9 +9,11 @@ import classNames from 'classnames';
 import Button from '@/src/components/Common/Button/Button';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
+import { DialFile } from '@/src/models/dial/file';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ExportFormat } from '@/src/types/export';
 import { PopUpState } from '@/src/types/pop-up';
@@ -27,7 +29,7 @@ interface Props<T> {
   isChanged: boolean;
   jsonEditorEnabled: boolean;
   hideJsonEditor?: boolean;
-  promptVersions?: string[];
+  existingVersions?: string[];
   selectedFormat?: ExportFormat;
   setSelectedFormat?: (format: ExportFormat) => void;
   children?: ReactNode;
@@ -35,6 +37,7 @@ interface Props<T> {
   onSave: (newVersion?: string) => void;
   removeEntity: (entity: string) => Promise<ServerActionResponse>;
   toggleJsonEditor?: () => void;
+  context?: () => AssetsFolderContext<DialFile>;
 }
 
 const HeaderButtons = <T extends object>({
@@ -47,7 +50,8 @@ const HeaderButtons = <T extends object>({
   jsonEditorEnabled,
   hideJsonEditor,
   children,
-  promptVersions,
+  existingVersions,
+  context,
   ...props
 }: Props<T>) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
@@ -89,7 +93,7 @@ const HeaderButtons = <T extends object>({
             onSave={onSave}
             view={view}
             jsonEditorEnabled={jsonEditorEnabled}
-            promptVersions={promptVersions}
+            existingVersions={existingVersions}
           />
         ) : (
           <div className="flex flex-row items-center w-full">
@@ -116,6 +120,7 @@ const HeaderButtons = <T extends object>({
             view={view}
             modalState={modalState}
             onCloseModal={onCloseModal}
+            context={context}
           />,
           document.body,
         )}
