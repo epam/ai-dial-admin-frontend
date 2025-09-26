@@ -16,6 +16,8 @@ const ActionColumn = <T extends object>({ items, data, api, node }: Props<T>) =>
   return data ? (
     <div className="w-[24px] h-[24px] ml-[-4px]">
       <ActionsDropdown
+        data={data}
+        rowIndex={node.rowIndex as number}
         icon={<IconDots width={16} height={16} stroke={2} />}
         items={dropdownItems}
         actionTriggerClass="flex h-[24px] hover:bg-accent-primary-alpha items-center justify-center rounded w-[24px]"
