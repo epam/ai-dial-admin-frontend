@@ -20,16 +20,16 @@ interface Props {
 }
 
 const FilesList: FC<Props> = ({ files, action }) => {
-  const download = useCallback((file: DialFile) => {
-    window.open(`/${FILE_DOWNLOAD}/?path=${encodeURIComponent(file.path)}`, '_blank');
+  const download = useCallback((file?: DialFile) => {
+    window.open(`/${FILE_DOWNLOAD}/?path=${encodeURIComponent(file?.path || '')}`, '_blank');
   }, []);
 
-  const openInNewTab = useCallback((file: DialFile) => {
+  const openInNewTab = useCallback((file?: DialFile) => {
     onOpenInNewTab(ApplicationRoute.Files, file);
   }, []);
 
-  const preview = useCallback(async (file: DialFile) => {
-    window.open(`/${FILE_PREVIEW}?path=${encodeURIComponent(file.path)}`, '_blank');
+  const preview = useCallback(async (file?: DialFile) => {
+    window.open(`/${FILE_PREVIEW}?path=${encodeURIComponent(file?.path || '')}`, '_blank');
   }, []);
 
   const isPreviewActionHidden = (_: GridApi, node: IRowNode) => {

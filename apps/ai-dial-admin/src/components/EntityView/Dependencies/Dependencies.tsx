@@ -41,8 +41,10 @@ const EntityDependencies: FC<Props> = ({ entity, applications, models, onChangeE
   );
 
   const onRemoveDependency = useCallback(
-    (_: DialApplication, index: number) => {
-      entity.dependencies?.splice(index, 1);
+    (_?: DialApplication, index?: number) => {
+      if (index) {
+        entity.dependencies?.splice(index, 1);
+      }
       onChangeEntity({
         ...entity,
         dependencies: entity.dependencies,
@@ -51,8 +53,8 @@ const EntityDependencies: FC<Props> = ({ entity, applications, models, onChangeE
     [entity, onChangeEntity],
   );
 
-  const onOpen = (entity: EntitiesGridData) => {
-    const route = entity.type === MenuI18nKey.Models ? ApplicationRoute.Models : ApplicationRoute.Applications;
+  const onOpen = (entity?: EntitiesGridData) => {
+    const route = entity?.type === MenuI18nKey.Models ? ApplicationRoute.Models : ApplicationRoute.Applications;
     onOpenInNewTab(route, entity);
   };
 
