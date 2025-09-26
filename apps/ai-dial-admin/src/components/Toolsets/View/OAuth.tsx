@@ -2,12 +2,13 @@ import { FC } from 'react';
 
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Toolset, ToolsetAuthSettings } from '@/src/models/dial/toolset';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import PasswordInputField from '@/src/components/Common/PasswordInput/PasswordInputField';
-import EndpointControl from '../../EntityMainProperties/BaseProperties/Endpoint/Endpoint';
+import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
+import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 
 enum AuthType {
   DYNAMIC = 'dynamic',
@@ -86,7 +87,20 @@ const OAuthControls: FC<Props> = ({ toolset, onChange }) => {
               })
             }
           />
-
+          <Multiselect
+            elementId="scopes"
+            selectedItems={toolset.authSettings.scopesSupported}
+            allItems={toolset.authSettings.scopesSupported}
+            onChangeItems={(scopesSupported: string[]) => {
+              onChange({
+                ...toolset,
+                authSettings: { ...(toolset.authSettings || {}), scopesSupported } as ToolsetAuthSettings,
+              });
+            }}
+            heading={t(EntityFieldsI18nKey.scopes)}
+            title={t(EntityFieldsI18nKey.scopes)}
+            addTitle={t(BasicI18nKey.AddField)}
+          />
           <EndpointControl
             id="authEndpoint"
             fieldTitle={t(EntityFieldsI18nKey.authEndpoint)}

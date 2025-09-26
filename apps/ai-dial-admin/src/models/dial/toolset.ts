@@ -23,8 +23,7 @@ export interface ToolsetAuthSettings {
   redirectUri?: string;
   authorizationEndpoint?: string;
   tokenEndpoint?: string;
-
-  // code_challenge_method: 'S256';
+  scopesSupported?: string[];
 }
 
 export enum ToolsetAuthType {
