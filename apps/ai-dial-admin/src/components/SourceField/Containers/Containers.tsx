@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import classNames from 'classnames';
 
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
@@ -147,7 +148,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
         {entity.source?.containerId && deploymentsEnabled && !isModal && (
           <Button
             iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
-            cssClass="secondary"
+            cssClass={classNames('secondary', errorText ? 'self-center mt-[3px]' : 'self-end')}
             title={t(SourceI18nKey.OpenContainer)}
             onClick={() => openContainer()}
           />
