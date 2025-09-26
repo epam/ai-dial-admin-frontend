@@ -54,13 +54,15 @@ const ToolsetEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) => {
           onChange={(endpoint) => onChange({ ...entity, endpoint })}
         />
       )}
-      <DropdownField
-        fieldTitle={t(EntityFieldsI18nKey.transport)}
-        selectedValue={entity.transport || ToolsetTransport.SSE}
-        elementId="transport"
-        items={transportOptions}
-        onChange={(transport) => onChange({ ...entity, transport: transport as ToolsetTransport })}
-      />
+      {!isModal && (
+        <DropdownField
+          fieldTitle={t(EntityFieldsI18nKey.transport)}
+          selectedValue={entity.transport || ToolsetTransport.SSE}
+          elementId="transport"
+          items={transportOptions}
+          onChange={(transport) => onChange({ ...entity, transport: transport as ToolsetTransport })}
+        />
+      )}
     </div>
   );
 };
