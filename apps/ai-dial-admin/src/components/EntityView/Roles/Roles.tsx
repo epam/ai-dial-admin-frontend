@@ -104,9 +104,9 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
   );
 
   const onRemoveRole = useCallback(
-    (role: DialRole) => {
+    (role?: DialRole) => {
       const newLimits = { ...(entity.roleLimits || {}) };
-      delete newLimits[role.name as string];
+      delete newLimits[role?.name as string];
 
       onChangeEntity({
         ...entity,
@@ -119,16 +119,16 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
   );
 
   const onResetToDefaultRole = useCallback(
-    (role: DialRole) => {
+    (role?: DialRole) => {
       onChangeEntity({
         ...entity,
         roleLimits: {
           ...entityRef.current.roleLimits,
-          [role.name as string]: {},
+          [role?.name as string]: {},
         } as DialRoleLimitsMap,
         roleShareResourceLimits: {
           ...entityRef.current.roleShareResourceLimits,
-          [role.name as string]: {},
+          [role?.name as string]: {},
         },
       });
     },
@@ -151,13 +151,13 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
   }, [onChangeEntity, entity]);
 
   const onSetNoLimits = useCallback(
-    (role: DialRole) => {
+    (role?: DialRole) => {
       onChangeEntity({
         ...entity,
         roleLimits: {
           ...entityRef.current.roleLimits,
-          [role.name as string]: {
-            ...entityRef.current.roleLimits?.[role.name as string],
+          [role?.name as string]: {
+            ...entityRef.current.roleLimits?.[role?.name as string],
             day: NO_LIMITS_VALUE,
             minute: NO_LIMITS_VALUE,
             month: NO_LIMITS_VALUE,
@@ -166,7 +166,7 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
         } as DialRoleLimitsMap,
         roleShareResourceLimits: {
           ...entityRef.current.roleShareResourceLimits,
-          [role.name as string]: {
+          [role?.name as string]: {
             invitationTtl: NO_LIMITS_VALUE,
             maxAcceptedUsers: NO_LIMITS_ACCEPTED_USERS,
           },
@@ -184,7 +184,7 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
     setAddModalState(PopUpState.Closed);
   }, [setAddModalState]);
 
-  const onOpen = (role: DialRole) => {
+  const onOpen = (role?: DialRole) => {
     onOpenInNewTab(ApplicationRoute.Roles, role);
   };
 
