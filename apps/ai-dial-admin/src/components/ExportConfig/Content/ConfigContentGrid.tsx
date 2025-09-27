@@ -41,7 +41,7 @@ const ConfigContentGrid: FC<Props> = ({ selectedTab, tabData, isFull, customExpo
   }, [selectedTab]);
 
   const onRemove = useCallback(
-    (entity: EntitiesGridData) => {
+    (entity?: EntitiesGridData) => {
       if (customExportDataRef.current && setCustomExportData) {
         const newData = getDataWithoutItem(customExportDataRef.current, entity, selectedTab);
         setCustomExportData((prev) => {

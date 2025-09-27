@@ -36,12 +36,12 @@ const FileProperties: FC<Props> = ({ file, onChangeFile }) => {
     [file, onChangeFile],
   );
 
-  const download = useCallback((file: DialFile) => {
-    window.open(`/${FILE_DOWNLOAD}?path=${encodeURIComponent(file.path)}`, '_blank');
+  const download = useCallback((file?: DialFile) => {
+    window.open(`/${FILE_DOWNLOAD}?path=${encodeURIComponent(file?.path || '')}`, '_blank');
   }, []);
 
-  const preview = useCallback(async (file: DialFile) => {
-    window.open(`/${FILE_PREVIEW}?path=${encodeURIComponent(file.path)}`, '_blank');
+  const preview = useCallback(async (file?: DialFile) => {
+    window.open(`/${FILE_PREVIEW}?path=${encodeURIComponent(file?.path || '')}`, '_blank');
   }, []);
 
   const isPreviewActionHidden = (_: GridApi, node: IRowNode) => {

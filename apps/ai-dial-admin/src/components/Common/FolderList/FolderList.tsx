@@ -3,7 +3,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { IconCaretDownFilled, IconCaretRightFilled, IconDotsVertical, IconFolder, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import FolderActions from '@/src/components/Common/FolderCreate/Components/FolderActions';
+import ActionsDropdown from '@/src/components/Common/ActionsDropdown/ActionsDropdown';
 import {
   getAddChildOperation,
   getAddSiblingOperation,
@@ -230,8 +230,8 @@ const FolderList: FC<Props> = ({
 
                 {showFolderActions && (
                   <div className="invisible group-hover:visible text-primary mx-2 flex flex-row gap-2">
-                    <FolderActions items={folderCreateItems(node)} icon={<IconPlus {...BASE_ICON_PROPS} />} />
-                    <FolderActions items={folderManageItems(node)} icon={<IconDotsVertical {...BASE_ICON_PROPS} />} />
+                    <ActionsDropdown items={folderCreateItems(node)} icon={<IconPlus {...BASE_ICON_PROPS} />} />
+                    <ActionsDropdown items={folderManageItems(node)} icon={<IconDotsVertical {...BASE_ICON_PROPS} />} />
                   </div>
                 )}
               </div>

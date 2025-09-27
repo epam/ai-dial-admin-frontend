@@ -48,8 +48,11 @@ const EntityInterceptors = <T extends { interceptors?: string[] }>({
   );
 
   const onRemoveInterceptor = useCallback(
-    (_: DialInterceptor, index: number) => {
-      entity.interceptors?.splice(index, 1);
+    (_?: DialInterceptor, index?: number) => {
+      if (index) {
+        entity.interceptors?.splice(index, 1);
+      }
+
       onChangeEntity({
         ...entity,
         interceptors: entity.interceptors,
@@ -78,7 +81,7 @@ const EntityInterceptors = <T extends { interceptors?: string[] }>({
     setAddModalState(PopUpState.Closed);
   }, [setAddModalState]);
 
-  const onOpen = (interceptor: DialInterceptor) => {
+  const onOpen = (interceptor?: DialInterceptor) => {
     onOpenInNewTab(ApplicationRoute.Interceptors, interceptor);
   };
 

@@ -676,6 +676,11 @@ export enum EntityPlaceholdersI18nKey {
   Description = 'EntityPlaceholders.Description',
   DisplayName = 'EntityPlaceholders.DisplayName',
   Id = 'EntityPlaceholders.Id',
+  RedirectUri = 'EntityPlaceholders.RedirectUri',
+  ClientId = 'EntityPlaceholders.ClientId',
+  ClientSecret = 'EntityPlaceholders.ClientSecret',
+  TokenEndpoint = 'EntityPlaceholders.TokenEndpoint',
+  AuthorizationEndpoint = 'EntityPlaceholders.AuthorizationEndpoint',
   Maintainer = 'EntityPlaceholders.Maintainer',
   Type = 'EntityPlaceholders.Type',
   Title = 'EntityPlaceholders.Title',
@@ -712,6 +717,8 @@ export enum EntityPlaceholdersI18nKey {
 export enum EntityFieldsI18nKey {
   roleLimits = 'EntityFields.roleLimits',
   isPublic = 'EntityFields.isPublic',
+  apiKeyHeader = 'EntityFields.apiKeyHeader',
+  costLimit = 'EntityFields.costLimit',
   defaultRoleLimit = 'EntityFields.defaultRoleLimit',
   fieldsHashingOrder = 'EntityFields.fieldsHashingOrder',
   endpointDeploymentName = 'EntityFields.endpointDeploymentName',
@@ -807,6 +814,11 @@ export enum EntityFieldsI18nKey {
   adapterName = 'EntityFields.SourceAdapter',
   runnerName = 'EntityFields.SourceInterceptorTemplate',
   containerId = 'EntityFields.SourceContainer',
+  clientId = 'EntityFields.clientId',
+  clientSecret = 'EntityFields.clientSecret',
+  redirectUri = 'EntityFields.redirectUri',
+  authEndpoint = 'EntityFields.authorizationEndpoint',
+  tokenEndpoint = 'EntityFields.tokenEndpoint',
 }
 
 export enum ToolsetI18nKey {
@@ -821,4 +833,8 @@ export enum ToolsetI18nKey {
   Disabled = 'Toolset.Disabled',
   AutoDetected = 'Toolset.AutoDetected',
   ToolsWarning = 'Toolset.ToolsWarning',
+  Authentication = 'Toolset.Authentication',
+  ClientRegistrationType = 'Toolset.ClientRegistrationType',
+  ExistingClient = 'Toolset.ExistingClient',
+  DynamicRegistration = 'Toolset.DynamicRegistration',
 }

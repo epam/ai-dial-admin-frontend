@@ -89,7 +89,7 @@ const BaseEntityList = <T extends object>({
   }, []);
 
   const onOpenDeleteModal = useCallback(
-    (entity: T) => {
+    (entity?: T) => {
       setCurrentEntity(entity);
       handleModalOpen(ModalType.delete);
     },
@@ -97,7 +97,7 @@ const BaseEntityList = <T extends object>({
   );
 
   const onOpenDuplicateModal = useCallback(
-    (entity: T) => {
+    (entity?: T) => {
       setCurrentEntity(entity);
       handleModalOpen(ModalType.duplicate);
     },
@@ -105,7 +105,7 @@ const BaseEntityList = <T extends object>({
   );
 
   const onOpenMoveModal = useCallback(
-    (entity: T) => {
+    (entity?: T) => {
       setCurrentEntity(entity);
       handleModalOpen(ModalType.move);
     },
@@ -113,7 +113,7 @@ const BaseEntityList = <T extends object>({
   );
 
   const openInNewTab = useCallback(
-    (entity: T) => {
+    (entity?: T) => {
       onOpenInNewTab(route, entity);
     },
     [route],

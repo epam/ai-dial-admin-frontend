@@ -17,19 +17,19 @@ import { EntityType } from '@/src/types/entity-type';
  */
 export const getDataWithoutItem = (
   data: EntitiesGridData[],
-  itemToDelete: EntitiesGridData,
+  itemToDelete: EntitiesGridData | undefined,
   currentTab: EntityType,
 ): EntitiesGridData[] => {
   switch (currentTab) {
     case EntityType.APPLICATION_TYPE_SCHEMA:
-      return data.filter((d) => (d as DialApplicationScheme).$id !== (itemToDelete as DialApplicationScheme).$id);
+      return data.filter((d) => (d as DialApplicationScheme).$id !== (itemToDelete as DialApplicationScheme)?.$id);
 
     case EntityType.PROMPT:
     case EntityType.FILE:
-      return data.filter((d) => d.path !== itemToDelete.path);
+      return data.filter((d) => d.path !== itemToDelete?.path);
 
     default:
-      return data.filter((d) => d.name !== itemToDelete.name);
+      return data.filter((d) => d.name !== itemToDelete?.name);
   }
 };
 
