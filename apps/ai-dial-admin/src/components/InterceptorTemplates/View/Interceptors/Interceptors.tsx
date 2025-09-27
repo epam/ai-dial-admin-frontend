@@ -25,7 +25,7 @@ const Interceptors: FC<Props> = ({ interceptorList }) => {
 
   const [interceptors, setInterceptors] = useState<DialInterceptor[]>([]);
 
-  const onOpen = useCallback((interceptor: DialInterceptor) => {
+  const onOpen = useCallback((interceptor?: DialInterceptor) => {
     onOpenInNewTab(ApplicationRoute.Interceptors, interceptor);
   }, []);
 

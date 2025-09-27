@@ -18,8 +18,8 @@ interface Props {
 const AdapterModelsGrid: FC<Props> = ({ models }) => {
   const t = useI18n() as (t: string) => string;
 
-  const open = (model: DialModel) => {
-    onOpenInNewTab(ApplicationRoute.Models, model.name);
+  const open = (model?: DialModel) => {
+    onOpenInNewTab(ApplicationRoute.Models, model?.name);
   };
 
   const rowData = models || [];

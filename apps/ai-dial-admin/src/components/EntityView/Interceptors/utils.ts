@@ -14,8 +14,8 @@ export const getInterceptorsGridData = (interceptors?: BaseEntity[], interceptor
 };
 
 export const getInterceptorsColumnDefs = (
-  remove: (entity: BaseEntity, index: number) => void,
-  open: (entity: BaseEntity) => void,
+  remove: (entity?: BaseEntity, index?: number) => void,
+  open: (entity?: BaseEntity) => void,
 ): ColDef[] => [
   DRAGGABLE_COL_DEF,
   {
