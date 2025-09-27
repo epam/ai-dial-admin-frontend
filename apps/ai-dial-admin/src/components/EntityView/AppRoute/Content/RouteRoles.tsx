@@ -70,11 +70,11 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
   );
 
   const onRemoveRole = useCallback(
-    (role: DialRole) => {
+    (role?: DialRole) => {
       onCloseAddModal();
 
       const roleLimits = { ...(route.roleLimits || {}) };
-      delete roleLimits[role.name as string];
+      delete roleLimits[role?.name as string];
       onChangeRoute({
         ...route,
         roleLimits,
@@ -83,7 +83,7 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
     [onCloseAddModal, onChangeRoute, route],
   );
 
-  const onOpen = (role: DialRole) => {
+  const onOpen = (role?: DialRole) => {
     onOpenInNewTab(ApplicationRoute.Roles, role);
   };
 

@@ -17,7 +17,7 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 import { ActionMenuOperation } from '@/src/types/action-menu-operations';
 
-export function getResourceRollbackOperation<T>(onClick: (entity: T) => void): ActionMenuOperationDeclaration<T> {
+export function getResourceRollbackOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconRefresh {...BASE_ICON_PROPS} />,
     id: ActionMenuOperation.Resource_rollback,
@@ -25,7 +25,7 @@ export function getResourceRollbackOperation<T>(onClick: (entity: T) => void): A
   };
 }
 
-export function getDeleteOperation<T>(onClick: (entity: T) => void): ActionMenuOperationDeclaration<T> {
+export function getDeleteOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconTrashX {...BASE_ICON_PROPS} />,
     id: ActionMenuOperation.Delete,
@@ -33,7 +33,9 @@ export function getDeleteOperation<T>(onClick: (entity: T) => void): ActionMenuO
   };
 }
 
-export function getRemoveOperation<T>(onClick: (entity: T, index: number) => void): ActionMenuOperationDeclaration<T> {
+export function getRemoveOperation<T>(
+  onClick: (entity?: T, index?: number) => void,
+): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconTrash {...BASE_ICON_PROPS} />,
     id: ActionMenuOperation.Remove,
@@ -42,7 +44,7 @@ export function getRemoveOperation<T>(onClick: (entity: T, index: number) => voi
 }
 
 export function getResetOperation<T>(
-  onClick: (entity: T) => void,
+  onClick: (entity?: T) => void,
   hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): ActionMenuOperationDeclaration<T> {
   return {
@@ -54,7 +56,7 @@ export function getResetOperation<T>(
 }
 
 export function getSetNoLimitsOperation<T>(
-  onClick: (entity: T) => void,
+  onClick: (entity?: T) => void,
   hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): ActionMenuOperationDeclaration<T> {
   return {
@@ -65,7 +67,7 @@ export function getSetNoLimitsOperation<T>(
   };
 }
 
-export function getDuplicateOperation<T>(onClick: (entity: T) => void): ActionMenuOperationDeclaration<T> {
+export function getDuplicateOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconCopy {...BASE_ICON_PROPS} />,
     id: ActionMenuOperation.Duplicate,
@@ -74,7 +76,7 @@ export function getDuplicateOperation<T>(onClick: (entity: T) => void): ActionMe
 }
 
 export function getOpenInNewTabOperation<T>(
-  onClick: (entity: T) => void,
+  onClick: (entity?: T) => void,
   hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): ActionMenuOperationDeclaration<T> {
   return {
@@ -86,7 +88,7 @@ export function getOpenInNewTabOperation<T>(
 }
 
 export function getViewDetailsOperation<T>(
-  onClick: (entity: T) => void,
+  onClick: (entity?: T) => void,
   hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): ActionMenuOperationDeclaration<T> {
   return {
@@ -97,7 +99,7 @@ export function getViewDetailsOperation<T>(
   };
 }
 
-export function getMoveOperation<T>(onClick: (entity: T) => void): ActionMenuOperationDeclaration<T> {
+export function getMoveOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconFolderShare {...BASE_ICON_PROPS} />,
     id: ActionMenuOperation.Move,
@@ -105,7 +107,7 @@ export function getMoveOperation<T>(onClick: (entity: T) => void): ActionMenuOpe
   };
 }
 
-export function getDownloadOperation<T>(onClick: (entity: T) => void): ActionMenuOperationDeclaration<T> {
+export function getDownloadOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconDownload {...BASE_ICON_PROPS} />,
     id: ActionMenuOperation.Download,
@@ -114,7 +116,7 @@ export function getDownloadOperation<T>(onClick: (entity: T) => void): ActionMen
 }
 
 export function getPreviewOperation<T>(
-  onClick: (entity: T) => void,
+  onClick: (entity?: T) => void,
   hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): ActionMenuOperationDeclaration<T> {
   return {
