@@ -26,6 +26,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
 import { addTrailingSlash, getFolderNameAndPath, isFolder } from '@/src/utils/files/path';
+import { isAssetView } from '@/src/utils/is-asset-view';
 import FolderListModals, { ModalType } from './Modals/FolderListModals';
 import { generateFolderListFromBulkPaths } from './utils';
 
@@ -70,7 +71,7 @@ const FolderList: FC<Props> = ({
     return isFolderDelete && !isBulkDelete ? initialPath : void 0;
   }, [initialPath, isBulkDelete, isFolderDelete]);
 
-  const showFolderActions = view === ApplicationRoute.Prompts;
+  const showFolderActions = isAssetView(view);
 
   const folderCreateItems = (node: DialFolder) => {
     const items = [
@@ -230,7 +231,9 @@ const FolderList: FC<Props> = ({
 
                 {showFolderActions && (
                   <div className="invisible group-hover:visible text-primary mx-2 flex flex-row gap-2">
-                    <ActionsDropdown items={folderCreateItems(node)} icon={<IconPlus {...BASE_ICON_PROPS} />} />
+                    {(view === ApplicationRoute.Prompts || view === ApplicationRoute.Files) && (
+                      <ActionsDropdown items={folderCreateItems(node)} icon={<IconPlus {...BASE_ICON_PROPS} />} />
+                    )}
                     <ActionsDropdown items={folderManageItems(node)} icon={<IconDotsVertical {...BASE_ICON_PROPS} />} />
                   </div>
                 )}

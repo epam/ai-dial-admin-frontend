@@ -9,6 +9,7 @@ import { generatePromptRowDataForDelete } from '@/src/components/Common/FolderLi
 import HorizontalCollapseBar from '@/src/components/Common/HorizontalCollapseBar/HorizontalCollapseBar';
 import NoData from '@/src/components/Common/NoData/NoData';
 import Popup from '@/src/components/Common/Popup/Popup';
+import { listViewTitleMap } from '@/src/components/EntityListView/constants';
 import TopicsCellRenderer from '@/src/components/Grid/CellRenderers/TopicCellRenderer';
 import Grid from '@/src/components/Grid/Grid';
 import { BasicI18nKey, ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
@@ -17,9 +18,11 @@ import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { PopUpState } from '@/src/types/pop-up';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   modalState: PopUpState;
+  view?: ApplicationRoute;
   selectedFolder?: string;
   isBulkDelete?: boolean;
   context?: () => AssetsFolderContext<DialFile>;
@@ -27,8 +30,8 @@ interface Props {
   onApply?: () => void;
 }
 
-const DeleteFolder: FC<Props> = ({ modalState, selectedFolder, isBulkDelete, context, onClose, onApply }) => {
-  const t = useI18n();
+const DeleteFolder: FC<Props> = ({ modalState, view, selectedFolder, isBulkDelete, context, onClose, onApply }) => {
+  const t = useI18n() as (s: string, params?: Record<string, string>) => string;
   const containerClassName = classNames('h-[750px] lg:max-w-[65%]');
 
   const folderContext = context?.();
@@ -36,10 +39,11 @@ const DeleteFolder: FC<Props> = ({ modalState, selectedFolder, isBulkDelete, con
 
   const [gridApi, setGridApi] = useState<GridApi>();
   const [rowData, setRowData] = useState<DialFile[]>([]);
+
   const columnDefs: ColDef[] = useMemo(() => {
-    return [
-      { field: 'name', colId: 'name', headerName: 'Display name', hide: false },
-      {
+    const columns: ColDef[] = [{ field: 'name', colId: 'name', headerName: 'Display name', hide: false }];
+    if (view !== ApplicationRoute.Files) {
+      columns.push({
         headerName: 'Version',
         field: 'version',
         filter: true,
@@ -47,9 +51,14 @@ const DeleteFolder: FC<Props> = ({ modalState, selectedFolder, isBulkDelete, con
         cellRendererParams: (params: { data?: { versions?: string[] } }) => ({
           topics: params.data?.versions || [],
         }),
-      },
-    ];
-  }, []);
+      });
+    }
+    return columns;
+  }, [view]);
+
+  const asset = useMemo(() => {
+    return String([listViewTitleMap[view || '']]);
+  }, [view]);
 
   const onGridReady = (event: GridReadyEvent) => {
     setGridApi(event.api);
@@ -86,7 +95,9 @@ const DeleteFolder: FC<Props> = ({ modalState, selectedFolder, isBulkDelete, con
       containerClassName={containerClassName}
     >
       <div className="flex flex-col gap-4 px-6 py-4 flex-1 min-h-0">
-        <div className="text-secondary text-sm">{t(FoldersI18nKey.DeleteFolderDescription)}</div>
+        <div className="text-secondary text-sm">
+          {t(FoldersI18nKey.DeleteFolderDescription, { asset: t(asset).toLowerCase() })}
+        </div>
         <div className="flex flex-row gap-4 flex-1 min-h-0">
           <HorizontalCollapseBar width="360" title={t(FoldersI18nKey.Folders)} containerClass="border-primary">
             <FolderList
