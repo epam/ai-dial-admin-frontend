@@ -768,6 +768,7 @@ export const fillDefaultShareLimits = (diffs: ActivityAuditDiff[], value: DialRo
  * @param {Record<string, ActivityAuditDiff[]>} diffMap - result map
  * @param {DialModelEndpoint[]} val1 - first value to compare
  * @param {DialModelEndpoint[]} val2 - second value to compare
+ * @param {?boolean} [isCurrent] - flag if current state is compared
  */
 export const compareUpstreams = (
   diffMap: Record<string, ActivityAuditDiff[]>,
@@ -793,6 +794,14 @@ export const compareUpstreams = (
   });
 };
 
+/**
+ * Compare defaults
+ *
+ * @param {Record<string, ActivityAuditDiff[]>} diffMap - result map
+ * @param {Record<string, DefaultsValue>} val1 - first value to compare
+ * @param {Record<string, DefaultsValue>} val2 - second value to compare
+ * @param {?boolean} [isCurrent] - flag if current state is compared
+ */
 export const compareDefaults = (
   diffMap: Record<string, ActivityAuditDiff[]>,
   val1: Record<string, DefaultsValue>,
@@ -834,6 +843,12 @@ export const fillUpstreams = (diffMap: Record<string, ActivityAuditDiff[]>, valu
   });
 };
 
+/**
+ * Fill defaults diff
+ *
+ * @param {Record<string, ActivityAuditDiff[]>} diffMap - result map
+ * @param {Record<string, DefaultsValue>} value - value to fill
+ */
 export const fillDefaults = (diffMap: Record<string, ActivityAuditDiff[]>, value: Record<string, DefaultsValue>) => {
   Object.keys(value).forEach((val, index) => {
     const sectionKey = `${EntityParameterKeys.DEFAULTS}${index}`;

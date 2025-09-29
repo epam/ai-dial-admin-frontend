@@ -6,7 +6,6 @@ export const setObjectsArrayDiff = (
   current: Record<string, ActivityAuditDiff[]>,
   compare: Record<string, ActivityAuditDiff[]>,
 ) => {
-  // console.log(current, compare)
   const [largerObj] = [current, compare].sort((a, b) => Object.keys(b).length - Object.keys(a).length);
   Object.keys(largerObj)
     .filter((key) => key.includes(sectionName))
