@@ -241,7 +241,7 @@ export const KEYS_COLUMNS: ColDef[] = [
   {
     headerName: 'Project',
     field: 'project',
-    hide: true,
+    hide: false,
   },
   {
     headerName: 'Project contact point',
