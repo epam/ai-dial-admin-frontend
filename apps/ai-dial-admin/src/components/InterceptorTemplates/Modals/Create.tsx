@@ -1,5 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { DialButton } from '@epam/ai-dial-ui-kit';
 
 import { ApplicationRoute } from '@/src/types/routes';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
@@ -11,7 +12,6 @@ import { getErrorNotification } from '@/src/utils/notification';
 import { createInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { useNotification } from '@/src/context/NotificationContext';
 
-import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 import BaseProperties from '@/src/components/InterceptorTemplates/Properties/BaseProperties';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -63,8 +63,13 @@ const Create: FC<Props> = ({ route, onClose, modalState, names }) => {
         <BaseProperties template={template} setTemplate={setTemplate} names={names} />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <Button cssClass="primary" title={t(ButtonsI18nKey.Create)} onClick={onCreate} disable={!isValid} />
+        <DialButton cssClass="dial-secondary-button" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton
+          cssClass="dial-primary-button"
+          title={t(ButtonsI18nKey.Create)}
+          onClick={onCreate}
+          disable={!isValid}
+        />
       </div>
     </Popup>
   );

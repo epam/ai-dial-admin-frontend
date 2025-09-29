@@ -1,8 +1,8 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { DialButton } from '@epam/ai-dial-ui-kit';
 
 import { createKey } from '@/src/app/[lang]/keys/actions';
-import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 import KeyProperties from '@/src/components/KeysList/KeyProperties';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
@@ -73,9 +73,9 @@ const CreateKey: FC<Props> = ({ modalState, names, keys, onClose }) => {
         <KeyProperties entity={currentKey} names={names} keys={keys} onChangeKey={onChangeKey} />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <Button
-          cssClass="primary"
+        <DialButton cssClass="dial-secondary-button" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton
+          cssClass="dial-primary-button"
           title={t(ButtonsI18nKey.Create)}
           onClick={onCreate}
           disable={!isValid || !isValidKey}

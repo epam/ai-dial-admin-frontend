@@ -2,9 +2,9 @@
 
 import { FC, useEffect, useRef, useState } from 'react';
 import { IconDownload } from '@tabler/icons-react';
+import { DialButton } from '@epam/ai-dial-ui-kit';
 
 import { previewJsonConfigs, previewZipConfig } from '@/src/app/[lang]/import-config/actions';
-import Button from '@/src/components/Common/Button/Button';
 import Loader from '@/src/components/Common/Loader/Loader';
 import { ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -58,8 +58,8 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
     <div className="flex flex-col flex-1 min-h-0 rounded border border-primary p-6 mt-8">
       <div className="mb-2 flex flex-row justify-between">
         <h1>{t(ImportI18nKey.Configuration)}</h1>
-        <Button
-          cssClass="primary"
+        <DialButton
+          cssClass="dial-primary-button"
           title={t(ButtonsI18nKey.Import)}
           disable={isLoading || !files}
           iconBefore={<IconDownload {...BASE_ICON_PROPS} />}

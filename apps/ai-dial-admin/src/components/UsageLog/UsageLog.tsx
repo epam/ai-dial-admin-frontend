@@ -1,5 +1,7 @@
 'use client';
 import { FC, useCallback, useState } from 'react';
+import { DialButton } from '@epam/ai-dial-ui-kit';
+import classNames from 'classnames';
 
 import { ApplicationRoute } from '@/src/types/routes';
 import { TimeRange } from '@/src/models/time-range';
@@ -15,13 +17,11 @@ import { useI18n } from '@/src/locales/client';
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
 import { IconRefresh } from '@tabler/icons-react';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-
-import Button from '@/src/components/Common/Button/Button';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import List from '@/src/components/UsageLog/List/List';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import classNames from 'classnames';
+
 
 interface Props {
   route: ApplicationRoute;
@@ -83,8 +83,8 @@ const UsageLog: FC<Props> = ({ route, entity, entityView }) => {
             timeRange={timeRange}
             onTimeRangeChange={onTimeRangeChange}
           />
-          <Button
-            cssClass="secondary"
+          <DialButton
+            cssClass="dial-secondary-button"
             title={t(ButtonsI18nKey.Refresh)}
             iconBefore={<IconRefresh {...BASE_ICON_PROPS} />}
             onClick={onRefresh}
