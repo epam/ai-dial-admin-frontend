@@ -1,15 +1,16 @@
+import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
+import { roleLimitsKeys, roleShareLimitsKeys } from '@/src/components/ActivityAudit/View/DiffReport/utils';
 import { ModelViewI18nKey } from '@/src/constants/i18n';
 import { NO_LIMITS_KEY } from '@/src/constants/role';
 import { ActivityAuditDiff, ActivityAuditSection } from '@/src/models/activity-audit';
-import { DialRoleLimits } from '@/src/models/dial/role-limits';
+import { DefaultsValue } from '@/src/models/dial/defaults';
 import { DialModelEndpoint, DialModelPricing, PricingType } from '@/src/models/dial/model';
+import { DialRoleLimits } from '@/src/models/dial/role-limits';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus } from '@/src/types/activity-audit';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
-import { roleLimitsKeys, roleShareLimitsKeys } from '@/src/components/ActivityAudit/View/DiffReport/utils';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { setUpstreamDiffs } from './utils/set-upstream-diffs';
+import { setObjectsArrayDiff } from './utils/set-objects-array-diffs';
 import { setRolesDiffs } from './utils/set-roles-diffs';
 
 const dateKeys = ['expiresAt', 'keyGeneratedAt', 'createdAt', 'updatedAt'];
@@ -23,7 +24,7 @@ const arrayParameterKeys = [
   EntityParameterKeys.METHODS,
 ];
 const arrayStringParameterKeys = [EntityParameterKeys.PRICING, EntityParameterKeys.RESPONSE];
-const arrayObjectParameterKeys = [EntityParameterKeys.UPSTREAMS];
+const arrayObjectParameterKeys = [EntityParameterKeys.UPSTREAMS, EntityParameterKeys.DEFAULTS];
 const separateObjectParameterKeys = [
   EntityParameterKeys.INTERCEPTORS,
   EntityParameterKeys.ROLE_LIMITS,
@@ -455,12 +456,15 @@ const fillSeparateObjects = (diffs: ActivityAuditDiff[], key: string, value: obj
 const compareObjectArray = (
   diffMap: Record<string, ActivityAuditDiff[]>,
   key: string,
-  val1: object[],
-  val2: object[],
+  val1: object[] | Record<string, DefaultsValue>,
+  val2: object[] | Record<string, DefaultsValue>,
   isCurrent?: boolean,
 ): void => {
   if (key === EntityParameterKeys.UPSTREAMS) {
     compareUpstreams(diffMap, val1 as DialModelEndpoint[], val2 as DialModelEndpoint[], isCurrent);
+  }
+  if (key === EntityParameterKeys.DEFAULTS) {
+    compareDefaults(diffMap, val1 as Record<string, DefaultsValue>, val2 as Record<string, DefaultsValue>, isCurrent);
   }
 };
 
@@ -471,9 +475,16 @@ const compareObjectArray = (
  * @param {string} key - resource key
  * @param {object[]} value - value to fill
  */
-const fillObjectArray = (diffMap: Record<string, ActivityAuditDiff[]>, key: string, value: object[]): void => {
+const fillObjectArray = (
+  diffMap: Record<string, ActivityAuditDiff[]>,
+  key: string,
+  value: object[] | Record<string, DefaultsValue>,
+): void => {
   if (key === EntityParameterKeys.UPSTREAMS) {
     fillUpstreams(diffMap, value as DialModelEndpoint[]);
+  }
+  if (key === EntityParameterKeys.DEFAULTS) {
+    fillDefaults(diffMap, value as Record<string, DefaultsValue>);
   }
 };
 
@@ -757,6 +768,7 @@ export const fillDefaultShareLimits = (diffs: ActivityAuditDiff[], value: DialRo
  * @param {Record<string, ActivityAuditDiff[]>} diffMap - result map
  * @param {DialModelEndpoint[]} val1 - first value to compare
  * @param {DialModelEndpoint[]} val2 - second value to compare
+ * @param {?boolean} [isCurrent] - flag if current state is compared
  */
 export const compareUpstreams = (
   diffMap: Record<string, ActivityAuditDiff[]>,
@@ -783,6 +795,41 @@ export const compareUpstreams = (
 };
 
 /**
+ * Compare defaults
+ *
+ * @param {Record<string, ActivityAuditDiff[]>} diffMap - result map
+ * @param {Record<string, DefaultsValue>} val1 - first value to compare
+ * @param {Record<string, DefaultsValue>} val2 - second value to compare
+ * @param {?boolean} [isCurrent] - flag if current state is compared
+ */
+export const compareDefaults = (
+  diffMap: Record<string, ActivityAuditDiff[]>,
+  val1: Record<string, DefaultsValue>,
+  val2: Record<string, DefaultsValue>,
+  isCurrent?: boolean,
+): void => {
+  const allKeys = [...new Set([...Object.keys(val1), ...Object.keys(val2)])].sort();
+  allKeys.forEach((defaultKey, index) => {
+    const sectionKey = `${EntityParameterKeys.DEFAULTS}${index}`;
+    if (!diffMap[sectionKey]) diffMap[sectionKey] = [];
+    const v1 = val1[defaultKey];
+    const v2 = val2[defaultKey];
+
+    if (v1 != null && v2 == null) {
+      const valueObject = { key: defaultKey, value: v1, type: typeof v1 };
+      compareSimpleObjects(diffMap[sectionKey], valueObject, createEmptyObjectWithKeys(valueObject), isCurrent);
+    } else if (v1 == null && v2 != null) {
+      const valueObject = { key: defaultKey, value: v2, type: typeof v2 };
+      compareSimpleObjects(diffMap[sectionKey], createEmptyObjectWithKeys(valueObject), valueObject, isCurrent);
+    } else if (v1 != null && v2 != null) {
+      const v1Object = { key: defaultKey, value: v1, type: typeof v1 };
+      const v2Object = { key: defaultKey, value: v2, type: typeof v2 };
+      compareSimpleObjects(diffMap[sectionKey], v1Object, v2Object, isCurrent);
+    }
+  });
+};
+
+/**
  * Fill upstreams diff
  *
  * @param {Record<string, ActivityAuditDiff[]>} diffMap - result map
@@ -793,6 +840,20 @@ export const fillUpstreams = (diffMap: Record<string, ActivityAuditDiff[]>, valu
     const sectionKey = `${EntityParameterKeys.UPSTREAMS}${index}`;
     if (!diffMap[sectionKey]) diffMap[sectionKey] = [];
     fillSimpleObjects(diffMap[sectionKey], val);
+  });
+};
+
+/**
+ * Fill defaults diff
+ *
+ * @param {Record<string, ActivityAuditDiff[]>} diffMap - result map
+ * @param {Record<string, DefaultsValue>} value - value to fill
+ */
+export const fillDefaults = (diffMap: Record<string, ActivityAuditDiff[]>, value: Record<string, DefaultsValue>) => {
+  Object.keys(value).forEach((val, index) => {
+    const sectionKey = `${EntityParameterKeys.DEFAULTS}${index}`;
+    if (!diffMap[sectionKey]) diffMap[sectionKey] = [];
+    fillSimpleObjects(diffMap[sectionKey], { key: val, value: value[val], type: typeof value[val] });
   });
 };
 
@@ -870,14 +931,15 @@ export const createSectionFromDiffs = (
     EntityParameterKeys.PARAMETERS,
     EntityParameterKeys.MODELS,
     EntityParameterKeys.DEPENDENCIES,
+    EntityParameterKeys.DEFAULTS,
   ];
   const sections: ActivityAuditSection = {};
 
   sectionNames.forEach((name) => {
     if (name == EntityParameterKeys.ROLES) {
       setRolesDiffs(sections, current, compare);
-    } else if (name === EntityParameterKeys.UPSTREAMS) {
-      setUpstreamDiffs(sections, current, compare);
+    } else if (name === EntityParameterKeys.UPSTREAMS || name === EntityParameterKeys.DEFAULTS) {
+      setObjectsArrayDiff(sections, name, current, compare);
     } else {
       const currentItem = current[name];
       const compareItem = compare[name];
