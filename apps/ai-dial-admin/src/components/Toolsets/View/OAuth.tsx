@@ -23,7 +23,7 @@ const OAuthControls: FC<Props> = ({ toolset, onChange }) => {
   const t = useI18n();
 
   const types: DropdownItemsModel[] = [
-    { id: AuthType.DYNAMIC, name: t(ToolsetI18nKey.DynamicRegistration) },
+    // { id: AuthType.DYNAMIC, name: t(ToolsetI18nKey.DynamicRegistration) },
     { id: AuthType.EXISTING, name: t(ToolsetI18nKey.ExistingClient) },
   ];
 
@@ -103,7 +103,7 @@ const OAuthControls: FC<Props> = ({ toolset, onChange }) => {
           />
           <EndpointControl
             id="authEndpoint"
-            fieldTitle={t(EntityFieldsI18nKey.authEndpoint)}
+            fieldTitle={t(EntityFieldsI18nKey.authorizationEndpoint)}
             endpoint={toolset.authSettings?.authorizationEndpoint || ''}
             placeholder={t(EntityPlaceholdersI18nKey.AuthorizationEndpoint)}
             onChange={(authorizationEndpoint) =>
