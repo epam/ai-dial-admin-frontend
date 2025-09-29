@@ -108,6 +108,7 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
       {isKeyImmutable && (
         <TextInputField
           elementId="projectContact"
+          optional={true}
           fieldTitle={t(EntityFieldsI18nKey.projectContactPoint)}
           placeholder={t(EntityPlaceholdersI18nKey.ContactPoint)}
           value={entity.projectContactPoint}
