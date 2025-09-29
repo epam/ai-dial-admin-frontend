@@ -1,22 +1,22 @@
 import { ActivityAuditDiff, ActivityAuditSection } from '@/src/models/activity-audit';
-import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
 
-export const setUpstreamDiffs = (
+export const setObjectsArrayDiff = (
   sections: ActivityAuditSection,
+  sectionName: string,
   current: Record<string, ActivityAuditDiff[]>,
   compare: Record<string, ActivityAuditDiff[]>,
 ) => {
   const [largerObj] = [current, compare].sort((a, b) => Object.keys(b).length - Object.keys(a).length);
   Object.keys(largerObj)
-    .filter((key) => key.includes('upstreams'))
+    .filter((key) => key.includes(sectionName))
     .forEach((upstreamKey) => {
       const currentUpstream = current[upstreamKey];
       const compareUpstream = compare[upstreamKey];
       if (currentUpstream?.length || compareUpstream?.length) {
-        if (!sections[EntityParameterKeys.UPSTREAMS]) {
-          sections[EntityParameterKeys.UPSTREAMS] = [];
+        if (!sections[sectionName]) {
+          sections[sectionName] = [];
         }
-        sections[EntityParameterKeys.UPSTREAMS].push({ current: currentUpstream, compare: compareUpstream });
+        sections[sectionName].push({ current: currentUpstream, compare: compareUpstream });
       }
     });
 };
