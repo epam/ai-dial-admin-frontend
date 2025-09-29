@@ -29,7 +29,6 @@ import {
   TooltipModule,
   ColumnState,
   EventApiModule,
-  ValidationModule,
 } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
 import { useCallback, useEffect, useState } from 'react';
@@ -65,7 +64,6 @@ ModuleRegistry.registerModules([
   InfiniteRowModelModule,
   RowStyleModule,
   EventApiModule,
-  ValidationModule,
 ]);
 
 const GRID_THEME_COLORS = {
