@@ -1,14 +1,17 @@
+import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
+import { roleLimitsKeys, roleShareLimitsKeys } from '@/src/components/ActivityAudit/View/DiffReport/utils';
 import { ModelViewI18nKey } from '@/src/constants/i18n';
 import { NO_LIMITS_KEY } from '@/src/constants/role';
 import { ActivityAuditDiff, ActivityAuditSection } from '@/src/models/activity-audit';
-import { DialRoleLimits } from '@/src/models/dial/role-limits';
+import { DefaultsValue } from '@/src/models/dial/defaults';
 import { DialModelEndpoint, DialModelPricing, PricingType } from '@/src/models/dial/model';
+import { DialRoleLimits } from '@/src/models/dial/role-limits';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus } from '@/src/types/activity-audit';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
-import { roleLimitsKeys, roleShareLimitsKeys } from '@/src/components/ActivityAudit/View/DiffReport/utils';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import { setObjectsArrayDiff } from './utils/set-objects-array-diffs';
+import { setRolesDiffs } from './utils/set-roles-diffs';
 
 const dateKeys = ['expiresAt', 'keyGeneratedAt', 'createdAt', 'updatedAt'];
 const appRunnerParameterKeys = ['properties', '$defs'];
@@ -21,12 +24,14 @@ const arrayParameterKeys = [
   EntityParameterKeys.METHODS,
 ];
 const arrayStringParameterKeys = [EntityParameterKeys.PRICING, EntityParameterKeys.RESPONSE];
-const arrayObjectParameterKeys = [EntityParameterKeys.UPSTREAMS];
+const arrayObjectParameterKeys = [EntityParameterKeys.UPSTREAMS, EntityParameterKeys.DEFAULTS];
 const separateObjectParameterKeys = [
   EntityParameterKeys.INTERCEPTORS,
   EntityParameterKeys.ROLE_LIMITS,
   EntityParameterKeys.DEFAULT_ROLE_LIMIT,
   EntityParameterKeys.ROLE_SHARE_LIMITS,
+  EntityParameterKeys.COST_LIMIT,
+  EntityParameterKeys.AUTH,
   EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT,
   EntityParameterKeys.FEATURES,
   EntityParameterKeys.APPLICATIONS,
@@ -187,7 +192,9 @@ const compareObjectTypes = (
     !diffMap[key] &&
     (separateObjectParameterKeys.includes(key) ||
       (type === ActivityAuditResourceType.ROLE &&
-        (key === EntityParameterKeys.LIMITS || key === EntityParameterKeys.SHARE)))
+        (key === EntityParameterKeys.LIMITS ||
+          key === EntityParameterKeys.SHARE ||
+          key === EntityParameterKeys.COST_LIMIT)))
   ) {
     diffMap[key] = [];
     compareSeparateObjects(diffMap[key], key, val1, val2, isCurrent);
@@ -367,13 +374,18 @@ const compareSeparateObjects = (
   ) {
     compareRoleLimits(diffs, val1 as Record<string, DialRoleLimits>, val2 as Record<string, DialRoleLimits>, isCurrent);
   }
+
+  if (key === EntityParameterKeys.COST_LIMIT) {
+    compareDefaultLimits(diffs, val1, val2, isCurrent);
+  }
+
   if (key === EntityParameterKeys.DEFAULT_ROLE_LIMIT) {
     compareDefaultLimits(diffs, val1, val2, isCurrent);
   }
   if (key === EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT) {
     compareDefaultShareLimits(diffs, val1, val2, isCurrent);
   }
-  if (key === EntityParameterKeys.FEATURES) {
+  if (key === EntityParameterKeys.FEATURES || key === EntityParameterKeys.AUTH) {
     compareSimpleObjects(diffs, val1, val2, isCurrent);
   }
   if (
@@ -386,6 +398,7 @@ const compareSeparateObjects = (
   ) {
     compareEntities(diffs, val1 as string[], val2 as string[], isCurrent);
   }
+
   if (key === EntityParameterKeys.MODELS) {
     compareModels(diffs, val1 as string[], val2 as string[], isCurrent);
   }
@@ -411,6 +424,9 @@ const fillSeparateObjects = (diffs: ActivityAuditDiff[], key: string, value: obj
     fillRoleLimits(diffs, value as Record<string, DialRoleLimits>);
   }
   if (key === EntityParameterKeys.DEFAULT_ROLE_LIMIT) {
+    fillDefaultLimits(diffs, value);
+  }
+  if (key === EntityParameterKeys.COST_LIMIT) {
     fillDefaultLimits(diffs, value);
   }
   if (key === EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT) {
@@ -443,12 +459,15 @@ const fillSeparateObjects = (diffs: ActivityAuditDiff[], key: string, value: obj
 const compareObjectArray = (
   diffMap: Record<string, ActivityAuditDiff[]>,
   key: string,
-  val1: object[],
-  val2: object[],
+  val1: object[] | Record<string, DefaultsValue>,
+  val2: object[] | Record<string, DefaultsValue>,
   isCurrent?: boolean,
 ): void => {
   if (key === EntityParameterKeys.UPSTREAMS) {
     compareUpstreams(diffMap, val1 as DialModelEndpoint[], val2 as DialModelEndpoint[], isCurrent);
+  }
+  if (key === EntityParameterKeys.DEFAULTS) {
+    compareDefaults(diffMap, val1 as Record<string, DefaultsValue>, val2 as Record<string, DefaultsValue>, isCurrent);
   }
 };
 
@@ -459,9 +478,16 @@ const compareObjectArray = (
  * @param {string} key - resource key
  * @param {object[]} value - value to fill
  */
-const fillObjectArray = (diffMap: Record<string, ActivityAuditDiff[]>, key: string, value: object[]): void => {
+const fillObjectArray = (
+  diffMap: Record<string, ActivityAuditDiff[]>,
+  key: string,
+  value: object[] | Record<string, DefaultsValue>,
+): void => {
   if (key === EntityParameterKeys.UPSTREAMS) {
     fillUpstreams(diffMap, value as DialModelEndpoint[]);
+  }
+  if (key === EntityParameterKeys.DEFAULTS) {
+    fillDefaults(diffMap, value as Record<string, DefaultsValue>);
   }
 };
 
@@ -745,6 +771,7 @@ export const fillDefaultShareLimits = (diffs: ActivityAuditDiff[], value: DialRo
  * @param {Record<string, ActivityAuditDiff[]>} diffMap - result map
  * @param {DialModelEndpoint[]} val1 - first value to compare
  * @param {DialModelEndpoint[]} val2 - second value to compare
+ * @param {?boolean} [isCurrent] - flag if current state is compared
  */
 export const compareUpstreams = (
   diffMap: Record<string, ActivityAuditDiff[]>,
@@ -771,6 +798,41 @@ export const compareUpstreams = (
 };
 
 /**
+ * Compare defaults
+ *
+ * @param {Record<string, ActivityAuditDiff[]>} diffMap - result map
+ * @param {Record<string, DefaultsValue>} val1 - first value to compare
+ * @param {Record<string, DefaultsValue>} val2 - second value to compare
+ * @param {?boolean} [isCurrent] - flag if current state is compared
+ */
+export const compareDefaults = (
+  diffMap: Record<string, ActivityAuditDiff[]>,
+  val1: Record<string, DefaultsValue>,
+  val2: Record<string, DefaultsValue>,
+  isCurrent?: boolean,
+): void => {
+  const allKeys = [...new Set([...Object.keys(val1), ...Object.keys(val2)])].sort();
+  allKeys.forEach((defaultKey, index) => {
+    const sectionKey = `${EntityParameterKeys.DEFAULTS}${index}`;
+    if (!diffMap[sectionKey]) diffMap[sectionKey] = [];
+    const v1 = val1[defaultKey];
+    const v2 = val2[defaultKey];
+
+    if (v1 != null && v2 == null) {
+      const valueObject = { key: defaultKey, value: v1, type: typeof v1 };
+      compareSimpleObjects(diffMap[sectionKey], valueObject, createEmptyObjectWithKeys(valueObject), isCurrent);
+    } else if (v1 == null && v2 != null) {
+      const valueObject = { key: defaultKey, value: v2, type: typeof v2 };
+      compareSimpleObjects(diffMap[sectionKey], createEmptyObjectWithKeys(valueObject), valueObject, isCurrent);
+    } else if (v1 != null && v2 != null) {
+      const v1Object = { key: defaultKey, value: v1, type: typeof v1 };
+      const v2Object = { key: defaultKey, value: v2, type: typeof v2 };
+      compareSimpleObjects(diffMap[sectionKey], v1Object, v2Object, isCurrent);
+    }
+  });
+};
+
+/**
  * Fill upstreams diff
  *
  * @param {Record<string, ActivityAuditDiff[]>} diffMap - result map
@@ -781,6 +843,20 @@ export const fillUpstreams = (diffMap: Record<string, ActivityAuditDiff[]>, valu
     const sectionKey = `${EntityParameterKeys.UPSTREAMS}${index}`;
     if (!diffMap[sectionKey]) diffMap[sectionKey] = [];
     fillSimpleObjects(diffMap[sectionKey], val);
+  });
+};
+
+/**
+ * Fill defaults diff
+ *
+ * @param {Record<string, ActivityAuditDiff[]>} diffMap - result map
+ * @param {Record<string, DefaultsValue>} value - value to fill
+ */
+export const fillDefaults = (diffMap: Record<string, ActivityAuditDiff[]>, value: Record<string, DefaultsValue>) => {
+  Object.keys(value).forEach((val, index) => {
+    const sectionKey = `${EntityParameterKeys.DEFAULTS}${index}`;
+    if (!diffMap[sectionKey]) diffMap[sectionKey] = [];
+    fillSimpleObjects(diffMap[sectionKey], { key: val, value: value[val], type: typeof value[val] });
   });
 };
 
@@ -834,34 +910,6 @@ const createEmptyObjectWithKeys = <T extends object>(obj: T): T => {
   }, {} as T);
 };
 
-export const mergeLimits = (limits: ActivityAuditDiff[], shareLimits: ActivityAuditDiff[]) => {
-  const mergedMap = new Map();
-
-  const mergeValues = (value1: string, value2: string) => {
-    return `${value1}, ${value2}`;
-  };
-
-  limits.forEach(({ parameter, value, status }) => {
-    mergedMap.set(parameter, { value, status });
-  });
-
-  shareLimits.forEach(({ parameter, value, status }) => {
-    if (mergedMap.has(parameter)) {
-      const current = mergedMap.get(parameter);
-      current.value = mergeValues(current.value, value);
-      current.status = status || current.status;
-    } else {
-      mergedMap.set(parameter, { value, status });
-    }
-  });
-
-  return Array.from(mergedMap, ([parameter, { value, status }]) => ({
-    parameter,
-    value,
-    status,
-  }));
-};
-
 /**
  * Generate sections from diff compare result
  *
@@ -876,7 +924,9 @@ export const createSectionFromDiffs = (
   const sectionNames = [
     EntityParameterKeys.PROPERTIES,
     EntityParameterKeys.UPSTREAMS,
+    EntityParameterKeys.COST_LIMIT,
     EntityParameterKeys.FEATURES,
+    EntityParameterKeys.AUTH,
     EntityParameterKeys.ROLES,
     EntityParameterKeys.INTERCEPTORS,
     EntityParameterKeys.APPLICATIONS,
@@ -885,81 +935,20 @@ export const createSectionFromDiffs = (
     EntityParameterKeys.PARAMETERS,
     EntityParameterKeys.MODELS,
     EntityParameterKeys.DEPENDENCIES,
+    EntityParameterKeys.DEFAULTS,
   ];
   const sections: ActivityAuditSection = {};
+
   sectionNames.forEach((name) => {
     if (name == EntityParameterKeys.ROLES) {
-      const currentDefault = current[EntityParameterKeys.DEFAULT_ROLE_LIMIT];
-      const compareDefault = compare[EntityParameterKeys.DEFAULT_ROLE_LIMIT];
-      const currentLimits = current[EntityParameterKeys.ROLE_LIMITS];
-      const compareLimits = compare[EntityParameterKeys.ROLE_LIMITS];
-      const currentDefaultShare = current[EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT];
-      const compareDefaultShare = compare[EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT];
-      const currentLimitsShare = current[EntityParameterKeys.ROLE_SHARE_LIMITS];
-      const compareLimitsShare = compare[EntityParameterKeys.ROLE_SHARE_LIMITS];
-      if (currentDefault?.length || compareDefault?.length) {
-        if (!sections[name]) {
-          sections[name] = [];
-        }
-        sections[name].push({
-          current: [...(currentDefault || []), ...(currentDefaultShare || [])],
-          compare: [...(compareDefault || []), ...(compareDefaultShare || [])],
-        });
-      }
-      if (currentLimits?.length || compareLimits?.length) {
-        if (!sections[name]) {
-          sections[name] = [];
-        }
-        sections[name].push({
-          current: mergeLimits(currentLimits || [], currentLimitsShare || []),
-          compare: mergeLimits(compareLimits || [], compareLimitsShare || []),
-        });
-      }
-      // case for role where limits stored into 'limits' property instead of entities 'roleLimits' or 'defaultRoleLimit'
-      if (!currentDefault && !compareDefault && !currentLimits && !compareLimits) {
-        const currentRoleLimits = current[EntityParameterKeys.LIMITS];
-        const compareRoleLimits = compare[EntityParameterKeys.LIMITS];
-        const currentLimitsShare = current[EntityParameterKeys.SHARE];
-        const compareLimitsShare = compare[EntityParameterKeys.SHARE];
-        if (currentRoleLimits?.length || compareRoleLimits?.length) {
-          if (!sections[name]) {
-            sections[name] = [];
-          }
-          sections[name].push({
-            current: mergeLimits(currentRoleLimits || [], currentLimitsShare || []),
-            compare: mergeLimits(compareRoleLimits || [], compareLimitsShare || []),
-          });
-        }
-        // case for key where only role names stored into 'roles' property
-        const currentRoles = current[EntityParameterKeys.ROLES];
-        const compareRoles = compare[EntityParameterKeys.ROLES];
-        if (currentRoles?.length || compareRoles?.length) {
-          if (!sections[name]) {
-            sections[name] = [];
-          }
-          sections[name].push({ current: currentRoles, compare: compareRoles });
-        }
-      }
-    } else if (name === EntityParameterKeys.UPSTREAMS) {
-      const [largerObj] = [current, compare].sort((a, b) => Object.keys(b).length - Object.keys(a).length);
-      Object.keys(largerObj)
-        .filter((key) => key.includes('upstreams'))
-        .forEach((upstreamKey) => {
-          const currentUpstream = current[upstreamKey];
-          const compareUpstream = compare[upstreamKey];
-          if (currentUpstream?.length || compareUpstream?.length) {
-            if (!sections[EntityParameterKeys.UPSTREAMS]) {
-              sections[EntityParameterKeys.UPSTREAMS] = [];
-            }
-            sections[EntityParameterKeys.UPSTREAMS].push({ current: currentUpstream, compare: compareUpstream });
-          }
-        });
+      setRolesDiffs(sections, current, compare);
+    } else if (name === EntityParameterKeys.UPSTREAMS || name === EntityParameterKeys.DEFAULTS) {
+      setObjectsArrayDiff(sections, name, current, compare);
     } else {
       const currentItem = current[name];
       const compareItem = compare[name];
       if (currentItem?.length || compareItem?.length) {
-        sections[name] = [];
-        sections[name].push({ current: currentItem, compare: compareItem });
+        sections[name] = [{ current: currentItem, compare: compareItem }];
       }
     }
   });

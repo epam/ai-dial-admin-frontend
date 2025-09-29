@@ -1,13 +1,3 @@
-import { ReactNode } from 'react';
-
-import { FolderOperation } from './types';
-
-export interface FolderOperationDeclaration {
-  icon: ReactNode;
-  id: FolderOperation;
-  onClick: (id?: string) => void;
-}
-
 export interface ZipFilePreview {
   fileName: string;
   name?: string;

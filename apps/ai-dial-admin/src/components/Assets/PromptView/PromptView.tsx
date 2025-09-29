@@ -7,15 +7,18 @@ import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
 import { createPrompt, getPrompt, getPrompts, movePrompts, removePrompt } from '@/src/app/[lang]/prompts/actions';
+import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
+import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { usePromptFolder } from '@/src/context/PromptFolderContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
+import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
@@ -23,7 +26,7 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import PromptProperties from './PromptProperties';
-import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from './utils';
+import { addNewVersion } from './utils';
 
 interface Props {
   originalPrompt: DialPrompt;
@@ -86,9 +89,9 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
       let updatedEntity = getEntityForUpdate(selectedPrompt, originalPrompt);
 
       if (newVersion) {
-        updatedEntity = addNewVersion(updatedEntity, newVersion);
+        updatedEntity = addNewVersion(updatedEntity as DialPrompt, newVersion);
       }
-      createPrompt(updatedEntity).then((res) => {
+      createPrompt(updatedEntity as DialPrompt).then((res) => {
         if (res.success) {
           if (isNeedToMove) {
             const responsePrompt = res.response as DialPrompt;
@@ -141,7 +144,8 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
           removeEntity={removePrompt}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          promptVersions={prompts?.map((prompt) => prompt.version) || []}
+          existingVersions={prompts?.map((prompt) => prompt.version) || []}
+          context={usePromptFolder as () => AssetsFolderContext<DialFile | DialPrompt>}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">

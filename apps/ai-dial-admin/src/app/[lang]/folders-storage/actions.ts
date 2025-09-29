@@ -7,6 +7,7 @@ import { DialRule } from '@/src/models/dial/rule';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { ResourceType } from '@/src/types/folder';
+import { ApplicationRoute } from '@/src/types/routes';
 
 export async function getFolders(path: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -23,9 +24,9 @@ export async function updateRules(targetFolder: string, rules: DialRule[]) {
   return foldersApi.updateRules(token, targetFolder, rules);
 }
 
-export async function createFolderWithFiles(body: FormData, type?: string) {
+export async function createFolderWithFiles(body: FormData, type?: string, view?: ApplicationRoute) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return foldersApi.createFolder(token, body, type);
+  return foldersApi.createFolder(token, body, type, view);
 }
 
 export async function previewPromptZip(body: FormData) {

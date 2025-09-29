@@ -11,6 +11,25 @@ export interface Toolset extends BaseEntity, EntityRoleLimits {
   endpoint?: string | null;
   maxRetryAttempts?: number;
   source?: SOURCE_FIELD;
+  authSettings?: ToolsetAuthSettings;
+}
+
+export interface ToolsetAuthSettings {
+  authenticationType: ToolsetAuthType;
+  apiKeyHeader?: string;
+
+  clientId?: string;
+  clientSecret?: string;
+  redirectUri?: string;
+  authorizationEndpoint?: string;
+  tokenEndpoint?: string;
+  scopesSupported?: string[];
+}
+
+export enum ToolsetAuthType {
+  NONE = 'none',
+  API_KEY = 'api_key',
+  OAUTH = 'oauth',
 }
 
 export interface Tool {

@@ -75,13 +75,13 @@ const AddEntitiesView: FC<Props> = ({
     [onAdd, onCloseModal],
   );
 
-  const onOpen = useCallback((row: EntitiesGridData) => {
-    onOpenInNewTab(row.route, row);
+  const onOpen = useCallback((row?: EntitiesGridData) => {
+    onOpenInNewTab(row?.route, row);
   }, []);
 
   const onRemoveEntity = useCallback(
-    (row: EntitiesGridData) => {
-      onRemove?.(row);
+    (row?: EntitiesGridData) => {
+      onRemove?.(row as EntitiesGridData);
     },
     [onRemove],
   );

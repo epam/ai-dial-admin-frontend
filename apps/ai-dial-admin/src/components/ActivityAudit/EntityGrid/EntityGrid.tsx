@@ -48,6 +48,7 @@ const AuditEntityGrid: FC<Props> = ({
     ...c,
     sort: void 0,
   }));
+
   const rowClassRules: RowClassRules = {
     'ag-error-row ag-error-border': (params) => {
       return (params.data as ActivityAuditDiff).status === DiffStatus.REMOVED;

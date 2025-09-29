@@ -23,7 +23,6 @@ export const getDisplayNameError = (
 };
 
 export const getVersionError = (
-  view: ApplicationRoute,
   isVersionOptional: boolean,
   displayVersion: string,
   t: (str: string, param?: Record<string, number>) => string,
@@ -31,12 +30,8 @@ export const getVersionError = (
   if (!isVersionOptional) {
     const hasDisplayVersion = !!displayVersion;
 
-    const isLengthError = hasDisplayVersion ? isWrongLengthWithView(view, displayVersion) : false;
     if (!hasDisplayVersion) {
       return t(ErrorI18nKey.Version);
-    }
-    if (isLengthError) {
-      return t(ErrorI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS });
     }
   }
   return '';

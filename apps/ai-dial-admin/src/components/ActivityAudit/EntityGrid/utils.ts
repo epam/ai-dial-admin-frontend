@@ -56,5 +56,5 @@ export const getColumnsByParameter = (
   ) {
     return ENTITIES_DIFF_COLUMNS;
   }
-  return RESOURCE_DIFF_COLUMNS(t as (stringToTranslate: string) => string);
+  return RESOURCE_DIFF_COLUMNS(t as (stringToTranslate: string) => string, parameter);
 };

@@ -39,7 +39,7 @@ export const fulDependenciesConfig: ExportDependenciesConfig = {
 export const getActualColDefs = (
   type: string,
   t: (v: string) => string,
-  remove?: (entity: EntitiesGridData) => void,
+  remove?: (entity?: EntitiesGridData) => void,
 ): ColDef[] => {
   let columns: ColDef[] = [...ENTITY_BASE_COLUMNS];
   if (type === EntityType.MODEL || type === EntityType.APPLICATION) {
@@ -88,8 +88,8 @@ export const getActualColDefs = (
  *
  * @param {EntitiesGridData} row - row related to selected entity
  */
-const openInNewTab = (row: EntitiesGridData) => {
-  onOpenInNewTab(row.route, row);
+const openInNewTab = (row?: EntitiesGridData) => {
+  onOpenInNewTab(row?.route, row);
 };
 
 /**

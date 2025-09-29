@@ -22,7 +22,7 @@ const BasePublicationsList = <T extends Publication>({ data, route }: BasePublic
   const router = useRouter();
 
   const openInNewTab = useCallback(
-    (publication: Publication) => {
+    (publication?: Publication) => {
       onOpenInNewTab(route, publication);
     },
     [route],

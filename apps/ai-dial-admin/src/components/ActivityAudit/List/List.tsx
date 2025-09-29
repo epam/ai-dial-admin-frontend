@@ -131,19 +131,19 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
       : void 0,
   };
 
-  const openInNewTab = useCallback((activity: DialActivity) => {
+  const openInNewTab = useCallback((activity?: DialActivity) => {
     window.open(
       `${ApplicationRoute.ActivityAudit}/${getEntityPath(ApplicationRoute.ActivityAudit, activity)}`,
       '_blank',
     );
   }, []);
 
-  const onOpenConfirmationModal = useCallback((activity: DialActivity) => {
+  const onOpenConfirmationModal = useCallback((activity?: DialActivity) => {
     setRollbackModalState(PopUpState.Opened);
     setSelectedActivity(activity);
   }, []);
 
-  const onOpenDetailsModal = useCallback((activity: DialActivity) => {
+  const onOpenDetailsModal = useCallback((activity?: DialActivity) => {
     setDetailsModalState(PopUpState.Opened);
     setSelectedActivity(activity);
   }, []);

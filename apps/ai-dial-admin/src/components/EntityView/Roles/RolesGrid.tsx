@@ -23,11 +23,11 @@ interface Props {
   onChangeEntity: (entity: EntityRoleLimits, withRefresh?: boolean) => void;
   onChangeTokensValue?: (value: number, data: DialRole, token: string) => void;
   onOpenAddModal?: () => void;
-  onOpenInNewTab: (role: DialRole) => void;
-  onRemoveRole: (role: DialRole) => void;
+  onOpenInNewTab: (role?: DialRole) => void;
+  onRemoveRole: (role?: DialRole) => void;
   onResetAllRolesToDefault: () => void;
-  onResetToDefaultRole: (role: DialRole) => void;
-  onSetNoLimits: (role: DialRole) => void;
+  onResetToDefaultRole: (role?: DialRole) => void;
+  onSetNoLimits: (role?: DialRole) => void;
   isResetToDefaultHidden: (api: GridApi, node: IRowNode) => boolean;
   isSetNoLimitsHidden: (api: GridApi, node: IRowNode) => boolean;
 }

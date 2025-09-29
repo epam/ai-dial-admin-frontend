@@ -43,7 +43,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Interceptors);
   }
 
-  const names = filterNames(interceptors);
+  const names = filterNames(interceptors, interceptor?.name);
 
   return (
     <SaveValidationContextProvider>

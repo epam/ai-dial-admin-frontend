@@ -17,8 +17,10 @@ export enum EntityParameterKeys {
   ROLES = 'roles',
   SHARE = 'share',
   ROLE_LIMITS = 'roleLimits',
+  AUTH = 'authSettings',
   DEFAULT_ROLE_LIMIT = 'defaultRoleLimit',
   ROLE_SHARE_LIMITS = 'roleShareResourceLimits',
+  COST_LIMIT = 'costLimit',
   DEFAULT_ROLE_SHARE_LIMIT = 'defaultRoleShareResourceLimit',
   UPSTREAMS = 'upstreams',
   FEATURES = 'features',
@@ -39,4 +41,5 @@ export enum EntityParameterKeys {
   ROUTES = 'routes',
   APP_RUNNER_ROUTES = 'dial:applicationTypeRoutes',
   SOURCE = 'source',
+  DEFAULTS = 'defaults',
 }

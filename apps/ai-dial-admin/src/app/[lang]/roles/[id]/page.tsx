@@ -46,7 +46,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Roles);
   }
 
-  const names = filterNames(roles);
+  const names = filterNames(roles, role?.name);
 
   return (
     <SaveValidationContextProvider>

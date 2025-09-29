@@ -3,7 +3,7 @@ import { ColDef } from 'ag-grid-community';
 import { DialFile } from '@/src/models/dial/file';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import FileNameCellRenderer from '@/src/components/Grid/CellRenderers/FileNameCellRenderer';
-import { EntityOperationDeclaration } from '@/src/models/entity-operations';
+import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 import { getNameExtensionFromFile } from './get-extension';
 
 export const getGridFileDataFromString = (files: string[]) => {
@@ -28,7 +28,7 @@ export const getGridFileData = (files: DialFile[]) => {
   });
 };
 
-export const getGridFileColumns = <T>(columns: ColDef[], actions: EntityOperationDeclaration<T>[]) => {
+export const getGridFileColumns = <T>(columns: ColDef[], actions: ActionMenuOperationDeclaration<T>[]) => {
   const modifiedColDefs = [...columns].slice(0, 2).map((colDef, index) => {
     colDef.filter = false;
     colDef.floatingFilter = false;
