@@ -130,7 +130,7 @@ const EntityMainProperties: FC<Props> = ({
 
         {view === ApplicationRoute.Models && (
           <VersionControl
-            version={''}
+            version={(entity as DialModel).displayVersion}
             onChange={onChangeVersion}
             error={versionError}
             optional={isVersionOptional}

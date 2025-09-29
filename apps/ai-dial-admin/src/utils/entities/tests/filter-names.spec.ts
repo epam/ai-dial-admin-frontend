@@ -19,6 +19,11 @@ describe('filterDisplayNames', () => {
     const entities = [{}, { displayName: null }];
     expect(filterDisplayNames(entities)).toEqual([]);
   });
+
+  it('returns array without current entity displayName', () => {
+    const entities = [{ displayName: 'Entity1' }, { displayName: 'Entity2' }, { displayName: null }, {}];
+    expect(filterDisplayNames(entities, 'Entity1')).toEqual(['Entity2']);
+  });
 });
 
 describe('filterNames', () => {
@@ -38,5 +43,10 @@ describe('filterNames', () => {
   it('returns empty array if no displayName present', () => {
     const entities = [{}, { name: null }];
     expect(filterNames(entities)).toEqual([]);
+  });
+
+  it('returns array without current entity displayName', () => {
+    const entities = [{ name: 'Entity1' }, { name: 'Entity2' }, { name: null }, {}];
+    expect(filterNames(entities, 'Entity1')).toEqual(['Entity2']);
   });
 });
