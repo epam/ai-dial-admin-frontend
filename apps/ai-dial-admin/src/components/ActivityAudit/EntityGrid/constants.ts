@@ -38,6 +38,7 @@ export const RESOURCE_DIFF_COLUMNS = (t: (stringToTranslate: string) => string):
       params.data.parameter === '$type' ? sourceTypeFormatter(params.value, t) : params.value,
     cellRendererSelector: (params: ICellRendererParams) => {
       switch (params.data?.parameter) {
+        case 'clientId':
         case 'key':
           return { component: PasswordCellRenderer };
         case 'extraData':
