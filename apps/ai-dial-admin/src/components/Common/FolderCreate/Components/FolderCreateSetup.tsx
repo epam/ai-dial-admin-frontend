@@ -4,6 +4,7 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState
 
 import { IconFileTypeZip } from '@tabler/icons-react';
 
+import Json from '@/public/images/icons/file/json.svg';
 import Field from '@/src/components/Common/Field/Field';
 import { CreateFolderSteps } from '@/src/components/Common/FolderCreate/constants';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
@@ -163,15 +164,17 @@ const FolderCreateSetup: FC<Props> = ({
               />
             ))}
           </div>
-          <div className="flex flex-col">
-            <Field fieldTitle={ignorePathsTitle} />
-            <Switch
-              isOn={ignorePaths}
-              title={t(ImportI18nKey.PathsIgnore)}
-              switchId="ignorePaths"
-              onChange={setIgnorePaths}
-            />
-          </div>
+          {view === ApplicationRoute.Prompts && (
+            <div className="flex flex-col">
+              <Field fieldTitle={ignorePathsTitle} />
+              <Switch
+                isOn={ignorePaths}
+                title={t(ImportI18nKey.PathsIgnore)}
+                switchId="ignorePaths"
+                onChange={setIgnorePaths}
+              />
+            </div>
+          )}
         </div>
         <div className="mt-2 flex-1 min-h-0">
           {fileType === ImportFileType.ARCHIVE && (
@@ -199,6 +202,24 @@ const FolderCreateSetup: FC<Props> = ({
               onChangeFile={changeFile}
               dynamicIcon={getFileIcon}
               errorText={t(ImportI18nKey.FileError)}
+              maxFilesCount={30}
+            />
+          )}
+
+          {fileType === ImportFileType.JSON && (
+            <LoadFileAreaField
+              elementId="importJSON"
+              fieldTitle={t(ImportI18nKey.Files)}
+              emptyTitle={t(ImportI18nKey.DropFiles)}
+              files={files}
+              iconBeforeInput={
+                <i className="text-secondary">
+                  <Json />
+                </i>
+              }
+              acceptTypes="application/json"
+              fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
+              onChangeFile={changeFile}
               maxFilesCount={30}
             />
           )}

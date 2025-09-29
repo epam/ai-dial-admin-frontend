@@ -56,15 +56,15 @@ const FolderListModals: FC<Props> = ({ modalState, modalType, view, selectedFold
     ) => {
       const body = getFormDataForImport(path, file, fileType, ConflictResolutionPolicy.SKIP, rules, ignorePaths);
 
-      createFolderWithFiles(body, fileType).then((res) => {
+      createFolderWithFiles(body, fileType, view).then((res) => {
         if (res.success) {
-          folderContext?.fetchFiles(`${addTrailingSlash(getFolderNameAndPath(path).path)}`);
+          folderContext?.fetchFiles(`${addTrailingSlash(getFolderNameAndPath(path).path)}`, true);
           showNotification(getSuccessNotification(t(FoldersI18nKey.FolderCreateSuccess)));
         }
       });
       handleClose();
     },
-    [folderContext, handleClose, showNotification, t],
+    [folderContext, handleClose, showNotification, t, view],
   );
 
   const renameFolder = useCallback(
@@ -133,6 +133,7 @@ const FolderListModals: FC<Props> = ({ modalState, modalType, view, selectedFold
         modalType === ModalType.delete &&
         createPortal(
           <DeleteFolder
+            view={view}
             modalState={modalState}
             onClose={handleClose}
             onApply={deleteFolder}

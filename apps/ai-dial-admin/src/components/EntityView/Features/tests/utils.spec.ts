@@ -17,6 +17,10 @@ describe('getSwitchControls', () => {
     expect(getSwitchControls(ApplicationRoute.Applications)).toEqual(applicationSwitchFeatures);
   });
 
+  test('returns applicationSwitchFeatures for Asset Application route', () => {
+    expect(getSwitchControls(ApplicationRoute.AssetsApplications)).toEqual(applicationSwitchFeatures);
+  });
+
   test('returns empty array for unknown route', () => {
     expect(getSwitchControls(ApplicationRoute.Keys)).toEqual([]);
   });
@@ -29,6 +33,10 @@ describe('getTextControls', () => {
 
   test('returns applicationTextFeatures for Applications route', () => {
     expect(getTextControls(ApplicationRoute.Applications)).toEqual(applicationTextFeatures);
+  });
+
+  test('returns applicationTextFeatures for Asset Application route', () => {
+    expect(getTextControls(ApplicationRoute.AssetsApplications)).toEqual(applicationTextFeatures);
   });
 
   test('returns empty array for unknown route', () => {
