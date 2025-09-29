@@ -41,7 +41,7 @@ export const RESOURCE_DIFF_COLUMNS = (t: (stringToTranslate: string) => string, 
       cellRendererSelector: (params: ICellRendererParams) => {
         if (
           (parameter === EntityParameterKeys.KEYS && params.data?.parameter === 'key') ||
-          params.data?.parameter === 'key'
+          params.data?.parameter === 'clientId'
         ) {
           return { component: PasswordCellRenderer };
         }
