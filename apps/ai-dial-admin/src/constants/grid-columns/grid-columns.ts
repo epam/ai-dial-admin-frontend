@@ -150,7 +150,13 @@ export const DEPENDENCIES_COLUMNS = [NAME_COLUMN, DISPLAY_NAME_COLUMN, VERSION_C
 
 export const MODELS_COLUMNS = (t: (str: string) => string, view?: ApplicationRoute): ColDef[] => [
   DISPLAY_NAME_COLUMN_WITH_SORT,
-  { field: 'displayVersion', colId: 'displayVersion', headerName: 'Version', hide: false },
+  {
+    field: 'displayVersion',
+    colId: 'displayVersion',
+    headerName: 'Version',
+    hide: false,
+    valueFormatter: (params) => params.value,
+  },
   DESCRIPTION_COLUMN,
   NAME_COLUMN,
   ...SOURCE_FIELD_COLUMNS(t, view),
