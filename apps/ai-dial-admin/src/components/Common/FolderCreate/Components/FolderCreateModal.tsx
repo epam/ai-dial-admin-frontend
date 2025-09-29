@@ -41,7 +41,7 @@ const FolderCreateModal: FC<Props> = ({ modalState, folderPath, view, onClose, o
   const containerClassName = classNames('h-[660px] lg:max-w-[65%]');
   const t = useI18n() as (stringToTranslate: string) => string;
 
-  const fileTypes = IMPORT_FILE_TYPES(t, ApplicationRoute.Files);
+  const fileTypes = IMPORT_FILE_TYPES(t, view);
 
   const [steps, setSteps] = useState(CREATE_FOLDER_STEPS(t));
   const [currentStep, setCurrentStep] = useState<Step>(steps[0]);
@@ -57,8 +57,7 @@ const FolderCreateModal: FC<Props> = ({ modalState, folderPath, view, onClose, o
   const [folderName, setFolderName] = useState('');
 
   const onFinishClick = () => {
-    const isPromptView = view === ApplicationRoute.Prompts;
-    if (isPromptView) {
+    if (view === ApplicationRoute.Prompts) {
       const type = fileType === ImportFileType.FILES ? ImportFileType.JSON : fileType;
       if (type === ImportFileType.ARCHIVE) {
         onApply?.(type, zipFile as File, rules, `${folderPath}${folderName}`, ignorePaths);
@@ -67,6 +66,18 @@ const FolderCreateModal: FC<Props> = ({ modalState, folderPath, view, onClose, o
           prompts: Array.from(editedFileMap.values()).flatMap((value) => value.files as DialPrompt[]),
         };
         onApply?.(type as ImportFileType, jsonFile, rules, `${folderPath}${folderName}`, ignorePaths);
+      }
+    } else if (view === ApplicationRoute.Files) {
+      if (fileType === ImportFileType.ARCHIVE) {
+        onApply?.(fileType, zipFile as File, rules, `${folderPath}${folderName}/`, ignorePaths);
+      } else {
+        onApply?.(
+          fileType as ImportFileType,
+          Array.from(editedFileMap.values()).flatMap((value) => value.files as unknown as File[]),
+          rules,
+          `${folderPath}${folderName}/`,
+          ignorePaths,
+        );
       }
     }
   };

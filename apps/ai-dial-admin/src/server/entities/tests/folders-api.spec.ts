@@ -2,16 +2,19 @@ import { DialFolder } from '@/src/models/dial/folder';
 import { DialRule } from '@/src/models/dial/rule';
 import { ServerActionResponse } from '@/src/models/server-action';
 import {
+  FILE_IMPORT_URL,
+  FILE_IMPORT_ZIP_URL,
   FOLDER_CREATE_URL,
   FOLDERS_MOVE_URL,
   FOLDERS_URL,
   FoldersApi,
   PREVIEW_PROMPT_ZIP,
-  RULES_UPDATE_URL,
   PROMPT_IMPORT_JSON_URL,
   PROMPT_IMPORT_ZIP_URL,
+  RULES_UPDATE_URL,
 } from '@/src/server/entities/folders-api';
 import { ImportFileType } from '@/src/types/import';
+import { ApplicationRoute } from '@/src/types/routes';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
@@ -45,7 +48,7 @@ describe('Server :: FoldersApi', () => {
 
     const formData = new FormData();
 
-    await instance.createFolder(TOKEN_MOCK, formData, ImportFileType.ARCHIVE);
+    await instance.createFolder(TOKEN_MOCK, formData, ImportFileType.ARCHIVE, ApplicationRoute.Prompts);
 
     expect(fetchMock).toHaveBeenCalledWith(
       `${TEST_URL}${PROMPT_IMPORT_ZIP_URL}`,
@@ -61,10 +64,42 @@ describe('Server :: FoldersApi', () => {
 
     const formData = new FormData();
 
-    await instance.createFolder(TOKEN_MOCK, formData, ImportFileType.FILES);
+    await instance.createFolder(TOKEN_MOCK, formData, ImportFileType.FILES, ApplicationRoute.Prompts);
 
     expect(fetchMock).toHaveBeenCalledWith(
       `${TEST_URL}${PROMPT_IMPORT_JSON_URL}`,
+      expect.objectContaining({
+        method: 'POST',
+        body: formData,
+      }),
+    );
+  });
+
+  test('calls postFiles with ZIP url if type is ARCHIVE', async () => {
+    fetchMock.mockResponseOnce({});
+
+    const formData = new FormData();
+
+    await instance.createFolder(TOKEN_MOCK, formData, ImportFileType.ARCHIVE, ApplicationRoute.Files);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${TEST_URL}${FILE_IMPORT_ZIP_URL}`,
+      expect.objectContaining({
+        method: 'POST',
+        body: formData,
+      }),
+    );
+  });
+
+  test('calls postFiles with JSON url if type is not ARCHIVE', async () => {
+    fetchMock.mockResponseOnce({});
+
+    const formData = new FormData();
+
+    await instance.createFolder(TOKEN_MOCK, formData, ImportFileType.FILES, ApplicationRoute.Files);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${TEST_URL}${FILE_IMPORT_URL}`,
       expect.objectContaining({
         method: 'POST',
         body: formData,

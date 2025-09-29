@@ -11,30 +11,39 @@ import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/uti
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import { EntityViewTab, getIsParametersTabAvailable } from '@/src/components/EntityView/View/utils';
+import ViewContent from '@/src/components/EntityView/View/ViewContent';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { useAppsFolder } from '@/src/context/AppsFolderContext';
 import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
+import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialAssetApp } from '@/src/models/dial/asset-app';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialFile } from '@/src/models/dial/file';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import AppProperties from './AppProperties';
+import { getTabsForAssetApp } from './utils';
 
 interface Props {
   originalApp: DialAssetApp;
-  apps?: DialAssetApp[] | null;
+  apps: DialAssetApp[];
+  models: DialModel[];
+  applications: DialApplication[];
+  schemes: DialApplicationScheme[];
+  interceptors: DialInterceptor[];
 }
 
-const AppView: FC<Props> = ({ originalApp, apps }) => {
+const AppView: FC<Props> = ({ originalApp, apps, models, applications, schemes, interceptors }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
-  const tabs = [propertiesTabs(t)];
+  const tabs = getTabsForAssetApp(t, getIsParametersTabAvailable(originalApp, schemes));
   const router = useRouter();
   const { fetchFiles } = useAppsFolder();
   const { showNotification } = useNotification();
@@ -148,16 +157,21 @@ const AppView: FC<Props> = ({ originalApp, apps }) => {
             setIsChanged={setIsChanged}
           />
         ) : (
-          <>
-            {activeTab === EntityViewTab.Properties && (
-              <AppProperties
-                app={selectedApp}
-                apps={apps || []}
-                onChangeApp={onChangeEntity}
-                setSelectedApp={setSelectedApp}
-              />
-            )}
-          </>
+          <ViewContent
+            activeTab={activeTab}
+            names={[]}
+            assetApps={apps}
+            models={models}
+            applications={applications}
+            applicationSchemes={schemes}
+            interceptors={interceptors}
+            view={ApplicationRoute.AssetsApplications}
+            selectedEntity={selectedApp}
+            jsonEditorEnabled={jsonEditorEnabled}
+            setSelectedApp={setSelectedApp}
+            isSkipRefresh={false}
+            onChangeEntity={onChangeEntity as (entity: BaseEntity) => void}
+          />
         )}
       </div>
     </div>
