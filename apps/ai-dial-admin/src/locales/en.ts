@@ -811,6 +811,7 @@ export default {
     ToolName: 'Enter tool name',
     Hour: 'h',
     Object: 'Object value',
+    ApiKeyHeader: 'Enter API key header',
   },
   Error: {
     ServerError: 'Server Error',
