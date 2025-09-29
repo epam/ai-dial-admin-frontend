@@ -1,8 +1,11 @@
 'use client';
-import { FC, useCallback } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback } from 'react';
 
 import ApplicationParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
+import AppHeader from '@/src/components/Assets/AppView/AppHeader';
+import AppProperties from '@/src/components/Assets/AppView/AppProperties';
 import EntityProperties from '@/src/components/EntityProperties/EntityProperties';
+import ApplicationAppRoutes from '@/src/components/EntityView/AppRoute/ApplicationAppRoutes';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityDependencies from '@/src/components/EntityView/Dependencies/Dependencies';
 import EntityFeatures from '@/src/components/EntityView/Features/Features';
@@ -13,13 +16,13 @@ import { EntityViewTab } from '@/src/components/EntityView/View/utils';
 import ModelProperties from '@/src/components/ModelView/ModelProperties/ModelProperties';
 import RouteProperties from '@/src/components/Routes/Properties/RouteProperties';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
+import { DialAssetApp } from '@/src/models/dial/asset-app';
 import { BaseEntity, EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
 import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
-import ApplicationAppRoutes from '@/src/components/EntityView/AppRoute/ApplicationAppRoutes';
 
 interface Props {
   activeTab: EntityViewTab;
@@ -28,12 +31,14 @@ interface Props {
   roles?: DialRole[] | null;
   interceptors?: DialInterceptor[] | null;
   applications?: DialApplication[] | null;
+  assetApps?: DialAssetApp[] | null;
   models?: DialModel[] | null;
   view: ApplicationRoute;
   selectedEntity: BaseEntity;
   jsonEditorEnabled: boolean;
   isSkipRefresh: boolean;
   onChangeEntity: (entity: BaseEntity) => void;
+  setSelectedApp?: Dispatch<SetStateAction<DialAssetApp>>;
 }
 
 const ViewContent: FC<Props> = ({
@@ -43,12 +48,14 @@ const ViewContent: FC<Props> = ({
   applicationSchemes,
   names,
   view,
+  assetApps,
   applications,
   interceptors,
   models,
   roles,
   selectedEntity,
   onChangeEntity,
+  setSelectedApp,
 }) => {
   const getPropertiesView = useCallback(() => {
     if (view === ApplicationRoute.Models) {
@@ -57,6 +64,17 @@ const ViewContent: FC<Props> = ({
 
     if (view === ApplicationRoute.Routes) {
       return <RouteProperties route={selectedEntity as DialRoute} updateRoute={onChangeEntity} />;
+    }
+
+    if (view === ApplicationRoute.AssetsApplications) {
+      return (
+        <AppProperties
+          app={selectedEntity as DialAssetApp}
+          apps={assetApps || []}
+          setSelectedApp={setSelectedApp}
+          onChangeApp={onChangeEntity}
+        />
+      );
     }
 
     return (
@@ -68,13 +86,17 @@ const ViewContent: FC<Props> = ({
         updateEntity={onChangeEntity}
       />
     );
-  }, [onChangeEntity, selectedEntity, applicationSchemes, names, view]);
+  }, [view, selectedEntity, applicationSchemes, names, onChangeEntity, assetApps, setSelectedApp]);
 
   return (
     <>
       {activeTab === EntityViewTab.Properties && (
         <div className="flex flex-col h-full w-full">
-          <EntityHeader entity={selectedEntity} />
+          {view === ApplicationRoute.AssetsApplications ? (
+            <AppHeader app={selectedEntity as DialAssetApp} />
+          ) : (
+            <EntityHeader entity={selectedEntity} />
+          )}
           <div className="flex-1 min-h-0 pt-4">{getPropertiesView()}</div>
         </div>
       )}

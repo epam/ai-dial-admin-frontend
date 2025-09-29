@@ -2,6 +2,7 @@ import { TabsI18nKey } from '@/src/constants/i18n';
 import { TabModel } from '@/src/models/tab';
 import { ApplicationRoute } from '@/src/types/routes';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
+import { DialAssetApp } from '@/src/models/dial/asset-app';
 
 export enum EntityViewTab {
   Properties = 'Properties',
@@ -126,12 +127,16 @@ export const getViewTabs = (
 };
 
 export const getIsParametersTabAvailable = (
-  application: DialApplication,
+  application: DialApplication | DialAssetApp,
   appRunners?: DialApplicationScheme[] | null,
 ) => {
   return (
     (!!application.customAppSchemaId &&
       !!appRunners?.find((s) => s.$id === application.customAppSchemaId)?.['dial:applicationTypeEditorUrl']) ||
-    !!application.editorUrl
+    !!application.editorUrl ||
+    (!!(application as DialAssetApp).applicationTypeSchemaId &&
+      !!appRunners?.find((s) => s.$id === (application as DialAssetApp).applicationTypeSchemaId)?.[
+        'dial:applicationTypeEditorUrl'
+      ])
   );
 };

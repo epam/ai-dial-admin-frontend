@@ -168,7 +168,7 @@ const FolderCreateReview: FC<Props> = ({
         columnDefs,
       });
       setCount(0);
-      setCurrentSteps(StepStatus.INVALID);
+      setCurrentSteps(view === ApplicationRoute.Prompts ? StepStatus.INVALID : StepStatus.VALID);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, editedFileMap]);
