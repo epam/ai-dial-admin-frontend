@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
+import { DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey, DuplicateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -64,10 +64,10 @@ const DuplicateAdapter: FC<Props> = ({ onDuplicate, modalState, onClose, adapter
         />
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
+        <DialButton cssClass="dial-secondary-button" title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
 
-        <Button
-          cssClass="primary"
+        <DialButton
+          cssClass="dial-primary-button"
           title={t(ButtonsI18nKey.Duplicate)}
           disable={!isValid}
           onClick={() => onDuplicate(entity)}

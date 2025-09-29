@@ -1,8 +1,8 @@
 'use client';
 
 import { FC } from 'react';
-import { DialErrorText } from '@epam/ai-dial-ui-kit';
 
+import ErrorText from '@/src/components/Common/ErrorText/ErrorText';
 import Field from '@/src/components/Common/Field/Field';
 import { InputFieldBaseProps } from '@/src/components/Common/InputField/InputField';
 import PasswordInput from './PasswordInput';
@@ -16,7 +16,7 @@ const PasswordInputField: FC<Props> = ({ fieldTitle, optional, elementCssClass, 
     <div className="flex flex-col">
       <Field fieldTitle={fieldTitle} optional={optional} htmlFor={elementId} />
       <PasswordInput cssClass={elementCssClass} inputId={elementId} {...props} />
-      <DialErrorText errorText={'aaaaaaaaaaaaaaaaaa'} />
+      <ErrorText errorText={errorText} />
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
+import { DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import Popup from '@/src/components/Common/Popup/Popup';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
@@ -121,10 +121,10 @@ const DuplicatePrompt: FC<Props> = ({ modalState, entity, versionsMap, onDuplica
         )}
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
+        <DialButton cssClass="dial-secondary-button" title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
 
-        <Button
-          cssClass="primary"
+        <DialButton
+          cssClass="dial-primary-button"
           title={t(ButtonsI18nKey.Duplicate)}
           disable={!isValid}
           onClick={() => onDuplicate(clonedPrompt)}
