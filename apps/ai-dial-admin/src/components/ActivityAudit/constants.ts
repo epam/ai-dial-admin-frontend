@@ -40,4 +40,5 @@ export enum EntityParameterKeys {
   ROUTES = 'routes',
   APP_RUNNER_ROUTES = 'dial:applicationTypeRoutes',
   SOURCE = 'source',
+  DEFAULTS = 'defaults',
 }
