@@ -6,6 +6,7 @@ import { useI18n } from '@/src/locales/client';
 import { Toolset, ToolsetAuthSettings, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
+import OAuthControls from './OAuth';
 
 interface Props {
   toolset: Toolset;
@@ -36,6 +37,11 @@ const Authentication: FC<Props> = ({ toolset, onChange }) => {
           />
         </div>
       ),
+    },
+    {
+      id: ToolsetAuthType.OAUTH,
+      name: 'OAuth 2.0',
+      content: <OAuthControls toolset={toolset} onChange={onChange} />,
     },
   ];
 

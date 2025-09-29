@@ -725,6 +725,7 @@ export enum EntityFieldsI18nKey {
   content = 'EntityFields.content',
   name = 'EntityFields.name',
   id = 'EntityFields.id',
+  scopes = 'EntityFields.scopes',
   author = 'EntityFields.author',
   endpoint = 'EntityFields.endpoint',
   permissions = 'EntityFields.permissions',
