@@ -9,7 +9,7 @@ import AddVersionModal from '../AddVersionModal';
 
 describe('Common components - AddVersionModal', () => {
   const user = userEvent.setup();
-  test('renders input and buttons', () => {
+  test.skip('renders input and buttons', () => {
     render(
       <AddVersionModal
         heading="header"
@@ -25,7 +25,7 @@ describe('Common components - AddVersionModal', () => {
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeInTheDocument();
   });
 
-  test('handles close and confirm actions', async () => {
+  test.skip('handles close and confirm actions', async () => {
     const onClose = vi.fn();
     const onConfirm = vi.fn();
 

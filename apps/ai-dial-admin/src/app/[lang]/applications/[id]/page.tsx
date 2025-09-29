@@ -53,7 +53,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Applications);
   }
 
-  const names = filterDisplayNames(applications);
+  const names = filterDisplayNames(applications, application?.displayName);
 
   return (
     <SaveValidationContextProvider>

@@ -36,7 +36,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Keys);
   }
 
-  const names = filterNames(keys);
+  const names = filterNames(keys, key?.name);
 
   return (
     <SaveValidationContextProvider>
