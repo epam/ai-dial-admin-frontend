@@ -11,7 +11,6 @@ import { roleLimitsKeys, roleShareLimitsKeys } from '@/src/components/ActivityAu
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { setUpstreamDiffs } from './utils/set-upstream-diffs';
 import { setRolesDiffs } from './utils/set-roles-diffs';
-import { setAuthDiffs } from './utils/set-auth-diffs';
 
 const dateKeys = ['expiresAt', 'keyGeneratedAt', 'createdAt', 'updatedAt'];
 const appRunnerParameterKeys = ['properties', '$defs'];
@@ -883,18 +882,14 @@ export const createSectionFromDiffs = (
       setRolesDiffs(sections, current, compare);
     } else if (name === EntityParameterKeys.UPSTREAMS) {
       setUpstreamDiffs(sections, current, compare);
-    } else if (name === EntityParameterKeys.AUTH) {
-      setAuthDiffs(sections, current, compare);
     } else {
       const currentItem = current[name];
       const compareItem = compare[name];
       if (currentItem?.length || compareItem?.length) {
-        sections[name] = [];
-        sections[name].push({ current: currentItem, compare: compareItem });
+        sections[name] = [{ current: currentItem, compare: compareItem }];
       }
     }
   });
-  console.log('Sections: ', sections);
   return sections;
 };
 
