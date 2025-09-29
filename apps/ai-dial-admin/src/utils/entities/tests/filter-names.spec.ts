@@ -45,7 +45,7 @@ describe('filterNames', () => {
     expect(filterNames(entities)).toEqual([]);
   });
 
-  it('returns array without current entity displayName', () => {
+  it('returns array without current entity тame', () => {
     const entities = [{ name: 'Entity1' }, { name: 'Entity2' }, { name: null }, {}];
     expect(filterNames(entities, 'Entity1')).toEqual(['Entity2']);
   });
