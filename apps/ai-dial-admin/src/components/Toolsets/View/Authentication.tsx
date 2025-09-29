@@ -1,7 +1,7 @@
 import { FC, useMemo } from 'react';
 
 import RadioGroup, { RadioButtonWithContent } from '@/src/components/Common/RadioGroup/RadioGroup';
-import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Toolset, ToolsetAuthSettings, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { RadioFieldOrientation } from '@/src/types/radio-orientation';
@@ -49,7 +49,7 @@ const Authentication: FC<Props> = ({ toolset, onChange }) => {
   return (
     <div className="flex flex-col">
       <RadioGroup
-        fieldTitle={t(ToolsetI18nKey.Authentication)}
+        fieldTitle={t(EntityFieldsI18nKey.authSettings)}
         radioButtons={authOptions}
         activeRadioButton={selectedAuthType}
         labelCssClass="small"
