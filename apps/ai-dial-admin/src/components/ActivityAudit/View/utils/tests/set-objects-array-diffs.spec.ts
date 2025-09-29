@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { setObjectsArrayDiff } from '../set-upstream-diffs';
+import { setObjectsArrayDiff } from '../set-objects-array-diffs';
 import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
 
 // Mock ActivityAuditDiff and ActivityAuditSection
