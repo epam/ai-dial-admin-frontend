@@ -7,7 +7,7 @@ export const filterLatestVersions = (data: (DialPrompt | DialAssetApp)[]) => {
 
   data?.forEach((item) => {
     const name = item.name as string;
-    if (!latestVersions[name] || item.updateTime > latestVersions[name].updateTime) {
+    if (!latestVersions[name] || compareVersions(item.version, latestVersions[name].version) > 0) {
       latestVersions[name] = item as DialPrompt;
     }
   });

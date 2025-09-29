@@ -12,7 +12,7 @@ export const getSwitchControls = (view: ApplicationRoute): (keyof DialFeatures)[
     return modelsSwitchFeatures;
   }
 
-  if (view === ApplicationRoute.Applications) {
+  if (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications) {
     return applicationSwitchFeatures;
   }
 
@@ -24,7 +24,7 @@ export const getTextControls = (view: ApplicationRoute): (keyof DialFeatures)[] 
     return modelsTextFeatures;
   }
 
-  if (view === ApplicationRoute.Applications) {
+  if (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications) {
     return applicationTextFeatures;
   }
 

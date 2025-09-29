@@ -141,6 +141,7 @@ const Modals: FC<Props> = ({
         modalType === ModalType.deleteBulk &&
         createPortal(
           <DeleteFolder
+            view={route}
             modalState={modalState}
             onClose={handleClose}
             onApply={handleDeleteBulk}

@@ -1,8 +1,9 @@
 import { JWT } from 'next-auth/jwt';
 
+import { imageTypes } from '@/src/constants/file';
 import { logger } from '@/src/server/logger';
-import { sendRequest } from './send-request';
 import { getAuthorizationHeader } from '@/src/utils/auth/api-headers';
+import { sendRequest } from './send-request';
 
 export const streamRequest = async (
   url: string,
@@ -15,6 +16,11 @@ export const streamRequest = async (
     const reader = res?.body as ReadableStream<Uint8Array>;
     const stream = createReadableStream(reader);
     const headers = new Headers();
+    const contentType = getContentType(fileName);
+    if (contentType) {
+      headers.append('Content-Type', contentType);
+    }
+
     headers.append('Content-Disposition', isPreview ? 'inline' : `attachment; filename=${fileName}`);
     return new Response(stream, { headers });
   } catch (e) {
@@ -47,4 +53,14 @@ export const createReadableStream = (stream: ReadableStream<Uint8Array>): Readab
       push();
     },
   });
+};
+
+export const getContentType = (fileName: string): string | null => {
+  const extension = fileName.split('.').pop()?.toLowerCase();
+
+  if (extension && imageTypes[`.${extension}`]) {
+    return imageTypes[`.${extension}`];
+  }
+
+  return null;
 };
