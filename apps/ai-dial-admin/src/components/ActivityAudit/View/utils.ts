@@ -31,6 +31,7 @@ const separateObjectParameterKeys = [
   EntityParameterKeys.DEFAULT_ROLE_LIMIT,
   EntityParameterKeys.ROLE_SHARE_LIMITS,
   EntityParameterKeys.COST_LIMIT,
+  EntityParameterKeys.AUTH,
   EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT,
   EntityParameterKeys.FEATURES,
   EntityParameterKeys.APPLICATIONS,
@@ -373,6 +374,7 @@ const compareSeparateObjects = (
   ) {
     compareRoleLimits(diffs, val1 as Record<string, DialRoleLimits>, val2 as Record<string, DialRoleLimits>, isCurrent);
   }
+
   if (key === EntityParameterKeys.COST_LIMIT) {
     compareDefaultLimits(diffs, val1, val2, isCurrent);
   }
@@ -383,7 +385,7 @@ const compareSeparateObjects = (
   if (key === EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT) {
     compareDefaultShareLimits(diffs, val1, val2, isCurrent);
   }
-  if (key === EntityParameterKeys.FEATURES) {
+  if (key === EntityParameterKeys.FEATURES || key === EntityParameterKeys.AUTH) {
     compareSimpleObjects(diffs, val1, val2, isCurrent);
   }
   if (
@@ -396,6 +398,7 @@ const compareSeparateObjects = (
   ) {
     compareEntities(diffs, val1 as string[], val2 as string[], isCurrent);
   }
+
   if (key === EntityParameterKeys.MODELS) {
     compareModels(diffs, val1 as string[], val2 as string[], isCurrent);
   }
@@ -923,6 +926,7 @@ export const createSectionFromDiffs = (
     EntityParameterKeys.UPSTREAMS,
     EntityParameterKeys.COST_LIMIT,
     EntityParameterKeys.FEATURES,
+    EntityParameterKeys.AUTH,
     EntityParameterKeys.ROLES,
     EntityParameterKeys.INTERCEPTORS,
     EntityParameterKeys.APPLICATIONS,
@@ -944,8 +948,7 @@ export const createSectionFromDiffs = (
       const currentItem = current[name];
       const compareItem = compare[name];
       if (currentItem?.length || compareItem?.length) {
-        sections[name] = [];
-        sections[name].push({ current: currentItem, compare: compareItem });
+        sections[name] = [{ current: currentItem, compare: compareItem }];
       }
     }
   });

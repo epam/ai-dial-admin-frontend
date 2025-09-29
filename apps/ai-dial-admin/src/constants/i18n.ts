@@ -684,6 +684,7 @@ export enum EntityPlaceholdersI18nKey {
   Maintainer = 'EntityPlaceholders.Maintainer',
   Type = 'EntityPlaceholders.Type',
   Title = 'EntityPlaceholders.Title',
+  ApiKeyHeader = 'EntityPlaceholders.ApiKeyHeader',
   Tier = 'EntityPlaceholders.Tier',
   Weight = 'EntityPlaceholders.Weight',
   UpstreamEndpoint = 'EntityPlaceholders.UpstreamEndpoint',
@@ -818,8 +819,10 @@ export enum EntityFieldsI18nKey {
   clientId = 'EntityFields.clientId',
   clientSecret = 'EntityFields.clientSecret',
   redirectUri = 'EntityFields.redirectUri',
-  authEndpoint = 'EntityFields.authorizationEndpoint',
+  authorizationEndpoint = 'EntityFields.authorizationEndpoint',
+  authenticationType = 'EntityFields.authenticationType',
   tokenEndpoint = 'EntityFields.tokenEndpoint',
+  authSettings = 'EntityFields.authSettings',
 }
 
 export enum ToolsetI18nKey {
@@ -834,7 +837,6 @@ export enum ToolsetI18nKey {
   Disabled = 'Toolset.Disabled',
   AutoDetected = 'Toolset.AutoDetected',
   ToolsWarning = 'Toolset.ToolsWarning',
-  Authentication = 'Toolset.Authentication',
   ClientRegistrationType = 'Toolset.ClientRegistrationType',
   ExistingClient = 'Toolset.ExistingClient',
   DynamicRegistration = 'Toolset.DynamicRegistration',

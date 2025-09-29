@@ -39,7 +39,10 @@ export const RESOURCE_DIFF_COLUMNS = (t: (stringToTranslate: string) => string, 
       tooltipValueGetter: (params) =>
         params.data.parameter === '$type' ? sourceTypeFormatter(params.value, t) : params.value,
       cellRendererSelector: (params: ICellRendererParams) => {
-        if (parameter === EntityParameterKeys.KEYS && params.data?.parameter === 'key') {
+        if (
+          (parameter === EntityParameterKeys.KEYS && params.data?.parameter === 'key') ||
+          params.data?.parameter === 'clientId'
+        ) {
           return { component: PasswordCellRenderer };
         }
         if (parameter === EntityParameterKeys.UPSTREAMS && params.data?.parameter === 'extraData') {
