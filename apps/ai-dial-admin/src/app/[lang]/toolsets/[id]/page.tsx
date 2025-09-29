@@ -39,7 +39,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Toolsets);
   }
 
-  const names = filterNames(toolSets);
+  const names = filterNames(toolSets, toolSet?.name);
 
   return (
     <SaveValidationContextProvider>

@@ -1,7 +1,10 @@
-import { FC } from 'react';
+import { FC, useEffect, useState } from 'react';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { FieldError } from '@/src/models/error';
+import { getVersionControlError } from '@/src/utils/validation/version-error';
 import { useI18n } from '@/src/locales/client';
+
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 
 interface Props {
@@ -11,10 +14,17 @@ interface Props {
   disabled?: boolean;
   error?: string;
   onChange?: (version?: string) => void;
+  hideError?: boolean;
 }
 
-const VersionControl: FC<Props> = ({ version, error, ...props }) => {
+const VersionControl: FC<Props> = ({ version, error, optional, hideError, ...props }) => {
   const t = useI18n() as (t: string) => string;
+
+  const [versionError, setVersionError] = useState<FieldError | null>(null);
+
+  useEffect(() => {
+    setVersionError(getVersionControlError(version, !optional, hideError, t));
+  }, [hideError, optional, t, version]);
 
   return (
     <TextInputField
@@ -22,8 +32,9 @@ const VersionControl: FC<Props> = ({ version, error, ...props }) => {
       fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
       placeholder={t(EntityPlaceholdersI18nKey.Version)}
       value={version}
-      errorText={error}
-      invalid={!!error}
+      errorText={error || versionError?.text}
+      invalid={!!error || !!versionError}
+      optional={optional}
       {...props}
     />
   );

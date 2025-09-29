@@ -58,8 +58,8 @@ const EntityMainProperties: FC<Props> = ({
   const versionError = useMemo(() => {
     return entity.displayName
       ? void 0
-      : getVersionError(view, isVersionOptional, (entity as DialModel).displayVersion as string, t);
-  }, [entity, isVersionOptional, t, view]);
+      : getVersionError(isVersionOptional, (entity as DialModel).displayVersion as string, t);
+  }, [entity, isVersionOptional, t]);
 
   const onChangeName = useCallback(
     (newEntity: ChatEntity) => {
@@ -130,10 +130,11 @@ const EntityMainProperties: FC<Props> = ({
 
         {view === ApplicationRoute.Models && (
           <VersionControl
-            version={(entity as DialModel).displayVersion}
+            version={''}
             onChange={onChangeVersion}
             error={versionError}
             optional={isVersionOptional}
+            hideError={!!displayNameError}
           />
         )}
 

@@ -39,22 +39,17 @@ describe('EntityMainProperties :: errors :: getDisplayNameError', () => {
 
 describe('EntityMainProperties :: errors :: getVersionError', () => {
   test('Should return empty if version is optional', () => {
-    const result = getVersionError(ApplicationRoute.Models, true, '', mockT);
+    const result = getVersionError(true, '', mockT);
     expect(result).toBe('');
   });
 
   test('Should return missing version error if required but not provided', () => {
-    const result = getVersionError(ApplicationRoute.Models, false, '', mockT);
+    const result = getVersionError(false, '', mockT);
     expect(result).toBe(ErrorI18nKey.Version);
   });
 
-  test('Should return min/max length error if version is too short/long', () => {
-    const result = getVersionError(ApplicationRoute.Models, false, 'x', mockT);
-    expect(result).toBe(ErrorI18nKey.MinMaxLength);
-  });
-
   test('Should return empty if version is valid', () => {
-    const result = getVersionError(ApplicationRoute.Models, false, '1.2.3', mockT);
+    const result = getVersionError(false, '1.2.3', mockT);
     expect(result).toBe('');
   });
 });
