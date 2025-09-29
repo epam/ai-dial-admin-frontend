@@ -17,6 +17,13 @@ export interface Toolset extends BaseEntity, EntityRoleLimits {
 export interface ToolsetAuthSettings {
   authenticationType: ToolsetAuthType;
   apiKeyHeader?: string;
+
+  clientId?: string;
+  clientSecret?: string;
+  redirectUri?: string;
+  authorizationEndpoint?: string;
+  tokenEndpoint?: string;
+  scopesSupported?: string[];
 }
 
 export enum ToolsetAuthType {

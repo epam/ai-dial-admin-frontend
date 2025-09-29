@@ -50,6 +50,9 @@ This documentation describes the structure and contents of the menu items array 
   - **Files**
     - **Key**: `Files`
     - **Description**: Navigate to the files page for uploading and managing system files.
+  - **Applications**
+    - **Key**: `Applications`
+    - **Description**: Navigate to the applications page for uploading and managing system applications.
 
 ### 4. **Access Management**
 

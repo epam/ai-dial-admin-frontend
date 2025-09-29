@@ -763,6 +763,7 @@ export default {
     redirectUri: 'Redirect URI',
     tokenEndpoint: 'Default token endpoint',
     authorizationEndpoint: 'Default authorization endpoint',
+    scopes: 'Scopes Supported',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
