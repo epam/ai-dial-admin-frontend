@@ -22,6 +22,7 @@ interface Props {
   currentState?: ActivityAuditEntity;
   rollBackState?: ActivityAuditEntity;
   entity?: BaseEntity;
+  heading?: string;
 }
 
 const ActivityDetails: FC<Props> = ({
@@ -32,6 +33,7 @@ const ActivityDetails: FC<Props> = ({
   currentState,
   rollBackState,
   entity,
+  heading,
 }) => {
   const t = useI18n();
 
@@ -82,7 +84,7 @@ const ActivityDetails: FC<Props> = ({
   return (
     <Popup
       onClose={onClose}
-      heading={t(ActivityAuditI18nKey.ActivityDetails)}
+      heading={heading || t(ActivityAuditI18nKey.ActivityDetails)}
       portalId="ActivityDetailsModal"
       state={modalState}
       containerClassName={containerClassName}

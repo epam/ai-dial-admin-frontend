@@ -553,6 +553,7 @@ export default {
     PathsIgnore: 'Ignore paths',
     PathsPrompt: 'Prompt paths',
     PathsFile: 'File paths',
+    Changes: 'Changes',
   },
   Export: {
     Config: 'Config',

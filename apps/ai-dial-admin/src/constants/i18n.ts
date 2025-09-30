@@ -506,6 +506,7 @@ export enum ImportI18nKey {
   PathsIgnore = 'Import.PathsIgnore',
   PathsPrompt = 'Import.PathsPrompt',
   PathsFile = 'Import.PathsFile',
+  Changes = 'Import.Changes',
 }
 
 export enum ExportI18nKey {
