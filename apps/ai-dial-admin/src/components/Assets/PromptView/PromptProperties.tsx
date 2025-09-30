@@ -40,7 +40,6 @@ import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 import AddVersionModal from './Modals/AddVersionModal';
 import CompareVersions from './Modals/CompareVersions';
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   prompt: DialPrompt;
