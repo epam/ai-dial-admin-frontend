@@ -39,11 +39,12 @@ import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 interface Props {
   originalInterceptor: DialInterceptor;
   names: string[];
+  etag: string;
   models: DialModel[];
   applications: DialApplication[];
 }
 
-const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applications }) => {
+const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, etag, applications }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -149,7 +150,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
     const req =
       selectedFormat === ExportFormat.CORE
         ? updateCoreEntity(getFileFromEntity(ApplicationRoute.Interceptors, selectedInterceptor))
-        : updateInterceptor(selectedInterceptor);
+        : updateInterceptor(selectedInterceptor, etag);
 
     req.then((res) => {
       if (res.success) {
@@ -159,7 +160,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedFormat, selectedInterceptor, router, showNotification]);
+  }, [selectedFormat, selectedInterceptor, router, etag, showNotification]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">

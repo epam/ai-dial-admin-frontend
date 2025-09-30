@@ -44,13 +44,13 @@ interface Props {
   view: ApplicationRoute;
   originalEntity: BaseEntity;
   names: string[];
-  etag?: string;
+  etag string;
   roles?: DialRole[] | null;
   applicationSchemes?: DialApplicationScheme[] | null;
   interceptors?: DialInterceptor[] | null;
   applications?: DialApplication[] | null;
   models?: DialModel[] | null;
-  updateEntity: (entity: BaseEntity, etag?: string) => Promise<ServerActionResponse>;
+  updateEntity: (entity: BaseEntity, etag: string) => Promise<ServerActionResponse>;
   removeEntity: (entity?: string) => Promise<ServerActionResponse>;
 }
 

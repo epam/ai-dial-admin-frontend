@@ -26,7 +26,7 @@ export class RoutesApi extends BaseApi {
     return this.postAction(ROUTES_URL, routes, token);
   }
 
-  updateRoute(routes: DialRoute, token: JWT | null, eTag?: string): Promise<ServerActionResponse> {
+  updateRoute(routes: DialRoute, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
     return this.putActionWithEtag(ROUTE_URL(routes.name), routes, token, eTag);
   }
 }
