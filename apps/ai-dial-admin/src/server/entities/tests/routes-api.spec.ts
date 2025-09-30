@@ -31,7 +31,7 @@ describe('Server :: RoutesApi', () => {
   test('Should calls getRoute', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockRoute));
 
-    const result = await instance.getRoute('route-1', TOKEN_MOCK);
+    const result = await instance.getRoute('route-1', TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/routes/route-1'),
@@ -60,7 +60,7 @@ describe('Server :: RoutesApi', () => {
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
-    await instance.updateRoute(updatedRoute, TOKEN_MOCK);
+    await instance.updateRoute(updatedRoute, TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/routes/route-1'),

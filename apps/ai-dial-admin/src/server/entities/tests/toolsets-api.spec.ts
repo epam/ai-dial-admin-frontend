@@ -31,7 +31,7 @@ describe('Server :: ToolsetsApi', () => {
   test('Should calls getToolset by name and return toolSet', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockToolset));
 
-    const result = await instance.getToolset(mockToolset.name, TOKEN_MOCK);
+    const result = await instance.getToolset(mockToolset.name, TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TOOLSET_URL(mockToolset.name)}`,
@@ -59,7 +59,7 @@ describe('Server :: ToolsetsApi', () => {
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
-    await instance.updateToolset(mockToolset, TOKEN_MOCK);
+    await instance.updateToolset(mockToolset, TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TOOLSET_URL(mockToolset.name)}`,

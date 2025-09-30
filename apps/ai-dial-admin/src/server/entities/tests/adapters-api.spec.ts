@@ -70,7 +70,7 @@ describe('Server :: Adapters', () => {
   test('Should calls getAdapter and fetches a specific adapter', async () => {
     fetch.mockResponseOnce(JSON.stringify(adapter));
 
-    const result = await instance.getAdapter(adapter.name, TOKEN_MOCK);
+    const result = await instance.getAdapter(adapter.name, TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(`/adapters/${adapter.name}`),
@@ -83,7 +83,7 @@ describe('Server :: Adapters', () => {
     const mockResponse: ServerActionResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
-    await instance.updateAdapter(adapter, TOKEN_MOCK);
+    await instance.updateAdapter(adapter, TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(`/adapters/${adapter.name}`),

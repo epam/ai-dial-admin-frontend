@@ -31,7 +31,7 @@ describe('Server :: RolesApi', () => {
   test('Should calls a single role by name', async () => {
     fetch.mockResponseOnce(JSON.stringify(exampleRole));
 
-    const result = await instance.getRole('admin', TOKEN_MOCK);
+    const result = await instance.getRole('admin', TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/roles/admin'),
@@ -60,7 +60,7 @@ describe('Server :: RolesApi', () => {
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
     const updatedRole = { ...exampleRole, description: 'Updated description' };
-    await instance.updateRole(updatedRole, TOKEN_MOCK);
+    await instance.updateRole(updatedRole, TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/roles/admin'),
