@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { IconCaretDownFilled, IconCaretRightFilled } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { getRevisions } from '@/src/app/[lang]/activity-audit/actions';
 import { sorts } from '@/src/components/ActivityAudit/constants';
@@ -163,9 +163,9 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, moda
       </div>
 
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <DialButton cssClass="dial-secondary-button" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         <DialButton
-          cssClass="dial-primary-button"
+          variant={ButtonVariant.Primary}
           title={t(ButtonsI18nKey.Apply)}
           onClick={() => onApply(revisions, selectedRevision)}
           disable={!selectedRevision}

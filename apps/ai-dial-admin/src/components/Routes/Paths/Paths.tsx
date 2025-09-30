@@ -2,7 +2,7 @@ import { FC, useCallback } from 'react';
 
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import { EntityPlaceholdersI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
@@ -95,7 +95,7 @@ const Paths: FC<Props> = ({ title, optional, readonly, paths, onChangePaths }) =
       {!readonly && (
         <div>
           <DialButton
-            cssClass="dial-secondary-button"
+            variant={ButtonVariant.Secondary}
             title={t(RoutesI18nKey.AddPaths)}
             iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
             onClick={onAddPath}

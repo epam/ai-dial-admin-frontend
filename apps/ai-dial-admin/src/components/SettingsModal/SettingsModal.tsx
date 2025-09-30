@@ -1,5 +1,5 @@
 import { FC, useCallback, useState } from 'react';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import Popup from '@/src/components/Common/Popup/Popup';
 import { SettingsModalI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
@@ -42,7 +42,11 @@ const SettingsModal: FC<Props> = ({ onConfirm, modalState, onClose }) => {
         />
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <DialButton cssClass="dial-primary-button" title={t(ButtonsI18nKey.Save)} onClick={() => onConfirm(settings)} />
+        <DialButton
+          variant={ButtonVariant.Primary}
+          title={t(ButtonsI18nKey.Save)}
+          onClick={() => onConfirm(settings)}
+        />
       </div>
     </Popup>
   );

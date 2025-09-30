@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 
 import { IconRestore } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 import {
@@ -164,7 +164,7 @@ const SystemRollback: FC = () => {
           </div>
           <DialButton
             iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
-            cssClass="dial-primary-button"
+            variant={ButtonVariant.Primary}
             title={t(ActivityAuditI18nKey.RollbackSystem)}
             onClick={() => setRollBackModalState(PopUpState.Opened)}
           />

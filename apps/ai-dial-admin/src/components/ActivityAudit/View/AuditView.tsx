@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 
 import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
@@ -133,7 +133,7 @@ const AuditView: FC<Props> = ({
               <FilterControl diffView={diffView} setDiffView={setDiffView} />
               <DialButton
                 iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
-                cssClass="dial-secondary-button"
+                variant={ButtonVariant.Secondary}
                 title={t(ActivityAuditI18nKey.RollbackResource)}
                 onClick={onOpenModal}
               />

@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import Popup from '@/src/components/Common/Popup/Popup';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
@@ -59,10 +59,10 @@ const DuplicateScheme: FC<Props> = ({ onDuplicate, modalState, onClose, entity }
         <DisplayNameControl displayName={clonedEntity['dial:applicationTypeDisplayName']} onChange={onChangeName} />
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <DialButton cssClass="dial-secondary-button" title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
 
         <DialButton
-          cssClass="dial-primary-button"
+          variant={ButtonVariant.Primary}
           title={t(ButtonsI18nKey.Duplicate)}
           disable={!isValid}
           onClick={() => onDuplicate(clonedEntity)}

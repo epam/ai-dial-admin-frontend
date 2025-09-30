@@ -1,6 +1,6 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import Popup from '@/src/components/Common/Popup/Popup';
@@ -167,9 +167,9 @@ const CreateEntity = <T extends CreatePromptEntity>({
         )}
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton cssClass="dial-secondary-button" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         <DialButton
-          cssClass="dial-primary-button"
+          variant={ButtonVariant.Primary}
           title={t(ButtonsI18nKey.Create)}
           onClick={onCreate}
           disable={(isUniqueNameError != null && !isUniqueNameError) || !isValid}

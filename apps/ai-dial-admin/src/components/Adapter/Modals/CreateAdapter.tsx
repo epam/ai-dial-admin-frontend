@@ -1,6 +1,6 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { createAdapter } from '@/src/app/[lang]/adapters/actions';
 import AdapterProperties from '@/src/components/Adapter/View/AdapterProperties';
@@ -67,9 +67,9 @@ const CreateAdapter: FC<Props> = ({ modalState, onClose, names }) => {
         <AdapterProperties entity={currentAdapter} names={names} onChangeAdapter={onChangeAdapter} />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton cssClass="dial-secondary-button" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         <DialButton
-          cssClass="dial-primary-button"
+          variant={ButtonVariant.Primary}
           title={t(ButtonsI18nKey.Create)}
           onClick={onCreate}
           disable={!isValid}

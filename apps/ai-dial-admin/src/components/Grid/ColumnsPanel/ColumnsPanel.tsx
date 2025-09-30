@@ -1,14 +1,15 @@
 'use client';
-import { ColDef } from 'ag-grid-community';
-import { FC, useCallback, useRef } from 'react';
-import classNames from 'classnames';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 import { IconX } from '@tabler/icons-react';
+import { ColDef } from 'ag-grid-community';
+import classNames from 'classnames';
+import { FC, useCallback, useRef } from 'react';
+import { useDrop } from 'react-dnd';
+
+import Checkbox from '@/src/components/Common/Checkbox/Checkbox';
+import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import Checkbox from '@/src/components/Common/Checkbox/Checkbox';
-import Button from '@/src/components/Common/Button/Button';
-import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
-import { useDrop } from 'react-dnd';
 
 interface Props {
   columns: ColDef[];
@@ -57,7 +58,12 @@ const ColumnsPanel: FC<Props> = ({
         <h3 className="flex-1 min-w-0 mr-3">{t(ButtonsI18nKey.Columns)}</h3>
         <div className="flex">
           {showResetButton && (
-            <Button cssClass="tertiary mr-4" title={t(ButtonsI18nKey.ResetToDefault)} onClick={resetToDefault} />
+            <DialButton
+              variant={ButtonVariant.Tertiary}
+              cssClass="mr-4"
+              title={t(ButtonsI18nKey.ResetToDefault)}
+              onClick={resetToDefault}
+            />
           )}
           <button
             type="button"

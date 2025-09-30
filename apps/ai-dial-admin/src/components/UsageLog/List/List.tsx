@@ -1,6 +1,6 @@
 import { FC, MouseEvent, useCallback, useEffect, useState } from 'react';
 import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -104,7 +104,7 @@ const List: FC<Props> = ({ route, getData, query, columnDefs, title, emptyDataTi
         <ResetFiltersButton gridApi={gridApi} />
         {!!data?.length && (
           <DialButton
-            cssClass="dial-tertiary-button"
+            variant={ButtonVariant.Tertiary}
             title={t(ButtonsI18nKey.Columns)}
             iconBefore={<IconColumns2 {...BASE_ICON_PROPS} />}
             onClick={onToggleColumnsPanel}

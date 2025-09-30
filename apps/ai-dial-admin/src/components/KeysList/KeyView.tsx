@@ -7,11 +7,11 @@ import { createPortal } from 'react-dom';
 import { IconRefresh } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { removeKey, updateKey } from '@/src/app/[lang]/keys/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import { getRelevantRolesForKey } from '@/src/components/AddEntitiesTab/utils';
-import Button from '@/src/components/Common/Button/Button';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
@@ -204,8 +204,8 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
             selectedFormat={selectedFormat}
             setSelectedFormat={setSelectedFormat}
           >
-            <Button
-              cssClass="primary"
+            <DialButton
+              variant={ButtonVariant.Primary}
               title={t(ButtonsI18nKey.Rotate)}
               iconBefore={<IconRefresh {...BASE_ICON_PROPS} />}
               onClick={() => setRotateModalState(PopUpState.Opened)}

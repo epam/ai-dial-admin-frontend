@@ -7,7 +7,7 @@ import { createPortal } from 'react-dom';
 import { IconRefresh, IconRestore } from '@tabler/icons-react';
 import { GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
 import classNames from 'classnames';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { DialButton, ButtonVariant } from '@epam/ai-dial-ui-kit';
 
 import { getActivities } from '@/src/app/[lang]/activity-audit/actions';
 import { getActivityAuditColumns, getGridFilters } from '@/src/components/ActivityAudit/List/utils';
@@ -236,7 +236,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
             onTimeRangeChange={onTimeRangeChange}
           />
           <DialButton
-            cssClass="dial-secondary-button"
+            variant={ButtonVariant.Secondary}
             title={t(ButtonsI18nKey.Refresh)}
             iconBefore={<IconRefresh {...BASE_ICON_PROPS} />}
             onClick={onRefresh}
@@ -244,7 +244,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
           {!entity && (
             <DialButton
               iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
-              cssClass="dial-secondary-button"
+              variant={ButtonVariant.Secondary}
               title={t(ActivityAuditI18nKey.RollbackSystem)}
               onClick={systemRollback}
             />

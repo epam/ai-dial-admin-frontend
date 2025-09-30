@@ -2,7 +2,7 @@
 
 import { IconPlus } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { getTools } from '@/src//app/[lang]/toolsets/actions';
 import AlertInfo from '@/src/components/Common/Alerts/AlertInfo';
@@ -178,7 +178,7 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
                   onSelectFilter={onSelectFilter}
                 />
                 <DialButton
-                  cssClass="dial-primary-button"
+                  variant={ButtonVariant.Primary}
                   title={t(ButtonsI18nKey.Add)}
                   iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
                   onClick={onOpenModal}

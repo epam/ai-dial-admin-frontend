@@ -4,7 +4,7 @@ import { FC, KeyboardEvent, useEffect, useRef, useState } from 'react';
 
 import classNames from 'classnames';
 import { isEqual } from 'lodash';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import Field from '@/src/components/Common/Field/Field';
 import Tag from '@/src/components/Common/TagInput/Tag';
@@ -202,7 +202,7 @@ const AttachmentInput: FC<Props> = ({
           </div>
           {!allSelected && (
             <DialButton
-              cssClass="dial-secondary-button"
+              variant={ButtonVariant.Secondary}
               title={t(AttachmentsI18nKey.UseAll)}
               onClick={handleSelectAll}
               disable={disable}
@@ -210,7 +210,7 @@ const AttachmentInput: FC<Props> = ({
           )}
           {!!selected.length && (
             <DialButton
-              cssClass="dial-secondary-button"
+              variant={ButtonVariant.Secondary}
               title={t(ButtonsI18nKey.None)}
               onClick={handleSelectNone}
               disable={disable}

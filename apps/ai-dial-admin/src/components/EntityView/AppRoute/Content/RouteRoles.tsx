@@ -2,8 +2,8 @@
 import { IconPlus, IconReplace } from '@tabler/icons-react';
 import { FC, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import Switch from '@/src/components/Common/Switch/Switch';
 import Grid from '@/src/components/Grid/Grid';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
@@ -116,8 +116,8 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
         <div className="flex flex-row items-center w-full mt-4 mb-4 justify-between h-[38px]">
           <h1> {t(TabsI18nKey.Roles)}</h1>
           {!route.isPublic && !readonly && (
-            <Button
-              cssClass="secondary"
+            <DialButton
+              variant={ButtonVariant.Secondary}
               iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
               title={t(ButtonsI18nKey.Add)}
               onClick={onOpenAddModal}

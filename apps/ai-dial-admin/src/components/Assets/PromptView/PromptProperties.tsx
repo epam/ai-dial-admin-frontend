@@ -3,7 +3,7 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState
 import { createPortal } from 'react-dom';
 
 import { IconPlus, IconReplace } from '@tabler/icons-react';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
@@ -213,7 +213,8 @@ const PromptProperties: FC<Props> = ({
                   onChange={onChangeVersion}
                 >
                   <DialButton
-                    cssClass="dial-tertiary-button w-full"
+                    cssClass="w-full"
+                    variant={ButtonVariant.Tertiary}
                     iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
                     title={t(ButtonsI18nKey.Create)}
                     onClick={() => handleModalOpen(ModalType.addVersion)}
@@ -223,7 +224,7 @@ const PromptProperties: FC<Props> = ({
             </div>
             {!!prompts?.length && prompts.length > 1 && (
               <DialButton
-                cssClass="dial-secondary-button"
+                variant={ButtonVariant.Secondary}
                 iconBefore={<IconReplace {...BASE_ICON_PROPS} />}
                 title={t(CompareI18nKey.CompareVersions)}
                 onClick={() => handleModalOpen(ModalType.compareVersions)}

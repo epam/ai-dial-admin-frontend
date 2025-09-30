@@ -1,5 +1,5 @@
 import { FC, useMemo } from 'react';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import FolderList from '@/src/components/Common/FolderList/FolderList';
 import Popup from '@/src/components/Common/Popup/Popup';
@@ -49,9 +49,9 @@ const FilePathModal: FC<Props> = ({ modalState, modalTitle, initialPath, onClose
         <FolderList context={context} isFolderMove={isFolderMove} folderPath={initialPath} />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton cssClass="dial-secondary-button" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         <DialButton
-          cssClass="dial-primary-button"
+          variant={ButtonVariant.Primary}
           title={t(ButtonsI18nKey.Apply)}
           onClick={() => {
             onApply(removeTrailingSlash(folderContext?.filePath));

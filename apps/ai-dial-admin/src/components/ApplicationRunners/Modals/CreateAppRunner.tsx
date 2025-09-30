@@ -1,6 +1,6 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { createApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationView/Properties';
@@ -65,9 +65,9 @@ const CreateAppRunner: FC<Props> = ({ modalState, onClose, route }) => {
         <SchemeProperties runner={currentScheme} onChangeRunner={onChangeScheme} />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton cssClass="dial-secondary-button" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         <DialButton
-          cssClass="dial-primary-button"
+          variant={ButtonVariant.Primary}
           title={t(ButtonsI18nKey.Create)}
           onClick={onCreate}
           disable={!isValid}

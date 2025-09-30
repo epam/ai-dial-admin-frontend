@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { ApplicationRoute } from '@/src/types/routes';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
@@ -63,9 +63,9 @@ const Create: FC<Props> = ({ route, onClose, modalState, names }) => {
         <BaseProperties template={template} setTemplate={setTemplate} names={names} />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton cssClass="dial-secondary-button" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         <DialButton
-          cssClass="dial-primary-button"
+          variant={ButtonVariant.Primary}
           title={t(ButtonsI18nKey.Create)}
           onClick={onCreate}
           disable={!isValid}

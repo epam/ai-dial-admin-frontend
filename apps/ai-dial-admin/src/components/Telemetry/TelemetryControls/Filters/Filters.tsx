@@ -1,6 +1,6 @@
 import React, { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
 import { IconPlus } from '@tabler/icons-react';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import AddFilter from '@/src/components/Telemetry/TelemetryControls/Filters/AddFilter';
 import Filter from '@/src/components/Telemetry/TelemetryControls/Filters/Filter';
@@ -99,7 +99,7 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route }) => {
         <DialButton
           title={t(TelemetryI18nKey.AddFilter)}
           iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-          cssClass="dial-tertiary-button"
+          variant={ButtonVariant.Tertiary}
         />
       </AddFilter>
     </>

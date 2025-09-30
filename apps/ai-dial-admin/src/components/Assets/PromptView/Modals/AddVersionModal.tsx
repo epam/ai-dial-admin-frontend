@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import Popup from '@/src/components/Common/Popup/Popup';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
@@ -34,10 +34,10 @@ const AddVersionModal: FC<Props> = ({
         <VersionControl version={version} onChange={(v) => setVersion(v || '')} />
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <DialButton cssClass="dial-secondary-button" title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
 
         <DialButton
-          cssClass="dial-primary-button"
+          variant={ButtonVariant.Primary}
           title={t(ButtonsI18nKey.Create)}
           onClick={() => onConfirm(version)}
           disable={existingVersions.includes(version)}

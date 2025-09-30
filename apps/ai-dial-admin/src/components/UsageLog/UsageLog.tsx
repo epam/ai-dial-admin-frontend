@@ -1,6 +1,6 @@
 'use client';
 import { FC, useCallback, useState } from 'react';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import { ApplicationRoute } from '@/src/types/routes';
@@ -83,7 +83,7 @@ const UsageLog: FC<Props> = ({ route, entity, entityView }) => {
             onTimeRangeChange={onTimeRangeChange}
           />
           <DialButton
-            cssClass="dial-secondary-button"
+            variant={ButtonVariant.Secondary}
             title={t(ButtonsI18nKey.Refresh)}
             iconBefore={<IconRefresh {...BASE_ICON_PROPS} />}
             onClick={onRefresh}

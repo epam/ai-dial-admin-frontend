@@ -1,7 +1,7 @@
 'use client';
 import { IconUpload } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { exportConfig, exportConfigMap } from '@/src/app/[lang]/export-config/actions';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
@@ -149,7 +149,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
         <div className="mb-4 flex flex-row items-center justify-between">
           <h1>{t(MenuI18nKey.ExportConfig)}</h1>
           <DialButton
-            cssClass="dial-primary-button"
+            variant={ButtonVariant.Primary}
             iconBefore={<IconUpload {...BASE_ICON_PROPS} />}
             title={t(ButtonsI18nKey.Export)}
             disable={isExportDisable}
