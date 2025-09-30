@@ -37,7 +37,7 @@ describe('Server :: ToolsetsApi', () => {
       `${TEST_URL}${TOOLSET_URL(mockToolset.name)}`,
       expect.objectContaining({ method: 'GET' }),
     );
-    expect(result).toEqual(JSON.stringify(mockToolset));
+    expect(result.response).toEqual(JSON.stringify(mockToolset));
   });
 
   test('Should calls createToolset with correct payload', async () => {

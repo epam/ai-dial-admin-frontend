@@ -37,7 +37,7 @@ describe('Server :: RoutesApi', () => {
       expect.stringContaining('/routes/route-1'),
       expect.objectContaining({ method: 'GET' }),
     );
-    expect(result).toEqual(JSON.stringify(mockRoute));
+    expect(result.response).toEqual(JSON.stringify(mockRoute));
   });
 
   test('Should calls createRoute', async () => {

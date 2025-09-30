@@ -37,7 +37,7 @@ describe('Server :: RolesApi', () => {
       expect.stringContaining('/roles/admin'),
       expect.objectContaining({ method: 'GET' }),
     );
-    expect(result).toEqual(JSON.stringify(exampleRole));
+      expect(result.response).toEqual(JSON.stringify(exampleRole));
   });
 
   test('Should create a new role', async () => {

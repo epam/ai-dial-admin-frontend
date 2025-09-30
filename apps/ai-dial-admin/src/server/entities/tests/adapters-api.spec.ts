@@ -76,7 +76,7 @@ describe('Server :: Adapters', () => {
       expect.stringContaining(`/adapters/${adapter.name}`),
       expect.objectContaining({ method: 'GET' }),
     );
-    expect(result).toEqual(JSON.stringify(adapter));
+    expect(result.response).toEqual(JSON.stringify(adapter));
   });
 
   test('Should calls updateAdapter and sends updated data via PUT', async () => {
