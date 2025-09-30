@@ -31,13 +31,13 @@ describe('Server :: KeysApi', () => {
   test('Should fetch a single key', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockKey));
 
-    const result = await instance.getKey(mockKey.name, TOKEN_MOCK);
+    const result = await instance.getKey(mockKey.name, TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${KEY_URL(mockKey.name)}`,
       expect.objectContaining({ method: 'GET' }),
     );
-    expect(result).toEqual(JSON.stringify(mockKey));
+    expect(result.response).toEqual(JSON.stringify(mockKey));
   });
 
   test('Should create a key', async () => {
@@ -59,7 +59,7 @@ describe('Server :: KeysApi', () => {
     const response = { success: true };
     fetch.mockResponseOnce(JSON.stringify(response));
 
-    await instance.updateKey(mockKey, TOKEN_MOCK);
+    await instance.updateKey(mockKey, TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${KEY_URL(mockKey.name)}`,

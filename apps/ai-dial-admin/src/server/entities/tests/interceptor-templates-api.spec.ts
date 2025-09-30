@@ -43,13 +43,13 @@ describe('Server :: InterceptorTemplatesApi', () => {
   test('Should fetch interceptor template', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockTemplate));
 
-    const result = await instance.getInterceptorTemplate(mockTemplate.name, TOKEN_MOCK);
+    const result = await instance.getInterceptorTemplate(mockTemplate.name, TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${INTERCEPTOR_TEMPLATES_URL}/${mockTemplate.name}`,
       expect.objectContaining({ method: 'GET' }),
     );
-    expect(result).toEqual(JSON.stringify(mockTemplate));
+    expect(result.response).toEqual(JSON.stringify(mockTemplate));
   });
 
   test('Should create interceptor template', async () => {
@@ -69,7 +69,7 @@ describe('Server :: InterceptorTemplatesApi', () => {
   test('Should update interceptor template', async () => {
     fetch.mockResponseOnce(JSON.stringify({ success: true }));
 
-    const result = await instance.updateInterceptorTemplate(mockTemplate, TOKEN_MOCK);
+    const result = await instance.updateInterceptorTemplate(mockTemplate, TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${INTERCEPTOR_TEMPLATE_URL(mockTemplate.name)}`,

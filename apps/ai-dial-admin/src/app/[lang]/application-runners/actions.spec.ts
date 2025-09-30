@@ -32,7 +32,7 @@ describe('Applications schemes :: server actions', () => {
 
   test('Should call update application scheme', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    updateApplicationScheme({}).then(() => {
+    updateApplicationScheme({}, 'etag123').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];

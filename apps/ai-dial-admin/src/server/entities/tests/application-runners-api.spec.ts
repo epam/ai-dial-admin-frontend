@@ -38,7 +38,7 @@ describe('Server :: ApplicationRunnersApi', () => {
   test('Should fetch a single application scheme by id', async () => {
     fetch.mockResponseOnce(JSON.stringify([mockScheme]));
 
-    await instance.getApplicationScheme(mockScheme.$id, TOKEN_MOCK);
+    await instance.getApplicationScheme(mockScheme.$id, TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${APPLICATION_SCHEME_URL(mockScheme.$id)}`,
@@ -65,7 +65,7 @@ describe('Server :: ApplicationRunnersApi', () => {
     const response = { success: true };
     fetch.mockResponseOnce(JSON.stringify(response));
 
-    const result = await instance.updateApplicationScheme(mockScheme, TOKEN_MOCK);
+    const result = await instance.updateApplicationScheme(mockScheme, TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${APPLICATION_SCHEME_URL(mockScheme.$id)}`,

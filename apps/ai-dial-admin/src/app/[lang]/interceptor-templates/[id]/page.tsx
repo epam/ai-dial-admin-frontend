@@ -9,10 +9,10 @@ import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { logger } from '@/src/server/logger';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
-
 import InterceptorTemplateView from '@/src/components/InterceptorTemplates/View/View';
 import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,10 +25,14 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     return redirect(SIGN_IN_LINK);
   }
 
+  let etag = DEFAULT_ETAG;
   let interceptorTemplate: InterceptorTemplate | null = null;
 
   try {
-    interceptorTemplate = await getInterceptorTemplate((await params.params).id);
+    interceptorTemplate = await getInterceptorTemplate((await params.params).id, etag).then((res) => {
+      etag = res?.etag || DEFAULT_ETAG;
+      return res?.response as InterceptorTemplate | null;
+    });
     if (interceptorTemplate === void 0) {
       return <Page403 />;
     }
@@ -42,7 +46,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   return (
     <SaveValidationContextProvider>
-      <InterceptorTemplateView route={ApplicationRoute.InterceptorTemplates} template={interceptorTemplate} />
+      <InterceptorTemplateView etag={etag} template={interceptorTemplate} />
     </SaveValidationContextProvider>
   );
 }
