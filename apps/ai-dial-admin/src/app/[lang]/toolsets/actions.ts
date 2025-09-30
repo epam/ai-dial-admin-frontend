@@ -18,9 +18,9 @@ export async function getTools(name: string) {
   return toolSetsApi.getTools(name, token);
 }
 
-export async function updateToolset(toolSet: Toolset) {
+export async function updateToolset(toolSet: Toolset, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return toolSetsApi.updateToolset(toolSet, token);
+  return toolSetsApi.updateToolset(toolSet, token, etag);
 }
 
 export async function createToolset(toolSet: Toolset) {

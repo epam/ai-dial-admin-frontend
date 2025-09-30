@@ -9,16 +9,21 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import AdapterView from '@/src/components/Adapter/View/AdapterView';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page(params: { params: Promise<{ id: string }> }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
+  let etag = DEFAULT_ETAG;
   let adapter: DialAdapter | null = null;
 
   try {
-    adapter = await adaptersApi.getAdapter((await params.params).id, token);
+    adapter = await adaptersApi.getAdapter((await params.params).id, token, etag).then((res) => {
+      etag = res?.etag || DEFAULT_ETAG;
+      return res?.response as DialAdapter | null;
+    });
   } catch (e) {
     logger.error('Getting adapter view data error', e);
   }
@@ -29,7 +34,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   return (
     <SaveValidationContextProvider>
-      <AdapterView originalAdapter={adapter} />
+      <AdapterView originalAdapter={adapter} etag={etag} />
     </SaveValidationContextProvider>
   );
 }

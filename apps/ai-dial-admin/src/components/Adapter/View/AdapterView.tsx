@@ -25,10 +25,11 @@ import { getErrorNotification } from '@/src/utils/notification';
 import AdapterProperties from './AdapterProperties';
 
 interface Props {
+  etag: string;
   originalAdapter: DialAdapter;
 }
 
-const AdapterView: FC<Props> = ({ originalAdapter }) => {
+const AdapterView: FC<Props> = ({ originalAdapter, etag }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -85,14 +86,14 @@ const AdapterView: FC<Props> = ({ originalAdapter }) => {
   }, [setJsonEditorEnabled]);
 
   const onSave = useCallback(() => {
-    updateAdapter(selectedAdapter).then((res) => {
+    updateAdapter(selectedAdapter, etag).then((res) => {
       if (res.success) {
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedAdapter, router, showNotification]);
+  }, [selectedAdapter, etag, router, showNotification]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
