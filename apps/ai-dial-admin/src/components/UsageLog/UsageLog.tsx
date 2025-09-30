@@ -22,7 +22,6 @@ import List from '@/src/components/UsageLog/List/List';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 
-
 interface Props {
   route: ApplicationRoute;
   entity?: BaseEntity;
