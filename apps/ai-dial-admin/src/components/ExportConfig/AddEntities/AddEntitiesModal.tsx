@@ -3,11 +3,11 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ColDef, GridOptions, SelectionChangedEvent } from 'ag-grid-community';
 import classNames from 'classnames';
+import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import Button from '@/src/components/Common/Button/Button';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Popup from '@/src/components/Common/Popup/Popup';
-import Switch from '@/src/components/Common/Switch/Switch';
 import { getAllAvailableDependencies, getButtonTitle } from '@/src/components/ExportConfig/AddEntities/utils';
 import Grid from '@/src/components/Grid/Grid';
 import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
@@ -97,7 +97,7 @@ const AddEntitiesModal: FC<Props> = ({ modalState, selectedTab, entities, column
           <div className="flex-1 flex flex-col min-h-0">
             {!!allDependencies.length && (
               <div className="mb-4">
-                <Switch
+                <DialSwitch
                   isOn={includeDependencies}
                   title={t(ExportI18nKey.IncludeDependencies)}
                   switchId="includeDependencies"
@@ -110,7 +110,7 @@ const AddEntitiesModal: FC<Props> = ({ modalState, selectedTab, entities, column
                 <div className="flex flex-col gap-4 w-fit rounded border border-primary p-4">
                   {allDependencies.map((dep, i) => {
                     return (
-                      <Switch
+                      <DialSwitch
                         key={i}
                         isOn={selectedDependencies.includes(dep)}
                         title={getButtonTitle(t, dep)}

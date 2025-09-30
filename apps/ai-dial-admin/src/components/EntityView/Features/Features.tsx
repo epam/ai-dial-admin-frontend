@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
+import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
-import Switch from '@/src/components/Common/Switch/Switch';
 import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
 import { FeaturesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -63,7 +63,7 @@ const EntityFeatures = <T extends { features?: DialFeatures }>({ view, entity, o
 
       {switchKeys.map((key) => {
         return (
-          <Switch
+          <DialSwitch
             key={key}
             isOn={entity?.features?.[key] as boolean}
             title={t(FeaturesI18nKey[key as keyof typeof FeaturesI18nKey])}
