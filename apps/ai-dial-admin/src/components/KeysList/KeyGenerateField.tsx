@@ -2,8 +2,8 @@ import { FC, useCallback, useState } from 'react';
 
 import { IconCopy, IconSparkles } from '@tabler/icons-react';
 import { v4 as uuidv4 } from 'uuid';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import PasswordInputField from '@/src/components/Common/PasswordInput/PasswordInputField';
 import { FieldError } from '@/src/models/error';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -49,15 +49,17 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
         />
       </div>
       {isKeyImmutable ? (
-        <Button
-          cssClass="secondary ml-2 h-[34px]"
+        <DialButton
+          variant={ButtonVariant.Secondary}
+          cssClass="ml-2 h-[34px]"
           iconBefore={<IconCopy />}
           title={t(ButtonsI18nKey.Copy)}
           onClick={() => navigator.clipboard.writeText(selectedKey.key || '')}
         />
       ) : (
-        <Button
-          cssClass="tertiary ml-2 h-[34px]"
+        <DialButton
+          variant={ButtonVariant.Tertiary}
+          cssClass="ml-2 h-[34px]"
           iconBefore={<IconSparkles />}
           title={t(ButtonsI18nKey.Generate)}
           onClick={onGenerateKey}
