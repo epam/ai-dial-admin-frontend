@@ -94,7 +94,7 @@ describe('Actions :: getResourceRollbackOperation', () => {
     expect(res.onClick).toEqual(CLICK);
   });
 
-    test('Should set COMPARE_CHANGES_OPERATION', () => {
+  test('Should set COMPARE_CHANGES_OPERATION', () => {
     const res = getCompareChangesOperation(CLICK);
     expect(res.id).toBe(ActionMenuOperation.Compare_changes);
     expect(res.icon).toEqual(<IconReplace {...BASE_ICON_PROPS} />);
