@@ -15,7 +15,7 @@ import { useI18n } from '@/src/locales/client';
 import Defaults from '@/src/components/Defaults/Defaults';
 import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
-import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
+import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import SourceField from '@/src/components/SourceField/SourceField';
 
 interface Props {

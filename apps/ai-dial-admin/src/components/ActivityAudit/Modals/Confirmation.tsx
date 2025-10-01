@@ -1,6 +1,6 @@
 import { FC, useCallback, useState } from 'react';
+import { AlertVariant, DialAlert } from '@epam/ai-dial-ui-kit';
 
-import AlertError from '@/src/components/Common/Alerts/AlertError';
 import Button from '@/src/components/Common/Button/Button';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Popup from '@/src/components/Common/Popup/Popup';
@@ -42,7 +42,7 @@ const ConfirmationRollback: FC<Props> = ({ revisionDate, modalState, onClose, on
           <span className="important-text-part ml-2">{revisionDate}</span>
         </div>
         <div className="my-4">
-          <AlertError text={t(ActivityAuditI18nKey.ConfirmSystemRollbackAlert)} />
+          <DialAlert variant={AlertVariant.Error} message={t(ActivityAuditI18nKey.ConfirmSystemRollbackAlert)} />
         </div>
         <TextInputField
           elementId="confirmationText"

@@ -4,7 +4,7 @@ import { Dispatch, FC, SetStateAction, useCallback } from 'react';
 import ApplicationParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import AppHeader from '@/src/components/Assets/AppView/AppHeader';
 import AppProperties from '@/src/components/Assets/AppView/AppProperties';
-import EntityProperties from '@/src/components/EntityProperties/EntityProperties';
+import EntityProperties from '@/src/components/EntityView/View/Content/Properties';
 import ApplicationAppRoutes from '@/src/components/EntityView/AppRoute/ApplicationAppRoutes';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityDependencies from '@/src/components/EntityView/Dependencies/Dependencies';
