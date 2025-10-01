@@ -1,9 +1,10 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Switch from '@/src/components/Common/Switch/Switch';
 import ValidityPeriodInput from '@/src/components/Common/ValidityPeriodInput/ValidityPeriodInput';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
@@ -12,6 +13,8 @@ import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import KeyGenerateField from './KeyGenerateField';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
+import { IconSparkles } from '@tabler/icons-react';
+import Button from '@/src/components/Common/Button/Button';
 
 interface Props {
   entity: DialKey;
@@ -84,9 +87,25 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
     [onChangeKey],
   );
 
+  const onGenerateKeyId = () => {
+    changeKey({ ...entity, name: uuidv4() });
+  };
+
   return (
     <div className="flex flex-col gap-6 h-full">
-      {!isKeyImmutable && <IdControl entity={entity} names={names} onChangeEntity={onChangeKey} />}
+      {!isKeyImmutable && (
+        <div className="flex items-end">
+          <div className="flex-1">
+            <IdControl entity={entity} names={names} onChangeEntity={onChangeKey} />
+          </div>
+          <Button
+            cssClass="tertiary ml-2 h-[34px]"
+            iconBefore={<IconSparkles />}
+            title={t(ButtonsI18nKey.Generate)}
+            onClick={onGenerateKeyId}
+          />
+        </div>
+      )}
 
       <DisplayNameControl
         displayName={entity.displayName}
