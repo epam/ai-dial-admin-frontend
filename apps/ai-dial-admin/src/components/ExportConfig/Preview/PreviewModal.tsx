@@ -1,10 +1,10 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import { previewExportConfig } from '@/src/app/[lang]/export-config/actions';
 import Button from '@/src/components/Common/Button/Button';
 import Loader from '@/src/components/Common/Loader/Loader';
 import Popup from '@/src/components/Common/Popup/Popup';
-import Switch from '@/src/components/Common/Switch/Switch';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import ConfigContentGrid from '@/src/components/ExportConfig/Content/ConfigContentGrid';
 import { getPreviewTabs } from '@/src/components/ExportConfig/Preview/utils';
@@ -89,7 +89,7 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, modalState, onClose
             </div>
           )}
         </div>
-        <Switch
+        <DialSwitch
           isOn={isIncludeSecret}
           title={t(ExportI18nKey.IncludeSecrets)}
           switchId="includeSecret"

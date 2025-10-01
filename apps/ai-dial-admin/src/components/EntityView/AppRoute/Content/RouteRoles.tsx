@@ -2,9 +2,9 @@
 import { IconPlus, IconReplace } from '@tabler/icons-react';
 import { FC, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import Button from '@/src/components/Common/Button/Button';
-import Switch from '@/src/components/Common/Switch/Switch';
 import Grid from '@/src/components/Grid/Grid';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
@@ -100,7 +100,7 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
     <>
       <div className="h-full w-full flex flex-col">
         {!readonly && (
-          <Switch
+          <DialSwitch
             switchId="inheritedAppRoles"
             title={t(RoutesI18nKey.InheritApplicationRoles)}
             isOn={route.isPublic}

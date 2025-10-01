@@ -33,7 +33,7 @@ const AppHeader: FC<Props> = ({ app }) => {
       <LabeledText label={t(EntityFieldsI18nKey.displayName)} text={app.name} copyButton={true} />
       {app.applicationTypeSchemaId && (
         <LabeledText label={t(PublicationsI18nKey.Runner)}>
-          <div className="flex flex-row gap-1 items-center">
+          <div className="flex flex-row gap-1 items-center max-w-[400px]">
             <Tooltip tooltip={app.applicationTypeSchemaId}>{app.applicationTypeSchemaId}</Tooltip>
             <button
               onClick={() => onOpenInNewTab(ApplicationRoute.ApplicationRunners, { $id: app.applicationTypeSchemaId })}
