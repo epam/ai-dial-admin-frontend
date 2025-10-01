@@ -117,6 +117,9 @@ export enum EntitiesI18nKey {
   JSONEditor = 'Entities.JSONEditor',
   Admin = 'Entities.Admin',
   Core = 'Entities.Core',
+  Action = 'Entities.Action',
+  Runner = 'Entities.Runner',
+  FolderStorage = 'Entities.FolderStorage',
   ApplicationDisplayName = 'Entities.ApplicationDisplayName',
   ChangeIcon = 'Entities.ChangeIcon',
   SaveChangesTitle = 'Entities.SaveChangesTitle',
@@ -433,9 +436,6 @@ export enum PublicationsI18nKey {
   ApplicationPublishApproveDescription = 'Publications.Applications.PublishApproveDescription',
   ApplicationUnpublishApproveDescription = 'Publications.Applications.UnpublishApproveDescription',
   OpenPrompt = 'Publications.Prompt.OpenPrompt',
-  Action = 'Publications.Action',
-  Runner = 'Publications.Runner',
-  FolderStorage = 'Publications.FolderStorage',
   FilesListTitle = 'Publications.Files.FilesListTitle',
 }
 

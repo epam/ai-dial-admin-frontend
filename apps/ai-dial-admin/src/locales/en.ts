@@ -150,7 +150,9 @@ export default {
     JSONEditor: 'JSON Editor',
     Admin: 'Admin format',
     Core: 'Core format',
-
+    Action: 'Action',
+    Runner: 'Runner',
+    FolderStorage: 'Folder Storage',
     // modals
     SaveChangesTitle: 'Save Changes',
     SaveChangesDescription: 'Save changes before opening the parameters tab. All unsaved changes will be lost.',
@@ -472,9 +474,6 @@ export default {
       PublishApproveDescription: 'Are you sure that you want to publish application?',
       UnpublishApproveDescription: 'Are you sure that you want to unpublish application?',
     },
-    Action: 'Action',
-    Runner: 'Runner',
-    FolderStorage: 'Folder Storage',
   },
   Prompts: {
     NewVersion: 'New Version',

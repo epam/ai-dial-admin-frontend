@@ -11,14 +11,14 @@ import {
   getComponentColDefs,
   getEntityByIdentifier,
 } from '@/src/components/ImportConfig/ConfigurationPreview/ConfigurationPreview.utils';
+import { ImportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { DialActivity } from '@/src/models/activity-audit';
 import { BaseEntity } from '@/src/models/dial/base-entity';
+import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { EntityType } from '@/src/types/entity-type';
 import { PopUpState } from '@/src/types/pop-up';
 import { getEmptyDataTitleI18nKey } from '@/src/utils/entities/get-empty-data-title';
-import { ActivityAuditEntity } from '@/src/types/activity-audit';
-import { ImportI18nKey } from '@/src/constants/i18n';
-import { DialActivity } from '@/src/models/activity-audit';
 import { getEntitiesList } from '@/src/utils/entities/get-entities-list';
 
 interface Props {
@@ -42,6 +42,14 @@ const ConfigurationGrid: FC<Props> = ({ selectedTab, tabData, currentState, prev
   const emptyDataTitleI18nkKey = useMemo(() => {
     return getEmptyDataTitleI18nKey(selectedTab);
   }, [selectedTab]);
+
+  const partialActivity = useMemo(() => {
+    return {
+      resourceId: nextEntity?.name || nextEntity?.key || nextEntity?.$id,
+      resourceType: getEntitiesList(t).find((e) => e.id === selectedTab)?.name,
+      action,
+    } as DialActivity;
+  }, [action, nextEntity?.$id, nextEntity?.key, nextEntity?.name, selectedTab, t]);
 
   const onOpenDetailsModal = useCallback(
     (entity?: BaseEntity) => {
@@ -77,13 +85,7 @@ const ConfigurationGrid: FC<Props> = ({ selectedTab, tabData, currentState, prev
       {detailsModalState === PopUpState.Opened &&
         createPortal(
           <ActivityDetails
-            partialActivity={
-              {
-                resourceId: nextEntity?.name || nextEntity?.key || nextEntity?.$id,
-                resourceType: getEntitiesList(t).find((e) => e.id === selectedTab)?.name,
-                action,
-              } as DialActivity
-            }
+            partialActivity={partialActivity}
             heading={t(ImportI18nKey.Changes)}
             currentState={nextEntity}
             rollBackState={prevEntity}
