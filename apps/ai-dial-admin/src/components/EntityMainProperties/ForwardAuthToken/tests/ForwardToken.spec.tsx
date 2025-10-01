@@ -1,36 +1,20 @@
+import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
-import { render } from '@testing-library/react';
-import ForwardAuthTokenField from './ForwardAuthTokenField';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
-
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: vi.fn(() => {
-    return { sidebarOpen: true, toggleSidebar: vi.fn() };
-  }),
-}));
+import ForwardAuthTokenField from '../ForwardAuthTokenField';
 
 const mockFunction = vi.fn();
 
 describe('ForwardToken :: ForwardAuthTokenField', () => {
-  test('Should render successfully', () => {
-    const { baseElement } = render(
-      <ForwardAuthTokenField
-        entity={{ name: 'entity', forwardAuthToken: true }}
-        onChangeEntity={mockFunction}
-        view={ApplicationRoute.Applications}
-      />,
-    );
-    expect(baseElement).toBeTruthy();
-  });
-
-  test('Should render successfully', () => {
-    const { baseElement } = render(
+  test('Should render successfully for Routes', () => {
+    render(
       <ForwardAuthTokenField
         entity={{ name: 'entity', forwardAuthToken: true }}
         onChangeEntity={mockFunction}
         view={ApplicationRoute.Routes}
       />,
     );
-    expect(baseElement).toBeTruthy();
+    expect(screen.getByText(EntityFieldsI18nKey.forwardAuthToken)).toBeInTheDocument();
   });
 });

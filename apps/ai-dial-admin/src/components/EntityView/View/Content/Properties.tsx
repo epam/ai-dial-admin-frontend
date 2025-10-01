@@ -5,7 +5,7 @@ import Defaults from '@/src/components/Defaults/Defaults';
 import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMainProperties';
-import EntityAttachments from '@/src/components/EntityView/EntityAttchaments/EntityAttachments';
+import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';

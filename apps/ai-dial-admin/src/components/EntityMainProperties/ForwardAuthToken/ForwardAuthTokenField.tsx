@@ -13,7 +13,7 @@ import {
 import { useI18n } from '@/src/locales/client';
 import { ChatEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getAlertTitlePerView, getDisplayNamePerView, NONE_ID, USE_ID } from './forward-token';
+import { getAlertTitlePerView, getDisplayNamePerView, NONE_ID, USE_ID } from './utils';
 
 interface Props {
   view: ApplicationRoute;
