@@ -1,14 +1,15 @@
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import Button from '@/src/components/Common/Button/Button';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import { EntityPlaceholdersI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import { EntityPlaceholdersI18nKey, ErrorI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import Path from './Path';
+import { useSaveValidationContext, ValidationActionType } from '../../../context/SaveValidationContext';
 
 interface Props {
   title: string;
@@ -20,6 +21,17 @@ interface Props {
 
 const Paths: FC<Props> = ({ title, optional, readonly, paths, onChangePaths }) => {
   const t = useI18n();
+  const { dispatch } = useSaveValidationContext();
+
+  const [pathError, setPathError] = useState('');
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'path', isValid: !pathError });
+  }, [dispatch, pathError]);
+
+  useEffect(() => {
+    setPathError(!paths || paths.length === 0 || paths.some((p) => !p) ? t(ErrorI18nKey.RequiredField) : '');
+  }, [paths, t]);
 
   const onAddPath = useCallback(() => {
     const newPaths = [...(paths || [])];
@@ -63,11 +75,13 @@ const Paths: FC<Props> = ({ title, optional, readonly, paths, onChangePaths }) =
         <div key="path 0" className="flex items-center">
           <div className="flex-1">
             <TextInputField
-              elementId={'path 0'}
+              elementId="path 0"
               value={''}
               disabled={readonly}
               placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
               fieldTitle={title}
+              errorText={pathError}
+              invalid={!!pathError}
               onChange={(value?: string) => onChangePath(0, value)}
             />
           </div>
