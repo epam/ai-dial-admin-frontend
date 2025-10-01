@@ -1,9 +1,9 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import { NumberInputField, TextInputField } from '@/src/components/Common/InputField/InputField';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
-import Switch from '@/src/components/Common/Switch/Switch';
 import UpstreamEndpoints from '@/src/components/Endpoints/UpstreamEndpoints';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
@@ -155,7 +155,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
           readonly={readonly}
         />
 
-        <Switch
+        <DialSwitch
           isOn={route.rewritePath}
           title={t(EntityFieldsI18nKey.rewritePath)}
           switchId="RewritePath"

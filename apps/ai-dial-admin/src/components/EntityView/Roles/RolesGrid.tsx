@@ -2,10 +2,10 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { IconPlus, IconReload } from '@tabler/icons-react';
 import { GridApi, GridReadyEvent, IRowNode } from 'ag-grid-community';
+import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import Button from '@/src/components/Common/Button/Button';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
-import Switch from '@/src/components/Common/Switch/Switch';
 import Grid from '@/src/components/Grid/Grid';
 import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -95,7 +95,7 @@ const RolesGrid: FC<Props> = ({
           <h1 className="mr-3">
             {t(TabsI18nKey.Roles)}: {data.length}
           </h1>
-          <Switch
+          <DialSwitch
             isOn={!entity.isPublic}
             title={t(RolesI18nKey.AvailableSpecificRoles)}
             switchId="specific_roles"

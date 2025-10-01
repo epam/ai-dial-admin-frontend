@@ -3,6 +3,7 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { IconFileTypeZip } from '@tabler/icons-react';
+import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import Json from '@/public/images/icons/file/json.svg';
 import Field from '@/src/components/Common/Field/Field';
@@ -10,7 +11,6 @@ import { CreateFolderSteps } from '@/src/components/Common/FolderCreate/constant
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import LoadFileAreaField from '@/src/components/Common/LoadFileArea/LoadFileAreaField';
 import RadioButton from '@/src/components/Common/RadioButton/RadioButton';
-import Switch from '@/src/components/Common/Switch/Switch';
 import { FoldersI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_ZIP_TYPE } from '@/src/constants/request-headers';
 import { useI18n } from '@/src/locales/client';
@@ -167,7 +167,7 @@ const FolderCreateSetup: FC<Props> = ({
           {view === ApplicationRoute.Prompts && (
             <div className="flex flex-col">
               <Field fieldTitle={ignorePathsTitle} />
-              <Switch
+              <DialSwitch
                 isOn={ignorePaths}
                 title={t(ImportI18nKey.PathsIgnore)}
                 switchId="ignorePaths"

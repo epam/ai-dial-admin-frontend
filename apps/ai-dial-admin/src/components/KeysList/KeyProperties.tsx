@@ -1,8 +1,8 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { DialSwitch } from '@epam/ai-dial-ui-kit';
 import { v4 as uuidv4 } from 'uuid';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import Switch from '@/src/components/Common/Switch/Switch';
 import ValidityPeriodInput from '@/src/components/Common/ValidityPeriodInput/ValidityPeriodInput';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -137,7 +137,7 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
       <KeyGenerateField isKeyImmutable={isKeyImmutable} keys={keys} selectedKey={entity} changeKey={changeKey} />
 
       {isKeyImmutable && (
-        <Switch
+        <DialSwitch
           isOn={entity.secured}
           title={t(EntityFieldsI18nKey.secured)}
           switchId="secured"
