@@ -18,13 +18,15 @@ interface Props {
 }
 
 const VersionControl: FC<Props> = ({ version, error, optional, hideError, ...props }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n() as (str: string, options?: Record<string, string | number>) => string;
 
   const [versionError, setVersionError] = useState<FieldError | null>(null);
 
   useEffect(() => {
-    setVersionError(getVersionControlError(version, !optional, hideError, t));
-  }, [hideError, optional, t, version]);
+    const error = getVersionControlError(version, optional, hideError, t);
+    setVersionError(error);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [version, optional, hideError]);
 
   return (
     <TextInputField

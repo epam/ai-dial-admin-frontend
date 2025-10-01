@@ -3,6 +3,7 @@ import { checkNameVersionCombination } from '@/src/utils/prompts/versions';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ErrorType } from '@/src/types/error-type';
 import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
+import { FieldError } from '@/src/models/error';
 
 export const getPromptVersionError = (
   versionsMap: Record<string, string[]> | undefined,
@@ -19,11 +20,11 @@ export const getPromptVersionError = (
 
 export const getVersionControlError = (
   version?: string,
-  required?: boolean,
+  optional?: boolean,
   hideError?: boolean,
   t?: (str: string, options?: Record<string, string | number>) => string,
-) => {
-  if (!version && required && !hideError) {
+): FieldError | null => {
+  if (!version && !optional && !hideError) {
     return {
       type: ErrorType.EMPTY,
       text: t ? t(ErrorI18nKey.RequiredField) : '',
