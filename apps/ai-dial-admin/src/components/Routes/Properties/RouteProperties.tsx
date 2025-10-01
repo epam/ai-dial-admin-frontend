@@ -1,9 +1,9 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import { NumberInputField, TextInputField } from '@/src/components/Common/InputField/InputField';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
-import Switch from '@/src/components/Common/Switch/Switch';
 import UpstreamEndpoints from '@/src/components/Endpoints/UpstreamEndpoints';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
@@ -46,10 +46,15 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
   const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE'];
 
   const [statusError, setStatusError] = useState('');
+  const [bodyError, setBodyError] = useState('');
 
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'status', isValid: !statusError });
   }, [dispatch, statusError]);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'body', isValid: !bodyError });
+  }, [dispatch, bodyError]);
 
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'methods', isValid: !!route.methods?.length });
@@ -80,8 +85,13 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
     (output: string) => {
       const newRoute = handleRouteOutputChange(route, output);
       updateRoute(newRoute);
+      if (output === RouteOutput.RESPONSE) {
+        setStatusError(t(ErrorI18nKey.RequiredField));
+
+        setBodyError(t(ErrorI18nKey.RequiredField));
+      }
     },
-    [route, updateRoute],
+    [route, t, updateRoute],
   );
 
   const onChangeStatus = useCallback(
@@ -107,8 +117,9 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
           body,
         },
       });
+      setBodyError(body ? '' : t(ErrorI18nKey.RequiredField));
     },
-    [route, updateRoute],
+    [route, t, updateRoute],
   );
 
   const onChangeMethods = useCallback(
@@ -155,7 +166,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
           readonly={readonly}
         />
 
-        <Switch
+        <DialSwitch
           isOn={route.rewritePath}
           title={t(EntityFieldsI18nKey.rewritePath)}
           switchId="RewritePath"
@@ -207,6 +218,8 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
                 placeholder={t(EntityPlaceholdersI18nKey.Body)}
                 value={route.response.body}
                 onChange={onChangeBody}
+                errorText={bodyError}
+                invalid={!!bodyError}
               />
             </div>
           </div>
