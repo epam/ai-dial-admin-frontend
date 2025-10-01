@@ -37,7 +37,7 @@ describe('Endpoint', () => {
     expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Weight)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Tier)).toBeInTheDocument();
     expect(screen.getByText(EntityFieldsI18nKey.extraData)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: ButtonsI18nKey.Remove })).toBeInTheDocument();
+    expect(screen.getByLabelText('remove')).toBeInTheDocument();
   });
 
   it('calls updateEndpoint on endpoint url change', () => {
