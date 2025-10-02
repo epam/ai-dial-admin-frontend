@@ -5,7 +5,7 @@ import { IconExternalLink } from '@tabler/icons-react';
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getFormattedResourceType } from '@/src/constants/grid-columns/formatters';
-import { ActivityAuditI18nKey } from '@/src/constants/i18n';
+import { ActivityAuditI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/activity-audit';
@@ -41,6 +41,7 @@ const ViewHeader: FC<Props> = ({ activity, isModalView, children }) => {
   return (
     <div className="flex flex-row w-full justify-between flex-wrap lg:flex-nowrap">
       <div className="flex flex-row gap-10 w-full flex-wrap">
+        {activity.action && <LabeledText label={t(EntitiesI18nKey.Action)} text={activity.action} />}
         {activity.activityType && (
           <LabeledText label={t(ActivityAuditI18nKey.ActivityType)} text={activity.activityType} />
         )}

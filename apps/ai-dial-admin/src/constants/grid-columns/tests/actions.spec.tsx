@@ -7,6 +7,7 @@ import {
   IconInfinity,
   IconRefresh,
   IconReload,
+  IconReplace,
   IconTrash,
   IconTrashX,
 } from '@tabler/icons-react';
@@ -15,6 +16,7 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { ActionMenuOperation } from '@/src/types/action-menu-operations';
 import { describe, expect, test, vi } from 'vitest';
 import {
+  getCompareChangesOperation,
   getDeleteOperation,
   getDuplicateOperation,
   getMoveOperation,
@@ -89,6 +91,13 @@ describe('Actions :: getResourceRollbackOperation', () => {
     const res = getViewDetailsOperation(CLICK);
     expect(res.id).toBe(ActionMenuOperation.View_details);
     expect(res.icon).toEqual(<OpenPopup {...BASE_ICON_PROPS} />);
+    expect(res.onClick).toEqual(CLICK);
+  });
+
+  test('Should set COMPARE_CHANGES_OPERATION', () => {
+    const res = getCompareChangesOperation(CLICK);
+    expect(res.id).toBe(ActionMenuOperation.Compare_changes);
+    expect(res.icon).toEqual(<IconReplace {...BASE_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
   });
 });
