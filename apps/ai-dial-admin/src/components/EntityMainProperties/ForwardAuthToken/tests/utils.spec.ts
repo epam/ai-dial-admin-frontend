@@ -7,7 +7,7 @@ import {
   isForwardTokenTrue,
   NONE_ID,
   USE_ID,
-} from './forward-token';
+} from '../utils';
 import { describe, expect, test } from 'vitest';
 
 describe('EntityProperties :: ForwardAuthToken :: getAlertTitlePerView', () => {
