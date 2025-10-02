@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 
-import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
+import { DialTextAreaField } from '@epam/ai-dial-ui-kit';
+
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
@@ -31,7 +32,7 @@ const DescriptionControl = <T extends { description?: string }>({ entity, onChan
   );
 
   return (
-    <TextAreaField
+    <DialTextAreaField
       elementId="description"
       fieldTitle={t(EntityFieldsI18nKey.description)}
       placeholder={t(EntityPlaceholdersI18nKey.Description)}
