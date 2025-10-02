@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
@@ -9,14 +9,17 @@ import AddVersionModal from '../AddVersionModal';
 
 describe('Common components - AddVersionModal', () => {
   const user = userEvent.setup();
-  test.skip('renders input and buttons', () => {
+  const onClose = vi.fn();
+  const onConfirm = vi.fn();
+
+  test('renders input and buttons', () => {
     render(
       <AddVersionModal
         heading="header"
         existingVersions={[]}
         modalState={PopUpState.Opened}
-        onClose={vi.fn()}
-        onConfirm={vi.fn()}
+        onClose={onClose}
+        onConfirm={onConfirm}
       />,
     );
 
@@ -25,10 +28,7 @@ describe('Common components - AddVersionModal', () => {
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeInTheDocument();
   });
 
-  test.skip('handles close and confirm actions', async () => {
-    const onClose = vi.fn();
-    const onConfirm = vi.fn();
-
+  test('handles close and confirm actions', async () => {
     render(
       <AddVersionModal
         heading="header"
@@ -49,15 +49,16 @@ describe('Common components - AddVersionModal', () => {
     expect(onConfirm).toHaveBeenCalled();
   });
 
-  test.skip('renders provided versions and handles version change', async () => {
+  test('renders provided versions and handles version change', async () => {
     const existingVersions = ['1.0.0', '2.0.0'];
+
     render(
       <AddVersionModal
         heading="header"
         existingVersions={existingVersions}
         modalState={PopUpState.Opened}
-        onClose={vi.fn()}
-        onConfirm={vi.fn()}
+        onClose={onClose}
+        onConfirm={onConfirm}
       />,
     );
 
@@ -65,8 +66,10 @@ describe('Common components - AddVersionModal', () => {
     expect(input).toBeInTheDocument();
     expect(input).toHaveValue('');
 
-    await user.clear(input);
-    await user.paste('3.0.0');
-    expect(input).toHaveValue('3.0.0');
+    await waitFor(async () => {
+      await user.clear(input);
+      await user.paste('3.0.0');
+      expect(input).toHaveValue('3.0.0');
+    });
   });
 });
