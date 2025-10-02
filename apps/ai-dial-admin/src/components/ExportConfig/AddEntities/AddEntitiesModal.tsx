@@ -17,6 +17,7 @@ import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { PopUpState } from '@/src/types/pop-up';
 import { EntityType } from '@/src/types/entity-type';
 import { getEmptyDataTitleI18nKey } from '@/src/utils/entities/get-empty-data-title';
+import Dependencies from './Dependencies';
 
 interface Props {
   modalState: PopUpState;
@@ -94,37 +95,11 @@ const AddEntitiesModal: FC<Props> = ({ modalState, selectedTab, entities, column
         {!entities.length ? (
           <NoDataContent emptyDataTitle={t(emptyTitle)} />
         ) : (
-          <div className="flex-1 flex flex-col min-h-0">
-            {!!allDependencies.length && (
-              <div className="mb-4">
-                <DialSwitch
-                  isOn={includeDependencies}
-                  title={t(ExportI18nKey.IncludeDependencies)}
-                  switchId="includeDependencies"
-                  onChange={onIncludeDependencies}
-                />
-              </div>
-            )}
-            <div className="flex-1 flex flex-row gap-4 min-h-0">
-              {includeDependencies && (
-                <div className="flex flex-col gap-4 w-fit rounded border border-primary p-4">
-                  {allDependencies.map((dep, i) => {
-                    return (
-                      <DialSwitch
-                        key={i}
-                        isOn={selectedDependencies.includes(dep)}
-                        title={getButtonTitle(t, dep)}
-                        switchId={dep}
-                        onChange={(v) => onChangeSelectedDependencies(v, dep)}
-                      />
-                    );
-                  })}
-                </div>
-              )}
-              <div className="flex-1">
-                <Grid columnDefs={columnDefs} rowData={entities} additionalGridOptions={additionalGridOptions} />
-              </div>
+          <div className="flex-1 flex flex-row min-h-0">
+            <div className="flex-1">
+              <Grid columnDefs={columnDefs} rowData={entities} additionalGridOptions={additionalGridOptions} />
             </div>
+            <Dependencies selectedTab={selectedTab} />
           </div>
         )}
       </div>
