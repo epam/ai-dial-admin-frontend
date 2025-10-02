@@ -2,6 +2,7 @@ import { FC, useEffect, useState } from 'react';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { FieldError } from '@/src/models/error';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getVersionControlError } from '@/src/utils/validation/version-error';
 import { useI18n } from '@/src/locales/client';
 
@@ -19,12 +20,14 @@ interface Props {
 
 const VersionControl: FC<Props> = ({ version, error, optional, hideError, ...props }) => {
   const t = useI18n() as (str: string, options?: Record<string, string | number>) => string;
+  const { dispatch } = useSaveValidationContext();
 
   const [versionError, setVersionError] = useState<FieldError | null>(null);
 
   useEffect(() => {
     const error = getVersionControlError(version, optional, hideError, t);
     setVersionError(error);
+    dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !error });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [version, optional, hideError]);
 
