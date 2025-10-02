@@ -2,13 +2,14 @@
 import { ColDef } from 'ag-grid-community';
 import { FC, useCallback, useRef } from 'react';
 import classNames from 'classnames';
+import { useDrop } from 'react-dnd';
 import { IconX } from '@tabler/icons-react';
+import { DialCheckbox } from '@epam/ai-dial-ui-kit';
+
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import Checkbox from '@/src/components/Common/Checkbox/Checkbox';
 import Button from '@/src/components/Common/Button/Button';
 import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
-import { useDrop } from 'react-dnd';
 
 interface Props {
   columns: ColDef[];
@@ -77,7 +78,7 @@ const ColumnsPanel: FC<Props> = ({
               return (
                 <li key={col.field}>
                   <DraggableItem id={col.field || ''} findItem={findColumn} moveItem={moveColumn}>
-                    <Checkbox
+                    <DialCheckbox
                       label={col.headerName}
                       id={col.field || ''}
                       checked={!col.hide}
