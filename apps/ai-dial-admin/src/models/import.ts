@@ -11,5 +11,6 @@ export type FileConfiguration = Record<string, FileComponentItem[]>;
 
 export interface FileComponentItem {
   importAction: string;
-  value: BaseEntity;
+  next: BaseEntity;
+  prev?: BaseEntity;
 }

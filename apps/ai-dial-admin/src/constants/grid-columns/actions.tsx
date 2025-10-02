@@ -7,6 +7,7 @@ import {
   IconInfinity,
   IconRefresh,
   IconReload,
+  IconReplace,
   IconTrash,
   IconTrashX,
 } from '@tabler/icons-react';
@@ -124,5 +125,13 @@ export function getPreviewOperation<T>(
     id: ActionMenuOperation.Preview,
     onClick,
     hidden,
+  };
+}
+
+export function getCompareChangesOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
+  return {
+    icon: <IconReplace {...BASE_ICON_PROPS} />,
+    id: ActionMenuOperation.Compare_changes,
+    onClick,
   };
 }

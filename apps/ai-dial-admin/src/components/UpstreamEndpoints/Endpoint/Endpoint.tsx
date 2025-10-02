@@ -20,7 +20,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialEndpointExtraData, DialModelEndpoint } from '@/src/models/dial/model';
 import { isDangerEndpoint } from '@/src/utils/validation/url-error';
 import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
-import ExtraDataField from './ExtraData/ExtraDataField';
+import ExtraDataField from '../ExtraData/ExtraDataField';
 import WarningIcon from './WarningIcon';
 
 interface Props {
