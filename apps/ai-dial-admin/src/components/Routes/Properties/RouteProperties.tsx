@@ -60,6 +60,12 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
     dispatch({ type: ValidationActionType.SetField, field: 'methods', isValid: !!route.methods?.length });
   }, [dispatch, route.methods]);
 
+  useEffect(() => {
+    if (isAppRoute) {
+      dispatch({ type: ValidationActionType.SetField, field: 'endpoints', isValid: !!route.upstreams?.length });
+    }
+  }, [isAppRoute, dispatch, route.upstreams?.length]);
+
   const selectedPermissions = useMemo(() => {
     const values = (route as DialAppRoute).permissions?.map(
       (p) => permissionsItems.find((i) => i.id === p)?.name as string,
