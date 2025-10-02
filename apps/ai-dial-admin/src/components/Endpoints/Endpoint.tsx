@@ -123,7 +123,6 @@ const Endpoint: FC<Props> = ({
               id={'upstreamEndpoints ' + index}
               endpoint={endpoint.endpoint}
               elementCssClass="h-[38px]"
-              required={true}
               placeholder={t(EntityPlaceholdersI18nKey.UpstreamEndpoint)}
               fieldTitle={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.Endpoints) : ''}
               onChange={onChangeEndPointUrl}
