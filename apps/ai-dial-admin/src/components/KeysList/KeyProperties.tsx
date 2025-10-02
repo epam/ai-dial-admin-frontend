@@ -83,8 +83,9 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
   const changeKey = useCallback(
     (key: DialKey) => {
       onChangeKey(key);
+      dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: true });
     },
-    [onChangeKey],
+    [dispatch, onChangeKey],
   );
 
   const onGenerateKeyId = () => {
