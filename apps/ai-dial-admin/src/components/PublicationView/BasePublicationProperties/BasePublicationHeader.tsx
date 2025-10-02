@@ -1,21 +1,20 @@
-import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
-import { IconCircleX, IconWorldShare, IconWorldOff } from '@tabler/icons-react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
+
+import { ButtonVariant, DialButton, DialTextAreaField } from '@epam/ai-dial-ui-kit';
+import { IconCircleX, IconWorldOff, IconWorldShare } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import { ButtonsI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
-import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
-import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
-import { PopUpState } from '@/src/types/pop-up';
-import { createPortal } from 'react-dom';
 import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
-import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
+import { ButtonsI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
+import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
+import { useI18n } from '@/src/locales/client';
 import { ActionType } from '@/src/models/dial/publications';
+import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getModalsTranslations } from '@/src/utils/publications';
-
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
 interface Props {
   onApprove: () => void;
@@ -126,7 +125,7 @@ const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action 
             confirmLabel={t(ButtonsI18nKey.Decline)}
           >
             <div className="px-6">
-              <TextAreaField
+              <DialTextAreaField
                 elementId="reason"
                 fieldTitle={t(PublicationsI18nKey.DeclineReason)}
                 placeholder={t(PublicationsI18nKey.DeclineReasonPlaceholder)}
