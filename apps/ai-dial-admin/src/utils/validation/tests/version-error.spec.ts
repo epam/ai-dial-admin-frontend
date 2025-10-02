@@ -41,14 +41,14 @@ describe('getPromptVersionError', () => {
 describe('getVersionControlError', () => {
   const t = (key: string) => key;
   test('returns Error if version does not exist but required', () => {
-    expect(getVersionControlError('', true, false, t)).toStrictEqual({
+    expect(getVersionControlError('', false, false, t)).toStrictEqual({
       type: ErrorType.EMPTY,
       text: ErrorI18nKey.RequiredField,
     });
   });
 
   test('do not returns Error if version does not exist but required but hidden', () => {
-    expect(getVersionControlError('', true, true, t)).toBe(null);
+    expect(getVersionControlError('', false, true, t)).toBe(null);
   });
 
   test('return Error if long value in field', () => {
