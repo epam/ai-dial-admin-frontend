@@ -4,7 +4,7 @@ import { DialSwitch } from '@epam/ai-dial-ui-kit';
 import { NumberInputField, TextInputField } from '@/src/components/Common/InputField/InputField';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
-import UpstreamEndpoints from '@/src/components/Endpoints/UpstreamEndpoints';
+import UpstreamEndpoints from '@/src/components/UpstreamEndpoints/UpstreamEndpoints';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';

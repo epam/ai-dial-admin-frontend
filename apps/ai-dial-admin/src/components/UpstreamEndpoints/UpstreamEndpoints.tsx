@@ -7,7 +7,7 @@ import { useI18n } from '@/src/locales/client';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { DialModel, DialModelEndpoint } from '@/src/models/dial/model';
 import { DialRoute } from '@/src/models/dial/route';
-import Endpoint from './Endpoint';
+import Endpoint from './Endpoint/Endpoint';
 
 interface Props {
   entity: DialRoute | DialModel;

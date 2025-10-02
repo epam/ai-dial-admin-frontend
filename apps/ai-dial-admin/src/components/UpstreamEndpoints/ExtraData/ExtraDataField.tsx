@@ -1,13 +1,15 @@
+import { FC, useCallback, useEffect, useState } from 'react';
+
+import { DialTextAreaField } from '@epam/ai-dial-ui-kit';
+
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import { RadioButtonWithContent } from '@/src/components/Common/RadioGroup/RadioGroup';
 import RadioGroupModalField from '@/src/components/Common/RadioGroupModalField/RadioGroupModalField';
-import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialEndpointExtraData, DialModelEndpoint } from '@/src/models/dial/model';
 import { JSONEditorError } from '@/src/types/editor';
-import { FC, useCallback, useEffect, useState } from 'react';
-import { NONE_ID, USE_JSON_ID, USE_STRING_ID } from './extra-data';
+import { NONE_ID, USE_JSON_ID, USE_STRING_ID } from './constants';
 
 interface Props {
   endpoint: DialModelEndpoint;
@@ -112,7 +114,7 @@ const ExtraDataField: FC<Props> = ({ endpoint, disabled, fieldTitle, onChangeExt
       id: USE_STRING_ID,
       name: t(TypeI18nKey.String),
       content: (
-        <TextAreaField
+        <DialTextAreaField
           elementId="extraDataStringValue"
           value={stringValue}
           placeholder={t(EntityPlaceholdersI18nKey.Value)}
