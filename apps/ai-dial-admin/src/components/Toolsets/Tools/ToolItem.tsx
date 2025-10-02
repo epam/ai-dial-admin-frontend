@@ -1,12 +1,11 @@
 'use client';
 
 import { FC } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialSwitch, DialButton } from '@epam/ai-dial-ui-kit';
+import { IconTrash } from '@tabler/icons-react';
 
 import { useI18n } from '@/src/locales/client';
 import { ButtonsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
-import Switch from '@/src/components/Common/Switch/Switch';
-import { IconTrash } from '@tabler/icons-react';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
 interface Props {
@@ -44,7 +43,7 @@ const ToolItem: FC<Props> = ({ tool, isAddedManual, onRemoveTool, isEnabled, rea
             </div>
           )}
 
-          {!readonly && <Switch switchId={tool} isOn={isEnabled} onChange={(value) => onChangeIsEnabled(value)} />}
+          {!readonly && <DialSwitch switchId={tool} isOn={isEnabled} onChange={(value) => onChangeIsEnabled(value)} />}
         </div>
       </div>
     </div>

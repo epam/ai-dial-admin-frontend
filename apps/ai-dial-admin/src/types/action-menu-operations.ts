@@ -18,4 +18,5 @@ export enum ActionMenuOperation {
   Manage_folder = 'Manage permissions',
   Rename = 'Rename',
   Move_to = 'Move to',
+  Compare_changes = 'Compare changes',
 }

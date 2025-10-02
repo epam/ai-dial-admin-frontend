@@ -3,7 +3,7 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState
 import { createPortal } from 'react-dom';
 
 import { IconPlus, IconReplace } from '@tabler/icons-react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialSwitch, ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
@@ -11,7 +11,6 @@ import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
 import MdEditor from '@/src/components/Common/MdEditor/MdEditor';
-import Switch from '@/src/components/Common/Switch/Switch';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
@@ -237,7 +236,7 @@ const PromptProperties: FC<Props> = ({
           <div>
             <div className="flex justify-between mb-2">
               <div className="tiny mb-2 text-secondary">{t(EntityFieldsI18nKey.content)}</div>
-              <Switch
+              <DialSwitch
                 isOn={isJSONContentMode}
                 title="JSON"
                 switchId="content_json_mode"

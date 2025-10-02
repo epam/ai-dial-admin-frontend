@@ -1,6 +1,8 @@
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import Button from '@/src/components/Common/Button/Button';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { IconCircleX, IconWorldShare, IconWorldOff } from '@tabler/icons-react';
 import classNames from 'classnames';
+
 import { ButtonsI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
@@ -12,7 +14,7 @@ import TextAreaField from '@/src/components/Common/TextAreaField/TextAreaField';
 import { ActionType } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getModalsTranslations } from '@/src/utils/publications';
-import { IconCircleX, IconWorldShare, IconWorldOff } from '@tabler/icons-react';
+
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
 interface Props {
@@ -70,22 +72,25 @@ const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action 
     <>
       <div className={containerClassNames}>
         <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
-          <Button
-            cssClass={classNames(`secondary ${buttonsClassNames}`)}
+          <DialButton
+            variant={ButtonVariant.Secondary}
+            cssClass={buttonsClassNames}
             title={t(ButtonsI18nKey.Decline)}
             onClick={() => setIsOpenDeclineModal(PopUpState.Opened)}
             iconBefore={<IconCircleX {...BASE_ICON_PROPS} />}
           />
           {action === ActionType.ADD ? (
-            <Button
-              cssClass={`primary ${buttonsClassNames} ${approveButtonClassNames}`}
+            <DialButton
+              variant={ButtonVariant.Primary}
+              cssClass={classNames(buttonsClassNames, approveButtonClassNames)}
               title={t(ButtonsI18nKey.Publish)}
               onClick={() => setIsOpenApproveModal(PopUpState.Opened)}
               iconBefore={<IconWorldShare {...BASE_ICON_PROPS} />}
             />
           ) : (
-            <Button
-              cssClass={`primary ${buttonsClassNames} ${approveButtonClassNames}`}
+            <DialButton
+              variant={ButtonVariant.Primary}
+              cssClass={classNames(buttonsClassNames, approveButtonClassNames)}
               title={t(ButtonsI18nKey.Unpublish)}
               onClick={() => setIsOpenApproveModal(PopUpState.Opened)}
               iconBefore={<IconWorldOff {...BASE_ICON_PROPS} />}
