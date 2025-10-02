@@ -3,9 +3,9 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import classNames from 'classnames';
+import { DialSteps, StepStatus } from '@epam/ai-dial-ui-kit';
 
 import Popup from '@/src/components/Common/Popup/Popup';
-import Steps from '@/src/components/Common/Steps/Steps';
 import { getMultipleImportStatus, isInvalidJson, isLargeFile } from '@/src/components/EntityListView/Import/import';
 import { FoldersI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { IMPORT_FILE_TYPES, IMPORT_RESOLUTIONS, IMPORT_STEPS } from '@/src/constants/import';
@@ -16,7 +16,6 @@ import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportMap } from '@/src/models/file';
 import { ParsedPrompts } from '@/src/models/prompts';
-import { Step, StepStatus } from '@/src/models/step';
 import { ConflictResolutionPolicy, ImportFileType as FileType, ImportSteps } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -49,7 +48,7 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
   const [resolutions, setResolutions] = useState(IMPORT_RESOLUTIONS(t));
 
   const [steps, setSteps] = useState(IMPORT_STEPS(t));
-  const [currentStep, setCurrentStep] = useState<Step>(steps[0]);
+  const [currentStepId, setCurrentStepId] = useState(steps[0].id);
 
   const [ignorePaths, setIgnorePaths] = useState(false);
   const [fileType, setFileType] = useState(fileTypes[0].id);
@@ -107,7 +106,7 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
     (type: string) => {
       setSteps((prev) => {
         const index = prev.findIndex((step) => step.id === ImportSteps.PROPERTIES);
-        return prev.map((item, i) => (i === index ? { ...item, status: StepStatus.INVALID } : item));
+        return prev.map((item, i) => (i === index ? { ...item, status: StepStatus.ERROR } : item));
       });
       setResolutions(IMPORT_RESOLUTIONS(t, type));
       setFileType(type);
@@ -156,19 +155,13 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
   );
 
   const setStepsState = useCallback(
-    (status: StepStatus) => {
+    (status?: StepStatus) => {
       setSteps((prev) => {
-        const index = prev.findIndex((step) => step.id === currentStep.id);
+        const index = prev.findIndex((step) => step.id === currentStepId);
         return prev.map((item, i) => (i === index ? { ...item, status } : item));
       });
-      setCurrentStep((prev) => {
-        return {
-          ...prev,
-          status,
-        };
-      });
     },
-    [currentStep.id],
+    [currentStepId],
   );
 
   const isInvalidFile = useCallback(
@@ -200,7 +193,7 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
   };
 
   useEffect(() => {
-    setStepsState(StepStatus.INVALID);
+    setStepsState();
   }, [fileType, setStepsState]);
 
   useEffect(() => {
@@ -210,13 +203,13 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
   }, [resolution, setStepsState]);
 
   useEffect(() => {
-    if (currentStep.id === ImportSteps.FILES) {
-      const zipStatus = zipFile ? StepStatus.VALID : StepStatus.INVALID;
+    if (currentStepId === ImportSteps.FILES) {
+      const zipStatus = zipFile ? StepStatus.VALID : void 0;
       const filesStatus = getMultipleImportStatus(fileType === FileType.JSON ? jsonFileMap : separateFileMap);
       const status = fileType === FileType.ARCHIVE ? zipStatus : filesStatus;
       setStepsState(status);
     }
-  }, [zipFile, fileType, setStepsState, jsonFileMap, currentStep.id, separateFileMap]);
+  }, [zipFile, fileType, setStepsState, jsonFileMap, currentStepId, separateFileMap]);
 
   return (
     <Popup
@@ -227,8 +220,8 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
       containerClassName={containerClassName}
     >
       <div className="flex px-6 py-4 flex-1 flex-col min-h-0">
-        <Steps steps={steps} currentStep={currentStep} setCurrentStep={setCurrentStep} />
-        <div className={currentStep.id === ImportSteps.FILES ? 'flex flex-col flex-1 min-h-0' : 'hidden'}>
+        <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStepId} />
+        <div className={currentStepId === ImportSteps.FILES ? 'flex flex-col flex-1 min-h-0' : 'hidden'}>
           <ImportFileTypeSelector
             files={
               fileType === FileType.ARCHIVE
@@ -250,7 +243,7 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
             route={route}
           />
         </div>
-        {currentStep.id === ImportSteps.PROPERTIES && (
+        {currentStepId === ImportSteps.PROPERTIES && (
           <ImportConflicts
             route={route}
             existing={folderContext?.data || []}
@@ -265,8 +258,8 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
       </div>
       <ImportModalButtons
         steps={steps}
-        currentStep={currentStep}
-        setCurrentStep={setCurrentStep}
+        currentStep={currentStepId}
+        setCurrentStep={setCurrentStepId}
         onFinishClick={onFinishClick}
       />
     </Popup>

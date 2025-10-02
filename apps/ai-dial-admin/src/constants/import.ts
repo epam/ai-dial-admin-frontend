@@ -1,7 +1,8 @@
+import { Step } from '@epam/ai-dial-ui-kit';
+
 import { RadioButtonModel } from '@/src/models/radio-button';
 import { ImportI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { ConflictResolutionPolicy, ImportFileType, ImportSteps } from '@/src/types/import';
-import { Step, StepStatus } from '@/src/models/step';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export const IMPORT_RESOLUTIONS = (
@@ -19,13 +20,13 @@ export const IMPORT_RESOLUTIONS = (
 };
 
 export const IMPORT_STEPS = (t: (stringToTranslate: string) => string): Step[] => [
-  { id: ImportSteps.FILES, name: t(ImportI18nKey.Files), status: StepStatus.INVALID },
-  { id: ImportSteps.PROPERTIES, name: t(TabsI18nKey.Properties), status: StepStatus.INVALID },
+  { id: ImportSteps.FILES, name: t(ImportI18nKey.Files) },
+  { id: ImportSteps.PROPERTIES, name: t(TabsI18nKey.Properties) },
 ];
 
 export const IMPORT_CONFIG_STEPS = (t: (stringToTranslate: string) => string): Step[] => [
-  { id: ImportSteps.FILES, name: t(ImportI18nKey.Files), status: StepStatus.INVALID },
-  { id: ImportSteps.CONFIGURATION, name: t(ImportI18nKey.Configuration), status: StepStatus.INVALID },
+  { id: ImportSteps.FILES, name: t(ImportI18nKey.Files) },
+  { id: ImportSteps.CONFIGURATION, name: t(ImportI18nKey.Configuration) },
 ];
 
 export const IMPORT_FILE_TYPES = (

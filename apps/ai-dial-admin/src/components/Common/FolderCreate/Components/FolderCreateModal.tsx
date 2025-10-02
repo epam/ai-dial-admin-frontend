@@ -6,7 +6,6 @@ import classNames from 'classnames';
 
 import { CREATE_FOLDER_STEPS, CreateFolderSteps } from '@/src/components/Common/FolderCreate/constants';
 import Popup from '@/src/components/Common/Popup/Popup';
-import Steps from '@/src/components/Common/Steps/Steps';
 import { FoldersI18nKey } from '@/src/constants/i18n';
 import { IMPORT_FILE_TYPES } from '@/src/constants/import';
 import { useI18n } from '@/src/locales/client';
@@ -14,7 +13,6 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { DialRule } from '@/src/models/dial/rule';
 import { FileImportMap } from '@/src/models/file';
 import { ParsedPrompts } from '@/src/models/prompts';
-import { Step } from '@/src/models/step';
 import { ImportFileType } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -22,6 +20,7 @@ import FolderCreateModalButtons from './FolderCreateModalButtons';
 import FolderCreatePermissions from './FolderCreatePermissions';
 import FolderCreateReview from './FolderCreateReview';
 import FolderCreateSetup from './FolderCreateSetup';
+import { DialSteps } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   modalState: PopUpState;
@@ -44,7 +43,7 @@ const FolderCreateModal: FC<Props> = ({ modalState, folderPath, view, onClose, o
   const fileTypes = IMPORT_FILE_TYPES(t, view);
 
   const [steps, setSteps] = useState(CREATE_FOLDER_STEPS(t));
-  const [currentStep, setCurrentStep] = useState<Step>(steps[0]);
+  const [currentStep, setCurrentStep] = useState(steps[0].id);
 
   const [ignorePaths, setIgnorePaths] = useState(false);
   const [fileType, setFileType] = useState(fileTypes[0].id);
@@ -91,10 +90,10 @@ const FolderCreateModal: FC<Props> = ({ modalState, folderPath, view, onClose, o
       containerClassName={containerClassName}
     >
       <div className="flex px-6 py-4 flex-1 flex-col min-h-0">
-        <Steps steps={steps} currentStep={currentStep} setCurrentStep={setCurrentStep} />
+        <DialSteps steps={steps} currentStep={currentStep} onChangeStep={setCurrentStep} />
         <div
           className={
-            currentStep.id === CreateFolderSteps.FOLDER_SETUP ? 'flex flex-col flex-1 min-h-0 pt-6 pb-4' : 'hidden'
+            currentStep === CreateFolderSteps.FOLDER_SETUP ? 'flex flex-col flex-1 min-h-0 pt-6 pb-4' : 'hidden'
           }
         >
           <FolderCreateSetup
@@ -115,7 +114,7 @@ const FolderCreateModal: FC<Props> = ({ modalState, folderPath, view, onClose, o
         </div>
         <div
           className={
-            currentStep.id === CreateFolderSteps.FILE_REVIEW ? 'flex flex-col flex-1 min-h-0 pt-6 pb-4' : 'hidden'
+            currentStep === CreateFolderSteps.FILE_REVIEW ? 'flex flex-col flex-1 min-h-0 pt-6 pb-4' : 'hidden'
           }
         >
           <FolderCreateReview
@@ -131,7 +130,7 @@ const FolderCreateModal: FC<Props> = ({ modalState, folderPath, view, onClose, o
         </div>
         <div
           className={
-            currentStep.id === CreateFolderSteps.PERMISSIONS ? 'flex flex-col flex-1 min-h-0 pt-6 pb-4' : 'hidden'
+            currentStep === CreateFolderSteps.PERMISSIONS ? 'flex flex-col flex-1 min-h-0 pt-6 pb-4' : 'hidden'
           }
         >
           <FolderCreatePermissions

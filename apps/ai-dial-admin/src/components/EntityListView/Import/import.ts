@@ -1,3 +1,5 @@
+import { Step, StepStatus } from '@epam/ai-dial-ui-kit';
+
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import {
@@ -13,7 +15,6 @@ import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { ImportResult } from '@/src/models/import';
 import { Notification } from '@/src/models/notification';
 import { ParsedPrompts, PromptImportGridData } from '@/src/models/prompts';
-import { StepStatus } from '@/src/models/step';
 import { ImportStatus } from '@/src/types/import';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -83,10 +84,10 @@ export const getImportResults = (
  * @param {Map<string, FileImportMap>} map - map of selected files for import
  * @returns {StepStatus} - status string
  */
-export const getMultipleImportStatus = (map: Map<string, FileImportMap>): StepStatus => {
+export const getMultipleImportStatus = (map: Map<string, FileImportMap>): StepStatus | undefined => {
   const files = Array.from(map.values());
   if (files.length === 0) {
-    return StepStatus.INVALID;
+    return void 0;
   } else if (files.some((value) => value.isInvalid)) {
     return StepStatus.ERROR;
   }

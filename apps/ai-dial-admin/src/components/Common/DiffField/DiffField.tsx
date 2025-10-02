@@ -1,13 +1,11 @@
 import { FC } from 'react';
 import classNames from 'classnames';
 import { DiffEditor, Monaco } from '@monaco-editor/react';
+import { DialFieldLabel } from '@epam/ai-dial-ui-kit';
 
 import { EDITOR_THEMES } from '@/src/types/editor';
 import { useTheme } from '@/src/context/ThemeContext';
 import { diffEditorOptions, getDiffEditorTheme } from '@/src/constants/editor';
-
-import Field from '@/src/components/Common/Field/Field';
-
 interface Props {
   original?: string;
   modified?: string;
@@ -24,7 +22,7 @@ const DiffField: FC<Props> = ({ original, modified, fieldTitle, cssClass }) => {
 
   return (
     <div className={classNames('flex flex-col w-full flex-1', cssClass)}>
-      <Field fieldTitle={fieldTitle} />
+      <DialFieldLabel htmlFor="Markdown" fieldTitle={fieldTitle} />
       <DiffEditor
         original={original}
         modified={modified}

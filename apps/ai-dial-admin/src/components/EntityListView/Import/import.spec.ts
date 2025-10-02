@@ -1,13 +1,6 @@
-import {
-  generateNameVersionForPrompt,
-  getFolderNameAndPath,
-  getNameVersionFromPrompt,
-  modifyNameVersionInPrompt,
-} from '@/src/utils/prompts/versions';
-import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { FileImportMap } from '@/src/models/file';
 import { ImportStatus } from '@/src/types/import';
-import { StepStatus } from '@/src/models/step';
+import { StepStatus } from '@epam/ai-dial-ui-kit';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   changeFilesMap,
@@ -72,11 +65,11 @@ describe('Import :: getImportResults', () => {
 });
 
 describe('Import :: getMultipleImportStatus', () => {
-  test('should return invalid status if no prompts in map', () => {
+  test('should return undefined status if no prompts in map', () => {
     const map = new Map();
     const result = getMultipleImportStatus(map as Map<string, FileImportMap>);
 
-    expect(result).toEqual(StepStatus.INVALID);
+    expect(result).toBeUndefined()
   });
 
   test('should return error status if some prompts in map are invalid', () => {

@@ -3,6 +3,7 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
 import { CellValueChangedEvent, ColDef, GridApi, GridReadyEvent, RowClassRules } from 'ag-grid-community';
+import { Step, StepStatus } from '@epam/ai-dial-ui-kit';
 
 import { previewPromptZip } from '@/src/app/[lang]/folders-storage/actions';
 import { CreateFolderSteps } from '@/src/components/Common/FolderCreate/constants';
@@ -26,7 +27,6 @@ import Grid from '@/src/components/Grid/Grid';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
-import { Step, StepStatus } from '@/src/models/step';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { PromptImportGridData } from '@/src/models/prompts';
@@ -36,11 +36,10 @@ interface Props {
   view?: ApplicationRoute;
   files: File[];
   fileType: string;
-  currentStep: Step;
+  currentStep: string;
   editedFileMap: Map<string, FileImportMap>;
   setEditedFileMap: Dispatch<SetStateAction<Map<string, FileImportMap>>>;
   setSteps: Dispatch<SetStateAction<Step[]>>;
-  setCurrentStep: Dispatch<SetStateAction<Step>>;
 }
 
 const FolderCreateReview: FC<Props> = ({
@@ -51,7 +50,6 @@ const FolderCreateReview: FC<Props> = ({
   editedFileMap,
   setEditedFileMap,
   setSteps,
-  setCurrentStep,
 }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
@@ -84,21 +82,13 @@ const FolderCreateReview: FC<Props> = ({
   };
 
   const setCurrentSteps = useCallback(
-    (status: StepStatus) => {
+    (status?: StepStatus) => {
       setSteps((prev) => {
         const index = prev.findIndex((step) => step.id === CreateFolderSteps.FILE_REVIEW);
         return prev.map((item, i) => (i === index ? { ...item, status } : item));
       });
-      if (currentStep.id === CreateFolderSteps.FILE_REVIEW) {
-        setCurrentStep((prev) => {
-          return {
-            ...prev,
-            status,
-          };
-        });
-      }
     },
-    [currentStep.id, setCurrentStep, setSteps],
+    [setSteps],
   );
 
   const onGridReady = (event: GridReadyEvent) => {
@@ -145,7 +135,7 @@ const FolderCreateReview: FC<Props> = ({
   }, [files, setEditedFileMap, fileType, view]);
 
   useEffect(() => {
-    if (currentStep.id !== CreateFolderSteps.FILE_REVIEW && editedFileMap.size !== 0) {
+    if (currentStep !== CreateFolderSteps.FILE_REVIEW && editedFileMap.size !== 0) {
       let rowData: (PromptImportGridData | FileImportGridData)[] = [];
       let isError;
 
@@ -162,13 +152,13 @@ const FolderCreateReview: FC<Props> = ({
       });
       setCurrentSteps(isError ? StepStatus.ERROR : StepStatus.VALID);
       setCount(rowData?.length || 0);
-    } else if (currentStep.id !== CreateFolderSteps.FILE_REVIEW && editedFileMap.size === 0) {
+    } else if (currentStep !== CreateFolderSteps.FILE_REVIEW && editedFileMap.size === 0) {
       gridApi?.updateGridOptions({
         rowData: [],
         columnDefs,
       });
       setCount(0);
-      setCurrentSteps(view === ApplicationRoute.Prompts ? StepStatus.INVALID : StepStatus.VALID);
+      setCurrentSteps(view === ApplicationRoute.Prompts ? void 0 : StepStatus.VALID);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, editedFileMap]);

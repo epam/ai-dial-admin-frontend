@@ -1,8 +1,8 @@
 import { FC, useCallback } from 'react';
 
 import { GridApi, IRowNode } from 'ag-grid-community';
+import { DialFieldLabel } from '@epam/ai-dial-ui-kit';
 
-import Field from '@/src/components/Common/Field/Field';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
 import Grid from '@/src/components/Grid/Grid';
@@ -63,7 +63,7 @@ const FileProperties: FC<Props> = ({ file, onChangeFile }) => {
 
       <div className="flex flex-col gap-6 pt-6">
         <div className="flex flex-col">
-          <Field fieldTitle={t(EntitiesI18nKey.Source)} />
+          <DialFieldLabel htmlFor="source" fieldTitle={t(EntitiesI18nKey.Source)} />
           <Grid columnDefs={columnDefs} rowData={rowData} />
         </div>
         <div className="lg:w-[35%]">

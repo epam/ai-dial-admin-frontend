@@ -2,6 +2,7 @@
 import { Dispatch, FC, SetStateAction, useCallback } from 'react';
 
 import { CellValueChangedEvent, ColDef, GridReadyEvent, RowClassRules } from 'ag-grid-community';
+import { StepStatus } from '@epam/ai-dial-ui-kit';
 
 import RadioButton from '@/src/components/Common/RadioButton/RadioButton';
 import {
@@ -20,7 +21,6 @@ import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { RadioButtonModel } from '@/src/models/radio-button';
-import { StepStatus } from '@/src/models/step';
 import { ConflictResolutionPolicy } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 
