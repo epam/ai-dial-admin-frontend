@@ -1,18 +1,20 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { ApplicationRoute } from '@/src/types/routes';
-import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { getUserToken } from '@/src/utils/auth/auth-request';
-import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
-import { logger } from '@/src/server/logger';
-import { SIGN_IN_LINK } from '@/src/constants/auth';
-
+import { createInterceptor, getInterceptorsList } from '@/src/app/[lang]/interceptors/actions';
 import InterceptorTemplateView from '@/src/components/InterceptorTemplates/View/View';
 import Page403 from '@/src/components/Page403/Page403';
+import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { InterceptorTemplate } from '@/src/models/interceptor-template';
+import { logger } from '@/src/server/logger';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getUserToken } from '@/src/utils/auth/auth-request';
+import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { filterNames } from '@/src/utils/entities/filter-names';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,8 +28,10 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   }
 
   let interceptorTemplate: InterceptorTemplate | null = null;
+  let interceptors: DialInterceptor[] | null = null;
 
   try {
+    interceptors = await getInterceptorsList();
     interceptorTemplate = await getInterceptorTemplate((await params.params).id);
     if (interceptorTemplate === void 0) {
       return <Page403 />;
@@ -40,9 +44,16 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     return redirect(ApplicationRoute.InterceptorTemplates);
   }
 
+  const names = filterNames(interceptors);
+
   return (
     <SaveValidationContextProvider>
-      <InterceptorTemplateView route={ApplicationRoute.InterceptorTemplates} template={interceptorTemplate} />
+      <InterceptorTemplateView
+        route={ApplicationRoute.InterceptorTemplates}
+        template={interceptorTemplate}
+        names={names}
+        createEntity={createInterceptor}
+      />
     </SaveValidationContextProvider>
   );
 }

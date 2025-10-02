@@ -29,6 +29,7 @@ interface Props {
   isEntityImmutable?: boolean;
   onChangeEntity: (entity: BaseEntity) => void;
   isModal?: boolean;
+  initialValues?: Partial<BaseEntity>;
 }
 
 const SimpleEntityProperties: FC<Props> = ({
@@ -39,6 +40,7 @@ const SimpleEntityProperties: FC<Props> = ({
   isEntityImmutable = false,
   versionsMap,
   isModal,
+  initialValues,
 }) => {
   const t = useI18n() as (t: string) => string;
   const { dispatch } = useSaveValidationContext();
@@ -110,7 +112,7 @@ const SimpleEntityProperties: FC<Props> = ({
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
 
-      {view === ApplicationRoute.Interceptors && isModal && (
+      {view === ApplicationRoute.Interceptors && isModal && !initialValues && (
         <SourceField
           view={ApplicationRoute.Interceptors}
           entity={entity}

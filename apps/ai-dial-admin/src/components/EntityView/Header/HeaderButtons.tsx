@@ -38,6 +38,7 @@ interface Props<T> {
   removeEntity: (entity: string) => Promise<ServerActionResponse>;
   toggleJsonEditor?: () => void;
   context?: () => AssetsFolderContext<DialFile>;
+  childrenContainerClass?: string;
 }
 
 const HeaderButtons = <T extends object>({
@@ -52,6 +53,7 @@ const HeaderButtons = <T extends object>({
   children,
   existingVersions,
   context,
+  childrenContainerClass,
   ...props
 }: Props<T>) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
@@ -98,7 +100,9 @@ const HeaderButtons = <T extends object>({
         ) : (
           <div className="flex flex-row items-center w-full">
             {!jsonEditorEnabled && (
-              <div className={`flex-1 flex flex-row gap-3 ${isSimple ? 'justify-center' : ''}`}>
+              <div
+                className={`flex-1 flex flex-row gap-3 ${childrenContainerClass || ''} ${isSimple ? 'justify-center' : ''}`}
+              >
                 <Button
                   cssClass={`secondary ${buttonsClassNames} ${isSimple ? 'min-w-[150px] lg:min-w-0' : ''}`}
                   title={t(ButtonsI18nKey.Delete)}
