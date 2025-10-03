@@ -6,7 +6,7 @@ import { foldersApi } from '@/src/app/api/api';
 import { DialRule } from '@/src/models/dial/rule';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { ResourceType } from '@/src/types/folder';
+import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export async function getFolders(path: string) {

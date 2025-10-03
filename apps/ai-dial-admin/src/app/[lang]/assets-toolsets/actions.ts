@@ -3,40 +3,41 @@
 import { cookies, headers } from 'next/headers';
 
 import { assetsApi } from '@/src/app/api/api';
+import { AssetToolset } from '@/src/models/dial/toolset';
+import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { ResourceType } from '@/src/types/folder';
-import { DialAssetApp } from '@/src/models/dial/asset-app';
 
-export async function getApps(path: string) {
+export async function getToolsets(path: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.getAssetList(token, path, ResourceType.APPLICATION);
+  return assetsApi.getAssetList(token, path, ResourceType.TOOLSET);
 }
 
-export async function getApp(folderId: string, name: string, version: string) {
+export async function getToolset(folderId: string, name: string, version: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  const apps = await assetsApi.getAssetList(token, `${folderId}/`, ResourceType.APPLICATION);
-  const path = apps?.find((app) => app.name === name && (app as DialAssetApp).version === version)?.path as string;
+  const toolsets = await assetsApi.getAssetList(token, `${folderId}/`, ResourceType.TOOLSET);
+  const path = toolsets?.find((toolset) => toolset.name === name && (toolset as AssetToolset).version === version)
+    ?.path as string;
 
-  return assetsApi.getAsset(token, path, ResourceType.APPLICATION);
+  return assetsApi.getAsset(token, path, ResourceType.TOOLSET);
 }
 
-export async function updateApp(app: DialAssetApp) {
+export async function updateToolset(toolset: AssetToolset) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.updateAsset(token, app, ResourceType.APPLICATION);
+  return assetsApi.updateAsset(token, toolset, ResourceType.TOOLSET);
 }
 
-export async function removeApp(path: string) {
+export async function removeToolset(path: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.removeAsset(token, path, ResourceType.APPLICATION);
+  return assetsApi.removeAsset(token, path, ResourceType.TOOLSET);
 }
 
-export async function bulkDeleteApps(paths: { path: string }[]) {
+export async function bulkDeleteToolsets(paths: { path: string }[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.bulkDeleteAssets(token, paths, ResourceType.APPLICATION);
+  return assetsApi.bulkDeleteAssets(token, paths, ResourceType.TOOLSET);
 }
 
-export async function moveApps(paths: string[], newPath: string) {
+export async function moveToolsets(paths: string[], newPath: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.moveAssets(token, paths, newPath, ResourceType.APPLICATION);
+  return assetsApi.moveAssets(token, paths, newPath, ResourceType.TOOLSET);
 }
