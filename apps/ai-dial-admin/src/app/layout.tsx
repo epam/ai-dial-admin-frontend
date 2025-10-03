@@ -5,6 +5,8 @@ import { Metadata } from 'next';
 import { getIconPath } from '@/src/utils/themes/icon-path';
 import { themesApi } from './api/api';
 
+import '@epam/ai-dial-ui-kit/styles.css';
+
 import '@/src/app/[lang]/global.scss';
 
 export const metadata: Metadata = {

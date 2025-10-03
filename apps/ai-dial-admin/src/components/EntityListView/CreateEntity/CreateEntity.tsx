@@ -38,6 +38,7 @@ interface Props<T> {
   versionsMap?: Record<string, string[]>;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
   onClose: () => void;
+  initialValues?: Partial<T>;
 }
 
 const CreateEntity = <T extends CreatePromptEntity>({
@@ -49,6 +50,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
   versionsMap,
   onClose,
   createEntity,
+  initialValues,
 }: Props<T>) => {
   const t = useI18n();
   const router = useRouter();
@@ -65,9 +67,8 @@ const CreateEntity = <T extends CreatePromptEntity>({
         } as T)
       : versionsMap
         ? ({ name: '', description: '', version: '1.0.0' } as T)
-        : ({ name: '', description: '' } as T),
+        : ({ name: '', description: '', ...initialValues } as T),
   );
-
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean | undefined>(void 0);
 
   const onChangeEntity = useCallback(
@@ -100,13 +101,13 @@ const CreateEntity = <T extends CreatePromptEntity>({
           fetchFiles(filePath);
         }
         const originalRoute = route.split('/')[1];
-        router.push(`${originalRoute}/${getEntityPath(route, res.response || entity)}`);
+        router.push(`${initialValues ? '/' : ''}${originalRoute}/${getEntityPath(route, res.response || entity)}`);
         onClose();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [currentEntity, showNotification, fetchFiles, filePath, onClose, route, router, createEntity]);
+  }, [currentEntity, route, createEntity, filePath, router, initialValues, onClose, fetchFiles, showNotification]);
 
   useEffect(() => {
     setIsUniqueNameError(void 0);
@@ -153,6 +154,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
             onChangeEntity={onChangeEntity}
             versionsMap={versionsMap}
             isModal={true}
+            initialValues={initialValues}
           />
         ) : (
           <EntityMainProperties
