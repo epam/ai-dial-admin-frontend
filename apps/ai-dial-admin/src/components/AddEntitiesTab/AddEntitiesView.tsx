@@ -2,8 +2,8 @@ import { IconPlus } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import Grid from '@/src/components/Grid/Grid';
@@ -117,8 +117,8 @@ const AddEntitiesView: FC<Props> = ({
             {viewTitle || t(TabsI18nKey.Entities)}: {data.length}
           </h1>
           {onAdd && (
-            <Button
-              cssClass="primary"
+            <DialButton
+              variant={ButtonVariant.Primary}
               iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
               title={t(ButtonsI18nKey.Add)}
               onClick={onOpenModal}

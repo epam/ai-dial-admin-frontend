@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import classNames from 'classnames';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { PopUpState } from '@/src/types/pop-up';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
@@ -19,7 +19,6 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
 import InputModal from '@/src/components/Common/InputModal/InputModal';
 import SelectAdapterModal from '@/src/components/SourceField/Adapters/SelectAdapterModal';
-import Button from '@/src/components/Common/Button/Button';
 import Field from '@/src/components/Common/Field/Field';
 import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
@@ -133,9 +132,10 @@ const Adapters = <T extends DialModel | DialInterceptor>({
           </div>
         )}
         {entity.source?.adapterName && !isModal && (
-          <Button
+          <DialButton
             iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
-            cssClass={classNames('secondary', errorText ? 'self-center mt-[3px]' : 'self-end')}
+            variant={ButtonVariant.Secondary}
+            cssClass={errorText ? 'self-center mt-[3px]' : 'self-end'}
             title={t(SourceI18nKey.OpenAdapter)}
             onClick={() => openAdapter()}
           />

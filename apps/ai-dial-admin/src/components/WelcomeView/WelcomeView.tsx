@@ -3,9 +3,9 @@
 import { IconDownload, IconFileDescription, IconExternalLink, IconUpload } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { FC } from 'react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import HeaderIcon from '@/public/images/icons/welcome-page/header-icon.svg';
-import Button from '@/src/components/Common/Button/Button';
 import { MENU_CONFIGURATION } from '@/src/components/Menu/menu-configuration';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -39,9 +39,9 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
           <p className="mb-2">{t(WelcomeViewI18nKey.Description)}</p>
           {docLink && (
             <div>
-              <Button
+              <DialButton
                 iconBefore={<IconFileDescription {...BASE_ICON_PROPS} />}
-                cssClass="primary"
+                variant={ButtonVariant.Primary}
                 title={t(WelcomeViewI18nKey.ViewDocumentation)}
                 onClick={() => {
                   window.open(docLink, '_blank');
@@ -57,26 +57,29 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
       <div className="mb-6 flex flex-col">
         <h2 className="mb-3">{t(WelcomeViewI18nKey.QuickActions)}</h2>
         <div className="flex flex-row gap-x-3">
-          <Button
+          <DialButton
             iconBefore={<IconDownload {...BASE_ICON_PROPS} widths={24} height={24} />}
-            cssClass="secondary p-4 lg:px-3 lg:py-2 h-[56px] w-[56px] lg:h-[42px] lg:w-auto"
+            variant={ButtonVariant.Secondary}
+            cssClass="p-4 lg:px-3 lg:py-2 h-[56px] w-[56px] lg:h-[42px] lg:w-auto"
             title={isTabletScreen ? '' : t(MenuI18nKey.ImportConfig)}
             onClick={() => {
               router.push(ApplicationRoute.ImportConfig);
             }}
           />
-          <Button
+          <DialButton
             iconBefore={<IconUpload {...BASE_ICON_PROPS} widths={24} height={24} />}
-            cssClass="secondary p-4 lg:px-3 lg:py-2 h-[56px] w-[56px] lg:h-[42px] lg:w-auto"
+            variant={ButtonVariant.Secondary}
+            cssClass="p-4 lg:px-3 lg:py-2 h-[56px] w-[56px] lg:h-[42px] lg:w-auto"
             title={isTabletScreen ? '' : t(MenuI18nKey.ExportConfig)}
             onClick={() => {
               router.push(ApplicationRoute.ExportConfig);
             }}
           />
           {dialLink && (
-            <Button
+            <DialButton
               iconBefore={<IconExternalLink {...BASE_ICON_PROPS} widths={24} height={24} />}
-              cssClass="secondary p-4 lg:px-3 lg:py-2 h-[56px] lg:h-[42px]"
+              variant={ButtonVariant.Secondary}
+              cssClass="p-4 lg:px-3 lg:py-2 h-[56px] w-[56px] lg:h-[42px] lg:w-auto"
               title={dialButtonName || t(WelcomeViewI18nKey.OpenDial)}
               onClick={() => {
                 window.open(dialLink, '_blank');
