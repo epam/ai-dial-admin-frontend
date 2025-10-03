@@ -167,6 +167,6 @@ export const getComponentColDefs = (
 
 export const getEntityByIdentifier = (allEntities: ActivityAuditEntity[], entity?: BaseEntity): ActivityAuditEntity => {
   return allEntities.find(
-    (e) => e?.name === (entity as ChatEntity)?.name || e?.$id === (entity as DialApplicationScheme)?.$id,
+    (e) => e?.name === (entity as ChatEntity)?.name || (e?.$id && e?.$id === (entity as DialApplicationScheme)?.$id),
   ) as ActivityAuditEntity;
 };
