@@ -37,8 +37,8 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
-import AddVersionModal from './Modals/AddVersionModal';
-import CompareVersions from './Modals/CompareVersions';
+import AddVersionModal from '../Modals/AddVersionModal';
+import CompareVersions from '../Modals/CompareVersions';
 
 interface Props {
   prompt: DialPrompt;

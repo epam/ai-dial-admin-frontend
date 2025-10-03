@@ -19,7 +19,7 @@ import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { addTrailingSlash, changePath } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import FileProperties from '../../FileView/FileProperties';
+import FileProperties from './Properties';
 
 interface Props {
   originalFile: DialFile;
