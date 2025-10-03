@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { getInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
-import { createInterceptor, getInterceptorsList } from '@/src/app/[lang]/interceptors/actions';
+import { getInterceptorsList } from '@/src/app/[lang]/interceptors/actions';
 import InterceptorTemplateView from '@/src/components/InterceptorTemplates/View/View';
 import Page403 from '@/src/components/Page403/Page403';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
@@ -52,7 +52,6 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
         route={ApplicationRoute.InterceptorTemplates}
         template={interceptorTemplate}
         names={names}
-        createEntity={createInterceptor}
       />
     </SaveValidationContextProvider>
   );

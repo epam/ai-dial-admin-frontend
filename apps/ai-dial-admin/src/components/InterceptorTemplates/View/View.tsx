@@ -8,6 +8,7 @@ import { IconPlus } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 
 import { deleteInterceptorTemplate, updateInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
+import { createInterceptor } from '@/src/app/[lang]/interceptors/actions';
 import Button from '@/src/components/Common/Button/Button';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
@@ -18,27 +19,24 @@ import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import { auditTabs, EntityViewTab, interceptorsTabs, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import ExtendedProperties from '@/src/components/InterceptorTemplates/Properties/ExtendedProperties';
 import Interceptors from '@/src/components/InterceptorTemplates/View/Interceptors/Interceptors';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ButtonsI18nKey, DeleteI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { ServerActionResponse } from '@/src/models/server-action';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
-import { SOURCE_TYPE } from '../../SourceField/types';
 
 interface Props {
   route: ApplicationRoute;
   template: InterceptorTemplate;
   names: string[];
-  createEntity: (entity: DialInterceptor) => Promise<ServerActionResponse>;
 }
 
-const View: FC<Props> = ({ route, template, names, createEntity }) => {
+const View: FC<Props> = ({ route, template, names }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -133,7 +131,7 @@ const View: FC<Props> = ({ route, template, names, createEntity }) => {
               route={ApplicationRoute.Interceptors}
               modalTitle={t(createModalTitleMap[ApplicationRoute.Interceptors])}
               modalState={createModalState}
-              createEntity={createEntity}
+              createEntity={createInterceptor}
               onClose={() => setCreateModalState(PopUpState.Closed)}
               names={names || []}
               initialValues={source}
