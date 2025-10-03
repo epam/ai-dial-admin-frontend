@@ -1,4 +1,6 @@
-import AlertError from '@/src/components/Common/Alerts/AlertError';
+import { FC, useCallback, useState } from 'react';
+import { AlertVariant, DialAlert } from '@epam/ai-dial-ui-kit';
+
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import RadioGroupModalField from '@/src/components/Common/RadioGroupModalField/RadioGroupModalField';
 import {
@@ -11,8 +13,7 @@ import {
 import { useI18n } from '@/src/locales/client';
 import { ChatEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';
-import { FC, useCallback, useState } from 'react';
-import { getAlertTitlePerView, getDisplayNamePerView, NONE_ID, USE_ID } from './forward-token';
+import { getAlertTitlePerView, getDisplayNamePerView, NONE_ID, USE_ID } from './utils';
 
 interface Props {
   view: ApplicationRoute;
@@ -63,7 +64,7 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
       name: titleKey ? t(titleKey as ForwardTokenI18nKey) : '',
       content: (
         <div className="flex flex-col gap-3 mt-3">
-          <AlertError text={t(ForwardTokenI18nKey.ForwardTokenModalAlert)} />
+          <DialAlert variant={AlertVariant.Error} message={t(ForwardTokenI18nKey.ForwardTokenModalAlert)} />
           <TextInputField
             elementId="entityName"
             fieldTitle={displayNameKey !== '' ? t(displayNameKey as CreateI18nKey) : ''}

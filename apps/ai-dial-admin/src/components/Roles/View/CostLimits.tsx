@@ -7,7 +7,7 @@ import { NO_LIMITS_VALUE } from '@/src/components/EntityView/Roles/constants';
 import { RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
-import LimitsControl from '@/src/components/EntityMainProperties/BaseProperties/Limits/Limits';
+import LimitsControl from '@/src/components/EntityMainProperties/Limits/Limits';
 
 interface Props {
   selectedRole: DialRole;

@@ -1,8 +1,9 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { AlertVariant, DialAlert } from '@epam/ai-dial-ui-kit';
+
 import { isDialRoleShareKey } from '@/src/components/AddEntitiesTab/utils';
-import AlertInfo from '@/src/components/Common/Alerts/AlertInfo';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import RolesGrid from '@/src/components/EntityView/Roles/RolesGrid';
 import {
@@ -212,7 +213,9 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
           />
         </div>
       </div>
-      {isDisableRole(entity) && view !== ApplicationRoute.Routes && <AlertInfo text={t(getNoAvailableTitle(view))} />}
+      {isDisableRole(entity) && view !== ApplicationRoute.Routes && (
+        <DialAlert variant={AlertVariant.Info} message={t(getNoAvailableTitle(view))} />
+      )}
       {addModalState === PopUpState.Opened &&
         createPortal(
           <AddEntitiesGrid
