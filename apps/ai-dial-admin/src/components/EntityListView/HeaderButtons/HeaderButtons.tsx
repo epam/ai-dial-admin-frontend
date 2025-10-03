@@ -15,7 +15,7 @@ import { createModalTitleMap } from '@/src/components/EntityListView/constants';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import { getImportResults } from '@/src/components/EntityListView/Import/import';
 import CreateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Create';
-import CreateKey from '@/src/components/KeysList/Popup/CreateKey';
+import CreateKey from '@/src/components/Keys/Modals/CreateKey';
 import { ButtonsI18nKey, ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';

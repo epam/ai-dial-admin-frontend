@@ -12,7 +12,7 @@ import { DialKey } from '@/src/models/dial/key';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
-import KeyGenerateField from '@/src/components/KeysList/KeyGenerateField';
+import KeyGenerateField from '@/src/components/Keys/View/Properties/KeyGenerateField';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
 

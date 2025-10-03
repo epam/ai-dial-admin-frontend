@@ -1,6 +1,6 @@
 'use client';
+
 import { ButtonVariant, DialButton, DialCheckbox } from '@epam/ai-dial-ui-kit';
-import { IconX } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 import classNames from 'classnames';
 import { FC, useCallback, useRef } from 'react';
@@ -8,6 +8,7 @@ import { useDrop } from 'react-dnd';
 
 import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
+import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -64,14 +65,7 @@ const ColumnsPanel: FC<Props> = ({
               onClick={resetToDefault}
             />
           )}
-          <button
-            type="button"
-            className="text-secondary hover:text-accent-primary"
-            aria-label="button"
-            onClick={toggleColumnsPanel}
-          >
-            <IconX height={24} width={24} />
-          </button>
+          <CloseButton onClose={toggleColumnsPanel} />
         </div>
       </div>
       <div ref={ref} className={bodyClassNames}>
