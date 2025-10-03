@@ -4,9 +4,9 @@ import { FC, useCallback, useState } from 'react';
 
 import { IconChevronDown, IconChevronRight, IconTrash, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
+import { DialPasswordInputField } from '@epam/ai-dial-ui-kit';
 
 import { NumberInputField } from '@/src/components/Common/InputField/InputField';
-import PasswordInputField from '@/src/components/Common/PasswordInput/PasswordInputField';
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import {
   EntityFieldsI18nKey,
@@ -130,7 +130,7 @@ const Endpoint: FC<Props> = ({
             />
           </div>
 
-          <PasswordInputField
+          <DialPasswordInputField
             disabled={readonly}
             elementId={'key ' + index}
             value={endpoint.key}
