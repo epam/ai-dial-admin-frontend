@@ -198,7 +198,7 @@ describe('getResourceTypeByView', () => {
     expect(result).toBe(ResourceType.APPLICATION);
   });
 
-    test('should return ResourceType.APPLICATION when route is AssetsToolsets', () => {
+  test('should return ResourceType.APPLICATION when route is AssetsToolsets', () => {
     const result = getResourceTypeByView(ApplicationRoute.AssetsToolsets);
     expect(result).toBe(ResourceType.TOOLSET);
   });

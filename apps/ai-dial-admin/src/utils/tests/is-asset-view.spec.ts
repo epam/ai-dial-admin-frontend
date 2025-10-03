@@ -18,12 +18,10 @@ describe('Utils :: isAssetView', () => {
     expect(result).toBeTruthy();
   });
 
-
   test('Should return true', () => {
     const result = isAssetView(ApplicationRoute.AssetsToolsets);
     expect(result).toBeTruthy();
   });
-
 
   test('Should return false', () => {
     const result = isAssetView(ApplicationRoute.Models);
