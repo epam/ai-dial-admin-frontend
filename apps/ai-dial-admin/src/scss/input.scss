@@ -47,5 +47,5 @@ input {
 }
 // TODO: fix in UI Kit
 input[type='checkbox'].invisible {
-  @apply w-0;
+  width: 0 !important;
 }
