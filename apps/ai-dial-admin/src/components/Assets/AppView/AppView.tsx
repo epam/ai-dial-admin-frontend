@@ -12,7 +12,7 @@ import Tabs from '@/src/components/Common/Tabs/Tabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { EntityViewTab, getIsParametersTabAvailable } from '@/src/components/EntityView/View/utils';
-import ViewContent from '@/src/components/EntityView/View/ViewContent';
+import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { useAppsFolder } from '@/src/context/AppsFolderContext';
 import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';

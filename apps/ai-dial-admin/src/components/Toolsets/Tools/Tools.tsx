@@ -2,10 +2,9 @@
 
 import { IconPlus } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { ButtonVariant, DialSwitch, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialSwitch, DialButton, AlertVariant, DialAlert } from '@epam/ai-dial-ui-kit';
 
 import { getTools } from '@/src//app/[lang]/toolsets/actions';
-import AlertInfo from '@/src/components/Common/Alerts/AlertInfo';
 import Loader from '@/src/components/Common/Loader/Loader';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Search from '@/src/components/Common/Search/Search';
@@ -205,7 +204,7 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
             )}
           </div>
           {!useAllTools && <span className="tiny text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
-          {isNotSavedToolset && <AlertInfo text={t(ToolsetI18nKey.ToolsWarning)} />}
+          {isNotSavedToolset && <DialAlert variant={AlertVariant.Info} message={t(ToolsetI18nKey.ToolsWarning)} />}
         </div>
       )}
       {modalState === PopUpState.Opened && (

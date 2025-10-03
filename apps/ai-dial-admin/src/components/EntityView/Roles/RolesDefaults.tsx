@@ -5,7 +5,7 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, RolesI18nKey } from '@/
 import { useI18n } from '@/src/locales/client';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRoleShare } from '@/src/models/dial/role-limits';
-import LimitsControl from '@/src/components/EntityMainProperties/BaseProperties/Limits/Limits';
+import LimitsControl from '@/src/components/EntityMainProperties/Limits/Limits';
 
 interface Props {
   entity: EntityRoleLimits;

@@ -38,7 +38,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { getEntityFromFile, getExportType } from './core-entity-utils';
 import { getFileFromEntity } from './core-entity-utils';
-import ViewContent from './ViewContent';
+import ViewContent from './Content/ViewContent';
 
 interface Props {
   view: ApplicationRoute;

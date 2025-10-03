@@ -1,12 +1,11 @@
 'use client';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialCheckbox } from '@epam/ai-dial-ui-kit';
 import { IconX } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 import classNames from 'classnames';
 import { FC, useCallback, useRef } from 'react';
 import { useDrop } from 'react-dnd';
 
-import Checkbox from '@/src/components/Common/Checkbox/Checkbox';
 import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -83,7 +82,7 @@ const ColumnsPanel: FC<Props> = ({
               return (
                 <li key={col.field}>
                   <DraggableItem id={col.field || ''} findItem={findColumn} moveItem={moveColumn}>
-                    <Checkbox
+                    <DialCheckbox
                       label={col.headerName}
                       id={col.field || ''}
                       checked={!col.hide}

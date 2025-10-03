@@ -8,7 +8,7 @@ import { useI18n } from '@/src/locales/client';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
-import EntityAttachments from '@/src/components/EntityView/Properties/EntityAttachments';
+import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
 import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
 
 interface Props {
