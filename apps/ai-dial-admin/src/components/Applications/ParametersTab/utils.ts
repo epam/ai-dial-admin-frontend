@@ -24,9 +24,17 @@ export const getAppRunner = (
   entity: DialApplication | DialAssetApp,
   applicationSchemes?: DialApplicationScheme[] | null,
 ): DialApplicationScheme | undefined => {
-  return applicationSchemes
-    ? applicationSchemes?.find((scheme) => scheme.$id === (entity as DialAssetApp)?.applicationTypeSchemaId) ||
-        applicationSchemes?.find((scheme) => scheme.$id === entity?.customAppSchemaId) ||
-        applicationSchemes?.find((scheme) => scheme['dial:applicationTypeEditorUrl'] === entity?.editorUrl)
-    : (entity as DialApplicationScheme);
+  if (!applicationSchemes) return entity as DialApplicationScheme;
+
+  return applicationSchemes?.find((scheme) => {
+    const appTypeSchemaId = (entity as DialAssetApp)?.applicationTypeSchemaId;
+    const customAppSchemaId = entity?.customAppSchemaId;
+    const editorUrl = entity?.editorUrl;
+
+    return (
+      (scheme.$id && appTypeSchemaId && scheme.$id === appTypeSchemaId) ||
+      (scheme.$id && customAppSchemaId && scheme.$id === customAppSchemaId) ||
+      (scheme['dial:applicationTypeEditorUrl'] && editorUrl && scheme['dial:applicationTypeEditorUrl'] === editorUrl)
+    );
+  });
 };
