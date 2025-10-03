@@ -9,7 +9,7 @@ const PasswordCellRenderer: FC<ICellRendererParams> = (props: ICellRendererParam
       <DialPasswordInput
         cssClass="p-0"
         hideBorder={true}
-        inputId={props.node.id + props.value || ''}
+        elementId={props.node.id + props.value || ''}
         value={props.value}
       />
     </div>
