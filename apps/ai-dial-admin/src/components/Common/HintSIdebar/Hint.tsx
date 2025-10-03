@@ -3,7 +3,6 @@
 import { FC } from 'react';
 
 import { useAppContext } from '@/src/context/AppContext';
-import { useI18n } from '@/src/locales/client';
 import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
 
 interface Props {
@@ -12,7 +11,6 @@ interface Props {
 }
 
 const Hint: FC<Props> = ({ title, text }) => {
-  const t = useI18n();
   const { closeHintSidebar } = useAppContext().hintSidebar;
 
   return (
