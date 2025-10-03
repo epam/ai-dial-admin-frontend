@@ -3,8 +3,8 @@
 import { FC, useEffect, useState } from 'react';
 
 import classNames from 'classnames';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
@@ -34,9 +34,15 @@ const FolderInfoHeader: FC<Props> = ({ isChanged, isSaveDisable, title, save, di
       <h2>{title}</h2>
       {isChanged && (
         <div className="flex flex-row gap-3 p-3 lg:p-0">
-          <Button cssClass={`secondary ${buttonsClassNames}`} title={t(ButtonsI18nKey.Discard)} onClick={discard} />
-          <Button
-            cssClass={`primary ${buttonsClassNames}`}
+          <DialButton
+            variant={ButtonVariant.Secondary}
+            cssClass={buttonsClassNames}
+            title={t(ButtonsI18nKey.Discard)}
+            onClick={discard}
+          />
+          <DialButton
+            variant={ButtonVariant.Primary}
+            cssClass={buttonsClassNames}
             title={t(ButtonsI18nKey.Save)}
             onClick={save}
             disable={isSaveDisable}

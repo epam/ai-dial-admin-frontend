@@ -1,6 +1,4 @@
 import { Inter } from 'next/font/google';
-
-import '@/src/app/[lang]/global.scss';
 import { ReactNode } from 'react';
 import { Metadata } from 'next';
 

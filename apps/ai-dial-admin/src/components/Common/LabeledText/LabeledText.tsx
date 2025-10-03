@@ -1,8 +1,8 @@
+import classNames from 'classnames';
 import { FC, ReactNode } from 'react';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
-import classNames from 'classnames';
 
 interface Props {
   label: string;

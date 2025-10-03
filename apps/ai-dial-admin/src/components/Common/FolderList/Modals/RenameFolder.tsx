@@ -1,6 +1,6 @@
 import { FC, useCallback, useMemo, useState } from 'react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
@@ -61,9 +61,9 @@ const RenameFolder: FC<Props> = ({ currentPath, siblings = [], modalState, onClo
       </div>
 
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <Button
-          cssClass="primary"
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton
+          variant={ButtonVariant.Primary}
           title={t(ButtonsI18nKey.Apply)}
           onClick={() => onApply(changeFolderName(currentPath || '', newName))}
           disable={isDisabled}

@@ -1,7 +1,7 @@
 import { FC, useCallback, useState } from 'react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 import { AlertVariant, DialAlert } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ActivityAuditI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
@@ -54,8 +54,13 @@ const ConfirmationRollback: FC<Props> = ({ revisionDate, modalState, onClose, on
       </div>
 
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <Button cssClass="primary" title={t(ButtonsI18nKey.Rollback)} onClick={onConfirm} disable={isDisabled} />
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton
+          variant={ButtonVariant.Primary}
+          title={t(ButtonsI18nKey.Rollback)}
+          onClick={onConfirm}
+          disable={isDisabled}
+        />
       </div>
     </Popup>
   );

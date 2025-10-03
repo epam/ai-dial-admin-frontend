@@ -3,10 +3,10 @@ import { ReactNode } from 'react';
 
 import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import classNames from 'classnames';
+import { DialButton } from '@epam/ai-dial-ui-kit';
 
 import FolderCollapse from '@/public/images/icons/folder-collapse.svg';
 import ExportGrid from '@/src/components/Assets/ExportAssets/ExportGrid';
-import Button from '@/src/components/Common/Button/Button';
 import FolderList from '@/src/components/Common/FolderList/FolderList';
 import HorizontalCollapseBar from '@/src/components/Common/HorizontalCollapseBar/HorizontalCollapseBar';
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
@@ -80,7 +80,7 @@ const ListView = <T extends object>({
                 tooltip={isCollapseDisable ? '' : t(FoldersI18nKey.CollapseAll)}
                 placement={'top'}
               >
-                <Button
+                <DialButton
                   cssClass={isCollapseDisable ? 'text-controls-disable' : 'hover:text-icon-accent-primary'}
                   onClick={collapseFolders}
                   iconBefore={<FolderCollapse width={24} height={24} />}

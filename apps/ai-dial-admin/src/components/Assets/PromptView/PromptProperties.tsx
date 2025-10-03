@@ -3,9 +3,8 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState
 import { createPortal } from 'react-dom';
 
 import { IconPlus, IconReplace } from '@tabler/icons-react';
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialSwitch, ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
@@ -212,8 +211,9 @@ const PromptProperties: FC<Props> = ({
                   fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
                   onChange={onChangeVersion}
                 >
-                  <Button
-                    cssClass="tertiary w-full"
+                  <DialButton
+                    cssClass="w-full"
+                    variant={ButtonVariant.Tertiary}
                     iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
                     title={t(ButtonsI18nKey.Create)}
                     onClick={() => handleModalOpen(ModalType.addVersion)}
@@ -222,8 +222,8 @@ const PromptProperties: FC<Props> = ({
               )}
             </div>
             {!!prompts?.length && prompts.length > 1 && (
-              <Button
-                cssClass="secondary"
+              <DialButton
+                variant={ButtonVariant.Secondary}
                 iconBefore={<IconReplace {...BASE_ICON_PROPS} />}
                 title={t(CompareI18nKey.CompareVersions)}
                 onClick={() => handleModalOpen(ModalType.compareVersions)}

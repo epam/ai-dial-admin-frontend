@@ -1,8 +1,7 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialSwitch, ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { previewExportConfig } from '@/src/app/[lang]/export-config/actions';
-import Button from '@/src/components/Common/Button/Button';
 import Loader from '@/src/components/Common/Loader/Loader';
 import Popup from '@/src/components/Common/Popup/Popup';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
@@ -97,8 +96,12 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, modalState, onClose
         />
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
-        <Button cssClass="primary" title={t(ButtonsI18nKey.Export)} onClick={() => onPrepare(isIncludeSecret)} />
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
+        <DialButton
+          variant={ButtonVariant.Primary}
+          title={t(ButtonsI18nKey.Export)}
+          onClick={() => onPrepare(isIncludeSecret)}
+        />
       </div>
     </Popup>
   );

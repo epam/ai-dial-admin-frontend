@@ -13,13 +13,11 @@ import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { useI18n } from '@/src/locales/client';
 import { IconExternalLink } from '@tabler/icons-react';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 import InputModal from '@/src/components/Common/InputModal/InputModal';
 import SelectRunnerModal from '@/src/components/SourceField/Template/SelectRunnerModal';
-import Button from '@/src/components/Common/Button/Button';
 import Field from '@/src/components/Common/Field/Field';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
-import classNames from 'classnames';
 
 interface Props<T> {
   entity: T;
@@ -125,9 +123,10 @@ const Templates = <T extends DialModel | DialInterceptor>({
           </div>
         )}
         {entity.source?.runnerName && !isModal && (
-          <Button
+          <DialButton
+            variant={ButtonVariant.Secondary}
             iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
-            cssClass={classNames('secondary', errorText ? 'self-center mt-[3px]' : 'self-end')}
+            cssClass={errorText ? 'self-center mt-[3px]' : 'self-end'}
             title={t(SourceI18nKey.OpenTemplate)}
             onClick={() => openTemplate()}
           />
