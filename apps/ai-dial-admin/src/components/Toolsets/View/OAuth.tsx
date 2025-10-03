@@ -1,12 +1,13 @@
 import { FC } from 'react';
 
+import { DialPasswordInputField } from '@epam/ai-dial-ui-kit';
+
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Toolset, ToolsetAuthSettings } from '@/src/models/dial/toolset';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
-import PasswordInputField from '@/src/components/Common/PasswordInput/PasswordInputField';
 import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 
@@ -75,7 +76,7 @@ const OAuthControls: FC<Props> = ({ toolset, onChange }) => {
               })
             }
           />
-          <PasswordInputField
+          <DialPasswordInputField
             elementId="clientSecret"
             fieldTitle={t(EntityFieldsI18nKey.clientSecret)}
             value={toolset.authSettings?.clientSecret || ''}
