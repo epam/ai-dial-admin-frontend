@@ -7,7 +7,7 @@ import { ButtonsI18nKey, EntityFieldsI18nKey, KeysI18nKey } from '@/src/constant
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { PopUpState } from '@/src/types/pop-up';
-import KeyGenerateField from './KeyGenerateField';
+import KeyGenerateField from '../View/Properties/KeyGenerateField';
 
 interface Props {
   modalState: PopUpState;
