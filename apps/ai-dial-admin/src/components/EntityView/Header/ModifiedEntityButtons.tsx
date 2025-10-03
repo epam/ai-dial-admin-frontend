@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 
 import classNames from 'classnames';
 
-import AddVersionModal from '@/src/components/Assets/PromptView/Modals/AddVersionModal';
+import AddVersionModal from '@/src/components/Assets/Prompts/Modals/AddVersionModal';
 import Button from '@/src/components/Common/Button/Button';
 import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
 import { ButtonsI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
