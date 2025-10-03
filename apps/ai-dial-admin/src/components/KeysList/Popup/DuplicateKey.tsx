@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 import ValidityPeriodInput from '@/src/components/Common/ValidityPeriodInput/ValidityPeriodInput';
 import { ButtonsI18nKey, DuplicateI18nKey } from '@/src/constants/i18n';
@@ -71,10 +71,10 @@ const DuplicateKey: FC<Props> = ({ onDuplicate, modalState, onClose, entity, nam
         <ValidityPeriodInput onChange={onChangeExpiresAt} />
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
 
-        <Button
-          cssClass="primary"
+        <DialButton
+          variant={ButtonVariant.Primary}
           title={t(ButtonsI18nKey.Duplicate)}
           disable={!isValid || !isValidKey}
           onClick={() => onDuplicate(clonedEntity)}

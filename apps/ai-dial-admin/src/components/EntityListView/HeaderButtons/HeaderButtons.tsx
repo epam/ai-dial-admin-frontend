@@ -4,12 +4,12 @@ import { Dispatch, MouseEvent, SetStateAction, useCallback, useState } from 'rea
 
 import { IconColumns2, IconFileArrowLeft, IconPlus, IconSquareCheck } from '@tabler/icons-react';
 import { GridApi } from 'ag-grid-community';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { importFiles } from '@/src/app/[lang]/files/actions';
 import { importPrompts } from '@/src/app/[lang]/prompts/actions';
 import CreateAdapter from '@/src/components/Adapter/Modals/CreateAdapter';
 import CreateAppRunner from '@/src/components/ApplicationRunners/Modals/CreateAppRunner';
-import Button from '@/src/components/Common/Button/Button';
 import Modals, { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { createModalTitleMap } from '@/src/components/EntityListView/constants';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
@@ -175,8 +175,8 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
     <div className="flex gap-4">
       <ResetFiltersButton gridApi={gridApi} />
       {showColumnsButton && (
-        <Button
-          cssClass="tertiary"
+        <DialButton
+          variant={ButtonVariant.Tertiary}
           title={t(ButtonsI18nKey.Columns)}
           iconBefore={<IconColumns2 {...BASE_ICON_PROPS} />}
           onClick={onToggleColumnsPanel}
@@ -186,14 +186,14 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
         <>
           {showExportImportButtons && (
             <>
-              <Button
-                cssClass="secondary"
+              <DialButton
+                variant={ButtonVariant.Secondary}
                 title={t(ButtonsI18nKey.BulkActions)}
                 iconBefore={<IconSquareCheck {...BASE_ICON_PROPS} />}
                 onClick={() => setIsBulkView?.(true)}
               />
-              <Button
-                cssClass="secondary"
+              <DialButton
+                variant={ButtonVariant.Secondary}
                 title={t(ButtonsI18nKey.Import)}
                 iconBefore={<IconFileArrowLeft {...BASE_ICON_PROPS} />}
                 onClick={() => handleModalOpen(ModalType.import)}
@@ -201,8 +201,8 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
             </>
           )}
           {!!createEntity && (
-            <Button
-              cssClass="primary"
+            <DialButton
+              variant={ButtonVariant.Primary}
               title={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}
               iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
               onClick={() => handleModalOpen(ModalType.create)}

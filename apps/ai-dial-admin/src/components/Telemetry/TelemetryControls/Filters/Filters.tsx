@@ -1,5 +1,6 @@
 import React, { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
 import { IconPlus } from '@tabler/icons-react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import AddFilter from '@/src/components/Telemetry/TelemetryControls/Filters/AddFilter';
 import Filter from '@/src/components/Telemetry/TelemetryControls/Filters/Filter';
@@ -9,7 +10,6 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ENTITY_QUERY, PROJECT_QUERY } from '@/src/constants/telemetry';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
-import Button from '@/src/components/Common/Button/Button';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -96,10 +96,10 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route }) => {
           />
         ))}
       <AddFilter addFilter={addFilter} dropdownData={{ projects, entities }} route={route}>
-        <Button
+        <DialButton
           title={t(TelemetryI18nKey.AddFilter)}
           iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-          cssClass="tertiary"
+          variant={ButtonVariant.Tertiary}
         />
       </AddFilter>
     </>

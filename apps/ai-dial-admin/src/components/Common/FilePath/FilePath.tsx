@@ -1,8 +1,8 @@
 import { IconFolderShare } from '@tabler/icons-react';
 import { ChangeEvent, FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
@@ -57,9 +57,9 @@ const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, 
           placeholder={placeholder}
           className="input mr-4 flex-1"
         />
-        <Button
+        <DialButton
           disable={disabled}
-          cssClass="secondary"
+          variant={ButtonVariant.Secondary}
           onClick={onOpenFilePathModal}
           title={t(ButtonsI18nKey.Move)}
           iconBefore={<IconFolderShare {...BASE_ICON_PROPS} />}

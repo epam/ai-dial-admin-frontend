@@ -3,8 +3,8 @@
 import { Dispatch, SetStateAction } from 'react';
 
 import { IconFileArrowRight, IconTrashX, IconX } from '@tabler/icons-react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
@@ -52,16 +52,16 @@ const BulkButtons = ({
         {itemsCount} {t(BasicI18nKey.Selected)}
       </div>
       <div className="bg-layer-4 h-5 w-[1px]"></div>
-      <Button
-        cssClass="secondary"
+      <DialButton
+        variant={ButtonVariant.Secondary}
         title={t(ButtonsI18nKey.Export)}
         iconBefore={<IconFileArrowRight {...BASE_ICON_PROPS} />}
         disable={!itemsCount}
         onClick={bulkExport}
       />
       {(route === ApplicationRoute.Prompts || route === ApplicationRoute.AssetsApplications) && (
-        <Button
-          cssClass="secondary"
+        <DialButton
+          variant={ButtonVariant.Secondary}
           title={t(ButtonsI18nKey.Delete)}
           iconBefore={<IconTrashX {...BASE_ICON_PROPS} />}
           disable={!itemsCount}
@@ -71,7 +71,7 @@ const BulkButtons = ({
           }}
         />
       )}
-      <Button
+      <DialButton
         cssClass="text-secondary hover:text-accent-primary"
         onClick={() => {
           setIsBulkView(false);
