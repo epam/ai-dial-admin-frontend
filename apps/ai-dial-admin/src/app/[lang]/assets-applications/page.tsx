@@ -1,7 +1,7 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import AppsList from '@/src/components/Assets/Apps/AppsList';
+import AppsList from '@/src/components/Assets/Apps/List/List';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { getUserToken } from '@/src/utils/auth/auth-request';

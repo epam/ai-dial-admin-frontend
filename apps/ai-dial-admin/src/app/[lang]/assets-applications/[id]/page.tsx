@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { applicationRunnersApi, applicationsApi, assetsApi, interceptorsApi, modelsApi } from '@/src/app/api/api';
-import AppView from '@/src/components/Assets/AppView/AppView';
+import AppView from '@/src/components/Assets/Apps/View/View';
 import Page403 from '@/src/components/Page403/Page403';
 import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
