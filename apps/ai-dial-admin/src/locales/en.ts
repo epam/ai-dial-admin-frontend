@@ -566,7 +566,7 @@ export default {
     Resources: 'Resources',
     FilePreview: 'Export File Preview',
     IncludeSecrets: 'Include secrets',
-    IncludeDependencies: 'Include related dependencies',
+    AllDependencies: 'All dependencies',
     SuccessTitle: '{type} exported successfully',
     SuccessDescription: 'You can now see them in local storage',
     ErrorTitle: '{type} export failed',

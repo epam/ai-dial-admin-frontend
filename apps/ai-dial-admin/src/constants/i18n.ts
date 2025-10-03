@@ -524,7 +524,7 @@ export enum ExportI18nKey {
   ErrorDescription = 'Export.ErrorDescription',
   FilePreview = 'Export.FilePreview',
   IncludeSecrets = 'Export.IncludeSecrets',
-  IncludeDependencies = 'Export.IncludeDependencies',
+  AllDependencies = 'Export.AllDependencies',
   Included = 'Export.Included',
   ActiveConfig = 'Export.ActiveConfig',
   NoPreview = 'Export.NoPreview',
