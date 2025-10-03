@@ -1,6 +1,6 @@
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { ResourceType } from '@/src/types/folder';
+import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
 import { generateFolderListFromBulkPaths, generatePromptRowDataForDelete, getResourceTypeByView } from '../utils';

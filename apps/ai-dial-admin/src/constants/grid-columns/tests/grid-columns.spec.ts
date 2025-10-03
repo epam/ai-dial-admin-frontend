@@ -4,7 +4,7 @@ import {
   KEYS_COLUMNS,
   MODELS_COLUMNS,
   PROJECT_GRID_COLUMNS,
-  PROMPTS_COLUMNS,
+  ASSETS_COLUMNS,
   PUBLICATION_COLUMNS,
   TELEMETRY_GRID_COLUMNS,
 } from '../grid-columns';
@@ -33,10 +33,10 @@ describe('Constants :: grid columns', () => {
     expect(KEYS_COLUMNS.some((c) => c.field === 'status')).toBe(true);
   });
 
-  test('PROMPTS_COLUMNS returns expected columns', () => {
-    expect(Array.isArray(PROMPTS_COLUMNS)).toBe(true);
-    expect(PROMPTS_COLUMNS.some((c) => c.field === 'name')).toBe(true);
-    expect(PROMPTS_COLUMNS.some((c) => c.field === 'version')).toBe(true);
+  test('ASSETS_COLUMNS returns expected columns', () => {
+    expect(Array.isArray(ASSETS_COLUMNS)).toBe(true);
+    expect(ASSETS_COLUMNS.some((c) => c.field === 'name')).toBe(true);
+    expect(ASSETS_COLUMNS.some((c) => c.field === 'version')).toBe(true);
   });
 
   test('EXPORT_COLUMNS returns expected columns for prompts', () => {
