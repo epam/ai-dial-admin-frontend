@@ -80,5 +80,8 @@ export const getResourceTypeByView = (route?: ApplicationRoute): ResourceType =>
   if (route === ApplicationRoute.AssetsApplications) {
     return ResourceType.APPLICATION;
   }
+  if (route === ApplicationRoute.AssetsToolsets) {
+    return ResourceType.TOOLSET;
+  }
   return '' as ResourceType;
 };

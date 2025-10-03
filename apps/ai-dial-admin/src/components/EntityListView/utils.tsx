@@ -113,6 +113,10 @@ export const getNotificationType = (route?: ApplicationRoute): string => {
     return MenuI18nKey.Applications;
   }
 
+  if (route === ApplicationRoute.AssetsToolsets) {
+    return MenuI18nKey.Toolsets;
+  }
+
   return '';
 };
 
@@ -150,6 +154,10 @@ export const getJsonFileName = (route?: ApplicationRoute): string => {
 
   if (route === ApplicationRoute.AssetsApplications) {
     return 'applications';
+  }
+
+  if (route === ApplicationRoute.AssetsToolsets) {
+    return 'toolsets';
   }
 
   return '';

@@ -81,6 +81,15 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
       },
     ],
   },
+  [ApplicationRoute.AssetsToolsets]: {
+    segments: [
+      { name: 'AssetsToolsets', i18nKey: MenuI18nKey.Toolsets },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
   [ApplicationRoute.FoldersStorage]: {
     segments: [
       { name: 'FoldersStorage', i18nKey: MenuI18nKey.FoldersStorage },

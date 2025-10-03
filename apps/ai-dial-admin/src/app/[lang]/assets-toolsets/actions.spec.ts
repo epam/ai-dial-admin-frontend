@@ -1,18 +1,18 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { getApps, removeApp, moveApps, bulkDeleteApps, getApp, updateApp } from './actions';
+import { bulkDeleteToolsets, getToolset, getToolsets, moveToolsets, removeToolset, updateToolset } from './actions';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
 
-describe('Assets application server actions', () => {
+describe('Assets toolsets server actions', () => {
   beforeEach(() => {
     fetch.resetMocks();
   });
 
-  test('Should call get apps', async () => {
+  test('Should call get toolsets', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    getApps('path').then(() => {
+    getToolsets('path').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];
@@ -20,9 +20,9 @@ describe('Assets application server actions', () => {
     });
   });
 
-  test('Should call get app', async () => {
+  test('Should call get toolset', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    await getApp('path', 'app', '1.0.0');
+    await getToolset('path', 'app', '1.0.0');
 
     expect(fetch.mock.calls.length).toEqual(2);
 
@@ -32,9 +32,9 @@ describe('Assets application server actions', () => {
     expect(call2?.method).toBe('POST');
   });
 
-  test('Should call update app', async () => {
+  test('Should call update toolset', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    updateApp({}).then(() => {
+    updateToolset({}).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];
@@ -42,9 +42,9 @@ describe('Assets application server actions', () => {
     });
   });
 
-  test('Should call remove app', async () => {
+  test('Should call remove toolset', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    removeApp('app').then(() => {
+    removeToolset('app').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];
@@ -52,9 +52,9 @@ describe('Assets application server actions', () => {
     });
   });
 
-  test('Should call move apps', async () => {
+  test('Should call move toolset', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    moveApps(['path'], 'newPath').then(() => {
+    moveToolsets(['path'], 'newPath').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];
@@ -62,9 +62,9 @@ describe('Assets application server actions', () => {
     });
   });
 
-  test('Should call bulk delete apps', async () => {
+  test('Should call bulk delete toolset', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    bulkDeleteApps([{ path: 'path' }]).then(() => {
+    bulkDeleteToolsets([{ path: 'path' }]).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];
