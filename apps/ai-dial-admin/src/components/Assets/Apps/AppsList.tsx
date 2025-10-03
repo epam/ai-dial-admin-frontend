@@ -7,8 +7,8 @@ import { filterLatestVersions, getVersionsPerName } from '@/src/components/Asset
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import Page403 from '@/src/components/Page403/Page403';
 import { APPS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { useAppsFolder } from '@/src/context/AppsFolderContext';
-import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
+import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { DialAssetApp } from '@/src/models/dial/asset-app';
 import { DialFile } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';

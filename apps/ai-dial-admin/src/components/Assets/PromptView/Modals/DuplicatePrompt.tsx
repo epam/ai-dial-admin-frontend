@@ -14,8 +14,8 @@ import {
   FoldersI18nKey,
   PromptsI18nKey,
 } from '@/src/constants/i18n';
-import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
-import { usePromptFolder } from '@/src/context/PromptFolderContext';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';

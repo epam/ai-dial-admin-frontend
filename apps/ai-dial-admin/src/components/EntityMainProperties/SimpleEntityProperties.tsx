@@ -20,6 +20,7 @@ import { getSourceItems } from '@/src/components/SourceField/constants';
 import SourceField from '@/src/components/SourceField/SourceField';
 import { useAppContext } from '@/src/context/AppContext';
 import { isDeploymentsEnabled } from '@/src/utils/plugins';
+import { isAssetView } from '@/src/utils/is-asset-view';
 
 interface Props {
   view?: ApplicationRoute;
@@ -45,15 +46,9 @@ const SimpleEntityProperties: FC<Props> = ({
   const { embeddedApps } = useAppContext();
   const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
 
-  const idTitleKey =
-    view === ApplicationRoute.Prompts || view === ApplicationRoute.Files || view === ApplicationRoute.AssetsApplications
-      ? EntityFieldsI18nKey.displayName
-      : EntityFieldsI18nKey.id;
+  const idTitleKey = isAssetView(view) ? EntityFieldsI18nKey.displayName : EntityFieldsI18nKey.id;
 
-  const idPlaceholderKey =
-    view === ApplicationRoute.Prompts || view === ApplicationRoute.Files || view === ApplicationRoute.AssetsApplications
-      ? EntityPlaceholdersI18nKey.DisplayName
-      : EntityPlaceholdersI18nKey.Id;
+  const idPlaceholderKey = isAssetView(view) ? EntityPlaceholdersI18nKey.DisplayName : EntityPlaceholdersI18nKey.Id;
 
   const [versionError, setVersionError] = useState<string | undefined>(void 0);
   const [pathError, setPathError] = useState<string | undefined>(void 0);

@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { applicationRunnersApi, applicationsApi, assetsApi, interceptorsApi, modelsApi } from '@/src/app/api/api';
 import AppView from '@/src/components/Assets/AppView/AppView';
 import Page403 from '@/src/components/Page403/Page403';
-import { AppsFolderProvider } from '@/src/context/AppsFolderContext';
+import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialAssetApp } from '@/src/models/dial/asset-app';
