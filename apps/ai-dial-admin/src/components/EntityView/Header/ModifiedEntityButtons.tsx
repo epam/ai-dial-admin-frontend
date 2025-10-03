@@ -4,9 +4,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import classNames from 'classnames';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import AddVersionModal from '@/src/components/Assets/PromptView/Modals/AddVersionModal';
-import Button from '@/src/components/Common/Button/Button';
 import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
 import { ButtonsI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -75,21 +75,24 @@ const ModifiedEntityButtons = <T extends object>({
   return (
     <>
       <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
-        <Button
-          cssClass={classNames('secondary', buttonsClassNames)}
+        <DialButton
+          variant={ButtonVariant.Secondary}
+          cssClass={buttonsClassNames}
           title={t(ButtonsI18nKey.Discard)}
           onClick={onDiscard}
         />
         {view === ApplicationRoute.Prompts && (
-          <Button
-            cssClass={classNames('secondary', buttonsClassNames)}
+          <DialButton
+            variant={ButtonVariant.Secondary}
+            cssClass={buttonsClassNames}
             title={t(ButtonsI18nKey.SaveAsNewVersion)}
             onClick={() => setVersionModalState(PopUpState.Opened)}
             disable={jsonEditorEnabled ? false : !isValid}
           />
         )}
-        <Button
-          cssClass={classNames('primary', buttonsClassNames)}
+        <DialButton
+          variant={ButtonVariant.Primary}
+          cssClass={buttonsClassNames}
           title={t(ButtonsI18nKey.Save)}
           onClick={() => onTryToSave()}
           disable={jsonEditorEnabled ? false : !isValid}

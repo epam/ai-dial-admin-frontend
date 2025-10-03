@@ -1,4 +1,6 @@
-import Button from '@/src/components/Common/Button/Button';
+import { FC, useCallback, useEffect, useState } from 'react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+
 import Field from '@/src/components/Common/Field/Field';
 import InputModal from '@/src/components/Common/InputModal/InputModal';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
@@ -7,7 +9,6 @@ import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n'
 import { useI18n } from '@/src/locales/client';
 import { JSONEditorError } from '@/src/types/editor';
 import { PopUpState } from '@/src/types/pop-up';
-import { FC, useCallback, useEffect, useState } from 'react';
 
 interface Props {
   value: object;
@@ -78,8 +79,13 @@ const JsonEditorInput: FC<Props> = ({ value, disabled, fieldTitle, elementId, on
             </div>
           </div>
           <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-            <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onCloseModal} />
-            <Button cssClass="primary" title={t(ButtonsI18nKey.Apply)} onClick={onApply} disable={!isValid} />
+            <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onCloseModal} />
+            <DialButton
+              variant={ButtonVariant.Primary}
+              title={t(ButtonsI18nKey.Apply)}
+              onClick={onApply}
+              disable={!isValid}
+            />
           </div>
         </Popup>
       </InputModal>

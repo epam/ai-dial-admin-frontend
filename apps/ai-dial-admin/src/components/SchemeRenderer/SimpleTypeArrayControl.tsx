@@ -3,8 +3,8 @@
 import { FC } from 'react';
 
 import { IconPlus } from '@tabler/icons-react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -25,9 +25,9 @@ const SimpleTypeArrayControl: FC<Props> = ({ control, type }) => {
       {simpleControlTypes.includes(type) && <SimpleTypeControls key={control.id} control={{ ...control, type }} />}
       {!simpleControlTypes.includes(type) && <div>{control.id}</div>}
       <div>
-        <Button
+        <DialButton
           disable={true}
-          cssClass="tertiary"
+          variant={ButtonVariant.Tertiary}
           title={t(ButtonsI18nKey.Add)}
           iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
         />

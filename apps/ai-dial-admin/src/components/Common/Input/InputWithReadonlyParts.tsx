@@ -2,6 +2,7 @@
 
 import classNames from 'classnames';
 import { FC } from 'react';
+import { ButtonVariant, DialButton, DialErrorText } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { IconCopy } from '@tabler/icons-react';
@@ -9,8 +10,6 @@ import { useI18n } from '@/src/locales/client';
 
 import Input, { InputProps } from './Input';
 import Field from '@/src/components/Common/Field/Field';
-import Button from '@/src/components/Common/Button/Button';
-import ErrorText from '../ErrorText/ErrorText';
 
 interface Props extends InputProps {
   title: string;
@@ -62,15 +61,16 @@ const InputWithReadonlyParts: FC<Props> = ({
           <p className="text-secondary small"> {postfixPart}</p>
         </div>
         {!hideCopyButton && (
-          <Button
-            cssClass="secondary ml-2 h-[34px]"
+          <DialButton
+            variant={ButtonVariant.Secondary}
+            cssClass="ml-2 h-[34px]"
             iconBefore={<IconCopy />}
             title={t(ButtonsI18nKey.Copy)}
             onClick={() => navigator.clipboard.writeText(fullValue || '')}
           />
         )}
       </div>
-      {invalid && <ErrorText errorText={errorText} />}
+      {invalid && <DialErrorText errorText={errorText} />}
     </div>
   );
 };

@@ -2,8 +2,8 @@ import { IconPlus } from '@tabler/icons-react';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 import { useDrop } from 'react-dnd';
 import { DialCheckbox } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import NewItemInput from './NewItemInput';
 import Search from '@/src/components/Common/Search/Search';
@@ -161,8 +161,9 @@ const MultiselectContentModal: FC<Props> = ({
       </div>
       {addTitle && (
         <div>
-          <Button
-            cssClass="secondary mt-2"
+          <DialButton
+            variant={ButtonVariant.Secondary}
+            cssClass="mt-2"
             iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
             title={addTitle}
             onClick={onAddItem}

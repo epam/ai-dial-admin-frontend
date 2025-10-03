@@ -1,9 +1,8 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { ButtonVariant, DialButton, DialLoader } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
-import Loader from '@/src/components/Common/Loader/Loader';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { baseColumnComparator } from '@/src/components/Grid/comparators/base-column-comparator';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
@@ -89,7 +88,7 @@ const MultiselectModal: FC<Props> = ({
     <Popup onClose={onClose} heading={heading} portalId="itemsMultiSelect" state={modalState}>
       <div className="flex flex-col overflow-auto px-6 py-4">
         {isLoading ? (
-          <Loader size={40} />
+          <DialLoader size={40} />
         ) : (
           <DndProvider backend={HTML5Backend}>
             <MultiselectContentModal
@@ -104,9 +103,9 @@ const MultiselectModal: FC<Props> = ({
         )}
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <Button
-          cssClass="primary"
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton
+          variant={ButtonVariant.Primary}
           title={applyButtonText || t(ButtonsI18nKey.Apply)}
           onClick={onApply}
           disable={!isValid || (draggable && isEqual(newItems, selectedItems))}

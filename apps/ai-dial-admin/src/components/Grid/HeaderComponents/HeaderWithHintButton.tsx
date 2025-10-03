@@ -1,9 +1,8 @@
 import { FC, MouseEvent, useCallback } from 'react';
 import { IconInfoCircle } from '@tabler/icons-react';
+import { DialButton } from '@epam/ai-dial-ui-kit';
 
 import { useAppContext } from '@/src/context/AppContext';
-
-import Button from '@/src/components/Common/Button/Button';
 import Hint from '@/src/components/Common/HintSIdebar/Hint';
 
 interface Props {
@@ -25,7 +24,7 @@ const HeaderWithHintButton: FC<Props> = ({ displayName, hintText, hintTitle }) =
 
   return (
     <div className="flex items-center w-full justify-end">
-      <Button
+      <DialButton
         cssClass="flex items-center justify-center mr-2.5"
         iconBefore={<IconInfoCircle size={14} />}
         onClick={onClick}
