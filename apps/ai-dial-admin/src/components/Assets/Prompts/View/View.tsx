@@ -25,7 +25,7 @@ import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import PromptProperties from './PromptProperties';
+import PromptProperties from './Properties';
 import { addNewVersion } from './utils';
 
 interface Props {

@@ -5,7 +5,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { PopUpState } from '@/src/types/pop-up';
 
-import CompareVersions from '../CompareVersions';
+import CompareVersions from '../../../PromptView/Modals/CompareVersions';
 import { DialPrompt } from '@/src/models/dial/prompt';
 
 import * as actions from '@/src/app/[lang]/prompts/actions';

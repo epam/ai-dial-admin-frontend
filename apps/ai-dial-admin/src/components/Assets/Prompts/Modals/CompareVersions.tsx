@@ -10,7 +10,7 @@ import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { PopUpState } from '@/src/types/pop-up';
-import VersionsControl from './VersionsControl';
+import VersionsControl from './tests/VersionsControl';
 
 interface Props {
   heading: string;
