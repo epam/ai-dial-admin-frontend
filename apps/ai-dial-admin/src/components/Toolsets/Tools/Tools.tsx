@@ -2,11 +2,17 @@
 
 import { IconPlus } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { ButtonVariant, DialSwitch, DialButton, AlertVariant, DialAlert } from '@epam/ai-dial-ui-kit';
+import {
+  ButtonVariant,
+  DialSwitch,
+  DialButton,
+  AlertVariant,
+  DialAlert,
+  DialNoDataContent,
+  DialLoader,
+} from '@epam/ai-dial-ui-kit';
 
 import { getTools } from '@/src//app/[lang]/toolsets/actions';
-import Loader from '@/src/components/Common/Loader/Loader';
-import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Search from '@/src/components/Common/Search/Search';
 import { ButtonsI18nKey, EntitiesI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -141,7 +147,7 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
   return (
     <>
       {isLoading ? (
-        <Loader size={40} />
+        <DialLoader size={40} />
       ) : (
         <div className="pt-3 w-full flex flex-col h-full gap-y-2">
           <div className="flex flex-row items-center mb-3">
@@ -186,7 +192,7 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
           </div>
           <div className="flex-1 min-h-0">
             {!filteredTools || filteredTools.length === 0 ? (
-              <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoTools)} />
+              <DialNoDataContent title={t(EntitiesI18nKey.NoTools)} />
             ) : (
               <div className="h-full overflow-y-auto flex flex-col gap-y-3 pr-2">
                 {filteredTools?.map((tool) => (
