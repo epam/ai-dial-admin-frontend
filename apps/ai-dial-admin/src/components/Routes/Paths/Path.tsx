@@ -2,8 +2,8 @@ import { FC, useEffect, useMemo, useState } from 'react';
 
 import { IconTrash } from '@tabler/icons-react';
 import classNames from 'classnames';
+import { DialButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import { EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -63,7 +63,7 @@ const Path: FC<Props> = ({ index, path, readonly, optional, fieldTitle, allPaths
   return (
     <div className="flex items-center">
       <div className="flex-1">
-        <TextInputField
+        <DialTextInputField
           elementId={'path ' + index}
           value={path}
           disabled={readonly}
@@ -75,9 +75,11 @@ const Path: FC<Props> = ({ index, path, readonly, optional, fieldTitle, allPaths
         />
       </div>
       {!readonly && (
-        <button aria-label="button" className={removeButtonClass} onClick={() => onRemove(index)}>
-          <IconTrash {...BASE_ICON_PROPS} />
-        </button>
+        <DialButton
+          cssClass={removeButtonClass}
+          onClick={() => onRemove(index)}
+          iconBefore={<IconTrash {...BASE_ICON_PROPS} />}
+        />
       )}
     </div>
   );
