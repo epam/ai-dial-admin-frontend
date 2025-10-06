@@ -1,3 +1,5 @@
+'use client';
+
 import { FC, MouseEvent, useCallback } from 'react';
 import { IconInfoCircle } from '@tabler/icons-react';
 import { DialButton } from '@epam/ai-dial-ui-kit';
