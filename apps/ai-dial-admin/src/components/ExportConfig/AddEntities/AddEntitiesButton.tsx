@@ -4,8 +4,8 @@ import { createPortal } from 'react-dom';
 
 import { IconPlus } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import AddEntitiesModal from '@/src/components/ExportConfig/AddEntities/AddEntitiesModal';
 import { getActualColDefs, isEntityWithDependency } from '@/src/components/ExportConfig/utils';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -61,10 +61,10 @@ const AddEntitiesButton: FC<Props> = ({ selectedTab, tabData, customExportData, 
 
   return (
     <>
-      <Button
+      <DialButton
         title={buttonTitle}
         iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-        cssClass="secondary"
+        variant={ButtonVariant.Secondary}
         onClick={() => onClick(selectedTab)}
       />
 

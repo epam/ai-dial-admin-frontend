@@ -3,7 +3,7 @@ import { FC } from 'react';
 import { DialKey } from '@/src/models/dial/key';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
-import KeyViewStatus from './KeyStatus/KeyViewStatus';
+import KeyViewStatus from './KeyStatus';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 

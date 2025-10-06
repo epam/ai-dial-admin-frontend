@@ -1,5 +1,6 @@
 import { cloneElement, Dispatch, FC, ReactElement, SetStateAction, useCallback, useState } from 'react';
-import Button from '@/src/components/Common/Button/Button';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+
 import { ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { createPortal } from 'react-dom';
 import Popup from '@/src/components/Common/Popup/Popup';
@@ -70,13 +71,15 @@ const AddFilterModal: FC<Props> = ({
               />
             </div>
             <div className="flex flex-row items-center gap-2 px-6 py-4">
-              <Button
-                cssClass="secondary flex-grow justify-center"
+              <DialButton
+                variant={ButtonVariant.Secondary}
+                cssClass="flex-grow justify-center"
                 title={t(ButtonsI18nKey.Cancel)}
                 onClick={onClose}
               />
-              <Button
-                cssClass="primary flex-grow justify-center"
+              <DialButton
+                variant={ButtonVariant.Primary}
+                cssClass="flex-grow justify-center"
                 title={t(ButtonsI18nKey.Apply)}
                 onClick={addFilter}
                 disable={!(type && condition && value)}

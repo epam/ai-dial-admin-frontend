@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import KeysList from '../KeysList';
+import KeysList from './List';
 import { describe, expect, test } from 'vitest';
 import { EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 

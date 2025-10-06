@@ -2,9 +2,8 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { IconPlus, IconReload } from '@tabler/icons-react';
 import { GridApi, GridReadyEvent, IRowNode } from 'ag-grid-community';
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialSwitch, DialButton, ButtonVariant } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Grid from '@/src/components/Grid/Grid';
 import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
@@ -105,16 +104,16 @@ const RolesGrid: FC<Props> = ({
 
         <div className="flex flex-row gap-3">
           {isResetAvailable(entity) && (
-            <Button
-              cssClass="tertiary"
+            <DialButton
+              variant={ButtonVariant.Tertiary}
               iconBefore={<IconReload {...BASE_ICON_PROPS} />}
               title={t(RolesI18nKey.ResetToDefaultLimits)}
               onClick={onResetAllRolesToDefault}
             />
           )}
           {!entity.isPublic && (
-            <Button
-              cssClass="primary"
+            <DialButton
+              variant={ButtonVariant.Primary}
               iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
               title={t(ButtonsI18nKey.Add)}
               onClick={onOpenAddModal}

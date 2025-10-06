@@ -1,8 +1,9 @@
 import { ErrorType } from '@/src/types/error-type';
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { KeyStatus } from '@/src/types/key';
-import { getErrorForKey, getColorClass } from '../keys-list';
+import { getErrorForKey, getColorClass } from '../utils';
 import { describe, expect, test, vi } from 'vitest';
+
 describe('Keys list :: getErrorForKey', () => {
   const key = 'my-key';
 

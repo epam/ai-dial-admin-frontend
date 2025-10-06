@@ -6,7 +6,7 @@ import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { getKeyStatus } from '@/src/utils/keys';
-import { getColorClass } from '../keys-list';
+import { getColorClass } from '../Properties/utils';
 
 interface Props {
   data: DialKey;

@@ -1,13 +1,13 @@
 import { FC, useCallback, useState } from 'react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 import ValidityPeriodInput from '@/src/components/Common/ValidityPeriodInput/ValidityPeriodInput';
 import { ButtonsI18nKey, EntityFieldsI18nKey, KeysI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { PopUpState } from '@/src/types/pop-up';
-import KeyGenerateField from './KeyGenerateField';
+import KeyGenerateField from '../View/Properties/KeyGenerateField';
 
 interface Props {
   modalState: PopUpState;
@@ -50,10 +50,10 @@ export const KeyRotateModal: FC<Props> = ({ modalState, selectedKey, keys, onCon
       </div>
 
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
 
-        <Button
-          cssClass="primary"
+        <DialButton
+          variant={ButtonVariant.Primary}
           title={t(ButtonsI18nKey.Rotate)}
           onClick={() => onConfirm(newKey)}
           disable={!newKey.key}

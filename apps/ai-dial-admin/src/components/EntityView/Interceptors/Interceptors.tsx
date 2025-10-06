@@ -2,8 +2,8 @@ import { IconPlus } from '@tabler/icons-react';
 import { RowDragEvent } from 'ag-grid-community';
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import Grid from '@/src/components/Grid/Grid';
@@ -93,8 +93,8 @@ const EntityInterceptors = <T extends { interceptors?: string[] }>({
         <h1>
           {t(TabsI18nKey.Interceptors)}: {entity.interceptors?.length}
         </h1>
-        <Button
-          cssClass="primary"
+        <DialButton
+          variant={ButtonVariant.Primary}
           iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
           title={t(ButtonsI18nKey.Add)}
           onClick={onOpenAddModal}
