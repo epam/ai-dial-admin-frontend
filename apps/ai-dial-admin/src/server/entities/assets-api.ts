@@ -1,6 +1,6 @@
 import { JWT } from 'next-auth/jwt';
 
-import { IF_MATCH, IF_NONE_MATCH } from '@/src/constants/api-headers';
+import { DEFAULT_ETAG, IF_MATCH, IF_NONE_MATCH } from '@/src/constants/api-headers';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { DialAssetApp } from '@/src/models/dial/asset-app';
 import { DialFile } from '@/src/models/dial/file';
@@ -113,10 +113,10 @@ export class AssetsApi extends BaseApi {
     token: JWT | null,
     path: string,
     type: ResourceType,
-    etag: string,
+    etag?: string,
   ): Promise<ServerActionResponse> {
     const url = this.buildUrl(type, ResourceOperation.DELETE);
-    return this.postAction(url, { path }, token, { [IF_MATCH]: etag });
+    return this.postAction(url, { path }, token, { [IF_MATCH]: etag || DEFAULT_ETAG });
   }
 
   removeAsset(token: JWT | null, path: string, type: ResourceType): Promise<ServerActionResponse> {

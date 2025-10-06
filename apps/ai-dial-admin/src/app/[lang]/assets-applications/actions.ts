@@ -26,7 +26,7 @@ export async function updateApp(app: DialAssetApp, etag: string) {
   return assetsApi.updateAssetWithEtag(token, app, ResourceType.APPLICATION, etag);
 }
 
-export async function removeApp(path: string, etag: string) {
+export async function removeApp(path: string, etag?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return assetsApi.removeAssetWithEtag(token, path, ResourceType.APPLICATION, etag);
 }

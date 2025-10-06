@@ -27,7 +27,7 @@ export async function updateToolset(toolset: AssetToolset, etag: string) {
   return assetsApi.updateAssetWithEtag(token, toolset, ResourceType.TOOLSET, etag);
 }
 
-export async function removeToolset(path: string, etag: string) {
+export async function removeToolset(path: string, etag?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return assetsApi.removeAssetWithEtag(token, path, ResourceType.TOOLSET, etag);
 }
