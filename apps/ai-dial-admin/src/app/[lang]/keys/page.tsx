@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { keysApi } from '@/src/app/api/api';
-import KeysList from '@/src/components/KeysList/KeysList';
+import KeysList from '@/src/components/Keys/List/List';
 import { DialKey } from '@/src/models/dial/key';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';

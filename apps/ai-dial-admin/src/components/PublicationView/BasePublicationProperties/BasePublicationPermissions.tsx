@@ -2,9 +2,9 @@ import { FC, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { IconReplace, IconBrandStackshare } from '@tabler/icons-react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { getRules } from '@/src/app/[lang]/folders-storage/actions';
-import Button from '@/src/components/Common/Button/Button';
 import RulesCompare from '@/src/components/PublicationView/Popup/RulesCompare';
 import RulesStructure from '@/src/components/PublicationView/Popup/RulesStructure';
 import RulesItem from '@/src/components/Rules/Item/RulesItem';
@@ -55,16 +55,16 @@ const BasePublicationPermissions: FC<Props> = ({ rules, folderId, showCompare })
     <RulesItem rules={rules} indentIndex={0} isAlwaysToggled={true}>
       <div className="flex gap-4">
         {showStructureButton && (
-          <Button
-            cssClass="secondary"
+          <DialButton
+            variant={ButtonVariant.Secondary}
             title={t(ButtonsI18nKey.ReviewStructure)}
             iconBefore={<IconBrandStackshare {...BASE_ICON_PROPS} />}
             onClick={() => setStructureModalState(PopUpState.Opened)}
           />
         )}
         {showCompareButton && (
-          <Button
-            cssClass="secondary"
+          <DialButton
+            variant={ButtonVariant.Secondary}
             title={t(CompareI18nKey.CompareChanges)}
             iconBefore={<IconReplace {...BASE_ICON_PROPS} />}
             onClick={() => setCompareModalState(PopUpState.Opened)}

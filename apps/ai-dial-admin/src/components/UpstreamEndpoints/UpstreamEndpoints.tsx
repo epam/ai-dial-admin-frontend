@@ -1,7 +1,7 @@
 import { FC, useCallback } from 'react';
 import { IconPlus } from '@tabler/icons-react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import { UpstreamEndpointsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -79,8 +79,8 @@ const UpstreamEndpoints: FC<Props> = ({ readonly, entity, onChangeEntity, isKeyO
       </div>
       {!readonly && (
         <div>
-          <Button
-            cssClass="secondary"
+          <DialButton
+            variant={ButtonVariant.Secondary}
             title={t(UpstreamEndpointsI18nKey.AddUpstream)}
             iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
             onClick={onAddEndpoint}

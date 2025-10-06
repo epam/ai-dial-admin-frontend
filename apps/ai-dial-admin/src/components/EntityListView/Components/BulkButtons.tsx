@@ -2,9 +2,10 @@
 
 import { Dispatch, SetStateAction } from 'react';
 
-import { IconFileArrowRight, IconTrashX, IconX } from '@tabler/icons-react';
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { IconFileArrowRight, IconTrashX } from '@tabler/icons-react';
 
+import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
@@ -71,13 +72,11 @@ const BulkButtons = ({
           }}
         />
       )}
-      <DialButton
-        cssClass="text-secondary hover:text-accent-primary"
-        onClick={() => {
+      <CloseButton
+        onClose={() => {
           setIsBulkView(false);
           folderContext?.setBulkSelectedData({});
         }}
-        iconBefore={<IconX height={24} width={24} />}
       />
     </div>
   );

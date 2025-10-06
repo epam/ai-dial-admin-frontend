@@ -1,6 +1,8 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialSwitch } from '@epam/ai-dial-ui-kit';
 import { v4 as uuidv4 } from 'uuid';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { IconSparkles } from '@tabler/icons-react';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import ValidityPeriodInput from '@/src/components/Common/ValidityPeriodInput/ValidityPeriodInput';
@@ -10,11 +12,9 @@ import { DialKey } from '@/src/models/dial/key';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
-import KeyGenerateField from './KeyGenerateField';
+import KeyGenerateField from '@/src/components/Keys/View/Properties/KeyGenerateField';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
-import { IconSparkles } from '@tabler/icons-react';
-import Button from '@/src/components/Common/Button/Button';
 
 interface Props {
   entity: DialKey;
@@ -99,8 +99,9 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
           <div className="flex-1">
             <IdControl entity={entity} names={names} onChangeEntity={onChangeKey} />
           </div>
-          <Button
-            cssClass="tertiary ml-2 h-[34px]"
+          <DialButton
+            variant={ButtonVariant.Tertiary}
+            cssClass="ml-2 h-[34px]"
             iconBefore={<IconSparkles />}
             title={t(ButtonsI18nKey.Generate)}
             onClick={onGenerateKeyId}

@@ -3,8 +3,8 @@ import { FC, useMemo, useState } from 'react';
 
 import { ColDef, GridOptions, SelectionChangedEvent } from 'ag-grid-community';
 import classNames from 'classnames';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { getButtonTitle } from '@/src/components/ExportConfig/AddEntities/utils';
@@ -83,9 +83,9 @@ const AddEntitiesModal: FC<Props> = ({ modalState, selectedTab, entities, column
         )}
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <Button
-          cssClass="primary"
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton
+          variant={ButtonVariant.Primary}
           title={t(ButtonsI18nKey.Add)}
           onClick={() => onApply(selectedEntities, selectedDependencies)}
           disable={!selectedEntities.length}

@@ -8,7 +8,7 @@ import { FieldError } from '@/src/models/error';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
-import { getErrorForKey } from './keys-list';
+import { getErrorForKey } from './utils';
 
 interface Props {
   isKeyImmutable?: boolean;

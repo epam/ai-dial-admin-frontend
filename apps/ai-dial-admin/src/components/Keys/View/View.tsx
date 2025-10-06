@@ -32,9 +32,9 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import KeyProperties from './KeyProperties';
-import KeyRotateModal from './KeyRotateModal';
-import KeyViewHeader from './KeyViewHeader';
+import KeyProperties from './Properties/Properties';
+import KeyRotateModal from '../Modals/KeyRotateModal';
+import KeyViewHeader from './Header/Header';
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { ExportFormat } from '@/src/types/export';
 import {

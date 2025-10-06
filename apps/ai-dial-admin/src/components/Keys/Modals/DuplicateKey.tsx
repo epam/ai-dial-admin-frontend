@@ -9,7 +9,7 @@ import { DialKey } from '@/src/models/dial/key';
 import { PopUpState } from '@/src/types/pop-up';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
-import KeyGenerateField from '../KeyGenerateField';
+import KeyGenerateField from '../View/Properties/KeyGenerateField';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
