@@ -49,7 +49,11 @@ const DeleteConfirmationModal = <T extends object>({
       if (res.success) {
         onCloseModal();
 
-        if (view === ApplicationRoute.Prompts || view === ApplicationRoute.AssetsApplications) {
+        if (
+          view === ApplicationRoute.Prompts ||
+          view === ApplicationRoute.AssetsToolsets ||
+          view === ApplicationRoute.AssetsApplications
+        ) {
           folderContext?.fetchFiles(folderContext?.filePath);
         }
 
