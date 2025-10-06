@@ -22,7 +22,7 @@ const CloseButton: FC<Props> = ({ onClose }) => {
       cssClass="text-secondary hover:text-accent-primary"
       onClick={onClose}
       iconBefore={<IconX height={24} width={24} />}
-    ></DialButton>
+    />
   );
 };
 
