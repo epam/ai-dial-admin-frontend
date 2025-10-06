@@ -62,6 +62,7 @@ export enum SettingsModalI18nKey {
 
 export enum BasicI18nKey {
   None = 'Basic.None',
+  Optional = 'Basic.Optional',
   Failed = 'Basic.Failed',
   NoData = 'Basic.NoData',
   NoParameters = 'Basic.NoParameters',
