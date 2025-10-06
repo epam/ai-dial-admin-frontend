@@ -1,15 +1,14 @@
 import { FC } from 'react';
 
-import { DialPasswordInputField } from '@epam/ai-dial-ui-kit';
+import { DialPasswordInputField, DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
+import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
+import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Toolset, ToolsetAuthSettings } from '@/src/models/dial/toolset';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
-import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
-import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 
 enum AuthType {
   DYNAMIC = 'dynamic',
@@ -47,7 +46,7 @@ const OAuthControls: FC<Props> = ({ toolset, onChange }) => {
             });
           }}
         />
-        <TextInputField
+        <DialTextInputField
           containerCssClass="w-[360px]"
           elementId="redirectUri"
           fieldTitle={t(EntityFieldsI18nKey.redirectUri)}
@@ -64,7 +63,7 @@ const OAuthControls: FC<Props> = ({ toolset, onChange }) => {
 
       {toolset.authSettings?.clientId != null && (
         <div className="flex flex-col gap-y-3 mt-3 w-full">
-          <TextInputField
+          <DialTextInputField
             elementId="clientId"
             fieldTitle={t(EntityFieldsI18nKey.clientId)}
             value={toolset.authSettings?.clientId || ''}

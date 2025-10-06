@@ -12,12 +12,12 @@ describe('Common components :: Field', () => {
   });
 
   test('Should render (Optional) when optional is true', () => {
-    render(<Field fieldTitle="My Field" optional />);
+    render(<Field htmlFor="input" fieldTitle="My Field" optional />);
     expect(screen.getByText('(Optional)')).toBeInTheDocument();
   });
 
   test('Should render nothing when fieldTitle is not provided', () => {
-    const { container } = render(<Field />);
+    const { container } = render(<Field htmlFor="input" />);
     expect(container).toBeEmptyDOMElement();
   });
 });

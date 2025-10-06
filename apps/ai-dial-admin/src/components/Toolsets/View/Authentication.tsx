@@ -1,11 +1,11 @@
 import { FC, useMemo } from 'react';
+import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 import RadioGroup, { RadioButtonWithContent } from '@/src/components/Common/RadioGroup/RadioGroup';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Toolset, ToolsetAuthSettings, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { RadioFieldOrientation } from '@/src/types/radio-orientation';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import OAuthControls from './OAuth';
 
 interface Props {
@@ -24,7 +24,7 @@ const Authentication: FC<Props> = ({ toolset, onChange }) => {
       name: 'API Key',
       content: (
         <div className="pl-[30px]">
-          <TextInputField
+          <DialTextInputField
             elementId="apiHeader"
             fieldTitle={t(EntityFieldsI18nKey.apiKeyHeader)}
             placeholder={t(EntityPlaceholdersI18nKey.ApiKeyHeader)}
