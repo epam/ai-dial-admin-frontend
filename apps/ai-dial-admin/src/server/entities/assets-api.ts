@@ -1,6 +1,6 @@
 import { JWT } from 'next-auth/jwt';
 
-import { DEFAULT_ETAG, IF_MATCH, IF_NONE_MATCH } from '@/src/constants/api-headers';
+import { IF_MATCH, IF_NONE_MATCH } from '@/src/constants/api-headers';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { DialAssetApp } from '@/src/models/dial/asset-app';
 import { DialFile } from '@/src/models/dial/file';
@@ -82,24 +82,41 @@ export class AssetsApi extends BaseApi {
     }
   }
 
+  getAssetWithEtag(token: JWT | null, path: string, type: ResourceType, etag: string) {
+    const url = this.buildUrl(type, ResourceOperation.GET);
+
+    return this.postAction(url, { path }, token, { [IF_NONE_MATCH]: etag });
+  }
+
   getAsset(token: JWT | null, path: string, type: ResourceType): Promise<DialPrompt | null> {
     const url = this.buildUrl(type, ResourceOperation.GET);
-    return this.post(
-      url,
-      { path },
-      token,
-      type === ResourceType.APPLICATION ? { [IF_NONE_MATCH]: DEFAULT_ETAG } : void 0,
-    );
+
+    return this.post(url, { path }, token);
+  }
+
+  updateAssetWithEtag(
+    token: JWT | null,
+    asset: DialAssetApp,
+    type: ResourceType,
+    etag: string,
+  ): Promise<ServerActionResponse> {
+    const url = this.buildUrl(type, ResourceOperation.UPDATE);
+    return this.postAction(url, { ...asset }, token, { [IF_MATCH]: etag });
   }
 
   updateAsset(token: JWT | null, asset: DialAssetApp, type: ResourceType): Promise<ServerActionResponse> {
     const url = this.buildUrl(type, ResourceOperation.UPDATE);
-    return this.postAction(
-      url,
-      { ...asset },
-      token,
-      type === ResourceType.APPLICATION ? { [IF_MATCH]: DEFAULT_ETAG } : void 0,
-    );
+    return this.postAction(url, { ...asset }, token);
+  }
+
+  removeAssetWithEtag(
+    token: JWT | null,
+    path: string,
+    type: ResourceType,
+    etag: string,
+  ): Promise<ServerActionResponse> {
+    const url = this.buildUrl(type, ResourceOperation.DELETE);
+    return this.postAction(url, { path }, token, { [IF_MATCH]: etag });
   }
 
   removeAsset(token: JWT | null, path: string, type: ResourceType): Promise<ServerActionResponse> {
@@ -107,12 +124,7 @@ export class AssetsApi extends BaseApi {
       return this.deleteAction(`${ResourceBasePaths[type]}?path=${path}`, token);
     } else {
       const url = this.buildUrl(type, ResourceOperation.DELETE);
-      return this.postAction(
-        url,
-        { path },
-        token,
-        type === ResourceType.APPLICATION ? { [IF_MATCH]: DEFAULT_ETAG } : void 0,
-      );
+      return this.postAction(url, { path }, token);
     }
   }
 
@@ -133,6 +145,7 @@ export class AssetsApi extends BaseApi {
     });
     return Promise.all(requests);
   }
+
   // currently for files - json /import, for prompts - json /import/json need fix from BE when application added
   importAssets(
     token: JWT | null,

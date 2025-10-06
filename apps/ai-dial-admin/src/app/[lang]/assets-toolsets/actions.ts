@@ -13,23 +13,23 @@ export async function getToolsets(path: string) {
   return assetsApi.getAssetList(token, path, ResourceType.TOOLSET);
 }
 
-export async function getToolset(folderId: string, name: string, version: string) {
+export async function getToolset(folderId: string, name: string, version: string, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const toolsets = await assetsApi.getAssetList(token, `${folderId}/`, ResourceType.TOOLSET);
   const path = toolsets?.find((toolset) => toolset.name === name && (toolset as AssetToolset).version === version)
     ?.path as string;
 
-  return assetsApi.getAsset(token, path, ResourceType.TOOLSET);
+  return assetsApi.getAssetWithEtag(token, path, ResourceType.TOOLSET, etag);
 }
 
-export async function updateToolset(toolset: AssetToolset) {
+export async function updateToolset(toolset: AssetToolset, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.updateAsset(token, toolset, ResourceType.TOOLSET);
+  return assetsApi.updateAssetWithEtag(token, toolset, ResourceType.TOOLSET, etag);
 }
 
-export async function removeToolset(path: string) {
+export async function removeToolset(path: string, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.removeAsset(token, path, ResourceType.TOOLSET);
+  return assetsApi.removeAssetWithEtag(token, path, ResourceType.TOOLSET, etag);
 }
 
 export async function bulkDeleteToolsets(paths: { path: string }[]) {

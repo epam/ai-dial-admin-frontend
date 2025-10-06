@@ -13,22 +13,22 @@ export async function getApps(path: string) {
   return assetsApi.getAssetList(token, path, ResourceType.APPLICATION);
 }
 
-export async function getApp(folderId: string, name: string, version: string) {
+export async function getApp(folderId: string, name: string, version: string, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const apps = await assetsApi.getAssetList(token, `${folderId}/`, ResourceType.APPLICATION);
   const path = apps?.find((app) => app.name === name && (app as DialAssetApp).version === version)?.path as string;
 
-  return assetsApi.getAsset(token, path, ResourceType.APPLICATION);
+  return assetsApi.getAssetWithEtag(token, path, ResourceType.APPLICATION, etag);
 }
 
-export async function updateApp(app: DialAssetApp) {
+export async function updateApp(app: DialAssetApp, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.updateAsset(token, app, ResourceType.APPLICATION);
+  return assetsApi.updateAssetWithEtag(token, app, ResourceType.APPLICATION, etag);
 }
 
-export async function removeApp(path: string) {
+export async function removeApp(path: string, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.removeAsset(token, path, ResourceType.APPLICATION);
+  return assetsApi.removeAssetWithEtag(token, path, ResourceType.APPLICATION, etag);
 }
 
 export async function bulkDeleteApps(paths: { path: string }[]) {

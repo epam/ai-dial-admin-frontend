@@ -33,6 +33,7 @@ import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getTabsForAssetApp } from './utils';
 
 interface Props {
+  etag: string;
   originalApp: DialAssetApp;
   apps: DialAssetApp[];
   models: DialModel[];
@@ -41,7 +42,7 @@ interface Props {
   interceptors: DialInterceptor[];
 }
 
-const AppView: FC<Props> = ({ originalApp, apps, models, applications, schemes, interceptors }) => {
+const AppView: FC<Props> = ({ etag, originalApp, apps, models, applications, schemes, interceptors }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const tabs = getTabsForAssetApp(t, getIsParametersTabAvailable(originalApp, schemes));
   const router = useRouter();
@@ -92,7 +93,7 @@ const AppView: FC<Props> = ({ originalApp, apps, models, applications, schemes, 
   const onSave = useCallback(() => {
     const isNeedToMove = getIsNeedToMove(selectedApp, originalApp);
     const updatedEntity = getEntityForUpdate(selectedApp, originalApp);
-    updateApp(updatedEntity).then((res) => {
+    updateApp(updatedEntity, etag).then((res) => {
       if (res.success) {
         if (isNeedToMove) {
           getApps(addTrailingSlash(updatedEntity.folderId)).then((apps) => {
@@ -118,7 +119,7 @@ const AppView: FC<Props> = ({ originalApp, apps, models, applications, schemes, 
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedApp, originalApp, router, fetchFiles, showNotification]);
+  }, [selectedApp, originalApp, router, fetchFiles, etag, showNotification]);
 
   const onChangeEntity = useCallback(
     (entity: DialAssetApp) => {
@@ -131,6 +132,13 @@ const AppView: FC<Props> = ({ originalApp, apps, models, applications, schemes, 
     setJsonEditorEnabled((prev) => !prev);
   }, [setJsonEditorEnabled]);
 
+  const onRemove = useCallback(
+    (entity: string) => {
+      return removeApp(entity, etag);
+    },
+    [etag],
+  );
+
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={headerClassName}>
@@ -141,7 +149,7 @@ const AppView: FC<Props> = ({ originalApp, apps, models, applications, schemes, 
           isChanged={isChanged}
           onSave={onSave}
           onDiscard={onDiscard}
-          removeEntity={removeApp}
+          removeEntity={onRemove}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
           existingVersions={apps?.map((app) => app.version) || []}
