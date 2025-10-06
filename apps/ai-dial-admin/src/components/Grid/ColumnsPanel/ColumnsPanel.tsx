@@ -65,7 +65,7 @@ const ColumnsPanel: FC<Props> = ({
               onClick={resetToDefault}
             />
           )}
-          <CloseButton onClose={toggleColumnsPanel} />
+          {toggleColumnsPanel && <CloseButton onClose={toggleColumnsPanel} />}
         </div>
       </div>
       <div ref={ref} className={bodyClassNames}>
