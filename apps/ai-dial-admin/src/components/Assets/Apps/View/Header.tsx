@@ -1,6 +1,7 @@
 import { FC, useCallback } from 'react';
 
 import { IconExternalLink } from '@tabler/icons-react';
+import { DialButton } from '@epam/ai-dial-ui-kit';
 
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
@@ -50,9 +51,11 @@ const AppHeader: FC<Props> = ({ app }) => {
       <LabeledText label={t(EntitiesI18nKey.FolderStorage)}>
         <div className="flex flex-row gap-1 items-center">
           <Tooltip tooltip={app.folderId}>{removeTrailingSlash(app.folderId)}</Tooltip>
-          <button onClick={() => openFolderStorageInNewTab(app.folderId)} className="text-secondary">
-            <IconExternalLink {...BASE_ICON_PROPS} />
-          </button>
+          <DialButton
+            onClick={() => openFolderStorageInNewTab(app.folderId)}
+            cssClass="text-secondary"
+            iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
+          />
         </div>
       </LabeledText>
     </div>
