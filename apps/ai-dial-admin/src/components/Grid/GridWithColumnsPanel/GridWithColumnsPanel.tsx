@@ -4,8 +4,8 @@ import classNames from 'classnames';
 import { useCallback, useEffect, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
-import NoDataContent from '@/src/components/Common/NoData/NoData';
 import { checkColDefsChanges } from '@/src/components/Grid/comparators/base-column-comparator';
 import ColumnsPanel from '@/src/components/Grid/ColumnsPanel/ColumnsPanel';
 import Grid from '@/src/components/Grid/Grid';
@@ -118,7 +118,7 @@ const GridWithColumnsPanel = <T extends object>({
   return (
     <div className="w-full h-full relative">
       {data?.length === 0 ? (
-        <NoDataContent emptyDataTitle={emptyDataTitle} />
+        <DialNoDataContent title={emptyDataTitle} />
       ) : (
         <>
           <Grid

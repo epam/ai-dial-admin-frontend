@@ -3,9 +3,9 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { ColDef } from 'ag-grid-community';
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
-import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Grid from '@/src/components/Grid/Grid';
 import {
   getComponentColDefs,
@@ -78,7 +78,7 @@ const ConfigurationGrid: FC<Props> = ({ selectedTab, tabData, currentState, prev
   }, [onOpenDetailsModal, selectedTab, t, tabData]);
 
   return rowData.length === 0 ? (
-    <NoDataContent emptyDataTitle={t(emptyDataTitleI18nkKey)} />
+    <DialNoDataContent title={t(emptyDataTitleI18nkKey)} />
   ) : (
     <>
       <Grid columnDefs={colDefs} rowData={rowData} />
