@@ -16,7 +16,7 @@ import {
   EntityPlaceholdersI18nKey,
   FoldersI18nKey,
 } from '@/src/constants/i18n';
-import { useFileFolder } from '@/src/context/FileFolderContext';
+import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { getGridFileColumns, getGridFileData } from '@/src/utils/files/grid-data';

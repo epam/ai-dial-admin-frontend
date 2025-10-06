@@ -4,6 +4,7 @@ export enum ApplicationRoute {
   Adapters = '/adapters',
   Applications = '/applications',
   AssetsApplications = '/assets-applications',
+  AssetsToolsets = '/assets-toolsets',
   ApplicationRunners = '/application-runners',
   ApplicationPublications = '/application-publications',
   Interceptors = '/interceptors',

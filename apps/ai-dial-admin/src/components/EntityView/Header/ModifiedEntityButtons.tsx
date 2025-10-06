@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 import classNames from 'classnames';
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import AddVersionModal from '@/src/components/Assets/PromptView/Modals/AddVersionModal';
+import AddVersionModal from '@/src/components/Assets/Prompts/Modals/AddVersionModal';
 import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
 import { ButtonsI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';

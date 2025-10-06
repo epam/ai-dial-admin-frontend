@@ -13,7 +13,7 @@ import {
 } from '@/src/components/EntityListView/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { ExportI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
-import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';

@@ -2,20 +2,20 @@
 
 import { FC } from 'react';
 
-import { bulkDeleteApps, moveApps, removeApp } from '@/src/app/[lang]/assets-applications/actions';
+import { bulkDeleteToolsets, moveToolsets, removeToolset } from '@/src/app/[lang]/assets-toolsets/actions';
 import { filterLatestVersions, getVersionsPerName } from '@/src/components/Assets/utils';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import Page403 from '@/src/components/Page403/Page403';
-import { APPS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { useAppsFolder } from '@/src/context/AppsFolderContext';
-import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
-import { DialAssetApp } from '@/src/models/dial/asset-app';
+import { ASSETS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { DialFile } from '@/src/models/dial/file';
+import { AssetToolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { filterNames } from '@/src/utils/entities/filter-names';
 
-const AppsList: FC = () => {
-  const { data } = useAppsFolder();
+const ToolsetsList: FC = () => {
+  const { data } = useToolsetFolder();
   if (data == null) {
     return <Page403 />;
   }
@@ -26,18 +26,18 @@ const AppsList: FC = () => {
 
   return (
     <BaseEntityList
-      baseColumns={APPS_COLUMNS}
+      baseColumns={ASSETS_COLUMNS}
       names={names}
       versionsMap={versionsMap}
       data={filteredData}
-      route={ApplicationRoute.AssetsApplications}
-      removeEntity={removeApp}
-      moveFiles={moveApps}
-      bulkDelete={bulkDeleteApps}
-      context={useAppsFolder as () => AssetsFolderContext<DialAssetApp | DialFile>}
+      route={ApplicationRoute.AssetsToolsets}
+      removeEntity={removeToolset}
+      moveFiles={moveToolsets}
+      bulkDelete={bulkDeleteToolsets}
+      context={useToolsetFolder as () => AssetsFolderContext<AssetToolset | DialFile>}
       showFolders={true}
     />
   );
 };
 
-export default AppsList;
+export default ToolsetsList;

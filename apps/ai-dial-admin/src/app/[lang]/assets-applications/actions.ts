@@ -5,7 +5,7 @@ import { cookies, headers } from 'next/headers';
 import { assetsApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { ResourceType } from '@/src/types/folder';
+import { ResourceType } from '@/src/types/resource-type';
 import { DialAssetApp } from '@/src/models/dial/asset-app';
 
 export async function getApps(path: string) {

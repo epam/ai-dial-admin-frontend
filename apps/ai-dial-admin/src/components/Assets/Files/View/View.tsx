@@ -11,7 +11,7 @@ import Tabs from '@/src/components/Common/Tabs/Tabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { useFileFolder } from '@/src/context/FileFolderContext';
+import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -19,7 +19,7 @@ import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { addTrailingSlash, changePath } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import FileProperties from './FileProperties';
+import FileProperties from './Properties';
 
 interface Props {
   originalFile: DialFile;

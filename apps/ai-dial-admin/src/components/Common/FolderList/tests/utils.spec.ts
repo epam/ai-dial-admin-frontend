@@ -1,6 +1,6 @@
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { ResourceType } from '@/src/types/folder';
+import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
 import { generateFolderListFromBulkPaths, generatePromptRowDataForDelete, getResourceTypeByView } from '../utils';
@@ -196,6 +196,11 @@ describe('getResourceTypeByView', () => {
   test('should return ResourceType.APPLICATION when route is AssetsApplications', () => {
     const result = getResourceTypeByView(ApplicationRoute.AssetsApplications);
     expect(result).toBe(ResourceType.APPLICATION);
+  });
+
+  test('should return ResourceType.APPLICATION when route is AssetsToolsets', () => {
+    const result = getResourceTypeByView(ApplicationRoute.AssetsToolsets);
+    expect(result).toBe(ResourceType.TOOLSET);
   });
 
   test('should return an empty string when route is undefined or not matching any of the routes', () => {

@@ -8,7 +8,7 @@ import { IconFileArrowRight, IconTrashX } from '@tabler/icons-react';
 import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { ImportFileType } from '@/src/types/import';

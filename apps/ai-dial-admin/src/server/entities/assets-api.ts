@@ -6,7 +6,7 @@ import { DialAssetApp } from '@/src/models/dial/asset-app';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { ResourceType } from '@/src/types/folder';
+import { ResourceType } from '@/src/types/resource-type';
 import { ImportFileType } from '@/src/types/import';
 import { getFileName } from '@/src/utils/api/get-file-name';
 import { changePath, getFolderNameAndPath } from '@/src/utils/files/path';
@@ -33,6 +33,7 @@ export const ResourceBasePaths: Record<ResourceType, string> = {
   [ResourceType.PROMPT]: `${API}/prompts`,
   [ResourceType.FILE]: `${API}/files`,
   [ResourceType.APPLICATION]: `${API}/application-resources`,
+  [ResourceType.TOOLSET]: `${API}/toolset-resources`,
   [ResourceType.CONVERSATION]: `${API}/conversations`,
 };
 

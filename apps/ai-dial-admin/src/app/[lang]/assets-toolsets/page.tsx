@@ -1,9 +1,10 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import FilesList from '@/src/components/Assets/Files/List/List';
+import ToolsetsList from '@/src/components/Assets/Toolsets/List';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
-import { FileFolderProvider } from '@/src/context/assets/FileFolderContext';
+import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -20,8 +21,10 @@ export default async function Page() {
   }
 
   return (
-    <FileFolderProvider>
-      <FilesList />
-    </FileFolderProvider>
+    <SaveValidationContextProvider>
+      <AppsFolderProvider>
+        <ToolsetsList />
+      </AppsFolderProvider>
+    </SaveValidationContextProvider>
   );
 }

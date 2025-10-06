@@ -19,6 +19,7 @@ export const listViewTitleMap: Record<string, MenuI18nKey> = {
   [ApplicationRoute.ActivityAudit]: MenuI18nKey.ActivityAudit,
   [ApplicationRoute.InterceptorTemplates]: MenuI18nKey.InterceptorTemplates,
   [ApplicationRoute.Toolsets]: MenuI18nKey.Toolsets,
+  [ApplicationRoute.AssetsToolsets]: MenuI18nKey.Toolsets,
 };
 
 export const emptyDataTitleMap: Record<string, EntitiesI18nKey> = {
@@ -33,6 +34,7 @@ export const emptyDataTitleMap: Record<string, EntitiesI18nKey> = {
   [ApplicationRoute.Prompts]: EntitiesI18nKey.NoPrompts,
   [ApplicationRoute.Files]: EntitiesI18nKey.NoFiles,
   [ApplicationRoute.AssetsApplications]: EntitiesI18nKey.NoApplications,
+  [ApplicationRoute.AssetsToolsets]: EntitiesI18nKey.NoToolsets,
   [ApplicationRoute.PromptPublications]: EntitiesI18nKey.NoPublications,
   [ApplicationRoute.FilePublications]: EntitiesI18nKey.NoPublications,
   [ApplicationRoute.ApplicationPublications]: EntitiesI18nKey.NoPublications,
@@ -51,6 +53,7 @@ export const deleteModalTitleMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.Prompts]: DeleteI18nKey.Prompt,
   [ApplicationRoute.Files]: DeleteI18nKey.File,
   [ApplicationRoute.AssetsApplications]: DeleteI18nKey.Application,
+  [ApplicationRoute.AssetsToolsets]: DeleteI18nKey.Toolsets,
   [ApplicationRoute.Routes]: DeleteI18nKey.Route,
   [ApplicationRoute.Adapters]: DeleteI18nKey.AdapterTitle,
   [ApplicationRoute.Toolsets]: DeleteI18nKey.Toolsets,

@@ -8,7 +8,7 @@ import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMainProperties';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { usePromptFolder } from '@/src/context/PromptFolderContext';
+import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
