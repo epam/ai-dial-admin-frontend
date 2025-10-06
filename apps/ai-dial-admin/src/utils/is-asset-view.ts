@@ -8,3 +8,11 @@ export const isAssetView = (view?: ApplicationRoute): boolean => {
     view === ApplicationRoute.AssetsToolsets
   );
 };
+
+export const isNotDuplicateAssetView = (view?: ApplicationRoute): boolean => {
+  return (
+    view === ApplicationRoute.Files ||
+    view === ApplicationRoute.AssetsApplications ||
+    view === ApplicationRoute.AssetsToolsets
+  );
+};

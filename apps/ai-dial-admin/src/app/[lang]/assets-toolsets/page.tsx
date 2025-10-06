@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 
 import ToolsetsList from '@/src/components/Assets/Toolsets/List';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
-import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
+import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
@@ -22,9 +22,9 @@ export default async function Page() {
 
   return (
     <SaveValidationContextProvider>
-      <AppsFolderProvider>
+      <ToolsetFolderProvider>
         <ToolsetsList />
-      </AppsFolderProvider>
+      </ToolsetFolderProvider>
     </SaveValidationContextProvider>
   );
 }
