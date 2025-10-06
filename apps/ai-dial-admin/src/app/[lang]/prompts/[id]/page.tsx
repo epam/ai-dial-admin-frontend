@@ -1,7 +1,7 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import PromptView from '@/src/components/Assets/PromptView/PromptView';
+import PromptView from '@/src/components/Assets/Prompts/View/View';
 import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialFileNodeType } from '@/src/models/dial/file';
@@ -11,7 +11,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { assetsApi } from '@/src/app/api/api';
-import { ResourceType } from '@/src/types/folder';
+import { ResourceType } from '@/src/types/resource-type';
 
 export const dynamic = 'force-dynamic';
 

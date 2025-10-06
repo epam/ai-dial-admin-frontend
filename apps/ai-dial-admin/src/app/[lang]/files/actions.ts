@@ -6,7 +6,7 @@ import { assetsApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { ImportFileType } from '@/src/types/import';
-import { ResourceType } from '@/src/types/folder';
+import { ResourceType } from '@/src/types/resource-type';
 
 export async function getFiles(path: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());

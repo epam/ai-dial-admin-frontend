@@ -1,18 +1,18 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { changeFolder, getFolders, getRules, previewPromptZip, removeFolder, updateRules } from './actions';
-import { ResourceType } from '@/src/types/resource-type';
+import { bulkDeleteToolsets, getToolset, getToolsets, moveToolsets, removeToolset, updateToolset } from './actions';
+
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
 
-describe('Folders storage :: server actions', () => {
+describe('Assets toolsets server actions', () => {
   beforeEach(() => {
     fetch.resetMocks();
   });
 
-  test('Should call get folders', async () => {
+  test('Should call get toolsets', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    getFolders('path').then(() => {
+    getToolsets('path').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];
@@ -20,29 +20,21 @@ describe('Folders storage :: server actions', () => {
     });
   });
 
-  test('Should call get rules', async () => {
+  test('Should call get toolset', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    getRules('path').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+    await getToolset('path', 'app', '1.0.0');
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('GET');
-    });
+    expect(fetch.mock.calls.length).toEqual(2);
+
+    const call = fetch.mock.calls[0][1];
+    const call2 = fetch.mock.calls[1][1];
+    expect(call?.method).toBe('POST');
+    expect(call2?.method).toBe('POST');
   });
 
-  test('Should call update rules', async () => {
+  test('Should call update toolset', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    updateRules('folder', []).then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
-
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('POST');
-    });
-  });
-
-  test('Should call preview prompt', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    previewPromptZip({} as FormData).then(() => {
+    updateToolset({}).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];
@@ -50,19 +42,29 @@ describe('Folders storage :: server actions', () => {
     });
   });
 
-  test('Should call remove folder', async () => {
+  test('Should call remove toolset', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    removeFolder('path').then(() => {
+    removeToolset('app').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('DELETE');
+      expect(call?.method).toBe('POST');
     });
   });
 
-  test('Should call change folder', async () => {
+  test('Should call move toolset', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    changeFolder('path', 'new', ResourceType.PROMPT).then(() => {
+    moveToolsets(['path'], 'newPath').then(() => {
+      expect(fetch.mock.calls.length).toEqual(1);
+
+      const call = fetch.mock.calls[0][1];
+      expect(call?.method).toBe('POST');
+    });
+  });
+
+  test('Should call bulk delete toolset', async () => {
+    fetch.mockResponse(JSON.stringify({ data: 'response' }));
+    bulkDeleteToolsets([{ path: 'path' }]).then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];

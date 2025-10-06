@@ -8,7 +8,7 @@ import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import ListView from '@/src/components/ListView/ListView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialAssetApp } from '@/src/models/dial/asset-app';

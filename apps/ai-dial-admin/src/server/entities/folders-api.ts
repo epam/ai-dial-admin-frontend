@@ -6,7 +6,7 @@ import { DialFolder } from '@/src/models/dial/folder';
 import { DialRule } from '@/src/models/dial/rule';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
-import { ResourceType } from '@/src/types/folder';
+import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export const FOLDERS_URL = `${API}/folders`;

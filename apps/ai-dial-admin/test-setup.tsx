@@ -36,7 +36,7 @@ vi.mock('@/src/context/RuleFolderProvider', () => ({
   useRuleFolder: () => vi.fn(),
 }));
 
-vi.mock('@/src/context/PromptFolderContext', () => ({
+vi.mock('@/src/context/assets/PromptFolderContext', () => ({
   usePromptFolder: () => vi.fn(),
 }));
 

@@ -1,6 +1,6 @@
 import { DialFile, DialFileNodeType } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { ResourceType } from '@/src/types/folder';
+import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
 
 /**
@@ -79,6 +79,9 @@ export const getResourceTypeByView = (route?: ApplicationRoute): ResourceType =>
   }
   if (route === ApplicationRoute.AssetsApplications) {
     return ResourceType.APPLICATION;
+  }
+  if (route === ApplicationRoute.AssetsToolsets) {
+    return ResourceType.TOOLSET;
   }
   return '' as ResourceType;
 };

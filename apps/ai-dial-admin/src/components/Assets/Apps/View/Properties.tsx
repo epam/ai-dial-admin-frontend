@@ -8,8 +8,8 @@ import DescriptionControl from '@/src/components/EntityMainProperties/BaseProper
 import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
-import { useAppsFolder } from '@/src/context/AppsFolderContext';
-import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
+import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAssetApp } from '@/src/models/dial/asset-app';
 import { DialFile } from '@/src/models/dial/file';

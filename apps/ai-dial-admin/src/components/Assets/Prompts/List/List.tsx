@@ -6,9 +6,9 @@ import { bulkDeletePrompts, createPrompt, movePrompts, removePrompt } from '@/sr
 import { filterLatestVersions, getVersionsPerName } from '@/src/components/Assets/utils';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import Page403 from '@/src/components/Page403/Page403';
-import { PROMPTS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
-import { usePromptFolder } from '@/src/context/PromptFolderContext';
+import { ASSETS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -26,7 +26,7 @@ const PromptsList: FC = () => {
 
   return (
     <BaseEntityList
-      baseColumns={PROMPTS_COLUMNS}
+      baseColumns={ASSETS_COLUMNS}
       names={names}
       versionsMap={versionsMap}
       data={filteredData}

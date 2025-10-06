@@ -25,8 +25,8 @@ import {
   PromptsI18nKey,
 } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
-import { usePromptFolder } from '@/src/context/PromptFolderContext';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
@@ -37,8 +37,8 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
-import AddVersionModal from './Modals/AddVersionModal';
-import CompareVersions from './Modals/CompareVersions';
+import AddVersionModal from '../Modals/AddVersionModal';
+import CompareVersions from '../Modals/CompareVersions';
 
 interface Props {
   prompt: DialPrompt;

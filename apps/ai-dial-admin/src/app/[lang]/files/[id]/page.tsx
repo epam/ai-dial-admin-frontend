@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
 
 import { getFiles } from '@/src/app/[lang]/files/actions';
-import FileView from '@/src/components/Assets/FileView/FileView';
+import FileView from '@/src/components/Assets/Files/View/View';
 import Page403 from '@/src/components/Page403/Page403';
-import { FileFolderProvider } from '@/src/context/FileFolderContext';
+import { FileFolderProvider } from '@/src/context/assets/FileFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialFile } from '@/src/models/dial/file';
 import { logger } from '@/src/server/logger';

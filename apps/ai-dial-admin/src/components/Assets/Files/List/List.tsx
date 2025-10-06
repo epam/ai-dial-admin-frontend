@@ -6,7 +6,7 @@ import { moveFiles, removeFile } from '@/src/app/[lang]/files/actions';
 import { FILES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import Page403 from '@/src/components/Page403/Page403';
-import { useFileFolder } from '@/src/context/FileFolderContext';
+import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getGridFileData } from '@/src/utils/files/grid-data';
 

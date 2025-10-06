@@ -7,7 +7,7 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { ImportFileType } from '@/src/types/import';
-import { ResourceType } from '@/src/types/folder';
+import { ResourceType } from '@/src/types/resource-type';
 
 export async function createPrompt(prompt: DialPrompt) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
