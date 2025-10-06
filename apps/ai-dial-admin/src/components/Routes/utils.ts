@@ -20,7 +20,7 @@ export const handleRouteOutputChange = (route: DialRoute, output: string) => {
   if (output === RouteOutput.RESPONSE) {
     return {
       ...route,
-      upstreams: void 0,
+      upstreams: [],
       response: {
         body: '',
         status: void 0,

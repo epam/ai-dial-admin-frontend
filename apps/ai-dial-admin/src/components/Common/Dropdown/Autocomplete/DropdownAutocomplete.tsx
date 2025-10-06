@@ -98,6 +98,7 @@ const DropdownAutocomplete = forwardRef<HTMLDivElement, DropdownAutocompleteProp
         <Tooltip tooltip={inputValue}>
           <input
             id={inputId}
+            type="text"
             {...getReferenceProps({
               ref: refs.setReference,
               onChange,

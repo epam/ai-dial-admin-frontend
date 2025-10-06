@@ -52,7 +52,7 @@ describe('Routes :: handleRouteOutputChange', () => {
     };
     const newRoute = handleRouteOutputChange(route, RouteOutput.RESPONSE);
     expect(newRoute).toEqual({
-      upstreams: void 0,
+      upstreams: [],
       response: { body: '', key: void 0 },
     });
   });
