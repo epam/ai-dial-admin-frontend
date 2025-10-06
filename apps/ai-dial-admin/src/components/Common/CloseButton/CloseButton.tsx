@@ -1,7 +1,6 @@
 'use client';
 
-import { DialButton } from '@epam/ai-dial-ui-kit';
-import { IconX } from '@tabler/icons-react';
+import { DialCloseButton } from '@epam/ai-dial-ui-kit';
 import { FC, MouseEvent } from 'react';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
@@ -13,17 +12,10 @@ interface Props {
   onClose: (e: MouseEvent<HTMLButtonElement>) => void;
 }
 
-const CloseButton: FC<Props> = ({ onClose }) => {
+const CloseButton: FC<Props> = ({ ...props }) => {
   const t = useI18n();
 
-  return (
-    <DialButton
-      ariaLabel={t(ButtonsI18nKey.Close)}
-      cssClass="text-secondary hover:text-accent-primary"
-      onClick={onClose}
-      iconBefore={<IconX height={24} width={24} />}
-    />
-  );
+  return <DialCloseButton ariaLabel={t(ButtonsI18nKey.Close)} {...props} />;
 };
 
 export default CloseButton;
