@@ -2,9 +2,8 @@ import { IconPlus } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
-import NoDataContent from '@/src/components/Common/NoData/NoData';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import Grid from '@/src/components/Grid/Grid';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
@@ -126,7 +125,7 @@ const AddEntitiesView: FC<Props> = ({
           )}
         </div>
         {!data?.length ? (
-          <NoDataContent emptyDataTitle={emptyDataTitle || t(EntitiesI18nKey.NoEntities)} />
+          <DialNoDataContent title={emptyDataTitle || t(EntitiesI18nKey.NoEntities)} />
         ) : (
           <Grid additionalGridOptions={{ onGridReady }} />
         )}
