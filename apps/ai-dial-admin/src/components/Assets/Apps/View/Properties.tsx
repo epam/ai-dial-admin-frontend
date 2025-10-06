@@ -39,12 +39,12 @@ const AppProperties: FC<Props> = ({ etag, app, apps, onChangeApp, setSelectedApp
     async (version: string) => {
       getApp?.(app.folderId, app.name as string, version, etag).then((res) => {
         if (res.success) {
-          const found = res.response;
+          const found = res.response as DialAssetApp;
 
           if (found) {
             setSelectedApp?.({} as DialAssetApp);
             router.push(
-              `${ApplicationRoute.AssetsApplications}/${`${encodeURIComponent((found as DialAssetApp).name as string)}?path=${encodeURIComponent(found.path)}`}`,
+              `${ApplicationRoute.AssetsApplications}/${`${encodeURIComponent(found.name as string)}?path=${encodeURIComponent(found.path)}`}`,
             );
           } else {
             const path = modifyNameVersionInPrompt(app.path, void 0, version);
@@ -59,7 +59,7 @@ const AppProperties: FC<Props> = ({ etag, app, apps, onChangeApp, setSelectedApp
         }
       });
     },
-    [app, setSelectedApp, router, onChangeApp],
+    [app, etag, setSelectedApp, router, onChangeApp, showNotification],
   );
 
   return (
