@@ -1,6 +1,6 @@
 import { FC } from 'react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 import RadioGroup, { RadioButtonWithContent } from '@/src/components/Common/RadioGroup/RadioGroup';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
@@ -47,8 +47,13 @@ const RadioGroupModal: FC<Props> = ({
         />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <Button cssClass="primary" title={t(ButtonsI18nKey.Apply)} onClick={onApply} disable={!isValid} />
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton
+          variant={ButtonVariant.Primary}
+          title={t(ButtonsI18nKey.Apply)}
+          onClick={onApply}
+          disable={!isValid}
+        />
       </div>
     </Popup>
   );

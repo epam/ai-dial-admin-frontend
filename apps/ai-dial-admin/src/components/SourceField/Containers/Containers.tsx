@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
+import { DialButton } from '@epam/ai-dial-ui-kit';
 
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
@@ -18,7 +19,6 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { IconExternalLink } from '@tabler/icons-react';
 
-import Button from '@/src/components/Common/Button/Button';
 import Field from '@/src/components/Common/Field/Field';
 import InputModal from '@/src/components/Common/InputModal/InputModal';
 import SelectContainerModal from '@/src/components/SourceField/Containers/SelectContainerModal';
@@ -146,7 +146,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
           </div>
         )}
         {entity.source?.containerId && deploymentsEnabled && !isModal && (
-          <Button
+          <DialButton
             iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
             cssClass={classNames('secondary', errorText ? 'self-center mt-[3px]' : 'self-end')}
             title={t(SourceI18nKey.OpenContainer)}

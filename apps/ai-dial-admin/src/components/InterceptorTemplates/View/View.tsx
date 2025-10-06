@@ -6,10 +6,10 @@ import { createPortal } from 'react-dom';
 
 import { IconPlus } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { deleteInterceptorTemplate, updateInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { createInterceptor } from '@/src/app/[lang]/interceptors/actions';
-import Button from '@/src/components/Common/Button/Button';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import { createModalTitleMap } from '@/src/components/EntityListView/constants';
@@ -104,8 +104,8 @@ const View: FC<Props> = ({ route, template, names }) => {
           jsonEditorEnabled={false}
           childrenContainerClass={'flex-row-reverse'}
         >
-          <Button
-            cssClass={`secondary`}
+          <DialButton
+            variant={ButtonVariant.Secondary}
             title={`${t(ButtonsI18nKey.Create)} ${t(DeleteI18nKey.Interceptor).toLowerCase()}`}
             iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
             onClick={() => setCreateModalState(PopUpState.Opened)}

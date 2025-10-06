@@ -4,7 +4,7 @@ import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { createKey } from '@/src/app/[lang]/keys/actions';
 import Popup from '@/src/components/Common/Popup/Popup';
-import KeyProperties from '@/src/components/KeysList/KeyProperties';
+import KeyProperties from '@/src/components/Keys/View/Properties/Properties';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';

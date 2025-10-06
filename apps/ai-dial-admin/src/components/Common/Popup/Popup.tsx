@@ -7,14 +7,12 @@ import {
   useInteractions,
   useRole,
 } from '@floating-ui/react';
-import { IconX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, FormHTMLAttributes, MouseEvent, ReactNode, useCallback } from 'react';
 
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import { PopUpState } from '@/src/types/pop-up';
-import { useI18n } from '@/src/locales/client';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
+import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
 
 interface Props extends FormHTMLAttributes<HTMLFormElement> {
   heading?: string | ReactNode;
@@ -39,7 +37,6 @@ const PopupView: FC<Props> = ({
   containerClassName,
   dividers = true,
 }) => {
-  const t = useI18n();
   const { refs, context } = useFloating({
     open: state !== PopUpState.Closed && !!state,
     onOpenChange: onClose,
@@ -85,15 +82,7 @@ const PopupView: FC<Props> = ({
                     ) : (
                       heading
                     ))}
-                  <button
-                    type="button"
-                    aria-label={t(ButtonsI18nKey.Close)}
-                    data-testid="modalClose"
-                    className="text-secondary hover:text-accent-primary"
-                    onClick={handleClose}
-                  >
-                    <IconX height={24} width={24} />
-                  </button>
+                  <CloseButton onClose={handleClose} />
                 </div>
               }
               {children[0]}

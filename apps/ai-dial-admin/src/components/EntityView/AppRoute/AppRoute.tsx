@@ -1,7 +1,7 @@
 import { IconPlus } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useState } from 'react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import HorizontalCollapseBar from '@/src/components/Common/HorizontalCollapseBar/HorizontalCollapseBar';
 import RouteContent from '@/src/components/EntityView/AppRoute/Content/RouteContent';
 import CreateRoute from '@/src/components/EntityView/AppRoute/CreateRoute';
@@ -91,8 +91,8 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
             <div className="flex flex-row flex-wrap justify-between items-center mb-6">
               <h1>{t(TabsI18nKey.Routes)}</h1>
               {!readonly && (
-                <Button
-                  cssClass="primary"
+                <DialButton
+                  variant={ButtonVariant.Primary}
                   iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
                   title={t(ButtonsI18nKey.Add)}
                   onClick={handleModalOpen}

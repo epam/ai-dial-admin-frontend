@@ -5,7 +5,7 @@ import DuplicateScheme from '@/src/components/ApplicationRunners/Modals/Duplicat
 import DuplicatePrompt from '@/src/components/Assets/Prompts/Modals/DuplicatePrompt';
 import DuplicatePopup from '@/src/components/DuplicatePopup/DuplicatePopup';
 import DuplicateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Duplicate';
-import DuplicateKey from '@/src/components/KeysList/Popup/DuplicateKey';
+import DuplicateKey from '@/src/components/Keys/Modals/DuplicateKey';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';
