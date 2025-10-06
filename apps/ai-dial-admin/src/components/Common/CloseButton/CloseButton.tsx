@@ -10,7 +10,7 @@ import { useI18n } from '@/src/locales/client';
 interface Props {
   cssClass?: string;
   size?: number;
-  onClose?: (e: MouseEvent<HTMLButtonElement>) => void;
+  onClose: (e: MouseEvent<HTMLButtonElement>) => void;
 }
 
 const CloseButton: FC<Props> = ({ onClose }) => {
@@ -18,7 +18,7 @@ const CloseButton: FC<Props> = ({ onClose }) => {
 
   return (
     <DialButton
-      aria-label={t(ButtonsI18nKey.Close)}
+      ariaLabel={t(ButtonsI18nKey.Close)}
       cssClass="text-secondary hover:text-accent-primary"
       onClick={onClose}
       iconBefore={<IconX height={24} width={24} />}
