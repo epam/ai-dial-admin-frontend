@@ -36,7 +36,11 @@ const SchemeProperties: FC<Props> = ({ runner, isImmutable, onChangeRunner }) =>
         <IdControl isUrlId={true} entity={{ name: runner.$id }} onChangeEntity={(entity) => onChangeId(entity.name)} />
       )}
 
-      <DisplayNameControl displayName={runner['dial:applicationTypeDisplayName']} onChange={onChangeName} />
+      <DisplayNameControl
+        displayName={runner['dial:applicationTypeDisplayName']}
+        required={true}
+        onChange={onChangeName}
+      />
 
       <DescriptionControl entity={runner} onChangeEntity={onChangeRunner} />
 

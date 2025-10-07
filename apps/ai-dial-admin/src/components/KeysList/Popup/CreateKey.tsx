@@ -63,6 +63,7 @@ const CreateKey: FC<Props> = ({ modalState, names, keys, onClose }) => {
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'key', isValid: !!currentKey.key });
     dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!currentKey.name });
+    dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!currentKey.displayName });
     dispatch({ type: ValidationActionType.SetField, field: 'project', isValid: !!currentKey.project });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

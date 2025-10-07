@@ -100,6 +100,7 @@ const SimpleEntityProperties: FC<Props> = ({
       {!versionsMap && (
         <DisplayNameControl
           displayName={entity.displayName}
+          required={true}
           onChange={(name) => onChangeEntity({ ...entity, displayName: name })}
         />
       )}
