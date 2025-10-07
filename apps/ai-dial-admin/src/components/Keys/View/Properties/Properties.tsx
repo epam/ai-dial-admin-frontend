@@ -107,6 +107,7 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
 
       <DisplayNameControl
         displayName={entity.displayName}
+        required={true}
         onChange={(displayName) => onChangeKey({ ...entity, displayName })}
       />
 
