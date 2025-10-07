@@ -35,10 +35,6 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
   const [projectError, setProjectError] = useState<string | undefined>();
 
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'project', isValid: !projectError });
-  }, [entity.project, dispatch, projectError]);
-
-  useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'key', isValid: isValidKey });
   }, [isValidKey, dispatch]);
 
