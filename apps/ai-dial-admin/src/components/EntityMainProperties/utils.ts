@@ -1,7 +1,7 @@
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { MAX_NAME_SYMBOLS, MIN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isWrongLengthWithView } from '@/src/utils/validation/name-error';
+import { isWrongFieldLength } from '@/src/utils/validation/name-error';
 
 export const getDisplayNameError = (
   view: ApplicationRoute,
@@ -10,7 +10,7 @@ export const getDisplayNameError = (
   t: (str: string, param?: Record<string, number>) => string,
   version?: string,
 ) => {
-  const isWrongLength = isWrongLengthWithView(view, displayName);
+  const isWrongLength = isWrongFieldLength(displayName);
   if (isWrongLength) {
     return t(ErrorI18nKey.MinMaxLength, { min: MIN_NAME_SYMBOLS, max: MAX_NAME_SYMBOLS });
   }

@@ -1,14 +1,13 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 
-import { IconTrash } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { DialButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { isValidRoutePath } from '@/src/utils/validation/path-error';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   index: number;
@@ -74,13 +73,7 @@ const Path: FC<Props> = ({ index, path, readonly, optional, fieldTitle, allPaths
           invalid={(isEmptyPath && index === 0 && isAllEmptyValues) || isInvalidPath}
         />
       </div>
-      {!readonly && (
-        <DialButton
-          cssClass={removeButtonClass}
-          onClick={() => onRemove(index)}
-          iconBefore={<IconTrash {...BASE_ICON_PROPS} />}
-        />
-      )}
+      {!readonly && <RemoveButton onClick={() => onRemove(index)} cssClass={removeButtonClass} />}
     </div>
   );
 };

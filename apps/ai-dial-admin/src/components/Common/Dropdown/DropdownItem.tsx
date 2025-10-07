@@ -71,7 +71,7 @@ const DropdownMenuItem = forwardRef<HTMLButtonElement, DropdownMenuItemProps & B
             dropdownItem?.disabled && 'hidden',
             isMenu ? 'h-[44px] pl-6' : 'h-[34px]',
             'w-full px-3',
-            disabled && '!cursor-not-allowed',
+            disabled && '!cursor-not-allowed opacity-75',
             className,
             isActiveItem ? ' bg-accent-primary-alpha border-l-accent-primary' : 'border-l-transparent',
           )}

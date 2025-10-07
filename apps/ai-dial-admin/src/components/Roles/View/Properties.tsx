@@ -6,14 +6,16 @@ import SimpleEntityProperties from '@/src/components/EntityMainProperties/Simple
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import { DialRole } from '@/src/models/dial/role';
 import RoleCostLimit from './CostLimits';
+import RoleSharing from './Sharing';
 
 interface Props {
   selectedRole: DialRole;
   names: string[];
+  isSkipRefresh: boolean;
   onChangeRole: (role: DialRole) => void;
 }
 
-const RoleProperties: FC<Props> = ({ selectedRole, names, onChangeRole }) => {
+const RoleProperties: FC<Props> = ({ selectedRole, names, isSkipRefresh, onChangeRole }) => {
   return (
     <div className="w-full mt-3 flex flex-col">
       <div className="lg:w-[35%] mt-3 w-full">
@@ -28,6 +30,7 @@ const RoleProperties: FC<Props> = ({ selectedRole, names, onChangeRole }) => {
         </div>
       </div>
       <RoleCostLimit selectedRole={selectedRole} onChangeRole={onChangeRole} />
+      <RoleSharing selectedRole={selectedRole} onChangeRole={onChangeRole} isSkipRefresh={isSkipRefresh} />
     </div>
   );
 };
