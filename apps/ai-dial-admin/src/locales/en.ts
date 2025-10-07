@@ -62,6 +62,7 @@ export default {
     Home: 'Home',
     Homepage: 'Homepage',
     Toolsets: 'Toolsets',
+    Conversations: 'Conversations',
     Adapters: 'Adapters',
     Applications: 'Applications',
     ApplicationRunners: 'Application Runners',
@@ -334,6 +335,7 @@ export default {
     SaveWithEmptyRolesTitle: 'Roles Are Not Assigned',
     SaveWithEmptyRolesDescription: 'Entity without assigned roles will not be available to end-users.',
     SaveProceedWithConfiguration: 'Are you sure you want to proceed with this configuration?',
+    Sharing: 'Sharing',
   },
   Attachments: {
     Attachments: 'Attachments',
