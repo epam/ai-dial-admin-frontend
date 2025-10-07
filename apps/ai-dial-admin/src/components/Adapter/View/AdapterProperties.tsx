@@ -51,14 +51,6 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
     [onChangeAdapter, entity],
   );
 
-  // initial validation on creation adapter (disable save when no values entered yet)
-  useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!entity.name });
-    dispatch({ type: ValidationActionType.SetField, field: 'baseEndpoint', isValid: !!entity.baseEndpoint });
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return (
     <div className="h-full flex flex-col gap-6">
       {!isEntityImmutable && <IdControl entity={entity} names={names} onChangeEntity={onChangeAdapter} />}
