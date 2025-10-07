@@ -22,7 +22,7 @@ import Actions from './Components/Actions';
 import { ModalType } from './Components/Modals';
 import { emptyDataTitleMap, listViewTitleMap } from './constants';
 import EntityListHeaderButtons from './HeaderButtons/HeaderButtons';
-import { isNotDuplicateAssetView } from '@/src/utils/is-asset-view';
+import { isDeploymentAsset } from '@/src/utils/is-asset-view';
 
 interface Props<T> {
   data: T[];
@@ -130,7 +130,7 @@ const BaseEntityList = <T extends object>({
   const getColumns = () => {
     if (route === ApplicationRoute.Prompts) {
       return ENTITIES_COLUMNS(baseColumns, onOpenDeleteModal, onOpenDuplicateModal, openInNewTab, onOpenMoveModal);
-    } else if (isNotDuplicateAssetView(route)) {
+    } else if (route === ApplicationRoute.Files || isDeploymentAsset(route)) {
       return ENTITIES_COLUMNS(baseColumns, onOpenDeleteModal, void 0, openInNewTab, onOpenMoveModal);
     }
     return ENTITIES_COLUMNS(baseColumns, onOpenDeleteModal, onOpenDuplicateModal, openInNewTab);
