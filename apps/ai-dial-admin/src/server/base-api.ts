@@ -27,8 +27,8 @@ export class BaseApi {
   protected async putActionWithEtag<T extends object>(
     url: string,
     dto: T,
-    token?: JWT | null,
-    etag?: string,
+    token: JWT | null,
+    etag: string,
   ): Promise<ServerActionResponse> {
     return this.putAction<T>(url, dto, token, { [IF_MATCH]: etag || DEFAULT_ETAG });
   }

@@ -17,7 +17,7 @@ export async function removeInterceptor(name?: string) {
   return interceptorsApi.removeInterceptor(token, name);
 }
 
-export async function updateInterceptor(interceptor: DialInterceptor) {
+export async function updateInterceptor(interceptor: DialInterceptor, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const defaults = interceptor.defaultsTemp
     ? { ...convertDefaultsToRecord(interceptor.defaultsTemp) }
@@ -27,7 +27,7 @@ export async function updateInterceptor(interceptor: DialInterceptor) {
     defaults,
   };
   delete newInterceptor.defaultsTemp;
-  return interceptorsApi.updateInterceptor(newInterceptor, token);
+  return interceptorsApi.updateInterceptor(newInterceptor, token, etag);
 }
 
 export async function createInterceptor(interceptor: DialInterceptor) {

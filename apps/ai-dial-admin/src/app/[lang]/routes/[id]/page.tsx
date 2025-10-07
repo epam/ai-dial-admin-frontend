@@ -11,6 +11,7 @@ import { removeRoute, updateRoute } from '../actions';
 import { DialRole } from '@/src/models/dial/role';
 import { logger } from '@/src/server/logger';
 import Page403 from '@/src/components/Page403/Page403';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { filterNames } from '@/src/utils/entities/filter-names';
 
@@ -19,12 +20,16 @@ export const dynamic = 'force-dynamic';
 export default async function Page(params: { params: Promise<{ id: string }> }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
+  let etag = DEFAULT_ETAG;
   let routes: DialRoute[] | null = [];
   let route: DialRoute | null = null;
   let roles: DialRole[] | null = [];
   try {
     routes = (await routesApi.getRoutesList(token)) || [];
-    route = await routesApi.getRoute((await params.params).id, token);
+    route = await routesApi.getRoute((await params.params).id, token, etag).then((res) => {
+      etag = res?.etag || DEFAULT_ETAG;
+      return res?.response as DialRoute | null;
+    });
     roles = (await rolesApi.getRolesList(token)) || [];
 
     if (routes === void 0 || route === void 0 || roles === void 0) {
@@ -47,6 +52,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
         names={names}
         originalEntity={route}
         roles={roles}
+        etag={etag}
         removeEntity={removeRoute}
         updateEntity={updateRoute}
       />

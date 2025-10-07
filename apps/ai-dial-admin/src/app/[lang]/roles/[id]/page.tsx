@@ -14,12 +14,14 @@ import { logger } from '@/src/server/logger';
 import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { filterNames } from '@/src/utils/entities/filter-names';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page(params: { params: Promise<{ id: string }> }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
+  let etag = DEFAULT_ETAG;
   let roles: DialRole[] | null = [];
   let role: DialRole | null = null;
 
@@ -33,7 +35,10 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     keys = await keysApi.getKeysList(token);
     applications = await applicationsApi.getApplicationsList(token);
 
-    role = await rolesApi.getRole((await params.params).id, token);
+    role = await rolesApi.getRole((await params.params).id, token, etag).then((res) => {
+      etag = res?.etag || DEFAULT_ETAG;
+      return res?.response as DialApplication | null;
+    });
 
     if (roles === void 0 || models === void 0 || keys === void 0 || applications === void 0 || role === void 0) {
       return <Page403 />;
@@ -56,6 +61,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
         models={models || []}
         applications={applications || []}
         keys={keys || []}
+        etag={etag}
       />
     </SaveValidationContextProvider>
   );

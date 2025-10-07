@@ -31,13 +31,13 @@ describe('Server :: ApplicationsApi', () => {
   test('Should calls getApplication by name and return application', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockApp));
 
-    const result = await instance.getApplication(mockApp.name, TOKEN_MOCK);
+    const result = await instance.getApplication(mockApp.name, TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${APPLICATION_URL(mockApp.name)}`,
       expect.objectContaining({ method: 'GET' }),
     );
-    expect(result).toEqual(JSON.stringify(mockApp));
+    expect(result.response).toEqual(JSON.stringify(mockApp));
   });
 
   test('Should calls createApplication with correct payload', async () => {
@@ -59,7 +59,7 @@ describe('Server :: ApplicationsApi', () => {
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
-    await instance.updateApplication(mockApp, TOKEN_MOCK);
+    await instance.updateApplication(mockApp, TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${APPLICATION_URL(mockApp.name)}`,
