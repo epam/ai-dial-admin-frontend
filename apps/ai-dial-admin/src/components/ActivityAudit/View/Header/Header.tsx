@@ -1,6 +1,7 @@
 import { FC, ReactNode } from 'react';
 
 import { IconExternalLink } from '@tabler/icons-react';
+import { DialButton } from '@epam/ai-dial-ui-kit';
 
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
@@ -56,9 +57,11 @@ const ViewHeader: FC<Props> = ({ activity, isModalView, children }) => {
             <div className="flex flex-row gap-1 items-center">
               <Tooltip tooltip={activity.resourceId}>{activity.resourceId}</Tooltip>
               {activity.activityType != ActivityAuditType.Delete && (
-                <button onClick={() => openResourceInNewTab(activity)} className="text-secondary">
-                  <IconExternalLink {...BASE_ICON_PROPS} />
-                </button>
+                <DialButton
+                  onClick={() => openResourceInNewTab(activity)}
+                  cssClass="text-secondary"
+                  iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
+                />
               )}
             </div>
           </LabeledText>
@@ -79,9 +82,11 @@ const ViewHeader: FC<Props> = ({ activity, isModalView, children }) => {
           <LabeledText label={t(ActivityAuditI18nKey.ActivityId)}>
             <div className="flex flex-row gap-1 items-center">
               <Tooltip tooltip={activity.activityId}>{activity.activityId}</Tooltip>
-              <button onClick={() => openActivityInNewTab(activity)} className="text-secondary">
-                <IconExternalLink {...BASE_ICON_PROPS} />
-              </button>
+              <DialButton
+                onClick={() => openActivityInNewTab(activity)}
+                cssClass="text-secondary"
+                iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
+              />
             </div>
           </LabeledText>
         )}

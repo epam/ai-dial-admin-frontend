@@ -2,9 +2,7 @@ import { FC, MouseEvent, ReactNode } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
-import { IconTrashX } from '@tabler/icons-react';
-
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import EmptyFileArea from './EmptyFileArea';
 import FilledInput from './FilledInput';
 
@@ -44,11 +42,7 @@ const LoadFileArea: FC<LoadFileAreaProps> = ({
     onChangeFile(files?.filter((f) => f.name !== fileUrl) || []);
   };
 
-  const removeFile = (fileUrl: string) => (
-    <button onClick={(e) => removeClick(e, fileUrl)} aria-label="remove">
-      <IconTrashX {...BASE_ICON_PROPS} />
-    </button>
-  );
+  const removeFile = (fileUrl: string) => <RemoveButton onClick={(e) => removeClick(e, fileUrl)} />;
 
   const onChange = (files: File[]) => {
     onChangeFile(files);
