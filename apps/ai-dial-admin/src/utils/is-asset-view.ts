@@ -7,11 +7,3 @@ export const isAssetView = (view?: ApplicationRoute): boolean => {
 export const isDeploymentAsset = (view?: ApplicationRoute): boolean => {
   return view === ApplicationRoute.AssetsApplications || view === ApplicationRoute.AssetsToolsets;
 };
-
-export const isNotDuplicateAssetView = (view?: ApplicationRoute): boolean => {
-  return (
-    view === ApplicationRoute.Files ||
-    view === ApplicationRoute.AssetsApplications ||
-    view === ApplicationRoute.AssetsToolsets
-  );
-};

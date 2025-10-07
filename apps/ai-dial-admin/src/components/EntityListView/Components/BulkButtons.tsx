@@ -15,7 +15,7 @@ import { ImportFileType } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ModalType } from './Modals';
-import { isAssetView } from '@/src/utils/is-asset-view';
+import { isDeploymentAsset } from '@/src/utils/is-asset-view';
 
 interface Props {
   route: ApplicationRoute;
@@ -40,7 +40,7 @@ const BulkButtons = ({
   const folderContext = context?.();
 
   const bulkExport = () => {
-    if (route === ApplicationRoute.Prompts || isAssetView(route)) {
+    if (route === ApplicationRoute.Prompts || isDeploymentAsset(route)) {
       setModalType(ModalType.export);
       setModalState(PopUpState.Opened);
     } else {
@@ -61,7 +61,7 @@ const BulkButtons = ({
         disable={!itemsCount}
         onClick={bulkExport}
       />
-      {(route === ApplicationRoute.Prompts || isAssetView(route)) && (
+      {(route === ApplicationRoute.Prompts || isDeploymentAsset(route)) && (
         <DialButton
           variant={ButtonVariant.Secondary}
           title={t(ButtonsI18nKey.Delete)}
