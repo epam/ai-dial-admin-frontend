@@ -3,10 +3,10 @@
 import { FC, useEffect, useState } from 'react';
 
 import classNames from 'classnames';
+import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import Dropdown from '@/src/components/Common/Dropdown/Dropdown';
 import DropdownMenuItem from '@/src/components/Common/Dropdown/DropdownItem';
-import Switch from '@/src/components/Common/Switch/Switch';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
@@ -74,7 +74,7 @@ const JsonToggles: FC<Props> = ({ view, jsonEditorEnabled, selectedFormat, setSe
           ))}
         </Dropdown>
       )}
-      <Switch
+      <DialSwitch
         isOn={jsonEditorEnabled}
         title={t(EntitiesI18nKey.JSONEditor)}
         switchId="jsonEditor"

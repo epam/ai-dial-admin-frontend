@@ -4,6 +4,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
 import { DialAdapter } from '@/src/models/dial/adapter';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const ADAPTERS_URL = `${API}/adapters`;
 export const ADAPTER_URL = (id?: string) => `${ADAPTERS_URL}/${id || ''}`;
@@ -25,11 +26,11 @@ export class AdaptersApi extends BaseApi {
     return this.deleteAction(ADAPTER_URL(name), token);
   }
 
-  getAdapter(name: string, token: JWT | null): Promise<DialAdapter | null> {
-    return this.get(ADAPTER_URL(name), token);
+  getAdapter(name: string, token: JWT | null, eTag: string) {
+    return this.getActionWithEtag(ADAPTER_URL(name), eTag || DEFAULT_ETAG, token);
   }
 
-  updateAdapter(adapter: DialAdapter, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putAction(ADAPTER_URL(adapter.name), adapter, token);
+  updateAdapter(adapter: DialAdapter, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(ADAPTER_URL(adapter.name), adapter, token, eTag);
   }
 }

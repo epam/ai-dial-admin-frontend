@@ -13,9 +13,9 @@ export async function removeRoute(name?: string) {
   return routesApi.removeRoute(token, name);
 }
 
-export async function updateRoute(route: DialRoute) {
+export async function updateRoute(route: DialRoute, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return routesApi.updateRoute(removeEmptyValues(route), token);
+  return routesApi.updateRoute(removeEmptyValues(route), token, etag);
 }
 
 export async function createRoute(route: DialRoute) {

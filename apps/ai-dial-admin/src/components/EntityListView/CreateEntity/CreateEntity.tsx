@@ -1,14 +1,14 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMainProperties';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { usePromptFolder } from '@/src/context/PromptFolderContext';
+import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
@@ -38,6 +38,7 @@ interface Props<T> {
   versionsMap?: Record<string, string[]>;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
   onClose: () => void;
+  initialValues?: Partial<T>;
 }
 
 const CreateEntity = <T extends CreatePromptEntity>({
@@ -49,6 +50,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
   versionsMap,
   onClose,
   createEntity,
+  initialValues,
 }: Props<T>) => {
   const t = useI18n();
   const router = useRouter();
@@ -65,9 +67,8 @@ const CreateEntity = <T extends CreatePromptEntity>({
         } as T)
       : versionsMap
         ? ({ name: '', description: '', version: '1.0.0' } as T)
-        : ({ name: '', description: '' } as T),
+        : ({ name: '', description: '', ...initialValues } as T),
   );
-
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean | undefined>(void 0);
 
   const onChangeEntity = useCallback(
@@ -100,13 +101,13 @@ const CreateEntity = <T extends CreatePromptEntity>({
           fetchFiles(filePath);
         }
         const originalRoute = route.split('/')[1];
-        router.push(`${originalRoute}/${getEntityPath(route, res.response || entity)}`);
+        router.push(`${initialValues ? '/' : ''}${originalRoute}/${getEntityPath(route, res.response || entity)}`);
         onClose();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [currentEntity, showNotification, fetchFiles, filePath, onClose, route, router, createEntity]);
+  }, [currentEntity, route, createEntity, filePath, router, initialValues, onClose, fetchFiles, showNotification]);
 
   useEffect(() => {
     setIsUniqueNameError(void 0);
@@ -115,6 +116,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
   // initial validation (disable save when no values entered yet)
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!currentEntity.name });
+    dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!currentEntity.displayName });
 
     if (route === ApplicationRoute.Models || route === ApplicationRoute.Toolsets) {
       dispatch({
@@ -153,6 +155,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
             onChangeEntity={onChangeEntity}
             versionsMap={versionsMap}
             isModal={true}
+            initialValues={initialValues}
           />
         ) : (
           <EntityMainProperties
@@ -167,9 +170,9 @@ const CreateEntity = <T extends CreatePromptEntity>({
         )}
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <Button
-          cssClass="primary"
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton
+          variant={ButtonVariant.Primary}
           title={t(ButtonsI18nKey.Create)}
           onClick={onCreate}
           disable={(isUniqueNameError != null && !isUniqueNameError) || !isValid}

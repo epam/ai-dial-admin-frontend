@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { keysApi, rolesApi } from '@/src/app/api/api';
-import KeyView from '@/src/components/KeysList/KeyView';
+import KeyView from '@/src/components/Keys/View/View';
 import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialKey } from '@/src/models/dial/key';

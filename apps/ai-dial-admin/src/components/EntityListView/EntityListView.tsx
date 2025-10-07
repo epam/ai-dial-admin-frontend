@@ -8,7 +8,7 @@ import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import ListView from '@/src/components/ListView/ListView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialAssetApp } from '@/src/models/dial/asset-app';
@@ -22,6 +22,7 @@ import Actions from './Components/Actions';
 import { ModalType } from './Components/Modals';
 import { emptyDataTitleMap, listViewTitleMap } from './constants';
 import EntityListHeaderButtons from './HeaderButtons/HeaderButtons';
+import { isDeploymentAsset } from '@/src/utils/is-asset-view';
 
 interface Props<T> {
   data: T[];
@@ -129,7 +130,7 @@ const BaseEntityList = <T extends object>({
   const getColumns = () => {
     if (route === ApplicationRoute.Prompts) {
       return ENTITIES_COLUMNS(baseColumns, onOpenDeleteModal, onOpenDuplicateModal, openInNewTab, onOpenMoveModal);
-    } else if (route === ApplicationRoute.Files || route === ApplicationRoute.AssetsApplications) {
+    } else if (route === ApplicationRoute.Files || isDeploymentAsset(route)) {
       return ENTITIES_COLUMNS(baseColumns, onOpenDeleteModal, void 0, openInNewTab, onOpenMoveModal);
     }
     return ENTITIES_COLUMNS(baseColumns, onOpenDeleteModal, onOpenDuplicateModal, openInNewTab);

@@ -12,19 +12,24 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { DialRole } from '@/src/models/dial/role';
 import { filterNames } from '@/src/utils/entities/filter-names';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page(params: { params: Promise<{ id: string }> }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
+  let etag = DEFAULT_ETAG;
   let toolSet: Toolset | null = null;
   let toolSets: Toolset[] | null = null;
 
   let roles: DialRole[] | null = null;
 
   try {
-    toolSet = await toolSetsApi.getToolset((await params.params).id, token);
+    toolSet = await toolSetsApi.getToolset((await params.params).id, token, etag).then((res) => {
+      etag = res?.etag || DEFAULT_ETAG;
+      return res?.response as Toolset | null;
+    });
 
     toolSets = await toolSetsApi.getToolsetList(token);
     roles = await rolesApi.getRolesList(token);
@@ -43,7 +48,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   return (
     <SaveValidationContextProvider>
-      <ToolsetView names={names} originalToolset={toolSet} roles={roles} />
+      <ToolsetView names={names} originalToolset={toolSet} roles={roles} etag={etag} />
     </SaveValidationContextProvider>
   );
 }

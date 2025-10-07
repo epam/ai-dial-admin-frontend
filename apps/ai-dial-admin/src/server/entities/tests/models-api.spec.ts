@@ -59,7 +59,7 @@ describe('Server :: ModelsApi', () => {
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
-    await instance.updateModel(updatedModel, TOKEN_MOCK);
+    await instance.updateModel(updatedModel, TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(`/models/${modelMock.name}`),

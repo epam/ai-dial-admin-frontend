@@ -62,6 +62,7 @@ export default {
     Home: 'Home',
     Homepage: 'Homepage',
     Toolsets: 'Toolsets',
+    Conversations: 'Conversations',
     Adapters: 'Adapters',
     Applications: 'Applications',
     ApplicationRunners: 'Application Runners',
@@ -150,7 +151,9 @@ export default {
     JSONEditor: 'JSON Editor',
     Admin: 'Admin format',
     Core: 'Core format',
-
+    Action: 'Action',
+    Runner: 'Runner',
+    FolderStorage: 'Folder Storage',
     // modals
     SaveChangesTitle: 'Save Changes',
     SaveChangesDescription: 'Save changes before opening the parameters tab. All unsaved changes will be lost.',
@@ -332,6 +335,7 @@ export default {
     SaveWithEmptyRolesTitle: 'Roles Are Not Assigned',
     SaveWithEmptyRolesDescription: 'Entity without assigned roles will not be available to end-users.',
     SaveProceedWithConfiguration: 'Are you sure you want to proceed with this configuration?',
+    Sharing: 'Sharing',
   },
   Attachments: {
     Attachments: 'Attachments',
@@ -472,9 +476,6 @@ export default {
       PublishApproveDescription: 'Are you sure that you want to publish application?',
       UnpublishApproveDescription: 'Are you sure that you want to unpublish application?',
     },
-    Action: 'Action',
-    Runner: 'Runner',
-    FolderStorage: 'Folder Storage',
   },
   Prompts: {
     NewVersion: 'New Version',
@@ -553,6 +554,7 @@ export default {
     PathsIgnore: 'Ignore paths',
     PathsPrompt: 'Prompt paths',
     PathsFile: 'File paths',
+    Changes: 'Changes',
   },
   Export: {
     Config: 'Config',
@@ -566,7 +568,7 @@ export default {
     Resources: 'Resources',
     FilePreview: 'Export File Preview',
     IncludeSecrets: 'Include secrets',
-    IncludeDependencies: 'Include related dependencies',
+    AllDependencies: 'All dependencies',
     SuccessTitle: '{type} exported successfully',
     SuccessDescription: 'You can now see them in local storage',
     ErrorTitle: '{type} export failed',

@@ -1,9 +1,9 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { createApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationView/Properties';
-import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -56,6 +56,11 @@ const CreateAppRunner: FC<Props> = ({ modalState, onClose, route }) => {
   // initial validation (disable save when no values entered yet)
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!currentScheme.$id });
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: 'displayName',
+      isValid: !!currentScheme['dial:applicationTypeDisplayName'],
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -65,8 +70,13 @@ const CreateAppRunner: FC<Props> = ({ modalState, onClose, route }) => {
         <SchemeProperties runner={currentScheme} onChangeRunner={onChangeScheme} />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <Button cssClass="primary" title={t(ButtonsI18nKey.Create)} onClick={onCreate} disable={!isValid} />
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton
+          variant={ButtonVariant.Primary}
+          title={t(ButtonsI18nKey.Create)}
+          onClick={onCreate}
+          disable={!isValid}
+        />
       </div>
     </Popup>
   );

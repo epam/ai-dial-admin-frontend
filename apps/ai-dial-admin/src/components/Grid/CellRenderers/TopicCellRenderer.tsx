@@ -69,7 +69,7 @@ const TopicsCellRenderer: FC<Props> = ({ topics }) => {
   return (
     <div ref={containerRef} className="flex gap-2 overflow-hidden w-full">
       {topics.slice(0, visibleCount).map((topic, index) => (
-        <div key={topic} ref={setTopicRef(index)} className={classNames(topicClass)}>
+        <div key={`shown-${topic}-${index}`} ref={setTopicRef(index)} className={classNames(topicClass)}>
           {topic}
         </div>
       ))}
@@ -82,7 +82,11 @@ const TopicsCellRenderer: FC<Props> = ({ topics }) => {
 
       <div className={hiddenClass}>
         {topics.map((topic, index) => (
-          <div key={`measure-${topic}`} ref={setTopicRef(index)} className={classNames(topicClass, 'inline-block')}>
+          <div
+            key={`hidden-${topic}-${index}`}
+            ref={setTopicRef(index)}
+            className={classNames(topicClass, 'inline-block')}
+          >
             {topic}
           </div>
         ))}

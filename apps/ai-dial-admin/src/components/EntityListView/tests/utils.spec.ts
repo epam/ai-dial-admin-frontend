@@ -21,6 +21,11 @@ describe('getNotificationType', () => {
     expect(result).toBe(MenuI18nKey.Applications);
   });
 
+  it('should return MenuI18nKey.Applications when route is AssetsToolsets', () => {
+    const result = getNotificationType(ApplicationRoute.AssetsToolsets);
+    expect(result).toBe(MenuI18nKey.Toolsets);
+  });
+
   it('should return an empty string when route is undefined or not matching any of the routes', () => {
     const resultWithUndefinedRoute = getNotificationType();
     const resultWithUnknownRoute = getNotificationType('SomeOtherRoute' as ApplicationRoute);
@@ -64,6 +69,11 @@ describe('getJsonFileName', () => {
   it('should return "applications" when route is AssetsApplications', () => {
     const result = getJsonFileName(ApplicationRoute.AssetsApplications);
     expect(result).toBe('applications');
+  });
+
+  it('should return "toolsets" when route is AssetsToolsets', () => {
+    const result = getJsonFileName(ApplicationRoute.AssetsToolsets);
+    expect(result).toBe('toolsets');
   });
 
   it('should return an empty string when route is undefined or does not match any known route', () => {

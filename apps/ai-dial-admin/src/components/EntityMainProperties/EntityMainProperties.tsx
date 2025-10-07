@@ -90,6 +90,11 @@ const EntityMainProperties: FC<Props> = ({
   );
 
   useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!entity.displayName });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     if (view === ApplicationRoute.Models) {
       dispatch({ type: ValidationActionType.SetField, field: 'displayVersion', isValid: !versionError });
     }
@@ -125,7 +130,6 @@ const EntityMainProperties: FC<Props> = ({
           onChange={onChangeDisplayName}
           invalid={!!displayNameError}
           items={uniq(names)}
-          optional={true}
         />
 
         {view === ApplicationRoute.Models && (

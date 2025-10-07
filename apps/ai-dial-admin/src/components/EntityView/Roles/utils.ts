@@ -2,6 +2,7 @@ import { ColDef, Column, GridApi, IRowNode } from 'ag-grid-community';
 
 import { RolesGridData } from '@/src/components/EntityView/Roles/models';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
+import { sharingTypes } from '@/src/components/Roles/constants';
 import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import {
   getOpenInNewTabOperation,
@@ -10,13 +11,13 @@ import {
   getSetNoLimitsOperation,
 } from '@/src/constants/grid-columns/actions';
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { RolesI18nKey } from '@/src/constants/i18n';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
-import { DialRoleLimits, DialRoleShare } from '@/src/models/dial/role-limits';
 import { DialRole } from '@/src/models/dial/role';
+import { DialRoleLimits } from '@/src/models/dial/role-limits';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { cellRenderParams } from './constants';
-import { RolesI18nKey } from '@/src/constants/i18n';
 
 export const getNoAvailableTitle = (view: ApplicationRoute) => {
   if (view === ApplicationRoute.Models) return RolesI18nKey.NotAvailableModel;
@@ -39,8 +40,7 @@ export const getRolesGridData = (entity: EntityRoleLimits, roles: DialRole[]): R
 const getAllRolesWithLimits = (roles: DialRole[], entity?: EntityRoleLimits) => {
   return roles.map((role) => {
     const limit = entity?.roleLimits?.[role.name || ''];
-    const share = entity?.roleShareResourceLimits?.[role.name || ''];
-    return mapRoleData(role, limit, share, entity);
+    return mapRoleData(role, limit, entity);
   });
 };
 
@@ -53,8 +53,7 @@ const getRolesWithLimits = (roles: DialRole[], entity?: EntityRoleLimits) => {
       if (!role) return null;
 
       const limit = entity?.roleLimits?.[roleName];
-      const share = entity?.roleShareResourceLimits?.[roleName];
-      return mapRoleData(role, limit, share, entity);
+      return mapRoleData(role, limit, entity);
     })
     .filter((data) => data !== null);
 };
@@ -66,7 +65,6 @@ const getLimitData = (value?: string | null, defaultValue?: string | null) => {
 const mapRoleData = (
   role: DialRole,
   limit: DialRoleLimits | undefined,
-  share: DialRoleShare | undefined,
   entity: EntityRoleLimits | undefined,
 ): RolesGridData => ({
   ...role,
@@ -74,12 +72,10 @@ const mapRoleData = (
   minute: getLimitData(limit?.minute, entity?.defaultRoleLimit?.minute),
   week: getLimitData(limit?.week, entity?.defaultRoleLimit?.week),
   month: getLimitData(limit?.month, entity?.defaultRoleLimit?.month),
-  invitationTtl: getLimitData(share?.invitationTtl, entity?.defaultRoleShareResourceLimit?.invitationTtl),
-  maxAcceptedUsers: getLimitData(share?.maxAcceptedUsers, entity?.defaultRoleShareResourceLimit?.maxAcceptedUsers),
 });
 
 export const LIMIT_COLUMNS = (
-  defaultValues?: DialRoleLimits & DialRoleShare,
+  defaultValues?: DialRoleLimits,
   onChange?: (value: number, data: DialRole, token: string) => void,
 ) => [
   {
@@ -126,29 +122,59 @@ export const LIMIT_COLUMNS = (
       onChange,
     },
   },
+];
+
+export const SHARING_COLUMNS = (
+  t: (stringToTranslate: string) => string,
+  onChange?: (value: number, data: DialRole, token: string) => void,
+  getDefaultPlaceholder?: (node: IRowNode, colDef: ColDef) => string,
+): ColDef[] => [
   {
-    headerName: 'Expiration time',
+    headerName: 'Type',
+    field: 'name',
+    filter: false,
+    floatingFilter: false,
+    valueFormatter: ({ value }) => formatType(value, t),
+    tooltipValueGetter: ({ value }) => formatType(value, t),
+  },
+  {
+    headerName: 'Expiration time (hours)',
     field: 'invitationTtl',
+    filter: false,
+    floatingFilter: false,
     cellClass: NO_BORDER_CLASS,
     cellRenderer: EditableCellRenderer,
     cellRendererParams: {
+      defaultValue: '',
       ...cellRenderParams,
-      defaultValue: defaultValues?.invitationTtl,
+      getDefaultPlaceholder,
       onChange,
     },
   },
   {
     headerName: 'Max users',
     field: 'maxAcceptedUsers',
+    filter: false,
+    floatingFilter: false,
     cellClass: NO_BORDER_CLASS,
     cellRenderer: EditableCellRenderer,
     cellRendererParams: {
+      defaultValue: '',
       ...cellRenderParams,
-      defaultValue: defaultValues?.maxAcceptedUsers,
+      getDefaultPlaceholder,
       onChange,
     },
   },
 ];
+
+const formatType = (value: string, t: (stringToTranslate: string) => string) => {
+  const typeFieldKey = sharingTypes[value as keyof typeof sharingTypes];
+  if (typeFieldKey) {
+    return t(typeFieldKey);
+  }
+
+  return value;
+};
 
 export const getRolesColumnDefs = (
   entity: EntityRoleLimits,
@@ -171,9 +197,7 @@ export const getRolesColumnDefs = (
         getSetNoLimitsOperation(setNoLimits, isSetNoLimitsHidden),
       ],
     );
-    colDefs.push(
-      ...LIMIT_COLUMNS({ ...entity.defaultRoleLimit, ...entity.defaultRoleShareResourceLimit }, onChangeLimits),
-    );
+    colDefs.push(...LIMIT_COLUMNS({ ...entity.defaultRoleLimit }, onChangeLimits));
   }
 
   if (!entity.isPublic) {
@@ -207,16 +231,8 @@ export const isSetNoLimitsHidden = (api: GridApi, node: IRowNode) => {
     colKey: api.getColumn('day') as Column,
     rowNode: node,
   });
-  const invitationTtl = api.getCellValue({
-    colKey: api.getColumn('invitationTtl') as Column,
-    rowNode: node,
-  });
-  const maxAcceptedUsers = api.getCellValue({
-    colKey: api.getColumn('maxAcceptedUsers') as Column,
-    rowNode: node,
-  });
 
-  return !day && !minute && !month && !week && !invitationTtl && !maxAcceptedUsers;
+  return !day && !minute && !month && !week;
 };
 
 export const isResetToDefaultHidden = (api: GridApi, node: IRowNode, entity: EntityRoleLimits) => {
@@ -236,27 +252,10 @@ export const isResetToDefaultHidden = (api: GridApi, node: IRowNode, entity: Ent
     colKey: api.getColumn('day') as Column,
     rowNode: node,
   });
-  const invitationTtl = api.getCellValue({
-    colKey: api.getColumn('invitationTtl') as Column,
-    rowNode: node,
-  });
-  const maxAcceptedUsers = api.getCellValue({
-    colKey: api.getColumn('maxAcceptedUsers') as Column,
-    rowNode: node,
-  });
   const defaultDay = entity.defaultRoleLimit?.day;
   const defaultMinute = entity.defaultRoleLimit?.minute;
   const defaultWeek = entity.defaultRoleLimit?.week;
   const defaultMonth = entity.defaultRoleLimit?.month;
-  const defaultInvitationTtl = entity.defaultRoleShareResourceLimit?.invitationTtl;
-  const defaultMaxAcceptedUsers = entity.defaultRoleShareResourceLimit?.maxAcceptedUsers;
 
-  return (
-    day === defaultDay &&
-    minute === defaultMinute &&
-    week === defaultWeek &&
-    month === defaultMonth &&
-    invitationTtl === defaultInvitationTtl &&
-    maxAcceptedUsers === defaultMaxAcceptedUsers
-  );
+  return day === defaultDay && minute === defaultMinute && week === defaultWeek && month === defaultMonth;
 };

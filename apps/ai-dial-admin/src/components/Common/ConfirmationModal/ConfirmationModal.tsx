@@ -1,12 +1,11 @@
 import { FC, ReactNode } from 'react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
 import Loader from '@/src/components/Common/Loader/Loader';
-import classNames from 'classnames';
 
 interface Props {
   heading: string;
@@ -61,14 +60,15 @@ const ConfirmationModal: FC<Props> = ({
       )}
       {!isLoading && (
         <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-          <Button
-            cssClass="secondary"
+          <DialButton
+            variant={ButtonVariant.Secondary}
             title={cancelLabel || t(ButtonsI18nKey.Cancel)}
             onClick={() => (onCancel ? onCancel() : onClose())}
           />
 
-          <Button
-            cssClass={classNames('primary', confirmClassName)}
+          <DialButton
+            variant={ButtonVariant.Primary}
+            cssClass={confirmClassName}
             title={confirmLabel}
             disable={disableConfirmButton}
             onClick={() => onConfirm()}

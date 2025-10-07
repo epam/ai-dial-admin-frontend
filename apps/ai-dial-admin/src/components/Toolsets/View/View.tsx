@@ -38,12 +38,13 @@ import {
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 
 interface Props {
+  etag: string;
   names: string[];
   roles: DialRole[] | null | undefined;
   originalToolset: Toolset;
 }
 
-const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
+const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -123,7 +124,7 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
     const req =
       selectedFormat === ExportFormat.CORE
         ? updateCoreEntity(getFileFromEntity(ApplicationRoute.Toolsets, selectedToolset))
-        : updateToolset(selectedToolset);
+        : updateToolset(selectedToolset, etag);
 
     req.then((res) => {
       if (res.success) {
@@ -134,7 +135,7 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
       }
       setModalState(PopUpState.Closed);
     });
-  }, [selectedFormat, selectedToolset, router, showNotification]);
+  }, [selectedFormat, selectedToolset, etag, router, showNotification]);
 
   const onTryToSave = useCallback(() => {
     if (selectedFormat !== ExportFormat.CORE && isDisableRole(selectedToolset as EntityRoleLimits)) {

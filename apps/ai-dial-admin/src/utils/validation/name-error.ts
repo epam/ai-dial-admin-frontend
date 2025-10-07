@@ -6,7 +6,6 @@ import {
   FORBIDDEN_NAME_SYMBOLS,
 } from '@/src/constants/validation';
 import { ErrorType } from '@/src/types/error-type';
-import { ApplicationRoute } from '@/src/types/routes';
 import { isValidHttpUrl } from './url-error';
 
 export const getErrorForUrlId = (
@@ -87,14 +86,6 @@ export const getErrorForDisplayName = (name?: string, required?: boolean, t?: (s
     };
   }
   return null;
-};
-
-export const isWrongLengthWithView = (view: ApplicationRoute, value?: string): boolean => {
-  if (view === ApplicationRoute.Applications || view === ApplicationRoute.Models) {
-    return value != null ? isWrongFieldLength(value) : false;
-  }
-
-  return false;
 };
 
 export const isWrongFieldLength = (value: string): boolean => {

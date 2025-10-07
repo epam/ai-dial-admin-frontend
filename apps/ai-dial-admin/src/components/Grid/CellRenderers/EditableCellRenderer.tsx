@@ -1,6 +1,6 @@
-import { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useMemo, useState } from 'react';
 
-import { ICellRendererParams } from 'ag-grid-community';
+import { ColDef, ICellRendererParams, IRowNode } from 'ag-grid-community';
 
 import Triangle from '@/public/images/icons/cell-triangle.svg';
 import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_VALUE } from '@/src/components/EntityView/Roles/constants';
@@ -12,6 +12,7 @@ interface EditableCellRendererParams extends ICellRendererParams {
   inputType?: 'text' | 'number';
   valueFormatter?: (value: number | string) => string;
   onChange?: (value: number | string, data: unknown, column: string, index?: number) => void;
+  getDefaultPlaceholder?: (node: IRowNode, colDef?: ColDef) => string;
 }
 
 const EditableCellRenderer = ({
@@ -22,13 +23,33 @@ const EditableCellRenderer = ({
   valueFormatter,
   onChange,
   setValue,
+  getDefaultPlaceholder,
   colDef,
   data,
+  node,
 }: EditableCellRendererParams) => {
   const t = useI18n() as (s: string) => string;
-  const translatedPlaceholder = placeholder ? t(placeholder) : '';
+  const initialPlaceholder = placeholder ? t(placeholder) : '';
+  const translatedPlaceholder = getDefaultPlaceholder?.(node, colDef) || initialPlaceholder;
   const initialValue = valueFormatter ? valueFormatter(value) : value || translatedPlaceholder;
+
   const [inputValue, setInputValue] = useState(initialValue);
+
+  const showTriangle = useMemo(() => {
+    return getDefaultPlaceholder ? !!inputValue : defaultValue !== inputValue;
+  }, [defaultValue, getDefaultPlaceholder, inputValue]);
+
+  const correctValue = useMemo(() => {
+    return inputValue == null || inputValue === NO_LIMITS_VALUE || inputValue === NO_LIMITS_ACCEPTED_USERS
+      ? ''
+      : inputValue;
+  }, [inputValue]);
+
+  const correctPlaceholder = useMemo(() => {
+    return inputValue === NO_LIMITS_VALUE || inputValue === NO_LIMITS_ACCEPTED_USERS
+      ? initialPlaceholder
+      : translatedPlaceholder;
+  }, [initialPlaceholder, inputValue, translatedPlaceholder]);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
@@ -54,16 +75,12 @@ const EditableCellRenderer = ({
       <input
         id="editable-cell-renderer"
         type={inputType}
-        value={
-          inputValue == null || inputValue === NO_LIMITS_VALUE || inputValue === NO_LIMITS_ACCEPTED_USERS
-            ? ''
-            : inputValue
-        }
-        placeholder={translatedPlaceholder}
+        value={correctValue}
+        placeholder={correctPlaceholder}
         onChange={handleChange}
         className="leading-[18px] h-[32px]"
       />
-      {defaultValue !== inputValue && (
+      {showTriangle && (
         <div className="absolute top-0 right-0 text-accent-tertiary">
           <Triangle />
         </div>

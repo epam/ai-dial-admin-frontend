@@ -264,7 +264,7 @@ export const RUNNERS_COLUMNS: ColDef[] = [
 
 export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
 
-export const PROMPTS_COLUMNS: ColDef[] = [
+export const ASSETS_COLUMNS: ColDef[] = [
   { field: 'name', colId: 'name', headerName: 'Display Name' },
   { field: 'version', headerName: 'Version' },
   AUTHOR_COLUMN,
@@ -276,8 +276,6 @@ export const FILES_COLUMNS: ColDef[] = [
   { field: 'extension', headerName: 'Extension' },
   AUTHOR_COLUMN,
 ];
-
-export const APPS_COLUMNS: ColDef[] = [...PROMPTS_COLUMNS];
 
 export const EXPORT_COLUMNS = (onChange: (value: string, name: string) => void, route?: ApplicationRoute): ColDef[] => {
   const columns: ColDef[] = [NAME_COLUMN_WITH_SORT, AUTHOR_COLUMN, UPDATED_AT_COLUMN];

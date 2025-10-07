@@ -2,10 +2,10 @@ import { exportFiles } from '@/src/app/[lang]/files/actions';
 import { exportPrompts } from '@/src/app/[lang]/prompts/actions';
 import DuplicateAdapter from '@/src/components/Adapter/Modals/DuplicateAdapter';
 import DuplicateScheme from '@/src/components/ApplicationRunners/Modals/DuplicateAppRunner';
-import DuplicatePrompt from '@/src/components/Assets/PromptView/Modals/DuplicatePrompt';
+import DuplicatePrompt from '@/src/components/Assets/Prompts/Modals/DuplicatePrompt';
 import DuplicatePopup from '@/src/components/DuplicatePopup/DuplicatePopup';
 import DuplicateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Duplicate';
-import DuplicateKey from '@/src/components/KeysList/Popup/DuplicateKey';
+import DuplicateKey from '@/src/components/Keys/Modals/DuplicateKey';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';
@@ -113,6 +113,10 @@ export const getNotificationType = (route?: ApplicationRoute): string => {
     return MenuI18nKey.Applications;
   }
 
+  if (route === ApplicationRoute.AssetsToolsets) {
+    return MenuI18nKey.Toolsets;
+  }
+
   return '';
 };
 
@@ -150,6 +154,10 @@ export const getJsonFileName = (route?: ApplicationRoute): string => {
 
   if (route === ApplicationRoute.AssetsApplications) {
     return 'applications';
+  }
+
+  if (route === ApplicationRoute.AssetsToolsets) {
+    return 'toolsets';
   }
 
   return '';

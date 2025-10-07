@@ -2,6 +2,7 @@ import { JWT } from 'next-auth/jwt';
 
 import { DialRoute } from '@/src/models/dial/route';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
 
@@ -13,8 +14,8 @@ export class RoutesApi extends BaseApi {
     return this.get(ROUTES_URL, token);
   }
 
-  getRoute(name: string, token: JWT | null): Promise<DialRoute | null> {
-    return this.get(ROUTE_URL(name), token);
+  getRoute(name: string, token: JWT | null, eTag: string) {
+    return this.getActionWithEtag(ROUTE_URL(name), eTag || DEFAULT_ETAG, token);
   }
 
   removeRoute(token: JWT | null, name?: string): Promise<ServerActionResponse> {
@@ -25,7 +26,7 @@ export class RoutesApi extends BaseApi {
     return this.postAction(ROUTES_URL, routes, token);
   }
 
-  updateRoute(routes: DialRoute, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putAction(ROUTE_URL(routes.name), routes, token);
+  updateRoute(routes: DialRoute, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(ROUTE_URL(routes.name), routes, token, eTag);
   }
 }

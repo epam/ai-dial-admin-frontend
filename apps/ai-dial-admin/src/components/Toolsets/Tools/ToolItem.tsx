@@ -1,11 +1,11 @@
 'use client';
 
 import { FC } from 'react';
+import { ButtonVariant, DialSwitch, DialButton } from '@epam/ai-dial-ui-kit';
+import { IconTrash } from '@tabler/icons-react';
+
 import { useI18n } from '@/src/locales/client';
 import { ButtonsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
-import Switch from '@/src/components/Common/Switch/Switch';
-import Button from '@/src/components/Common/Button/Button';
-import { IconTrash } from '@tabler/icons-react';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
 interface Props {
@@ -34,8 +34,8 @@ const ToolItem: FC<Props> = ({ tool, isAddedManual, onRemoveTool, isEnabled, rea
         <div className="flex flex-row items-center">
           {isAddedManual && (
             <div className="invisible group-hover:visible">
-              <Button
-                cssClass="secondary"
+              <DialButton
+                variant={ButtonVariant.Secondary}
                 title={t(ButtonsI18nKey.Delete)}
                 iconBefore={<IconTrash {...BASE_ICON_PROPS} />}
                 onClick={() => onRemoveTool?.(tool)}
@@ -43,7 +43,7 @@ const ToolItem: FC<Props> = ({ tool, isAddedManual, onRemoveTool, isEnabled, rea
             </div>
           )}
 
-          {!readonly && <Switch switchId={tool} isOn={isEnabled} onChange={(value) => onChangeIsEnabled(value)} />}
+          {!readonly && <DialSwitch switchId={tool} isOn={isEnabled} onChange={(value) => onChangeIsEnabled(value)} />}
         </div>
       </div>
     </div>

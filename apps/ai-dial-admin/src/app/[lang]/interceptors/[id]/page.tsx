@@ -13,12 +13,14 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { filterNames } from '@/src/utils/entities/filter-names';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page(params: { params: Promise<{ id: string }> }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
+  let etag = DEFAULT_ETAG;
   let interceptors: DialInterceptor[] | null = [];
   let interceptor: DialInterceptor | null = null;
 
@@ -30,7 +32,10 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     models = await modelsApi.getModelsList(token);
     applications = await applicationsApi.getApplicationsList(token);
 
-    interceptor = await interceptorsApi.getInterceptor((await params.params).id, token);
+    interceptor = await interceptorsApi.getInterceptor((await params.params).id, token, etag).then((res) => {
+      etag = res?.etag || DEFAULT_ETAG;
+      return res?.response as DialModel | null;
+    });
 
     if (interceptors === void 0 || models === void 0 || applications === void 0 || interceptor === void 0) {
       return <Page403 />;
@@ -51,6 +56,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
         names={names}
         originalInterceptor={interceptor}
         models={models || []}
+        etag={etag}
         applications={applications || []}
       />
     </SaveValidationContextProvider>

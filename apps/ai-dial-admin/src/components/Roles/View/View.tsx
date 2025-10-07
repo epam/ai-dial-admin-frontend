@@ -50,9 +50,10 @@ interface Props {
   models: DialModel[];
   applications: DialApplication[];
   keys: DialKey[];
+  etag: string;
 }
 
-const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys }) => {
+const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications, keys }) => {
   const t = useI18n() as (str: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -188,7 +189,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
     const req =
       selectedFormat === ExportFormat.CORE
         ? updateCoreEntity(getFileFromEntity(ApplicationRoute.Roles, selectedRole))
-        : updateRole(selectedRole);
+        : updateRole(selectedRole, etag);
 
     req.then((res) => {
       if (res.success) {
@@ -198,7 +199,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedFormat, selectedRole, router, showNotification]);
+  }, [selectedFormat, selectedRole, etag, router, showNotification]);
 
   const onChangeRoleToken = useCallback(
     (value: number, data: DialRole, token: string) => {
@@ -259,7 +260,12 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
         ) : (
           <>
             {activeTab === EntityViewTab.Properties && (
-              <RoleProperties selectedRole={selectedRole} names={names} onChangeRole={onChangeRole} />
+              <RoleProperties
+                selectedRole={selectedRole}
+                names={names}
+                onChangeRole={onChangeRole}
+                isSkipRefresh={isSkipRefresh}
+              />
             )}
           </>
         )}

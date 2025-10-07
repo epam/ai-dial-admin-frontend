@@ -1,8 +1,8 @@
 import { ChangeEvent, FC, useCallback, useRef } from 'react';
 import { IconPlus, IconTrashX } from '@tabler/icons-react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import Field from '@/src/components/Common/Field/Field';
-import Button from '@/src/components/Common/Button/Button';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -66,16 +66,17 @@ const LoadFileAreaField: FC<LoadFileAreaFieldProps> = ({
         <Field fieldTitle={`${fieldTitle}: ${isMultiple ? files?.length || 0 : ''}`} htmlFor={elementId} />
         {isMultiple && !!files?.length && (
           <div className="flex flex-row items-center gap-x-2">
-            <Button
-              cssClass="tertiary text-error"
+            <DialButton
+              variant={ButtonVariant.Tertiary}
+              cssClass="text-error"
               iconBefore={<IconTrashX {...BASE_ICON_PROPS} />}
               title={t(ButtonsI18nKey.DeleteAll)}
               onClick={onRemoveFiles}
             />
 
             {(maxFilesCount ? maxFilesCount > files?.length : true) && (
-              <Button
-                cssClass="tertiary"
+              <DialButton
+                variant={ButtonVariant.Tertiary}
                 iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
                 title={t(ButtonsI18nKey.Add)}
                 onClick={onAddFiles}

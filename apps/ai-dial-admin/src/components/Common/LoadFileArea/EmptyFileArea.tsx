@@ -3,9 +3,8 @@ import { ChangeEvent, DragEvent, FC, KeyboardEvent, useCallback, useEffect, useM
 import type { DropTargetMonitor } from 'react-dnd';
 import { useDrop } from 'react-dnd';
 import { NativeTypes } from 'react-dnd-html5-backend';
+import { ButtonVariant, DialButton, DialErrorText } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
-import ErrorText from '@/src/components/Common/ErrorText/ErrorText';
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -137,7 +136,11 @@ const EmptyFileArea: FC<Props> = ({
         >
           <p className="mb-1">{emptyTitle}</p>
           <p className="mb-0.5"> {t(BasicI18nKey.Or)}</p>
-          <Button cssClass="tertiary" title={t(ButtonsI18nKey.Browse)} onClick={() => fileInputRef.current?.click()} />
+          <DialButton
+            variant={ButtonVariant.Tertiary}
+            title={t(ButtonsI18nKey.Browse)}
+            onClick={() => fileInputRef.current?.click()}
+          />
         </label>
         <input
           multiple={isMultiple}
@@ -151,9 +154,9 @@ const EmptyFileArea: FC<Props> = ({
       </div>
       <>
         {isErrorFileFormat ? (
-          <ErrorText errorText={fileFormatError} />
+          <DialErrorText errorText={fileFormatError} />
         ) : (
-          getIsFileCountError(files) && <ErrorText errorText={fileCountError} />
+          getIsFileCountError(files) && <DialErrorText errorText={fileCountError} />
         )}
       </>
     </>

@@ -1,8 +1,9 @@
 import { FC, useCallback } from 'react';
 
+import { DialSwitch } from '@epam/ai-dial-ui-kit';
+
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
-import Switch from '@/src/components/Common/Switch/Switch';
 import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
 import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
 import EditorUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/EditorUrl';
@@ -159,7 +160,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
       <ViewerUrlControl endpoint={runner['dial:applicationTypeViewerUrl']} onChange={onChangeViewerUrl} />
       <EditorUrlControl endpoint={runner['dial:applicationTypeEditorUrl']} onChange={onChangeEditorUrl} />
 
-      <Switch
+      <DialSwitch
         isOn={runner['dial:appendApplicationPropertiesHeader']}
         title={t(EntityFieldsI18nKey['dial:appendApplicationPropertiesHeader'])}
         switchId="appendApplicationPropertiesHeader"
@@ -167,7 +168,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
           onChange(value, 'dial:appendApplicationPropertiesHeader');
         }}
       />
-      <Switch
+      <DialSwitch
         isOn={runner['dial:applicationTypePlaybackSupport']}
         title={t(EntityFieldsI18nKey['dial:applicationTypePlaybackSupport'])}
         switchId="applicationTypePlaybackSupport"

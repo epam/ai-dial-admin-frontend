@@ -1,11 +1,6 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { ApplicationRoute } from '@/src/types/routes';
-import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { getUserToken } from '@/src/utils/auth/auth-request';
-import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { logger } from '@/src/server/logger';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
@@ -13,6 +8,14 @@ import InterceptorTemplateView from '@/src/components/InterceptorTemplates/View/
 import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { InterceptorTemplate } from '@/src/models/interceptor-template';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { getInterceptorsList } from '../../interceptors/actions';
+import { filterNames } from '@/src/utils/entities/filter-names';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { getUserToken } from '@/src/utils/auth/auth-request';
+import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,8 +30,10 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   let etag = DEFAULT_ETAG;
   let interceptorTemplate: InterceptorTemplate | null = null;
+  let interceptors: DialInterceptor[] | null = null;
 
   try {
+    interceptors = await getInterceptorsList();
     interceptorTemplate = await getInterceptorTemplate((await params.params).id, etag).then((res) => {
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as InterceptorTemplate | null;
@@ -44,9 +49,11 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     return redirect(ApplicationRoute.InterceptorTemplates);
   }
 
+  const names = filterNames(interceptors);
+
   return (
     <SaveValidationContextProvider>
-      <InterceptorTemplateView etag={etag} template={interceptorTemplate} />
+      <InterceptorTemplateView template={interceptorTemplate} names={names} etag={etag} />
     </SaveValidationContextProvider>
   );
 }

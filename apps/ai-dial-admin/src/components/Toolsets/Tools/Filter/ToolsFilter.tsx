@@ -1,11 +1,10 @@
 'use client';
-'use client';
 
 import { FC } from 'react';
+import { DialCheckbox } from '@epam/ai-dial-ui-kit';
 
 import Dropdown from '@/src/components/Common/Dropdown/Dropdown';
 import SelectedFilter from './SelectedFilter';
-import Checkbox from '@/src/components/Common/Checkbox/Checkbox';
 import { ToolFilter } from '../type';
 import { ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -23,7 +22,7 @@ const ToolsFilter: FC<Props> = ({ isAllSelected, onSelectFilter, selectedFilters
     <Dropdown trigger={<SelectedFilter selectedFilters={selectedFilters} />} listClassName="w-[200px]">
       <div className="bg-layer-0 rounded flex flex-col w-[200px]">
         <div className="py-2 px-4">
-          <Checkbox
+          <DialCheckbox
             checked={isAllSelected}
             id={ToolFilter.All}
             label={t(ToolsetI18nKey.AllTools)}
@@ -32,7 +31,7 @@ const ToolsFilter: FC<Props> = ({ isAllSelected, onSelectFilter, selectedFilters
         </div>
         <div className="flex flex-col pl-[20px]">
           <div className="py-2 px-4">
-            <Checkbox
+            <DialCheckbox
               checked={selectedFilters.includes(ToolFilter.Enabled)}
               id={ToolFilter.Enabled}
               label={t(ToolsetI18nKey.Enabled)}
@@ -40,7 +39,7 @@ const ToolsFilter: FC<Props> = ({ isAllSelected, onSelectFilter, selectedFilters
             />
           </div>
           <div className="py-2 px-4">
-            <Checkbox
+            <DialCheckbox
               checked={selectedFilters.includes(ToolFilter.Disabled)}
               id={ToolFilter.Disabled}
               label={t(ToolsetI18nKey.Disabled)}
@@ -49,7 +48,7 @@ const ToolsFilter: FC<Props> = ({ isAllSelected, onSelectFilter, selectedFilters
           </div>
 
           <div className="py-2 px-4">
-            <Checkbox
+            <DialCheckbox
               checked={selectedFilters.includes(ToolFilter.AutoDetected)}
               id={ToolFilter.AutoDetected}
               label={t(ToolsetI18nKey.AutoDetected)}
@@ -57,7 +56,7 @@ const ToolsFilter: FC<Props> = ({ isAllSelected, onSelectFilter, selectedFilters
             />
           </div>
           <div className="py-2 px-4">
-            <Checkbox
+            <DialCheckbox
               checked={selectedFilters.includes(ToolFilter.AddedManually)}
               id={ToolFilter.AddedManually}
               label={t(ToolsetI18nKey.AddedManually)}

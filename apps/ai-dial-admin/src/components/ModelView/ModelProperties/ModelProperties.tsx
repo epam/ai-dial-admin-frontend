@@ -2,9 +2,9 @@ import { FC } from 'react';
 
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import Defaults from '@/src/components/Defaults/Defaults';
-import UpstreamEndpoints from '@/src/components/Endpoints/UpstreamEndpoints';
+import UpstreamEndpoints from '@/src/components/UpstreamEndpoints/UpstreamEndpoints';
 import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMainProperties';
-import ForwardAuthTokenField from '@/src/components/EntityView/Properties/ForwardAuthToken/ForwardAuthTokenField';
+import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
 import Limits from '@/src/components/ModelView/Limits/Limits';
 import Pricing from '@/src/components/ModelView/Pricing/Pricing';
