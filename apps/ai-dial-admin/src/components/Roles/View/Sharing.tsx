@@ -1,0 +1,158 @@
+'use client';
+
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import { IconReload } from '@tabler/icons-react';
+import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
+
+import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_VALUE } from '@/src/components/EntityView/Roles/constants';
+import { SHARING_COLUMNS } from '@/src/components/EntityView/Roles/utils';
+import Grid from '@/src/components/Grid/Grid';
+import { SharingGridData } from '@/src/components/Roles/models';
+import {
+  getDefaultPlaceholder,
+  getSharingData,
+  isResetToDefaultHidden,
+  isSetNoLimitsHidden,
+} from '@/src/components/Roles/utils';
+import { ACTION_COLUMN } from '@/src/constants/ag-grid';
+import { getResetOperation, getSetNoLimitsOperation } from '@/src/constants/grid-columns/actions';
+import { RolesI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { useI18n } from '@/src/locales/client';
+import { DialRole } from '@/src/models/dial/role';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+
+interface Props {
+  isSkipRefresh: boolean;
+  selectedRole: DialRole;
+  onChangeRole: (role: DialRole, withRefresh?: boolean) => void;
+}
+
+const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) => {
+  const t = useI18n() as (key: string) => string;
+  const [gridApi, setGridApi] = useState<GridApi>();
+
+  const onChangeTypeSharing = useCallback(
+    (value: number, data: DialRole, token: string) => {
+      const name = data.name as string;
+      const updatedEntity = {
+        ...entityRef.current,
+        share: {
+          ...selectedRole.share,
+          [name]: {
+            ...selectedRole.share?.[name],
+            [token]: value,
+          },
+        },
+      };
+      onChangeRole(updatedEntity, true);
+    },
+    [onChangeRole, selectedRole],
+  );
+
+  const onResetAllSharingToDefault = useCallback(() => {
+    onChangeRole({
+      ...selectedRole,
+      share: {},
+    });
+  }, [onChangeRole, selectedRole]);
+
+  const onResetSharingToDefault = useCallback(
+    (data?: SharingGridData) => {
+      if (data) {
+        onChangeRole({
+          ...selectedRole,
+          share: {
+            ...selectedRole.share,
+            [data.name]: {},
+          },
+        });
+      }
+    },
+    [onChangeRole, selectedRole],
+  );
+
+  const onSetNoLimits = useCallback(
+    (data?: SharingGridData) => {
+      if (data) {
+        onChangeRole({
+          ...selectedRole,
+          share: {
+            ...selectedRole.share,
+            [data.name]: {
+              invitationTtl: NO_LIMITS_VALUE,
+              maxAcceptedUsers: NO_LIMITS_ACCEPTED_USERS,
+            },
+          },
+        });
+      }
+    },
+    [onChangeRole, selectedRole],
+  );
+
+  const isResetAvailable = useMemo(() => {
+    return (
+      selectedRole.share &&
+      Object.values(selectedRole.share).some((record) =>
+        Object.values(record).some((value) => value !== '' && value !== undefined && value !== null),
+      )
+    );
+  }, [selectedRole.share]);
+  const entityRef = useRef(selectedRole);
+
+  const columns: ColDef[] = useMemo(() => {
+    return [
+      ...SHARING_COLUMNS(t, onChangeTypeSharing, (node, colDef) => getDefaultPlaceholder(node, colDef)),
+      ACTION_COLUMN(
+        [
+          getResetOperation(onResetSharingToDefault, (api, node) => isResetToDefaultHidden(api, node)),
+          getSetNoLimitsOperation(onSetNoLimits, (api, node) => isSetNoLimitsHidden(api, node)),
+        ],
+        true,
+      ),
+    ];
+  }, [onChangeTypeSharing, onResetSharingToDefault, onSetNoLimits, t]);
+
+  const data = getSharingData(selectedRole);
+
+  const onGridReady = (event: GridReadyEvent) => {
+    setGridApi(event.api);
+    event.api?.updateGridOptions({
+      columnDefs: columns,
+      rowData: data,
+    });
+  };
+
+  useEffect(() => {
+    entityRef.current = selectedRole;
+  }, [selectedRole]);
+
+  useEffect(() => {
+    if (!isSkipRefresh && !gridApi?.isDestroyed()) {
+      gridApi?.updateGridOptions({
+        columnDefs: columns,
+        rowData: data,
+      });
+    }
+  }, [isSkipRefresh, columns, data, gridApi]);
+
+  return (
+    <div className="max-w-[750px] w-full mt-6 flex flex-col">
+      <div className="flex justify-between items-center mb-3">
+        <h1>{t(RolesI18nKey.Sharing)}</h1>
+        {isResetAvailable && (
+          <DialButton
+            variant={ButtonVariant.Secondary}
+            iconBefore={<IconReload {...BASE_ICON_PROPS} />}
+            title={t(RolesI18nKey.ResetToDefaultLimits)}
+            onClick={onResetAllSharingToDefault}
+          />
+        )}
+      </div>
+      <Grid additionalGridOptions={{ onGridReady }} />
+    </div>
+  );
+};
+
+export default RoleSharing;
