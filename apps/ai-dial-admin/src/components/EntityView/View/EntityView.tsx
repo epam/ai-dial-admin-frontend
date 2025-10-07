@@ -300,6 +300,7 @@ const EntityView: FC<Props> = ({
           ) : (
             <ViewContent
               view={view}
+              etag={etag}
               applicationSchemes={applicationSchemes}
               activeTab={activeTab}
               selectedEntity={selectedEntity}
