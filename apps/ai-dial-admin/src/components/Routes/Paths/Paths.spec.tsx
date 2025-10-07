@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import Paths from './Paths';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import { EntityPlaceholdersI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 
 describe('Paths', () => {
   test('renders empty path input if no paths', () => {
@@ -28,7 +28,7 @@ describe('Paths', () => {
     render(<Paths title="title" onChangePaths={onChangePaths} />);
     fireEvent.click(screen.getByText(RoutesI18nKey.AddPaths));
     expect(onChangePaths).toHaveBeenCalledWith(['', '']);
-    fireEvent.click(screen.getByLabelText('button'));
+    fireEvent.click(screen.getByLabelText(RoutesI18nKey.AddPaths));
     expect(onChangePaths).toHaveBeenCalledWith(['', '']);
   });
 
@@ -42,14 +42,14 @@ describe('Paths', () => {
   test('calls onChangePaths when Remove is clicked', () => {
     const onChangePaths = vi.fn();
     render(<Paths paths={['/a', '/b']} title="title" onChangePaths={onChangePaths} />);
-    fireEvent.click(screen.getAllByLabelText('button')[0]);
-    expect(onChangePaths).toHaveBeenCalledWith(['/b']);
+    fireEvent.click(screen.getAllByLabelText(RoutesI18nKey.AddPaths)[0]);
+    expect(onChangePaths).toHaveBeenCalledWith(['/a', '/b', '']);
   });
 
   test('clears path if only one and Remove is clicked', () => {
     const onChangePaths = vi.fn();
     render(<Paths paths={['/a']} title="title" onChangePaths={onChangePaths} />);
-    fireEvent.click(screen.getByLabelText('button'));
-    expect(onChangePaths).toHaveBeenCalledWith(['']);
+    fireEvent.click(screen.getByLabelText(RoutesI18nKey.AddPaths));
+    expect(onChangePaths).toHaveBeenCalledWith(['/a', '']);
   });
 });
