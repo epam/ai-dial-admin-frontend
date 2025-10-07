@@ -2,18 +2,17 @@
 
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
-import { IconTrash } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TagInput from '@/src/components/Common/TagInput/TagInput';
 import { BasicI18nKey, ErrorI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialRule, RuleFunction } from '@/src/models/dial/rule';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { getAttributeItems, getOperationItems } from '@/src/components/Rules/utils';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 interface Props {
   rule: DialRule;
@@ -150,10 +149,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
             />
           )}
         </div>
-
-        <button className={iconClass} onClick={onRemoveValue} aria-label="remove">
-          <IconTrash {...BASE_ICON_PROPS} />
-        </button>
+        <RemoveButton onClick={onRemoveValue} cssClass={iconClass} />
       </div>
     </>
   );
