@@ -1,0 +1,7 @@
+export enum SharingType {
+  APPLICATION = 'APPLICATION',
+  TOOL_SET = 'TOOL_SET',
+  PROMPT = 'PROMPT',
+  FILE = 'FILE',
+  CONVERSATION = 'CONVERSATION',
+}

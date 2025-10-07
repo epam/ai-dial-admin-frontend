@@ -26,6 +26,7 @@ export enum MenuI18nKey {
   Files = 'Menu.Files',
   Audit = 'Menu.Audit',
   Toolsets = 'Menu.Toolsets',
+  Conversations = 'Menu.Conversations',
   AuditDescription = 'Menu.AuditDescription',
   MCPDescription = 'Menu.MCPDescription',
   Dashboard = 'Menu.Dashboard',
@@ -303,6 +304,7 @@ export enum RolesI18nKey {
   NotAvailableModel = 'Roles.NotAvailableModel',
   NotAvailableApplication = 'Roles.NotAvailableApplication',
   NotAvailableToolSet = 'Roles.NotAvailableToolSet',
+  Sharing = 'Roles.Sharing',
 }
 
 export enum ForwardTokenI18nKey {

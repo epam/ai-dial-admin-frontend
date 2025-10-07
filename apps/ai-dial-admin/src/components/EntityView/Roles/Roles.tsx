@@ -1,7 +1,6 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { isDialRoleShareKey } from '@/src/components/AddEntitiesTab/utils';
 import AlertInfo from '@/src/components/Common/Alerts/AlertInfo';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import RolesGrid from '@/src/components/EntityView/Roles/RolesGrid';
@@ -15,12 +14,12 @@ import { EntitiesI18nKey, RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
-import { DialRoleLimits, DialRoleLimitsMap, DialRoleShare, DialRoleShareMap } from '@/src/models/dial/role-limits';
+import { DialRoleLimits, DialRoleLimitsMap } from '@/src/models/dial/role-limits';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import RolesDefaults from './RolesDefaults';
-import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_VALUE } from './constants';
+import { NO_LIMITS_VALUE } from './constants';
 
 interface Props {
   entity: EntityRoleLimits;
@@ -51,7 +50,6 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
     (value: number, data: DialRole, token: string) => {
       const name = data.name as string;
       const roleLimits = entityRef.current.roleLimits ?? {};
-      const roleShareResourceLimits = entityRef.current.roleShareResourceLimits ?? {};
       const updatedLimits = {
         ...roleLimits,
         [name]: {
@@ -60,17 +58,9 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
         },
       };
 
-      const updatedShare = {
-        ...roleShareResourceLimits,
-        [name]: {
-          ...roleShareResourceLimits[name],
-          [token]: value.toString(),
-        },
-      };
-
       const updatedEntity = {
         ...entityRef.current,
-        ...(isDialRoleShareKey(token) ? { roleShareResourceLimits: updatedShare } : { roleLimits: updatedLimits }),
+        roleLimits: updatedLimits,
       };
 
       onChangeEntity(updatedEntity, true);
@@ -81,10 +71,8 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
   const onAddRoles = useCallback(
     (roles: DialRole[]) => {
       const newRoles = {} as DialRoleLimitsMap;
-      const newRoleShare = {} as DialRoleShareMap;
       roles.forEach((role) => {
         newRoles[role.name as string] = {};
-        newRoleShare[role.name as string] = {};
       });
 
       onChangeEntity({
@@ -93,10 +81,6 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
           ...entity.roleLimits,
           ...newRoles,
         } as DialRoleLimitsMap,
-        roleShareResourceLimits: {
-          ...entity.roleShareResourceLimits,
-          ...newRoleShare,
-        },
       });
       setAddModalState(PopUpState.Closed);
     },
@@ -126,10 +110,6 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
           ...entityRef.current.roleLimits,
           [role?.name as string]: {},
         } as DialRoleLimitsMap,
-        roleShareResourceLimits: {
-          ...entityRef.current.roleShareResourceLimits,
-          [role?.name as string]: {},
-        },
       });
     },
     [onChangeEntity, entity],
@@ -137,16 +117,13 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
 
   const onResetAllRolesToDefault = useCallback(() => {
     const updatedRoleLimits: Record<string, DialRoleLimits> = {};
-    const updatedRoleShareResourceLimits: Record<string, DialRoleShare> = {};
 
     Object.keys(entityRef.current.roleLimits || {}).forEach((roleName) => {
       updatedRoleLimits[roleName] = {};
-      updatedRoleShareResourceLimits[roleName] = {};
     });
     onChangeEntity({
       ...entity,
       roleLimits: updatedRoleLimits,
-      roleShareResourceLimits: updatedRoleShareResourceLimits,
     });
   }, [onChangeEntity, entity]);
 
@@ -164,13 +141,6 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
             week: NO_LIMITS_VALUE,
           },
         } as DialRoleLimitsMap,
-        roleShareResourceLimits: {
-          ...entityRef.current.roleShareResourceLimits,
-          [role?.name as string]: {
-            invitationTtl: NO_LIMITS_VALUE,
-            maxAcceptedUsers: NO_LIMITS_ACCEPTED_USERS,
-          },
-        } as DialRoleShareMap,
       });
     },
     [onChangeEntity, entity],

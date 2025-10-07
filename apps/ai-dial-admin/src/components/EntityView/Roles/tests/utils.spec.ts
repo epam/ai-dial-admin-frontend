@@ -77,16 +77,12 @@ describe('Roles View :: getRolesGridData', () => {
           limit: { day: '1', minute: '1' },
           limit2: { day: null, minute: null },
         },
-        roleShareResourceLimits: {
-          limit: { invitationTtl: '3600', maxAcceptedUsers: '10' },
-          limit2: { invitationTtl: null, maxAcceptedUsers: null },
-        },
       },
       [{ name: 'limit' }, { name: 'limit2' }],
     );
     expect(res).toEqual([
-      { name: 'limit', day: '1', minute: '1', invitationTtl: '3600', maxAcceptedUsers: '10' },
-      { name: 'limit2', day: null, minute: null, invitationTtl: null, maxAcceptedUsers: null },
+      { name: 'limit', day: '1', minute: '1' },
+      { name: 'limit2', day: null, minute: null },
     ]);
   });
 
@@ -96,7 +92,6 @@ describe('Roles View :: getRolesGridData', () => {
         isPublic: false,
         defaultRoleLimit: { day: '2', minute: '2' },
         roleLimits: { limit: { day: '1', minute: '1' } },
-        roleShareResourceLimits: { limit: { invitationTtl: '3600', maxAcceptedUsers: '10' } },
       },
       [{ name: 'limit' }],
     );
@@ -105,8 +100,6 @@ describe('Roles View :: getRolesGridData', () => {
         name: 'limit',
         day: '1',
         minute: '1',
-        invitationTtl: '3600',
-        maxAcceptedUsers: '10',
       },
     ]);
   });
@@ -140,7 +133,6 @@ describe('Roles View :: getRolesGridData', () => {
         isPublic: true,
         defaultRoleLimit: { day: '2', minute: '2' },
         roleLimits: {},
-        roleShareResourceLimits: {},
       },
       [{ name: 'limit' }],
     );
@@ -153,13 +145,10 @@ describe('Roles View :: getRolesGridData', () => {
         isPublic: true,
         defaultRoleLimit: { day: '2', minute: '2' },
         roleLimits: {},
-        roleShareResourceLimits: {
-          limit: { invitationTtl: '3600', maxAcceptedUsers: '10' },
-        },
       },
       [{ name: 'limit' }],
     );
-    expect(res).toEqual([{ name: 'limit', day: '2', minute: '2', invitationTtl: '3600', maxAcceptedUsers: '10' }]);
+    expect(res).toEqual([{ name: 'limit', day: '2', minute: '2' }]);
   });
 
   test('Should handle missing roleShareResourceLimits gracefully when isPublic true', () => {
@@ -168,14 +157,11 @@ describe('Roles View :: getRolesGridData', () => {
         isPublic: true,
         defaultRoleLimit: { day: '2', minute: '2' },
         roleLimits: { limit: { day: '1', minute: '1' } },
-        roleShareResourceLimits: {},
       },
       [{ name: 'limit' }],
     );
     expect(res).toEqual([
       {
-        invitationTtl: undefined,
-        maxAcceptedUsers: undefined,
         month: undefined,
         week: undefined,
         day: '1',
@@ -191,7 +177,6 @@ describe('Roles View :: getRolesGridData', () => {
         isPublic: false,
         defaultRoleLimit: { day: '2', minute: '2' },
         roleLimits: {},
-        roleShareResourceLimits: { limit: { invitationTtl: '3600', maxAcceptedUsers: '10' } },
       },
       [{ name: 'limit' }],
     );
@@ -204,15 +189,12 @@ describe('Roles View :: getRolesGridData', () => {
         isPublic: true,
         defaultRoleLimit: { day: '2', minute: '2' },
         roleLimits: { limit: { day: null, minute: null } },
-        roleShareResourceLimits: {},
       },
       [{ name: 'limit' }],
     );
     expect(res).toEqual([
       {
         day: null,
-        invitationTtl: undefined,
-        maxAcceptedUsers: undefined,
         minute: null,
         month: undefined,
         name: 'limit',
@@ -227,15 +209,12 @@ describe('Roles View :: getRolesGridData', () => {
         isPublic: true,
         defaultRoleLimit: { day: '2', minute: '2' },
         roleLimits: { limit: { day: '1', minute: '1' } },
-        roleShareResourceLimits: {},
       },
       [{ name: 'limit' }],
     );
     expect(res).toEqual([
       {
         day: '1',
-        invitationTtl: undefined,
-        maxAcceptedUsers: undefined,
         minute: '1',
         month: undefined,
         name: 'limit',
