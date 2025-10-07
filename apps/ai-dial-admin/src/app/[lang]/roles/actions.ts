@@ -12,9 +12,9 @@ export async function removeRole(name?: string) {
   return rolesApi.removeRole(token, name);
 }
 
-export async function updateRole(role: DialRole) {
+export async function updateRole(role: DialRole, eTag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return rolesApi.updateRole(role, token);
+  return rolesApi.updateRole(role, token, eTag);
 }
 
 export async function createRole(role: DialRole) {
