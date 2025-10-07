@@ -20,9 +20,7 @@ describe('Interceptor Template ExtendedProperties', () => {
     render(<ExtendedProperties template={template} onChange={onChangeMock} />);
 
     expect(screen.getByRole('textbox', { name: EntityFieldsI18nKey.displayName })).toBeInTheDocument();
-    expect(
-      screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.description} ${BasicI18nKey.Optional}` }),
-    ).toBeInTheDocument();
+    expect(screen.getByText(EntityFieldsI18nKey.description)).toBeInTheDocument();
     expect(
       screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.completionEndpoint} ${BasicI18nKey.Optional}` }),
     ).toBeInTheDocument();
