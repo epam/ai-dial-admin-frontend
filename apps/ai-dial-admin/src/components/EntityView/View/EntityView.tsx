@@ -44,7 +44,7 @@ interface Props {
   view: ApplicationRoute;
   originalEntity: BaseEntity;
   names: string[];
-  etag string;
+  etag: string;
   roles?: DialRole[] | null;
   applicationSchemes?: DialApplicationScheme[] | null;
   interceptors?: DialInterceptor[] | null;
