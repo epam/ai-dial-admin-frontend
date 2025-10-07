@@ -1,7 +1,10 @@
 'use client';
 
 import { FC, useCallback, useEffect, useState } from 'react';
-import NoData from '@/src/components/Common/NoData/NoData';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { VisualizerConnectorEvents, VisualizerConnectorRequest } from '@epam/ai-dial-shared';
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+
 import { BasicI18nKey } from '@/src/constants/i18n';
 import FrameRenderer from '@/src/components/FrameRenderer/FrameRenderer';
 import { useSession } from 'next-auth/react';
@@ -10,8 +13,6 @@ import { useTheme } from '@/src/context/ThemeContext';
 import { FrameConfig } from '@/src/models/frame-config';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { VisualizerConnectorEvents, VisualizerConnectorRequest } from '@epam/ai-dial-shared';
 
 interface Props {
   slug: string;
@@ -98,7 +99,7 @@ const PluginView: FC<Props> = ({ slug }) => {
   return (
     <div className="flex flex-col bg-layer-2 rounded p-4 flex-1 min-h-0">
       {error || !frameConfig ? (
-        <NoData emptyDataTitle={t(BasicI18nKey.NoData)} />
+        <DialNoDataContent title={t(BasicI18nKey.NoData)} />
       ) : (
         <FrameRenderer iframeUrl={generateTargetUrl()?.href ?? ''} name={frameConfig?.name} />
       )}

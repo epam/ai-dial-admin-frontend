@@ -3,11 +3,11 @@ import { FC, useEffect, useMemo, useState } from 'react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import classNames from 'classnames';
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import FolderList from '@/src/components/Common/FolderList/FolderList';
 import { generatePromptRowDataForDelete } from '@/src/components/Common/FolderList/utils';
 import HorizontalCollapseBar from '@/src/components/Common/HorizontalCollapseBar/HorizontalCollapseBar';
-import NoData from '@/src/components/Common/NoData/NoData';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { listViewTitleMap } from '@/src/components/EntityListView/constants';
 import TopicsCellRenderer from '@/src/components/Grid/CellRenderers/TopicCellRenderer';
@@ -115,7 +115,7 @@ const DeleteFolder: FC<Props> = ({ modalState, view, selectedFolder, isBulkDelet
                 }}
               />
             ) : (
-              <NoData emptyDataTitle={t(BasicI18nKey.NoData)} />
+              <DialNoDataContent title={t(BasicI18nKey.NoData)} />
             )}
           </div>
         </div>

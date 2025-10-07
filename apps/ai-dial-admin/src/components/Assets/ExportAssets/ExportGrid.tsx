@@ -1,8 +1,8 @@
 import { FC, useEffect, useRef, useState } from 'react';
 
 import { GridApi, GridReadyEvent } from 'ag-grid-community';
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
-import NoData from '@/src/components/Common/NoData/NoData';
 import Grid from '@/src/components/Grid/Grid';
 import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
 import { ALL_ID } from '@/src/constants/dial-base-entity';
@@ -171,7 +171,7 @@ const ExportGrid: FC<Props> = ({ route, context }) => {
           }}
         />
       ) : (
-        <NoData emptyDataTitle={t(BasicI18nKey.NoData)} />
+        <DialNoDataContent title={t(BasicI18nKey.NoData)} />
       )}
     </div>
   );
