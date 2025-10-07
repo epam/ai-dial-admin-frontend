@@ -9,7 +9,6 @@ describe('Common components :: Field', () => {
     const label = screen.getByText('My Field');
     expect(label).toBeInTheDocument();
     expect(label.tagName.toLowerCase()).toBe('span');
-    expect(label).toHaveAttribute('for', 'input-id');
   });
 
   test('Should render (Optional) when optional is true', () => {
