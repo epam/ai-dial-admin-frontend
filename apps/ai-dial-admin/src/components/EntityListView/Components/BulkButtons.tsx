@@ -2,18 +2,20 @@
 
 import { Dispatch, SetStateAction } from 'react';
 
-import { IconFileArrowRight, IconTrashX, IconX } from '@tabler/icons-react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { IconFileArrowRight, IconTrashX } from '@tabler/icons-react';
 
-import Button from '@/src/components/Common/Button/Button';
+import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { ImportFileType } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ModalType } from './Modals';
+import { isDeploymentAsset } from '@/src/utils/is-asset-view';
 
 interface Props {
   route: ApplicationRoute;
@@ -38,7 +40,7 @@ const BulkButtons = ({
   const folderContext = context?.();
 
   const bulkExport = () => {
-    if (route === ApplicationRoute.Prompts || route === ApplicationRoute.AssetsApplications) {
+    if (route === ApplicationRoute.Prompts || isDeploymentAsset(route)) {
       setModalType(ModalType.export);
       setModalState(PopUpState.Opened);
     } else {
@@ -52,16 +54,16 @@ const BulkButtons = ({
         {itemsCount} {t(BasicI18nKey.Selected)}
       </div>
       <div className="bg-layer-4 h-5 w-[1px]"></div>
-      <Button
-        cssClass="secondary"
+      <DialButton
+        variant={ButtonVariant.Secondary}
         title={t(ButtonsI18nKey.Export)}
         iconBefore={<IconFileArrowRight {...BASE_ICON_PROPS} />}
         disable={!itemsCount}
         onClick={bulkExport}
       />
-      {(route === ApplicationRoute.Prompts || route === ApplicationRoute.AssetsApplications) && (
-        <Button
-          cssClass="secondary"
+      {(route === ApplicationRoute.Prompts || isDeploymentAsset(route)) && (
+        <DialButton
+          variant={ButtonVariant.Secondary}
           title={t(ButtonsI18nKey.Delete)}
           iconBefore={<IconTrashX {...BASE_ICON_PROPS} />}
           disable={!itemsCount}
@@ -71,13 +73,11 @@ const BulkButtons = ({
           }}
         />
       )}
-      <Button
-        cssClass="text-secondary hover:text-accent-primary"
-        onClick={() => {
+      <CloseButton
+        onClose={() => {
           setIsBulkView(false);
           folderContext?.setBulkSelectedData({});
         }}
-        iconBefore={<IconX height={24} width={24} />}
       />
     </div>
   );

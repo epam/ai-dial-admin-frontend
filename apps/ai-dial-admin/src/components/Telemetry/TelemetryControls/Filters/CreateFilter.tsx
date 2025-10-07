@@ -1,16 +1,17 @@
 import { Dispatch, FC, SetStateAction, useCallback } from 'react';
-import { IconX } from '@tabler/icons-react';
+import classNames from 'classnames';
+
 import DropdownMenuItem from '@/src/components/Common/Dropdown/DropdownItem';
 import Dropdown from '@/src/components/Common/Dropdown/Dropdown';
 import Input from '@/src/components/Common/Input/Input';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
-import classNames from 'classnames';
 import { BasicI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { getDefaultFilterValue, getFilterConditionConfig, getFilterTypeConfig } from '@/src/utils/telemetry';
 import { ApplicationRoute } from '@/src/types/routes';
+import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
 
 interface Props {
   type: FILTER_TYPE;
@@ -145,14 +146,7 @@ const CreateFilter: FC<Props> = ({
           />
         )}
       </div>
-      <button
-        type="button"
-        aria-label="button"
-        className="hidden md:flex text-secondary hover:text-accent-primary"
-        onClick={onClose}
-      >
-        <IconX height={24} width={24} />
-      </button>
+      <CloseButton onClose={onClose} cssClass="hidden md:flex" />
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import { FC, MouseEvent, useCallback, useEffect, useState } from 'react';
 import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -11,7 +12,6 @@ import { IconColumns2 } from '@tabler/icons-react';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 
-import Button from '@/src/components/Common/Button/Button';
 import ListView from '@/src/components/ListView/ListView';
 import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/ResetFiltersButton';
 import Loader from '@/src/components/Common/Loader/Loader';
@@ -103,8 +103,8 @@ const List: FC<Props> = ({ route, getData, query, columnDefs, title, emptyDataTi
       <div className="flex gap-4">
         <ResetFiltersButton gridApi={gridApi} />
         {!!data?.length && (
-          <Button
-            cssClass="tertiary"
+          <DialButton
+            variant={ButtonVariant.Tertiary}
             title={t(ButtonsI18nKey.Columns)}
             iconBefore={<IconColumns2 {...BASE_ICON_PROPS} />}
             onClick={onToggleColumnsPanel}

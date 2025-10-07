@@ -1,12 +1,12 @@
 import { Dispatch, FC, SetStateAction, useMemo } from 'react';
 
 import { IconFileTypeZip } from '@tabler/icons-react';
+import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import Json from '@/public/images/icons/file/json.svg';
 import Field from '@/src/components/Common/Field/Field';
 import LoadFileAreaField from '@/src/components/Common/LoadFileArea/LoadFileAreaField';
 import RadioButton from '@/src/components/Common/RadioButton/RadioButton';
-import Switch from '@/src/components/Common/Switch/Switch';
 import { ImportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { RadioButtonModel } from '@/src/models/radio-button';
@@ -75,7 +75,7 @@ const ImportFileTypeSelector: FC<Props> = ({
         {route === ApplicationRoute.Prompts && (
           <div className="flex flex-col">
             <Field fieldTitle={ignorePathsTitle} />
-            <Switch
+            <DialSwitch
               isOn={ignorePaths}
               title={t(ImportI18nKey.PathsIgnore)}
               switchId="ignorePaths"

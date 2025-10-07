@@ -20,7 +20,7 @@ const DashboardView: FC<Props> = ({ grafanaLink }) => {
       <div className="flex flex-row mb-3 py-1.5 justify-between items-center">
         <h1>{t(MenuI18nKey.Dashboard)}</h1>
         {grafanaLink && (
-          <Link className="tertiary" href={grafanaLink} target="_blank">
+          <Link className="dial-tertiary-button" href={grafanaLink} target="_blank">
             <Grafana />
             <p className="small-text-semi ml-2">{t(TelemetryI18nKey.Grafana)}</p>
           </Link>

@@ -8,11 +8,18 @@ import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operati
 
 interface Props<T> extends CustomCellRendererProps<T> {
   items: ActionMenuOperationDeclaration<T>[];
+  disabledInsteadHidden?: boolean;
 }
 
-const ActionColumn = <T extends object>({ items, data, api, node }: Props<T>) => {
-  const dropdownItems = items.filter((item) => !item.hidden?.(api, node));
-
+const ActionColumn = <T extends object>({ items, data, api, node, disabledInsteadHidden }: Props<T>) => {
+  const dropdownItems = disabledInsteadHidden
+    ? items.map((item) => {
+        return {
+          ...item,
+          disabled: item.hidden?.(api, node),
+        };
+      })
+    : items.filter((item) => !item.hidden?.(api, node));
   return data ? (
     <div className="w-[24px] h-[24px] ml-[-4px]">
       <ActionsDropdown

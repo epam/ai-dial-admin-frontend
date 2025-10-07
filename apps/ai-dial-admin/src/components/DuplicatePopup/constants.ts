@@ -10,6 +10,7 @@ export const duplicateModalTitleMap: Record<string, DuplicateI18nKey> = {
   [ApplicationRoute.Roles]: DuplicateI18nKey.RoleHeader,
   [ApplicationRoute.Prompts]: DuplicateI18nKey.PromptHeader,
   [ApplicationRoute.AssetsApplications]: DuplicateI18nKey.ApplicationHeader,
+  [ApplicationRoute.AssetsToolsets]: DuplicateI18nKey.Toolsets,
   [ApplicationRoute.Adapters]: DuplicateI18nKey.AdapterHeader,
   [ApplicationRoute.InterceptorTemplates]: DuplicateI18nKey.InterceptorTemplate,
   [ApplicationRoute.Toolsets]: DuplicateI18nKey.Toolsets,

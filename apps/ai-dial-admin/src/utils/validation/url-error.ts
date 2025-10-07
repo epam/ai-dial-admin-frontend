@@ -26,7 +26,7 @@ export const isDangerEndpoint = (value?: string) => {
   return WARNING_ENDPOINT_REGEX.test(value || '');
 };
 
-export const getUrlError = (url?: string, t?: (str: string) => string, required?: boolean) => {
+export const getUrlError = (url?: string | null, t?: (str: string) => string, required?: boolean) => {
   if (!url && required) {
     return {
       type: ErrorType.EMPTY,

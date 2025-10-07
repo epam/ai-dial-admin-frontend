@@ -3,8 +3,8 @@
 import { IconExternalLink } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import ErrorText from '@/src/components/Common/ErrorText/ErrorText';
 import Field from '@/src/components/Common/Field/Field';
@@ -123,8 +123,9 @@ const SourceEntitySelector: FC<Props> = ({
         <ErrorText errorText={errorText} />
       </div>
       {selectedValue && (
-        <Button
-          cssClass="secondary mt-[22px]"
+        <DialButton
+          variant={ButtonVariant.Secondary}
+          cssClass="mt-[22px]"
           title={buttonTitle}
           iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
           onClick={openInNewTab}

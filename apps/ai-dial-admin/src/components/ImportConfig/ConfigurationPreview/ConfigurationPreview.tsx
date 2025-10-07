@@ -1,24 +1,26 @@
 'use client';
 
 import { FC, useEffect, useRef, useState } from 'react';
+
 import { IconDownload } from '@tabler/icons-react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { previewJsonConfigs, previewZipConfig } from '@/src/app/[lang]/import-config/actions';
-import Button from '@/src/components/Common/Button/Button';
 import Loader from '@/src/components/Common/Loader/Loader';
+import Tabs from '@/src/components/Common/Tabs/Tabs';
+import ConfigurationGrid from '@/src/components/ImportConfig/ConfigurationPreview/ConfigurationGrid';
+import { getConfigurationPreview } from '@/src/components/ImportConfig/ConfigurationPreview/ConfigurationPreview.utils';
 import { ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
+import { BaseEntity } from '@/src/models/dial/base-entity';
+import { FileConfiguration } from '@/src/models/import';
+import { TabModel } from '@/src/models/tab';
+import { ActivityAuditEntity } from '@/src/types/activity-audit';
+import { EntityType } from '@/src/types/entity-type';
 import { ImportFileType } from '@/src/types/import';
 import { getErrorNotification } from '@/src/utils/notification';
-import { TabModel } from '@/src/models/tab';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
-import { getConfigurationPreview } from '@/src/components/ImportConfig/ConfigurationPreview/ConfigurationPreview.utils';
-import { FileConfiguration } from '@/src/models/import';
-import ConfigurationGrid from '@/src/components/ImportConfig/ConfigurationPreview/ConfigurationGrid';
-import { BaseEntity } from '@/src/models/dial/base-entity';
-import { EntityType } from '@/src/types/entity-type';
 
 interface Props {
   importBody: FormData;
@@ -37,14 +39,19 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
   const [data, setData] = useState<Record<string, BaseEntity[]>>({});
   const [isLoading, setIsLoading] = useState(false);
 
+  const [currentState, setCurrentState] = useState<Record<string, ActivityAuditEntity[]>>({});
+  const [prevState, setPrevState] = useState<Record<string, ActivityAuditEntity[]>>({});
+
   useEffect(() => {
     setIsLoading(true);
     (fileType == ImportFileType.ARCHIVE ? previewZipConfig(importBody) : previewJsonConfigs(importBody)).then((res) => {
       setIsLoading(false);
       if (res.success) {
         const fileConfiguration = res.response as FileConfiguration;
-        const { previewData, tabs } = getConfigurationPreview(fileConfiguration, t);
+        const { previewData, prevData, tabs } = getConfigurationPreview(fileConfiguration, t);
 
+        setCurrentState(previewData as Record<string, ActivityAuditEntity[]>);
+        setPrevState(prevData as Record<string, ActivityAuditEntity[]>);
         setData(previewData);
         setTabs(tabs);
         setSelectedTab(tabs[0]?.id);
@@ -58,8 +65,8 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
     <div className="flex flex-col flex-1 min-h-0 rounded border border-primary p-6 mt-8">
       <div className="mb-2 flex flex-row justify-between">
         <h1>{t(ImportI18nKey.Configuration)}</h1>
-        <Button
-          cssClass="primary"
+        <DialButton
+          variant={ButtonVariant.Primary}
           title={t(ButtonsI18nKey.Import)}
           disable={isLoading || !files}
           iconBefore={<IconDownload {...BASE_ICON_PROPS} />}
@@ -77,7 +84,12 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
             <div className="mb-3">
               <Tabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
             </div>
-            <ConfigurationGrid selectedTab={selectedTab as EntityType} tabData={data} />
+            <ConfigurationGrid
+              selectedTab={selectedTab as EntityType}
+              tabData={data}
+              currentState={currentState}
+              prevState={prevState}
+            />
           </div>
         )}
       </div>

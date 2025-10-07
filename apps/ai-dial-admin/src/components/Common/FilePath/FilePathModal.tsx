@@ -1,10 +1,10 @@
 import { FC, useMemo } from 'react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import FolderList from '@/src/components/Common/FolderList/FolderList';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAssetApp } from '@/src/models/dial/asset-app';
 import { DialFile } from '@/src/models/dial/file';
@@ -49,9 +49,9 @@ const FilePathModal: FC<Props> = ({ modalState, modalTitle, initialPath, onClose
         <FolderList context={context} isFolderMove={isFolderMove} folderPath={initialPath} />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <Button
-          cssClass="primary"
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton
+          variant={ButtonVariant.Primary}
           title={t(ButtonsI18nKey.Apply)}
           onClick={() => {
             onApply(removeTrailingSlash(folderContext?.filePath));

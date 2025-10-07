@@ -1,9 +1,9 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { createAdapter } from '@/src/app/[lang]/adapters/actions';
 import AdapterProperties from '@/src/components/Adapter/View/AdapterProperties';
-import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -45,6 +45,7 @@ const CreateAdapter: FC<Props> = ({ modalState, onClose, names }) => {
   // initial validation on creation adapter (disable save when no values entered yet)
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!currentAdapter.name });
+    dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!currentAdapter.displayName });
     dispatch({ type: ValidationActionType.SetField, field: 'baseEndpoint', isValid: !!currentAdapter.baseEndpoint });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -67,8 +68,13 @@ const CreateAdapter: FC<Props> = ({ modalState, onClose, names }) => {
         <AdapterProperties entity={currentAdapter} names={names} onChangeAdapter={onChangeAdapter} />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <Button cssClass="primary" title={t(ButtonsI18nKey.Create)} onClick={onCreate} disable={!isValid} />
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton
+          variant={ButtonVariant.Primary}
+          title={t(ButtonsI18nKey.Create)}
+          onClick={onCreate}
+          disable={!isValid}
+        />
       </div>
     </Popup>
   );

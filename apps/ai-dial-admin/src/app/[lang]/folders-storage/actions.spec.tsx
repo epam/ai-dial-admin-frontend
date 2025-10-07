@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 import { changeFolder, getFolders, getRules, previewPromptZip, removeFolder, updateRules } from './actions';
-import { ResourceType } from '@/src/types/folder';
+import { ResourceType } from '@/src/types/resource-type';
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
 

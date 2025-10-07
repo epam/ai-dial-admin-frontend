@@ -2,8 +2,8 @@ import { FC, useEffect, useMemo, useState } from 'react';
 
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import classNames from 'classnames';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import FolderList from '@/src/components/Common/FolderList/FolderList';
 import { generatePromptRowDataForDelete } from '@/src/components/Common/FolderList/utils';
 import HorizontalCollapseBar from '@/src/components/Common/HorizontalCollapseBar/HorizontalCollapseBar';
@@ -13,7 +13,7 @@ import { listViewTitleMap } from '@/src/components/EntityListView/constants';
 import TopicsCellRenderer from '@/src/components/Grid/CellRenderers/TopicCellRenderer';
 import Grid from '@/src/components/Grid/Grid';
 import { BasicI18nKey, ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
-import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
@@ -121,9 +121,9 @@ const DeleteFolder: FC<Props> = ({ modalState, view, selectedFolder, isBulkDelet
         </div>
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <Button
-          cssClass="primary"
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton
+          variant={ButtonVariant.Primary}
           title={t(ButtonsI18nKey.Delete)}
           onClick={() => {
             onApply?.();

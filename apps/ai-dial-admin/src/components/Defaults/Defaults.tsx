@@ -2,8 +2,8 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { IconChevronDown, IconChevronRight, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -85,8 +85,8 @@ const Defaults: FC<Props> = ({ entity, onChangeEntity }) => {
           <DefaultItem key={index} item={item} index={index} changeItem={onChangeDefaultItem} onRemove={onRemoveItem} />
         ))}
         <div>
-          <Button
-            cssClass="tertiary"
+          <DialButton
+            variant={ButtonVariant.Tertiary}
             title={t(ButtonsI18nKey.AddDefault)}
             iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
             onClick={onAddItem}

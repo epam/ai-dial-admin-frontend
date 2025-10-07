@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 
 import { IconRestore } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 import {
@@ -16,7 +17,6 @@ import DiffLegend from '@/src/components/ActivityAudit/View/DiffReport/DiffLegen
 import AuditEntityGrid from '@/src/components/ActivityAudit/EntityGrid/EntityGrid';
 import { mergeEntityMaps } from '@/src/components/ActivityAudit/View/utils';
 import { getSystemRollbackColumns } from '@/src/components/ActivityAudit/Rollback/utils';
-import Button from '@/src/components/Common/Button/Button';
 import Loader from '@/src/components/Common/Loader/Loader';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import { ActivityAuditI18nKey, MenuI18nKey } from '@/src/constants/i18n';
@@ -162,9 +162,9 @@ const SystemRollback: FC = () => {
               <OpenPopup />
             </div>
           </div>
-          <Button
+          <DialButton
             iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
-            cssClass="primary"
+            variant={ButtonVariant.Primary}
             title={t(ActivityAuditI18nKey.RollbackSystem)}
             onClick={() => setRollBackModalState(PopUpState.Opened)}
           />

@@ -10,7 +10,7 @@ import ConfirmationModal from '@/src/components/Common/ConfirmationModal/Confirm
 import { deleteModalTitleMap } from '@/src/components/EntityListView/constants';
 import DeleteInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Delete';
 import { ButtonsI18nKey, DeleteI18nKey } from '@/src/constants/i18n';
-import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
@@ -49,7 +49,11 @@ const DeleteConfirmationModal = <T extends object>({
       if (res.success) {
         onCloseModal();
 
-        if (view === ApplicationRoute.Prompts || view === ApplicationRoute.AssetsApplications) {
+        if (
+          view === ApplicationRoute.Prompts ||
+          view === ApplicationRoute.AssetsToolsets ||
+          view === ApplicationRoute.AssetsApplications
+        ) {
           folderContext?.fetchFiles(folderContext?.filePath);
         }
 

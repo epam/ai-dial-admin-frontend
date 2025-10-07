@@ -9,7 +9,7 @@ import { ALL_ID } from '@/src/constants/dial-base-entity';
 import { EXPORT_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { STRINGS_DELIMITER } from '@/src/constants/prompt';
-import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';

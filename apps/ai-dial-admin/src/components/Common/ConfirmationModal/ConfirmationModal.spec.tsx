@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { PopUpState } from '@/src/types/pop-up';
 import ConfirmationModal from './ConfirmationModal';
 import { describe, expect, test, vi } from 'vitest';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 
 describe('Common :: ConfirmationModal', () => {
   test('Should render successfully', async () => {
@@ -82,7 +83,7 @@ describe('Common :: ConfirmationModal', () => {
     expect(screen.getByText('heading')).toBeInTheDocument();
     expect(screen.getByText('description')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /close/i }));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Close }));
     expect(onClose).toHaveBeenCalled();
   });
 
