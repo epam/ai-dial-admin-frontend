@@ -1,6 +1,7 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import Button from '@/src/components/Common/Button/Button';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -44,8 +45,13 @@ const TokenizedModelsModal: FC<Props> = ({ model, modalState, onClose, onSelectM
         <TokenizedModelsGrid selectedModel={selectedModel} onSelectModelId={onSelectModel} />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <Button cssClass="primary" title={t(ButtonsI18nKey.Apply)} onClick={onApply} disable={!selectedModel} />
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton
+          variant={ButtonVariant.Primary}
+          title={t(ButtonsI18nKey.Apply)}
+          onClick={onApply}
+          disable={!selectedModel}
+        />
       </div>
     </Popup>
   );

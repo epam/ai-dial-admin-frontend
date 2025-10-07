@@ -3,8 +3,8 @@
 import { Dispatch, FC, SetStateAction, useCallback } from 'react';
 
 import classNames from 'classnames';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useRuleFolder } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
@@ -106,8 +106,8 @@ const RulesValueList: FC<Props> = ({
       )}
       <div className={classNames(ruleIndentClass, isReadonly && 'hidden')}>
         <div className={lineHorizontalChildClass}></div>
-        <Button
-          cssClass="primary"
+        <DialButton
+          variant={ButtonVariant.Primary}
           title={t(ButtonsI18nKey.Add)}
           onClick={onAddValue}
           disable={availableAttributes?.length === rules.length}

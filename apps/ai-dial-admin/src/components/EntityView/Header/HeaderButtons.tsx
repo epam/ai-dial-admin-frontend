@@ -5,11 +5,11 @@ import { createPortal } from 'react-dom';
 
 import { IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
@@ -38,6 +38,7 @@ interface Props<T> {
   removeEntity: (entity: string) => Promise<ServerActionResponse>;
   toggleJsonEditor?: () => void;
   context?: () => AssetsFolderContext<DialFile>;
+  childrenContainerClass?: string;
 }
 
 const HeaderButtons = <T extends object>({
@@ -52,6 +53,7 @@ const HeaderButtons = <T extends object>({
   children,
   existingVersions,
   context,
+  childrenContainerClass,
   ...props
 }: Props<T>) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
@@ -98,9 +100,12 @@ const HeaderButtons = <T extends object>({
         ) : (
           <div className="flex flex-row items-center w-full">
             {!jsonEditorEnabled && (
-              <div className={`flex-1 flex flex-row gap-3 ${isSimple ? 'justify-center' : ''}`}>
-                <Button
-                  cssClass={`secondary ${buttonsClassNames} ${isSimple ? 'min-w-[150px] lg:min-w-0' : ''}`}
+              <div
+                className={`flex-1 flex flex-row gap-3 ${childrenContainerClass || ''} ${isSimple ? 'justify-center' : ''}`}
+              >
+                <DialButton
+                  variant={ButtonVariant.Secondary}
+                  cssClass={classNames(buttonsClassNames, isSimple ? 'min-w-[150px] lg:min-w-0' : '')}
                   title={t(ButtonsI18nKey.Delete)}
                   iconBefore={<IconTrashX {...BASE_ICON_PROPS} />}
                   onClick={onOpenModal}

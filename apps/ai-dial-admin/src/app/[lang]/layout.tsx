@@ -19,7 +19,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getMenuItems } from '@/src/utils/env/get-menu-items';
-import { PromptFolderProvider } from '@/src/context/PromptFolderContext';
+import { PromptFolderProvider } from '@/src/context/assets/PromptFolderContext';
 
 export default async function Layout({ children, params }: { children: ReactNode; params: Promise<{ lang: string }> }) {
   const { lang } = await params;

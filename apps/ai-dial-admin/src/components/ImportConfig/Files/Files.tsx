@@ -2,9 +2,9 @@
 
 import { FC, useCallback, useEffect, useState } from 'react';
 import { IconArrowNarrowRight, IconZip } from '@tabler/icons-react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import Json from '@/public/images/icons/file/json.svg';
-import Button from '@/src/components/Common/Button/Button';
 import LoadFileAreaField from '@/src/components/Common/LoadFileArea/LoadFileAreaField';
 import RadioField from '@/src/components/Common/RadioField/RadioField';
 import { isLargeFile } from '@/src/components/EntityListView/Import/import';
@@ -75,8 +75,8 @@ const Files: FC<Props> = ({
     <div className="flex flex-col flex-1 min-h-0 rounded border border-primary p-6 mt-8">
       <div className="mb-2 flex flex-row justify-between">
         <h1>{t(ImportI18nKey.Files)}</h1>
-        <Button
-          cssClass="primary"
+        <DialButton
+          variant={ButtonVariant.Primary}
           title={t(ButtonsI18nKey.Next)}
           disable={!isFilesValid}
           iconAfter={<IconArrowNarrowRight {...BASE_ICON_PROPS} />}

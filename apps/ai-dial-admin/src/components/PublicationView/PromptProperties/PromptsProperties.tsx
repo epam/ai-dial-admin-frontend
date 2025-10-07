@@ -2,10 +2,9 @@ import classNames from 'classnames';
 import { FC, ReactNode, useCallback, useState } from 'react';
 
 import { IconChevronDown, IconChevronRight, IconExternalLink } from '@tabler/icons-react';
+import { ButtonVariant, DialButton, DialTooltip } from '@epam/ai-dial-ui-kit';
 
-import Button from '@/src/components/Common/Button/Button';
 import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import { EntityFieldsI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -58,8 +57,8 @@ const PromptsProperties: FC<Props> = ({ prompt, action, collapsed }) => {
 
         <div className="flex justify-end gap-4">
           {action === ActionType.DELETE && (
-            <Button
-              cssClass="secondary"
+            <DialButton
+              variant={ButtonVariant.Secondary}
               title={t(PublicationsI18nKey.OpenPrompt)}
               iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
               onClick={openPrompt}
@@ -76,13 +75,13 @@ const PromptsProperties: FC<Props> = ({ prompt, action, collapsed }) => {
         </div>
         <div className="mt-4">
           <LabeledText label={t(EntityFieldsI18nKey.content)}>
-            <Tooltip
+            <DialTooltip
               contentClassName="truncate"
               tooltip={formatPromptText(prompt.content as string)}
               placement={'bottom-start'}
             >
               <p className="break-words">{formatPromptText(prompt.content as string)}</p>
-            </Tooltip>
+            </DialTooltip>
           </LabeledText>
         </div>
       </div>

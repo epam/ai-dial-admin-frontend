@@ -1,4 +1,5 @@
 import { FC, useState } from 'react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { PopUpState } from '@/src/types/pop-up';
@@ -9,7 +10,6 @@ import { SOURCE_CONTAINERS_COLUMNS } from '@/src/constants/grid-columns/grid-col
 
 import Grid from '@/src/components/Grid/Grid';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import Button from '@/src/components/Common/Button/Button';
 import Popup from '@/src/components/Common/Popup/Popup';
 
 interface Props {
@@ -67,9 +67,9 @@ const SelectContainerModal: FC<Props> = ({ selectedId, interceptorContainers, mo
         />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <Button
-          cssClass="primary"
+        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton
+          variant={ButtonVariant.Primary}
           title={t(ButtonsI18nKey.Apply)}
           disable={!selectedContainer}
           onClick={() => onApply(selectedContainer)}

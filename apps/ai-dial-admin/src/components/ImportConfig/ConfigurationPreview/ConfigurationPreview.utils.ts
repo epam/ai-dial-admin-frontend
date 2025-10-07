@@ -1,9 +1,9 @@
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { isNull, startCase } from 'lodash';
-import { TabModel } from '@/src/models/tab';
-import { FileComponentItem, FileConfiguration } from '@/src/models/import';
-import { ImportConfigurationAction } from '@/src/types/import';
-import { BaseEntity } from '@/src/models/dial/base-entity';
+
+import StatusCellRenderer from '@/src/components/Grid/CellRenderers/StatusCellRenderer';
+import { ACTION_COLUMN } from '@/src/constants/ag-grid';
+import { getCompareChangesOperation } from '@/src/constants/grid-columns/actions';
 import {
   APPLICATIONS_COLUMNS,
   KEYS_COLUMNS,
@@ -11,16 +11,25 @@ import {
   RUNNERS_COLUMNS,
   SIMPLE_ENTITY_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
-import StatusCellRenderer from '@/src/components/Grid/CellRenderers/StatusCellRenderer';
+import { DialApplicationScheme } from '@/src/models/dial/application';
+import { BaseEntity, ChatEntity } from '@/src/models/dial/base-entity';
+import { FileComponentItem, FileConfiguration } from '@/src/models/import';
+import { TabModel } from '@/src/models/tab';
+import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { EntityType } from '@/src/types/entity-type';
-import { getEntitiesList } from '@/src/utils/entities/get-entities-list';
+import { ImportConfigurationAction } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getEntitiesList } from '@/src/utils/entities/get-entities-list';
 
 const getConfigurationItems = (componentItems: FileComponentItem[], t: (v: string) => string) => {
   return componentItems?.map((componentItem) => ({
     action: t(`Import.${startCase(componentItem?.importAction)}`),
-    ...componentItem?.value,
+    ...componentItem?.next,
   }));
+};
+
+const getPrevItems = (componentItems: FileComponentItem[]) => {
+  return componentItems?.map((componentItem) => componentItem?.prev);
 };
 
 const getConfigurationTabs = (preview: Record<string, BaseEntity[]>, t: (v: string) => string): TabModel[] => {
@@ -41,57 +50,71 @@ const getConfigurationTabs = (preview: Record<string, BaseEntity[]>, t: (v: stri
 
 export const getConfigurationPreview = (configuration: FileConfiguration, t: (v: string) => string) => {
   const previewData: Record<string, BaseEntity[]> = {};
+  const prevData: Record<string, (BaseEntity | undefined)[]> = {};
 
   Object.keys(configuration).forEach((configurationKey) => {
     if (configuration[configurationKey]) {
       const configurationItems = getConfigurationItems(configuration[configurationKey], t);
+      const prevItems = getPrevItems(configuration[configurationKey]);
+
       if (configurationKey === 'models') {
         previewData[EntityType.MODEL] = configurationItems;
+        prevData[EntityType.MODEL] = prevItems;
       }
 
       if (configurationKey === 'adapters') {
         previewData[EntityType.ADAPTER] = configurationItems;
+        prevData[EntityType.ADAPTER] = prevItems;
       }
 
       if (configurationKey === 'applications') {
         previewData[EntityType.APPLICATION] = configurationItems;
+        prevData[EntityType.APPLICATION] = prevItems;
       }
 
       if (configurationKey === 'routes') {
         previewData[EntityType.ROUTE] = configurationItems;
+        prevData[EntityType.ROUTE] = prevItems;
       }
 
       if (configurationKey === 'roles') {
         previewData[EntityType.ROLE] = configurationItems;
+        prevData[EntityType.ROLE] = prevItems;
       }
 
       if (configurationKey === 'keys') {
         previewData[EntityType.KEY] = configurationItems;
+        prevData[EntityType.KEY] = prevItems;
       }
 
       if (configurationKey === 'applicationRunners') {
         previewData[EntityType.APPLICATION_TYPE_SCHEMA] = configurationItems;
+        prevData[EntityType.APPLICATION_TYPE_SCHEMA] = prevItems;
       }
 
       if (configurationKey === 'interceptors') {
         previewData[EntityType.INTERCEPTOR] = configurationItems;
+        prevData[EntityType.INTERCEPTOR] = prevItems;
       }
 
       if (configurationKey === 'prompts') {
         previewData[EntityType.PROMPT] = configurationItems;
+        prevData[EntityType.PROMPT] = prevItems;
       }
 
       if (configurationKey === 'files') {
         previewData[EntityType.FILE] = configurationItems;
+        prevData[EntityType.FILE] = prevItems;
       }
 
       if (configurationKey === 'toolSets') {
         previewData[EntityType.TOOLSET] = configurationItems;
+        prevData[EntityType.TOOLSET] = prevItems;
       }
     }
   });
 
-  return { previewData, tabs: getConfigurationTabs(previewData, t) };
+  return { previewData, prevData, tabs: getConfigurationTabs(previewData, t) };
 };
 
 export const getActionClass = (action: string): string => {
@@ -117,22 +140,33 @@ const getComponentActionColumn = (): ColDef => {
   };
 };
 
-export const getComponentColDefs = (type: string, t: (v: string) => string): ColDef[] => {
+export const getComponentColDefs = (
+  type: string,
+  t: (v: string) => string,
+  compare: (entity?: BaseEntity) => void,
+): ColDef[] => {
+  const actionColumn = ACTION_COLUMN([getCompareChangesOperation(compare)]);
   if (type === EntityType.MODEL) {
-    return [getComponentActionColumn(), ...MODELS_COLUMNS(t, ApplicationRoute.Models)];
+    return [getComponentActionColumn(), ...MODELS_COLUMNS(t, ApplicationRoute.Models), actionColumn];
   }
 
   if (type === EntityType.APPLICATION) {
-    return [getComponentActionColumn(), ...APPLICATIONS_COLUMNS(t)];
+    return [getComponentActionColumn(), ...APPLICATIONS_COLUMNS(t), actionColumn];
   }
 
   if (type === EntityType.APPLICATION_TYPE_SCHEMA) {
-    return [getComponentActionColumn(), ...RUNNERS_COLUMNS];
+    return [getComponentActionColumn(), ...RUNNERS_COLUMNS, actionColumn];
   }
 
   if (type === EntityType.KEY) {
-    return [getComponentActionColumn(), ...KEYS_COLUMNS];
+    return [getComponentActionColumn(), ...KEYS_COLUMNS, actionColumn];
   }
 
-  return [getComponentActionColumn(), ...SIMPLE_ENTITY_COLUMNS];
+  return [getComponentActionColumn(), ...SIMPLE_ENTITY_COLUMNS, actionColumn];
+};
+
+export const getEntityByIdentifier = (allEntities: ActivityAuditEntity[], entity?: BaseEntity): ActivityAuditEntity => {
+  return allEntities.find(
+    (e) => e?.name === (entity as ChatEntity)?.name || (e?.$id && e?.$id === (entity as DialApplicationScheme)?.$id),
+  ) as ActivityAuditEntity;
 };

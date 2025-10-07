@@ -1,6 +1,7 @@
 import { FC, useCallback, useState } from 'react';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+
 import DatePicker from '@/src/components/Common/DatePicker/DatePicker';
-import Button from '@/src/components/Common/Button/Button';
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TimeRange } from '@/src/models/time-range';
@@ -61,7 +62,7 @@ const RangePicker: FC<Props> = ({ onChange, timeRange }) => {
         endDate={endDate}
         minDate={startDate === null ? void 0 : startDate} // minDate: Date | undefined
       />
-      <Button title={t(ButtonsI18nKey.Apply)} onClick={onClick} cssClass="primary w-max" />
+      <DialButton title={t(ButtonsI18nKey.Apply)} onClick={onClick} variant={ButtonVariant.Primary} cssClass="w-max" />
     </div>
   );
 };

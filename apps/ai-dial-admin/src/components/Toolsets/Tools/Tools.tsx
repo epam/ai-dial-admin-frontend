@@ -2,14 +2,12 @@
 
 import { IconPlus } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { ButtonVariant, DialSwitch, DialButton, AlertVariant, DialAlert } from '@epam/ai-dial-ui-kit';
 
 import { getTools } from '@/src//app/[lang]/toolsets/actions';
-import AlertInfo from '@/src/components/Common/Alerts/AlertInfo';
-import Button from '@/src/components/Common/Button/Button';
 import Loader from '@/src/components/Common/Loader/Loader';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Search from '@/src/components/Common/Search/Search';
-import Switch from '@/src/components/Common/Switch/Switch';
 import { ButtonsI18nKey, EntitiesI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -152,7 +150,7 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
               {`: ${toolsCount}`}
             </h1>
 
-            <Switch
+            <DialSwitch
               switchId="useAllTools"
               title={t(ToolsetI18nKey.UseAllTools)}
               isOn={useAllTools}
@@ -177,8 +175,8 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
                   selectedFilters={selectedFilters}
                   onSelectFilter={onSelectFilter}
                 />
-                <Button
-                  cssClass="primary"
+                <DialButton
+                  variant={ButtonVariant.Primary}
                   title={t(ButtonsI18nKey.Add)}
                   iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
                   onClick={onOpenModal}
@@ -206,7 +204,7 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
             )}
           </div>
           {!useAllTools && <span className="tiny text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
-          {isNotSavedToolset && <AlertInfo text={t(ToolsetI18nKey.ToolsWarning)} />}
+          {isNotSavedToolset && <DialAlert variant={AlertVariant.Info} message={t(ToolsetI18nKey.ToolsWarning)} />}
         </div>
       )}
       {modalState === PopUpState.Opened && (

@@ -260,7 +260,12 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
         ) : (
           <>
             {activeTab === EntityViewTab.Properties && (
-              <RoleProperties selectedRole={selectedRole} names={names} onChangeRole={onChangeRole} />
+              <RoleProperties
+                selectedRole={selectedRole}
+                names={names}
+                onChangeRole={onChangeRole}
+                isSkipRefresh={isSkipRefresh}
+              />
             )}
           </>
         )}

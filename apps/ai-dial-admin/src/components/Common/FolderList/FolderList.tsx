@@ -17,7 +17,7 @@ import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { EntitiesI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { AssetsFolderContext } from '@/src/context/AssetsFolderContext';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { RuleFolderContextType } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';

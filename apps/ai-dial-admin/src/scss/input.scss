@@ -2,7 +2,7 @@
   .input {
     @apply border border-solid border-primary rounded outline-0;
     @apply bg-transparent small truncate;
-    @apply px-3 py-2 w-full;
+    @apply px-3 py-2;
 
     &:not(:placeholder-shown) {
       @apply text-primary;
@@ -33,6 +33,10 @@
   .input-field {
     @apply h-[38px];
   }
+}
+input[type='number'],
+input[type='text'] {
+  @apply w-full;
 }
 
 input {

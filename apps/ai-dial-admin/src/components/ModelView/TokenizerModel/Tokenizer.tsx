@@ -1,7 +1,7 @@
 import { FC, useCallback, useState } from 'react';
+import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import InputModal from '@/src/components/Common/InputModal/InputModal';
-import Switch from '@/src/components/Common/Switch/Switch';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModel } from '@/src/models/dial/model';
@@ -48,7 +48,7 @@ const TokenizerModelSwitch: FC<Props> = ({ model, onChangeModel }) => {
 
   return (
     <div className="flex flex-col gap-3">
-      <Switch
+      <DialSwitch
         isOn={model.tokenizerModel != null}
         title={t(EntityFieldsI18nKey.tokenizerModel)}
         switchId="tokenizerModel"
