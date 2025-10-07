@@ -17,7 +17,8 @@ const Field: FC<Props> = ({ fieldTitle, htmlFor, optional }) => {
       optionalText={t(BasicI18nKey.Optional)}
       fieldTitle={fieldTitle}
       optional={optional}
-      htmlFor={htmlFor || fieldTitle}
+      htmlFor={htmlFor || fieldTitle || ''}
+    />
   );
 };
 
