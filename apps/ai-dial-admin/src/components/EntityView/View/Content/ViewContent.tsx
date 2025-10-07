@@ -37,6 +37,7 @@ interface Props {
   selectedEntity: BaseEntity;
   jsonEditorEnabled: boolean;
   isSkipRefresh: boolean;
+  etag?: string;
   onChangeEntity: (entity: BaseEntity) => void;
   setSelectedApp?: Dispatch<SetStateAction<DialAssetApp>>;
 }
@@ -48,6 +49,7 @@ const ViewContent: FC<Props> = ({
   applicationSchemes,
   names,
   view,
+  etag,
   assetApps,
   applications,
   interceptors,
@@ -69,6 +71,7 @@ const ViewContent: FC<Props> = ({
     if (view === ApplicationRoute.AssetsApplications) {
       return (
         <AppProperties
+          etag={etag as string}
           app={selectedEntity as DialAssetApp}
           apps={assetApps || []}
           setSelectedApp={setSelectedApp}
@@ -86,7 +89,7 @@ const ViewContent: FC<Props> = ({
         updateEntity={onChangeEntity}
       />
     );
-  }, [view, selectedEntity, applicationSchemes, names, onChangeEntity, assetApps, setSelectedApp]);
+  }, [view, selectedEntity, applicationSchemes, names, onChangeEntity, etag, assetApps, setSelectedApp]);
 
   return (
     <>
