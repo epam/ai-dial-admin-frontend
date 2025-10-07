@@ -15,12 +15,14 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { filterDisplayNames } from '@/src/utils/entities/filter-names';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page(params: { params: Promise<{ id: string }> }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
+  let etag = DEFAULT_ETAG;
   let models: DialModel[] | null = [];
   let applications: DialApplication[] | null = [];
   let application: DialApplication | null = null;
@@ -32,7 +34,10 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   try {
     models = await modelsApi.getModelsList(token);
     applications = await applicationsApi.getApplicationsList(token);
-    application = await applicationsApi.getApplication((await params.params).id, token);
+    application = await applicationsApi.getApplication((await params.params).id, token, etag).then((res) => {
+      etag = res?.etag || DEFAULT_ETAG;
+      return res?.response as DialApplication | null;
+    });
     applicationSchemes = await applicationRunnersApi.getApplicationSchemesList(token);
     roles = await rolesApi.getRolesList(token);
     interceptors = await interceptorsApi.getInterceptorsList(token);
@@ -60,6 +65,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       <EntityView
         view={ApplicationRoute.Applications}
         names={names}
+        etag={etag}
         roles={roles}
         interceptors={interceptors}
         applications={applications}

@@ -13,8 +13,8 @@ export class InterceptorsApi extends BaseApi {
     return this.get(INTERCEPTORS_URL, token);
   }
 
-  getInterceptor(name: string, token: JWT | null): Promise<DialInterceptor | null> {
-    return this.get(INTERCEPTOR_URL(name), token);
+  getInterceptor(name: string, token: JWT | null, eTag: string) {
+    return this.getActionWithEtag(INTERCEPTOR_URL(name), eTag, token);
   }
 
   removeInterceptor(token: JWT | null, name?: string): Promise<ServerActionResponse> {
@@ -25,7 +25,7 @@ export class InterceptorsApi extends BaseApi {
     return this.postAction(INTERCEPTORS_URL, interceptors, token);
   }
 
-  updateInterceptor(interceptors: DialInterceptor, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putAction(INTERCEPTOR_URL(interceptors.name), interceptors, token);
+  updateInterceptor(interceptors: DialInterceptor, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(INTERCEPTOR_URL(interceptors.name), interceptors, token, eTag);
   }
 }

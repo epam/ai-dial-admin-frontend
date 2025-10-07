@@ -31,13 +31,13 @@ describe('Server :: InterceptorsApi', () => {
   test('should call getInterceptor with correct name and method', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockInterceptor));
 
-    const result = await instance.getInterceptor('test-interceptor', TOKEN_MOCK);
+    const result = await instance.getInterceptor('test-interceptor', TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${INTERCEPTOR_URL('test-interceptor')}`,
       expect.objectContaining({ method: 'GET' }),
     );
-    expect(result).toEqual(JSON.stringify(mockInterceptor));
+    expect(result.response).toEqual(JSON.stringify(mockInterceptor));
   });
 
   test('Should call createInterceptor with POST method and body', async () => {
@@ -57,7 +57,7 @@ describe('Server :: InterceptorsApi', () => {
   test('Should call updateInterceptor with PUT method and body', async () => {
     fetch.mockResponseOnce(JSON.stringify({ success: true }));
 
-    await instance.updateInterceptor(mockInterceptor, TOKEN_MOCK);
+    await instance.updateInterceptor(mockInterceptor, TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${INTERCEPTOR_URL(mockInterceptor.name)}`,

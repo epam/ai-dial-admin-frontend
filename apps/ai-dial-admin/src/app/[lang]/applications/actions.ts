@@ -24,7 +24,7 @@ export async function createApplication(application: DialApplication) {
   return applicationsApi.createApplication({ ...application, ...DEFAULT_ROLE_LIMITS }, token);
 }
 
-export async function updateApplication(application: DialApplication) {
+export async function updateApplication(application: DialApplication, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const defaults = application.defaultsTemp
     ? { ...convertDefaultsToRecord(application.defaultsTemp) }
@@ -35,5 +35,5 @@ export async function updateApplication(application: DialApplication) {
     defaults,
   };
   delete app.defaultsTemp;
-  return applicationsApi.updateApplication(app, token);
+  return applicationsApi.updateApplication(app, token, etag);
 }
