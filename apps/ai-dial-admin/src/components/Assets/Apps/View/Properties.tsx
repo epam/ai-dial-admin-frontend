@@ -15,17 +15,21 @@ import { DialAssetApp } from '@/src/models/dial/asset-app';
 import { DialFile } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
+import { getErrorNotification } from '@/src/utils/notification';
+import { useNotification } from '@/src/context/NotificationContext';
 
 interface Props {
+  etag: string;
   app: DialAssetApp;
   apps: DialAssetApp[];
   onChangeApp: (app: DialAssetApp) => void;
   setSelectedApp?: Dispatch<SetStateAction<DialAssetApp>>;
 }
 
-const AppProperties: FC<Props> = ({ app, apps, onChangeApp, setSelectedApp }) => {
+const AppProperties: FC<Props> = ({ etag, app, apps, onChangeApp, setSelectedApp }) => {
   const t = useI18n() as (t: string) => string;
   const router = useRouter();
+  const { showNotification } = useNotification();
 
   const items = useMemo(() => {
     return apps.map((app) => ({ id: app.version, name: app.version }));
@@ -33,22 +37,29 @@ const AppProperties: FC<Props> = ({ app, apps, onChangeApp, setSelectedApp }) =>
 
   const onChangeVersion = useCallback(
     async (version: string) => {
-      const found = await getApp?.(app.folderId, app.name as string, version);
-      if (found) {
-        setSelectedApp?.({} as DialAssetApp);
-        router.push(
-          `${ApplicationRoute.AssetsApplications}/${`${encodeURIComponent((found as DialAssetApp).name as string)}?path=${encodeURIComponent(found.path)}`}`,
-        );
-      } else {
-        const path = modifyNameVersionInPrompt(app.path, void 0, version);
-        onChangeApp?.({
-          ...app,
-          version,
-          path,
-        });
-      }
+      getApp?.(app.folderId, app.name as string, version, etag).then((res) => {
+        if (res.success) {
+          const found = res.response as DialAssetApp;
+
+          if (found) {
+            setSelectedApp?.({} as DialAssetApp);
+            router.push(
+              `${ApplicationRoute.AssetsApplications}/${`${encodeURIComponent(found.name as string)}?path=${encodeURIComponent(found.path)}`}`,
+            );
+          } else {
+            const path = modifyNameVersionInPrompt(app.path, void 0, version);
+            onChangeApp?.({
+              ...app,
+              version,
+              path,
+            });
+          }
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        }
+      });
     },
-    [app, setSelectedApp, router, onChangeApp],
+    [app, etag, setSelectedApp, router, onChangeApp, showNotification],
   );
 
   return (
