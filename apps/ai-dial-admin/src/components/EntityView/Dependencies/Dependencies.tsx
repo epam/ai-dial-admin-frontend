@@ -1,6 +1,7 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import NoDataContent from '@/src/components/Common/NoData/NoData';
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+
 import Grid from '@/src/components/Grid/Grid';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
@@ -88,7 +89,7 @@ const EntityDependencies: FC<Props> = ({ entity, applications, models, onChangeE
         />
       </div>
       {!entity.dependencies?.length ? (
-        <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoDependencies)} />
+        <DialNoDataContent title={t(EntitiesI18nKey.NoDependencies)} />
       ) : (
         <Grid columnDefs={columns} rowData={rowData} />
       )}

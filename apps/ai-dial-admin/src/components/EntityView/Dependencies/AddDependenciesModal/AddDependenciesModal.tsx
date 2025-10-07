@@ -1,10 +1,9 @@
 'use client';
 import { FC, useState } from 'react';
 
+import { ButtonVariant, DialButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Popup from '@/src/components/Common/Popup/Popup';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import Grid from '@/src/components/Grid/Grid';
@@ -40,10 +39,8 @@ const AddDependenciesModal: FC<Props> = ({ modalState, entities, entityType, onC
     >
       <div className="flex flex-1 flex-col px-6 py-4 min-h-0">
         {!entities.length ? (
-          <NoDataContent
-            emptyDataTitle={t(
-              entityType === EntityType.MODEL ? EntitiesI18nKey.NoModels : EntitiesI18nKey.NoApplications,
-            )}
+          <DialNoDataContent
+            title={t(entityType === EntityType.MODEL ? EntitiesI18nKey.NoModels : EntitiesI18nKey.NoApplications)}
           />
         ) : (
           <div className="flex-1 flex flex-col min-h-0 w-full">

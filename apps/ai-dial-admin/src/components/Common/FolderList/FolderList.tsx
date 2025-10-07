@@ -2,6 +2,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { IconCaretDownFilled, IconCaretRightFilled, IconDotsVertical, IconFolder, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import ActionsDropdown from '@/src/components/Common/ActionsDropdown/ActionsDropdown';
 import {
@@ -12,7 +13,6 @@ import {
   getMoveFolderOperation,
   getRenameFolderOperation,
 } from '@/src/components/Common/FolderCreate/Components/Operations';
-import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { EntitiesI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
@@ -256,7 +256,7 @@ const FolderList: FC<Props> = ({
   return (
     <div className="flex-1 w-full h-full overflow-y-auto">
       {!folderContext?.files?.length && !isBulkDelete ? (
-        <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoFolders)} />
+        <DialNoDataContent title={t(EntitiesI18nKey.NoFolders)} />
       ) : (
         renderTree(folderData, 0, rootFolder)
       )}

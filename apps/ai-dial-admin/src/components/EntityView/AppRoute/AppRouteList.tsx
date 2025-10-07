@@ -1,9 +1,9 @@
 import { FC } from 'react';
 import { IconDotsVertical, IconTrash } from '@tabler/icons-react';
 import classNames from 'classnames';
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import ActionsDropdown from '@/src/components/Common/ActionsDropdown/ActionsDropdown';
-import NoDataContent from '@/src/components/Common/NoData/NoData';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -36,7 +36,7 @@ const AppRouteList: FC<Props> = ({ routes, activeRoute, onRemove, onClick }) => 
 
   return (
     <div className="flex-1 min-h-0 flex flex-col relative gap-y-4 overflow-auto">
-      {!activeRoute && <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoAppRoutes)} />}
+      {!activeRoute && <DialNoDataContent title={t(EntitiesI18nKey.NoAppRoutes)} />}
       {activeRoute && !!routes?.length
         ? routes.map((route) => {
             return (
