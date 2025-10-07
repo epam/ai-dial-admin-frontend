@@ -3,11 +3,10 @@ import { FC, useEffect, useMemo, useState } from 'react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import classNames from 'classnames';
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialNoDataContent, DialCollapsibleSidebar } from '@epam/ai-dial-ui-kit';
 
 import FolderList from '@/src/components/Common/FolderList/FolderList';
 import { generatePromptRowDataForDelete } from '@/src/components/Common/FolderList/utils';
-import HorizontalCollapseBar from '@/src/components/Common/HorizontalCollapseBar/HorizontalCollapseBar';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { listViewTitleMap } from '@/src/components/EntityListView/constants';
 import TopicsCellRenderer from '@/src/components/Grid/CellRenderers/TopicCellRenderer';
@@ -99,14 +98,14 @@ const DeleteFolder: FC<Props> = ({ modalState, view, selectedFolder, isBulkDelet
           {t(FoldersI18nKey.DeleteFolderDescription, { asset: t(asset).toLowerCase() })}
         </div>
         <div className="flex flex-row gap-4 flex-1 min-h-0">
-          <HorizontalCollapseBar width="360" title={t(FoldersI18nKey.Folders)} containerClass="border-primary">
+          <DialCollapsibleSidebar width={360} title={t(FoldersI18nKey.Folders)} containerCssClass="border-primary">
             <FolderList
               context={context}
               isFolderDelete={true}
               initialPath={selectedFolder}
               isBulkDelete={isBulkDelete}
             />
-          </HorizontalCollapseBar>
+          </DialCollapsibleSidebar>
           <div className="flex-1 min-h-0">
             {rowData.length ? (
               <Grid
