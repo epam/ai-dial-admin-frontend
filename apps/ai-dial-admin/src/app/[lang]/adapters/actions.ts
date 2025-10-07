@@ -12,9 +12,9 @@ export async function removeAdapter(name?: string) {
   return adaptersApi.removeAdapter(token, name);
 }
 
-export async function updateAdapter(adapter: DialAdapter) {
+export async function updateAdapter(adapter: DialAdapter, eTag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return adaptersApi.updateAdapter(adapter, token);
+  return adaptersApi.updateAdapter(adapter, token, eTag);
 }
 
 export async function createAdapter(adapter: DialAdapter) {

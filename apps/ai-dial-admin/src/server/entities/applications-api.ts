@@ -4,6 +4,7 @@ import { DialApplication } from '@/src/models/dial/application';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const APPLICATIONS_URL = `${API}/applications`;
 export const APPLICATION_URL = (name?: string) => `${APPLICATIONS_URL}/${name}`;
@@ -13,8 +14,8 @@ export class ApplicationsApi extends BaseApi {
     return this.get(APPLICATIONS_URL, token);
   }
 
-  getApplication(name: string, token: JWT | null): Promise<DialApplication | null> {
-    return this.get(APPLICATION_URL(name), token);
+  getApplication(name: string, token: JWT | null, eTag: string) {
+    return this.getActionWithEtag(APPLICATION_URL(name), eTag || DEFAULT_ETAG, token);
   }
 
   removeApplication(token: JWT | null, name?: string): Promise<ServerActionResponse> {
@@ -25,7 +26,7 @@ export class ApplicationsApi extends BaseApi {
     return this.postAction(APPLICATIONS_URL, application, token);
   }
 
-  updateApplication(application: DialApplication, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putAction(APPLICATION_URL(application.name), application, token);
+  updateApplication(application: DialApplication, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(APPLICATION_URL(application.name), application, token, eTag);
   }
 }

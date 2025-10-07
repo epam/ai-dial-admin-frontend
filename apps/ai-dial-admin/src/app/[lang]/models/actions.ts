@@ -34,8 +34,7 @@ export async function removeModel(name?: string) {
   return modelsApi.removeModel(token, name);
 }
 
-// TODO: etag is optional - refactor when backend integration will be ready
-export async function updateModel(model: DialModel, etag?: string) {
+export async function updateModel(model: DialModel, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const defaults = model.defaultsTemp ? { ...convertDefaultsToRecord(model.defaultsTemp) } : { ...model.defaults };
   const newModel = {

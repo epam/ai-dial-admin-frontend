@@ -50,7 +50,7 @@ export const rollbackEntityPerType = async (activity: DialActivity) => {
   return getUpdateAction(activity.resourceType)?.(revision as unknown as any);
 };
 
-export const getUpdateAction = (type?: ActivityAuditResourceType) => {
+export const getUpdateAction = (type?: ActivityAuditResourceType): any => {
   switch (type) {
     case ActivityAuditResourceType.MODEL:
       return updateModel;

@@ -4,6 +4,7 @@ import { Toolset, Tool } from '@/src/models/dial/toolset';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const TOOLSETS_URL = `${API}/toolSets`;
 export const TOOLSET_URL = (name?: string) => `${TOOLSETS_URL}/${name}`;
@@ -14,8 +15,8 @@ export class ToolsetsApi extends BaseApi {
     return this.get(TOOLSETS_URL, token);
   }
 
-  getToolset(name: string, token: JWT | null): Promise<Toolset | null> {
-    return this.get(TOOLSET_URL(name), token);
+  getToolset(name: string, token: JWT | null, eTag: string) {
+    return this.getActionWithEtag(TOOLSET_URL(name), eTag || DEFAULT_ETAG, token);
   }
 
   getTools(name: string, token: JWT | null): Promise<Tool[] | null> {
@@ -30,7 +31,7 @@ export class ToolsetsApi extends BaseApi {
     return this.postAction(TOOLSETS_URL, toolset, token);
   }
 
-  updateToolset(toolset: Toolset, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putAction(TOOLSET_URL(toolset.name), toolset, token);
+  updateToolset(toolset: Toolset, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(TOOLSET_URL(toolset.name), toolset, token, eTag);
   }
 }
