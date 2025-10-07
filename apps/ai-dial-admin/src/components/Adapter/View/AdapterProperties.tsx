@@ -25,7 +25,7 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
 
   const validateDisplayName = useCallback(
     (displayName?: string) => {
-      const error = getErrorForDisplayName(displayName, false, t);
+      const error = getErrorForDisplayName(displayName, true, t);
       dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
     },
     [dispatch, t],
@@ -63,7 +63,7 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
     <div className="h-full flex flex-col gap-6">
       {!isEntityImmutable && <IdControl entity={entity} names={names} onChangeEntity={onChangeAdapter} />}
 
-      <DisplayNameControl displayName={entity.displayName} onChange={onChangeDisplayName} />
+      <DisplayNameControl displayName={entity.displayName} required={true} onChange={onChangeDisplayName} />
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeAdapter} />
 

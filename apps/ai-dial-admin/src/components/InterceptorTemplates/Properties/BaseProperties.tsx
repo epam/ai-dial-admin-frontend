@@ -17,6 +17,7 @@ const BaseProperties: FC<Props> = ({ template, setTemplate, names, isImmutable }
     <div className="flex flex-col gap-6 h-full">
       {!isImmutable && <IdControl entity={template} names={names} onChangeEntity={setTemplate} />}
       <DisplayNameControl
+        required={true}
         displayName={template.displayName}
         onChange={(displayName) => {
           setTemplate({ ...template, displayName });
