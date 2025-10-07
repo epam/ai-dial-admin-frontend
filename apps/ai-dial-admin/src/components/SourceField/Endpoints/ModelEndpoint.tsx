@@ -1,16 +1,14 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import classNames from 'classnames';
 
+import { DialRadioGroup, RadioGroupOrientation, RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
+
 import { EntityFieldsI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
-import { RadioFieldOrientation } from '@/src/types/radio-orientation';
-import { RadioButtonModel } from '@/src/models/radio-button';
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 import { FieldError } from '@/src/models/error';
 import { getUrlError } from '@/src/utils/validation/url-error';
 import { useI18n } from '@/src/locales/client';
-
-import RadioField from '@/src/components/Common/RadioField/RadioField';
 import InputWithReadonlyParts from '@/src/components/Common/Input/InputWithReadonlyParts';
 import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
 
@@ -24,7 +22,7 @@ interface Props {
 const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
   const t = useI18n() as (key: string) => string;
 
-  const modelTypeRadio: RadioButtonModel[] = [
+  const modelTypeRadio: RadioButtonWithContent[] = [
     { id: DialModelType.Chat, name: t(ModelViewI18nKey.Chat) },
     { id: DialModelType.Embedding, name: t(ModelViewI18nKey.Embedding) },
   ];
@@ -107,12 +105,12 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
     <div className="w-full flex flex-col gap-6">
       {!isModal && (
         <div className="w-full lg:w-[35%]">
-          <RadioField
+          <DialRadioGroup
             radioButtons={modelTypeRadio}
             activeRadioButton={entity.type as string}
             elementId="type"
             fieldTitle={t(EntityFieldsI18nKey.type)}
-            orientation={RadioFieldOrientation.Row}
+            orientation={RadioGroupOrientation.Row}
             onChange={onChangeType}
           />
         </div>

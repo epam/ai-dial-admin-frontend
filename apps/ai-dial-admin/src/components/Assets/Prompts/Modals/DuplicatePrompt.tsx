@@ -1,9 +1,14 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import {
+  ButtonVariant,
+  DialButton,
+  DialRadioGroup,
+  RadioButtonWithContent,
+  RadioGroupOrientation,
+} from '@epam/ai-dial-ui-kit';
 
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import Popup from '@/src/components/Common/Popup/Popup';
-import RadioField from '@/src/components/Common/RadioField/RadioField';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
 import {
@@ -19,10 +24,8 @@ import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { RadioButtonModel } from '@/src/models/radio-button';
 import { PopUpState } from '@/src/types/pop-up';
 import { DuplicationTypes } from '@/src/types/prompt';
-import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/prompts/versions';
 
 interface Props {
@@ -39,7 +42,7 @@ const DuplicatePrompt: FC<Props> = ({ modalState, entity, versionsMap, onDuplica
   const initialFolder = entity.folderId;
   const [duplicationType, setDuplicationType] = useState<string>(DuplicationTypes.VERSION);
 
-  const duplicationTypes: RadioButtonModel[] = [
+  const duplicationTypes: RadioButtonWithContent[] = [
     { id: DuplicationTypes.VERSION, name: t(PromptsI18nKey.NewVersion) },
     { id: DuplicationTypes.PROMPT, name: t(PromptsI18nKey.NewPrompt) },
   ];
@@ -94,12 +97,12 @@ const DuplicatePrompt: FC<Props> = ({ modalState, entity, versionsMap, onDuplica
   return (
     <Popup onClose={onClose} heading={t(DuplicateI18nKey.PromptHeader)} portalId="DuplicatePrompt" state={modalState}>
       <div className="flex flex-col px-6 py-4 gap-4">
-        <RadioField
+        <DialRadioGroup
           radioButtons={duplicationTypes}
           activeRadioButton={duplicationType}
           elementId="duplicationTypes"
           fieldTitle={t(PromptsI18nKey.DuplicationType)}
-          orientation={RadioFieldOrientation.Column}
+          orientation={RadioGroupOrientation.Column}
           onChange={onChangeDuplicationType}
         />
         <DisplayNameControl

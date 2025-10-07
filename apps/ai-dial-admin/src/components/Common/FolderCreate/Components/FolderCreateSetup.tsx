@@ -3,18 +3,21 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { IconFileTypeZip } from '@tabler/icons-react';
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
+import {
+  DialRadioGroup,
+  DialSwitch,
+  DialTextInputField,
+  RadioButtonWithContent,
+  RadioGroupOrientation,
+} from '@epam/ai-dial-ui-kit';
 
 import Json from '@/public/images/icons/file/json.svg';
 import Field from '@/src/components/Common/Field/Field';
 import { CreateFolderSteps } from '@/src/components/Common/FolderCreate/constants';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import LoadFileAreaField from '@/src/components/Common/LoadFileArea/LoadFileAreaField';
-import RadioButton from '@/src/components/Common/RadioButton/RadioButton';
 import { FoldersI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_ZIP_TYPE } from '@/src/constants/request-headers';
 import { useI18n } from '@/src/locales/client';
-import { RadioButtonModel } from '@/src/models/radio-button';
 import { Step, StepStatus } from '@/src/models/step';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -25,7 +28,7 @@ import { getErrorForFolderName } from '@/src/utils/validation/folder-error';
 interface Props {
   view?: ApplicationRoute;
   files: File[];
-  fileTypes: RadioButtonModel[];
+  fileTypes: RadioButtonWithContent[];
   fileType: string;
   setFileType: Dispatch<SetStateAction<string>>;
   setZipFile: Dispatch<SetStateAction<File | null | undefined>>;
@@ -139,7 +142,7 @@ const FolderCreateSetup: FC<Props> = ({
   return (
     <>
       <div className="w-[50%]">
-        <TextInputField
+        <DialTextInputField
           fieldTitle={t(FoldersI18nKey.FolderName)}
           elementId="name"
           placeholder={t(FoldersI18nKey.FolderCreatePlaceholder)}
@@ -151,19 +154,14 @@ const FolderCreateSetup: FC<Props> = ({
       </div>
       <div className="flex-1 flex flex-col min-h-0">
         <div className="flex flex-col gap-4 mt-6">
-          <div className="flex flex-col">
-            <Field fieldTitle={t(ImportI18nKey.FileType)} />
-            {fileTypes.map((type) => (
-              <RadioButton
-                key={type.id}
-                inputId={type.id}
-                title={type.name}
-                description={type.description}
-                checked={type.id === fileType}
-                onChange={() => setFileType(type.id)}
-              />
-            ))}
-          </div>
+          <DialRadioGroup
+            fieldTitle={t(ImportI18nKey.FileType)}
+            orientation={RadioGroupOrientation.Column}
+            radioButtons={fileTypes}
+            activeRadioButton={fileType}
+            elementId="conflict-resolution"
+            onChange={setFileType}
+          />
           {view === ApplicationRoute.Prompts && (
             <div className="flex flex-col">
               <Field fieldTitle={ignorePathsTitle} />

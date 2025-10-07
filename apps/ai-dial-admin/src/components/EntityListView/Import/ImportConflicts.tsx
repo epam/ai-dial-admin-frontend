@@ -2,8 +2,8 @@
 import { Dispatch, FC, SetStateAction, useCallback } from 'react';
 
 import { CellValueChangedEvent, ColDef, GridReadyEvent, RowClassRules } from 'ag-grid-community';
+import { DialRadioGroup, RadioGroupOrientation, RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
 
-import RadioButton from '@/src/components/Common/RadioButton/RadioButton';
 import {
   changeFilesMap,
   generateFileColumnsForImportGrid,
@@ -19,7 +19,6 @@ import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
-import { RadioButtonModel } from '@/src/models/radio-button';
 import { StepStatus } from '@/src/models/step';
 import { ConflictResolutionPolicy } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -28,7 +27,7 @@ interface Props {
   route?: ApplicationRoute;
   existing?: (DialFile | DialPrompt)[];
   filesMap: Map<string, FileImportMap>;
-  resolutions: RadioButtonModel[];
+  resolutions: RadioButtonWithContent[];
   resolution: string;
   setResolution: Dispatch<SetStateAction<string>>;
   setEditedFileMap: Dispatch<SetStateAction<Map<string, FileImportMap>>>;
@@ -102,16 +101,13 @@ const ImportConflicts: FC<Props> = ({
   return (
     <div className="flex flex-col min-h-0">
       <h3 className="pt-6 pb-4">{t(ImportI18nKey.ConflictResolution)}</h3>
-      {resolutions.map((r) => (
-        <div key={r.id} className="mb-2">
-          <RadioButton
-            inputId={r.id}
-            title={r.name}
-            checked={r.id === resolution}
-            onChange={() => setResolution(r.id)}
-          />
-        </div>
-      ))}
+      <DialRadioGroup
+        orientation={RadioGroupOrientation.Column}
+        radioButtons={resolutions}
+        activeRadioButton={resolution}
+        elementId="conflict-resolution"
+        onChange={setResolution}
+      />
       {resolution === ConflictResolutionPolicy.MANUAL && (
         <div className="flex flex-col flex-1 min-h-0">
           <div>

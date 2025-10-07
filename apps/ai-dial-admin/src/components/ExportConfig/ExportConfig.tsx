@@ -1,10 +1,15 @@
 'use client';
 import { IconUpload } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import {
+  ButtonVariant,
+  RadioButtonWithContent,
+  DialButton,
+  DialRadioGroup,
+  RadioGroupOrientation,
+} from '@epam/ai-dial-ui-kit';
 
 import { exportConfig, exportConfigMap } from '@/src/app/[lang]/export-config/actions';
-import RadioField from '@/src/components/Common/RadioField/RadioField';
 import ConfigContent from '@/src/components/ExportConfig/Content/ConfigContent';
 import { fulDependenciesConfig, getComponents, getComponentTypes } from '@/src/components/ExportConfig/utils';
 import PreviewModal from '@/src/components/ExportConfig/Preview/PreviewModal';
@@ -15,10 +20,8 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportDependenciesConfig, ExportRequest } from '@/src/models/export';
-import { RadioButtonModel } from '@/src/models/radio-button';
 import { ExportFormat, ExportType } from '@/src/types/export';
 import { PopUpState } from '@/src/types/pop-up';
-import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { downloadFile } from '@/src/utils/download';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import NoPreview from '@/src/components/ExportConfig/Preview/NoPreview';
@@ -38,7 +41,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
   const [customExportData, setCustomExportData] = useState<Record<string, EntitiesGridData[]>>({});
   const [isExportDisable, setIsExportDisable] = useState(false);
 
-  const exportTypes: RadioButtonModel[] = [
+  const exportTypes: RadioButtonWithContent[] = [
     {
       id: ExportType.Full,
       name: t(ExportI18nKey.FullConfig),
@@ -49,7 +52,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
     },
   ];
 
-  const exportFormats: RadioButtonModel[] = useMemo(() => {
+  const exportFormats: RadioButtonWithContent[] = useMemo(() => {
     const formats = [
       {
         id: ExportFormat.ADMIN,
@@ -160,22 +163,22 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
           <div className="border border-primary p-4 rounded w-[240px] flex flex-col">
             <h3 className="mb-4">{t(ExportI18nKey.Structure)}</h3>
             <div className="flex flex-1 flex-col gap-y-6 min-h-0 min-w-0 overflow-auto">
-              <RadioField
+              <DialRadioGroup
                 radioButtons={exportFormats}
                 activeRadioButton={selectedExportFormat}
                 elementId="exportFormat"
                 fieldTitle={t(ExportI18nKey.ExportFormat)}
-                orientation={RadioFieldOrientation.Column}
+                orientation={RadioGroupOrientation.Column}
                 onChange={onChangeExportFormat}
               />
               {selectedExportFormat !== ExportFormat.ACTIVE_CONFIG && (
                 <>
-                  <RadioField
+                  <DialRadioGroup
                     radioButtons={exportTypes}
                     activeRadioButton={selectedExportType}
                     elementId="exportType"
                     fieldTitle={t(ExportI18nKey.ExportType)}
-                    orientation={RadioFieldOrientation.Column}
+                    orientation={RadioGroupOrientation.Column}
                     onChange={onChangeExportType}
                   />
 

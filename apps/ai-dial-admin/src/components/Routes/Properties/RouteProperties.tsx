@@ -1,9 +1,14 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
+import {
+  DialNumberInputField,
+  DialRadioGroup,
+  DialSwitch,
+  DialTextInputField,
+  RadioButtonWithContent,
+  RadioGroupOrientation,
+} from '@epam/ai-dial-ui-kit';
 
-import { NumberInputField, TextInputField } from '@/src/components/Common/InputField/InputField';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
-import RadioField from '@/src/components/Common/RadioField/RadioField';
 import UpstreamEndpoints from '@/src/components/UpstreamEndpoints/UpstreamEndpoints';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
@@ -13,8 +18,6 @@ import { handleRouteOutputChange } from '@/src/components/Routes/utils';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialAppRoute, DialRoute, RouteOutput, RoutePermission } from '@/src/models/dial/route';
-import { RadioButtonModel } from '@/src/models/radio-button';
-import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -30,7 +33,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
 
-  const outputRadio: RadioButtonModel[] = [
+  const outputRadio: RadioButtonWithContent[] = [
     { id: RouteOutput.UPSTREAMS, name: t(EntityFieldsI18nKey.upstreams) },
     { id: RouteOutput.RESPONSE, name: t(EntityFieldsI18nKey.response) },
   ];
@@ -191,13 +194,13 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
           errorText={route.methods?.length ? '' : t(ErrorI18nKey.EmptyField)}
         />
 
-        <RadioField
+        <DialRadioGroup
           radioButtons={outputRadio}
           activeRadioButton={route.response ? outputRadio[1].id : outputRadio[0].id}
           elementId="output"
           disabled={readonly}
           fieldTitle={t(RoutesI18nKey.Output)}
-          orientation={RadioFieldOrientation.Row}
+          orientation={RadioGroupOrientation.Row}
           onChange={onChangeOutput}
         />
       </div>
@@ -205,7 +208,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
         {route.response ? (
           <div className="flex lg:w-[60%]">
             <div className="mr-2">
-              <NumberInputField
+              <DialNumberInputField
                 disabled={readonly}
                 elementId="status"
                 fieldTitle={t(EntityFieldsI18nKey.status)}
@@ -217,7 +220,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
               />
             </div>
             <div className="flex-1">
-              <TextInputField
+              <DialTextInputField
                 disabled={readonly}
                 elementId="body"
                 fieldTitle={t(EntityFieldsI18nKey.body)}
@@ -247,7 +250,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
               onChange={onChangePermissions}
             />
           )}
-          <NumberInputField
+          <DialNumberInputField
             elementId="order"
             disabled={readonly}
             fieldTitle={t(EntityFieldsI18nKey.order)}
