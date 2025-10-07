@@ -116,6 +116,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
   // initial validation (disable save when no values entered yet)
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!currentEntity.name });
+    dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!currentEntity.displayName });
 
     if (route === ApplicationRoute.Models || route === ApplicationRoute.Toolsets) {
       dispatch({
