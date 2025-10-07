@@ -39,16 +39,16 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
       const updatedEntity = {
         ...entityRef.current,
         share: {
-          ...selectedRole.share,
+          ...entityRef.current.share,
           [name]: {
-            ...selectedRole.share?.[name],
+            ...entityRef.current.share?.[name],
             [token]: value,
           },
         },
       };
       onChangeRole(updatedEntity, true);
     },
-    [onChangeRole, selectedRole],
+    [onChangeRole],
   );
 
   const onResetAllSharingToDefault = useCallback(() => {
@@ -62,24 +62,24 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
     (data?: SharingGridData) => {
       if (data) {
         onChangeRole({
-          ...selectedRole,
+          ...entityRef.current,
           share: {
-            ...selectedRole.share,
+            ...entityRef.current.share,
             [data.name]: {},
           },
         });
       }
     },
-    [onChangeRole, selectedRole],
+    [onChangeRole],
   );
 
   const onSetNoLimits = useCallback(
     (data?: SharingGridData) => {
       if (data) {
         onChangeRole({
-          ...selectedRole,
+          ...entityRef.current,
           share: {
-            ...selectedRole.share,
+            ...entityRef.current.share,
             [data.name]: {
               invitationTtl: NO_LIMITS_VALUE,
               maxAcceptedUsers: NO_LIMITS_ACCEPTED_USERS,
@@ -88,7 +88,7 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
         });
       }
     },
-    [onChangeRole, selectedRole],
+    [onChangeRole],
   );
 
   const isResetAvailable = useMemo(() => {
@@ -143,7 +143,7 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
         <h1>{t(RolesI18nKey.Sharing)}</h1>
         {isResetAvailable && (
           <DialButton
-            variant={ButtonVariant.Secondary}
+            variant={ButtonVariant.Tertiary}
             iconBefore={<IconReload {...BASE_ICON_PROPS} />}
             title={t(RolesI18nKey.ResetToDefaultLimits)}
             onClick={onResetAllSharingToDefault}
