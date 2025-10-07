@@ -30,11 +30,14 @@ export const UTILITY_COLUMN: ColDef = {
   suppressHeaderMenuButton: true,
 };
 
-export const ACTION_COLUMN = <T>(items: ActionMenuOperationDeclaration<T>[]): ColDef => ({
+export const ACTION_COLUMN = <T>(
+  items: ActionMenuOperationDeclaration<T>[],
+  disabledInsteadHidden?: boolean,
+): ColDef => ({
   ...UTILITY_COLUMN,
   field: ACTIONS_COLUMN_CEL_ID,
   cellRenderer: ActionColumn,
-  cellRendererParams: { items },
+  cellRendererParams: { items, disabledInsteadHidden },
   cellClass: 'relative',
   pinned: 'right',
   lockPinned: true,
