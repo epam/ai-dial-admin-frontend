@@ -5,6 +5,7 @@ import { Metadata } from 'next';
 import { getIconPath } from '@/src/utils/themes/icon-path';
 import { themesApi } from './api/api';
 import '@/src/app/[lang]/global.scss';
+import '@epam/ai-dial-ui-kit/styles.css';
 export const metadata: Metadata = {
   title: process.env.APP_NAME || 'AI Dial Admin',
 };
