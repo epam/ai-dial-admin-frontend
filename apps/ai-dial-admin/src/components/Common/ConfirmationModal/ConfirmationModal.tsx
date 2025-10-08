@@ -1,11 +1,10 @@
 import { FC, ReactNode } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialLoader } from '@epam/ai-dial-ui-kit';
 
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
-import Loader from '@/src/components/Common/Loader/Loader';
 
 interface Props {
   heading: string;
@@ -51,7 +50,7 @@ const ConfirmationModal: FC<Props> = ({
     >
       {isLoading ? (
         <div className="px-6 py-4 h-[120px]">
-          <Loader size={50} />
+          <DialLoader size={50} />
         </div>
       ) : children != null ? (
         <>{children}</>

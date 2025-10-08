@@ -1,10 +1,10 @@
 import { FC, useEffect, useState } from 'react';
 
 import classNames from 'classnames';
+import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getActivityById, getRevisionDetails } from '@/src/app/[lang]/activity-audit/actions';
 import AuditView from '@/src/components/ActivityAudit/View/AuditView';
-import Loader from '@/src/components/Common/Loader/Loader';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ActivityAuditI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -92,7 +92,7 @@ const ActivityDetails: FC<Props> = ({
     >
       <div className="flex-1 min-h-0 px-6 py-4">
         {loading ? (
-          <Loader />
+          <DialLoader />
         ) : (
           <AuditView
             activity={activity || ({} as DialActivity)}

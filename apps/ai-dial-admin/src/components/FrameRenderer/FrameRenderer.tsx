@@ -1,4 +1,5 @@
-import Loader from '@/src/components/Common/Loader/Loader';
+import { DialLoader } from '@epam/ai-dial-ui-kit';
+
 import {
   VisualizerConnectorEvents,
   VisualizerConnectorRequest,
@@ -92,7 +93,7 @@ const FrameRenderer = forwardRef<HTMLDivElement, Props>(
       <div className={'relative h-full w-full'}>
         {loading && (
           <div className="absolute inset-0 z-50 bg-layer-2">
-            <Loader size={40} />
+            <DialLoader size={40} />
           </div>
         )}
         <div ref={containerRef} className={containerClassNames} />

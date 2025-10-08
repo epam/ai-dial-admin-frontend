@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from 'react';
+import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getApplications } from '@/src/app/[lang]/applications/actions';
-import Loader from '@/src/components/Common/Loader/Loader';
 import { DISPLAY_NAME_COLUMN, NAME_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import Grid from '@/src/components/Grid/Grid';
 import { DeleteI18nKey } from '@/src/constants/i18n';
@@ -45,7 +45,7 @@ const DeleteAppRunner: FC<Props> = ({ entity, isEntityView }) => {
       <p>{t(DeleteI18nKey.ApplicationRunnerDescriptionWarning)}</p>
       <div className="flex-1 min-h-0 mt-4 flex flex-col">
         {isLoading ? (
-          <Loader size={24} />
+          <DialLoader size={24} />
         ) : (
           <>
             <h3 className="text-primary mb-1">{t(DeleteI18nKey.ApplicationRunnerApplicationsTitle)}</h3>

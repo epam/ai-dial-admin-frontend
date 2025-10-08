@@ -2,7 +2,6 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { DialSwitch, ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { previewExportConfig } from '@/src/app/[lang]/export-config/actions';
-import Loader from '@/src/components/Common/Loader/Loader';
 import Popup from '@/src/components/Common/Popup/Popup';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import ConfigContentGrid from '@/src/components/ExportConfig/Content/ConfigContentGrid';
@@ -76,7 +75,7 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, modalState, onClose
       <div className="flex flex-col gap-4 py-6 px-6 flex-1 min-h-0 h-[674px]">
         <div className="flex-1 min-h-0">
           {isLoadingData ? (
-            <Loader size={50} />
+            <DialLoader size={50} />
           ) : (
             <div className="flex flex-col h-full">
               <div className="mb-3">

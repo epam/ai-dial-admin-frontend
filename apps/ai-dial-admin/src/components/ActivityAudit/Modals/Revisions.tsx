@@ -2,14 +2,13 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { IconCaretDownFilled, IconCaretRightFilled } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getRevisions } from '@/src/app/[lang]/activity-audit/actions';
 import { sorts } from '@/src/components/ActivityAudit/constants';
 import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
 import { groupByDay } from '@/src/components/ActivityAudit/List/utils';
 import DatePicker from '@/src/components/Common/DatePicker/DatePicker';
-import Loader from '@/src/components/Common/Loader/Loader';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ActivityAuditI18nKey, BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -120,7 +119,7 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, moda
         </div>
         <div className="px-6 py-4 h-[600px] w-full min-h-0 flex flex-col overflow-auto">
           {isLoading ? (
-            <Loader size={40} />
+            <DialLoader size={40} />
           ) : (
             Object.entries(groupedData).map(([key, values]) => {
               const isExpanded = !!expandedKeys[key as keyof typeof expandedKeys];
