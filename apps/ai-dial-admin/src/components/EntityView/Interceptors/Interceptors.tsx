@@ -2,9 +2,8 @@ import { IconPlus } from '@tabler/icons-react';
 import { RowDragEvent } from 'ag-grid-community';
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
-import NoDataContent from '@/src/components/Common/NoData/NoData';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import Grid from '@/src/components/Grid/Grid';
 import { ButtonsI18nKey, EntitiesI18nKey, InterceptorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
@@ -101,7 +100,7 @@ const EntityInterceptors = <T extends { interceptors?: string[] }>({
         />
       </div>
       {!entity.interceptors?.length ? (
-        <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoInterceptors)} />
+        <DialNoDataContent title={t(EntitiesI18nKey.NoInterceptors)} />
       ) : (
         <Grid columnDefs={columns} rowData={rowData} additionalGridOptions={{ rowDragManaged: true, onRowDragEnd }} />
       )}

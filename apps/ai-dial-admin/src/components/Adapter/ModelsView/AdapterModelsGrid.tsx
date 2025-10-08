@@ -1,6 +1,6 @@
 import { FC } from 'react';
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
-import NoDataContent from '@/src/components/Common/NoData/NoData';
 import { ENTITY_BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import Grid from '@/src/components/Grid/Grid';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
@@ -33,7 +33,7 @@ const AdapterModelsGrid: FC<Props> = ({ models }) => {
         </h1>
       </div>
       {!rowData?.length ? (
-        <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoModels)} />
+        <DialNoDataContent title={t(EntitiesI18nKey.NoModels)} />
       ) : (
         <Grid columnDefs={columnDefs} rowData={rowData} />
       )}

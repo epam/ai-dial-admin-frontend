@@ -1,12 +1,10 @@
 'use client';
 
 import { FC } from 'react';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { DialButton, DialCollapsibleSidebar, DialTooltip } from '@epam/ai-dial-ui-kit';
 
 import FolderCollapse from '@/public/images/icons/folder-collapse.svg';
 import FolderList from '@/src/components/Common/FolderList/FolderList';
-import HorizontalCollapseBar from '@/src/components/Common/HorizontalCollapseBar/HorizontalCollapseBar';
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useRuleFolder } from '@/src/context/RuleFolderContext';
@@ -31,13 +29,13 @@ const FoldersStorage: FC<Props> = ({ initialPath }) => {
     <div className="flex flex-col bg-layer-2 rounded p-4 flex-1 min-h-0">
       <h1>{t(MenuI18nKey.FoldersStorage)}</h1>
       <div className="flex flex-1 gap-4 pt-4 min-h-0">
-        <HorizontalCollapseBar
-          width="480"
+        <DialCollapsibleSidebar
+          width={480}
           title={t(MenuI18nKey.FoldersStorage)}
-          containerClass="bg-layer-3 border-transparent mr-0"
+          containerCssClass="bg-layer-3 border-transparent mr-0"
           iconSize={24}
           additionalButtons={
-            <Tooltip
+            <DialTooltip
               triggerClassName={'flex items-center'}
               tooltip={isCollapseDisable ? '' : t(FoldersI18nKey.CollapseAll)}
               placement={'top'}
@@ -48,11 +46,11 @@ const FoldersStorage: FC<Props> = ({ initialPath }) => {
                 iconBefore={<FolderCollapse width={24} height={24} />}
                 disable={isCollapseDisable}
               />
-            </Tooltip>
+            </DialTooltip>
           }
         >
           <FolderList context={useRuleFolder} initialPath={initialPath} />
-        </HorizontalCollapseBar>
+        </DialCollapsibleSidebar>
         <FolderInfo isReadonly={false} />
       </div>
     </div>

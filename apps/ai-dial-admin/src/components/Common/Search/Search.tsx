@@ -1,8 +1,6 @@
-import { IconSearch } from '@tabler/icons-react';
-import { FC, useEffect, useState } from 'react';
+import { DialSearch } from '@epam/ai-dial-ui-kit';
+import { FC } from 'react';
 
-import InputWithIcon from '@/src/components/Common/Input/InputWithIcon';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -13,25 +11,9 @@ interface Props {
 
 const Search: FC<Props> = ({ initialPattern, onChange }) => {
   const t = useI18n();
-  const [pattern, setPattern] = useState<string>(initialPattern || '');
-
-  useEffect(() => {
-    setPattern(initialPattern || '');
-  }, [initialPattern]);
 
   return (
-    <div className="min-h-[38px]">
-      <InputWithIcon
-        inputId="search"
-        placeholder={t(BasicI18nKey.Search)}
-        iconBeforeInput={<IconSearch {...BASE_ICON_PROPS} />}
-        value={pattern}
-        onChange={(value) => {
-          setPattern(value);
-          onChange(value);
-        }}
-      />
-    </div>
+    <DialSearch elementId="search" placeholder={t(BasicI18nKey.Search)} value={initialPattern} onChange={onChange} />
   );
 };
 

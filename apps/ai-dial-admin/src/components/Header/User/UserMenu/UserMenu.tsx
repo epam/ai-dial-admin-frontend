@@ -1,7 +1,7 @@
 import { IconChevronDown } from '@tabler/icons-react';
+import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useState } from 'react';
 
-import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import Dropdown from '@/src/components/Common/Dropdown/Dropdown';
 import DropdownMenuItem from '@/src/components/Common/Dropdown/DropdownItem';
 import SettingsModal from '@/src/components/SettingsModal/SettingsModal';
@@ -23,7 +23,7 @@ interface Props {
 const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
   const t = useI18n();
   const [isOpen, setIsOpen] = useState(false);
-  const [logoutConfirmationState, setLogoutConfirmationState] = useState(PopUpState.Closed);
+  const [isLogoutConfirmationOpen, setIsLogoutConfirmationOpen] = useState(false);
   const [settingsModalState, setSettingsModalState] = useState(PopUpState.Closed);
   const { session, handleLogout } = useLogout();
   const { setTheme, themes } = useTheme();
@@ -38,7 +38,7 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
       handleLogout();
       return;
     }
-    setLogoutConfirmationState(PopUpState.Opened);
+    setIsLogoutConfirmationOpen(true);
   };
 
   useEffect(() => {
@@ -96,15 +96,15 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
           )}
         </Dropdown>
       )}
-      {logoutConfirmationState === PopUpState.Opened && (
-        <ConfirmationModal
-          modalState={logoutConfirmationState}
-          heading={t(AuthI18nKey.ModalTitle)}
+      {isLogoutConfirmationOpen && (
+        <DialConfirmationPopup
+          open={isLogoutConfirmationOpen}
+          title={t(AuthI18nKey.ModalTitle)}
           description={t(AuthI18nKey.ModalDescription)}
           confirmLabel={t(AuthI18nKey.Logout)}
-          onClose={() => setLogoutConfirmationState(PopUpState.Closed)}
+          onClose={() => setIsLogoutConfirmationOpen(false)}
           onConfirm={() => {
-            setLogoutConfirmationState(PopUpState.Closed);
+            setIsLogoutConfirmationOpen(false);
             handleLogout();
           }}
         />

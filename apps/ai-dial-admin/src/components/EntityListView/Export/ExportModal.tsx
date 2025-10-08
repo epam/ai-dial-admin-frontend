@@ -3,17 +3,20 @@
 import { FC, useState } from 'react';
 
 import classNames from 'classnames';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import {
+  ButtonVariant,
+  RadioButtonWithContent,
+  DialButton,
+  DialRadioGroup,
+  RadioGroupOrientation,
+} from '@epam/ai-dial-ui-kit';
 
 import Popup from '@/src/components/Common/Popup/Popup';
-import RadioField from '@/src/components/Common/RadioField/RadioField';
 import { ButtonsI18nKey, ExportI18nKey, FoldersI18nKey, PromptsI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ImportFileType as FileType, ImportFileType } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
-import { RadioButtonModel } from '@/src/models/radio-button';
-import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 
 interface Props {
   modalState: PopUpState;
@@ -26,7 +29,7 @@ const ExportModal: FC<Props> = ({ modalState, route, onClose, onApply }) => {
   const containerClassName = classNames('lg:max-w-[450px]');
   const t = useI18n() as (stringToTranslate: string) => string;
 
-  const exportTypeRadio: RadioButtonModel[] = [
+  const exportTypeRadio: RadioButtonWithContent[] = [
     { id: ImportFileType.ARCHIVE, name: t(TypeI18nKey.Archive) },
     { id: ImportFileType.JSON, name: t(TypeI18nKey.JSON) },
   ];
@@ -42,12 +45,12 @@ const ExportModal: FC<Props> = ({ modalState, route, onClose, onApply }) => {
       containerClassName={containerClassName}
     >
       <div className="flex px-6 py-6 flex-1 flex-col min-h-0">
-        <RadioField
+        <DialRadioGroup
           radioButtons={exportTypeRadio}
           activeRadioButton={exportType}
           elementId="type"
           fieldTitle={t(ExportI18nKey.ExportFormat)}
-          orientation={RadioFieldOrientation.Column}
+          orientation={RadioGroupOrientation.Column}
           onChange={setExportType}
         />
       </div>

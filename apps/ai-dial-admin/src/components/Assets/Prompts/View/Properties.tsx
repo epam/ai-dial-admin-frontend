@@ -9,7 +9,7 @@ import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
-import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
+import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import MdEditor from '@/src/components/Common/MdEditor/MdEditor';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
@@ -177,18 +177,18 @@ const PromptProperties: FC<Props> = ({
       <div className="flex flex-row gap-10 mb-6">
         {publication ? (
           <>
-            <LabeledText label={t(EntityFieldsI18nKey.displayName)} text={prompt.name} copyButton={true} />
-            {prompt.author && <LabeledText label={t(EntitiesI18nKey.Author)} text={prompt.author} />}
-            <LabeledText
+            <LabelledText label={t(EntityFieldsI18nKey.displayName)} text={prompt.name} copyButton={true} />
+            {prompt.author && <LabelledText label={t(EntitiesI18nKey.Author)} text={prompt.author} />}
+            <LabelledText
               label={t(EntityFieldsI18nKey.createdAt)}
               text={formatDateTimeToLocalString(publication.createdAt)}
             />
           </>
         ) : (
           <>
-            <LabeledText label={t(EntityFieldsI18nKey.displayName)} text={prompt.name} copyButton={true} />
-            {prompt.author && <LabeledText label={t(EntitiesI18nKey.Author)} text={prompt.author} />}
-            <LabeledText
+            <LabelledText label={t(EntityFieldsI18nKey.displayName)} text={prompt.name} copyButton={true} />
+            {prompt.author && <LabelledText label={t(EntitiesI18nKey.Author)} text={prompt.author} />}
+            <LabelledText
               label={t(EntityFieldsI18nKey.updatedAt)}
               text={formatDateTimeToLocalString(prompt.updateTime)}
             />

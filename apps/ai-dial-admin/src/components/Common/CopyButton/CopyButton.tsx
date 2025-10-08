@@ -1,5 +1,6 @@
 import { IconCopy } from '@tabler/icons-react';
 import { FC, useCallback } from 'react';
+import { DialButton } from '@epam/ai-dial-ui-kit';
 
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -24,9 +25,12 @@ const CopyButton: FC<Props> = ({ title, field }) => {
   }, [field, title, showNotification, t]);
 
   return (
-    <button onClick={onClick} className="cursor-pointer hover:text-accent-primary" aria-label="copy">
-      <IconCopy {...BASE_ICON_PROPS} />
-    </button>
+    <DialButton
+      ariaLabel="copy"
+      cssClass="cursor-pointer text-secondary hover:text-accent-primary"
+      onClick={onClick}
+      iconBefore={<IconCopy {...BASE_ICON_PROPS} />}
+    />
   );
 };
 

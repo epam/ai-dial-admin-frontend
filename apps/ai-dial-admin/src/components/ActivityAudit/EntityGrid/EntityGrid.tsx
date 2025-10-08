@@ -2,10 +2,10 @@ import { FC, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { CellClickedEvent, ColDef, GridApi, GridReadyEvent, RowClassRules } from 'ag-grid-community';
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
 import { getCurrentAndRollbackEntities, getColumnsByParameter } from '@/src/components/ActivityAudit/EntityGrid/utils';
-import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Grid from '@/src/components/Grid/Grid';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -13,7 +13,6 @@ import { ActivityAuditDiff, DialActivity } from '@/src/models/activity-audit';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus, DiffView } from '@/src/types/activity-audit';
 import { PopUpState } from '@/src/types/pop-up';
-
 interface Props {
   data?: ActivityAuditDiff[];
   parameter?: string;
@@ -93,7 +92,7 @@ const AuditEntityGrid: FC<Props> = ({
 
   return !data?.length ? (
     <div className="rounded border border-secondary h-full">
-      <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoResource)} />
+      <DialNoDataContent title={t(EntitiesI18nKey.NoResource)} />
     </div>
   ) : (
     <div className="w-full h-full relative">

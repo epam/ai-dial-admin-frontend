@@ -22,6 +22,7 @@ export default {
   },
   Basic: {
     None: '- None -',
+    Optional: '(Optional)',
     Failed: 'Failed',
     NoData: 'No Data',
     NoParameters: 'No Parameters',

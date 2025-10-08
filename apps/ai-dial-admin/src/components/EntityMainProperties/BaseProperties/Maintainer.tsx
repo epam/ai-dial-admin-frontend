@@ -1,4 +1,5 @@
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
+import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -13,7 +14,7 @@ const MaintainerControl = <T extends { author?: string }>({ entity, onChangeEnti
   const t = useI18n() as (t: string) => string;
 
   return (
-    <TextInputField
+    <DialTextInputField
       elementId="author"
       fieldTitle={t(EntityFieldsI18nKey.author)}
       placeholder={t(EntityPlaceholdersI18nKey.Maintainer)}

@@ -4,7 +4,7 @@ import { FC, ReactNode, useCallback, useState } from 'react';
 import { IconChevronDown, IconChevronRight, IconExternalLink } from '@tabler/icons-react';
 import { ButtonVariant, DialButton, DialTooltip } from '@epam/ai-dial-ui-kit';
 
-import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
+import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { EntityFieldsI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -68,13 +68,13 @@ const PromptsProperties: FC<Props> = ({ prompt, action, collapsed }) => {
       </div>
       <div className={classNames('flex flex-col h-full justify-between', isCollapsed && 'hidden')}>
         <div className="mt-4">
-          <LabeledText label={t(EntityFieldsI18nKey.displayVersion)} text={prompt.version as string} />
+          <LabelledText label={t(EntityFieldsI18nKey.displayVersion)} text={prompt.version as string} />
         </div>
         <div className="mt-4">
-          <LabeledText label={t(EntityFieldsI18nKey.description)} text={prompt.description as string} />
+          <LabelledText label={t(EntityFieldsI18nKey.description)} text={prompt.description as string} />
         </div>
         <div className="mt-4">
-          <LabeledText label={t(EntityFieldsI18nKey.content)}>
+          <LabelledText label={t(EntityFieldsI18nKey.content)}>
             <DialTooltip
               contentClassName="truncate"
               tooltip={formatPromptText(prompt.content as string)}
@@ -82,7 +82,7 @@ const PromptsProperties: FC<Props> = ({ prompt, action, collapsed }) => {
             >
               <p className="break-words">{formatPromptText(prompt.content as string)}</p>
             </DialTooltip>
-          </LabeledText>
+          </LabelledText>
         </div>
       </div>
     </div>

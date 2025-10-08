@@ -1,9 +1,8 @@
 'use client';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialCheckbox } from '@epam/ai-dial-ui-kit';
+import { DialCheckbox, DialCollapsibleSidebar } from '@epam/ai-dial-ui-kit';
 
-import HorizontalCollapseBar from '@/src/components/Common/HorizontalCollapseBar/HorizontalCollapseBar';
 import { getAllAvailableDependencies, getButtonTitle } from '@/src/components/ExportConfig/AddEntities/utils';
 import { ExportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -49,10 +48,10 @@ const Dependencies: FC<Props> = ({ selectedTab, onChangeSelectedDependencies, se
   }, [allDependencies, isAllSelected, onChangeSelectedDependencies]);
 
   return (
-    <HorizontalCollapseBar
-      width="256"
+    <DialCollapsibleSidebar
+      width={256}
       title={t(ExportI18nKey.Dependencies)}
-      containerClass="border border-primary ml-3"
+      containerCssClass="border border-primary ml-3"
     >
       <div className="flex flex-col">
         <h3 className="mb-3">{t(ExportI18nKey.Dependencies)}</h3>
@@ -78,7 +77,7 @@ const Dependencies: FC<Props> = ({ selectedTab, onChangeSelectedDependencies, se
           </div>
         </div>
       </div>
-    </HorizontalCollapseBar>
+    </DialCollapsibleSidebar>
   );
 };
 

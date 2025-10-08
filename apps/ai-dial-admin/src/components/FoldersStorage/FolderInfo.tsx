@@ -3,9 +3,9 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import classNames from 'classnames';
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import { updateRules } from '@/src/app/[lang]/folders-storage/actions';
-import NoDataContent from '@/src/components/Common/NoData/NoData';
 import RulesList from '@/src/components/Rules/RulesList';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useRuleFolder } from '@/src/context/RuleFolderContext';
@@ -71,7 +71,7 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
   const containerClass = classNames('w-full h-full bg-layer-3 rounded p-4 flex flex-col gap-4');
 
   return !currentFolder ? (
-    <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoFolders)} />
+    <DialNoDataContent title={t(EntitiesI18nKey.NoFolders)} />
   ) : (
     <div className={containerClass}>
       <FolderInfoHeader

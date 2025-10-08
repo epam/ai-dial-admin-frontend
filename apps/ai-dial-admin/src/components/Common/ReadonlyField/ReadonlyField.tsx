@@ -1,7 +1,7 @@
 import { FC } from 'react';
+import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 
 interface Props {
   title: string;
@@ -9,12 +9,12 @@ interface Props {
 }
 const ReadonlyField: FC<Props> = ({ value, title }) => {
   return (
-    <TextInputField
+    <DialTextInputField
       fieldTitle={title}
       elementId="readonlyField"
       disabled={true}
       value={value}
-      iconAfterInput={<CopyButton field={value || ''} title={title} />}
+      iconAfter={<CopyButton field={value || ''} title={title} />}
     />
   );
 };

@@ -46,21 +46,4 @@
       @apply base-button-disable;
     }
   }
-
-  .tertiary {
-    @apply base-button text-accent-primary bg-transparent;
-
-    &:hover,
-    &:focus {
-      @apply bg-controls-accent-alpha;
-    }
-
-    &:focus {
-      @apply border-accent-primary;
-    }
-
-    &:disabled {
-      @apply base-button-disable;
-    }
-  }
 }
