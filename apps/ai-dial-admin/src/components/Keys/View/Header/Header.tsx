@@ -2,7 +2,7 @@ import { FC } from 'react';
 
 import { DialKey } from '@/src/models/dial/key';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
+import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import KeyViewStatus from './KeyStatus';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -15,16 +15,16 @@ const KeyViewHeader: FC<Props> = ({ selectedKey }) => {
   const t = useI18n();
   return (
     <div className="flex flex-row gap-10 w-full mb-8">
-      <LabeledText label={t(EntityFieldsI18nKey.id)} text={selectedKey.name} copyButton={true} />
-      <LabeledText label={t(EntityFieldsI18nKey.createdAt)} text={formatDateTimeToLocalString(selectedKey.createdAt)} />
-      <LabeledText
+      <LabelledText label={t(EntityFieldsI18nKey.id)} text={selectedKey.name} copyButton={true} />
+      <LabelledText label={t(EntityFieldsI18nKey.createdAt)} text={formatDateTimeToLocalString(selectedKey.createdAt)} />
+      <LabelledText
         label={t(EntityFieldsI18nKey.keyGeneratedAt)}
         text={formatDateTimeToLocalString(selectedKey.keyGeneratedAt)}
       />
-      <LabeledText label={t(EntityFieldsI18nKey.expiresAt)} text={formatDateTimeToLocalString(selectedKey.expiresAt)} />
-      <LabeledText label={t(EntityFieldsI18nKey.status)}>
+      <LabelledText label={t(EntityFieldsI18nKey.expiresAt)} text={formatDateTimeToLocalString(selectedKey.expiresAt)} />
+      <LabelledText label={t(EntityFieldsI18nKey.status)}>
         <KeyViewStatus data={selectedKey} />
-      </LabeledText>
+      </LabelledText>
     </div>
   );
 };
