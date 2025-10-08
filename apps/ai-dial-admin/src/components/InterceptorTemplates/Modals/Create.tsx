@@ -49,6 +49,7 @@ const Create: FC<Props> = ({ route, onClose, modalState, names }) => {
   // initial validation (disable save when no values entered yet)
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!template.name });
+    dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!template.displayName });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

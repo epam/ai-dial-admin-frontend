@@ -25,7 +25,11 @@ const ActionsDropdown = <T extends object>({ items, data, rowIndex, ...props }: 
     <div>
       <Dropdown width={200} type={DropdownType.ContextMenu} trigger={<ActionTrigger {...props} />}>
         {items.map((item, i) => (
-          <DropdownMenuItem key={i} item={<ActionItem item={item} data={data as T} rowIndex={rowIndex as number} />} />
+          <DropdownMenuItem
+            key={i}
+            item={<ActionItem item={item} data={data as T} rowIndex={rowIndex as number} />}
+            disabled={item.disabled}
+          />
         ))}
       </Dropdown>
     </div>
