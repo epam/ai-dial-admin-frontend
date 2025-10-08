@@ -80,6 +80,7 @@ const iconColors = {
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  important: false,
   content: [
     './src/app/**/*.{js,ts,jsx,tsx}',
     './src/components/**/*.{js,ts,jsx,tsx}',
