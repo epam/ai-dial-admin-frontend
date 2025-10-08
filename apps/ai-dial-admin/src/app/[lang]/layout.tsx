@@ -21,7 +21,7 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getMenuItems } from '@/src/utils/env/get-menu-items';
 import { PromptFolderProvider } from '@/src/context/assets/PromptFolderContext';
 
-import '@epam/ai-dial-ui-kit/styles.css';
+import '@epam/ai-dial-ui-kit/dist/styles.css';
 
 export default async function Layout({ children, params }: { children: ReactNode; params: Promise<{ lang: string }> }) {
   const { lang } = await params;
