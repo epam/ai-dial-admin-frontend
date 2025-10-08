@@ -20,7 +20,7 @@ describe('PreviewModal', () => {
   it('renders popup and tabs', async () => {
     render(<PreviewModal {...defaultProps} />);
     expect(screen.getByText(ExportI18nKey.FilePreview)).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole('loader')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('status')).toBeInTheDocument());
   });
 
   it('calls onClose when cancel button is clicked', async () => {
