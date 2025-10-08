@@ -2,7 +2,7 @@ import { FC, ReactNode } from 'react';
 
 import classNames from 'classnames';
 
-import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
+import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { ACTION_I18N_KEYS } from '@/src/constants/publications';
 import { useI18n } from '@/src/locales/client';
@@ -35,25 +35,25 @@ const BasePublicationProperties: FC<Props> = ({ publication, children, applicati
       <div className="flex flex-col sm:flex-row gap-8">
         <div className="flex flex-row gap-8">
           {!application ? (
-            <LabeledText label={t(EntitiesI18nKey.Action)}>
+            <LabelledText label={t(EntitiesI18nKey.Action)}>
               <p className="truncate items-center flex">
                 <span className={indicatorClassNames} />
                 {t(ACTION_I18N_KEYS[publication.action])}
               </p>
-            </LabeledText>
+            </LabelledText>
           ) : runnerId ? (
-            <LabeledText label={t(EntitiesI18nKey.Runner)}>
+            <LabelledText label={t(EntitiesI18nKey.Runner)}>
               <p className="truncate items-center">{runner?.['dial:applicationTypeDisplayName'] || runnerId}</p>
-            </LabeledText>
+            </LabelledText>
           ) : null}
-          {publication.author && <LabeledText label={t(EntitiesI18nKey.Author)} text={publication.author} />}
+          {publication.author && <LabelledText label={t(EntitiesI18nKey.Author)} text={publication.author} />}
         </div>
         <div className="flex flex-col sm:flex-row gap-8">
-          <LabeledText
+          <LabelledText
             label={t(EntityFieldsI18nKey.createdAt)}
             text={formatDateTimeToLocalString(publication.createdAt)}
           />
-          <LabeledText
+          <LabelledText
             label={t(EntitiesI18nKey.FolderStorage)}
             text={removeTrailingSlash(decodeURIComponent(publication.folderId))}
           />

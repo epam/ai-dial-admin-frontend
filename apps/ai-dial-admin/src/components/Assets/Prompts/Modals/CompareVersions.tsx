@@ -4,7 +4,7 @@ import classNames from 'classnames';
 
 import { getPrompt } from '@/src/app/[lang]/prompts/actions';
 import DiffField from '@/src/components/Common/DiffField/DiffField';
-import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
+import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -79,12 +79,12 @@ const CompareVersions: FC<Props> = ({ heading, modalState, onClose, prompts, pro
         </div>
 
         {(original?.author || modified?.author) && (
-          <LabeledText label={t(EntityFieldsI18nKey.author)}>
+          <LabelledText label={t(EntityFieldsI18nKey.author)}>
             <div className="flex">
               <p className="flex-1 body text-primary">{original?.author || t(BasicI18nKey.None)}</p>
               <p className="flex-1 body text-primary">{modified?.author || t(BasicI18nKey.None)}</p>
             </div>
-          </LabeledText>
+          </LabelledText>
         )}
 
         <DiffField
