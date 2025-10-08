@@ -1,8 +1,7 @@
 import { IconPlus } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialCollapsibleSidebar } from '@epam/ai-dial-ui-kit';
 
-import HorizontalCollapseBar from '@/src/components/Common/HorizontalCollapseBar/HorizontalCollapseBar';
 import RouteContent from '@/src/components/EntityView/AppRoute/Content/RouteContent';
 import CreateRoute from '@/src/components/EntityView/AppRoute/CreateRoute';
 import { ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
@@ -86,7 +85,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
   return (
     <>
       <div className="flex flex-row gap-4 h-full w-full">
-        <HorizontalCollapseBar width="296" title={t(TabsI18nKey.Routes)} containerClass="bg-layer-3 mr-4">
+        <DialCollapsibleSidebar width={296} title={t(TabsI18nKey.Routes)} containerCssClass="bg-layer-3 mr-4">
           <div className="h-full relative flex flex-col">
             <div className="flex flex-row flex-wrap justify-between items-center mb-6">
               <h1>{t(TabsI18nKey.Routes)}</h1>
@@ -106,7 +105,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
               onRemove={onRemoveRoute}
             />
           </div>
-        </HorizontalCollapseBar>
+        </DialCollapsibleSidebar>
 
         <div className="flex flex-col flex-1 min-h-0 min-w-0 relative border border-primary rounded">
           {routes?.[activeRouteIndex as number] && (

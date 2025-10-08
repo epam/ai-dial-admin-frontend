@@ -1,8 +1,8 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 
 import classNames from 'classnames';
+import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -62,7 +62,7 @@ const Path: FC<Props> = ({ index, path, readonly, optional, fieldTitle, allPaths
   return (
     <div className="flex items-center">
       <div className="flex-1">
-        <TextInputField
+        <DialTextInputField
           elementId={'path ' + index}
           value={path}
           disabled={readonly}

@@ -1,9 +1,10 @@
 import { FC } from 'react';
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+
 import { useI18n } from '@/src/locales/client';
 import { EntitiesI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import { FilePublication } from '@/src/models/dial/publications';
 import FilesList from '@/src/components/PublicationView/FileProperties/FilesList';
-import NoDataContent from '@/src/components/Common/NoData/NoData';
 
 interface Props {
   publication: FilePublication;
@@ -20,7 +21,7 @@ const FilesProperties: FC<Props> = ({ publication }) => {
         {publication.files && publication.files.length > 0 ? (
           <FilesList files={publication.files} action={publication.action} />
         ) : (
-          <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoFiles)} />
+          <DialNoDataContent title={t(EntitiesI18nKey.NoFiles)} />
         )}
       </div>
     </div>

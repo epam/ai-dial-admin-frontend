@@ -3,9 +3,8 @@ import { FC, useMemo, useState } from 'react';
 
 import { ColDef, GridOptions, SelectionChangedEvent } from 'ag-grid-community';
 import classNames from 'classnames';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
-import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { getButtonTitle } from '@/src/components/ExportConfig/AddEntities/utils';
 import Grid from '@/src/components/Grid/Grid';
@@ -68,7 +67,7 @@ const AddEntitiesModal: FC<Props> = ({ modalState, selectedTab, entities, column
     >
       <div className="flex flex-1 flex-col px-6 py-4 min-h-0">
         {!entities.length ? (
-          <NoDataContent emptyDataTitle={t(emptyTitle)} />
+          <DialNoDataContent title={t(emptyTitle)} />
         ) : (
           <div className="flex-1 flex flex-row min-h-0">
             <div className="flex-1">

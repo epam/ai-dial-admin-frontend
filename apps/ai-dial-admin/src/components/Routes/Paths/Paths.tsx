@@ -2,14 +2,13 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import { EntityPlaceholdersI18nKey, ErrorI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import Path from './Path';
-import { useSaveValidationContext, ValidationActionType } from '../../../context/SaveValidationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   title: string;
@@ -74,7 +73,7 @@ const Paths: FC<Props> = ({ title, optional, readonly, paths, onChangePaths }) =
       {paths == null || paths.length === 0 ? (
         <div key="path 0" className="flex items-center">
           <div className="flex-1">
-            <TextInputField
+            <DialTextInputField
               elementId="path 0"
               value={''}
               disabled={readonly}

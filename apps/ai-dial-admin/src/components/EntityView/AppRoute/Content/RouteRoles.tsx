@@ -1,9 +1,10 @@
 'use client';
+import { ButtonVariant, DialButton, DialNoDataContent, DialSwitch } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconReplace } from '@tabler/icons-react';
 import { FC, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ButtonVariant, DialSwitch, DialButton } from '@epam/ai-dial-ui-kit';
 
+import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import Grid from '@/src/components/Grid/Grid';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
@@ -12,13 +13,11 @@ import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, RoutesI18nKey, TabsI18nK
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
+import { DialRoleLimitsMap } from '@/src/models/dial/role-limits';
 import { DialAppRoute } from '@/src/models/dial/route';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
-import NoDataContent from '@/src/components/Common/NoData/NoData';
-import { DialRoleLimitsMap } from '@/src/models/dial/role-limits';
 
 interface Props {
   parentRoles?: string[];
@@ -128,12 +127,12 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
             {data.length > 0 ? (
               <Grid columnDefs={columns} rowData={data} />
             ) : iAppRunnerView && route.isPublic ? (
-              <NoDataContent
+              <DialNoDataContent
                 icon={<IconReplace width={60} height={60} />}
-                emptyDataTitle={t(RoutesI18nKey.InheritRolesWarning)}
+                title={t(RoutesI18nKey.InheritRolesWarning)}
               />
             ) : (
-              <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoRoles)} />
+              <DialNoDataContent title={t(EntitiesI18nKey.NoRoles)} />
             )}
           </div>
         </div>

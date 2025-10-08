@@ -3,13 +3,11 @@ import { ReactNode } from 'react';
 
 import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import classNames from 'classnames';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { DialButton, DialCollapsibleSidebar, DialTooltip } from '@epam/ai-dial-ui-kit';
 
 import FolderCollapse from '@/public/images/icons/folder-collapse.svg';
 import ExportGrid from '@/src/components/Assets/ExportAssets/ExportGrid';
 import FolderList from '@/src/components/Common/FolderList/FolderList';
-import HorizontalCollapseBar from '@/src/components/Common/HorizontalCollapseBar/HorizontalCollapseBar';
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import GridWithColumnsPanel from '@/src/components/Grid/GridWithColumnsPanel/GridWithColumnsPanel';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { FoldersI18nKey } from '@/src/constants/i18n';
@@ -69,13 +67,13 @@ const ListView = <T extends object>({
       </div>
       <div className="flex flex-1 min-h-0 gap-4">
         {showFolders && (
-          <HorizontalCollapseBar
-            width="320"
+          <DialCollapsibleSidebar
+            width={320}
             title={title || ''}
-            containerClass="bg-layer-3 border-transparent mr-0"
+            containerCssClass="bg-layer-3 border-transparent mr-0"
             iconSize={24}
             additionalButtons={
-              <Tooltip
+              <DialTooltip
                 triggerClassName={'flex items-center'}
                 tooltip={isCollapseDisable ? '' : t(FoldersI18nKey.CollapseAll)}
                 placement={'top'}
@@ -86,11 +84,11 @@ const ListView = <T extends object>({
                   iconBefore={<FolderCollapse width={24} height={24} />}
                   disable={isCollapseDisable}
                 />
-              </Tooltip>
+              </DialTooltip>
             }
           >
             <FolderList context={context} view={view} />
-          </HorizontalCollapseBar>
+          </DialCollapsibleSidebar>
         )}
         {isBulkView ? (
           <ExportGrid context={context} route={view} />

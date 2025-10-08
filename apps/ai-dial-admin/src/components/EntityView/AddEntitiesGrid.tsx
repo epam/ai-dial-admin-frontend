@@ -1,16 +1,15 @@
+import { ButtonVariant, DialButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridOptions, SelectionChangedEvent } from 'ag-grid-community';
 import classNames from 'classnames';
 import { useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Popup from '@/src/components/Common/Popup/Popup';
 import Grid from '@/src/components/Grid/Grid';
 import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
+import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
-import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props<T> {
   modalState: PopUpState;
@@ -61,7 +60,7 @@ const AddEntitiesGrid = <T extends object>({
     >
       <div className="flex flex-1 flex-col px-6 py-4 min-h-0">
         {!entities.length ? (
-          <NoDataContent emptyDataTitle={emptyTitle} />
+          <DialNoDataContent title={emptyTitle} />
         ) : (
           <Grid columnDefs={columnDefs} rowData={entities} additionalGridOptions={additionalGridOptions} />
         )}

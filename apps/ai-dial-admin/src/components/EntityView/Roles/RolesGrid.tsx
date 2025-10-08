@@ -2,9 +2,8 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { IconPlus, IconReload } from '@tabler/icons-react';
 import { GridApi, GridReadyEvent, IRowNode } from 'ag-grid-community';
-import { DialSwitch, DialButton, ButtonVariant } from '@epam/ai-dial-ui-kit';
+import { DialSwitch, DialButton, ButtonVariant, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
-import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Grid from '@/src/components/Grid/Grid';
 import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -122,7 +121,7 @@ const RolesGrid: FC<Props> = ({
         </div>
       </div>
       {!data.length ? (
-        <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoRoles)} />
+        <DialNoDataContent title={t(EntitiesI18nKey.NoRoles)} />
       ) : (
         <Grid additionalGridOptions={{ onGridReady }} />
       )}

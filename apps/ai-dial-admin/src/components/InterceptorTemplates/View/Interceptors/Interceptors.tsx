@@ -1,4 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -10,7 +11,6 @@ import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { getInterceptorsList } from '@/src/app/[lang]/interceptors/actions';
 import { getErrorNotification } from '@/src/utils/notification';
 import { useNotification } from '@/src/context/NotificationContext';
-import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Grid from '@/src/components/Grid/Grid';
 import Page403 from '@/src/components/Page403/Page403';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
@@ -48,7 +48,7 @@ const Interceptors: FC<Props> = ({ interceptorList }) => {
   return (
     <>
       {!interceptorList?.length || !interceptors.length ? (
-        <NoDataContent emptyDataTitle={t(EntitiesI18nKey.NoInterceptors)} />
+        <DialNoDataContent title={t(EntitiesI18nKey.NoInterceptors)} />
       ) : (
         <Grid columnDefs={colDefs} rowData={interceptors} />
       )}
