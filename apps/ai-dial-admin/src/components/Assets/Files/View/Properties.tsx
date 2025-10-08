@@ -4,7 +4,7 @@ import { GridApi, IRowNode } from 'ag-grid-community';
 
 import Field from '@/src/components/Common/Field/Field';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
-import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
+import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import Grid from '@/src/components/Grid/Grid';
 import { FILE_DOWNLOAD, FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
 import { getDownloadOperation, getPreviewOperation } from '@/src/constants/grid-columns/actions';
@@ -57,8 +57,8 @@ const FileProperties: FC<Props> = ({ file, onChangeFile }) => {
   return (
     <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full gap-6">
       <div className="flex flex-row gap-10">
-        <LabeledText label={t(EntityFieldsI18nKey.displayName)} text={file.name} />
-        {file.author && <LabeledText label={t(EntitiesI18nKey.Author)} text={file.author} />}
+        <LabelledText label={t(EntityFieldsI18nKey.displayName)} text={file.name} />
+        {file.author && <LabelledText label={t(EntitiesI18nKey.Author)} text={file.author} />}
       </div>
 
       <div className="flex flex-col gap-6 pt-6">

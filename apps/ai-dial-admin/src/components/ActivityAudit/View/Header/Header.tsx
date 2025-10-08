@@ -3,7 +3,7 @@ import { FC, ReactNode } from 'react';
 import { IconExternalLink } from '@tabler/icons-react';
 import { DialButton } from '@epam/ai-dial-ui-kit';
 
-import LabeledText from '@/src/components/Common/LabeledText/LabeledText';
+import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getFormattedResourceType } from '@/src/constants/grid-columns/formatters';
 import { ActivityAuditI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
@@ -42,18 +42,18 @@ const ViewHeader: FC<Props> = ({ activity, isModalView, children }) => {
   return (
     <div className="flex flex-row w-full justify-between flex-wrap lg:flex-nowrap">
       <div className="flex flex-row gap-10 w-full flex-wrap">
-        {activity.action && <LabeledText label={t(EntitiesI18nKey.Action)} text={activity.action} />}
+        {activity.action && <LabelledText label={t(EntitiesI18nKey.Action)} text={activity.action} />}
         {activity.activityType && (
-          <LabeledText label={t(ActivityAuditI18nKey.ActivityType)} text={activity.activityType} />
+          <LabelledText label={t(ActivityAuditI18nKey.ActivityType)} text={activity.activityType} />
         )}
         {activity.resourceType && (
-          <LabeledText
+          <LabelledText
             label={t(ActivityAuditI18nKey.ResourceType)}
             text={getFormattedResourceType(activity.resourceType, t)}
           />
         )}
         {activity.resourceId && (
-          <LabeledText label={t(ActivityAuditI18nKey.ResourceId)}>
+          <LabelledText label={t(ActivityAuditI18nKey.ResourceId)}>
             <div className="flex flex-row gap-1 items-center">
               <Tooltip tooltip={activity.resourceId}>{activity.resourceId}</Tooltip>
               {activity.activityType != ActivityAuditType.Delete && (
@@ -64,22 +64,22 @@ const ViewHeader: FC<Props> = ({ activity, isModalView, children }) => {
                 />
               )}
             </div>
-          </LabeledText>
+          </LabelledText>
         )}
         {activity.epochTimestampMs && (
-          <LabeledText
+          <LabelledText
             label={t(ActivityAuditI18nKey.Time)}
             text={formatDateTimeToLocalString(activity.epochTimestampMs)}
           />
         )}
         {activity.initiatedEmail && (
-          <LabeledText label={t(ActivityAuditI18nKey.Initiated)} text={activity.initiatedEmail} />
+          <LabelledText label={t(ActivityAuditI18nKey.Initiated)} text={activity.initiatedEmail} />
         )}
         {activity.initiatedAuthor && (
-          <LabeledText label={t(ActivityAuditI18nKey.UserId)} text={activity.initiatedAuthor} />
+          <LabelledText label={t(ActivityAuditI18nKey.UserId)} text={activity.initiatedAuthor} />
         )}
         {activity.activityId && isModalView && (
-          <LabeledText label={t(ActivityAuditI18nKey.ActivityId)}>
+          <LabelledText label={t(ActivityAuditI18nKey.ActivityId)}>
             <div className="flex flex-row gap-1 items-center">
               <Tooltip tooltip={activity.activityId}>{activity.activityId}</Tooltip>
               <DialButton
@@ -88,7 +88,7 @@ const ViewHeader: FC<Props> = ({ activity, isModalView, children }) => {
                 iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
               />
             </div>
-          </LabeledText>
+          </LabelledText>
         )}
       </div>
       {children}
