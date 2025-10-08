@@ -3,7 +3,7 @@
 import { FC, useEffect, useRef, useState } from 'react';
 
 import { IconDownload } from '@tabler/icons-react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { previewJsonConfigs, previewZipConfig } from '@/src/app/[lang]/import-config/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
@@ -75,7 +75,7 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
       <div className="flex-1 min-h-0">
         {isLoading ? (
           <div className="flex flex-col h-full w-full justify-center items-center">
-            <DialLoader size={45} containerClassName="h-auto" />
+            <DialLoader size={45} cssClass="h-auto" />
             <p className="mt-3 text-primary small">{t(ImportI18nKey.ConfigurationParsing)}</p>
           </div>
         ) : (

@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
-import { DialSwitch, ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialSwitch, ButtonVariant, DialButton, DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { previewExportConfig } from '@/src/app/[lang]/export-config/actions';
 import Popup from '@/src/components/Common/Popup/Popup';
