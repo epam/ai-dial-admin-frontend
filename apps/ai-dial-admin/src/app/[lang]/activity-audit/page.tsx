@@ -7,6 +7,8 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
+import '@epam/ai-dial-ui-kit/styles.css';
+
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
