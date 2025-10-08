@@ -16,12 +16,18 @@ const KeyViewHeader: FC<Props> = ({ selectedKey }) => {
   return (
     <div className="flex flex-row gap-10 w-full mb-8">
       <LabelledText label={t(EntityFieldsI18nKey.id)} text={selectedKey.name} copyButton={true} />
-      <LabelledText label={t(EntityFieldsI18nKey.createdAt)} text={formatDateTimeToLocalString(selectedKey.createdAt)} />
+      <LabelledText
+        label={t(EntityFieldsI18nKey.createdAt)}
+        text={formatDateTimeToLocalString(selectedKey.createdAt)}
+      />
       <LabelledText
         label={t(EntityFieldsI18nKey.keyGeneratedAt)}
         text={formatDateTimeToLocalString(selectedKey.keyGeneratedAt)}
       />
-      <LabelledText label={t(EntityFieldsI18nKey.expiresAt)} text={formatDateTimeToLocalString(selectedKey.expiresAt)} />
+      <LabelledText
+        label={t(EntityFieldsI18nKey.expiresAt)}
+        text={formatDateTimeToLocalString(selectedKey.expiresAt)}
+      />
       <LabelledText label={t(EntityFieldsI18nKey.status)}>
         <KeyViewStatus data={selectedKey} />
       </LabelledText>
