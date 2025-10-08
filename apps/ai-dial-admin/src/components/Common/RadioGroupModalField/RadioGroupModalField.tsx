@@ -1,11 +1,12 @@
 import { FC, useCallback, useState } from 'react';
 
+import classNames from 'classnames';
+import { RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
+
 import Field from '@/src/components/Common/Field/Field';
 import InputModal from '@/src/components/Common/InputModal/InputModal';
-import { RadioButtonWithContent } from '@/src/components/Common/RadioGroup/RadioGroup';
 import { PopUpState } from '@/src/types/pop-up';
 import RadioGroupModal from './RadioGroupModal';
-import classNames from 'classnames';
 
 interface Props {
   title: string;

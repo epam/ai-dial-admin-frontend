@@ -1,10 +1,14 @@
 import { FC } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import {
+  ButtonVariant,
+  RadioButtonWithContent,
+  DialButton,
+  DialRadioGroup,
+  RadioGroupOrientation,
+} from '@epam/ai-dial-ui-kit';
 
 import Popup from '@/src/components/Common/Popup/Popup';
-import RadioGroup, { RadioButtonWithContent } from '@/src/components/Common/RadioGroup/RadioGroup';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
 
@@ -37,12 +41,12 @@ const RadioGroupModal: FC<Props> = ({
   return (
     <Popup onClose={onClose} heading={title} portalId={portalId} state={modalState}>
       <div className="px-6 py-4">
-        <RadioGroup
+        <DialRadioGroup
           radioButtons={radioButtons}
           activeRadioButton={selectedValue}
           labelCssClass="small"
           elementId={elementId}
-          orientation={RadioFieldOrientation.Column}
+          orientation={RadioGroupOrientation.Column}
           onChange={onChangeRadioField}
         />
       </div>

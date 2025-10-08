@@ -1,11 +1,14 @@
 import { FC, useMemo } from 'react';
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+import {
+  DialRadioGroup,
+  RadioGroupOrientation,
+  RadioButtonWithContent,
+  DialTextInputField,
+} from '@epam/ai-dial-ui-kit';
 
-import RadioGroup, { RadioButtonWithContent } from '@/src/components/Common/RadioGroup/RadioGroup';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Toolset, ToolsetAuthSettings, ToolsetAuthType } from '@/src/models/dial/toolset';
-import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 import OAuthControls from './OAuth';
 
 interface Props {
@@ -48,13 +51,13 @@ const Authentication: FC<Props> = ({ toolset, onChange }) => {
 
   return (
     <div className="flex flex-col">
-      <RadioGroup
+      <DialRadioGroup
         fieldTitle={t(EntityFieldsI18nKey.authSettings)}
         radioButtons={authOptions}
         activeRadioButton={selectedAuthType}
         labelCssClass="small"
         elementId={'auth'}
-        orientation={RadioFieldOrientation.Column}
+        orientation={RadioGroupOrientation.Column}
         onChange={(authenticationType) =>
           onChange({
             ...toolset,

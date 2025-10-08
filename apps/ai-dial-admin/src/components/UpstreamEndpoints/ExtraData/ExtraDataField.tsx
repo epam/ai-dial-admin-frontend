@@ -1,9 +1,8 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialTextAreaField } from '@epam/ai-dial-ui-kit';
+import { DialTextAreaField, RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
 
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
-import { RadioButtonWithContent } from '@/src/components/Common/RadioGroup/RadioGroup';
 import RadioGroupModalField from '@/src/components/Common/RadioGroupModalField/RadioGroupModalField';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';

@@ -2,25 +2,28 @@
 
 import { FC, useCallback, useEffect, useState } from 'react';
 import { IconArrowNarrowRight, IconZip } from '@tabler/icons-react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import {
+  ButtonVariant,
+  RadioButtonWithContent,
+  DialButton,
+  DialRadioGroup,
+  RadioGroupOrientation,
+} from '@epam/ai-dial-ui-kit';
 
 import Json from '@/public/images/icons/file/json.svg';
 import LoadFileAreaField from '@/src/components/Common/LoadFileArea/LoadFileAreaField';
-import RadioField from '@/src/components/Common/RadioField/RadioField';
 import { isLargeFile } from '@/src/components/EntityListView/Import/import';
 import { ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { IMPORT_RESOLUTIONS } from '@/src/constants/import';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { RadioButtonModel } from '@/src/models/radio-button';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
-import { RadioFieldOrientation } from '@/src/types/radio-orientation';
 
-const IMPORT_FILE_TYPES = (t: (str: string) => string): RadioButtonModel[] => [
+const IMPORT_FILE_TYPES = (t: (str: string) => string): RadioButtonWithContent[] => [
   {
     id: ImportFileType.ARCHIVE,
     name: t(ImportI18nKey.DialArchive),
-    description: t(ImportI18nKey.DialArchiveDescription),
+    content: <div className="tiny mt-2 ml-[26px]">{t(ImportI18nKey.DialArchiveDescription)}</div>,
   },
   { id: ImportFileType.JSON, name: t(ImportI18nKey.DialCoreFiles) },
 ];
@@ -84,21 +87,21 @@ const Files: FC<Props> = ({
         />
       </div>
       <div className="flex-1 min-h-0 gap-y-6 flex flex-col w-full overflow-auto">
-        <RadioField
+        <DialRadioGroup
           radioButtons={IMPORT_RESOLUTIONS(t)}
           activeRadioButton={activeResolution}
           elementId="conflictResolution"
           fieldTitle={t(ImportI18nKey.ConflictResolution)}
-          orientation={RadioFieldOrientation.Column}
+          orientation={RadioGroupOrientation.Column}
           onChange={onChangeResolution}
         />
         <div className="h-[104px]">
-          <RadioField
+          <DialRadioGroup
             radioButtons={IMPORT_FILE_TYPES(t)}
             activeRadioButton={fileType}
             elementId="fileType"
             fieldTitle={t(ImportI18nKey.FileType)}
-            orientation={RadioFieldOrientation.Column}
+            orientation={RadioGroupOrientation.Column}
             onChange={onChangeFileType}
           />
         </div>
