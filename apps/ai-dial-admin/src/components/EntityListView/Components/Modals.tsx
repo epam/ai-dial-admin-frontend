@@ -96,6 +96,7 @@ const Modals: FC<Props> = ({
         modalType === ModalType.delete &&
         createPortal(
           <DialConfirmationPopup
+            open={true}
             title={`${t(DeleteI18nKey.Title)} ${t(deleteModalTitleMap[route as keyof typeof deleteModalTitleMap])}`}
             onConfirm={handleDelete as () => void}
             confirmLabel={t(ButtonsI18nKey.Delete)}

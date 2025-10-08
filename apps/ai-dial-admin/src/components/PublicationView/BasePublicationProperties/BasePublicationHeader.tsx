@@ -98,6 +98,7 @@ const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action 
       {isApproveModalOpen &&
         createPortal(
           <DialConfirmationPopup
+            open={isApproveModalOpen}
             title={t(keys.ApproveModalTitle)}
             onConfirm={approve}
             onClose={() => {
@@ -112,6 +113,7 @@ const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action 
       {isDeclineModalOpen &&
         createPortal(
           <DialConfirmationPopup
+            open={isDeclineModalOpen}
             title={t(keys.DeclineModalTitle)}
             onConfirm={decline}
             disableConfirmButton={isDeclineInvalid}

@@ -15,13 +15,11 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 
 interface Props<T> {
-  modalState: PopUpState;
   view: ApplicationRoute;
   entity: T;
   removeEntity: (entity: string) => Promise<ServerActionResponse>;
@@ -69,6 +67,7 @@ const DeleteConfirmationModal = <T extends object>({ view, entity, removeEntity,
 
   return (
     <DialConfirmationPopup
+      open={true}
       description={`${t(DeleteI18nKey.Confirming)} ${t(deleteModalTitleMap[view])}?`}
       title={`${t(DeleteI18nKey.Title)} ${t(deleteModalTitleMap[view])}`}
       onConfirm={onConfirmRemoving}

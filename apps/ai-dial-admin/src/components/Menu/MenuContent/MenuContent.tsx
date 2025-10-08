@@ -112,6 +112,7 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
       {isOpenModal &&
         createPortal(
           <DialConfirmationPopup
+            open={isOpenModal}
             description={t(ReloadConfigI18nKey.ReloadDescription)}
             title={t(ReloadConfigI18nKey.ReloadTitle)}
             onConfirm={onConfirmReload}

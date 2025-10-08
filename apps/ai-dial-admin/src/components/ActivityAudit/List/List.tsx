@@ -253,6 +253,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
       {isRollbackModalOpen &&
         createPortal(
           <DialConfirmationPopup
+            open={isRollbackModalOpen}
             isLoading={isLoading}
             title={t(ActivityAuditI18nKey.ConfirmRollback)}
             onConfirm={resourceRollback}

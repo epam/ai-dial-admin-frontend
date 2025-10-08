@@ -159,6 +159,7 @@ const AuditView: FC<Props> = ({
       {isOpenModal &&
         createPortal(
           <DialConfirmationPopup
+            open={isOpenModal}
             isLoading={isLoading}
             title={t(ActivityAuditI18nKey.ConfirmRollback)}
             onConfirm={resourceRollback}

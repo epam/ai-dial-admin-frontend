@@ -16,6 +16,7 @@ const EntityRolesModal: FC<Props> = ({ onConfirm, onClose, onCancel }) => {
 
   return createPortal(
     <DialConfirmationPopup
+      open={true}
       title={t(RolesI18nKey.SaveWithEmptyRolesTitle)}
       confirmLabel={t(ButtonsI18nKey.Save)}
       cancelLabel={t(ButtonsI18nKey.ContinueEditing)}

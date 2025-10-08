@@ -24,6 +24,7 @@ const EntityViewModals: FC<Props> = ({ isModalOpen, modalType, handleConfirm, ha
         modalType === ModalType.entity &&
         createPortal(
           <DialConfirmationPopup
+            open={isModalOpen}
             title={t(EntitiesI18nKey.SaveChangesTitle)}
             description={t(EntitiesI18nKey.SaveChangesDescription)}
             confirmLabel={t(ButtonsI18nKey.Save)}

@@ -258,6 +258,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
       {isOpenConfirmModal &&
         createPortal(
           <DialConfirmationPopup
+            open={isOpenConfirmModal}
             description={t(KeysI18nKey.SaveWithoutRolesDescriptions)}
             title={t(KeysI18nKey.SaveWithoutRoles)}
             onConfirm={() => onSaveKey()}
