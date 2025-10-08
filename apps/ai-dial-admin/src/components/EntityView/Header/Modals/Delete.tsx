@@ -3,10 +3,10 @@
 import { useCallback } from 'react';
 
 import { useRouter } from 'next/navigation';
+import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
 
 import DeleteAdapter from '@/src/components/Adapter/Modals/DeleteAdapter';
 import DeleteAppRunner from '@/src/components/ApplicationRunners/Modals/DeleteAppRunner';
-import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import { deleteModalTitleMap } from '@/src/components/EntityListView/constants';
 import DeleteInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Delete';
 import { ButtonsI18nKey, DeleteI18nKey } from '@/src/constants/i18n';
@@ -29,14 +29,7 @@ interface Props<T> {
   context?: () => AssetsFolderContext<DialFile>;
 }
 
-const DeleteConfirmationModal = <T extends object>({
-  modalState,
-  view,
-  entity,
-  removeEntity,
-  onCloseModal,
-  context,
-}: Props<T>) => {
+const DeleteConfirmationModal = <T extends object>({ view, entity, removeEntity, onCloseModal, context }: Props<T>) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -75,16 +68,15 @@ const DeleteConfirmationModal = <T extends object>({
     ) : null;
 
   return (
-    <ConfirmationModal
+    <DialConfirmationPopup
       description={`${t(DeleteI18nKey.Confirming)} ${t(deleteModalTitleMap[view])}?`}
-      heading={`${t(DeleteI18nKey.Title)} ${t(deleteModalTitleMap[view])}`}
+      title={`${t(DeleteI18nKey.Title)} ${t(deleteModalTitleMap[view])}`}
       onConfirm={onConfirmRemoving}
-      modalState={modalState}
       onClose={onCloseModal}
       confirmLabel={t(ButtonsI18nKey.Delete)}
     >
       {deleteModalContent}
-    </ConfirmationModal>
+    </DialConfirmationPopup>
   );
 };
 

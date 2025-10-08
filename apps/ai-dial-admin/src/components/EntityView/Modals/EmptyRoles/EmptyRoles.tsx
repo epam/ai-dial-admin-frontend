@@ -1,27 +1,25 @@
-import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
-import { ButtonsI18nKey, RolesI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
-import { PopUpState } from '@/src/types/pop-up';
+import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 import { createPortal } from 'react-dom';
 
+import { ButtonsI18nKey, RolesI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+
 interface Props {
-  modalState: PopUpState;
   onConfirm: () => void;
   onClose: () => void;
   onCancel: () => void;
 }
 
-const EntityRolesModal: FC<Props> = ({ modalState, onConfirm, onClose, onCancel }) => {
+const EntityRolesModal: FC<Props> = ({ onConfirm, onClose, onCancel }) => {
   const t = useI18n();
 
   return createPortal(
-    <ConfirmationModal
-      modalState={modalState}
-      heading={t(RolesI18nKey.SaveWithEmptyRolesTitle)}
+    <DialConfirmationPopup
+      title={t(RolesI18nKey.SaveWithEmptyRolesTitle)}
       confirmLabel={t(ButtonsI18nKey.Save)}
       cancelLabel={t(ButtonsI18nKey.ContinueEditing)}
-      containerClassName="lg:!max-w-[440px]"
+      confirmClassName="lg:!max-w-[440px]"
       onConfirm={onConfirm}
       onClose={onClose}
       onCancel={onCancel}
@@ -30,7 +28,7 @@ const EntityRolesModal: FC<Props> = ({ modalState, onConfirm, onClose, onCancel 
         <p className="mb-2">{t(RolesI18nKey.SaveWithEmptyRolesDescription)}</p>
         <p className="small-text-semi">{t(RolesI18nKey.SaveProceedWithConfiguration)}</p>
       </div>
-    </ConfirmationModal>,
+    </DialConfirmationPopup>,
     document.body,
   );
 };

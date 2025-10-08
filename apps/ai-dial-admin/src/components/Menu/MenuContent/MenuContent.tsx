@@ -4,10 +4,10 @@ import { FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { usePathname, useRouter } from 'next/navigation';
 import { IconDownload, IconUpload } from '@tabler/icons-react';
+import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
 
 import { MenuI18nKey, ReloadConfigI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
-import { PopUpState } from '@/src/types/pop-up';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { reloadConfig } from '@/src/app/actions';
@@ -17,7 +17,6 @@ import { getActualMenuItems } from '@/src/utils/env/get-menu-items';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { MENU_CONFIGURATION } from '../menu-configuration';
 
-import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import MenuItem from '../MenuItem/MenuItem';
 import MenuAction from './MenuAction';
 
@@ -40,16 +39,11 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
 
   const activeMenuGroup = actualConfig.find((config) => config.items.some((item) => item.href === pathname));
   const { showNotification } = useNotification();
-  const [modalState, setIsOpenModal] = useState(PopUpState.Closed);
+  const [isOpenModal, setIsOpenModal] = useState(false);
   const [isLoadingReload, setIsLoadingReload] = useState(false);
 
-  // const onOpenModal = useCallback(() => {
-  //   setIsLoadingReload(false);
-  //   setIsOpenModal(PopUpState.Opened);
-  // }, [setIsOpenModal]);
-
   const onCloseModal = useCallback(() => {
-    setIsOpenModal(PopUpState.Closed);
+    setIsOpenModal(false);
   }, [setIsOpenModal]);
 
   const onConfirmReload = useCallback(() => {
@@ -115,13 +109,12 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
           )}
         </div>
       </div>
-      {modalState === PopUpState.Opened &&
+      {isOpenModal &&
         createPortal(
-          <ConfirmationModal
+          <DialConfirmationPopup
             description={t(ReloadConfigI18nKey.ReloadDescription)}
-            heading={t(ReloadConfigI18nKey.ReloadTitle)}
+            title={t(ReloadConfigI18nKey.ReloadTitle)}
             onConfirm={onConfirmReload}
-            modalState={modalState}
             onClose={onCloseModal}
             isLoading={isLoadingReload}
             confirmLabel={t(ReloadConfigI18nKey.Reload)}

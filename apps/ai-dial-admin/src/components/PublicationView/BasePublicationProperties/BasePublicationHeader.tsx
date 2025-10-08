@@ -1,18 +1,16 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialTextAreaField } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialConfirmationPopup, DialButton, DialTextAreaField } from '@epam/ai-dial-ui-kit';
 import { IconCircleX, IconWorldOff, IconWorldShare } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import { ButtonsI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { ActionType } from '@/src/models/dial/publications';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getModalsTranslations } from '@/src/utils/publications';
 
@@ -35,8 +33,8 @@ const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action 
 
   const [containerClassNames, setContainerClassNames] = useState(staticContainerClassnames);
   const [buttonsClassNames, setButtonsClassNames] = useState('');
-  const [approveModalState, setIsOpenApproveModal] = useState(PopUpState.Closed);
-  const [declineModalState, setIsOpenDeclineModal] = useState(PopUpState.Closed);
+  const [isApproveModalOpen, setIsOpenApproveModal] = useState(false);
+  const [isDeclineModalOpen, setIsOpenDeclineModal] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
   const isDeclineInvalid = useMemo(() => {
     const value = declineReason.trim();
@@ -59,12 +57,12 @@ const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action 
 
   const approve = useCallback(() => {
     onApprove();
-    setIsOpenApproveModal(PopUpState.Closed);
+    setIsOpenApproveModal(false);
   }, [onApprove]);
 
   const decline = useCallback(() => {
     onDecline(declineReason);
-    setIsOpenDeclineModal(PopUpState.Closed);
+    setIsOpenDeclineModal(false);
   }, [declineReason, onDecline]);
 
   return (
@@ -75,7 +73,7 @@ const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action 
             variant={ButtonVariant.Secondary}
             cssClass={buttonsClassNames}
             title={t(ButtonsI18nKey.Decline)}
-            onClick={() => setIsOpenDeclineModal(PopUpState.Opened)}
+            onClick={() => setIsOpenDeclineModal(true)}
             iconBefore={<IconCircleX {...BASE_ICON_PROPS} />}
           />
           {action === ActionType.ADD ? (
@@ -83,7 +81,7 @@ const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action 
               variant={ButtonVariant.Primary}
               cssClass={classNames(buttonsClassNames, approveButtonClassNames)}
               title={t(ButtonsI18nKey.Publish)}
-              onClick={() => setIsOpenApproveModal(PopUpState.Opened)}
+              onClick={() => setIsOpenApproveModal(true)}
               iconBefore={<IconWorldShare {...BASE_ICON_PROPS} />}
             />
           ) : (
@@ -91,20 +89,19 @@ const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action 
               variant={ButtonVariant.Primary}
               cssClass={classNames(buttonsClassNames, approveButtonClassNames)}
               title={t(ButtonsI18nKey.Unpublish)}
-              onClick={() => setIsOpenApproveModal(PopUpState.Opened)}
+              onClick={() => setIsOpenApproveModal(true)}
               iconBefore={<IconWorldOff {...BASE_ICON_PROPS} />}
             />
           )}
         </div>
       </div>
-      {approveModalState === PopUpState.Opened &&
+      {isApproveModalOpen &&
         createPortal(
-          <ConfirmationModal
-            heading={t(keys.ApproveModalTitle)}
+          <DialConfirmationPopup
+            title={t(keys.ApproveModalTitle)}
             onConfirm={approve}
-            modalState={approveModalState}
             onClose={() => {
-              setIsOpenApproveModal(PopUpState.Closed);
+              setIsOpenApproveModal(false);
             }}
             confirmClassName={approveButtonClassNames}
             confirmLabel={t(action === ActionType.ADD ? ButtonsI18nKey.Publish : ButtonsI18nKey.Unpublish)}
@@ -112,15 +109,14 @@ const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action 
           />,
           document.body,
         )}
-      {declineModalState === PopUpState.Opened &&
+      {isDeclineModalOpen &&
         createPortal(
-          <ConfirmationModal
-            heading={t(keys.DeclineModalTitle)}
+          <DialConfirmationPopup
+            title={t(keys.DeclineModalTitle)}
             onConfirm={decline}
-            modalState={declineModalState}
             disableConfirmButton={isDeclineInvalid}
             onClose={() => {
-              setIsOpenDeclineModal(PopUpState.Closed);
+              setIsOpenDeclineModal(false);
             }}
             confirmLabel={t(ButtonsI18nKey.Decline)}
           >
@@ -134,7 +130,7 @@ const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action 
                 elementCssClass={'min-h-[120px]'}
               />
             </div>
-          </ConfirmationModal>,
+          </DialConfirmationPopup>,
           document.body,
         )}
     </>

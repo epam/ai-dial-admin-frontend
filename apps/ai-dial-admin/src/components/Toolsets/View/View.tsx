@@ -23,7 +23,6 @@ import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
 import { Toolset } from '@/src/models/dial/toolset';
 import { TabModel } from '@/src/models/tab';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
@@ -53,7 +52,7 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   const tabs: TabModel[] = [propertiesTabs(t), toolsTabs(t), rolesTabs(t), auditTabs(t)];
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
-  const [modalState, setModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedToolset, setSelectedToolset] = useState(cloneDeep(originalToolset));
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
@@ -133,13 +132,13 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
-      setModalState(PopUpState.Closed);
+      setIsModalOpen(false);
     });
   }, [selectedFormat, selectedToolset, etag, router, showNotification]);
 
   const onTryToSave = useCallback(() => {
     if (selectedFormat !== ExportFormat.CORE && isDisableRole(selectedToolset as EntityRoleLimits)) {
-      setModalState(PopUpState.Opened);
+      setIsModalOpen(true);
     } else {
       onSave();
     }
@@ -198,12 +197,11 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
               <EntityAudit entity={selectedToolset} view={ApplicationRoute.Toolsets} />
             )}
 
-            {modalState === PopUpState.Opened && (
+            {isModalOpen && (
               <EntityRolesModal
-                modalState={modalState}
                 onConfirm={() => onSave()}
-                onClose={() => setModalState(PopUpState.Closed)}
-                onCancel={() => setModalState(PopUpState.Closed)}
+                onClose={() => setIsModalOpen(false)}
+                onCancel={() => setIsModalOpen(false)}
               />
             )}
           </>
