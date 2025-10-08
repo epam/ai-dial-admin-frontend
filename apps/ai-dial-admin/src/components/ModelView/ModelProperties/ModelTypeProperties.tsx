@@ -5,8 +5,8 @@ import { FC, useCallback } from 'react';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { useI18n } from '@/src/locales/client';
+import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
 import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
@@ -28,7 +28,7 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
   return (
     <div className="w-full flex flex-col gap-6">
       <div className="w-full flex flex-col gap-6 lg:w-[35%]">
-        <TextInputField
+        <DialTextInputField
           elementId="overrideName"
           fieldTitle={t(EntityFieldsI18nKey.overrideName)}
           placeholder={t(EntityPlaceholdersI18nKey.OverrideName)}

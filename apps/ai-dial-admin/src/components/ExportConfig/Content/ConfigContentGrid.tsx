@@ -2,8 +2,8 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
-import NoDataContent from '@/src/components/Common/NoData/NoData';
 import { getDataWithoutItem } from '@/src/components/ExportConfig/Content/utils';
 import { getActualColDefs } from '@/src/components/ExportConfig/utils';
 import Grid from '@/src/components/Grid/Grid';
@@ -93,13 +93,9 @@ const ConfigContentGrid: FC<Props> = ({ selectedTab, tabData, isFull, customExpo
   };
 
   return (isFull ? fullData.length === 0 : customData.length === 0) ? (
-    <NoDataContent emptyDataTitle={t(emptyDataTitleI18nkKey)} />
+    <DialNoDataContent title={t(emptyDataTitleI18nkKey)} />
   ) : (
-    <Grid
-      additionalGridOptions={{
-        onGridReady,
-      }}
-    />
+    <Grid additionalGridOptions={{ onGridReady }} />
   );
 };
 

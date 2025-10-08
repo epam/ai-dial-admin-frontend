@@ -1,13 +1,15 @@
 'use client';
 import { FC, useEffect, useState } from 'react';
+
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import ReactECharts, { EChartsOption } from 'echarts-for-react';
-import { BasicI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
-import { TelemetryData, TelemetryQuery } from '@/src/models/telemetry';
-import { ServerActionResponse } from '@/src/models/server-action';
-import { refreshOptionsConfig, SYSTEM_USAGE_QUERY } from '@/src/constants/telemetry';
+
 import Loader from '@/src/components/Common/Loader/Loader';
-import NoDataContent from '@/src/components/Common/NoData/NoData';
+import { BasicI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
+import { refreshOptionsConfig, SYSTEM_USAGE_QUERY } from '@/src/constants/telemetry';
+import { useI18n } from '@/src/locales/client';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { TelemetryData, TelemetryQuery } from '@/src/models/telemetry';
 import { getListingData, prepareChartData } from '@/src/utils/telemetry';
 
 interface Props {
@@ -61,7 +63,7 @@ const LineChart: FC<Props> = ({ getData, refreshTime }) => {
       ) : (
         <>
           {!data?.length ? (
-            <NoDataContent emptyDataTitle={t(BasicI18nKey.NoData)} />
+            <DialNoDataContent title={t(BasicI18nKey.NoData)} />
           ) : (
             <div>
               {options && <ReactECharts option={options} className="flex w-full h-full min-h-[280px] m-0 p-0" />}

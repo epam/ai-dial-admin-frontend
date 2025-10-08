@@ -1,11 +1,12 @@
 'use client';
 
 import { FC, useCallback, useEffect, useState } from 'react';
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { useTheme } from '@/src/context/ThemeContext';
 import { getFrameConfig, getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import FrameRenderer from '@/src/components/FrameRenderer/FrameRenderer';
-import NoData from '@/src/components/Common/NoData/NoData';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { useSession } from 'next-auth/react';
@@ -47,7 +48,7 @@ const ApplicationParametersTab: FC<Props> = ({ entity, applicationSchemes, jsonE
   return (
     <div className="flex w-full h-full">
       {error || !frameConfig ? (
-        <NoData emptyDataTitle={t(BasicI18nKey.NoParameters)} />
+        <DialNoDataContent title={t(BasicI18nKey.NoParameters)} />
       ) : (
         <FrameRenderer
           iframeUrl={generateTargetUrl()?.href ?? ''}

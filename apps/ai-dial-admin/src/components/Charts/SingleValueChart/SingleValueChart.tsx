@@ -1,11 +1,11 @@
 import { FC, useEffect, useState } from 'react';
+import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+
 import { useI18n } from '@/src/locales/client';
 import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
 import { TelemetryData, TelemetryQuery } from '@/src/models/telemetry';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { BasicI18nKey } from '@/src/constants/i18n';
-import Loader from '@/src/components/Common/Loader/Loader';
-import NoDataContent from '@/src/components/Common/NoData/NoData';
 import { getSingleValueChartData } from '@/src/utils/telemetry';
 import { refreshOptionsConfig } from '@/src/constants/telemetry';
 
@@ -53,11 +53,11 @@ const SingleValueChart: FC<Props> = ({ title, getData, unit, query, refreshTime 
     <div className="flex flex-col rounded-lg border border-primary md:min-w-[250px] min-w-[150px] w-full p-4">
       <h3 className="text-primary mb-4">{t(title)}</h3>
       {loading ? (
-        <Loader size={24} />
+        <DialLoader size={24} />
       ) : (
         <>
           {data === null ? (
-            <NoDataContent emptyDataTitle={t(BasicI18nKey.NoData)} />
+            <DialNoDataContent title={t(BasicI18nKey.NoData)} />
           ) : (
             <div className="flex items-center justify-center text-accent-primary md:text-6xl font-semibold h-full text-3xl nowrap">
               {unit && <span className="text-secondary font-extralight mr-1">{unit}</span>}

@@ -1,9 +1,9 @@
 'use client';
 
 import { FC, useCallback, useEffect, useMemo } from 'react';
+import { DialNumberInputField } from '@epam/ai-dial-ui-kit';
 
 import AttachmentInput from '@/src/components/Common/AttachmentInput/AttachmentInput';
-import { NumberInputField } from '@/src/components/Common/InputField/InputField';
 import { AttachmentsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { EntityAttachment } from '@/src/models/dial/base-entity';
@@ -62,18 +62,17 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
         onChange={(values) => onChangeAttachmentTypes(values)}
       />
       {entity.inputAttachmentTypes?.length && (
-        <div className="w-[148px]">
-          <NumberInputField
-            elementId="maxAttachment"
-            fieldTitle={t(AttachmentsI18nKey.MaxNumber)}
-            placeholder={t(EntityPlaceholdersI18nKey.Number)}
-            value={entity.maxInputAttachments}
-            onChange={onChangeAttachmentMax}
-            errorText={error}
-            invalid={!!error}
-            min={0}
-          />
-        </div>
+        <DialNumberInputField
+          containerCssClass="w-[148px]"
+          elementId="maxAttachment"
+          fieldTitle={t(AttachmentsI18nKey.MaxNumber)}
+          placeholder={t(EntityPlaceholdersI18nKey.Number)}
+          value={entity.maxInputAttachments}
+          onChange={onChangeAttachmentMax}
+          errorText={error}
+          invalid={!!error}
+          min={0}
+        />
       )}
     </div>
   );
