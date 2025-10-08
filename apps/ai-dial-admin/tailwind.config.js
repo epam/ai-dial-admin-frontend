@@ -85,7 +85,6 @@ module.exports = {
     './src/app/**/*.{js,ts,jsx,tsx}',
     './src/components/**/*.{js,ts,jsx,tsx}',
     './src/features/**/*.{js,ts,jsx,tsx}',
-    './node_modules/@epam/ai-dial-ui-kit/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
     backgroundColor: { ...backgroundsColors, ...buttonsBgColors },
