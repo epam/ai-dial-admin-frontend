@@ -12,9 +12,9 @@ export async function getInterceptorTemplatesList() {
   return interceptorTemplatesApi.getInterceptorTemplatesList(token);
 }
 
-export async function getInterceptorTemplate(name: string) {
+export async function getInterceptorTemplate(name: string, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return interceptorTemplatesApi.getInterceptorTemplate(name, token);
+  return interceptorTemplatesApi.getInterceptorTemplate(name, token, etag);
 }
 
 export async function createInterceptorTemplate(template: InterceptorTemplate) {
@@ -22,9 +22,9 @@ export async function createInterceptorTemplate(template: InterceptorTemplate) {
   return interceptorTemplatesApi.createInterceptorTemplate(template, token);
 }
 
-export async function updateInterceptorTemplate(template: InterceptorTemplate) {
+export async function updateInterceptorTemplate(template: InterceptorTemplate, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return interceptorTemplatesApi.updateInterceptorTemplate(template, token);
+  return interceptorTemplatesApi.updateInterceptorTemplate(template, token, etag);
 }
 
 export async function deleteInterceptorTemplate(name?: string) {
