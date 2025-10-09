@@ -68,7 +68,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
       dispatch({
         type: ValidationActionType.SetField,
         field: 'endpoints',
-        isValid: route.response ? true : !!route.upstreams?.length,
+        isValid: !!route.response || !!route.upstreams?.length,
       });
     }
   }, [isAppRoute, dispatch, route.upstreams?.length, route.response]);
