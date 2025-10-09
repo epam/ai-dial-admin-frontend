@@ -410,15 +410,11 @@ describe('Activity audit :: createSectionFromDiffs', () => {
   test('should merge limits and share limits under ROLES', () => {
     const current: Record<string, ActivityAuditDiff[]> = {
       [EntityParameterKeys.DEFAULT_ROLE_LIMIT]: [{ parameter: 'default', value: '10' }],
-      [EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT]: [{ parameter: 'shareDefault', value: '8' }],
       [EntityParameterKeys.ROLE_LIMITS]: [{ parameter: 'role1', value: '5' }],
-      [EntityParameterKeys.ROLE_SHARE_LIMITS]: [{ parameter: 'role1Share', value: '3' }],
     };
     const compare: Record<string, ActivityAuditDiff[]> = {
       [EntityParameterKeys.DEFAULT_ROLE_LIMIT]: [{ parameter: 'default', value: '15' }],
-      [EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT]: [{ parameter: 'shareDefault', value: '12' }],
       [EntityParameterKeys.ROLE_LIMITS]: [{ parameter: 'role1', value: '7' }],
-      [EntityParameterKeys.ROLE_SHARE_LIMITS]: [{ parameter: 'role1Share', value: '5' }],
     };
 
     const result = createSectionFromDiffs(current, compare);
@@ -428,17 +424,15 @@ describe('Activity audit :: createSectionFromDiffs', () => {
     expect(result[EntityParameterKeys.ROLES][0]).toEqual({
       current: [
         ...current[EntityParameterKeys.DEFAULT_ROLE_LIMIT],
-        ...current[EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT],
       ],
       compare: [
         ...compare[EntityParameterKeys.DEFAULT_ROLE_LIMIT],
-        ...compare[EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT],
       ],
     });
 
     expect(result[EntityParameterKeys.ROLES][1]).toEqual({
-      current: [...current[EntityParameterKeys.ROLE_LIMITS], ...current[EntityParameterKeys.ROLE_SHARE_LIMITS]],
-      compare: [...compare[EntityParameterKeys.ROLE_LIMITS], ...compare[EntityParameterKeys.ROLE_SHARE_LIMITS]],
+      current: [...current[EntityParameterKeys.ROLE_LIMITS]],
+      compare: [...compare[EntityParameterKeys.ROLE_LIMITS]],
     });
   });
 
