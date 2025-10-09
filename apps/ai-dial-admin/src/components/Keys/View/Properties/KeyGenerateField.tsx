@@ -1,13 +1,14 @@
 import { FC, useCallback, useState } from 'react';
 
+import { ButtonVariant, DialButton, DialPasswordInputField } from '@epam/ai-dial-ui-kit';
 import { IconCopy, IconSparkles } from '@tabler/icons-react';
 import { v4 as uuidv4 } from 'uuid';
-import { ButtonVariant, DialButton, DialPasswordInputField } from '@epam/ai-dial-ui-kit';
 
-import { FieldError } from '@/src/models/error';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
+import { FieldError } from '@/src/models/error';
 import { getErrorForKey } from './utils';
 
 interface Props {
@@ -51,7 +52,7 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
         <DialButton
           variant={ButtonVariant.Secondary}
           cssClass="ml-2 h-[34px]"
-          iconBefore={<IconCopy />}
+          iconBefore={<IconCopy {...BASE_ICON_PROPS} />}
           title={t(ButtonsI18nKey.Copy)}
           onClick={() => navigator.clipboard.writeText(selectedKey.key || '')}
         />
