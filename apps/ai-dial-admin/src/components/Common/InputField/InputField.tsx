@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, ReactNode, useCallback } from 'react';
+import { FC, ReactNode } from 'react';
 
 import { FieldControlProps } from '@/src/models/field-control-props';
 import { BasicI18nKey } from '@/src/constants/i18n';
