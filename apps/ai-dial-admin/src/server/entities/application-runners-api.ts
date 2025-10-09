@@ -13,10 +13,13 @@ export class ApplicationRunnersApi extends BaseApi {
     return this.get(APPLICATION_SCHEMES_URL, token);
   }
 
-  getApplicationScheme(name: string, token: JWT | null): Promise<DialApplicationScheme | null | undefined> {
-    return this.get(APPLICATION_SCHEME_URL(name), token).then((res) =>
-      res === void 0 ? void 0 : (res as DialApplicationScheme[])?.[0],
-    );
+  getApplicationScheme(name: string, token: JWT | null, etag: string) {
+    return this.getActionWithEtag(APPLICATION_SCHEME_URL(name), etag, token).then((res) => {
+      return {
+        ...res,
+        response: res?.response === void 0 ? void 0 : (res?.response as DialApplicationScheme[])?.[0],
+      };
+    });
   }
 
   removeApplicationScheme(token: JWT | null, id?: string): Promise<ServerActionResponse> {
@@ -27,7 +30,11 @@ export class ApplicationRunnersApi extends BaseApi {
     return this.postAction(APPLICATION_SCHEMES_URL, scheme, token);
   }
 
-  updateApplicationScheme(scheme: DialApplicationScheme, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putAction(APPLICATION_SCHEME_URL(scheme.$id), scheme, token);
+  updateApplicationScheme(
+    scheme: DialApplicationScheme,
+    token: JWT | null,
+    etag: string,
+  ): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(APPLICATION_SCHEME_URL(scheme.$id), scheme, token, etag);
   }
 }

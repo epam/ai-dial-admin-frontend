@@ -48,10 +48,11 @@ interface Props {
   originalKey: DialKey;
   names: string[];
   keys: string[];
+  etag: string;
   roles: DialRole[];
 }
 
-const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
+const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
   const t = useI18n() as (str: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -150,7 +151,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
     const req =
       selectedFormat === ExportFormat.CORE
         ? updateCoreEntity(getFileFromEntity(ApplicationRoute.Keys, selectedKey))
-        : updateKey(selectedKey);
+        : updateKey(selectedKey, etag);
 
     req.then((res) => {
       if (res.success) {
@@ -160,12 +161,12 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedFormat, setConfirmModalState, selectedKey, router, showNotification]);
+  }, [selectedFormat, etag, setConfirmModalState, selectedKey, router, showNotification]);
 
   const onRotateKey = useCallback(
     (key: DialKey) => {
       setRotateModalState(PopUpState.Closed);
-      updateKey(key).then((res) => {
+      updateKey(key, etag).then((res) => {
         if (res.success) {
           router.refresh();
           showNotification(
@@ -176,7 +177,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
         }
       });
     },
-    [router, showNotification, t],
+    [router, showNotification, t, etag],
   );
 
   const onTryToSaveKey = useCallback(() => {

@@ -12,9 +12,9 @@ export async function removeKey(key?: string) {
   return keysApi.removeKey(token, key);
 }
 
-export async function updateKey(key: DialKey) {
+export async function updateKey(key: DialKey, eTag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return keysApi.updateKey(key, token);
+  return keysApi.updateKey(key, token, eTag);
 }
 
 export async function createKey(key: DialKey) {

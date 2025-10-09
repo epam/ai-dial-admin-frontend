@@ -31,12 +31,12 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 
 interface Props {
-  route: ApplicationRoute;
+  etag: string;
   template: InterceptorTemplate;
   names: string[];
 }
 
-const View: FC<Props> = ({ route, template, names }) => {
+const View: FC<Props> = ({ etag, template, names }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -66,14 +66,14 @@ const View: FC<Props> = ({ route, template, names }) => {
   );
 
   const onSave = useCallback(() => {
-    updateInterceptorTemplate(selectedTemplate).then((res) => {
+    updateInterceptorTemplate(selectedTemplate, etag).then((res) => {
       if (res.success) {
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [router, selectedTemplate, showNotification]);
+  }, [router, selectedTemplate, etag, showNotification]);
 
   const onDiscard = useCallback(() => {
     setSelectedTemplate(cloneDeep(template));
@@ -94,7 +94,7 @@ const View: FC<Props> = ({ route, template, names }) => {
       <div className="flex flex-row min-h-[34px] justify-between">
         <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
         <HeaderButtons
-          view={route}
+          view={ApplicationRoute.InterceptorTemplates}
           entity={selectedTemplate}
           isChanged={isChanged}
           onSave={onSave}

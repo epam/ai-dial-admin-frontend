@@ -12,18 +12,23 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { filterNames } from '@/src/utils/entities/filter-names';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page(params: { params: Promise<{ id: string }> }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
+  let etag = DEFAULT_ETAG;
   let keys: DialKey[] | null = [];
   let key: DialKey | null = null;
   let roles: DialRole[] | null = [];
   try {
     keys = await keysApi.getKeysList(token);
-    key = await keysApi.getKey((await params.params).id, token);
+    key = await keysApi.getKey((await params.params).id, token, etag).then((res) => {
+      etag = res?.etag || DEFAULT_ETAG;
+      return res?.response as DialKey | null;
+    });
     roles = await rolesApi.getRolesList(token);
     if (keys === void 0 || key === void 0 || roles === void 0) {
       return <Page403 />;
@@ -40,7 +45,13 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   return (
     <SaveValidationContextProvider>
-      <KeyView names={names} keys={keys?.map((key) => key.key || '') || []} originalKey={key} roles={roles || []} />
+      <KeyView
+        etag={etag}
+        names={names}
+        keys={keys?.map((key) => key.key || '') || []}
+        originalKey={key}
+        roles={roles || []}
+      />
     </SaveValidationContextProvider>
   );
 }

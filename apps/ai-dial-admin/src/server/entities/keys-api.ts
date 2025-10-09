@@ -13,8 +13,8 @@ export class KeysApi extends BaseApi {
     return this.get(KEYS_URL, token);
   }
 
-  getKey(name: string, token: JWT | null): Promise<DialKey | null> {
-    return this.get(KEY_URL(name), token);
+  getKey(name: string, token: JWT | null, eTag: string) {
+    return this.getActionWithEtag(KEY_URL(name), eTag, token);
   }
 
   removeKey(token: JWT | null, name?: string): Promise<ServerActionResponse> {
@@ -25,7 +25,7 @@ export class KeysApi extends BaseApi {
     return this.postAction(KEYS_URL, key, token);
   }
 
-  updateKey(key: DialKey, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putAction(KEY_URL(key.name), key, token);
+  updateKey(key: DialKey, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(KEY_URL(key.name), key, token, eTag);
   }
 }
