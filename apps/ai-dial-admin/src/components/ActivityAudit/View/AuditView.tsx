@@ -25,7 +25,6 @@ import EntityDiff from '@/src/components/ActivityAudit/View/DiffReport/EntityDif
 import CompareControl from '@/src/components/ActivityAudit/View/DiffReport/CompareControl';
 import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
 import ViewHeader from '@/src/components/ActivityAudit/View/Header/Header';
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 
 interface Props {
   activity: DialActivity;
@@ -123,7 +122,7 @@ const AuditView: FC<Props> = ({
         {!isModalView && (
           <div className="flex flex-row flex-wrap justify-between mb-6 gap-3">
             <h1 className="flex flex-row items-center gap-x-3">
-              <Tooltip tooltip={activity.activityId}>{activity.activityId}</Tooltip>
+              <DialTooltip tooltip={activity.activityId}>{activity.activityId}</DialTooltip>
               <CopyButton field={activity.activityId} title={t(EntityFieldsI18nKey.id)} />
             </h1>
             <div className="flex flex-row items-center gap-4 flex-wrap">

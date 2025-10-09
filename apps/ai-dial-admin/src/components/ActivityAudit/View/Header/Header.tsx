@@ -1,7 +1,7 @@
 import { FC, ReactNode } from 'react';
 
 import { IconExternalLink } from '@tabler/icons-react';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { DialButton, DialTooltip } from '@epam/ai-dial-ui-kit';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
@@ -14,7 +14,6 @@ import { ActivityAuditType } from '@/src/types/activity-audit';
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { auditResourceRoute } from '@/src/components/ActivityAudit/View/Header/constants';
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 
 interface Props {
   activity: DialActivity;
@@ -55,7 +54,7 @@ const ViewHeader: FC<Props> = ({ activity, isModalView, children }) => {
         {activity.resourceId && (
           <LabelledText label={t(ActivityAuditI18nKey.ResourceId)}>
             <div className="flex flex-row gap-1 items-center">
-              <Tooltip tooltip={activity.resourceId}>{activity.resourceId}</Tooltip>
+              <DialTooltip tooltip={activity.resourceId}>{activity.resourceId}</DialTooltip>
               {activity.activityType != ActivityAuditType.Delete && (
                 <DialButton
                   onClick={() => openResourceInNewTab(activity)}
@@ -81,7 +80,7 @@ const ViewHeader: FC<Props> = ({ activity, isModalView, children }) => {
         {activity.activityId && isModalView && (
           <LabelledText label={t(ActivityAuditI18nKey.ActivityId)}>
             <div className="flex flex-row gap-1 items-center">
-              <Tooltip tooltip={activity.activityId}>{activity.activityId}</Tooltip>
+              <DialTooltip tooltip={activity.activityId}>{activity.activityId}</DialTooltip>
               <DialButton
                 onClick={() => openActivityInNewTab(activity)}
                 cssClass="text-secondary"
