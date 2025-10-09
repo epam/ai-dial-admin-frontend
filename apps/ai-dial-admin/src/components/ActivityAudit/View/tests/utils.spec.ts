@@ -422,12 +422,8 @@ describe('Activity audit :: createSectionFromDiffs', () => {
     expect(result[EntityParameterKeys.ROLES]).toHaveLength(2);
 
     expect(result[EntityParameterKeys.ROLES][0]).toEqual({
-      current: [
-        ...current[EntityParameterKeys.DEFAULT_ROLE_LIMIT],
-      ],
-      compare: [
-        ...compare[EntityParameterKeys.DEFAULT_ROLE_LIMIT],
-      ],
+      current: [...current[EntityParameterKeys.DEFAULT_ROLE_LIMIT]],
+      compare: [...compare[EntityParameterKeys.DEFAULT_ROLE_LIMIT]],
     });
 
     expect(result[EntityParameterKeys.ROLES][1]).toEqual({
