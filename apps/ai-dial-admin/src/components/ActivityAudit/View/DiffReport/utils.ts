@@ -27,11 +27,9 @@ const getRowDataByParameter = (
       if (item.parameter) {
         roleLimitsKeys.forEach((key) => {
           const value =
-            valueMap[key] === NO_LIMITS_VALUE
+            valueMap[key] === NO_LIMITS_VALUE || valueMap[key] === NO_LIMITS_ACCEPTED_USERS
               ? NO_LIMITS_KEY
-              : valueMap[key] === NO_LIMITS_ACCEPTED_USERS
-                ? NO_LIMITS_KEY
-                : valueMap[key];
+              : valueMap[key];
           newObj[key] = value || NO_LIMITS_KEY;
         });
       }
@@ -42,7 +40,7 @@ const getRowDataByParameter = (
     return data?.map((item) => {
       return {
         ...item,
-        value: item.value === NO_LIMITS_VALUE ? NO_LIMITS_KEY : item.value,
+        value: item.value === NO_LIMITS_VALUE || item.value === NO_LIMITS_ACCEPTED_USERS ? NO_LIMITS_KEY : item.value,
       };
     });
   }
