@@ -12,19 +12,13 @@ export const setRolesDiffs = (
   const currentLimits = current[EntityParameterKeys.ROLE_LIMITS];
   const compareLimits = compare[EntityParameterKeys.ROLE_LIMITS];
 
-  const currentDefaultShare = current[EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT];
-  const compareDefaultShare = compare[EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT];
-
-  const currentLimitsShare = current[EntityParameterKeys.ROLE_SHARE_LIMITS];
-  const compareLimitsShare = compare[EntityParameterKeys.ROLE_SHARE_LIMITS];
-
   if (currentDefault?.length || compareDefault?.length) {
     if (!sections[EntityParameterKeys.ROLES]) {
       sections[EntityParameterKeys.ROLES] = [];
     }
     sections[EntityParameterKeys.ROLES].push({
-      current: [...(currentDefault || []), ...(currentDefaultShare || [])],
-      compare: [...(compareDefault || []), ...(compareDefaultShare || [])],
+      current: [...(currentDefault || [])],
+      compare: [...(compareDefault || [])],
     });
   }
 
@@ -33,8 +27,8 @@ export const setRolesDiffs = (
       sections[EntityParameterKeys.ROLES] = [];
     }
     sections[EntityParameterKeys.ROLES].push({
-      current: mergeLimits(currentLimits || [], currentLimitsShare || []),
-      compare: mergeLimits(compareLimits || [], compareLimitsShare || []),
+      current: currentLimits || [],
+      compare: compareLimits || [],
     });
   }
 
@@ -42,15 +36,14 @@ export const setRolesDiffs = (
   if (!currentDefault && !compareDefault && !currentLimits && !compareLimits) {
     const currentRoleLimits = current[EntityParameterKeys.LIMITS];
     const compareRoleLimits = compare[EntityParameterKeys.LIMITS];
-    const currentLimitsShare = current[EntityParameterKeys.SHARE];
-    const compareLimitsShare = compare[EntityParameterKeys.SHARE];
+
     if (currentRoleLimits?.length || compareRoleLimits?.length) {
       if (!sections[EntityParameterKeys.ROLES]) {
         sections[EntityParameterKeys.ROLES] = [];
       }
       sections[EntityParameterKeys.ROLES].push({
-        current: mergeLimits(currentRoleLimits || [], currentLimitsShare || []),
-        compare: mergeLimits(compareRoleLimits || [], compareLimitsShare || []),
+        current: currentRoleLimits || [],
+        compare: compareRoleLimits || [],
       });
     }
 

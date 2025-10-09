@@ -1,5 +1,5 @@
 import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
-import { roleLimitsKeys, roleShareLimitsKeys } from '@/src/components/ActivityAudit/View/DiffReport/utils';
+import { roleLimitsKeys } from '@/src/components/ActivityAudit/View/DiffReport/utils';
 import { ModelViewI18nKey } from '@/src/constants/i18n';
 import { NO_LIMITS_KEY } from '@/src/constants/role';
 import { ActivityAuditDiff, ActivityAuditSection } from '@/src/models/activity-audit';
@@ -29,10 +29,8 @@ const separateObjectParameterKeys = [
   EntityParameterKeys.INTERCEPTORS,
   EntityParameterKeys.ROLE_LIMITS,
   EntityParameterKeys.DEFAULT_ROLE_LIMIT,
-  EntityParameterKeys.ROLE_SHARE_LIMITS,
   EntityParameterKeys.COST_LIMIT,
   EntityParameterKeys.AUTH,
-  EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT,
   EntityParameterKeys.FEATURES,
   EntityParameterKeys.APPLICATIONS,
   EntityParameterKeys.ENTITIES,
@@ -369,7 +367,6 @@ const compareSeparateObjects = (
   if (
     key === EntityParameterKeys.ROLE_LIMITS ||
     key === EntityParameterKeys.LIMITS ||
-    key === EntityParameterKeys.ROLE_SHARE_LIMITS ||
     key === EntityParameterKeys.SHARE
   ) {
     compareRoleLimits(diffs, val1 as Record<string, DialRoleLimits>, val2 as Record<string, DialRoleLimits>, isCurrent);
@@ -381,9 +378,6 @@ const compareSeparateObjects = (
 
   if (key === EntityParameterKeys.DEFAULT_ROLE_LIMIT) {
     compareDefaultLimits(diffs, val1, val2, isCurrent);
-  }
-  if (key === EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT) {
-    compareDefaultShareLimits(diffs, val1, val2, isCurrent);
   }
   if (key === EntityParameterKeys.FEATURES || key === EntityParameterKeys.AUTH) {
     compareSimpleObjects(diffs, val1, val2, isCurrent);
@@ -418,7 +412,6 @@ const fillSeparateObjects = (diffs: ActivityAuditDiff[], key: string, value: obj
   if (
     key === EntityParameterKeys.ROLE_LIMITS ||
     key === EntityParameterKeys.LIMITS ||
-    key === EntityParameterKeys.ROLE_SHARE_LIMITS ||
     key === EntityParameterKeys.SHARE
   ) {
     fillRoleLimits(diffs, value as Record<string, DialRoleLimits>);
@@ -428,9 +421,6 @@ const fillSeparateObjects = (diffs: ActivityAuditDiff[], key: string, value: obj
   }
   if (key === EntityParameterKeys.COST_LIMIT) {
     fillDefaultLimits(diffs, value);
-  }
-  if (key === EntityParameterKeys.DEFAULT_ROLE_SHARE_LIMIT) {
-    fillDefaultShareLimits(diffs, value);
   }
   if (key === EntityParameterKeys.FEATURES) {
     fillSimpleObjects(diffs, value);
@@ -693,7 +683,6 @@ export const fillRoleLimits = (diffs: ActivityAuditDiff[], value: Record<string,
 export const convertRoleLimitsIntoString = (limits?: DialRoleLimits): string => {
   return limits
     ? Object.entries(limits)
-        .filter(([key]) => key !== EntityParameterKeys.ENABLED)
         .map(([key, value]) => `${key}: ${value}`)
         .join(', ')
     : '';
@@ -727,39 +716,6 @@ export const compareDefaultLimits = (
  */
 export const fillDefaultLimits = (diffs: ActivityAuditDiff[], value: DialRoleLimits): void => {
   roleLimitsKeys.forEach((key) => {
-    const val = value?.[key as keyof typeof value] || NO_LIMITS_KEY;
-    fillSimpleTypes(diffs, key, val);
-  });
-};
-
-/**
- * Compare default role share limits
- *
- * @param {ActivityAuditDiff[]} diffs - result array
- * @param {DialRoleLimits} val1 - first value to compare
- * @param {DialRoleLimits} val2 - second value to compare
- */
-export const compareDefaultShareLimits = (
-  diffs: ActivityAuditDiff[],
-  val1: DialRoleLimits,
-  val2: DialRoleLimits,
-  isCurrent?: boolean,
-): void => {
-  roleShareLimitsKeys.forEach((key) => {
-    const value1 = val1?.[key as keyof typeof val1] || NO_LIMITS_KEY;
-    const value2 = val2?.[key as keyof typeof val2] || NO_LIMITS_KEY;
-    compareSimpleTypes(diffs, key, value1, value2, isCurrent);
-  });
-};
-
-/**
- * Fill default role share limits diff
- *
- * @param {ActivityAuditDiff[]} diffs - result array
- * @param {DialRoleLimits} value - value to fill
- */
-export const fillDefaultShareLimits = (diffs: ActivityAuditDiff[], value: DialRoleLimits): void => {
-  roleShareLimitsKeys.forEach((key) => {
     const val = value?.[key as keyof typeof value] || NO_LIMITS_KEY;
     fillSimpleTypes(diffs, key, val);
   });
