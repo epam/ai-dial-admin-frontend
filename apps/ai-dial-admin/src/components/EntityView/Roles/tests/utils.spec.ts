@@ -91,7 +91,7 @@ describe('Roles View :: getRolesGridData', () => {
       {
         isPublic: false,
         defaultRoleLimit: { day: '2', minute: '2' },
-        roleLimits: { limit: { day: '1', minute: '1' } },
+        roleLimits: { limit: { day: '1', minute: '1', enabled: true } },
       },
       [{ name: 'limit' }],
     );
@@ -120,7 +120,7 @@ describe('Roles View :: getRolesGridData', () => {
       {
         isPublic: false,
         defaultRoleLimit: { day: '2', minute: '2' },
-        roleLimits: { limit: { day: '1', minute: '1' } },
+        roleLimits: { limit: { day: '1', minute: '1', enabled: true } },
       },
       [{ name: 'limit' }],
     );

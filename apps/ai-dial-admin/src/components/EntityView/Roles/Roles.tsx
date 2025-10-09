@@ -39,7 +39,10 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
   const entityRef = useRef(entity);
 
   useEffect(() => {
-    const roleLimits = [...Object.keys(entity?.roleLimits || {})];
+    const roleLimits = Object.keys(entity?.roleLimits || {}).filter(
+      (key) => entity?.roleLimits?.[key]?.enabled === true,
+    );
+
     setAvailableRoles(roles.filter((role) => !roleLimits.includes(role.name as string)));
   }, [entity, roles]);
 
@@ -73,7 +76,12 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
     (roles: DialRole[]) => {
       const newRoles = {} as DialRoleLimitsMap;
       roles.forEach((role) => {
-        newRoles[role.name as string] = {};
+        const limit = role.name as string;
+        if (entity.roleLimits && entity.roleLimits[limit]) {
+          entity.roleLimits[limit].enabled = true;
+        } else {
+          newRoles[limit] = { enabled: true };
+        }
       });
 
       onChangeEntity({

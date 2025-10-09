@@ -4,7 +4,6 @@ import { ENTITY_BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { LIMIT_COLUMNS } from '@/src/components/EntityView/Roles/utils';
 import { NO_LIMITS_KEY } from '@/src/constants/role';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DialRoleShare } from '@/src/models/dial/role-limits';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialKey } from '@/src/models/dial/key';
 import { DialModel } from '@/src/models/dial/model';
@@ -27,10 +26,6 @@ export const ENTITY_COLUMNS = (t: (v: string) => string): ColDef[] => [
     tooltipValueGetter: (params) => t(params.value),
   },
 ];
-
-export const isDialRoleShareKey = (key: string): key is keyof DialRoleShare => {
-  return key === 'invitationTtl' || key === 'maxAcceptedUsers';
-};
 
 export const ROLES_ENTITIES_COLUMNS = (
   t: (v: string) => string,
@@ -125,17 +120,16 @@ export const getEntitiesForRole = (role: DialRole, allEntities: EntitiesGridData
 
   Object.keys(role?.limits).forEach((entityName) => {
     const limit = role?.limits?.[entityName];
-    const share = role?.share?.[entityName];
-    const entity = allEntities.find((m) => m.name === entityName);
-    data.push({
-      ...(entity as EntitiesGridData),
-      day: limit?.day == null ? NO_LIMITS_KEY : limit?.day,
-      minute: limit?.minute == null ? NO_LIMITS_KEY : limit?.minute,
-      month: limit?.month == null ? NO_LIMITS_KEY : limit?.month,
-      week: limit?.week == null ? NO_LIMITS_KEY : limit?.week,
-      invitationTtl: share?.invitationTtl == null ? NO_LIMITS_KEY : share?.invitationTtl,
-      maxAcceptedUsers: share?.maxAcceptedUsers == null ? NO_LIMITS_KEY : share?.maxAcceptedUsers,
-    });
+    if (limit?.enabled) {
+      const entity = allEntities.find((m) => m.name === entityName);
+      data.push({
+        ...(entity as EntitiesGridData),
+        day: limit?.day == null ? NO_LIMITS_KEY : limit?.day,
+        minute: limit?.minute == null ? NO_LIMITS_KEY : limit?.minute,
+        month: limit?.month == null ? NO_LIMITS_KEY : limit?.month,
+        week: limit?.week == null ? NO_LIMITS_KEY : limit?.week,
+      });
+    }
   });
 
   return data;

@@ -39,8 +39,7 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
     expect(
       getEntitiesForRole(
         {
-          limits: { model: { day: 1 } },
-          share: { model: { invitationTtl: 3600, maxAcceptedUsers: 10 } },
+          limits: { model: { day: 1, enabled: true } },
           model1: { day: 1 },
         },
         data,
@@ -54,8 +53,6 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
         name: 'model',
         route: ApplicationRoute.Models,
         type: MenuI18nKey.Models,
-        invitationTtl: 3600,
-        maxAcceptedUsers: 10,
       },
     ]);
   });
@@ -64,8 +61,7 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
     expect(
       getEntitiesForRole(
         {
-          limits: { model: { minute: 1, week: 2, month: 3 } },
-          share: { model: { invitationTtl: 1800, maxAcceptedUsers: 5 } },
+          limits: { model: { minute: 1, week: 2, month: 3, enabled: true } },
           model1: { minute: 1, week: 2, month: 3 },
         },
         data,
@@ -79,8 +75,6 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
         name: 'model',
         route: ApplicationRoute.Models,
         type: MenuI18nKey.Models,
-        invitationTtl: 1800,
-        maxAcceptedUsers: 5,
       },
     ]);
   });
@@ -89,7 +83,7 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
     expect(
       getEntitiesForRole(
         {
-          limits: { model: { minute: 1, week: 2, month: 3 } },
+          limits: { model: { minute: 1, week: 2, month: 3, enabled: true } },
           model1: { minute: 1, week: 2, month: 3 },
         },
         data,
@@ -103,8 +97,6 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
         name: 'model',
         route: ApplicationRoute.Models,
         type: MenuI18nKey.Models,
-        invitationTtl: 'No Limits',
-        maxAcceptedUsers: 'No Limits',
       },
     ]);
   });
@@ -114,11 +106,8 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
       getEntitiesForRole(
         {
           limits: {
-            model: { day: 1 },
-            model2: { minute: 1, week: 2, month: 3 },
-          },
-          share: {
-            model: { invitationTtl: 3600, maxAcceptedUsers: 10 },
+            model: { day: 1, enabled: true },
+            model2: { minute: 1, week: 2, month: 3, enabled: true },
           },
           model1: { day: 1 },
         },
@@ -133,16 +122,12 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
         name: 'model',
         route: ApplicationRoute.Models,
         type: MenuI18nKey.Models,
-        invitationTtl: 3600,
-        maxAcceptedUsers: 10,
       },
       {
         day: 'No Limits',
         minute: 1,
         week: 2,
         month: 3,
-        invitationTtl: 'No Limits',
-        maxAcceptedUsers: 'No Limits',
       },
     ]);
   });
@@ -161,11 +146,8 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
       getEntitiesForRole(
         {
           limits: {
-            model: { minute: 10 },
-            model2: { month: 5 },
-          },
-          share: {
-            model: { invitationTtl: 3600 },
+            model: { minute: 10, enabled: true },
+            model2: { month: 5, enabled: true },
           },
         },
         data,
@@ -179,16 +161,12 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
         name: 'model',
         route: ApplicationRoute.Models,
         type: MenuI18nKey.Models,
-        invitationTtl: 3600,
-        maxAcceptedUsers: 'No Limits',
       },
       {
         day: 'No Limits',
         minute: 'No Limits',
         week: 'No Limits',
         month: 5,
-        invitationTtl: 'No Limits',
-        maxAcceptedUsers: 'No Limits',
       },
     ]);
   });
