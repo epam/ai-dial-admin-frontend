@@ -34,7 +34,7 @@ const LimitControl: FC<Props> = ({ limits, controlClassName, isCostInputs, onCha
       placeholder={t(RolesI18nKey.NoLimits)}
       value={limits?.[fieldKey] === NO_LIMITS_VALUE ? '' : (limits?.[fieldKey] as string | null)}
       onChange={(value) => onChangeLimit(value, fieldKey)}
-      iconBeforeInput={isCostInputs ? <IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} /> : null}
+      iconBefore={isCostInputs ? <IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} /> : null}
       {...props}
     />
   );
