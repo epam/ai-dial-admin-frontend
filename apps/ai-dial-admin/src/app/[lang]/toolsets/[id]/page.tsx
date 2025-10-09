@@ -6,7 +6,7 @@ import Page403 from '@/src/components/Page403/Page403';
 import ToolsetView from '@/src/components/Toolsets/View/View';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Toolset } from '@/src/models/dial/toolset';
-import { logger } from '@/src/server/logger';
+import { logError } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -37,7 +37,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       return <Page403 />;
     }
   } catch (e) {
-    logger.error('Getting toolSet view data error', e);
+    logError(e, 'Failed to fetch toolSet view data');
   }
 
   if (toolSet == null) {

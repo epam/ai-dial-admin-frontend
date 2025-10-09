@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { getInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
-import { logger } from '@/src/server/logger';
+import { logError } from '@/src/server/logger';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import InterceptorTemplateView from '@/src/components/InterceptorTemplates/View/View';
 import Page403 from '@/src/components/Page403/Page403';
@@ -42,7 +42,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       return <Page403 />;
     }
   } catch (e) {
-    logger.error('Getting interceptor template view data error', e);
+    logError(e, 'Failed to fetch interceptor template data');
   }
 
   if (!interceptorTemplate) {
