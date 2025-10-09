@@ -1,10 +1,10 @@
+import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
+import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_VALUE } from '@/src/components/EntityView/Roles/constants';
 import { NO_LIMITS_KEY } from '@/src/constants/role';
 import { ActivityAuditDiff, ActivityAuditDiffSection } from '@/src/models/activity-audit';
 import { ActivityAuditResourceType, DiffStatus, DiffView } from '@/src/types/activity-audit';
-import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
 
-export const roleLimitsKeys = ['minute', 'day', 'week', 'month'];
-export const roleShareLimitsKeys = ['maxAcceptedUsers', 'invitationTtl'];
+export const roleLimitsKeys = ['minute', 'day', 'week', 'month', 'enabled'];
 
 const getRowDataByParameter = (
   data?: ActivityAuditDiff[],
@@ -26,14 +26,22 @@ const getRowDataByParameter = (
 
       if (item.parameter) {
         roleLimitsKeys.forEach((key) => {
-          newObj[key] = valueMap[key] || NO_LIMITS_KEY;
-        });
-        roleShareLimitsKeys.forEach((key) => {
-          newObj[key] = valueMap[key] || NO_LIMITS_KEY;
+          const value =
+            valueMap[key] === NO_LIMITS_VALUE || valueMap[key] === NO_LIMITS_ACCEPTED_USERS
+              ? NO_LIMITS_KEY
+              : valueMap[key];
+          newObj[key] = value || NO_LIMITS_KEY;
         });
       }
-
       return newObj as unknown as ActivityAuditDiff;
+    });
+  }
+  if (parameter === EntityParameterKeys.COST_LIMIT) {
+    return data?.map((item) => {
+      return {
+        ...item,
+        value: item.value === NO_LIMITS_VALUE || item.value === NO_LIMITS_ACCEPTED_USERS ? NO_LIMITS_KEY : item.value,
+      };
     });
   }
   return data;
