@@ -2,10 +2,11 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ColDef } from 'ag-grid-community';
 import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { ColDef } from 'ag-grid-community';
 
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
+import { importPreviewResource } from '@/src/components/ActivityAudit/View/Header/constants';
 import Grid from '@/src/components/Grid/Grid';
 import {
   getComponentColDefs,
@@ -44,9 +45,10 @@ const ConfigurationGrid: FC<Props> = ({ selectedTab, tabData, currentState, prev
   }, [selectedTab]);
 
   const partialActivity = useMemo(() => {
+    const type = getEntitiesList(t).find((e) => e.id === selectedTab)?.id as EntityType;
     return {
       resourceId: nextEntity?.name || nextEntity?.key || nextEntity?.$id,
-      resourceType: getEntitiesList(t).find((e) => e.id === selectedTab)?.name,
+      resourceType: importPreviewResource[type],
       action,
     } as DialActivity;
   }, [action, nextEntity?.$id, nextEntity?.key, nextEntity?.name, selectedTab, t]);
