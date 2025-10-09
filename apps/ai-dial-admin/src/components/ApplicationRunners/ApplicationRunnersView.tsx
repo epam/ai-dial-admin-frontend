@@ -43,11 +43,12 @@ import {
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 
 interface Props {
+  etag: string;
   originalScheme: DialApplicationScheme;
   roles: DialRole[] | null;
 }
 
-const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
+const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -131,7 +132,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
     const req =
       selectedFormat === ExportFormat.CORE
         ? updateCoreEntity(getFileFromEntity(ApplicationRoute.ApplicationRunners, selectedRunner))
-        : updateApplicationScheme(selectedRunner);
+        : updateApplicationScheme(selectedRunner, etag);
 
     req.then((res) => {
       if (res.success) {
@@ -141,7 +142,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedFormat, selectedRunner, router, showNotification]);
+  }, [selectedFormat, selectedRunner, etag, router, showNotification]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">

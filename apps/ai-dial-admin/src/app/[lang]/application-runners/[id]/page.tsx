@@ -11,18 +11,23 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialRole } from '@/src/models/dial/role';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page(params: { params: Promise<{ id: string }> }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
+  let etag = DEFAULT_ETAG;
   let applicationScheme: DialApplicationScheme | null | undefined = null;
   let roles: DialRole[] | null = [];
 
   try {
     const id = decodeURIComponent((await params.params).id);
-    applicationScheme = await applicationRunnersApi.getApplicationScheme(id, token);
+    applicationScheme = await applicationRunnersApi.getApplicationScheme(id, token, etag).then((res) => {
+      etag = res?.etag || DEFAULT_ETAG;
+      return res?.response as DialApplicationScheme | null;
+    });
     roles = await rolesApi.getRolesList(token);
     if (roles === void 0 || applicationScheme === void 0) {
       return <Page403 />;
@@ -37,7 +42,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   return (
     <SaveValidationContextProvider>
-      <ApplicationRunnersView originalScheme={applicationScheme} roles={roles} />
+      <ApplicationRunnersView etag={etag} originalScheme={applicationScheme} roles={roles} />
     </SaveValidationContextProvider>
   );
 }

@@ -17,7 +17,7 @@ export async function createApplicationScheme(scheme: DialApplicationScheme) {
   return applicationRunnersApi.createApplicationScheme(scheme, token);
 }
 
-export async function updateApplicationScheme(runner: DialApplicationScheme) {
+export async function updateApplicationScheme(runner: DialApplicationScheme, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return applicationRunnersApi.updateApplicationScheme(
     {
@@ -28,5 +28,6 @@ export async function updateApplicationScheme(runner: DialApplicationScheme) {
       })),
     },
     token,
+    etag,
   );
 }

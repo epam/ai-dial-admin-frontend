@@ -15,8 +15,8 @@ export class InterceptorTemplatesApi extends BaseApi {
     return this.get(INTERCEPTOR_TEMPLATES_URL, token);
   }
 
-  getInterceptorTemplate(name: string, token: JWT | null): Promise<InterceptorTemplate | null> {
-    return this.get(INTERCEPTOR_TEMPLATE_URL(name), token);
+  getInterceptorTemplate(name: string, token: JWT | null, eTag: string) {
+    return this.getActionWithEtag(INTERCEPTOR_TEMPLATE_URL(name), eTag, token);
   }
 
   createInterceptorTemplate(template: InterceptorTemplate, token: JWT | null): Promise<ServerActionResponse> {
@@ -27,7 +27,11 @@ export class InterceptorTemplatesApi extends BaseApi {
     return this.deleteAction(DELETE_INTERCEPTOR_TEMPLATE_URL(name), token);
   }
 
-  updateInterceptorTemplate(template: InterceptorTemplate, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putAction(INTERCEPTOR_TEMPLATE_URL(template.name), template, token);
+  updateInterceptorTemplate(
+    template: InterceptorTemplate,
+    token: JWT | null,
+    eTag: string,
+  ): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(INTERCEPTOR_TEMPLATE_URL(template.name), template, token, eTag);
   }
 }
