@@ -8,10 +8,10 @@ interface Props {
   elementId: string;
   fieldTitle?: string;
   placeholder?: string;
-  value?: string | null;
+  value?: number | string;
   controlClassName?: string;
   disabled?: boolean;
-  onChange?: (value: string | number) => void;
+  onChange?: (value: number | string) => void;
 }
 
 const PriceControl: FC<Props> = ({ elementId, fieldTitle, controlClassName, ...props }) => {
