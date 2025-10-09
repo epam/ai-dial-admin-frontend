@@ -19,7 +19,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
-import { AssetToolset } from '@/src/models/dial/toolset';
+import { AssetToolset, Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -115,7 +115,7 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
 
   const onChangeEntity = useCallback(
     (entity: Toolset) => {
-      setSelectedToolset(entity);
+      setSelectedToolset(entity as AssetToolset);
     },
     [setSelectedToolset],
   );
