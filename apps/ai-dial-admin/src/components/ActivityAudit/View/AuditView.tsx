@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 
 import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
-import { ButtonVariant, DialButton, DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialConfirmationPopup, DialTooltip } from '@epam/ai-dial-ui-kit';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { ActivityAuditI18nKey, ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
