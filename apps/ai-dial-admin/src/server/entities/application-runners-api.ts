@@ -14,12 +14,7 @@ export class ApplicationRunnersApi extends BaseApi {
   }
 
   getApplicationScheme(name: string, token: JWT | null, etag: string) {
-    return this.getActionWithEtag(APPLICATION_SCHEME_URL(name), etag, token).then((res) => {
-      return {
-        ...res,
-        response: res?.response === void 0 ? void 0 : (res?.response as DialApplicationScheme[])?.[0],
-      };
-    });
+    return this.getActionWithEtag(APPLICATION_SCHEME_URL(name), etag, token);
   }
 
   removeApplicationScheme(token: JWT | null, id?: string): Promise<ServerActionResponse> {
