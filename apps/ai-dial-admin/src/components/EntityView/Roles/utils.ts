@@ -149,6 +149,7 @@ export const SHARING_COLUMNS = (
       ...cellRenderParams,
       getDefaultPlaceholder,
       onChange,
+      valueFormatter: (v: string) => v,
     },
   },
   {
@@ -163,6 +164,7 @@ export const SHARING_COLUMNS = (
       ...cellRenderParams,
       getDefaultPlaceholder,
       onChange,
+      valueFormatter: (v: string) => v,
     },
   },
 ];
