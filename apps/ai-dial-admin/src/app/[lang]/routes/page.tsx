@@ -8,7 +8,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
-import { logger } from '@/src/server/logger';
+import { logError } from '@/src/server/logger';
 import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
@@ -31,7 +31,7 @@ export default async function Page() {
       return <Page403 />;
     }
   } catch (e) {
-    logger.error('Getting routes error', e);
+    logError(e, 'Failed to fetch routes view data');
   }
 
   return (

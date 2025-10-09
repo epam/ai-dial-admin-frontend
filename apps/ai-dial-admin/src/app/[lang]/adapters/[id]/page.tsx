@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 
 import { adaptersApi } from '@/src/app/api/api';
 import { DialAdapter } from '@/src/models/dial/adapter';
-import { logger } from '@/src/server/logger';
+import { logError } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -25,7 +25,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       return res?.response as DialAdapter | null;
     });
   } catch (e) {
-    logger.error('Getting adapter view data error', e);
+    logError(e, 'Failed to fetch adapter view data');
   }
 
   if (adapter == null) {

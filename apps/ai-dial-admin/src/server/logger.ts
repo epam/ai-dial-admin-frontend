@@ -9,9 +9,11 @@ const stream = pretty({
 
 export const logger = pino(stream);
 
-export const logError = (error: unknown, context: Record<string, unknown>, message: string) => {
-  const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-  const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
+export const logError = (error: unknown, message: string, context: Record<string, unknown> = {}) => {
+  const errorMessage = (error as { message: string }).message
+    ? (error as { message: string }).message
+    : 'Unknown error';
+  const errorStack = (error as { error: string }) ? (error as { error: string }).error : 'No stack trace available';
 
   logger.error(
     {
