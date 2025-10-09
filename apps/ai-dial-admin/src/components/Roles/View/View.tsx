@@ -142,6 +142,12 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
       const newLimits: Record<string, DialRoleLimits> = {};
       rows.forEach((row) => {
         newLimits[row.name || ''] = {};
+        const limit = row.name as string;
+        if (selectedRole.limits && selectedRole.limits[limit]) {
+          selectedRole.limits[limit].enabled = true;
+        } else {
+          newLimits[limit] = { enabled: true };
+        }
       });
       onChangeRole({
         ...selectedRole,
