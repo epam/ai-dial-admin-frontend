@@ -53,6 +53,8 @@ const getRolesWithLimits = (roles: DialRole[], entity?: EntityRoleLimits) => {
       if (!role) return null;
 
       const limit = entity?.roleLimits?.[roleName];
+
+      if (!limit?.enabled) return null;
       return mapRoleData(role, limit, entity);
     })
     .filter((data) => data !== null);
