@@ -1,9 +1,9 @@
 import { FC } from 'react';
 
 import classNames from 'classnames';
+import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import FolderList from '@/src/components/Common/FolderList/FolderList';
-import Loader from '@/src/components/Common/Loader/Loader';
 import Popup from '@/src/components/Common/Popup/Popup';
 import FolderInfo from '@/src/components/FoldersStorage/FolderInfo';
 import { FoldersI18nKey } from '@/src/constants/i18n';
@@ -30,7 +30,7 @@ const RulesStructure: FC<Props> = ({ isLoading, modalState, onClose }) => {
       containerClassName={containerClassName}
     >
       {isLoading ? (
-        <Loader size={50} />
+        <DialLoader size={50} />
       ) : (
         <div className="flex flex-1 flex-row px-6 min-h-0">
           <div className="flex flex-1 gap-4 pt-4 mb-6 min-h-0">

@@ -6,9 +6,8 @@ import { createPortal } from 'react-dom';
 
 import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
 
-import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { ActivityAuditI18nKey, ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -17,7 +16,6 @@ import { useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/activity-audit';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ActivityAuditEntity, CompareView, DiffView } from '@/src/types/activity-audit';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { rollbackEntityPerRevision } from '@/src/utils/audit/get-rollback-request';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
@@ -51,7 +49,7 @@ const AuditView: FC<Props> = ({
 
   const { showNotification } = useNotification();
 
-  const [modalState, setModalState] = useState(PopUpState.Closed);
+  const [isOpenModal, setIsOpenModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [diffView, setDiffView] = useState(DiffView.ALL);
   const [compareView, setCompareView] = useState(CompareView.NEXT);
@@ -72,12 +70,12 @@ const AuditView: FC<Props> = ({
   );
 
   const onOpenModal = useCallback(() => {
-    setModalState(PopUpState.Opened);
-  }, [setModalState]);
+    setIsOpenModal(true);
+  }, [setIsOpenModal]);
 
   const onCloseModal = useCallback(() => {
-    setModalState(PopUpState.Closed);
-  }, [setModalState]);
+    setIsOpenModal(false);
+  }, [setIsOpenModal]);
 
   const resourceRollback = useCallback(() => {
     setIsLoading(true);
@@ -158,13 +156,13 @@ const AuditView: FC<Props> = ({
           />
         </div>
       </div>
-      {modalState === PopUpState.Opened &&
+      {isOpenModal &&
         createPortal(
-          <ConfirmationModal
+          <DialConfirmationPopup
+            open={isOpenModal}
             isLoading={isLoading}
-            heading={t(ActivityAuditI18nKey.ConfirmRollback)}
+            title={t(ActivityAuditI18nKey.ConfirmRollback)}
             onConfirm={resourceRollback}
-            modalState={modalState}
             confirmLabel={t(ButtonsI18nKey.Rollback)}
             onClose={onCloseModal}
           >
@@ -175,7 +173,7 @@ const AuditView: FC<Props> = ({
               </p>
               <p>{t(ActivityAuditI18nKey.ConfirmRollbackAsking)}</p>
             </div>
-          </ConfirmationModal>,
+          </DialConfirmationPopup>,
           document.body,
         )}
     </>

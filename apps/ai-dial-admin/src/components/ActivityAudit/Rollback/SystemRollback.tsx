@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 
 import { IconRestore } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialLoader } from '@epam/ai-dial-ui-kit';
 
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 import {
@@ -17,7 +17,6 @@ import DiffLegend from '@/src/components/ActivityAudit/View/DiffReport/DiffLegen
 import AuditEntityGrid from '@/src/components/ActivityAudit/EntityGrid/EntityGrid';
 import { mergeEntityMaps } from '@/src/components/ActivityAudit/View/utils';
 import { getSystemRollbackColumns } from '@/src/components/ActivityAudit/Rollback/utils';
-import Loader from '@/src/components/Common/Loader/Loader';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import { ActivityAuditI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -180,7 +179,7 @@ const SystemRollback: FC = () => {
         </div>
         <div className="flex-1 min-h-0 flex flex-row w-full mb-4 mt-2 overflow-auto">
           {isLoading ? (
-            <Loader size={40} />
+            <DialLoader size={40} />
           ) : (
             <div className="flex-1 flex flex-col min-h-0">
               <div className="flex-1 flex flex-row gap-8">

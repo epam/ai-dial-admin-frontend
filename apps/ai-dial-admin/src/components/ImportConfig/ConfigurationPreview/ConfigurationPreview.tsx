@@ -3,10 +3,9 @@
 import { FC, useEffect, useRef, useState } from 'react';
 
 import { IconDownload } from '@tabler/icons-react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { previewJsonConfigs, previewZipConfig } from '@/src/app/[lang]/import-config/actions';
-import Loader from '@/src/components/Common/Loader/Loader';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import ConfigurationGrid from '@/src/components/ImportConfig/ConfigurationPreview/ConfigurationGrid';
 import { getConfigurationPreview } from '@/src/components/ImportConfig/ConfigurationPreview/ConfigurationPreview.utils';
@@ -76,7 +75,7 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
       <div className="flex-1 min-h-0">
         {isLoading ? (
           <div className="flex flex-col h-full w-full justify-center items-center">
-            <Loader size={45} containerClassName="h-auto" />
+            <DialLoader size={45} cssClass="h-auto" />
             <p className="mt-3 text-primary small">{t(ImportI18nKey.ConfigurationParsing)}</p>
           </div>
         ) : (

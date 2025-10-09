@@ -7,13 +7,12 @@ import { createPortal } from 'react-dom';
 import { IconRefresh, IconRestore } from '@tabler/icons-react';
 import { GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
 import classNames from 'classnames';
-import { DialButton, ButtonVariant } from '@epam/ai-dial-ui-kit';
+import { DialButton, ButtonVariant, DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
 
 import { getActivities } from '@/src/app/[lang]/activity-audit/actions';
 import { getActivityAuditColumns, getGridFilters } from '@/src/components/ActivityAudit/List/utils';
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
 import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
-import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
 import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/EntityListView/constants';
 import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/ResetFiltersButton';
@@ -50,7 +49,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
 
   const { showNotification } = useNotification();
 
-  const [rollbackModalState, setRollbackModalState] = useState(PopUpState.Closed);
+  const [isRollbackModalOpen, setIsRollbackModalOpen] = useState(false);
   const [detailsModalState, setDetailsModalState] = useState(PopUpState.Closed);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -61,10 +60,10 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
   const [selectedActivity, setSelectedActivity] = useState<DialActivity | undefined>(void 0);
 
   const onCloseModal = useCallback(() => {
-    setRollbackModalState(PopUpState.Closed);
+    setIsRollbackModalOpen(false);
     setDetailsModalState(PopUpState.Closed);
     setSelectedActivity(void 0);
-  }, [setRollbackModalState]);
+  }, [setIsRollbackModalOpen]);
 
   const gridDataSource: IDatasource = useMemo(
     () => ({
@@ -139,7 +138,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
   }, []);
 
   const onOpenConfirmationModal = useCallback((activity?: DialActivity) => {
-    setRollbackModalState(PopUpState.Opened);
+    setIsRollbackModalOpen(true);
     setSelectedActivity(activity);
   }, []);
 
@@ -251,13 +250,13 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
           )}
         </div>
       </ListView>
-      {rollbackModalState === PopUpState.Opened &&
+      {isRollbackModalOpen &&
         createPortal(
-          <ConfirmationModal
+          <DialConfirmationPopup
+            open={isRollbackModalOpen}
             isLoading={isLoading}
-            heading={t(ActivityAuditI18nKey.ConfirmRollback)}
+            title={t(ActivityAuditI18nKey.ConfirmRollback)}
             onConfirm={resourceRollback}
-            modalState={rollbackModalState}
             confirmLabel={t(ButtonsI18nKey.Rollback)}
             onClose={onCloseModal}
           >
@@ -276,7 +275,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
               </p>
               <p>{t(ActivityAuditI18nKey.ConfirmRollbackAsking)}</p>
             </div>
-          </ConfirmationModal>,
+          </DialConfirmationPopup>,
           document.body,
         )}
       {detailsModalState === PopUpState.Opened &&

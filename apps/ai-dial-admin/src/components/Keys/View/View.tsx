@@ -7,12 +7,11 @@ import { createPortal } from 'react-dom';
 import { IconRefresh } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
 
 import { removeKey, updateKey } from '@/src/app/[lang]/keys/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import { getRelevantRolesForKey } from '@/src/components/AddEntitiesTab/utils';
-import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
@@ -48,10 +47,11 @@ interface Props {
   originalKey: DialKey;
   names: string[];
   keys: string[];
+  etag: string;
   roles: DialRole[];
 }
 
-const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
+const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
   const t = useI18n() as (str: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -59,7 +59,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
   const tabs: TabModel[] = [propertiesTabs(t), rolesTabs(t), auditTabs(t)];
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
-  const [confirmModalState, setConfirmModalState] = useState(PopUpState.Closed);
+  const [isOpenConfirmModal, setIsOpenConfirmModal] = useState(false);
   const [rotateModalState, setRotateModalState] = useState(PopUpState.Closed);
   const [selectedKey, setSelectedKey] = useState(cloneDeep(originalKey));
   const [isChanged, setIsChanged] = useState(false);
@@ -146,11 +146,11 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
   );
 
   const onSaveKey = useCallback(() => {
-    setConfirmModalState(PopUpState.Closed);
+    setIsOpenConfirmModal(false);
     const req =
       selectedFormat === ExportFormat.CORE
         ? updateCoreEntity(getFileFromEntity(ApplicationRoute.Keys, selectedKey))
-        : updateKey(selectedKey);
+        : updateKey(selectedKey, etag);
 
     req.then((res) => {
       if (res.success) {
@@ -160,12 +160,12 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedFormat, setConfirmModalState, selectedKey, router, showNotification]);
+  }, [selectedFormat, etag, setIsOpenConfirmModal, selectedKey, router, showNotification]);
 
   const onRotateKey = useCallback(
     (key: DialKey) => {
       setRotateModalState(PopUpState.Closed);
-      updateKey(key).then((res) => {
+      updateKey(key, etag).then((res) => {
         if (res.success) {
           router.refresh();
           showNotification(
@@ -176,16 +176,16 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
         }
       });
     },
-    [router, showNotification, t],
+    [router, showNotification, t, etag],
   );
 
   const onTryToSaveKey = useCallback(() => {
     if (selectedKey.roles == null || selectedKey.roles.length === 0) {
-      setConfirmModalState(PopUpState.Opened);
+      setIsOpenConfirmModal(true);
     } else {
       onSaveKey();
     }
-  }, [selectedKey.roles, setConfirmModalState, onSaveKey]);
+  }, [selectedKey.roles, setIsOpenConfirmModal, onSaveKey]);
 
   return (
     <>
@@ -256,14 +256,14 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
         </div>
       </div>
 
-      {confirmModalState === PopUpState.Opened &&
+      {isOpenConfirmModal &&
         createPortal(
-          <ConfirmationModal
+          <DialConfirmationPopup
+            open={isOpenConfirmModal}
             description={t(KeysI18nKey.SaveWithoutRolesDescriptions)}
-            heading={t(KeysI18nKey.SaveWithoutRoles)}
+            title={t(KeysI18nKey.SaveWithoutRoles)}
             onConfirm={() => onSaveKey()}
-            modalState={confirmModalState}
-            onClose={() => setConfirmModalState(PopUpState.Closed)}
+            onClose={() => setIsOpenConfirmModal(false)}
             confirmLabel={t(ButtonsI18nKey.Save)}
             cancelLabel={t(ButtonsI18nKey.ContinueEditing)}
           />,

@@ -1,6 +1,6 @@
 import { FC, MouseEvent, useCallback, useEffect, useState } from 'react';
 import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -14,7 +14,6 @@ import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 
 import ListView from '@/src/components/ListView/ListView';
 import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/ResetFiltersButton';
-import Loader from '@/src/components/Common/Loader/Loader';
 import Page403 from '@/src/components/Page403/Page403';
 
 interface Props {
@@ -84,7 +83,7 @@ const List: FC<Props> = ({ route, getData, query, columnDefs, title, emptyDataTi
   }, [closeColumnsPanel]);
 
   if (!data?.length && loading) {
-    return <Loader size={40} />;
+    return <DialLoader size={40} />;
   }
 
   return (

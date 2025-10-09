@@ -1,10 +1,10 @@
 'use client';
 import { FC, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
 
 import DeleteAdapter from '@/src/components/Adapter/Modals/DeleteAdapter';
 import DeleteAppRunner from '@/src/components/ApplicationRunners/Modals/DeleteAppRunner';
-import ConfirmationModal from '@/src/components/Common/ConfirmationModal/ConfirmationModal';
 import FilePathModal from '@/src/components/Common/FilePath/FilePathModal';
 import DeleteFolder from '@/src/components/Common/FolderList/Modals/DeleteFolder';
 import { deleteModalTitleMap } from '@/src/components/EntityListView/constants';
@@ -95,10 +95,10 @@ const Modals: FC<Props> = ({
       {modalState === PopUpState.Opened &&
         modalType === ModalType.delete &&
         createPortal(
-          <ConfirmationModal
-            heading={`${t(DeleteI18nKey.Title)} ${t(deleteModalTitleMap[route as keyof typeof deleteModalTitleMap])}`}
+          <DialConfirmationPopup
+            open={true}
+            title={`${t(DeleteI18nKey.Title)} ${t(deleteModalTitleMap[route as keyof typeof deleteModalTitleMap])}`}
             onConfirm={handleDelete as () => void}
-            modalState={modalState}
             confirmLabel={t(ButtonsI18nKey.Delete)}
             onClose={handleClose}
           >
@@ -118,7 +118,7 @@ const Modals: FC<Props> = ({
                   <span>{t(deleteModalTitleMap[route as keyof typeof deleteModalTitleMap])}?</span>
                 </p>
               ))}
-          </ConfirmationModal>,
+          </DialConfirmationPopup>,
           document.body,
         )}
       {modalState === PopUpState.Opened &&

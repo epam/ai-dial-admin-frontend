@@ -2,7 +2,8 @@
 
 import { ReactNode, useEffect } from 'react';
 
-import Loader from '@/src/components/Common/Loader/Loader';
+import { DialLoader } from '@epam/ai-dial-ui-kit';
+
 import { I18nProviderClient } from '@/src/locales/client';
 
 interface ProviderProps {
@@ -16,7 +17,7 @@ export const I18nProvider = ({ locale, children }: ProviderProps) => {
   }, [locale]);
 
   return (
-    <I18nProviderClient locale={locale} fallback={<Loader size={40} />}>
+    <I18nProviderClient locale={locale} fallback={<DialLoader size={40} />}>
       {children}
     </I18nProviderClient>
   );

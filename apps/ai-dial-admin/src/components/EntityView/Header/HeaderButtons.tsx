@@ -16,7 +16,6 @@ import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ExportFormat } from '@/src/types/export';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import JsonToggles from './JsonToggle';
@@ -59,7 +58,7 @@ const HeaderButtons = <T extends object>({
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
   const isSimple = isSimpleEntity(view);
 
-  const [modalState, setIsOpenModal] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const staticContainerClassnames = 'flex flex-row gap-3 divide-x divide-primary lg:h-[35px]';
 
   const isTablet = useIsOnlyTabletScreen();
@@ -68,12 +67,12 @@ const HeaderButtons = <T extends object>({
   const [buttonsClassNames, setButtonsClassNames] = useState('');
 
   const onOpenModal = useCallback(() => {
-    setIsOpenModal(PopUpState.Opened);
-  }, [setIsOpenModal]);
+    setIsModalOpen(true);
+  }, [setIsModalOpen]);
 
   const onCloseModal = useCallback(() => {
-    setIsOpenModal(PopUpState.Closed);
-  }, [setIsOpenModal]);
+    setIsModalOpen(false);
+  }, [setIsModalOpen]);
 
   useEffect(() => {
     setContainerClassNames(
@@ -117,13 +116,12 @@ const HeaderButtons = <T extends object>({
           </div>
         )}
       </div>
-      {modalState === PopUpState.Opened &&
+      {isModalOpen &&
         createPortal(
           <DeleteConfirmationModal
             entity={entity}
             removeEntity={removeEntity}
             view={view}
-            modalState={modalState}
             onCloseModal={onCloseModal}
             context={context}
           />,

@@ -2,19 +2,20 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { getInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
-import { getInterceptorsList } from '@/src/app/[lang]/interceptors/actions';
+import { logger } from '@/src/server/logger';
+import { SIGN_IN_LINK } from '@/src/constants/auth';
 import InterceptorTemplateView from '@/src/components/InterceptorTemplates/View/View';
 import Page403 from '@/src/components/Page403/Page403';
-import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
-import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { logger } from '@/src/server/logger';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { getInterceptorsList } from '../../interceptors/actions';
+import { filterNames } from '@/src/utils/entities/filter-names';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
-import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { filterNames } from '@/src/utils/entities/filter-names';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,12 +28,16 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     return redirect(SIGN_IN_LINK);
   }
 
+  let etag = DEFAULT_ETAG;
   let interceptorTemplate: InterceptorTemplate | null = null;
   let interceptors: DialInterceptor[] | null = null;
 
   try {
     interceptors = await getInterceptorsList();
-    interceptorTemplate = await getInterceptorTemplate((await params.params).id);
+    interceptorTemplate = await getInterceptorTemplate((await params.params).id, etag).then((res) => {
+      etag = res?.etag || DEFAULT_ETAG;
+      return res?.response as InterceptorTemplate | null;
+    });
     if (interceptorTemplate === void 0) {
       return <Page403 />;
     }
@@ -48,11 +53,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   return (
     <SaveValidationContextProvider>
-      <InterceptorTemplateView
-        route={ApplicationRoute.InterceptorTemplates}
-        template={interceptorTemplate}
-        names={names}
-      />
+      <InterceptorTemplateView template={interceptorTemplate} names={names} etag={etag} />
     </SaveValidationContextProvider>
   );
 }

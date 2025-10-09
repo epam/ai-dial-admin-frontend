@@ -22,7 +22,6 @@ import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ExportFormat } from '@/src/types/export';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
@@ -71,7 +70,7 @@ const EntityView: FC<Props> = ({
   const router = useRouter();
   const { showNotification } = useNotification();
 
-  const [modalState, setModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType>();
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -108,13 +107,13 @@ const EntityView: FC<Props> = ({
   );
 
   const handleModalClose = useCallback(() => {
-    setModalState(PopUpState.Closed);
+    setIsModalOpen(false);
     setModalType(void 0);
   }, []);
 
   const handleModalOpen = useCallback((modalType: ModalType) => {
     setModalType(modalType);
-    setModalState(PopUpState.Opened);
+    setIsModalOpen(true);
   }, []);
 
   const handleMessage = useCallback(
@@ -313,7 +312,7 @@ const EntityView: FC<Props> = ({
         </div>
       </div>
       <EntityViewModals
-        modalState={modalState}
+        isModalOpen={isModalOpen}
         modalType={modalType}
         handleConfirm={handleModalConfirm}
         handleClose={handleModalClose}
