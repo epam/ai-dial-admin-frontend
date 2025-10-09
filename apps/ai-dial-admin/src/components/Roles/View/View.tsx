@@ -145,7 +145,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
         if (selectedRole.limits && selectedRole.limits[limit]) {
           selectedRole.limits[limit].enabled = true;
         } else {
-          newLimits[row.name || ''] = { enabled: true };
+          newLimits[limit] = { enabled: true };
         }
       });
       onChangeRole({
