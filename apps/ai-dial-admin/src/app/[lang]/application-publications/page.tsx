@@ -6,7 +6,7 @@ import Page403 from '@/src/components/Page403/Page403';
 import BasePublicationsList from '@/src/components/PublicationsList/PublicationsList';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { Publication } from '@/src/models/dial/publications';
-import { logger } from '@/src/server/logger';
+import { logError } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
@@ -32,7 +32,7 @@ export default async function Page() {
       return <Page403 />;
     }
   } catch (e) {
-    logger.error('Getting application publications error', e);
+    logError(e, 'Failed to fetch application publications data');
   }
 
   return <BasePublicationsList data={data || []} route={ApplicationRoute.ApplicationPublications} />;

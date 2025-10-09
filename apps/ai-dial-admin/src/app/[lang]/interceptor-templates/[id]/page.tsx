@@ -7,7 +7,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
-import { logger } from '@/src/server/logger';
+import { logError } from '@/src/server/logger';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 
 import InterceptorTemplateView from '@/src/components/InterceptorTemplates/View/View';
@@ -33,7 +33,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       return <Page403 />;
     }
   } catch (e) {
-    logger.error('Getting interceptor template view data error', e);
+    logError(e, 'Failed to fetch interceptor template data');
   }
 
   if (!interceptorTemplate) {

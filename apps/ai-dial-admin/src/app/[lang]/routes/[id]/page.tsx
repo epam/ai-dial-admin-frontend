@@ -9,7 +9,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { removeRoute, updateRoute } from '../actions';
 import { DialRole } from '@/src/models/dial/role';
-import { logger } from '@/src/server/logger';
+import { logError } from '@/src/server/logger';
 import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { filterNames } from '@/src/utils/entities/filter-names';
@@ -31,7 +31,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       return <Page403 />;
     }
   } catch (e) {
-    logger.error('Getting route view data error', e);
+    logError(e, 'Failed to fetch route view data');
   }
 
   if (route == null) {

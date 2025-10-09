@@ -6,7 +6,7 @@ import Page403 from '@/src/components/Page403/Page403';
 import { FileFolderProvider } from '@/src/context/FileFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialFile } from '@/src/models/dial/file';
-import { logger } from '@/src/server/logger';
+import { logError } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { addTrailingSlash, getFolderNameAndPath } from '@/src/utils/files/path';
 
@@ -24,7 +24,7 @@ export default async function Page(params: { searchParams: Promise<{ path: strin
     }
     file = files?.find((f) => f.name === name) as DialFile;
   } catch (e) {
-    logger.error('Getting file view data error', e);
+    logError(e, 'Failed to fetch file view data');
   }
 
   if (file == null) {
