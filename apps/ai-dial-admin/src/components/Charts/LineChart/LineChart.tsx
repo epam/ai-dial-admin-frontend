@@ -1,10 +1,9 @@
 'use client';
 import { FC, useEffect, useState } from 'react';
 
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import ReactECharts, { EChartsOption } from 'echarts-for-react';
 
-import Loader from '@/src/components/Common/Loader/Loader';
 import { BasicI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { refreshOptionsConfig, SYSTEM_USAGE_QUERY } from '@/src/constants/telemetry';
 import { useI18n } from '@/src/locales/client';
@@ -59,7 +58,7 @@ const LineChart: FC<Props> = ({ getData, refreshTime }) => {
       <h3 className="text-primary mb-4">{t(TelemetryI18nKey.SystemUsage)}</h3>
 
       {loading ? (
-        <Loader size={24} />
+        <DialLoader size={24} />
       ) : (
         <>
           {!data?.length ? (

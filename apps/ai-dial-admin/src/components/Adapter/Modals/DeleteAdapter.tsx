@@ -1,7 +1,8 @@
 import { FC, useEffect, useState } from 'react';
 
+import { DialLoader } from '@epam/ai-dial-ui-kit';
+
 import { getModels } from '@/src/app/[lang]/models/actions';
-import Loader from '@/src/components/Common/Loader/Loader';
 import Grid from '@/src/components/Grid/Grid';
 import { DISPLAY_NAME_COLUMN, NAME_COLUMN, VERSION_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { DeleteI18nKey } from '@/src/constants/i18n';
@@ -45,7 +46,7 @@ const DeleteAdapter: FC<Props> = ({ entity, isEntityView }) => {
       <p>{t(DeleteI18nKey.AdapterDescriptionWarning)}</p>
       <div className="flex-1 min-h-0 mt-4 flex flex-col">
         {isLoading ? (
-          <Loader size={24} />
+          <DialLoader size={24} />
         ) : (
           <>
             <h3 className="text-primary mb-1">{t(DeleteI18nKey.AdapterModelsTitle)}</h3>

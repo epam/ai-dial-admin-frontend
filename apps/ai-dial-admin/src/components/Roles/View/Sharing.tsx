@@ -139,7 +139,7 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
 
   return (
     <div className="max-w-[750px] w-full mt-6 flex flex-col">
-      <div className="flex justify-between items-center mb-3">
+      <div className="flex justify-between items-center mb-3 h-[38px]">
         <h1>{t(RolesI18nKey.Sharing)}</h1>
         {isResetAvailable && (
           <DialButton

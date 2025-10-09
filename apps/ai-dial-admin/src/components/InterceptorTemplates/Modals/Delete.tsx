@@ -1,5 +1,6 @@
 import { FC, useEffect, useState } from 'react';
 
+import { DialLoader } from '@epam/ai-dial-ui-kit';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { DeleteI18nKey } from '@/src/constants/i18n';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -7,7 +8,6 @@ import { getInterceptorsList } from '@/src/app/[lang]/interceptors/actions';
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useI18n } from '@/src/locales/client';
 
-import Loader from '@/src/components/Common/Loader/Loader';
 import Grid from '@/src/components/Grid/Grid';
 
 interface Props {
@@ -44,7 +44,7 @@ const Delete: FC<Props> = ({ template }) => {
       <p>{t(DeleteI18nKey.InterceptorTemplateDescriptionWarning)}</p>
       <div className="flex-1 min-h-0 mt-4 flex flex-col">
         {isLoading ? (
-          <Loader size={24} />
+          <DialLoader size={24} />
         ) : (
           <>
             <h3 className="text-primary mb-1">{t(DeleteI18nKey.InterceptorTemplateInterceptorsTitle)}</h3>

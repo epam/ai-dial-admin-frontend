@@ -1,8 +1,9 @@
 'use client';
 
 import { FC, useEffect, useRef, useState } from 'react';
+import { DialLoader } from '@epam/ai-dial-ui-kit';
+
 import { getModelsTokenizers } from '@/src/app/[lang]/models/actions';
-import Loader from '@/src/components/Common/Loader/Loader';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import Grid from '@/src/components/Grid/Grid';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
@@ -38,7 +39,7 @@ const TokenizedModelsGrid: FC<Props> = ({ onSelectModelId, selectedModel }) => {
   }, [setData]);
 
   return isLoading ? (
-    <Loader size={40} />
+    <DialLoader size={40} />
   ) : (
     <Grid
       columnDefs={SIMPLE_ENTITY_COLUMNS}
