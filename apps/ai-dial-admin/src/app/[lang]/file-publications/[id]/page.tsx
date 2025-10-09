@@ -7,7 +7,7 @@ import PublicationView from '@/src/components/PublicationView/PublicationView';
 import { approvePublication, declinePublication } from '@/src/app/actions/publications';
 import { publicationsApi } from '@/src/app/api/api';
 import { Publication } from '@/src/models/dial/publications';
-import { logger } from '@/src/server/logger';
+import { logError } from '@/src/server/logger';
 import Page403 from '@/src/components/Page403/Page403';
 
 export const dynamic = 'force-dynamic';
@@ -23,7 +23,7 @@ export default async function Page(params: { searchParams: Promise<{ path: strin
       return <Page403 />;
     }
   } catch (e) {
-    logger.error('Getting file publication view data error', e);
+    logError(e, 'Failed to fetch file publication view data');
   }
 
   if (data == null) {

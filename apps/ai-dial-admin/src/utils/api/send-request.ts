@@ -1,4 +1,4 @@
-import { logger } from '@/src/server/logger';
+import { logError } from '@/src/server/logger';
 
 export const CACHE: RequestInit = { cache: 'no-store' };
 
@@ -16,7 +16,7 @@ export const sendRequest = async <T extends object>(
       headers,
     });
   } catch (e) {
-    logger.error(e, 'Error');
+    logError(e, 'Send request failed');
     return new Promise(() => null);
   }
 };
