@@ -1,5 +1,5 @@
 @layer components {
-  .input {
+  .input:not(.dial-input) {
     @apply border border-solid border-primary rounded outline-0;
     @apply bg-transparent small truncate;
     @apply px-3 py-2;

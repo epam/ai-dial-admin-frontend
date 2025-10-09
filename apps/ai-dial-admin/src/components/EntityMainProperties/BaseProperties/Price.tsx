@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { IconCurrencyDollar } from '@tabler/icons-react';
+import { DialNumberInputField } from '@epam/ai-dial-ui-kit';
 
-import { NumberInputField } from '@/src/components/Common/InputField/InputField';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
 interface Props {
@@ -16,11 +16,11 @@ interface Props {
 
 const PriceControl: FC<Props> = ({ elementId, fieldTitle, controlClassName, ...props }) => {
   return (
-    <NumberInputField
+    <DialNumberInputField
       elementId={elementId}
       fieldTitle={fieldTitle}
       containerCssClass={controlClassName}
-      iconBeforeInput={<IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} />}
+      iconBefore={<IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} />}
       {...props}
     />
   );

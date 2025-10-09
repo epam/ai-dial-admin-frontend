@@ -1,7 +1,7 @@
 import { FC, useCallback } from 'react';
+import { DialNumberInputField } from '@epam/ai-dial-ui-kit';
 
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
-import { NumberInputField } from '@/src/components/Common/InputField/InputField';
 import { BasicI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModel } from '@/src/models/dial/model';
@@ -83,7 +83,7 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
       />
 
       {activeLimitType === LimitType.Total && (
-        <NumberInputField
+        <DialNumberInputField
           elementId="totalNum"
           elementCssClass="flex-1"
           fieldTitle={t(ModelViewI18nKey.NumberOfTokens)}
@@ -94,14 +94,14 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
 
       {activeLimitType === LimitType.SeparateTokenAndCompletions && (
         <>
-          <NumberInputField
+          <DialNumberInputField
             elementId="promptsNum"
             elementCssClass="flex-1"
             fieldTitle={t(ModelViewI18nKey.Prompts)}
             value={model.limits?.maxPromptTokens}
             onChange={onChangeMaxPromptTokens}
           />
-          <NumberInputField
+          <DialNumberInputField
             elementId="completionsNum"
             elementCssClass="flex-1"
             fieldTitle={t(ModelViewI18nKey.Completions)}
