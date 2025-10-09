@@ -8,33 +8,32 @@ import { SharingGridData } from './models';
 import { SharingType } from './types';
 
 export const getSharingData = (role?: DialRole): SharingGridData[] => {
-  return [
-    {
-      name: SharingType.APPLICATION,
-      invitationTtl: role?.share?.[SharingType.APPLICATION]?.invitationTtl,
-      maxAcceptedUsers: role?.share?.[SharingType.APPLICATION]?.maxAcceptedUsers,
-    },
-    {
-      name: SharingType.TOOL_SET,
-      invitationTtl: role?.share?.[SharingType.TOOL_SET]?.invitationTtl,
-      maxAcceptedUsers: role?.share?.[SharingType.TOOL_SET]?.maxAcceptedUsers,
-    },
-    {
-      name: SharingType.PROMPT,
-      invitationTtl: role?.share?.[SharingType.PROMPT]?.invitationTtl,
-      maxAcceptedUsers: role?.share?.[SharingType.PROMPT]?.maxAcceptedUsers,
-    },
-    {
-      name: SharingType.FILE,
-      invitationTtl: role?.share?.[SharingType.FILE]?.invitationTtl,
-      maxAcceptedUsers: role?.share?.[SharingType.FILE]?.maxAcceptedUsers,
-    },
-    {
-      name: SharingType.CONVERSATION,
-      invitationTtl: role?.share?.[SharingType.CONVERSATION]?.invitationTtl,
-      maxAcceptedUsers: role?.share?.[SharingType.CONVERSATION]?.maxAcceptedUsers,
-    },
+  const types = [
+    SharingType.APPLICATION,
+    SharingType.TOOL_SET,
+    SharingType.PROMPT,
+    SharingType.FILE,
+    SharingType.CONVERSATION,
   ];
+
+  return types.map((type) => {
+    const shareData = role?.share?.[type];
+    const invitationTtl = shareData?.invitationTtl;
+
+    return {
+      name: type,
+      invitationTtl: (invitationTtl ? getHoursFromMs(invitationTtl) : invitationTtl)?.toString(),
+      maxAcceptedUsers: shareData?.maxAcceptedUsers,
+    };
+  });
+};
+
+export const getHoursFromMs = (ms: string): number => {
+  return +ms / (60 * 60 * 1000);
+};
+
+export const getMsFromHours = (hours: number): number => {
+  return hours * 60 * 60 * 1000;
 };
 
 export const getDefaultPlaceholder = (node: IRowNode, colDef: ColDef) => {
