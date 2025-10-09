@@ -194,7 +194,7 @@ export const getRolesColumnDefs = (
   const actions = [getOpenInNewTabOperation(open)];
   const colDefs = [...SIMPLE_ENTITY_COLUMNS];
 
-  if (view !== ApplicationRoute.Routes) {
+  if (view !== ApplicationRoute.Routes && view !== ApplicationRoute.Toolsets) {
     actions.push(
       ...[
         getResetOperation(resetToDefault, resetToDefaultHidden),
