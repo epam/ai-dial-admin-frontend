@@ -1,4 +1,5 @@
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
+import { EntityType } from '@/src/types/entity-type';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export const auditResourceRoute: Record<ActivityAuditResourceType, ApplicationRoute> = {
@@ -25,4 +26,16 @@ export const routeAuditResource: Partial<Record<ApplicationRoute, ActivityAuditR
   [ApplicationRoute.Routes]: ActivityAuditResourceType.ROUTE,
   [ApplicationRoute.InterceptorTemplates]: ActivityAuditResourceType.INTERCEPTOR_TEMPLATE,
   [ApplicationRoute.Toolsets]: ActivityAuditResourceType.TOOLSET,
+};
+
+export const importPreviewResource: Partial<Record<EntityType, ActivityAuditResourceType>> = {
+  [EntityType.MODEL]: ActivityAuditResourceType.MODEL,
+  [EntityType.TOOLSET]: ActivityAuditResourceType.TOOLSET,
+  [EntityType.ROUTE]: ActivityAuditResourceType.ROUTE,
+  [EntityType.ROLE]: ActivityAuditResourceType.ROLE,
+  [EntityType.KEY]: ActivityAuditResourceType.KEY,
+  [EntityType.APPLICATION_TYPE_SCHEMA]: ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA,
+  [EntityType.INTERCEPTOR]: ActivityAuditResourceType.INTERCEPTOR,
+  [EntityType.INTERCEPTOR_RUNNER]: ActivityAuditResourceType.INTERCEPTOR_TEMPLATE,
+  [EntityType.ADAPTER]: ActivityAuditResourceType.ADAPTER,
 };

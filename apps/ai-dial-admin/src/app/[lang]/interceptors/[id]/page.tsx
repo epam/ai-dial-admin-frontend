@@ -8,7 +8,7 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
-import { logger } from '@/src/server/logger';
+import { logError } from '@/src/server/logger';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
@@ -36,7 +36,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       return <Page403 />;
     }
   } catch (e) {
-    logger.error('Getting interceptor view data error', e);
+    logError(e, 'Failed to fetch interceptor view data');
   }
 
   if (interceptor == null) {

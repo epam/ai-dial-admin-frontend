@@ -11,6 +11,7 @@ import Grid from '@/src/components/Grid/Grid';
 import { SharingGridData } from '@/src/components/Roles/models';
 import {
   getDefaultPlaceholder,
+  getMsFromHours,
   getSharingData,
   isResetToDefaultHidden,
   isSetNoLimitsHidden,
@@ -36,15 +37,20 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
   const onChangeTypeSharing = useCallback(
     (value: number, data: DialRole, token: string) => {
       const name = data.name as string;
+      const newValue = {
+        ...entityRef.current.share?.[name],
+        [token]: token === 'invitationTtl' && value ? getMsFromHours(value) : value,
+      };
+      const share = {
+        ...entityRef.current.share,
+        [name]: newValue,
+      };
+      if (Object.values(newValue).every((val) => val === null || val === undefined || val === '')) {
+        delete share[name];
+      }
       const updatedEntity = {
         ...entityRef.current,
-        share: {
-          ...entityRef.current.share,
-          [name]: {
-            ...entityRef.current.share?.[name],
-            [token]: value,
-          },
-        },
+        share,
       };
       onChangeRole(updatedEntity, true);
     },
@@ -61,12 +67,13 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
   const onResetSharingToDefault = useCallback(
     (data?: SharingGridData) => {
       if (data) {
+        const share = {
+          ...entityRef.current.share,
+        };
+        delete share[data.name];
         onChangeRole({
           ...entityRef.current,
-          share: {
-            ...entityRef.current.share,
-            [data.name]: {},
-          },
+          share,
         });
       }
     },

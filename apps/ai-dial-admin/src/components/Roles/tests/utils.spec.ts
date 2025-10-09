@@ -22,43 +22,43 @@ describe('getSharingData', () => {
   test('should return correct sharing data based on provided role', () => {
     const mockRole: DialRole = {
       share: {
-        [SharingType.APPLICATION]: { invitationTtl: '3600', maxAcceptedUsers: '5' },
-        [SharingType.TOOL_SET]: { invitationTtl: '7200', maxAcceptedUsers: '10' },
-        [SharingType.PROMPT]: { invitationTtl: '1800', maxAcceptedUsers: '3' },
-        [SharingType.FILE]: { invitationTtl: '600', maxAcceptedUsers: '2' },
-        [SharingType.CONVERSATION]: { invitationTtl: '1200', maxAcceptedUsers: '4' },
+        [SharingType.APPLICATION]: { invitationTtl: '3600000', maxAcceptedUsers: '5' },
+        [SharingType.TOOL_SET]: { invitationTtl: '7200000', maxAcceptedUsers: '10' },
+        [SharingType.PROMPT]: { invitationTtl: '1800000', maxAcceptedUsers: '3' },
+        [SharingType.FILE]: { invitationTtl: '600000', maxAcceptedUsers: '2' },
+        [SharingType.CONVERSATION]: { invitationTtl: '1200000', maxAcceptedUsers: '4' },
       },
     };
 
     const result = getSharingData(mockRole);
 
     expect(result).toEqual([
-      { name: SharingType.APPLICATION, invitationTtl: '3600', maxAcceptedUsers: '5' },
-      { name: SharingType.TOOL_SET, invitationTtl: '7200', maxAcceptedUsers: '10' },
-      { name: SharingType.PROMPT, invitationTtl: '1800', maxAcceptedUsers: '3' },
-      { name: SharingType.FILE, invitationTtl: '600', maxAcceptedUsers: '2' },
-      { name: SharingType.CONVERSATION, invitationTtl: '1200', maxAcceptedUsers: '4' },
+      { name: SharingType.APPLICATION, invitationTtl: '1', maxAcceptedUsers: '5' },
+      { name: SharingType.TOOL_SET, invitationTtl: '2', maxAcceptedUsers: '10' },
+      { name: SharingType.PROMPT, invitationTtl: '0.5', maxAcceptedUsers: '3' },
+      { name: SharingType.FILE, invitationTtl: '0.16666666666666666', maxAcceptedUsers: '2' },
+      { name: SharingType.CONVERSATION, invitationTtl: '0.3333333333333333', maxAcceptedUsers: '4' },
     ]);
   });
 
   test('should return undefined values if specific SharingType is not present in role', () => {
     const mockRole: DialRole = {
       share: {
-        [SharingType.APPLICATION]: { invitationTtl: '3600', maxAcceptedUsers: '5' },
-        [SharingType.TOOL_SET]: { invitationTtl: '7200', maxAcceptedUsers: '10' },
-        [SharingType.FILE]: { invitationTtl: '600', maxAcceptedUsers: '2' },
-        [SharingType.CONVERSATION]: { invitationTtl: '1200', maxAcceptedUsers: '4' },
+        [SharingType.APPLICATION]: { invitationTtl: '3600000', maxAcceptedUsers: '5' },
+        [SharingType.TOOL_SET]: { invitationTtl: '7200000', maxAcceptedUsers: '10' },
+        [SharingType.FILE]: { invitationTtl: '600000', maxAcceptedUsers: '2' },
+        [SharingType.CONVERSATION]: { invitationTtl: '1200000', maxAcceptedUsers: '4' },
       },
     };
 
     const result = getSharingData(mockRole);
 
     expect(result).toEqual([
-      { name: SharingType.APPLICATION, invitationTtl: '3600', maxAcceptedUsers: '5' },
-      { name: SharingType.TOOL_SET, invitationTtl: '7200', maxAcceptedUsers: '10' },
+      { name: SharingType.APPLICATION, invitationTtl: '1', maxAcceptedUsers: '5' },
+      { name: SharingType.TOOL_SET, invitationTtl: '2', maxAcceptedUsers: '10' },
       { name: SharingType.PROMPT, invitationTtl: undefined, maxAcceptedUsers: undefined },
-      { name: SharingType.FILE, invitationTtl: '600', maxAcceptedUsers: '2' },
-      { name: SharingType.CONVERSATION, invitationTtl: '1200', maxAcceptedUsers: '4' },
+      { name: SharingType.FILE, invitationTtl: '0.16666666666666666', maxAcceptedUsers: '2' },
+      { name: SharingType.CONVERSATION, invitationTtl: '0.3333333333333333', maxAcceptedUsers: '4' },
     ]);
   });
 

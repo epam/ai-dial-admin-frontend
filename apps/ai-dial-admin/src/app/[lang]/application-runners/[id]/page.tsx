@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { applicationRunnersApi, rolesApi } from '@/src/app/api/api';
 import ApplicationRunnersView from '@/src/components/ApplicationRunners/ApplicationRunnersView';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { logger } from '@/src/server/logger';
+import { logError } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -28,7 +28,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       return <Page403 />;
     }
   } catch (e) {
-    logger.error('Getting application runner view data error', e);
+    logError(e, 'Failed to fetch application runner data');
   }
 
   if (applicationScheme == null) {

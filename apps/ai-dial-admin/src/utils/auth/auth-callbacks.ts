@@ -5,7 +5,7 @@ import { TokenEndpointHandler } from 'next-auth/providers';
 import { TokenSet } from 'openid-client';
 
 import { Token, UserSession } from '@/src/models/auth';
-import { logger } from '@/src/server/logger';
+import { logError, logger } from '@/src/server/logger';
 import { NextClient, RefreshToken } from './nextauth-client';
 
 const waitRefreshTokenTimeout = 5;
@@ -14,7 +14,7 @@ const safeDecodeJwt = (accessToken: string) => {
   try {
     return decodeJwt(accessToken);
   } catch (err) {
-    logger.error("Token couldn't be parsed as JWT", err);
+    logError(err, "Token couldn't be parsed as JWT");
     // TODO: read roles from GCP token format
     return {};
   }

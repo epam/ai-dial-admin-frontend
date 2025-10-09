@@ -53,6 +53,8 @@ const getRolesWithLimits = (roles: DialRole[], entity?: EntityRoleLimits) => {
       if (!role) return null;
 
       const limit = entity?.roleLimits?.[roleName];
+
+      if (!limit?.enabled) return null;
       return mapRoleData(role, limit, entity);
     })
     .filter((data) => data !== null);
@@ -149,6 +151,7 @@ export const SHARING_COLUMNS = (
       ...cellRenderParams,
       getDefaultPlaceholder,
       onChange,
+      valueFormatter: (v: string) => v,
     },
   },
   {
@@ -163,6 +166,7 @@ export const SHARING_COLUMNS = (
       ...cellRenderParams,
       getDefaultPlaceholder,
       onChange,
+      valueFormatter: (v: string) => v,
     },
   },
 ];

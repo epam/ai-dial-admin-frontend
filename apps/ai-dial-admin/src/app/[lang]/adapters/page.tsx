@@ -7,7 +7,7 @@ import Page403 from '@/src/components/Page403/Page403';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialAdapter } from '@/src/models/dial/adapter';
-import { logger } from '@/src/server/logger';
+import { logError } from '@/src/server/logger';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -31,7 +31,7 @@ export default async function Page() {
       return <Page403 />;
     }
   } catch (e) {
-    logger.error('Getting adapters error', e);
+    logError(e, 'Failed to fetch adapters data');
   }
 
   return (

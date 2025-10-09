@@ -19,8 +19,7 @@ export const ROLE_LIMITS_DIFF_COLUMNS = [
   { field: 'day', headerName: 'Per day' },
   { field: 'week', headerName: 'Per week' },
   { field: 'month', headerName: 'Per month' },
-  { field: 'invitationTtl', headerName: 'Expiration time' },
-  { field: 'maxAcceptedUsers', headerName: 'Max users' },
+  { field: 'enabled', headerName: 'Enabled' },
 ];
 
 export const RESOURCE_DIFF_COLUMNS = (t: (stringToTranslate: string) => string, parameter?: string): ColDef[] => {
