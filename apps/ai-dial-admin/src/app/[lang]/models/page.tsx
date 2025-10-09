@@ -6,7 +6,7 @@ import ModelsList from '@/src/components/Models/List/List';
 import Page403 from '@/src/components/Page403/Page403';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { DialModel } from '@/src/models/dial/model';
-import { logger } from '@/src/server/logger';
+import { logError } from '@/src/server/logger';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -31,7 +31,7 @@ export default async function Page() {
       return <Page403 />;
     }
   } catch (e) {
-    logger.error('Getting models error', e);
+    logError(e, 'Failed to fetch models view data');
   }
 
   return (

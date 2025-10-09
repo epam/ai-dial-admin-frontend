@@ -11,7 +11,7 @@ import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/uti
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import { EntityViewTab, propertiesTabs, rolesTabs, toolsTabs } from '@/src/components/EntityView/View/utils';
+import { EntityViewTab, propertiesTabs, toolsTabs } from '@/src/components/EntityView/View/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
@@ -24,6 +24,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
+import Tool from '@/src/components/Toolsets/Tools/Tools';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import ToolsetProperties from '@/src/components/Toolsets/View/Properties';
 
@@ -35,7 +36,7 @@ interface Props {
 
 const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
-  const tabs = [propertiesTabs(t), toolsTabs(t), rolesTabs(t)];
+  const tabs = [propertiesTabs(t), toolsTabs(t)];
   const router = useRouter();
   const { fetchFiles } = useToolsetFolder();
   const { showNotification } = useNotification();
@@ -157,9 +158,19 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
             setIsChanged={setIsChanged}
           />
         ) : (
-          activeTab === EntityViewTab.Properties && (
-            <ToolsetProperties names={[]} selectedToolset={selectedToolset} onChangeToolset={onChangeEntity} />
-          )
+          <>
+            {activeTab === EntityViewTab.Properties && (
+              <ToolsetProperties names={[]} selectedToolset={selectedToolset} onChangeToolset={onChangeEntity} />
+            )}
+
+            {activeTab === EntityViewTab.Tools && (
+              <Tool
+                originalToolset={originalToolset}
+                selectedToolset={selectedToolset}
+                onChangeToolset={onChangeEntity}
+              />
+            )}
+          </>
         )}
       </div>
     </div>

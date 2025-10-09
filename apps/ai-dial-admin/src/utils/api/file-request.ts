@@ -1,4 +1,4 @@
-import { logger } from '@/src/server/logger';
+import { logError } from '@/src/server/logger';
 import { CACHE } from './send-request';
 
 export const fileRequest = async (
@@ -15,7 +15,7 @@ export const fileRequest = async (
       headers,
     });
   } catch (e) {
-    logger.error(e, 'Error');
+    logError(e, 'File request failed');
     return new Promise(() => null);
   }
 };

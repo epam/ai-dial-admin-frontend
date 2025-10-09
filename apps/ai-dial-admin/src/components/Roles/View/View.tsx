@@ -11,7 +11,6 @@ import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import {
   getEntitiesForRole,
   getRelevantKeysForRole,
-  isDialRoleShareKey,
   ROLES_ENTITIES_COLUMNS,
 } from '@/src/components/AddEntitiesTab/utils';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
@@ -142,11 +141,19 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
     (rows: EntitiesGridData[]) => {
       const newLimits: Record<string, DialRoleLimits> = {};
       rows.forEach((row) => {
-        newLimits[row.name || ''] = {};
+        const limit = row.name as string;
+        if (selectedRole.limits && selectedRole.limits[limit]) {
+          selectedRole.limits[limit].enabled = true;
+        } else {
+          newLimits[limit] = { enabled: true };
+        }
       });
       onChangeRole({
         ...selectedRole,
-        limits: { ...(selectedRole.limits || {}), ...newLimits },
+        limits: {
+          ...(selectedRole.limits || {}),
+          ...newLimits,
+        },
       });
     },
     [onChangeRole, selectedRole],
@@ -205,7 +212,6 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
     (value: number, data: DialRole, token: string) => {
       const name = data.name as string;
       const limits = entityRef.current.limits ?? {};
-      const share = entityRef.current.share ?? {};
       const updatedLimits = {
         ...limits,
         [name]: {
@@ -214,17 +220,9 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
         },
       };
 
-      const updatedShare = {
-        ...share,
-        [name]: {
-          ...share[name],
-          [token]: value.toString(),
-        },
-      };
-
       const updatedEntity = {
         ...entityRef.current,
-        ...(isDialRoleShareKey(token) ? { share: updatedShare } : { limits: updatedLimits }),
+        limits: updatedLimits,
       };
 
       onChangeRole(updatedEntity, true);

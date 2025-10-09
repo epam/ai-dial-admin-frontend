@@ -2,6 +2,6 @@ export enum ResourceType {
   FILE = 'FILE',
   PROMPT = 'PROMPT',
   APPLICATION = 'APPLICATION',
-  TOOLSET = 'TOOLSET',
+  TOOLSET = 'TOOL_SET',
   CONVERSATION = 'CONVERSATION',
 }
