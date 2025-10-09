@@ -6,7 +6,7 @@ export interface DialRoleLimits {
   minute?: string | null;
   week?: string | null;
   month?: string | null;
-  enabled?: true;
+  enabled?: boolean;
 }
 
 export interface DialRoleShare {
