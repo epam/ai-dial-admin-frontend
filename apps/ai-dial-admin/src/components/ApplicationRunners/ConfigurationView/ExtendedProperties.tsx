@@ -1,9 +1,8 @@
 import { FC, useCallback } from 'react';
 
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialSwitch, DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
 import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
 import EditorUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/EditorUrl';
@@ -99,7 +98,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
           onChange(icon, 'dial:applicationTypeIconUrl');
         }}
       />
-      <TextInputField
+      <DialTextInputField
         elementId="title"
         fieldTitle={t(EntityFieldsI18nKey.title)}
         placeholder={t(EntityPlaceholdersI18nKey.Title)}

@@ -1,10 +1,10 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { getUrlError } from '@/src/utils/validation/url-error';
+import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 export interface EndpointControlProps {
   endpoint?: string | null;
@@ -55,7 +55,7 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, o
   );
 
   return (
-    <TextInputField
+    <DialTextInputField
       textBeforeInput={textBeforeInput}
       elementId={id}
       value={endpoint || ''}

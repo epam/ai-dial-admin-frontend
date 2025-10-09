@@ -1,7 +1,6 @@
 import { FC, useCallback, useState } from 'react';
-import { AlertVariant, DialAlert } from '@epam/ai-dial-ui-kit';
+import { AlertVariant, DialAlert, DialTextInputField } from '@epam/ai-dial-ui-kit';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import RadioGroupModalField from '@/src/components/Common/RadioGroupModalField/RadioGroupModalField';
 import {
   BasicI18nKey,
@@ -65,7 +64,7 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
       content: (
         <div className="flex flex-col gap-3 mt-3">
           <DialAlert variant={AlertVariant.Error} message={t(ForwardTokenI18nKey.ForwardTokenModalAlert)} />
-          <TextInputField
+          <DialTextInputField
             elementId="entityName"
             fieldTitle={displayNameKey !== '' ? t(displayNameKey as CreateI18nKey) : ''}
             placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}

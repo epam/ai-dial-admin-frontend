@@ -1,6 +1,6 @@
 import { FC, useCallback, useState } from 'react';
+import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
@@ -123,7 +123,7 @@ const SimpleEntityProperties: FC<Props> = ({
       )}
 
       {view === ApplicationRoute.Routes && (
-        <TextInputField
+        <DialTextInputField
           elementId="path"
           placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
           fieldTitle={t(EntityFieldsI18nKey.paths)}

@@ -1,10 +1,9 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialSwitch } from '@epam/ai-dial-ui-kit';
 import { v4 as uuidv4 } from 'uuid';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { IconSparkles } from '@tabler/icons-react';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import ValidityPeriodInput from '@/src/components/Common/ValidityPeriodInput/ValidityPeriodInput';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -113,7 +112,7 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeKey} />
 
-      <TextInputField
+      <DialTextInputField
         elementId="project"
         fieldTitle={t(EntityFieldsI18nKey.project)}
         placeholder={t(EntityPlaceholdersI18nKey.Project)}
@@ -124,7 +123,7 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
       />
 
       {isKeyImmutable && (
-        <TextInputField
+        <DialTextInputField
           elementId="projectContact"
           optional={true}
           fieldTitle={t(EntityFieldsI18nKey.projectContactPoint)}

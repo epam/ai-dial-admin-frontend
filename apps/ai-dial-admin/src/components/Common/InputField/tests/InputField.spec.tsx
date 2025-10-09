@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
-import { NumberInputField, TextInputField } from '../InputField';
+import { NumberInputField } from '../InputField';
 import { BasicI18nKey } from '@/src/constants/i18n';
 
 describe('NumberInputField', () => {
@@ -33,16 +33,5 @@ describe('NumberInputField', () => {
       />,
     );
     expect(screen.getByText('text-before-input')).toBeInTheDocument();
-  });
-});
-
-describe('TextInputField', () => {
-  test('renders with value and calls onChange', () => {
-    const onChange = vi.fn();
-    render(<TextInputField elementId="txt" value="abc" onChange={onChange} fieldTitle="Text" />);
-    const input = screen.getByRole('textbox');
-    expect(input).toHaveValue('abc');
-    fireEvent.change(input, { target: { value: 'xyz' } });
-    expect(onChange).toHaveBeenCalledWith('xyz');
   });
 });

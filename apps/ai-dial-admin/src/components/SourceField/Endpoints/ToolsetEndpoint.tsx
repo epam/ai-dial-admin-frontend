@@ -2,6 +2,7 @@
 
 import { FC } from 'react';
 import classNames from 'classnames';
+import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -10,7 +11,6 @@ import { ToolsetTransport } from '@/src/types/toolset';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { useI18n } from '@/src/locales/client';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 
 interface Props {
@@ -30,7 +30,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) => {
   return (
     <div className={classNames('flex flex-col gap-6', !isModal && 'lg:w-[35%]')}>
       {prefix ? (
-        <TextInputField
+        <DialTextInputField
           elementId={'endpoint'}
           textBeforeInput={prefix}
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
@@ -45,7 +45,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) => {
           tooltipTriggerClassName={'flex-1'}
         />
       ) : (
-        <TextInputField
+        <DialTextInputField
           elementId="endpoint"
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}

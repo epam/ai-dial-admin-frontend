@@ -87,19 +87,3 @@ export const NumberInputField: FC<NumberInputFieldProps> = ({ onChange, value, .
     />
   );
 };
-
-export interface TextInputFieldProps extends InputFieldBaseProps {
-  onChange?: (value?: string) => void;
-}
-
-export const TextInputField: FC<TextInputFieldProps> = ({ onChange, ...props }) => {
-  const onChangeValue = useCallback(
-    (value?: string | number) => {
-      const valueStr = (value as string).trim();
-      onChange?.(!valueStr ? void 0 : valueStr);
-    },
-    [onChange],
-  );
-
-  return <InputField type="text" onChange={onChangeValue} {...props} />;
-};

@@ -3,11 +3,10 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState
 import { createPortal } from 'react-dom';
 
 import { IconPlus, IconReplace } from '@tabler/icons-react';
-import { DialSwitch, ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialSwitch, ButtonVariant, DialButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import MdEditor from '@/src/components/Common/MdEditor/MdEditor';
@@ -253,7 +252,7 @@ const PromptProperties: FC<Props> = ({
           </div>
           <div className="lg:w-[35%]">
             {isImmutable ? (
-              <TextInputField
+              <DialTextInputField
                 elementId="version"
                 fieldTitle={t(FoldersI18nKey.Storage)}
                 value={prompt.path}
