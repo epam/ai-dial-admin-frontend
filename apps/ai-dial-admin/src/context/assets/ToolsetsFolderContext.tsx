@@ -1,11 +1,11 @@
 'use client';
 
-import { getApps } from '@/src/app/[lang]/assets-applications/actions';
-import { DialAssetApp } from '@/src/models/dial/asset-app';
 import { createFolderContext } from './AssetsFolderContext';
+import { getToolsets } from '@/src/app/[lang]/assets-toolsets/actions';
+import { AssetToolset } from '@/src/models/dial/toolset';
 
 export const { Provider: ToolsetFolderProvider, useFolderContext: useToolsetFolder } =
-  createFolderContext<DialAssetApp>(
-    getApps as (path: string) => Promise<DialAssetApp[] | null | undefined>,
+  createFolderContext<AssetToolset>(
+    getToolsets as (path: string) => Promise<AssetToolset[] | null | undefined>,
     'useToolsetFolder',
   );

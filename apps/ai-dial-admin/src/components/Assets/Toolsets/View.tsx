@@ -6,59 +6,51 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
-import { getApps, moveApps, removeApp, updateApp } from '@/src/app/[lang]/assets-applications/actions';
+import { getToolsets, moveToolsets, removeToolset, updateToolset } from '@/src/app/[lang]/assets-toolsets/actions';
 import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import { EntityViewTab, getIsParametersTabAvailable } from '@/src/components/EntityView/View/utils';
-import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
+import { EntityViewTab, propertiesTabs, rolesTabs, toolsTabs } from '@/src/components/EntityView/View/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DialAssetApp } from '@/src/models/dial/asset-app';
-import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialFile } from '@/src/models/dial/file';
-import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { DialModel } from '@/src/models/dial/model';
+import { AssetToolset, Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import { getTabsForAssetApp } from './utils';
+import ToolsetProperties from '@/src/components/Toolsets/View/Properties';
 
 interface Props {
   etag: string;
-  originalApp: DialAssetApp;
-  apps: DialAssetApp[];
-  models: DialModel[];
-  applications: DialApplication[];
-  schemes: DialApplicationScheme[];
-  interceptors: DialInterceptor[];
+  originalToolset: AssetToolset;
+  toolsets: AssetToolset[];
 }
 
-const AppView: FC<Props> = ({ etag, originalApp, apps, models, applications, schemes, interceptors }) => {
+const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
-  const tabs = getTabsForAssetApp(t, getIsParametersTabAvailable(originalApp, schemes));
+  const tabs = [propertiesTabs(t), toolsTabs(t), rolesTabs(t)];
   const router = useRouter();
-  const { fetchFiles } = useAppsFolder();
+  const { fetchFiles } = useToolsetFolder();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
+
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
-  const [selectedApp, setSelectedApp] = useState(cloneDeep(originalApp));
+  const [selectedToolset, setSelectedToolset] = useState(cloneDeep(originalToolset));
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
 
   const [key, setKey] = useState(0);
 
   useEffect(() => {
-    setSelectedApp(cloneDeep(originalApp));
-  }, [originalApp]);
+    setSelectedToolset(cloneDeep(originalToolset));
+  }, [originalToolset]);
 
   const headerClassName = classNames(
     'flex flex-row min-h-[34px]',
@@ -66,10 +58,10 @@ const AppView: FC<Props> = ({ etag, originalApp, apps, models, applications, sch
   );
 
   useEffect(() => {
-    if (Object.keys(selectedApp).length && originalApp) {
-      setIsChanged(!isEqualSkippingUndefined(originalApp, selectedApp));
+    if (Object.keys(selectedToolset).length && originalToolset) {
+      setIsChanged(!isEqualSkippingUndefined(originalToolset, selectedToolset));
     }
-  }, [selectedApp, originalApp]);
+  }, [selectedToolset, originalToolset]);
 
   const onChangeActiveTab = useCallback(
     (tab: string) => {
@@ -87,22 +79,22 @@ const AppView: FC<Props> = ({ etag, originalApp, apps, models, applications, sch
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
-    setSelectedApp(cloneDeep(originalApp));
-  }, [jsonEditorEnabled, originalApp, dispatch]);
+    setSelectedToolset(cloneDeep(originalToolset));
+  }, [jsonEditorEnabled, originalToolset, dispatch]);
 
   const onSave = useCallback(() => {
-    const isNeedToMove = getIsNeedToMove(selectedApp, originalApp);
-    const updatedEntity = getEntityForUpdate(selectedApp, originalApp);
-    updateApp(updatedEntity, etag).then((res) => {
+    const isNeedToMove = getIsNeedToMove(selectedToolset, originalToolset);
+    const updatedEntity = getEntityForUpdate(selectedToolset, originalToolset);
+    updateToolset(updatedEntity, etag).then((res) => {
       if (res.success) {
         if (isNeedToMove) {
-          getApps(addTrailingSlash(updatedEntity.folderId)).then((apps) => {
-            const pathsToMove = getListOfPathsToMove(updatedEntity, null, apps || []);
-            const newPath = removeTrailingSlash(selectedApp.folderId);
-            moveApps(pathsToMove, newPath).then((r) => {
+          getToolsets(addTrailingSlash(updatedEntity.folderId)).then((toolsets) => {
+            const pathsToMove = getListOfPathsToMove(updatedEntity, null, toolsets || []);
+            const newPath = removeTrailingSlash(selectedToolset.folderId);
+            moveToolsets(pathsToMove, newPath).then((r) => {
               if (r.every((response) => response.success)) {
                 router.push(
-                  `${ApplicationRoute.AssetsApplications}/${getEntityPath(ApplicationRoute.AssetsApplications, { name: updatedEntity.name, path: changePath(updatedEntity.path, newPath) })}`,
+                  `${ApplicationRoute.AssetsToolsets}/${getEntityPath(ApplicationRoute.AssetsToolsets, { name: updatedEntity.name, path: changePath(updatedEntity.path, newPath) })}`,
                 );
                 fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
               }
@@ -111,7 +103,7 @@ const AppView: FC<Props> = ({ etag, originalApp, apps, models, applications, sch
         } else {
           fetchFiles(updatedEntity.folderId);
           router.push(
-            `${ApplicationRoute.AssetsApplications}/${getEntityPath(ApplicationRoute.AssetsApplications, updatedEntity)}`,
+            `${ApplicationRoute.AssetsToolsets}/${getEntityPath(ApplicationRoute.AssetsToolsets, updatedEntity)}`,
           );
         }
         router.refresh();
@@ -119,13 +111,13 @@ const AppView: FC<Props> = ({ etag, originalApp, apps, models, applications, sch
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedApp, originalApp, router, fetchFiles, etag, showNotification]);
+  }, [selectedToolset, originalToolset, router, fetchFiles, etag, showNotification]);
 
   const onChangeEntity = useCallback(
-    (entity: DialAssetApp) => {
-      setSelectedApp(entity);
+    (entity: Toolset) => {
+      setSelectedToolset(entity as AssetToolset);
     },
-    [setSelectedApp],
+    [setSelectedToolset],
   );
 
   const toggleJsonEditor = useCallback(() => {
@@ -134,7 +126,7 @@ const AppView: FC<Props> = ({ etag, originalApp, apps, models, applications, sch
 
   const onRemove = useCallback(
     (entity: string) => {
-      return removeApp(entity, etag);
+      return removeToolset(entity, etag);
     },
     [etag],
   );
@@ -144,46 +136,34 @@ const AppView: FC<Props> = ({ etag, originalApp, apps, models, applications, sch
       <div className={headerClassName}>
         <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
         <HeaderButtons
-          view={ApplicationRoute.AssetsApplications}
-          entity={selectedApp}
+          view={ApplicationRoute.AssetsToolsets}
+          entity={selectedToolset}
           isChanged={isChanged}
           onSave={onSave}
           onDiscard={onDiscard}
           removeEntity={onRemove}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          existingVersions={apps?.map((app) => app.version) || []}
-          context={useAppsFolder as () => AssetsFolderContext<DialFile | DialAssetApp>}
+          existingVersions={toolsets?.map((app) => app.version) || []}
+          context={useToolsetFolder as () => AssetsFolderContext<DialFile | AssetToolset>}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
         {jsonEditorEnabled ? (
           <EntityJsonEditor
             key={key}
-            entity={selectedApp}
-            setSelectedEntity={setSelectedApp}
+            entity={selectedToolset}
+            setSelectedEntity={setSelectedToolset}
             setIsChanged={setIsChanged}
           />
         ) : (
-          <ViewContent
-            activeTab={activeTab}
-            names={[]}
-            assetApps={apps}
-            models={models}
-            applications={applications}
-            applicationSchemes={schemes}
-            interceptors={interceptors}
-            view={ApplicationRoute.AssetsApplications}
-            selectedEntity={selectedApp}
-            jsonEditorEnabled={jsonEditorEnabled}
-            setSelectedApp={setSelectedApp}
-            isSkipRefresh={false}
-            onChangeEntity={onChangeEntity as (entity: BaseEntity) => void}
-          />
+          activeTab === EntityViewTab.Properties && (
+            <ToolsetProperties names={[]} selectedToolset={selectedToolset} onChangeToolset={onChangeEntity} />
+          )
         )}
       </div>
     </div>
   );
 };
 
-export default AppView;
+export default ToolsetView;
