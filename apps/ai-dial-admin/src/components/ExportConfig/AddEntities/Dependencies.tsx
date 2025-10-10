@@ -47,7 +47,7 @@ const Dependencies: FC<Props> = ({ selectedTab, onChangeSelectedDependencies, se
     }
   }, [allDependencies, isAllSelected, onChangeSelectedDependencies]);
 
-  return (
+  return allDependencies.length ? (
     <DialCollapsibleSidebar
       width={256}
       title={t(ExportI18nKey.Dependencies)}
@@ -62,7 +62,7 @@ const Dependencies: FC<Props> = ({ selectedTab, onChangeSelectedDependencies, se
             label={t(ExportI18nKey.AllDependencies)}
             onChange={onSelectAll}
           />
-          <div className="flex flex-col pl-[20px] mt-3">
+          <div className="flex flex-col pl-[20px] mt-3 gap-y-3">
             {allDependencies.map((dep, i) => {
               return (
                 <DialCheckbox
@@ -78,7 +78,7 @@ const Dependencies: FC<Props> = ({ selectedTab, onChangeSelectedDependencies, se
         </div>
       </div>
     </DialCollapsibleSidebar>
-  );
+  ) : null;
 };
 
 export default Dependencies;
