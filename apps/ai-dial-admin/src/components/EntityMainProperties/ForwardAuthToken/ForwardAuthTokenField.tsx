@@ -94,6 +94,7 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
         portalId="entityNameToken"
         size={PopupSize.Sm}
         selectedRadioValue={forwardToken ? radioButtons[1].id : radioButtons[0].id}
+        selectedValue={forwardToken ? radioButtons[1].id : radioButtons[0].id}
         isValid={isValid}
         radioButtons={radioButtons}
         onChangeRadioField={onChangeRadioField}
