@@ -5,7 +5,7 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IconReload } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
-import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_VALUE } from '@/src/components/EntityView/Roles/constants';
+import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_VALUE } from '@/src/constants/role';
 import { SHARING_COLUMNS } from '@/src/components/EntityView/Roles/utils';
 import Grid from '@/src/components/Grid/Grid';
 import { SharingGridData } from '@/src/components/Roles/models';

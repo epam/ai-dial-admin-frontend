@@ -3,7 +3,7 @@ import { ChangeEvent, useEffect, useMemo, useState } from 'react';
 import { ColDef, ICellRendererParams, IRowNode } from 'ag-grid-community';
 
 import Triangle from '@/public/images/icons/cell-triangle.svg';
-import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_VALUE } from '@/src/components/EntityView/Roles/constants';
+import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_VALUE } from '@/src/constants/role';
 import { useI18n } from '@/src/locales/client';
 
 interface EditableCellRendererParams extends ICellRendererParams {
@@ -35,15 +35,18 @@ const EditableCellRenderer = ({
 
   const [inputValue, setInputValue] = useState(initialValue);
 
+  const isEmptyValue = useMemo(() => {
+    return inputValue == null || inputValue === NO_LIMITS_VALUE || inputValue === NO_LIMITS_ACCEPTED_USERS;
+  }, [inputValue]);
+
   const showTriangle = useMemo(() => {
-    return getDefaultPlaceholder ? !!inputValue : defaultValue !== inputValue;
-  }, [defaultValue, getDefaultPlaceholder, inputValue]);
+    const value = isEmptyValue ? void 0 : inputValue;
+    return getDefaultPlaceholder ? isEmptyValue : defaultValue !== value;
+  }, [defaultValue, getDefaultPlaceholder, inputValue, isEmptyValue]);
 
   const correctValue = useMemo(() => {
-    return inputValue == null || inputValue === NO_LIMITS_VALUE || inputValue === NO_LIMITS_ACCEPTED_USERS
-      ? ''
-      : inputValue;
-  }, [inputValue]);
+    return isEmptyValue ? '' : inputValue;
+  }, [inputValue, isEmptyValue]);
 
   const correctPlaceholder = useMemo(() => {
     return inputValue === NO_LIMITS_VALUE || inputValue === NO_LIMITS_ACCEPTED_USERS
