@@ -63,9 +63,7 @@ export class AssetsApi extends BaseApi {
           body.nextToken = nextToken;
         }
 
-        const response = (await this.post(url, body, token)) as
-          | { items: AssetApp[]; nextToken?: string }
-          | undefined;
+        const response = (await this.post(url, body, token)) as { items: AssetApp[]; nextToken?: string } | undefined;
 
         if (!response) break;
 
