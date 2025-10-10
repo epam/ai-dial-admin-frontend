@@ -2,7 +2,7 @@ import { JWT } from 'next-auth/jwt';
 
 import { DEFAULT_ETAG, IF_MATCH, IF_NONE_MATCH } from '@/src/constants/api-headers';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { DialAssetApp } from '@/src/models/dial/asset-app';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -47,14 +47,14 @@ export class AssetsApi extends BaseApi {
     token: JWT | null,
     path: string,
     type: ResourceType,
-  ): Promise<(DialAssetApp | DialPrompt | DialFile)[] | null | undefined> {
+  ): Promise<(AssetApp | DialPrompt | DialFile)[] | null | undefined> {
     const url = this.buildUrl(type, ResourceOperation.LIST);
     if (type === ResourceType.FILE) {
       return this.post(ResourceBasePaths[type], { path }, token).then((response) =>
         response === void 0 ? void 0 : (response as { items: DialFile[] })?.items || [],
       );
     } else {
-      const allItems: DialAssetApp[] = [];
+      const allItems: AssetApp[] = [];
       let nextToken: string | undefined = undefined;
 
       while (true) {
@@ -63,9 +63,7 @@ export class AssetsApi extends BaseApi {
           body.nextToken = nextToken;
         }
 
-        const response = (await this.post(url, body, token)) as
-          | { items: DialAssetApp[]; nextToken?: string }
-          | undefined;
+        const response = (await this.post(url, body, token)) as { items: AssetApp[]; nextToken?: string } | undefined;
 
         if (!response) break;
 
@@ -96,7 +94,7 @@ export class AssetsApi extends BaseApi {
 
   updateAssetWithEtag(
     token: JWT | null,
-    asset: DialAssetApp,
+    asset: AssetApp,
     type: ResourceType,
     etag: string,
   ): Promise<ServerActionResponse> {
@@ -104,7 +102,7 @@ export class AssetsApi extends BaseApi {
     return this.postAction(url, { ...asset }, token, { [IF_MATCH]: etag });
   }
 
-  updateAsset(token: JWT | null, asset: DialAssetApp, type: ResourceType): Promise<ServerActionResponse> {
+  updateAsset(token: JWT | null, asset: AssetApp, type: ResourceType): Promise<ServerActionResponse> {
     const url = this.buildUrl(type, ResourceOperation.UPDATE);
     return this.postAction(url, { ...asset }, token);
   }

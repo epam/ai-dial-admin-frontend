@@ -11,7 +11,7 @@ import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { DialAssetApp } from '@/src/models/dial/asset-app';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -39,7 +39,7 @@ interface Props<T> {
   showColumnsButton?: boolean;
   showFolders?: boolean;
   showExport?: boolean;
-  context?: () => AssetsFolderContext<DialFile | DialPrompt | DialAssetApp>;
+  context?: () => AssetsFolderContext<DialFile | DialPrompt | AssetApp>;
 }
 
 const BaseEntityList = <T extends object>({

@@ -10,7 +10,7 @@ import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interce
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import { EntityViewTab } from '@/src/components/EntityView/View/utils';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DialAssetApp } from '@/src/models/dial/asset-app';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { BaseEntity, EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
@@ -25,7 +25,7 @@ interface Props {
   roles?: DialRole[] | null;
   interceptors?: DialInterceptor[] | null;
   applications?: DialApplication[] | null;
-  assetApps?: DialAssetApp[] | null;
+  assets?: AssetApp[] | null;
   models?: DialModel[] | null;
   view: ApplicationRoute;
   selectedEntity: BaseEntity;

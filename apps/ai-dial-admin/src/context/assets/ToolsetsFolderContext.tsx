@@ -2,7 +2,7 @@
 
 import { createFolderContext } from './AssetsFolderContext';
 import { getToolsets } from '@/src/app/[lang]/assets-toolsets/actions';
-import { AssetToolset } from '@/src/models/dial/toolset';
+import { AssetToolset } from '@/src/models/dial/deployment-asset';
 
 export const { Provider: ToolsetFolderProvider, useFolderContext: useToolsetFolder } =
   createFolderContext<AssetToolset>(
