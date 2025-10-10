@@ -32,6 +32,10 @@
     min-height: 38px;
   }
 
+  .input-disable {
+    @apply bg-layer-3 text-secondary;
+  }
+
   .base-button-disable {
     @apply pointer-events-none text-controls-disable bg-controls-disable;
   }
@@ -62,6 +66,9 @@
       @apply border-hover;
     }
 
+    &:disabled {
+      @apply base-button-disable;
+    }
   }
 }
 
@@ -104,7 +111,7 @@
     .ag-pinned-left-header {
       .ag-floating-filter {
         input {
-          // @apply input m-0 p-0 px-2;
+          @apply input m-0 p-0 px-2;
           height: 24px !important;
         }
       }
