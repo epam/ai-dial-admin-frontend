@@ -55,7 +55,7 @@ const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, 
           value={filePath}
           onChange={onInputChange}
           placeholder={placeholder}
-          className="input mr-4 flex-1"
+          className="dial-input mr-4 flex-1"
         />
         <DialButton
           disable={disabled}
