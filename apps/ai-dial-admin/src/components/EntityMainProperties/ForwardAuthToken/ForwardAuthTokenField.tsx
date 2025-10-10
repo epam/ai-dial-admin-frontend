@@ -1,7 +1,13 @@
 import { FC, useCallback, useState } from 'react';
-import { AlertVariant, DialAlert, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import {
+  AlertVariant,
+  DialAlert,
+  DialRadioGroupPopupField,
+  PopupSize,
+  RadioButtonWithContent,
+  DialTextInputField,
+} from '@epam/ai-dial-ui-kit';
 
-import RadioGroupModalField from '@/src/components/Common/RadioGroupModalField/RadioGroupModalField';
 import {
   BasicI18nKey,
   CreateI18nKey,
@@ -30,6 +36,7 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
 
   const onSetForwardToken = useCallback(
     (forwardAuthToken: boolean) => {
+      setForwardToken(forwardAuthToken);
       onChangeEntity({ ...entity, forwardAuthToken });
     },
     [onChangeEntity, entity],
@@ -56,13 +63,13 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
     onSetForwardToken(Boolean(forwardToken));
   }, [onSetForwardToken, forwardToken]);
 
-  const radioButtons = [
+  const radioButtons: RadioButtonWithContent[] = [
     { id: NONE_ID, name: t(BasicI18nKey.None) },
     {
       id: USE_ID,
       name: titleKey ? t(titleKey as ForwardTokenI18nKey) : '',
       content: (
-        <div className="flex flex-col gap-3 mt-3">
+        <div className="flex flex-col gap-y-6 mt-3">
           <DialAlert variant={AlertVariant.Error} message={t(ForwardTokenI18nKey.ForwardTokenModalAlert)} />
           <DialTextInputField
             elementId="entityName"
@@ -78,13 +85,16 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
 
   return (
     <div className="flex flex-col">
-      <RadioGroupModalField
-        title={t(EntityFieldsI18nKey.forwardAuthToken)}
-        popupTitle={t(ForwardTokenI18nKey.ForwardTokenModalTitle)}
-        elementId="forwardAuthToken"
+      <DialRadioGroupPopupField
+        htmlFor="forwardAuthToken"
+        id="forwardAuthToken"
+        emptyValueText={t(BasicI18nKey.None)}
+        fieldTitle={t(EntityFieldsI18nKey.forwardAuthToken)}
+        title={t(ForwardTokenI18nKey.ForwardTokenModalTitle)}
         portalId="entityNameToken"
-        selectedInputValue={entity.forwardAuthToken ? USE_ID : NONE_ID}
-        selectedRadioValue={forwardToken ? USE_ID : NONE_ID}
+        size={PopupSize.Sm}
+        selectedRadioValue={forwardToken ? radioButtons[1].id : radioButtons[0].id}
+        selectedValue={forwardToken ? radioButtons[1].id : radioButtons[0].id}
         isValid={isValid}
         radioButtons={radioButtons}
         onChangeRadioField={onChangeRadioField}

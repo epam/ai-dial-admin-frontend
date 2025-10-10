@@ -2,6 +2,7 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { AlertVariant, DialAlert } from '@epam/ai-dial-ui-kit';
+import classNames from 'classnames';
 
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import RolesGrid from '@/src/components/EntityView/Roles/RolesGrid';
@@ -20,7 +21,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import RolesDefaults from './RolesDefaults';
-import { NO_LIMITS_VALUE } from './constants';
+import { NO_LIMITS_VALUE } from '@/src/constants/role';
 
 interface Props {
   entity: EntityRoleLimits;
@@ -32,6 +33,7 @@ interface Props {
 
 const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRefresh }) => {
   const t = useI18n();
+  const isRolesWithDefaults = view !== ApplicationRoute.Routes && view !== ApplicationRoute.Toolsets;
 
   const [addModalState, setAddModalState] = useState(PopUpState.Closed);
   const [availableRoles, setAvailableRoles] = useState<DialRole[]>([]);
@@ -170,9 +172,9 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
   return (
     <div className="h-full flex flex-col pt-3">
       <div className="flex flex-col flex-1 min-h-0 divide-y divide-primary">
-        {view !== ApplicationRoute.Routes && <RolesDefaults entity={entity} onChangeEntity={onChangeEntity} />}
+        {isRolesWithDefaults && <RolesDefaults entity={entity} onChangeEntity={onChangeEntity} />}
 
-        <div className="flex-1 min-h-0 pt-8 mb-4">
+        <div className={classNames('flex-1 min-h-0 mb-4', isRolesWithDefaults ? 'pt-8' : '')}>
           <RolesGrid
             view={view}
             entity={entity}

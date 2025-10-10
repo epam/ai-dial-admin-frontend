@@ -2,7 +2,7 @@
 
 import { FC, ReactNode } from 'react';
 
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
+import { DialTooltip } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   tooltip: string;
@@ -12,7 +12,7 @@ interface Props {
 
 const MenuAction: FC<Props> = ({ tooltip, icon, onClick }) => {
   return (
-    <Tooltip tooltip={tooltip}>
+    <DialTooltip tooltip={tooltip}>
       <button
         type="button"
         aria-label="button"
@@ -21,7 +21,7 @@ const MenuAction: FC<Props> = ({ tooltip, icon, onClick }) => {
       >
         {icon}
       </button>
-    </Tooltip>
+    </DialTooltip>
   );
 };
 

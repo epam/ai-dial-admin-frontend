@@ -4,9 +4,8 @@ import { FC, useCallback, useState } from 'react';
 
 import { IconChevronDown, IconChevronRight, IconTrash, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { DialPasswordInputField, DialNumberInputField } from '@epam/ai-dial-ui-kit';
+import { DialPasswordInputField, DialTooltip, DialNumberInputField } from '@epam/ai-dial-ui-kit';
 
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import {
   EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
@@ -105,11 +104,11 @@ const Endpoint: FC<Props> = ({
               {t(UpstreamEndpointsI18nKey.Upstream)} {index + 1}
             </h3>
             {isCollapsed && (
-              <Tooltip tooltip={endpoint.endpoint || '—'}>
+              <DialTooltip tooltip={endpoint.endpoint || '—'}>
                 <p className="max-w-[220px] md:max-w-[50%] truncate tiny text-secondary mt-3">
                   {endpoint.endpoint || '—'}
                 </p>
-              </Tooltip>
+              </DialTooltip>
             )}
           </div>
         )}

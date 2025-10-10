@@ -7,6 +7,7 @@ import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isDeploymentAsset } from '@/src/utils/is-asset-view';
 
 interface Props<T> {
   entity: T;
@@ -22,9 +23,8 @@ const TopicsControl = <T extends { topics?: string[]; descriptionKeywords?: stri
   ...props
 }: Props<T>) => {
   const t = useI18n();
-
-  const selectedItems = view === ApplicationRoute.AssetsApplications ? entity.descriptionKeywords : entity.topics;
-  const allItems = view === ApplicationRoute.AssetsApplications ? entity.descriptionKeywords : entity.topics;
+  const selectedItems = isDeploymentAsset(view) ? entity.descriptionKeywords : entity.topics;
+  const allItems = isDeploymentAsset(view) ? entity.descriptionKeywords : entity.topics;
 
   const changeTopics = useCallback(
     (items: string[]) => {

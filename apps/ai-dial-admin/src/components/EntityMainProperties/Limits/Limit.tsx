@@ -6,7 +6,7 @@ import { RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRoleLimits } from '@/src/models/dial/role-limits';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { NO_LIMITS_VALUE } from '@/src/components/EntityView/Roles/constants';
+import { NO_LIMITS_VALUE } from '@/src/constants/role';
 
 interface Props {
   controlClassName?: string;
