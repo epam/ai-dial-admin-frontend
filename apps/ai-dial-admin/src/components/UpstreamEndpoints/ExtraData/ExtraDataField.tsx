@@ -1,9 +1,8 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialTextAreaField, RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
+import { DialRadioGroupPopupField, DialTextAreaField, RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
 
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
-import RadioGroupModalField from '@/src/components/Common/RadioGroupModalField/RadioGroupModalField';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialEndpointExtraData, DialModelEndpoint } from '@/src/models/dial/model';
@@ -134,11 +133,13 @@ const ExtraDataField: FC<Props> = ({ endpoint, disabled, fieldTitle, onChangeExt
 
   return (
     <div className="flex flex-col">
-      <RadioGroupModalField
+      <DialRadioGroupPopupField
         disabled={disabled}
-        title={fieldTitle ?? ''}
-        popupTitle={t(EntityFieldsI18nKey.extraData)}
-        elementId="extraDataInput"
+        htmlFor="extraDataInput"
+        id="extraDataInput"
+        emptyValueText={t(BasicI18nKey.None)}
+        fieldTitle={fieldTitle ?? ''}
+        title={t(EntityFieldsI18nKey.extraData)}
         portalId="extraDataPortal"
         customInputValue={
           typeof endpoint.extraData === 'object'
