@@ -40,7 +40,8 @@ const EditableCellRenderer = ({
   }, [inputValue]);
 
   const showTriangle = useMemo(() => {
-    return getDefaultPlaceholder ? isEmptyValue : defaultValue !== inputValue;
+    const value = isEmptyValue ? void 0 : inputValue;
+    return getDefaultPlaceholder ? isEmptyValue : defaultValue !== value;
   }, [defaultValue, getDefaultPlaceholder, inputValue, isEmptyValue]);
 
   const correctValue = useMemo(() => {
