@@ -1,6 +1,6 @@
 import { ColDef, Column, GridApi, IRowNode } from 'ag-grid-community';
 
-import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_VALUE } from '@/src/components/EntityView/Roles/constants';
+import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_VALUE } from '@/src/constants/role';
 import { DialRole } from '@/src/models/dial/role';
 import { DialRoleShare } from '@/src/models/dial/role-limits';
 import { sharingDefaults } from './constants';
