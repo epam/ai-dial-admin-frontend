@@ -22,6 +22,9 @@ describe('Utils :: prepareEntityForDuplicate', () => {
     expect(result).toEqual({
       name: 'n',
       description: 'd',
+      grantedKeys: [],
+      limits: {},
+      share: {},
     });
   });
 
