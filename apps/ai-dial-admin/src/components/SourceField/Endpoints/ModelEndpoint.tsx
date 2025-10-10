@@ -9,7 +9,7 @@ import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 import { FieldError } from '@/src/models/error';
 import { getUrlError } from '@/src/utils/validation/url-error';
 import { useI18n } from '@/src/locales/client';
-import InputWithReadonlyParts from '@/src/components/Common/Input/InputWithReadonlyParts';
+import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
 import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
 
 interface Props {
@@ -117,25 +117,23 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
       )}
       <div className={classNames(!isModal && 'lg:w-[75%]')}>
         {prefix ? (
-          <InputWithReadonlyParts
-            inputId="endpoint"
+          <ComplexInput
+            elementId="endpoint"
             value={name}
             fullValue={fullValue}
-            title={t(EntityFieldsI18nKey.endpoint)}
-            postfixPart={postfix}
-            prefixPart={prefix}
+            fieldTitle={t(EntityFieldsI18nKey.endpoint)}
+            suffix={postfix}
+            textBeforeInput={prefix}
             onChange={onChangePath}
-            hideCopyButton={isModal}
           />
         ) : (
-          <InputWithReadonlyParts
-            inputId="endpoint"
+          <ComplexInput
+            elementId="endpoint"
             value={name}
             fullValue={fullValue}
-            title={t(EntityFieldsI18nKey.endpoint)}
-            postfixPart={postfix}
+            fieldTitle={t(EntityFieldsI18nKey.endpoint)}
+            suffix={postfix}
             onChange={onChangeEndpoint}
-            hideCopyButton={isModal}
             errorText={endpointError?.text}
             invalid={!!endpointError}
           />

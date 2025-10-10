@@ -2,10 +2,9 @@ import { FC } from 'react';
 
 import { IconExclamationCircle } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialInputProps } from '@epam/ai-dial-ui-kit';
 
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { DialInputProps } from '@epam/ai-dial-ui-kit/dist/src/components/Input/Input';
 
 interface Props extends DialInputProps {
   isInvalid?: boolean;
