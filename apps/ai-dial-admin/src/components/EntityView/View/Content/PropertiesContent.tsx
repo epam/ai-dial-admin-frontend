@@ -2,7 +2,7 @@
 import { FC, useCallback } from 'react';
 
 import DeploymentAssetHeader from '@/src/components/Assets/Deployments/Header';
-import AppProperties from '@/src/components/Assets/Apps/View/Properties';
+import DeploymentProperties from '@/src/components/Assets/Deployments/Properties';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import EntityProperties from '@/src/components/EntityView/View/Content/Properties';
 import ModelProperties from '@/src/components/ModelView/ModelProperties/ModelProperties';
@@ -43,13 +43,14 @@ const PropertiesContent: FC<Props> = ({
       return <RouteProperties route={selectedEntity as DialRoute} updateRoute={onChangeEntity} />;
     }
 
-    if (view === ApplicationRoute.AssetsApplications) {
+    if (isDeploymentAsset(view)) {
       return (
-        <AppProperties
+        <DeploymentProperties
+          view={view}
           etag={etag as string}
-          app={selectedEntity as DialAssetApp}
-          apps={assetApps || []}
-          onChangeApp={onChangeEntity}
+          asset={selectedEntity as DialAssetApp | AssetToolset}
+          assets={assetApps || []}
+          onChange={onChangeEntity}
         />
       );
     }
