@@ -65,4 +65,22 @@ describe('getModalsTranslations', () => {
       ApproveDescription: PublicationsI18nKey.ApplicationUnpublishApproveDescription,
     });
   });
+
+  test('returns toolset publication approve translations', () => {
+    const result = getModalsTranslations(ApplicationRoute.ToolsetPublications, ActionType.ADD);
+    expect(result).toEqual({
+      ApproveModalTitle: PublicationsI18nKey.ToolsetPublishApproveModalTitle,
+      DeclineModalTitle: PublicationsI18nKey.ToolsetPublishDeclineModalTitle,
+      ApproveDescription: PublicationsI18nKey.ToolsetPublishApproveDescription,
+    });
+  });
+
+  test('returns toolset publication unpublish translations', () => {
+    const result = getModalsTranslations(ApplicationRoute.ToolsetPublications, ActionType.REMOVE);
+    expect(result).toEqual({
+      ApproveModalTitle: PublicationsI18nKey.ToolsetUnpublishApproveModalTitle,
+      DeclineModalTitle: PublicationsI18nKey.ToolsetUnpublishDeclineModalTitle,
+      ApproveDescription: PublicationsI18nKey.ToolsetUnpublishApproveDescription,
+    });
+  });
 });
