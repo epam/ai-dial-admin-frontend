@@ -1,5 +1,5 @@
 import { useRouter } from 'next/navigation';
-import { Dispatch, FC, SetStateAction, useCallback, useMemo } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 
 import { getApp } from '@/src/app/[lang]/assets-applications/actions';
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
@@ -10,23 +10,22 @@ import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAssetApp } from '@/src/models/dial/asset-app';
 import { DialFile } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';
-import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 import { getErrorNotification } from '@/src/utils/notification';
-import { useNotification } from '@/src/context/NotificationContext';
+import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 
 interface Props {
   etag: string;
   app: DialAssetApp;
   apps: DialAssetApp[];
   onChangeApp: (app: DialAssetApp) => void;
-  setSelectedApp?: Dispatch<SetStateAction<DialAssetApp>>;
 }
 
-const AppProperties: FC<Props> = ({ etag, app, apps, onChangeApp, setSelectedApp }) => {
+const AppProperties: FC<Props> = ({ etag, app, apps, onChangeApp }) => {
   const t = useI18n() as (t: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -42,7 +41,7 @@ const AppProperties: FC<Props> = ({ etag, app, apps, onChangeApp, setSelectedApp
           const found = res.response as DialAssetApp;
 
           if (found) {
-            setSelectedApp?.({} as DialAssetApp);
+            onChangeApp?.({} as DialAssetApp);
             router.push(
               `${ApplicationRoute.AssetsApplications}/${`${encodeURIComponent(found.name as string)}?path=${encodeURIComponent(found.path)}`}`,
             );
@@ -59,7 +58,7 @@ const AppProperties: FC<Props> = ({ etag, app, apps, onChangeApp, setSelectedApp
         }
       });
     },
-    [app, etag, setSelectedApp, router, onChangeApp, showNotification],
+    [app, etag, router, onChangeApp, showNotification],
   );
 
   return (
