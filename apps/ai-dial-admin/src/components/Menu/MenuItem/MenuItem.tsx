@@ -3,12 +3,12 @@
 import { FC, useCallback, useState } from 'react';
 import classNames from 'classnames';
 import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
+import { DialTooltip } from '@epam/ai-dial-ui-kit';
 
 import { MenuGroupConfiguration } from '../menu-configuration';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import MenuItemContent from './MenuItemContent';
 
 interface Props {
@@ -37,7 +37,7 @@ const MenuItem: FC<Props> = ({ config, activeMenuItem, isOpenByDefault = false, 
 
   return (
     <li className="flex flex-col">
-      <Tooltip triggerClassName="small-text-semi" tooltip={t(config.key) ?? ''} placement={'right'}>
+      <DialTooltip triggerClassName="small-text-semi" tooltip={t(config.key) ?? ''} placement={'right'}>
         <button className={menuBlockClassNames} onClick={onClick} aria-label="button">
           <div className="flex flex-row items-center flex-1 min-w-0">
             <div className={classNames('mr-4', iconClassNames)}>{config.icon}</div>
@@ -49,7 +49,7 @@ const MenuItem: FC<Props> = ({ config, activeMenuItem, isOpenByDefault = false, 
             </div>
           )}
         </button>
-      </Tooltip>
+      </DialTooltip>
       {isOpen && !!config.items.length && (
         <div className="flex flex-row w-full relative my-1">
           <div className="bg-layer-4 w-[1px] absolute left-[23px] top-[12px] bottom-[12px]"></div>
