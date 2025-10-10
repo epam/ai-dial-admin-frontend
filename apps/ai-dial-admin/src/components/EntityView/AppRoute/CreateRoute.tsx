@@ -23,6 +23,7 @@ const CreateRoute: FC<Props> = ({ isModalOpen, onClose, onCreate }) => {
       portalId="CreateRoute"
       open={isModalOpen}
       size={PopupSize.Md}
+      dividers={true}
     >
       <div className="flex flex-col overflow-auto px-6 py-4">
         <TextInputField
