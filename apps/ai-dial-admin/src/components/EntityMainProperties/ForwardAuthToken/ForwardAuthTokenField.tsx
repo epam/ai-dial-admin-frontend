@@ -36,6 +36,7 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
 
   const onSetForwardToken = useCallback(
     (forwardAuthToken: boolean) => {
+      setForwardToken(forwardAuthToken);
       onChangeEntity({ ...entity, forwardAuthToken });
     },
     [onChangeEntity, entity],
@@ -92,7 +93,7 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
         title={t(ForwardTokenI18nKey.ForwardTokenModalTitle)}
         portalId="entityNameToken"
         size={PopupSize.Sm}
-        selectedRadioValue={entity.forwardAuthToken || forwardToken ? radioButtons[1].id : radioButtons[0].id}
+        selectedRadioValue={forwardToken ? radioButtons[1].id : radioButtons[0].id}
         isValid={isValid}
         radioButtons={radioButtons}
         onChangeRadioField={onChangeRadioField}
