@@ -37,9 +37,3 @@ export interface Tool {
   name: string;
   description: string;
 }
-
-export interface AssetToolset extends DialFile, Toolset {
-  version: string;
-  children?: AssetToolset[];
-  versions?: string[];
-}

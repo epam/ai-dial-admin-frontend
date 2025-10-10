@@ -3,7 +3,7 @@
 import { cookies, headers } from 'next/headers';
 
 import { assetsApi } from '@/src/app/api/api';
-import { AssetToolset } from '@/src/models/dial/toolset';
+import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';

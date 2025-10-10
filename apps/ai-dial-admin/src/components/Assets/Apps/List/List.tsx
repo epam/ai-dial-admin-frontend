@@ -9,7 +9,7 @@ import Page403 from '@/src/components/Page403/Page403';
 import { ASSETS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
-import { DialAssetApp } from '@/src/models/dial/asset-app';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';
 import { filterNames } from '@/src/utils/entities/filter-names';
@@ -34,7 +34,7 @@ const AppsList: FC = () => {
       removeEntity={removeApp}
       moveFiles={moveApps}
       bulkDelete={bulkDeleteApps}
-      context={useAppsFolder as () => AssetsFolderContext<DialAssetApp | DialFile>}
+      context={useAppsFolder as () => AssetsFolderContext<AssetApp | DialFile>}
       showFolders={true}
     />
   );
