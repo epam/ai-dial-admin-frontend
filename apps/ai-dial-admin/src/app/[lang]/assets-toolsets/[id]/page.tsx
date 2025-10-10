@@ -15,7 +15,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContext';
-import { AssetToolset } from '@/src/models/dial/toolset';
+import { AssetToolset } from '@/src/models/dial/deployment-asset';
 
 export const dynamic = 'force-dynamic';
 

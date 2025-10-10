@@ -9,7 +9,7 @@ import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DialAssetApp } from '@/src/models/dial/asset-app';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
@@ -36,8 +36,8 @@ export default async function Page(params: {
 
   let etag = DEFAULT_ETAG;
 
-  let apps: DialAssetApp[] = [];
-  let app: DialAssetApp | null = null;
+  let apps: AssetApp[] = [];
+  let app: AssetApp | null = null;
 
   let models: DialModel[] | null = [];
   let applications: DialApplication[] | null = [];
@@ -51,7 +51,7 @@ export default async function Page(params: {
 
     app = await assetsApi.getAssetWithEtag(token, path, ResourceType.APPLICATION, etag).then((res) => {
       etag = res?.etag || DEFAULT_ETAG;
-      return res?.response as DialAssetApp | null;
+      return res?.response as AssetApp | null;
     });
 
     if (app === void 0) {
@@ -60,7 +60,7 @@ export default async function Page(params: {
 
     apps = ((await assetsApi.getAssetList(token, `${app?.folderId}/`, ResourceType.APPLICATION))?.filter(
       (p) => p.nodeType === DialFileNodeType.ITEM && p.name === name,
-    ) || []) as DialAssetApp[];
+    ) || []) as AssetApp[];
 
     models = await modelsApi.getModelsList(token);
     applications = await applicationsApi.getApplicationsList(token);
@@ -80,7 +80,7 @@ export default async function Page(params: {
         <AppView
           etag={etag}
           originalApp={app}
-          apps={apps || []}
+          assets={apps || []}
           models={models || []}
           applications={applications || []}
           schemes={applicationSchemes || []}

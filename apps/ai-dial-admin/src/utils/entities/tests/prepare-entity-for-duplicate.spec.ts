@@ -12,10 +12,19 @@ describe('Utils :: prepareEntityForDuplicate', () => {
   };
 
   test('Should return filtered role', () => {
-    const result = prepareEntityForDuplicate(ApplicationRoute.Roles, entity);
+    const result = prepareEntityForDuplicate(ApplicationRoute.Roles, {
+      name: 'n',
+      description: 'd',
+      grantedKeys: ['key'],
+      share: { a: {} },
+      limits: { a: {} },
+    });
     expect(result).toEqual({
       name: 'n',
       description: 'd',
+      grantedKeys: [],
+      limits: {},
+      share: {},
     });
   });
 

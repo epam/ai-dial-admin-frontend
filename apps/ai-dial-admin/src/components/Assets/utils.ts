@@ -1,8 +1,8 @@
-import { DialAssetApp } from '@/src/models/dial/asset-app';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { compareVersions } from '@/src/utils/prompts/versions';
 
-export const filterLatestVersions = (data: (DialPrompt | DialAssetApp)[]) => {
+export const filterLatestVersions = (data: (DialPrompt | AssetApp)[]) => {
   const latestVersions: Record<string, DialPrompt> = {};
 
   data?.forEach((item) => {
@@ -15,7 +15,7 @@ export const filterLatestVersions = (data: (DialPrompt | DialAssetApp)[]) => {
   return Object.values(latestVersions);
 };
 
-export const getVersionsPerName = (data: (DialPrompt | DialAssetApp)[]) => {
+export const getVersionsPerName = (data: (DialPrompt | AssetApp)[]) => {
   const versionsPerName: Record<string, string[]> = {};
 
   data.forEach((item) => {
@@ -34,13 +34,13 @@ export const getVersionsPerName = (data: (DialPrompt | DialAssetApp)[]) => {
   return versionsPerName;
 };
 
-export const getIsNeedToMove = (entity: DialPrompt | DialAssetApp, initialEntity?: DialPrompt | DialAssetApp) => {
+export const getIsNeedToMove = (entity: DialPrompt | AssetApp, initialEntity?: DialPrompt | AssetApp) => {
   return entity.folderId !== initialEntity?.folderId;
 };
 
-export const getEntityForUpdate = (entity: DialPrompt | DialAssetApp, initialEntity?: DialPrompt | DialAssetApp) => {
+export const getEntityForUpdate = (entity: DialPrompt | AssetApp, initialEntity?: DialPrompt | AssetApp) => {
   return {
     ...entity,
-    folderId: (initialEntity as DialPrompt | DialAssetApp)?.folderId,
+    folderId: (initialEntity as DialPrompt | AssetApp)?.folderId,
   };
 };

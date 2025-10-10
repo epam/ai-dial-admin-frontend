@@ -8,10 +8,9 @@ import EntityProperties from '@/src/components/EntityView/View/Content/Propertie
 import ModelProperties from '@/src/components/ModelView/ModelProperties/ModelProperties';
 import RouteProperties from '@/src/components/Routes/Properties/RouteProperties';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { DialAssetApp } from '@/src/models/dial/asset-app';
+import { DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialRoute } from '@/src/models/dial/route';
-import { AssetToolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isDeploymentAsset } from '@/src/utils/is-asset-view';
 
@@ -20,7 +19,7 @@ interface Props {
   applicationSchemes?: DialApplicationScheme[] | null;
   view: ApplicationRoute;
   etag?: string;
-  assetApps?: DialAssetApp[] | null;
+  assets?: DeploymentAsset[] | null;
   selectedEntity: BaseEntity;
   onChangeEntity: (entity: BaseEntity) => void;
 }
@@ -30,7 +29,7 @@ const PropertiesContent: FC<Props> = ({
   names,
   view,
   etag,
-  assetApps,
+  assets,
   selectedEntity,
   onChangeEntity,
 }) => {
@@ -48,8 +47,8 @@ const PropertiesContent: FC<Props> = ({
         <DeploymentProperties
           view={view}
           etag={etag as string}
-          asset={selectedEntity as DialAssetApp | AssetToolset}
-          assets={assetApps || []}
+          asset={selectedEntity as DeploymentAsset}
+          assets={assets || []}
           onChange={onChangeEntity}
         />
       );
@@ -64,12 +63,12 @@ const PropertiesContent: FC<Props> = ({
         updateEntity={onChangeEntity}
       />
     );
-  }, [view, selectedEntity, applicationSchemes, names, onChangeEntity, etag, assetApps]);
+  }, [view, selectedEntity, applicationSchemes, names, onChangeEntity, etag, assets]);
 
   return (
     <div className="flex flex-col h-full w-full">
       {isDeploymentAsset(view) ? (
-        <DeploymentAssetHeader asset={selectedEntity as DialAssetApp | AssetToolset} />
+        <DeploymentAssetHeader asset={selectedEntity as DeploymentAsset} />
       ) : (
         <EntityHeader entity={selectedEntity} />
       )}
