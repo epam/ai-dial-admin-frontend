@@ -13,12 +13,13 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { removeTrailingSlash } from '@/src/utils/files/path';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { AssetToolset } from '@/src/models/dial/toolset';
 
 interface Props {
-  app: DialAssetApp;
+  asset: DialAssetApp | AssetToolset;
 }
 
-const AppHeader: FC<Props> = ({ app }) => {
+const DeploymentAssetHeader: FC<Props> = ({ asset }) => {
   const t = useI18n() as (t: string) => string;
   const currentLocale = useCurrentLocale();
 
@@ -31,28 +32,33 @@ const AppHeader: FC<Props> = ({ app }) => {
 
   return (
     <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary mb-3">
-      <LabelledText label={t(EntityFieldsI18nKey.displayName)} text={app.name} copyButton={true} />
-      {app.applicationTypeSchemaId && (
+      <LabelledText label={t(EntityFieldsI18nKey.displayName)} text={asset.name} copyButton={true} />
+      {(asset as DialAssetApp).applicationTypeSchemaId && (
         <LabelledText label={t(EntitiesI18nKey.Runner)}>
           <div className="flex flex-row gap-1 items-center max-w-[400px]">
-            <DialTooltip tooltip={app.applicationTypeSchemaId}>{app.applicationTypeSchemaId}</DialTooltip>
-            <button
-              onClick={() => onOpenInNewTab(ApplicationRoute.ApplicationRunners, { $id: app.applicationTypeSchemaId })}
-              className="text-secondary"
-            >
-              <IconExternalLink {...BASE_ICON_PROPS} />
-            </button>
+            <DialTooltip tooltip={(asset as DialAssetApp).applicationTypeSchemaId}>
+              {(asset as DialAssetApp).applicationTypeSchemaId}
+            </DialTooltip>
+            <DialButton
+              onClick={() =>
+                onOpenInNewTab(ApplicationRoute.ApplicationRunners, {
+                  $id: (asset as DialAssetApp).applicationTypeSchemaId,
+                })
+              }
+              iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
+              cssClass="text-secondary"
+            />
           </div>
         </LabelledText>
       )}
-      {app.author && <LabelledText label={t(EntitiesI18nKey.Author)} text={app.author} />}
-      <LabelledText label={t(EntityFieldsI18nKey.createdAt)} text={formatDateTimeToLocalString(app.createdAt)} />
-      <LabelledText label={t(EntityFieldsI18nKey.updatedAt)} text={formatDateTimeToLocalString(app.updateTime)} />
+      {asset.author && <LabelledText label={t(EntitiesI18nKey.Author)} text={asset.author} />}
+      <LabelledText label={t(EntityFieldsI18nKey.createdAt)} text={formatDateTimeToLocalString(asset.createdAt)} />
+      <LabelledText label={t(EntityFieldsI18nKey.updatedAt)} text={formatDateTimeToLocalString(asset.updateTime)} />
       <LabelledText label={t(EntitiesI18nKey.FolderStorage)}>
         <div className="flex flex-row gap-1 items-center">
-          <Tooltip tooltip={app.folderId}>{removeTrailingSlash(app.folderId)}</Tooltip>
+          <Tooltip tooltip={asset.folderId}>{removeTrailingSlash(asset.folderId)}</Tooltip>
           <DialButton
-            onClick={() => openFolderStorageInNewTab(app.folderId)}
+            onClick={() => openFolderStorageInNewTab(asset.folderId)}
             cssClass="text-secondary"
             iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
           />
@@ -62,4 +68,4 @@ const AppHeader: FC<Props> = ({ app }) => {
   );
 };
 
-export default AppHeader;
+export default DeploymentAssetHeader;

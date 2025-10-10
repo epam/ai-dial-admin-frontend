@@ -21,7 +21,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import RolesDefaults from './RolesDefaults';
-import { NO_LIMITS_VALUE } from './constants';
+import { NO_LIMITS_VALUE } from '@/src/constants/role';
 
 interface Props {
   entity: EntityRoleLimits;

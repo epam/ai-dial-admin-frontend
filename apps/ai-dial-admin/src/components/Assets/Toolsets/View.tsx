@@ -26,7 +26,7 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import Tool from '@/src/components/Toolsets/Tools/Tools';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import ToolsetProperties from '@/src/components/Toolsets/View/Properties';
+import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
 
 interface Props {
   etag: string;
@@ -160,7 +160,15 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
         ) : (
           <>
             {activeTab === EntityViewTab.Properties && (
-              <ToolsetProperties names={[]} selectedToolset={selectedToolset} onChangeToolset={onChangeEntity} />
+              <ViewContent
+                activeTab={activeTab}
+                names={[]}
+                view={ApplicationRoute.AssetsToolsets}
+                selectedEntity={selectedToolset}
+                jsonEditorEnabled={jsonEditorEnabled}
+                isSkipRefresh={false}
+                onChangeEntity={onChangeEntity}
+              />
             )}
 
             {activeTab === EntityViewTab.Tools && (
