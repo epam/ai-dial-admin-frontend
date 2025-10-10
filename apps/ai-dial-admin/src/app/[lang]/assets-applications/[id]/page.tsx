@@ -80,7 +80,7 @@ export default async function Page(params: {
         <AppView
           etag={etag}
           originalApp={app}
-          apps={apps || []}
+          assets={apps || []}
           models={models || []}
           applications={applications || []}
           schemes={applicationSchemes || []}

@@ -164,6 +164,7 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
               <ViewContent
                 activeTab={activeTab}
                 names={[]}
+                assets={toolsets || []}
                 view={ApplicationRoute.AssetsToolsets}
                 selectedEntity={selectedToolset}
                 jsonEditorEnabled={jsonEditorEnabled}

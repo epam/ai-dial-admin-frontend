@@ -25,7 +25,7 @@ interface Props {
   roles?: DialRole[] | null;
   interceptors?: DialInterceptor[] | null;
   applications?: DialApplication[] | null;
-  assetApps?: AssetApp[] | null;
+  assets?: AssetApp[] | null;
   models?: DialModel[] | null;
   view: ApplicationRoute;
   selectedEntity: BaseEntity;

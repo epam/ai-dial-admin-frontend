@@ -1,7 +1,6 @@
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 import { BaseEntity, EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { ToolsetTransport } from '@/src/types/toolset';
-import { DialFile } from './file';
 
 export interface Toolset extends BaseEntity, EntityRoleLimits {
   transport?: ToolsetTransport;

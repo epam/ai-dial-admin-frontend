@@ -35,14 +35,14 @@ import { getTabsForAssetApp } from './utils';
 interface Props {
   etag: string;
   originalApp: AssetApp;
-  apps: AssetApp[];
+  assets: AssetApp[];
   models: DialModel[];
   applications: DialApplication[];
   schemes: DialApplicationScheme[];
   interceptors: DialInterceptor[];
 }
 
-const AppView: FC<Props> = ({ etag, originalApp, apps, models, applications, schemes, interceptors }) => {
+const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, schemes, interceptors }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const tabs = getTabsForAssetApp(t, getIsParametersTabAvailable(originalApp, schemes));
   const router = useRouter();
@@ -152,7 +152,7 @@ const AppView: FC<Props> = ({ etag, originalApp, apps, models, applications, sch
           removeEntity={onRemove}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          existingVersions={apps?.map((app) => app.version) || []}
+          existingVersions={assets?.map((app) => app.version) || []}
           context={useAppsFolder as () => AssetsFolderContext<DialFile | AssetApp>}
         />
       </div>
@@ -168,7 +168,7 @@ const AppView: FC<Props> = ({ etag, originalApp, apps, models, applications, sch
           <ViewContent
             activeTab={activeTab}
             names={[]}
-            assetApps={apps}
+            assets={assets}
             models={models}
             applications={applications}
             applicationSchemes={schemes}

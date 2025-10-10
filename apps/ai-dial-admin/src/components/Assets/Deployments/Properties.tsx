@@ -19,6 +19,7 @@ import { DialFile } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
+import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
 
 interface Props {
   etag: string;
@@ -86,11 +87,9 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, onChange }
         </div>
 
         <IconControl iconUrl={asset.iconUrl} onChange={(icon) => onChange({ ...asset, iconUrl: icon })} />
-        <div className="lg:w-[35%]">
+        <div className="lg:w-[35%] flex flex-col gap-y-6">
           <TopicsControl entity={asset} onChange={onChange} view={view} />
-        </div>
 
-        <div className="lg:w-[35%]">
           <FilePath
             value={asset.folderId}
             label={t(FoldersI18nKey.Storage)}
@@ -104,6 +103,10 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, onChange }
             }
           />
         </div>
+      </div>
+
+      <div className="flex flex-col gap-6">
+        <MaxRetryAttempts entity={asset} onChangeEntity={onChange} />
       </div>
     </div>
   );
