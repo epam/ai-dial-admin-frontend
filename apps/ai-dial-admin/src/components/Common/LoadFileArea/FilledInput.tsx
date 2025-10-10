@@ -1,51 +1,29 @@
-import { FC, ReactNode } from 'react';
+import { FC } from 'react';
 
 import { IconExclamationCircle } from '@tabler/icons-react';
 import classNames from 'classnames';
+import { DialInput } from '@epam/ai-dial-ui-kit';
 
-import Input, { InputProps } from '@/src/components/Common/Input/Input';
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { DialInputProps } from '@epam/ai-dial-ui-kit/dist/src/components/Input/Input';
 
-interface Props extends InputProps {
+interface Props extends DialInputProps {
   isInvalid?: boolean;
   errorText?: string;
-  iconAfterInput?: ReactNode;
-  iconBeforeInput?: ReactNode;
   onClick?: () => void;
 }
 
-const FilledInput: FC<Props> = ({
-  isInvalid,
-  errorText,
-  iconBeforeInput,
-  iconAfterInput,
-  cssClass,
-  onClick,
-  ...props
-}) => {
+const FilledInput: FC<Props> = ({ isInvalid, iconBefore, cssClass, ...props }) => {
+  const icon = <div className="mr-2">{isInvalid ? <IconExclamationCircle {...BASE_ICON_PROPS} /> : iconBefore}</div>;
+
   return (
-    <div
-      className={classNames(
-        'dial-input-field flex flex-row items-center p-0 w-full',
-        iconAfterInput ? 'pr-2' : '',
-        iconBeforeInput ? 'pl-2' : '',
-        props.disabled ? 'bg-layer-3 text-secondary' : '',
-      )}
-      onClick={onClick}
-    >
-      <Tooltip tooltip={isInvalid ? errorText : ''} placement={'bottom'}>
-        <div className={classNames(isInvalid ? 'text-error' : '', 'flex items-center')}>
-          {isInvalid ? <IconExclamationCircle {...BASE_ICON_PROPS} /> : iconBeforeInput}
-        </div>
-      </Tooltip>
-      <Input
-        tooltipTriggerClassName="flex-1 min-w-0"
-        cssClass={classNames('border-0 bg-transparent', isInvalid ? 'text-error' : '', cssClass)}
-        {...props}
-      />
-      <div className="flex items-center">{iconAfterInput}</div>
-    </div>
+    <DialInput
+      iconBefore={icon}
+      tooltipTriggerClassName="flex-1 min-w-0"
+      cssClass={classNames(isInvalid ? 'text-error' : '', cssClass)}
+      containerCssClass="border-0 bg-transparent"
+      {...props}
+    />
   );
 };
 
