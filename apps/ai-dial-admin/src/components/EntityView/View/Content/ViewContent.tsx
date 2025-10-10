@@ -1,28 +1,22 @@
 'use client';
-import { Dispatch, FC, SetStateAction, useCallback } from 'react';
+import { FC } from 'react';
 
 import ApplicationParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
-import AppHeader from '@/src/components/Assets/Apps/View/Header';
-import AppProperties from '@/src/components/Assets/Apps/View/Properties';
-import EntityProperties from '@/src/components/EntityView/View/Content/Properties';
 import ApplicationAppRoutes from '@/src/components/EntityView/AppRoute/ApplicationAppRoutes';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityDependencies from '@/src/components/EntityView/Dependencies/Dependencies';
 import EntityFeatures from '@/src/components/EntityView/Features/Features';
-import EntityHeader from '@/src/components/EntityView/Header/Header';
 import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import { EntityViewTab } from '@/src/components/EntityView/View/utils';
-import ModelProperties from '@/src/components/ModelView/ModelProperties/ModelProperties';
-import RouteProperties from '@/src/components/Routes/Properties/RouteProperties';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialAssetApp } from '@/src/models/dial/asset-app';
 import { BaseEntity, EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
-import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
+import PropertiesContent from './PropertiesContent';
 
 interface Props {
   activeTab: EntityViewTab;
@@ -39,7 +33,6 @@ interface Props {
   isSkipRefresh: boolean;
   etag?: string;
   onChangeEntity: (entity: BaseEntity) => void;
-  setSelectedApp?: Dispatch<SetStateAction<DialAssetApp>>;
 }
 
 const ViewContent: FC<Props> = ({
@@ -47,61 +40,25 @@ const ViewContent: FC<Props> = ({
   jsonEditorEnabled,
   isSkipRefresh,
   applicationSchemes,
-  names,
   view,
-  etag,
-  assetApps,
   applications,
   interceptors,
   models,
   roles,
   selectedEntity,
   onChangeEntity,
-  setSelectedApp,
+  ...props
 }) => {
-  const getPropertiesView = useCallback(() => {
-    if (view === ApplicationRoute.Models) {
-      return <ModelProperties model={selectedEntity} modelsNames={names} updateModel={onChangeEntity} />;
-    }
-
-    if (view === ApplicationRoute.Routes) {
-      return <RouteProperties route={selectedEntity as DialRoute} updateRoute={onChangeEntity} />;
-    }
-
-    if (view === ApplicationRoute.AssetsApplications) {
-      return (
-        <AppProperties
-          etag={etag as string}
-          app={selectedEntity as DialAssetApp}
-          apps={assetApps || []}
-          setSelectedApp={setSelectedApp}
-          onChangeApp={onChangeEntity}
-        />
-      );
-    }
-
-    return (
-      <EntityProperties
-        entity={selectedEntity}
-        runners={applicationSchemes || []}
-        names={names}
-        view={view}
-        updateEntity={onChangeEntity}
-      />
-    );
-  }, [view, selectedEntity, applicationSchemes, names, onChangeEntity, etag, assetApps, setSelectedApp]);
-
   return (
     <>
       {activeTab === EntityViewTab.Properties && (
-        <div className="flex flex-col h-full w-full">
-          {view === ApplicationRoute.AssetsApplications ? (
-            <AppHeader app={selectedEntity as DialAssetApp} />
-          ) : (
-            <EntityHeader entity={selectedEntity} />
-          )}
-          <div className="flex-1 min-h-0 pt-4">{getPropertiesView()}</div>
-        </div>
+        <PropertiesContent
+          applicationSchemes={applicationSchemes}
+          view={view}
+          selectedEntity={selectedEntity}
+          onChangeEntity={onChangeEntity}
+          {...props}
+        />
       )}
       {activeTab === EntityViewTab.Features && (
         <EntityFeatures

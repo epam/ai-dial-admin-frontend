@@ -176,7 +176,6 @@ const AppView: FC<Props> = ({ etag, originalApp, apps, models, applications, sch
             view={ApplicationRoute.AssetsApplications}
             selectedEntity={selectedApp}
             jsonEditorEnabled={jsonEditorEnabled}
-            setSelectedApp={setSelectedApp}
             isSkipRefresh={false}
             onChangeEntity={onChangeEntity as (entity: BaseEntity) => void}
           />
