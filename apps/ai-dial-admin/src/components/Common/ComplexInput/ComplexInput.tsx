@@ -13,8 +13,10 @@ interface Props extends DialInputProps {
 
 const ComplexInput: FC<Props> = ({ fullValue, fieldTitle, ...props }) => {
   return (
-    <div className="flex items-end gap-2 lg:w-[35%]">
-      <DialTextInputField containerCssClass="flex-1" fieldTitle={fieldTitle} {...props} />
+    <div className="flex items-end gap-2 w-full">
+      <div className="min-w-0 lg:w-[35%]">
+        <DialTextInputField containerCssClass="w-full" fieldTitle={fieldTitle} {...props} elementCssClass="w-full" />
+      </div>
       <CopyButton title={fieldTitle} field={fullValue} isFullButton={true} />
     </div>
   );

@@ -1,5 +1,4 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import classNames from 'classnames';
 
 import { DialRadioGroup, RadioGroupOrientation, RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
 
@@ -104,41 +103,38 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
   return (
     <div className="w-full flex flex-col gap-6">
       {!isModal && (
-        <div className="w-full lg:w-[35%]">
-          <DialRadioGroup
-            radioButtons={modelTypeRadio}
-            activeRadioButton={entity.type as string}
-            elementId="type"
-            fieldTitle={t(EntityFieldsI18nKey.type)}
-            orientation={RadioGroupOrientation.Row}
-            onChange={onChangeType}
-          />
-        </div>
+        <DialRadioGroup
+          radioButtons={modelTypeRadio}
+          activeRadioButton={entity.type as string}
+          elementId="type"
+          fieldTitle={t(EntityFieldsI18nKey.type)}
+          orientation={RadioGroupOrientation.Row}
+          onChange={onChangeType}
+        />
       )}
-      <div className={classNames(!isModal && 'lg:w-[75%]')}>
-        {prefix ? (
-          <ComplexInput
-            elementId="endpoint"
-            value={name}
-            fullValue={fullValue}
-            fieldTitle={t(EntityFieldsI18nKey.endpoint)}
-            suffix={postfix}
-            textBeforeInput={prefix}
-            onChange={onChangePath}
-          />
-        ) : (
-          <ComplexInput
-            elementId="endpoint"
-            value={name}
-            fullValue={fullValue}
-            fieldTitle={t(EntityFieldsI18nKey.endpoint)}
-            suffix={postfix}
-            onChange={onChangeEndpoint}
-            errorText={endpointError?.text}
-            invalid={!!endpointError}
-          />
-        )}
-      </div>
+
+      {prefix ? (
+        <ComplexInput
+          elementId="endpoint"
+          value={name}
+          fullValue={fullValue}
+          fieldTitle={t(EntityFieldsI18nKey.endpoint)}
+          suffix={postfix}
+          textBeforeInput={prefix}
+          onChange={onChangePath}
+        />
+      ) : (
+        <ComplexInput
+          elementId="endpoint"
+          value={name}
+          fullValue={fullValue}
+          fieldTitle={t(EntityFieldsI18nKey.endpoint)}
+          suffix={postfix}
+          onChange={onChangeEndpoint}
+          errorText={endpointError?.text}
+          invalid={!!endpointError}
+        />
+      )}
     </div>
   );
 };
