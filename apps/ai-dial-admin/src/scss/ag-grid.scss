@@ -1,3 +1,70 @@
+@layer components {
+  // TODO: remove after fixing style in UI kit
+  .input {
+    @apply border border-solid border-primary rounded outline-0;
+    @apply bg-transparent small truncate;
+    @apply px-3 py-2;
+
+    &:not(:placeholder-shown) {
+      @apply text-primary;
+    }
+
+    &:hover {
+      @apply border-hover;
+    }
+
+    &:focus,
+    &:focus-within {
+      @apply border-accent-primary;
+    }
+
+    &:disabled {
+      @apply input-disable;
+    }
+  }
+
+  .base-button {
+    @apply flex flex-row items-center px-3 py-2;
+    @apply rounded border border-solid border-transparent;
+    @apply small-medium;
+
+    min-width: 38px;
+    min-height: 38px;
+  }
+
+  .base-button-disable {
+    @apply pointer-events-none text-controls-disable bg-controls-disable;
+  }
+
+  .primary {
+    @apply base-button bg-controls-accent text-controls-primary;
+
+    &:hover,
+    &:focus {
+      @apply bg-controls-accent-hover;
+    }
+
+    &:focus {
+      @apply border-hover;
+    }
+  }
+
+  .secondary {
+    @apply base-button bg-transparent text-primary;
+    @apply border-primary;
+
+    &:hover,
+    &:focus {
+      @apply bg-layer-4;
+    }
+
+    &:focus {
+      @apply border-hover;
+    }
+
+  }
+}
+
 .ag-root-wrapper {
   .ag-root-wrapper-body {
     @apply h-auto;
@@ -37,7 +104,7 @@
     .ag-pinned-left-header {
       .ag-floating-filter {
         input {
-          @apply input m-0 p-0 px-2;
+          // @apply input m-0 p-0 px-2;
           height: 24px !important;
         }
       }

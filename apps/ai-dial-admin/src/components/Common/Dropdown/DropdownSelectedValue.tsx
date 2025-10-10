@@ -31,7 +31,7 @@ const DropdownSelectedItem: FC<Props> = ({
     selectedClassName ||
     classNames(
       'flex flex-row w-full items-center',
-      isMenu ? 'small-medium cursor-pointer' : 'dial-input dial-input-field',
+      isMenu ? 'small-medium cursor-pointer' : 'dial-input px-3 py-2 dial-input-field',
       disabled ? 'dial-input-disable' : '',
     );
   const selectedValueClassNames = classNames(

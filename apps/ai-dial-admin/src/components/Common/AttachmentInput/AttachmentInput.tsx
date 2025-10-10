@@ -194,7 +194,7 @@ const AttachmentInput: FC<Props> = ({
                     if (filteredSuggestions.length) setShowSuggestions(true);
                   }}
                   onKeyDown={handleKeyDown}
-                  className="outline-none border-none w-full flex-1 p-1"
+                  className="outline-none border-none w-full flex-1 p-1 dial-input"
                   placeholder={placeholder || ''}
                 />
               </div>

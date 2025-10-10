@@ -24,7 +24,7 @@ const RulesValueReadonly: FC<Props> = ({ rule, ruleDiff, setLastValueHeight }) =
   const isRuleNew = ruleDiff && ruleDiff.status === RuleDiffStatus.INCLUDE && !ruleDiff.items;
 
   const containerClass = classNames(
-    'flex-1 flex flex-row items-center dial-input pt-2',
+    'flex-1 flex flex-row items-center dial-input py-2 px-3',
     isRuleError && 'border-error',
     isRuleNew && 'border-accent-secondary',
   );

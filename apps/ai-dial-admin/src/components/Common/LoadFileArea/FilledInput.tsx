@@ -27,7 +27,7 @@ const FilledInput: FC<Props> = ({
   return (
     <div
       className={classNames(
-        'input-field flex flex-row items-center p-0 w-full',
+        'dial-input-field flex flex-row items-center p-0 w-full',
         iconAfterInput ? 'pr-2' : '',
         iconBeforeInput ? 'pl-2' : '',
         props.disabled ? 'bg-layer-3 text-secondary' : '',
