@@ -3,6 +3,15 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';
 
 export const prepareEntityForDuplicate = (route: ApplicationRoute, entity: BaseEntity, prompt?: DialPrompt | null) => {
+  if (route === ApplicationRoute.Roles) {
+    return {
+      ...entity,
+      limits: {},
+      share: {},
+      grantedKeys: [],
+    };
+  }
+
   if (route === ApplicationRoute.Interceptors) {
     return {
       ...entity,

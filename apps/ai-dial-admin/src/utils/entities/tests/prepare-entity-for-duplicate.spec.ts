@@ -11,6 +11,20 @@ describe('Utils :: prepareEntityForDuplicate', () => {
     roles: ['roles'],
   };
 
+  test('Should return filtered role', () => {
+    const result = prepareEntityForDuplicate(ApplicationRoute.Roles, {
+      name: 'n',
+      description: 'd',
+      grantedKeys: ['key'],
+      share: { a: {} },
+      limits: { a: {} },
+    });
+    expect(result).toEqual({
+      name: 'n',
+      description: 'd',
+    });
+  });
+
   test('Should return filtered interceptor', () => {
     const result = prepareEntityForDuplicate(ApplicationRoute.Interceptors, entity);
     expect(result).toEqual({
