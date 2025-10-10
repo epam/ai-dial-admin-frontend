@@ -1,14 +1,13 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { IconPlus, IconTrash } from '@tabler/icons-react';
-import classNames from 'classnames';
-import { ButtonVariant, DialButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { IconPlus } from '@tabler/icons-react';
 
-import { EntityPlaceholdersI18nKey, ErrorI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import Path from './Path';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   title: string;
@@ -70,41 +69,19 @@ const Paths: FC<Props> = ({ title, optional, readonly, paths, onChangePaths }) =
 
   return (
     <div className="flex flex-col gap-y-3">
-      {paths == null || paths.length === 0 ? (
-        <div key="path 0" className="flex items-center">
-          <div className="flex-1">
-            <DialTextInputField
-              elementId="path 0"
-              value={''}
-              disabled={readonly}
-              placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
-              fieldTitle={title}
-              errorText={pathError}
-              invalid={!!pathError}
-              onChange={(value?: string) => onChangePath(0, value)}
-            />
-          </div>
-          {!readonly && (
-            <button disabled={true} aria-label="button" className={classNames('cursor-pointer ml-[10px] mt-[20px]')}>
-              <IconTrash {...BASE_ICON_PROPS} />
-            </button>
-          )}
-        </div>
-      ) : (
-        paths?.map((path, index) => (
-          <Path
-            readonly={readonly}
-            key={'path ' + index}
-            path={path}
-            index={index}
-            optional={optional}
-            fieldTitle={title}
-            allPaths={paths}
-            onRemove={onRemove}
-            onChangePath={onChangePath}
-          />
-        ))
-      )}
+      {paths?.map((path, index) => (
+        <Path
+          readonly={readonly}
+          key={'path ' + index}
+          path={path}
+          index={index}
+          optional={optional}
+          fieldTitle={title}
+          allPaths={paths}
+          onRemove={onRemove}
+          onChangePath={onChangePath}
+        />
+      ))}
       {!readonly && (
         <div>
           <DialButton
