@@ -14,19 +14,19 @@ import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialAssetApp } from '@/src/models/dial/asset-app';
+import { AssetApp, DeploymentAsset, AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
-import { AssetToolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
+import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
 
 interface Props {
   etag: string;
   view: ApplicationRoute;
-  asset: DialAssetApp | AssetToolset;
-  assets: (DialAssetApp | AssetToolset)[];
-  onChange: (asset: DialAssetApp | AssetToolset) => void;
+  asset: DeploymentAsset;
+  assets: DeploymentAsset[];
+  onChange: (asset: DeploymentAsset) => void;
 }
 
 const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, onChange }) => {
@@ -44,10 +44,10 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, onChange }
 
       getAsset?.(asset.folderId, asset.name as string, version, etag).then((res) => {
         if (res.success) {
-          const found = res.response as DialAssetApp | AssetToolset;
+          const found = res.response as DeploymentAsset;
 
           if (found) {
-            onChange?.({} as DialAssetApp | AssetToolset);
+            onChange?.({} as DeploymentAsset);
             router.push(
               `${view}/${`${encodeURIComponent(found.name as string)}?path=${encodeURIComponent(found.path)}`}`,
             );
@@ -87,11 +87,9 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, onChange }
         </div>
 
         <IconControl iconUrl={asset.iconUrl} onChange={(icon) => onChange({ ...asset, iconUrl: icon })} />
-        <div className="lg:w-[35%]">
+        <div className="lg:w-[35%] flex flex-col gap-y-6">
           <TopicsControl entity={asset} onChange={onChange} view={view} />
-        </div>
 
-        <div className="lg:w-[35%]">
           <FilePath
             value={asset.folderId}
             label={t(FoldersI18nKey.Storage)}
@@ -100,11 +98,15 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, onChange }
             onChange={(folderId) => onChange?.({ ...asset, folderId })}
             context={
               view === ApplicationRoute.AssetsApplications
-                ? (useAppsFolder as () => AssetsFolderContext<DialAssetApp | DialFile>)
+                ? (useAppsFolder as () => AssetsFolderContext<AssetApp | DialFile>)
                 : (useToolsetFolder as () => AssetsFolderContext<AssetToolset | DialFile>)
             }
           />
         </div>
+      </div>
+
+      <div className="flex flex-col gap-6">
+        <MaxRetryAttempts entity={asset} onChangeEntity={onChange} />
       </div>
     </div>
   );

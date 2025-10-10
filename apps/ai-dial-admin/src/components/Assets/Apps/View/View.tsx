@@ -20,7 +20,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DialAssetApp } from '@/src/models/dial/asset-app';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialFile } from '@/src/models/dial/file';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -34,15 +34,15 @@ import { getTabsForAssetApp } from './utils';
 
 interface Props {
   etag: string;
-  originalApp: DialAssetApp;
-  apps: DialAssetApp[];
+  originalApp: AssetApp;
+  assets: AssetApp[];
   models: DialModel[];
   applications: DialApplication[];
   schemes: DialApplicationScheme[];
   interceptors: DialInterceptor[];
 }
 
-const AppView: FC<Props> = ({ etag, originalApp, apps, models, applications, schemes, interceptors }) => {
+const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, schemes, interceptors }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const tabs = getTabsForAssetApp(t, getIsParametersTabAvailable(originalApp, schemes));
   const router = useRouter();
@@ -122,7 +122,7 @@ const AppView: FC<Props> = ({ etag, originalApp, apps, models, applications, sch
   }, [selectedApp, originalApp, router, fetchFiles, etag, showNotification]);
 
   const onChangeEntity = useCallback(
-    (entity: DialAssetApp) => {
+    (entity: AssetApp) => {
       setSelectedApp(entity);
     },
     [setSelectedApp],
@@ -152,8 +152,8 @@ const AppView: FC<Props> = ({ etag, originalApp, apps, models, applications, sch
           removeEntity={onRemove}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          existingVersions={apps?.map((app) => app.version) || []}
-          context={useAppsFolder as () => AssetsFolderContext<DialFile | DialAssetApp>}
+          existingVersions={assets?.map((app) => app.version) || []}
+          context={useAppsFolder as () => AssetsFolderContext<DialFile | AssetApp>}
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
@@ -168,7 +168,7 @@ const AppView: FC<Props> = ({ etag, originalApp, apps, models, applications, sch
           <ViewContent
             activeTab={activeTab}
             names={[]}
-            assetApps={apps}
+            assets={assets}
             models={models}
             applications={applications}
             applicationSchemes={schemes}
