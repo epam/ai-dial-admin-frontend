@@ -176,7 +176,7 @@ const PromptProperties: FC<Props> = ({
       <div className="flex flex-row gap-10 mb-6">
         {publication ? (
           <>
-            <LabelledText label={t(EntityFieldsI18nKey.displayName)} text={prompt.name} copyButton={true} />
+            <LabelledText label={t(EntityFieldsI18nKey.displayName)} text={prompt.name} copyable={true} />
             {prompt.author && <LabelledText label={t(EntitiesI18nKey.Author)} text={prompt.author} />}
             <LabelledText
               label={t(EntityFieldsI18nKey.createdAt)}
@@ -185,7 +185,7 @@ const PromptProperties: FC<Props> = ({
           </>
         ) : (
           <>
-            <LabelledText label={t(EntityFieldsI18nKey.displayName)} text={prompt.name} copyButton={true} />
+            <LabelledText label={t(EntityFieldsI18nKey.displayName)} text={prompt.name} copyable={true} />
             {prompt.author && <LabelledText label={t(EntitiesI18nKey.Author)} text={prompt.author} />}
             <LabelledText
               label={t(EntityFieldsI18nKey.updatedAt)}

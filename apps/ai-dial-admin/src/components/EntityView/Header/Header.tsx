@@ -18,7 +18,7 @@ const EntityHeader: FC<Props> = ({ entity }) => {
 
   return (
     <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary mb-3">
-      <LabelledText label={t(EntityFieldsI18nKey.id)} text={id || ''} copyButton={true} />
+      <LabelledText label={t(EntityFieldsI18nKey.id)} text={id || ''} copyable={true} />
       <LabelledText label={t(EntityFieldsI18nKey.updatedAt)} text={formatDateTimeToLocalString(entity?.updatedAt)} />
       <LabelledText label={t(EntityFieldsI18nKey.createdAt)} text={formatDateTimeToLocalString(entity?.createdAt)} />
     </div>

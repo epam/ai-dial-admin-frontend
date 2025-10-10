@@ -133,6 +133,7 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
           onChange={onChangeEndpoint}
           errorText={endpointError?.text}
           invalid={!!endpointError}
+          copyable={false}
         />
       )}
     </div>
