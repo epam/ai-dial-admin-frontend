@@ -1,7 +1,7 @@
 'use client';
 import { FC, useCallback } from 'react';
 
-import DeploymentAssetHeader from '@/src/components/Assets/Apps/View/Header';
+import DeploymentAssetHeader from '@/src/components/Assets/Deployments/Header';
 import AppProperties from '@/src/components/Assets/Apps/View/Properties';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import EntityProperties from '@/src/components/EntityView/View/Content/Properties';
