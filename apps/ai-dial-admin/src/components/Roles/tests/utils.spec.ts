@@ -4,7 +4,7 @@ import { ColDef, Column, GridApi, IRowNode } from 'ag-grid-community';
 import { DialRole } from '@/src/models/dial/role';
 import { SharingType } from '../types';
 import { getSharingData, getDefaultPlaceholder, isResetToDefaultHidden, isSetNoLimitsHidden } from '../utils';
-import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_VALUE } from '@/src/components/EntityView/Roles/constants';
+import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_VALUE } from '@/src/constants/role';
 
 describe('getSharingData', () => {
   test('should return default sharing data when role is undefined', () => {

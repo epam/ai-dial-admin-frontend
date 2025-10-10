@@ -3,7 +3,7 @@
 import { FC, useEffect, useState } from 'react';
 import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
-import { NO_LIMITS_VALUE } from '@/src/components/EntityView/Roles/constants';
+import { NO_LIMITS_VALUE } from '@/src/constants/role';
 import { RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
