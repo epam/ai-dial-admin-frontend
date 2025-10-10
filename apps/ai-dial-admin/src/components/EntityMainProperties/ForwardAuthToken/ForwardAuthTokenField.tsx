@@ -1,5 +1,11 @@
 import { FC, useCallback, useState } from 'react';
-import { AlertVariant, DialAlert, DialRadioGroupPopupField, RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
+import {
+  AlertVariant,
+  DialAlert,
+  DialRadioGroupPopupField,
+  PopupSize,
+  RadioButtonWithContent,
+} from '@epam/ai-dial-ui-kit';
 
 import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import {
@@ -81,10 +87,11 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
       <DialRadioGroupPopupField
         htmlFor="forwardAuthToken"
         id="forwardAuthToken"
-        emptyValueText={NONE_ID}
+        emptyValueText={t(BasicI18nKey.None)}
         fieldTitle={t(EntityFieldsI18nKey.forwardAuthToken)}
         title={t(ForwardTokenI18nKey.ForwardTokenModalTitle)}
         portalId="entityNameToken"
+        size={PopupSize.Sm}
         selectedRadioValue={forwardToken ? radioButtons[1].name : radioButtons[0].name}
         isValid={isValid}
         radioButtons={radioButtons}
