@@ -42,7 +42,6 @@ const ToolsetEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) => {
               source: { ...entity.source, completionEndpointPath } as SOURCE_FIELD,
             })
           }
-          tooltipTriggerClassName={'flex-1'}
         />
       ) : (
         <DialTextInputField

@@ -23,6 +23,10 @@
     }
   }
 
+  .input-disable {
+    @apply bg-layer-3 text-secondary;
+  }
+
   .base-button {
     @apply flex flex-row items-center px-3 py-2;
     @apply rounded border border-solid border-transparent;
@@ -30,10 +34,6 @@
 
     min-width: 38px;
     min-height: 38px;
-  }
-
-  .input-disable {
-    @apply bg-layer-3 text-secondary;
   }
 
   .base-button-disable {
