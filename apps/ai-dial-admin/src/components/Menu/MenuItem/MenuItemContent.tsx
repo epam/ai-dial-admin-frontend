@@ -1,11 +1,10 @@
 import classNames from 'classnames';
 import { FC } from 'react';
+import Link from 'next/link';
+import { DialTooltip } from '@epam/ai-dial-ui-kit';
 
 import { useI18n } from '@/src/locales/client';
 import { MenuItem } from '../menu-configuration';
-
-import Link from 'next/link';
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 
 interface Props {
   menuItem: MenuItem;
@@ -28,7 +27,7 @@ const MenuItemContent: FC<Props> = ({ menuItem, isActive, isSidebarOpen }) => {
   );
 
   return (
-    <Tooltip
+    <DialTooltip
       triggerClassName="small-text-semi"
       tooltip={t(menuItem.key)}
       placement={'right'}
@@ -38,7 +37,7 @@ const MenuItemContent: FC<Props> = ({ menuItem, isActive, isSidebarOpen }) => {
         <div className={menuCircleClassNames}></div>
         {isSidebarOpen && <span className="ml-4">{t(menuItem.key)}</span>}
       </Link>
-    </Tooltip>
+    </DialTooltip>
   );
 };
 

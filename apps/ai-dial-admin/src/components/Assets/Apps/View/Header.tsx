@@ -1,7 +1,7 @@
 import { FC, useCallback } from 'react';
 
 import { IconExternalLink } from '@tabler/icons-react';
-import { DialButton } from '@epam/ai-dial-ui-kit';
+import { DialButton, DialTooltip } from '@epam/ai-dial-ui-kit';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
@@ -35,7 +35,7 @@ const AppHeader: FC<Props> = ({ app }) => {
       {app.applicationTypeSchemaId && (
         <LabelledText label={t(EntitiesI18nKey.Runner)}>
           <div className="flex flex-row gap-1 items-center max-w-[400px]">
-            <Tooltip tooltip={app.applicationTypeSchemaId}>{app.applicationTypeSchemaId}</Tooltip>
+            <DialTooltip tooltip={app.applicationTypeSchemaId}>{app.applicationTypeSchemaId}</DialTooltip>
             <button
               onClick={() => onOpenInNewTab(ApplicationRoute.ApplicationRunners, { $id: app.applicationTypeSchemaId })}
               className="text-secondary"

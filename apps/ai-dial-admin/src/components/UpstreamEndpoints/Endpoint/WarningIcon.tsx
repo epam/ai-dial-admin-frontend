@@ -3,8 +3,8 @@
 import { FC } from 'react';
 
 import { IconAlertTriangleFilled } from '@tabler/icons-react';
+import { DialTooltip } from '@epam/ai-dial-ui-kit';
 
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
 interface Props {
@@ -13,9 +13,13 @@ interface Props {
 
 const WarningIcon: FC<Props> = ({ endpointWarning }) => {
   return (
-    <Tooltip tooltip={endpointWarning} placement={'bottom'} triggerClassName={endpointWarning ? 'w-[20px]' : 'hidden'}>
+    <DialTooltip
+      tooltip={endpointWarning}
+      placement={'bottom'}
+      triggerClassName={endpointWarning ? 'w-[20px]' : 'hidden'}
+    >
       <IconAlertTriangleFilled fill="#F4CE46" {...BASE_ICON_PROPS} className={endpointWarning ? '' : 'hidden'} />
-    </Tooltip>
+    </DialTooltip>
   );
 };
 

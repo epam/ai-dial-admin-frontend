@@ -7,7 +7,7 @@ import { createPortal } from 'react-dom';
 import { IconRefresh, IconRestore } from '@tabler/icons-react';
 import { GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
 import classNames from 'classnames';
-import { DialButton, ButtonVariant, DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
+import { DialButton, ButtonVariant, DialConfirmationPopup, DialTooltip } from '@epam/ai-dial-ui-kit';
 
 import { getActivities } from '@/src/app/[lang]/activity-audit/actions';
 import { getActivityAuditColumns, getGridFilters } from '@/src/components/ActivityAudit/List/utils';
@@ -36,7 +36,6 @@ import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 
 interface Props {
   entity?: BaseEntity | DialApplicationScheme;
@@ -265,9 +264,9 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
                 <span>{t(ActivityAuditI18nKey.ConfirmRollbackDescriptionPart1)}</span>
                 <span className="important-text-part mx-1">{selectedActivity?.activityType}</span>
                 <span>{t(ActivityAuditI18nKey.ConfirmRollbackDescriptionPart2)}</span>
-                <Tooltip tooltip={selectedActivity?.resourceId || ''} triggerClassName="flex-1">
+                <DialTooltip tooltip={selectedActivity?.resourceId || ''} triggerClassName="flex-1">
                   <span className="important-text-part mx-1">{selectedActivity?.resourceId}</span>
-                </Tooltip>
+                </DialTooltip>
                 <span>{t(ActivityAuditI18nKey.ConfirmRollbackDescriptionPart3)}</span>
                 <span className="important-text-part">
                   {formatDateTimeToLocalString(selectedActivity?.epochTimestampMs)}
