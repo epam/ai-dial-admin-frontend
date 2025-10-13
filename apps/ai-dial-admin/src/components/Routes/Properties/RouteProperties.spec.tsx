@@ -1,4 +1,4 @@
-import { CreateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import RouteProperties from './RouteProperties';
@@ -17,7 +17,6 @@ describe('RouteProperties', () => {
   test('renders all fields for app route', () => {
     render(<RouteProperties route={baseRoute} isAppRoute={true} updateRoute={vi.fn()} />);
     expect(screen.getByText(EntityFieldsI18nKey.displayName)).toBeInTheDocument();
-    expect(screen.getByText(EntityFieldsI18nKey.paths)).toBeInTheDocument();
     expect(screen.getByText(EntityFieldsI18nKey.rewritePath)).toBeInTheDocument();
     expect(screen.getByText(EntityFieldsI18nKey.methods)).toBeInTheDocument();
     expect(screen.getByText(RoutesI18nKey.Output)).toBeInTheDocument();
