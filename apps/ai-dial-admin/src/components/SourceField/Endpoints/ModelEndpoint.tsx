@@ -122,7 +122,6 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
           suffix={postfix}
           textBeforeInput={prefix}
           onChange={onChangePath}
-          containerCssClass="lg:w-[35%]"
         />
       ) : (
         <ComplexInput
