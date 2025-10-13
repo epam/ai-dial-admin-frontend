@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
+import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -55,7 +55,7 @@ const IdControl = <T extends { name?: string }>({
   }, [isUniqueNameError]);
 
   return (
-    <TextInputField
+    <DialTextInputField
       placeholder={placeholder || t(EntityPlaceholdersI18nKey.Id)}
       fieldTitle={fieldTitle || t(EntityFieldsI18nKey.id)}
       elementId="name"
