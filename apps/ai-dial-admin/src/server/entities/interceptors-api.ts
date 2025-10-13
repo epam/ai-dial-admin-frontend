@@ -7,6 +7,7 @@ import { BaseApi } from '../base-api';
 
 export const INTERCEPTORS_URL = `${API}/interceptors`;
 export const INTERCEPTOR_URL = (name?: string) => `${INTERCEPTORS_URL}/${name}`;
+export const CONFIGURATION_URL = (name: string) => `${API}/deployments/${name}/configuration`;
 
 export class InterceptorsApi extends BaseApi {
   getInterceptorsList(token: JWT | null): Promise<DialInterceptor[] | null> {
@@ -27,5 +28,9 @@ export class InterceptorsApi extends BaseApi {
 
   updateInterceptor(interceptors: DialInterceptor, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
     return this.putActionWithEtag(INTERCEPTOR_URL(interceptors.name), interceptors, token, eTag);
+  }
+
+  getConfigurationSchema(name: string, token: JWT | null): Promise<unknown | null> {
+    return this.get(CONFIGURATION_URL(name), token);
   }
 }

@@ -103,6 +103,7 @@ export enum EntitiesI18nKey {
   NoToolsets = 'Entities.NoToolsets',
   NoTools = 'Entities.NoTools',
   NoDependencies = 'Entities.NoDependencies',
+  NoConfigurationSchema = 'Entities.NoConfigurationSchema',
   AddModel = 'Entities.AddModel',
   AddApplication = 'Entities.AddApplication',
   AddEntities = 'Entities.AddEntities',
@@ -117,6 +118,7 @@ export enum EntitiesI18nKey {
   ModelDisplayName = 'Entities.ModelDisplayName',
   Author = 'Entities.Author',
   JSONEditor = 'Entities.JSONEditor',
+  JSONViewer = 'Entities.JSONViewer',
   Admin = 'Entities.Admin',
   Core = 'Entities.Core',
   Action = 'Entities.Action',
@@ -364,6 +366,7 @@ export enum TabsI18nKey {
   Conversations = 'Tabs.Conversations',
   Attachments = 'Tabs.Attachments',
   Tools = 'Tabs.Tools',
+  ParameterSchema = 'Tabs.ParameterSchema',
 }
 
 export enum InterceptorsI18nKey {

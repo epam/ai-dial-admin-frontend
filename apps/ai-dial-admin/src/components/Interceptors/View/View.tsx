@@ -10,7 +10,7 @@ import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import { getRelevantDataForInterceptor } from '@/src/components/AddEntitiesTab/utils';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
-import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import { auditTabs, EntityViewTab, parameterSchemaTabs, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import { TabsI18nKey } from '@/src/constants/i18n';
@@ -35,6 +35,7 @@ import {
   getFileFromEntity,
 } from '@/src/components/EntityView/View/core-entity-utils';
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
+import ParameterSchema from '@/src/components/Interceptors/View/ParameterSchema/ParameterSchema';
 
 interface Props {
   originalInterceptor: DialInterceptor;
@@ -52,6 +53,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, etag, 
 
   const tabs: TabModel[] = [
     propertiesTabs(t),
+    parameterSchemaTabs(t),
     { id: EntityViewTab.Entities, name: t(TabsI18nKey.Entities) },
     auditTabs(t),
   ];
@@ -201,7 +203,12 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, etag, 
                 </div>
               </>
             )}
-
+            {activeTab === EntityViewTab.ParameterSchema && (
+              <ParameterSchema
+                schemaURL={selectedInterceptor.features?.configurationEndpoint}
+                name={selectedInterceptor.name as string}
+              />
+            )}
             {activeTab === EntityViewTab.Entities && (
               <AddEntitiesView
                 models={models}
