@@ -7,6 +7,7 @@ export interface DialFeatures {
   systemPromptSupported: boolean;
   urlAttachmentsSupported: boolean;
   folderAttachmentsSupported: boolean;
+  assistantAttachmentsInRequestSupported: boolean;
   seedSupported: boolean;
   allowResume: boolean;
   addonsSupported: boolean;

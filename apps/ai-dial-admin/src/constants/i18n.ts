@@ -337,6 +337,7 @@ export enum FeaturesI18nKey {
   consentRequired = 'Features.consentRequired',
   urlAttachmentsSupported = 'Features.urlAttachmentsSupported',
   folderAttachmentsSupported = 'Features.folderAttachmentsSupported',
+  assistantAttachmentsInRequestSupported = 'Features.assistantAttachmentsInRequestSupported',
   accessibleByPerRequestKey = 'Features.accessibleByPerRequestKey',
   configurationEndpoint = 'Features.configurationEndpoint',
   rateEndpoint = 'Features.rateEndpoint',
