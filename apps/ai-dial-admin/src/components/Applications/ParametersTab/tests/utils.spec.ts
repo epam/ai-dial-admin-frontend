@@ -1,5 +1,8 @@
-import { describe, expect, test } from 'vitest';
-import { getFrameConfig, getAppRunner } from '../utils';
+import { ApplicationRoute } from '@/src/types/routes';
+import { describe, expect, test, vi } from 'vitest';
+import { ParamsView } from '../types';
+import { getAppRunner, getFrameConfig, getInitialParamsView, generateViewItems } from '../utils';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 
 describe('getFrameConfig', () => {
   test('returns config for DialApplicationScheme', () => {
@@ -161,5 +164,88 @@ describe('getAppRunner', () => {
 
     const result = getAppRunner(entity, schemes);
     expect(result).toBeUndefined();
+  });
+});
+
+describe('getInitialParamsView', () => {
+  test('should return ParamsView.FORM for ApplicationPublications route', () => {
+    const result = getInitialParamsView(ApplicationRoute.ApplicationPublications);
+    expect(result).toBe(ParamsView.FORM);
+  });
+
+  test('should return ParamsView.FORM for ApplicationRunners route', () => {
+    const result = getInitialParamsView(ApplicationRoute.ApplicationRunners);
+    expect(result).toBe(ParamsView.FORM);
+  });
+
+  test('should return ParamsView.UI when uiExist is true', () => {
+    const result = getInitialParamsView(undefined, true);
+    expect(result).toBe(ParamsView.UI);
+  });
+
+  test('should return ParamsView.TABLE when uiExist is false and route is neither ApplicationPublications nor ApplicationRunners', () => {
+    const result = getInitialParamsView(undefined, false);
+    expect(result).toBe(ParamsView.TABLE);
+  });
+});
+
+describe('generateViewItems', () => {
+  const t = vi.fn((key) => key);
+
+  test('should return an empty array for ApplicationPublications route', () => {
+    const result = generateViewItems(t, ApplicationRoute.ApplicationPublications);
+    expect(result).toEqual([]);
+  });
+
+  test('should return an empty array for ApplicationRunners route', () => {
+    const result = generateViewItems(t, ApplicationRoute.ApplicationRunners);
+    expect(result).toEqual([]);
+  });
+
+  test('should include ParamsView.FORM when showForm is true', () => {
+    const result = generateViewItems(t, undefined, false, true);
+    expect(result).toContainEqual({
+      id: ParamsView.FORM,
+      name: t(EntitiesI18nKey[ParamsView.FORM]),
+    });
+  });
+
+  test('should include ParamsView.UI when showUi is true', () => {
+    const result = generateViewItems(t, undefined, true, false);
+    expect(result).toContainEqual({
+      id: ParamsView.UI,
+      name: t(EntitiesI18nKey[ParamsView.UI]),
+    });
+  });
+
+  test('should include both ParamsView.FORM and ParamsView.UI when both showForm and showUi are true', () => {
+    const result = generateViewItems(t, undefined, true, true);
+
+    expect(result).toContainEqual({
+      id: ParamsView.FORM,
+      name: t(EntitiesI18nKey[ParamsView.FORM]),
+    });
+    expect(result).toContainEqual({
+      id: ParamsView.UI,
+      name: t(EntitiesI18nKey[ParamsView.UI]),
+    });
+  });
+
+  test('should return only ParamsView.TABLE when neither showForm nor showUi are true', () => {
+    const result = generateViewItems(t, undefined, false, false);
+    expect(result).toEqual([
+      {
+        id: ParamsView.TABLE,
+        name: t(EntitiesI18nKey[ParamsView.TABLE]),
+      },
+    ]);
+  });
+
+  test('should call the translation function with correct keys', () => {
+    generateViewItems(t, undefined, true, true);
+
+    expect(t).toHaveBeenCalledWith(EntitiesI18nKey[ParamsView.TABLE]);
+    expect(t).toHaveBeenCalledWith(EntitiesI18nKey[ParamsView.FORM]);
+    expect(t).toHaveBeenCalledWith(EntitiesI18nKey[ParamsView.UI]);
   });
 });

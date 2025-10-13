@@ -155,6 +155,9 @@ export default {
     Action: 'Action',
     Runner: 'Runner',
     FolderStorage: 'Folder Storage',
+    Table: 'Table',
+    Form: 'Generated form',
+    Ui: 'Application custom UI',
     // modals
     SaveChangesTitle: 'Save Changes',
     SaveChangesDescription: 'Save changes before opening the parameters tab. All unsaved changes will be lost.',

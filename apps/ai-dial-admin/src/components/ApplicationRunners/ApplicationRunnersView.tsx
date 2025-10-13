@@ -7,12 +7,20 @@ import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
 import { removeApplicationScheme, updateApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
+import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
+import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
+import ApplicationParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import {
+  getEntityFromFile,
+  getExportType,
+  getFileFromEntity,
+} from '@/src/components/EntityView/View/core-entity-utils';
 import {
   appRouteTab,
   auditTabs,
@@ -27,20 +35,12 @@ import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialRole } from '@/src/models/dial/role';
 import { TabModel } from '@/src/models/tab';
+import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import AppRunnerApplications from './ConfigurationView/Applications';
-import SchemeParameters from './ConfigurationView/Parameters';
 import SchemeProperties from './ConfigurationView/Properties';
-import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
-import { ExportFormat } from '@/src/types/export';
-import {
-  getEntityFromFile,
-  getExportType,
-  getFileFromEntity,
-} from '@/src/components/EntityView/View/core-entity-utils';
-import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 
 interface Props {
   etag: string;
@@ -181,7 +181,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles }) => {
             )}
 
             {activeTab === EntityViewTab.Parameters && (
-              <SchemeParameters scheme={selectedRunner} onChangeScheme={onChangeScheme} />
+              <ApplicationParametersTab view={ApplicationRoute.ApplicationRunners} />
             )}
 
             {activeTab === EntityViewTab.Applications && (
