@@ -79,6 +79,8 @@ export enum BasicI18nKey {
   Search = 'Basic.Search',
   Or = 'Basic.Or',
   And = 'Basic.And',
+  Enabled = 'Basic.Enabled',
+  Disabled = 'Basic.Disabled',
 }
 
 export enum EntitiesI18nKey {
@@ -854,8 +856,6 @@ export enum ToolsetI18nKey {
   Warning = 'Toolset.Warning',
   View = 'Toolset.View',
   AllTools = 'Toolset.AllTools',
-  Enabled = 'Toolset.Enabled',
-  Disabled = 'Toolset.Disabled',
   AutoDetected = 'Toolset.AutoDetected',
   ToolsWarning = 'Toolset.ToolsWarning',
   ClientRegistrationType = 'Toolset.ClientRegistrationType',

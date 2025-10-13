@@ -35,8 +35,8 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
   ];
 
   const typeBucketCopy: DropdownItemsModel[] = [
-    { id: TypeBucketCopy.ENABLED, name: t(TypeI18nKey.Object) },
-    { id: TypeBucketCopy.DISABLED, name: t(TypeI18nKey.Boolean) },
+    { id: TypeBucketCopy.ENABLED, name: t(BasicI18nKey.Enabled) },
+    { id: TypeBucketCopy.DISABLED, name: t(BasicI18nKey.Disabled) },
   ];
 
   const onChange = useCallback(
@@ -121,7 +121,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
         }}
       />
 
-      <div className="lg:w-[35%]">
+      <div className="lg:w-[35%] flex flex-col gap-y-6">
         <DropdownField
           selectedValue={runner.type || BasicI18nKey.None}
           elementId="type"

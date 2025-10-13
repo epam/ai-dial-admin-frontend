@@ -6,7 +6,7 @@ import { DialCheckbox } from '@epam/ai-dial-ui-kit';
 import Dropdown from '@/src/components/Common/Dropdown/Dropdown';
 import SelectedFilter from './SelectedFilter';
 import { ToolFilter } from '../type';
-import { ToolsetI18nKey } from '@/src/constants/i18n';
+import { ToolsetI18nKey, BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -34,7 +34,7 @@ const ToolsFilter: FC<Props> = ({ isAllSelected, onSelectFilter, selectedFilters
             <DialCheckbox
               checked={selectedFilters.includes(ToolFilter.Enabled)}
               id={ToolFilter.Enabled}
-              label={t(ToolsetI18nKey.Enabled)}
+              label={t(BasicI18nKey.Enabled)}
               onChange={(value) => onSelectFilter(value, ToolFilter.Enabled)}
             />
           </div>
@@ -42,7 +42,7 @@ const ToolsFilter: FC<Props> = ({ isAllSelected, onSelectFilter, selectedFilters
             <DialCheckbox
               checked={selectedFilters.includes(ToolFilter.Disabled)}
               id={ToolFilter.Disabled}
-              label={t(ToolsetI18nKey.Disabled)}
+              label={t(BasicI18nKey.Disabled)}
               onChange={(value) => onSelectFilter(value, ToolFilter.Disabled)}
             />
           </div>

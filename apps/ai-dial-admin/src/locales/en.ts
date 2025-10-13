@@ -37,6 +37,8 @@ export default {
     Search: 'Search',
     Or: 'or',
     And: 'And',
+    Enabled: 'Enabled',
+    Disabled: 'Disabled',
   },
   ReloadConfig: {
     ReloadTitle: 'Reload Config',
@@ -883,8 +885,6 @@ export default {
     View: 'View',
     AllTools: 'All tools',
     Warning: 'List of tools from external endpoint may not display some tools. Add the missing tools manually.',
-    Enabled: 'Enabled',
-    Disabled: 'Disabled',
     AutoDetected: 'Auto-detected',
     ClientRegistrationType: 'Client Registration Type',
     DynamicRegistration: 'Dynamic registration',
