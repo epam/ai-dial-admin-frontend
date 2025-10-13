@@ -739,6 +739,7 @@ export default {
     applicationTypeRoutes: 'App Routes',
     routes: 'App Routes',
     apiKeyHeader: 'API key header',
+    apiKeyValue: 'API key value',
     costLimit: 'Cost limits',
     applicationTypeCompletionEndpoint: 'Completion endpoint',
     completionEndpoint: 'Completion endpoint',
@@ -828,7 +829,7 @@ export default {
     ToolName: 'Enter tool name',
     Hour: 'h',
     Object: 'Object value',
-    ApiKeyHeader: 'Enter API key header',
+    Header: 'Enter header',
   },
   Error: {
     ServerError: 'Server Error',
@@ -889,5 +890,11 @@ export default {
     DynamicRegistration: 'Dynamic registration',
     ExistingClient: 'Existing client',
     ToolsWarning: 'Endpoint has been changed. Save changes to display auto-detected tools.',
+    ApiKey: 'API Key',
+    OAuth: 'OAuth',
+    NoneAuth: 'Without authentication',
+    WithLogin: 'With login',
+    WithLoginAndConfig: 'With login & configuration',
+    WithoutLogin: 'Without login',
   },
 } as const;
