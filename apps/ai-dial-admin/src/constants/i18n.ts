@@ -34,6 +34,7 @@ export enum MenuI18nKey {
   Tools = 'Menu.Tools',
   ToolsDescription = 'Menu.ToolsDescription',
   PromptPublications = 'Menu.PromptPublications',
+  ToolsetPublications = 'Menu.ToolsetPublications',
   ApplicationPublications = 'Menu.ApplicationPublications',
   FilePublications = 'Menu.FilePublications',
   ImportConfig = 'Menu.ImportConfig',
@@ -418,28 +419,39 @@ export enum RoutesI18nKey {
 }
 
 export enum PublicationsI18nKey {
+  DeclineReason = 'Publications.ReasonTitle',
+  DeclineReasonPlaceholder = 'Publications.ReasonPlaceholder',
+
+  // prompt publications
   PromptPublishApproveModalTitle = 'Publications.Prompt.PublishApproveModalTitle',
   PromptPublishDeclineModalTitle = 'Publications.Prompt.PublishDeclineModalTitle',
   PromptUnpublishApproveModalTitle = 'Publications.Prompt.UnpublishApproveModalTitle',
   PromptUnpublishDeclineModalTitle = 'Publications.Prompt.UnpublishDeclineModalTitle',
   PromptPublishApproveDescription = 'Publications.Prompt.PublishApproveDescription',
   PromptUnpublishApproveDescription = 'Publications.Prompt.UnpublishApproveDescription',
-  DeclineReason = 'Publications.ReasonTitle',
-  DeclineReasonPlaceholder = 'Publications.Prompt.ReasonPlaceholder',
-  FilePublishApproveModalTitle = 'Publications.Files.PublishApproveModalTitle',
-  FilePublishDeclineModalTitle = 'Publications.Files.PublishDeclineModalTitle',
-  FileUnpublishApproveModalTitle = 'Publications.Files.UnpublishApproveModalTitle',
-  FileUnpublishDeclineModalTitle = 'Publications.Files.UnpublishDeclineModalTitle',
-  FilePublishApproveDescription = 'Publications.Files.PublishApproveDescription',
-  FileUnpublishApproveDescription = 'Publications.Files.UnpublishApproveDescription',
-  ApplicationPublishApproveModalTitle = 'Publications.Applications.PublishApproveModalTitle',
-  ApplicationPublishDeclineModalTitle = 'Publications.Applications.PublishDeclineModalTitle',
-  ApplicationUnpublishApproveModalTitle = 'Publications.Applications.UnpublishApproveModalTitle',
-  ApplicationUnpublishDeclineModalTitle = 'Publications.Applications.UnpublishDeclineModalTitle',
-  ApplicationPublishApproveDescription = 'Publications.Applications.PublishApproveDescription',
-  ApplicationUnpublishApproveDescription = 'Publications.Applications.UnpublishApproveDescription',
   OpenPrompt = 'Publications.Prompt.OpenPrompt',
-  FilesListTitle = 'Publications.Files.FilesListTitle',
+  // file publications
+  FilePublishApproveModalTitle = 'Publications.File.PublishApproveModalTitle',
+  FilePublishDeclineModalTitle = 'Publications.File.PublishDeclineModalTitle',
+  FileUnpublishApproveModalTitle = 'Publications.File.UnpublishApproveModalTitle',
+  FileUnpublishDeclineModalTitle = 'Publications.File.UnpublishDeclineModalTitle',
+  FilePublishApproveDescription = 'Publications.File.PublishApproveDescription',
+  FileUnpublishApproveDescription = 'Publications.File.UnpublishApproveDescription',
+  FilesListTitle = 'Publications.File.FilesListTitle',
+  // application publications
+  ApplicationPublishApproveModalTitle = 'Publications.Application.PublishApproveModalTitle',
+  ApplicationPublishDeclineModalTitle = 'Publications.Application.PublishDeclineModalTitle',
+  ApplicationUnpublishApproveModalTitle = 'Publications.Application.UnpublishApproveModalTitle',
+  ApplicationUnpublishDeclineModalTitle = 'Publications.Application.UnpublishDeclineModalTitle',
+  ApplicationPublishApproveDescription = 'Publications.Application.PublishApproveDescription',
+  ApplicationUnpublishApproveDescription = 'Publications.Application.UnpublishApproveDescription',
+  // toolset publications
+  ToolsetPublishApproveModalTitle = 'Publications.Toolset.PublishApproveModalTitle',
+  ToolsetPublishDeclineModalTitle = 'Publications.Toolset.PublishDeclineModalTitle',
+  ToolsetUnpublishApproveModalTitle = 'Publications.Toolset.UnpublishApproveModalTitle',
+  ToolsetUnpublishDeclineModalTitle = 'Publications.Toolset.UnpublishDeclineModalTitle',
+  ToolsetPublishApproveDescription = 'Publications.Toolset.PublishApproveDescription',
+  ToolsetUnpublishApproveDescription = 'Publications.Toolset.UnpublishApproveDescription',
 }
 
 export enum CompareI18nKey {

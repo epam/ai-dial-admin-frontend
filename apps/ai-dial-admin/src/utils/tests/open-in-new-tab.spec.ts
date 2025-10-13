@@ -40,6 +40,11 @@ describe('Entity list view :: getEntityPath', () => {
     expect(result).toEqual('requestName?path=path');
   });
 
+  test('Should return name field for toolset publication', () => {
+    const result = getEntityPath(ApplicationRoute.ToolsetPublications, { ...data, requestName: 'requestName' }, true);
+    expect(result).toEqual('requestName?path=path');
+  });
+
   test('Should return name field for file publication', () => {
     const result = getEntityPath(ApplicationRoute.FilePublications, { ...data, requestName: 'requestName' }, true);
     expect(result).toEqual('requestName?path=path');
