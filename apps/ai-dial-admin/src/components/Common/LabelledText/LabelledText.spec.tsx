@@ -20,7 +20,7 @@ describe('LabelledText', () => {
   });
 
   it('renders copy button if copyButton is true', () => {
-    render(<LabelledText label="Copy Label" text="Copy Text" copyButton />);
+    render(<LabelledText label="Copy Label" text="Copy Text" copyable />);
     expect(screen.getByLabelText('copy')).toBeInTheDocument();
   });
 

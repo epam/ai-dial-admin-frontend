@@ -2,11 +2,11 @@
 
 import { FC, useCallback, useMemo } from 'react';
 
+import { DialNumberInputField, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { IconTrash } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
-import { NumberInputField, TextInputField } from '@/src/components/Common/InputField/InputField';
 import JsonEditorInput from '@/src/components/Common/JsonEditorInput/JsonEditorInput';
 import {
   BasicI18nKey,
@@ -104,7 +104,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
     <div className="flex gap-4 items-start">
       <div className={classNames('flex flex-row gap-x-4 items-center')}>
         <div className="min-w-[187px]">
-          <TextInputField
+          <DialTextInputField
             elementId={'entity-default-key ' + index}
             value={item.key}
             placeholder={t(EntityPlaceholdersI18nKey.Key)}
@@ -114,7 +114,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
         </div>
         <div className={classNames('w-[384px]')}>
           {item.type === DefaultItemType.string && (
-            <TextInputField
+            <DialTextInputField
               elementId={'entity-default-value ' + index}
               value={item.value as string}
               placeholder={t(EntityPlaceholdersI18nKey.Value)}
@@ -123,7 +123,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
             />
           )}
           {item.type === DefaultItemType.number && (
-            <NumberInputField
+            <DialNumberInputField
               elementId={'entity-default-value ' + index}
               value={item.value as string}
               placeholder={t(EntityPlaceholdersI18nKey.Value)}

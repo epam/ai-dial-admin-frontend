@@ -31,7 +31,7 @@ const DeploymentAssetHeader: FC<Props> = ({ asset }) => {
 
   return (
     <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary mb-3">
-      <LabelledText label={t(EntityFieldsI18nKey.displayName)} text={asset.name} copyButton={true} />
+      <LabelledText label={t(EntityFieldsI18nKey.displayName)} text={asset.name} copyable={true} />
       {(asset as AssetApp).applicationTypeSchemaId && (
         <LabelledText label={t(EntitiesI18nKey.Runner)}>
           <div className="flex flex-row gap-1 items-center max-w-[400px]">

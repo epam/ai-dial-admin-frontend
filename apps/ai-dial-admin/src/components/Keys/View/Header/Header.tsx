@@ -15,7 +15,7 @@ const KeyViewHeader: FC<Props> = ({ selectedKey }) => {
   const t = useI18n();
   return (
     <div className="flex flex-row gap-10 w-full mb-8">
-      <LabelledText label={t(EntityFieldsI18nKey.id)} text={selectedKey.name} copyButton={true} />
+      <LabelledText label={t(EntityFieldsI18nKey.id)} text={selectedKey.name} copyable={true} />
       <LabelledText
         label={t(EntityFieldsI18nKey.createdAt)}
         text={formatDateTimeToLocalString(selectedKey.createdAt)}

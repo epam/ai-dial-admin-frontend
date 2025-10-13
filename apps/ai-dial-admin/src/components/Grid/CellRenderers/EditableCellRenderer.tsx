@@ -81,7 +81,7 @@ const EditableCellRenderer = ({
         value={correctValue}
         placeholder={correctPlaceholder}
         onChange={handleChange}
-        className="leading-[18px] h-[32px]"
+        className="leading-[18px] h-[32px] dial-input px-2 py-1"
       />
       {showTriangle && (
         <div className="absolute top-0 right-0 text-accent-tertiary">

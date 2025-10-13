@@ -68,10 +68,10 @@ const LoadFileArea: FC<LoadFileAreaProps> = ({
           {files.map((file, index) => (
             <FilledInput
               key={file.name + index}
-              inputId={file.name}
+              elementId={file.name}
               value={file.name}
-              iconAfterInput={removeFile(file.name)}
-              iconBeforeInput={iconBeforeInput || dynamicIcon?.(file.name)}
+              iconAfter={removeFile(file.name)}
+              iconBefore={iconBeforeInput || dynamicIcon?.(file.name)}
               isInvalid={isInvalid?.(file)}
               errorText={errorText}
             />

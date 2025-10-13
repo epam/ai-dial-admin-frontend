@@ -75,7 +75,7 @@ const TagInput: FC<Props> = ({
   return (
     <div className={classNames('flex flex-col w-full')}>
       <Field fieldTitle={fieldTitle} optional={optional} htmlFor={elementId} />
-      <div className={classNames('input min-h-[38px] p-[6px]', invalid && 'input-error')}>
+      <div className={classNames('dial-input min-h-[38px] p-[6px]', invalid && 'dial-input-error')}>
         <div
           ref={containerRef}
           className={classNames('flex flex-wrap items-start gap-2', wraps ? 'flex-col-reverse' : 'flex-row')}
@@ -89,7 +89,7 @@ const TagInput: FC<Props> = ({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            className={classNames('outline-none border-none w-full min-w-[100px] flex-1 p-1')}
+            className={classNames('outline-none border-none w-full min-w-[100px] dial-input flex-1 p-1')}
             placeholder={placeholder}
             disabled={disabled}
           />
