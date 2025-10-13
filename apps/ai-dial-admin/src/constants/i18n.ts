@@ -26,6 +26,7 @@ export enum MenuI18nKey {
   Files = 'Menu.Files',
   Audit = 'Menu.Audit',
   Toolsets = 'Menu.Toolsets',
+  ToolsetPublications = 'Menu.ToolsetPublications',
   Conversations = 'Menu.Conversations',
   AuditDescription = 'Menu.AuditDescription',
   MCPDescription = 'Menu.MCPDescription',

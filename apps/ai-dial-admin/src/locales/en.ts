@@ -83,6 +83,7 @@ export default {
 
     PromptPublications: 'Prompt Publications',
     ApplicationPublications: 'Application Publications',
+    ToolsetPublications: 'Toolset Publications',
     FilePublications: 'File Publications',
     ImportConfig: 'Import Config',
     ExportConfig: 'Export Config',
