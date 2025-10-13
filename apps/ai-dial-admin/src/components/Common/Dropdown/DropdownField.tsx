@@ -3,13 +3,14 @@
 import { FC, ReactNode } from 'react';
 
 import Field from '@/src/components/Common/Field/Field';
-import { InputFieldBaseProps } from '@/src/components/Common/InputField/InputField';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import Dropdown from './Dropdown';
 import DropdownMenuItem from './DropdownItem';
 import classNames from 'classnames';
+// TODO: temp: remove when use DropdownField from @epam/ai-dial-ui-kit
+import { DialInputFieldBaseProps } from '@epam/ai-dial-ui-kit/dist/src/components/InputField/InputField';
 
-interface Props extends InputFieldBaseProps {
+interface Props extends DialInputFieldBaseProps {
   items: DropdownItemsModel[];
   selectedClassName?: string;
   selectedValue?: string;

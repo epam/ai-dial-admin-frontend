@@ -29,7 +29,22 @@ describe('Server :: Publications', () => {
     );
   });
 
-  test('Should calls application publications  list', async () => {
+  test('Should calls toolset publications list', async () => {
+    const mockPublications: Publication[] = [
+      { id: '10', title: 'App 1' },
+      { id: '20', title: 'App 2' },
+    ];
+    fetch.mockResponseOnce(JSON.stringify({ publications: mockPublications }));
+
+    await instance.getToolsetPublicationsList(TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/publications?type=tool_set'),
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('Should calls application publications list', async () => {
     const mockPublications: Publication[] = [
       { id: '10', title: 'App 1' },
       { id: '20', title: 'App 2' },

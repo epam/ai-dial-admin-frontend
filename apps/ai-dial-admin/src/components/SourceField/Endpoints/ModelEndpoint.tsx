@@ -1,5 +1,4 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import classNames from 'classnames';
 
 import { DialRadioGroup, RadioGroupOrientation, RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
 
@@ -9,7 +8,7 @@ import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 import { FieldError } from '@/src/models/error';
 import { getUrlError } from '@/src/utils/validation/url-error';
 import { useI18n } from '@/src/locales/client';
-import InputWithReadonlyParts from '@/src/components/Common/Input/InputWithReadonlyParts';
+import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
 import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
 
 interface Props {
@@ -104,43 +103,39 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
   return (
     <div className="w-full flex flex-col gap-6">
       {!isModal && (
-        <div className="w-full lg:w-[35%]">
-          <DialRadioGroup
-            radioButtons={modelTypeRadio}
-            activeRadioButton={entity.type as string}
-            elementId="type"
-            fieldTitle={t(EntityFieldsI18nKey.type)}
-            orientation={RadioGroupOrientation.Row}
-            onChange={onChangeType}
-          />
-        </div>
+        <DialRadioGroup
+          radioButtons={modelTypeRadio}
+          activeRadioButton={entity.type as string}
+          elementId="type"
+          fieldTitle={t(EntityFieldsI18nKey.type)}
+          orientation={RadioGroupOrientation.Row}
+          onChange={onChangeType}
+        />
       )}
-      <div className={classNames(!isModal && 'lg:w-[75%]')}>
-        {prefix ? (
-          <InputWithReadonlyParts
-            inputId="endpoint"
-            value={name}
-            fullValue={fullValue}
-            title={t(EntityFieldsI18nKey.endpoint)}
-            postfixPart={postfix}
-            prefixPart={prefix}
-            onChange={onChangePath}
-            hideCopyButton={isModal}
-          />
-        ) : (
-          <InputWithReadonlyParts
-            inputId="endpoint"
-            value={name}
-            fullValue={fullValue}
-            title={t(EntityFieldsI18nKey.endpoint)}
-            postfixPart={postfix}
-            onChange={onChangeEndpoint}
-            hideCopyButton={isModal}
-            errorText={endpointError?.text}
-            invalid={!!endpointError}
-          />
-        )}
-      </div>
+
+      {prefix ? (
+        <ComplexInput
+          elementId="endpoint"
+          value={name}
+          fullValue={fullValue}
+          fieldTitle={t(EntityFieldsI18nKey.endpoint)}
+          suffix={postfix}
+          textBeforeInput={prefix}
+          onChange={onChangePath}
+        />
+      ) : (
+        <ComplexInput
+          elementId="endpoint"
+          value={name}
+          fullValue={fullValue}
+          fieldTitle={t(EntityFieldsI18nKey.endpoint)}
+          suffix={postfix}
+          onChange={onChangeEndpoint}
+          errorText={endpointError?.text}
+          invalid={!!endpointError}
+          copyable={false}
+        />
+      )}
     </div>
   );
 };

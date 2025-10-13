@@ -4,9 +4,8 @@ import { FC, useCallback, useState } from 'react';
 
 import { IconChevronDown, IconChevronRight, IconTrash, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { DialPasswordInputField, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialPasswordInputField, DialTooltip, DialNumberInputField } from '@epam/ai-dial-ui-kit';
 
-import { NumberInputField } from '@/src/components/Common/InputField/InputField';
 import {
   EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
@@ -139,7 +138,7 @@ const Endpoint: FC<Props> = ({
             onChange={onChangeKey}
           />
 
-          <NumberInputField
+          <DialNumberInputField
             elementId={'weight ' + index}
             disabled={readonly}
             value={endpoint.weight}
@@ -150,7 +149,7 @@ const Endpoint: FC<Props> = ({
             onChange={onChangeWeight}
           />
 
-          <NumberInputField
+          <DialNumberInputField
             elementId={'tier ' + index}
             disabled={readonly}
             value={endpoint.tier}

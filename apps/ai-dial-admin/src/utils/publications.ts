@@ -9,46 +9,52 @@ export function getActionClass(action: ActionType): string {
 
 export function getModalsTranslations(route: ApplicationRoute, action: ActionType) {
   if (route === ApplicationRoute.PromptPublications) {
-    if (action === ActionType.ADD) {
-      return {
-        ApproveModalTitle: PublicationsI18nKey.PromptPublishApproveModalTitle,
-        DeclineModalTitle: PublicationsI18nKey.PromptPublishDeclineModalTitle,
-        ApproveDescription: PublicationsI18nKey.PromptPublishApproveDescription,
-      };
-    } else {
-      return {
-        ApproveModalTitle: PublicationsI18nKey.PromptUnpublishApproveModalTitle,
-        DeclineModalTitle: PublicationsI18nKey.PromptUnpublishDeclineModalTitle,
-        ApproveDescription: PublicationsI18nKey.PromptUnpublishApproveDescription,
-      };
-    }
+    return action === ActionType.ADD
+      ? {
+          ApproveModalTitle: PublicationsI18nKey.PromptPublishApproveModalTitle,
+          DeclineModalTitle: PublicationsI18nKey.PromptPublishDeclineModalTitle,
+          ApproveDescription: PublicationsI18nKey.PromptPublishApproveDescription,
+        }
+      : {
+          ApproveModalTitle: PublicationsI18nKey.PromptUnpublishApproveModalTitle,
+          DeclineModalTitle: PublicationsI18nKey.PromptUnpublishDeclineModalTitle,
+          ApproveDescription: PublicationsI18nKey.PromptUnpublishApproveDescription,
+        };
   } else if (route === ApplicationRoute.ApplicationPublications) {
-    if (action === ActionType.ADD) {
-      return {
-        ApproveModalTitle: PublicationsI18nKey.ApplicationPublishApproveModalTitle,
-        DeclineModalTitle: PublicationsI18nKey.ApplicationPublishDeclineModalTitle,
-        ApproveDescription: PublicationsI18nKey.ApplicationPublishApproveDescription,
-      };
-    } else {
-      return {
-        ApproveModalTitle: PublicationsI18nKey.ApplicationUnpublishApproveModalTitle,
-        DeclineModalTitle: PublicationsI18nKey.ApplicationUnpublishDeclineModalTitle,
-        ApproveDescription: PublicationsI18nKey.ApplicationUnpublishApproveDescription,
-      };
-    }
-  } else {
-    if (action === ActionType.ADD) {
-      return {
+    return action === ActionType.ADD
+      ? {
+          ApproveModalTitle: PublicationsI18nKey.ApplicationPublishApproveModalTitle,
+          DeclineModalTitle: PublicationsI18nKey.ApplicationPublishDeclineModalTitle,
+          ApproveDescription: PublicationsI18nKey.ApplicationPublishApproveDescription,
+        }
+      : {
+          ApproveModalTitle: PublicationsI18nKey.ApplicationUnpublishApproveModalTitle,
+          DeclineModalTitle: PublicationsI18nKey.ApplicationUnpublishDeclineModalTitle,
+          ApproveDescription: PublicationsI18nKey.ApplicationUnpublishApproveDescription,
+        };
+  } else if (route === ApplicationRoute.ToolsetPublications) {
+    return action === ActionType.ADD
+      ? {
+          ApproveModalTitle: PublicationsI18nKey.ToolsetPublishApproveModalTitle,
+          DeclineModalTitle: PublicationsI18nKey.ToolsetPublishDeclineModalTitle,
+          ApproveDescription: PublicationsI18nKey.ToolsetPublishApproveDescription,
+        }
+      : {
+          ApproveModalTitle: PublicationsI18nKey.ToolsetUnpublishApproveModalTitle,
+          DeclineModalTitle: PublicationsI18nKey.ToolsetUnpublishDeclineModalTitle,
+          ApproveDescription: PublicationsI18nKey.ToolsetUnpublishApproveDescription,
+        };
+  }
+
+  return action === ActionType.ADD
+    ? {
         ApproveModalTitle: PublicationsI18nKey.FilePublishApproveModalTitle,
         DeclineModalTitle: PublicationsI18nKey.FilePublishDeclineModalTitle,
         ApproveDescription: PublicationsI18nKey.FilePublishApproveDescription,
-      };
-    } else {
-      return {
+      }
+    : {
         ApproveModalTitle: PublicationsI18nKey.FileUnpublishApproveModalTitle,
         DeclineModalTitle: PublicationsI18nKey.FileUnpublishDeclineModalTitle,
         ApproveDescription: PublicationsI18nKey.FileUnpublishApproveDescription,
       };
-    }
-  }
 }

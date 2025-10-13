@@ -1,7 +1,6 @@
 import { FC, useCallback, useMemo, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -49,7 +48,7 @@ const RenameFolder: FC<Props> = ({ currentPath, siblings = [], modalState, onClo
       dividers={true}
     >
       <div className="px-6 py-4">
-        <TextInputField
+        <DialTextInputField
           elementId="folderName"
           fieldTitle={t(FoldersI18nKey.FolderName)}
           placeholder={t(FoldersI18nKey.FolderCreatePlaceholder)}

@@ -17,14 +17,14 @@ const template: InterceptorTemplate = {
 
 describe('View', () => {
   it('Should render correctly', () => {
-    render(<View names={[]} route={ApplicationRoute.InterceptorTemplates} template={template} />);
+    render(<View etag="qqqq" names={[]} template={template} />);
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Delete })).toBeInTheDocument();
-    expect(
-      screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.completionEndpoint} ${BasicI18nKey.Optional}` }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('textbox', { name: `${FeaturesI18nKey.configurationEndpoint} ${BasicI18nKey.Optional}` }),
-    ).toBeInTheDocument();
+    const completion = screen.getByText(EntityFieldsI18nKey.completionEndpoint);
+    expect(completion).toBeInTheDocument();
+    expect(completion.parentElement).toHaveAttribute('for', 'completionEndpoint');
+    const configuration = screen.getByText(FeaturesI18nKey.configurationEndpoint);
+    expect(configuration).toBeInTheDocument();
+    expect(configuration.parentElement).toHaveAttribute('for', 'configurationEndpoint');
   });
 });

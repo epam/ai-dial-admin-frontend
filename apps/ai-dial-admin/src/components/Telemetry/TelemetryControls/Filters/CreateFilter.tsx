@@ -1,9 +1,10 @@
 import { Dispatch, FC, SetStateAction, useCallback } from 'react';
 import classNames from 'classnames';
 
+import { DialInput } from '@epam/ai-dial-ui-kit';
+
 import DropdownMenuItem from '@/src/components/Common/Dropdown/DropdownItem';
 import Dropdown from '@/src/components/Common/Dropdown/Dropdown';
-import Input from '@/src/components/Common/Input/Input';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { BasicI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -137,8 +138,8 @@ const CreateFilter: FC<Props> = ({
             )}
           </>
         ) : (
-          <Input
-            inputId={'filterValue'}
+          <DialInput
+            elementId="filterValue"
             onChange={setValue}
             placeholder={t(BasicI18nKey.Value)}
             value={value}

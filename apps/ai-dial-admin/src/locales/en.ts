@@ -83,6 +83,7 @@ export default {
 
     PromptPublications: 'Prompt Publications',
     ApplicationPublications: 'Application Publications',
+    ToolsetPublications: 'Toolset Publications',
     FilePublications: 'File Publications',
     ImportConfig: 'Import Config',
     ExportConfig: 'Export Config',
@@ -452,6 +453,7 @@ export default {
   },
   Publications: {
     ReasonTitle: 'Reason',
+    ReasonPlaceholder: 'Describe the reason for decline',
     Prompt: {
       PublishApproveModalTitle: 'Publish Prompt',
       UnpublishApproveModalTitle: 'Unpublish Prompt',
@@ -459,10 +461,9 @@ export default {
       UnpublishDeclineModalTitle: 'Decline Prompt Unpublishing',
       PublishApproveDescription: 'Are you sure that you want to publish prompt?',
       UnpublishApproveDescription: 'Are you sure that you want to unpublish prompt?',
-      ReasonPlaceholder: 'Describe the reason for decline',
       OpenPrompt: 'Open Prompt',
     },
-    Files: {
+    File: {
       FilesListTitle: 'Files list',
       PublishApproveModalTitle: 'Publish File',
       UnpublishApproveModalTitle: 'Unpublish File',
@@ -470,15 +471,22 @@ export default {
       UnpublishDeclineModalTitle: 'Decline File Unpublishing',
       PublishApproveDescription: 'Are you sure that you want to publish file?',
       UnpublishApproveDescription: 'Are you sure that you want to unpublish file?',
-      ReasonPlaceholder: 'Describe the reason for decline',
     },
-    Applications: {
+    Application: {
       PublishApproveModalTitle: 'Publish Application',
       UnpublishApproveModalTitle: 'Unpublish Application',
       PublishDeclineModalTitle: 'Decline Application Publishing',
       UnpublishDeclineModalTitle: 'Decline Application Unpublishing',
       PublishApproveDescription: 'Are you sure that you want to publish application?',
       UnpublishApproveDescription: 'Are you sure that you want to unpublish application?',
+    },
+    Toolset: {
+      PublishApproveModalTitle: 'Publish Toolset',
+      UnpublishApproveModalTitle: 'Unpublish Toolset',
+      PublishDeclineModalTitle: 'Decline Toolset Publishing',
+      UnpublishDeclineModalTitle: 'Decline Toolset Unpublishing',
+      PublishApproveDescription: 'Are you sure that you want to publish toolset?',
+      UnpublishApproveDescription: 'Are you sure that you want to unpublish toolset?',
     },
   },
   Prompts: {

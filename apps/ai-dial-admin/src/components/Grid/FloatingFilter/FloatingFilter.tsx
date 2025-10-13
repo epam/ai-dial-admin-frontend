@@ -20,7 +20,7 @@ const FloatingFilter = (props: IFloatingFilterParams) => {
       <IconSearch width={12} height={12} className="" />
       <input
         type="text"
-        className="w-full border-0 tiny"
+        className="w-full border-0 dial-tiny dial-input px-3 py-2"
         value={props.currentParentModel()?.filter || ''}
         onChange={onInputChanged}
         placeholder={t(BasicI18nKey.Search)}
