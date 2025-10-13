@@ -73,7 +73,7 @@ const InputModal: FC<Props> = ({
         <div className="w-full" onClick={readonly ? void 0 : onOpenModal}>
           <div
             className={classNames(
-              'dial-input flex flex-row items-center w-full justify-between',
+              'dial-input flex flex-row items-center w-full justify-between py-2 px-3',
               readonly ? 'dial-input-disable' : '',
             )}
           >
