@@ -1,6 +1,6 @@
 import { DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
-import { FC, useCallback, useMemo } from 'react';
+import { FC, useCallback, useMemo, useState } from 'react';
 
 import { ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -8,6 +8,11 @@ import { ToolsetAuthSettings, ToolsetAuthType } from '@/src/models/dial/toolset'
 import { AuthConfig } from '../Authentication';
 import ApiKeySection from './ApiKeySection';
 import OAuthSection from './OAuthSection';
+enum AuthType {
+  With_config = 'With_config',
+  Without_config = 'Without_config',
+  With_config_and_login = 'With_config_and_login',
+}
 
 interface Props {
   config: AuthConfig;
@@ -20,27 +25,24 @@ interface Props {
 const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings, onChange }) => {
   const t = useI18n();
 
-  // const toolsetDetails = useAppSelector(ToolsetSelectors.selectToolsetDetails);
+  const [isWithLogin, setIsWithLogin] = useState(AuthType.With_config);
 
-  // const isSignedIn = toolsetDetails && isToolsetSignedIn(toolsetDetails);
-
-  const isWithLogin = true;
   const radioLogin: RadioButtonWithContent[] = useMemo(() => {
     const buttons = [
       {
-        id: 'with-config',
+        id: AuthType.With_config,
         name: t(ToolsetI18nKey.WithLogin),
       },
     ];
 
     if (config.id === ToolsetAuthType.API_KEY) {
       buttons.push({
-        id: 'without-config',
+        id: AuthType.Without_config,
         name: t(ToolsetI18nKey.WithoutLogin),
       });
     } else if (config.id === ToolsetAuthType.OAUTH) {
       buttons.push({
-        id: 'with-config-and-login',
+        id: AuthType.With_config_and_login,
         name: t(ToolsetI18nKey.WithLoginAndConfig),
       });
     }
@@ -49,13 +51,12 @@ const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings,
   }, [config.id, t]);
 
   const handleOnClick = useCallback(() => {
-    // if (!isSignedIn) onClick(type);
     onClick(config.id);
   }, [config.id, onClick]);
 
-  const onChangeAuth = useCallback(() => {
-    console.log('Change auth type');
-  }, [config.id, onClick]);
+  const onChangeAuth = useCallback((value: string) => {
+    setIsWithLogin(value as AuthType);
+  }, []);
 
   return (
     <div className="flex flex-col w-full rounded bg-layer-3 border border-tertiary">
