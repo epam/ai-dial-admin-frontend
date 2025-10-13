@@ -22,7 +22,7 @@ import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
 import { Toolset } from '@/src/models/dial/toolset';
-import Authentication from '@/src/components//Toolsets/View/Authentication';
+import Authentication from '@/src/components/Toolsets/View/Authentication';
 
 interface Props {
   etag: string;
