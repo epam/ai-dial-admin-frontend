@@ -1,6 +1,6 @@
 import { DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -8,9 +8,10 @@ import { ToolsetAuthSettings, ToolsetAuthType } from '@/src/models/dial/toolset'
 import { AuthConfig } from '../Authentication';
 import ApiKeySection from './ApiKeySection';
 import OAuthSection from './OAuthSection';
+
 enum AuthType {
-  With_config = 'With_config',
-  Without_config = 'Without_config',
+  With_login = 'With_login',
+  Without_login = 'Without_login',
   With_config_and_login = 'With_config_and_login',
 }
 
@@ -25,19 +26,19 @@ interface Props {
 const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings, onChange }) => {
   const t = useI18n();
 
-  const [isWithLogin, setIsWithLogin] = useState(AuthType.With_config);
+  const [isWithLogin, setIsWithLogin] = useState(AuthType.With_login);
 
   const radioLogin: RadioButtonWithContent[] = useMemo(() => {
     const buttons = [
       {
-        id: AuthType.With_config,
+        id: AuthType.With_login,
         name: t(ToolsetI18nKey.WithLogin),
       },
     ];
 
     if (config.id === ToolsetAuthType.API_KEY) {
       buttons.push({
-        id: AuthType.Without_config,
+        id: AuthType.Without_login,
         name: t(ToolsetI18nKey.WithoutLogin),
       });
     } else if (config.id === ToolsetAuthType.OAUTH) {
@@ -50,6 +51,10 @@ const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings,
     return buttons;
   }, [config.id, t]);
 
+  useEffect(() => {
+    setIsWithLogin(authSettings?.clientId ? AuthType.With_config_and_login : AuthType.Without_login);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const handleOnClick = useCallback(() => {
     onClick(config.id);
   }, [config.id, onClick]);
