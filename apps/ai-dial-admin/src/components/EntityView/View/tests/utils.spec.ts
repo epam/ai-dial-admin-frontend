@@ -25,6 +25,7 @@ describe('Entity View :: getViewTabs', () => {
     expect(res).toEqual([
       propertiesTabs(t),
       featuresTabs(t),
+      parametersTabs(t),
       rolesTabs(t),
       interceptorsTabs(t),
       dependenciesTabs(t),
