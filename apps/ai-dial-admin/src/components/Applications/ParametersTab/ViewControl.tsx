@@ -1,6 +1,10 @@
 import { Dispatch, FC, SetStateAction, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { VisualizerConnectorRequests } from '@epam/ai-dial-shared';
+import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
+import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
+
 import Dropdown from '@/src/components/Common/Dropdown/Dropdown';
 import DropdownMenuItem from '@/src/components/Common/Dropdown/DropdownItem';
 import { ButtonsI18nKey, CompareI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
@@ -9,9 +13,6 @@ import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAttachmentData } from '@/src/models/attachment-data';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
-import { VisualizerConnectorRequests } from '@epam/ai-dial-shared';
-import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
-import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 import { ParamsView } from './types';
 
 interface Props {
@@ -86,7 +87,7 @@ const ViewControl: FC<Props> = ({ items, paramsView, setParamsView, onSave, isCh
         <DialConfirmationPopup
           open={isModalOpen}
           title={t(EntitiesI18nKey.SaveParametersTitle)}
-          description={t(EntitiesI18nKey.SaveParametersDescription)}
+          description={t(EntitiesI18nKey.SaveParametersViewDescription)}
           confirmLabel={t(ButtonsI18nKey.Save)}
           cancelLabel={t(ButtonsI18nKey.LeaveWithoutSave)}
           onConfirm={onConfirm}

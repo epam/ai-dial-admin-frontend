@@ -128,6 +128,7 @@ export enum EntitiesI18nKey {
   SaveChangesDescription = 'Entities.SaveChangesDescription',
   SaveParametersTitle = 'Entities.SaveParametersTitle',
   SaveParametersDescription = 'Entities.SaveParametersDescription',
+  SaveParametersViewDescription = 'Entities.SaveParametersViewDescription',
   Table = 'Entities.Table',
   Form = 'Entities.Form',
   Ui = 'Entities.Ui',
