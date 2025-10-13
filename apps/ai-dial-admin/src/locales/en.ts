@@ -379,6 +379,7 @@ export default {
   Features: {
     toolsSupported: 'Tools',
     systemPromptSupported: 'System prompt',
+    assistantAttachmentsInRequestSupported: 'Assistant Attachments in request',
     seedSupported: 'Seed',
     urlAttachmentsSupported: 'URL Attachments',
     folderAttachmentsSupported: 'Folder Attachments',
