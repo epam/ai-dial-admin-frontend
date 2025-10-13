@@ -17,7 +17,7 @@ import {
   TypeI18nKey,
 } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialApplicationScheme, TypeEntity } from '@/src/models/dial/application';
+import { DialApplicationScheme, TypeBucketCopy, TypeEntity } from '@/src/models/dial/application';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 
@@ -34,11 +34,23 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
     { id: TypeEntity.BOOLEAN, name: t(TypeI18nKey.Boolean) },
   ];
 
+  const typeBucketCopy: DropdownItemsModel[] = [
+    { id: TypeBucketCopy.ENABLED, name: t(TypeI18nKey.Object) },
+    { id: TypeBucketCopy.DISABLED, name: t(TypeI18nKey.Boolean) },
+  ];
+
   const onChange = useCallback(
     (value: string | string[] | boolean | undefined, key: keyof DialApplicationScheme) => {
       onChangeRunner({ ...runner, [key]: value });
     },
     [runner, onChangeRunner],
+  );
+
+  const onChangeTypeCopyBucket = useCallback(
+    (value?: string) => {
+      onChange(value, 'dial:applicationTypeBucketCopy');
+    },
+    [onChange],
   );
 
   const onChangeCompletionEndPoint = useCallback(
@@ -119,6 +131,15 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
           onChange={(type: string) => {
             onChangeRunner({ ...runner, type: type === BasicI18nKey.None ? void 0 : (type as TypeEntity) });
           }}
+        />
+
+        <DropdownField
+          selectedValue={runner['dial:applicationTypeBucketCopy'] || TypeBucketCopy.DISABLED}
+          elementId="typeCopy"
+          items={typeBucketCopy}
+          fieldTitle={t(EntityFieldsI18nKey['dial:applicationTypeBucketCopy'])}
+          placeholder={t(EntityPlaceholdersI18nKey.TypeBucketCopy)}
+          onChange={onChangeTypeCopyBucket}
         />
       </div>
       <TopicsControl entity={runner} onChange={onChangeRunner} />

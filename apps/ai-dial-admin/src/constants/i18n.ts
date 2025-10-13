@@ -684,6 +684,7 @@ export enum BooleanI18nKey {
 
 export enum EntityPlaceholdersI18nKey {
   Project = 'EntityPlaceholders.Project',
+  TypeBucketCopy = 'EntityPlaceholders.TypeBucketCopy',
   ContactPoint = 'EntityPlaceholders.ContactPoint',
   Endpoint = 'EntityPlaceholders.Endpoint',
   EditorUrl = 'EntityPlaceholders.EditorUrl',
@@ -812,6 +813,7 @@ export enum EntityFieldsI18nKey {
   'dial:appendApplicationPropertiesHeader' = 'EntityFields.appendApplicationPropertiesHeader',
   'dial:applicationTypePlaybackSupport' = 'EntityFields.applicationTypePlaybackSupport',
   'dial:applicationTypeIconUrl' = 'EntityFields.applicationTypeIconUrl',
+  'dial:applicationTypeBucketCopy' = 'EntityFields.applicationTypeBucketCopy',
   grantedKeys = 'EntityFields.grantedKeys',
   createdAt = 'EntityFields.createdAt',
   updatedAt = 'EntityFields.updatedAt',

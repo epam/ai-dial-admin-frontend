@@ -28,6 +28,7 @@ export interface DialApplicationScheme extends ModifiedEntity, DialScheme {
   'dial:applicationTypeRoutes'?: DialRoute[];
   'dial:applicationTypePlaybackSupport'?: boolean;
   'dial:applicationTypeIconUrl'?: string;
+  'dial:applicationTypeBucketCopy'?: TypeBucketCopy;
   applications?: string[];
   topics?: string[];
 }
@@ -35,4 +36,9 @@ export interface DialApplicationScheme extends ModifiedEntity, DialScheme {
 export enum TypeEntity {
   OBJECT = 'object',
   BOOLEAN = 'boolean',
+}
+
+export enum TypeBucketCopy {
+  DISABLED = 'disabled',
+  ENABLED = 'enabled',
 }
