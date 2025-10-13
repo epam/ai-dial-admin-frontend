@@ -87,7 +87,7 @@ const ViewControl: FC<Props> = ({ items, paramsView, setParamsView, onSave, isCh
         <DialConfirmationPopup
           open={isModalOpen}
           title={t(EntitiesI18nKey.SaveParametersTitle)}
-          description={t(EntitiesI18nKey.SaveParametersViewDescription)}
+          description={t(EntitiesI18nKey.SaveParametersDescription)}
           confirmLabel={t(ButtonsI18nKey.Save)}
           cancelLabel={t(ButtonsI18nKey.LeaveWithoutSave)}
           onConfirm={onConfirm}

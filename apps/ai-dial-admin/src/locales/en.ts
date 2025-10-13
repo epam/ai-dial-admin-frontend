@@ -162,8 +162,7 @@ export default {
     SaveChangesTitle: 'Save Changes',
     SaveChangesDescription: 'Save changes before opening the parameters tab. All unsaved changes will be lost.',
     SaveParametersTitle: 'Save Parameters',
-    SaveParametersDescription: 'Save changes in parameters before leaving the tab. All unsaved changes will be lost.',
-    SaveParametersViewDescription: 'Save parameter changes before leaving this view. Unsaved changes will be lost.',
+    SaveParametersDescription: 'Save parameter changes before leaving. Unsaved changes will be lost.',
   },
   DeleteEntity: {
     Title: 'Confirm Deleting ',
