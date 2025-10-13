@@ -1,5 +1,11 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+import { FC, useCallback, useEffect, useState } from 'react';
+
+import classNames from 'classnames';
+import { cloneDeep } from 'lodash';
+
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
@@ -8,7 +14,7 @@ import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor'
 import { ModalType } from '@/src/components/EntityView/Modals/constants';
 import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
 import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
-import { EntityViewTab, getIsParametersTabAvailable, getViewTabs } from '@/src/components/EntityView/View/utils';
+import { EntityViewTab, getViewTabs } from '@/src/components/EntityView/View/utils';
 import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -31,13 +37,8 @@ import {
   VisualizerConnectorRequests,
 } from '@epam/ai-dial-shared';
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
-import classNames from 'classnames';
-import { cloneDeep } from 'lodash';
-import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
-import { getEntityFromFile, getExportType } from './core-entity-utils';
-import { getFileFromEntity } from './core-entity-utils';
 import ViewContent from './Content/ViewContent';
+import { getEntityFromFile, getExportType, getFileFromEntity } from './core-entity-utils';
 
 interface Props {
   view: ApplicationRoute;
@@ -64,9 +65,8 @@ const EntityView: FC<Props> = ({
 }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const { dispatch } = useSaveValidationContext();
-  const isParametersTabAvailable = getIsParametersTabAvailable(originalEntity as DialApplication, applicationSchemes);
 
-  const tabs = getViewTabs(t, view, isParametersTabAvailable);
+  const tabs = getViewTabs(t, view);
   const router = useRouter();
   const { showNotification } = useNotification();
 
@@ -306,6 +306,8 @@ const EntityView: FC<Props> = ({
               jsonEditorEnabled={jsonEditorEnabled}
               isSkipRefresh={isSkipRefresh}
               onChangeEntity={onChangeEntity}
+              isChanged={isChanged}
+              onSave={onSave}
               {...props}
             />
           )}

@@ -6,12 +6,12 @@ import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { ACTION_I18N_KEYS } from '@/src/constants/publications';
 import { useI18n } from '@/src/locales/client';
+import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ActionType, ApplicationPublication, Publication } from '@/src/models/dial/publications';
 import { removeTrailingSlash } from '@/src/utils/files/path';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getActionClass } from '@/src/utils/publications';
 import BasePublicationPermissions from './BasePublicationPermissions';
-import { DialApplicationScheme } from '@/src/models/dial/application';
 
 interface Props {
   publication: Publication;
@@ -33,31 +33,28 @@ const BasePublicationProperties: FC<Props> = ({ publication, children, applicati
   return (
     <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full" data-testid={'publication-header'}>
       <div className="flex flex-col sm:flex-row gap-8">
-        <div className="flex flex-row gap-8">
-          {!application ? (
-            <LabelledText label={t(EntitiesI18nKey.Action)}>
-              <p className="truncate items-center flex">
-                <span className={indicatorClassNames} />
-                {t(ACTION_I18N_KEYS[publication.action])}
-              </p>
-            </LabelledText>
-          ) : runnerId ? (
-            <LabelledText label={t(EntitiesI18nKey.Runner)}>
-              <p className="truncate items-center">{runner?.['dial:applicationTypeDisplayName'] || runnerId}</p>
-            </LabelledText>
-          ) : null}
-          {publication.author && <LabelledText label={t(EntitiesI18nKey.Author)} text={publication.author} />}
-        </div>
-        <div className="flex flex-col sm:flex-row gap-8">
-          <LabelledText
-            label={t(EntityFieldsI18nKey.createdAt)}
-            text={formatDateTimeToLocalString(publication.createdAt)}
-          />
-          <LabelledText
-            label={t(EntitiesI18nKey.FolderStorage)}
-            text={removeTrailingSlash(decodeURIComponent(publication.folderId))}
-          />
-        </div>
+        {!application && (
+          <LabelledText label={t(EntitiesI18nKey.Action)}>
+            <p className="truncate items-center flex">
+              <span className={indicatorClassNames} />
+              {t(ACTION_I18N_KEYS[publication.action])}
+            </p>
+          </LabelledText>
+        )}
+        {runnerId && (
+          <LabelledText label={t(EntitiesI18nKey.Runner)}>
+            <p className="truncate items-center">{runner?.['dial:applicationTypeDisplayName'] || runnerId}</p>
+          </LabelledText>
+        )}
+        {publication.author && <LabelledText label={t(EntitiesI18nKey.Author)} text={publication.author} />}
+        <LabelledText
+          label={t(EntityFieldsI18nKey.createdAt)}
+          text={formatDateTimeToLocalString(publication.createdAt)}
+        />
+        <LabelledText
+          label={t(EntitiesI18nKey.FolderStorage)}
+          text={removeTrailingSlash(decodeURIComponent(publication.folderId))}
+        />
       </div>
       <div className="flex-1 min-h-0 mt-8 pt-8 relative" data-testid={'publication-content'}>
         <div className="flex flex-col gap-6 h-full overflow-auto">{children}</div>

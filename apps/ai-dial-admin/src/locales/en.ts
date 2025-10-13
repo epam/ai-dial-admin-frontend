@@ -156,11 +156,14 @@ export default {
     Action: 'Action',
     Runner: 'Runner',
     FolderStorage: 'Folder Storage',
+    Table: 'Table',
+    Form: 'Generated form',
+    Ui: 'Application custom UI',
     // modals
     SaveChangesTitle: 'Save Changes',
     SaveChangesDescription: 'Save changes before opening the parameters tab. All unsaved changes will be lost.',
     SaveParametersTitle: 'Save Parameters',
-    SaveParametersDescription: 'Save changes in parameters before leaving the tab. All unsaved changes will be lost.',
+    SaveParametersDescription: 'Save parameter changes before leaving. Unsaved changes will be lost.',
   },
   DeleteEntity: {
     Title: 'Confirm Deleting ',
