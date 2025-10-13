@@ -1,5 +1,6 @@
 import { clearSchemeForEditor } from '../utils';
 import { describe, expect, test } from 'vitest';
+import { TypeBucketCopy } from '@/src/models/dial/application';
 
 describe('ApplicationRunner :: clearSchemeForEditor', () => {
   test('Should clear all field', () => {
@@ -19,6 +20,7 @@ describe('ApplicationRunner :: clearSchemeForEditor', () => {
       ['dial:appendApplicationPropertiesHeader']: true,
       ['dial:applicationTypePlaybackSupport']: true,
       ['dial:applicationTypeRoutes']: [],
+      ['dial:applicationTypeBucketCopy']: TypeBucketCopy.ENABLED,
       ['dial:applicationTypeIconUrl']: 'icon1.svg',
       properties: {
         properties1: '1',
