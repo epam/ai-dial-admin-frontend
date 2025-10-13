@@ -34,9 +34,7 @@ const Paths: FC<Props> = ({ title, optional, readonly, paths, onChangePaths }) =
   const onAddPath = useCallback(() => {
     const newPaths = [...(paths || [])];
     newPaths.push('');
-    if (newPaths.length === 1) {
-      newPaths.push('');
-    }
+
     onChangePaths(newPaths);
   }, [paths, onChangePaths]);
 
