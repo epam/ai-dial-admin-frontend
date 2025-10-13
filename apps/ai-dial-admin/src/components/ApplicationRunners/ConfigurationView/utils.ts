@@ -23,6 +23,7 @@ const fields: (keyof DialApplicationScheme)[] = [
   'dial:appendApplicationPropertiesHeader',
   'dial:applicationTypePlaybackSupport',
   'dial:applicationTypeIconUrl',
+  'dial:applicationTypeBucketCopy',
 ];
 
 export const clearSchemeForEditor = (scheme: DialApplicationScheme) => {

@@ -79,6 +79,8 @@ export enum BasicI18nKey {
   Search = 'Basic.Search',
   Or = 'Basic.Or',
   And = 'Basic.And',
+  Enabled = 'Basic.Enabled',
+  Disabled = 'Basic.Disabled',
 }
 
 export enum EntitiesI18nKey {
@@ -688,6 +690,7 @@ export enum BooleanI18nKey {
 
 export enum EntityPlaceholdersI18nKey {
   Project = 'EntityPlaceholders.Project',
+  TypeBucketCopy = 'EntityPlaceholders.TypeBucketCopy',
   ContactPoint = 'EntityPlaceholders.ContactPoint',
   Endpoint = 'EntityPlaceholders.Endpoint',
   EditorUrl = 'EntityPlaceholders.EditorUrl',
@@ -816,6 +819,7 @@ export enum EntityFieldsI18nKey {
   'dial:appendApplicationPropertiesHeader' = 'EntityFields.appendApplicationPropertiesHeader',
   'dial:applicationTypePlaybackSupport' = 'EntityFields.applicationTypePlaybackSupport',
   'dial:applicationTypeIconUrl' = 'EntityFields.applicationTypeIconUrl',
+  'dial:applicationTypeBucketCopy' = 'EntityFields.applicationTypeBucketCopy',
   grantedKeys = 'EntityFields.grantedKeys',
   createdAt = 'EntityFields.createdAt',
   updatedAt = 'EntityFields.updatedAt',
@@ -853,8 +857,6 @@ export enum ToolsetI18nKey {
   Warning = 'Toolset.Warning',
   View = 'Toolset.View',
   AllTools = 'Toolset.AllTools',
-  Enabled = 'Toolset.Enabled',
-  Disabled = 'Toolset.Disabled',
   AutoDetected = 'Toolset.AutoDetected',
   ToolsWarning = 'Toolset.ToolsWarning',
   ClientRegistrationType = 'Toolset.ClientRegistrationType',
