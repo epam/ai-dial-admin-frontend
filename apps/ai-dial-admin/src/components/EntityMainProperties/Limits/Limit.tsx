@@ -1,7 +1,7 @@
 import { FC, useCallback } from 'react';
 import { IconCurrencyDollar } from '@tabler/icons-react';
+import { DialNumberInputField } from '@epam/ai-dial-ui-kit';
 
-import { NumberInputField } from '@/src/components/Common/InputField/InputField';
 import { RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRoleLimits } from '@/src/models/dial/role-limits';
@@ -29,12 +29,12 @@ const LimitControl: FC<Props> = ({ limits, controlClassName, isCostInputs, onCha
   );
 
   return (
-    <NumberInputField
+    <DialNumberInputField
       containerCssClass={controlClassName}
       placeholder={t(RolesI18nKey.NoLimits)}
-      value={limits?.[fieldKey] === NO_LIMITS_VALUE ? '' : (limits?.[fieldKey] as string | null)}
+      value={limits?.[fieldKey] === NO_LIMITS_VALUE ? '' : (limits?.[fieldKey] as string)}
       onChange={(value) => onChangeLimit(value, fieldKey)}
-      iconBeforeInput={isCostInputs ? <IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} /> : null}
+      iconBefore={isCostInputs ? <IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} /> : null}
       {...props}
     />
   );

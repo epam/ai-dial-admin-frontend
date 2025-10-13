@@ -1,11 +1,10 @@
 import { FC, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey, CreateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 
 interface Props {
   modalState: PopUpState;
@@ -21,7 +20,7 @@ const CreateRoute: FC<Props> = ({ modalState, onClose, onCreate }) => {
   return (
     <Popup onClose={onClose} heading={t(CreateI18nKey.Route)} portalId="CreateRoute" state={modalState}>
       <div className="flex flex-col overflow-auto px-6 py-4">
-        <TextInputField
+        <DialTextInputField
           elementId="name"
           fieldTitle={t(EntityFieldsI18nKey.displayName)}
           placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}

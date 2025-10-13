@@ -3,9 +3,9 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
 import classNames from 'classnames';
+import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import TagInput from '@/src/components/Common/TagInput/TagInput';
 import { BasicI18nKey, ErrorI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -127,7 +127,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
         </div>
         <div className="w-full">
           {rule.function === RuleFunction.REGEX ? (
-            <TextInputField
+            <DialTextInputField
               elementId={'upstreamEndpoints ' + index}
               value={rule.targets?.[0]}
               fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}

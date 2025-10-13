@@ -1,8 +1,8 @@
 import { IconTrash } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC } from 'react';
+import { DialInput } from '@epam/ai-dial-ui-kit';
 
-import Input from '@/src/components/Common/Input/Input';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
 
@@ -31,8 +31,8 @@ const NewItemInput: FC<Props> = ({
     return (
       <div className="flex flex-row gap-x-2 items-center w-full">
         <div className="flex-1">
-          <Input
-            inputId={'item ' + index}
+          <DialInput
+            elementId={'item ' + index}
             value={value}
             placeholder={placeholder}
             onChange={(v) => onChangeItem(v, index)}

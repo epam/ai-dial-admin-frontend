@@ -4,10 +4,11 @@ import { FC } from 'react';
 
 import ErrorText from '@/src/components/Common/ErrorText/ErrorText';
 import Field from '@/src/components/Common/Field/Field';
-import { InputFieldBaseProps } from '@/src/components/Common/InputField/InputField';
 import DropdownAutocomplete from './DropdownAutocomplete';
+// TODO: temp - remove after use Dial UI Kit Autocomplete
+import { DialInputFieldBaseProps } from '@epam/ai-dial-ui-kit/dist/src/components/InputField/InputField';
 
-interface Props extends InputFieldBaseProps {
+interface Props extends DialInputFieldBaseProps {
   items: string[];
   onChange: (value: string) => void;
 }

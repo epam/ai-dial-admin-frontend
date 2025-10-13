@@ -173,7 +173,7 @@ const AttachmentInput: FC<Props> = ({
         </div>
       ) : (
         <div className={classNames('flex flex-row gap-2 items-center w-full', disable && 'pointer-events-none')}>
-          <div className={classNames('input min-h-[38px] p-[6px]', inputClass)}>
+          <div className={classNames('dial-input min-h-[38px] p-[6px]', inputClass)}>
             <div
               ref={containerRef}
               className={classNames('flex flex-wrap items-start gap-2', wraps ? 'flex-col-reverse' : 'flex-row')}
@@ -194,7 +194,7 @@ const AttachmentInput: FC<Props> = ({
                     if (filteredSuggestions.length) setShowSuggestions(true);
                   }}
                   onKeyDown={handleKeyDown}
-                  className="outline-none border-none w-full flex-1 p-1"
+                  className="outline-none border-none w-full flex-1 p-1 dial-input"
                   placeholder={placeholder || ''}
                 />
               </div>

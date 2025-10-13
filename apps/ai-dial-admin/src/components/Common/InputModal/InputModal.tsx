@@ -51,10 +51,10 @@ const InputModal: FC<Props> = ({
           >
             <div
               className={classNames(
-                readonly ? 'input-disable' : '',
-                'input input-field flex flex-row items-center w-full justify-between',
+                readonly ? 'dial-input-disable' : '',
+                'dial-input dial-input-field px-3 py-2 flex flex-row items-center w-full justify-between',
                 inputCssClasses,
-                errorText ? 'input-error' : '',
+                errorText ? 'dial-input-error' : '',
               )}
             >
               <Tooltip tooltip={value}>
@@ -73,8 +73,8 @@ const InputModal: FC<Props> = ({
         <div className="w-full" onClick={readonly ? void 0 : onOpenModal}>
           <div
             className={classNames(
-              'input flex flex-row items-center w-full justify-between',
-              readonly ? 'input-disable' : '',
+              'dial-input flex flex-row items-center w-full justify-between py-2 px-3',
+              readonly ? 'dial-input-disable' : '',
             )}
           >
             <AutocompleteInputValue selectedItems={value as string[]} />

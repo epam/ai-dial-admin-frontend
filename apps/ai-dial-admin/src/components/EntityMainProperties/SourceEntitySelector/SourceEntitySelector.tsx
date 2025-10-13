@@ -107,7 +107,7 @@ const SourceEntitySelector: FC<Props> = ({
           modalState={modalState}
           selectedValue={valueTitle}
           onOpenModal={onOpenModal}
-          inputCssClasses={errorText && 'input-error'}
+          inputCssClasses={errorText && 'dial-input-error'}
         >
           <SelectSourceEntityModal
             title={fieldTitle}

@@ -1,6 +1,6 @@
 import { FC, useCallback, useState } from 'react';
+import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 
-import { TextInputField } from '@/src/components/Common/InputField/InputField';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -39,7 +39,7 @@ const DisplayNameControl: FC<Props> = ({ displayName, onChange, required, ...pro
   );
 
   return (
-    <TextInputField
+    <DialTextInputField
       fieldTitle={t(EntityFieldsI18nKey.displayName)}
       placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
       elementId="displayName"

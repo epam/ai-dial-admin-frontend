@@ -114,7 +114,7 @@ const DropdownAutocomplete = forwardRef<HTMLDivElement, DropdownAutocompleteProp
                 }
               },
             })}
-            className={classNames(invalid ? 'input-error' : '', '')}
+            className={classNames(invalid ? 'dial-input-error' : '', 'dial-input px-3 py-2')}
           />
         </Tooltip>
         <FloatingPortal>
