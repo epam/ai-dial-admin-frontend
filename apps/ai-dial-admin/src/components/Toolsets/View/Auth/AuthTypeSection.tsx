@@ -7,16 +7,17 @@ import { useI18n } from '@/src/locales/client';
 import { ToolsetAuthSettings, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { AuthConfig } from '../Authentication';
 import ApiKeySection from './ApiKeySection';
+import OAuthSection from './OAuthSection';
 
 interface Props {
   config: AuthConfig;
   isSelected: boolean;
   onClick: (type: ToolsetAuthType) => void;
   authSettings?: ToolsetAuthSettings;
-  onChangeAuthSettings: (authSettings: ToolsetAuthSettings) => void;
+  onChange: (authSettings: ToolsetAuthSettings) => void;
 }
 
-const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings, onChangeAuthSettings }) => {
+const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings, onChange }) => {
   const t = useI18n();
 
   // const toolsetDetails = useAppSelector(ToolsetSelectors.selectToolsetDetails);
@@ -82,12 +83,10 @@ const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings,
           {isWithLogin && (
             <>
               {config.id === ToolsetAuthType.API_KEY && (
-                <ApiKeySection authSettings={authSettings} onChangeAuthSettings={onChangeAuthSettings} />
+                <ApiKeySection authSettings={authSettings} onChange={onChange} />
               )}
 
-              {config.id === ToolsetAuthType.OAUTH && (
-                <ApiKeySection authSettings={authSettings} onChangeAuthSettings={onChangeAuthSettings} />
-              )}
+              {config.id === ToolsetAuthType.OAUTH && <OAuthSection authSettings={authSettings} onChange={onChange} />}
             </>
           )}
         </div>

@@ -22,6 +22,7 @@ import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
 import { Toolset } from '@/src/models/dial/toolset';
+import Authentication from '@/src/components//Toolsets/View/Authentication';
 
 interface Props {
   etag: string;
@@ -109,7 +110,10 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, onChange }
 
       <div className="flex flex-col gap-y-6">
         {view === ApplicationRoute.AssetsToolsets && (
-          <ToolsetEndpoint entity={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} />
+          <>
+            <ToolsetEndpoint entity={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} />
+            <Authentication toolset={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} />
+          </>
         )}
         <MaxRetryAttempts entity={asset} onChangeEntity={onChange} />
       </div>

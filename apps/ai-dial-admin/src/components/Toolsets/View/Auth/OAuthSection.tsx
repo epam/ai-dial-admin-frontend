@@ -7,19 +7,20 @@ import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { Toolset, ToolsetAuthSettings } from '@/src/models/dial/toolset';
+import { ToolsetAuthSettings } from '@/src/models/dial/toolset';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 
 enum AuthType {
   DYNAMIC = 'dynamic',
   EXISTING = 'existing',
 }
+
 interface Props {
-  toolset: Toolset;
-  onChange: (entity: Toolset) => void;
+  authSettings?: ToolsetAuthSettings;
+  onChange: (entity: ToolsetAuthSettings) => void;
 }
 
-const OAuthControls: FC<Props> = ({ toolset, onChange }) => {
+const OAuthSection: FC<Props> = ({ authSettings, onChange }) => {
   const t = useI18n();
 
   const types: DropdownItemsModel[] = [
@@ -34,68 +35,47 @@ const OAuthControls: FC<Props> = ({ toolset, onChange }) => {
           containerCssClass="w-[192px]"
           elementId="type"
           fieldTitle={t(ToolsetI18nKey.ClientRegistrationType)}
-          selectedValue={toolset.authSettings?.clientId == null ? AuthType.DYNAMIC : AuthType.EXISTING}
+          selectedValue={authSettings?.clientId == null ? AuthType.DYNAMIC : AuthType.EXISTING}
           items={types}
           onChange={(type: string) => {
             onChange({
-              ...toolset,
-              authSettings: {
-                ...(toolset.authSettings || {}),
-                clientId: type === AuthType.EXISTING ? '' : undefined,
-              } as ToolsetAuthSettings,
-            });
+              ...(authSettings || {}),
+              clientId: type === AuthType.EXISTING ? '' : undefined,
+            } as ToolsetAuthSettings);
           }}
         />
         <DialTextInputField
           containerCssClass="w-[360px]"
           elementId="redirectUri"
           fieldTitle={t(EntityFieldsI18nKey.redirectUri)}
-          value={toolset.authSettings?.redirectUri || ''}
+          value={authSettings?.redirectUri || ''}
           placeholder={t(EntityPlaceholdersI18nKey.RedirectUri)}
-          onChange={(redirectUri) =>
-            onChange({
-              ...toolset,
-              authSettings: { ...(toolset.authSettings || {}), redirectUri } as ToolsetAuthSettings,
-            })
-          }
+          onChange={(redirectUri) => onChange({ ...(authSettings || {}), redirectUri } as ToolsetAuthSettings)}
         />
       </div>
 
-      {toolset.authSettings?.clientId != null && (
+      {authSettings?.clientId != null && (
         <div className="flex flex-col gap-y-3 mt-3 w-full">
           <DialTextInputField
             elementId="clientId"
             fieldTitle={t(EntityFieldsI18nKey.clientId)}
-            value={toolset.authSettings?.clientId || ''}
+            value={authSettings?.clientId || ''}
             placeholder={t(EntityPlaceholdersI18nKey.ClientId)}
-            onChange={(clientId) =>
-              onChange({
-                ...toolset,
-                authSettings: { ...(toolset.authSettings || {}), clientId } as ToolsetAuthSettings,
-              })
-            }
+            onChange={(clientId) => onChange({ ...(authSettings || {}), clientId })}
           />
           <DialPasswordInputField
             elementId="clientSecret"
             fieldTitle={t(EntityFieldsI18nKey.clientSecret)}
-            value={toolset.authSettings?.clientSecret || ''}
+            value={authSettings?.clientSecret || ''}
             placeholder={t(EntityPlaceholdersI18nKey.ClientSecret)}
-            onChange={(clientSecret) =>
-              onChange({
-                ...toolset,
-                authSettings: { ...(toolset.authSettings || {}), clientSecret } as ToolsetAuthSettings,
-              })
-            }
+            onChange={(clientSecret) => onChange({ ...(authSettings || {}), clientSecret })}
           />
           <Multiselect
             elementId="scopes"
-            selectedItems={toolset.authSettings.scopesSupported}
-            allItems={toolset.authSettings.scopesSupported}
+            selectedItems={authSettings.scopesSupported}
+            allItems={authSettings.scopesSupported}
             onChangeItems={(scopesSupported: string[]) => {
-              onChange({
-                ...toolset,
-                authSettings: { ...(toolset.authSettings || {}), scopesSupported } as ToolsetAuthSettings,
-              });
+              onChange({ ...(authSettings || {}), scopesSupported });
             }}
             heading={t(EntityFieldsI18nKey.scopes)}
             title={t(EntityFieldsI18nKey.scopes)}
@@ -104,27 +84,17 @@ const OAuthControls: FC<Props> = ({ toolset, onChange }) => {
           <EndpointControl
             id="authEndpoint"
             fieldTitle={t(EntityFieldsI18nKey.authorizationEndpoint)}
-            endpoint={toolset.authSettings?.authorizationEndpoint || ''}
+            endpoint={authSettings?.authorizationEndpoint || ''}
             placeholder={t(EntityPlaceholdersI18nKey.AuthorizationEndpoint)}
-            onChange={(authorizationEndpoint) =>
-              onChange({
-                ...toolset,
-                authSettings: { ...(toolset.authSettings || {}), authorizationEndpoint } as ToolsetAuthSettings,
-              })
-            }
+            onChange={(authorizationEndpoint) => onChange({ ...(authSettings || {}), authorizationEndpoint })}
           />
 
           <EndpointControl
             id="tokenEndpoint"
             fieldTitle={t(EntityFieldsI18nKey.tokenEndpoint)}
-            endpoint={toolset.authSettings?.tokenEndpoint || ''}
+            endpoint={authSettings?.tokenEndpoint || ''}
             placeholder={t(EntityPlaceholdersI18nKey.TokenEndpoint)}
-            onChange={(tokenEndpoint) =>
-              onChange({
-                ...toolset,
-                authSettings: { ...(toolset.authSettings || {}), tokenEndpoint } as ToolsetAuthSettings,
-              })
-            }
+            onChange={(tokenEndpoint) => onChange({ ...(authSettings || {}), tokenEndpoint })}
           />
         </div>
       )}
@@ -132,4 +102,4 @@ const OAuthControls: FC<Props> = ({ toolset, onChange }) => {
   );
 };
 
-export default OAuthControls;
+export default OAuthSection;

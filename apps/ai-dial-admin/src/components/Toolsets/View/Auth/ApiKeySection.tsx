@@ -7,10 +7,10 @@ import { ToolsetAuthSettings } from '@/src/models/dial/toolset';
 
 interface Props {
   authSettings?: ToolsetAuthSettings;
-  onChangeAuthSettings: (authSettings: ToolsetAuthSettings) => void;
+  onChange: (authSettings: ToolsetAuthSettings) => void;
 }
 
-const ApiKeySection: FC<Props> = ({ authSettings, onChangeAuthSettings }) => {
+const ApiKeySection: FC<Props> = ({ authSettings, onChange }) => {
   const t = useI18n();
 
   return (
@@ -20,9 +20,7 @@ const ApiKeySection: FC<Props> = ({ authSettings, onChangeAuthSettings }) => {
         fieldTitle={t(EntityFieldsI18nKey.apiKeyHeader)}
         placeholder={t(EntityPlaceholdersI18nKey.Value)}
         value={authSettings?.apiKeyHeader}
-        onChange={(apiKeyHeader) =>
-          onChangeAuthSettings({ ...(authSettings || {}), apiKeyHeader } as ToolsetAuthSettings)
-        }
+        onChange={(apiKeyHeader) => onChange({ ...(authSettings || {}), apiKeyHeader } as ToolsetAuthSettings)}
       />
     </div>
   );
