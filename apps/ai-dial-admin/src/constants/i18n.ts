@@ -437,7 +437,7 @@ export enum PublicationsI18nKey {
   FileUnpublishDeclineModalTitle = 'Publications.File.UnpublishDeclineModalTitle',
   FilePublishApproveDescription = 'Publications.File.PublishApproveDescription',
   FileUnpublishApproveDescription = 'Publications.File.UnpublishApproveDescription',
-  FilesListTitle = 'Publications.Files.FilesListTitle',
+  FilesListTitle = 'Publications.File.FilesListTitle',
   // application publications
   ApplicationPublishApproveModalTitle = 'Publications.Application.PublishApproveModalTitle',
   ApplicationPublishDeclineModalTitle = 'Publications.Application.PublishDeclineModalTitle',
