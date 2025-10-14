@@ -222,7 +222,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply 
       cssClass="h-[660px]"
       open={isModalOpen}
     >
-      <div className="flex px-6 py-4 flex-1 flex-col min-h-0">
+      <div className="flex px-6 py-4 h-full flex-col">
         <Steps steps={steps} currentStep={currentStep} setCurrentStep={setCurrentStep} />
         <div className={currentStep.id === ImportSteps.FILES ? 'flex flex-col flex-1 min-h-0' : 'hidden'}>
           <ImportFileTypeSelector

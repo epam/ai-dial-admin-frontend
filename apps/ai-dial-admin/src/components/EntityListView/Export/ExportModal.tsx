@@ -40,9 +40,9 @@ const ExportModal: FC<Props> = ({ isModalOpen, route, onClose, onApply }) => {
       title={route === ApplicationRoute.Prompts ? t(PromptsI18nKey.Export) : t(FoldersI18nKey.Export)}
       portalId="ExportModal"
       open={isModalOpen}
-      size={PopupSize.Lg}
+      size={PopupSize.Sm}
     >
-      <div className="flex px-6 py-6 flex-1 flex-col min-h-0">
+      <div className="flex px-6 py-6 h-full flex-col">
         <DialRadioGroup
           radioButtons={exportTypeRadio}
           activeRadioButton={exportType}

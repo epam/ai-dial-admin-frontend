@@ -97,7 +97,7 @@ const FolderCreateModal: FC<Props> = ({ isModalOpen, folderPath, view, onClose, 
         />
       }
     >
-      <div className="flex px-6 py-4 flex-1 flex-col min-h-0">
+      <div className="flex px-6 py-4 h-full flex-col">
         <Steps steps={steps} currentStep={currentStep} setCurrentStep={setCurrentStep} />
         <div
           className={
