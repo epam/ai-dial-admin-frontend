@@ -18,7 +18,6 @@ import { FileImportMap } from '@/src/models/file';
 import { ParsedPrompts } from '@/src/models/prompts';
 import { Step, StepStatus } from '@/src/models/step';
 import { ConflictResolutionPolicy, ImportFileType as FileType, ImportSteps } from '@/src/types/import';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import ImportConflicts from './ImportConflicts';
 import ImportFileTypeSelector from './ImportFileType';
@@ -27,7 +26,7 @@ import ImportModalButtons from './ImportModalButtons';
 const MAX_FILES_COUNT = 30;
 
 interface Props {
-  modalState: PopUpState;
+  isModalOpen: boolean;
   route?: ApplicationRoute;
   context?: () => AssetsFolderContext<DialFile>;
   onClose: () => void;
@@ -40,7 +39,7 @@ interface Props {
   ) => void;
 }
 
-const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }) => {
+const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply }) => {
   const containerClassName = classNames('h-[660px] lg:max-w-[45%]');
   const folderContext = context?.();
   const t = useI18n() as (stringToTranslate: string) => string;
@@ -223,7 +222,7 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
       onClose={onClose}
       heading={route === ApplicationRoute.Prompts ? t(PromptsI18nKey.Import) : t(FoldersI18nKey.Import)}
       portalId="ImportModal"
-      state={modalState}
+      state={isModalOpen}
       containerClassName={containerClassName}
     >
       <div className="flex px-6 py-4 flex-1 flex-col min-h-0">
