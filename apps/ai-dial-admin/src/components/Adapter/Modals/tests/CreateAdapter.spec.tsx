@@ -1,12 +1,11 @@
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
-import { PopUpState } from '@/src/types/pop-up';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import CreateAdapter from '../CreateAdapter';
 
 describe('CreateAdapter', () => {
   test('renders popup and adapter properties', () => {
-    render(<CreateAdapter modalState={PopUpState.Opened} onClose={vi.fn()} names={['adapter1']} />);
+    render(<CreateAdapter isModalOpen={true} onClose={vi.fn()} names={['adapter1']} />);
     expect(screen.getByText(CreateI18nKey.CreateAdapter)).toBeInTheDocument();
     expect(screen.getByText(ButtonsI18nKey.Cancel)).toBeInTheDocument();
     expect(screen.getByText(ButtonsI18nKey.Create)).toBeInTheDocument();
@@ -14,7 +13,7 @@ describe('CreateAdapter', () => {
 
   test('calls onClose when Cancel is clicked', () => {
     const onClose = vi.fn();
-    render(<CreateAdapter modalState={PopUpState.Opened} onClose={onClose} names={[]} />);
+    render(<CreateAdapter isModalOpen={true} onClose={onClose} names={[]} />);
     fireEvent.click(screen.getByText(ButtonsI18nKey.Cancel));
     expect(onClose).toHaveBeenCalled();
   });

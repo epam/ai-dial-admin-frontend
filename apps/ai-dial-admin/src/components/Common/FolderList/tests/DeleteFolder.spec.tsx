@@ -6,7 +6,7 @@ import { PopUpState } from '@/src/types/pop-up';
 
 describe('DeleteFolder', () => {
   const baseProps = {
-    modalState: PopUpState.Opened,
+    isModalOpen: true,
     onClose: vi.fn(),
     onApply: vi.fn(),
   };

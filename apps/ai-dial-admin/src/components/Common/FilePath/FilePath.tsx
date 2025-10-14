@@ -8,7 +8,6 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
-import { PopUpState } from '@/src/types/pop-up';
 import FilePathModal from './FilePathModal';
 
 interface Props {
@@ -24,7 +23,7 @@ interface Props {
 const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, onChange, context }) => {
   const t = useI18n();
   const [filePath, setFilePath] = useState(value);
-  const [filePathModalState, setFilePathModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const onInputChange = (event: ChangeEvent<HTMLInputElement>): void => {
     onPathChange(event.target.value);
@@ -36,12 +35,12 @@ const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, 
   };
 
   const onOpenFilePathModal = useCallback(() => {
-    setFilePathModalState(PopUpState.Opened);
-  }, [setFilePathModalState]);
+    setIsModalOpen(true);
+  }, [setIsModalOpen]);
 
   const onCloseFilePathModal = useCallback(() => {
-    setFilePathModalState(PopUpState.Closed);
-  }, [setFilePathModalState]);
+    setIsModalOpen(false);
+  }, [setIsModalOpen]);
 
   return (
     <div className="flex flex-col">
@@ -65,11 +64,11 @@ const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, 
           iconBefore={<IconFolderShare {...BASE_ICON_PROPS} />}
         />
       </div>
-      {filePathModalState === PopUpState.Opened &&
+      {isModalOpen &&
         createPortal(
           <FilePathModal
             modalTitle={modalTitle}
-            modalState={filePathModalState}
+            isModalOpen={isModalOpen}
             onClose={onCloseFilePathModal}
             onApply={onPathChange}
             initialPath={value}

@@ -1,9 +1,8 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import Popup from '@/src/components/Common/Popup/Popup';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMainProperties';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
@@ -13,7 +12,6 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { getErrorNotification } from '@/src/utils/notification';
@@ -31,7 +29,7 @@ interface CreatePromptEntity extends BaseEntity {
 
 interface Props<T> {
   route: ApplicationRoute;
-  modalState: PopUpState;
+  isModalOpen: boolean;
   names: string[];
   modalTitle: string;
   runners?: DialApplicationScheme[];
@@ -45,7 +43,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
   modalTitle,
   runners,
   route,
-  modalState,
+  isModalOpen,
   names,
   versionsMap,
   onClose,
@@ -146,7 +144,23 @@ const CreateEntity = <T extends CreatePromptEntity>({
   }, []);
 
   return (
-    <Popup onClose={onClose} heading={modalTitle} portalId="CreateEntity" state={modalState}>
+    <DialPopup
+      onClose={onClose}
+      title={modalTitle}
+      portalId="CreateEntity"
+      open={isModalOpen}
+      footer={
+        <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
+          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+          <DialButton
+            variant={ButtonVariant.Primary}
+            title={t(ButtonsI18nKey.Create)}
+            onClick={onCreate}
+            disable={(isUniqueNameError != null && !isUniqueNameError) || !isValid}
+          />
+        </div>
+      }
+    >
       <div className="flex flex-col overflow-auto px-6 py-4">
         {isSimpleEntity(route) ? (
           <SimpleEntityProperties
@@ -170,16 +184,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
           />
         )}
       </div>
-      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Create)}
-          onClick={onCreate}
-          disable={(isUniqueNameError != null && !isUniqueNameError) || !isValid}
-        />
-      </div>
-    </Popup>
+    </DialPopup>
   );
 };
 

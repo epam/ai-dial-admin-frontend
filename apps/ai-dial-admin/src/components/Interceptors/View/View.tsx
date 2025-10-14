@@ -65,7 +65,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, etag, 
   const [coreInterceptor, setCoreInterceptor] = useState<DialInterceptor | null>(null);
 
   useEffect(() => {
-    const name = (originalInterceptor as { name: string })?.name;
+    const name = originalInterceptor?.name;
     if (!coreInterceptor && name) {
       getCoreEntity(name, getExportType(ApplicationRoute.Interceptors)).then((data) => {
         setCoreInterceptor(getEntityFromFile(ApplicationRoute.Interceptors, name, data) as DialInterceptor);

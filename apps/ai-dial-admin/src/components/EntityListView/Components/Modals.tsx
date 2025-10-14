@@ -18,7 +18,6 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialFile } from '@/src/models/dial/file';
 import { ParsedPrompts } from '@/src/models/prompts';
 import { ImportFileType } from '@/src/types/import';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export enum ModalType {
@@ -37,7 +36,7 @@ interface Props {
   entity?: BaseEntity;
   route?: ApplicationRoute;
   initialPath?: string;
-  modalState: PopUpState;
+  isModalOpen: boolean;
   modalType?: ModalType;
   createModal?: ReactNode;
   duplicateModal?: ReactNode;
@@ -60,7 +59,7 @@ const Modals: FC<Props> = ({
   entity,
   route,
   initialPath,
-  modalState,
+  isModalOpen,
   modalType,
   createModal,
   duplicateModal,
@@ -76,14 +75,14 @@ const Modals: FC<Props> = ({
 
   return (
     <>
-      {modalState === PopUpState.Opened && modalType === ModalType.create && createPortal(createModal, document.body)}
-      {modalState === PopUpState.Opened &&
+      {isModalOpen && modalType === ModalType.create && createPortal(createModal, document.body)}
+      {isModalOpen &&
         modalType === ModalType.import &&
         createPortal(
           <ImportModal
             route={route}
             context={context}
-            modalState={modalState}
+            isModalOpen={isModalOpen}
             onClose={() => {
               handleClose();
             }}
@@ -92,7 +91,7 @@ const Modals: FC<Props> = ({
           document.body,
         )}
 
-      {modalState === PopUpState.Opened &&
+      {isModalOpen &&
         modalType === ModalType.delete &&
         createPortal(
           <DialConfirmationPopup
@@ -121,15 +120,13 @@ const Modals: FC<Props> = ({
           </DialConfirmationPopup>,
           document.body,
         )}
-      {modalState === PopUpState.Opened &&
-        modalType === ModalType.duplicate &&
-        createPortal(duplicateModal, document.body)}
-      {modalState === PopUpState.Opened &&
+      {isModalOpen && modalType === ModalType.duplicate && createPortal(duplicateModal, document.body)}
+      {isModalOpen &&
         modalType === ModalType.move &&
         createPortal(
           <FilePathModal
             modalTitle={t(BasicI18nKey.MoveToFolder)}
-            modalState={modalState}
+            isModalOpen={isModalOpen}
             onClose={handleClose}
             onApply={handleMove as () => void}
             initialPath={initialPath}
@@ -137,12 +134,12 @@ const Modals: FC<Props> = ({
           />,
           document.body,
         )}
-      {modalState === PopUpState.Opened &&
+      {isModalOpen &&
         modalType === ModalType.deleteBulk &&
         createPortal(
           <DeleteFolder
             view={route}
-            modalState={modalState}
+            isModalOpen={isModalOpen}
             onClose={handleClose}
             onApply={handleDeleteBulk}
             context={context}
@@ -150,10 +147,10 @@ const Modals: FC<Props> = ({
           />,
           document.body,
         )}
-      {modalState === PopUpState.Opened &&
+      {isModalOpen &&
         modalType === ModalType.export &&
         createPortal(
-          <ExportModal route={route} modalState={modalState} onClose={handleClose} onApply={handleExport} />,
+          <ExportModal route={route} isModalOpen={isModalOpen} onClose={handleClose} onApply={handleExport} />,
           document.body,
         )}
     </>
