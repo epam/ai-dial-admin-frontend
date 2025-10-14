@@ -55,6 +55,7 @@ const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings,
     setIsWithLogin(authSettings?.clientId ? AuthType.With_config_and_login : AuthType.Without_login);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
   const handleOnClick = useCallback(() => {
     onClick(config.id);
   }, [config.id, onClick]);
