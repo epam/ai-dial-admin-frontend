@@ -221,6 +221,14 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply 
       portalId="ImportModal"
       cssClass="h-[660px]"
       open={isModalOpen}
+      footer={
+        <ImportModalButtons
+          steps={steps}
+          currentStep={currentStep}
+          setCurrentStep={setCurrentStep}
+          onFinishClick={onFinishClick}
+        />
+      }
     >
       <div className="flex px-6 py-4 h-full flex-col">
         <Steps steps={steps} currentStep={currentStep} setCurrentStep={setCurrentStep} />
@@ -259,12 +267,6 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply 
           />
         )}
       </div>
-      <ImportModalButtons
-        steps={steps}
-        currentStep={currentStep}
-        setCurrentStep={setCurrentStep}
-        onFinishClick={onFinishClick}
-      />
     </DialPopup>
   );
 };
