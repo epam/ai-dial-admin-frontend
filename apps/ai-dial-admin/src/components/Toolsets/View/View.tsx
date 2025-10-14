@@ -66,7 +66,7 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   );
 
   useEffect(() => {
-    const name = (originalToolset as { name: string })?.name;
+    const name = originalToolset?.name;
     if (!coreToolset && name) {
       getCoreEntity(name, getExportType(ApplicationRoute.Toolsets)).then((data) => {
         setCoreToolset(getEntityFromFile(ApplicationRoute.Toolsets, name, data) as Toolset);
