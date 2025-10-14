@@ -26,7 +26,7 @@ interface Props {
 const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings, onChange }) => {
   const t = useI18n();
 
-  const [isWithLogin, setIsWithLogin] = useState(AuthType.With_login);
+  const [selectedAuthType, setSelectedAuthType] = useState(AuthType.With_login);
 
   const radioLogin: RadioButtonWithContent[] = useMemo(() => {
     const buttons = [
@@ -52,7 +52,7 @@ const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings,
   }, [config.id, t]);
 
   useEffect(() => {
-    setIsWithLogin(authSettings?.clientId ? AuthType.With_config_and_login : AuthType.Without_login);
+    setSelectedAuthType(authSettings?.clientId ? AuthType.With_config_and_login : AuthType.Without_login);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -61,7 +61,7 @@ const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings,
   }, [config.id, onClick]);
 
   const onChangeAuth = useCallback((value: string) => {
-    setIsWithLogin(value as AuthType);
+    setSelectedAuthType(value as AuthType);
   }, []);
 
   return (
@@ -87,7 +87,7 @@ const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings,
             onChange={onChangeAuth}
           />
 
-          {isWithLogin && (
+          {selectedAuthType === AuthType.With_login && (
             <>
               {config.id === ToolsetAuthType.API_KEY && (
                 <ApiKeySection authSettings={authSettings} onChange={onChange} />

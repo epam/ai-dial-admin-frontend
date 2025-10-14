@@ -2,10 +2,9 @@
 
 import { FC, useState } from 'react';
 
-import classNames from 'classnames';
+import { DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { CREATE_FOLDER_STEPS, CreateFolderSteps } from '@/src/components/Common/FolderCreate/constants';
-import Popup from '@/src/components/Common/Popup/Popup';
 import Steps from '@/src/components/Common/Steps/Steps';
 import { FoldersI18nKey } from '@/src/constants/i18n';
 import { IMPORT_FILE_TYPES } from '@/src/constants/import';
@@ -16,7 +15,6 @@ import { FileImportMap } from '@/src/models/file';
 import { ParsedPrompts } from '@/src/models/prompts';
 import { Step } from '@/src/models/step';
 import { ImportFileType } from '@/src/types/import';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import FolderCreateModalButtons from './FolderCreateModalButtons';
 import FolderCreatePermissions from './FolderCreatePermissions';
@@ -24,7 +22,7 @@ import FolderCreateReview from './FolderCreateReview';
 import FolderCreateSetup from './FolderCreateSetup';
 
 interface Props {
-  modalState: PopUpState;
+  isModalOpen: boolean;
   folderPath?: string;
   view?: ApplicationRoute;
   onClose: () => void;
@@ -37,8 +35,7 @@ interface Props {
   ) => void;
 }
 
-const FolderCreateModal: FC<Props> = ({ modalState, folderPath, view, onClose, onApply }) => {
-  const containerClassName = classNames('h-[660px] lg:max-w-[65%]');
+const FolderCreateModal: FC<Props> = ({ isModalOpen, folderPath, view, onClose, onApply }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
 
   const fileTypes = IMPORT_FILE_TYPES(t, view);
@@ -83,12 +80,22 @@ const FolderCreateModal: FC<Props> = ({ modalState, folderPath, view, onClose, o
   };
 
   return (
-    <Popup
+    <DialPopup
       onClose={onClose}
-      heading={t(FoldersI18nKey.FolderCreate)}
+      title={t(FoldersI18nKey.FolderCreate)}
       portalId="CreateFolder"
-      state={modalState}
-      containerClassName={containerClassName}
+      open={isModalOpen}
+      cssClass="h-[660px]"
+      size={PopupSize.Lg}
+      footer={
+        <FolderCreateModalButtons
+          steps={steps}
+          currentStep={currentStep}
+          setCurrentStep={setCurrentStep}
+          onFinishClick={onFinishClick}
+          onClose={onClose}
+        />
+      }
     >
       <div className="flex px-6 py-4 flex-1 flex-col min-h-0">
         <Steps steps={steps} currentStep={currentStep} setCurrentStep={setCurrentStep} />
@@ -142,15 +149,7 @@ const FolderCreateModal: FC<Props> = ({ modalState, folderPath, view, onClose, o
           />
         </div>
       </div>
-
-      <FolderCreateModalButtons
-        steps={steps}
-        currentStep={currentStep}
-        setCurrentStep={setCurrentStep}
-        onFinishClick={onFinishClick}
-        onClose={onClose}
-      />
-    </Popup>
+    </DialPopup>
   );
 };
 

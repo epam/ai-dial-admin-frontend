@@ -1,10 +1,8 @@
 import { FC, useCallback, useMemo, useState } from 'react';
-import { ButtonVariant, DialButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialPopup, DialTextInputField } from '@epam/ai-dial-ui-kit';
 
-import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { PopUpState } from '@/src/types/pop-up';
 import { getFolderName } from '@/src/utils/files/folder';
 import { changeFolderName } from '@/src/utils/files/path';
 import { getErrorForFolderName } from '@/src/utils/validation/folder-error';
@@ -12,12 +10,12 @@ import { getErrorForFolderName } from '@/src/utils/validation/folder-error';
 interface Props {
   currentPath: string;
   siblings?: string[];
-  modalState: PopUpState;
+  isModalOpen: boolean;
   onClose: () => void;
   onApply: (name: string) => void;
 }
 
-const RenameFolder: FC<Props> = ({ currentPath, siblings = [], modalState, onClose, onApply }) => {
+const RenameFolder: FC<Props> = ({ currentPath, siblings = [], isModalOpen, onClose, onApply }) => {
   const t = useI18n() as (str: string) => string;
   const [newName, setNewName] = useState(getFolderName(currentPath) || '');
   const [isDisabled, setIsDisabled] = useState(true);
@@ -40,12 +38,23 @@ const RenameFolder: FC<Props> = ({ currentPath, siblings = [], modalState, onClo
   );
 
   return (
-    <Popup
+    <DialPopup
       onClose={onClose}
-      heading={t(FoldersI18nKey.Rename)}
+      title={t(FoldersI18nKey.Rename)}
       portalId="FolderRename"
-      state={modalState}
+      open={isModalOpen}
       dividers={true}
+      footer={
+        <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
+          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+          <DialButton
+            variant={ButtonVariant.Primary}
+            title={t(ButtonsI18nKey.Apply)}
+            onClick={() => onApply(changeFolderName(currentPath || '', newName))}
+            disable={isDisabled}
+          />
+        </div>
+      }
     >
       <div className="px-6 py-4">
         <DialTextInputField
@@ -58,17 +67,7 @@ const RenameFolder: FC<Props> = ({ currentPath, siblings = [], modalState, onClo
           invalid={!!errorText}
         />
       </div>
-
-      <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Apply)}
-          onClick={() => onApply(changeFolderName(currentPath || '', newName))}
-          disable={isDisabled}
-        />
-      </div>
-    </Popup>
+    </DialPopup>
   );
 };
 
