@@ -39,6 +39,6 @@ export enum TypeEntity {
 }
 
 export enum TypeBucketCopy {
-  DISABLED = 'disabled',
-  ENABLED = 'enabled',
+  DISABLED = 'DISABLED',
+  ENABLED = 'ENABLED',
 }
