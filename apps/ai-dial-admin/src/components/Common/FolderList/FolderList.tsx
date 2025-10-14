@@ -22,7 +22,6 @@ import { RuleFolderContextType } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
 import { addTrailingSlash, getFolderNameAndPath, isFolder } from '@/src/utils/files/path';
@@ -54,7 +53,7 @@ const FolderList: FC<Props> = ({
   const t = useI18n();
   const folderContext = context?.();
 
-  const [modalState, setModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType | undefined>(void 0);
 
   const [selectedFolder, setSelectedFolder] = useState<string>();
@@ -92,13 +91,13 @@ const FolderList: FC<Props> = ({
   };
 
   const handleModalClose = useCallback(() => {
-    setModalState(PopUpState.Closed);
+    setIsModalOpen(false);
     setModalType(void 0);
   }, []);
 
   const handleModalOpen = useCallback((modalType: ModalType) => {
     setModalType(modalType);
-    setModalState(PopUpState.Opened);
+    setIsModalOpen(true);
   }, []);
 
   const openFolderStorage = (path: string) => {
@@ -262,7 +261,7 @@ const FolderList: FC<Props> = ({
       )}
       <FolderListModals
         view={view}
-        modalState={modalState}
+        isModalOpen={isModalOpen}
         modalType={modalType}
         selectedFolder={selectedFolder}
         context={context as () => AssetsFolderContext<DialFile>}

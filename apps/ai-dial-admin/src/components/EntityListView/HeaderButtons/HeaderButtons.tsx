@@ -30,7 +30,6 @@ import { ImportResult } from '@/src/models/import';
 import { ParsedPrompts } from '@/src/models/prompts';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
 import { getErrorNotification, getPrepareNotification } from '@/src/utils/notification';
@@ -72,17 +71,17 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
   const { showNotification, removeNotification } = useNotification();
 
   const folderContext = context?.();
-  const [modalState, setModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType>();
   const isTabletScreen = useIsTabletScreen();
   const handleModalClose = useCallback(() => {
-    setModalState(PopUpState.Closed);
+    setIsModalOpen(false);
     setModalType(void 0);
   }, []);
 
   const handleModalOpen = useCallback((modalType: ModalType) => {
     setModalType(modalType);
-    setModalState(PopUpState.Opened);
+    setIsModalOpen(true);
   }, []);
 
   const onImport = useCallback(
@@ -137,13 +136,13 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
 
   const getCreateModal = () => {
     if (route === ApplicationRoute.ApplicationRunners) {
-      return <CreateAppRunner modalState={modalState} onClose={handleModalClose} route={route} />;
+      return <CreateAppRunner isModalOpen={isModalOpen} onClose={handleModalClose} route={route} />;
     }
 
     if (route === ApplicationRoute.InterceptorTemplates) {
       return (
         <CreateInterceptorTemplate
-          modalState={modalState}
+          isModalOpen={isModalOpen}
           onClose={handleModalClose}
           route={route}
           names={names || []}
@@ -151,18 +150,18 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
       );
     }
     if (route === ApplicationRoute.Adapters) {
-      return <CreateAdapter modalState={modalState} onClose={handleModalClose} names={names || []} />;
+      return <CreateAdapter isModalOpen={isModalOpen} onClose={handleModalClose} names={names || []} />;
     }
 
     if (route === ApplicationRoute.Keys) {
-      return <CreateKey modalState={modalState} onClose={handleModalClose} names={names || []} keys={keys || []} />;
+      return <CreateKey isModalOpen={isModalOpen} onClose={handleModalClose} names={names || []} keys={keys || []} />;
     }
     return (
       <CreateEntity
         route={route}
         runners={runners}
         modalTitle={t(createModalTitleMap[route])}
-        modalState={modalState}
+        isModalOpen={isModalOpen}
         createEntity={createEntity}
         onClose={handleModalClose}
         names={names || []}
@@ -213,7 +212,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
 
       <Modals
         route={route}
-        modalState={modalState}
+        isModalOpen={isModalOpen}
         modalType={modalType}
         createModal={<SaveValidationContextProvider>{getCreateModal()}</SaveValidationContextProvider>}
         handleImport={onImport}

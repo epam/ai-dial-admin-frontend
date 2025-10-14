@@ -1,13 +1,11 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
-import classNames from 'classnames';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { DialNoDataContent, DialCollapsibleSidebar } from '@epam/ai-dial-ui-kit';
 
 import FolderList from '@/src/components/Common/FolderList/FolderList';
 import { generatePromptRowDataForDelete } from '@/src/components/Common/FolderList/utils';
-import Popup from '@/src/components/Common/Popup/Popup';
 import { listViewTitleMap } from '@/src/components/EntityListView/constants';
 import TopicsCellRenderer from '@/src/components/Grid/CellRenderers/TopicCellRenderer';
 import Grid from '@/src/components/Grid/Grid';
@@ -16,11 +14,10 @@ import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
-  modalState: PopUpState;
+  isModalOpen: boolean;
   view?: ApplicationRoute;
   selectedFolder?: string;
   isBulkDelete?: boolean;
@@ -29,9 +26,8 @@ interface Props {
   onApply?: () => void;
 }
 
-const DeleteFolder: FC<Props> = ({ modalState, view, selectedFolder, isBulkDelete, context, onClose, onApply }) => {
+const DeleteFolder: FC<Props> = ({ isModalOpen, view, selectedFolder, isBulkDelete, context, onClose, onApply }) => {
   const t = useI18n() as (s: string, params?: Record<string, string>) => string;
-  const containerClassName = classNames('h-[750px] lg:max-w-[65%]');
 
   const folderContext = context?.();
   const filePath = folderContext?.filePath as string;
@@ -86,14 +82,29 @@ const DeleteFolder: FC<Props> = ({ modalState, view, selectedFolder, isBulkDelet
   }, [filePath, folderContext, folderContext?.fetchedFoldersData, isBulkDelete]);
 
   return (
-    <Popup
+    <DialPopup
       onClose={onClose}
-      heading={t(FoldersI18nKey.DeleteFolder)}
+      title={t(FoldersI18nKey.DeleteFolder)}
       portalId="DeleteFolder"
-      state={modalState}
-      containerClassName={containerClassName}
+      open={isModalOpen}
+      size={PopupSize.Lg}
+      cssClass="h-[750px]"
+      footer={
+        <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
+          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+          <DialButton
+            variant={ButtonVariant.Primary}
+            title={t(ButtonsI18nKey.Delete)}
+            onClick={() => {
+              onApply?.();
+              onClose();
+            }}
+            disable={false}
+          />
+        </div>
+      }
     >
-      <div className="flex flex-col gap-4 px-6 py-4 flex-1 min-h-0">
+      <div className="flex flex-col gap-4 px-6 py-4 h-full">
         <div className="text-secondary text-sm">
           {t(FoldersI18nKey.DeleteFolderDescription, { asset: t(asset).toLowerCase() })}
         </div>
@@ -119,19 +130,7 @@ const DeleteFolder: FC<Props> = ({ modalState, view, selectedFolder, isBulkDelet
           </div>
         </div>
       </div>
-      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Delete)}
-          onClick={() => {
-            onApply?.();
-            onClose();
-          }}
-          disable={false}
-        />
-      </div>
-    </Popup>
+    </DialPopup>
   );
 };
 

@@ -1,10 +1,9 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 
 import { ApplicationRoute } from '@/src/types/routes';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
-import { PopUpState } from '@/src/types/pop-up';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { useI18n } from '@/src/locales/client';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
@@ -12,18 +11,17 @@ import { getErrorNotification } from '@/src/utils/notification';
 import { createInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { useNotification } from '@/src/context/NotificationContext';
 
-import Popup from '@/src/components/Common/Popup/Popup';
 import BaseProperties from '@/src/components/InterceptorTemplates/Properties/BaseProperties';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   route: ApplicationRoute;
   names: string[];
-  modalState: PopUpState;
+  isModalOpen: boolean;
   onClose: () => void;
 }
 
-const Create: FC<Props> = ({ route, onClose, modalState, names }) => {
+const Create: FC<Props> = ({ route, onClose, isModalOpen, names }) => {
   const t = useI18n() as (t: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -54,25 +52,27 @@ const Create: FC<Props> = ({ route, onClose, modalState, names }) => {
   }, []);
 
   return (
-    <Popup
+    <DialPopup
       onClose={onClose}
-      heading={t(CreateI18nKey.CreateInterceptorTemplate)}
-      portalId="CreateRunner"
-      state={modalState}
+      title={t(CreateI18nKey.CreateInterceptorTemplate)}
+      portalId="CreateInterceptorTemplate"
+      open={isModalOpen}
+      footer={
+        <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
+          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+          <DialButton
+            variant={ButtonVariant.Primary}
+            title={t(ButtonsI18nKey.Create)}
+            onClick={onCreate}
+            disable={!isValid}
+          />
+        </div>
+      }
     >
       <div className="flex flex-col px-6 py-4">
         <BaseProperties template={template} setTemplate={setTemplate} names={names} />
       </div>
-      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Create)}
-          onClick={onCreate}
-          disable={!isValid}
-        />
-      </div>
-    </Popup>
+    </DialPopup>
   );
 };
 

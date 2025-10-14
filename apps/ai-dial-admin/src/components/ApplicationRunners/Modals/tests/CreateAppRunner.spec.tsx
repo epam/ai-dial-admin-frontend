@@ -5,7 +5,7 @@ import { ButtonsI18nKey, CreateI18nKey, EntityPlaceholdersI18nKey } from '@/src/
 
 describe('CreateAppRunner', () => {
   const baseProps = {
-    modalState: 'Opened',
+    isModalOpen: true,
     onClose: vi.fn(),
     route: '/app/application-runners',
   };

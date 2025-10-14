@@ -25,7 +25,6 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
@@ -44,7 +43,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isChanged, setIsChanged] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(cloneDeep(template));
-  const [createModalState, setCreateModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const tabs = [propertiesTabs(t), interceptorsTabs(t), auditTabs(t)];
 
@@ -108,7 +107,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
             variant={ButtonVariant.Secondary}
             title={`${t(ButtonsI18nKey.Create)} ${t(DeleteI18nKey.Interceptor).toLowerCase()}`}
             iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-            onClick={() => setCreateModalState(PopUpState.Opened)}
+            onClick={() => setIsModalOpen(true)}
           />
         </HeaderButtons>
       </div>
@@ -125,14 +124,14 @@ const View: FC<Props> = ({ etag, template, names }) => {
         {activeTab === EntityViewTab.Audit && (
           <EntityAudit entity={selectedTemplate} view={ApplicationRoute.InterceptorTemplates} />
         )}
-        {createModalState === PopUpState.Opened &&
+        {isModalOpen &&
           createPortal(
             <CreateEntity
               route={ApplicationRoute.Interceptors}
               modalTitle={t(createModalTitleMap[ApplicationRoute.Interceptors])}
-              modalState={createModalState}
+              isModalOpen={isModalOpen}
               createEntity={createInterceptor}
-              onClose={() => setCreateModalState(PopUpState.Closed)}
+              onClose={() => setIsModalOpen(false)}
               names={names || []}
               initialValues={source}
             />,

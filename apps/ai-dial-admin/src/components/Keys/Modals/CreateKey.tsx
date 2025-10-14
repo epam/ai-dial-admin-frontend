@@ -1,28 +1,26 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 
 import { createKey } from '@/src/app/[lang]/keys/actions';
-import Popup from '@/src/components/Common/Popup/Popup';
 import KeyProperties from '@/src/components/Keys/View/Properties/Properties';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
 interface Props {
-  modalState: PopUpState;
+  isModalOpen: boolean;
   names: string[];
   keys: string[];
   onClose: () => void;
 }
 
-const CreateKey: FC<Props> = ({ modalState, names, keys, onClose }) => {
+const CreateKey: FC<Props> = ({ isModalOpen, names, keys, onClose }) => {
   const t = useI18n();
   const router = useRouter();
 
@@ -69,20 +67,27 @@ const CreateKey: FC<Props> = ({ modalState, names, keys, onClose }) => {
   }, []);
 
   return (
-    <Popup onClose={onClose} heading={t(CreateI18nKey.Key)} portalId="CreateKey" state={modalState}>
+    <DialPopup
+      onClose={onClose}
+      title={t(CreateI18nKey.Key)}
+      portalId="CreateKey"
+      open={isModalOpen}
+      footer={
+        <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
+          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+          <DialButton
+            variant={ButtonVariant.Primary}
+            title={t(ButtonsI18nKey.Create)}
+            onClick={onCreate}
+            disable={!isValid || !isValidKey}
+          />
+        </div>
+      }
+    >
       <div className="flex flex-col px-6 py-4">
         <KeyProperties entity={currentKey} names={names} keys={keys} onChangeKey={onChangeKey} />
       </div>
-      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Create)}
-          onClick={onCreate}
-          disable={!isValid || !isValidKey}
-        />
-      </div>
-    </Popup>
+    </DialPopup>
   );
 };
 
