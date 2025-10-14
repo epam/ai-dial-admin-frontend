@@ -35,7 +35,7 @@ const OAuthSection: FC<Props> = ({ authSettings, onChange }) => {
           containerCssClass="w-[192px]"
           elementId="type"
           fieldTitle={t(ToolsetI18nKey.ClientRegistrationType)}
-          selectedValue={authSettings?.clientId == null ? AuthType.DYNAMIC : AuthType.EXISTING}
+          selectedValue={AuthType.EXISTING}
           items={types}
           onChange={(type: string) => {
             onChange({

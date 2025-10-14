@@ -52,7 +52,12 @@ const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings,
   }, [config.id, t]);
 
   useEffect(() => {
-    setSelectedAuthType(authSettings?.clientId ? AuthType.With_config_and_login : AuthType.Without_login);
+    const value = authSettings?.clientId
+      ? AuthType.With_config_and_login
+      : config.id === ToolsetAuthType.API_KEY
+        ? AuthType.Without_login
+        : AuthType.With_login;
+    setSelectedAuthType(value);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -81,20 +86,17 @@ const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings,
         <div className="flex flex-col gap-4 border-t border-tertiary p-4">
           <DialRadioGroup
             elementId="auth"
-            activeRadioButton={radioLogin[0].id}
+            activeRadioButton={selectedAuthType}
             orientation={RadioGroupOrientation.Row}
             radioButtons={radioLogin}
             onChange={onChangeAuth}
           />
+          {selectedAuthType === AuthType.With_login && config.id === ToolsetAuthType.API_KEY && (
+            <ApiKeySection authSettings={authSettings} onChange={onChange} />
+          )}
 
-          {selectedAuthType === AuthType.With_login && (
-            <>
-              {config.id === ToolsetAuthType.API_KEY && (
-                <ApiKeySection authSettings={authSettings} onChange={onChange} />
-              )}
-
-              {config.id === ToolsetAuthType.OAUTH && <OAuthSection authSettings={authSettings} onChange={onChange} />}
-            </>
+          {selectedAuthType === AuthType.With_config_and_login && config.id === ToolsetAuthType.OAUTH && (
+            <OAuthSection authSettings={authSettings} onChange={onChange} />
           )}
         </div>
       )}
