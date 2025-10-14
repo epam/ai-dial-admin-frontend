@@ -2,12 +2,11 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import RenameFolder from '../Modals/RenameFolder';
 import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
-import { PopUpState } from '@/src/types/pop-up';
 
 describe('RenameFolder', () => {
   const baseProps = {
     currentPath: 'path',
-    modalState: PopUpState.Opened,
+    isModalOpen: true,
     onClose: vi.fn(),
     onApply: vi.fn(),
   };

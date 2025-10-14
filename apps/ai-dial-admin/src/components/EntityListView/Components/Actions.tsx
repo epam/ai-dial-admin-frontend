@@ -208,7 +208,7 @@ const Actions = <T extends object>({
           entity={currentEntity}
           route={route}
           initialPath={(currentEntity as DialPrompt)?.folderId}
-          modalState={modalState}
+          isModalOpen={modalState === PopUpState.Opened}
           modalType={modalType}
           duplicateModal={getDuplicateModal(
             currentEntity,
