@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import Popup from '@/src/components/Common/Popup/Popup';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMainProperties';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';

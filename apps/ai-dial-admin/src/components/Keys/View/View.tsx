@@ -76,7 +76,6 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
     const name = originalKey?.name;
     if (!coreKey && name) {
       getCoreEntity(name, getExportType(ApplicationRoute.Keys)).then((data) => {
-        console.log(data);
         setCoreKey(getEntityFromFile(ApplicationRoute.Keys, name, data) as DialKey);
       });
     }

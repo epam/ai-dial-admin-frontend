@@ -3,7 +3,6 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { ApplicationRoute } from '@/src/types/routes';
-import { PopUpState } from '@/src/types/pop-up';
 
 import Create from '../Create';
 
@@ -23,7 +22,7 @@ describe('Create InterceptorTemplate Modal', () => {
     render(
       <Create
         route={ApplicationRoute.InterceptorTemplates}
-        modalState={PopUpState.Opened}
+        isModalOpen={true}
         onClose={onCloseMock}
         names={['a', 'b']}
       />,
@@ -39,7 +38,7 @@ describe('Create InterceptorTemplate Modal', () => {
     render(
       <Create
         route={ApplicationRoute.InterceptorTemplates}
-        modalState={PopUpState.Opened}
+        isModalOpen={true}
         onClose={onCloseMock}
         names={['a', 'b']}
       />,
@@ -50,27 +49,4 @@ describe('Create InterceptorTemplate Modal', () => {
 
     expect(onCloseMock).toHaveBeenCalled();
   });
-
-  // test('Should call createInterceptorTemplate on Create button click', async () => {
-  //   const onCloseMock = vi.fn();
-  //   render(
-  //     <Create
-  //       route={ApplicationRoute.InterceptorTemplates}
-  //       modalState={PopUpState.Opened}
-  //       onClose={onCloseMock}
-  //       names={['a', 'b']}
-  //     />,
-  //   );
-
-  //   await userEvent.type(screen.getByPlaceholderText('CreateEntity.id.placeholder'), 'new-id');
-  //   await userEvent.type(screen.getByPlaceholderText('CreateEntity.name.placeholder'), 'New Name');
-  //   await userEvent.type(screen.getByPlaceholderText('CreateEntity.description.placeholder'), 'Some description');
-
-  //   const createButton = screen.getByRole('button', { name: 'Buttons.Create' });
-  //   await userEvent.click(createButton);
-
-  //   expect(createInterceptorTemplate).toHaveBeenCalled();
-  //   expect(pushMock).toHaveBeenCalled();
-  //   expect(onCloseMock).toHaveBeenCalled();
-  // });
 });
