@@ -67,7 +67,7 @@ const Modals: FC<Props> = ({
   handleDeleteBulk,
   handleClose,
   context,
-  ...props
+  removeEntity,
 }) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
 
@@ -95,7 +95,7 @@ const Modals: FC<Props> = ({
             view={route}
             onCloseModal={handleClose}
             context={context}
-            {...props}
+            removeEntity={removeEntity as (entity: string) => Promise<ServerActionResponse>}
           />,
           document.body,
         )}
