@@ -15,7 +15,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getConfirmation, getNotificationDescription, getNotificationTitle, getTitle } from './utils';
-import { isAssetView } from '@/src/utils/is-asset-view';
+import { isAssetView, isBuildersView } from '@/src/utils/is-asset-view';
 import RelatedArtefacts from './RelatedArtefact';
 
 interface Artefact {
@@ -48,12 +48,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
   const router = useRouter();
   const { showNotification } = useNotification();
   const folderContext = context?.();
-  const modalSize =
-    view === ApplicationRoute.ApplicationRunners ||
-    view === ApplicationRoute.Adapters ||
-    view === ApplicationRoute.InterceptorTemplates
-      ? PopupSize.Md
-      : PopupSize.Sm;
+  const modalSize = isBuildersView(view) ? PopupSize.Md : PopupSize.Sm;
 
   const showSuccessNotification = useCallback(
     (entityKey: string) => {
@@ -109,11 +104,11 @@ const DeleteConfirmationModal = <T extends Artefact>({
       <div className="h-full flex flex-col gap-y-4 px-6 py-2 w-full">
         <span className="text-secondary dial-small">{getConfirmation(view, t)}</span>
         <div className="flex flex-col gap-y-2">
-          <div className="text-primary dial-small">
-            <span className="text-secondary">{t(EntityFieldsI18nKey.id)}:</span>{' '}
+          <div className="text-primary dial-small flex flex-row items-center gap-x-1">
+            <span className="text-secondary">{t(EntityFieldsI18nKey.id)}:</span>
             <DialEllipsisTooltip text={entity.name || entity.$id} />
           </div>
-          <div className="text-primary dial-small">
+          <div className="text-primary dial-small flex flex-row items-center gap-x-1">
             <span className="text-secondary">{t(EntityFieldsI18nKey.displayName)}:</span>
             <DialEllipsisTooltip text={entity.displayName || entity['dial:applicationTypeDisplayName']} />
           </div>
@@ -123,7 +118,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
             </div>
           )}
         </div>
-        <RelatedArtefacts entity={entity} view={view} />
+        {isBuildersView(view) && <RelatedArtefacts entity={entity} view={view} />}
       </div>
     </DialConfirmationPopup>
   );
