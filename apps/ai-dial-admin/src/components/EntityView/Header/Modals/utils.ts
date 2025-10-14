@@ -1,5 +1,9 @@
 import { DeleteI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getApplications } from '@/src/app/[lang]/applications/actions';
+import { BaseEntity } from '@/src/models/dial/base-entity';
+import { getModels } from '@/src/app/[lang]/models/actions';
+import { getInterceptorsList } from '@/src/app/[lang]/interceptors/actions';
 
 const deleteEntityMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.Models]: DeleteI18nKey.Model,
@@ -9,15 +13,13 @@ const deleteEntityMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.Toolsets]: DeleteI18nKey.Toolsets,
   [ApplicationRoute.Interceptors]: DeleteI18nKey.Interceptor,
   [ApplicationRoute.Routes]: DeleteI18nKey.Route,
-  // TODO: Add all r
-
-  [ApplicationRoute.ApplicationRunners]: DeleteI18nKey.ApplicationRunnerTitle,
+  [ApplicationRoute.ApplicationRunners]: DeleteI18nKey.ApplicationRunner,
   [ApplicationRoute.Keys]: DeleteI18nKey.Key,
   [ApplicationRoute.Roles]: DeleteI18nKey.Role,
   [ApplicationRoute.Prompts]: DeleteI18nKey.Prompt,
   [ApplicationRoute.Files]: DeleteI18nKey.File,
-  [ApplicationRoute.Adapters]: DeleteI18nKey.AdapterTitle,
-  [ApplicationRoute.InterceptorTemplates]: DeleteI18nKey.InterceptorTemplateTitle,
+  [ApplicationRoute.Adapters]: DeleteI18nKey.Adapter,
+  [ApplicationRoute.InterceptorTemplates]: DeleteI18nKey.InterceptorTemplate,
 };
 
 export const getTitle = (view: ApplicationRoute, t: (str: string, props?: Record<string, string>) => string) => {
@@ -41,4 +43,89 @@ export const getNotificationDescription = (
   t: (str: string, props?: Record<string, string>) => string,
 ) => {
   return t(DeleteI18nKey.NotificationDescription, { entity: t(deleteEntityMap[view]), entityId });
+};
+
+export const getWarningText = (view: ApplicationRoute, t: (str: string) => string) => {
+  switch (view) {
+    case ApplicationRoute.ApplicationRunners:
+      return t(DeleteI18nKey.ApplicationRunnerWarning);
+    case ApplicationRoute.InterceptorTemplates:
+      return t(DeleteI18nKey.InterceptorTemplateWarning);
+    case ApplicationRoute.Adapters:
+      return t(DeleteI18nKey.AdapterWarning);
+    default:
+      return '';
+  }
+};
+
+export const getRelatedText = (view: ApplicationRoute, t: (str: string) => string) => {
+  switch (view) {
+    case ApplicationRoute.ApplicationRunners:
+      return t(DeleteI18nKey.RelatedApplications);
+    case ApplicationRoute.InterceptorTemplates:
+      return t(DeleteI18nKey.RelatedInterceptors);
+    case ApplicationRoute.Adapters:
+      return t(DeleteI18nKey.RelatedModels);
+    default:
+      return '';
+  }
+};
+
+export const getNoRelatedText = (view: ApplicationRoute, t: (str: string) => string) => {
+  switch (view) {
+    case ApplicationRoute.ApplicationRunners:
+      return t(DeleteI18nKey.NoApplications);
+    case ApplicationRoute.InterceptorTemplates:
+      return t(DeleteI18nKey.NoInterceptors);
+    case ApplicationRoute.Adapters:
+      return t(DeleteI18nKey.NoModels);
+    default:
+      return '';
+  }
+};
+
+const getRelatedApplications = (entity: { applications?: string[] }) => {
+  return getApplications().then((res) => {
+    return res?.reduce((acc, curr) => {
+      if (entity.applications?.includes(curr.name as string)) {
+        acc.push(curr);
+      }
+      return acc;
+    }, [] as BaseEntity[]);
+  });
+};
+
+const getRelatedModels = (entity: { models?: string[] }) => {
+  return getModels().then((res) => {
+    return res?.reduce((acc, curr) => {
+      if (entity.models?.includes(curr.name as string)) {
+        acc.push(curr);
+      }
+      return acc;
+    }, [] as BaseEntity[]);
+  });
+};
+
+const getRelatedInterceptors = (entity: { interceptors?: string[] }) => {
+  return getInterceptorsList().then((res) => {
+    return res?.reduce((acc, curr) => {
+      if (entity.interceptors?.includes(curr.name as string)) {
+        acc.push(curr);
+      }
+      return acc;
+    }, [] as BaseEntity[]);
+  });
+};
+
+export const getRelatedArtifacts = (view: ApplicationRoute, entity: BaseEntity) => {
+  switch (view) {
+    case ApplicationRoute.ApplicationRunners:
+      return getRelatedApplications(entity as { applications?: string[] });
+    case ApplicationRoute.Adapters:
+      return getRelatedModels(entity as { models?: string[] });
+    case ApplicationRoute.InterceptorTemplates:
+      return getRelatedInterceptors(entity as { interceptors?: string[] });
+    default:
+      return Promise.resolve([]);
+  }
 };

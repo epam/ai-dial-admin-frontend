@@ -20,6 +20,8 @@ const ONLY_ADMIN_ENTITIES = [
   ApplicationRoute.InterceptorTemplates,
   ApplicationRoute.Prompts,
   ApplicationRoute.Files,
+  ApplicationRoute.AssetsApplications,
+  ApplicationRoute.AssetsToolsets,
 ];
 
 interface Props {

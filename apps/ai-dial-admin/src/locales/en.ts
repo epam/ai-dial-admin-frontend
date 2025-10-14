@@ -170,23 +170,16 @@ export default {
   DeleteEntity: {
     Title: 'Confirm Deleting {entity}',
     Confirming: 'Are you sure that you want to delete {entity}?',
-    ApplicationRunner: {
-      Title: 'Application Runner',
-      DescriptionWarning: 'This Application Runner and all related Applications will be deleted permanently.',
-      ApplicationsTitle: 'Related Applications',
-      NoApplicationsTitle: 'No related Applications',
-    },
-    InterceptorTemplate: {
-      Title: 'Interceptor Template',
-      DescriptionWarning: 'This Interceptor Template and all related Interceptors will be deleted permanently.',
-      InterceptorsTitle: 'Related Interceptors',
-      NoInterceptorsTitle: 'No related Interceptors',
-    },
-    Adapter: {
-      Title: 'Adapter',
-      DescriptionWarning: 'This Adapter and all related Models will be deleted permanently.',
-      ModelsTitle: 'Related Models',
-      NoModelsTitle: 'No related Models',
+    NoRelatedArtefacts: {
+      InterceptorTemplateWarning: 'This Interceptor Template and all related Interceptors will be deleted permanently.',
+      AdapterWarning: 'This Adapter and all related Models will be deleted permanently.',
+      ApplicationRunnerWarning: 'This Application Runner and all related Applications will be deleted permanently.',
+      NoApplications: 'No related Applications',
+      NoInterceptors: 'No related Interceptors',
+      NoModels: 'No related Models',
+      RelatedApplications: 'Related Applications',
+      RelatedInterceptors: 'Related Interceptors',
+      RelatedModels: 'Related Models',
     },
     Notification: {
       Title: '{entity} deleted successfully',
@@ -203,6 +196,8 @@ export default {
       Prompt: 'Prompt',
       File: 'File',
       Adapter: 'Adapter',
+      InterceptorTemplate: 'Interceptor Template',
+      ApplicationRunner: 'Application Runner',
     },
   },
   DuplicateEntity: {

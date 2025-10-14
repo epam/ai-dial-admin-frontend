@@ -3,12 +3,9 @@
 import { useCallback } from 'react';
 
 import { useRouter } from 'next/navigation';
-import { ConfirmationPopupVariant, DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopupVariant, DialConfirmationPopup, DialEllipsisTooltip, PopupSize } from '@epam/ai-dial-ui-kit';
 
-import DeleteAdapter from '@/src/components/Adapter/Modals/DeleteAdapter';
-import DeleteAppRunner from '@/src/components/ApplicationRunners/Modals/DeleteAppRunner';
-import DeleteInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Delete';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -19,7 +16,15 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getConfirmation, getNotificationDescription, getNotificationTitle, getTitle } from './utils';
 import { isAssetView } from '@/src/utils/is-asset-view';
+import RelatedArtefacts from './RelatedArtefact';
 
+interface Artefact {
+  name?: string;
+  displayName?: string;
+  displayVersion?: string;
+  $id?: string;
+  'dial:applicationTypeDisplayName'?: string;
+}
 interface Props<T> {
   view: ApplicationRoute;
   entity: T;
@@ -30,7 +35,7 @@ interface Props<T> {
   context?: () => AssetsFolderContext<DialFile>;
 }
 
-const DeleteConfirmationModal = <T extends object>({
+const DeleteConfirmationModal = <T extends Artefact>({
   view,
   entity,
   removeEntity,
@@ -43,6 +48,12 @@ const DeleteConfirmationModal = <T extends object>({
   const router = useRouter();
   const { showNotification } = useNotification();
   const folderContext = context?.();
+  const modalSize =
+    view === ApplicationRoute.ApplicationRunners ||
+    view === ApplicationRoute.Adapters ||
+    view === ApplicationRoute.InterceptorTemplates
+      ? PopupSize.Md
+      : PopupSize.Sm;
 
   const showSuccessNotification = useCallback(
     (entityKey: string) => {
@@ -85,26 +96,35 @@ const DeleteConfirmationModal = <T extends object>({
     showNotification,
   ]);
 
-  const deleteModalContent =
-    view === ApplicationRoute.ApplicationRunners ? (
-      <DeleteAppRunner entity={entity} isEntityView={true} />
-    ) : view === ApplicationRoute.Adapters ? (
-      <DeleteAdapter entity={entity} isEntityView={true} />
-    ) : view === ApplicationRoute.InterceptorTemplates ? (
-      <DeleteInterceptorTemplate template={entity} />
-    ) : null;
-
   return (
     <DialConfirmationPopup
       open={true}
       variant={ConfirmationPopupVariant.Danger}
-      description={getConfirmation(view, t)}
       title={getTitle(view, t)}
       onConfirm={onConfirmRemoving}
       onClose={onCloseModal}
+      size={modalSize}
       confirmLabel={t(ButtonsI18nKey.Delete)}
     >
-      {deleteModalContent}
+      <div className="h-full flex flex-col gap-y-4 px-6 py-2 w-full">
+        <span className="text-secondary dial-small">{getConfirmation(view, t)}</span>
+        <div className="flex flex-col gap-y-2">
+          <div className="text-primary dial-small">
+            <span className="text-secondary">{t(EntityFieldsI18nKey.id)}:</span>{' '}
+            <DialEllipsisTooltip text={entity.name || entity.$id} />
+          </div>
+          <div className="text-primary dial-small">
+            <span className="text-secondary">{t(EntityFieldsI18nKey.displayName)}:</span>
+            <DialEllipsisTooltip text={entity.displayName || entity['dial:applicationTypeDisplayName']} />
+          </div>
+          {entity.displayVersion && (
+            <div className="text-primary dial-small">
+              <span className="text-secondary">{t(EntityFieldsI18nKey.displayVersion)}:</span> {entity.displayVersion}
+            </div>
+          )}
+        </div>
+        <RelatedArtefacts entity={entity} view={view} />
+      </div>
     </DialConfirmationPopup>
   );
 };
