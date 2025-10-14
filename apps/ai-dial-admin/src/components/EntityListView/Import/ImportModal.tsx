@@ -1,10 +1,8 @@
 'use client';
 
 import { FC, useCallback, useEffect, useState } from 'react';
+import { DialPopup } from '@epam/ai-dial-ui-kit';
 
-import classNames from 'classnames';
-
-import Popup from '@/src/components/Common/Popup/Popup';
 import Steps from '@/src/components/Common/Steps/Steps';
 import { getMultipleImportStatus, isInvalidJson, isLargeFile } from '@/src/components/EntityListView/Import/import';
 import { FoldersI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
@@ -40,7 +38,6 @@ interface Props {
 }
 
 const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply }) => {
-  const containerClassName = classNames('h-[660px] lg:max-w-[45%]');
   const folderContext = context?.();
   const t = useI18n() as (stringToTranslate: string) => string;
 
@@ -218,12 +215,12 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply 
   }, [zipFile, fileType, setStepsState, jsonFileMap, currentStep.id, separateFileMap]);
 
   return (
-    <Popup
+    <DialPopup
       onClose={onClose}
-      heading={route === ApplicationRoute.Prompts ? t(PromptsI18nKey.Import) : t(FoldersI18nKey.Import)}
+      title={route === ApplicationRoute.Prompts ? t(PromptsI18nKey.Import) : t(FoldersI18nKey.Import)}
       portalId="ImportModal"
-      state={isModalOpen}
-      containerClassName={containerClassName}
+      cssClass="h-[660px]"
+      open={isModalOpen}
     >
       <div className="flex px-6 py-4 flex-1 flex-col min-h-0">
         <Steps steps={steps} currentStep={currentStep} setCurrentStep={setCurrentStep} />
@@ -268,7 +265,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply 
         setCurrentStep={setCurrentStep}
         onFinishClick={onFinishClick}
       />
-    </Popup>
+    </DialPopup>
   );
 };
 
