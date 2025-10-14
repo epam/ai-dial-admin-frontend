@@ -13,9 +13,7 @@ describe('DuplicateAdapter', () => {
   };
 
   test('renders all fields and buttons', () => {
-    render(
-      <DuplicateAdapter modalState={PopUpState.Opened} onClose={vi.fn()} adapter={baseAdapter} onDuplicate={vi.fn()} />,
-    );
+    render(<DuplicateAdapter isModalOpen={true} onClose={vi.fn()} adapter={baseAdapter} onDuplicate={vi.fn()} />);
 
     expect(screen.getByText(EntityFieldsI18nKey.id)).toBeInTheDocument();
     expect(screen.getByText(EntityFieldsI18nKey.displayName)).toBeInTheDocument();
@@ -26,23 +24,14 @@ describe('DuplicateAdapter', () => {
 
   test('calls onClose when Cancel is clicked', () => {
     const onClose = vi.fn();
-    render(
-      <DuplicateAdapter modalState={PopUpState.Opened} onClose={onClose} adapter={baseAdapter} onDuplicate={vi.fn()} />,
-    );
+    render(<DuplicateAdapter isModalOpen={true} onClose={onClose} adapter={baseAdapter} onDuplicate={vi.fn()} />);
     fireEvent.click(screen.getByText(ButtonsI18nKey.Cancel));
     expect(onClose).toHaveBeenCalled();
   });
 
   test('calls onDuplicate with correct entity when Duplicate is clicked', () => {
     const onDuplicate = vi.fn();
-    render(
-      <DuplicateAdapter
-        modalState={PopUpState.Opened}
-        onClose={vi.fn()}
-        adapter={baseAdapter}
-        onDuplicate={onDuplicate}
-      />,
-    );
+    render(<DuplicateAdapter isModalOpen={true} onClose={vi.fn()} adapter={baseAdapter} onDuplicate={onDuplicate} />);
     // Fill in the name to enable the button
     fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Id), { target: { value: 'adapter2' } });
     fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName), {
