@@ -1,5 +1,5 @@
 import { FC, useCallback, useMemo, useState } from 'react';
-import { ButtonVariant, DialButton, DialPopup, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialPopup, DialTextInputField, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -44,6 +44,7 @@ const RenameFolder: FC<Props> = ({ currentPath, siblings = [], isModalOpen, onCl
       portalId="FolderRename"
       open={isModalOpen}
       dividers={true}
+      size={PopupSize.Sm}
       footer={
         <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
           <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
