@@ -5,37 +5,38 @@ import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
+import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
+import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 import { removeInterceptor, updateInterceptor } from '@/src/app/[lang]/interceptors/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import { getRelevantDataForInterceptor } from '@/src/components/AddEntitiesTab/utils';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
-import { auditTabs, EntityViewTab, parameterSchemaTabs, propertiesTabs } from '@/src/components/EntityView/View/utils';
-import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
-import { TabsI18nKey } from '@/src/constants/i18n';
-import { useNotification } from '@/src/context/NotificationContext';
-import { useI18n } from '@/src/locales/client';
-import { DialApplication } from '@/src/models/dial/application';
-import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { DialModel } from '@/src/models/dial/model';
-import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { TabModel } from '@/src/models/tab';
-import { ApplicationRoute } from '@/src/types/routes';
-import { getErrorNotification } from '@/src/utils/notification';
-import InterceptorProperties from './Properties';
-import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
-import { ExportFormat } from '@/src/types/export';
 import {
   getEntityFromFile,
   getExportType,
   getFileFromEntity,
 } from '@/src/components/EntityView/View/core-entity-utils';
-import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
+import { auditTabs, EntityViewTab, parameterSchemaTabs, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import ParameterSchema from '@/src/components/Interceptors/View/ParameterSchema/ParameterSchema';
+import { TabsI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useI18n } from '@/src/locales/client';
+import { DialApplication } from '@/src/models/dial/application';
+import { DefaultsValue } from '@/src/models/dial/defaults';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { DialModel } from '@/src/models/dial/model';
+import { EntitiesGridData } from '@/src/models/entities-grid-data';
+import { TabModel } from '@/src/models/tab';
+import { ExportFormat } from '@/src/types/export';
+import { ApplicationRoute } from '@/src/types/routes';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import { getErrorNotification } from '@/src/utils/notification';
+import InterceptorProperties from './Properties';
 
 interface Props {
   originalInterceptor: DialInterceptor;
@@ -164,6 +165,22 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, etag, 
     });
   }, [selectedFormat, selectedInterceptor, router, etag, showNotification]);
 
+  const onChangeConfiguration = useCallback(
+    (data: Record<string, unknown>) => {
+      const newInterceptor = {
+        ...selectedInterceptor,
+        defaults: {
+          ...selectedInterceptor.defaults,
+          custom_fields: {
+            interceptor_configuration: data,
+          },
+        },
+      };
+      onChangeInterceptor(newInterceptor);
+    },
+    [onChangeInterceptor, selectedInterceptor],
+  );
+
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={headerClassName}>
@@ -205,6 +222,10 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, etag, 
             )}
             {activeTab === EntityViewTab.ParameterSchema && (
               <ParameterSchema
+                configuration={
+                  selectedInterceptor.defaults?.custom_fields?.['interceptor_configuration' as keyof DefaultsValue]
+                }
+                onChangeConfiguration={onChangeConfiguration}
                 schemaURL={selectedInterceptor.features?.configurationEndpoint}
                 name={selectedInterceptor.name as string}
               />

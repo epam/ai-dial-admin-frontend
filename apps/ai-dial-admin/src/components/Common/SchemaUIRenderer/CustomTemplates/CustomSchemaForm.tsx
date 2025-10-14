@@ -1,9 +1,11 @@
 import { withTheme } from '@rjsf/core';
-import { TitleTemplate } from './TitleTemplate';
-import { TextWidget } from './TextWidget';
-import { ObjectFieldTemplate } from '@/src/components/Common/SchemaUIRenderer/CustomTemplates/ObjectFieldTemplate';
+
 import { ArrayFieldTemplate } from '@/src/components/Common/SchemaUIRenderer/CustomTemplates/ArrayFieldTeplate';
-import { FieldTemplate } from '@/src/components/Common/SchemaUIRenderer/CustomTemplates/FieldTemplate';
+import { ObjectFieldTemplate } from '@/src/components/Common/SchemaUIRenderer/CustomTemplates/ObjectFieldTemplate';
+import { FieldTemplate } from './FieldTemplate';
+import { TextWidget } from './TextWidget';
+import { TitleTemplate } from './TitleTemplate';
+import { WrapIfAdditionalTemplate } from './WrapIfAdditionalTemplate';
 
 export const Theme = {
   templates: {
@@ -11,6 +13,7 @@ export const Theme = {
     ObjectFieldTemplate,
     ArrayFieldTemplate,
     FieldTemplate,
+    WrapIfAdditionalTemplate,
   },
   widgets: { TextWidget },
 };

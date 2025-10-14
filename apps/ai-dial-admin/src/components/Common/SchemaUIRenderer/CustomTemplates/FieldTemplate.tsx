@@ -1,14 +1,15 @@
 import { FC } from 'react';
+
 import type { FieldTemplateProps } from '@rjsf/utils';
 
-export const FieldTemplate: FC<FieldTemplateProps> = ({ id, children, errors, help, schema }) => {
-  const isString = schema.type === 'string';
+import { WrapIfAdditionalTemplate } from './WrapIfAdditionalTemplate';
 
+export const FieldTemplate: FC<FieldTemplateProps> = (props) => {
   return (
-    <div id={id} className={isString ? 'w-full' : ''}>
-      {children}
-      {errors}
-      {help}
-    </div>
+    <WrapIfAdditionalTemplate {...props}>
+      {props.children}
+      {props.errors}
+      {props.help}
+    </WrapIfAdditionalTemplate>
   );
 };

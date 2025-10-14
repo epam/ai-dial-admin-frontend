@@ -1,7 +1,9 @@
 import { FC } from 'react';
-import { canExpand, ObjectFieldTemplateProps } from '@rjsf/utils';
+
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { canExpand, ObjectFieldTemplateProps } from '@rjsf/utils';
 import { IconPlus } from '@tabler/icons-react';
+
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
 export const ObjectFieldTemplate: FC<ObjectFieldTemplateProps> = (props) => {
@@ -20,7 +22,7 @@ export const ObjectFieldTemplate: FC<ObjectFieldTemplateProps> = (props) => {
           variant={ButtonVariant.Tertiary}
           onClick={onAddClick(schema)}
           title={`Add ${title}`}
-          cssClass="w-fit"
+          cssClass="w-fit mt-2"
           iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
         />
       )}
