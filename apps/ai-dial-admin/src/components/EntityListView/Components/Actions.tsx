@@ -26,9 +26,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { downloadFile, downloadJson } from '@/src/utils/download';
 import { prepareEntityForDuplicate } from '@/src/utils/entities/prepare-entity-for-duplicate';
 import { getListOfPathsToBulkDelete, getListOfPathsToMove } from '@/src/utils/files/path';
-import { isAssetView } from '@/src/utils/is-asset-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import BulkButtons from './BulkButtons';
 import Modals, { ModalType } from './Modals';
 
@@ -92,21 +90,6 @@ const Actions = <T extends object>({
     setModalState(PopUpState.Closed);
     setModalType(void 0);
   }, [setModalState, setModalType]);
-
-  const onDelete = useCallback(() => {
-    removeEntity(getEntityPath(route, currentEntity, true)).then((res) => {
-      if (res.success) {
-        handleModalClose();
-        setCurrentEntity(void 0);
-        if (isAssetView(route)) {
-          folderContext?.fetchFiles?.(folderContext?.filePath);
-        }
-        router.refresh();
-      } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
-      }
-    });
-  }, [currentEntity, folderContext, handleModalClose, removeEntity, route, router, setCurrentEntity, showNotification]);
 
   const onDuplicate = useCallback(
     (clonedEntity: T) => {
@@ -222,10 +205,11 @@ const Actions = <T extends object>({
           )}
           handleExport={onExport}
           handleClose={handleModalClose}
-          handleDelete={onDelete}
+          removeEntity={removeEntity}
           handleDeleteBulk={onDeleteBulk}
           handleMove={onMove}
           context={context}
+          resetCurrentEntity={() => setCurrentEntity(void 0)}
         />
       ) : null}
       {isBulkView && (

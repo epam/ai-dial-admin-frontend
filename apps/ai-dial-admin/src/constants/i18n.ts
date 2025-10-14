@@ -139,8 +139,7 @@ export enum EntitiesI18nKey {
 export enum DeleteI18nKey {
   Title = 'DeleteEntity.Title',
   Confirming = 'DeleteEntity.Confirming',
-  Model = 'DeleteEntity.Model',
-  Application = 'DeleteEntity.Application',
+
   ApplicationRunnerTitle = 'DeleteEntity.ApplicationRunner.Title',
   ApplicationRunnerDescriptionWarning = 'DeleteEntity.ApplicationRunner.DescriptionWarning',
   ApplicationRunnerApplicationsTitle = 'DeleteEntity.ApplicationRunner.ApplicationsTitle',
@@ -149,17 +148,25 @@ export enum DeleteI18nKey {
   AdapterDescriptionWarning = 'DeleteEntity.Adapter.DescriptionWarning',
   AdapterModelsTitle = 'DeleteEntity.Adapter.ModelsTitle',
   AdapterNoModelsTitle = 'DeleteEntity.Adapter.NoModelsTitle',
-  Role = 'DeleteEntity.Role',
-  Interceptor = 'DeleteEntity.Interceptor',
-  Key = 'DeleteEntity.Key',
-  Route = 'DeleteEntity.Route',
-  Prompt = 'DeleteEntity.Prompt',
-  File = 'DeleteEntity.File',
-  Toolsets = 'DeleteEntity.Toolsets',
+
   InterceptorTemplateTitle = 'DeleteEntity.InterceptorTemplate.Title',
   InterceptorTemplateDescriptionWarning = 'DeleteEntity.InterceptorTemplate.DescriptionWarning',
   InterceptorTemplateInterceptorsTitle = 'DeleteEntity.InterceptorTemplate.InterceptorsTitle',
   InterceptorTemplateNoInterceptorsTitle = 'DeleteEntity.InterceptorTemplate.NoInterceptorsTitle',
+
+  // notification
+  NotificationTitle = 'DeleteEntity.Notification.Title',
+  NotificationDescription = 'DeleteEntity.Notification.Description',
+  // Entities
+  Model = 'DeleteEntity.Entities.Model',
+  Application = 'DeleteEntity.Application',
+  Toolsets = 'DeleteEntity.Toolsets',
+  Route = 'DeleteEntity.Route',
+  Interceptor = 'DeleteEntity.Interceptor',
+  Role = 'DeleteEntity.Role',
+  Key = 'DeleteEntity.Key',
+  Prompt = 'DeleteEntity.Prompt',
+  File = 'DeleteEntity.File',
 }
 
 export enum DuplicateI18nKey {
