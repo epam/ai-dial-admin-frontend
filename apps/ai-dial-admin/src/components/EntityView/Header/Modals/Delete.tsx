@@ -3,78 +3,123 @@
 import { useCallback } from 'react';
 
 import { useRouter } from 'next/navigation';
-import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopupVariant, DialConfirmationPopup, DialEllipsisTooltip, PopupSize } from '@epam/ai-dial-ui-kit';
 
-import DeleteAdapter from '@/src/components/Adapter/Modals/DeleteAdapter';
-import DeleteAppRunner from '@/src/components/ApplicationRunners/Modals/DeleteAppRunner';
-import { deleteModalTitleMap } from '@/src/components/EntityListView/constants';
-import DeleteInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Delete';
-import { ButtonsI18nKey, DeleteI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getErrorNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { getConfirmation, getNotificationDescription, getNotificationTitle, getTitle } from './utils';
+import { isAssetView, isBuildersView } from '@/src/utils/is-asset-view';
+import RelatedArtefacts from './RelatedArtefact';
 
+interface Artefact {
+  name?: string;
+  displayName?: string;
+  displayVersion?: string;
+  $id?: string;
+  'dial:applicationTypeDisplayName'?: string;
+}
 interface Props<T> {
   view: ApplicationRoute;
   entity: T;
+  isSelectedView?: boolean;
+  resetCurrentEntity?: () => void;
   removeEntity: (entity: string) => Promise<ServerActionResponse>;
   onCloseModal: () => void;
   context?: () => AssetsFolderContext<DialFile>;
 }
 
-const DeleteConfirmationModal = <T extends object>({ view, entity, removeEntity, onCloseModal, context }: Props<T>) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+const DeleteConfirmationModal = <T extends Artefact>({
+  view,
+  entity,
+  removeEntity,
+  onCloseModal,
+  context,
+  isSelectedView,
+  resetCurrentEntity,
+}: Props<T>) => {
+  const t = useI18n() as (key: string, options?: Record<string, string>) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
   const folderContext = context?.();
+  const modalSize = isBuildersView(view) ? PopupSize.Md : PopupSize.Sm;
+
+  const showSuccessNotification = useCallback(
+    (entityKey: string) => {
+      showNotification(
+        getSuccessNotification(getNotificationTitle(view, t), getNotificationDescription(view, entityKey, t)),
+      );
+    },
+    [showNotification, t, view],
+  );
 
   const onConfirmRemoving = useCallback(() => {
-    const removeKey = getEntityPath(view, entity, true);
+    const entityKey = getEntityPath(view, entity, true);
 
-    removeEntity(removeKey).then((res) => {
+    removeEntity(entityKey).then((res) => {
       if (res.success) {
         onCloseModal();
-
-        if (
-          view === ApplicationRoute.Prompts ||
-          view === ApplicationRoute.AssetsToolsets ||
-          view === ApplicationRoute.AssetsApplications
-        ) {
+        resetCurrentEntity?.();
+        if (isAssetView(view)) {
           folderContext?.fetchFiles(folderContext?.filePath);
         }
-
-        router.push(view);
+        showSuccessNotification(entityKey);
+        if (isSelectedView) {
+          router.push(view);
+        }
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [view, entity, removeEntity, onCloseModal, router, folderContext, showNotification]);
-
-  const deleteModalContent =
-    view === ApplicationRoute.ApplicationRunners ? (
-      <DeleteAppRunner entity={entity} isEntityView={true} />
-    ) : view === ApplicationRoute.Adapters ? (
-      <DeleteAdapter entity={entity} isEntityView={true} />
-    ) : view === ApplicationRoute.InterceptorTemplates ? (
-      <DeleteInterceptorTemplate template={entity} />
-    ) : null;
+  }, [
+    view,
+    entity,
+    removeEntity,
+    onCloseModal,
+    resetCurrentEntity,
+    showSuccessNotification,
+    isSelectedView,
+    router,
+    folderContext,
+    showNotification,
+  ]);
 
   return (
     <DialConfirmationPopup
       open={true}
-      description={`${t(DeleteI18nKey.Confirming)} ${t(deleteModalTitleMap[view])}?`}
-      title={`${t(DeleteI18nKey.Title)} ${t(deleteModalTitleMap[view])}`}
+      variant={ConfirmationPopupVariant.Danger}
+      title={getTitle(view, t)}
       onConfirm={onConfirmRemoving}
       onClose={onCloseModal}
+      size={modalSize}
       confirmLabel={t(ButtonsI18nKey.Delete)}
     >
-      {deleteModalContent}
+      <div className="h-full flex flex-col gap-y-4 px-6 py-2 w-full">
+        <span className="text-secondary dial-small">{getConfirmation(view, t)}</span>
+        <div className="flex flex-col gap-y-2">
+          <div className="text-primary dial-small flex flex-row items-center gap-x-1">
+            <span className="text-secondary">{t(EntityFieldsI18nKey.id)}:</span>
+            <DialEllipsisTooltip text={entity.name || entity.$id} />
+          </div>
+          <div className="text-primary dial-small flex flex-row items-center gap-x-1">
+            <span className="text-secondary">{t(EntityFieldsI18nKey.displayName)}:</span>
+            <DialEllipsisTooltip text={entity.displayName || entity['dial:applicationTypeDisplayName']} />
+          </div>
+          {entity.displayVersion && (
+            <div className="text-primary dial-small">
+              <span className="text-secondary">{t(EntityFieldsI18nKey.displayVersion)}:</span> {entity.displayVersion}
+            </div>
+          )}
+        </div>
+        {isBuildersView(view) && <RelatedArtefacts entity={entity} view={view} />}
+      </div>
     </DialConfirmationPopup>
   );
 };

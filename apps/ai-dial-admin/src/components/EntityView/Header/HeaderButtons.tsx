@@ -124,6 +124,7 @@ const HeaderButtons = <T extends object>({
             view={view}
             onCloseModal={onCloseModal}
             context={context}
+            isSelectedView={true}
           />,
           document.body,
         )}

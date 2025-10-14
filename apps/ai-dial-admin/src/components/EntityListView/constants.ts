@@ -1,4 +1,4 @@
-import { CreateI18nKey, DeleteI18nKey, EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export const listViewTitleMap: Record<string, MenuI18nKey> = {
@@ -43,23 +43,6 @@ export const emptyDataTitleMap: Record<string, EntitiesI18nKey> = {
   [ApplicationRoute.ActivityAudit]: EntitiesI18nKey.NoActivityAudit,
   [ApplicationRoute.InterceptorTemplates]: EntitiesI18nKey.NoInterceptorTemplates,
   [ApplicationRoute.Toolsets]: EntitiesI18nKey.NoToolsets,
-};
-
-export const deleteModalTitleMap: Record<string, DeleteI18nKey> = {
-  [ApplicationRoute.Models]: DeleteI18nKey.Model,
-  [ApplicationRoute.Applications]: DeleteI18nKey.Application,
-  [ApplicationRoute.ApplicationRunners]: DeleteI18nKey.ApplicationRunnerTitle,
-  [ApplicationRoute.Interceptors]: DeleteI18nKey.Interceptor,
-  [ApplicationRoute.Keys]: DeleteI18nKey.Key,
-  [ApplicationRoute.Roles]: DeleteI18nKey.Role,
-  [ApplicationRoute.Prompts]: DeleteI18nKey.Prompt,
-  [ApplicationRoute.Files]: DeleteI18nKey.File,
-  [ApplicationRoute.AssetsApplications]: DeleteI18nKey.Application,
-  [ApplicationRoute.AssetsToolsets]: DeleteI18nKey.Toolsets,
-  [ApplicationRoute.Routes]: DeleteI18nKey.Route,
-  [ApplicationRoute.Adapters]: DeleteI18nKey.AdapterTitle,
-  [ApplicationRoute.Toolsets]: DeleteI18nKey.Toolsets,
-  [ApplicationRoute.InterceptorTemplates]: DeleteI18nKey.InterceptorTemplateTitle,
 };
 
 export const createModalTitleMap: Record<string, CreateI18nKey> = {

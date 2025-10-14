@@ -139,27 +139,35 @@ export enum EntitiesI18nKey {
 export enum DeleteI18nKey {
   Title = 'DeleteEntity.Title',
   Confirming = 'DeleteEntity.Confirming',
-  Model = 'DeleteEntity.Model',
-  Application = 'DeleteEntity.Application',
-  ApplicationRunnerTitle = 'DeleteEntity.ApplicationRunner.Title',
-  ApplicationRunnerDescriptionWarning = 'DeleteEntity.ApplicationRunner.DescriptionWarning',
-  ApplicationRunnerApplicationsTitle = 'DeleteEntity.ApplicationRunner.ApplicationsTitle',
-  ApplicationRunnerNoApplicationsTitle = 'DeleteEntity.ApplicationRunner.NoApplicationsTitle',
-  AdapterTitle = 'DeleteEntity.Adapter.Title',
-  AdapterDescriptionWarning = 'DeleteEntity.Adapter.DescriptionWarning',
-  AdapterModelsTitle = 'DeleteEntity.Adapter.ModelsTitle',
-  AdapterNoModelsTitle = 'DeleteEntity.Adapter.NoModelsTitle',
-  Role = 'DeleteEntity.Role',
-  Interceptor = 'DeleteEntity.Interceptor',
-  Key = 'DeleteEntity.Key',
-  Route = 'DeleteEntity.Route',
-  Prompt = 'DeleteEntity.Prompt',
-  File = 'DeleteEntity.File',
-  Toolsets = 'DeleteEntity.Toolsets',
-  InterceptorTemplateTitle = 'DeleteEntity.InterceptorTemplate.Title',
-  InterceptorTemplateDescriptionWarning = 'DeleteEntity.InterceptorTemplate.DescriptionWarning',
-  InterceptorTemplateInterceptorsTitle = 'DeleteEntity.InterceptorTemplate.InterceptorsTitle',
-  InterceptorTemplateNoInterceptorsTitle = 'DeleteEntity.InterceptorTemplate.NoInterceptorsTitle',
+
+  // Notification
+  NotificationTitle = 'DeleteEntity.Notification.Title',
+  NotificationDescription = 'DeleteEntity.Notification.Description',
+
+  // Entities
+  Model = 'DeleteEntity.Entities.Model',
+  Application = 'DeleteEntity.Entities.Application',
+  Toolsets = 'DeleteEntity.Entities.Toolsets',
+  Route = 'DeleteEntity.Entities.Route',
+  Interceptor = 'DeleteEntity.Entities.Interceptor',
+  Role = 'DeleteEntity.Entities.Role',
+  Key = 'DeleteEntity.Entities.Key',
+  Prompt = 'DeleteEntity.Entities.Prompt',
+  File = 'DeleteEntity.Entities.File',
+  Adapter = 'DeleteEntity.Entities.Adapter',
+  InterceptorTemplate = 'DeleteEntity.Entities.InterceptorTemplate',
+  ApplicationRunner = 'DeleteEntity.Entities.ApplicationRunner',
+
+  //  No related artefacts
+  AdapterWarning = 'DeleteEntity.NoRelatedArtefacts.AdapterWarning',
+  NoModels = 'DeleteEntity.NoRelatedArtefacts.NoModels',
+  InterceptorTemplateWarning = 'DeleteEntity.NoRelatedArtefacts.InterceptorTemplateWarning',
+  NoInterceptors = 'DeleteEntity.NoRelatedArtefacts.NoInterceptors',
+  ApplicationRunnerWarning = 'DeleteEntity.NoRelatedArtefacts.ApplicationRunnerWarning',
+  NoApplications = 'DeleteEntity.NoRelatedArtefacts.NoApplications',
+  RelatedApplications = 'DeleteEntity.NoRelatedArtefacts.RelatedApplications',
+  RelatedInterceptors = 'DeleteEntity.NoRelatedArtefacts.RelatedInterceptors',
+  RelatedModels = 'DeleteEntity.NoRelatedArtefacts.RelatedModels',
 }
 
 export enum DuplicateI18nKey {
