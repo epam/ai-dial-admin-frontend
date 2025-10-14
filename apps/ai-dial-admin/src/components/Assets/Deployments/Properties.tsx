@@ -107,7 +107,7 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, onChange }
         </div>
       </div>
 
-      <div className="flex flex-col gap-y-6 lg:w-[35px]">
+      <div className="flex flex-col gap-y-6">
         {view === ApplicationRoute.AssetsToolsets && (
           <>
             <ToolsetEndpoint entity={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} />
