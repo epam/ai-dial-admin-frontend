@@ -19,7 +19,7 @@ import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import JsonToggles from './JsonToggle';
-import DeleteConfirmationModal from './Modals/Delete';
+import DeleteConfirmationModal from '../Modals/Delete/Delete';
 import ModifiedEntityButtons from './ModifiedEntityButtons';
 
 interface Props<T> {

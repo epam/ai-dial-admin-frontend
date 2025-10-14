@@ -6,7 +6,7 @@ import FilePathModal from '@/src/components/Common/FilePath/FilePathModal';
 import DeleteFolder from '@/src/components/Common/FolderList/Modals/DeleteFolder';
 import ExportModal from '@/src/components/EntityListView/Export/ExportModal';
 import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
-import DeleteConfirmationModal from '@/src/components/EntityView/Header/Modals/Delete';
+import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';

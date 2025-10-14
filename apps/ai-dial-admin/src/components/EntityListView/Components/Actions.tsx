@@ -199,7 +199,7 @@ const Actions = <T extends object>({
             keys || [],
             route,
             versionsMap || {},
-            modalState,
+            modalState === PopUpState.Opened,
             handleModalClose,
             onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>,
           )}

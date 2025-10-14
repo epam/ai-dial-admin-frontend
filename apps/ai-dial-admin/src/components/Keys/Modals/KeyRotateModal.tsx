@@ -1,7 +1,7 @@
 import { FC, useCallback, useState } from 'react';
 import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 
-import ValidityPeriodInput from '@/src/components/Common/ValidityPeriodInput/ValidityPeriodInput';
+import ValidityPeriod from '@/src/components/Keys/Modals/ValidityPeriod';
 import { ButtonsI18nKey, EntityFieldsI18nKey, KeysI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
@@ -58,7 +58,7 @@ export const KeyRotateModal: FC<Props> = ({ isModalOpen, selectedKey, keys, onCo
       <div className="flex flex-col gap-6 px-6 py-4">
         <div className="text-secondary small-150">{t(KeysI18nKey.RotateKeyDescription)}</div>
         <KeyGenerateField keys={keys} selectedKey={newKey} changeKey={onChangeKey} />
-        <ValidityPeriodInput onChange={onChangeExpiresAt} />
+        <ValidityPeriod onChange={onChangeExpiresAt} />
       </div>
     </DialPopup>
   );

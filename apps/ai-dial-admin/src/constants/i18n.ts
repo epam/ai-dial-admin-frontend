@@ -171,18 +171,23 @@ export enum DeleteI18nKey {
 }
 
 export enum DuplicateI18nKey {
-  ModelHeader = 'DuplicateEntity.Model.Header',
-  ModelDescription = 'DuplicateEntity.Model.Description',
-  ApplicationRunnerHeader = 'DuplicateEntity.ApplicationRunner',
-  ApplicationHeader = 'DuplicateEntity.Application',
-  RoleHeader = 'DuplicateEntity.Role',
-  KeyHeader = 'DuplicateEntity.Key',
-  RouteHeader = 'DuplicateEntity.Route',
-  PromptHeader = 'DuplicateEntity.Prompt',
-  InterceptorHeader = 'DuplicateEntity.Interceptor',
-  AdapterHeader = 'DuplicateEntity.Adapter',
-  InterceptorTemplate = 'DuplicateEntity.InterceptorTemplate',
-  Toolsets = 'DuplicateEntity.Toolsets',
+  Title = 'DuplicateEntity.Title',
+
+  ModelDescription = 'DuplicateEntity.ModelDescription',
+
+  // Entities
+  Model = 'DuplicateEntity.Entities.Model',
+  Application = 'DeleteEntity.Entities.Application',
+  Toolsets = 'DuplicateEntity.Entities.Toolsets',
+  Route = 'DuplicateEntity.Entities.Route',
+  Interceptor = 'DuplicateEntity.Entities.Interceptor',
+  Role = 'DuplicateEntity.Entities.Role',
+  Key = 'DuplicateEntity.Entities.Key',
+  Prompt = 'DuplicateEntity.Entities.Prompt',
+  File = 'DuplicateEntity.Entities.File',
+  Adapter = 'DeleteEntity.Entities.Adapter',
+  InterceptorTemplate = 'DuplicateEntity.Entities.InterceptorTemplate',
+  ApplicationRunner = 'DuplicateEntity.Entities.ApplicationRunner',
 }
 
 export enum ButtonsI18nKey {

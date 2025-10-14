@@ -3,7 +3,7 @@ import { exportPrompts } from '@/src/app/[lang]/prompts/actions';
 import DuplicateAdapter from '@/src/components/Adapter/Modals/DuplicateAdapter';
 import DuplicateScheme from '@/src/components/ApplicationRunners/Modals/DuplicateAppRunner';
 import DuplicatePrompt from '@/src/components/Assets/Prompts/Modals/DuplicatePrompt';
-import DuplicatePopup from '@/src/components/DuplicatePopup/DuplicatePopup';
+import DuplicatePopup from '@/src/components/EntityView/Modals/Duplicate/Duplicate';
 import DuplicateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Duplicate';
 import DuplicateKey from '@/src/components/Keys/Modals/DuplicateKey';
 import { MenuI18nKey } from '@/src/constants/i18n';
@@ -11,7 +11,6 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export const getDuplicateModal = <T extends object>(
@@ -20,7 +19,7 @@ export const getDuplicateModal = <T extends object>(
   keys: string[],
   route: ApplicationRoute,
   versionsMap: Record<string, string[]>,
-  modalState: PopUpState,
+  isModalOpen: boolean,
   handleModalClose: () => void,
   onDuplicate: (entity: BaseEntity) => Promise<ServerActionResponse>,
 ) => {
@@ -31,7 +30,7 @@ export const getDuplicateModal = <T extends object>(
       <DuplicateScheme
         entity={currentEntity}
         onDuplicate={onDuplicate}
-        modalState={modalState}
+        isModalOpen={isModalOpen}
         onClose={handleModalClose}
       />
     );
@@ -42,7 +41,7 @@ export const getDuplicateModal = <T extends object>(
       <DuplicateInterceptorTemplate
         template={currentEntity}
         onDuplicate={onDuplicate}
-        modalState={modalState}
+        isModalOpen={isModalOpen}
         onClose={handleModalClose}
         names={names}
       />
@@ -53,7 +52,7 @@ export const getDuplicateModal = <T extends object>(
       <DuplicateAdapter
         adapter={currentEntity}
         onDuplicate={onDuplicate}
-        modalState={modalState}
+        isModalOpen={isModalOpen}
         onClose={handleModalClose}
       />
     );
@@ -64,7 +63,7 @@ export const getDuplicateModal = <T extends object>(
       <DuplicateKey
         entity={currentEntity}
         onDuplicate={onDuplicate}
-        modalState={modalState}
+        isModalOpen={isModalOpen}
         names={names}
         keys={keys}
         onClose={handleModalClose}
@@ -78,7 +77,7 @@ export const getDuplicateModal = <T extends object>(
         entity={currentEntity as DialPrompt}
         versionsMap={versionsMap}
         onDuplicate={onDuplicate}
-        modalState={modalState}
+        isModalOpen={isModalOpen}
         onClose={handleModalClose}
       />
     );
@@ -89,7 +88,7 @@ export const getDuplicateModal = <T extends object>(
       names={names || []}
       entity={currentEntity}
       onDuplicate={onDuplicate}
-      modalState={modalState}
+      isModalOpen={isModalOpen}
       onClose={handleModalClose}
     />
   );

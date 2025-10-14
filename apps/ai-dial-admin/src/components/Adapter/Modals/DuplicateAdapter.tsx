@@ -1,24 +1,22 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 
-import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey, DuplicateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
-import { PopUpState } from '@/src/types/pop-up';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
-  modalState: PopUpState;
+  isModalOpen: boolean;
   onClose: () => void;
   adapter: DialAdapter;
   onDuplicate: (entity: DialAdapter) => void;
 }
 
-const DuplicateAdapter: FC<Props> = ({ onDuplicate, modalState, onClose, adapter }) => {
+const DuplicateAdapter: FC<Props> = ({ onDuplicate, isModalOpen, onClose, adapter }) => {
   const t = useI18n();
 
   const [entity, setEntity] = useState<DialAdapter>({ ...adapter, name: '' });
@@ -48,7 +46,24 @@ const DuplicateAdapter: FC<Props> = ({ onDuplicate, modalState, onClose, adapter
   );
 
   return (
-    <Popup onClose={onClose} heading={t(DuplicateI18nKey.AdapterHeader)} portalId="DuplicateAdapter" state={modalState}>
+    <DialPopup
+      onClose={onClose}
+      title={t(DuplicateI18nKey.Adapter)}
+      portalId="DuplicateAdapter"
+      open={isModalOpen}
+      footer={
+        <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
+          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
+
+          <DialButton
+            variant={ButtonVariant.Primary}
+            title={t(ButtonsI18nKey.Duplicate)}
+            disable={!isValid}
+            onClick={() => onDuplicate(entity)}
+          />
+        </div>
+      }
+    >
       <div className="flex flex-col gap-3 px-6 py-4 ">
         <IdControl entity={entity} onChangeEntity={setEntity} />
 
@@ -63,17 +78,7 @@ const DuplicateAdapter: FC<Props> = ({ onDuplicate, modalState, onClose, adapter
           onChange={onChangeEndpoint}
         />
       </div>
-      <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
-
-        <DialButton
-          variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Duplicate)}
-          disable={!isValid}
-          onClick={() => onDuplicate(entity)}
-        />
-      </div>
-    </Popup>
+    </DialPopup>
   );
 };
 
