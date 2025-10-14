@@ -81,6 +81,10 @@ export const MENU_CONFIGURATION = (iconSize: number): MenuGroupConfiguration[] =
         href: ApplicationRoute.AssetsApplications,
       },
       {
+        key: MenuI18nKey.Toolsets,
+        href: ApplicationRoute.AssetsToolsets,
+      },
+      {
         key: MenuI18nKey.Prompts,
         href: ApplicationRoute.Prompts,
       },
