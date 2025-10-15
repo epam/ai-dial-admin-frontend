@@ -41,6 +41,7 @@ import {
   getFileFromEntity,
 } from '@/src/components/EntityView/View/core-entity-utils';
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
   originalKey: DialKey;
@@ -154,12 +155,18 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
     req.then((res) => {
       if (res.success) {
         setCoreKey(null);
+        showNotification(
+          getSuccessNotification(
+            getUpdateNotificationTitle(ApplicationRoute.Keys, t),
+            getUpdateNotificationDescription(ApplicationRoute.Keys, selectedKey.name, t),
+          ),
+        );
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedFormat, etag, setIsOpenConfirmModal, selectedKey, router, showNotification]);
+  }, [selectedFormat, selectedKey, etag, showNotification, t, router]);
 
   const onRotateKey = useCallback(
     (key: DialKey) => {

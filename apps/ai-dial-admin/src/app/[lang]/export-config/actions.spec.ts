@@ -57,6 +57,7 @@ describe('Export config :: actions :: exportConfig', () => {
       {
         $type: 'custom',
         componentTypes: [],
+        addSecrets: true,
         components: [
           {
             name: 'name',
