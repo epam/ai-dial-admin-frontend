@@ -29,7 +29,6 @@ import { useI18n } from '@/src/locales/client';
 import { ActivityAuditDiff, DialActivity } from '@/src/models/activity-audit';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ActivityAuditEntity, ActivityAuditResourceType, DiffView } from '@/src/types/activity-audit';
-import { PopUpState } from '@/src/types/pop-up';
 import { getRevisionRouteForAllEntities } from '@/src/utils/audit/get-revision-route';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 
@@ -50,8 +49,8 @@ const SystemRollback: FC = () => {
   const [currentRows, setCurrentRows] = useState<ActivityAuditDiff[]>();
   const [rollbackRows, setRollbackRows] = useState<ActivityAuditDiff[]>();
 
-  const [revisionsModalState, setRevisionsModalState] = useState(PopUpState.Closed);
-  const [rollBackModalState, setRollBackModalState] = useState(PopUpState.Closed);
+  const [isRevisionsModalOpen, setRevisionModalOpen] = useState(false);
+  const [isRollBackModalOpen, setIsRollBackModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const [revisions, setRevisions] = useState<ActivityAuditRevision[] | null>();
@@ -63,7 +62,7 @@ const SystemRollback: FC = () => {
 
   const systemRollback = useCallback(() => {
     systemRollbackToRevision(rollbackRevision?.id);
-    setRollBackModalState(PopUpState.Closed);
+    setIsRollBackModalOpen(false);
   }, [rollbackRevision?.id]);
 
   const fetchAllEntitiesForRevision = async (
@@ -105,7 +104,7 @@ const SystemRollback: FC = () => {
       setRollbackRevision(rollbackRevision);
       fetchRevisionEntities(currentRevision, rollbackRevision);
       setRevisions(revisions);
-      setRevisionsModalState(PopUpState.Closed);
+      setRevisionModalOpen(false);
     },
     [currentRevision, fetchRevisionEntities],
   );
@@ -153,7 +152,7 @@ const SystemRollback: FC = () => {
           <FilterControl diffView={diffView} setDiffView={setDiffView} isResources={true} />
           <div
             className="flex flex-row items-center small bg-layer-3 rounded h-6 p-2 cursor-pointer"
-            onClick={() => setRevisionsModalState(PopUpState.Opened)}
+            onClick={() => setRevisionModalOpen(true)}
           >
             <span>{t(ActivityAuditI18nKey.RollbackRevision)}</span>
             <span>: {formatDateTimeToLocalString(rollbackRevision?.timestamp)}</span>
@@ -165,7 +164,7 @@ const SystemRollback: FC = () => {
             iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
             variant={ButtonVariant.Primary}
             title={t(ActivityAuditI18nKey.RollbackSystem)}
-            onClick={() => setRollBackModalState(PopUpState.Opened)}
+            onClick={() => setIsRollBackModalOpen(true)}
           />
         </div>
       </div>
@@ -209,24 +208,24 @@ const SystemRollback: FC = () => {
         </div>
         <DiffLegend description={true} />
       </div>
-      {rollBackModalState === PopUpState.Opened &&
+      {isRollBackModalOpen &&
         createPortal(
           <ConfirmationRollback
             revisionDate={formatDateTimeToLocalString(rollbackRevision?.timestamp)}
-            modalState={rollBackModalState}
+            isModalOpen={isRollBackModalOpen}
             onConfirm={systemRollback}
-            onClose={() => setRollBackModalState(PopUpState.Closed)}
+            onClose={() => setIsRollBackModalOpen(false)}
           />,
           document.body,
         )}
-      {revisionsModalState === PopUpState.Opened &&
+      {isRevisionsModalOpen &&
         createPortal(
           <RollbackRevisions
             initialRevisions={revisions?.filter((r) => r.id !== currentRevision?.id) || []}
             rollBackRevision={rollbackRevision as ActivityAuditRevision}
-            modalState={revisionsModalState}
+            isModalOpen={isRevisionsModalOpen}
             onApply={updateRevisions}
-            onClose={() => setRevisionsModalState(PopUpState.Closed)}
+            onClose={() => setRevisionModalOpen(false)}
           />,
           document.body,
         )}

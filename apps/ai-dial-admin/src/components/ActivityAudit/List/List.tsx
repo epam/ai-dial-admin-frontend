@@ -27,7 +27,6 @@ import { DialActivity } from '@/src/models/activity-audit';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { FilterDto } from '@/src/models/request';
 import { TimeRange } from '@/src/models/time-range';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { rollbackEntityPerType } from '@/src/utils/audit/get-rollback-request';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
@@ -49,7 +48,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
   const { showNotification } = useNotification();
 
   const [isRollbackModalOpen, setIsRollbackModalOpen] = useState(false);
-  const [detailsModalState, setDetailsModalState] = useState(PopUpState.Closed);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
@@ -60,7 +59,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
 
   const onCloseModal = useCallback(() => {
     setIsRollbackModalOpen(false);
-    setDetailsModalState(PopUpState.Closed);
+    setIsDetailsModalOpen(false);
     setSelectedActivity(void 0);
   }, [setIsRollbackModalOpen]);
 
@@ -142,7 +141,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
   }, []);
 
   const onOpenDetailsModal = useCallback((activity?: DialActivity) => {
-    setDetailsModalState(PopUpState.Opened);
+    setIsDetailsModalOpen(true);
     setSelectedActivity(activity);
   }, []);
 
@@ -277,12 +276,12 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
           </DialConfirmationPopup>,
           document.body,
         )}
-      {detailsModalState === PopUpState.Opened &&
+      {isDetailsModalOpen &&
         createPortal(
           <ActivityDetails
             entity={entity}
             auditViewId={selectedActivity?.activityId}
-            modalState={detailsModalState}
+            isModalOpen={isDetailsModalOpen}
             onClose={onCloseModal}
           />,
           document.body,
