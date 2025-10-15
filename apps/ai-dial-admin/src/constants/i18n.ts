@@ -237,21 +237,30 @@ export enum ButtonsI18nKey {
 }
 
 export enum CreateI18nKey {
-  Model = 'CreateEntity.Model',
-  Application = 'CreateEntity.Application',
-  Adapter = 'CreateEntity.Adapter',
-  Toolsets = 'CreateEntity.Toolsets',
-  ApplicationRunner = 'CreateEntity.ApplicationRunner',
-  Role = 'CreateEntity.Role',
-  Key = 'CreateEntity.Key',
-  Prompt = 'CreateEntity.Prompt',
-  Route = 'CreateEntity.Route',
-  Interceptor = 'CreateEntity.Interceptor',
-  CreateInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Create',
+  Title = 'CreateEntity.Title',
+
   SelectInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Select',
-  CreateAdapter = 'CreateEntity.Adapter.Create',
+
   SelectAdapter = 'CreateEntity.Adapter.Select',
   SelectContainer = 'CreateEntity.SelectContainer',
+
+  // Notification
+  NotificationTitle = 'CreateEntity.Notification.Title',
+  NotificationDescription = 'CreateEntity.Notification.Description',
+
+  // Entities
+  Model = 'CreateEntity.Entities.Model',
+  Application = 'CreateEntity.Entities.Application',
+  Toolsets = 'CreateEntity.Entities.Toolsets',
+  Route = 'CreateEntity.Entities.Route',
+  Interceptor = 'CreateEntity.Entities.Interceptor',
+  Role = 'CreateEntity.Entities.Role',
+  Key = 'CreateEntity.Entities.Key',
+  Prompt = 'CreateEntity.Entities.Prompt',
+  File = 'CreateEntity.Entities.File',
+  Adapter = 'CreateEntity.Entities.Adapter',
+  InterceptorTemplate = 'CreateEntity.Entities.InterceptorTemplate',
+  ApplicationRunner = 'CreateEntity.Entities.ApplicationRunner',
 }
 
 export enum UpstreamEndpointsI18nKey {

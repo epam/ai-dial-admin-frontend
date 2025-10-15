@@ -12,7 +12,6 @@ import { deleteInterceptorTemplate, updateInterceptorTemplate } from '@/src/app/
 import { createInterceptor } from '@/src/app/[lang]/interceptors/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
-import { createModalTitleMap } from '@/src/components/EntityListView/constants';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
@@ -128,7 +127,6 @@ const View: FC<Props> = ({ etag, template, names }) => {
           createPortal(
             <CreateEntity
               route={ApplicationRoute.Interceptors}
-              modalTitle={t(createModalTitleMap[ApplicationRoute.Interceptors])}
               isModalOpen={isModalOpen}
               createEntity={createInterceptor}
               onClose={() => setIsModalOpen(false)}

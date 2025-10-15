@@ -30,6 +30,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import BulkButtons from './BulkButtons';
 import Modals, { ModalType } from './Modals';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 
 interface Props<T> {
   names?: string[];
@@ -110,6 +111,12 @@ const Actions = <T extends object>({
           if (route === ApplicationRoute.Prompts) {
             folderContext?.fetchFiles?.(folderContext?.filePath);
           }
+          showNotification(
+            getSuccessNotification(
+              getCreateNotificationTitle(ApplicationRoute.Adapters, t),
+              getCreateNotificationDescription(ApplicationRoute.Adapters, (preparedEntity as { name: string }).name, t),
+            ),
+          );
           router.push(`${route}/${getEntityPath(route, preparedEntity)}`);
           router.refresh();
         } else {
@@ -118,7 +125,7 @@ const Actions = <T extends object>({
       };
       duplicate();
     },
-    [route, createEntity, handleModalClose, setCurrentEntity, router, folderContext, showNotification],
+    [route, createEntity, handleModalClose, setCurrentEntity, showNotification, t, router, folderContext],
   );
 
   const onMove = useCallback(
