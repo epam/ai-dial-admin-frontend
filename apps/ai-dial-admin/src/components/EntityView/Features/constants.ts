@@ -5,9 +5,10 @@ export const modelsTextFeatures: (keyof DialFeatures)[] = [
   'rateEndpoint',
   'tokenizeEndpoint',
   'truncatePromptEndpoint',
+  'configurationEndpoint',
 ];
 
-export const applicationTextFeatures: (keyof DialFeatures)[] = [...modelsTextFeatures, 'configurationEndpoint'];
+export const applicationTextFeatures: (keyof DialFeatures)[] = [...modelsTextFeatures];
 
 export const placeholdersMap: Record<string, EntityPlaceholdersI18nKey> = {
   rateEndpoint: EntityPlaceholdersI18nKey.RateEndpoint,
