@@ -10,7 +10,7 @@ import { getSuccessNotification } from '@/src/utils/notification';
 
 interface Props {
   title: string;
-  field: string;
+  field?: string;
   isFullButton?: boolean;
 }
 
