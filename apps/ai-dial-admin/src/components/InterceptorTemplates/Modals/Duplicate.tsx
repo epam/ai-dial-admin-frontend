@@ -1,24 +1,22 @@
 import { FC, useEffect, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, DuplicateI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { PopUpState } from '@/src/types/pop-up';
 
-import Popup from '@/src/components/Common/Popup/Popup';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
-  modalState: PopUpState;
+  isModalOpen: boolean;
   onClose: () => void;
   template: InterceptorTemplate;
   onDuplicate: (template: InterceptorTemplate) => void;
   names?: string[];
 }
-const DuplicateTemplate: FC<Props> = ({ onDuplicate, modalState, onClose, template, names }) => {
+const DuplicateTemplate: FC<Props> = ({ onDuplicate, isModalOpen, onClose, template, names }) => {
   const t = useI18n() as (t: string) => string;
   const { isValid, dispatch } = useSaveValidationContext();
 
@@ -34,11 +32,23 @@ const DuplicateTemplate: FC<Props> = ({ onDuplicate, modalState, onClose, templa
   }, []);
 
   return (
-    <Popup
+    <DialPopup
       onClose={onClose}
-      heading={t(DuplicateI18nKey.InterceptorTemplate)}
+      title={t(DuplicateI18nKey.InterceptorTemplate)}
       portalId="DuplicateTemplate"
-      state={modalState}
+      open={isModalOpen}
+      footer={
+        <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
+          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
+
+          <DialButton
+            variant={ButtonVariant.Primary}
+            title={t(ButtonsI18nKey.Duplicate)}
+            disable={!isValid}
+            onClick={() => onDuplicate(clonedTemplate)}
+          />
+        </div>
+      }
     >
       <div className="flex flex-col px-6 py-4 gap-y-6">
         <IdControl entity={clonedTemplate} names={names} onChangeEntity={setTemplate} />
@@ -48,17 +58,7 @@ const DuplicateTemplate: FC<Props> = ({ onDuplicate, modalState, onClose, templa
           onChange={(displayName) => setTemplate({ ...clonedTemplate, displayName })}
         />
       </div>
-      <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
-
-        <DialButton
-          variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Duplicate)}
-          disable={!isValid}
-          onClick={() => onDuplicate(clonedTemplate)}
-        />
-      </div>
-    </Popup>
+    </DialPopup>
   );
 };
 
