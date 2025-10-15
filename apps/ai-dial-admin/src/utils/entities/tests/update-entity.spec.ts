@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '../update-entity';
 
 describe('Update :: utils', () => {
-  const tWithProps = (str: string, props?:s Record<string, string>) => str + ' with props';
+  const tWithProps = (str: string, props?: Record<string, string>) => str + ' with props';
 
   it('getUpdateNotificationTitle returns a string', () => {
     expect(getUpdateNotificationTitle(ApplicationRoute.Interceptors, tWithProps)).toBe(
