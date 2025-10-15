@@ -236,12 +236,31 @@ export enum ButtonsI18nKey {
   BulkActions = 'Buttons.BulkActions',
 }
 
+export enum UpdateI18nKey {
+  // Notification
+  NotificationTitle = 'UpdateEntity.Notification.Title',
+  NotificationDescription = 'UpdateEntity.Notification.Description',
+
+  // Entities
+  Model = 'UpdateEntity.Entities.Model',
+  Application = 'UpdateEntity.Entities.Application',
+  Toolsets = 'UpdateEntity.Entities.Toolsets',
+  Route = 'UpdateEntity.Entities.Route',
+  Interceptor = 'UpdateEntity.Entities.Interceptor',
+  Role = 'UpdateEntity.Entities.Role',
+  Key = 'UpdateEntity.Entities.Key',
+  Prompt = 'UpdateEntity.Entities.Prompt',
+  File = 'UpdateEntity.Entities.File',
+  Adapter = 'UpdateEntity.Entities.Adapter',
+  InterceptorTemplate = 'UpdateEntity.Entities.InterceptorTemplate',
+  ApplicationRunner = 'UpdateEntity.Entities.ApplicationRunner',
+}
+
 export enum CreateI18nKey {
   Title = 'CreateEntity.Title',
 
-  SelectInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Select',
-
-  SelectAdapter = 'CreateEntity.Adapter.Select',
+  SelectInterceptorTemplate = 'CreateEntity.SelectInterceptorTemplate',
+  SelectAdapter = 'CreateEntity.SelectAdapter',
   SelectContainer = 'CreateEntity.SelectContainer',
 
   // Notification

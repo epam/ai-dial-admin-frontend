@@ -220,16 +220,33 @@ export default {
   },
   CreateEntity: {
     Title: 'Create {entity}',
+    SelectAdapter: 'Select Adapter',
+    SelectInterceptorTemplate: 'Select Interceptor Template',
     SelectContainer: 'Select Container',
-    InterceptorTemplate: {
-      Select: 'Select Interceptor Template',
-    },
-    Adapter: {
-      Select: 'Select Adapter',
-    },
+
     Notification: {
       Title: '{entity} created successfully',
       Description: '{entity} {entityId} has been added to the list.',
+    },
+    Entities: {
+      Model: 'Model',
+      Application: 'Application',
+      Toolsets: 'Toolsets',
+      Interceptor: 'Interceptor',
+      Route: 'Route',
+      Role: 'Role',
+      Key: 'Key',
+      Prompt: 'Prompt',
+      File: 'File',
+      Adapter: 'Adapter',
+      InterceptorTemplate: 'Interceptor Template',
+      ApplicationRunner: 'Application Runner',
+    },
+  },
+  UpdateEntity: {
+    Notification: {
+      Title: '{entity} updated successfully',
+      Description: '{entity} {entityId} has been updated. Changes can be reverted using Rollback.',
     },
     Entities: {
       Model: 'Model',
