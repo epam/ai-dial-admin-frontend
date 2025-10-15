@@ -663,6 +663,7 @@ export default {
     DeleteFolderDescription: 'Are you sure that you want to delete all subfolders and {asset}?',
     Folders: 'Folders',
     CollapseAll: 'Collapse all folders',
+    NoPreviewArchive: 'Preview is not available for DIAL Admin Archive file type',
   },
   ActivityAudit: {
     ResourceDiff: 'Resource diff',
