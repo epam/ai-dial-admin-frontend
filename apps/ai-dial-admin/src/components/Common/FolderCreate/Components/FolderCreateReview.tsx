@@ -16,6 +16,7 @@ import {
   readAllFiles,
   readJsonFiles,
 } from '@/src/components/Common/FolderCreate/utils';
+import NoPreview from '@/src/components/Common/NoPreview/NoPreview';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
 import {
   changeFilesMap,
@@ -23,13 +24,13 @@ import {
   generatePromptRowDataForImportGrid,
 } from '@/src/components/EntityListView/Import/import';
 import Grid from '@/src/components/Grid/Grid';
-import { MenuI18nKey } from '@/src/constants/i18n';
+import { FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
+import { PromptImportGridData } from '@/src/models/prompts';
 import { Step, StepStatus } from '@/src/models/step';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
-import { PromptImportGridData } from '@/src/models/prompts';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
@@ -173,7 +174,9 @@ const FolderCreateReview: FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, editedFileMap]);
 
-  return (
+  return fileType === ImportFileType.ARCHIVE ? (
+    <NoPreview text={t(FoldersI18nKey.NoPreviewArchive)} />
+  ) : (
     <div className="flex flex-col flex-1 min-h-0">
       <div>
         {t(MenuI18nKey.Files)}: {count || 0}

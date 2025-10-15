@@ -603,6 +603,7 @@ export enum FoldersI18nKey {
   DeleteFolder = 'Folder.DeleteFolder',
   DeleteFolderDescription = 'Folder.DeleteFolderDescription',
   CollapseAll = 'Folder.CollapseAll',
+  NoPreviewArchive = 'Folder.NoPreviewArchive',
 }
 
 export enum ActivityAuditI18nKey {
