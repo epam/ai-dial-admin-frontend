@@ -2,7 +2,7 @@ import { JWT } from 'next-auth/jwt';
 
 import { DEFAULT_ETAG, IF_MATCH, IF_NONE_MATCH } from '@/src/constants/api-headers';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { AssetApp } from '@/src/models/dial/deployment-asset';
+import { DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -47,14 +47,14 @@ export class AssetsApi extends BaseApi {
     token: JWT | null,
     path: string,
     type: ResourceType,
-  ): Promise<(AssetApp | DialPrompt | DialFile)[] | null | undefined> {
+  ): Promise<(DeploymentAsset | DialPrompt | DialFile)[] | null | undefined> {
     const url = this.buildUrl(type, ResourceOperation.LIST);
     if (type === ResourceType.FILE) {
       return this.post(ResourceBasePaths[type], { path }, token).then((response) =>
         response === void 0 ? void 0 : (response as { items: DialFile[] })?.items || [],
       );
     } else {
-      const allItems: AssetApp[] = [];
+      const allItems: DeploymentAsset | DialPrompt[] = [];
       let nextToken: string | undefined = undefined;
 
       while (true) {
@@ -63,7 +63,9 @@ export class AssetsApi extends BaseApi {
           body.nextToken = nextToken;
         }
 
-        const response = (await this.post(url, body, token)) as { items: AssetApp[]; nextToken?: string } | undefined;
+        const response = (await this.post(url, body, token)) as
+          | { items: DeploymentAsset | DialPrompt[]; nextToken?: string }
+          | undefined;
 
         if (!response) break;
 
@@ -94,7 +96,7 @@ export class AssetsApi extends BaseApi {
 
   updateAssetWithEtag(
     token: JWT | null,
-    asset: AssetApp,
+    asset: DeploymentAsset | DialPrompt,
     type: ResourceType,
     etag: string,
   ): Promise<ServerActionResponse> {
@@ -102,9 +104,22 @@ export class AssetsApi extends BaseApi {
     return this.postAction(url, { ...asset }, token, { [IF_MATCH]: etag });
   }
 
-  updateAsset(token: JWT | null, asset: AssetApp, type: ResourceType): Promise<ServerActionResponse> {
+  updateAsset(
+    token: JWT | null,
+    asset: DeploymentAsset | DialPrompt,
+    type: ResourceType,
+  ): Promise<ServerActionResponse> {
     const url = this.buildUrl(type, ResourceOperation.UPDATE);
     return this.postAction(url, { ...asset }, token);
+  }
+
+  createAsset(
+    asset: DeploymentAsset | DialPrompt,
+    type: ResourceType,
+    token: JWT | null,
+  ): Promise<ServerActionResponse> {
+    const url = this.buildUrl(type, ResourceOperation.CREATE);
+    return this.postAction(url, { ...asset, folderId: asset.folderId || ROOT_FOLDER }, token);
   }
 
   removeAssetWithEtag(
@@ -163,15 +178,6 @@ export class AssetsApi extends BaseApi {
   }
 
   // PROMPT SPECIFIC
-
-  createPrompt(prompt: DialPrompt, token: JWT | null): Promise<ServerActionResponse> {
-    const url = this.buildUrl(ResourceType.PROMPT, ResourceOperation.CREATE);
-    return this.postAction(
-      url,
-      { ...prompt, content: prompt.content || '', folderId: prompt.folderId || ROOT_FOLDER },
-      token,
-    );
-  }
 
   exportPrompts(
     token: JWT | null,

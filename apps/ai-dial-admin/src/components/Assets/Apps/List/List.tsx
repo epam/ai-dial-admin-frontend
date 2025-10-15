@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { bulkDeleteApps, moveApps, removeApp } from '@/src/app/[lang]/assets-applications/actions';
+import { bulkDeleteApps, createApp, moveApps, removeApp } from '@/src/app/[lang]/assets-applications/actions';
 import { filterLatestVersions, getVersionsPerName } from '@/src/components/Assets/utils';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import Page403 from '@/src/components/Page403/Page403';
@@ -32,6 +32,7 @@ const AppsList: FC = () => {
       data={filteredData}
       route={ApplicationRoute.AssetsApplications}
       removeEntity={removeApp}
+      createEntity={createApp}
       moveFiles={moveApps}
       bulkDelete={bulkDeleteApps}
       context={useAppsFolder as () => AssetsFolderContext<AssetApp | DialFile>}
