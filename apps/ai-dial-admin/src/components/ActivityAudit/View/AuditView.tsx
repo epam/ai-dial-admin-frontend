@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { ButtonVariant, DialButton, DialConfirmationPopup, DialTooltip } from '@epam/ai-dial-ui-kit';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
-import { ActivityAuditI18nKey, ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { ActivityAuditI18nKey, ButtonsI18nKey, EntityFieldsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -25,6 +25,12 @@ import CompareControl from '@/src/components/ActivityAudit/View/DiffReport/Compa
 import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
 import ViewHeader from '@/src/components/ActivityAudit/View/Header/Header';
 import { generateCurrentResource } from './utils/generate-diffs';
+import {
+  getRollbackErrorDescription,
+  getRollbackErrorTitle,
+  getRollbackSuccessDescription,
+  getRollbackSuccessTitle,
+} from '@/src/utils/entities/rollback-entity';
 
 interface Props {
   activity: DialActivity;
@@ -84,18 +90,13 @@ const AuditView: FC<Props> = ({
         if (res?.success) {
           showNotification(
             getSuccessNotification(
-              t(ActivityAuditI18nKey.ResourceRollback),
-              t(ActivityAuditI18nKey.ResourceRollbackDescription),
+              getRollbackSuccessTitle(activity.resourceType, t),
+              getRollbackSuccessDescription(activity.resourceType, t),
             ),
           );
           router.push(ApplicationRoute.ActivityAudit);
         } else {
-          showNotification(
-            getErrorNotification(
-              res?.errorHeader || t(ActivityAuditI18nKey.ResourceRollbackErrorTitle),
-              res?.errorMessage,
-            ),
-          );
+          showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage));
         }
 
         onCloseModal();
@@ -104,8 +105,8 @@ const AuditView: FC<Props> = ({
         setIsLoading(false);
         showNotification(
           getErrorNotification(
-            t(ActivityAuditI18nKey.ResourceRollbackErrorTitle),
-            t(ActivityAuditI18nKey.ResourceRollbackErrorDescription),
+            getRollbackErrorTitle(activity.resourceType, t),
+            getRollbackErrorDescription(activity.resourceType, t),
           ),
         );
       });
@@ -131,7 +132,7 @@ const AuditView: FC<Props> = ({
               <DialButton
                 iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
                 variant={ButtonVariant.Secondary}
-                title={t(ActivityAuditI18nKey.RollbackResource)}
+                title={t(RollbackI18nKey.Resource)}
                 onClick={onOpenModal}
               />
             </div>
@@ -160,7 +161,7 @@ const AuditView: FC<Props> = ({
           <DialConfirmationPopup
             open={isOpenModal}
             isLoading={isLoading}
-            title={t(ActivityAuditI18nKey.ConfirmRollback)}
+            title={t(RollbackI18nKey.ConfirmResourceRollbackTitle)}
             onConfirm={resourceRollback}
             confirmLabel={t(ButtonsI18nKey.Rollback)}
             onClose={onCloseModal}

@@ -23,7 +23,7 @@ import DiffLegend from '@/src/components/ActivityAudit/View/DiffReport/DiffLegen
 import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
 import { mergeEntityMaps } from '@/src/components/ActivityAudit/View/utils/generate-diffs';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
-import { ActivityAuditI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { ActivityAuditI18nKey, MenuI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { ActivityAuditDiff, DialActivity } from '@/src/models/activity-audit';
@@ -155,7 +155,7 @@ const SystemRollback: FC = () => {
             className="flex flex-row items-center small bg-layer-3 rounded h-6 p-2 cursor-pointer"
             onClick={() => setRevisionsModalState(PopUpState.Opened)}
           >
-            <span>{t(ActivityAuditI18nKey.RollbackRevision)}</span>
+            <span>{t(RollbackI18nKey.Revision)}</span>
             <span>: {formatDateTimeToLocalString(rollbackRevision?.timestamp)}</span>
             <div className="pl-1">
               <OpenPopup />

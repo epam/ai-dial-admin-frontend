@@ -607,23 +607,6 @@ export enum FoldersI18nKey {
 
 export enum ActivityAuditI18nKey {
   ResourceDiff = 'ActivityAudit.ResourceDiff',
-  RollbackResource = 'ActivityAudit.RollbackResource',
-  RollbackSystem = 'ActivityAudit.RollbackSystem',
-  ConfirmRollback = 'ActivityAudit.ConfirmRollback',
-  ConfirmSystemRollback = 'ActivityAudit.ConfirmSystemRollback',
-  ConfirmSystemRollbackDescription = 'ActivityAudit.ConfirmSystemRollbackDescription',
-  ConfirmSystemRollbackAlert = 'ActivityAudit.ConfirmSystemRollbackAlert',
-  ConfirmSystemRollbackLabel = 'ActivityAudit.ConfirmSystemRollbackLabel',
-  ConfirmSystemRollbackPlaceholder = 'ActivityAudit.ConfirmSystemRollbackPlaceholder',
-  ConfirmRollbackDescriptionPart1 = 'ActivityAudit.ConfirmRollbackDescription.Part1',
-  ConfirmRollbackDescriptionPart2 = 'ActivityAudit.ConfirmRollbackDescription.Part2',
-  ConfirmRollbackDescriptionPart3 = 'ActivityAudit.ConfirmRollbackDescription.Part3',
-  ConfirmSelectionRollbackDescription = 'ActivityAudit.ConfirmSelectionRollbackDescription',
-  ConfirmRollbackAsking = 'ActivityAudit.ConfirmRollbackAsking',
-  ResourceRollback = 'ActivityAudit.ResourceRollback',
-  ResourceRollbackDescription = 'ActivityAudit.ResourceRollbackDescription',
-  ResourceRollbackErrorTitle = 'ActivityAudit.ResourceRollbackErrorTitle',
-  ResourceRollbackErrorDescription = 'ActivityAudit.ResourceRollbackErrorDescription',
   AllParameters = 'ActivityAudit.AllParameters',
   AllResources = 'ActivityAudit.AllResources',
   Differences = 'ActivityAudit.Differences',
@@ -635,11 +618,51 @@ export enum ActivityAuditI18nKey {
   UserId = 'ActivityAudit.UserId',
   ActivityId = 'ActivityAudit.ActivityId',
   CurrentState = 'ActivityAudit.CurrentState',
-  RollbackState = 'ActivityAudit.RollbackState',
-  RollbackRevision = 'ActivityAudit.RollbackRevision',
   ActivityDetails = 'ActivityAudit.ActivityDetails',
   BeforeAfter = 'ActivityAudit.BeforeAfter',
   BeforeCurrent = 'ActivityAudit.BeforeCurrent',
+}
+
+export enum RollbackI18nKey {
+  State = 'Rollback.State',
+  Revision = 'Rollback.Revision',
+  Resource = 'Rollback.Resource',
+  System = 'Rollback.System',
+  ConfirmRollbackAsking = 'Rollback.ConfirmRollbackAsking',
+
+  // Resource rollback
+  ConfirmResourceRollbackTitle = 'Rollback.ResourceRollback.Title',
+  ConfirmRollbackDescriptionPart1 = 'Rollback.ConfirmRollbackDescription.Part1',
+  ConfirmRollbackDescriptionPart2 = 'Rollback.ConfirmRollbackDescription.Part2',
+  ConfirmRollbackDescriptionPart3 = 'Rollback.ConfirmRollbackDescription.Part3',
+  ConfirmSelectionRollbackDescription = 'Rollback.ResourceRollback.SelectionRollbackDescription',
+
+  // System rollback
+  ConfirmSystemRollbackTitle = 'Rollback.SystemRollback.Title',
+  ConfirmSystemRollbackDescription = 'Rollback.SystemRollback.Description',
+  ConfirmSystemRollbackAlert = 'Rollback.SystemRollback.Alert',
+  ConfirmSystemRollbackLabel = 'Rollback.SystemRollback.Label',
+  ConfirmSystemRollbackPlaceholder = 'Rollback.SystemRollback.Placeholder',
+
+  // Notification
+  NotificationErrorTitle = 'Rollback.Notification.ErrorTitle',
+  NotificationErrorDescription = 'Rollback.Notification.ErrorDescription',
+  NotificationSuccessTitle = 'Rollback.Notification.SuccessTitle',
+  NotificationSuccessDescription = 'Rollback.Notification.SuccessDescription',
+
+  // Entities
+  Model = 'Rollback.Entities.Model',
+  Application = 'Rollback.Entities.Application',
+  Toolsets = 'Rollback.Entities.Toolsets',
+  Route = 'Rollback.Entities.Route',
+  Interceptor = 'Rollback.Entities.Interceptor',
+  Role = 'Rollback.Entities.Role',
+  Key = 'Rollback.Entities.Key',
+  Prompt = 'Rollback.Entities.Prompt',
+  File = 'Rollback.Entities.File',
+  Adapter = 'Rollback.Entities.Adapter',
+  InterceptorTemplate = 'Rollback.Entities.InterceptorTemplate',
+  ApplicationRunner = 'Rollback.Entities.ApplicationRunner',
 }
 
 export enum ErrorI18nKey {
