@@ -13,25 +13,25 @@ describe('Rollback :: utils', () => {
 
   it('getRollbackSuccessTitle returns a string', () => {
     expect(getRollbackSuccessTitle(ActivityAuditResourceType.INTERCEPTOR, tWithProps)).toBe(
-      `${RollbackI18nKey.NotificationTitle} with props`,
+      `${RollbackI18nKey.NotificationSuccessTitle} with props`,
     );
   });
 
   it('getRollbackSuccessDescription returns a string', () => {
     expect(getRollbackSuccessDescription(ActivityAuditResourceType.INTERCEPTOR, tWithProps)).toBe(
-      `${RollbackI18nKey.NotificationDescription} with props`,
+      `${RollbackI18nKey.NotificationSuccessDescription} with props`,
     );
   });
 
   it('getRollbackErrorTitle returns a string', () => {
     expect(getRollbackErrorTitle(ActivityAuditResourceType.INTERCEPTOR, tWithProps)).toBe(
-      `${RollbackI18nKey.NotificationTitle} with props`,
+      `${RollbackI18nKey.NotificationErrorTitle} with props`,
     );
   });
 
   it('getRollbackErrorDescription returns a string', () => {
     expect(getRollbackErrorDescription(ActivityAuditResourceType.INTERCEPTOR, tWithProps)).toBe(
-      `${RollbackI18nKey.NotificationDescription} with props`,
+      `${RollbackI18nKey.NotificationErrorDescription} with props`,
     );
   });
 });
