@@ -2,6 +2,8 @@
 
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { IconEyeOff } from '@tabler/icons-react';
 import { CellValueChangedEvent, ColDef, GridApi, GridReadyEvent, RowClassRules } from 'ag-grid-community';
 
 import { previewPromptZip } from '@/src/app/[lang]/folders-storage/actions';
@@ -23,13 +25,13 @@ import {
   generatePromptRowDataForImportGrid,
 } from '@/src/components/EntityListView/Import/import';
 import Grid from '@/src/components/Grid/Grid';
-import { MenuI18nKey } from '@/src/constants/i18n';
+import { FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
+import { PromptImportGridData } from '@/src/models/prompts';
 import { Step, StepStatus } from '@/src/models/step';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
-import { PromptImportGridData } from '@/src/models/prompts';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
 interface Props {
@@ -173,7 +175,9 @@ const FolderCreateReview: FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, editedFileMap]);
 
-  return (
+  return fileType === ImportFileType.ARCHIVE ? (
+    <DialNoDataContent title={t(FoldersI18nKey.NoPreviewArchive)} icon={<IconEyeOff width={50} height={50} />} />
+  ) : (
     <div className="flex flex-col flex-1 min-h-0">
       <div>
         {t(MenuI18nKey.Files)}: {count || 0}
