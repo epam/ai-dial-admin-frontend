@@ -113,8 +113,8 @@ const Actions = <T extends object>({
           }
           showNotification(
             getSuccessNotification(
-              getCreateNotificationTitle(ApplicationRoute.Adapters, t),
-              getCreateNotificationDescription(ApplicationRoute.Adapters, (preparedEntity as { name: string }).name, t),
+              getCreateNotificationTitle(route, t),
+              getCreateNotificationDescription(route, (preparedEntity as { name: string }).name, t),
             ),
           );
           router.push(`${route}/${getEntityPath(route, preparedEntity)}`);
