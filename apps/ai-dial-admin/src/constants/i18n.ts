@@ -860,6 +860,17 @@ export enum EntityFieldsI18nKey {
   authenticationType = 'EntityFields.authenticationType',
   tokenEndpoint = 'EntityFields.tokenEndpoint',
   authSettings = 'EntityFields.authSettings',
+  share = 'EntityFields.share',
+  'application.invitationTtl' = 'EntityFields.applicationInvitationTtl',
+  'application.maxAcceptedUsers' = 'EntityFields.applicationMaxAcceptedUsers',
+  'conversation.invitationTtl' = 'EntityFields.conversationInvitationTtl',
+  'conversation.maxAcceptedUsers' = 'EntityFields.conversationMaxAcceptedUsers',
+  'file.invitationTtl' = 'EntityFields.fileInvitationTtl',
+  'file.maxAcceptedUsers' = 'EntityFields.fileMaxAcceptedUsers',
+  'prompt.invitationTtl' = 'EntityFields.promptInvitationTtl',
+  'prompt.maxAcceptedUsers' = 'EntityFields.promptMaxAcceptedUsers',
+  'tool_set.invitationTtl' = 'EntityFields.tool_setInvitationTtl',
+  'tool_set.maxAcceptedUsers' = 'EntityFields.tool_setMaxAcceptedUsers',
 }
 
 export enum ToolsetI18nKey {

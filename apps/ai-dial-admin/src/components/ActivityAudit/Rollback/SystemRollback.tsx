@@ -2,9 +2,9 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { ButtonVariant, DialButton, DialLoader } from '@epam/ai-dial-ui-kit';
 import { IconRestore } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
-import { ButtonVariant, DialButton, DialLoader } from '@epam/ai-dial-ui-kit';
 
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 import {
@@ -12,11 +12,16 @@ import {
   getRevisions,
   systemRollbackToRevision,
 } from '@/src/app/[lang]/activity-audit/actions';
-import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
-import DiffLegend from '@/src/components/ActivityAudit/View/DiffReport/DiffLegend';
+import { sorts } from '@/src/components/ActivityAudit/constants';
 import AuditEntityGrid from '@/src/components/ActivityAudit/EntityGrid/EntityGrid';
-import { mergeEntityMaps } from '@/src/components/ActivityAudit/View/utils';
+import ConfirmationRollback from '@/src/components/ActivityAudit/Modals/Confirmation';
+import RollbackRevisions from '@/src/components/ActivityAudit/Modals/Revisions';
+import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
+import { SYSTEM_ROLLBACK_ENTITIES, SYSTEM_ROLLBACK_TAB_NAME } from '@/src/components/ActivityAudit/Rollback/constants';
 import { getSystemRollbackColumns } from '@/src/components/ActivityAudit/Rollback/utils';
+import DiffLegend from '@/src/components/ActivityAudit/View/DiffReport/DiffLegend';
+import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
+import { mergeEntityMaps } from '@/src/components/ActivityAudit/View/utils/generate-diffs';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import { ActivityAuditI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -27,11 +32,6 @@ import { ActivityAuditEntity, ActivityAuditResourceType, DiffView } from '@/src/
 import { PopUpState } from '@/src/types/pop-up';
 import { getRevisionRouteForAllEntities } from '@/src/utils/audit/get-revision-route';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import ConfirmationRollback from '@/src/components/ActivityAudit/Modals/Confirmation';
-import RollbackRevisions from '@/src/components/ActivityAudit/Modals/Revisions';
-import { SYSTEM_ROLLBACK_ENTITIES, SYSTEM_ROLLBACK_TAB_NAME } from '@/src/components/ActivityAudit/Rollback/constants';
-import { sorts } from '@/src/components/ActivityAudit/constants';
-import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
 
 const SystemRollback: FC = () => {
   const t = useI18n() as (t: string) => string;
