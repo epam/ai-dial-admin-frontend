@@ -34,7 +34,7 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
   return (
     <div className="flex flex-col w-full h-full overflow-auto">
       <div className="mb-6 flex flex-row justify-between bg-layer-2 p-[32px] relative">
-        <div className="flex flex-col w-full lg:w-[55%] z-[10]">
+        <div className="flex flex-col w-full xl:w-[55%] z-[10]">
           <h1 className="mb-3">{t(WelcomeViewI18nKey.Title)}</h1>
           <p className="mb-2">{t(WelcomeViewI18nKey.Description)}</p>
           {docLink && (
@@ -50,7 +50,7 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
             </div>
           )}
         </div>
-        <div className="absolute top-3 right-5 hidden lg:block">
+        <div className="absolute top-3 right-5 hidden xl:block">
           <HeaderIcon />
         </div>
       </div>
@@ -79,7 +79,7 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
             <DialButton
               iconBefore={<IconExternalLink {...BASE_ICON_PROPS} widths={24} height={24} />}
               variant={ButtonVariant.Secondary}
-              cssClass="p-4 lg:px-3 lg:py-2 h-[56px] w-[56px] lg:h-[42px] lg:w-auto"
+              cssClass="secondary p-4 lg:px-3 lg:py-2 h-[56px] lg:h-[42px]"
               title={dialButtonName || t(WelcomeViewI18nKey.OpenDial)}
               onClick={() => {
                 window.open(dialLink, '_blank');
