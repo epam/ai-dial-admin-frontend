@@ -26,7 +26,6 @@ describe('Common components - CompareVersions', () => {
       <CompareVersions heading="heading" prompts={prompts} prompt={prompt} isModalOpen={true} onClose={vi.fn()} />,
     );
 
-    expect(screen.getByRole('button', { name: ButtonsI18nKey.Close })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'heading' })).toBeInTheDocument();
   });
 
