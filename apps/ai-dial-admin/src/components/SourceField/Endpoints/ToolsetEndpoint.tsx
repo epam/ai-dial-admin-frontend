@@ -12,6 +12,7 @@ import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { useI18n } from '@/src/locales/client';
 
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
+import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
 
 interface Props {
   entity: Toolset;
@@ -30,12 +31,14 @@ const ToolsetEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) => {
   return (
     <div className={classNames('flex flex-col gap-6', !isModal && 'lg:w-[35%]')}>
       {prefix ? (
-        <DialTextInputField
-          elementId={'endpoint'}
+        <ComplexInput
+          elementId="endpoint"
           textBeforeInput={prefix}
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
           value={entity.source?.completionEndpointPath}
+          fullValue={entity.source?.completionEndpointPath}
+          copyable={true}
           onChange={(completionEndpointPath) =>
             onChange({
               ...entity,
