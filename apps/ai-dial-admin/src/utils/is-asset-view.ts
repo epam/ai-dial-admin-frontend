@@ -7,3 +7,11 @@ export const isAssetView = (view?: ApplicationRoute): boolean => {
 export const isDeploymentAsset = (view?: ApplicationRoute): boolean => {
   return view === ApplicationRoute.AssetsApplications || view === ApplicationRoute.AssetsToolsets;
 };
+
+export const isBuildersView = (view?: ApplicationRoute): boolean => {
+  return (
+    view === ApplicationRoute.Adapters ||
+    view === ApplicationRoute.ApplicationRunners ||
+    view === ApplicationRoute.InterceptorTemplates
+  );
+};

@@ -2,13 +2,13 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import {
   ButtonVariant,
   DialButton,
+  DialPopup,
   DialRadioGroup,
   RadioButtonWithContent,
   RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
 
 import FilePath from '@/src/components/Common/FilePath/FilePath';
-import Popup from '@/src/components/Common/Popup/Popup';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
 import {
@@ -24,19 +24,18 @@ import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { PopUpState } from '@/src/types/pop-up';
 import { DuplicationTypes } from '@/src/types/prompt';
 import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/prompts/versions';
 
 interface Props {
-  modalState: PopUpState;
+  isModalOpen: boolean;
   entity: DialPrompt;
   versionsMap: Record<string, string[]>;
   onClose: () => void;
   onDuplicate: (entity: DialPrompt) => void;
 }
 
-const DuplicatePrompt: FC<Props> = ({ modalState, entity, versionsMap, onDuplicate, onClose }) => {
+const DuplicatePrompt: FC<Props> = ({ isModalOpen, entity, versionsMap, onDuplicate, onClose }) => {
   const t = useI18n();
   const initialName = entity.name;
   const initialFolder = entity.folderId;
@@ -95,7 +94,24 @@ const DuplicatePrompt: FC<Props> = ({ modalState, entity, versionsMap, onDuplica
   );
 
   return (
-    <Popup onClose={onClose} heading={t(DuplicateI18nKey.PromptHeader)} portalId="DuplicatePrompt" state={modalState}>
+    <DialPopup
+      onClose={onClose}
+      title={t(DuplicateI18nKey.Prompt)}
+      portalId="DuplicatePrompt"
+      open={isModalOpen}
+      footer={
+        <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
+          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
+
+          <DialButton
+            variant={ButtonVariant.Primary}
+            title={t(ButtonsI18nKey.Duplicate)}
+            disable={!isValid}
+            onClick={() => onDuplicate(clonedPrompt)}
+          />
+        </div>
+      }
+    >
       <div className="flex flex-col px-6 py-4 gap-4">
         <DialRadioGroup
           radioButtons={duplicationTypes}
@@ -123,17 +139,7 @@ const DuplicatePrompt: FC<Props> = ({ modalState, entity, versionsMap, onDuplica
           />
         )}
       </div>
-      <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
-
-        <DialButton
-          variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Duplicate)}
-          disable={!isValid}
-          onClick={() => onDuplicate(clonedPrompt)}
-        />
-      </div>
-    </Popup>
+    </DialPopup>
   );
 };
 

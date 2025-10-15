@@ -15,7 +15,7 @@ describe('Duplicate InterceptorTemplate Modal', () => {
   test('Should render all important elements', () => {
     render(
       <Duplicate
-        modalState={PopUpState.Opened}
+        isModalOpen={true}
         onClose={onCloseMock}
         template={{ name: 't', displayName: '', description: '' }}
         onDuplicate={onDuplicateMock}
@@ -33,7 +33,7 @@ describe('Duplicate InterceptorTemplate Modal', () => {
   test.skip('Should call onDuplicate when Duplicate button is clicked', async () => {
     render(
       <Duplicate
-        modalState={PopUpState.Opened}
+        isModalOpen={true}
         onClose={onCloseMock}
         template={{ name: 't', displayName: '', description: '' }}
         onDuplicate={onDuplicateMock}
@@ -51,7 +51,7 @@ describe('Duplicate InterceptorTemplate Modal', () => {
   test('Should call onClose when Cancel button is clicked', async () => {
     render(
       <Duplicate
-        modalState={PopUpState.Opened}
+        isModalOpen={true}
         onClose={onCloseMock}
         template={{ name: 't', displayName: '', description: '' }}
         onDuplicate={onDuplicateMock}

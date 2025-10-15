@@ -1,27 +1,26 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 
 import { createAdapter } from '@/src/app/[lang]/adapters/actions';
 import AdapterProperties from '@/src/components/Adapter/View/AdapterProperties';
-import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getErrorNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 
 interface Props {
-  modalState: PopUpState;
+  isModalOpen: boolean;
   onClose: () => void;
   names: string[];
 }
 
-const CreateAdapter: FC<Props> = ({ modalState, onClose, names }) => {
+const CreateAdapter: FC<Props> = ({ isModalOpen, onClose, names }) => {
   const t = useI18n() as (t: string) => string;
   const router = useRouter();
 
@@ -54,16 +53,22 @@ const CreateAdapter: FC<Props> = ({ modalState, onClose, names }) => {
     createAdapter(currentAdapter).then((res) => {
       if (res.success) {
         const originalRoute = ApplicationRoute.Adapters.split('/')[1];
+        showNotification(
+          getSuccessNotification(
+            getCreateNotificationTitle(ApplicationRoute.Adapters, t),
+            getCreateNotificationDescription(ApplicationRoute.Adapters, currentAdapter.name, t),
+          ),
+        );
         router.push(`${originalRoute}/${getEntityPath(ApplicationRoute.Adapters, res.response || currentAdapter)}`);
         onClose();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [currentAdapter, router, onClose, showNotification]);
+  }, [currentAdapter, showNotification, t, router, onClose]);
 
   return (
-    <Popup onClose={onClose} heading={t(CreateI18nKey.CreateAdapter)} portalId="CreateRunner" state={modalState}>
+    <DialPopup onClose={onClose} title={t(CreateI18nKey.Adapter)} portalId="CreateAdapter" open={isModalOpen}>
       <div className="flex flex-col px-6 py-4">
         <AdapterProperties entity={currentAdapter} names={names} onChangeAdapter={onChangeAdapter} />
       </div>
@@ -76,7 +81,7 @@ const CreateAdapter: FC<Props> = ({ modalState, onClose, names }) => {
           disable={!isValid}
         />
       </div>
-    </Popup>
+    </DialPopup>
   );
 };
 

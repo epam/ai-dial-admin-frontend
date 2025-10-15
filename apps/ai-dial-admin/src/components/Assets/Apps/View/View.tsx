@@ -11,7 +11,7 @@ import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/uti
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import { EntityViewTab, getIsParametersTabAvailable } from '@/src/components/EntityView/View/utils';
+import { EntityViewTab } from '@/src/components/EntityView/View/utils';
 import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
@@ -44,7 +44,7 @@ interface Props {
 
 const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, schemes, interceptors }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
-  const tabs = getTabsForAssetApp(t, getIsParametersTabAvailable(originalApp, schemes));
+  const tabs = getTabsForAssetApp(t);
   const router = useRouter();
   const { fetchFiles } = useAppsFolder();
   const { showNotification } = useNotification();
@@ -177,6 +177,8 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
             selectedEntity={selectedApp}
             jsonEditorEnabled={jsonEditorEnabled}
             isSkipRefresh={false}
+            isChanged={isChanged}
+            onSave={onSave}
             onChangeEntity={onChangeEntity as (entity: BaseEntity) => void}
           />
         )}

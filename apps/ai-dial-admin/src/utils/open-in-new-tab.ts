@@ -38,6 +38,7 @@ export const getEntityPath = (
     case ApplicationRoute.PromptPublications:
     case ApplicationRoute.FilePublications:
     case ApplicationRoute.ApplicationPublications:
+    case ApplicationRoute.ToolsetPublications:
       return `${encodeURIComponent((data as Publication).requestName)}?path=${(data as DialPrompt).path}`;
 
     case ApplicationRoute.ActivityAudit:

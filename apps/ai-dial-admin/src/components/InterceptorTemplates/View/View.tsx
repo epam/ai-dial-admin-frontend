@@ -12,7 +12,6 @@ import { deleteInterceptorTemplate, updateInterceptorTemplate } from '@/src/app/
 import { createInterceptor } from '@/src/app/[lang]/interceptors/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
-import { createModalTitleMap } from '@/src/components/EntityListView/constants';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
@@ -25,10 +24,10 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { getErrorNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
   etag: string;
@@ -44,7 +43,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isChanged, setIsChanged] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(cloneDeep(template));
-  const [createModalState, setCreateModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const tabs = [propertiesTabs(t), interceptorsTabs(t), auditTabs(t)];
 
@@ -68,12 +67,18 @@ const View: FC<Props> = ({ etag, template, names }) => {
   const onSave = useCallback(() => {
     updateInterceptorTemplate(selectedTemplate, etag).then((res) => {
       if (res.success) {
+        showNotification(
+          getSuccessNotification(
+            getUpdateNotificationTitle(ApplicationRoute.InterceptorTemplates, t),
+            getUpdateNotificationDescription(ApplicationRoute.InterceptorTemplates, selectedTemplate.name, t),
+          ),
+        );
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [router, selectedTemplate, etag, showNotification]);
+  }, [selectedTemplate, etag, showNotification, t, router]);
 
   const onDiscard = useCallback(() => {
     setSelectedTemplate(cloneDeep(template));
@@ -108,7 +113,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
             variant={ButtonVariant.Secondary}
             title={`${t(ButtonsI18nKey.Create)} ${t(DeleteI18nKey.Interceptor).toLowerCase()}`}
             iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-            onClick={() => setCreateModalState(PopUpState.Opened)}
+            onClick={() => setIsModalOpen(true)}
           />
         </HeaderButtons>
       </div>
@@ -125,14 +130,13 @@ const View: FC<Props> = ({ etag, template, names }) => {
         {activeTab === EntityViewTab.Audit && (
           <EntityAudit entity={selectedTemplate} view={ApplicationRoute.InterceptorTemplates} />
         )}
-        {createModalState === PopUpState.Opened &&
+        {isModalOpen &&
           createPortal(
             <CreateEntity
               route={ApplicationRoute.Interceptors}
-              modalTitle={t(createModalTitleMap[ApplicationRoute.Interceptors])}
-              modalState={createModalState}
+              isModalOpen={isModalOpen}
               createEntity={createInterceptor}
-              onClose={() => setCreateModalState(PopUpState.Closed)}
+              onClose={() => setIsModalOpen(false)}
               names={names || []}
               initialValues={source}
             />,

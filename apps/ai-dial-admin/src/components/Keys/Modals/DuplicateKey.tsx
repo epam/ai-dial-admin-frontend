@@ -1,19 +1,17 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 
-import Popup from '@/src/components/Common/Popup/Popup';
-import ValidityPeriodInput from '@/src/components/Common/ValidityPeriodInput/ValidityPeriodInput';
+import ValidityPeriod from '@/src/components/Keys/Modals/ValidityPeriod';
 import { ButtonsI18nKey, DuplicateI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
-import { PopUpState } from '@/src/types/pop-up';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import KeyGenerateField from '../View/Properties/KeyGenerateField';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
-  modalState: PopUpState;
+  isModalOpen: boolean;
   onClose: () => void;
   entity: DialKey;
   names: string[];
@@ -21,7 +19,7 @@ interface Props {
   onDuplicate: (entity: DialKey) => void;
 }
 
-const DuplicateKey: FC<Props> = ({ onDuplicate, modalState, onClose, entity, names, keys }) => {
+const DuplicateKey: FC<Props> = ({ onDuplicate, isModalOpen, onClose, entity, names, keys }) => {
   const t = useI18n() as (t: string) => string;
 
   const { isValid, dispatch } = useSaveValidationContext();
@@ -59,7 +57,24 @@ const DuplicateKey: FC<Props> = ({ onDuplicate, modalState, onClose, entity, nam
   }, [clonedEntity]);
 
   return (
-    <Popup onClose={onClose} heading={t(DuplicateI18nKey.KeyHeader)} portalId="DuplicateKey" state={modalState}>
+    <DialPopup
+      onClose={onClose}
+      title={t(DuplicateI18nKey.Key)}
+      portalId="DuplicateKey"
+      open={isModalOpen}
+      footer={
+        <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
+          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
+
+          <DialButton
+            variant={ButtonVariant.Primary}
+            title={t(ButtonsI18nKey.Duplicate)}
+            disable={!isValid || !isValidKey}
+            onClick={() => onDuplicate(clonedEntity)}
+          />
+        </div>
+      }
+    >
       <div className="flex flex-col gap-6 px-6 py-4">
         <IdControl entity={clonedEntity} names={names} onChangeEntity={setEntity} />
         <DisplayNameControl
@@ -68,19 +83,9 @@ const DuplicateKey: FC<Props> = ({ onDuplicate, modalState, onClose, entity, nam
         />
 
         <KeyGenerateField keys={keys} selectedKey={clonedEntity} changeKey={onChangeKey} />
-        <ValidityPeriodInput onChange={onChangeExpiresAt} />
+        <ValidityPeriod onChange={onChangeExpiresAt} />
       </div>
-      <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
-
-        <DialButton
-          variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Duplicate)}
-          disable={!isValid || !isValidKey}
-          onClick={() => onDuplicate(clonedEntity)}
-        />
-      </div>
-    </Popup>
+    </DialPopup>
   );
 };
 

@@ -1,4 +1,4 @@
-import { CreateI18nKey, DeleteI18nKey, EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export const listViewTitleMap: Record<string, MenuI18nKey> = {
@@ -14,6 +14,7 @@ export const listViewTitleMap: Record<string, MenuI18nKey> = {
   [ApplicationRoute.AssetsApplications]: MenuI18nKey.Applications,
   [ApplicationRoute.Routes]: MenuI18nKey.Routes,
   [ApplicationRoute.PromptPublications]: MenuI18nKey.PromptPublications,
+  [ApplicationRoute.ToolsetPublications]: MenuI18nKey.ToolsetPublications,
   [ApplicationRoute.FilePublications]: MenuI18nKey.FilePublications,
   [ApplicationRoute.ApplicationPublications]: MenuI18nKey.ApplicationPublications,
   [ApplicationRoute.ActivityAudit]: MenuI18nKey.ActivityAudit,
@@ -36,40 +37,10 @@ export const emptyDataTitleMap: Record<string, EntitiesI18nKey> = {
   [ApplicationRoute.AssetsApplications]: EntitiesI18nKey.NoApplications,
   [ApplicationRoute.AssetsToolsets]: EntitiesI18nKey.NoToolsets,
   [ApplicationRoute.PromptPublications]: EntitiesI18nKey.NoPublications,
+  [ApplicationRoute.ToolsetPublications]: EntitiesI18nKey.NoPublications,
   [ApplicationRoute.FilePublications]: EntitiesI18nKey.NoPublications,
   [ApplicationRoute.ApplicationPublications]: EntitiesI18nKey.NoPublications,
   [ApplicationRoute.ActivityAudit]: EntitiesI18nKey.NoActivityAudit,
   [ApplicationRoute.InterceptorTemplates]: EntitiesI18nKey.NoInterceptorTemplates,
   [ApplicationRoute.Toolsets]: EntitiesI18nKey.NoToolsets,
-};
-
-export const deleteModalTitleMap: Record<string, DeleteI18nKey> = {
-  [ApplicationRoute.Models]: DeleteI18nKey.Model,
-  [ApplicationRoute.Applications]: DeleteI18nKey.Application,
-  [ApplicationRoute.ApplicationRunners]: DeleteI18nKey.ApplicationRunnerTitle,
-  [ApplicationRoute.Interceptors]: DeleteI18nKey.Interceptor,
-  [ApplicationRoute.Keys]: DeleteI18nKey.Key,
-  [ApplicationRoute.Roles]: DeleteI18nKey.Role,
-  [ApplicationRoute.Prompts]: DeleteI18nKey.Prompt,
-  [ApplicationRoute.Files]: DeleteI18nKey.File,
-  [ApplicationRoute.AssetsApplications]: DeleteI18nKey.Application,
-  [ApplicationRoute.AssetsToolsets]: DeleteI18nKey.Toolsets,
-  [ApplicationRoute.Routes]: DeleteI18nKey.Route,
-  [ApplicationRoute.Adapters]: DeleteI18nKey.AdapterTitle,
-  [ApplicationRoute.Toolsets]: DeleteI18nKey.Toolsets,
-  [ApplicationRoute.InterceptorTemplates]: DeleteI18nKey.InterceptorTemplateTitle,
-};
-
-export const createModalTitleMap: Record<string, CreateI18nKey> = {
-  [ApplicationRoute.Models]: CreateI18nKey.Model,
-  [ApplicationRoute.Applications]: CreateI18nKey.Application,
-  [ApplicationRoute.ApplicationRunners]: CreateI18nKey.ApplicationRunner,
-  [ApplicationRoute.Keys]: CreateI18nKey.Key,
-  [ApplicationRoute.Roles]: CreateI18nKey.Role,
-  [ApplicationRoute.Interceptors]: CreateI18nKey.Interceptor,
-  [ApplicationRoute.Prompts]: CreateI18nKey.Prompt,
-  [ApplicationRoute.Routes]: CreateI18nKey.Route,
-  [ApplicationRoute.Adapters]: CreateI18nKey.CreateAdapter,
-  [ApplicationRoute.Toolsets]: CreateI18nKey.Toolsets,
-  [ApplicationRoute.InterceptorTemplates]: CreateI18nKey.CreateInterceptorTemplate,
 };

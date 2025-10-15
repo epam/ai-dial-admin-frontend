@@ -34,6 +34,7 @@ export enum MenuI18nKey {
   Tools = 'Menu.Tools',
   ToolsDescription = 'Menu.ToolsDescription',
   PromptPublications = 'Menu.PromptPublications',
+  ToolsetPublications = 'Menu.ToolsetPublications',
   ApplicationPublications = 'Menu.ApplicationPublications',
   FilePublications = 'Menu.FilePublications',
   ImportConfig = 'Menu.ImportConfig',
@@ -78,6 +79,8 @@ export enum BasicI18nKey {
   Search = 'Basic.Search',
   Or = 'Basic.Or',
   And = 'Basic.And',
+  Enabled = 'Basic.Enabled',
+  Disabled = 'Basic.Disabled',
 }
 
 export enum EntitiesI18nKey {
@@ -130,47 +133,63 @@ export enum EntitiesI18nKey {
   SaveChangesDescription = 'Entities.SaveChangesDescription',
   SaveParametersTitle = 'Entities.SaveParametersTitle',
   SaveParametersDescription = 'Entities.SaveParametersDescription',
+  Table = 'Entities.Table',
+  Form = 'Entities.Form',
+  Ui = 'Entities.Ui',
 }
 
 export enum DeleteI18nKey {
   Title = 'DeleteEntity.Title',
   Confirming = 'DeleteEntity.Confirming',
-  Model = 'DeleteEntity.Model',
-  Application = 'DeleteEntity.Application',
-  ApplicationRunnerTitle = 'DeleteEntity.ApplicationRunner.Title',
-  ApplicationRunnerDescriptionWarning = 'DeleteEntity.ApplicationRunner.DescriptionWarning',
-  ApplicationRunnerApplicationsTitle = 'DeleteEntity.ApplicationRunner.ApplicationsTitle',
-  ApplicationRunnerNoApplicationsTitle = 'DeleteEntity.ApplicationRunner.NoApplicationsTitle',
-  AdapterTitle = 'DeleteEntity.Adapter.Title',
-  AdapterDescriptionWarning = 'DeleteEntity.Adapter.DescriptionWarning',
-  AdapterModelsTitle = 'DeleteEntity.Adapter.ModelsTitle',
-  AdapterNoModelsTitle = 'DeleteEntity.Adapter.NoModelsTitle',
-  Role = 'DeleteEntity.Role',
-  Interceptor = 'DeleteEntity.Interceptor',
-  Key = 'DeleteEntity.Key',
-  Route = 'DeleteEntity.Route',
-  Prompt = 'DeleteEntity.Prompt',
-  File = 'DeleteEntity.File',
-  Toolsets = 'DeleteEntity.Toolsets',
-  InterceptorTemplateTitle = 'DeleteEntity.InterceptorTemplate.Title',
-  InterceptorTemplateDescriptionWarning = 'DeleteEntity.InterceptorTemplate.DescriptionWarning',
-  InterceptorTemplateInterceptorsTitle = 'DeleteEntity.InterceptorTemplate.InterceptorsTitle',
-  InterceptorTemplateNoInterceptorsTitle = 'DeleteEntity.InterceptorTemplate.NoInterceptorsTitle',
+
+  // Notification
+  NotificationTitle = 'DeleteEntity.Notification.Title',
+  NotificationDescription = 'DeleteEntity.Notification.Description',
+
+  // Entities
+  Model = 'DeleteEntity.Entities.Model',
+  Application = 'DeleteEntity.Entities.Application',
+  Toolsets = 'DeleteEntity.Entities.Toolsets',
+  Route = 'DeleteEntity.Entities.Route',
+  Interceptor = 'DeleteEntity.Entities.Interceptor',
+  Role = 'DeleteEntity.Entities.Role',
+  Key = 'DeleteEntity.Entities.Key',
+  Prompt = 'DeleteEntity.Entities.Prompt',
+  File = 'DeleteEntity.Entities.File',
+  Adapter = 'DeleteEntity.Entities.Adapter',
+  InterceptorTemplate = 'DeleteEntity.Entities.InterceptorTemplate',
+  ApplicationRunner = 'DeleteEntity.Entities.ApplicationRunner',
+
+  //  No related artefacts
+  AdapterWarning = 'DeleteEntity.NoRelatedArtefacts.AdapterWarning',
+  NoModels = 'DeleteEntity.NoRelatedArtefacts.NoModels',
+  InterceptorTemplateWarning = 'DeleteEntity.NoRelatedArtefacts.InterceptorTemplateWarning',
+  NoInterceptors = 'DeleteEntity.NoRelatedArtefacts.NoInterceptors',
+  ApplicationRunnerWarning = 'DeleteEntity.NoRelatedArtefacts.ApplicationRunnerWarning',
+  NoApplications = 'DeleteEntity.NoRelatedArtefacts.NoApplications',
+  RelatedApplications = 'DeleteEntity.NoRelatedArtefacts.RelatedApplications',
+  RelatedInterceptors = 'DeleteEntity.NoRelatedArtefacts.RelatedInterceptors',
+  RelatedModels = 'DeleteEntity.NoRelatedArtefacts.RelatedModels',
 }
 
 export enum DuplicateI18nKey {
-  ModelHeader = 'DuplicateEntity.Model.Header',
-  ModelDescription = 'DuplicateEntity.Model.Description',
-  ApplicationRunnerHeader = 'DuplicateEntity.ApplicationRunner',
-  ApplicationHeader = 'DuplicateEntity.Application',
-  RoleHeader = 'DuplicateEntity.Role',
-  KeyHeader = 'DuplicateEntity.Key',
-  RouteHeader = 'DuplicateEntity.Route',
-  PromptHeader = 'DuplicateEntity.Prompt',
-  InterceptorHeader = 'DuplicateEntity.Interceptor',
-  AdapterHeader = 'DuplicateEntity.Adapter',
-  InterceptorTemplate = 'DuplicateEntity.InterceptorTemplate',
-  Toolsets = 'DuplicateEntity.Toolsets',
+  Title = 'DuplicateEntity.Title',
+
+  ModelDescription = 'DuplicateEntity.ModelDescription',
+
+  // Entities
+  Model = 'DuplicateEntity.Entities.Model',
+  Application = 'DeleteEntity.Entities.Application',
+  Toolsets = 'DuplicateEntity.Entities.Toolsets',
+  Route = 'DuplicateEntity.Entities.Route',
+  Interceptor = 'DuplicateEntity.Entities.Interceptor',
+  Role = 'DuplicateEntity.Entities.Role',
+  Key = 'DuplicateEntity.Entities.Key',
+  Prompt = 'DuplicateEntity.Entities.Prompt',
+  File = 'DuplicateEntity.Entities.File',
+  Adapter = 'DeleteEntity.Entities.Adapter',
+  InterceptorTemplate = 'DuplicateEntity.Entities.InterceptorTemplate',
+  ApplicationRunner = 'DuplicateEntity.Entities.ApplicationRunner',
 }
 
 export enum ButtonsI18nKey {
@@ -219,22 +238,50 @@ export enum ButtonsI18nKey {
   BulkActions = 'Buttons.BulkActions',
 }
 
+export enum UpdateI18nKey {
+  // Notification
+  NotificationTitle = 'UpdateEntity.Notification.Title',
+  NotificationDescription = 'UpdateEntity.Notification.Description',
+
+  // Entities
+  Model = 'UpdateEntity.Entities.Model',
+  Application = 'UpdateEntity.Entities.Application',
+  Toolsets = 'UpdateEntity.Entities.Toolsets',
+  Route = 'UpdateEntity.Entities.Route',
+  Interceptor = 'UpdateEntity.Entities.Interceptor',
+  Role = 'UpdateEntity.Entities.Role',
+  Key = 'UpdateEntity.Entities.Key',
+  Prompt = 'UpdateEntity.Entities.Prompt',
+  File = 'UpdateEntity.Entities.File',
+  Adapter = 'UpdateEntity.Entities.Adapter',
+  InterceptorTemplate = 'UpdateEntity.Entities.InterceptorTemplate',
+  ApplicationRunner = 'UpdateEntity.Entities.ApplicationRunner',
+}
+
 export enum CreateI18nKey {
-  Model = 'CreateEntity.Model',
-  Application = 'CreateEntity.Application',
-  Adapter = 'CreateEntity.Adapter',
-  Toolsets = 'CreateEntity.Toolsets',
-  ApplicationRunner = 'CreateEntity.ApplicationRunner',
-  Role = 'CreateEntity.Role',
-  Key = 'CreateEntity.Key',
-  Prompt = 'CreateEntity.Prompt',
-  Route = 'CreateEntity.Route',
-  Interceptor = 'CreateEntity.Interceptor',
-  CreateInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Create',
-  SelectInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Select',
-  CreateAdapter = 'CreateEntity.Adapter.Create',
-  SelectAdapter = 'CreateEntity.Adapter.Select',
+  Title = 'CreateEntity.Title',
+
+  SelectInterceptorTemplate = 'CreateEntity.SelectInterceptorTemplate',
+  SelectAdapter = 'CreateEntity.SelectAdapter',
   SelectContainer = 'CreateEntity.SelectContainer',
+
+  // Notification
+  NotificationTitle = 'CreateEntity.Notification.Title',
+  NotificationDescription = 'CreateEntity.Notification.Description',
+
+  // Entities
+  Model = 'CreateEntity.Entities.Model',
+  Application = 'CreateEntity.Entities.Application',
+  Toolsets = 'CreateEntity.Entities.Toolsets',
+  Route = 'CreateEntity.Entities.Route',
+  Interceptor = 'CreateEntity.Entities.Interceptor',
+  Role = 'CreateEntity.Entities.Role',
+  Key = 'CreateEntity.Entities.Key',
+  Prompt = 'CreateEntity.Entities.Prompt',
+  File = 'CreateEntity.Entities.File',
+  Adapter = 'CreateEntity.Entities.Adapter',
+  InterceptorTemplate = 'CreateEntity.Entities.InterceptorTemplate',
+  ApplicationRunner = 'CreateEntity.Entities.ApplicationRunner',
 }
 
 export enum UpstreamEndpointsI18nKey {
@@ -335,6 +382,7 @@ export enum FeaturesI18nKey {
   consentRequired = 'Features.consentRequired',
   urlAttachmentsSupported = 'Features.urlAttachmentsSupported',
   folderAttachmentsSupported = 'Features.folderAttachmentsSupported',
+  assistantAttachmentsInRequestSupported = 'Features.assistantAttachmentsInRequestSupported',
   accessibleByPerRequestKey = 'Features.accessibleByPerRequestKey',
   configurationEndpoint = 'Features.configurationEndpoint',
   rateEndpoint = 'Features.rateEndpoint',
@@ -421,28 +469,39 @@ export enum RoutesI18nKey {
 }
 
 export enum PublicationsI18nKey {
+  DeclineReason = 'Publications.ReasonTitle',
+  DeclineReasonPlaceholder = 'Publications.ReasonPlaceholder',
+
+  // prompt publications
   PromptPublishApproveModalTitle = 'Publications.Prompt.PublishApproveModalTitle',
   PromptPublishDeclineModalTitle = 'Publications.Prompt.PublishDeclineModalTitle',
   PromptUnpublishApproveModalTitle = 'Publications.Prompt.UnpublishApproveModalTitle',
   PromptUnpublishDeclineModalTitle = 'Publications.Prompt.UnpublishDeclineModalTitle',
   PromptPublishApproveDescription = 'Publications.Prompt.PublishApproveDescription',
   PromptUnpublishApproveDescription = 'Publications.Prompt.UnpublishApproveDescription',
-  DeclineReason = 'Publications.ReasonTitle',
-  DeclineReasonPlaceholder = 'Publications.Prompt.ReasonPlaceholder',
-  FilePublishApproveModalTitle = 'Publications.Files.PublishApproveModalTitle',
-  FilePublishDeclineModalTitle = 'Publications.Files.PublishDeclineModalTitle',
-  FileUnpublishApproveModalTitle = 'Publications.Files.UnpublishApproveModalTitle',
-  FileUnpublishDeclineModalTitle = 'Publications.Files.UnpublishDeclineModalTitle',
-  FilePublishApproveDescription = 'Publications.Files.PublishApproveDescription',
-  FileUnpublishApproveDescription = 'Publications.Files.UnpublishApproveDescription',
-  ApplicationPublishApproveModalTitle = 'Publications.Applications.PublishApproveModalTitle',
-  ApplicationPublishDeclineModalTitle = 'Publications.Applications.PublishDeclineModalTitle',
-  ApplicationUnpublishApproveModalTitle = 'Publications.Applications.UnpublishApproveModalTitle',
-  ApplicationUnpublishDeclineModalTitle = 'Publications.Applications.UnpublishDeclineModalTitle',
-  ApplicationPublishApproveDescription = 'Publications.Applications.PublishApproveDescription',
-  ApplicationUnpublishApproveDescription = 'Publications.Applications.UnpublishApproveDescription',
   OpenPrompt = 'Publications.Prompt.OpenPrompt',
-  FilesListTitle = 'Publications.Files.FilesListTitle',
+  // file publications
+  FilePublishApproveModalTitle = 'Publications.File.PublishApproveModalTitle',
+  FilePublishDeclineModalTitle = 'Publications.File.PublishDeclineModalTitle',
+  FileUnpublishApproveModalTitle = 'Publications.File.UnpublishApproveModalTitle',
+  FileUnpublishDeclineModalTitle = 'Publications.File.UnpublishDeclineModalTitle',
+  FilePublishApproveDescription = 'Publications.File.PublishApproveDescription',
+  FileUnpublishApproveDescription = 'Publications.File.UnpublishApproveDescription',
+  FilesListTitle = 'Publications.File.FilesListTitle',
+  // application publications
+  ApplicationPublishApproveModalTitle = 'Publications.Application.PublishApproveModalTitle',
+  ApplicationPublishDeclineModalTitle = 'Publications.Application.PublishDeclineModalTitle',
+  ApplicationUnpublishApproveModalTitle = 'Publications.Application.UnpublishApproveModalTitle',
+  ApplicationUnpublishDeclineModalTitle = 'Publications.Application.UnpublishDeclineModalTitle',
+  ApplicationPublishApproveDescription = 'Publications.Application.PublishApproveDescription',
+  ApplicationUnpublishApproveDescription = 'Publications.Application.UnpublishApproveDescription',
+  // toolset publications
+  ToolsetPublishApproveModalTitle = 'Publications.Toolset.PublishApproveModalTitle',
+  ToolsetPublishDeclineModalTitle = 'Publications.Toolset.PublishDeclineModalTitle',
+  ToolsetUnpublishApproveModalTitle = 'Publications.Toolset.UnpublishApproveModalTitle',
+  ToolsetUnpublishDeclineModalTitle = 'Publications.Toolset.UnpublishDeclineModalTitle',
+  ToolsetPublishApproveDescription = 'Publications.Toolset.PublishApproveDescription',
+  ToolsetUnpublishApproveDescription = 'Publications.Toolset.UnpublishApproveDescription',
 }
 
 export enum CompareI18nKey {
@@ -575,6 +634,7 @@ export enum FoldersI18nKey {
   DeleteFolder = 'Folder.DeleteFolder',
   DeleteFolderDescription = 'Folder.DeleteFolderDescription',
   CollapseAll = 'Folder.CollapseAll',
+  NoPreviewArchive = 'Folder.NoPreviewArchive',
 }
 
 export enum ActivityAuditI18nKey {
@@ -675,6 +735,7 @@ export enum BooleanI18nKey {
 
 export enum EntityPlaceholdersI18nKey {
   Project = 'EntityPlaceholders.Project',
+  TypeBucketCopy = 'EntityPlaceholders.TypeBucketCopy',
   ContactPoint = 'EntityPlaceholders.ContactPoint',
   Endpoint = 'EntityPlaceholders.Endpoint',
   EditorUrl = 'EntityPlaceholders.EditorUrl',
@@ -691,7 +752,7 @@ export enum EntityPlaceholdersI18nKey {
   Maintainer = 'EntityPlaceholders.Maintainer',
   Type = 'EntityPlaceholders.Type',
   Title = 'EntityPlaceholders.Title',
-  ApiKeyHeader = 'EntityPlaceholders.ApiKeyHeader',
+  Header = 'EntityPlaceholders.Header',
   Tier = 'EntityPlaceholders.Tier',
   Weight = 'EntityPlaceholders.Weight',
   UpstreamEndpoint = 'EntityPlaceholders.UpstreamEndpoint',
@@ -803,6 +864,7 @@ export enum EntityFieldsI18nKey {
   'dial:appendApplicationPropertiesHeader' = 'EntityFields.appendApplicationPropertiesHeader',
   'dial:applicationTypePlaybackSupport' = 'EntityFields.applicationTypePlaybackSupport',
   'dial:applicationTypeIconUrl' = 'EntityFields.applicationTypeIconUrl',
+  'dial:applicationTypeBucketCopy' = 'EntityFields.applicationTypeBucketCopy',
   grantedKeys = 'EntityFields.grantedKeys',
   createdAt = 'EntityFields.createdAt',
   updatedAt = 'EntityFields.updatedAt',
@@ -830,6 +892,17 @@ export enum EntityFieldsI18nKey {
   authenticationType = 'EntityFields.authenticationType',
   tokenEndpoint = 'EntityFields.tokenEndpoint',
   authSettings = 'EntityFields.authSettings',
+  share = 'EntityFields.share',
+  'application.invitationTtl' = 'EntityFields.applicationInvitationTtl',
+  'application.maxAcceptedUsers' = 'EntityFields.applicationMaxAcceptedUsers',
+  'conversation.invitationTtl' = 'EntityFields.conversationInvitationTtl',
+  'conversation.maxAcceptedUsers' = 'EntityFields.conversationMaxAcceptedUsers',
+  'file.invitationTtl' = 'EntityFields.fileInvitationTtl',
+  'file.maxAcceptedUsers' = 'EntityFields.fileMaxAcceptedUsers',
+  'prompt.invitationTtl' = 'EntityFields.promptInvitationTtl',
+  'prompt.maxAcceptedUsers' = 'EntityFields.promptMaxAcceptedUsers',
+  'tool_set.invitationTtl' = 'EntityFields.tool_setInvitationTtl',
+  'tool_set.maxAcceptedUsers' = 'EntityFields.tool_setMaxAcceptedUsers',
 }
 
 export enum ToolsetI18nKey {
@@ -840,11 +913,15 @@ export enum ToolsetI18nKey {
   Warning = 'Toolset.Warning',
   View = 'Toolset.View',
   AllTools = 'Toolset.AllTools',
-  Enabled = 'Toolset.Enabled',
-  Disabled = 'Toolset.Disabled',
   AutoDetected = 'Toolset.AutoDetected',
   ToolsWarning = 'Toolset.ToolsWarning',
   ClientRegistrationType = 'Toolset.ClientRegistrationType',
   ExistingClient = 'Toolset.ExistingClient',
   DynamicRegistration = 'Toolset.DynamicRegistration',
+  ApiKey = 'Toolset.ApiKey',
+  OAuth = 'Toolset.OAuth',
+  NoneAuth = 'Toolset.NoneAuth',
+  WithLogin = 'Toolset.WithLogin',
+  WithLoginAndConfig = 'Toolset.WithLoginAndConfig',
+  WithoutLogin = 'Toolset.WithoutLogin',
 }

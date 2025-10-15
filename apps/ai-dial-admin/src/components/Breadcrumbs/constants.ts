@@ -108,6 +108,15 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
       },
     ],
   },
+  [ApplicationRoute.ToolsetPublications]: {
+    segments: [
+      { name: 'ToolsetPublications', i18nKey: MenuI18nKey.ToolsetPublications },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
   [ApplicationRoute.FilePublications]: {
     segments: [
       { name: 'FilePublications', i18nKey: MenuI18nKey.FilePublications },

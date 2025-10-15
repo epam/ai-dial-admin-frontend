@@ -1,10 +1,8 @@
 'use client';
 
 import { FC, useCallback, useEffect, useState } from 'react';
+import { DialPopup } from '@epam/ai-dial-ui-kit';
 
-import classNames from 'classnames';
-
-import Popup from '@/src/components/Common/Popup/Popup';
 import Steps from '@/src/components/Common/Steps/Steps';
 import { getMultipleImportStatus, isInvalidJson, isLargeFile } from '@/src/components/EntityListView/Import/import';
 import { FoldersI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
@@ -18,7 +16,6 @@ import { FileImportMap } from '@/src/models/file';
 import { ParsedPrompts } from '@/src/models/prompts';
 import { Step, StepStatus } from '@/src/models/step';
 import { ConflictResolutionPolicy, ImportFileType as FileType, ImportSteps } from '@/src/types/import';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import ImportConflicts from './ImportConflicts';
 import ImportFileTypeSelector from './ImportFileType';
@@ -27,7 +24,7 @@ import ImportModalButtons from './ImportModalButtons';
 const MAX_FILES_COUNT = 30;
 
 interface Props {
-  modalState: PopUpState;
+  isModalOpen: boolean;
   route?: ApplicationRoute;
   context?: () => AssetsFolderContext<DialFile>;
   onClose: () => void;
@@ -40,8 +37,7 @@ interface Props {
   ) => void;
 }
 
-const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }) => {
-  const containerClassName = classNames('h-[660px] lg:max-w-[45%]');
+const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply }) => {
   const folderContext = context?.();
   const t = useI18n() as (stringToTranslate: string) => string;
 
@@ -219,14 +215,22 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
   }, [zipFile, fileType, setStepsState, jsonFileMap, currentStep.id, separateFileMap]);
 
   return (
-    <Popup
+    <DialPopup
       onClose={onClose}
-      heading={route === ApplicationRoute.Prompts ? t(PromptsI18nKey.Import) : t(FoldersI18nKey.Import)}
+      title={route === ApplicationRoute.Prompts ? t(PromptsI18nKey.Import) : t(FoldersI18nKey.Import)}
       portalId="ImportModal"
-      state={modalState}
-      containerClassName={containerClassName}
+      cssClass="h-[660px]"
+      open={isModalOpen}
+      footer={
+        <ImportModalButtons
+          steps={steps}
+          currentStep={currentStep}
+          setCurrentStep={setCurrentStep}
+          onFinishClick={onFinishClick}
+        />
+      }
     >
-      <div className="flex px-6 py-4 flex-1 flex-col min-h-0">
+      <div className="flex px-6 py-4 h-full flex-col">
         <Steps steps={steps} currentStep={currentStep} setCurrentStep={setCurrentStep} />
         <div className={currentStep.id === ImportSteps.FILES ? 'flex flex-col flex-1 min-h-0' : 'hidden'}>
           <ImportFileTypeSelector
@@ -263,13 +267,7 @@ const ImportModal: FC<Props> = ({ modalState, route, context, onClose, onApply }
           />
         )}
       </div>
-      <ImportModalButtons
-        steps={steps}
-        currentStep={currentStep}
-        setCurrentStep={setCurrentStep}
-        onFinishClick={onFinishClick}
-      />
-    </Popup>
+    </DialPopup>
   );
 };
 

@@ -2,31 +2,29 @@
 
 import { FC, useState } from 'react';
 
-import classNames from 'classnames';
 import {
   ButtonVariant,
   RadioButtonWithContent,
   DialButton,
   DialRadioGroup,
   RadioGroupOrientation,
+  DialPopup,
+  PopupSize,
 } from '@epam/ai-dial-ui-kit';
 
-import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey, ExportI18nKey, FoldersI18nKey, PromptsI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ImportFileType as FileType, ImportFileType } from '@/src/types/import';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
-  modalState: PopUpState;
+  isModalOpen: boolean;
   route?: ApplicationRoute;
   onClose: () => void;
   onApply?: (fileType: FileType) => void;
 }
 
-const ExportModal: FC<Props> = ({ modalState, route, onClose, onApply }) => {
-  const containerClassName = classNames('lg:max-w-[450px]');
+const ExportModal: FC<Props> = ({ isModalOpen, route, onClose, onApply }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
 
   const exportTypeRadio: RadioButtonWithContent[] = [
@@ -37,14 +35,14 @@ const ExportModal: FC<Props> = ({ modalState, route, onClose, onApply }) => {
   const [exportType, setExportType] = useState(exportTypeRadio[0].id);
 
   return (
-    <Popup
+    <DialPopup
       onClose={onClose}
-      heading={route === ApplicationRoute.Prompts ? t(PromptsI18nKey.Export) : t(FoldersI18nKey.Export)}
+      title={route === ApplicationRoute.Prompts ? t(PromptsI18nKey.Export) : t(FoldersI18nKey.Export)}
       portalId="ExportModal"
-      state={modalState}
-      containerClassName={containerClassName}
+      open={isModalOpen}
+      size={PopupSize.Sm}
     >
-      <div className="flex px-6 py-6 flex-1 flex-col min-h-0">
+      <div className="flex px-6 py-6 h-full flex-col">
         <DialRadioGroup
           radioButtons={exportTypeRadio}
           activeRadioButton={exportType}
@@ -62,7 +60,7 @@ const ExportModal: FC<Props> = ({ modalState, route, onClose, onApply }) => {
           onClick={() => onApply?.(exportType as ImportFileType)}
         />
       </div>
-    </Popup>
+    </DialPopup>
   );
 };
 

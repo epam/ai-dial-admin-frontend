@@ -34,8 +34,9 @@ import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { TabModel } from '@/src/models/tab';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { getErrorNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import InterceptorProperties from './Properties';
 
 interface Props {
@@ -68,7 +69,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, etag, 
   const [coreInterceptor, setCoreInterceptor] = useState<DialInterceptor | null>(null);
 
   useEffect(() => {
-    const name = (originalInterceptor as { name: string })?.name;
+    const name = originalInterceptor?.name;
     if (!coreInterceptor && name) {
       getCoreEntity(name, getExportType(ApplicationRoute.Interceptors)).then((data) => {
         setCoreInterceptor(getEntityFromFile(ApplicationRoute.Interceptors, name, data) as DialInterceptor);
@@ -158,12 +159,18 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, etag, 
     req.then((res) => {
       if (res.success) {
         setCoreInterceptor(null);
+        showNotification(
+          getSuccessNotification(
+            getUpdateNotificationTitle(ApplicationRoute.Interceptors, t),
+            getUpdateNotificationDescription(ApplicationRoute.Interceptors, selectedInterceptor.name, t),
+          ),
+        );
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedFormat, selectedInterceptor, router, etag, showNotification]);
+  }, [selectedFormat, selectedInterceptor, etag, showNotification, t, router]);
 
   const onChangeConfiguration = useCallback(
     (data: Record<string, unknown>) => {

@@ -17,7 +17,6 @@ import { DialFolder } from '@/src/models/dial/folder';
 import { DialRule } from '@/src/models/dial/rule';
 import { ParsedPrompts } from '@/src/models/prompts';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { findFolderSiblings, getFolderName } from '@/src/utils/files/folder';
 import { addTrailingSlash, getFolderNameAndPath } from '@/src/utils/files/path';
@@ -33,7 +32,7 @@ export enum ModalType {
 }
 
 interface Props {
-  modalState: PopUpState;
+  isModalOpen: boolean;
   modalType?: ModalType;
   view?: ApplicationRoute;
   selectedFolder?: string;
@@ -41,7 +40,7 @@ interface Props {
   context?: () => AssetsFolderContext<DialFile>;
 }
 
-const FolderListModals: FC<Props> = ({ modalState, modalType, view, selectedFolder = '', handleClose, context }) => {
+const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFolder = '', handleClose, context }) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
   const folderContext = context?.();
   const { showNotification } = useNotification();
@@ -104,37 +103,37 @@ const FolderListModals: FC<Props> = ({ modalState, modalType, view, selectedFold
 
   return (
     <>
-      {modalState === PopUpState.Opened &&
+      {isModalOpen &&
         modalType === ModalType.create &&
         createPortal(
           <FolderCreateModal
             view={view}
             folderPath={selectedFolder}
-            modalState={modalState}
+            isModalOpen={isModalOpen}
             onClose={handleClose}
             onApply={createFolder}
           />,
           document.body,
         )}
-      {modalState === PopUpState.Opened &&
+      {isModalOpen &&
         modalType === ModalType.rename &&
         createPortal(
           <RenameFolder
             currentPath={selectedFolder}
             siblings={findFolderSiblings(selectedFolder, folderContext?.files[0] as DialFolder)}
-            modalState={modalState}
+            isModalOpen={isModalOpen}
             onClose={handleClose}
             onApply={renameFolder}
           />,
           document.body,
         )}
 
-      {modalState === PopUpState.Opened &&
+      {isModalOpen &&
         modalType === ModalType.delete &&
         createPortal(
           <DeleteFolder
             view={view}
-            modalState={modalState}
+            isModalOpen={isModalOpen}
             onClose={handleClose}
             onApply={deleteFolder}
             context={context}
@@ -142,12 +141,12 @@ const FolderListModals: FC<Props> = ({ modalState, modalType, view, selectedFold
           />,
           document.body,
         )}
-      {modalState === PopUpState.Opened &&
+      {isModalOpen &&
         modalType === ModalType.move &&
         createPortal(
           <FilePathModal
             modalTitle={t(BasicI18nKey.MoveToFolder)}
-            modalState={modalState}
+            isModalOpen={isModalOpen}
             onClose={handleClose}
             onApply={moveFolder}
             initialPath={selectedFolder}

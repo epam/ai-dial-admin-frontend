@@ -25,7 +25,7 @@ import { Toolset } from '@/src/models/dial/toolset';
 import { TabModel } from '@/src/models/tab';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { getErrorNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import ToolsetProperties from './Properties';
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { ExportFormat } from '@/src/types/export';
@@ -35,6 +35,7 @@ import {
   getFileFromEntity,
 } from '@/src/components/EntityView/View/core-entity-utils';
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
   etag: string;
@@ -66,7 +67,7 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   );
 
   useEffect(() => {
-    const name = (originalToolset as { name: string })?.name;
+    const name = originalToolset?.name;
     if (!coreToolset && name) {
       getCoreEntity(name, getExportType(ApplicationRoute.Toolsets)).then((data) => {
         setCoreToolset(getEntityFromFile(ApplicationRoute.Toolsets, name, data) as Toolset);
@@ -128,13 +129,19 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
     req.then((res) => {
       if (res.success) {
         setCoreToolset(null);
+        showNotification(
+          getSuccessNotification(
+            getUpdateNotificationTitle(ApplicationRoute.Toolsets, t),
+            getUpdateNotificationDescription(ApplicationRoute.Toolsets, selectedToolset.name, t),
+          ),
+        );
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
       setIsModalOpen(false);
     });
-  }, [selectedFormat, selectedToolset, etag, router, showNotification]);
+  }, [selectedFormat, selectedToolset, etag, showNotification, t, router]);
 
   const onTryToSave = useCallback(() => {
     if (selectedFormat !== ExportFormat.CORE && isDisableRole(selectedToolset as EntityRoleLimits)) {

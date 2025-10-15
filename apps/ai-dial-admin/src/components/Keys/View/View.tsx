@@ -27,7 +27,6 @@ import { DialKey } from '@/src/models/dial/key';
 import { DialRole } from '@/src/models/dial/role';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { TabModel } from '@/src/models/tab';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -42,6 +41,7 @@ import {
   getFileFromEntity,
 } from '@/src/components/EntityView/View/core-entity-utils';
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
   originalKey: DialKey;
@@ -60,7 +60,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isOpenConfirmModal, setIsOpenConfirmModal] = useState(false);
-  const [rotateModalState, setRotateModalState] = useState(PopUpState.Closed);
+  const [isRotateModalOpen, setIsRotateModalOpen] = useState(false);
   const [selectedKey, setSelectedKey] = useState(cloneDeep(originalKey));
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
@@ -74,7 +74,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
   );
 
   useEffect(() => {
-    const name = (originalKey as { name: string })?.name;
+    const name = originalKey?.name;
     if (!coreKey && name) {
       getCoreEntity(name, getExportType(ApplicationRoute.Keys)).then((data) => {
         setCoreKey(getEntityFromFile(ApplicationRoute.Keys, name, data) as DialKey);
@@ -88,9 +88,9 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
 
   useEffect(() => {
     const isEqualAdminKey = isEqualSkippingUndefined(originalKey, selectedKey);
-    const isEqualCorKey = isEqualSkippingUndefined(selectedKey, coreKey);
+    const isEqualCoreKey = isEqualSkippingUndefined(selectedKey, coreKey);
 
-    setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCorKey : !isEqualAdminKey);
+    setIsChanged(selectedFormat === ExportFormat.CORE ? !isEqualCoreKey : !isEqualAdminKey);
   }, [selectedFormat, originalKey, selectedKey, coreKey]);
 
   const onChangeActiveTab = useCallback(
@@ -155,16 +155,22 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
     req.then((res) => {
       if (res.success) {
         setCoreKey(null);
+        showNotification(
+          getSuccessNotification(
+            getUpdateNotificationTitle(ApplicationRoute.Keys, t),
+            getUpdateNotificationDescription(ApplicationRoute.Keys, selectedKey.name, t),
+          ),
+        );
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedFormat, etag, setIsOpenConfirmModal, selectedKey, router, showNotification]);
+  }, [selectedFormat, selectedKey, etag, showNotification, t, router]);
 
   const onRotateKey = useCallback(
     (key: DialKey) => {
-      setRotateModalState(PopUpState.Closed);
+      setIsRotateModalOpen(false);
       updateKey(key, etag).then((res) => {
         if (res.success) {
           router.refresh();
@@ -180,12 +186,12 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
   );
 
   const onTryToSaveKey = useCallback(() => {
-    if (selectedKey.roles == null || selectedKey.roles.length === 0) {
+    if ((selectedKey?.roles == null || selectedKey.roles.length === 0) && selectedFormat !== ExportFormat.CORE) {
       setIsOpenConfirmModal(true);
     } else {
       onSaveKey();
     }
-  }, [selectedKey.roles, setIsOpenConfirmModal, onSaveKey]);
+  }, [selectedKey, selectedFormat, onSaveKey]);
 
   return (
     <>
@@ -208,7 +214,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
               variant={ButtonVariant.Primary}
               title={t(ButtonsI18nKey.Rotate)}
               iconBefore={<IconRefresh {...BASE_ICON_PROPS} />}
-              onClick={() => setRotateModalState(PopUpState.Opened)}
+              onClick={() => setIsRotateModalOpen(true)}
             />
           </HeaderButtons>
         </div>
@@ -270,14 +276,14 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
           document.body,
         )}
 
-      {rotateModalState === PopUpState.Opened &&
+      {isRotateModalOpen &&
         createPortal(
           <KeyRotateModal
-            modalState={rotateModalState}
+            isModalOpen={isRotateModalOpen}
             selectedKey={selectedKey}
             keys={keys}
             onConfirm={(key) => onRotateKey(key)}
-            onClose={() => setRotateModalState(PopUpState.Closed)}
+            onClose={() => setIsRotateModalOpen(false)}
           />,
           document.body,
         )}

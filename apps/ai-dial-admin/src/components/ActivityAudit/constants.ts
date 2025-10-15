@@ -43,3 +43,33 @@ export enum EntityParameterKeys {
   SOURCE = 'source',
   DEFAULTS = 'defaults',
 }
+
+export const dateKeys = ['expiresAt', 'keyGeneratedAt', 'createdAt', 'updatedAt'];
+export const appRunnerParameterKeys = ['properties', '$defs'];
+export const shareKeys = ['invitationTtl', 'maxAcceptedUsers'];
+
+export const arrayParameterKeys = [
+  EntityParameterKeys.TOPICS,
+  EntityParameterKeys.TOOLS,
+  EntityParameterKeys.HASHING_ORDER,
+  EntityParameterKeys.PATHS,
+  EntityParameterKeys.METHODS,
+];
+export const arrayStringParameterKeys = [EntityParameterKeys.PRICING, EntityParameterKeys.RESPONSE];
+export const arrayObjectParameterKeys = [EntityParameterKeys.UPSTREAMS, EntityParameterKeys.DEFAULTS];
+export const separateObjectParameterKeys = [
+  EntityParameterKeys.INTERCEPTORS,
+  EntityParameterKeys.ROLE_LIMITS,
+  EntityParameterKeys.DEFAULT_ROLE_LIMIT,
+  EntityParameterKeys.COST_LIMIT,
+  EntityParameterKeys.AUTH,
+  EntityParameterKeys.FEATURES,
+  EntityParameterKeys.APPLICATIONS,
+  EntityParameterKeys.ENTITIES,
+  EntityParameterKeys.ROUTES,
+  EntityParameterKeys.KEYS,
+  EntityParameterKeys.ROLES,
+  EntityParameterKeys.MODELS,
+  EntityParameterKeys.DEPENDENCIES,
+  EntityParameterKeys.SOURCE,
+];

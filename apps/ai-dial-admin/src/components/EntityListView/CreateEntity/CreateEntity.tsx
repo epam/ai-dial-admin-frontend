@@ -1,9 +1,8 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import Popup from '@/src/components/Common/Popup/Popup';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMainProperties';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
@@ -13,16 +12,20 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
-import { getErrorNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { RoutesForCheckingUniqueName } from './constants';
 import { DialRoute } from '@/src/models/dial/route';
 import { isValidSourceField } from '@/src/components/SourceField/utils';
 import { DialModel } from '@/src/models/dial/model';
+import {
+  getCreateEntityTitle,
+  getCreateNotificationDescription,
+  getCreateNotificationTitle,
+} from '@/src/utils/entities/create-entity';
 
 interface CreatePromptEntity extends BaseEntity {
   version?: string;
@@ -31,9 +34,8 @@ interface CreatePromptEntity extends BaseEntity {
 
 interface Props<T> {
   route: ApplicationRoute;
-  modalState: PopUpState;
+  isModalOpen: boolean;
   names: string[];
-  modalTitle: string;
   runners?: DialApplicationScheme[];
   versionsMap?: Record<string, string[]>;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
@@ -42,17 +44,16 @@ interface Props<T> {
 }
 
 const CreateEntity = <T extends CreatePromptEntity>({
-  modalTitle,
   runners,
   route,
-  modalState,
+  isModalOpen,
   names,
   versionsMap,
   onClose,
   createEntity,
   initialValues,
 }: Props<T>) => {
-  const t = useI18n();
+  const t = useI18n() as (str: string, props?: Record<string, string>) => string;
   const router = useRouter();
   const { filePath, fetchFiles } = usePromptFolder();
   const { isValid, dispatch } = useSaveValidationContext();
@@ -100,6 +101,12 @@ const CreateEntity = <T extends CreatePromptEntity>({
         if (route === ApplicationRoute.Prompts) {
           fetchFiles(filePath);
         }
+        showNotification(
+          getSuccessNotification(
+            getCreateNotificationTitle(route, t),
+            getCreateNotificationDescription(route, entity.name, t),
+          ),
+        );
         const originalRoute = route.split('/')[1];
         router.push(`${initialValues ? '/' : ''}${originalRoute}/${getEntityPath(route, res.response || entity)}`);
         onClose();
@@ -107,7 +114,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [currentEntity, route, createEntity, filePath, router, initialValues, onClose, fetchFiles, showNotification]);
+  }, [currentEntity, route, createEntity, filePath, showNotification, t, router, initialValues, onClose, fetchFiles]);
 
   useEffect(() => {
     setIsUniqueNameError(void 0);
@@ -146,7 +153,23 @@ const CreateEntity = <T extends CreatePromptEntity>({
   }, []);
 
   return (
-    <Popup onClose={onClose} heading={modalTitle} portalId="CreateEntity" state={modalState}>
+    <DialPopup
+      onClose={onClose}
+      title={getCreateEntityTitle(route, t)}
+      portalId="CreateEntity"
+      open={isModalOpen}
+      footer={
+        <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
+          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+          <DialButton
+            variant={ButtonVariant.Primary}
+            title={t(ButtonsI18nKey.Create)}
+            onClick={onCreate}
+            disable={(isUniqueNameError != null && !isUniqueNameError) || !isValid}
+          />
+        </div>
+      }
+    >
       <div className="flex flex-col overflow-auto px-6 py-4">
         {isSimpleEntity(route) ? (
           <SimpleEntityProperties
@@ -170,16 +193,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
           />
         )}
       </div>
-      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Create)}
-          onClick={onCreate}
-          disable={(isUniqueNameError != null && !isUniqueNameError) || !isValid}
-        />
-      </div>
-    </Popup>
+    </DialPopup>
   );
 };
 

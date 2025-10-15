@@ -26,11 +26,11 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { downloadFile, downloadJson } from '@/src/utils/download';
 import { prepareEntityForDuplicate } from '@/src/utils/entities/prepare-entity-for-duplicate';
 import { getListOfPathsToBulkDelete, getListOfPathsToMove } from '@/src/utils/files/path';
-import { isAssetView } from '@/src/utils/is-asset-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import BulkButtons from './BulkButtons';
 import Modals, { ModalType } from './Modals';
+import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 
 interface Props<T> {
   names?: string[];
@@ -93,21 +93,6 @@ const Actions = <T extends object>({
     setModalType(void 0);
   }, [setModalState, setModalType]);
 
-  const onDelete = useCallback(() => {
-    removeEntity(getEntityPath(route, currentEntity, true)).then((res) => {
-      if (res.success) {
-        handleModalClose();
-        setCurrentEntity(void 0);
-        if (isAssetView(route)) {
-          folderContext?.fetchFiles?.(folderContext?.filePath);
-        }
-        router.refresh();
-      } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
-      }
-    });
-  }, [currentEntity, folderContext, handleModalClose, removeEntity, route, router, setCurrentEntity, showNotification]);
-
   const onDuplicate = useCallback(
     (clonedEntity: T) => {
       const duplicate = async () => {
@@ -117,6 +102,7 @@ const Actions = <T extends object>({
           const { folderId, name, version } = entityRef.current as DialPrompt;
           prevPromptData = await getPrompt(folderId, name as string, version);
         }
+
         const preparedEntity = prepareEntityForDuplicate(route, clonedEntity, prevPromptData) as T;
         const res = await createEntity?.(preparedEntity);
         if (res?.success) {
@@ -125,6 +111,13 @@ const Actions = <T extends object>({
           if (route === ApplicationRoute.Prompts) {
             folderContext?.fetchFiles?.(folderContext?.filePath);
           }
+          showNotification(
+            getSuccessNotification(
+              getCreateNotificationTitle(route, t),
+              getCreateNotificationDescription(route, (preparedEntity as { name: string }).name, t),
+            ),
+          );
+          router.push(`${route}/${getEntityPath(route, preparedEntity)}`);
           router.refresh();
         } else {
           showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage));
@@ -132,7 +125,7 @@ const Actions = <T extends object>({
       };
       duplicate();
     },
-    [route, createEntity, handleModalClose, setCurrentEntity, router, folderContext, showNotification],
+    [route, createEntity, handleModalClose, setCurrentEntity, showNotification, t, router, folderContext],
   );
 
   const onMove = useCallback(
@@ -208,7 +201,7 @@ const Actions = <T extends object>({
           entity={currentEntity}
           route={route}
           initialPath={(currentEntity as DialPrompt)?.folderId}
-          modalState={modalState}
+          isModalOpen={modalState === PopUpState.Opened}
           modalType={modalType}
           duplicateModal={getDuplicateModal(
             currentEntity,
@@ -216,16 +209,17 @@ const Actions = <T extends object>({
             keys || [],
             route,
             versionsMap || {},
-            modalState,
+            modalState === PopUpState.Opened,
             handleModalClose,
             onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>,
           )}
           handleExport={onExport}
           handleClose={handleModalClose}
-          handleDelete={onDelete}
+          removeEntity={removeEntity}
           handleDeleteBulk={onDeleteBulk}
           handleMove={onMove}
           context={context}
+          resetCurrentEntity={() => setCurrentEntity(void 0)}
         />
       ) : null}
       {isBulkView && (

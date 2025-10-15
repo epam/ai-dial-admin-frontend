@@ -20,11 +20,11 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { rollbackEntityPerRevision } from '@/src/utils/audit/get-rollback-request';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { generateCurrentResource } from '@/src/components/ActivityAudit/View/utils';
 import EntityDiff from '@/src/components/ActivityAudit/View/DiffReport/EntityDiff';
 import CompareControl from '@/src/components/ActivityAudit/View/DiffReport/CompareControl';
 import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
 import ViewHeader from '@/src/components/ActivityAudit/View/Header/Header';
+import { generateCurrentResource } from './utils/generate-diffs';
 
 interface Props {
   activity: DialActivity;
