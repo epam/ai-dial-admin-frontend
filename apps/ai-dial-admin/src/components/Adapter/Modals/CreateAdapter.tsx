@@ -10,8 +10,9 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getErrorNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 
 interface Props {
   isModalOpen: boolean;
@@ -52,16 +53,22 @@ const CreateAdapter: FC<Props> = ({ isModalOpen, onClose, names }) => {
     createAdapter(currentAdapter).then((res) => {
       if (res.success) {
         const originalRoute = ApplicationRoute.Adapters.split('/')[1];
+        showNotification(
+          getSuccessNotification(
+            getCreateNotificationTitle(ApplicationRoute.Adapters, t),
+            getCreateNotificationDescription(ApplicationRoute.Adapters, currentAdapter.name, t),
+          ),
+        );
         router.push(`${originalRoute}/${getEntityPath(ApplicationRoute.Adapters, res.response || currentAdapter)}`);
         onClose();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [currentAdapter, router, onClose, showNotification]);
+  }, [currentAdapter, showNotification, t, router, onClose]);
 
   return (
-    <DialPopup onClose={onClose} title={t(CreateI18nKey.CreateAdapter)} portalId="CreateAdapter" open={isModalOpen}>
+    <DialPopup onClose={onClose} title={t(CreateI18nKey.Adapter)} portalId="CreateAdapter" open={isModalOpen}>
       <div className="flex flex-col px-6 py-4">
         <AdapterProperties entity={currentAdapter} names={names} onChangeAdapter={onChangeAdapter} />
       </div>

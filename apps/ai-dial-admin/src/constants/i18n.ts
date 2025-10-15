@@ -236,22 +236,50 @@ export enum ButtonsI18nKey {
   BulkActions = 'Buttons.BulkActions',
 }
 
+export enum UpdateI18nKey {
+  // Notification
+  NotificationTitle = 'UpdateEntity.Notification.Title',
+  NotificationDescription = 'UpdateEntity.Notification.Description',
+
+  // Entities
+  Model = 'UpdateEntity.Entities.Model',
+  Application = 'UpdateEntity.Entities.Application',
+  Toolsets = 'UpdateEntity.Entities.Toolsets',
+  Route = 'UpdateEntity.Entities.Route',
+  Interceptor = 'UpdateEntity.Entities.Interceptor',
+  Role = 'UpdateEntity.Entities.Role',
+  Key = 'UpdateEntity.Entities.Key',
+  Prompt = 'UpdateEntity.Entities.Prompt',
+  File = 'UpdateEntity.Entities.File',
+  Adapter = 'UpdateEntity.Entities.Adapter',
+  InterceptorTemplate = 'UpdateEntity.Entities.InterceptorTemplate',
+  ApplicationRunner = 'UpdateEntity.Entities.ApplicationRunner',
+}
+
 export enum CreateI18nKey {
-  Model = 'CreateEntity.Model',
-  Application = 'CreateEntity.Application',
-  Adapter = 'CreateEntity.Adapter',
-  Toolsets = 'CreateEntity.Toolsets',
-  ApplicationRunner = 'CreateEntity.ApplicationRunner',
-  Role = 'CreateEntity.Role',
-  Key = 'CreateEntity.Key',
-  Prompt = 'CreateEntity.Prompt',
-  Route = 'CreateEntity.Route',
-  Interceptor = 'CreateEntity.Interceptor',
-  CreateInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Create',
-  SelectInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Select',
-  CreateAdapter = 'CreateEntity.Adapter.Create',
-  SelectAdapter = 'CreateEntity.Adapter.Select',
+  Title = 'CreateEntity.Title',
+
+  SelectInterceptorTemplate = 'CreateEntity.SelectInterceptorTemplate',
+  SelectAdapter = 'CreateEntity.SelectAdapter',
   SelectContainer = 'CreateEntity.SelectContainer',
+
+  // Notification
+  NotificationTitle = 'CreateEntity.Notification.Title',
+  NotificationDescription = 'CreateEntity.Notification.Description',
+
+  // Entities
+  Model = 'CreateEntity.Entities.Model',
+  Application = 'CreateEntity.Entities.Application',
+  Toolsets = 'CreateEntity.Entities.Toolsets',
+  Route = 'CreateEntity.Entities.Route',
+  Interceptor = 'CreateEntity.Entities.Interceptor',
+  Role = 'CreateEntity.Entities.Role',
+  Key = 'CreateEntity.Entities.Key',
+  Prompt = 'CreateEntity.Entities.Prompt',
+  File = 'CreateEntity.Entities.File',
+  Adapter = 'CreateEntity.Entities.Adapter',
+  InterceptorTemplate = 'CreateEntity.Entities.InterceptorTemplate',
+  ApplicationRunner = 'CreateEntity.Entities.ApplicationRunner',
 }
 
 export enum UpstreamEndpointsI18nKey {

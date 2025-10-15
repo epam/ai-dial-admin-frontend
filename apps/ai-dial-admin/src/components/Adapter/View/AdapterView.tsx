@@ -21,8 +21,9 @@ import { DialAdapter } from '@/src/models/dial/adapter';
 import { TabModel } from '@/src/models/tab';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { getErrorNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import AdapterProperties from './AdapterProperties';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
   etag: string;
@@ -88,12 +89,18 @@ const AdapterView: FC<Props> = ({ originalAdapter, etag }) => {
   const onSave = useCallback(() => {
     updateAdapter(selectedAdapter, etag).then((res) => {
       if (res.success) {
+        showNotification(
+          getSuccessNotification(
+            getUpdateNotificationTitle(ApplicationRoute.Adapters, t),
+            getUpdateNotificationDescription(ApplicationRoute.Adapters, selectedAdapter.name, t),
+          ),
+        );
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedAdapter, etag, router, showNotification]);
+  }, [selectedAdapter, etag, showNotification, t, router]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">

@@ -7,12 +7,13 @@ import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { useI18n } from '@/src/locales/client';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import { getErrorNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { createInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { useNotification } from '@/src/context/NotificationContext';
 
 import BaseProperties from '@/src/components/InterceptorTemplates/Properties/BaseProperties';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 
 interface Props {
   route: ApplicationRoute;
@@ -36,13 +37,19 @@ const Create: FC<Props> = ({ route, onClose, isModalOpen, names }) => {
   const onCreate = useCallback(() => {
     createInterceptorTemplate(template).then((res) => {
       if (res.success) {
+        showNotification(
+          getSuccessNotification(
+            getCreateNotificationTitle(ApplicationRoute.InterceptorTemplates, t),
+            getCreateNotificationDescription(ApplicationRoute.InterceptorTemplates, template.name, t),
+          ),
+        );
         onClose();
         router.push(`${route}/${getEntityPath(route, template)}`);
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [template, route, router, onClose, showNotification]);
+  }, [template, showNotification, t, onClose, router, route]);
 
   // initial validation (disable save when no values entered yet)
   useEffect(() => {
@@ -54,7 +61,7 @@ const Create: FC<Props> = ({ route, onClose, isModalOpen, names }) => {
   return (
     <DialPopup
       onClose={onClose}
-      title={t(CreateI18nKey.CreateInterceptorTemplate)}
+      title={t(CreateI18nKey.InterceptorTemplate)}
       portalId="CreateInterceptorTemplate"
       open={isModalOpen}
       footer={
