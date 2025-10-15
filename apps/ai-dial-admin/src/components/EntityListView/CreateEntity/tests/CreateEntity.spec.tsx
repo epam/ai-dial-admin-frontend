@@ -7,7 +7,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 describe('CreateEntity', () => {
   test('renders popup and adapter properties', () => {
     render(<CreateEntity route={ApplicationRoute.Models} isModalOpen={true} onClose={vi.fn()} names={['model1']} />);
-    expect(screen.getByText(CreateI18nKey.Model)).toBeInTheDocument();
+    expect(screen.getByText(CreateI18nKey.Title)).toBeInTheDocument();
     expect(screen.getByText(ButtonsI18nKey.Cancel)).toBeInTheDocument();
     expect(screen.getByText(ButtonsI18nKey.Create)).toBeInTheDocument();
   });
