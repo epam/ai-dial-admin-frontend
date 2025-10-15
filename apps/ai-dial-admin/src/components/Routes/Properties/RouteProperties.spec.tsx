@@ -11,6 +11,7 @@ describe('RouteProperties', () => {
     methods: ['GET'],
     response: { status: 200, body: 'ok' },
     order: 1,
+    paths: ['/path1'],
     maxRetryAttempts: 3,
   };
 
