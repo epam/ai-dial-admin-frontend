@@ -1,10 +1,10 @@
 import { FC } from 'react';
 
-import { createSectionFromDiffs } from '@/src/components/ActivityAudit/View/utils';
-import { ActivityAuditDiff } from '@/src/models/activity-audit';
-import { ActivityAuditResourceType, CompareView, DiffView } from '@/src/types/activity-audit';
 import DiffLegend from '@/src/components/ActivityAudit/View/DiffReport/DiffLegend';
 import DiffSection from '@/src/components/ActivityAudit/View/DiffReport/DiffSection';
+import { createSectionFromDiffs } from '@/src/components/ActivityAudit/View/utils/generate-diffs';
+import { ActivityAuditDiff } from '@/src/models/activity-audit';
+import { ActivityAuditResourceType, CompareView, DiffView } from '@/src/types/activity-audit';
 
 interface Props {
   currentEntity: Record<string, ActivityAuditDiff[]>;
