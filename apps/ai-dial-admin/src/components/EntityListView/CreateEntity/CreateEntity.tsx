@@ -1,31 +1,31 @@
+import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 
-import { DialApplicationScheme } from '@/src/models/dial/application';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMainProperties';
 import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
+import { isValidSourceField } from '@/src/components/SourceField/utils';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
+import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
+import { DialModel } from '@/src/models/dial/model';
+import { DialRoute } from '@/src/models/dial/route';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
-import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { checkIsUniqueDeploymentName } from '@/src/app/actions';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { RoutesForCheckingUniqueName } from './constants';
-import { DialRoute } from '@/src/models/dial/route';
-import { isValidSourceField } from '@/src/components/SourceField/utils';
-import { DialModel } from '@/src/models/dial/model';
 import {
   getCreateEntityTitle,
   getCreateNotificationDescription,
   getCreateNotificationTitle,
 } from '@/src/utils/entities/create-entity';
+import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { RoutesForCheckingUniqueName } from './constants';
 
 interface CreatePromptEntity extends BaseEntity {
   version?: string;
@@ -153,22 +153,16 @@ const CreateEntity = <T extends CreatePromptEntity>({
   }, []);
 
   return (
-    <DialPopup
+    <DialFormPopup
       onClose={onClose}
       title={getCreateEntityTitle(route, t)}
       portalId="CreateEntity"
       open={isModalOpen}
-      footer={
-        <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-          <DialButton
-            variant={ButtonVariant.Primary}
-            title={t(ButtonsI18nKey.Create)}
-            onClick={onCreate}
-            disable={(isUniqueNameError != null && !isUniqueNameError) || !isValid}
-          />
-        </div>
-      }
+      onSubmit={onCreate}
+      onCancel={onClose}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      submitLabel={t(ButtonsI18nKey.Create)}
+      disableSubmitButton={(isUniqueNameError != null && !isUniqueNameError) || !isValid}
     >
       <div className="flex flex-col overflow-auto px-6 py-4">
         {isSimpleEntity(route) ? (
@@ -193,7 +187,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
           />
         )}
       </div>
-    </DialPopup>
+    </DialFormPopup>
   );
 };
 

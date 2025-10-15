@@ -1,17 +1,17 @@
+import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { duplicateModalDescriptionMap, getTitle } from './utils';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 
 type ClonedEntity = BaseEntity | DialModel;
 interface Props {
@@ -53,23 +53,16 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
   }, []);
 
   return (
-    <DialPopup
+    <DialFormPopup
       onClose={onClose}
       title={t(getTitle(view, t))}
       portalId="CloneEntity"
       open={isModalOpen}
-      footer={
-        <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
-
-          <DialButton
-            variant={ButtonVariant.Primary}
-            title={t(ButtonsI18nKey.Duplicate)}
-            disable={!isValid}
-            onClick={() => onDuplicate(clonedEntity)}
-          />
-        </div>
-      }
+      onSubmit={() => onDuplicate(clonedEntity)}
+      onCancel={onClose}
+      disableSubmitButton={!isValid}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      submitLabel={t(ButtonsI18nKey.Duplicate)}
     >
       <div className="flex flex-col px-6 py-4">
         {!!duplicateModalDescriptionMap[view] && (
@@ -88,7 +81,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
           )}
         </div>
       </div>
-    </DialPopup>
+    </DialFormPopup>
   );
 };
 export default DuplicateEntity;

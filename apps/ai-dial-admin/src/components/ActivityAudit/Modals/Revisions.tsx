@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { IconCaretDownFilled, IconCaretRightFilled } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { ButtonVariant, DialButton, DialLoader, DialPopup } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialFormPopup } from '@epam/ai-dial-ui-kit';
 
 import { getRevisions } from '@/src/app/[lang]/activity-audit/actions';
 import { sorts } from '@/src/components/ActivityAudit/constants';
@@ -80,23 +80,17 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, isMo
   }, [revisions]);
 
   return (
-    <DialPopup
+    <DialFormPopup
       onClose={onClose}
       title={t(ActivityAuditI18nKey.RollbackRevision)}
       portalId="RollBackRevisionsModal"
       open={isModalOpen}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      submitLabel={t(ButtonsI18nKey.Apply)}
+      onSubmit={() => onApply(revisions, selectedRevision)}
+      onCancel={onClose}
+      disableSubmitButton={!selectedRevision}
       dividers={true}
-      footer={
-        <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-          <DialButton
-            variant={ButtonVariant.Primary}
-            title={t(ButtonsI18nKey.Apply)}
-            onClick={() => onApply(revisions, selectedRevision)}
-            disable={!selectedRevision}
-          />
-        </div>
-      }
     >
       <div className="flex h-full flex-col">
         <div className="flex flex-row gap-4 bg-layer-2 h-[84px] py-3 px-6">
@@ -169,7 +163,7 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, isMo
           )}
         </div>
       </div>
-    </DialPopup>
+    </DialFormPopup>
   );
 };
 

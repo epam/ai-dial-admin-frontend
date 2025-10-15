@@ -1,8 +1,7 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 
+import { DialCollapsibleSidebar, DialFormPopup, DialNoDataContent, PopupSize } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
-import { ButtonVariant, DialButton, DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
-import { DialNoDataContent, DialCollapsibleSidebar } from '@epam/ai-dial-ui-kit';
 
 import FolderList from '@/src/components/Common/FolderList/FolderList';
 import { generatePromptRowDataForDelete } from '@/src/components/Common/FolderList/utils';
@@ -82,27 +81,20 @@ const DeleteFolder: FC<Props> = ({ isModalOpen, view, selectedFolder, isBulkDele
   }, [filePath, folderContext, folderContext?.fetchedFoldersData, isBulkDelete]);
 
   return (
-    <DialPopup
+    <DialFormPopup
       onClose={onClose}
       title={t(FoldersI18nKey.DeleteFolder)}
       portalId="DeleteFolder"
       open={isModalOpen}
       size={PopupSize.Lg}
       cssClass="h-[750px]"
-      footer={
-        <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-          <DialButton
-            variant={ButtonVariant.Primary}
-            title={t(ButtonsI18nKey.Delete)}
-            onClick={() => {
-              onApply?.();
-              onClose();
-            }}
-            disable={false}
-          />
-        </div>
-      }
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      submitLabel={t(ButtonsI18nKey.Delete)}
+      onSubmit={() => {
+        onApply?.();
+        onClose();
+      }}
+      onCancel={onClose}
     >
       <div className="flex flex-col gap-4 px-6 py-4 h-full">
         <div className="text-secondary text-sm">
@@ -130,7 +122,7 @@ const DeleteFolder: FC<Props> = ({ isModalOpen, view, selectedFolder, isBulkDele
           </div>
         </div>
       </div>
-    </DialPopup>
+    </DialFormPopup>
   );
 };
 
