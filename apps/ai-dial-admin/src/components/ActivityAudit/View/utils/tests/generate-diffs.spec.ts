@@ -4,7 +4,13 @@ import { DefaultsValue } from '@/src/models/dial/defaults';
 import { DialModelEndpoint } from '@/src/models/dial/model';
 import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus } from '@/src/types/activity-audit';
 import { describe, expect, test } from 'vitest';
-import { compareObjectArray, createSectionFromDiffs, fillObjectArray, generateCurrentResource, mergeEntityMaps } from '../generate-diffs';
+import {
+  compareObjectArray,
+  createSectionFromDiffs,
+  fillObjectArray,
+  generateCurrentResource,
+  mergeEntityMaps,
+} from '../generate-diffs';
 
 describe('Activity audit :: generateCurrentResource ', () => {
   test('should return only empty properties array', () => {
