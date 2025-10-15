@@ -2,6 +2,8 @@
 
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { IconEyeOff } from '@tabler/icons-react';
 import { CellValueChangedEvent, ColDef, GridApi, GridReadyEvent, RowClassRules } from 'ag-grid-community';
 
 import { previewPromptZip } from '@/src/app/[lang]/folders-storage/actions';
@@ -16,7 +18,6 @@ import {
   readAllFiles,
   readJsonFiles,
 } from '@/src/components/Common/FolderCreate/utils';
-import NoPreview from '@/src/components/Common/NoPreview/NoPreview';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
 import {
   changeFilesMap,
@@ -175,7 +176,7 @@ const FolderCreateReview: FC<Props> = ({
   }, [currentStep, editedFileMap]);
 
   return fileType === ImportFileType.ARCHIVE ? (
-    <NoPreview text={t(FoldersI18nKey.NoPreviewArchive)} />
+    <DialNoDataContent title={t(FoldersI18nKey.NoPreviewArchive)} icon={<IconEyeOff width={50} height={50} />} />
   ) : (
     <div className="flex flex-col flex-1 min-h-0">
       <div>

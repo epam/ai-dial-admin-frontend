@@ -4,14 +4,14 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ButtonVariant,
   DialButton,
+  DialNoDataContent,
   DialRadioGroup,
   RadioButtonWithContent,
   RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
-import { IconUpload } from '@tabler/icons-react';
+import { IconEyeOff, IconUpload } from '@tabler/icons-react';
 
 import { exportConfig, exportConfigMap } from '@/src/app/[lang]/export-config/actions';
-import NoPreview from '@/src/components/Common/NoPreview/NoPreview';
 import ConfigContent from '@/src/components/ExportConfig/Content/ConfigContent';
 import PreviewModal from '@/src/components/ExportConfig/Preview/PreviewModal';
 import ExportDependencies from '@/src/components/ExportConfig/Structure/Dependencies';
@@ -197,7 +197,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
             </div>
           </div>
           {selectedExportFormat === ExportFormat.ACTIVE_CONFIG ? (
-            <NoPreview text={t(ExportI18nKey.NoPreview)} />
+            <DialNoDataContent title={t(ExportI18nKey.NoPreview)} icon={<IconEyeOff width={50} height={50} />} />
           ) : (
             <ConfigContent
               selectedExportFormat={selectedExportFormat}
