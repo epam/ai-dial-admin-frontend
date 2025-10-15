@@ -17,7 +17,7 @@ describe('Update :: utils', () => {
       `${UpdateI18nKey.NotificationDescription} with props`,
     );
 
-     expect(getUpdateNotificationDescription(ApplicationRoute.Interceptors, void 0, tWithProps)).toBe(
+    expect(getUpdateNotificationDescription(ApplicationRoute.Interceptors, void 0, tWithProps)).toBe(
       `${UpdateI18nKey.NotificationDescription} with props`,
     );
   });
