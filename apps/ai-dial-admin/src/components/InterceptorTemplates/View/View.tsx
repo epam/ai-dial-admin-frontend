@@ -26,7 +26,8 @@ import { useI18n } from '@/src/locales/client';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { getErrorNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
   etag: string;
@@ -66,12 +67,18 @@ const View: FC<Props> = ({ etag, template, names }) => {
   const onSave = useCallback(() => {
     updateInterceptorTemplate(selectedTemplate, etag).then((res) => {
       if (res.success) {
+        showNotification(
+          getSuccessNotification(
+            getUpdateNotificationTitle(ApplicationRoute.InterceptorTemplates, t),
+            getUpdateNotificationDescription(ApplicationRoute.InterceptorTemplates, selectedTemplate.name, t),
+          ),
+        );
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [router, selectedTemplate, etag, showNotification]);
+  }, [selectedTemplate, etag, showNotification, t, router]);
 
   const onDiscard = useCallback(() => {
     setSelectedTemplate(cloneDeep(template));

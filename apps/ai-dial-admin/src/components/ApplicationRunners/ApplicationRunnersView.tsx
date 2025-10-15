@@ -38,9 +38,10 @@ import { TabModel } from '@/src/models/tab';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { getErrorNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import AppRunnerApplications from './ConfigurationView/Applications';
 import SchemeProperties from './ConfigurationView/Properties';
+import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 
 interface Props {
   etag: string;
@@ -137,12 +138,18 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles }) => {
     req.then((res) => {
       if (res.success) {
         setCoreRunner(null);
+        showNotification(
+          getSuccessNotification(
+            getCreateNotificationTitle(ApplicationRoute.ApplicationRunners, t),
+            getCreateNotificationDescription(ApplicationRoute.ApplicationRunners, selectedRunner.$id, t),
+          ),
+        );
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedFormat, selectedRunner, etag, router, showNotification]);
+  }, [selectedFormat, selectedRunner, etag, showNotification, t, router]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
