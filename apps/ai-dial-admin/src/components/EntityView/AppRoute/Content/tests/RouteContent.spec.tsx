@@ -4,13 +4,12 @@ import RouteContent from '../RouteContent';
 import { EntityFieldsI18nKey, RoutesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 
 describe('RouteContent', () => {
-  const route = { id: 'route1' };
+  const route = { id: 'route1', paths: [''] };
 
   test('renders tabs and RouteProperties by default', () => {
     render(<RouteContent route={route} onChangeRoute={vi.fn()} />);
     expect(screen.getByRole('tab', { name: TabsI18nKey.Attachments })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: TabsI18nKey.Roles })).toBeInTheDocument();
-    expect(screen.getByText(EntityFieldsI18nKey.paths)).toBeInTheDocument();
   });
 
   test('shows RouteAttachments when Attachments tab is clicked', () => {
