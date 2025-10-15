@@ -14,13 +14,18 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
-import { getErrorNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { RoutesForCheckingUniqueName } from './constants';
 import { DialRoute } from '@/src/models/dial/route';
 import { isValidSourceField } from '@/src/components/SourceField/utils';
 import { DialModel } from '@/src/models/dial/model';
+import {
+  getCreateEntityTitle,
+  getCreateNotificationDescription,
+  getCreateNotificationTitle,
+} from '@/src/utils/entities/create-entity';
 
 interface CreatePromptEntity extends BaseEntity {
   version?: string;
@@ -31,7 +36,6 @@ interface Props<T> {
   route: ApplicationRoute;
   isModalOpen: boolean;
   names: string[];
-  modalTitle: string;
   runners?: DialApplicationScheme[];
   versionsMap?: Record<string, string[]>;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
@@ -40,7 +44,6 @@ interface Props<T> {
 }
 
 const CreateEntity = <T extends CreatePromptEntity>({
-  modalTitle,
   runners,
   route,
   isModalOpen,
@@ -50,7 +53,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
   createEntity,
   initialValues,
 }: Props<T>) => {
-  const t = useI18n();
+  const t = useI18n() as (str: string, props?: Record<string, string>) => string;
   const router = useRouter();
   const { filePath, fetchFiles } = usePromptFolder();
   const { isValid, dispatch } = useSaveValidationContext();
@@ -98,6 +101,12 @@ const CreateEntity = <T extends CreatePromptEntity>({
         if (route === ApplicationRoute.Prompts) {
           fetchFiles(filePath);
         }
+        showNotification(
+          getSuccessNotification(
+            getCreateNotificationTitle(route, t),
+            getCreateNotificationDescription(route, entity.name, t),
+          ),
+        );
         const originalRoute = route.split('/')[1];
         router.push(`${initialValues ? '/' : ''}${originalRoute}/${getEntityPath(route, res.response || entity)}`);
         onClose();
@@ -105,7 +114,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [currentEntity, route, createEntity, filePath, router, initialValues, onClose, fetchFiles, showNotification]);
+  }, [currentEntity, route, createEntity, filePath, showNotification, t, router, initialValues, onClose, fetchFiles]);
 
   useEffect(() => {
     setIsUniqueNameError(void 0);
@@ -146,7 +155,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
   return (
     <DialPopup
       onClose={onClose}
-      title={modalTitle}
+      title={getCreateEntityTitle(route, t)}
       portalId="CreateEntity"
       open={isModalOpen}
       footer={

@@ -101,7 +101,7 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
   }, [isModal, entity, prefix]);
 
   return (
-    <div className="w-full flex flex-col gap-6">
+    <div className="w-full flex flex-col gap-6 lg:w-[35%]">
       {!isModal && (
         <DialRadioGroup
           radioButtons={modelTypeRadio}
@@ -134,6 +134,7 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
           errorText={endpointError?.text}
           invalid={!!endpointError}
           copyable={false}
+          inputContainerCssClass="w-full"
         />
       )}
     </div>
