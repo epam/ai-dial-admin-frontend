@@ -11,7 +11,6 @@ import { importPrompts } from '@/src/app/[lang]/prompts/actions';
 import CreateAdapter from '@/src/components/Adapter/Modals/CreateAdapter';
 import CreateAppRunner from '@/src/components/ApplicationRunners/Modals/CreateAppRunner';
 import Modals, { ModalType } from '@/src/components/EntityListView/Components/Modals';
-import { createModalTitleMap } from '@/src/components/EntityListView/constants';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import { getImportResults } from '@/src/components/EntityListView/Import/import';
 import CreateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Create';
@@ -160,7 +159,6 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
       <CreateEntity
         route={route}
         runners={runners}
-        modalTitle={t(createModalTitleMap[route])}
         isModalOpen={isModalOpen}
         createEntity={createEntity}
         onClose={handleModalClose}

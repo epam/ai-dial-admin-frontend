@@ -9,9 +9,10 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getErrorNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 
 interface Props {
   isModalOpen: boolean;
@@ -21,7 +22,7 @@ interface Props {
 }
 
 const CreateKey: FC<Props> = ({ isModalOpen, names, keys, onClose }) => {
-  const t = useI18n();
+  const t = useI18n() as (t: string) => string;
   const router = useRouter();
 
   const { showNotification } = useNotification();
@@ -49,13 +50,19 @@ const CreateKey: FC<Props> = ({ isModalOpen, names, keys, onClose }) => {
   const onCreate = useCallback(() => {
     createKey(currentKey).then((res) => {
       if (res.success) {
+        showNotification(
+          getSuccessNotification(
+            getCreateNotificationTitle(ApplicationRoute.Keys, t),
+            getCreateNotificationDescription(ApplicationRoute.Keys, currentKey.name, t),
+          ),
+        );
         router.push(getUrnForEntity(ApplicationRoute.Keys, currentKey));
         onClose();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [currentKey, showNotification, onClose, router]);
+  }, [currentKey, showNotification, t, router, onClose]);
 
   // initial validation (disable save when no values entered yet)
   useEffect(() => {
