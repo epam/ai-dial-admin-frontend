@@ -41,7 +41,7 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import AppRunnerApplications from './ConfigurationView/Applications';
 import SchemeProperties from './ConfigurationView/Properties';
-import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
   etag: string;
@@ -140,8 +140,8 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles }) => {
         setCoreRunner(null);
         showNotification(
           getSuccessNotification(
-            getCreateNotificationTitle(ApplicationRoute.ApplicationRunners, t),
-            getCreateNotificationDescription(ApplicationRoute.ApplicationRunners, selectedRunner.$id, t),
+            getUpdateNotificationTitle(ApplicationRoute.ApplicationRunners, t),
+            getUpdateNotificationDescription(ApplicationRoute.ApplicationRunners, selectedRunner.$id, t),
           ),
         );
         router.refresh();
