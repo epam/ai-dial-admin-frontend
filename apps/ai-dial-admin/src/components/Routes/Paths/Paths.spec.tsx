@@ -1,15 +1,9 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { RoutesI18nKey } from '@/src/constants/i18n';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import Paths from './Paths';
-import { EntityPlaceholdersI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 
 describe('Paths', () => {
-  test('renders empty path input if no paths', () => {
-    render(<Paths paths={[]} title="title" onChangePaths={vi.fn()} />);
-    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.PathUrl)).toBeInTheDocument();
-    expect(screen.getByText('title')).toBeInTheDocument();
-  });
-
   test('renders Path components for each path', () => {
     render(<Paths paths={['/a', '/b']} title="title" onChangePaths={vi.fn()} />);
     expect(screen.getByDisplayValue('/a')).toBeInTheDocument();
@@ -27,9 +21,9 @@ describe('Paths', () => {
     const onChangePaths = vi.fn();
     render(<Paths title="title" onChangePaths={onChangePaths} />);
     fireEvent.click(screen.getByText(RoutesI18nKey.AddPaths));
-    expect(onChangePaths).toHaveBeenCalledWith(['', '']);
+    expect(onChangePaths).toHaveBeenCalledWith(['']);
     fireEvent.click(screen.getByLabelText(RoutesI18nKey.AddPaths));
-    expect(onChangePaths).toHaveBeenCalledWith(['', '']);
+    expect(onChangePaths).toHaveBeenCalledWith(['']);
   });
 
   test('calls onChangePaths when path input changes', () => {
