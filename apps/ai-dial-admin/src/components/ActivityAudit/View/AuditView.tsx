@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { ButtonVariant, DialButton, DialConfirmationPopup, DialTooltip } from '@epam/ai-dial-ui-kit';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
-import { ActivityAuditI18nKey, ButtonsI18nKey, EntityFieldsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -168,10 +168,10 @@ const AuditView: FC<Props> = ({
           >
             <div className="text-secondary small-150 px-6 py-4">
               <p>
-                <span>{t(ActivityAuditI18nKey.ConfirmSelectionRollbackDescription)}</span>
+                <span>{t(RollbackI18nKey.ConfirmSelectionRollbackDescription)}</span>
                 <span className="important-text-part">{formatDateTimeToLocalString(activity?.epochTimestampMs)}</span>
               </p>
-              <p>{t(ActivityAuditI18nKey.ConfirmRollbackAsking)}</p>
+              <p>{t(RollbackI18nKey.ConfirmRollbackAsking)}</p>
             </div>
           </DialConfirmationPopup>,
           document.body,
