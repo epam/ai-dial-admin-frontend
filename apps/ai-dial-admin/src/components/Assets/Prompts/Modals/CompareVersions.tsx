@@ -1,28 +1,24 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
-
-import classNames from 'classnames';
+import { DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { getPrompt } from '@/src/app/[lang]/prompts/actions';
 import DiffField from '@/src/components/Common/DiffField/DiffField';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
-import Popup from '@/src/components/Common/Popup/Popup';
 import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { PopUpState } from '@/src/types/pop-up';
 import VersionsControl from './VersionsControl';
 
 interface Props {
   heading: string;
-  modalState: PopUpState;
+  isModalOpen: boolean;
   onClose: () => void;
   prompts?: DialPrompt[];
   prompt: DialPrompt;
 }
 
-const CompareVersions: FC<Props> = ({ heading, modalState, onClose, prompts, prompt }) => {
+const CompareVersions: FC<Props> = ({ heading, isModalOpen, onClose, prompts, prompt }) => {
   const t = useI18n();
-  const containerClassName = classNames('h-[93%] min-w-[92%]');
   const versions = prompts?.map((prompt) => prompt.version) as string[];
 
   const [original, setOriginal] = useState<DialPrompt | null>(null);
@@ -53,11 +49,12 @@ const CompareVersions: FC<Props> = ({ heading, modalState, onClose, prompts, pro
   }, [prompts, prompt, fetchPrompt]);
 
   return (
-    <Popup
+    <DialPopup
+      open={isModalOpen}
       portalId="compareVersionsModal"
-      containerClassName={containerClassName}
-      state={modalState}
-      heading={heading}
+      cssClass="h-[93%]"
+      size={PopupSize.Lg}
+      title={heading}
       onClose={onClose}
     >
       <div className="flex flex-col gap-4 px-6 py-4 h-full">
@@ -99,8 +96,7 @@ const CompareVersions: FC<Props> = ({ heading, modalState, onClose, prompts, pro
           modified={modified?.content}
         />
       </div>
-      <></>
-    </Popup>
+    </DialPopup>
   );
 };
 

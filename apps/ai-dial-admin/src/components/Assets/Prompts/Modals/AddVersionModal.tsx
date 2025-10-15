@@ -1,15 +1,13 @@
+import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Popup from '@/src/components/Common/Popup/Popup';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
 import { ButtonsI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { PopUpState } from '@/src/types/pop-up';
 
 interface Props {
   heading: string;
-  modalState: PopUpState;
+  isModalOpen: boolean;
   existingVersions: string[];
   prefilledVersion?: string;
   onClose: () => void;
@@ -18,7 +16,7 @@ interface Props {
 
 const AddVersionModal: FC<Props> = ({
   heading,
-  modalState,
+  isModalOpen,
   existingVersions,
   prefilledVersion,
   onConfirm,
@@ -28,22 +26,22 @@ const AddVersionModal: FC<Props> = ({
   const [version, setVersion] = useState<string>(prefilledVersion || '');
 
   return (
-    <Popup onClose={onClose} heading={heading} portalId="newVersionModal" state={modalState}>
+    <DialFormPopup
+      onClose={onClose}
+      title={heading}
+      portalId="newVersionModal"
+      open={isModalOpen}
+      onCancel={onClose}
+      onSubmit={() => onConfirm(version)}
+      disableSubmitButton={existingVersions.includes(version)}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      submitLabel={t(ButtonsI18nKey.Create)}
+    >
       <div className=" flex flex-col gap-4 text-primary small px-6 py-4">
         {prefilledVersion && <div className="text-secondary">{t(PromptsI18nKey.NewVersionSaveDescription)}</div>}
         <VersionControl version={version} onChange={(v) => setVersion(v || '')} />
       </div>
-      <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
-
-        <DialButton
-          variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Create)}
-          onClick={() => onConfirm(version)}
-          disable={existingVersions.includes(version)}
-        />
-      </div>
-    </Popup>
+    </DialFormPopup>
   );
 };
 

@@ -32,7 +32,6 @@ import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
 import { JSONEditorError } from '@/src/types/editor';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
@@ -66,7 +65,7 @@ const PromptProperties: FC<Props> = ({
   const router = useRouter();
   const { dispatch } = useSaveValidationContext();
 
-  const [modalState, setModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType>();
 
   const [isJSONContentMode, setIsJSONContentMode] = useState(false);
@@ -115,20 +114,20 @@ const PromptProperties: FC<Props> = ({
   );
 
   const handleModalClose = useCallback(() => {
-    setModalState(PopUpState.Closed);
+    setIsModalOpen(false);
     setModalType(void 0);
   }, []);
 
   const handleModalOpen = useCallback((modalType: ModalType) => {
     setModalType(modalType);
-    setModalState(PopUpState.Opened);
+    setIsModalOpen(true);
   }, []);
 
   const onAddVersion = useCallback(
     (version: string) => {
       setAddedVersions((prev) => [...new Set([...prev, version])]);
       onChangeVersion(version);
-      setModalState(PopUpState.Closed);
+      setIsModalOpen(false);
     },
     [onChangeVersion, setAddedVersions],
   );
@@ -271,24 +270,24 @@ const PromptProperties: FC<Props> = ({
           </div>
         </div>
       </div>
-      {modalState === PopUpState.Opened &&
+      {isModalOpen &&
         modalType === ModalType.addVersion &&
         createPortal(
           <AddVersionModal
             heading={t(PromptsI18nKey.NewVersionCreate)}
-            modalState={modalState}
+            isModalOpen={isModalOpen}
             existingVersions={[...versions, ...addedVersions]}
             onClose={handleModalClose}
             onConfirm={onAddVersion}
           />,
           document.body,
         )}
-      {modalState === PopUpState.Opened &&
+      {isModalOpen &&
         modalType === ModalType.compareVersions &&
         createPortal(
           <CompareVersions
             heading={t(CompareI18nKey.CompareVersions)}
-            modalState={modalState}
+            isModalOpen={isModalOpen}
             onClose={handleModalClose}
             prompts={prompts}
             prompt={prompt}
