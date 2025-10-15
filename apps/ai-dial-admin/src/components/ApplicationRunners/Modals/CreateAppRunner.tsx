@@ -10,8 +10,9 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getErrorNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 
 interface Props {
   isModalOpen: boolean;
@@ -43,13 +44,19 @@ const CreateAppRunner: FC<Props> = ({ isModalOpen, onClose, route }) => {
     createApplicationScheme(currentScheme).then((res) => {
       if (res.success) {
         const originalRoute = route.split('/')[1];
+        showNotification(
+          getSuccessNotification(
+            getCreateNotificationTitle(ApplicationRoute.ApplicationRunners, t),
+            getCreateNotificationDescription(ApplicationRoute.ApplicationRunners, currentScheme.$id, t),
+          ),
+        );
         router.push(`${originalRoute}/${getEntityPath(ApplicationRoute.ApplicationRunners, currentScheme)}`);
         onClose();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [currentScheme, route, router, onClose, showNotification]);
+  }, [currentScheme, route, showNotification, t, router, onClose]);
 
   // initial validation (disable save when no values entered yet)
   useEffect(() => {

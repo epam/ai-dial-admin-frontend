@@ -1,4 +1,4 @@
-import { CreateI18nKey, EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export const listViewTitleMap: Record<string, MenuI18nKey> = {
@@ -43,18 +43,4 @@ export const emptyDataTitleMap: Record<string, EntitiesI18nKey> = {
   [ApplicationRoute.ActivityAudit]: EntitiesI18nKey.NoActivityAudit,
   [ApplicationRoute.InterceptorTemplates]: EntitiesI18nKey.NoInterceptorTemplates,
   [ApplicationRoute.Toolsets]: EntitiesI18nKey.NoToolsets,
-};
-
-export const createModalTitleMap: Record<string, CreateI18nKey> = {
-  [ApplicationRoute.Models]: CreateI18nKey.Model,
-  [ApplicationRoute.Applications]: CreateI18nKey.Application,
-  [ApplicationRoute.ApplicationRunners]: CreateI18nKey.ApplicationRunner,
-  [ApplicationRoute.Keys]: CreateI18nKey.Key,
-  [ApplicationRoute.Roles]: CreateI18nKey.Role,
-  [ApplicationRoute.Interceptors]: CreateI18nKey.Interceptor,
-  [ApplicationRoute.Prompts]: CreateI18nKey.Prompt,
-  [ApplicationRoute.Routes]: CreateI18nKey.Route,
-  [ApplicationRoute.Adapters]: CreateI18nKey.CreateAdapter,
-  [ApplicationRoute.Toolsets]: CreateI18nKey.Toolsets,
-  [ApplicationRoute.InterceptorTemplates]: CreateI18nKey.CreateInterceptorTemplate,
 };

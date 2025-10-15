@@ -41,7 +41,7 @@ const exportedEntity = {
 };
 export async function getCoreEntity(name: string, type: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return await utilityApi.getCoreEntity({ ...exportedEntity, components: [{ type, name }] }, token);
+  return await utilityApi.getCoreEntity({ ...exportedEntity, components: [{ type, name }], addSecrets: true }, token);
 }
 
 export async function exportConfig(exportConfig: ExportRequest) {

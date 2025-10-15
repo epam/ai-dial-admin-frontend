@@ -29,7 +29,7 @@ import { DialRole } from '@/src/models/dial/role';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { TabModel } from '@/src/models/tab';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getErrorNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -42,6 +42,7 @@ import {
 } from '@/src/components/EntityView/View/core-entity-utils';
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 import RoleProperties from './Properties';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
   originalRole: DialRole;
@@ -201,12 +202,18 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
     req.then((res) => {
       if (res.success) {
         setCoreRole(null);
+        showNotification(
+          getSuccessNotification(
+            getUpdateNotificationTitle(ApplicationRoute.Roles, t),
+            getUpdateNotificationDescription(ApplicationRoute.Roles, selectedRole.name, t),
+          ),
+        );
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedFormat, selectedRole, etag, router, showNotification]);
+  }, [selectedFormat, selectedRole, etag, showNotification, t, router]);
 
   const onChangeRoleToken = useCallback(
     (value: number, data: DialRole, token: string) => {

@@ -1,19 +1,21 @@
 'use client';
-import { IconUpload } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+
 import {
   ButtonVariant,
-  RadioButtonWithContent,
   DialButton,
+  DialNoDataContent,
   DialRadioGroup,
+  RadioButtonWithContent,
   RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
+import { IconEyeOff, IconUpload } from '@tabler/icons-react';
 
 import { exportConfig, exportConfigMap } from '@/src/app/[lang]/export-config/actions';
 import ConfigContent from '@/src/components/ExportConfig/Content/ConfigContent';
-import { fulDependenciesConfig, getComponents, getComponentTypes } from '@/src/components/ExportConfig/utils';
 import PreviewModal from '@/src/components/ExportConfig/Preview/PreviewModal';
 import ExportDependencies from '@/src/components/ExportConfig/Structure/Dependencies';
+import { fulDependenciesConfig, getComponents, getComponentTypes } from '@/src/components/ExportConfig/utils';
 import { ButtonsI18nKey, ExportI18nKey, ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -24,7 +26,6 @@ import { ExportFormat, ExportType } from '@/src/types/export';
 import { PopUpState } from '@/src/types/pop-up';
 import { downloadFile } from '@/src/utils/download';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import NoPreview from '@/src/components/ExportConfig/Preview/NoPreview';
 
 interface Props {
   enableExportConfigMap?: boolean;
@@ -196,7 +197,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
             </div>
           </div>
           {selectedExportFormat === ExportFormat.ACTIVE_CONFIG ? (
-            <NoPreview />
+            <DialNoDataContent title={t(ExportI18nKey.NoPreview)} icon={<IconEyeOff width={50} height={50} />} />
           ) : (
             <ConfigContent
               selectedExportFormat={selectedExportFormat}

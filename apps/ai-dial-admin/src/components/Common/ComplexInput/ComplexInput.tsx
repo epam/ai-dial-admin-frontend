@@ -9,7 +9,7 @@ import classNames from 'classnames';
 interface Props extends DialInputProps {
   fieldTitle: string;
   errorText?: string;
-  fullValue: string;
+  fullValue?: string;
   inputContainerCssClass?: string;
   copyable?: boolean;
 }
