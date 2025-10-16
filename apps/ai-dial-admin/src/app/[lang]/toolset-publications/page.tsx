@@ -35,5 +35,5 @@ export default async function Page() {
     logError(e, 'Failed to fetch toolset publications data');
   }
 
-  return <BasePublicationsList data={data || []} route={ApplicationRoute.AssetsToolsets} />;
+  return <BasePublicationsList data={data || []} route={ApplicationRoute.ToolsetPublications} />;
 }
