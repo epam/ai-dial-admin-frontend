@@ -1,24 +1,24 @@
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ApplicationRoute } from '@/src/types/routes';
+import { SelectOption } from '@epam/ai-dial-ui-kit';
 
-export const INTERCEPTOR_SOURCE_ITEMS: DropdownItemsModel[] = [
-  { id: SOURCE_TYPE.ENDPOINTS, name: 'External Endpoint' },
-  { id: SOURCE_TYPE.CONTAINER, name: 'Interceptor Container' },
-  { id: SOURCE_TYPE.RUNNER, name: 'Interceptor Template' },
+export const INTERCEPTOR_SOURCE_ITEMS: SelectOption[] = [
+  { value: SOURCE_TYPE.ENDPOINTS, label: 'External Endpoint' },
+  { value: SOURCE_TYPE.CONTAINER, label: 'Interceptor Container' },
+  { value: SOURCE_TYPE.RUNNER, label: 'Interceptor Template' },
 ];
 
-export const MODELS_SOURCE_ITEMS: DropdownItemsModel[] = [
+export const MODELS_SOURCE_ITEMS: SelectOption[] = [
   // NOTE: Keep order
-  { id: SOURCE_TYPE.ADAPTER, name: 'Adapter' },
-  { id: SOURCE_TYPE.CONTAINER, name: 'Model Container' },
-  { id: SOURCE_TYPE.ENDPOINTS, name: 'External Endpoint' },
+  { value: SOURCE_TYPE.ADAPTER, label: 'Adapter' },
+  { value: SOURCE_TYPE.CONTAINER, label: 'Model Container' },
+  { value: SOURCE_TYPE.ENDPOINTS, label: 'External Endpoint' },
 ];
 
-export const TOOLSET_SOURCE_ITEMS: DropdownItemsModel[] = [
+export const TOOLSET_SOURCE_ITEMS: SelectOption[] = [
   // NOTE: Keep order
-  { id: SOURCE_TYPE.ENDPOINTS, name: 'External Endpoint' },
-  { id: SOURCE_TYPE.CONTAINER, name: 'MCP Container' },
+  { value: SOURCE_TYPE.ENDPOINTS, label: 'External Endpoint' },
+  { value: SOURCE_TYPE.CONTAINER, label: 'MCP Container' },
 ];
 
 const getItems = (route: ApplicationRoute) => {
@@ -39,7 +39,7 @@ export const getSourceItems = (route: ApplicationRoute, deploymentsEnabled?: boo
 
   if (!deploymentsEnabled) {
     return items.map((item) => {
-      if (item.id === SOURCE_TYPE.CONTAINER) {
+      if (item.value === SOURCE_TYPE.CONTAINER) {
         item.disabled = true;
       }
       return item;

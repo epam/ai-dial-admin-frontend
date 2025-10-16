@@ -18,7 +18,7 @@
     ]
   },
   "dependencies": {
-    "@epam/ai-dial-ui-kit": "0.3.0-rc.20",
+    "@epam/ai-dial-ui-kit": "0.3.0-rc.28",
     "@epam/ai-dial-shared": "^0.35.0",
     "@epam/ai-dial-visualizer-connector": "^0.35.0",
     "@floating-ui/react": "^0.27.16",
@@ -40,6 +40,9 @@
     "@opentelemetry/sdk-trace-base": "^2.0.1",
     "@opentelemetry/sdk-trace-node": "^2.0.1",
     "@opentelemetry/semantic-conventions": "^1.33.0",
+    "@rjsf/core": "^5.24.13",
+    "@rjsf/utils": "^5.24.13",
+    "@rjsf/validator-ajv8": "^5.24.13",
     "@tabler/icons-react": "^3.34.1",
     "@uiw/react-md-editor": "^4.0.8",
     "ag-grid-react": "^34.1.0",

@@ -19,7 +19,7 @@ import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/Re
 import ListView from '@/src/components/ListView/ListView';
 import { ACTIONS_COLUMN_CEL_ID, CACHE_LIMIT, PAGE_SIZE } from '@/src/constants/ag-grid';
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
-import { ActivityAuditI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -27,7 +27,6 @@ import { DialActivity } from '@/src/models/activity-audit';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { FilterDto } from '@/src/models/request';
 import { TimeRange } from '@/src/models/time-range';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { rollbackEntityPerType } from '@/src/utils/audit/get-rollback-request';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
@@ -36,6 +35,12 @@ import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import {
+  getRollbackErrorDescription,
+  getRollbackErrorTitle,
+  getRollbackSuccessDescription,
+  getRollbackSuccessTitle,
+} from '@/src/utils/entities/rollback-entity';
 
 interface Props {
   entity?: BaseEntity | DialApplicationScheme;
@@ -49,7 +54,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
   const { showNotification } = useNotification();
 
   const [isRollbackModalOpen, setIsRollbackModalOpen] = useState(false);
-  const [detailsModalState, setDetailsModalState] = useState(PopUpState.Closed);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
@@ -60,7 +65,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
 
   const onCloseModal = useCallback(() => {
     setIsRollbackModalOpen(false);
-    setDetailsModalState(PopUpState.Closed);
+    setIsDetailsModalOpen(false);
     setSelectedActivity(void 0);
   }, [setIsRollbackModalOpen]);
 
@@ -142,7 +147,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
   }, []);
 
   const onOpenDetailsModal = useCallback((activity?: DialActivity) => {
-    setDetailsModalState(PopUpState.Opened);
+    setIsDetailsModalOpen(true);
     setSelectedActivity(activity);
   }, []);
 
@@ -185,26 +190,21 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
           if (res?.success) {
             showNotification(
               getSuccessNotification(
-                t(ActivityAuditI18nKey.ResourceRollback),
-                t(ActivityAuditI18nKey.ResourceRollbackDescription),
+                getRollbackSuccessTitle(selectedActivity.resourceType, t),
+                getRollbackSuccessDescription(selectedActivity.resourceType, t),
               ),
             );
             onRefresh();
           } else {
-            showNotification(
-              getErrorNotification(
-                res?.errorHeader || t(ActivityAuditI18nKey.ResourceRollbackErrorTitle),
-                res?.errorMessage,
-              ),
-            );
+            showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage));
           }
         })
         .catch(() => {
           setIsLoading(false);
           showNotification(
             getErrorNotification(
-              t(ActivityAuditI18nKey.ResourceRollbackErrorTitle),
-              t(ActivityAuditI18nKey.ResourceRollbackErrorDescription),
+              getRollbackErrorTitle(selectedActivity.resourceType, t),
+              getRollbackErrorDescription(selectedActivity.resourceType, t),
             ),
           );
         });
@@ -243,7 +243,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
             <DialButton
               iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
               variant={ButtonVariant.Secondary}
-              title={t(ActivityAuditI18nKey.RollbackSystem)}
+              title={t(RollbackI18nKey.System)}
               onClick={systemRollback}
             />
           )}
@@ -254,35 +254,35 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
           <DialConfirmationPopup
             open={isRollbackModalOpen}
             isLoading={isLoading}
-            title={t(ActivityAuditI18nKey.ConfirmRollback)}
+            title={t(RollbackI18nKey.ConfirmResourceRollbackTitle)}
             onConfirm={resourceRollback}
             confirmLabel={t(ButtonsI18nKey.Rollback)}
             onClose={onCloseModal}
           >
             <div className="text-secondary small-150 px-6 py-4">
               <p>
-                <span>{t(ActivityAuditI18nKey.ConfirmRollbackDescriptionPart1)}</span>
+                <span>{t(RollbackI18nKey.ConfirmRollbackDescriptionPart1)}</span>
                 <span className="important-text-part mx-1">{selectedActivity?.activityType}</span>
-                <span>{t(ActivityAuditI18nKey.ConfirmRollbackDescriptionPart2)}</span>
+                <span>{t(RollbackI18nKey.ConfirmRollbackDescriptionPart2)}</span>
                 <DialTooltip tooltip={selectedActivity?.resourceId || ''} triggerClassName="flex-1">
                   <span className="important-text-part mx-1">{selectedActivity?.resourceId}</span>
                 </DialTooltip>
-                <span>{t(ActivityAuditI18nKey.ConfirmRollbackDescriptionPart3)}</span>
+                <span>{t(RollbackI18nKey.ConfirmRollbackDescriptionPart3)}</span>
                 <span className="important-text-part">
                   {formatDateTimeToLocalString(selectedActivity?.epochTimestampMs)}
                 </span>
               </p>
-              <p>{t(ActivityAuditI18nKey.ConfirmRollbackAsking)}</p>
+              <p>{t(RollbackI18nKey.ConfirmRollbackAsking)}</p>
             </div>
           </DialConfirmationPopup>,
           document.body,
         )}
-      {detailsModalState === PopUpState.Opened &&
+      {isDetailsModalOpen &&
         createPortal(
           <ActivityDetails
             entity={entity}
             auditViewId={selectedActivity?.activityId}
-            modalState={detailsModalState}
+            isModalOpen={isDetailsModalOpen}
             onClose={onCloseModal}
           />,
           document.body,

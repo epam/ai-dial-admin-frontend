@@ -1,18 +1,18 @@
+import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 
 import { createKey } from '@/src/app/[lang]/keys/actions';
 import KeyProperties from '@/src/components/Keys/View/Properties/Properties';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   isModalOpen: boolean;
@@ -74,27 +74,21 @@ const CreateKey: FC<Props> = ({ isModalOpen, names, keys, onClose }) => {
   }, []);
 
   return (
-    <DialPopup
+    <DialFormPopup
       onClose={onClose}
       title={t(CreateI18nKey.Key)}
       portalId="CreateKey"
       open={isModalOpen}
-      footer={
-        <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-          <DialButton
-            variant={ButtonVariant.Primary}
-            title={t(ButtonsI18nKey.Create)}
-            onClick={onCreate}
-            disable={!isValid || !isValidKey}
-          />
-        </div>
-      }
+      onSubmit={onCreate}
+      onCancel={onClose}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      submitLabel={t(ButtonsI18nKey.Create)}
+      disableSubmitButton={!isValid || !isValidKey}
     >
       <div className="flex flex-col px-6 py-4">
         <KeyProperties entity={currentKey} names={names} keys={keys} onChangeKey={onChangeKey} />
       </div>
-    </DialPopup>
+    </DialFormPopup>
   );
 };
 

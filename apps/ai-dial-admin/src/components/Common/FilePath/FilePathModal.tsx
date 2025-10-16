@@ -1,8 +1,7 @@
+import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { FC, useMemo } from 'react';
-import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 
 import FolderList from '@/src/components/Common/FolderList/FolderList';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
@@ -10,6 +9,7 @@ import { DialFile } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { checkPaths, checkSelectedPath, removeTrailingSlash } from '@/src/utils/files/path';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 
 interface Props {
   isModalOpen: boolean;
@@ -44,31 +44,25 @@ const FilePathModal: FC<Props> = ({
   }, [folderContext?.filePath, folderContext?.files, initialPath, isFolderMove]);
 
   return (
-    <DialPopup
+    <DialFormPopup
       onClose={onClose}
       title={modalTitle}
       portalId="SelectFile"
       open={isModalOpen}
       cssClass="h-[750px]"
-      footer={
-        <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-          <DialButton
-            variant={ButtonVariant.Primary}
-            title={t(ButtonsI18nKey.Apply)}
-            onClick={() => {
-              onApply(removeTrailingSlash(folderContext?.filePath));
-              onClose();
-            }}
-            disable={disable}
-          />
-        </div>
-      }
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      submitLabel={t(ButtonsI18nKey.Apply)}
+      onSubmit={() => {
+        onApply(removeTrailingSlash(folderContext?.filePath));
+        onClose();
+      }}
+      onCancel={onClose}
+      disableSubmitButton={disable}
     >
       <div className="flex px-6 py-4 h-full">
         <FolderList context={context} isFolderMove={isFolderMove} folderPath={initialPath} />
       </div>
-    </DialPopup>
+    </DialFormPopup>
   );
 };
 

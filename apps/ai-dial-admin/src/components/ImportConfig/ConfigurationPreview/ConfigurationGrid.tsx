@@ -18,7 +18,6 @@ import { DialActivity } from '@/src/models/activity-audit';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { EntityType } from '@/src/types/entity-type';
-import { PopUpState } from '@/src/types/pop-up';
 import { getEmptyDataTitleI18nKey } from '@/src/utils/entities/get-empty-data-title';
 import { getEntitiesList } from '@/src/utils/entities/get-entities-list';
 
@@ -35,7 +34,7 @@ const ConfigurationGrid: FC<Props> = ({ selectedTab, tabData, currentState, prev
   const [rowData, setRowData] = useState<BaseEntity[]>([]);
   const [colDefs, setColDefs] = useState<ColDef[]>([]);
 
-  const [detailsModalState, setDetailsModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [prevEntity, setPrevEntity] = useState<ActivityAuditEntity | undefined>();
   const [nextEntity, setNextEntity] = useState<ActivityAuditEntity | undefined>();
   const [action, setAction] = useState<string | undefined>();
@@ -60,13 +59,13 @@ const ConfigurationGrid: FC<Props> = ({ selectedTab, tabData, currentState, prev
       setPrevEntity(prev);
       setNextEntity(next);
       setAction(action as string);
-      setDetailsModalState(PopUpState.Opened);
+      setIsModalOpen(true);
     },
     [currentState, prevState, selectedTab],
   );
 
   const onCloseModal = useCallback(() => {
-    setDetailsModalState(PopUpState.Closed);
+    setIsModalOpen(false);
   }, []);
 
   useEffect(() => {
@@ -84,14 +83,14 @@ const ConfigurationGrid: FC<Props> = ({ selectedTab, tabData, currentState, prev
   ) : (
     <>
       <Grid columnDefs={colDefs} rowData={rowData} />
-      {detailsModalState === PopUpState.Opened &&
+      {isModalOpen &&
         createPortal(
           <ActivityDetails
             partialActivity={partialActivity}
             heading={t(ImportI18nKey.Changes)}
             currentState={nextEntity}
             rollBackState={prevEntity}
-            modalState={detailsModalState}
+            isModalOpen={isModalOpen}
             onClose={onCloseModal}
           />,
           document.body,

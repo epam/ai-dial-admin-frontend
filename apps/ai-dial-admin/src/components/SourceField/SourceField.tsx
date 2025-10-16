@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
+import { DialSelect, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { Container } from '@/src/models/deployments';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -17,7 +17,6 @@ import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/u
 import { useI18n } from '@/src/locales/client';
 
 import Field from '@/src/components/Common/Field/Field';
-import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import Containers from '@/src/components/SourceField/Containers/Containers';
 import Templates from '@/src/components/SourceField/Template/Templates';
 import Adapters from '@/src/components/SourceField/Adapters/Adapters';
@@ -29,7 +28,7 @@ interface Props<T> {
   getContainers: () => Promise<Container[] | null>;
   getRunners?: () => Promise<InterceptorTemplate[] | null>;
   getAdapters?: () => Promise<ServerActionResponse | null>;
-  sourceItems: DropdownItemsModel[];
+  sourceItems: SelectOption[];
   elementId: string;
   fieldTitle?: string;
   optional?: boolean;
@@ -53,7 +52,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
 }: Props<T>) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
-  const [source, setSource] = useState(sourceItems[0].id);
+  const [source, setSource] = useState(sourceItems[0].value);
   const [errorText, setErrorText] = useState('');
 
   const onChangeEntity = useCallback(
@@ -89,7 +88,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
       const entityWithSource = {
         ...entity,
         source: {
-          $type: sourceItems[0].id,
+          $type: sourceItems[0].value,
         },
       };
 
@@ -105,15 +104,9 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col max-w-fit">
+      <div className="flex flex-col w-[180px]">
         <Field fieldTitle={fieldTitle} optional={optional} htmlFor={elementId} />
-        <DropdownField
-          listClassName={'w-fit'}
-          items={sourceItems}
-          onChange={onChangeSource}
-          elementId={elementId}
-          selectedValue={source}
-        />
+        <DialSelect options={sourceItems} onChange={(v) => onChangeSource(v as string)} value={source} />
       </div>
 
       {source === SOURCE_TYPE.ENDPOINTS && (

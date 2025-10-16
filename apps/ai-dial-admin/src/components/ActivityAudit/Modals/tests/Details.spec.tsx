@@ -7,7 +7,7 @@ import ActivityDetails from '../Details';
 
 describe('Activity Details Modal', () => {
   test('Should render component', async () => {
-    render(<ActivityDetails auditViewId="id" onClose={vi.fn()} modalState={PopUpState.Opened} />);
+    render(<ActivityDetails auditViewId="id" onClose={vi.fn()} isModalOpen={PopUpState.Opened} />);
 
     expect(screen.getByText(ActivityAuditI18nKey.ActivityDetails)).toBeInTheDocument();
   });

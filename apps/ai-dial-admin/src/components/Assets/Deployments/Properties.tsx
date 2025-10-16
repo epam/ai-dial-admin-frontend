@@ -70,7 +70,7 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, onChange }
   );
 
   return (
-    <div className="h-full flex flex-col pt-3 w-full gap-y-6">
+    <div className="h-full flex flex-col w-full gap-y-6">
       <div className="flex flex-col gap-y-6">
         <div className="flex items-end gap-4">
           <div className="w-[105px]">

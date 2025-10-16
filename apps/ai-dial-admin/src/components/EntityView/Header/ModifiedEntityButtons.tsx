@@ -15,7 +15,6 @@ import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { generateNewInitialVersion } from '@/src/utils/prompts/versions';
 
@@ -41,7 +40,7 @@ const ModifiedEntityButtons = <T extends object>({
 
   const { isValid, jsonErrors, dispatch } = useSaveValidationContext();
 
-  const [versionModalState, setVersionModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
@@ -50,7 +49,7 @@ const ModifiedEntityButtons = <T extends object>({
   const onTryToSave = useCallback(
     (newVersion?: string) => {
       if (newVersion) {
-        setVersionModalState(PopUpState.Closed);
+        setIsModalOpen(false);
       }
 
       if (jsonErrors?.length) {
@@ -86,7 +85,7 @@ const ModifiedEntityButtons = <T extends object>({
             variant={ButtonVariant.Secondary}
             cssClass={buttonsClassNames}
             title={t(ButtonsI18nKey.SaveAsNewVersion)}
-            onClick={() => setVersionModalState(PopUpState.Opened)}
+            onClick={() => setIsModalOpen(true)}
             disable={jsonEditorEnabled ? false : !isValid}
           />
         )}
@@ -98,14 +97,14 @@ const ModifiedEntityButtons = <T extends object>({
           disable={jsonEditorEnabled ? false : !isValid}
         />
       </div>
-      {versionModalState === PopUpState.Opened &&
+      {isModalOpen &&
         createPortal(
           <AddVersionModal
             heading={t(PromptsI18nKey.NewVersionSave)}
-            modalState={versionModalState}
+            isModalOpen={isModalOpen}
             prefilledVersion={generateNewInitialVersion((entity as DialPrompt).version)}
             existingVersions={existingVersions || []}
-            onClose={() => setVersionModalState(PopUpState.Closed)}
+            onClose={() => setIsModalOpen(false)}
             onConfirm={onTryToSave}
           />,
           document.body,
