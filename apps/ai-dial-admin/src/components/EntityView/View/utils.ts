@@ -21,6 +21,7 @@ export enum EntityViewTab {
   Conversations = 'Conversations',
   Attachments = 'Attachments',
   Tools = 'Tools',
+  ParameterSchema = 'ParameterSchema',
 }
 
 export const propertiesTabs = (t: (stringToTranslate: string) => string) => ({
@@ -96,6 +97,11 @@ export const attachmentsTabs = (t: (stringToTranslate: string) => string) => ({
 export const toolsTabs = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Tools,
   name: t(TabsI18nKey.Tools),
+});
+
+export const parameterSchemaTabs = (t: (stringToTranslate: string) => string) => ({
+  id: EntityViewTab.ParameterSchema,
+  name: t(TabsI18nKey.ParameterSchema),
 });
 
 export const getViewTabs = (t: (stringToTranslate: string) => string, view: ApplicationRoute): TabModel[] => {
