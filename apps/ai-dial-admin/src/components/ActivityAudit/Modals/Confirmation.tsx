@@ -2,7 +2,7 @@ import { FC, useCallback, useState } from 'react';
 import { DialConfirmationPopup, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { AlertVariant, DialAlert } from '@epam/ai-dial-ui-kit';
 
-import { RollbackI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -34,6 +34,7 @@ const ConfirmationRollback: FC<Props> = ({ revisionDate, isModalOpen, onClose, o
       disableConfirmButton={isDisabled}
       dividers={true}
       onConfirm={onConfirm}
+      confirmLabel={t(ButtonsI18nKey.Rollback)}
     >
       <div className="px-6 py-4">
         <div className="text-secondary small-150">
