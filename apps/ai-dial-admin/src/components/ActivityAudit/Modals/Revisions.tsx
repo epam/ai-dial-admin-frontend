@@ -9,7 +9,7 @@ import { sorts } from '@/src/components/ActivityAudit/constants';
 import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
 import { groupByDay } from '@/src/components/ActivityAudit/List/utils';
 import DatePicker from '@/src/components/Common/DatePicker/DatePicker';
-import { ActivityAuditI18nKey, BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { FilterOperatorDto } from '@/src/types/request';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
@@ -82,7 +82,7 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, isMo
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(ActivityAuditI18nKey.RollbackRevision)}
+      title={t(RollbackI18nKey.Revision)}
       portalId="RollBackRevisionsModal"
       open={isModalOpen}
       cancelLabel={t(ButtonsI18nKey.Cancel)}

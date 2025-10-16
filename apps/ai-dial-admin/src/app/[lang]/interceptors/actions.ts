@@ -35,6 +35,11 @@ export async function createInterceptor(interceptor: DialInterceptor) {
   return interceptorsApi.createInterceptor(interceptor, token);
 }
 
+export async function getConfigurationSchema(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return interceptorsApi.getConfigurationSchema(name, token);
+}
+
 export async function getInterceptorContainers() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return deploymentsApi.getInterceptorContainers(token);
