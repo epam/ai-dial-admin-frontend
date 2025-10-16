@@ -22,6 +22,7 @@ export enum EntityViewTab {
   Attachments = 'Attachments',
   Tools = 'Tools',
   ParameterSchema = 'ParameterSchema',
+  Files = 'Files',
 }
 
 export const propertiesTabs = (t: (stringToTranslate: string) => string) => ({

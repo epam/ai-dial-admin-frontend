@@ -1,5 +1,5 @@
 import { PromptPublication } from '@/src/models/dial/publications';
-import PromptsProperties from '@/src/components/PublicationView/PromptProperties/PromptsProperties';
+import PromptsProperties from '@/src/components/Publications/Assets/Files/Prompt/PromptsProperties';
 
 interface Props {
   publication: PromptPublication;

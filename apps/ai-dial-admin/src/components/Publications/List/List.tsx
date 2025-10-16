@@ -12,12 +12,12 @@ import { Publication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab, getEntityPath } from '@/src/utils/open-in-new-tab';
 
-interface BasePublicationsListProps<T> {
+interface Props<T> {
   data: T[];
   route: ApplicationRoute;
 }
 
-const BasePublicationsList = <T extends Publication>({ data, route }: BasePublicationsListProps<T>) => {
+const PublicationsList = <T extends Publication>({ data, route }: Props<T>) => {
   const t = useI18n();
   const router = useRouter();
 
@@ -50,4 +50,4 @@ const BasePublicationsList = <T extends Publication>({ data, route }: BasePublic
   );
 };
 
-export default BasePublicationsList;
+export default PublicationsList;

@@ -4,14 +4,14 @@ import { useCallback } from 'react';
 import { ApplicationRoute } from '@/src/types/routes';
 import BasePublicationHeader from '@/src/components/PublicationView/BasePublicationProperties/BasePublicationHeader';
 import { ServerActionResponse } from '@/src/models/server-action';
-import PublicationProperties from '@/src/components/PublicationView/PublicationProperties';
+import PublicationProperties from '@/src/components/Publications/View/Properties';
 import { Publication } from '@/src/models/dial/publications';
 import { useRouter } from 'next/navigation';
 import { getErrorNotification } from '@/src/utils/notification';
 import { useNotification } from '@/src/context/NotificationContext';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 
-interface PublicationViewProps<T> {
+interface Props<T> {
   view: ApplicationRoute;
   publication: T;
   applicationSchemes?: DialApplicationScheme[] | null;
@@ -25,7 +25,7 @@ const PublicationView = <T extends Publication>({
   approvePublication,
   applicationSchemes,
   declinePublication,
-}: PublicationViewProps<T>) => {
+}: Props<T>) => {
   const router = useRouter();
   const { showNotification } = useNotification();
 
@@ -53,12 +53,9 @@ const PublicationView = <T extends Publication>({
   );
 
   return (
-    <div
-      data-testid="publication-view"
-      className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative"
-    >
+    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className="flex flex-row justify-between min-h-[34px]">
-        <div className="flex flex-row mb-3" data-testid="publication-view-header">
+        <div className="flex flex-row mb-3">
           <h1>{publication.requestName}</h1>
         </div>
         <BasePublicationHeader onApprove={onApprove} onDecline={onDecline} action={publication.action} route={view} />
