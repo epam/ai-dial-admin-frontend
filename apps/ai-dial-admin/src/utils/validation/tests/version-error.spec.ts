@@ -1,8 +1,8 @@
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { describe, expect, test } from 'vitest';
 import { getPromptVersionError, getVersionControlError } from '../version-error';
-import { ErrorType } from '../../../types/error-type';
-import { MAX_NAME_SYMBOLS } from '../../../constants/validation';
+import { ErrorType } from '@/src/types/error-type';
+import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
 
 describe('getPromptVersionError', () => {
   const t = (key: string) => key;
