@@ -33,6 +33,7 @@ import {
   getToolsetsForEntitiesGrid,
 } from '@/src/utils/entities/entities-list-view';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { getAllAvailableDependencies } from '@/src/utils/entities/get-export-deps';
 
 const exportedEntity = {
   $type: ExportType.Custom,
@@ -41,7 +42,10 @@ const exportedEntity = {
 };
 export async function getCoreEntity(name: string, type: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return await utilityApi.getCoreEntity({ ...exportedEntity, components: [{ type, name }], addSecrets: true }, token);
+  return await utilityApi.getCoreEntity(
+    { ...exportedEntity, components: [{ type, name, dependencies: getAllAvailableDependencies() }], addSecrets: true },
+    token,
+  );
 }
 
 export async function exportConfig(exportConfig: ExportRequest) {
