@@ -1,5 +1,5 @@
+import { DialFormPopup, DialTextInputField, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useMemo, useState } from 'react';
-import { ButtonVariant, DialButton, DialPopup, DialTextInputField, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -38,24 +38,18 @@ const RenameFolder: FC<Props> = ({ currentPath, siblings = [], isModalOpen, onCl
   );
 
   return (
-    <DialPopup
+    <DialFormPopup
       onClose={onClose}
       title={t(FoldersI18nKey.Rename)}
       portalId="FolderRename"
       open={isModalOpen}
       dividers={true}
       size={PopupSize.Sm}
-      footer={
-        <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-          <DialButton
-            variant={ButtonVariant.Primary}
-            title={t(ButtonsI18nKey.Apply)}
-            onClick={() => onApply(changeFolderName(currentPath || '', newName))}
-            disable={isDisabled}
-          />
-        </div>
-      }
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      submitLabel={t(ButtonsI18nKey.Apply)}
+      onSubmit={() => onApply(changeFolderName(currentPath || '', newName))}
+      onCancel={onClose}
+      disableSubmitButton={isDisabled}
     >
       <div className="px-6 py-4">
         <DialTextInputField
@@ -68,7 +62,7 @@ const RenameFolder: FC<Props> = ({ currentPath, siblings = [], isModalOpen, onCl
           invalid={!!errorText}
         />
       </div>
-    </DialPopup>
+    </DialFormPopup>
   );
 };
 

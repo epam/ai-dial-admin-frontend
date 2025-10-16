@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, DuplicateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -46,23 +46,16 @@ const DuplicateAdapter: FC<Props> = ({ onDuplicate, isModalOpen, onClose, adapte
   );
 
   return (
-    <DialPopup
+    <DialFormPopup
       onClose={onClose}
       title={t(DuplicateI18nKey.Adapter)}
       portalId="DuplicateAdapter"
       open={isModalOpen}
-      footer={
-        <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
-
-          <DialButton
-            variant={ButtonVariant.Primary}
-            title={t(ButtonsI18nKey.Duplicate)}
-            disable={!isValid}
-            onClick={() => onDuplicate(entity)}
-          />
-        </div>
-      }
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      submitLabel={t(ButtonsI18nKey.Duplicate)}
+      onSubmit={() => onDuplicate(entity)}
+      onCancel={onClose}
+      disableSubmitButton={!isValid}
     >
       <div className="flex flex-col gap-3 px-6 py-4 ">
         <IdControl entity={entity} onChangeEntity={setEntity} />
@@ -78,7 +71,7 @@ const DuplicateAdapter: FC<Props> = ({ onDuplicate, isModalOpen, onClose, adapte
           onChange={onChangeEndpoint}
         />
       </div>
-    </DialPopup>
+    </DialFormPopup>
   );
 };
 

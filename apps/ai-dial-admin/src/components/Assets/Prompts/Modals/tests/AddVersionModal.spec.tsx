@@ -17,7 +17,7 @@ describe('Common components - AddVersionModal', () => {
       <AddVersionModal
         heading="header"
         existingVersions={[]}
-        modalState={PopUpState.Opened}
+        isModalOpen={true}
         onClose={onClose}
         onConfirm={onConfirm}
       />,
@@ -33,7 +33,7 @@ describe('Common components - AddVersionModal', () => {
       <AddVersionModal
         heading="header"
         existingVersions={[]}
-        modalState={PopUpState.Opened}
+        isModalOpen={true}
         onClose={onClose}
         onConfirm={onConfirm}
       />,
@@ -56,7 +56,7 @@ describe('Common components - AddVersionModal', () => {
       <AddVersionModal
         heading="header"
         existingVersions={existingVersions}
-        modalState={PopUpState.Opened}
+        isModalOpen={true}
         onClose={onClose}
         onConfirm={onConfirm}
       />,

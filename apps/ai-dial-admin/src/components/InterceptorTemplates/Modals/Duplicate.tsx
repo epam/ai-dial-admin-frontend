@@ -1,5 +1,5 @@
+import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useState } from 'react';
-import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, DuplicateI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -32,23 +32,16 @@ const DuplicateTemplate: FC<Props> = ({ onDuplicate, isModalOpen, onClose, templ
   }, []);
 
   return (
-    <DialPopup
+    <DialFormPopup
       onClose={onClose}
       title={t(DuplicateI18nKey.InterceptorTemplate)}
       portalId="DuplicateTemplate"
       open={isModalOpen}
-      footer={
-        <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
-
-          <DialButton
-            variant={ButtonVariant.Primary}
-            title={t(ButtonsI18nKey.Duplicate)}
-            disable={!isValid}
-            onClick={() => onDuplicate(clonedTemplate)}
-          />
-        </div>
-      }
+      onSubmit={() => onDuplicate(clonedTemplate)}
+      onCancel={onClose}
+      disableSubmitButton={!isValid}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      submitLabel={t(ButtonsI18nKey.Duplicate)}
     >
       <div className="flex flex-col px-6 py-4 gap-y-6">
         <IdControl entity={clonedTemplate} names={names} onChangeEntity={setTemplate} />
@@ -58,7 +51,7 @@ const DuplicateTemplate: FC<Props> = ({ onDuplicate, isModalOpen, onClose, templ
           onChange={(displayName) => setTemplate({ ...clonedTemplate, displayName })}
         />
       </div>
-    </DialPopup>
+    </DialFormPopup>
   );
 };
 

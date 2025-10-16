@@ -1,12 +1,5 @@
+import { DialFormPopup, DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
-import {
-  ButtonVariant,
-  DialButton,
-  DialPopup,
-  DialRadioGroup,
-  RadioButtonWithContent,
-  RadioGroupOrientation,
-} from '@epam/ai-dial-ui-kit';
 
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
@@ -94,23 +87,16 @@ const DuplicatePrompt: FC<Props> = ({ isModalOpen, entity, versionsMap, onDuplic
   );
 
   return (
-    <DialPopup
+    <DialFormPopup
       onClose={onClose}
       title={t(DuplicateI18nKey.Prompt)}
       portalId="DuplicatePrompt"
       open={isModalOpen}
-      footer={
-        <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
-
-          <DialButton
-            variant={ButtonVariant.Primary}
-            title={t(ButtonsI18nKey.Duplicate)}
-            disable={!isValid}
-            onClick={() => onDuplicate(clonedPrompt)}
-          />
-        </div>
-      }
+      onSubmit={() => onDuplicate(clonedPrompt)}
+      onCancel={onClose}
+      disableSubmitButton={!isValid}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      submitLabel={t(ButtonsI18nKey.Duplicate)}
     >
       <div className="flex flex-col px-6 py-4 gap-4">
         <DialRadioGroup
@@ -139,7 +125,7 @@ const DuplicatePrompt: FC<Props> = ({ isModalOpen, entity, versionsMap, onDuplic
           />
         )}
       </div>
-    </DialPopup>
+    </DialFormPopup>
   );
 };
 

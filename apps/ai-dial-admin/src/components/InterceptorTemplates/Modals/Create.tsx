@@ -1,15 +1,15 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
-import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useEffect, useState } from 'react';
 
-import { ApplicationRoute } from '@/src/types/routes';
-import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
-import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { useI18n } from '@/src/locales/client';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { createInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
+import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useI18n } from '@/src/locales/client';
+import { InterceptorTemplate } from '@/src/models/interceptor-template';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getEntityPath } from '@/src/utils/open-in-new-tab';
 
 import BaseProperties from '@/src/components/InterceptorTemplates/Properties/BaseProperties';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -59,27 +59,21 @@ const Create: FC<Props> = ({ route, onClose, isModalOpen, names }) => {
   }, []);
 
   return (
-    <DialPopup
+    <DialFormPopup
       onClose={onClose}
       title={t(CreateI18nKey.InterceptorTemplate)}
       portalId="CreateInterceptorTemplate"
       open={isModalOpen}
-      footer={
-        <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-          <DialButton
-            variant={ButtonVariant.Primary}
-            title={t(ButtonsI18nKey.Create)}
-            onClick={onCreate}
-            disable={!isValid}
-          />
-        </div>
-      }
+      onSubmit={onCreate}
+      onCancel={onClose}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      submitLabel={t(ButtonsI18nKey.Create)}
+      disableSubmitButton={!isValid}
     >
       <div className="flex flex-col px-6 py-4">
         <BaseProperties template={template} setTemplate={setTemplate} names={names} />
       </div>
-    </DialPopup>
+    </DialFormPopup>
   );
 };
 

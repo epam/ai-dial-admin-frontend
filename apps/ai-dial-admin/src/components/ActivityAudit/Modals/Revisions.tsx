@@ -2,29 +2,27 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { IconCaretDownFilled, IconCaretRightFilled } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { ButtonVariant, DialButton, DialLoader } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialFormPopup } from '@epam/ai-dial-ui-kit';
 
 import { getRevisions } from '@/src/app/[lang]/activity-audit/actions';
 import { sorts } from '@/src/components/ActivityAudit/constants';
 import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
 import { groupByDay } from '@/src/components/ActivityAudit/List/utils';
 import DatePicker from '@/src/components/Common/DatePicker/DatePicker';
-import Popup from '@/src/components/Common/Popup/Popup';
 import { BasicI18nKey, ButtonsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { PopUpState } from '@/src/types/pop-up';
 import { FilterOperatorDto } from '@/src/types/request';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 
 interface Props {
   initialRevisions: ActivityAuditRevision[];
   rollBackRevision: ActivityAuditRevision;
-  modalState: PopUpState;
+  isModalOpen: boolean;
   onClose: () => void;
   onApply: (revisions: ActivityAuditRevision[], rollBackRevision?: ActivityAuditRevision) => void;
 }
 
-const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, modalState, onClose, onApply }) => {
+const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, isModalOpen, onClose, onApply }) => {
   const t = useI18n();
 
   const [selectedRevision, setSelectedRevision] = useState<ActivityAuditRevision | undefined>(rollBackRevision);
@@ -82,14 +80,19 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, moda
   }, [revisions]);
 
   return (
-    <Popup
+    <DialFormPopup
       onClose={onClose}
-      heading={t(RollbackI18nKey.Revision)}
+      title={t(RollbackI18nKey.Revision)}
       portalId="RollBackRevisionsModal"
-      state={modalState}
+      open={isModalOpen}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      submitLabel={t(ButtonsI18nKey.Apply)}
+      onSubmit={() => onApply(revisions, selectedRevision)}
+      onCancel={onClose}
+      disableSubmitButton={!selectedRevision}
       dividers={true}
     >
-      <div className="flex flex-1 flex-col min-h-0">
+      <div className="flex h-full flex-col">
         <div className="flex flex-row gap-4 bg-layer-2 h-[84px] py-3 px-6">
           <DatePicker
             onCalendarClose={fetchNewData}
@@ -160,17 +163,7 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, moda
           )}
         </div>
       </div>
-
-      <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Apply)}
-          onClick={() => onApply(revisions, selectedRevision)}
-          disable={!selectedRevision}
-        />
-      </div>
-    </Popup>
+    </DialFormPopup>
   );
 };
 

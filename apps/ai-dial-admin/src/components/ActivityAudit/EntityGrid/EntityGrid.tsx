@@ -12,7 +12,7 @@ import { useI18n } from '@/src/locales/client';
 import { ActivityAuditDiff, DialActivity } from '@/src/models/activity-audit';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus, DiffView } from '@/src/types/activity-audit';
-import { PopUpState } from '@/src/types/pop-up';
+
 interface Props {
   data?: ActivityAuditDiff[];
   parameter?: string;
@@ -38,7 +38,7 @@ const AuditEntityGrid: FC<Props> = ({
 }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const [gridApi, setGridApi] = useState<GridApi>();
-  const [detailsModalState, setDetailsModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [resourceId, setResourceId] = useState('');
   const [currentState, setCurrentState] = useState<ActivityAuditEntity | undefined>(void 0);
   const [rollbackState, setRollbackState] = useState<ActivityAuditEntity | undefined>(void 0);
@@ -70,7 +70,7 @@ const AuditEntityGrid: FC<Props> = ({
     const { current, rollback } = getCurrentAndRollbackEntities(e.data, id, rollbackRows, currentRows);
     setCurrentState(current);
     setRollbackState(rollback);
-    setDetailsModalState(PopUpState.Opened);
+    setIsModalOpen(true);
   };
 
   const onGridReady = (event: GridReadyEvent) => {
@@ -104,12 +104,12 @@ const AuditEntityGrid: FC<Props> = ({
           enableCellTextSelection: true,
         }}
       />
-      {detailsModalState === PopUpState.Opened &&
+      {isModalOpen &&
         createPortal(
           <ActivityDetails
             auditViewId={void 0}
-            modalState={detailsModalState}
-            onClose={() => setDetailsModalState(PopUpState.Closed)}
+            isModalOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
             partialActivity={{ ...activity, resourceId } as DialActivity}
             currentState={currentState}
             rollBackState={rollbackState}

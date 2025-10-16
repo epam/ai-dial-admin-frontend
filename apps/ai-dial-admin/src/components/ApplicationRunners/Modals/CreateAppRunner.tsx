@@ -1,6 +1,6 @@
+import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 
 import { createApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationView/Properties';
@@ -10,9 +10,9 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 
 interface Props {
   isModalOpen: boolean;
@@ -70,27 +70,21 @@ const CreateAppRunner: FC<Props> = ({ isModalOpen, onClose, route }) => {
   }, []);
 
   return (
-    <DialPopup
+    <DialFormPopup
       onClose={onClose}
       title={t(CreateI18nKey.ApplicationRunner)}
       portalId="CreateRunner"
       open={isModalOpen}
-      footer={
-        <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-          <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-          <DialButton
-            variant={ButtonVariant.Primary}
-            title={t(ButtonsI18nKey.Create)}
-            onClick={onCreate}
-            disable={!isValid}
-          />
-        </div>
-      }
+      onSubmit={onCreate}
+      onCancel={onClose}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      submitLabel={t(ButtonsI18nKey.Create)}
+      disableSubmitButton={!isValid}
     >
       <div className="flex flex-col px-6 py-4">
         <SchemeProperties runner={currentScheme} onChangeRunner={onChangeScheme} />
       </div>
-    </DialPopup>
+    </DialFormPopup>
   );
 };
 

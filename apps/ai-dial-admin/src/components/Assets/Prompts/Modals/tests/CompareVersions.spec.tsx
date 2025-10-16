@@ -23,28 +23,15 @@ describe('Common components - CompareVersions', () => {
   ] as DialPrompt[];
   test('renders component correctly', () => {
     render(
-      <CompareVersions
-        heading="heading"
-        prompts={prompts}
-        prompt={prompt}
-        modalState={PopUpState.Opened}
-        onClose={vi.fn()}
-      />,
+      <CompareVersions heading="heading" prompts={prompts} prompt={prompt} isModalOpen={true} onClose={vi.fn()} />,
     );
 
-    expect(screen.getByRole('button', { name: ButtonsI18nKey.Close })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'heading' })).toBeInTheDocument();
   });
 
   test('version change handled correctly', async () => {
     render(
-      <CompareVersions
-        heading="heading"
-        prompts={prompts}
-        prompt={prompt}
-        modalState={PopUpState.Opened}
-        onClose={vi.fn()}
-      />,
+      <CompareVersions heading="heading" prompts={prompts} prompt={prompt} isModalOpen={true} onClose={vi.fn()} />,
     );
 
     const dropdownItem = screen.getByRole('menuitem', { name: '1.0.0' });
