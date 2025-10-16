@@ -10,7 +10,7 @@ import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
 import { groupByDay } from '@/src/components/ActivityAudit/List/utils';
 import DatePicker from '@/src/components/Common/DatePicker/DatePicker';
 import Popup from '@/src/components/Common/Popup/Popup';
-import { ActivityAuditI18nKey, BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { PopUpState } from '@/src/types/pop-up';
 import { FilterOperatorDto } from '@/src/types/request';
@@ -84,7 +84,7 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, moda
   return (
     <Popup
       onClose={onClose}
-      heading={t(ActivityAuditI18nKey.RollbackRevision)}
+      heading={t(RollbackI18nKey.Revision)}
       portalId="RollBackRevisionsModal"
       state={modalState}
       dividers={true}

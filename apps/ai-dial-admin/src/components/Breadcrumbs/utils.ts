@@ -1,12 +1,12 @@
 import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
-import { ActivityAuditI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { RollbackI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { EmbeddedApp } from '@/src/context/AppContext';
 import { ApplicationRoute } from '@/src/types/routes';
 import { breadcrumbConfig } from './constants';
 import { BreadcrumbConfig, Breadcrumb } from './models';
 
 const IGNORE_BREADCRUMBS = [ApplicationRoute.Home, ApplicationRoute.Forbidden];
-const TRANSLATE_BREADCRUMBS = { [SYSTEM_ROLLBACK_ID]: ActivityAuditI18nKey.RollbackSystem };
+const TRANSLATE_BREADCRUMBS = { [SYSTEM_ROLLBACK_ID]: RollbackI18nKey.System };
 
 const getEmbeddedPluginBreadcrumb = (route: ApplicationRoute, apps?: EmbeddedApp[]): BreadcrumbConfig | null => {
   const app = apps?.find((a) => a.slug === route);

@@ -670,23 +670,6 @@ export default {
   },
   ActivityAudit: {
     ResourceDiff: 'Resource diff',
-    RollbackResource: 'Resource rollback',
-    RollbackSystem: 'System Rollback',
-    ConfirmRollback: 'Confirm Resource Rollback',
-    ConfirmSystemRollback: 'Confirm System Rollback',
-    ConfirmSystemRollbackDescription:
-      'You are about to restore the entire system configuration — including all entities — to the state recorded in the following event:',
-    ConfirmSystemRollbackAlert:
-      'This operation is irreversible and will overwrite the current configuration of all applications, models, roles, and settings in the system.',
-    ConfirmSystemRollbackLabel: 'Type System Rollback to confirm',
-    ConfirmSystemRollbackPlaceholder: 'Enter rollback confirmation',
-    ConfirmSelectionRollbackDescription: 'You`re about to revert this resource to a previous state from: ',
-    ConfirmRollbackDescription: {
-      Part1: 'You`re about to revert',
-      Part2: 'of',
-      Part3: 'to a previous state from: ',
-    },
-    ConfirmRollbackAsking: 'This action will overwrite the current configuration. Are you sure you want to continue?',
     AllParameters: 'All parameters',
     AllResources: 'All resources',
     Differences: 'Changes only',
@@ -697,16 +680,59 @@ export default {
     Initiated: 'Initiated',
     UserId: 'User ID',
     ActivityId: 'Activity ID',
-    ResourceRollback: 'Resource rolled back successfully',
-    ResourceRollbackDescription: 'Changes have been delivered to the system',
-    ResourceRollbackErrorTitle: 'Resource rollback failed',
-    ResourceRollbackErrorDescription: 'Error occurred while reverting, please try again',
     CurrentState: 'Current state',
-    RollbackState: 'Rollback state',
-    RollbackRevision: 'Rollback revision',
     ActivityDetails: 'Activity details',
     BeforeAfter: 'Before/After',
     BeforeCurrent: 'Before/Current state',
+  },
+  Rollback: {
+    State: 'Rollback state',
+    Revision: 'Rollback revision',
+    Resource: 'Resource rollback',
+    System: 'System Rollback',
+    ConfirmRollbackAsking: 'This action will overwrite the current configuration. Are you sure you want to continue?',
+    ConfirmRollbackDescription: {
+      Part1: 'You`re about to revert',
+      Part2: 'of',
+      Part3: 'to a previous state from: ',
+    },
+
+    ResourceRollback: {
+      Title: 'Confirm Resource Rollback',
+      SelectionRollbackDescription: 'You`re about to revert this resource to a previous state from: ',
+    },
+
+    SystemRollback: {
+      Title: 'Confirm System Rollback',
+      Description:
+        'You are about to restore the entire system configuration — including all entities — to the state recorded in the following event:',
+      Alert:
+        'This operation is irreversible and will overwrite the current configuration of all applications, models, roles, and settings in the system.',
+      Label: 'Type System Rollback to confirm',
+      Placeholder: 'Enter rollback confirmation',
+    },
+
+    Notification: {
+      ErrorTitle: '{entity} rollback failed',
+      ErrorDescription: 'Error occurred while reverting, please try again',
+
+      SuccessTitle: '{entity} rolled back successfully',
+      SuccessDescription: 'Changes have been delivered to the system',
+    },
+    Entities: {
+      Model: 'Model',
+      Application: 'Application',
+      Toolsets: 'Toolsets',
+      Interceptor: 'Interceptor',
+      Route: 'Route',
+      Role: 'Role',
+      Key: 'Key',
+      Prompt: 'Prompt',
+      File: 'File',
+      Adapter: 'Adapter',
+      InterceptorTemplate: 'Interceptor Template',
+      ApplicationRunner: 'Application Runner',
+    },
   },
   EntityFields: {
     roleLimits: 'Role limits',
