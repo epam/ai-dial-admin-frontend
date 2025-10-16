@@ -132,6 +132,7 @@ export default {
     NoResource: 'Resource does not exist',
     NoInterceptorTemplates: 'No Interceptor Templates',
     NoDependencies: 'No Dependencies',
+    NoConfigurationSchema: 'No Configuration Scheme',
     NoToolsets: 'No Toolsets',
     NoTools: 'No Tools',
     // add entity or entities
@@ -153,6 +154,7 @@ export default {
     InterceptorTemplate: 'Interceptor Template',
     Author: 'Author',
     JSONEditor: 'JSON Editor',
+    JSONViewer: 'JSON Viewer',
     Admin: 'Admin format',
     Core: 'Core format',
     Action: 'Action',
@@ -401,6 +403,7 @@ export default {
     Tools: 'Tools Overview',
     Conversations: 'Conversations',
     Attachments: 'Attachments',
+    ParameterSchema: 'Parameter Scheme',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',

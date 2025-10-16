@@ -1,0 +1,59 @@
+import { FC, useEffect, useState } from 'react';
+import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+
+import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { getConfigurationSchema } from '@/src/app/[lang]/interceptors/actions';
+import { useI18n } from '@/src/locales/client';
+
+import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer';
+import { RJSFSchema } from '@rjsf/utils';
+
+interface Props {
+  schemaURL?: string;
+  name: string;
+  configuration?: Record<string, unknown>;
+  onChangeConfiguration: (data: Record<string, unknown>) => void;
+}
+
+const ParameterSchema: FC<Props> = ({ schemaURL, name, configuration, onChangeConfiguration }) => {
+  const t = useI18n();
+  const [schema, setSchema] = useState<RJSFSchema | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (schemaURL) {
+      const fetchSchema = async () => {
+        setIsLoading(true);
+        const schema = await getConfigurationSchema(name);
+        if (schema) {
+          setIsLoading(false);
+          setSchema(schema);
+        }
+      };
+
+      fetchSchema().catch((e) => {
+        console.error(e);
+      });
+    }
+  }, [name, schemaURL]);
+
+  if (isLoading) {
+    return <DialLoader size={40} />;
+  }
+
+  return (
+    <>
+      {!schema ? (
+        <DialNoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
+      ) : (
+        <div className="flex relative min-h-0 h-full w-full bg-layer-0">
+          <div className="w-full h-full">
+            <SchemaUiRenderer schema={schema} data={configuration} onChangeConfiguration={onChangeConfiguration} />
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default ParameterSchema;
