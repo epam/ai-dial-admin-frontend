@@ -3,8 +3,6 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
-import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMainProperties';
-import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
 import { isValidSourceField } from '@/src/components/SourceField/utils';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
@@ -22,9 +20,9 @@ import {
   getCreateNotificationDescription,
   getCreateNotificationTitle,
 } from '@/src/utils/entities/create-entity';
-import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import Properties from '@/src/components/EntityMainProperties/Properties/Properties';
 import { RoutesForCheckingUniqueName } from './constants';
 
 interface CreatePromptEntity extends BaseEntity {
@@ -71,13 +69,6 @@ const CreateEntity = <T extends CreatePromptEntity>({
         : ({ name: '', description: '', ...initialValues } as T),
   );
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean | undefined>(void 0);
-
-  const onChangeEntity = useCallback(
-    (entity: BaseEntity) => {
-      setEntity({ ...currentEntity, ...entity });
-    },
-    [currentEntity, setEntity],
-  );
 
   const onCreate = useCallback(async () => {
     const entity = {
@@ -165,27 +156,17 @@ const CreateEntity = <T extends CreatePromptEntity>({
       disableSubmitButton={(isUniqueNameError != null && !isUniqueNameError) || !isValid}
     >
       <div className="flex flex-col overflow-auto px-6 py-4">
-        {isSimpleEntity(route) ? (
-          <SimpleEntityProperties
-            view={route}
-            entity={currentEntity}
-            names={names}
-            onChangeEntity={onChangeEntity}
-            versionsMap={versionsMap}
-            isModal={true}
-            initialValues={initialValues}
-          />
-        ) : (
-          <EntityMainProperties
-            view={route}
-            runners={runners}
-            entity={currentEntity}
-            names={names}
-            isUniqueNameError={isUniqueNameError}
-            onChangeEntity={onChangeEntity}
-            isModal={true}
-          />
-        )}
+        <Properties
+          view={route}
+          runners={runners}
+          versionsMap={versionsMap}
+          entity={currentEntity}
+          names={names}
+          isUniqueNameError={isUniqueNameError}
+          initialValues={initialValues}
+          onChangeEntity={(entity) => setEntity(entity as T)}
+          isModal={true}
+        />
       </div>
     </DialFormPopup>
   );

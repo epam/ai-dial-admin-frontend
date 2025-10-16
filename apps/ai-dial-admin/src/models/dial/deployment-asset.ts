@@ -1,5 +1,6 @@
 import { DialApplication } from './application';
 import { DialFile } from './file';
+import { DialPrompt } from './prompt';
 import { Toolset } from './toolset';
 
 export interface AssetApp extends DialFile, DialApplication {
@@ -16,3 +17,4 @@ export interface AssetToolset extends DialFile, Toolset {
 }
 
 export type DeploymentAsset = AssetApp | AssetToolset;
+export type Asset = DeploymentAsset | DialPrompt;

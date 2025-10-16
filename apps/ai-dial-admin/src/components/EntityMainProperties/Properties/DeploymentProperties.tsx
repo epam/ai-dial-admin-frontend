@@ -34,10 +34,9 @@ interface Props {
   runners?: DialApplicationScheme[];
   isEntityImmutable?: boolean;
   onChangeEntity: (entity: ChatEntity) => void;
-  isModal?: boolean;
 }
 
-const EntityMainProperties: FC<Props> = ({
+const DeploymentProperties: FC<Props> = ({
   view,
   entity,
   runners,
@@ -45,7 +44,6 @@ const EntityMainProperties: FC<Props> = ({
   isUniqueNameError,
   onChangeEntity,
   isEntityImmutable = false,
-  isModal,
 }) => {
   const t = useI18n() as (str: string, param?: Record<string, number>) => string;
   const { dispatch } = useSaveValidationContext();
@@ -161,7 +159,6 @@ const EntityMainProperties: FC<Props> = ({
         view={view}
         isEntityImmutable={isEntityImmutable}
         runners={runners}
-        isModal={isModal}
       />
 
       {(view === ApplicationRoute.Models || view === ApplicationRoute.Toolsets) && (
@@ -174,11 +171,10 @@ const EntityMainProperties: FC<Props> = ({
           fieldTitle={t(EntitiesI18nKey.SourceType)}
           sourceItems={getSourceItems(view, deploymentsEnabled)}
           getAdapters={getModelsAdapters}
-          isModal={isModal}
         />
       )}
     </div>
   );
 };
 
-export default EntityMainProperties;
+export default DeploymentProperties;
