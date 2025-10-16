@@ -171,6 +171,7 @@ const DeploymentProperties: FC<Props> = ({
           fieldTitle={t(EntitiesI18nKey.SourceType)}
           sourceItems={getSourceItems(view, deploymentsEnabled)}
           getAdapters={getModelsAdapters}
+          isModal={!isEntityImmutable}
         />
       )}
     </div>
