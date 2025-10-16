@@ -195,7 +195,11 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
         <div className={headerClassName}>
-          {!jsonEditorEnabled && <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />}
+          {!jsonEditorEnabled && (
+            <div className="flex-1 min-w-0">
+              <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+            </div>
+          )}
           <HeaderButtons
             view={ApplicationRoute.Keys}
             entity={selectedKey}

@@ -97,10 +97,14 @@ const HeaderButtons = <T extends object>({
             existingVersions={existingVersions}
           />
         ) : (
-          <div className="flex flex-row items-center w-full">
+          <div className="flex flex-row items-center w-full gap-x-3">
             {!jsonEditorEnabled && (
               <div
-                className={`flex-1 flex flex-row gap-3 ${childrenContainerClass || ''} ${isSimple ? 'justify-center' : ''}`}
+                className={classNames(
+                  `flex-1 flex flex-row gap-3`,
+                  childrenContainerClass,
+                  isSimple ? 'justify-center' : '',
+                )}
               >
                 <DialButton
                   variant={ButtonVariant.Secondary}
