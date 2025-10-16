@@ -43,7 +43,11 @@ const exportedEntity = {
 export async function getCoreEntity(name: string, type: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return await utilityApi.getCoreEntity(
-    { ...exportedEntity, components: [{ type, name, dependencies: getAllAvailableDependencies() }], addSecrets: true },
+    {
+      ...exportedEntity,
+      components: [{ type, name, dependencies: getAllAvailableDependencies(type) }],
+      addSecrets: true,
+    },
     token,
   );
 }
