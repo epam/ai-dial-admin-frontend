@@ -45,7 +45,7 @@ export async function getCoreEntity(name: string, type: string) {
   return await utilityApi.getCoreEntity(
     {
       ...exportedEntity,
-      components: [{ type, name, dependencies: getAllAvailableDependencies(type) }],
+      components: [{ type, name, dependencies: getAllAvailableDependencies(type as EntityType) }],
       addSecrets: true,
     },
     token,
