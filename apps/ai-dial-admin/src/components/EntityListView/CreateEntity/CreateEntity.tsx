@@ -24,6 +24,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import Properties from '@/src/components/EntityMainProperties/Properties/Properties';
 import { RoutesForCheckingUniqueName } from './constants';
+import { isAssetView } from '@/src/utils/is-asset-view';
 
 interface CreatePromptEntity extends BaseEntity {
   version?: string;
@@ -84,12 +85,12 @@ const CreateEntity = <T extends CreatePromptEntity>({
 
     if (!isUnique) return;
 
-    if (route === ApplicationRoute.Prompts) {
+    if (isAssetView(route)) {
       entity.folderId = filePath;
     }
     createEntity?.(entity).then((res) => {
       if (res.success) {
-        if (route === ApplicationRoute.Prompts) {
+        if (isAssetView(route)) {
           fetchFiles(filePath);
         }
         showNotification(
