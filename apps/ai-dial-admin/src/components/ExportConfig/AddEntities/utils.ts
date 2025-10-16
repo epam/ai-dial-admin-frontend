@@ -3,38 +3,6 @@ import { ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { EntityType } from '@/src/types/entity-type';
 
-export const getAllAvailableDependencies = (selectedTab?: EntityType): EntityType[] => {
-  if (selectedTab === EntityType.ROLE) {
-    return [
-      EntityType.MODEL,
-      EntityType.APPLICATION,
-      EntityType.TOOLSET,
-      EntityType.ROUTE,
-      EntityType.APPLICATION_TYPE_SCHEMA,
-      EntityType.INTERCEPTOR,
-    ];
-  }
-  if (selectedTab === EntityType.KEY) {
-    return [
-      EntityType.ROLE,
-      EntityType.MODEL,
-      EntityType.APPLICATION,
-      EntityType.APPLICATION_TYPE_SCHEMA,
-      EntityType.INTERCEPTOR,
-    ];
-  }
-
-  if (selectedTab === EntityType.MODEL) {
-    return [EntityType.INTERCEPTOR];
-  }
-
-  if (selectedTab === EntityType.APPLICATION) {
-    return [EntityType.MODEL, EntityType.APPLICATION, EntityType.APPLICATION_TYPE_SCHEMA, EntityType.INTERCEPTOR];
-  }
-
-  return [];
-};
-
 export const getButtonTitle = (t: (v: string) => string, selectedTab?: EntityType, full?: boolean) => {
   let entity = '';
 
