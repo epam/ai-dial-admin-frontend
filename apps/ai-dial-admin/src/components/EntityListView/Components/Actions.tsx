@@ -29,6 +29,8 @@ import { getListOfPathsToBulkDelete, getListOfPathsToMove } from '@/src/utils/fi
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import BulkButtons from './BulkButtons';
 import Modals, { ModalType } from './Modals';
+import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 
 interface Props<T> {
   names?: string[];
@@ -100,6 +102,7 @@ const Actions = <T extends object>({
           const { folderId, name, version } = entityRef.current as DialPrompt;
           prevPromptData = await getPrompt(folderId, name as string, version);
         }
+
         const preparedEntity = prepareEntityForDuplicate(route, clonedEntity, prevPromptData) as T;
         const res = await createEntity?.(preparedEntity);
         if (res?.success) {
@@ -108,6 +111,13 @@ const Actions = <T extends object>({
           if (route === ApplicationRoute.Prompts) {
             folderContext?.fetchFiles?.(folderContext?.filePath);
           }
+          showNotification(
+            getSuccessNotification(
+              getCreateNotificationTitle(route, t),
+              getCreateNotificationDescription(route, (preparedEntity as { name: string }).name, t),
+            ),
+          );
+          router.push(`${route}/${getEntityPath(route, preparedEntity)}`);
           router.refresh();
         } else {
           showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage));
@@ -115,7 +125,7 @@ const Actions = <T extends object>({
       };
       duplicate();
     },
-    [route, createEntity, handleModalClose, setCurrentEntity, router, folderContext, showNotification],
+    [route, createEntity, handleModalClose, setCurrentEntity, showNotification, t, router, folderContext],
   );
 
   const onMove = useCallback(
@@ -199,7 +209,7 @@ const Actions = <T extends object>({
             keys || [],
             route,
             versionsMap || {},
-            modalState,
+            modalState === PopUpState.Opened,
             handleModalClose,
             onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>,
           )}

@@ -106,6 +106,7 @@ export enum EntitiesI18nKey {
   NoToolsets = 'Entities.NoToolsets',
   NoTools = 'Entities.NoTools',
   NoDependencies = 'Entities.NoDependencies',
+  NoConfigurationSchema = 'Entities.NoConfigurationSchema',
   AddModel = 'Entities.AddModel',
   AddApplication = 'Entities.AddApplication',
   AddEntities = 'Entities.AddEntities',
@@ -120,6 +121,7 @@ export enum EntitiesI18nKey {
   ModelDisplayName = 'Entities.ModelDisplayName',
   Author = 'Entities.Author',
   JSONEditor = 'Entities.JSONEditor',
+  JSONViewer = 'Entities.JSONViewer',
   Admin = 'Entities.Admin',
   Core = 'Entities.Core',
   Action = 'Entities.Action',
@@ -171,18 +173,23 @@ export enum DeleteI18nKey {
 }
 
 export enum DuplicateI18nKey {
-  ModelHeader = 'DuplicateEntity.Model.Header',
-  ModelDescription = 'DuplicateEntity.Model.Description',
-  ApplicationRunnerHeader = 'DuplicateEntity.ApplicationRunner',
-  ApplicationHeader = 'DuplicateEntity.Application',
-  RoleHeader = 'DuplicateEntity.Role',
-  KeyHeader = 'DuplicateEntity.Key',
-  RouteHeader = 'DuplicateEntity.Route',
-  PromptHeader = 'DuplicateEntity.Prompt',
-  InterceptorHeader = 'DuplicateEntity.Interceptor',
-  AdapterHeader = 'DuplicateEntity.Adapter',
-  InterceptorTemplate = 'DuplicateEntity.InterceptorTemplate',
-  Toolsets = 'DuplicateEntity.Toolsets',
+  Title = 'DuplicateEntity.Title',
+
+  ModelDescription = 'DuplicateEntity.ModelDescription',
+
+  // Entities
+  Model = 'DuplicateEntity.Entities.Model',
+  Application = 'DeleteEntity.Entities.Application',
+  Toolsets = 'DuplicateEntity.Entities.Toolsets',
+  Route = 'DuplicateEntity.Entities.Route',
+  Interceptor = 'DuplicateEntity.Entities.Interceptor',
+  Role = 'DuplicateEntity.Entities.Role',
+  Key = 'DuplicateEntity.Entities.Key',
+  Prompt = 'DuplicateEntity.Entities.Prompt',
+  File = 'DuplicateEntity.Entities.File',
+  Adapter = 'DeleteEntity.Entities.Adapter',
+  InterceptorTemplate = 'DuplicateEntity.Entities.InterceptorTemplate',
+  ApplicationRunner = 'DuplicateEntity.Entities.ApplicationRunner',
 }
 
 export enum ButtonsI18nKey {
@@ -231,22 +238,50 @@ export enum ButtonsI18nKey {
   BulkActions = 'Buttons.BulkActions',
 }
 
+export enum UpdateI18nKey {
+  // Notification
+  NotificationTitle = 'UpdateEntity.Notification.Title',
+  NotificationDescription = 'UpdateEntity.Notification.Description',
+
+  // Entities
+  Model = 'UpdateEntity.Entities.Model',
+  Application = 'UpdateEntity.Entities.Application',
+  Toolsets = 'UpdateEntity.Entities.Toolsets',
+  Route = 'UpdateEntity.Entities.Route',
+  Interceptor = 'UpdateEntity.Entities.Interceptor',
+  Role = 'UpdateEntity.Entities.Role',
+  Key = 'UpdateEntity.Entities.Key',
+  Prompt = 'UpdateEntity.Entities.Prompt',
+  File = 'UpdateEntity.Entities.File',
+  Adapter = 'UpdateEntity.Entities.Adapter',
+  InterceptorTemplate = 'UpdateEntity.Entities.InterceptorTemplate',
+  ApplicationRunner = 'UpdateEntity.Entities.ApplicationRunner',
+}
+
 export enum CreateI18nKey {
-  Model = 'CreateEntity.Model',
-  Application = 'CreateEntity.Application',
-  Adapter = 'CreateEntity.Adapter',
-  Toolsets = 'CreateEntity.Toolsets',
-  ApplicationRunner = 'CreateEntity.ApplicationRunner',
-  Role = 'CreateEntity.Role',
-  Key = 'CreateEntity.Key',
-  Prompt = 'CreateEntity.Prompt',
-  Route = 'CreateEntity.Route',
-  Interceptor = 'CreateEntity.Interceptor',
-  CreateInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Create',
-  SelectInterceptorTemplate = 'CreateEntity.InterceptorTemplate.Select',
-  CreateAdapter = 'CreateEntity.Adapter.Create',
-  SelectAdapter = 'CreateEntity.Adapter.Select',
+  Title = 'CreateEntity.Title',
+
+  SelectInterceptorTemplate = 'CreateEntity.SelectInterceptorTemplate',
+  SelectAdapter = 'CreateEntity.SelectAdapter',
   SelectContainer = 'CreateEntity.SelectContainer',
+
+  // Notification
+  NotificationTitle = 'CreateEntity.Notification.Title',
+  NotificationDescription = 'CreateEntity.Notification.Description',
+
+  // Entities
+  Model = 'CreateEntity.Entities.Model',
+  Application = 'CreateEntity.Entities.Application',
+  Toolsets = 'CreateEntity.Entities.Toolsets',
+  Route = 'CreateEntity.Entities.Route',
+  Interceptor = 'CreateEntity.Entities.Interceptor',
+  Role = 'CreateEntity.Entities.Role',
+  Key = 'CreateEntity.Entities.Key',
+  Prompt = 'CreateEntity.Entities.Prompt',
+  File = 'CreateEntity.Entities.File',
+  Adapter = 'CreateEntity.Entities.Adapter',
+  InterceptorTemplate = 'CreateEntity.Entities.InterceptorTemplate',
+  ApplicationRunner = 'CreateEntity.Entities.ApplicationRunner',
 }
 
 export enum UpstreamEndpointsI18nKey {
@@ -379,6 +414,7 @@ export enum TabsI18nKey {
   Conversations = 'Tabs.Conversations',
   Attachments = 'Tabs.Attachments',
   Tools = 'Tabs.Tools',
+  ParameterSchema = 'Tabs.ParameterSchema',
 }
 
 export enum InterceptorsI18nKey {
@@ -598,27 +634,11 @@ export enum FoldersI18nKey {
   DeleteFolder = 'Folder.DeleteFolder',
   DeleteFolderDescription = 'Folder.DeleteFolderDescription',
   CollapseAll = 'Folder.CollapseAll',
+  NoPreviewArchive = 'Folder.NoPreviewArchive',
 }
 
 export enum ActivityAuditI18nKey {
   ResourceDiff = 'ActivityAudit.ResourceDiff',
-  RollbackResource = 'ActivityAudit.RollbackResource',
-  RollbackSystem = 'ActivityAudit.RollbackSystem',
-  ConfirmRollback = 'ActivityAudit.ConfirmRollback',
-  ConfirmSystemRollback = 'ActivityAudit.ConfirmSystemRollback',
-  ConfirmSystemRollbackDescription = 'ActivityAudit.ConfirmSystemRollbackDescription',
-  ConfirmSystemRollbackAlert = 'ActivityAudit.ConfirmSystemRollbackAlert',
-  ConfirmSystemRollbackLabel = 'ActivityAudit.ConfirmSystemRollbackLabel',
-  ConfirmSystemRollbackPlaceholder = 'ActivityAudit.ConfirmSystemRollbackPlaceholder',
-  ConfirmRollbackDescriptionPart1 = 'ActivityAudit.ConfirmRollbackDescription.Part1',
-  ConfirmRollbackDescriptionPart2 = 'ActivityAudit.ConfirmRollbackDescription.Part2',
-  ConfirmRollbackDescriptionPart3 = 'ActivityAudit.ConfirmRollbackDescription.Part3',
-  ConfirmSelectionRollbackDescription = 'ActivityAudit.ConfirmSelectionRollbackDescription',
-  ConfirmRollbackAsking = 'ActivityAudit.ConfirmRollbackAsking',
-  ResourceRollback = 'ActivityAudit.ResourceRollback',
-  ResourceRollbackDescription = 'ActivityAudit.ResourceRollbackDescription',
-  ResourceRollbackErrorTitle = 'ActivityAudit.ResourceRollbackErrorTitle',
-  ResourceRollbackErrorDescription = 'ActivityAudit.ResourceRollbackErrorDescription',
   AllParameters = 'ActivityAudit.AllParameters',
   AllResources = 'ActivityAudit.AllResources',
   Differences = 'ActivityAudit.Differences',
@@ -630,11 +650,51 @@ export enum ActivityAuditI18nKey {
   UserId = 'ActivityAudit.UserId',
   ActivityId = 'ActivityAudit.ActivityId',
   CurrentState = 'ActivityAudit.CurrentState',
-  RollbackState = 'ActivityAudit.RollbackState',
-  RollbackRevision = 'ActivityAudit.RollbackRevision',
   ActivityDetails = 'ActivityAudit.ActivityDetails',
   BeforeAfter = 'ActivityAudit.BeforeAfter',
   BeforeCurrent = 'ActivityAudit.BeforeCurrent',
+}
+
+export enum RollbackI18nKey {
+  State = 'Rollback.State',
+  Revision = 'Rollback.Revision',
+  Resource = 'Rollback.Resource',
+  System = 'Rollback.System',
+  ConfirmRollbackAsking = 'Rollback.ConfirmRollbackAsking',
+
+  // Resource rollback
+  ConfirmResourceRollbackTitle = 'Rollback.ResourceRollback.Title',
+  ConfirmRollbackDescriptionPart1 = 'Rollback.ConfirmRollbackDescription.Part1',
+  ConfirmRollbackDescriptionPart2 = 'Rollback.ConfirmRollbackDescription.Part2',
+  ConfirmRollbackDescriptionPart3 = 'Rollback.ConfirmRollbackDescription.Part3',
+  ConfirmSelectionRollbackDescription = 'Rollback.ResourceRollback.SelectionRollbackDescription',
+
+  // System rollback
+  ConfirmSystemRollbackTitle = 'Rollback.SystemRollback.Title',
+  ConfirmSystemRollbackDescription = 'Rollback.SystemRollback.Description',
+  ConfirmSystemRollbackAlert = 'Rollback.SystemRollback.Alert',
+  ConfirmSystemRollbackLabel = 'Rollback.SystemRollback.Label',
+  ConfirmSystemRollbackPlaceholder = 'Rollback.SystemRollback.Placeholder',
+
+  // Notification
+  NotificationErrorTitle = 'Rollback.Notification.ErrorTitle',
+  NotificationErrorDescription = 'Rollback.Notification.ErrorDescription',
+  NotificationSuccessTitle = 'Rollback.Notification.SuccessTitle',
+  NotificationSuccessDescription = 'Rollback.Notification.SuccessDescription',
+
+  // Entities
+  Model = 'Rollback.Entities.Model',
+  Application = 'Rollback.Entities.Application',
+  Toolsets = 'Rollback.Entities.Toolsets',
+  Route = 'Rollback.Entities.Route',
+  Interceptor = 'Rollback.Entities.Interceptor',
+  Role = 'Rollback.Entities.Role',
+  Key = 'Rollback.Entities.Key',
+  Prompt = 'Rollback.Entities.Prompt',
+  File = 'Rollback.Entities.File',
+  Adapter = 'Rollback.Entities.Adapter',
+  InterceptorTemplate = 'Rollback.Entities.InterceptorTemplate',
+  ApplicationRunner = 'Rollback.Entities.ApplicationRunner',
 }
 
 export enum ErrorI18nKey {
@@ -855,6 +915,17 @@ export enum EntityFieldsI18nKey {
   authenticationType = 'EntityFields.authenticationType',
   tokenEndpoint = 'EntityFields.tokenEndpoint',
   authSettings = 'EntityFields.authSettings',
+  share = 'EntityFields.share',
+  'application.invitationTtl' = 'EntityFields.applicationInvitationTtl',
+  'application.maxAcceptedUsers' = 'EntityFields.applicationMaxAcceptedUsers',
+  'conversation.invitationTtl' = 'EntityFields.conversationInvitationTtl',
+  'conversation.maxAcceptedUsers' = 'EntityFields.conversationMaxAcceptedUsers',
+  'file.invitationTtl' = 'EntityFields.fileInvitationTtl',
+  'file.maxAcceptedUsers' = 'EntityFields.fileMaxAcceptedUsers',
+  'prompt.invitationTtl' = 'EntityFields.promptInvitationTtl',
+  'prompt.maxAcceptedUsers' = 'EntityFields.promptMaxAcceptedUsers',
+  'tool_set.invitationTtl' = 'EntityFields.tool_setInvitationTtl',
+  'tool_set.maxAcceptedUsers' = 'EntityFields.tool_setMaxAcceptedUsers',
 }
 
 export enum ToolsetI18nKey {

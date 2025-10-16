@@ -1,14 +1,14 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
-import DuplicatePopup from './DuplicatePopup';
+import DuplicatePopup from './Duplicate';
 import { ApplicationRoute } from '@/src/types/routes';
-import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '../../constants/i18n';
+import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 
 describe('DuplicatePopup', () => {
   const baseEntity = { name: 'oldName', displayName: 'oldDisplay', displayVersion: '1.0' };
   const baseProps = {
     view: 'Simple',
-    modalState: 'Opened',
+    isModalOpen: true,
     names: ['existing'],
     entity: baseEntity,
     onClose: vi.fn(),

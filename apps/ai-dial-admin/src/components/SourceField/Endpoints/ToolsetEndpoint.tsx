@@ -2,16 +2,16 @@
 
 import { FC } from 'react';
 import classNames from 'classnames';
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialSelect, DialTextInputField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ToolsetTransport } from '@/src/types/toolset';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { useI18n } from '@/src/locales/client';
 
-import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
+import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
+import Field from '@/src/components/Common/Field/Field';
 
 interface Props {
   entity: Toolset;
@@ -22,20 +22,22 @@ interface Props {
 
 const ToolsetEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) => {
   const t = useI18n();
-  const transportOptions: DropdownItemsModel[] = [
-    { id: ToolsetTransport.HTTP, name: ToolsetTransport.HTTP.toUpperCase() },
-    { id: ToolsetTransport.SSE, name: ToolsetTransport.SSE.toUpperCase() },
+  const transportOptions: SelectOption[] = [
+    { value: ToolsetTransport.HTTP, label: ToolsetTransport.HTTP.toUpperCase() },
+    { value: ToolsetTransport.SSE, label: ToolsetTransport.SSE.toUpperCase() },
   ];
 
   return (
     <div className={classNames('flex flex-col gap-6', !isModal && 'lg:w-[35%]')}>
       {prefix ? (
-        <DialTextInputField
-          elementId={'endpoint'}
+        <ComplexInput
+          elementId="endpoint"
           textBeforeInput={prefix}
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
           value={entity.source?.completionEndpointPath}
+          fullValue={`${prefix}${entity.source?.completionEndpointPath}`}
+          copyable={true}
           onChange={(completionEndpointPath) =>
             onChange({
               ...entity,
@@ -53,13 +55,14 @@ const ToolsetEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) => {
         />
       )}
       {!isModal && (
-        <DropdownField
-          fieldTitle={t(EntityFieldsI18nKey.transport)}
-          selectedValue={entity.transport || ToolsetTransport.SSE}
-          elementId="transport"
-          items={transportOptions}
-          onChange={(transport) => onChange({ ...entity, transport: transport as ToolsetTransport })}
-        />
+        <div className="flex flex-col w-[180px]">
+          <Field fieldTitle={t(EntityFieldsI18nKey.transport)} />
+          <DialSelect
+            value={entity.transport || ToolsetTransport.SSE}
+            options={transportOptions}
+            onChange={(transport) => onChange({ ...entity, transport: transport as ToolsetTransport })}
+          />
+        </div>
       )}
     </div>
   );

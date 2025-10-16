@@ -30,7 +30,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { getErrorNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import {
   VisualizerConnectorEvents,
   VisualizerConnectorRequest,
@@ -39,6 +39,7 @@ import {
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 import ViewContent from './Content/ViewContent';
 import { getEntityFromFile, getExportType, getFileFromEntity } from './core-entity-utils';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
   view: ApplicationRoute;
@@ -191,12 +192,18 @@ const EntityView: FC<Props> = ({
     req.then((res) => {
       if (res.success) {
         setCoreEntity(null);
+        showNotification(
+          getSuccessNotification(
+            getUpdateNotificationTitle(view, t),
+            getUpdateNotificationDescription(view, selectedEntity.name, t),
+          ),
+        );
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedFormat, view, selectedEntity, updateEntity, etag, router, showNotification]);
+  }, [selectedFormat, view, selectedEntity, updateEntity, etag, showNotification, t, router]);
 
   const onTryToSave = useCallback(() => {
     if (

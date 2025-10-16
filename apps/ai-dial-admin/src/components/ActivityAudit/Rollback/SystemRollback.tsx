@@ -2,9 +2,9 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { ButtonVariant, DialButton, DialLoader } from '@epam/ai-dial-ui-kit';
 import { IconRestore } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
-import { ButtonVariant, DialButton, DialLoader } from '@epam/ai-dial-ui-kit';
 
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 import {
@@ -12,13 +12,18 @@ import {
   getRevisions,
   systemRollbackToRevision,
 } from '@/src/app/[lang]/activity-audit/actions';
-import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
-import DiffLegend from '@/src/components/ActivityAudit/View/DiffReport/DiffLegend';
+import { sorts } from '@/src/components/ActivityAudit/constants';
 import AuditEntityGrid from '@/src/components/ActivityAudit/EntityGrid/EntityGrid';
-import { mergeEntityMaps } from '@/src/components/ActivityAudit/View/utils';
+import ConfirmationRollback from '@/src/components/ActivityAudit/Modals/Confirmation';
+import RollbackRevisions from '@/src/components/ActivityAudit/Modals/Revisions';
+import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
+import { SYSTEM_ROLLBACK_ENTITIES, SYSTEM_ROLLBACK_TAB_NAME } from '@/src/components/ActivityAudit/Rollback/constants';
 import { getSystemRollbackColumns } from '@/src/components/ActivityAudit/Rollback/utils';
+import DiffLegend from '@/src/components/ActivityAudit/View/DiffReport/DiffLegend';
+import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
+import { mergeEntityMaps } from '@/src/components/ActivityAudit/View/utils/generate-diffs';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
-import { ActivityAuditI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { ActivityAuditI18nKey, MenuI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { ActivityAuditDiff, DialActivity } from '@/src/models/activity-audit';
@@ -27,11 +32,6 @@ import { ActivityAuditEntity, ActivityAuditResourceType, DiffView } from '@/src/
 import { PopUpState } from '@/src/types/pop-up';
 import { getRevisionRouteForAllEntities } from '@/src/utils/audit/get-revision-route';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import ConfirmationRollback from '@/src/components/ActivityAudit/Modals/Confirmation';
-import RollbackRevisions from '@/src/components/ActivityAudit/Modals/Revisions';
-import { SYSTEM_ROLLBACK_ENTITIES, SYSTEM_ROLLBACK_TAB_NAME } from '@/src/components/ActivityAudit/Rollback/constants';
-import { sorts } from '@/src/components/ActivityAudit/constants';
-import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
 
 const SystemRollback: FC = () => {
   const t = useI18n() as (t: string) => string;
@@ -148,14 +148,14 @@ const SystemRollback: FC = () => {
   return (
     <div className="flex flex-col bg-layer-2 rounded p-4 flex-1 min-h-0">
       <div className="flex flex-row justify-between mb-3">
-        <h1>{t(ActivityAuditI18nKey.RollbackSystem)}</h1>
+        <h1>{t(RollbackI18nKey.System)}</h1>
         <div className="flex flex-row gap-3 items-center">
           <FilterControl diffView={diffView} setDiffView={setDiffView} isResources={true} />
           <div
             className="flex flex-row items-center small bg-layer-3 rounded h-6 p-2 cursor-pointer"
             onClick={() => setRevisionsModalState(PopUpState.Opened)}
           >
-            <span>{t(ActivityAuditI18nKey.RollbackRevision)}</span>
+            <span>{t(RollbackI18nKey.Revision)}</span>
             <span>: {formatDateTimeToLocalString(rollbackRevision?.timestamp)}</span>
             <div className="pl-1">
               <OpenPopup />
@@ -164,7 +164,7 @@ const SystemRollback: FC = () => {
           <DialButton
             iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
             variant={ButtonVariant.Primary}
-            title={t(ActivityAuditI18nKey.RollbackSystem)}
+            title={t(RollbackI18nKey.System)}
             onClick={() => setRollBackModalState(PopUpState.Opened)}
           />
         </div>
@@ -194,7 +194,7 @@ const SystemRollback: FC = () => {
                   />
                 </div>
                 <div className="flex flex-col flex-1">
-                  <h3 className="mb-4 text-primary">{t(ActivityAuditI18nKey.RollbackState)}</h3>
+                  <h3 className="mb-4 text-primary">{t(RollbackI18nKey.State)}</h3>
                   <AuditEntityGrid
                     data={rollbackRows}
                     columns={columns}

@@ -12,7 +12,6 @@ import { deleteInterceptorTemplate, updateInterceptorTemplate } from '@/src/app/
 import { createInterceptor } from '@/src/app/[lang]/interceptors/actions';
 import Tabs from '@/src/components/Common/Tabs/Tabs';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
-import { createModalTitleMap } from '@/src/components/EntityListView/constants';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
@@ -27,7 +26,8 @@ import { useI18n } from '@/src/locales/client';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { getErrorNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
   etag: string;
@@ -67,12 +67,18 @@ const View: FC<Props> = ({ etag, template, names }) => {
   const onSave = useCallback(() => {
     updateInterceptorTemplate(selectedTemplate, etag).then((res) => {
       if (res.success) {
+        showNotification(
+          getSuccessNotification(
+            getUpdateNotificationTitle(ApplicationRoute.InterceptorTemplates, t),
+            getUpdateNotificationDescription(ApplicationRoute.InterceptorTemplates, selectedTemplate.name, t),
+          ),
+        );
         router.refresh();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [router, selectedTemplate, etag, showNotification]);
+  }, [selectedTemplate, etag, showNotification, t, router]);
 
   const onDiscard = useCallback(() => {
     setSelectedTemplate(cloneDeep(template));
@@ -128,7 +134,6 @@ const View: FC<Props> = ({ etag, template, names }) => {
           createPortal(
             <CreateEntity
               route={ApplicationRoute.Interceptors}
-              modalTitle={t(createModalTitleMap[ApplicationRoute.Interceptors])}
               isModalOpen={isModalOpen}
               createEntity={createInterceptor}
               onClose={() => setIsModalOpen(false)}

@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ButtonVariant, DialButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { IconSparkles } from '@tabler/icons-react';
 
-import ValidityPeriodInput from '@/src/components/Common/ValidityPeriodInput/ValidityPeriodInput';
+import ValidityPeriod from '@/src/components/Keys/Modals/ValidityPeriod';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
@@ -142,7 +142,7 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
           onChange={onChangeSecured}
         />
       )}
-      {!isKeyImmutable && <ValidityPeriodInput onChange={onChangeExpiresAt} />}
+      {!isKeyImmutable && <ValidityPeriod onChange={onChangeExpiresAt} />}
     </div>
   );
 };
