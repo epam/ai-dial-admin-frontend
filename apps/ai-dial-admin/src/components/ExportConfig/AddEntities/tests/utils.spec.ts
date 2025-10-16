@@ -1,4 +1,4 @@
-import { getButtonTitle, getAllAvailableDependencies, getAvailableData } from '../utils';
+import { getButtonTitle, getAvailableData } from '../utils';
 import { ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import * as AddEntitiesUtils from '@/src/components/AddEntitiesTab/utils';
@@ -104,56 +104,6 @@ describe('Export Config Utils :: getButtonTitle', () => {
   test('Should return empty string if no selected tab and not full', () => {
     const res = getButtonTitle(mockTranslate, undefined, false);
     expect(res).toBe('');
-  });
-});
-
-describe('Export Config Utils :: getAllAvailableDependencies', () => {
-  test('returns correct dependencies for ROLE', () => {
-    const result = getAllAvailableDependencies(EntityType.ROLE);
-    expect(result).toEqual([
-      EntityType.MODEL,
-      EntityType.APPLICATION,
-      EntityType.TOOLSET,
-      EntityType.ROUTE,
-      EntityType.APPLICATION_TYPE_SCHEMA,
-      EntityType.INTERCEPTOR,
-    ]);
-  });
-
-  test('returns correct dependencies for KEY', () => {
-    const result = getAllAvailableDependencies(EntityType.KEY);
-    expect(result).toEqual([
-      EntityType.ROLE,
-      EntityType.MODEL,
-      EntityType.APPLICATION,
-      EntityType.APPLICATION_TYPE_SCHEMA,
-      EntityType.INTERCEPTOR,
-    ]);
-  });
-
-  test('returns correct dependencies for MODEL', () => {
-    const result = getAllAvailableDependencies(EntityType.MODEL);
-    expect(result).toEqual([EntityType.INTERCEPTOR]);
-  });
-
-  test('returns correct dependencies for APPLICATION', () => {
-    const result = getAllAvailableDependencies(EntityType.APPLICATION);
-    expect(result).toEqual([
-      EntityType.MODEL,
-      EntityType.APPLICATION,
-      EntityType.APPLICATION_TYPE_SCHEMA,
-      EntityType.INTERCEPTOR,
-    ]);
-  });
-
-  test('returns empty array for undefined input', () => {
-    const result = getAllAvailableDependencies(undefined);
-    expect(result).toEqual([]);
-  });
-
-  test('returns empty array for unsupported type', () => {
-    const result = getAllAvailableDependencies('UNKNOWN' as EntityType);
-    expect(result).toEqual([]);
   });
 });
 
