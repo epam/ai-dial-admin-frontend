@@ -31,7 +31,15 @@ const Properties = <T extends object>({
   }
 
   if (isAssetView(view)) {
-    return <AssetProperties view={view} versionsMap={versionsMap} initialValues={initialValues} {...props} />;
+    return (
+      <AssetProperties
+        view={view}
+        runners={runners}
+        versionsMap={versionsMap}
+        initialValues={initialValues}
+        {...props}
+      />
+    );
   }
 
   return <DeploymentProperties view={view} runners={runners} isUniqueNameError={isUniqueNameError} {...props} />;

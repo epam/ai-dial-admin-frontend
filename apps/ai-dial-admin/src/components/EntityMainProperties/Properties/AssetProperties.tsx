@@ -1,5 +1,6 @@
 import { FC, useCallback, useState } from 'react';
 
+import ApplicationSource from '@/src/components/Applications/ApplicationSource/ApplicationSource';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
@@ -7,10 +8,11 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
+import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getPromptVersionError } from '@/src/utils/validation/version-error';
-import { Asset } from '../../../models/dial/deployment-asset';
+import { DialApplicationScheme } from '@/src/models/dial/application';
 
 interface Props {
   view?: ApplicationRoute;
@@ -18,8 +20,9 @@ interface Props {
   names: string[];
   isEntityImmutable: boolean;
   versionsMap?: Record<string, string[]>;
-  onChangeEntity: (entity: BaseEntity) => void;
+  onChangeEntity: (entity: object) => void;
   isModal?: boolean;
+  runners?: DialApplicationScheme[];
   initialValues?: Partial<BaseEntity>;
 }
 
@@ -30,6 +33,7 @@ const AssetProperties: FC<Props> = ({
   onChangeEntity,
   isEntityImmutable = false,
   versionsMap,
+  runners,
 }) => {
   const t = useI18n() as (t: string) => string;
   const { dispatch } = useSaveValidationContext();
@@ -73,6 +77,15 @@ const AssetProperties: FC<Props> = ({
       />
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
+
+      {view === ApplicationRoute.AssetsApplications && !isEntityImmutable && (
+        <ApplicationSource
+          entity={entity}
+          runners={runners}
+          isEntityImmutable={isEntityImmutable}
+          onChangeEntity={onChangeEntity}
+        />
+      )}
     </div>
   );
 };
