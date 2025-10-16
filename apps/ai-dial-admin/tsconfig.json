@@ -16,9 +16,7 @@
     ]
   },
   "files": [],
-  "include": [
-    ".next/types/**/*.ts"
-  ],
+  "include": [".next/types/**/*.ts"],
   "references": [
     {
       "path": "./tsconfig.app.json"
