@@ -144,14 +144,15 @@ const EntityMainProperties: FC<Props> = ({
 
         <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
 
-        {view === ApplicationRoute.Applications && !isEntityImmutable && (
-          <ApplicationSource
-            entity={entity}
-            runners={runners}
-            isEntityImmutable={isEntityImmutable}
-            onChangeEntity={onChangeEntity}
-          />
-        )}
+        {(view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications) &&
+          !isEntityImmutable && (
+            <ApplicationSource
+              entity={entity}
+              runners={runners}
+              isEntityImmutable={isEntityImmutable}
+              onChangeEntity={onChangeEntity}
+            />
+          )}
       </div>
 
       <AdditionalProperties

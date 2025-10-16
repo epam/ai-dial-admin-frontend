@@ -103,7 +103,12 @@ const SimpleEntityProperties: FC<Props> = ({
       )}
 
       {versionsMap && (
-        <VersionControl version={(entity as DialPrompt).version} onChange={onChangeVersion} error={versionError} />
+        <VersionControl
+          containerCssClass="w-[150px]"
+          version={(entity as DialPrompt).version}
+          onChange={onChangeVersion}
+          error={versionError}
+        />
       )}
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />

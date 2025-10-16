@@ -2,7 +2,12 @@
 
 import { FC } from 'react';
 
-import { bulkDeleteToolsets, moveToolsets, removeToolset } from '@/src/app/[lang]/assets-toolsets/actions';
+import {
+  bulkDeleteToolsets,
+  createToolset,
+  moveToolsets,
+  removeToolset,
+} from '@/src/app/[lang]/assets-toolsets/actions';
 import { filterLatestVersions, getVersionsPerName } from '@/src/components/Assets/utils';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import Page403 from '@/src/components/Page403/Page403';
@@ -32,6 +37,7 @@ const ToolsetsList: FC = () => {
       data={filteredData}
       route={ApplicationRoute.AssetsToolsets}
       removeEntity={removeToolset}
+      createEntity={createToolset}
       moveFiles={moveToolsets}
       bulkDelete={bulkDeleteToolsets}
       context={useToolsetFolder as () => AssetsFolderContext<AssetToolset | DialFile>}
