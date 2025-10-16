@@ -3,10 +3,11 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DialCheckbox, DialCollapsibleSidebar } from '@epam/ai-dial-ui-kit';
 
-import { getAllAvailableDependencies, getButtonTitle } from '@/src/components/ExportConfig/AddEntities/utils';
+import { getButtonTitle } from '@/src/components/ExportConfig/AddEntities/utils';
 import { ExportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { EntityType } from '@/src/types/entity-type';
+import { getAllAvailableDependencies } from '@/src/utils/entities/get-export-deps';
 
 interface Props {
   selectedTab?: EntityType;
