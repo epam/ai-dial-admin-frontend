@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react';
 import { ApplicationRoute } from '@/src/types/routes';
-import BasePublicationHeader from '@/src/components/PublicationView/BasePublicationProperties/BasePublicationHeader';
+import BasePublicationHeader from '@/src/components/Publications/Properties/Header';
 import { ServerActionResponse } from '@/src/models/server-action';
 import PublicationProperties from '@/src/components/Publications/View/Properties';
 import { Publication } from '@/src/models/dial/publications';
