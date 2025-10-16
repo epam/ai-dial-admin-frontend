@@ -18,7 +18,7 @@ interface Props {
   view?: ApplicationRoute;
   entity: Asset;
   names: string[];
-  isEntityImmutable: boolean;
+  isEntityImmutable?: boolean;
   versionsMap?: Record<string, string[]>;
   onChangeEntity: (entity: object) => void;
   isModal?: boolean;

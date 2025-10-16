@@ -5,6 +5,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { isAssetView } from '@/src/utils/is-asset-view';
 import AssetProperties from './AssetProperties';
+import { Asset } from '../../../models/dial/deployment-asset';
 
 interface Props<T> {
   view: ApplicationRoute;
@@ -24,10 +25,11 @@ const Properties = <T extends object>({
   initialValues,
   isUniqueNameError,
   versionsMap,
+  entity,
   ...props
 }: Props<T>) => {
   if (isSimpleEntity(view)) {
-    return <EntityProperties view={view} {...props} />;
+    return <EntityProperties entity={entity} view={view} {...props} />;
   }
 
   if (isAssetView(view)) {
@@ -37,12 +39,21 @@ const Properties = <T extends object>({
         runners={runners}
         versionsMap={versionsMap}
         initialValues={initialValues}
+        entity={entity as Asset}
         {...props}
       />
     );
   }
 
-  return <DeploymentProperties view={view} runners={runners} isUniqueNameError={isUniqueNameError} {...props} />;
+  return (
+    <DeploymentProperties
+      entity={entity}
+      view={view}
+      runners={runners}
+      isUniqueNameError={isUniqueNameError}
+      {...props}
+    />
+  );
 };
 
 export default Properties;
