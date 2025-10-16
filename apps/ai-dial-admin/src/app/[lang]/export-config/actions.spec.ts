@@ -7,6 +7,7 @@ import * as entityUtils from '@/src/utils/entities/entities-list-view';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { EntityType } from '@/src/types/entity-type';
+import { getAllAvailableDependencies } from '@/src/utils/entities/get-export-deps';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 vi.mock('@/src/utils/auth/auth-request');
@@ -62,6 +63,7 @@ describe('Export config :: actions :: exportConfig', () => {
           {
             name: 'name',
             type: 'MODEL',
+            dependencies: getAllAvailableDependencies('MODEL'),
           },
         ],
         exportFormat: 'CORE',
