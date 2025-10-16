@@ -165,7 +165,6 @@ const CreateEntity = <T extends CreatePromptEntity>({
           isUniqueNameError={isUniqueNameError}
           initialValues={initialValues}
           onChangeEntity={(entity) => setEntity(entity as T)}
-          isModal={true}
         />
       </div>
     </DialFormPopup>
