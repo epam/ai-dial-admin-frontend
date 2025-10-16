@@ -2,7 +2,7 @@ import { FC, useCallback, useState } from 'react';
 import { DialConfirmationPopup, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { AlertVariant, DialAlert } from '@epam/ai-dial-ui-kit';
 
-import { ButtonsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
+import { RollbackI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
