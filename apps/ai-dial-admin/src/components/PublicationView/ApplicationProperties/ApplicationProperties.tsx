@@ -39,7 +39,11 @@ const ApplicationProperties: FC<Props> = ({ publication }) => {
 
   return application ? (
     <div className="flex flex-col gap-y-6 h-full">
-      <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab as ApplicationPublicationTab)} />
+      <DialTabs
+        tabs={tabs}
+        activeTab={selectedTab}
+        onClick={(tab) => setSelectedTab(tab as ApplicationPublicationTab)}
+      />
       <div className="flex-1 min-h-0 pt-[25px] lg:pt-0">
         {selectedTab === ApplicationPublicationTab.Properties && <ApplicationInfo application={application} />}
         {selectedTab === ApplicationPublicationTab.Parameters && (
