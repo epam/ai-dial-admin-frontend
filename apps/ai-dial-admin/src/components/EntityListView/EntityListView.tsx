@@ -15,7 +15,7 @@ import { DialFile } from '@/src/models/dial/file';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isDeploymentAsset } from '@/src/utils/is-asset-view';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { getEntityPath, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import Actions from './Components/Actions';
 import { ModalType } from './Components/Modals';
@@ -127,9 +127,9 @@ const BaseEntityList = <T extends object>({
   }, [closeColumnsPanel]);
 
   const getColumns = () => {
-    if (route === ApplicationRoute.Prompts) {
+    if (isAssetWithVersion(route)) {
       return ENTITIES_COLUMNS(baseColumns, onOpenDeleteModal, onOpenDuplicateModal, openInNewTab, onOpenMoveModal);
-    } else if (route === ApplicationRoute.Files || isDeploymentAsset(route)) {
+    } else if (route === ApplicationRoute.Files) {
       return ENTITIES_COLUMNS(baseColumns, onOpenDeleteModal, void 0, openInNewTab, onOpenMoveModal);
     }
     return ENTITIES_COLUMNS(baseColumns, onOpenDeleteModal, onOpenDuplicateModal, openInNewTab);
