@@ -5,12 +5,12 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
+import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 
 import { removeApplicationScheme, updateApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 import ApplicationParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
 import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
@@ -34,7 +34,6 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialRole } from '@/src/models/dial/role';
-import { TabModel } from '@/src/models/tab';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -154,7 +153,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles }) => {
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={headerClassName}>
-        <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
+        <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
         <HeaderButtons
           view={ApplicationRoute.ApplicationRunners}
           entity={selectedRunner}

@@ -1,9 +1,8 @@
+import { ButtonVariant, DialButton, DialLoader, DialSwitch, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
-import { DialSwitch, ButtonVariant, DialButton, DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { previewExportConfig } from '@/src/app/[lang]/export-config/actions';
 import Popup from '@/src/components/Common/Popup/Popup';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
 import ConfigContentGrid from '@/src/components/ExportConfig/Content/ConfigContentGrid';
 import { getPreviewTabs } from '@/src/components/ExportConfig/Preview/utils';
 import { ButtonsI18nKey, ExportI18nKey } from '@/src/constants/i18n';
@@ -11,11 +10,10 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportRequest } from '@/src/models/export';
-import { TabModel } from '@/src/models/tab';
+import { EntityType } from '@/src/types/entity-type';
 import { ExportType } from '@/src/types/export';
 import { PopUpState } from '@/src/types/pop-up';
 import { getErrorNotification } from '@/src/utils/notification';
-import { EntityType } from '@/src/types/entity-type';
 
 interface Props {
   exportRequest: Partial<ExportRequest>;
@@ -79,7 +77,7 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, modalState, onClose
           ) : (
             <div className="flex flex-col h-full">
               <div className="mb-3">
-                <Tabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
+                <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
               </div>
               <div className="flex-1 min-h-0">
                 <ConfigContentGrid selectedTab={selectedTab as EntityType} tabData={data} isFull={true} />

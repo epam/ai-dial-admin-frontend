@@ -5,10 +5,10 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
+import { DialTabs } from '@epam/ai-dial-ui-kit';
 
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { ModalType } from '@/src/components/EntityView/Modals/constants';
@@ -280,7 +280,12 @@ const EntityView: FC<Props> = ({
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
         <div className={headerClassName}>
-          <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
+          <DialTabs
+            tabs={tabs}
+            activeTab={activeTab}
+            onClick={onChangeActiveTab}
+            jsonEditorEnabled={jsonEditorEnabled}
+          />
           <HeaderButtons
             view={view}
             entity={selectedEntity}

@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from 'react';
+import { DialTabs } from '@epam/ai-dial-ui-kit';
 
 import ApplicationParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
 import FilesProperties from '@/src/components/PublicationView/FileProperties/FilesProperties';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -39,7 +39,7 @@ const ApplicationProperties: FC<Props> = ({ publication }) => {
 
   return application ? (
     <div className="flex flex-col gap-y-6 h-full">
-      <Tabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab as ApplicationPublicationTab)} />
+      <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab as ApplicationPublicationTab)} />
       <div className="flex-1 min-h-0 pt-[25px] lg:pt-0">
         {selectedTab === ApplicationPublicationTab.Properties && <ApplicationInfo application={application} />}
         {selectedTab === ApplicationPublicationTab.Parameters && (

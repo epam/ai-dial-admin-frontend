@@ -10,7 +10,6 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useLogout } from '@/src/hooks/use-logout';
 import { useI18n } from '@/src/locales/client';
-import { PopUpState } from '@/src/types/pop-up';
 import LogoutItem from './LogoutItem';
 import SettingsItem from './SettingsItem';
 import UserInfo from './UserInfo';
@@ -24,7 +23,7 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
   const t = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [isLogoutConfirmationOpen, setIsLogoutConfirmationOpen] = useState(false);
-  const [settingsModalState, setSettingsModalState] = useState(PopUpState.Closed);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const { session, handleLogout } = useLogout();
   const { setTheme, themes } = useTheme();
 
@@ -32,7 +31,7 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
     setTheme(theme as string);
   };
 
-  const handleSettingsClick = () => setSettingsModalState(PopUpState.Opened);
+  const handleSettingsClick = () => setIsSettingsModalOpen(true);
   const handleLogOutClick = () => {
     if (!session) {
       handleLogout();
@@ -109,12 +108,12 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
           }}
         />
       )}
-      {settingsModalState === PopUpState.Opened && (
+      {isSettingsModalOpen && (
         <SettingsModal
-          modalState={settingsModalState}
-          onClose={() => setSettingsModalState(PopUpState.Closed)}
+          isSettingsModalOpen={isSettingsModalOpen}
+          onClose={() => setIsSettingsModalOpen(false)}
           onConfirm={(settings) => {
-            setSettingsModalState(PopUpState.Closed);
+            setIsSettingsModalOpen(false);
             applySettings(settings);
           }}
         />

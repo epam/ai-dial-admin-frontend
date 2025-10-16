@@ -5,6 +5,7 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
+import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 
 import { removeRole, updateRole } from '@/src/app/[lang]/roles/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
@@ -13,7 +14,6 @@ import {
   getRelevantKeysForRole,
   ROLES_ENTITIES_COLUMNS,
 } from '@/src/components/AddEntitiesTab/utils';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
@@ -27,7 +27,6 @@ import { DialKey } from '@/src/models/dial/key';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { TabModel } from '@/src/models/tab';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -240,7 +239,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={headerClassName}>
-        <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
+        <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
         <HeaderButtons
           view={ApplicationRoute.Roles}
           entity={selectedRole}
