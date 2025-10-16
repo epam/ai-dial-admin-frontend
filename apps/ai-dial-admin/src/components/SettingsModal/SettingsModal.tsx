@@ -1,4 +1,4 @@
-import { DialFormPopup, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, DialSelectField, PopupSize, SelectOption } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
 
 import { ButtonsI18nKey, SettingsModalI18nKey } from '@/src/constants/i18n';
@@ -32,6 +32,7 @@ const SettingsModal: FC<Props> = ({ onConfirm, isModalOpen, onClose }) => {
       title={t(SettingsModalI18nKey.Settings)}
       portalId="SettingsModal"
       open={isModalOpen}
+      size={PopupSize.Sm}
       submitLabel={t(ButtonsI18nKey.Save)}
       onSubmit={() => onConfirm(settings)}
     >

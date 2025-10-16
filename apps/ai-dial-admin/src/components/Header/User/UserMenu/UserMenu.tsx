@@ -110,7 +110,7 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
       )}
       {isSettingsModalOpen && (
         <SettingsModal
-          isSettingsModalOpen={isSettingsModalOpen}
+          isModalOpen={isSettingsModalOpen}
           onClose={() => setIsSettingsModalOpen(false)}
           onConfirm={(settings) => {
             setIsSettingsModalOpen(false);
