@@ -11,7 +11,6 @@ import { ResourceType } from '@/src/types/resource-type';
 
 export async function createPrompt(prompt: DialPrompt) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  console.log('createPrompt', prompt);
   return assetsApi.createAsset({ ...prompt, content: prompt.content || '' }, ResourceType.PROMPT, token);
 }
 
