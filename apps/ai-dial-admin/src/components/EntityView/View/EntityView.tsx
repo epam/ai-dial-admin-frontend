@@ -280,12 +280,7 @@ const EntityView: FC<Props> = ({
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
         <div className={headerClassName}>
-          <DialTabs
-            tabs={tabs}
-            activeTab={activeTab}
-            onClick={onChangeActiveTab}
-            jsonEditorEnabled={jsonEditorEnabled}
-          />
+          {!jsonEditorEnabled && <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />}
           <HeaderButtons
             view={view}
             entity={selectedEntity}

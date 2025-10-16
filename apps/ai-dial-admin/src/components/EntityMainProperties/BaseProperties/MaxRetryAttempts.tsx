@@ -1,9 +1,8 @@
+import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 import { useCallback } from 'react';
-import { DialSelect, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import Field from '@/src/components/Common/Field/Field';
 
 interface Props<T> {
   entity?: T;
@@ -31,15 +30,15 @@ const MaxRetryAttempts = <T extends { maxRetryAttempts?: number }>({ entity, onC
   );
 
   return (
-    <div className="flex flex-col w-[180px]">
-      <Field fieldTitle={t(EntityFieldsI18nKey.maxRetryAttempts)} />
-      <DialSelect
-        disabled={readonly}
-        value={activeMaxAttempts}
-        options={items}
-        onChange={(value) => onChange(value as string)}
-      />
-    </div>
+    <DialSelectField
+      disabled={readonly}
+      elementId="maxRetryAttempts"
+      containerCssClass="w-[180px]"
+      fieldTitle={t(EntityFieldsI18nKey.maxRetryAttempts)}
+      value={activeMaxAttempts}
+      options={items}
+      onChange={(value) => onChange(value as string)}
+    />
   );
 };
 
