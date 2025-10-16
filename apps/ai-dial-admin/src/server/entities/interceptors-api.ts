@@ -2,6 +2,7 @@ import { JWT } from 'next-auth/jwt';
 
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { RJSFSchema } from '@rjsf/utils';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
 
@@ -30,7 +31,7 @@ export class InterceptorsApi extends BaseApi {
     return this.putActionWithEtag(INTERCEPTOR_URL(interceptors.name), interceptors, token, eTag);
   }
 
-  getConfigurationSchema(name: string, token: JWT | null): Promise<unknown | null> {
+  getConfigurationSchema(name: string, token: JWT | null): Promise<RJSFSchema | null> {
     return this.get(CONFIGURATION_URL(name), token);
   }
 }

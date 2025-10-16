@@ -132,7 +132,7 @@ export default {
     NoResource: 'Resource does not exist',
     NoInterceptorTemplates: 'No Interceptor Templates',
     NoDependencies: 'No Dependencies',
-    NoConfigurationSchema: 'No Configuration Schema',
+    NoConfigurationSchema: 'No Configuration Scheme',
     NoToolsets: 'No Toolsets',
     NoTools: 'No Tools',
     // add entity or entities
@@ -403,7 +403,7 @@ export default {
     Tools: 'Tools Overview',
     Conversations: 'Conversations',
     Attachments: 'Attachments',
-    ParameterSchema: 'Parameter Schema',
+    ParameterSchema: 'Parameter Scheme',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',

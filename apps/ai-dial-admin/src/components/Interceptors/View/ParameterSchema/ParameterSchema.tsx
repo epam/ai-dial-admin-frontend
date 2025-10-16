@@ -6,6 +6,7 @@ import { getConfigurationSchema } from '@/src/app/[lang]/interceptors/actions';
 import { useI18n } from '@/src/locales/client';
 
 import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer';
+import { RJSFSchema } from '@rjsf/utils';
 
 interface Props {
   schemaURL?: string;
@@ -16,7 +17,7 @@ interface Props {
 
 const ParameterSchema: FC<Props> = ({ schemaURL, name, configuration, onChangeConfiguration }) => {
   const t = useI18n();
-  const [schema, setSchema] = useState<any>(null);
+  const [schema, setSchema] = useState<RJSFSchema | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {

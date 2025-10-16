@@ -1,9 +1,11 @@
 import { FC, useCallback } from 'react';
 
+import { IChangeEvent } from '@rjsf/core';
 import { RJSFSchema } from '@rjsf/utils';
 import validator from '@rjsf/validator-ajv8';
 
 import { SchemaForm } from '@/src/components/Common/SchemaUIRenderer/CustomTemplates/CustomSchemaForm';
+
 interface Props {
   schema: RJSFSchema;
   data?: Record<string, unknown>;
@@ -11,7 +13,7 @@ interface Props {
 }
 const SchemaUiRenderer: FC<Props> = ({ schema, data, onChangeConfiguration }) => {
   const onChange = useCallback(
-    (data: any) => {
+    (data: IChangeEvent<any, RJSFSchema, any>) => {
       onChangeConfiguration(data.formData);
     },
     [onChangeConfiguration],

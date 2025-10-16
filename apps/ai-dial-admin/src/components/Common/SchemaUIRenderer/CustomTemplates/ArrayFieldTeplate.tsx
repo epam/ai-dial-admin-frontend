@@ -1,10 +1,17 @@
 import { FC } from 'react';
-import type { ArrayFieldTemplateProps } from '@rjsf/utils';
-import { IconPlus, IconTrashX } from '@tabler/icons-react';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import type { ArrayFieldTemplateProps } from '@rjsf/utils';
+import { IconPlus } from '@tabler/icons-react';
+
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { useI18n } from '@/src/locales/client';
 
 export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({ canAdd, items, onAddClick, title }) => {
+  const t = useI18n() as (stringToTranslate: string) => string;
+
   return (
     <fieldset className="flex flex-col p-6 gap-3">
       {title && <p className="small">{title}</p>}
@@ -16,9 +23,9 @@ export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({ canAdd, items,
             <li key={key} className="flex w-full gap-3 items-start lg:w-[45%]">
               <div className="flex w-full bg-layer-2 p-[18px]">{children}</div>
               {hasRemove && (
-                <DialButton
-                  iconBefore={<IconTrashX {...BASE_ICON_PROPS} className="text-error" />}
+                <RemoveButton
                   onClick={onDropIndexClick(key)}
+                  iconClass="text-error"
                   cssClass="border rounded border-primary justify-start p-2"
                 />
               )}
@@ -31,7 +38,7 @@ export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({ canAdd, items,
         <DialButton
           variant={ButtonVariant.Tertiary}
           onClick={onAddClick}
-          title={`Add ${title}`}
+          title={`${t(ButtonsI18nKey.Add)} ${title}`}
           cssClass="w-fit"
           iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
         />

@@ -1,5 +1,5 @@
 import createFetchMock from 'vitest-fetch-mock';
-import { InterceptorsApi, INTERCEPTORS_URL, INTERCEPTOR_URL } from '../interceptors-api';
+import { InterceptorsApi, INTERCEPTORS_URL, INTERCEPTOR_URL, CONFIGURATION_URL } from '../interceptors-api';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -77,5 +77,17 @@ describe('Server :: InterceptorsApi', () => {
       `${TEST_URL}${INTERCEPTOR_URL(mockInterceptor.name)}`,
       expect.objectContaining({ method: 'DELETE' }),
     );
+  });
+
+  test('should call getConfigurationSchema with correct name and method', async () => {
+    fetch.mockResponseOnce(JSON.stringify(mockInterceptor));
+
+    const result = await instance.getConfigurationSchema('test-interceptor', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${CONFIGURATION_URL('test-interceptor')}`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result).toEqual(JSON.stringify(mockInterceptor));
   });
 });
