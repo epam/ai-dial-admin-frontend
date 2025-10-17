@@ -36,8 +36,7 @@ import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { getEntityFromFile, getExportType } from './core-entity-utils';
-import { getFileFromEntity } from './core-entity-utils';
+import { getExportType } from './core-entity-utils';
 import ViewContent from './ViewContent';
 
 interface Props {
@@ -91,7 +90,7 @@ const EntityView: FC<Props> = ({
     const name = (originalEntity as { name: string })?.name;
     if (!coreEntity && name) {
       getCoreEntity(name, getExportType(view)).then((data) => {
-        setCoreEntity(getEntityFromFile(view, name, data) as BaseEntity);
+        setCoreEntity(data);
       });
     }
   }, [coreEntity, originalEntity, view]);
@@ -186,7 +185,7 @@ const EntityView: FC<Props> = ({
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreEntity(getFileFromEntity(view, selectedEntity))
+        ? updateCoreEntity(selectedEntity as Record<string, unknown>)
         : updateEntity(selectedEntity, etag);
 
     req.then((res) => {
@@ -197,7 +196,7 @@ const EntityView: FC<Props> = ({
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedFormat, view, selectedEntity, updateEntity, etag, router, showNotification]);
+  }, [selectedFormat, selectedEntity, updateEntity, etag, router, showNotification]);
 
   const onTryToSave = useCallback(() => {
     if (

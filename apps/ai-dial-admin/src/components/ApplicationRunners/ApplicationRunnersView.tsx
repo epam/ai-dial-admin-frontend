@@ -35,11 +35,7 @@ import SchemeParameters from './ConfigurationView/Parameters';
 import SchemeProperties from './ConfigurationView/Properties';
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { ExportFormat } from '@/src/types/export';
-import {
-  getEntityFromFile,
-  getExportType,
-  getFileFromEntity,
-} from '@/src/components/EntityView/View/core-entity-utils';
+import { getExportType } from '@/src/components/EntityView/View/core-entity-utils';
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 
 interface Props {
@@ -73,7 +69,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
     const name = originalScheme?.$id;
     if (!coreRunner && name) {
       getCoreEntity(name, getExportType(ApplicationRoute.ApplicationRunners)).then((data) => {
-        setCoreRunner(getEntityFromFile(ApplicationRoute.ApplicationRunners, name, data) as DialApplicationScheme);
+        setCoreRunner(data);
       });
     }
   }, [coreRunner, originalScheme]);
@@ -130,7 +126,7 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreEntity(getFileFromEntity(ApplicationRoute.ApplicationRunners, selectedRunner))
+        ? updateCoreEntity(selectedRunner as Record<string, unknown>)
         : updateApplicationScheme(selectedRunner);
 
     req.then((res) => {

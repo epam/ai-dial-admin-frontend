@@ -37,11 +37,7 @@ import KeyRotateModal from './KeyRotateModal';
 import KeyViewHeader from './KeyViewHeader';
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { ExportFormat } from '@/src/types/export';
-import {
-  getEntityFromFile,
-  getExportType,
-  getFileFromEntity,
-} from '@/src/components/EntityView/View/core-entity-utils';
+import { getExportType } from '@/src/components/EntityView/View/core-entity-utils';
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 
 interface Props {
@@ -77,7 +73,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
     const name = (originalKey as { name: string })?.name;
     if (!coreKey && name) {
       getCoreEntity(name, getExportType(ApplicationRoute.Keys)).then((data) => {
-        setCoreKey(getEntityFromFile(ApplicationRoute.Keys, name, data) as DialKey);
+        setCoreKey(data);
       });
     }
   }, [coreKey, originalKey]);
@@ -149,7 +145,7 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
     setConfirmModalState(PopUpState.Closed);
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreEntity(getFileFromEntity(ApplicationRoute.Keys, selectedKey))
+        ? updateCoreEntity(selectedKey as Record<string, unknown>)
         : updateKey(selectedKey);
 
     req.then((res) => {
