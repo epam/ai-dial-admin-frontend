@@ -15,11 +15,7 @@ import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import {
-  getEntityFromFile,
-  getExportType,
-  getFileFromEntity,
-} from '@/src/components/EntityView/View/core-entity-utils';
+import { getExportType } from '@/src/components/EntityView/View/core-entity-utils';
 import { auditTabs, EntityViewTab, parameterSchemaTabs, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import ParameterSchema from '@/src/components/Interceptors/View/ParameterSchema/ParameterSchema';
 import { TabsI18nKey } from '@/src/constants/i18n';
@@ -71,7 +67,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, etag, 
     const name = originalInterceptor?.name;
     if (!coreInterceptor && name) {
       getCoreEntity(name, getExportType(ApplicationRoute.Interceptors)).then((data) => {
-        setCoreInterceptor(getEntityFromFile(ApplicationRoute.Interceptors, name, data) as DialInterceptor);
+        setCoreInterceptor(data);
       });
     }
   }, [coreInterceptor, originalInterceptor]);
@@ -152,7 +148,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, etag, 
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreEntity(getFileFromEntity(ApplicationRoute.Interceptors, selectedInterceptor))
+        ? updateCoreEntity(selectedInterceptor as Record<string, unknown>)
         : updateInterceptor(selectedInterceptor, etag);
 
     req.then((res) => {

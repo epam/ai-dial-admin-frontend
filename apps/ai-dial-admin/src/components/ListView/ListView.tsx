@@ -96,9 +96,7 @@ const ListView = <T extends object>({
           <GridWithColumnsPanel
             columnDefs={columnDefs}
             data={data}
-            additionalGridOptions={{
-              ...additionalGridOptions,
-            }}
+            additionalGridOptions={{ ...additionalGridOptions }}
             emptyDataTitle={emptyDataTitle}
             showColumnsPanel={showColumnsPanel}
             toggleColumnsPanel={toggleColumnsPanel}

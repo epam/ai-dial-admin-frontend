@@ -16,11 +16,7 @@ import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import {
-  getEntityFromFile,
-  getExportType,
-  getFileFromEntity,
-} from '@/src/components/EntityView/View/core-entity-utils';
+import { getExportType } from '@/src/components/EntityView/View/core-entity-utils';
 import {
   appRouteTab,
   auditTabs,
@@ -74,7 +70,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles }) => {
     const name = originalScheme?.$id;
     if (!coreRunner && name) {
       getCoreEntity(name, getExportType(ApplicationRoute.ApplicationRunners)).then((data) => {
-        setCoreRunner(getEntityFromFile(ApplicationRoute.ApplicationRunners, name, data) as DialApplicationScheme);
+        setCoreRunner(data);
       });
     }
   }, [coreRunner, originalScheme]);
@@ -131,7 +127,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles }) => {
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreEntity(getFileFromEntity(ApplicationRoute.ApplicationRunners, selectedRunner))
+        ? updateCoreEntity(selectedRunner as Record<string, unknown>)
         : updateApplicationScheme(selectedRunner, etag);
 
     req.then((res) => {
