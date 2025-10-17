@@ -1,33 +1,30 @@
 import { FC } from 'react';
 
-import classNames from 'classnames';
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import FolderList from '@/src/components/Common/FolderList/FolderList';
-import Popup from '@/src/components/Common/Popup/Popup';
 import FolderInfo from '@/src/components/FoldersStorage/FolderInfo';
 import { FoldersI18nKey } from '@/src/constants/i18n';
 import { useRuleFolder } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
-import { PopUpState } from '@/src/types/pop-up';
 
 interface Props {
   isLoading: boolean;
-  modalState: PopUpState;
+  isOpen: boolean;
   onClose: () => void;
 }
 
-const RulesStructure: FC<Props> = ({ isLoading, modalState, onClose }) => {
+const RulesStructure: FC<Props> = ({ isLoading, isOpen, onClose }) => {
   const t = useI18n();
 
-  const containerClassName = classNames('lg:max-w-[75%] md:max-w-[90%] h-[584px]');
   return (
-    <Popup
+    <DialPopup
       onClose={onClose}
-      heading={t(FoldersI18nKey.ReviewStructure)}
+      title={t(FoldersI18nKey.ReviewStructure)}
       portalId="RulesStructure"
-      state={modalState}
-      containerClassName={containerClassName}
+      open={isOpen}
+      cssClass="min-h-[200px]"
+      size={PopupSize.Lg}
     >
       {isLoading ? (
         <DialLoader size={50} />
@@ -43,8 +40,7 @@ const RulesStructure: FC<Props> = ({ isLoading, modalState, onClose }) => {
           </div>
         </div>
       )}
-      <></>
-    </Popup>
+    </DialPopup>
   );
 };
 

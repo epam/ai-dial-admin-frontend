@@ -35,8 +35,8 @@ const filtersConfiguration = [
 
 interface Props {
   originalToolset: Toolset;
-  selectedToolset: Toolset;
-  onChangeToolset: (toolset: Toolset) => void;
+  selectedToolset?: Toolset;
+  onChangeToolset?: (toolset: Toolset) => void;
 }
 
 const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset }) => {
@@ -50,34 +50,36 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
   const [availableTools, setAvailableTools] = useState<Tool[]>([]);
 
   const isNotSavedToolset = useMemo(() => {
-    return originalToolset.endpoint !== selectedToolset.endpoint;
+    return originalToolset.endpoint !== selectedToolset?.endpoint;
   }, [originalToolset, selectedToolset]);
 
   const toolsCount = useMemo(() => {
-    return uniq([...availableTools.map((t) => t.name), ...(selectedToolset.allowedTools || []).filter((t) => t !== '')])
-      .length;
-  }, [selectedToolset.allowedTools, availableTools]);
+    return uniq([
+      ...availableTools.map((t) => t.name),
+      ...(selectedToolset?.allowedTools || []).filter((t) => t !== ''),
+    ]).length;
+  }, [selectedToolset, availableTools]);
 
   const filteredTools = useMemo(() => {
     const patternLower = pattern.toLowerCase();
 
-    return getFilteredTools(selectedToolset.allowedTools || [], selectedFilters, availableTools).filter(
+    return getFilteredTools(selectedToolset?.allowedTools || [], selectedFilters, availableTools).filter(
       (tool) => tool.toLowerCase().includes(patternLower) && tool !== '',
     );
-  }, [pattern, selectedToolset.allowedTools, selectedFilters, availableTools]);
+  }, [pattern, selectedToolset?.allowedTools, selectedFilters, availableTools]);
 
   useEffect(() => {
-    if (selectedToolset.name) {
+    if (selectedToolset?.name) {
       setIsLoading(true);
-      getTools(selectedToolset.name).then((tools) => {
+      getTools(selectedToolset?.name).then((tools) => {
         setIsLoading(false);
         setAvailableTools(tools || []);
       });
     }
-  }, [selectedToolset.name, isNotSavedToolset, selectedToolset.endpoint]);
+  }, [selectedToolset?.name, isNotSavedToolset, selectedToolset?.endpoint]);
 
   useEffect(() => {
-    setUseAllTools(!selectedToolset.allowedTools || selectedToolset.allowedTools.length === 0);
+    setUseAllTools(!selectedToolset?.allowedTools || selectedToolset?.allowedTools.length === 0);
   }, [selectedToolset]);
 
   const onOpenModal = useCallback(() => {
@@ -90,9 +92,9 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
 
   const onAddTools = useCallback(
     (tools: string[]) => {
-      onChangeToolset({
+      onChangeToolset?.({
         ...selectedToolset,
-        allowedTools: [...(selectedToolset.allowedTools?.filter((t) => t !== '') || []), ...tools],
+        allowedTools: [...(selectedToolset?.allowedTools?.filter((t) => t !== '') || []), ...tools],
       });
     },
     [onChangeToolset, selectedToolset],
@@ -100,9 +102,9 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
 
   const onRemoveTool = useCallback(
     (tool: string) => {
-      onChangeToolset({
+      onChangeToolset?.({
         ...selectedToolset,
-        allowedTools: [...(selectedToolset.allowedTools?.filter((t) => t !== tool) || [])],
+        allowedTools: [...(selectedToolset?.allowedTools?.filter((t) => t !== tool) || [])],
       });
     },
     [onChangeToolset, selectedToolset],
@@ -130,14 +132,14 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
   const onChangeTools = useCallback(
     (value: boolean, tool: string) => {
       if (value) {
-        onChangeToolset({
+        onChangeToolset?.({
           ...selectedToolset,
-          allowedTools: [...(selectedToolset.allowedTools?.filter((t) => t !== '') || []), tool],
+          allowedTools: [...(selectedToolset?.allowedTools?.filter((t) => t !== '') || []), tool],
         });
       } else {
-        onChangeToolset({
+        onChangeToolset?.({
           ...selectedToolset,
-          allowedTools: selectedToolset.allowedTools?.filter((t) => t !== tool),
+          allowedTools: selectedToolset?.allowedTools?.filter((t) => t !== tool),
         });
       }
     },
@@ -156,17 +158,19 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
               {`: ${toolsCount}`}
             </h1>
 
-            <DialSwitch
-              switchId="useAllTools"
-              title={t(ToolsetI18nKey.UseAllTools)}
-              isOn={useAllTools}
-              onChange={(value) =>
-                onChangeToolset({
-                  ...selectedToolset,
-                  allowedTools: value ? [] : ['' /* to trigger validation error */],
-                })
-              }
-            />
+            {selectedToolset && (
+              <DialSwitch
+                switchId="useAllTools"
+                title={t(ToolsetI18nKey.UseAllTools)}
+                isOn={useAllTools}
+                onChange={(value) =>
+                  onChangeToolset?.({
+                    ...selectedToolset,
+                    allowedTools: value ? [] : ['' /* to trigger validation error */],
+                  })
+                }
+              />
+            )}
           </div>
           <div className="flex flex-row items-center mb-3 justify-between">
             <div className="w-[480px]">
@@ -181,12 +185,14 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
                   selectedFilters={selectedFilters}
                   onSelectFilter={onSelectFilter}
                 />
-                <DialButton
-                  variant={ButtonVariant.Primary}
-                  title={t(ButtonsI18nKey.Add)}
-                  iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-                  onClick={onOpenModal}
-                />
+                {selectedToolset && (
+                  <DialButton
+                    variant={ButtonVariant.Primary}
+                    title={t(ButtonsI18nKey.Add)}
+                    iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+                    onClick={onOpenModal}
+                  />
+                )}
               </div>
             )}
           </div>
@@ -199,8 +205,8 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
                   <ToolItem
                     key={tool}
                     tool={tool}
-                    onRemoveTool={onRemoveTool}
-                    isEnabled={selectedToolset.allowedTools?.includes(tool)}
+                    onRemoveTool={selectedToolset ? onRemoveTool : void 0}
+                    isEnabled={selectedToolset?.allowedTools?.includes(tool)}
                     isAddedManual={!availableTools.some((t) => t.name === tool)}
                     readonly={useAllTools || !availableTools.some((t) => t.name === tool)}
                     onChangeIsEnabled={(v) => onChangeTools(v, tool)}

@@ -2,12 +2,12 @@ import { ActionType } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
-import BasePublicationHeader from '../BasePublicationHeader';
+import PublicationHeader from '../Header';
 import { ButtonsI18nKey } from '../../../../constants/i18n';
 describe('BasePublicationHeader', () => {
   test('Should render approve and decline buttons', () => {
     render(
-      <BasePublicationHeader
+      <PublicationHeader
         onApprove={vi.fn()}
         onDecline={vi.fn()}
         route={ApplicationRoute.PromptPublications}
@@ -21,7 +21,7 @@ describe('BasePublicationHeader', () => {
   test('Should open and confirm approve modal', () => {
     const onApprove = vi.fn();
     render(
-      <BasePublicationHeader
+      <PublicationHeader
         onApprove={onApprove}
         onDecline={vi.fn()}
         route={ApplicationRoute.PromptPublications}
@@ -35,7 +35,7 @@ describe('BasePublicationHeader', () => {
   test('Should open and confirm decline modal with reason', () => {
     const onDecline = vi.fn();
     render(
-      <BasePublicationHeader
+      <PublicationHeader
         onApprove={vi.fn()}
         onDecline={onDecline}
         route={ApplicationRoute.PromptPublications}
@@ -48,7 +48,7 @@ describe('BasePublicationHeader', () => {
 
   test('Should render Unpublish button for REMOVE action', () => {
     render(
-      <BasePublicationHeader
+      <PublicationHeader
         onApprove={vi.fn()}
         onDecline={vi.fn()}
         route={ApplicationRoute.PromptPublications}

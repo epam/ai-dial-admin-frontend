@@ -21,7 +21,7 @@ interface Props {
   action: ActionType;
 }
 
-const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action }) => {
+const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action }) => {
   const t = useI18n() as (t: string) => string;
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
@@ -139,4 +139,4 @@ const BasePublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action 
   );
 };
 
-export default BasePublicationHeader;
+export default PublicationHeader;

@@ -13,12 +13,13 @@ import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
 
 interface Props {
   entity: Toolset;
-  onChange: (toolset: Toolset) => void;
+  onChange?: (toolset: Toolset) => void;
   prefix?: string;
   isModal?: boolean;
+  readonly?: boolean;
 }
 
-const ToolsetEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) => {
+const ToolsetEndpoint: FC<Props> = ({ entity, readonly, onChange, prefix, isModal }) => {
   const t = useI18n();
   const transportOptions: SelectOption[] = [
     { value: ToolsetTransport.HTTP, label: ToolsetTransport.HTTP.toUpperCase() },
@@ -29,6 +30,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) => {
     <div className={classNames('flex flex-col gap-6', !isModal && 'lg:w-[35%]')}>
       {prefix ? (
         <ComplexInput
+          readonly={readonly}
           elementId="endpoint"
           textBeforeInput={prefix}
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
@@ -37,7 +39,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) => {
           fullValue={`${prefix}${entity.source?.completionEndpointPath}`}
           copyable={true}
           onChange={(completionEndpointPath) =>
-            onChange({
+            onChange?.({
               ...entity,
               source: { ...entity.source, completionEndpointPath } as SOURCE_FIELD,
             })
@@ -45,11 +47,12 @@ const ToolsetEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) => {
         />
       ) : (
         <DialTextInputField
+          readonly={readonly}
           elementId="endpoint"
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
           value={entity.endpoint}
-          onChange={(endpoint) => onChange({ ...entity, endpoint })}
+          onChange={(endpoint) => onChange?.({ ...entity, endpoint })}
         />
       )}
       {!isModal && (
@@ -59,7 +62,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) => {
           containerCssClass="w-[180px]"
           value={entity.transport || ToolsetTransport.SSE}
           options={transportOptions}
-          onChange={(transport) => onChange({ ...entity, transport: transport as ToolsetTransport })}
+          onChange={(transport) => onChange?.({ ...entity, transport: transport as ToolsetTransport })}
         />
       )}
     </div>
