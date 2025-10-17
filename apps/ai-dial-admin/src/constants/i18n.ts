@@ -236,6 +236,7 @@ export enum ButtonsI18nKey {
   OpenAppRunner = 'Buttons.OpenAppRunner',
   None = 'Buttons.None',
   BulkActions = 'Buttons.BulkActions',
+  AddAdditionalProperties = 'Buttons.AddAdditionalProperties',
 }
 
 export enum UpdateI18nKey {
@@ -926,6 +927,7 @@ export enum EntityFieldsI18nKey {
   'prompt.maxAcceptedUsers' = 'EntityFields.promptMaxAcceptedUsers',
   'tool_set.invitationTtl' = 'EntityFields.tool_setInvitationTtl',
   'tool_set.maxAcceptedUsers' = 'EntityFields.tool_setMaxAcceptedUsers',
+  new_key = 'EntityFields.new_key',
 }
 
 export enum ToolsetI18nKey {
