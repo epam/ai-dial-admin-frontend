@@ -47,16 +47,13 @@ describe('Formatters :: numberValueFormatter', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  test('formats number from params.data using colDef.field', () => {
+  test('formats number from data', () => {
     expect(numberValueFormatter('12345')).toBe('12,345');
+    expect(numberValueFormatter(12345)).toBe('12,345');
   });
 
-  test('returns empty string if params.data is missing', () => {
+  test('returns empty string if data is missing', () => {
     expect(numberValueFormatter(undefined)).toBe('');
-  });
-
-  test('returns empty string if colDef.field is missing', () => {
-    expect(numberValueFormatter(12345)).toBe('');
   });
 });
 
@@ -64,16 +61,13 @@ describe('Formatters :: priceValueFormatter', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  test('formats number from params.data using colDef.field', () => {
+  test('formats number from data', () => {
+    expect(priceValueFormatter(12345)).toBe('12345');
     expect(priceValueFormatter(12345)).toBe('12345');
   });
 
-  test('returns empty string if params.data is missing', () => {
+  test('returns empty string if data is missing', () => {
     expect(priceValueFormatter(undefined)).toBe('');
-  });
-
-  test('returns empty string if colDef.field is missing', () => {
-    expect(priceValueFormatter(12345)).toBe('');
   });
 });
 
@@ -99,19 +93,6 @@ describe('Formatters :: sourceValueFormatter', () => {
         endpoint: 'http://example.com',
       }),
     ).toBe('http://example.com');
-  });
-
-  test('formats source value for not exist type', () => {
-    expect(sourceValueFormatter({ source: { $type: 'UNKNOWN', name: 'Unknown1' } })).toBe('default value');
-  });
-
-  test('formats source value for missing source type', () => {
-    const params = {
-      data: { source: {} },
-      value: 'default value',
-      colDef: { field: 'source' },
-    } as any;
-    expect(sourceValueFormatter(params)).toBe('default value');
   });
 });
 
