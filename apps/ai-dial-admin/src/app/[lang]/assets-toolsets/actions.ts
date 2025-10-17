@@ -13,6 +13,11 @@ export async function getToolsets(path: string) {
   return assetsApi.getAssetList(token, path, ResourceType.TOOLSET);
 }
 
+export async function createToolset(toolset: AssetToolset) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetsApi.createAsset(toolset, ResourceType.TOOLSET, token);
+}
+
 export async function getToolset(folderId: string, name: string, version: string, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const toolsets = await assetsApi.getAssetList(token, `${folderId}/`, ResourceType.TOOLSET);

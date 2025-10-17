@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
+import EntityProperties from '@/src/components/EntityMainProperties/Properties/EntityProperties';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import { DialRole } from '@/src/models/dial/role';
 import RoleCostLimit from './CostLimits';
@@ -21,7 +21,7 @@ const RoleProperties: FC<Props> = ({ selectedRole, names, isSkipRefresh, onChang
       <div className="lg:w-[35%] mt-3 w-full">
         <EntityHeader entity={selectedRole} />
         <div className="flex-1 min-h-0 pt-4">
-          <SimpleEntityProperties
+          <EntityProperties
             entity={selectedRole}
             onChangeEntity={onChangeRole}
             names={names}
