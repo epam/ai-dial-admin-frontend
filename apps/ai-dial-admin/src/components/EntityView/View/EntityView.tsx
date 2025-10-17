@@ -38,7 +38,7 @@ import {
 } from '@epam/ai-dial-shared';
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 import ViewContent from './Content/ViewContent';
-import { getEntityFromFile, getExportType, getFileFromEntity } from './core-entity-utils';
+import { getExportType, getFileFromEntity } from './core-entity-utils';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
@@ -91,7 +91,7 @@ const EntityView: FC<Props> = ({
     const name = (originalEntity as { name: string })?.name;
     if (!coreEntity && name) {
       getCoreEntity(name, getExportType(view)).then((data) => {
-        setCoreEntity(getEntityFromFile(view, name, data) as BaseEntity);
+        setCoreEntity(data);
       });
     }
   }, [coreEntity, originalEntity, view]);

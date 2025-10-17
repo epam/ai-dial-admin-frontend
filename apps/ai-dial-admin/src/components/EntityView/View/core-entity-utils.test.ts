@@ -1,49 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { getEntityFromFile, getExportType, getFileFromEntity } from './core-entity-utils';
+import { getExportType, getFileFromEntity } from './core-entity-utils';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityType } from '@/src/types/entity-type';
 
 const entity = { name: 'testEntity', value: 123 };
-const file = {
-  models: { testEntity: entity },
-  applications: { testEntity: entity },
-  toolsets: { testEntity: entity },
-  routes: { testEntity: entity },
-  roles: { testEntity: entity },
-  keys: { testEntity: entity },
-  applicationTypeSchemas: [entity],
-  interceptors: { testEntity: entity },
-} as any;
-
-describe('getEntityFromFile', () => {
-  it('returns entity from models', () => {
-    expect(getEntityFromFile(ApplicationRoute.Models, 'testEntity', file)).toBe(entity);
-  });
-  it('returns entity from applications', () => {
-    expect(getEntityFromFile(ApplicationRoute.Applications, 'testEntity', file)).toBe(entity);
-  });
-  it('returns entity from toolsets', () => {
-    expect(getEntityFromFile(ApplicationRoute.Toolsets, 'testEntity', file)).toBe(entity);
-  });
-  it('returns entity from routes', () => {
-    expect(getEntityFromFile(ApplicationRoute.Routes, 'testEntity', file)).toBe(entity);
-  });
-  it('returns entity from roles', () => {
-    expect(getEntityFromFile(ApplicationRoute.Roles, 'testEntity', file)).toBe(entity);
-  });
-  it('returns entity from keys', () => {
-    expect(getEntityFromFile(ApplicationRoute.Keys, 'testEntity', file)).toBe(entity);
-  });
-  it('returns entity from applicationTypeSchemas', () => {
-    expect(getEntityFromFile(ApplicationRoute.ApplicationRunners, 'testEntity', file)).toBe(entity);
-  });
-  it('returns entity from interceptors', () => {
-    expect(getEntityFromFile(ApplicationRoute.Interceptors, 'testEntity', file)).toBe(entity);
-  });
-  it('returns empty string for unknown route', () => {
-    expect(getEntityFromFile('unknown' as ApplicationRoute, 'testEntity', file)).toBe('');
-  });
-});
 
 describe('getFileFromEntity', () => {
   it('returns models record for Models route', () => {
