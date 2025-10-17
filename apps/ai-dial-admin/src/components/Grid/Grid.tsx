@@ -186,9 +186,6 @@ const Grid = <T extends object>({
           comparator: baseColumnComparator.bind(this),
           tooltipValueGetter: (p: ITooltipParams) => p.data?.[(p.colDef as ColDef)?.field || ''],
           tooltipComponent: tooltipRenderer,
-          onCellContextMenu: () => {
-            return <div>Valera</div>;
-          },
         }}
         onGridSizeChanged={onGridSizeChanged}
         onFilterChanged={onStateChanged}
