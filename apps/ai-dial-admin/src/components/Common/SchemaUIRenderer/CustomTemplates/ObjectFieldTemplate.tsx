@@ -24,7 +24,7 @@ export const ObjectFieldTemplate: FC<ObjectFieldTemplateProps> = (props) => {
         <DialButton
           variant={ButtonVariant.Tertiary}
           onClick={onAddClick(schema)}
-          title={`${t(ButtonsI18nKey.Add)} ${title}`}
+          title={t(ButtonsI18nKey.AddAdditionalProperties)}
           cssClass="w-fit mt-2"
           iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
         />
