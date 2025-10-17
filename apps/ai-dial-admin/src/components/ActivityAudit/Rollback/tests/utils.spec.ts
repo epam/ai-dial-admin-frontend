@@ -41,7 +41,7 @@ describe('getSystemRollbackColumns', () => {
 
   test('returns SIMPLE_ENTITY_COLUMNS for MODEL', () => {
     const cols = getSystemRollbackColumns(ActivityAuditResourceType.MODEL, t);
-    expect(cols.length).toEqual(17);
+    expect(cols.length).toEqual(18);
   });
 
   test('returns SIMPLE_ENTITY_COLUMNS for APPLICATION', () => {
