@@ -7,12 +7,10 @@ import CompletionEndpointControl from '@/src/components/EntityMainProperties/Bas
 import EditorUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/EditorUrl';
 import ViewerUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ViewerUrl';
 import AppRunners from '@/src/components/SourceField/Application/AppRunners';
-import { RUNNERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { ButtonsI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { ApplicationRoute } from '@/src/types/routes';
 import { SourceTypes } from './constants';
 
 interface Props {
@@ -93,7 +91,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
 
   return (
     <div className="h-full flex flex-col gap-6">
-      <div className="max-w-[180px]">
+      <div className="lg:w-[180px]">
         <DialSelectField
           value={sourceType?.value}
           elementId="sourceType"

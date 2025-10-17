@@ -84,28 +84,29 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
       />
     </div>
   ) : (
-    <div className={classNames('flex flex-row gap-2 items-start', 'w-full')}>
-      <div className={classNames('flex flex-col', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
-        <Field fieldTitle={t(EntitiesI18nKey.AppRunner)} htmlFor="sourceEntity" />
-        <DialInputPopup
-          emptyValueText={t(EntitiesI18nKey.NoApplicationRunners)}
-          open={isModalOpen}
-          onOpen={onOpenModal}
-          selectedValue={valueTitle}
-        >
-          <SelectAppRunnerModal
-            selectedId={selectedValue}
-            onApply={onChange}
-            isModalOpen={isModalOpen}
-            onClose={onCloseModal}
-            sourceEntities={runners}
-          />
-        </DialInputPopup>
+    <div className="flex flex-row gap-2 items-end w-full lg:w-[50%]">
+      <div className="flex-1 min-w-0">
+        <div className="w-full">
+          <Field fieldTitle={t(EntitiesI18nKey.AppRunner)} htmlFor="sourceEntity" />
+          <DialInputPopup
+            emptyValueText={t(EntitiesI18nKey.NoApplicationRunners)}
+            open={isModalOpen}
+            onOpen={onOpenModal}
+            selectedValue={valueTitle}
+          >
+            <SelectAppRunnerModal
+              selectedId={selectedValue}
+              onApply={onChange}
+              isModalOpen={isModalOpen}
+              onClose={onCloseModal}
+              sourceEntities={runners}
+            />
+          </DialInputPopup>
+        </div>
       </div>
       {selectedValue && (
         <DialButton
           variant={ButtonVariant.Secondary}
-          cssClass="mt-[22px]"
           title={t(ButtonsI18nKey.OpenAppRunner)}
           iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
           onClick={openInNewTab}

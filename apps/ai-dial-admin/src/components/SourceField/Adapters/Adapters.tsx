@@ -110,34 +110,38 @@ const Adapters = <T extends DialModel | DialInterceptor>({
             />
           </div>
         ) : (
-          <div className="flex flex-col lg:w-[35%]">
-            <Field fieldTitle={t(SourceI18nKey.Adapter)} htmlFor={'adapters'} />
-            <DialInputPopup
-              open={isModalOpen}
-              onOpen={onOpenModal}
-              selectedValue={selectedAdapter?.name}
-              elementId={'adapters'}
-              errorText={errorText}
-              emptyValueText={t(EntitiesI18nKey.NoAdapters)}
-            >
-              <SelectAdapterModal
-                selected={entity.source?.adapterName}
-                onClose={onCloseModal}
-                onApply={onSelect}
-                adapters={adapters}
-                isModalOpen={isModalOpen}
+          <div className="flex flex-row lg:w-[50%]">
+            <div className="flex-1 min-w-0">
+              <div className="w-full">
+                <Field fieldTitle={t(SourceI18nKey.Adapter)} htmlFor={'adapters'} />
+                <DialInputPopup
+                  open={isModalOpen}
+                  onOpen={onOpenModal}
+                  selectedValue={selectedAdapter?.name}
+                  elementId={'adapters'}
+                  errorText={errorText}
+                  emptyValueText={t(EntitiesI18nKey.NoAdapters)}
+                >
+                  <SelectAdapterModal
+                    selected={entity.source?.adapterName}
+                    onClose={onCloseModal}
+                    onApply={onSelect}
+                    adapters={adapters}
+                    isModalOpen={isModalOpen}
+                  />
+                </DialInputPopup>
+              </div>
+            </div>
+            {entity.source?.adapterName && (
+              <DialButton
+                iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
+                variant={ButtonVariant.Secondary}
+                cssClass={errorText ? 'self-center mt-[3px]' : 'self-end'}
+                title={t(SourceI18nKey.OpenAdapter)}
+                onClick={() => openAdapter()}
               />
-            </DialInputPopup>
+            )}
           </div>
-        )}
-        {entity.source?.adapterName && !isModal && (
-          <DialButton
-            iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
-            variant={ButtonVariant.Secondary}
-            cssClass={errorText ? 'self-center mt-[3px]' : 'self-end'}
-            title={t(SourceI18nKey.OpenAdapter)}
-            onClick={() => openAdapter()}
-          />
         )}
       </div>
       {entity.source?.adapterName && selectedAdapter && !isModal && (

@@ -7,7 +7,6 @@ import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 import { ApplicationRoute } from '@/src/types/routes';
 import { DialModel } from '@/src/models/dial/model';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { PopUpState } from '@/src/types/pop-up';
 import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -123,35 +122,39 @@ const Containers = <T extends DialInterceptor | DialModel>({
             />
           </div>
         ) : (
-          <div className="flex flex-col lg:w-[35%]">
-            <Field fieldTitle={t(SourceI18nKey.Container)} htmlFor={'containers'} />
-            <DialInputPopup
-              open={isModalOpen}
-              onOpen={onOpenModal}
-              selectedValue={selectedContainer?.name}
-              elementId={'containers'}
-              emptyValueText={t(EntitiesI18nKey.NoContainers)}
-              disabled={!deploymentsEnabled}
-              errorText={errorText}
-            >
-              <SelectContainerModal
-                selectedId={entity.source?.containerId}
-                onClose={onCloseModal}
-                onApply={onSelect}
-                interceptorContainers={containers}
-                isModalOpen={isModalOpen}
+          <div className="flex flex-col lg:w-[55%]">
+            <div className="flex-1 min-w-0">
+              <div className="w-full">
+                <Field fieldTitle={t(SourceI18nKey.Container)} htmlFor={'containers'} />
+                <DialInputPopup
+                  open={isModalOpen}
+                  onOpen={onOpenModal}
+                  selectedValue={selectedContainer?.name}
+                  elementId={'containers'}
+                  emptyValueText={t(EntitiesI18nKey.NoContainers)}
+                  disabled={!deploymentsEnabled}
+                  errorText={errorText}
+                >
+                  <SelectContainerModal
+                    selectedId={entity.source?.containerId}
+                    onClose={onCloseModal}
+                    onApply={onSelect}
+                    interceptorContainers={containers}
+                    isModalOpen={isModalOpen}
+                  />
+                </DialInputPopup>
+              </div>
+            </div>
+            {entity.source?.containerId && deploymentsEnabled && (
+              <DialButton
+                iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
+                cssClass={classNames(errorText ? 'self-center mt-[3px]' : 'self-end')}
+                title={t(SourceI18nKey.OpenContainer)}
+                variant={ButtonVariant.Secondary}
+                onClick={() => openContainer()}
               />
-            </DialInputPopup>
+            )}
           </div>
-        )}
-        {entity.source?.containerId && deploymentsEnabled && !isModal && (
-          <DialButton
-            iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
-            cssClass={classNames(errorText ? 'self-center mt-[3px]' : 'self-end')}
-            title={t(SourceI18nKey.OpenContainer)}
-            variant={ButtonVariant.Secondary}
-            onClick={() => openContainer()}
-          />
         )}
       </div>
       {entity.source?.containerId && selectedContainer && !isModal && (
