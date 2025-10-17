@@ -31,7 +31,9 @@ export const getEntityPath = (
     case ApplicationRoute.Files:
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets: {
-      const path = (data as DialPrompt).path || `${(data as DialPrompt).folderId}/${(data as DialPrompt).folderId}`;
+      const path =
+        (data as DialPrompt).path ||
+        `${(data as DialPrompt).folderId}${(data as DialPrompt).name}__${(data as DialPrompt).version}`;
       return forRemove
         ? decodeURIComponent((data as DialPrompt).path)
         : `${encodeURIComponent((data as DialPrompt).name as string)}?path=${encodeURIComponent(path)}`;
