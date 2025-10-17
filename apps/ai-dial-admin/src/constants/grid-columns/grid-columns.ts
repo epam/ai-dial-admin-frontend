@@ -129,7 +129,7 @@ const SOURCE_TYPE_COLUMN = (t: (key: string) => string, view?: ApplicationRoute)
   headerName: 'Source type',
   hide: false,
   valueFormatter: ({ value }) => sourceTypeFormatter(value, t, view),
-  filterValueGetter: (params) => sourceTypeFormatter(params.data[params.colDef.field || ''], t, view),
+  filterValueGetter: (params) => sourceTypeFormatter(params.data['source.$type'], t, view),
   tooltipValueGetter: ({ value }) => sourceTypeFormatter(value, t, view),
 });
 
