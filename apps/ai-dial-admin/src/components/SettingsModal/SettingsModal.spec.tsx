@@ -18,7 +18,7 @@ vi.mock('@/src/context/ThemeContext', () => ({
 
 describe('SettingsModal', () => {
   test('renders and allows theme selection and confirm', () => {
-    render(<SettingsModal modalState={PopUpState.Opened} onClose={mockOnClose} onConfirm={mockOnConfirm} />);
+    render(<SettingsModal isModalOpen={true} onClose={mockOnClose} onConfirm={mockOnConfirm} />);
 
     expect(screen.getByText(SettingsModalI18nKey.Settings)).toBeInTheDocument();
 

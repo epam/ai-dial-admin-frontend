@@ -10,7 +10,7 @@ import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { logError } from '@/src/server/logger';
 import Page403 from '@/src/components/Page403/Page403';
 import { ApplicationRoute } from '@/src/types/routes';
-import BasePublicationsList from '@/src/components/PublicationsList/PublicationsList';
+import PublicationsList from '@/src/components/Publications/List/List';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,5 +34,5 @@ export default async function Page() {
     logError(e, 'Failed to fetch file publications view data');
   }
 
-  return <BasePublicationsList data={data || []} route={ApplicationRoute.FilePublications} />;
+  return <PublicationsList data={data || []} route={ApplicationRoute.FilePublications} />;
 }

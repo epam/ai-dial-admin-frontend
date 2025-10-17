@@ -18,3 +18,14 @@ export interface DialApplicationResource extends BaseEntity {
   editorUrl: string;
   viewerUrl: string;
 }
+
+export interface DialToolsetResource extends BaseEntity {
+  descriptionKeywords: string[];
+  path: string;
+  folderId: string;
+  version: string;
+  author: string;
+  endpoint: string;
+  iconUrl: string;
+  maxRetryAttempts: number;
+}

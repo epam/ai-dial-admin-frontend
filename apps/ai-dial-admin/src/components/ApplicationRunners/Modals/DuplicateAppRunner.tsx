@@ -59,7 +59,11 @@ const DuplicateScheme: FC<Props> = ({ onDuplicate, isModalOpen, onClose, entity 
           entity={{ name: clonedEntity.$id }}
           onChangeEntity={(entity) => onChangeId(entity.name)}
         />
-        <DisplayNameControl displayName={clonedEntity['dial:applicationTypeDisplayName']} onChange={onChangeName} />
+        <DisplayNameControl
+          displayName={clonedEntity['dial:applicationTypeDisplayName']}
+          onChange={onChangeName}
+          required={true}
+        />
       </div>
     </DialFormPopup>
   );

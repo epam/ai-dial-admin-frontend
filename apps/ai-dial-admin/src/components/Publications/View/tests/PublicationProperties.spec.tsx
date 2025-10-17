@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import PublicationProperties from '../PublicationProperties';
+import PublicationProperties from '../Properties';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 

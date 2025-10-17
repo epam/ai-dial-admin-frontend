@@ -3,7 +3,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { redirect } from 'next/navigation';
 import { ApplicationRoute } from '@/src/types/routes';
-import PublicationView from '@/src/components/PublicationView/PublicationView';
+import PublicationView from '@/src/components/Publications/View/View';
 import { approvePublication, declinePublication } from '@/src/app/actions/publications';
 import { applicationRunnersApi, publicationsApi } from '@/src/app/api/api';
 import { Publication } from '@/src/models/dial/publications';
