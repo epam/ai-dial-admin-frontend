@@ -11,7 +11,7 @@ import { ActionType, ApplicationPublication, Publication } from '@/src/models/di
 import { removeTrailingSlash } from '@/src/utils/files/path';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getActionClass } from '@/src/utils/publications';
-import BasePublicationPermissions from './BasePublicationPermissions';
+import PublicationPermissions from './Permissions';
 
 interface Props {
   publication: Publication;
@@ -31,7 +31,7 @@ const BasePublicationProperties: FC<Props> = ({ publication, children, applicati
   const runner = applicationSchemes?.find((app) => app.$id === runnerId);
 
   return (
-    <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full" data-testid={'publication-header'}>
+    <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full">
       <div className="flex flex-col sm:flex-row gap-8">
         {!application && (
           <LabelledText label={t(EntitiesI18nKey.Action)}>
@@ -56,11 +56,11 @@ const BasePublicationProperties: FC<Props> = ({ publication, children, applicati
           text={removeTrailingSlash(decodeURIComponent(publication.folderId))}
         />
       </div>
-      <div className="flex-1 min-h-0 mt-8 pt-8 relative" data-testid={'publication-content'}>
+      <div className="flex-1 min-h-0 mt-8 pt-8 relative">
         <div className="flex flex-col gap-6 h-full overflow-auto">{children}</div>
       </div>
       <div className="mt-8 pt-8" id="publication-permissions">
-        <BasePublicationPermissions
+        <PublicationPermissions
           rules={publication.rules || []}
           folderId={decodeURIComponent(publication.folderId)}
           showCompare={publication.action === ActionType.ADD}

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 
 import { publicationsApi } from '@/src/app/api/api';
 import Page403 from '@/src/components/Page403/Page403';
-import BasePublicationsList from '@/src/components/PublicationsList/PublicationsList';
+import PublicationsList from '@/src/components/Publications/List/List';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { Publication } from '@/src/models/dial/publications';
 import { logError } from '@/src/server/logger';
@@ -35,5 +35,5 @@ export default async function Page() {
     logError(e, 'Failed to fetch application publications data');
   }
 
-  return <BasePublicationsList data={data || []} route={ApplicationRoute.ApplicationPublications} />;
+  return <PublicationsList data={data || []} route={ApplicationRoute.ApplicationPublications} />;
 }
