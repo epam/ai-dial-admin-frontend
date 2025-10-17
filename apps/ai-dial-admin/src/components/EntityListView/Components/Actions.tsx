@@ -31,6 +31,7 @@ import BulkButtons from './BulkButtons';
 import Modals, { ModalType } from './Modals';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 
 interface Props<T> {
   names?: string[];
@@ -108,7 +109,7 @@ const Actions = <T extends object>({
         if (res?.success) {
           handleModalClose();
           setCurrentEntity(void 0);
-          if (route === ApplicationRoute.Prompts) {
+          if (isAssetWithVersion(route)) {
             folderContext?.fetchFiles?.(folderContext?.filePath);
           }
           showNotification(
