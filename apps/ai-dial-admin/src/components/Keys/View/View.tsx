@@ -4,18 +4,24 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { ButtonVariant, DialButton, DialConfirmationPopup, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
-import { ButtonVariant, DialButton, DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
 
+import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
+import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 import { removeKey, updateKey } from '@/src/app/[lang]/keys/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import { getRelevantRolesForKey } from '@/src/components/AddEntitiesTab/utils';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import {
+  getEntityFromFile,
+  getExportType,
+  getFileFromEntity,
+} from '@/src/components/EntityView/View/core-entity-utils';
 import { auditTabs, EntityViewTab, propertiesTabs, rolesTabs } from '@/src/components/EntityView/View/utils';
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, KeysI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
@@ -26,22 +32,14 @@ import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { DialRole } from '@/src/models/dial/role';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { TabModel } from '@/src/models/tab';
+import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import KeyProperties from './Properties/Properties';
 import KeyRotateModal from '../Modals/KeyRotateModal';
 import KeyViewHeader from './Header/Header';
-import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
-import { ExportFormat } from '@/src/types/export';
-import {
-  getEntityFromFile,
-  getExportType,
-  getFileFromEntity,
-} from '@/src/components/EntityView/View/core-entity-utils';
-import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
-import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import KeyProperties from './Properties/Properties';
 
 interface Props {
   originalKey: DialKey;
@@ -197,7 +195,11 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
         <div className={headerClassName}>
-          <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
+          {!jsonEditorEnabled && (
+            <div className="flex-1 min-w-0">
+              <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+            </div>
+          )}
           <HeaderButtons
             view={ApplicationRoute.Keys}
             entity={selectedKey}

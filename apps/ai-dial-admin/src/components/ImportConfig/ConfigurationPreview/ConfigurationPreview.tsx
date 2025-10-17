@@ -2,11 +2,10 @@
 
 import { FC, useEffect, useRef, useState } from 'react';
 
+import { ButtonVariant, DialButton, DialLoader, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 import { IconDownload } from '@tabler/icons-react';
-import { ButtonVariant, DialButton, DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { previewJsonConfigs, previewZipConfig } from '@/src/app/[lang]/import-config/actions';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
 import ConfigurationGrid from '@/src/components/ImportConfig/ConfigurationPreview/ConfigurationGrid';
 import { getConfigurationPreview } from '@/src/components/ImportConfig/ConfigurationPreview/ConfigurationPreview.utils';
 import { ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
@@ -15,7 +14,6 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { FileConfiguration } from '@/src/models/import';
-import { TabModel } from '@/src/models/tab';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { EntityType } from '@/src/types/entity-type';
 import { ImportFileType } from '@/src/types/import';
@@ -81,7 +79,7 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
         ) : (
           <div className="flex flex-col h-full">
             <div className="mb-3">
-              <Tabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
+              <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
             </div>
             <ConfigurationGrid
               selectedTab={selectedTab as EntityType}

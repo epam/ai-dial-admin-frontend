@@ -5,10 +5,10 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
+import { DialTabs } from '@epam/ai-dial-ui-kit';
 
 import { getToolsets, moveToolsets, removeToolset, updateToolset } from '@/src/app/[lang]/assets-toolsets/actions';
 import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { EntityViewTab, propertiesTabs, toolsTabs } from '@/src/components/EntityView/View/utils';
@@ -136,7 +136,11 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={headerClassName}>
-        <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
+        {!jsonEditorEnabled && (
+          <div className="flex-1 min-w-0">
+            <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+          </div>
+        )}
         <HeaderButtons
           view={ApplicationRoute.AssetsToolsets}
           entity={selectedToolset}

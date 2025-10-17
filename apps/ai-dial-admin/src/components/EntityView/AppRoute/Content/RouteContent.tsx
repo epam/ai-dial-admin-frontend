@@ -1,7 +1,7 @@
 'use client';
 import { FC, useState } from 'react';
+import { DialTabs } from '@epam/ai-dial-ui-kit';
 
-import Tabs from '@/src/components/Common/Tabs/Tabs';
 import { attachmentsTabs, EntityViewTab, propertiesTabs, rolesTabs } from '@/src/components/EntityView/View/utils';
 import { useI18n } from '@/src/locales/client';
 import { DialAppRoute } from '@/src/models/dial/route';
@@ -29,7 +29,7 @@ const RouteContent: FC<Props> = ({ route, readonly, onChangeRoute, ...props }) =
   return (
     <div className="h-full w-full p-4 flex flex-col">
       <div className="mb-4">
-        <Tabs tabs={tabs} activeTab={activeTab} onClick={(tab) => setActiveTab(tab as EntityViewTab)} />
+        <DialTabs tabs={tabs} activeTab={activeTab} onClick={(tab) => setActiveTab(tab as EntityViewTab)} />
       </div>
 
       <div className="flex-1 min-h-0 overflow-auto mt-4 lg:mt-0">

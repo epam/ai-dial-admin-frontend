@@ -5,9 +5,9 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
+import { DialTabs } from '@epam/ai-dial-ui-kit';
 
 import { moveFiles, removeFile } from '@/src/app/[lang]/files/actions';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
@@ -80,7 +80,7 @@ const FileView: FC<Props> = ({ originalFile }) => {
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={headerClassName}>
-        <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={false} />
+        <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
         <HeaderButtons
           view={ApplicationRoute.Files}
           entity={selectedFile}

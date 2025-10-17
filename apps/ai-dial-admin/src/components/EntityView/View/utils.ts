@@ -1,5 +1,5 @@
 import { TabsI18nKey } from '@/src/constants/i18n';
-import { TabModel } from '@/src/models/tab';
+import { TabModel } from '@epam/ai-dial-ui-kit';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export enum EntityViewTab {
