@@ -1,8 +1,8 @@
 import { FC, useCallback, useMemo, useState } from 'react';
 
+import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
-import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
 import EditorUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/EditorUrl';
 import ViewerUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ViewerUrl';
@@ -12,9 +12,9 @@ import { ButtonsI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/sr
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ApplicationRoute } from '@/src/types/routes';
 import { SourceTypes } from './constants';
+
 interface Props {
   entity: DialApplication;
   runners?: DialApplicationScheme[];
@@ -24,20 +24,20 @@ interface Props {
 
 const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntityImmutable }) => {
   const t = useI18n() as (key: string) => string;
-  const sources: DropdownItemsModel[] = useMemo(
+  const sources: SelectOption[] = useMemo(
     () => [
       {
-        id: SourceTypes.ENDPOINTS,
-        name: t(EntitiesI18nKey.Endpoints),
+        value: SourceTypes.ENDPOINTS,
+        label: t(EntitiesI18nKey.Endpoints),
       },
       {
-        id: SourceTypes.APP_RUNNER,
-        name: t(EntitiesI18nKey.AppRunner),
+        value: SourceTypes.APP_RUNNER,
+        label: t(EntitiesI18nKey.AppRunner),
       },
     ],
     [t],
   );
-  const [sourceType, setSourceType] = useState<DropdownItemsModel | undefined>(
+  const [sourceType, setSourceType] = useState<SelectOption | undefined>(
     entity.endpoint || !entity.customAppSchemaId ? sources[0] : sources[1],
   );
   const { dispatch } = useSaveValidationContext();
@@ -51,13 +51,13 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
 
   const onChangeSource = useCallback(
     (value: string) => {
-      if (sourceType?.id !== value) {
+      if (sourceType?.value !== value) {
         // Reset validation states when changing source type
         dispatch({ type: ValidationActionType.SetField, field: 'endpoint', isValid: true });
         dispatch({ type: ValidationActionType.SetField, field: 'viewerUrl', isValid: true });
         dispatch({ type: ValidationActionType.SetField, field: 'editorUrl', isValid: true });
         dispatch({ type: ValidationActionType.SetField, field: 'completionEndpoint', isValid: true });
-        setSourceType(sources?.find((t) => t.id === value));
+        setSourceType(sources?.find((t) => t.value === value));
         onChangeEntity({
           ...entity,
           endpoint: void 0,
@@ -67,7 +67,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
         });
       }
     },
-    [entity, onChangeEntity, sourceType?.id, sources, dispatch],
+    [entity, onChangeEntity, sourceType?.value, sources, dispatch],
   );
 
   const onChangeViewerUrl = useCallback(
@@ -94,15 +94,15 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
   return (
     <div className="h-full flex flex-col gap-6">
       <div className="max-w-[180px]">
-        <DropdownField
-          selectedValue={sourceType?.id}
+        <DialSelectField
+          value={sourceType?.value}
           elementId="sourceType"
-          items={sources}
+          options={sources}
           fieldTitle={t(EntitiesI18nKey.SourceType)}
-          onChange={onChangeSource}
+          onChange={(source) => onChangeSource(source as string)}
         />
       </div>
-      {sourceType?.id === SourceTypes.ENDPOINTS && (
+      {sourceType?.value === SourceTypes.ENDPOINTS && (
         <div className={classNames('flex flex-col gap-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
           <CompletionEndpointControl required={true} endpoint={entity.endpoint} onChange={onChangeEndpoint} />
           {isEntityImmutable && (
@@ -113,7 +113,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
           )}
         </div>
       )}
-      {sourceType?.id === SourceTypes.APP_RUNNER && (
+      {sourceType?.value === SourceTypes.APP_RUNNER && (
         <div className={classNames('flex flex-row gap-6 items-start')}>
           <SourceEntitySelector
             buttonTitle={t(ButtonsI18nKey.OpenAppRunner)}

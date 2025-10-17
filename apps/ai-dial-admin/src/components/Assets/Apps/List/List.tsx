@@ -13,8 +13,11 @@ import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';
 import { filterNames } from '@/src/utils/entities/filter-names';
-
-const AppsList: FC = () => {
+import { DialApplicationScheme } from '@/src/models/dial/application';
+interface Props {
+  runners: DialApplicationScheme[];
+}
+const AppsList: FC<Props> = ({ runners }) => {
   const { data } = useAppsFolder();
   if (data == null) {
     return <Page403 />;
@@ -28,6 +31,7 @@ const AppsList: FC = () => {
     <BaseEntityList
       baseColumns={ASSETS_COLUMNS}
       names={names}
+      runners={runners}
       versionsMap={versionsMap}
       data={filteredData}
       route={ApplicationRoute.AssetsApplications}

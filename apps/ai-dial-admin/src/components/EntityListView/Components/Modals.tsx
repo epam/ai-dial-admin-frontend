@@ -16,6 +16,7 @@ import { ParsedPrompts } from '@/src/models/prompts';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
+import { Asset } from '@/src/models/dial/deployment-asset';
 
 export enum ModalType {
   create = 'create',
@@ -50,7 +51,7 @@ interface Props {
   handleMove?: (path: string) => void;
   handleDeleteBulk?: () => void;
   handleClose: () => void;
-  context?: () => AssetsFolderContext<DialFile>;
+  context?: () => AssetsFolderContext<Asset | DialFile>;
 }
 
 const Modals: FC<Props> = ({
