@@ -60,7 +60,7 @@ const DuplicateAdapter: FC<Props> = ({ onDuplicate, isModalOpen, onClose, adapte
       <div className="flex flex-col gap-3 px-6 py-4 ">
         <IdControl entity={entity} onChangeEntity={setEntity} />
 
-        <DisplayNameControl displayName={entity.displayName} onChange={onChangeDisplayName} />
+        <DisplayNameControl displayName={entity.displayName} onChange={onChangeDisplayName} required={true} />
 
         <EndpointControl
           id="baseEndpoint"

@@ -70,7 +70,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
         )}
         <div className="flex flex-col gap-6">
           <IdControl entity={clonedEntity} onChangeEntity={setEntity} names={names} />
-          <DisplayNameControl displayName={clonedEntity.displayName} onChange={onChangeDisplayName} />
+          <DisplayNameControl displayName={clonedEntity.displayName} onChange={onChangeDisplayName} required={true} />
 
           {view === ApplicationRoute.Models && (
             <VersionControl

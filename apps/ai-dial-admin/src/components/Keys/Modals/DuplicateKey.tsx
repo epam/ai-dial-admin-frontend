@@ -73,6 +73,7 @@ const DuplicateKey: FC<Props> = ({ onDuplicate, isModalOpen, onClose, entity, na
         <DisplayNameControl
           displayName={clonedEntity.displayName}
           onChange={(displayName?: string) => setEntity({ ...clonedEntity, displayName })}
+          required={true}
         />
 
         <KeyGenerateField keys={keys} selectedKey={clonedEntity} changeKey={onChangeKey} />
