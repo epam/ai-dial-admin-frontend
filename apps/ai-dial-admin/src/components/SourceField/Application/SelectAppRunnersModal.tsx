@@ -1,5 +1,4 @@
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
-import { ColDef } from 'ag-grid-community';
 import { FC, useState } from 'react';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
@@ -12,11 +11,9 @@ import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 
 interface Props {
-  title: string;
   selectedId?: string;
   sourceEntities?: DialApplicationScheme[];
   isModalOpen: boolean;
-  columns: ColDef[];
   onClose: () => void;
   onApply: (id?: string) => void;
 }

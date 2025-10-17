@@ -1,19 +1,12 @@
 'use client';
 
-import {
-  ButtonVariant,
-  DialButton,
-  DialErrorText,
-  DialInputPopup,
-  DialSelectField,
-  SelectOption,
-} from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialInputPopup, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import Field from '@/src/components/Common/Field/Field';
-import { ButtonsI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
@@ -36,10 +29,6 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [valueTitle, setValueTitle] = useState('');
 
-  const errorText = useMemo(() => {
-    return selectedValue ? '' : t(ErrorI18nKey.RequiredField);
-  }, [selectedValue, t]);
-
   const onOpenModal = useCallback(() => {
     setIsModalOpen(true);
   }, [setIsModalOpen]);
@@ -49,9 +38,9 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
   }, [setIsModalOpen]);
 
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'sourceEntitySelector', isValid: !errorText });
+    dispatch({ type: ValidationActionType.SetField, field: 'sourceEntitySelector', isValid: !!selectedValue });
     return () => dispatch({ type: ValidationActionType.SetField, field: 'sourceEntitySelector', isValid: true });
-  }, [errorText, t, dispatch]);
+  }, [selectedValue, t, dispatch]);
 
   const dropdownItems = useMemo(() => {
     return (
@@ -92,7 +81,6 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
         fieldTitle={EntitiesI18nKey.AppRunner}
         placeholder={t(EntityPlaceholdersI18nKey.SelectAppRunner)}
         onChange={(runner) => onChange(runner as string)}
-        error={errorText}
       />
     </div>
   ) : (
@@ -104,7 +92,6 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
           open={isModalOpen}
           onOpen={onOpenModal}
           selectedValue={valueTitle}
-          inputCssClasses={errorText && 'dial-input-error'}
         >
           <SelectAppRunnerModal
             selectedId={selectedValue}
@@ -114,7 +101,6 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
             sourceEntities={runners}
           />
         </DialInputPopup>
-        <DialErrorText errorText={errorText} />
       </div>
       {selectedValue && (
         <DialButton

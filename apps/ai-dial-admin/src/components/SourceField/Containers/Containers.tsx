@@ -131,7 +131,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
               selectedValue={selectedContainer?.name}
               elementId={'containers'}
               emptyValueText={t(EntitiesI18nKey.NoContainers)}
-              // readonly={!deploymentsEnabled}
+              disabled={!deploymentsEnabled}
               errorText={errorText}
             >
               <SelectContainerModal
