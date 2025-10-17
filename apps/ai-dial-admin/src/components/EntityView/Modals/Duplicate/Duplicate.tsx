@@ -10,7 +10,11 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
-import { duplicateModalDescriptionMap, getTitle } from './utils';
+import {
+  duplicateModalDescriptionMap,
+  getClonedEntityName,
+  getCloneTitle,
+} from '@/src/utils/entities/duplicate-entity';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 
 type ClonedEntity = BaseEntity | DialModel;
@@ -29,7 +33,9 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
   const { isValid, dispatch } = useSaveValidationContext();
 
   const [clonedEntity, setEntity] = useState<ClonedEntity>(
-    isSimple ? { ...entity, name: void 0 } : { ...entity, name: void 0, displayVersion: void 0, displayName: void 0 },
+    isSimple
+      ? { ...entity, name: getClonedEntityName(entity.name) }
+      : { ...entity, name: getClonedEntityName(entity.name), displayVersion: void 0, displayName: void 0 },
   );
 
   const onChangeVersion = useCallback(
@@ -55,7 +61,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(getTitle(view, t))}
+      title={t(getCloneTitle(view, t))}
       portalId="CloneEntity"
       open={isModalOpen}
       onSubmit={() => onDuplicate(clonedEntity)}

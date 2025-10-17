@@ -7,7 +7,6 @@ import VersionControl from '@/src/components/EntityMainProperties/BaseProperties
 import {
   BasicI18nKey,
   ButtonsI18nKey,
-  DuplicateI18nKey,
   EntityPlaceholdersI18nKey,
   FoldersI18nKey,
   PromptsI18nKey,
@@ -19,6 +18,8 @@ import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { DuplicationTypes } from '@/src/types/prompt';
 import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/prompts/versions';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
 
 interface Props {
   isModalOpen: boolean;
@@ -29,7 +30,7 @@ interface Props {
 }
 
 const DuplicatePrompt: FC<Props> = ({ isModalOpen, entity, versionsMap, onDuplicate, onClose }) => {
-  const t = useI18n();
+  const t = useI18n() as (t: string, props?: Record<string, string>) => string;
   const initialName = entity.name;
   const initialFolder = entity.folderId;
   const [duplicationType, setDuplicationType] = useState<string>(DuplicationTypes.VERSION);
@@ -41,6 +42,7 @@ const DuplicatePrompt: FC<Props> = ({ isModalOpen, entity, versionsMap, onDuplic
 
   const [clonedPrompt, setClonedPrompt] = useState<DialPrompt>({
     ...entity,
+    name: getClonedEntityName(entity.name),
     version: getInitialVersion(versionsMap, entity?.name),
   });
   const [isValid, setIsValid] = useState(false);
@@ -89,7 +91,7 @@ const DuplicatePrompt: FC<Props> = ({ isModalOpen, entity, versionsMap, onDuplic
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(DuplicateI18nKey.Prompt)}
+      title={t(getCloneTitle(ApplicationRoute.Prompts, t))}
       portalId="DuplicatePrompt"
       open={isModalOpen}
       onSubmit={() => onDuplicate(clonedPrompt)}

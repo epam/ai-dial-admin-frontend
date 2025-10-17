@@ -1,13 +1,14 @@
 import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useState } from 'react';
 
-import { ButtonsI18nKey, DuplicateI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
-import { InterceptorTemplate } from '@/src/models/interceptor-template';
-
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useI18n } from '@/src/locales/client';
+import { InterceptorTemplate } from '@/src/models/interceptor-template';
+import { getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   isModalOpen: boolean;
@@ -22,7 +23,7 @@ const DuplicateTemplate: FC<Props> = ({ onDuplicate, isModalOpen, onClose, templ
 
   const [clonedTemplate, setTemplate] = useState<InterceptorTemplate>({
     ...template,
-    name: `${template.name}_(copy)`,
+    name: getClonedEntityName(template.name),
   });
 
   // initial validation (disable save when no values entered yet)
@@ -34,7 +35,7 @@ const DuplicateTemplate: FC<Props> = ({ onDuplicate, isModalOpen, onClose, templ
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(DuplicateI18nKey.InterceptorTemplate)}
+      title={t(getCloneTitle(ApplicationRoute.InterceptorTemplates, t))}
       portalId="DuplicateTemplate"
       open={isModalOpen}
       onSubmit={() => onDuplicate(clonedTemplate)}
