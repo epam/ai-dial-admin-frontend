@@ -3,6 +3,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { ButtonVariant, DialButton, DialLoader } from '@epam/ai-dial-ui-kit';
+import { DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconRestore } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 
@@ -22,7 +23,6 @@ import { getSystemRollbackColumns } from '@/src/components/ActivityAudit/Rollbac
 import DiffLegend from '@/src/components/ActivityAudit/View/DiffReport/DiffLegend';
 import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
 import { mergeEntityMaps } from '@/src/components/ActivityAudit/View/utils/generate-diffs';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
 import { ActivityAuditI18nKey, MenuI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -170,7 +170,7 @@ const SystemRollback: FC = () => {
       </div>
       <div className="flex flex-col min-h-0 flex-1 relative">
         <div className="pt-6 pb-4">
-          <Tabs
+          <DialTabs
             tabs={tabs}
             activeTab={selectedTab}
             onClick={(tab) => setSelectedTab(tab as ActivityAuditResourceType)}

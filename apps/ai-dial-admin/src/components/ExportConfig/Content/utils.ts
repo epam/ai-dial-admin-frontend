@@ -3,7 +3,7 @@ import { MenuI18nKey } from '@/src/constants/i18n';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportDependenciesConfig } from '@/src/models/export';
-import { TabModel } from '@/src/models/tab';
+import { TabModel } from '@epam/ai-dial-ui-kit';
 import { ExportFormat, ExportType } from '@/src/types/export';
 import { EntityType } from '@/src/types/entity-type';
 

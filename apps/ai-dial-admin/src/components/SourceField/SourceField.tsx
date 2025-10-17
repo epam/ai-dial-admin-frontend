@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { DialSelect, SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -16,7 +16,6 @@ import { isValidSourceField } from '@/src/components/SourceField/utils';
 import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
 import { useI18n } from '@/src/locales/client';
 
-import Field from '@/src/components/Common/Field/Field';
 import Containers from '@/src/components/SourceField/Containers/Containers';
 import Templates from '@/src/components/SourceField/Template/Templates';
 import Adapters from '@/src/components/SourceField/Adapters/Adapters';
@@ -104,10 +103,15 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col w-[180px]">
-        <Field fieldTitle={fieldTitle} optional={optional} htmlFor={elementId} />
-        <DialSelect options={sourceItems} onChange={(v) => onChangeSource(v as string)} value={source} />
-      </div>
+      <DialSelectField
+        elementId={elementId}
+        containerCssClass="w-[180px]"
+        fieldTitle={fieldTitle}
+        optional={optional}
+        options={sourceItems}
+        onChange={(v) => onChangeSource(v as string)}
+        value={source}
+      />
 
       {source === SOURCE_TYPE.ENDPOINTS && (
         <Endpoints entity={entity} onChange={onChangeEntity} view={view} isModal={isModal} />
