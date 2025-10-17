@@ -1,10 +1,9 @@
 import { FC } from 'react';
 
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialRemoveButton } from '@epam/ai-dial-ui-kit';
 import type { ArrayFieldTemplateProps } from '@rjsf/utils';
 import { IconPlus } from '@tabler/icons-react';
 
-import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -23,7 +22,7 @@ export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({ canAdd, items,
             <li key={key} className="flex w-full gap-3 items-start lg:w-[45%]">
               <div className="flex w-full bg-layer-2 p-[18px]">{children}</div>
               {hasRemove && (
-                <RemoveButton
+                <DialRemoveButton
                   onClick={onDropIndexClick(key)}
                   iconClass="text-error"
                   cssClass="border rounded border-primary justify-start p-2"

@@ -27,9 +27,7 @@ const InterceptorEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) =
     (configurationEndpoint?: string) => {
       onChange({
         ...entity,
-        features: {
-          configurationEndpoint: configurationEndpoint,
-        } as DialFeatures,
+        features: { configurationEndpoint } as DialFeatures,
       });
     },
     [entity, onChange],

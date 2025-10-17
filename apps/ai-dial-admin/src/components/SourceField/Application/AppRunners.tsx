@@ -1,0 +1,132 @@
+'use client';
+
+import {
+  ButtonVariant,
+  DialButton,
+  DialErrorText,
+  DialInputPopup,
+  DialSelectField,
+  SelectOption,
+} from '@epam/ai-dial-ui-kit';
+import { IconExternalLink } from '@tabler/icons-react';
+import classNames from 'classnames';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+
+import Field from '@/src/components/Common/Field/Field';
+import { ButtonsI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useCurrentLocale, useI18n } from '@/src/locales/client';
+import { DialApplicationScheme } from '@/src/models/dial/application';
+import { ApplicationRoute } from '@/src/types/routes';
+import SelectAppRunnerModal from './SelectAppRunnersModal';
+
+interface Props {
+  selectedValue?: string;
+  runners?: DialApplicationScheme[];
+  isEntityImmutable?: boolean;
+  onChangeValue: (value?: string) => void;
+}
+
+const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntityImmutable = false }) => {
+  const t = useI18n();
+  const currentLocale = useCurrentLocale();
+  const { dispatch } = useSaveValidationContext();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [valueTitle, setValueTitle] = useState('');
+
+  const errorText = useMemo(() => {
+    return selectedValue ? '' : t(ErrorI18nKey.RequiredField);
+  }, [selectedValue, t]);
+
+  const onOpenModal = useCallback(() => {
+    setIsModalOpen(true);
+  }, [setIsModalOpen]);
+
+  const onCloseModal = useCallback(() => {
+    setIsModalOpen(false);
+  }, [setIsModalOpen]);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'sourceEntitySelector', isValid: !errorText });
+    return () => dispatch({ type: ValidationActionType.SetField, field: 'sourceEntitySelector', isValid: true });
+  }, [errorText, t, dispatch]);
+
+  const dropdownItems = useMemo(() => {
+    return (
+      runners?.map((entity) => ({
+        value: (entity as DialApplicationScheme).$id || '',
+        label: (entity as DialApplicationScheme)['dial:applicationTypeDisplayName'] || '',
+      })) || ([] as SelectOption[])
+    );
+  }, [runners]);
+
+  const onChange = useCallback(
+    (value?: string) => {
+      onChangeValue(value);
+
+      onCloseModal();
+    },
+    [onChangeValue, onCloseModal],
+  );
+
+  const openInNewTab = useCallback(() => {
+    window.open(
+      `/${currentLocale}${ApplicationRoute.ApplicationRunners}/${encodeURIComponent(`${selectedValue}`)}`,
+      '_blank',
+    );
+  }, [currentLocale, selectedValue]);
+
+  useEffect(() => {
+    setValueTitle(dropdownItems?.find((r) => r.value === selectedValue)?.label || '');
+  }, [selectedValue, dropdownItems]);
+
+  return !isEntityImmutable ? (
+    <div className="w-full">
+      <DialSelectField
+        value={selectedValue}
+        searchable={true}
+        elementId="sourceEntity"
+        options={dropdownItems}
+        fieldTitle={EntitiesI18nKey.AppRunner}
+        placeholder={t(EntityPlaceholdersI18nKey.SelectAppRunner)}
+        onChange={(runner) => onChange(runner as string)}
+        error={errorText}
+      />
+    </div>
+  ) : (
+    <div className={classNames('flex flex-row gap-2 items-start', 'w-full')}>
+      <div className={classNames('flex flex-col', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
+        <Field fieldTitle={t(EntitiesI18nKey.AppRunner)} htmlFor="sourceEntity" />
+        <DialInputPopup
+          emptyValueText={t(EntitiesI18nKey.NoApplicationRunners)}
+          open={isModalOpen}
+          onOpen={onOpenModal}
+          selectedValue={valueTitle}
+          inputCssClasses={errorText && 'dial-input-error'}
+        >
+          <SelectAppRunnerModal
+            selectedId={selectedValue}
+            onApply={onChange}
+            isModalOpen={isModalOpen}
+            onClose={onCloseModal}
+            sourceEntities={runners}
+          />
+        </DialInputPopup>
+        <DialErrorText errorText={errorText} />
+      </div>
+      {selectedValue && (
+        <DialButton
+          variant={ButtonVariant.Secondary}
+          cssClass="mt-[22px]"
+          title={t(ButtonsI18nKey.OpenAppRunner)}
+          iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
+          onClick={openInNewTab}
+        />
+      )}
+    </div>
+  );
+};
+
+export default AppRunners;

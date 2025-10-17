@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialInputPopup, DialSelectField } from '@epam/ai-dial-ui-kit';
 
-import { PopUpState } from '@/src/types/pop-up';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ApplicationRoute } from '@/src/types/routes';
 import { DialModel } from '@/src/models/dial/model';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { CreateI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { getErrorNotification } from '@/src/utils/notification';
 import { useNotification } from '@/src/context/NotificationContext';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
@@ -17,11 +16,9 @@ import { useI18n } from '@/src/locales/client';
 import { IconExternalLink } from '@tabler/icons-react';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
-import InputModal from '@/src/components/Common/InputModal/InputModal';
 import SelectAdapterModal from '@/src/components/SourceField/Adapters/SelectAdapterModal';
 import Field from '@/src/components/Common/Field/Field';
 import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
-import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
 
 interface Props<T> {
@@ -43,17 +40,17 @@ const Adapters = <T extends DialModel | DialInterceptor>({
   const { showNotification } = useNotification();
   const showNotificationRef = useRef(showNotification);
 
-  const [modalState, setModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [adapters, setAdapters] = useState<DialAdapter[]>([]);
   const [selectedAdapter, setSelectedAdapter] = useState<DialAdapter | null>(null);
 
   const onOpenModal = useCallback(() => {
-    setModalState(PopUpState.Opened);
-  }, [setModalState]);
+    setIsModalOpen(true);
+  }, [setIsModalOpen]);
 
   const onCloseModal = useCallback(() => {
-    setModalState(PopUpState.Closed);
-  }, [setModalState]);
+    setIsModalOpen(false);
+  }, [setIsModalOpen]);
 
   const onSelect = useCallback(
     (name?: string) => {
@@ -98,15 +95,16 @@ const Adapters = <T extends DialModel | DialInterceptor>({
     <div className="flex flex-col gap-6">
       <div className="flex lg:flex-row flex-col gap-2">
         {isModal ? (
-          <div className="flex flex-col w-full">
-            <DropdownField
-              items={adapters.map((adapter) => ({
-                id: adapter.name as string,
-                name: adapter.displayName || adapter.name || '',
+          <div className="w-full">
+            <DialSelectField
+              searchable={true}
+              options={adapters.map((adapter) => ({
+                value: adapter.name as string,
+                label: adapter.displayName || adapter.name || '',
               }))}
-              onChange={onSelect}
+              onChange={(adapter) => onSelect(adapter as string)}
               elementId={'source-type'}
-              selectedValue={adapters.find((adapter) => adapter.name === entity.source?.adapterName)?.name}
+              value={adapters.find((adapter) => adapter.name === entity.source?.adapterName)?.name}
               placeholder={t(CreateI18nKey.SelectAdapter)}
               fieldTitle={t(EntityFieldsI18nKey.adapter)}
             />
@@ -114,21 +112,22 @@ const Adapters = <T extends DialModel | DialInterceptor>({
         ) : (
           <div className="flex flex-col lg:w-[35%]">
             <Field fieldTitle={t(SourceI18nKey.Adapter)} htmlFor={'adapters'} />
-            <InputModal
-              modalState={modalState}
-              onOpenModal={onOpenModal}
+            <DialInputPopup
+              open={isModalOpen}
+              onOpen={onOpenModal}
               selectedValue={selectedAdapter?.name}
               elementId={'adapters'}
               errorText={errorText}
+              emptyValueText={t(EntitiesI18nKey.NoAdapters)}
             >
               <SelectAdapterModal
                 selected={entity.source?.adapterName}
                 onClose={onCloseModal}
                 onApply={onSelect}
                 adapters={adapters}
-                modalState={modalState}
+                isModalOpen={isModalOpen}
               />
-            </InputModal>
+            </DialInputPopup>
           </div>
         )}
         {entity.source?.adapterName && !isModal && (

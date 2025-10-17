@@ -27,7 +27,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, readonly, onChange, prefix, isModa
   ];
 
   return (
-    <div className={classNames('flex flex-col gap-6', !isModal && 'lg:w-[35%]')}>
+    <div className={classNames('flex flex-col gap-6')}>
       {prefix ? (
         <ComplexInput
           readonly={readonly}
@@ -59,6 +59,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, readonly, onChange, prefix, isModa
         <DialSelectField
           fieldTitle={t(EntityFieldsI18nKey.transport)}
           elementId="transport"
+          readonly={readonly}
           containerCssClass="w-[180px]"
           value={entity.transport || ToolsetTransport.SSE}
           options={transportOptions}

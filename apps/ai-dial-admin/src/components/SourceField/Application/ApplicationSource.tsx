@@ -6,7 +6,7 @@ import classNames from 'classnames';
 import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
 import EditorUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/EditorUrl';
 import ViewerUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ViewerUrl';
-import SourceEntitySelector from '@/src/components/EntityMainProperties/SourceEntitySelector/SourceEntitySelector';
+import AppRunners from '@/src/components/SourceField/Application/AppRunners';
 import { RUNNERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -115,14 +115,9 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
       )}
       {sourceType?.value === SourceTypes.APP_RUNNER && (
         <div className={classNames('flex flex-row gap-6 items-start')}>
-          <SourceEntitySelector
-            buttonTitle={t(ButtonsI18nKey.OpenAppRunner)}
-            columns={RUNNERS_COLUMNS}
-            fieldTitle={t(EntitiesI18nKey.AppRunner)}
-            placeholder={t(EntityPlaceholdersI18nKey.SelectAppRunner)}
+          <AppRunners
             selectedValue={entity.customAppSchemaId}
-            sourceEntities={runners}
-            route={ApplicationRoute.ApplicationRunners}
+            runners={runners}
             isEntityImmutable={isEntityImmutable}
             onChangeValue={onChangeAppRunner}
           />

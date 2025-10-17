@@ -3,7 +3,7 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
 import classNames from 'classnames';
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialRemoveButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import TagInput from '@/src/components/Common/TagInput/TagInput';
@@ -12,7 +12,6 @@ import { useI18n } from '@/src/locales/client';
 import { DialRule, RuleFunction } from '@/src/models/dial/rule';
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { getAttributeItems, getOperationItems } from '@/src/components/Rules/utils';
-import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 interface Props {
   rule: DialRule;
@@ -149,7 +148,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
             />
           )}
         </div>
-        <RemoveButton onClick={onRemoveValue} cssClass={iconClass} />
+        <DialRemoveButton onClick={onRemoveValue} cssClass={iconClass} />
       </div>
     </>
   );

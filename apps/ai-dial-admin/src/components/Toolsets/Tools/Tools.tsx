@@ -216,7 +216,9 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
             )}
           </div>
           {!useAllTools && <span className="tiny text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
-          {isNotSavedToolset && <DialAlert variant={AlertVariant.Info} message={t(ToolsetI18nKey.ToolsWarning)} />}
+          {isNotSavedToolset && !selectedToolset && (
+            <DialAlert variant={AlertVariant.Info} message={t(ToolsetI18nKey.ToolsWarning)} />
+          )}
         </div>
       )}
       {modalState === PopUpState.Opened && (
