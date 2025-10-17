@@ -47,28 +47,13 @@ describe('Formatters :: numberValueFormatter', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  test('formats number from params.data using colDef.field', () => {
-    const params = {
-      data: { amount: 12345 },
-      colDef: { field: 'amount' },
-    } as any;
-    expect(numberValueFormatter(params)).toBe('12,345');
+  test('formats number from data', () => {
+    expect(numberValueFormatter('12345')).toBe('12,345');
+    expect(numberValueFormatter(12345)).toBe('12,345');
   });
 
-  test('returns empty string if params.data is missing', () => {
-    const params = {
-      data: undefined,
-      colDef: { field: 'amount' },
-    } as any;
-    expect(numberValueFormatter(params)).toBe('');
-  });
-
-  test('returns empty string if colDef.field is missing', () => {
-    const params = {
-      data: { amount: 12345 },
-      colDef: {},
-    } as any;
-    expect(numberValueFormatter(params)).toBe('');
+  test('returns empty string if data is missing', () => {
+    expect(numberValueFormatter(undefined)).toBe('');
   });
 });
 
@@ -76,80 +61,38 @@ describe('Formatters :: priceValueFormatter', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  test('formats number from params.data using colDef.field', () => {
-    const params = {
-      data: { price: 12345 },
-      colDef: { field: 'price' },
-    } as any;
-    expect(priceValueFormatter(params)).toBe('12345');
+  test('formats number from data', () => {
+    expect(priceValueFormatter(12345)).toBe('12345');
+    expect(priceValueFormatter(12345)).toBe('12345');
   });
 
-  test('returns empty string if params.data is missing', () => {
-    const params = {
-      data: undefined,
-      colDef: { field: 'price' },
-    } as any;
-    expect(priceValueFormatter(params)).toBe('');
-  });
-
-  test('returns empty string if colDef.field is missing', () => {
-    const params = {
-      data: { amount: 12345 },
-      colDef: {},
-    } as any;
-    expect(priceValueFormatter(params)).toBe('');
+  test('returns empty string if data is missing', () => {
+    expect(priceValueFormatter(undefined)).toBe('');
   });
 });
 
 describe('Formatters :: sourceValueFormatter', () => {
   test('formats source value for ADAPTER type', () => {
-    const params = {
-      data: { source: { $type: SOURCE_TYPE.ADAPTER, adapterName: 'Adapter1' } },
-      colDef: { field: 'source' },
-    } as any;
-    expect(sourceValueFormatter(params)).toBe('Adapter1');
+    expect(sourceValueFormatter({ source: { $type: SOURCE_TYPE.ADAPTER, adapterName: 'Adapter1' } })).toBe('Adapter1');
   });
 
   test('formats source value for CONTAINER type', () => {
-    const params = {
-      data: { source: { $type: SOURCE_TYPE.CONTAINER, containerId: 'Container1' } },
-      colDef: { field: 'source' },
-    } as any;
-    expect(sourceValueFormatter(params)).toBe('Container1');
+    expect(sourceValueFormatter({ source: { $type: SOURCE_TYPE.CONTAINER, containerId: 'Container1' } })).toBe(
+      'Container1',
+    );
   });
 
   test('formats source value for RUNNER type', () => {
-    const params = {
-      data: { source: { $type: SOURCE_TYPE.RUNNER, runnerName: 'Runner1' } },
-      colDef: { field: 'source' },
-    } as any;
-    expect(sourceValueFormatter(params)).toBe('Runner1');
+    expect(sourceValueFormatter({ source: { $type: SOURCE_TYPE.RUNNER, runnerName: 'Runner1' } })).toBe('Runner1');
   });
 
   test('formats source value for ENDPOINT type', () => {
-    const params = {
-      data: { source: { $type: SOURCE_TYPE.ENDPOINTS, runnerName: 'Runner1' }, endpoint: 'http://example.com' },
-      colDef: { field: 'source' },
-    } as any;
-    expect(sourceValueFormatter(params)).toBe('http://example.com');
-  });
-
-  test('formats source value for not exist type', () => {
-    const params = {
-      data: { source: { $type: 'UNKNOWN', name: 'Unknown1' } },
-      value: 'default value',
-      colDef: { field: 'source' },
-    } as any;
-    expect(sourceValueFormatter(params)).toBe('default value');
-  });
-
-  test('formats source value for missing source type', () => {
-    const params = {
-      data: { source: {} },
-      value: 'default value',
-      colDef: { field: 'source' },
-    } as any;
-    expect(sourceValueFormatter(params)).toBe('default value');
+    expect(
+      sourceValueFormatter({
+        source: { $type: SOURCE_TYPE.ENDPOINTS, runnerName: 'Runner1' },
+        endpoint: 'http://example.com',
+      }),
+    ).toBe('http://example.com');
   });
 });
 
