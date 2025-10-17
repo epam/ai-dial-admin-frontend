@@ -164,6 +164,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
         onClose={handleModalClose}
         names={names || []}
         versionsMap={versionsMap}
+        context={context}
       />
     );
   };

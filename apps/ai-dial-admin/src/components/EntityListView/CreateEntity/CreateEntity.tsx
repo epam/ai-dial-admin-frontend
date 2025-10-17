@@ -5,7 +5,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import { isValidSourceField } from '@/src/components/SourceField/utils';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -25,6 +24,8 @@ import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import Properties from '@/src/components/EntityMainProperties/Properties/Properties';
 import { RoutesForCheckingUniqueName } from './constants';
 import { isAssetView } from '@/src/utils/is-asset-view';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { Asset } from '@/src/models/dial/deployment-asset';
 
 interface CreatePromptEntity extends BaseEntity {
   version?: string;
@@ -38,6 +39,7 @@ interface Props<T> {
   runners?: DialApplicationScheme[];
   versionsMap?: Record<string, string[]>;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
+  context?: () => AssetsFolderContext<Asset>;
   onClose: () => void;
   initialValues?: Partial<T>;
 }
@@ -51,10 +53,11 @@ const CreateEntity = <T extends CreatePromptEntity>({
   onClose,
   createEntity,
   initialValues,
+  context,
 }: Props<T>) => {
   const t = useI18n() as (str: string, props?: Record<string, string>) => string;
   const router = useRouter();
-  const { filePath, fetchFiles } = usePromptFolder();
+  const folderContext = context?.();
   const { isValid, dispatch } = useSaveValidationContext();
 
   const { showNotification } = useNotification();
@@ -86,12 +89,12 @@ const CreateEntity = <T extends CreatePromptEntity>({
     if (!isUnique) return;
 
     if (isAssetView(route)) {
-      entity.folderId = filePath;
+      entity.folderId = folderContext?.filePath;
     }
     createEntity?.(entity).then((res) => {
       if (res.success) {
         if (isAssetView(route)) {
-          fetchFiles(filePath);
+          folderContext?.fetchFiles(folderContext?.filePath);
         }
         showNotification(
           getSuccessNotification(
@@ -106,7 +109,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [currentEntity, route, createEntity, filePath, showNotification, t, router, initialValues, onClose, fetchFiles]);
+  }, [currentEntity, route, createEntity, folderContext, showNotification, t, router, initialValues, onClose]);
 
   useEffect(() => {
     setIsUniqueNameError(void 0);
