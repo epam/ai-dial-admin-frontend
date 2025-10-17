@@ -1,9 +1,9 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useMemo } from 'react';
+import { DialSelectField } from '@epam/ai-dial-ui-kit';
 
 import { getApp } from '@/src/app/[lang]/assets-applications/actions';
 import { getToolset } from '@/src/app/[lang]/assets-toolsets/actions';
-import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
@@ -37,7 +37,7 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, onChange }
   const { showNotification } = useNotification();
 
   const items = useMemo(() => {
-    return assets.map((asset) => ({ id: asset.version, name: asset.version }));
+    return assets.map((asset) => ({ value: asset.version, label: asset.version }));
   }, [assets]);
 
   const onChangeVersion = useCallback(
@@ -74,13 +74,12 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, onChange }
       <div className="flex flex-col gap-y-6">
         <div className="flex items-end gap-4">
           <div className="w-[105px]">
-            <DropdownField
-              elementCssClass="lg:w-[35%]"
-              selectedValue={asset.version}
+            <DialSelectField
+              value={asset.version}
               elementId="version"
-              items={items}
+              options={items}
               fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
-              onChange={onChangeVersion}
+              onChange={(version) => onChangeVersion(version as string)}
             />
           </div>
         </div>

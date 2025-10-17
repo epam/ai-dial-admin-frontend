@@ -2,7 +2,6 @@
 
 import { ButtonVariant, DialButton, DialInputPopup, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
-import classNames from 'classnames';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import Field from '@/src/components/Common/Field/Field';

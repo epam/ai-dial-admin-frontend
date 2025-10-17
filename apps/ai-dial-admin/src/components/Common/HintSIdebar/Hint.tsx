@@ -1,9 +1,9 @@
 'use client';
 
 import { FC } from 'react';
+import { DialCloseButton } from '@epam/ai-dial-ui-kit';
 
 import { useAppContext } from '@/src/context/AppContext';
-import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
 
 interface Props {
   title: string;
@@ -17,7 +17,7 @@ const Hint: FC<Props> = ({ title, text }) => {
     <div className="flex flex-col w-full gap-6">
       <div className="flex items-center justify-between">
         <h3 className="text-primary overflow-ellipsis">{title}</h3>
-        <CloseButton onClose={closeHintSidebar} />
+        <DialCloseButton onClose={closeHintSidebar} />
       </div>
       <div className="overflow-y-scroll">
         <p className="small text-primary">{text}</p>

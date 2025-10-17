@@ -1,7 +1,6 @@
 'use client';
 
 import { FC } from 'react';
-import classNames from 'classnames';
 import { DialSelectField, DialTextInputField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';

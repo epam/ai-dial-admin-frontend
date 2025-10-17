@@ -4,7 +4,6 @@ import { DialInputProps, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
-import classNames from 'classnames';
 
 interface Props extends DialInputProps {
   fieldTitle: string;
