@@ -1,10 +1,9 @@
 import { FC, useCallback } from 'react';
 
+import { DialButton, DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
-import { DialButton, DialTooltip } from '@epam/ai-dial-ui-kit';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
@@ -35,9 +34,7 @@ const DeploymentAssetHeader: FC<Props> = ({ asset }) => {
       {(asset as AssetApp).applicationTypeSchemaId && (
         <LabelledText label={t(EntitiesI18nKey.Runner)}>
           <div className="flex flex-row gap-1 items-center max-w-[400px]">
-            <DialTooltip tooltip={(asset as AssetApp).applicationTypeSchemaId}>
-              {(asset as AssetApp).applicationTypeSchemaId}
-            </DialTooltip>
+            <DialEllipsisTooltip text={(asset as AssetApp).applicationTypeSchemaId} />
             <DialButton
               onClick={() =>
                 onOpenInNewTab(ApplicationRoute.ApplicationRunners, {
@@ -55,7 +52,7 @@ const DeploymentAssetHeader: FC<Props> = ({ asset }) => {
       <LabelledText label={t(EntityFieldsI18nKey.updatedAt)} text={formatDateTimeToLocalString(asset.updateTime)} />
       <LabelledText label={t(EntitiesI18nKey.FolderStorage)}>
         <div className="flex flex-row gap-1 items-center">
-          <Tooltip tooltip={asset.folderId}>{removeTrailingSlash(asset.folderId)}</Tooltip>
+          <DialEllipsisTooltip text={removeTrailingSlash(asset.folderId)} />
           <DialButton
             onClick={() => openFolderStorageInNewTab(asset.folderId)}
             cssClass="text-secondary"

@@ -6,7 +6,7 @@ import { PopUpState } from '@/src/types/pop-up';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { useI18n } from '@/src/locales/client';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
-import { SOURCE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 import Grid from '@/src/components/Grid/Grid';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
@@ -35,7 +35,7 @@ const SelectAdapterModal: FC<Props> = ({ selected, adapters, modalState, onClose
     >
       <div className="flex flex-col px-6 py-4 flex-1 min-h-0">
         <Grid
-          columnDefs={SOURCE_COLUMNS}
+          columnDefs={BASE_COLUMNS}
           additionalGridOptions={{
             rowSelection: { mode: 'singleRow', enableClickSelection: true },
             selectionColumnDef: {
@@ -54,7 +54,7 @@ const SelectAdapterModal: FC<Props> = ({ selected, adapters, modalState, onClose
             },
             onGridReady: (event) => {
               event.api?.updateGridOptions({
-                columnDefs: SOURCE_COLUMNS,
+                columnDefs: BASE_COLUMNS,
                 rowData: adapters,
               });
               event.api.forEachNode((node) => {
