@@ -1,32 +1,30 @@
 import { FC } from 'react';
 
-import classNames from 'classnames';
+import { DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
-import Popup from '@/src/components/Common/Popup/Popup';
 import RulesItem from '@/src/components/Rules/Item/RulesItem';
 import { FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRule } from '@/src/models/dial/rule';
-import { PopUpState } from '@/src/types/pop-up';
 
 interface Props {
   rules: DialRule[];
   compareRules: DialRule[];
-  modalState: PopUpState;
+  isOpen: boolean;
   onClose: () => void;
 }
 
-const RulesCompare: FC<Props> = ({ rules, compareRules, modalState, onClose }) => {
+const RulesCompare: FC<Props> = ({ rules, compareRules, isOpen, onClose }) => {
   const t = useI18n();
-  const containerClassName = classNames('lg:max-w-[75%] md:max-w-[90%] min-h-[200px]');
 
   return (
-    <Popup
+    <DialPopup
       onClose={onClose}
-      heading={t(FoldersI18nKey.ComparePermissions)}
+      title={t(FoldersI18nKey.ComparePermissions)}
       portalId="RulesCompare"
-      state={modalState}
-      containerClassName={containerClassName}
+      open={isOpen}
+      cssClass="min-h-[200px]"
+      size={PopupSize.Lg}
     >
       <div className="flex flex-1 flex-row px-6 min-h-0 divide-tertiary divide-x">
         <RulesItem
@@ -44,8 +42,7 @@ const RulesCompare: FC<Props> = ({ rules, compareRules, modalState, onClose }) =
           isAlwaysToggled={true}
         />
       </div>
-      <></>
-    </Popup>
+    </DialPopup>
   );
 };
 

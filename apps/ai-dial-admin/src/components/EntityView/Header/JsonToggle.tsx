@@ -60,8 +60,8 @@ const JsonToggles: FC<Props> = ({ view, jsonEditorEnabled, selectedFormat, setSe
   }, [isTablet, isMobile]);
 
   return (
-    <div className={editorClassNames}>
-      {jsonEditorEnabled && !ONLY_ADMIN_ENTITIES.includes(view) && (
+    <div className={classNames(editorClassNames)}>
+      {jsonEditorEnabled && !ONLY_ADMIN_ENTITIES.includes(view) ? (
         <Dropdown
           selectedValue={selectedFormat == ExportFormat.CORE ? items[0] : items[1]}
           selectedClassName="bg-layer-4 cursor-pointer h-[22px] px-1 small rounded flex items-center justify-center"
@@ -75,7 +75,7 @@ const JsonToggles: FC<Props> = ({ view, jsonEditorEnabled, selectedFormat, setSe
             />
           ))}
         </Dropdown>
-      )}
+      ) : null}
       <DialSwitch
         isOn={jsonEditorEnabled}
         title={t(EntitiesI18nKey.JSONEditor)}

@@ -1,5 +1,5 @@
 import { TabsI18nKey } from '@/src/constants/i18n';
-import { TabModel } from '@/src/models/tab';
+import { TabModel } from '@epam/ai-dial-ui-kit';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export enum EntityViewTab {
@@ -22,6 +22,7 @@ export enum EntityViewTab {
   Attachments = 'Attachments',
   Tools = 'Tools',
   ParameterSchema = 'ParameterSchema',
+  Files = 'Files',
 }
 
 export const propertiesTabs = (t: (stringToTranslate: string) => string) => ({

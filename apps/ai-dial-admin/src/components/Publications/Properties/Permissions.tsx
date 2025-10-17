@@ -5,8 +5,8 @@ import { IconReplace, IconBrandStackshare } from '@tabler/icons-react';
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { getRules } from '@/src/app/[lang]/folders-storage/actions';
-import RulesCompare from '@/src/components/PublicationView/Popup/RulesCompare';
-import RulesStructure from '@/src/components/PublicationView/Popup/RulesStructure';
+import RulesCompare from '@/src/components/Publications/Popup/RulesCompare';
+import RulesStructure from '@/src/components/Publications/Popup/RulesStructure';
 import RulesItem from '@/src/components/Rules/Item/RulesItem';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { ButtonsI18nKey, CompareI18nKey } from '@/src/constants/i18n';
@@ -14,7 +14,6 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useRuleFolder } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialRule } from '@/src/models/dial/rule';
-import { PopUpState } from '@/src/types/pop-up';
 import { addTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 
@@ -24,12 +23,12 @@ interface Props {
   showCompare: boolean;
 }
 
-const BasePublicationPermissions: FC<Props> = ({ rules, folderId, showCompare }) => {
+const PublicationPermissions: FC<Props> = ({ rules, folderId, showCompare }) => {
   const t = useI18n();
   const { fetchFolderHierarchy, isLoading } = useRuleFolder();
 
-  const [compareModalState, setCompareModalState] = useState(PopUpState.Closed);
-  const [structureModalState, setStructureModalState] = useState(PopUpState.Closed);
+  const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
+  const [isStructureModalOpen, setIsStructureModalOpen] = useState(false);
   const [compareRules, setCompareRules] = useState<DialRule[]>([]);
   const [showCompareButton, setShowCompareButton] = useState(false);
   const [showStructureButton, setShowStructureButton] = useState(false);
@@ -59,7 +58,7 @@ const BasePublicationPermissions: FC<Props> = ({ rules, folderId, showCompare })
             variant={ButtonVariant.Secondary}
             title={t(ButtonsI18nKey.ReviewStructure)}
             iconBefore={<IconBrandStackshare {...BASE_ICON_PROPS} />}
-            onClick={() => setStructureModalState(PopUpState.Opened)}
+            onClick={() => setIsStructureModalOpen(true)}
           />
         )}
         {showCompareButton && (
@@ -67,27 +66,27 @@ const BasePublicationPermissions: FC<Props> = ({ rules, folderId, showCompare })
             variant={ButtonVariant.Secondary}
             title={t(CompareI18nKey.CompareChanges)}
             iconBefore={<IconReplace {...BASE_ICON_PROPS} />}
-            onClick={() => setCompareModalState(PopUpState.Opened)}
+            onClick={() => setIsCompareModalOpen(true)}
           />
         )}
       </div>
 
-      {compareModalState === PopUpState.Opened &&
+      {isCompareModalOpen &&
         createPortal(
           <RulesCompare
             rules={rules}
             compareRules={compareRules}
-            modalState={compareModalState}
-            onClose={() => setCompareModalState(PopUpState.Closed)}
+            isOpen={isCompareModalOpen}
+            onClose={() => setIsCompareModalOpen(false)}
           />,
           document.body,
         )}
-      {structureModalState === PopUpState.Opened &&
+      {isStructureModalOpen &&
         createPortal(
           <RulesStructure
             isLoading={isLoading}
-            modalState={structureModalState}
-            onClose={() => setStructureModalState(PopUpState.Closed)}
+            isOpen={isStructureModalOpen}
+            onClose={() => setIsStructureModalOpen(false)}
           />,
           document.body,
         )}
@@ -95,4 +94,4 @@ const BasePublicationPermissions: FC<Props> = ({ rules, folderId, showCompare })
   );
 };
 
-export default BasePublicationPermissions;
+export default PublicationPermissions;

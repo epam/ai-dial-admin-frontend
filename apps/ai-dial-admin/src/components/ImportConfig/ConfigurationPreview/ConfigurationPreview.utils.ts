@@ -1,5 +1,6 @@
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { isNull, startCase } from 'lodash';
+import { TabModel } from '@epam/ai-dial-ui-kit';
 
 import StatusCellRenderer from '@/src/components/Grid/CellRenderers/StatusCellRenderer';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
@@ -14,7 +15,6 @@ import {
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity, ChatEntity } from '@/src/models/dial/base-entity';
 import { FileComponentItem, FileConfiguration } from '@/src/models/import';
-import { TabModel } from '@/src/models/tab';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { EntityType } from '@/src/types/entity-type';
 import { ImportConfigurationAction } from '@/src/types/import';

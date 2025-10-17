@@ -4,7 +4,7 @@ import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import { FilePublication } from '@/src/models/dial/publications';
-import FilesList from '@/src/components/PublicationView/FileProperties/FilesList';
+import FilesList from '@/src/components/Publications/Assets/Files/FilesList';
 
 interface Props {
   publication: FilePublication;

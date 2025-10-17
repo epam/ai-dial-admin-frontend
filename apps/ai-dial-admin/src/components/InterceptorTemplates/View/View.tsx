@@ -7,10 +7,10 @@ import { createPortal } from 'react-dom';
 import { IconPlus } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialTabs } from '@epam/ai-dial-ui-kit';
 
 import { deleteInterceptorTemplate, updateInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { createInterceptor } from '@/src/app/[lang]/interceptors/actions';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
@@ -97,7 +97,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className="flex flex-row min-h-[34px] justify-between">
-        <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+        <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
         <HeaderButtons
           view={ApplicationRoute.InterceptorTemplates}
           entity={selectedTemplate}
