@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { DialRadioGroup, RadioGroupOrientation, RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
 
-import { EntityFieldsI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 import { FieldError } from '@/src/models/error';
@@ -101,7 +101,7 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
   }, [isModal, entity, prefix]);
 
   return (
-    <div className="w-full flex flex-col gap-6 lg:w-[35%]">
+    <div className="w-full flex flex-col gap-6 lg:w-[45%]">
       {!isModal && (
         <DialRadioGroup
           radioButtons={modelTypeRadio}
@@ -130,11 +130,11 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
           fullValue={fullValue}
           fieldTitle={t(EntityFieldsI18nKey.endpoint)}
           suffix={postfix}
+          placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           onChange={onChangeEndpoint}
           errorText={endpointError?.text}
           invalid={!!endpointError}
           copyable={false}
-          inputContainerCssClass="w-full"
         />
       )}
     </div>

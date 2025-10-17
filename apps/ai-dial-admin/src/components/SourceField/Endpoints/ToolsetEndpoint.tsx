@@ -27,7 +27,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, readonly, onChange, prefix, isModa
   ];
 
   return (
-    <div className={classNames('flex flex-col gap-6')}>
+    <div className="w-full flex flex-col gap-6 lg:w-[45%]">
       {prefix ? (
         <ComplexInput
           readonly={readonly}

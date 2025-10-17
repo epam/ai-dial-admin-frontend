@@ -122,7 +122,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
             />
           </div>
         ) : (
-          <div className="flex flex-col lg:w-[55%]">
+          <div className="flex flex-col lg:w-[50%] gap-2">
             <div className="flex-1 min-w-0">
               <div className="w-full">
                 <Field fieldTitle={t(SourceI18nKey.Container)} htmlFor={'containers'} />

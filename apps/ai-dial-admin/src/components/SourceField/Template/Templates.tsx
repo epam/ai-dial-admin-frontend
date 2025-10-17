@@ -101,7 +101,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
             />
           </div>
         ) : (
-          <div className="flex flex-col lg:w-[55%]">
+          <div className="flex flex-col gap-2 lg:w-[50%]">
             <div className="flex-1 min-w-0">
               <div className="w-full">
                 <Field fieldTitle={t(SourceI18nKey.InterceptorTemplate)} htmlFor={'templates'} />
