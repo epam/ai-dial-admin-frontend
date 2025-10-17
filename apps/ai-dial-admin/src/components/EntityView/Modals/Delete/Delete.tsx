@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { useRouter } from 'next/navigation';
 import { ConfirmationPopupVariant, DialConfirmationPopup, DialEllipsisTooltip, PopupSize } from '@epam/ai-dial-ui-kit';
@@ -44,6 +44,12 @@ const DeleteConfirmationModal = <T extends Artefact>({
   isSelectedView,
   resetCurrentEntity,
 }: Props<T>) => {
+  const name = useMemo(
+    () => (isAssetView(view) ? entity.name : entity.displayName || entity['dial:applicationTypeDisplayName']),
+    [entity, view],
+  );
+  const id = useMemo(() => (isAssetView(view) ? void 0 : entity.name || entity.$id), [entity.$id, entity.name, view]);
+
   const t = useI18n() as (key: string, options?: Record<string, string>) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -104,14 +110,18 @@ const DeleteConfirmationModal = <T extends Artefact>({
       <div className="h-full flex flex-col gap-y-4 px-6 py-2 w-full">
         <span className="text-secondary dial-small">{getConfirmation(view, t)}</span>
         <div className="flex flex-col gap-y-2">
-          <div className="text-primary dial-small flex flex-row items-center gap-x-1">
-            <span className="text-secondary">{t(EntityFieldsI18nKey.id)}:</span>
-            <DialEllipsisTooltip text={entity.name || entity.$id} />
-          </div>
-          <div className="text-primary dial-small flex flex-row items-center gap-x-1">
-            <span className="text-secondary">{t(EntityFieldsI18nKey.displayName)}:</span>
-            <DialEllipsisTooltip text={entity.displayName || entity['dial:applicationTypeDisplayName']} />
-          </div>
+          {id && (
+            <div className="text-primary dial-small flex flex-row items-center gap-x-1">
+              <span className="text-secondary">{t(EntityFieldsI18nKey.id)}:</span>
+              <DialEllipsisTooltip text={entity.name || entity.$id} />
+            </div>
+          )}
+          {name && (
+            <div className="text-primary dial-small flex flex-row items-center gap-x-1">
+              <span className="text-secondary">{t(EntityFieldsI18nKey.displayName)}:</span>
+              <DialEllipsisTooltip text={name} />
+            </div>
+          )}
           {entity.displayVersion && (
             <div className="text-primary dial-small">
               <span className="text-secondary">{t(EntityFieldsI18nKey.displayVersion)}:</span> {entity.displayVersion}

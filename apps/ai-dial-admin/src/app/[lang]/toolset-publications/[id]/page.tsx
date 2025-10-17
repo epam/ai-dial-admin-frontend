@@ -9,6 +9,7 @@ import { publicationsApi } from '@/src/app/api/api';
 import { Publication } from '@/src/models/dial/publications';
 import { logError } from '@/src/server/logger';
 import Page403 from '@/src/components/Page403/Page403';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,11 +32,13 @@ export default async function Page(params: { searchParams: Promise<{ path: strin
   }
 
   return (
-    <PublicationView
-      publication={data as Publication}
-      view={ApplicationRoute.ToolsetPublications}
-      approvePublication={approvePublication}
-      declinePublication={declinePublication}
-    />
+    <SaveValidationContextProvider>
+      <PublicationView
+        publication={data as Publication}
+        view={ApplicationRoute.ToolsetPublications}
+        approvePublication={approvePublication}
+        declinePublication={declinePublication}
+      />
+    </SaveValidationContextProvider>
   );
 }

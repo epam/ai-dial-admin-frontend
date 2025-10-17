@@ -22,6 +22,14 @@ export const duplicateModalDescriptionMap: Record<string, DuplicateI18nKey> = {
   [ApplicationRoute.Models]: DuplicateI18nKey.ModelDescription,
 };
 
-export const getTitle = (view: ApplicationRoute, t: (str: string, props?: Record<string, string>) => string) => {
+export const getCloneTitle = (view: ApplicationRoute, t: (str: string, props?: Record<string, string>) => string) => {
   return t(DuplicateI18nKey.Title, { entity: t(duplicateEntityMap[view]) });
+};
+
+export const getClonedEntityName = (name?: string): string => {
+  const copySuffix = '_(copy)';
+  if (name?.endsWith(copySuffix)) {
+    return name;
+  }
+  return `${name}${copySuffix}`;
 };
