@@ -35,11 +35,7 @@ import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor'
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { ExportFormat } from '@/src/types/export';
-import {
-  getEntityFromFile,
-  getExportType,
-  getFileFromEntity,
-} from '@/src/components/EntityView/View/core-entity-utils';
+import { getExportType } from '@/src/components/EntityView/View/core-entity-utils';
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 import RoleProperties from './Properties';
 
@@ -83,7 +79,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
     const name = (originalRole as { name: string })?.name;
     if (!coreRole && name) {
       getCoreEntity(name, getExportType(ApplicationRoute.Roles)).then((data) => {
-        setCoreRole(getEntityFromFile(ApplicationRoute.Roles, name, data) as DialRole);
+        setCoreRole(data);
       });
     }
   }, [coreRole, originalRole]);
@@ -194,7 +190,7 @@ const RolesView: FC<Props> = ({ originalRole, names, models, applications, keys 
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreEntity(getFileFromEntity(ApplicationRoute.Roles, selectedRole))
+        ? updateCoreEntity(selectedRole as Record<string, unknown>)
         : updateRole(selectedRole);
 
     req.then((res) => {

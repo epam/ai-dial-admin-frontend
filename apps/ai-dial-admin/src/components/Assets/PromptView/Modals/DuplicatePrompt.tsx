@@ -106,6 +106,7 @@ const DuplicatePrompt: FC<Props> = ({ modalState, entity, versionsMap, onDuplica
           displayName={clonedPrompt.name}
           onChange={onChangeName}
           disabled={duplicationType === DuplicationTypes.VERSION}
+          required={true}
         />
         <VersionControl version={clonedPrompt.version} onChange={onChangeVersion} />
 

@@ -29,11 +29,7 @@ import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor'
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { ExportFormat } from '@/src/types/export';
-import {
-  getEntityFromFile,
-  getExportType,
-  getFileFromEntity,
-} from '@/src/components/EntityView/View/core-entity-utils';
+import { getExportType } from '@/src/components/EntityView/View/core-entity-utils';
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 
 interface Props {
@@ -67,7 +63,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
     const name = (originalInterceptor as { name: string })?.name;
     if (!coreInterceptor && name) {
       getCoreEntity(name, getExportType(ApplicationRoute.Interceptors)).then((data) => {
-        setCoreInterceptor(getEntityFromFile(ApplicationRoute.Interceptors, name, data) as DialInterceptor);
+        setCoreInterceptor(data);
       });
     }
   }, [coreInterceptor, originalInterceptor]);
@@ -148,7 +144,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, applic
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreEntity(getFileFromEntity(ApplicationRoute.Interceptors, selectedInterceptor))
+        ? updateCoreEntity(selectedInterceptor as Record<string, unknown>)
         : updateInterceptor(selectedInterceptor);
 
     req.then((res) => {

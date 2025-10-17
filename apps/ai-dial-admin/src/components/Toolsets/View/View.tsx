@@ -30,11 +30,7 @@ import { getErrorNotification } from '@/src/utils/notification';
 import ToolsetProperties from './Properties';
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { ExportFormat } from '@/src/types/export';
-import {
-  getEntityFromFile,
-  getExportType,
-  getFileFromEntity,
-} from '@/src/components/EntityView/View/core-entity-utils';
+import { getExportType } from '@/src/components/EntityView/View/core-entity-utils';
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 
 interface Props {
@@ -69,7 +65,7 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
     const name = (originalToolset as { name: string })?.name;
     if (!coreToolset && name) {
       getCoreEntity(name, getExportType(ApplicationRoute.Toolsets)).then((data) => {
-        setCoreToolset(getEntityFromFile(ApplicationRoute.Toolsets, name, data) as Toolset);
+        setCoreToolset(data);
       });
     }
   }, [coreToolset, originalToolset]);
@@ -122,7 +118,7 @@ const ToolsetView: FC<Props> = ({ names, roles, originalToolset }) => {
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreEntity(getFileFromEntity(ApplicationRoute.Toolsets, selectedToolset))
+        ? updateCoreEntity(selectedToolset as Record<string, unknown>)
         : updateToolset(selectedToolset);
 
     req.then((res) => {

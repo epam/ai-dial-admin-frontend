@@ -49,7 +49,7 @@ const EntityInterceptors = <T extends { interceptors?: string[] }>({
 
   const onRemoveInterceptor = useCallback(
     (_?: DialInterceptor, index?: number) => {
-      if (index) {
+      if (index != null) {
         entity.interceptors?.splice(index, 1);
       }
 

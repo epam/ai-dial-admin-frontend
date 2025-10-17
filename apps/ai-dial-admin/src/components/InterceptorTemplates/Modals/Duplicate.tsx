@@ -46,6 +46,7 @@ const DuplicateTemplate: FC<Props> = ({ onDuplicate, modalState, onClose, templa
         <DisplayNameControl
           displayName={clonedTemplate.displayName}
           onChange={(displayName) => setTemplate({ ...clonedTemplate, displayName })}
+          required={true}
         />
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
