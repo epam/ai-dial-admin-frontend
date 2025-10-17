@@ -1,45 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { getExportType, getFileFromEntity } from './core-entity-utils';
+import { getExportType } from './core-entity-utils';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityType } from '@/src/types/entity-type';
-
-const entity = { name: 'testEntity', value: 123 };
-
-describe('getFileFromEntity', () => {
-  it('returns models record for Models route', () => {
-    expect(getFileFromEntity(ApplicationRoute.Models, entity as any)).toEqual({ models: { testEntity: entity } });
-  });
-  it('returns applications record for Applications route', () => {
-    expect(getFileFromEntity(ApplicationRoute.Applications, entity as any)).toEqual({
-      applications: { testEntity: entity },
-    });
-  });
-  it('returns toolsets record for Toolsets route', () => {
-    expect(getFileFromEntity(ApplicationRoute.Toolsets, entity as any)).toEqual({ toolsets: { testEntity: entity } });
-  });
-  it('returns routes record for Routes route', () => {
-    expect(getFileFromEntity(ApplicationRoute.Routes, entity as any)).toEqual({ routes: { testEntity: entity } });
-  });
-  it('returns roles record for Roles route', () => {
-    expect(getFileFromEntity(ApplicationRoute.Roles, entity as any)).toEqual({ roles: { testEntity: entity } });
-  });
-  it('returns keys record for Keys route', () => {
-    expect(getFileFromEntity(ApplicationRoute.Keys, entity as any)).toEqual({ keys: { testEntity: entity } });
-  });
-  it('returns applicationTypeSchemas record for ApplicationRunners route', () => {
-    expect(getFileFromEntity(ApplicationRoute.ApplicationRunners, entity as any)).toEqual({
-      applicationTypeSchemas: [entity],
-    });
-  });
-  it('returns interceptors record for Interceptors route', () => {
-    expect(getFileFromEntity(ApplicationRoute.Interceptors, entity as any)).toEqual({
-      interceptors: { testEntity: entity },
-    });
-  });
-  it('returns empty object for unknown route', () => {
-    expect(getFileFromEntity('unknown' as ApplicationRoute, entity as any)).toEqual({});
-  });
-});
 
 describe('getExportType', () => {
   it('returns MODEL for Models route', () => {

@@ -38,7 +38,7 @@ import {
 } from '@epam/ai-dial-shared';
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 import ViewContent from './Content/ViewContent';
-import { getExportType, getFileFromEntity } from './core-entity-utils';
+import { getExportType } from './core-entity-utils';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
@@ -186,7 +186,7 @@ const EntityView: FC<Props> = ({
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreEntity(getFileFromEntity(view, selectedEntity))
+        ? updateCoreEntity(selectedEntity as Record<string, unknown>)
         : updateEntity(selectedEntity, etag);
 
     req.then((res) => {

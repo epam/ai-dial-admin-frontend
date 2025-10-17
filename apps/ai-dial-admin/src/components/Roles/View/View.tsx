@@ -34,7 +34,7 @@ import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor'
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { ExportFormat } from '@/src/types/export';
-import { getExportType, getFileFromEntity } from '@/src/components/EntityView/View/core-entity-utils';
+import { getExportType } from '@/src/components/EntityView/View/core-entity-utils';
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 import RoleProperties from './Properties';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
@@ -191,7 +191,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreEntity(getFileFromEntity(ApplicationRoute.Roles, selectedRole))
+        ? updateCoreEntity(selectedRole as Record<string, unknown>)
         : updateRole(selectedRole, etag);
 
     req.then((res) => {

@@ -28,7 +28,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import ToolsetProperties from './Properties';
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { ExportFormat } from '@/src/types/export';
-import { getExportType, getFileFromEntity } from '@/src/components/EntityView/View/core-entity-utils';
+import { getExportType } from '@/src/components/EntityView/View/core-entity-utils';
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
@@ -118,7 +118,7 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreEntity(getFileFromEntity(ApplicationRoute.Toolsets, selectedToolset))
+        ? updateCoreEntity(selectedToolset as Record<string, unknown>)
         : updateToolset(selectedToolset, etag);
 
     req.then((res) => {
