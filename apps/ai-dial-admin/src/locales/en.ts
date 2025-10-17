@@ -321,6 +321,7 @@ export default {
     OpenAdapter: 'Open Adapter',
     None: 'None',
     BulkActions: 'Bulk actions',
+    AddAdditionalProperties: 'Add additional properties',
   },
   Compare: {
     CompareChanges: 'Compare changes',
@@ -854,6 +855,7 @@ export default {
     promptMaxAcceptedUsers: 'Prompts max users',
     tool_setInvitationTtl: 'Toolsets expiration time',
     tool_setMaxAcceptedUsers: 'Toolsets max users',
+    new_key: 'New key',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
