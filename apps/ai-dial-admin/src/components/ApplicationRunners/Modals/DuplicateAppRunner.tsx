@@ -56,7 +56,11 @@ const DuplicateScheme: FC<Props> = ({ onDuplicate, modalState, onClose, entity }
           entity={{ name: clonedEntity.$id }}
           onChangeEntity={(entity) => onChangeId(entity.name)}
         />
-        <DisplayNameControl displayName={clonedEntity['dial:applicationTypeDisplayName']} onChange={onChangeName} />
+        <DisplayNameControl
+          displayName={clonedEntity['dial:applicationTypeDisplayName']}
+          onChange={onChangeName}
+          required={true}
+        />
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
         <Button cssClass="secondary" title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />

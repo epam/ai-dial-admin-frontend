@@ -64,7 +64,7 @@ const DuplicatePopup: FC<Props> = ({ onDuplicate, names, view, modalState, onClo
         )}
         <div className="flex flex-col gap-6">
           <IdControl entity={clonedEntity} onChangeEntity={setEntity} names={names} />
-          <DisplayNameControl displayName={clonedEntity.displayName} onChange={onChangeDisplayName} />
+          <DisplayNameControl displayName={clonedEntity.displayName} onChange={onChangeDisplayName} required={true} />
 
           {view === ApplicationRoute.Models && (
             <VersionControl
