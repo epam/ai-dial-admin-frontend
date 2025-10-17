@@ -26,6 +26,7 @@ import { RoutesForCheckingUniqueName } from './constants';
 import { isAssetView } from '@/src/utils/is-asset-view';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { Asset } from '@/src/models/dial/deployment-asset';
+import { DialFile } from '@/src/models/dial/file';
 
 interface CreatePromptEntity extends BaseEntity {
   version?: string;
@@ -39,7 +40,7 @@ interface Props<T> {
   runners?: DialApplicationScheme[];
   versionsMap?: Record<string, string[]>;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
-  context?: () => AssetsFolderContext<Asset>;
+  context?: () => AssetsFolderContext<Asset | DialFile>;
   onClose: () => void;
   initialValues?: Partial<T>;
 }
