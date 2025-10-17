@@ -13,6 +13,8 @@ const createEntityMap: Record<string, CreateI18nKey> = {
   [ApplicationRoute.Adapters]: CreateI18nKey.Adapter,
   [ApplicationRoute.Toolsets]: CreateI18nKey.Toolsets,
   [ApplicationRoute.InterceptorTemplates]: CreateI18nKey.InterceptorTemplate,
+  [ApplicationRoute.AssetsApplications]: CreateI18nKey.Application,
+  [ApplicationRoute.AssetsToolsets]: CreateI18nKey.Toolsets,
 };
 
 export const getCreateEntityTitle = (

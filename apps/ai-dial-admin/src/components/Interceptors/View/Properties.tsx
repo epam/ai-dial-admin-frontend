@@ -14,7 +14,7 @@ import { useI18n } from '@/src/locales/client';
 
 import Defaults from '@/src/components/Defaults/Defaults';
 import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
-import SimpleEntityProperties from '@/src/components/EntityMainProperties/SimpleEntityProperties';
+import EntityProperties from '@/src/components/EntityMainProperties/Properties/EntityProperties';
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import SourceField from '@/src/components/SourceField/SourceField';
 
@@ -32,7 +32,7 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
     <div className="h-full flex flex-col gap-6 w-full">
       <div className="flex flex-col gap-6">
         <div className="lg:w-[35%] flex flex-col gap-6 mt-3">
-          <SimpleEntityProperties
+          <EntityProperties
             entity={selectedInterceptor}
             onChangeEntity={onChangeInterceptor}
             names={names}

@@ -3,7 +3,7 @@ import { FC } from 'react';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import Defaults from '@/src/components/Defaults/Defaults';
 import UpstreamEndpoints from '@/src/components/UpstreamEndpoints/UpstreamEndpoints';
-import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMainProperties';
+import DeploymentProperties from '@/src/components/EntityMainProperties/Properties/DeploymentProperties';
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
 import Limits from '@/src/components/ModelView/Limits/Limits';
@@ -26,7 +26,7 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, updateModel }) => {
 
   return (
     <div className="h-full flex flex-col pt-3 gap-6">
-      <EntityMainProperties
+      <DeploymentProperties
         view={ApplicationRoute.Models}
         entity={model}
         onChangeEntity={updateModel}

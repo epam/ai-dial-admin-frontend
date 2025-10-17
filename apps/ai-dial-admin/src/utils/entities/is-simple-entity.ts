@@ -5,6 +5,8 @@ export const isSimpleEntity = (view: ApplicationRoute) => {
     case ApplicationRoute.Applications:
     case ApplicationRoute.Models:
     case ApplicationRoute.Toolsets:
+    case ApplicationRoute.AssetsToolsets:
+    case ApplicationRoute.AssetsApplications:
       return false;
 
     default:

@@ -17,6 +17,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { generateNewInitialVersion } from '@/src/utils/prompts/versions';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 
 interface Props<T> {
   view: ApplicationRoute;
@@ -80,7 +81,7 @@ const ModifiedEntityButtons = <T extends object>({
           title={t(ButtonsI18nKey.Discard)}
           onClick={onDiscard}
         />
-        {view === ApplicationRoute.Prompts && (
+        {isAssetWithVersion(view) && (
           <DialButton
             variant={ButtonVariant.Secondary}
             cssClass={buttonsClassNames}

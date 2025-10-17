@@ -11,18 +11,17 @@ import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
-import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { getEntityPath, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import Actions from './Components/Actions';
 import { ModalType } from './Components/Modals';
 import { emptyDataTitleMap, listViewTitleMap } from './constants';
 import EntityListHeaderButtons from './HeaderButtons/HeaderButtons';
-import { isDeploymentAsset } from '@/src/utils/is-asset-view';
+import { Asset } from '@/src/models/dial/deployment-asset';
 
 interface Props<T> {
   data: T[];
@@ -39,7 +38,7 @@ interface Props<T> {
   showColumnsButton?: boolean;
   showFolders?: boolean;
   showExport?: boolean;
-  context?: () => AssetsFolderContext<DialFile | DialPrompt | AssetApp>;
+  context?: () => AssetsFolderContext<DialFile | Asset>;
 }
 
 const BaseEntityList = <T extends object>({
@@ -128,9 +127,9 @@ const BaseEntityList = <T extends object>({
   }, [closeColumnsPanel]);
 
   const getColumns = () => {
-    if (route === ApplicationRoute.Prompts) {
+    if (isAssetWithVersion(route)) {
       return ENTITIES_COLUMNS(baseColumns, onOpenDeleteModal, onOpenDuplicateModal, openInNewTab, onOpenMoveModal);
-    } else if (route === ApplicationRoute.Files || isDeploymentAsset(route)) {
+    } else if (route === ApplicationRoute.Files) {
       return ENTITIES_COLUMNS(baseColumns, onOpenDeleteModal, void 0, openInNewTab, onOpenMoveModal);
     }
     return ENTITIES_COLUMNS(baseColumns, onOpenDeleteModal, onOpenDuplicateModal, openInNewTab);

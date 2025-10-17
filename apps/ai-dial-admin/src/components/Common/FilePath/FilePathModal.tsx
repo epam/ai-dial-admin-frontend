@@ -2,14 +2,13 @@ import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { FC, useMemo } from 'react';
 
 import FolderList from '@/src/components/Common/FolderList/FolderList';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
-import { AssetApp } from '@/src/models/dial/deployment-asset';
+import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
-import { DialPrompt } from '@/src/models/dial/prompt';
 import { checkPaths, checkSelectedPath, removeTrailingSlash } from '@/src/utils/files/path';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
 
 interface Props {
   isModalOpen: boolean;
@@ -17,7 +16,7 @@ interface Props {
   initialPath?: string;
   onClose: () => void;
   onApply: (filePath: string) => void;
-  context?: () => AssetsFolderContext<DialFile | DialPrompt | AssetApp>;
+  context?: () => AssetsFolderContext<DialFile | Asset>;
   isFolderMove?: boolean;
 }
 

@@ -20,17 +20,9 @@ interface Props {
   runners?: DialApplicationScheme[];
   isEntityImmutable?: boolean;
   onChangeEntity: (entity: ChatEntity) => void;
-  isModal?: boolean;
 }
 
-const AdditionalProperties: FC<Props> = ({
-  view,
-  entity,
-  runners,
-  onChangeEntity,
-  isEntityImmutable = false,
-  isModal,
-}) => {
+const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity, isEntityImmutable = false }) => {
   const t = useI18n() as (str: string, param?: Record<string, number>) => string;
 
   const applicationRunner = runners?.find((runner) => runner.$id === (entity as DialApplication).customAppSchemaId);
@@ -42,7 +34,7 @@ const AdditionalProperties: FC<Props> = ({
     view === ApplicationRoute.Interceptors ||
     view === ApplicationRoute.Toolsets;
 
-  if ((!isShowMaintainer && !isShowCompletionEndpoint) || isModal) {
+  if ((!isShowMaintainer && !isShowCompletionEndpoint) || !isEntityImmutable) {
     return null;
   }
 
@@ -59,7 +51,7 @@ const AdditionalProperties: FC<Props> = ({
             title={t(EntityFieldsI18nKey.completionEndpoint)}
           />
         ) : null}
-        {view == ApplicationRoute.Toolsets && !isModal && (
+        {view == ApplicationRoute.Toolsets && !isEntityImmutable && (
           <>
             <IconControl iconUrl={entity.iconUrl} onChange={(icon) => onChangeEntity({ ...entity, iconUrl: icon })} />
             <TopicsControl
