@@ -3,7 +3,7 @@
 import { uniq } from 'lodash';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import ApplicationSource from '@/src/components/Applications/ApplicationSource/ApplicationSource';
+import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
 import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/AutocompleteField';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';

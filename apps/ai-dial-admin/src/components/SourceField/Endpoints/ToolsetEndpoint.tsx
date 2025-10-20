@@ -1,7 +1,6 @@
 'use client';
 
 import { FC } from 'react';
-import classNames from 'classnames';
 import { DialSelectField, DialTextInputField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';
@@ -27,7 +26,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, readonly, onChange, prefix, isModa
   ];
 
   return (
-    <div className={classNames('flex flex-col gap-6', !isModal && 'lg:w-[35%]')}>
+    <div className="w-full flex flex-col gap-6 lg:w-[45%]">
       {prefix ? (
         <ComplexInput
           readonly={readonly}
@@ -47,7 +46,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, readonly, onChange, prefix, isModa
         />
       ) : (
         <DialTextInputField
-          readonly={readonly}
+          disabled={readonly}
           elementId="endpoint"
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
@@ -57,8 +56,10 @@ const ToolsetEndpoint: FC<Props> = ({ entity, readonly, onChange, prefix, isModa
       )}
       {!isModal && (
         <DialSelectField
+          disabled={readonly}
           fieldTitle={t(EntityFieldsI18nKey.transport)}
           elementId="transport"
+          readonly={readonly}
           containerCssClass="w-[180px]"
           value={entity.transport || ToolsetTransport.SSE}
           options={transportOptions}

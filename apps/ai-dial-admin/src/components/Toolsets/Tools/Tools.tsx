@@ -1,18 +1,19 @@
 'use client';
 
+import {
+  AlertVariant,
+  ButtonVariant,
+  DialAlert,
+  DialButton,
+  DialLoader,
+  DialNoDataContent,
+  DialSwitch,
+} from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  ButtonVariant,
-  DialSwitch,
-  DialButton,
-  AlertVariant,
-  DialAlert,
-  DialNoDataContent,
-  DialLoader,
-} from '@epam/ai-dial-ui-kit';
 
-import { getTools } from '@/src//app/[lang]/toolsets/actions';
+import { getAssetTools } from '@/src/app/[lang]/assets-toolsets/actions';
+import { getTools } from '@/src/app/[lang]/toolsets/actions';
 import Search from '@/src/components/Common/Search/Search';
 import { ButtonsI18nKey, EntitiesI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -36,10 +37,12 @@ const filtersConfiguration = [
 interface Props {
   originalToolset: Toolset;
   selectedToolset?: Toolset;
+  isAssetToolset?: boolean;
+  readonly?: boolean;
   onChangeToolset?: (toolset: Toolset) => void;
 }
 
-const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset }) => {
+const ToolsView: FC<Props> = ({ selectedToolset, isAssetToolset, readonly, originalToolset, onChangeToolset }) => {
   const t = useI18n();
 
   const [modalState, setModalState] = useState(PopUpState.Closed);
@@ -71,12 +74,12 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
   useEffect(() => {
     if (selectedToolset?.name) {
       setIsLoading(true);
-      getTools(selectedToolset?.name).then((tools) => {
+      (isAssetToolset ? getAssetTools(selectedToolset?.name) : getTools(selectedToolset?.name)).then((tools) => {
         setIsLoading(false);
         setAvailableTools(tools || []);
       });
     }
-  }, [selectedToolset?.name, isNotSavedToolset, selectedToolset?.endpoint]);
+  }, [selectedToolset?.name, isAssetToolset, isNotSavedToolset, selectedToolset?.endpoint]);
 
   useEffect(() => {
     setUseAllTools(!selectedToolset?.allowedTools || selectedToolset?.allowedTools.length === 0);
@@ -158,7 +161,7 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
               {`: ${toolsCount}`}
             </h1>
 
-            {selectedToolset && (
+            {!readonly && (
               <DialSwitch
                 switchId="useAllTools"
                 title={t(ToolsetI18nKey.UseAllTools)}
@@ -185,7 +188,7 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
                   selectedFilters={selectedFilters}
                   onSelectFilter={onSelectFilter}
                 />
-                {selectedToolset && (
+                {!readonly && (
                   <DialButton
                     variant={ButtonVariant.Primary}
                     title={t(ButtonsI18nKey.Add)}
@@ -215,8 +218,10 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
               </div>
             )}
           </div>
-          {!useAllTools && <span className="tiny text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
-          {isNotSavedToolset && <DialAlert variant={AlertVariant.Info} message={t(ToolsetI18nKey.ToolsWarning)} />}
+          {!useAllTools && !readonly && <span className="tiny text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
+          {isNotSavedToolset && !readonly && (
+            <DialAlert variant={AlertVariant.Info} message={t(ToolsetI18nKey.ToolsWarning)} />
+          )}
         </div>
       )}
       {modalState === PopUpState.Opened && (
@@ -226,4 +231,4 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
   );
 };
 
-export default ToolView;
+export default ToolsView;

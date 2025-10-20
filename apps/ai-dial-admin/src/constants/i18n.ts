@@ -100,6 +100,8 @@ export enum EntitiesI18nKey {
   NoAppRoutes = 'Entities.NoAppRoutes',
   NoUsageLog = 'Entities.NoUsageLog',
   NoActivityAudit = 'Entities.NoActivityAudit',
+  NoContainers = 'Entities.NoContainers',
+  NoTemplates = 'Entities.NoTemplates',
   NoFolders = 'Entities.NoFolders',
   NoResource = 'Entities.NoResource',
   NoInterceptorTemplates = 'Entities.NoInterceptorTemplates',
