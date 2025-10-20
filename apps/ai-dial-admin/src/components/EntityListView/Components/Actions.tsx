@@ -98,7 +98,6 @@ const Actions = <T extends object>({
       const duplicate = async () => {
         const preparedEntity = (await prepareEntityForDuplicate(route, clonedEntity, entityRef)) as T;
         const res = await createEntity?.(preparedEntity);
-        // console.log(preparedEntity, res)
         if (res?.success) {
           handleModalClose();
           setCurrentEntity(void 0);
