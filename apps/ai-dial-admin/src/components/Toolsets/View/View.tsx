@@ -15,7 +15,7 @@ import EntityRolesModal from '@/src/components/EntityView/Modals/EmptyRoles/Empt
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
 import { auditTabs, EntityViewTab, propertiesTabs, rolesTabs, toolsTabs } from '@/src/components/EntityView/View/utils';
-import Tool from '@/src/components/Toolsets/Tools/Tools';
+import ToolsView from '@/src/components/Toolsets/Tools/Tools';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -182,7 +182,7 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
             )}
 
             {activeTab === EntityViewTab.Tools && (
-              <Tool
+              <ToolsView
                 originalToolset={originalToolset}
                 selectedToolset={selectedToolset}
                 onChangeToolset={onChangeToolset}
