@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 
 import { getFiles } from '@/src/app/[lang]/files/actions';
-import FileView from '@/src/components/Assets/Files/View/View';
+import FileView from '@/src/components/Assets/Files/View';
 import Page403 from '@/src/components/Page403/Page403';
 import { FileFolderProvider } from '@/src/context/assets/FileFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
