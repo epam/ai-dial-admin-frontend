@@ -46,7 +46,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, readonly, onChange, prefix, isModa
         />
       ) : (
         <DialTextInputField
-          readonly={readonly}
+          disabled={readonly}
           elementId="endpoint"
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
@@ -56,6 +56,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, readonly, onChange, prefix, isModa
       )}
       {!isModal && (
         <DialSelectField
+          disabled={readonly}
           fieldTitle={t(EntityFieldsI18nKey.transport)}
           elementId="transport"
           readonly={readonly}
