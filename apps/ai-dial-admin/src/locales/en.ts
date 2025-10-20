@@ -165,6 +165,7 @@ export default {
     Table: 'Table',
     Form: 'Generated form',
     Ui: 'Application custom UI',
+    ToolsetEndpoint: 'Toolset Endpoint',
     // modals
     SaveChangesTitle: 'Save Changes',
     SaveChangesDescription: 'Save changes before opening the parameters tab. All unsaved changes will be lost.',
