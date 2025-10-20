@@ -56,7 +56,7 @@ const Multiselect: FC<Props> = ({
         <MultiselectModal
           initSelectedItems={selectedItems}
           onSelectItems={onChangeItems}
-          modalState={modalState}
+          isModalOpen={modalState}
           onClose={onCloseModal}
           {...props}
         />

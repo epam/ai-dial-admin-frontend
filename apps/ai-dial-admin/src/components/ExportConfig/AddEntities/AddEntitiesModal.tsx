@@ -18,7 +18,7 @@ import { getEmptyDataTitleI18nKey } from '@/src/utils/entities/get-empty-data-ti
 import Dependencies from './Dependencies';
 
 interface Props {
-  modalState: PopUpState;
+  isModalOpen: PopUpState;
   selectedTab?: EntityType;
   entities: EntitiesGridData[];
   columnDefs?: ColDef[];
@@ -26,7 +26,7 @@ interface Props {
   onApply: (entities: EntitiesGridData[], dependencies?: EntityType[]) => void;
 }
 
-const AddEntitiesModal: FC<Props> = ({ modalState, selectedTab, entities, columnDefs, onClose, onApply }) => {
+const AddEntitiesModal: FC<Props> = ({ isModalOpen: modalState, selectedTab, entities, columnDefs, onClose, onApply }) => {
   const t = useI18n() as (v: string) => string;
   const [selectedEntities, setSelectedEntities] = useState<EntitiesGridData[]>([]);
   const [selectedDependencies, setSelectedDependencies] = useState<EntityType[]>([]);

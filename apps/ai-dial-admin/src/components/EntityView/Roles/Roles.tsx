@@ -17,7 +17,6 @@ import { useI18n } from '@/src/locales/client';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
 import { DialRoleLimits, DialRoleLimitsMap } from '@/src/models/dial/role-limits';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import RolesDefaults from './RolesDefaults';
@@ -35,7 +34,7 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
   const t = useI18n();
   const isRolesWithDefaults = view !== ApplicationRoute.Routes && view !== ApplicationRoute.Toolsets;
 
-  const [addModalState, setAddModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [availableRoles, setAvailableRoles] = useState<DialRole[]>([]);
 
   const entityRef = useRef(entity);
@@ -93,9 +92,9 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
           ...newRoles,
         } as DialRoleLimitsMap,
       });
-      setAddModalState(PopUpState.Closed);
+      setIsModalOpen(false);
     },
-    [entity, onChangeEntity, setAddModalState],
+    [entity, onChangeEntity, setIsModalOpen],
   );
 
   const onRemoveRole = useCallback(
@@ -158,12 +157,12 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
   );
 
   const onOpenAddModal = useCallback(() => {
-    setAddModalState(PopUpState.Opened);
-  }, [setAddModalState]);
+    setIsModalOpen(true);
+  }, [setIsModalOpen]);
 
   const onCloseAddModal = useCallback(() => {
-    setAddModalState(PopUpState.Closed);
-  }, [setAddModalState]);
+    setIsModalOpen(false);
+  }, [setIsModalOpen]);
 
   const onOpen = (role?: DialRole) => {
     onOpenInNewTab(ApplicationRoute.Roles, role);
@@ -196,12 +195,12 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
       {isDisableRole(entity) && view !== ApplicationRoute.Routes && (
         <DialAlert variant={AlertVariant.Info} message={t(getNoAvailableTitle(view))} />
       )}
-      {addModalState === PopUpState.Opened &&
+      {isModalOpen &&
         createPortal(
           <AddEntitiesGrid
             modalTitle={t(RolesI18nKey.AddRoles)}
             emptyTitle={t(EntitiesI18nKey.NoRoles)}
-            modalState={addModalState}
+            isModalOpen={isModalOpen}
             entities={availableRoles}
             onClose={onCloseAddModal}
             onApply={onAddRoles}

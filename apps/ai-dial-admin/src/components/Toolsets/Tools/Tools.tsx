@@ -19,7 +19,6 @@ import { ButtonsI18nKey, EntitiesI18nKey, ToolsetI18nKey } from '@/src/constants
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { Tool, Toolset } from '@/src/models/dial/toolset';
-import { PopUpState } from '@/src/types/pop-up';
 import { isEqual, uniq } from 'lodash';
 import AddToolsModal from './AddToolsModal';
 import ToolsFilter from './Filter/ToolsFilter';
@@ -45,7 +44,7 @@ interface Props {
 const ToolsView: FC<Props> = ({ selectedToolset, isAssetToolset, readonly, originalToolset, onChangeToolset }) => {
   const t = useI18n();
 
-  const [modalState, setModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState(filtersConfiguration);
   const [pattern, setPattern] = useState('');
   const [useAllTools, setUseAllTools] = useState(false);
@@ -86,12 +85,12 @@ const ToolsView: FC<Props> = ({ selectedToolset, isAssetToolset, readonly, origi
   }, [selectedToolset]);
 
   const onOpenModal = useCallback(() => {
-    setModalState(PopUpState.Opened);
-  }, [setModalState]);
+    setIsModalOpen(true);
+  }, [setIsModalOpen]);
 
   const onCloseModal = useCallback(() => {
-    setModalState(PopUpState.Closed);
-  }, [setModalState]);
+    setIsModalOpen(false);
+  }, [setIsModalOpen]);
 
   const onAddTools = useCallback(
     (tools: string[]) => {
@@ -224,9 +223,7 @@ const ToolsView: FC<Props> = ({ selectedToolset, isAssetToolset, readonly, origi
           )}
         </div>
       )}
-      {modalState === PopUpState.Opened && (
-        <AddToolsModal modalState={modalState} onClose={onCloseModal} onSelectItems={onAddTools} />
-      )}
+      {isModalOpen && <AddToolsModal isModalOpen={isModalOpen} onClose={onCloseModal} onSelectItems={onAddTools} />}
     </>
   );
 };

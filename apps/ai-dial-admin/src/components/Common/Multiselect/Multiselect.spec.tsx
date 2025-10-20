@@ -21,7 +21,7 @@ describe('Common components - MultiselectModal', () => {
       <MultiselectModal
         heading="title"
         allItems={[]}
-        modalState={PopUpState.Opened}
+        isModalOpen={PopUpState.Opened}
         onClose={vi.fn()}
         onSelectItems={vi.fn()}
         addTitle="title"

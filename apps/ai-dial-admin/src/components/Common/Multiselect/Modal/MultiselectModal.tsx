@@ -1,22 +1,20 @@
+import { DialFormPopup, DialLoader } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { ButtonVariant, DialButton, DialLoader } from '@epam/ai-dial-ui-kit';
 
-import Popup from '@/src/components/Common/Popup/Popup';
 import { baseColumnComparator } from '@/src/components/Grid/comparators/base-column-comparator';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { PopUpState } from '@/src/types/pop-up';
 import { getErrorNotification } from '@/src/utils/notification';
 import { isEqual, uniq } from 'lodash';
 import MultiselectContentModal from './ModalContent';
 
 interface Props {
   initSelectedItems?: string[];
-  modalState: PopUpState;
+  isModalOpen: boolean;
   heading?: string;
   addTitle?: string;
   addPlaceholder?: string;
@@ -30,7 +28,7 @@ interface Props {
 
 const MultiselectModal: FC<Props> = ({
   initSelectedItems,
-  modalState,
+  isModalOpen,
   heading,
   allItems,
   onClose,
@@ -85,7 +83,17 @@ const MultiselectModal: FC<Props> = ({
   }, [setItems, getItems, allItems]);
 
   return (
-    <Popup onClose={onClose} heading={heading} portalId="itemsMultiSelect" state={modalState}>
+    <DialFormPopup
+      onClose={onClose}
+      title={heading}
+      portalId="itemsMultiSelect"
+      open={isModalOpen}
+      onSubmit={onApply}
+      onCancel={onClose}
+      submitLabel={applyButtonText || t(ButtonsI18nKey.Apply)}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      disableSubmitButton={!isValid || (draggable && isEqual(newItems, selectedItems))}
+    >
       <div className="flex flex-col overflow-auto px-6 py-4">
         {isLoading ? (
           <DialLoader size={40} />
@@ -102,16 +110,7 @@ const MultiselectModal: FC<Props> = ({
           </DndProvider>
         )}
       </div>
-      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
-          title={applyButtonText || t(ButtonsI18nKey.Apply)}
-          onClick={onApply}
-          disable={!isValid || (draggable && isEqual(newItems, selectedItems))}
-        />
-      </div>
-    </Popup>
+    </DialFormPopup>
   );
 };
 

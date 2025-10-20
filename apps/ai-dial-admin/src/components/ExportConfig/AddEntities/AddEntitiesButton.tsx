@@ -73,7 +73,7 @@ const AddEntitiesButton: FC<Props> = ({ selectedTab, tabData, customExportData, 
           <AddEntitiesModal
             selectedTab={entityTitle}
             columnDefs={columnDefs}
-            modalState={modalState}
+            isModalOpen={modalState}
             entities={availableEntities}
             onClose={() => setModalState(PopUpState.Closed)}
             onApply={onAddEntity}
