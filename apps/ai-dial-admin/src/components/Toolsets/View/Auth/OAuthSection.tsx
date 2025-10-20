@@ -1,14 +1,12 @@
 import { FC } from 'react';
 
-import { DialPasswordInputField, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialPasswordInputField, DialSelectField, DialTextInputField, SelectOption } from '@epam/ai-dial-ui-kit';
 
-import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ToolsetAuthSettings } from '@/src/models/dial/toolset';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
 
 enum AuthType {
   DYNAMIC = 'dynamic',
@@ -23,21 +21,21 @@ interface Props {
 const OAuthSection: FC<Props> = ({ authSettings, onChange }) => {
   const t = useI18n();
 
-  const types: DropdownItemsModel[] = [
-    // { id: AuthType.DYNAMIC, name: t(ToolsetI18nKey.DynamicRegistration) },
-    { id: AuthType.EXISTING, name: t(ToolsetI18nKey.ExistingClient) },
+  const types: SelectOption[] = [
+    // { value: AuthType.DYNAMIC, label: t(ToolsetI18nKey.DynamicRegistration) },
+    { value: AuthType.EXISTING, label: t(ToolsetI18nKey.ExistingClient) },
   ];
 
   return (
     <div className="flex flex-col pl-[26px]">
       <div className="flex flex-row gap-x-4">
-        <DropdownField
+        <DialSelectField
           containerCssClass="w-[192px]"
           elementId="type"
           fieldTitle={t(ToolsetI18nKey.ClientRegistrationType)}
-          selectedValue={AuthType.EXISTING}
-          items={types}
-          onChange={(type: string) => {
+          value={AuthType.EXISTING}
+          options={types}
+          onChange={(type) => {
             onChange({
               ...(authSettings || {}),
               clientId: type === AuthType.EXISTING ? '' : undefined,

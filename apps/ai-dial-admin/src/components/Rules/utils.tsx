@@ -5,8 +5,8 @@ import Regex from '@/public/images/icons/regex.svg';
 import { FoldersI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { DialRule, RuleDiffStatus, RuleDiffModel, RuleFunction, RuleSource } from '@/src/models/dial/rule';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { JSX } from 'react';
+import { SelectOption } from '@epam/ai-dial-ui-kit';
 
 const operations = [RuleFunction.EQUAL, RuleFunction.CONTAIN, RuleFunction.REGEX];
 
@@ -15,16 +15,13 @@ const operations = [RuleFunction.EQUAL, RuleFunction.CONTAIN, RuleFunction.REGEX
  *
  * @param {(t: string) => string} t - function for translate
  * @param {?string[]} [attributes] - list of available attributes
- * @returns {DropdownItemsModel[]} - list of translated dropdown items
+ * @returns {SelectOption[]} - list of translated dropdown items
  */
-export const getAttributeItems = (t: (t: string) => string, attributes?: string[]): DropdownItemsModel[] => {
+export const getAttributeItems = (t: (t: string) => string, attributes?: string[]): SelectOption[] => {
   return (
     attributes?.map((a) => {
       const name = t(FoldersI18nKey[RuleSource[a as keyof typeof RuleSource]]);
-      return {
-        id: a,
-        name,
-      };
+      return { value: a, label: name };
     }) || []
   );
 };
@@ -33,10 +30,10 @@ export const getAttributeItems = (t: (t: string) => string, attributes?: string[
  * Generate and translate dropdown items for operation selector inside folder rule configuration
  *
  * @param {(t: string) => string} t - function for translate
- * @returns {DropdownItemsModel[]} - list of translated dropdown items
+ * @returns {SelectOption[]} - list of translated dropdown items
  */
-export const getOperationItems = (t: (t: string) => string): DropdownItemsModel[] => {
-  return operations.map((a) => ({ id: a, name: t(FoldersI18nKey[a]), icon: getOperationIcon(a) }));
+export const getOperationItems = (t: (t: string) => string): SelectOption[] => {
+  return operations.map((a) => ({ value: a, label: t(FoldersI18nKey[a]), icon: getOperationIcon(a) }));
 };
 
 /**

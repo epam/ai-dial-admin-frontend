@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { ApplicationRoute } from '@/src/types/routes';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 import CreateFilter from '@/src/components/Telemetry/TelemetryControls/Filters/CreateFilter';
@@ -15,7 +15,7 @@ describe('Components - CreateFilter', () => {
       value: 'asd',
       type: FILTER_TYPE.Entity,
     };
-    const { getByTestId } = render(
+    render(
       <CreateFilter
         type={filter.type}
         value={filter.value}
@@ -28,8 +28,6 @@ describe('Components - CreateFilter', () => {
         route={ApplicationRoute.Dashboard}
       />,
     );
-
-    const createView = getByTestId('dashboard-create-filter');
-    expect(createView).toBeTruthy();
+    expect(screen.getByDisplayValue('asd')).toBeInTheDocument();
   });
 });
