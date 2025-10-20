@@ -43,7 +43,7 @@ const EntityDependencies: FC<Props> = ({ entity, applications, models, onChangeE
 
   const onRemoveDependency = useCallback(
     (_?: DialApplication, index?: number) => {
-      if (index) {
+      if (index != null) {
         entity.dependencies?.splice(index, 1);
       }
       onChangeEntity({
