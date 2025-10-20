@@ -3,7 +3,6 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { PopUpState } from '@/src/types/pop-up';
 
 import AddVersionModal from '@/src/components/Assets/Prompts/Modals/AddVersionModal';
 

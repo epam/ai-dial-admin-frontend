@@ -1,18 +1,14 @@
-import { ButtonVariant, DialButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, DialNoDataContent, PopupSize } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridOptions, SelectionChangedEvent } from 'ag-grid-community';
-import classNames from 'classnames';
 import { useState } from 'react';
 
-import Popup from '@/src/components/Common/Popup/Popup';
 import Grid from '@/src/components/Grid/Grid';
 import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { PopUpState } from '@/src/types/pop-up';
-
 interface Props<T> {
-  modalState: PopUpState;
+  isModalOpen: boolean;
   modalTitle: string;
   emptyTitle: string;
   entities: T[];
@@ -23,7 +19,7 @@ interface Props<T> {
 
 const AddEntitiesGrid = <T extends object>({
   columnDefs = SIMPLE_ENTITY_COLUMNS,
-  modalState,
+  isModalOpen,
   modalTitle,
   emptyTitle,
   entities,
@@ -49,32 +45,28 @@ const AddEntitiesGrid = <T extends object>({
     onSelectionChanged: onSelectionChanged,
   };
 
-  const containerClassName = classNames('h-[800px] lg:max-w-[75%] md:max-w-[90%]');
   return (
-    <Popup
+    <DialFormPopup
       onClose={onClose}
-      heading={modalTitle}
+      title={modalTitle}
       portalId="AddEntity"
-      state={modalState}
-      containerClassName={containerClassName}
+      open={isModalOpen}
+      cssClass="h-[800px]"
+      size={PopupSize.Lg}
+      submitLabel={t(ButtonsI18nKey.Apply)}
+      onSubmit={() => onApply(selectedEntities)}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      disableSubmitButton={!selectedEntities.length}
+      onCancel={onClose}
     >
-      <div className="flex flex-1 flex-col px-6 py-4 min-h-0">
+      <div className="flex h-full flex-col px-6 py-4 min-h-0">
         {!entities.length ? (
           <DialNoDataContent title={emptyTitle} />
         ) : (
           <Grid columnDefs={columnDefs} rowData={entities} additionalGridOptions={additionalGridOptions} />
         )}
       </div>
-      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Apply)}
-          onClick={() => onApply(selectedEntities)}
-          disable={!selectedEntities.length}
-        />
-      </div>
-    </Popup>
+    </DialFormPopup>
   );
 };
 

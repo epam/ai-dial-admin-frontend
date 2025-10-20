@@ -1,5 +1,4 @@
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { PopUpState } from '@/src/types/pop-up';
 import { render } from '@testing-library/react';
 import { fireEvent } from '@testing-library/dom';
 import DuplicateScheme from '@/src/components/ApplicationRunners/Modals/DuplicateAppRunner';
@@ -20,7 +19,7 @@ describe('Components :: DuplicateScheme', () => {
 
   test('Should render successfully', () => {
     const { baseElement } = render(
-      <DuplicateScheme entity={scheme} onDuplicate={onDuplicate} onClose={vi.fn()} modalState={PopUpState.Opened} />,
+      <DuplicateScheme entity={scheme} onDuplicate={onDuplicate} onClose={vi.fn()} isModalOpen={true} />,
     );
 
     expect(baseElement).toBeTruthy();
