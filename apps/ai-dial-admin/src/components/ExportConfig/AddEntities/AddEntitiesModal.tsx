@@ -1,7 +1,7 @@
 'use client';
 import { FC, useMemo, useState } from 'react';
 
-import { DialFormPopup, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, DialNoDataContent, PopupSize } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridOptions, SelectionChangedEvent } from 'ag-grid-community';
 
 import { getButtonTitle } from '@/src/components/ExportConfig/AddEntities/utils';
@@ -58,6 +58,7 @@ const AddEntitiesModal: FC<Props> = ({ isModalOpen, selectedTab, entities, colum
       title={modalTitle}
       portalId="AddExportEntities"
       open={isModalOpen}
+      size={PopupSize.Lg}
       cssClass="h-[800px]"
       onSubmit={() => onApply(selectedEntities, selectedDependencies)}
       onCancel={onClose}
