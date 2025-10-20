@@ -122,33 +122,31 @@ const Containers = <T extends DialInterceptor | DialModel>({
             />
           </div>
         ) : (
-          <div className="flex flex-col lg:w-[50%] gap-2">
-            <div className="flex-1 min-w-0">
-              <div className="w-full">
-                <Field fieldTitle={t(SourceI18nKey.Container)} htmlFor={'containers'} />
-                <DialInputPopup
-                  open={isModalOpen}
-                  onOpen={onOpenModal}
-                  selectedValue={selectedContainer?.name}
-                  elementId={'containers'}
-                  emptyValueText={t(EntitiesI18nKey.NoContainers)}
-                  disabled={!deploymentsEnabled}
-                  errorText={errorText}
-                >
-                  <SelectContainerModal
-                    selectedId={entity.source?.containerId}
-                    onClose={onCloseModal}
-                    onApply={onSelect}
-                    interceptorContainers={containers}
-                    isModalOpen={isModalOpen}
-                  />
-                </DialInputPopup>
-              </div>
+          <div className="flex w-full gap-2">
+            <div className="w-full lg:w-[45%]">
+              <Field fieldTitle={t(SourceI18nKey.Container)} htmlFor={'containers'} />
+              <DialInputPopup
+                open={isModalOpen}
+                onOpen={onOpenModal}
+                selectedValue={selectedContainer?.name}
+                elementId={'containers'}
+                emptyValueText={t(EntitiesI18nKey.NoContainers)}
+                disabled={!deploymentsEnabled}
+                errorText={errorText}
+              >
+                <SelectContainerModal
+                  selectedId={entity.source?.containerId}
+                  onClose={onCloseModal}
+                  onApply={onSelect}
+                  interceptorContainers={containers}
+                  isModalOpen={isModalOpen}
+                />
+              </DialInputPopup>
             </div>
             {entity.source?.containerId && deploymentsEnabled && (
               <DialButton
                 iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
-                cssClass={classNames(errorText ? 'self-center mt-[3px]' : 'self-end')}
+                cssClass={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
                 title={t(SourceI18nKey.OpenContainer)}
                 variant={ButtonVariant.Secondary}
                 onClick={() => openContainer()}

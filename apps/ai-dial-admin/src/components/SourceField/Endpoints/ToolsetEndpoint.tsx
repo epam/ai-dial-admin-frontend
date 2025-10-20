@@ -1,14 +1,15 @@
 'use client';
 
 import { FC } from 'react';
+import classNames from 'classnames';
 import { DialSelectField, DialTextInputField, SelectOption } from '@epam/ai-dial-ui-kit';
 
-import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ToolsetTransport } from '@/src/types/toolset';
 import { useI18n } from '@/src/locales/client';
-import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
+
+import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
 
 interface Props {
   entity: Toolset;
@@ -26,24 +27,9 @@ const ToolsetEndpoint: FC<Props> = ({ entity, readonly, onChange, prefix, isModa
   ];
 
   return (
-    <div className="w-full flex flex-col gap-6 lg:w-[45%]">
+    <div className={classNames('w-full flex flex-col gap-6', !isModal && ' lg:w-[45%]')}>
       {prefix ? (
-        <ComplexInput
-          readonly={readonly}
-          elementId="endpoint"
-          textBeforeInput={prefix}
-          placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
-          fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
-          value={entity.source?.completionEndpointPath}
-          fullValue={`${prefix}${entity.source?.completionEndpointPath}`}
-          copyable={true}
-          onChange={(completionEndpointPath) =>
-            onChange?.({
-              ...entity,
-              source: { ...entity.source, completionEndpointPath } as SOURCE_FIELD,
-            })
-          }
-        />
+        <ReadonlyField elementId="endpoint" title={t(EntitiesI18nKey.ToolsetEndpoint)} value={prefix} />
       ) : (
         <DialTextInputField
           disabled={readonly}
