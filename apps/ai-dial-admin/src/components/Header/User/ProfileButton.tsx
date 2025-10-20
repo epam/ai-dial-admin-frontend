@@ -1,9 +1,9 @@
-import { IconUser, IconX } from '@tabler/icons-react';
+import {  IconX } from '@tabler/icons-react';
 import { useSession } from 'next-auth/react';
-import Image from 'next/image';
 import { useCallback } from 'react';
 
 import { useAppContext } from '@/src/context/AppContext';
+import UserInfo from './UserMenu/UserInfo';
 
 const ProfileButton = () => {
   const { userMenuOpen, toggleUserMenu } = useAppContext();
@@ -22,10 +22,8 @@ const ProfileButton = () => {
     >
       {userMenuOpen ? (
         <IconX className="text-secondary" width={24} height={24} id="close-icon" />
-      ) : session?.user?.image ? (
-        <Image role="img" className="rounded" src={session?.user?.image} width={24} height={24} alt="User avatar" />
       ) : (
-        <IconUser role="img" width={24} height={24} />
+        <UserInfo session={session} />
       )}
     </button>
   );
