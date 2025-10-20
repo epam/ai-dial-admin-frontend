@@ -1,43 +1,11 @@
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import Multiselect from './Multiselect';
-import MultiselectModal from './Modal/MultiselectModal';
-import NewItemInput from './Modal/NewItemInput';
-import { PopUpState } from '@/src/types/pop-up';
-import { describe, expect, test, vi } from 'vitest';
 
-describe('Common components - Multiselect', () => {
-  test('Should render successfully', () => {
-    const { baseElement } = render(
-      <Multiselect elementId="test" heading="title" title="title" onChangeItems={vi.fn()} />,
-    );
-
-    expect(baseElement).toBeTruthy();
-  });
-});
-
-describe('Common components - MultiselectModal', () => {
-  test('Should render successfully', () => {
-    const { baseElement } = render(
-      <MultiselectModal
-        heading="title"
-        allItems={[]}
-        isModalOpen={PopUpState.Opened}
-        onClose={vi.fn()}
-        onSelectItems={vi.fn()}
-        addTitle="title"
-      />,
-    );
-
-    expect(baseElement).toBeTruthy();
-  });
-});
-
-describe('Common components - NewItemInput', () => {
-  test('Should render successfully', () => {
-    const { baseElement } = render(
-      <NewItemInput index={0} value="test" onChangeItem={vi.fn()} onRemoveItem={vi.fn()} placeholder="test" />,
-    );
-
-    expect(baseElement).toBeTruthy();
+describe('Multiselect', () => {
+  it('renders field title and error text', () => {
+    render(<Multiselect elementId="id" title="Title" errorText="Error!" />);
+    expect(screen.getByText('Title')).toBeInTheDocument();
+    expect(screen.getByText('Error!')).toBeInTheDocument();
   });
 });

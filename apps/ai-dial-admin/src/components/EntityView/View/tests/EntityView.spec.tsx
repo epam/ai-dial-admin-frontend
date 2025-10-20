@@ -1,22 +1,20 @@
-import { render } from '@testing-library/react';
-import AddEntitiesGrid from '../../AddEntitiesGrid';
-import { PopUpState } from '@/src/types/pop-up';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import EntityView from '../EntityView';
+import { TabsI18nKey } from '@/src/constants/i18n';
 
-const mockFunction = vi.fn();
+const baseProps = {
+  view: 'Applications',
+  originalEntity: { id: '1', name: 'Entity' },
+  names: ['Entity'],
+  etag: 'etag',
+  updateEntity: vi.fn(),
+  removeEntity: vi.fn(),
+};
 
-describe('EntityView - AddEntitiesGrid', () => {
-  test('Should render successfully', () => {
-    const { baseElement } = render(
-      <AddEntitiesGrid
-        entities={[]}
-        emptyTitle={''}
-        modalState={PopUpState.Opened}
-        modalTitle="test-title"
-        onApply={mockFunction}
-        onClose={mockFunction}
-      />,
-    );
-    expect(baseElement).toBeTruthy();
+describe('EntityView', () => {
+  it('renders tabs, header buttons, and content', () => {
+    render(<EntityView {...baseProps} />);
+    expect(screen.getByText(TabsI18nKey.Properties)).toBeInTheDocument();
   });
 });

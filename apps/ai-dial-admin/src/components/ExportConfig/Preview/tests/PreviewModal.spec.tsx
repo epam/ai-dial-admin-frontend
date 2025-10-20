@@ -1,13 +1,12 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import PreviewModal from '../PreviewModal';
-import { PopUpState } from '@/src/types/pop-up';
 import { ExportType } from '@/src/types/export';
 import { ButtonsI18nKey, ExportI18nKey } from '@/src/constants/i18n';
 
 const defaultProps = {
   exportRequest: { $type: ExportType.Full },
-  modalState: PopUpState.Opened,
+  isModalOpen: true,
   onClose: vi.fn(),
   onPrepare: vi.fn(),
 };
