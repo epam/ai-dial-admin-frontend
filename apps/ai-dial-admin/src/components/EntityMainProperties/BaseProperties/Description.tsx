@@ -10,7 +10,6 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 
 interface Props<T> {
   entity: T;
-  readonly?: boolean;
   disabled?: boolean;
   onChangeEntity?: (entity: T) => void;
 }

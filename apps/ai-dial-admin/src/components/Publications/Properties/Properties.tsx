@@ -12,14 +12,16 @@ import { removeTrailingSlash } from '@/src/utils/files/path';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getActionClass } from '@/src/utils/publications';
 import PublicationPermissions from './Permissions';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
+  view: ApplicationRoute;
   publication: Publication;
   applicationSchemes?: DialApplicationScheme[] | null;
   children: ReactNode;
 }
 
-const BasePublicationProperties: FC<Props> = ({ publication, children, applicationSchemes }) => {
+const BasePublicationProperties: FC<Props> = ({ view, publication, children, applicationSchemes }) => {
   const t = useI18n() as (str: string) => string;
   const indicatorClassNames = classNames(
     'flex w-2 h-2 mr-1 rounded no-user-select',
@@ -33,14 +35,15 @@ const BasePublicationProperties: FC<Props> = ({ publication, children, applicati
   return (
     <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full">
       <div className="flex flex-col sm:flex-row gap-8">
-        {!application && (
-          <LabelledText label={t(EntitiesI18nKey.Action)}>
-            <p className="truncate items-center flex">
-              <span className={indicatorClassNames} />
-              {t(ACTION_I18N_KEYS[publication.action])}
-            </p>
-          </LabelledText>
-        )}
+        {view === ApplicationRoute.Prompts ||
+          (view === ApplicationRoute.Files && (
+            <LabelledText label={t(EntitiesI18nKey.Action)}>
+              <p className="truncate items-center flex">
+                <span className={indicatorClassNames} />
+                {t(ACTION_I18N_KEYS[publication.action])}
+              </p>
+            </LabelledText>
+          ))}
         {runnerId && (
           <LabelledText label={t(EntitiesI18nKey.Runner)}>
             <p className="truncate items-center">{runner?.['dial:applicationTypeDisplayName'] || runnerId}</p>

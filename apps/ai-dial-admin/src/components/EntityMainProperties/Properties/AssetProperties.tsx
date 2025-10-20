@@ -13,6 +13,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getPromptVersionError } from '@/src/utils/validation/version-error';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
+import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
 
 interface Props {
   view?: ApplicationRoute;
@@ -85,6 +86,10 @@ const AssetProperties: FC<Props> = ({
           isEntityImmutable={isEntityImmutable}
           onChangeEntity={onChangeEntity}
         />
+      )}
+
+      {view === ApplicationRoute.AssetsApplications && !isEntityImmutable && (
+        <ToolsetEndpoint isModal={true} entity={entity} onChange={onChangeEntity} />
       )}
     </div>
   );
