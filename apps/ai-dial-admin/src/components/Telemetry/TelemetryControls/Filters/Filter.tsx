@@ -22,7 +22,7 @@ const Filter: FC<Props> = ({ id, onClose, onEdit, dropdownData, filterData, rout
   const t = useI18n() as (t: string) => string;
   const filterTypeConfig = getFilterTypeConfig(t);
   const filterConditionConfig = getFilterConditionConfig(t);
-  const typeText = filterTypeConfig.find((item) => item.value === type)?.name;
+  const typeText = filterTypeConfig.find((item) => item.value === type)?.value;
   const conditionIcon = filterConditionConfig.find((item) => item.value === condition)?.icon;
 
   const addFilter = useCallback(
