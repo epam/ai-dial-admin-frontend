@@ -168,7 +168,6 @@ const CreateEntity = <T extends CreatePromptEntity>({
           entity={currentEntity}
           names={names}
           isUniqueNameError={isUniqueNameError}
-          initialValues={initialValues}
           onChangeEntity={(entity) => setEntity(entity as T)}
         />
       </div>

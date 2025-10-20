@@ -18,7 +18,7 @@ interface Props<T> {
 }
 
 const PublicationsList = <T extends Publication>({ data, route }: Props<T>) => {
-  const t = useI18n();
+  const t = useI18n() as (s: string) => string;
   const router = useRouter();
 
   const openInNewTab = useCallback(

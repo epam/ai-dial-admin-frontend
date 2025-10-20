@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { applicationRunnersApi, applicationsApi, assetsApi, interceptorsApi, modelsApi } from '@/src/app/api/api';
-import AppView from '@/src/components/Assets/Apps/View/View';
+import AppView from '@/src/components/Assets/Apps/View';
 import Page403 from '@/src/components/Page403/Page403';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
