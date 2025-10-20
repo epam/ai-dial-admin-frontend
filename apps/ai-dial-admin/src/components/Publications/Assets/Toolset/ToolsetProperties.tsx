@@ -2,7 +2,7 @@ import { FC, useEffect, useState } from 'react';
 import { DialTabs } from '@epam/ai-dial-ui-kit';
 
 import { EntityViewTab, propertiesTabs, toolsTabs } from '@/src/components/EntityView/View/utils';
-import Tool from '@/src/components/Toolsets/Tools/Tools';
+import ToolsView from '@/src/components/Toolsets/Tools/Tools';
 import { useI18n } from '@/src/locales/client';
 import { ToolsetPublication } from '@/src/models/dial/publications';
 import ToolsetInfo from './Info';
@@ -32,7 +32,7 @@ const ToolsProperties: FC<Props> = ({ publication }) => {
       <div className="flex-1 min-h-0 pt-[25px] lg:pt-0">
         {selectedTab === EntityViewTab.Properties && <ToolsetInfo toolset={toolset} />}
         {selectedTab === EntityViewTab.Tools && (
-          <Tool originalToolset={toolset} readonly={true} isAssetToolset={true} />
+          <ToolsView originalToolset={toolset} readonly={true} isAssetToolset={true} />
         )}
       </div>
     </div>
