@@ -1,4 +1,4 @@
-import {  IconX } from '@tabler/icons-react';
+import { IconX } from '@tabler/icons-react';
 import { useSession } from 'next-auth/react';
 import { useCallback } from 'react';
 
