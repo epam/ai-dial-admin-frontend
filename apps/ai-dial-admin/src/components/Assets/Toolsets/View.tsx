@@ -25,7 +25,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
-import ToolsView from '@/src/components/Toolsets/Tools/Tools';
+import Tool from '@/src/components/Toolsets/Tools/Tools';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
 
@@ -178,8 +178,7 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
             )}
 
             {activeTab === EntityViewTab.Tools && (
-              <ToolsView
-                isAssetToolset={true}
+              <Tool
                 originalToolset={originalToolset}
                 selectedToolset={selectedToolset}
                 onChangeToolset={onChangeEntity}

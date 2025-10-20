@@ -1,6 +1,5 @@
 import { FC, useCallback, useState } from 'react';
 
-import ApplicationSource from '@/src/components/Applications/ApplicationSource/ApplicationSource';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
@@ -13,6 +12,7 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getPromptVersionError } from '@/src/utils/validation/version-error';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
 
 interface Props {
   view?: ApplicationRoute;

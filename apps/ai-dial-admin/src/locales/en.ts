@@ -125,6 +125,8 @@ export default {
     NoAppRoutes: 'No App Routes',
     NoPrompts: 'No Prompts',
     NoFiles: 'No Files',
+    NoTemplates: 'No Templates',
+    NoContainers: 'No Containers',
     NoPublications: 'No Publications',
     NoUsageLog: 'No Logs',
     NoActivityAudit: 'No Activities',

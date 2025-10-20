@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef } from 'react';
 
+import { getPrompt } from '@/src/app/[lang]/prompts/actions';
 import { generateExportList } from '@/src/components/Assets/ExportAssets/export';
 import {
   getDuplicateModal,
@@ -23,7 +24,7 @@ import { ImportFileType } from '@/src/types/import';
 import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { downloadFile, downloadJson } from '@/src/utils/download';
-import { prepareEntityForDuplicate } from '@/src/components/EntityListView/Components/utils';
+import { prepareEntityForDuplicate } from '@/src/utils/entities/prepare-entity-for-duplicate';
 import { getListOfPathsToBulkDelete, getListOfPathsToMove } from '@/src/utils/files/path';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import BulkButtons from './BulkButtons';
@@ -96,7 +97,14 @@ const Actions = <T extends object>({
   const onDuplicate = useCallback(
     (clonedEntity: T) => {
       const duplicate = async () => {
-        const preparedEntity = (await prepareEntityForDuplicate(route, clonedEntity, entityRef)) as T;
+        let prevPromptData = null;
+
+        if (route === ApplicationRoute.Prompts) {
+          const { folderId, name, version } = entityRef.current as DialPrompt;
+          prevPromptData = await getPrompt(folderId, name as string, version);
+        }
+
+        const preparedEntity = prepareEntityForDuplicate(route, clonedEntity, prevPromptData) as T;
         const res = await createEntity?.(preparedEntity);
         if (res?.success) {
           handleModalClose();
