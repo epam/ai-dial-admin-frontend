@@ -7,6 +7,7 @@ import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { getAllowTools, getTransport } from '@/src/utils/entities/toolset-transport';
 
 export async function getToolsets(path: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -15,7 +16,11 @@ export async function getToolsets(path: string) {
 
 export async function createToolset(toolset: AssetToolset) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.createAsset(toolset, ResourceType.TOOLSET, token);
+  return assetsApi.createAsset(
+    { ...toolset, allowedTools: getAllowTools(toolset), transport: getTransport(toolset) },
+    ResourceType.TOOLSET,
+    token,
+  );
 }
 
 export async function getToolset(folderId: string, name: string, version: string, etag: string) {
@@ -45,4 +50,9 @@ export async function bulkDeleteToolsets(paths: { path: string }[]) {
 export async function moveToolsets(paths: string[], newPath: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return assetsApi.moveAssets(token, paths, newPath, ResourceType.TOOLSET);
+}
+
+export async function getAssetTools(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetsApi.getTools(name, token);
 }

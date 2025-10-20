@@ -126,6 +126,10 @@ export const MENU_CONFIGURATION = (iconSize: number): MenuGroupConfiguration[] =
         href: ApplicationRoute.ApplicationPublications,
       },
       {
+        key: MenuI18nKey.ToolsetPublications,
+        href: ApplicationRoute.ToolsetPublications,
+      },
+      {
         key: MenuI18nKey.PromptPublications,
         href: ApplicationRoute.PromptPublications,
       },
