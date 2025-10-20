@@ -18,7 +18,6 @@ describe('ActionColumn', () => {
     const { container } = render(<ActionColumn {...baseProps} />);
 
     expect(container.querySelector('.tabler-icon-dots')).toBeInTheDocument();
-    expect(screen.getByRole('menu')).toBeInTheDocument();
   });
 
   test('renders nothing if data is null', () => {

@@ -4,6 +4,8 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState
 
 import { IconFileTypeZip } from '@tabler/icons-react';
 import {
+  DialIcon,
+  DialLoadFileAreaField,
   DialRadioGroup,
   DialSwitch,
   DialTextInputField,
@@ -14,8 +16,7 @@ import {
 import Json from '@/public/images/icons/file/json.svg';
 import Field from '@/src/components/Common/Field/Field';
 import { CreateFolderSteps } from '@/src/components/Common/FolderCreate/constants';
-import LoadFileAreaField from '@/src/components/Common/LoadFileArea/LoadFileAreaField';
-import { FoldersI18nKey, ImportI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, FoldersI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_ZIP_TYPE } from '@/src/constants/request-headers';
 import { useI18n } from '@/src/locales/client';
 import { Step, StepStatus } from '@/src/models/step';
@@ -176,28 +177,32 @@ const FolderCreateSetup: FC<Props> = ({
         </div>
         <div className="mt-2 flex-1 min-h-0">
           {fileType === ImportFileType.ARCHIVE && (
-            <LoadFileAreaField
+            <DialLoadFileAreaField
               elementId="importArchive"
               files={files?.[0] ? [files[0]] : []}
               fieldTitle={t(ImportI18nKey.File)}
-              emptyTitle={t(ImportI18nKey.DropAnyFile)}
+              emptyTextFirstLine={t(ImportI18nKey.DropAnyFile)}
+              emptyTextSecondLine={t(BasicI18nKey.Or)}
+              emptyButtonLabel={t(ButtonsI18nKey.Browse)}
               iconBeforeInput={<IconFileTypeZip width={18} height={18} className="text-secondary" />}
               fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
               fileCountError={t(ImportI18nKey.ArchiveDescription)}
               acceptTypes="application/zip, .zip, application/x-zip-compressed"
-              onChangeFile={changeFile}
-              isMultiple={false}
+              onChange={changeFile}
+              multiple={false}
             />
           )}
 
           {fileType === ImportFileType.FILES && (
-            <LoadFileAreaField
+            <DialLoadFileAreaField
               elementId="importFiles"
               fieldTitle={t(ImportI18nKey.Files)}
-              emptyTitle={t(ImportI18nKey.DropAnyFile)}
+              emptyTextFirstLine={t(ImportI18nKey.DropAnyFile)}
+              emptyTextSecondLine={t(BasicI18nKey.Or)}
+              emptyButtonLabel={t(ButtonsI18nKey.Browse)}
               files={files}
               acceptTypes={acceptTypes}
-              onChangeFile={changeFile}
+              onChange={changeFile}
               dynamicIcon={getFileIcon}
               errorText={t(ImportI18nKey.FileError)}
               maxFilesCount={30}
@@ -205,19 +210,17 @@ const FolderCreateSetup: FC<Props> = ({
           )}
 
           {fileType === ImportFileType.JSON && (
-            <LoadFileAreaField
+            <DialLoadFileAreaField
               elementId="importJSON"
               fieldTitle={t(ImportI18nKey.Files)}
-              emptyTitle={t(ImportI18nKey.DropFiles)}
+              emptyTextFirstLine={t(ImportI18nKey.DropFiles)}
+              emptyTextSecondLine={t(BasicI18nKey.Or)}
+              emptyButtonLabel={t(ButtonsI18nKey.Browse)}
               files={files}
-              iconBeforeInput={
-                <i className="text-secondary">
-                  <Json />
-                </i>
-              }
+              iconBeforeInput={<DialIcon icon={<Json />} className="text-secondary" />}
               acceptTypes="application/json"
               fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
-              onChangeFile={changeFile}
+              onChange={changeFile}
               maxFilesCount={30}
             />
           )}

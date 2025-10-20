@@ -1,5 +1,4 @@
 import { Session } from 'next-auth';
-import Image from 'next/image';
 import { FC } from 'react';
 import { IconUser } from '@tabler/icons-react';
 
@@ -14,7 +13,8 @@ const UserInfo: FC<Props> = ({ session }) => {
   return (
     <div className="flex items-center gap-3 p-4">
       {session?.user?.image ? (
-        <Image className="rounded" src={session?.user?.image} width={18} height={18} alt="User avatar" />
+        // eslint-disable-next-line @next/next/no-img-element
+        <img className="rounded" src={session?.user?.image} width={18} height={18} alt="User avatar" />
       ) : (
         <IconUser width={18} height={18} />
       )}

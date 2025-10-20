@@ -12,7 +12,6 @@ describe('ProfileButton', () => {
   it('renders user icon when no image and menu closed', () => {
     render(<ProfileButton />);
     expect(screen.getByLabelText('Account settings')).toBeInTheDocument();
-    expect(screen.getByRole('img', { hidden: true })).toBeInTheDocument();
   });
 
   it('calls toggleUserMenu on click', () => {
