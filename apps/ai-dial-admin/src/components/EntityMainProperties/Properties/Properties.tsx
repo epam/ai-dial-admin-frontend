@@ -13,7 +13,6 @@ interface Props<T> {
   names: string[];
   versionsMap?: Record<string, string[]>;
   runners?: DialApplicationScheme[];
-  initialValues?: Partial<T>;
   isUniqueNameError?: boolean;
   isEntityImmutable?: boolean;
   onChangeEntity: (entity: object) => void;
@@ -22,7 +21,6 @@ interface Props<T> {
 const Properties = <T extends object>({
   view,
   runners,
-  initialValues,
   isUniqueNameError,
   versionsMap,
   entity,
@@ -34,14 +32,7 @@ const Properties = <T extends object>({
 
   if (isAssetView(view)) {
     return (
-      <AssetProperties
-        view={view}
-        runners={runners}
-        versionsMap={versionsMap}
-        initialValues={initialValues}
-        entity={entity as Asset}
-        {...props}
-      />
+      <AssetProperties view={view} runners={runners} versionsMap={versionsMap} entity={entity as Asset} {...props} />
     );
   }
 

@@ -58,7 +58,7 @@ const BaseEntityList = <T extends object>({
   showExport,
   context,
 }: Props<T>) => {
-  const t = useI18n();
+  const t = useI18n() as (s: string) => string;
   const router = useRouter();
   const gridOptions: GridOptions = {
     onCellClicked: (e) => {
