@@ -1,55 +1,29 @@
-import { render } from '@testing-library/react';
-import IconGallery from '@/src/components/IconGallery/IconGallery';
-import { fireEvent, getByText } from '@testing-library/react';
-import { getIconPath } from '@/src/utils/themes/icon-path';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
+import IconGallery from './IconGallery';
 
-const icons = [
-  {
-    url: `MyIcon.svg`,
-    name: 'MyIcon',
-  },
-];
-
-vi.mock('@/src/components/IconGallery/Icons.config', () => ({
-  getIconsConfig: vi.fn(() => {
-    return icons;
-  }),
-}));
-
-describe('Components - ItemGallery', () => {
-  test('Should render icon successfully', () => {
+describe('IconGallery', () => {
+  test('renders None icon and all icons', () => {
     const setSelectedIcon = vi.fn();
-    const { baseElement } = render(<IconGallery selectedIcon={''} setSelectedIcon={setSelectedIcon} />);
-
-    expect(baseElement).toBeTruthy();
-    const noneOption = baseElement.getElementsByTagName('i')[0];
-    expect(noneOption).toBeTruthy();
-    expect(getByText(baseElement, 'None')).toBeTruthy();
-    const iconOption = baseElement.getElementsByTagName('img')[0];
-    const alt = iconOption.getAttribute('alt');
-    const url = iconOption.getAttribute('src');
-    expect(url).toBe(getIconPath(`${icons[0].name}.svg`));
-    expect(alt).toBe(icons[0].name);
+    render(<IconGallery selectedIcon={null} setSelectedIcon={setSelectedIcon} />);
+    expect(screen.getByText('None')).toBeInTheDocument();
+    expect(screen.getByText('Imagen')).toBeInTheDocument();
+    expect(screen.getByText('Mind-Map')).toBeInTheDocument();
   });
 
-  test('Should select none icon successfully', () => {
+  test('calls setSelectedIcon when None icon is clicked', () => {
     const setSelectedIcon = vi.fn();
-    const { baseElement } = render(<IconGallery selectedIcon={''} setSelectedIcon={setSelectedIcon} />);
-
-    expect(baseElement).toBeTruthy();
-    const noneOption = baseElement.getElementsByTagName('button')[0];
-    fireEvent.click(noneOption);
+    render(<IconGallery selectedIcon={null} setSelectedIcon={setSelectedIcon} />);
+    fireEvent.click(screen.getByText('None'));
     expect(setSelectedIcon).toHaveBeenCalledWith('');
   });
 
-  test('Should select icon successfully', () => {
+  test('calls setSelectedIcon when a gallery icon is clicked', () => {
     const setSelectedIcon = vi.fn();
-    const { baseElement } = render(<IconGallery selectedIcon={''} setSelectedIcon={setSelectedIcon} />);
-
-    expect(baseElement).toBeTruthy();
-    const iconOption = baseElement.getElementsByTagName('button')[1];
-    fireEvent.click(iconOption);
-    expect(setSelectedIcon).toHaveBeenCalledWith(icons[0].url);
+    render(<IconGallery selectedIcon={null} setSelectedIcon={setSelectedIcon} />);
+    fireEvent.click(screen.getByText('Mind-Map').closest('button')!);
+    expect(setSelectedIcon).toHaveBeenCalledWith('Mind-Map.svg');
+    fireEvent.click(screen.getByText('Imagen').closest('button')!);
+    expect(setSelectedIcon).toHaveBeenCalledWith('Imagen.svg');
   });
 });
