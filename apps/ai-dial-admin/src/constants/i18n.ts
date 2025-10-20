@@ -141,6 +141,7 @@ export enum EntitiesI18nKey {
   NewVersion = 'Entities.NewVersion',
   NewEntity = 'Entities.NewEntity',
   DuplicationType = 'Entities.DuplicationType',
+  ToolsetEndpoint = 'Entities.ToolsetEndpoint',
 }
 
 export enum DeleteI18nKey {
