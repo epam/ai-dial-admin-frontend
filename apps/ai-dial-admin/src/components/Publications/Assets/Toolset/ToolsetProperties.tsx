@@ -31,7 +31,9 @@ const ToolsProperties: FC<Props> = ({ publication }) => {
       <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab as EntityViewTab)} />
       <div className="flex-1 min-h-0 pt-[25px] lg:pt-0">
         {selectedTab === EntityViewTab.Properties && <ToolsetInfo toolset={toolset} />}
-        {selectedTab === EntityViewTab.Tools && <Tool originalToolset={toolset} />}
+        {selectedTab === EntityViewTab.Tools && (
+          <Tool originalToolset={toolset} readonly={true} isAssetToolset={true} />
+        )}
       </div>
     </div>
   ) : null;

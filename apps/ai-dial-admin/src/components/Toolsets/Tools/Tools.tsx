@@ -25,6 +25,7 @@ import ToolsFilter from './Filter/ToolsFilter';
 import ToolItem from './ToolItem';
 import { ToolFilter } from './type';
 import { getFilteredTools } from './utils';
+import { getAssetTools } from '../../../app/[lang]/assets-toolsets/actions';
 
 const filtersConfiguration = [
   ToolFilter.Enabled,
@@ -36,10 +37,12 @@ const filtersConfiguration = [
 interface Props {
   originalToolset: Toolset;
   selectedToolset?: Toolset;
+  isAssetToolset?: boolean;
+  readonly?: boolean;
   onChangeToolset?: (toolset: Toolset) => void;
 }
 
-const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset }) => {
+const ToolsView: FC<Props> = ({ selectedToolset, isAssetToolset, readonly, originalToolset, onChangeToolset }) => {
   const t = useI18n();
 
   const [modalState, setModalState] = useState(PopUpState.Closed);
@@ -71,12 +74,12 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
   useEffect(() => {
     if (selectedToolset?.name) {
       setIsLoading(true);
-      getTools(selectedToolset?.name).then((tools) => {
+      (isAssetToolset ? getAssetTools(selectedToolset?.name) : getTools(selectedToolset?.name)).then((tools) => {
         setIsLoading(false);
         setAvailableTools(tools || []);
       });
     }
-  }, [selectedToolset?.name, isNotSavedToolset, selectedToolset?.endpoint]);
+  }, [selectedToolset?.name, isAssetToolset, isNotSavedToolset, selectedToolset?.endpoint]);
 
   useEffect(() => {
     setUseAllTools(!selectedToolset?.allowedTools || selectedToolset?.allowedTools.length === 0);
@@ -185,7 +188,7 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
                   selectedFilters={selectedFilters}
                   onSelectFilter={onSelectFilter}
                 />
-                {selectedToolset && (
+                {readonly && (
                   <DialButton
                     variant={ButtonVariant.Primary}
                     title={t(ButtonsI18nKey.Add)}
@@ -215,7 +218,7 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
               </div>
             )}
           </div>
-          {!useAllTools && <span className="tiny text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
+          {!useAllTools && readonly && <span className="tiny text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
           {isNotSavedToolset && <DialAlert variant={AlertVariant.Info} message={t(ToolsetI18nKey.ToolsWarning)} />}
         </div>
       )}
@@ -226,4 +229,4 @@ const ToolView: FC<Props> = ({ selectedToolset, originalToolset, onChangeToolset
   );
 };
 
-export default ToolView;
+export default ToolsView;
