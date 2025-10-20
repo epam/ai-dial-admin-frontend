@@ -1,8 +1,7 @@
 import { FC, useCallback } from 'react';
 
-import { DialSwitch, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialSelectField, DialSwitch, DialTextInputField, SelectOption } from '@epam/ai-dial-ui-kit';
 
-import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
 import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
 import EditorUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/EditorUrl';
@@ -18,7 +17,6 @@ import {
 } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme, TypeBucketCopy, TypeEntity } from '@/src/models/dial/application';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 
 interface Props {
@@ -28,15 +26,15 @@ interface Props {
 
 const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
   const t = useI18n() as (key: string) => string;
-  const types: DropdownItemsModel[] = [
-    { id: BasicI18nKey.None, name: t(BasicI18nKey.None) },
-    { id: TypeEntity.OBJECT, name: t(TypeI18nKey.Object) },
-    { id: TypeEntity.BOOLEAN, name: t(TypeI18nKey.Boolean) },
+  const types: SelectOption[] = [
+    { value: BasicI18nKey.None, label: t(BasicI18nKey.None) },
+    { value: TypeEntity.OBJECT, label: t(TypeI18nKey.Object) },
+    { value: TypeEntity.BOOLEAN, label: t(TypeI18nKey.Boolean) },
   ];
 
-  const typeBucketCopy: DropdownItemsModel[] = [
-    { id: TypeBucketCopy.ENABLED, name: t(BasicI18nKey.Enabled) },
-    { id: TypeBucketCopy.DISABLED, name: t(BasicI18nKey.Disabled) },
+  const typeBucketCopy: SelectOption[] = [
+    { value: TypeBucketCopy.ENABLED, label: t(BasicI18nKey.Enabled) },
+    { value: TypeBucketCopy.DISABLED, label: t(BasicI18nKey.Disabled) },
   ];
 
   const onChange = useCallback(
@@ -122,24 +120,24 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
       />
 
       <div className="lg:w-[35%] flex flex-col gap-y-6">
-        <DropdownField
-          selectedValue={runner.type || BasicI18nKey.None}
+        <DialSelectField
+          value={runner.type || BasicI18nKey.None}
           elementId="type"
-          items={types}
+          options={types}
           fieldTitle={t(EntityFieldsI18nKey.type)}
           placeholder={t(EntityPlaceholdersI18nKey.Type)}
-          onChange={(type: string) => {
+          onChange={(type) => {
             onChangeRunner({ ...runner, type: type === BasicI18nKey.None ? void 0 : (type as TypeEntity) });
           }}
         />
 
-        <DropdownField
-          selectedValue={runner['dial:applicationTypeBucketCopy'] || TypeBucketCopy.DISABLED}
+        <DialSelectField
+          value={runner['dial:applicationTypeBucketCopy'] || TypeBucketCopy.DISABLED}
           elementId="typeCopy"
-          items={typeBucketCopy}
+          options={typeBucketCopy}
           fieldTitle={t(EntityFieldsI18nKey['dial:applicationTypeBucketCopy'])}
           placeholder={t(EntityPlaceholdersI18nKey.TypeBucketCopy)}
-          onChange={onChangeTypeCopyBucket}
+          onChange={(type) => onChangeTypeCopyBucket(type as string)}
         />
       </div>
       <TopicsControl entity={runner} onChange={onChangeRunner} />

@@ -1,9 +1,8 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 
 import classNames from 'classnames';
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialRemoveButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
 
-import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -73,7 +72,7 @@ const Path: FC<Props> = ({ index, path, readonly, optional, fieldTitle, allPaths
           invalid={(isEmptyPath && index === 0 && isAllEmptyValues) || isInvalidPath}
         />
       </div>
-      {!readonly && <RemoveButton onClick={() => onRemove(index)} cssClass={removeButtonClass} />}
+      {!readonly && <DialRemoveButton onClick={() => onRemove(index)} cssClass={removeButtonClass} />}
     </div>
   );
 };

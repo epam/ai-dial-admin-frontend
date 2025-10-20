@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialInputPopup, DialSelectField } from '@epam/ai-dial-ui-kit';
 
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 import { ApplicationRoute } from '@/src/types/routes';
 import { DialModel } from '@/src/models/dial/model';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { PopUpState } from '@/src/types/pop-up';
-import { CreateI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
 import { useNotification } from '@/src/context/NotificationContext';
 import { getErrorNotification } from '@/src/utils/notification';
@@ -20,9 +19,7 @@ import { useI18n } from '@/src/locales/client';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import Field from '@/src/components/Common/Field/Field';
-import InputModal from '@/src/components/Common/InputModal/InputModal';
 import SelectContainerModal from '@/src/components/SourceField/Containers/SelectContainerModal';
-import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
 
 interface Props<T> {
@@ -48,17 +45,17 @@ const Containers = <T extends DialInterceptor | DialModel>({
   const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
   const showNotificationRef = useRef(showNotification);
 
-  const [modalState, setModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [containers, setContainers] = useState<Container[]>([]);
   const [selectedContainer, setSelectedContainer] = useState<Container | null>(null);
 
   const onOpenModal = useCallback(() => {
-    setModalState(PopUpState.Opened);
-  }, [setModalState]);
+    setIsModalOpen(true);
+  }, [setIsModalOpen]);
 
   const onCloseModal = useCallback(() => {
-    setModalState(PopUpState.Closed);
-  }, [setModalState]);
+    setIsModalOpen(false);
+  }, [setIsModalOpen]);
 
   const onSelect = useCallback(
     (id?: string) => {
@@ -114,45 +111,48 @@ const Containers = <T extends DialInterceptor | DialModel>({
       <div className="flex lg:flex-row flex-col gap-2 items-end">
         {isModal ? (
           <div className="flex flex-col w-full">
-            <DropdownField
-              items={containers.map((container) => ({ id: container.id, name: container.name }))}
-              onChange={onSelect}
+            <DialSelectField
+              options={containers.map((container) => ({ value: container.id, label: container.name }))}
+              onChange={(container) => onSelect(container as string)}
               elementId={'source-type'}
-              selectedValue={containers.find((container) => container.id === entity.source?.containerId)?.id}
+              value={containers.find((container) => container.id === entity.source?.containerId)?.id}
               placeholder={t(CreateI18nKey.SelectContainer)}
               fieldTitle={t(EntityFieldsI18nKey.container)}
               readonly={!deploymentsEnabled}
             />
           </div>
         ) : (
-          <div className="flex flex-col lg:w-[35%]">
-            <Field fieldTitle={t(SourceI18nKey.Container)} htmlFor={'containers'} />
-            <InputModal
-              modalState={modalState}
-              onOpenModal={onOpenModal}
-              selectedValue={selectedContainer?.name}
-              elementId={'containers'}
-              readonly={!deploymentsEnabled}
-              errorText={errorText}
-            >
-              <SelectContainerModal
-                selectedId={entity.source?.containerId}
-                onClose={onCloseModal}
-                onApply={onSelect}
-                interceptorContainers={containers}
-                modalState={modalState}
+          <div className="flex w-full gap-2">
+            <div className="w-full lg:w-[45%]">
+              <Field fieldTitle={t(SourceI18nKey.Container)} htmlFor={'containers'} />
+              <DialInputPopup
+                open={isModalOpen}
+                onOpen={onOpenModal}
+                selectedValue={selectedContainer?.name}
+                elementId={'containers'}
+                emptyValueText={t(EntitiesI18nKey.NoContainers)}
+                disabled={!deploymentsEnabled}
+                errorText={errorText}
+              >
+                <SelectContainerModal
+                  selectedId={entity.source?.containerId}
+                  onClose={onCloseModal}
+                  onApply={onSelect}
+                  interceptorContainers={containers}
+                  isModalOpen={isModalOpen}
+                />
+              </DialInputPopup>
+            </div>
+            {entity.source?.containerId && deploymentsEnabled && (
+              <DialButton
+                iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
+                cssClass={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
+                title={t(SourceI18nKey.OpenContainer)}
+                variant={ButtonVariant.Secondary}
+                onClick={() => openContainer()}
               />
-            </InputModal>
+            )}
           </div>
-        )}
-        {entity.source?.containerId && deploymentsEnabled && !isModal && (
-          <DialButton
-            iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
-            cssClass={classNames(errorText ? 'self-center mt-[3px]' : 'self-end')}
-            title={t(SourceI18nKey.OpenContainer)}
-            variant={ButtonVariant.Secondary}
-            onClick={() => openContainer()}
-          />
         )}
       </div>
       {entity.source?.containerId && selectedContainer && !isModal && (

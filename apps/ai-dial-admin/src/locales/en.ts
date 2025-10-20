@@ -125,6 +125,8 @@ export default {
     NoAppRoutes: 'No App Routes',
     NoPrompts: 'No Prompts',
     NoFiles: 'No Files',
+    NoTemplates: 'No Templates',
+    NoContainers: 'No Containers',
     NoPublications: 'No Publications',
     NoUsageLog: 'No Logs',
     NoActivityAudit: 'No Activities',
@@ -163,7 +165,7 @@ export default {
     Table: 'Table',
     Form: 'Generated form',
     Ui: 'Application custom UI',
-    ModelEndpoint: 'Model Endpoint',
+    ToolsetEndpoint: 'Toolset Endpoint',
     // modals
     SaveChangesTitle: 'Save Changes',
     SaveChangesDescription: 'Save changes before opening the parameters tab. All unsaved changes will be lost.',

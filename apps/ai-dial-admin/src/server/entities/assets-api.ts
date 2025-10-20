@@ -12,7 +12,6 @@ import { getFileName } from '@/src/utils/api/get-file-name';
 import { changePath, getFolderNameAndPath } from '@/src/utils/files/path';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
-import { Tool } from '@/src/models/dial/toolset';
 
 export enum ResourceOperation {
   LIST = 'list',
@@ -211,12 +210,5 @@ export class AssetsApi extends BaseApi {
         fileName: '',
       };
     });
-  }
-
-  // Toolset specific
-
-  getTools(name: string, token: JWT | null) {
-    const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/${name}/discovered-tools`;
-    return this.get(url, token).then((res) => (res as { tools: Tool[] })?.tools || []);
   }
 }

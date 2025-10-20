@@ -2,9 +2,9 @@ import { FC, MouseEvent, ReactNode } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
-import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import EmptyFileArea from './EmptyFileArea';
 import FilledInput from './FilledInput';
+import { DialRemoveButton } from '@epam/ai-dial-ui-kit';
 
 export interface LoadFileAreaProps {
   emptyTitle: string;
@@ -42,7 +42,7 @@ const LoadFileArea: FC<LoadFileAreaProps> = ({
     onChangeFile(files?.filter((f) => f.name !== fileUrl) || []);
   };
 
-  const removeFile = (fileUrl: string) => <RemoveButton onClick={(e) => removeClick(e, fileUrl)} />;
+  const removeFile = (fileUrl: string) => <DialRemoveButton onClick={(e) => removeClick(e, fileUrl)} />;
 
   const onChange = (files: File[]) => {
     onChangeFile(files);

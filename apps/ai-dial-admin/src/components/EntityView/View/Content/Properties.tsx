@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import ApplicationSource from '@/src/components/Applications/ApplicationSource/ApplicationSource';
+import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
 import Defaults from '@/src/components/Defaults/Defaults';
 import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';

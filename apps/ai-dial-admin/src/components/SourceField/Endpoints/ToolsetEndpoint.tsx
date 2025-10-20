@@ -3,11 +3,13 @@
 import { FC } from 'react';
 import classNames from 'classnames';
 import { DialSelectField, DialTextInputField, SelectOption } from '@epam/ai-dial-ui-kit';
+
 import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ToolsetTransport } from '@/src/types/toolset';
 import { useI18n } from '@/src/locales/client';
-import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
+
+import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
 
 interface Props {
   entity: Toolset;
@@ -25,34 +27,24 @@ const ToolsetEndpoint: FC<Props> = ({ entity, readonly, onChange, prefix, isModa
   ];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className={classNames('w-full flex flex-col gap-6', !isModal && ' lg:w-[45%]')}>
       {prefix ? (
-        <ComplexInput
+        <ReadonlyField elementId="endpoint" title={t(EntitiesI18nKey.ToolsetEndpoint)} value={prefix} />
+      ) : (
+        <DialTextInputField
+          readonly={readonly}
           elementId="endpoint"
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
-          fieldTitle={t(EntitiesI18nKey.ModelEndpoint)}
-          value={prefix}
-          inputContainerCssClass={classNames(!isModal ? 'lg:w-[35%]' : 'w-full')}
-          fullValue={prefix}
-          disabled={true}
+          fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
+          value={entity.endpoint}
+          onChange={(endpoint) => onChange?.({ ...entity, endpoint })}
         />
-      ) : (
-        <div className={classNames(!isModal && 'lg:w-[35%]')}>
-          <DialTextInputField
-            disabled={readonly}
-            elementId="endpoint"
-            placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
-            fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
-            value={entity.endpoint}
-            onChange={(endpoint) => onChange?.({ ...entity, endpoint })}
-          />
-        </div>
       )}
       {!isModal && (
         <DialSelectField
-          disabled={readonly}
           fieldTitle={t(EntityFieldsI18nKey.transport)}
           elementId="transport"
+          readonly={readonly}
           containerCssClass="w-[180px]"
           value={entity.transport || ToolsetTransport.SSE}
           options={transportOptions}

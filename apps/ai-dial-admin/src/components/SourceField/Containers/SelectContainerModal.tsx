@@ -1,39 +1,43 @@
+import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
-import { PopUpState } from '@/src/types/pop-up';
-import { Container } from '@/src/models/deployments';
-import { useI18n } from '@/src/locales/client';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
 import { SOURCE_CONTAINERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+import { Container } from '@/src/models/deployments';
 
-import Grid from '@/src/components/Grid/Grid';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import Popup from '@/src/components/Common/Popup/Popup';
+import Grid from '@/src/components/Grid/Grid';
 
 interface Props {
   selectedId?: string;
   interceptorContainers?: Container[];
-  modalState: PopUpState;
+  isModalOpen: boolean;
   onClose: () => void;
   onApply: (id?: string) => void;
 }
 
-const SelectContainerModal: FC<Props> = ({ selectedId, interceptorContainers, modalState, onClose, onApply }) => {
+const SelectContainerModal: FC<Props> = ({ selectedId, interceptorContainers, isModalOpen, onClose, onApply }) => {
   const t = useI18n();
 
   const [selectedContainer, setSelectedContainer] = useState(selectedId);
 
   return (
-    <Popup
+    <DialFormPopup
       onClose={onClose}
-      heading={t(CreateI18nKey.SelectContainer)}
-      portalId="entityNameToken"
-      state={modalState}
-      containerClassName={'h-[750px] lg:max-w-[65%]'}
+      title={t(CreateI18nKey.SelectContainer)}
+      portalId="SelectContainer"
+      open={isModalOpen}
+      size={PopupSize.Lg}
+      cssClass="h-[750px]"
+      onSubmit={() => onApply(selectedContainer)}
+      disableSubmitButton={!selectedContainer}
+      submitLabel={t(ButtonsI18nKey.Apply)}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      onCancel={onClose}
     >
-      <div className="flex flex-col px-6 py-4 flex-1 min-h-0">
+      <div className="flex flex-col px-6 py-4 h-full">
         <Grid
           columnDefs={SOURCE_CONTAINERS_COLUMNS}
           additionalGridOptions={{
@@ -66,16 +70,7 @@ const SelectContainerModal: FC<Props> = ({ selectedId, interceptorContainers, mo
           }}
         />
       </div>
-      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Apply)}
-          disable={!selectedContainer}
-          onClick={() => onApply(selectedContainer)}
-        />
-      </div>
-    </Popup>
+    </DialFormPopup>
   );
 };
 

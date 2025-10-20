@@ -6,12 +6,13 @@ import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 interface Props {
   title: string;
   value?: string;
+  elementId?: string;
 }
-const ReadonlyField: FC<Props> = ({ value, title }) => {
+const ReadonlyField: FC<Props> = ({ value, title, elementId }) => {
   return (
     <DialTextInputField
       fieldTitle={title}
-      elementId="readonlyField"
+      elementId={elementId || 'readonlyField'}
       disabled={true}
       value={value}
       iconAfter={<CopyButton field={value || ''} title={title} />}

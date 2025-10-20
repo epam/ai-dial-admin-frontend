@@ -1,58 +1,52 @@
+import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
-import { ColDef } from 'ag-grid-community';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import Popup from '@/src/components/Common/Popup/Popup';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import Grid from '@/src/components/Grid/Grid';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
-import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { RUNNERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { BasicI18nKey, ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialApplicationScheme } from '@/src/models/dial/application';
-import { PopUpState } from '@/src/types/pop-up';
 import { DialAdapter } from '@/src/models/dial/adapter';
+import { DialApplicationScheme } from '@/src/models/dial/application';
 
 interface Props {
-  title: string;
   selectedId?: string;
-  sourceEntities?: (DialApplicationScheme | DialAdapter)[];
-  modalState: PopUpState;
-  columns: ColDef[];
+  sourceEntities?: DialApplicationScheme[];
+  isModalOpen: boolean;
   onClose: () => void;
   onApply: (id?: string) => void;
 }
 
-const SelectSourceEntityModal: FC<Props> = ({
-  title,
-  selectedId,
-  columns,
-  sourceEntities,
-  modalState,
-  onClose,
-  onApply,
-}) => {
+const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOpen, onClose, onApply }) => {
   const t = useI18n();
 
-  const [selectedEntity, setSelectedEntity] = useState(selectedId);
+  const [selectedRunner, setSelectedRunner] = useState(selectedId);
 
   const isSelectedNode = (data?: DialApplicationScheme | DialAdapter) => {
     const runner = data as DialApplicationScheme;
     const adapter = data as DialAdapter;
-    const id = selectedEntity || t(BasicI18nKey.None);
+    const id = selectedRunner || t(BasicI18nKey.None);
     return runner?.$id === id || adapter?.name === id;
   };
 
   return (
-    <Popup
+    <DialFormPopup
       onClose={onClose}
-      heading={title}
-      portalId="sourceEntitySelectorModal"
-      state={modalState}
-      containerClassName={'h-[750px] lg:max-w-[65%]'}
+      title={t(EntitiesI18nKey.AppRunner)}
+      portalId="SelectAppRunnerModal"
+      open={isModalOpen}
+      size={PopupSize.Lg}
+      cssClass="h-[750px]"
+      onSubmit={() => onApply(selectedRunner === t(BasicI18nKey.None) ? void 0 : selectedRunner)}
+      disableSubmitButton={!selectedRunner}
+      submitLabel={t(ButtonsI18nKey.Apply)}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      onCancel={onClose}
     >
-      <div className="flex flex-col px-6 py-4 flex-1 min-h-0">
+      <div className="flex flex-col px-6 py-4 h-full">
         <Grid
-          columnDefs={columns.map((col) => ({ ...col, sort: void 0 }))}
+          columnDefs={RUNNERS_COLUMNS.map((col) => ({ ...col, sort: void 0 }))}
           additionalGridOptions={{
             rowSelection: { mode: 'singleRow', enableClickSelection: true },
             selectionColumnDef: {
@@ -67,17 +61,16 @@ const SelectSourceEntityModal: FC<Props> = ({
             },
             onRowSelected: (event) => {
               if (event.node.isSelected()) {
-                setSelectedEntity(event.data.$id || event.data.name);
+                setSelectedRunner(event.data.$id || event.data.name);
               }
             },
             onGridReady: (event) => {
               event.api?.updateGridOptions({
-                columnDefs: columns,
+                columnDefs: RUNNERS_COLUMNS,
                 rowData: [
                   {
                     ['dial:applicationTypeDisplayName']: t(BasicI18nKey.None),
                     $id: t(BasicI18nKey.None),
-                    name: t(BasicI18nKey.None),
                   },
                   ...(sourceEntities || []),
                 ],
@@ -91,16 +84,8 @@ const SelectSourceEntityModal: FC<Props> = ({
           }}
         />
       </div>
-      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Apply)}
-          onClick={() => onApply(selectedEntity === t(BasicI18nKey.None) ? void 0 : selectedEntity)}
-        />
-      </div>
-    </Popup>
+    </DialFormPopup>
   );
 };
 
-export default SelectSourceEntityModal;
+export default SelectAppRunnerModal;

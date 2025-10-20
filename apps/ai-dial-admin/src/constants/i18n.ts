@@ -100,6 +100,8 @@ export enum EntitiesI18nKey {
   NoAppRoutes = 'Entities.NoAppRoutes',
   NoUsageLog = 'Entities.NoUsageLog',
   NoActivityAudit = 'Entities.NoActivityAudit',
+  NoContainers = 'Entities.NoContainers',
+  NoTemplates = 'Entities.NoTemplates',
   NoFolders = 'Entities.NoFolders',
   NoResource = 'Entities.NoResource',
   NoInterceptorTemplates = 'Entities.NoInterceptorTemplates',
@@ -136,7 +138,7 @@ export enum EntitiesI18nKey {
   Table = 'Entities.Table',
   Form = 'Entities.Form',
   Ui = 'Entities.Ui',
-  ModelEndpoint = 'Entities.ModelEndpoint',
+  ToolsetEndpoint = 'Entities.ToolsetEndpoint',
 }
 
 export enum DeleteI18nKey {

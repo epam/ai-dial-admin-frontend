@@ -1,23 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { PopUpState } from '@/src/types/pop-up';
-import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { ApplicationRoute } from '@/src/types/routes';
-import { CreateI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
-import { DialModel } from '@/src/models/dial/model';
-import { getErrorNotification } from '@/src/utils/notification';
-import { useNotification } from '@/src/context/NotificationContext';
-import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { useI18n } from '@/src/locales/client';
+import { ButtonVariant, DialButton, DialInputPopup, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
-import InputModal from '@/src/components/Common/InputModal/InputModal';
-import SelectRunnerModal from '@/src/components/SourceField/Template/SelectRunnerModal';
+
 import Field from '@/src/components/Common/Field/Field';
-import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
+import SelectRunnerModal from '@/src/components/SourceField/Template/SelectRunnerModal';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useI18n } from '@/src/locales/client';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { DialModel } from '@/src/models/dial/model';
+import { InterceptorTemplate } from '@/src/models/interceptor-template';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getErrorNotification } from '@/src/utils/notification';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 interface Props<T> {
   entity: T;
@@ -37,17 +35,17 @@ const Templates = <T extends DialModel | DialInterceptor>({
   const t = useI18n();
   const { showNotification } = useNotification();
 
-  const [modalState, setModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [runners, setRunners] = useState<InterceptorTemplate[]>([]);
   const [selectedRunner, setSelectedRunner] = useState<InterceptorTemplate | null>(null);
 
   const onOpenModal = useCallback(() => {
-    setModalState(PopUpState.Opened);
-  }, [setModalState]);
+    setIsModalOpen(true);
+  }, [setIsModalOpen]);
 
   const onCloseModal = useCallback(() => {
-    setModalState(PopUpState.Closed);
-  }, [setModalState]);
+    setIsModalOpen(false);
+  }, [setIsModalOpen]);
 
   const onSelect = useCallback(
     (name?: string) => {
@@ -90,46 +88,51 @@ const Templates = <T extends DialModel | DialInterceptor>({
       <div className="flex lg:flex-row flex-col gap-2">
         {isModal ? (
           <div className="flex flex-col w-full">
-            <DropdownField
-              items={runners.map((runner) => ({
-                id: runner.name as string,
-                name: runner.displayName || runner.name || '',
+            <DialSelectField
+              options={runners.map((runner) => ({
+                value: runner.name as string,
+                label: runner.displayName || runner.name || '',
               }))}
-              onChange={onSelect}
+              onChange={(value) => onSelect(value as string)}
               elementId={'source-type'}
-              selectedValue={runners.find((runner) => runner.name === entity.source?.runnerName)?.name}
+              value={runners.find((runner) => runner.name === entity.source?.runnerName)?.name}
               placeholder={t(CreateI18nKey.SelectAdapter)}
               fieldTitle={t(EntityFieldsI18nKey.adapter)}
             />
           </div>
         ) : (
-          <div className="flex flex-col lg:w-[35%]">
-            <Field fieldTitle={t(SourceI18nKey.InterceptorTemplate)} htmlFor={'templates'} />
-            <InputModal
-              modalState={modalState}
-              onOpenModal={onOpenModal}
-              selectedValue={selectedRunner?.name}
-              elementId={'templates'}
-              errorText={errorText}
-            >
-              <SelectRunnerModal
-                selected={entity.source?.runnerName}
-                onClose={onCloseModal}
-                onApply={onSelect}
-                runners={runners}
-                modalState={modalState}
+          <div className="flex flex-col gap-2 lg:w-[50%]">
+            <div className="flex-1 min-w-0">
+              <div className="w-full">
+                <Field fieldTitle={t(SourceI18nKey.InterceptorTemplate)} htmlFor={'templates'} />
+                <DialInputPopup
+                  open={isModalOpen}
+                  onOpen={onOpenModal}
+                  selectedValue={selectedRunner?.name}
+                  elementId={'templates'}
+                  errorText={errorText}
+                  emptyValueText={t(EntitiesI18nKey.NoTemplates)}
+                >
+                  <SelectRunnerModal
+                    selected={entity.source?.runnerName}
+                    onClose={onCloseModal}
+                    onApply={onSelect}
+                    runners={runners}
+                    isModalOpen={isModalOpen}
+                  />
+                </DialInputPopup>
+              </div>
+            </div>
+            {entity.source?.runnerName && (
+              <DialButton
+                variant={ButtonVariant.Secondary}
+                iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
+                cssClass={errorText ? 'self-center mt-[3px]' : 'self-end'}
+                title={t(SourceI18nKey.OpenTemplate)}
+                onClick={() => openTemplate()}
               />
-            </InputModal>
+            )}
           </div>
-        )}
-        {entity.source?.runnerName && !isModal && (
-          <DialButton
-            variant={ButtonVariant.Secondary}
-            iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
-            cssClass={errorText ? 'self-center mt-[3px]' : 'self-end'}
-            title={t(SourceI18nKey.OpenTemplate)}
-            onClick={() => openTemplate()}
-          />
         )}
       </div>
     </div>
