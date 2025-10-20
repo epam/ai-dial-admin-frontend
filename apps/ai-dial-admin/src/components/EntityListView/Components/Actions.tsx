@@ -205,6 +205,7 @@ const Actions = <T extends object>({
             modalState === PopUpState.Opened,
             handleModalClose,
             onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>,
+            context,
           )}
           handleExport={onExport}
           handleClose={handleModalClose}

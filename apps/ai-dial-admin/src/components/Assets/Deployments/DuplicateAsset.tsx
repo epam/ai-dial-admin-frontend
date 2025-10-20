@@ -7,94 +7,100 @@ import VersionControl from '@/src/components/EntityMainProperties/BaseProperties
 import {
   BasicI18nKey,
   ButtonsI18nKey,
+  EntitiesI18nKey,
   EntityPlaceholdersI18nKey,
   FoldersI18nKey,
-  PromptsI18nKey,
 } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
-import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { DuplicationTypes } from '@/src/types/prompt';
 import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/prompts/versions';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
+import { duplicateEntityMap, getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
+import { Asset } from '@/src/models/dial/deployment-asset';
 
 interface Props {
+  view: ApplicationRoute;
   isModalOpen: boolean;
-  entity: DialPrompt;
+  entity: Asset;
   versionsMap: Record<string, string[]>;
+  context?: () => AssetsFolderContext<DialFile | Asset>;
   onClose: () => void;
-  onDuplicate: (entity: DialPrompt) => void;
+  onDuplicate: (entity: Asset) => void;
 }
 
-const DuplicatePrompt: FC<Props> = ({ isModalOpen, entity, versionsMap, onDuplicate, onClose }) => {
+const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, context, onDuplicate, onClose }) => {
   const t = useI18n() as (t: string, props?: Record<string, string>) => string;
   const initialName = entity.name;
   const initialFolder = entity.folderId;
   const [duplicationType, setDuplicationType] = useState<string>(DuplicationTypes.VERSION);
 
   const duplicationTypes: RadioButtonWithContent[] = [
-    { id: DuplicationTypes.VERSION, name: t(PromptsI18nKey.NewVersion) },
-    { id: DuplicationTypes.PROMPT, name: t(PromptsI18nKey.NewPrompt) },
+    { id: DuplicationTypes.VERSION, name: t(EntitiesI18nKey.NewVersion) },
+    { id: DuplicationTypes.ENTITY, name: t(EntitiesI18nKey.NewEntity, { entity: t(duplicateEntityMap[view]) }) },
   ];
 
-  const [clonedPrompt, setClonedPrompt] = useState<DialPrompt>({
+  const [clonedAsset, setClonedAsset] = useState<Asset>({
     ...entity,
-    name: getClonedEntityName(entity.name),
+    name: getClonedEntityName(entity.name, duplicationType === DuplicationTypes.VERSION),
     version: getInitialVersion(versionsMap, entity?.name),
   });
   const [isValid, setIsValid] = useState(false);
 
   useEffect(() => {
     setIsValid(
-      !!clonedPrompt.name &&
-        !!clonedPrompt.version &&
-        !checkNameVersionCombination(versionsMap, clonedPrompt.name, clonedPrompt.version),
+      !!clonedAsset.name &&
+        !!clonedAsset.version &&
+        !checkNameVersionCombination(versionsMap, clonedAsset.name, clonedAsset.version),
     );
-  }, [clonedPrompt, versionsMap]);
+  }, [clonedAsset, versionsMap]);
 
   const onChangeName = useCallback(
     (name?: string) => {
-      setClonedPrompt({ ...clonedPrompt, name });
+      setClonedAsset({ ...clonedAsset, name });
     },
-    [setClonedPrompt, clonedPrompt],
+    [setClonedAsset, clonedAsset],
   );
 
   const onChangeVersion = useCallback(
     (version?: string) => {
-      setClonedPrompt({ ...clonedPrompt, version: version || '' });
+      setClonedAsset({ ...clonedAsset, version: version || '' });
     },
-    [setClonedPrompt, clonedPrompt],
+    [setClonedAsset, clonedAsset],
   );
 
   const onChangePath = useCallback(
     (folderId: string) => {
-      setClonedPrompt({ ...clonedPrompt, folderId });
+      setClonedAsset({ ...clonedAsset, folderId });
     },
-    [setClonedPrompt, clonedPrompt],
+    [setClonedAsset, clonedAsset],
   );
 
   const onChangeDuplicationType = useCallback(
     (type: string) => {
       setDuplicationType(type);
       if (type === DuplicationTypes.VERSION) {
-        setClonedPrompt({ ...clonedPrompt, name: initialName });
+        setClonedAsset({ ...clonedAsset, name: initialName });
       } else {
-        setClonedPrompt({ ...clonedPrompt, folderId: initialFolder });
+        setClonedAsset({
+          ...clonedAsset,
+          folderId: initialFolder,
+          name: entity.name === initialName ? getClonedEntityName(entity.name) : entity.name,
+        });
       }
     },
-    [setDuplicationType, setClonedPrompt, initialName, initialFolder, clonedPrompt],
+    [clonedAsset, initialName, initialFolder, entity.name],
   );
 
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(getCloneTitle(ApplicationRoute.Prompts, t))}
-      portalId="DuplicatePrompt"
+      title={t(getCloneTitle(view, t))}
+      portalId="DuplicateAsset"
       open={isModalOpen}
-      onSubmit={() => onDuplicate(clonedPrompt)}
+      onSubmit={() => onDuplicate(clonedAsset)}
       onCancel={onClose}
       disableSubmitButton={!isValid}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
@@ -105,26 +111,26 @@ const DuplicatePrompt: FC<Props> = ({ isModalOpen, entity, versionsMap, onDuplic
           radioButtons={duplicationTypes}
           activeRadioButton={duplicationType}
           elementId="duplicationTypes"
-          fieldTitle={t(PromptsI18nKey.DuplicationType)}
+          fieldTitle={t(EntitiesI18nKey.DuplicationType)}
           orientation={RadioGroupOrientation.Column}
           onChange={onChangeDuplicationType}
         />
         <DisplayNameControl
-          displayName={clonedPrompt.name}
+          displayName={clonedAsset.name}
           onChange={onChangeName}
           disabled={duplicationType === DuplicationTypes.VERSION}
           required={true}
         />
-        <VersionControl version={clonedPrompt.version} onChange={onChangeVersion} />
+        <VersionControl version={clonedAsset.version} onChange={onChangeVersion} />
 
-        {duplicationType === DuplicationTypes.PROMPT && (
+        {duplicationType === DuplicationTypes.ENTITY && (
           <FilePath
-            value={clonedPrompt.folderId}
+            value={clonedAsset.folderId}
             label={t(FoldersI18nKey.Storage)}
             modalTitle={t(BasicI18nKey.MoveToFolder)}
             placeholder={t(EntityPlaceholdersI18nKey.Path)}
             onChange={onChangePath}
-            context={usePromptFolder as () => AssetsFolderContext<DialPrompt | DialFile>}
+            context={context as () => AssetsFolderContext<DialPrompt | DialFile>}
           />
         )}
       </div>
@@ -132,4 +138,4 @@ const DuplicatePrompt: FC<Props> = ({ isModalOpen, entity, versionsMap, onDuplic
   );
 };
 
-export default DuplicatePrompt;
+export default DuplicateAsset;

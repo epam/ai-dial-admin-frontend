@@ -1,7 +1,7 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import PromptsList from '@/src/components/Assets/Prompts/List/List';
+import PromptsList from '@/src/components/Assets/Prompts/List';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { getUserToken } from '@/src/utils/auth/auth-request';

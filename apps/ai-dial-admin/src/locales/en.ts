@@ -165,6 +165,9 @@ export default {
     Table: 'Table',
     Form: 'Generated form',
     Ui: 'Application custom UI',
+    NewVersion: 'New Version',
+    NewEntity: 'New {entity}',
+    DuplicationType: 'Duplication type',
     ToolsetEndpoint: 'Toolset Endpoint',
     // modals
     SaveChangesTitle: 'Save Changes',
@@ -529,9 +532,6 @@ export default {
     },
   },
   Prompts: {
-    NewVersion: 'New Version',
-    NewPrompt: 'New Prompt',
-    DuplicationType: 'Duplication type',
     Export: 'Export prompts',
     Import: 'Import prompts',
     NewVersionCreate: 'Create new version',

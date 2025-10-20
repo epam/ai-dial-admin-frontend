@@ -294,7 +294,7 @@ export const ASSETS_COLUMNS: ColDef[] = [
 ];
 
 export const FILES_COLUMNS: ColDef[] = [
-  { field: 'name', colId: 'name', headerName: 'Display Name' },
+  { field: 'name', colId: 'name', headerName: 'Display Name', valueFormatter: ({ value }) => value },
   { field: 'extension', headerName: 'Extension' },
   AUTHOR_COLUMN,
 ];
