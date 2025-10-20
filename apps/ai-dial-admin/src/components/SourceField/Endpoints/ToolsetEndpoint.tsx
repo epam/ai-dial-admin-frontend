@@ -36,7 +36,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, readonly, onChange, prefix, isModa
           elementId="endpoint"
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
-          value={entity.endpoint}
+          value={entity.endpoint || ''}
           onChange={(endpoint) => onChange?.({ ...entity, endpoint })}
         />
       )}
