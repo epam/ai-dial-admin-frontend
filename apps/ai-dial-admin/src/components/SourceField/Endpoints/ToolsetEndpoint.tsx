@@ -3,8 +3,6 @@
 import { FC } from 'react';
 import classNames from 'classnames';
 import { DialSelectField, DialTextInputField, SelectOption } from '@epam/ai-dial-ui-kit';
-
-import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ToolsetTransport } from '@/src/types/toolset';
@@ -27,33 +25,28 @@ const ToolsetEndpoint: FC<Props> = ({ entity, readonly, onChange, prefix, isModa
   ];
 
   return (
-    <div className={classNames('flex flex-col gap-6', !isModal && 'lg:w-[35%]')}>
+    <div className="flex flex-col gap-6">
       {prefix ? (
         <ComplexInput
-          readonly={readonly}
           elementId="endpoint"
-          textBeforeInput={prefix}
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
-          fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
-          value={entity.source?.completionEndpointPath}
-          fullValue={`${prefix}${entity.source?.completionEndpointPath}`}
-          copyable={true}
-          onChange={(completionEndpointPath) =>
-            onChange?.({
-              ...entity,
-              source: { ...entity.source, completionEndpointPath } as SOURCE_FIELD,
-            })
-          }
+          fieldTitle={t(EntitiesI18nKey.ModelEndpoint)}
+          value={prefix}
+          inputContainerCssClass={classNames(!isModal ? 'lg:w-[35%]' : 'w-full')}
+          fullValue={prefix}
+          disabled={true}
         />
       ) : (
-        <DialTextInputField
-          disabled={readonly}
-          elementId="endpoint"
-          placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
-          fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
-          value={entity.endpoint}
-          onChange={(endpoint) => onChange?.({ ...entity, endpoint })}
-        />
+        <div className={classNames(!isModal && 'lg:w-[35%]')}>
+          <DialTextInputField
+            disabled={readonly}
+            elementId="endpoint"
+            placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+            fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
+            value={entity.endpoint}
+            onChange={(endpoint) => onChange?.({ ...entity, endpoint })}
+          />
+        </div>
       )}
       {!isModal && (
         <DialSelectField

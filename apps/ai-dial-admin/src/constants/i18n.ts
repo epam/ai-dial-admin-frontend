@@ -136,6 +136,7 @@ export enum EntitiesI18nKey {
   Table = 'Entities.Table',
   Form = 'Entities.Form',
   Ui = 'Entities.Ui',
+  ModelEndpoint = 'Entities.ModelEndpoint',
 }
 
 export enum DeleteI18nKey {
