@@ -138,6 +138,7 @@ export enum EntitiesI18nKey {
   Table = 'Entities.Table',
   Form = 'Entities.Form',
   Ui = 'Entities.Ui',
+  ToolsetEndpoint = 'Entities.ToolsetEndpoint',
 }
 
 export enum DeleteI18nKey {
