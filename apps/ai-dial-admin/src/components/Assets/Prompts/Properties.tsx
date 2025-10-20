@@ -2,8 +2,8 @@ import { useRouter } from 'next/navigation';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { ButtonVariant, DialButton, DialSwitch, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconReplace } from '@tabler/icons-react';
-import { DialSwitch, ButtonVariant, DialButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
@@ -35,8 +35,8 @@ import { JSONEditorError } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
-import AddVersionModal from '../Modals/AddVersionModal';
-import CompareVersions from '../Modals/CompareVersions';
+import AddVersionModal from './Modals/AddVersionModal';
+import CompareVersions from './Modals/CompareVersions';
 
 interface Props {
   prompt: DialPrompt;

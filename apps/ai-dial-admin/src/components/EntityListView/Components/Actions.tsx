@@ -204,6 +204,7 @@ const Actions = <T extends object>({
             isModalOpen,
             handleModalClose,
             onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>,
+            context,
           )}
           handleExport={onExport}
           handleClose={handleModalClose}

@@ -6,7 +6,6 @@ import VersionControl from '@/src/components/EntityMainProperties/BaseProperties
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { BaseEntity } from '@/src/models/dial/base-entity';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -22,9 +21,7 @@ interface Props {
   isEntityImmutable?: boolean;
   versionsMap?: Record<string, string[]>;
   onChangeEntity: (entity: object) => void;
-  isModal?: boolean;
   runners?: DialApplicationScheme[];
-  initialValues?: Partial<BaseEntity>;
 }
 
 const AssetProperties: FC<Props> = ({

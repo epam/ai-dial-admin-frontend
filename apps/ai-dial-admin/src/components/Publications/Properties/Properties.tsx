@@ -35,15 +35,14 @@ const BasePublicationProperties: FC<Props> = ({ view, publication, children, app
   return (
     <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full">
       <div className="flex flex-col sm:flex-row gap-8">
-        {view === ApplicationRoute.Prompts ||
-          (view === ApplicationRoute.Files && (
-            <LabelledText label={t(EntitiesI18nKey.Action)}>
-              <p className="truncate items-center flex">
-                <span className={indicatorClassNames} />
-                {t(ACTION_I18N_KEYS[publication.action])}
-              </p>
-            </LabelledText>
-          ))}
+        {(view === ApplicationRoute.Prompts || view === ApplicationRoute.Files) && (
+          <LabelledText label={t(EntitiesI18nKey.Action)}>
+            <p className="truncate items-center flex">
+              <span className={indicatorClassNames} />
+              {t(ACTION_I18N_KEYS[publication.action])}
+            </p>
+          </LabelledText>
+        )}
         {runnerId && (
           <LabelledText label={t(EntitiesI18nKey.Runner)}>
             <p className="truncate items-center">{runner?.['dial:applicationTypeDisplayName'] || runnerId}</p>
