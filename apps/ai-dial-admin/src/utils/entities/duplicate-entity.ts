@@ -1,7 +1,7 @@
 import { DuplicateI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 
-const duplicateEntityMap: Record<string, DuplicateI18nKey> = {
+export const duplicateEntityMap: Record<string, DuplicateI18nKey> = {
   [ApplicationRoute.Models]: DuplicateI18nKey.Model,
   [ApplicationRoute.Applications]: DuplicateI18nKey.Application,
   [ApplicationRoute.AssetsApplications]: DuplicateI18nKey.Application,
@@ -26,10 +26,10 @@ export const getCloneTitle = (view: ApplicationRoute, t: (str: string, props?: R
   return t(DuplicateI18nKey.Title, { entity: t(duplicateEntityMap[view]) });
 };
 
-export const getClonedEntityName = (name?: string): string => {
+export const getClonedEntityName = (name?: string, withoutSuffix?: boolean): string => {
   const copySuffix = '_(copy)';
-  if (name?.endsWith(copySuffix)) {
-    return name;
+  if (name?.endsWith(copySuffix) || withoutSuffix) {
+    return name || '';
   }
   return `${name}${copySuffix}`;
 };
