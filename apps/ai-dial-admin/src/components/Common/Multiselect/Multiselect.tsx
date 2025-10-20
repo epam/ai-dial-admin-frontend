@@ -1,9 +1,11 @@
 import { FC, useCallback, useState } from 'react';
+import { DialErrorText, DialInputPopup } from '@epam/ai-dial-ui-kit';
 
 import Field from '@/src/components/Common/Field/Field';
 import { ServerActionResponse } from '@/src/models/server-action';
 import MultiselectModal from './Modal/MultiselectModal';
-import { DialErrorText, DialInputPopup } from '@epam/ai-dial-ui-kit';
+import { BasicI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
   elementId: string;
@@ -31,6 +33,7 @@ const Multiselect: FC<Props> = ({
   errorText,
   ...props
 }) => {
+  const t = useI18n();
   const [isModalOpen, setIsModalState] = useState(false);
 
   const onOpenModal = useCallback(() => {
@@ -50,6 +53,7 @@ const Multiselect: FC<Props> = ({
         disabled={readonly}
         selectedValue={selectedItems}
         onOpen={onOpenModal}
+        emptyValueText={t(BasicI18nKey.None)}
       >
         <MultiselectModal
           initSelectedItems={selectedItems}
