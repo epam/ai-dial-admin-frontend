@@ -1,6 +1,6 @@
 import { ToolsetTransport } from '@/src/types/toolset';
-import { AssetToolset } from '../../models/dial/deployment-asset';
-import { Toolset } from '../../models/dial/toolset';
+import { AssetToolset } from '@/src/models/dial/deployment-asset';
+import { Toolset } from '@/src/models/dial/toolset';
 
 export const getTransport = (toolset: AssetToolset | Toolset) => {
   return toolset.endpoint?.includes('http') || toolset.endpoint?.includes('https')

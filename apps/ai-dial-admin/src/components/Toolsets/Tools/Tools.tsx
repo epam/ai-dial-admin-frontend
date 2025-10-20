@@ -1,18 +1,19 @@
 'use client';
 
+import {
+  AlertVariant,
+  ButtonVariant,
+  DialAlert,
+  DialButton,
+  DialLoader,
+  DialNoDataContent,
+  DialSwitch,
+} from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  ButtonVariant,
-  DialSwitch,
-  DialButton,
-  AlertVariant,
-  DialAlert,
-  DialNoDataContent,
-  DialLoader,
-} from '@epam/ai-dial-ui-kit';
 
-import { getTools } from '@/src//app/[lang]/toolsets/actions';
+import { getAssetTools } from '@/src/app/[lang]/assets-toolsets/actions';
+import { getTools } from '@/src/app/[lang]/toolsets/actions';
 import Search from '@/src/components/Common/Search/Search';
 import { ButtonsI18nKey, EntitiesI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -25,7 +26,6 @@ import ToolsFilter from './Filter/ToolsFilter';
 import ToolItem from './ToolItem';
 import { ToolFilter } from './type';
 import { getFilteredTools } from './utils';
-import { getAssetTools } from '../../../app/[lang]/assets-toolsets/actions';
 
 const filtersConfiguration = [
   ToolFilter.Enabled,
@@ -161,7 +161,7 @@ const ToolsView: FC<Props> = ({ selectedToolset, isAssetToolset, readonly, origi
               {`: ${toolsCount}`}
             </h1>
 
-            {selectedToolset && (
+            {!readonly && (
               <DialSwitch
                 switchId="useAllTools"
                 title={t(ToolsetI18nKey.UseAllTools)}
@@ -188,7 +188,7 @@ const ToolsView: FC<Props> = ({ selectedToolset, isAssetToolset, readonly, origi
                   selectedFilters={selectedFilters}
                   onSelectFilter={onSelectFilter}
                 />
-                {readonly && (
+                {!readonly && (
                   <DialButton
                     variant={ButtonVariant.Primary}
                     title={t(ButtonsI18nKey.Add)}
@@ -218,7 +218,7 @@ const ToolsView: FC<Props> = ({ selectedToolset, isAssetToolset, readonly, origi
               </div>
             )}
           </div>
-          {!useAllTools && readonly && <span className="tiny text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
+          {!useAllTools && !readonly && <span className="tiny text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
           {isNotSavedToolset && <DialAlert variant={AlertVariant.Info} message={t(ToolsetI18nKey.ToolsWarning)} />}
         </div>
       )}
