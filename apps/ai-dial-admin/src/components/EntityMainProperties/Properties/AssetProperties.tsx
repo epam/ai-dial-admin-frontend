@@ -6,13 +6,13 @@ import VersionControl from '@/src/components/EntityMainProperties/BaseProperties
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { BaseEntity } from '@/src/models/dial/base-entity';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getPromptVersionError } from '@/src/utils/validation/version-error';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
+import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
 
 interface Props {
   view?: ApplicationRoute;
@@ -21,9 +21,7 @@ interface Props {
   isEntityImmutable?: boolean;
   versionsMap?: Record<string, string[]>;
   onChangeEntity: (entity: object) => void;
-  isModal?: boolean;
   runners?: DialApplicationScheme[];
-  initialValues?: Partial<BaseEntity>;
 }
 
 const AssetProperties: FC<Props> = ({
@@ -85,6 +83,10 @@ const AssetProperties: FC<Props> = ({
           isEntityImmutable={isEntityImmutable}
           onChangeEntity={onChangeEntity}
         />
+      )}
+
+      {view === ApplicationRoute.AssetsApplications && !isEntityImmutable && (
+        <ToolsetEndpoint isModal={true} entity={entity} onChange={onChangeEntity} />
       )}
     </div>
   );

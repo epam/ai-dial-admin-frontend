@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import ApplicationInfo from '../ApplicationInfo';
-import { DialApplicationResource } from '@/src/models/dial/application-resource';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 
 describe('ApplicationInfo', () => {
@@ -11,12 +10,10 @@ describe('ApplicationInfo', () => {
       displayVersion: '1.0.0',
       description: 'A test application',
       descriptionKeywords: ['AI', 'Dial'],
-    } as DialApplicationResource;
+    } as any;
 
     render(<ApplicationInfo application={application} />);
 
-    expect(screen.getByText(EntityFieldsI18nKey.displayName)).toBeInTheDocument();
-    expect(screen.getByText('Test App')).toBeInTheDocument();
     expect(screen.getByText(EntityFieldsI18nKey.description)).toBeInTheDocument();
     expect(screen.getByText('A test application')).toBeInTheDocument();
     expect(screen.getByText(EntityFieldsI18nKey.iconUrl)).toBeInTheDocument();

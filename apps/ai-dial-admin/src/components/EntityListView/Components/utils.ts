@@ -17,12 +17,12 @@ export const getData = async <T>(route: ApplicationRoute, ref: RefObject<T | und
 
   if (route === ApplicationRoute.AssetsApplications) {
     const { folderId, name, version } = ref.current as AssetApp;
-    return await getApp(folderId, name as string, version, DEFAULT_ETAG);
+    return (await getApp(folderId, name as string, version, DEFAULT_ETAG)).response;
   }
 
   if (route === ApplicationRoute.AssetsToolsets) {
     const { folderId, name, version } = ref.current as AssetToolset;
-    return await getToolset(folderId, name as string, version, DEFAULT_ETAG);
+    return (await getToolset(folderId, name as string, version, DEFAULT_ETAG)).response;
   }
 
   return null;

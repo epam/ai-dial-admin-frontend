@@ -1,7 +1,7 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import FilesList from '@/src/components/Assets/Files/List/List';
+import FilesList from '@/src/components/Assets/Files/List';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { FileFolderProvider } from '@/src/context/assets/FileFolderContext';
 import { getUserToken } from '@/src/utils/auth/auth-request';

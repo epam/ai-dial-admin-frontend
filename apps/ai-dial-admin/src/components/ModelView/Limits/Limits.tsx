@@ -1,13 +1,11 @@
+import { DialNumberInputField, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback } from 'react';
-import { DialNumberInputField } from '@epam/ai-dial-ui-kit';
 
-import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { BasicI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModel } from '@/src/models/dial/model';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
-import { getActiveLimitType, isLimitTypeSeparateTokenAndCompletions, isLimitTypeTotal } from './utils';
 import { LimitType } from './constants';
+import { getActiveLimitType, isLimitTypeSeparateTokenAndCompletions, isLimitTypeTotal } from './utils';
 
 interface Props {
   model: DialModel;
@@ -17,18 +15,18 @@ interface Props {
 const Limits: FC<Props> = ({ model, onChangeModel }) => {
   const t = useI18n();
 
-  const items: DropdownItemsModel[] = [
+  const items: SelectOption[] = [
     {
-      id: LimitType.None,
-      name: t(BasicI18nKey.None),
+      value: LimitType.None,
+      label: t(BasicI18nKey.None),
     },
     {
-      id: LimitType.Total,
-      name: t(ModelViewI18nKey.TotalNumbers),
+      value: LimitType.Total,
+      label: t(ModelViewI18nKey.TotalNumbers),
     },
     {
-      id: LimitType.SeparateTokenAndCompletions,
-      name: t(ModelViewI18nKey.SeparatelyPromptsAndCompletions),
+      value: LimitType.SeparateTokenAndCompletions,
+      label: t(ModelViewI18nKey.SeparatelyPromptsAndCompletions),
     },
   ];
   const activeLimitType = getActiveLimitType(model);
@@ -52,21 +50,21 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
   );
 
   const onChangeMaxTotalTokens = useCallback(
-    (maxTotalTokens: number | string) => {
+    (maxTotalTokens?: number | string) => {
       onChangeModel({ ...model, limits: { ...model.limits, maxTotalTokens } });
     },
     [onChangeModel, model],
   );
 
   const onChangeMaxCompletionTokens = useCallback(
-    (maxCompletionTokens: number | string) => {
+    (maxCompletionTokens?: number | string) => {
       onChangeModel({ ...model, limits: { ...model.limits, maxCompletionTokens } });
     },
     [onChangeModel, model],
   );
 
   const onChangeMaxPromptTokens = useCallback(
-    (maxPromptTokens: number | string) => {
+    (maxPromptTokens?: number | string) => {
       onChangeModel({ ...model, limits: { ...model.limits, maxPromptTokens } });
     },
     [onChangeModel, model],
@@ -74,12 +72,12 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
 
   return (
     <div className="flex flex-row gap-x-2 items-center lg:w-[35%]">
-      <DropdownField
-        selectedValue={activeLimitType}
+      <DialSelectField
+        value={activeLimitType}
         elementId="limits"
-        items={items}
+        options={items}
         fieldTitle={t(ModelViewI18nKey.InteractionLimit)}
-        onChange={onChangeLimitType}
+        onChange={(type) => onChangeLimitType(type as string)}
       />
 
       {activeLimitType === LimitType.Total && (

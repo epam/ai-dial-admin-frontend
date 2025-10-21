@@ -138,6 +138,9 @@ export enum EntitiesI18nKey {
   Table = 'Entities.Table',
   Form = 'Entities.Form',
   Ui = 'Entities.Ui',
+  NewVersion = 'Entities.NewVersion',
+  NewEntity = 'Entities.NewEntity',
+  DuplicationType = 'Entities.DuplicationType',
   ToolsetEndpoint = 'Entities.ToolsetEndpoint',
 }
 
@@ -520,9 +523,6 @@ export enum CompareI18nKey {
 }
 
 export enum PromptsI18nKey {
-  NewVersion = 'Prompts.NewVersion',
-  NewPrompt = 'Prompts.NewPrompt',
-  DuplicationType = 'Prompts.DuplicationType',
   Export = 'Prompts.Export',
   Import = 'Prompts.Import',
   NewVersionCreate = 'Prompts.NewVersionCreate',

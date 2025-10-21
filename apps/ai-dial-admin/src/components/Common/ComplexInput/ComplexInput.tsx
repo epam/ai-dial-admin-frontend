@@ -6,6 +6,7 @@ import { FC } from 'react';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 
 interface Props extends DialInputProps {
+  value?: string;
   fieldTitle: string;
   errorText?: string;
   fullValue?: string;
