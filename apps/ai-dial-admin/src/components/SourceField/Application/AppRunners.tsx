@@ -77,7 +77,7 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
         searchable={true}
         elementId="sourceEntity"
         options={dropdownItems}
-        fieldTitle={EntitiesI18nKey.AppRunner}
+        fieldTitle={t(EntitiesI18nKey.AppRunner)}
         placeholder={t(EntityPlaceholdersI18nKey.SelectAppRunner)}
         onChange={(runner) => onChange(runner as string)}
       />
