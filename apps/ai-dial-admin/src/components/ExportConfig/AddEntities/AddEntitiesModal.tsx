@@ -8,7 +8,7 @@ import { DialSwitch } from '@epam/ai-dial-ui-kit';
 import Button from '@/src/components/Common/Button/Button';
 import NoDataContent from '@/src/components/Common/NoData/NoData';
 import Popup from '@/src/components/Common/Popup/Popup';
-import { getAllAvailableDependencies, getButtonTitle } from '@/src/components/ExportConfig/AddEntities/utils';
+import { getButtonTitle } from '@/src/components/ExportConfig/AddEntities/utils';
 import Grid from '@/src/components/Grid/Grid';
 import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey, ExportI18nKey } from '@/src/constants/i18n';
@@ -17,6 +17,7 @@ import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { PopUpState } from '@/src/types/pop-up';
 import { EntityType } from '@/src/types/entity-type';
 import { getEmptyDataTitleI18nKey } from '@/src/utils/entities/get-empty-data-title';
+import { getAllAvailableDependencies } from '@/src/utils/entities/get-export-deps';
 
 interface Props {
   modalState: PopUpState;
