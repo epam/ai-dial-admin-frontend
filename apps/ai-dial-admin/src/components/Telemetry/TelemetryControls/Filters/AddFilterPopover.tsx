@@ -11,8 +11,8 @@ import {
   useRole,
 } from '@floating-ui/react';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ApplicationRoute } from '@/src/types/routes';
+import { SelectOption } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   type: FILTER_TYPE;
@@ -22,7 +22,7 @@ interface Props {
   setCondition: Dispatch<SetStateAction<FILTER_OPERATOR>>;
   setValue: Dispatch<SetStateAction<string>>;
   onCreate: () => void;
-  dropdownData: { projects: DropdownItemsModel[]; entities: DropdownItemsModel[] };
+  dropdownData: { projects: SelectOption[]; entities: SelectOption[] };
   reset: () => void;
   children: ReactElement;
   route: ApplicationRoute;

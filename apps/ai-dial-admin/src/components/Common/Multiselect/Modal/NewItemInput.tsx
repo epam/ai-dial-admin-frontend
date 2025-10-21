@@ -11,7 +11,7 @@ interface Props {
   index: number;
   draggable?: boolean;
   placeholder?: string;
-  onChangeItem: (item: string, index: number) => void;
+  onChangeItem: (item: string | undefined, index: number) => void;
   onRemoveItem: (index: number) => void;
   onMoveItem?: (field: string, index: number) => void;
   onFindItem?: (field: string) => number;

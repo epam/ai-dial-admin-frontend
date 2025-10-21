@@ -22,7 +22,7 @@ const LimitControl: FC<Props> = ({ limits, controlClassName, isCostInputs, onCha
   const t = useI18n();
 
   const onChangeLimit = useCallback(
-    (value: number | string, key: keyof DialRoleLimits) => {
+    (value: number | string | undefined, key: keyof DialRoleLimits) => {
       onChange({ ...limits, [key]: value });
     },
     [limits, onChange],

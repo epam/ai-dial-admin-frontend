@@ -55,16 +55,16 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
   );
 
   const onChangeCompletion = useCallback(
-    (completion: number | string) => {
-      const value = (isTokenType ? +completion / 1000000 : completion).toString();
+    (completion?: number | string) => {
+      const value = completion ? (isTokenType ? +completion / 1000000 : completion).toString() : void 0;
       onChangeModel({ ...model, pricing: { ...model.pricing, completion: value } });
     },
     [isTokenType, onChangeModel, model],
   );
 
   const onChangePrompt = useCallback(
-    (prompt: number | string) => {
-      const value = (isTokenType ? +prompt / 1000000 : prompt).toString();
+    (prompt?: number | string) => {
+      const value = prompt ? (isTokenType ? +prompt / 1000000 : prompt).toString() : void 0;
       onChangeModel({ ...model, pricing: { ...model.pricing, prompt: value } });
     },
     [isTokenType, onChangeModel, model],

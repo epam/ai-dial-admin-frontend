@@ -20,21 +20,25 @@ export const filterOperatorConfig: Record<string, string> = {
 };
 
 export const filterTypeConfig = [
-  { id: FILTER_TYPE.Entity, name: TelemetryI18nKey.FilterTypeEntities, filter: 'deployment' },
-  { id: FILTER_TYPE.Project, name: TelemetryI18nKey.FilterTypeProjects, filter: 'project_id' },
+  { value: FILTER_TYPE.Entity, label: TelemetryI18nKey.FilterTypeEntities, filter: 'deployment' },
+  { value: FILTER_TYPE.Project, label: TelemetryI18nKey.FilterTypeProjects, filter: 'project_id' },
 ];
 
 export const filterConditionConfig = [
-  { id: FILTER_OPERATOR.Contain, name: TelemetryI18nKey.FilterConditionContain, icon: <Contains /> },
-  { id: FILTER_OPERATOR.NotContains, name: TelemetryI18nKey.FilterConditionNotContain, icon: <NotContains /> },
-  { id: FILTER_OPERATOR.Equal, name: TelemetryI18nKey.FilterConditionEqual, icon: <IconEqual {...BASE_ICON_PROPS} /> },
+  { value: FILTER_OPERATOR.Contain, label: TelemetryI18nKey.FilterConditionContain, icon: <Contains /> },
+  { value: FILTER_OPERATOR.NotContains, label: TelemetryI18nKey.FilterConditionNotContain, icon: <NotContains /> },
   {
-    id: FILTER_OPERATOR.NotEqual,
-    name: TelemetryI18nKey.FilterConditionNotEqual,
+    value: FILTER_OPERATOR.Equal,
+    label: TelemetryI18nKey.FilterConditionEqual,
+    icon: <IconEqual {...BASE_ICON_PROPS} />,
+  },
+  {
+    value: FILTER_OPERATOR.NotEqual,
+    label: TelemetryI18nKey.FilterConditionNotEqual,
     icon: <IconEqualNot {...BASE_ICON_PROPS} />,
   },
-  { id: FILTER_OPERATOR.StartsWith, name: TelemetryI18nKey.FilterConditionStartsWith, icon: <StartsWith /> },
-  { id: FILTER_OPERATOR.EndsWith, name: TelemetryI18nKey.FilterConditionEndsWith, icon: <EndsWith /> },
+  { value: FILTER_OPERATOR.StartsWith, label: TelemetryI18nKey.FilterConditionStartsWith, icon: <StartsWith /> },
+  { value: FILTER_OPERATOR.EndsWith, label: TelemetryI18nKey.FilterConditionEndsWith, icon: <EndsWith /> },
 ];
 
 export const refreshOptionsConfig = [
