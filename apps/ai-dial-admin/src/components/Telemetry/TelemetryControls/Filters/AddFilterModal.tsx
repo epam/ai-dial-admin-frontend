@@ -1,13 +1,12 @@
-import { DialFormPopup } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, SelectOption } from '@epam/ai-dial-ui-kit';
+import { createPortal } from 'react-dom';
 import { cloneElement, Dispatch, FC, ReactElement, SetStateAction, useCallback, useState } from 'react';
 
 import CreateFilter from '@/src/components/Telemetry/TelemetryControls/Filters/CreateFilter';
 import { ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ApplicationRoute } from '@/src/types/routes';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
-import { createPortal } from 'react-dom';
 
 interface Props {
   type: FILTER_TYPE;
@@ -17,7 +16,7 @@ interface Props {
   setCondition: Dispatch<SetStateAction<FILTER_OPERATOR>>;
   setValue: Dispatch<SetStateAction<string>>;
   onCreate: () => void;
-  dropdownData: { projects: DropdownItemsModel[]; entities: DropdownItemsModel[] };
+  dropdownData: { projects: SelectOption[]; entities: SelectOption[] };
   reset: () => void;
   children: ReactElement;
   route: ApplicationRoute;

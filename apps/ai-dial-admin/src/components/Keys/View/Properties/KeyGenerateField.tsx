@@ -24,8 +24,8 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
   const [keyError, setKeyError] = useState<FieldError | null>(null);
 
   const onChangeKeyValue = useCallback(
-    (key: string) => {
-      setKeyError(getErrorForKey(key, keys, t));
+    (key?: string) => {
+      setKeyError(getErrorForKey(key || '', keys, t));
       changeKey({ ...selectedKey, key });
     },
     [changeKey, keys, selectedKey, t],

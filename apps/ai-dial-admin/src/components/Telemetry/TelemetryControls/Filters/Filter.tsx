@@ -1,8 +1,9 @@
 import { FC, useCallback } from 'react';
 import { IconX } from '@tabler/icons-react';
+import { SelectOption } from '@epam/ai-dial-ui-kit';
+
 import { FilterData } from '@/src/models/telemetry';
 import AddFilter from '@/src/components/Telemetry/TelemetryControls/Filters/AddFilter';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ApplicationRoute } from '@/src/types/routes';
 import { useI18n } from '@/src/locales/client';
 import { getFilterConditionConfig, getFilterTypeConfig } from '@/src/utils/telemetry';
@@ -12,7 +13,7 @@ interface Props {
   onClose: (id: number) => void;
   onEdit: (filter: FilterData, index?: number) => void;
   filterData: FilterData;
-  dropdownData: { projects: DropdownItemsModel[]; entities: DropdownItemsModel[] };
+  dropdownData: { projects: SelectOption[]; entities: SelectOption[] };
   route: ApplicationRoute;
 }
 
@@ -21,8 +22,8 @@ const Filter: FC<Props> = ({ id, onClose, onEdit, dropdownData, filterData, rout
   const t = useI18n() as (t: string) => string;
   const filterTypeConfig = getFilterTypeConfig(t);
   const filterConditionConfig = getFilterConditionConfig(t);
-  const typeText = filterTypeConfig.find((item) => item.id === type)?.name;
-  const conditionIcon = filterConditionConfig.find((item) => item.id === condition)?.icon;
+  const typeText = filterTypeConfig.find((item) => item.value === type)?.value;
+  const conditionIcon = filterConditionConfig.find((item) => item.value === condition)?.icon;
 
   const addFilter = useCallback(
     (filter: FilterData) => {
@@ -33,10 +34,7 @@ const Filter: FC<Props> = ({ id, onClose, onEdit, dropdownData, filterData, rout
 
   return (
     <AddFilter addFilter={addFilter} dropdownData={dropdownData} filterData={filterData} route={route}>
-      <div
-        data-testid="dashboard-filter"
-        className="flex text-primary small rounded bg-layer-3 my-[5px] mr-4 px-1.5 py-1"
-      >
+      <div className="flex text-primary small rounded bg-layer-3 my-[5px] mr-4 px-1.5 py-1">
         <p className="flex items-center">
           <span className="mr-1">{typeText}</span>
           <i className="mr-1">{conditionIcon}</i>

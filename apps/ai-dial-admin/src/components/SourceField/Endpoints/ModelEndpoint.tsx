@@ -44,8 +44,8 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
   }, [entity, prefix]);
 
   const onChangePath = useCallback(
-    (value: string) => {
-      setName(value);
+    (value?: string) => {
+      setName(value || '');
       onChange({
         ...entity,
         source: { ...(entity.source as SOURCE_FIELD), completionEndpointPath: `${value}${postfix}` },
@@ -55,10 +55,10 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
   );
 
   const onChangeEndpoint = useCallback(
-    (value: string) => {
+    (value?: string) => {
       const error = getUrlError(value, t, true);
       setEndpointError(error);
-      setName(value);
+      setName(value || '');
       onChange({
         ...entity,
         endpoint: `${value}${postfix}`,
