@@ -16,6 +16,7 @@ import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import classNames from 'classnames';
 
 interface Props<T> {
   entity: T;
@@ -85,7 +86,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex lg:flex-row flex-col gap-2">
+      <div className="flex lg:flex-row flex-col gap-2 items-end">
         {isModal ? (
           <div className="flex flex-col w-full">
             <DialSelectField
@@ -101,33 +102,31 @@ const Templates = <T extends DialModel | DialInterceptor>({
             />
           </div>
         ) : (
-          <div className="flex flex-col gap-2 lg:w-[50%]">
-            <div className="flex-1 min-w-0">
-              <div className="w-full">
-                <Field fieldTitle={t(SourceI18nKey.InterceptorTemplate)} htmlFor={'templates'} />
-                <DialInputPopup
-                  open={isModalOpen}
-                  onOpen={onOpenModal}
-                  selectedValue={selectedRunner?.name}
-                  elementId={'templates'}
-                  errorText={errorText}
-                  emptyValueText={t(EntitiesI18nKey.NoTemplates)}
-                >
-                  <SelectRunnerModal
-                    selected={entity.source?.runnerName}
-                    onClose={onCloseModal}
-                    onApply={onSelect}
-                    runners={runners}
-                    isModalOpen={isModalOpen}
-                  />
-                </DialInputPopup>
-              </div>
+          <div className="flex gap-2 w-full">
+            <div className="w-full lg:w-[45%]">
+              <Field fieldTitle={t(SourceI18nKey.InterceptorTemplate)} htmlFor={'templates'} />
+              <DialInputPopup
+                open={isModalOpen}
+                onOpen={onOpenModal}
+                selectedValue={selectedRunner?.name}
+                elementId={'templates'}
+                errorText={errorText}
+                emptyValueText={t(EntitiesI18nKey.NoTemplates)}
+              >
+                <SelectRunnerModal
+                  selected={entity.source?.runnerName}
+                  onClose={onCloseModal}
+                  onApply={onSelect}
+                  runners={runners}
+                  isModalOpen={isModalOpen}
+                />
+              </DialInputPopup>
             </div>
             {entity.source?.runnerName && (
               <DialButton
                 variant={ButtonVariant.Secondary}
                 iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
-                cssClass={errorText ? 'self-center mt-[3px]' : 'self-end'}
+                cssClass={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
                 title={t(SourceI18nKey.OpenTemplate)}
                 onClick={() => openTemplate()}
               />
