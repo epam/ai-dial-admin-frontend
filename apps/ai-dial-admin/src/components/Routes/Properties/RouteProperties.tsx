@@ -108,7 +108,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
   );
 
   const onChangeStatus = useCallback(
-    (status: number | string) => {
+    (status?: number | string) => {
       updateRoute({
         ...route,
         response: {
@@ -116,7 +116,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
           status,
         },
       });
-      setStatusError(+status >= 100 && +status <= 999 ? '' : t(ErrorI18nKey.InvalidStatus));
+      setStatusError(status && +status >= 100 && +status <= 999 ? '' : t(ErrorI18nKey.InvalidStatus));
     },
     [route, updateRoute, t],
   );

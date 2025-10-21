@@ -11,7 +11,7 @@ interface Props {
   value?: number | string;
   controlClassName?: string;
   disabled?: boolean;
-  onChange?: (value: number | string) => void;
+  onChange?: (value?: number | string) => void;
 }
 
 const PriceControl: FC<Props> = ({ elementId, fieldTitle, controlClassName, ...props }) => {

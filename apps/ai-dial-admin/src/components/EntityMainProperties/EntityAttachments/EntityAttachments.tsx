@@ -29,7 +29,7 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
   }, [error, t, dispatch]);
 
   const onChangeAttachmentMax = useCallback(
-    (value: number | string) => {
+    (value?: number | string) => {
       onChangeEntity({ ...entity, maxInputAttachments: value });
     },
     [entity, onChangeEntity],
