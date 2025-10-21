@@ -1,9 +1,8 @@
 'use client';
 
 import { FC } from 'react';
-import { DialNumberInputField, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialNumberInputField, DialSelectField, DialTextInputField } from '@epam/ai-dial-ui-kit';
 
-import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { SchemeParameterControl } from './models';
@@ -42,13 +41,13 @@ const SimpleTypeControls: FC<Props> = ({ control }) => {
       )}
       {control.type === SchemeParameterType.boolean && (
         <div className="w-[35%]">
-          <DropdownField
+          <DialSelectField
             elementId={control.id}
             fieldTitle={control.label}
             optional={control.optional}
             placeholder={t(EntityPlaceholdersI18nKey.Select)}
             disabled={true}
-            items={[]}
+            options={[]}
             onChange={() => void 0}
           />
         </div>

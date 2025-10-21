@@ -1,13 +1,12 @@
 import React, { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
 import { IconPlus } from '@tabler/icons-react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import AddFilter from '@/src/components/Telemetry/TelemetryControls/Filters/AddFilter';
 import Filter from '@/src/components/Telemetry/TelemetryControls/Filters/Filter';
 import { FilterData, TelemetryQuery } from '@/src/models/telemetry';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ENTITY_QUERY, PROJECT_QUERY } from '@/src/constants/telemetry';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -22,8 +21,8 @@ interface Props {
 
 const Filters: FC<Props> = ({ filters, setFilters, getData, route }) => {
   const t = useI18n();
-  const [projects, setProjects] = useState<DropdownItemsModel[]>([]);
-  const [entities, setEntities] = useState<DropdownItemsModel[]>([]);
+  const [projects, setProjects] = useState<SelectOption[]>([]);
+  const [entities, setEntities] = useState<SelectOption[]>([]);
 
   useEffect(() => {
     const fetch = async (query: TelemetryQuery): Promise<{ data: string[][] }> => {
@@ -41,14 +40,14 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route }) => {
       if (projectData?.length) {
         setProjects(
           projectData.map((arr: string[]) => {
-            return { id: arr[0], name: arr[0] };
+            return { value: arr[0], label: arr[0] };
           }),
         );
       }
       if (entityData?.length) {
         setEntities(
           entityData.map((arr: string[]) => {
-            return { id: arr[0], name: arr[0] };
+            return { value: arr[0], label: arr[0] };
           }),
         );
       }

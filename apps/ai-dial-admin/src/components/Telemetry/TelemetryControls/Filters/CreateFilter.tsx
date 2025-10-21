@@ -1,15 +1,12 @@
 import { Dispatch, FC, SetStateAction, useCallback } from 'react';
 import classNames from 'classnames';
 
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
-import DropdownMenuItem from '@/src/components/Common/Dropdown/DropdownItem';
-import Dropdown from '@/src/components/Common/Dropdown/Dropdown';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { BasicI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { getDefaultFilterValue, getFilterConditionConfig, getFilterTypeConfig } from '@/src/utils/telemetry';
 import { ApplicationRoute } from '@/src/types/routes';
 import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
@@ -22,7 +19,7 @@ interface Props {
   setCondition: Dispatch<SetStateAction<FILTER_OPERATOR>>;
   setValue: Dispatch<SetStateAction<string>>;
   onClose: () => void;
-  dropdownData: { projects: DropdownItemsModel[]; entities: DropdownItemsModel[] };
+  dropdownData: { projects: SelectOption[]; entities: SelectOption[] };
   route: ApplicationRoute;
 }
 
@@ -66,9 +63,9 @@ const CreateFilter: FC<Props> = ({
           if (prev !== value) {
             if (condition === FILTER_OPERATOR.Equal || condition === FILTER_OPERATOR.NotEqual) {
               if (type === FILTER_TYPE.Entity) {
-                setValue(entities[0].id);
+                setValue(entities[0].value);
               } else {
-                setValue(projects[0].id);
+                setValue(projects[0].value);
               }
             } else {
               setValue('');
@@ -87,20 +84,16 @@ const CreateFilter: FC<Props> = ({
   );
 
   return (
-    <div className={containerClassNames} data-testid="dashboard-create-filter">
+    <div className={containerClassNames}>
       <>
         {route === ApplicationRoute.Dashboard ? (
           <div className="md:mr-4 md:mb-0 mb-4 min-w-[120px]">
-            <Dropdown selectedValue={filterTypeConfig.find((item) => item.id === type)}>
-              {filterTypeConfig.map((item, i) => (
-                <DropdownMenuItem
-                  className="gap-0"
-                  key={i}
-                  dropdownItem={item}
-                  onClick={() => setTypeHandler(item.id)}
-                />
-              ))}
-            </Dropdown>
+            <DialSelectField
+              value={filterTypeConfig.find((item) => item.value === type)?.value}
+              elementId="type"
+              onChange={(type) => setTypeHandler(type as FILTER_TYPE)}
+              options={filterTypeConfig}
+            />
           </div>
         ) : (
           <div className="flex">
@@ -109,32 +102,30 @@ const CreateFilter: FC<Props> = ({
         )}
       </>
       <div className="md:mr-4 md:mb-0 mb-4 min-w-[160px]">
-        <Dropdown selectedValue={filterConditionConfig.find((item) => item.id === condition)}>
-          {filterConditionConfig.map((item, i) => (
-            <DropdownMenuItem
-              className="gap-0"
-              key={i}
-              dropdownItem={item}
-              onClick={() => setConditionHandler(item.id)}
-            />
-          ))}
-        </Dropdown>
+        <DialSelectField
+          value={filterConditionConfig.find((item) => item.value === type)?.value}
+          elementId="Condition"
+          onChange={(type) => setConditionHandler(type as FILTER_OPERATOR)}
+          options={filterConditionConfig}
+        />
       </div>
       <div className="md:mr-2 md:mb-0 mb-4 min-w-[190px] max-w-[250px]">
         {condition === FILTER_OPERATOR.Equal || condition === FILTER_OPERATOR.NotEqual ? (
           <>
             {type === FILTER_TYPE.Entity ? (
-              <Dropdown selectedValue={entities.find((item) => item.id === value)}>
-                {entities.map((item, i) => (
-                  <DropdownMenuItem className="gap-0" key={i} dropdownItem={item} onClick={() => setValue(item.id)} />
-                ))}
-              </Dropdown>
+              <DialSelectField
+                value={entities.find((item) => item.value === value)?.value}
+                elementId="entities"
+                onChange={(type) => setValue(type as string)}
+                options={entities}
+              />
             ) : (
-              <Dropdown selectedValue={projects.find((item) => item.id === value)}>
-                {projects.map((item, i) => (
-                  <DropdownMenuItem className="gap-0" key={i} dropdownItem={item} onClick={() => setValue(item.id)} />
-                ))}
-              </Dropdown>
+              <DialSelectField
+                value={projects.find((item) => item.value === value)?.value}
+                elementId="projects"
+                onChange={(type) => setValue(type as string)}
+                options={projects}
+              />
             )}
           </>
         ) : (

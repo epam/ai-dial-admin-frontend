@@ -118,9 +118,9 @@ describe('getOperationItems', () => {
     const items = getOperationItems(t);
 
     expect(items).toHaveLength(3);
-    expect(items[0]).toMatchObject({ id: RuleFunction.EQUAL, name: FoldersI18nKey.equal });
-    expect(items[1]).toMatchObject({ id: RuleFunction.CONTAIN, name: FoldersI18nKey.contain });
-    expect(items[2]).toMatchObject({ id: RuleFunction.REGEX, name: FoldersI18nKey.regex });
+    expect(items[0]).toMatchObject({ value: RuleFunction.EQUAL, label: FoldersI18nKey.equal });
+    expect(items[1]).toMatchObject({ value: RuleFunction.CONTAIN, label: FoldersI18nKey.contain });
+    expect(items[2]).toMatchObject({ value: RuleFunction.REGEX, label: FoldersI18nKey.regex });
 
     // Check icons are present (JSX)
     expect(items[0].icon).toBeTruthy();
@@ -134,7 +134,7 @@ describe('getAttributeItems', () => {
 
   test('returns translated attribute items', () => {
     const items = getAttributeItems(t, ['a', 'b']);
-    expect(items).toEqual([{ id: 'a' }, { id: 'b' }]);
+    expect(items).toEqual([{ value: 'a' }, { value: 'b' }]);
   });
 
   test('returns empty array if attributes is undefined', () => {
