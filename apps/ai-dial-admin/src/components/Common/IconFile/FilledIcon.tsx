@@ -1,41 +1,42 @@
-import { IconTrashX, IconRefreshDot } from '@tabler/icons-react';
+import { IconRefreshDot, IconTrashX } from '@tabler/icons-react';
 import Image from 'next/image';
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import ContextMenu, { ContextMenuItem } from '@/src/components/Common/ContextMenu/ContextMenu';
 import IconGalleryModal from '@/src/components/IconGallery/IconGalleryModal';
 import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { PopUpState } from '@/src/types/pop-up';
+import { DialDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 
 interface Props {
-  readonly?: boolean;
+  disabled?: boolean;
   fileUrl: string;
   onChange: (url: string) => void;
 }
 
-const FilledIcon: FC<Props> = ({ readonly, fileUrl, onChange }) => {
+const FilledIcon: FC<Props> = ({ disabled, fileUrl, onChange }) => {
   const t = useI18n();
   const [src, setSrc] = useState(fileUrl);
-  const [modalState, setIsModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     setSrc(fileUrl);
   }, [fileUrl]);
 
   const onClose = useCallback(() => {
-    setIsModalState(PopUpState.Closed);
-  }, [setIsModalState]);
+    setIsModalOpen(false);
+  }, [setIsModalOpen]);
 
-  const contextMenu: ContextMenuItem[] = [
+  const contextMenu: DropdownItem[] = [
     {
-      title: t(EntitiesI18nKey.ChangeIcon),
-      onClick: () => setIsModalState(PopUpState.Opened),
+      key: 'change-icon',
+      label: t(EntitiesI18nKey.ChangeIcon),
+      onClick: () => setIsModalOpen(true),
       icon: <IconRefreshDot {...BASE_ICON_PROPS} />,
     },
     {
-      title: t(ButtonsI18nKey.Delete),
+      key: 'remove-icon',
+      label: t(ButtonsI18nKey.Delete),
       onClick: () => onChange(''),
       icon: <IconTrashX {...BASE_ICON_PROPS} />,
     },
@@ -58,12 +59,13 @@ const FilledIcon: FC<Props> = ({ readonly, fileUrl, onChange }) => {
     );
   };
 
-  return readonly ? (
+  return disabled ? (
     getImageSrc()
   ) : (
     <>
-      <ContextMenu contextMenuItems={contextMenu}>{getImageSrc()}</ContextMenu>
-      <IconGalleryModal modalState={modalState} selectedValue={fileUrl} onClose={onClose} onChange={onChange} />
+      <DialDropdown menu={{ items: contextMenu }}>{getImageSrc()}</DialDropdown>
+
+      <IconGalleryModal isModalOpen={isModalOpen} selectedValue={fileUrl} onClose={onClose} onChange={onChange} />
     </>
   );
 };

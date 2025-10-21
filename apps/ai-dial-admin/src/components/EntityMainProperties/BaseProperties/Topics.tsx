@@ -11,7 +11,7 @@ import { isDeploymentAsset } from '@/src/utils/is-asset-view';
 
 interface Props<T> {
   entity: T;
-  readonly?: boolean;
+  disabled?: boolean;
   onChange?: (entity: T) => void;
   view?: ApplicationRoute;
 }

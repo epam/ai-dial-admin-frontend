@@ -1,23 +1,19 @@
+import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
-import classNames from 'classnames';
 
-import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import IconGallery from '@/src/components/IconGallery/IconGallery';
-import Popup from '@/src/components/Common/Popup/Popup';
+import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { PopUpState } from '@/src/types/pop-up';
 
 interface Props {
-  modalState: PopUpState;
+  isModalOpen: boolean;
   selectedValue: string;
   onClose: () => void;
   onChange: (url: string) => void;
 }
 
-const IconGalleryModal: FC<Props> = ({ modalState, selectedValue, onClose, onChange }) => {
+const IconGalleryModal: FC<Props> = ({ isModalOpen, selectedValue, onClose, onChange }) => {
   const t = useI18n();
-  const popupClassNames = classNames('flex flex-col lg:max-w-[808px] md:max-w-[648px] sm:max-w-[328px]');
   const [selectedIcon, setSelectedIcon] = useState(selectedValue);
 
   const onApply = useCallback(() => {
@@ -26,21 +22,20 @@ const IconGalleryModal: FC<Props> = ({ modalState, selectedValue, onClose, onCha
   }, [onChange, onClose, selectedIcon]);
 
   return (
-    <Popup
+    <DialFormPopup
       onClose={onClose}
-      heading={t(EntityFieldsI18nKey.iconUrl)}
+      title={t(EntityFieldsI18nKey.iconUrl)}
       portalId="IconSelector"
-      state={modalState}
-      containerClassName={popupClassNames}
+      open={isModalOpen}
+      onSubmit={onApply}
+      onCancel={onClose}
+      submitLabel={t(ButtonsI18nKey.Apply)}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
     >
-      <div className="flex flex-col max-h-[568px] p-6 overflow-y-scroll">
+      <div className="flex flex-col h-full max-h-[568px] p-6 overflow-y-auto">
         <IconGallery selectedIcon={selectedIcon} setSelectedIcon={setSelectedIcon} />
       </div>
-      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton variant={ButtonVariant.Primary} title={t(ButtonsI18nKey.Apply)} onClick={onApply} />
-      </div>
-    </Popup>
+    </DialFormPopup>
   );
 };
 

@@ -1,4 +1,5 @@
 import { FC } from 'react';
+
 import { ApplicationRoute } from '@/src/types/routes';
 import { Publication } from '@/src/models/dial/publications';
 import BasePublicationProperties from '@/src/components/Publications/Properties/Properties';
@@ -17,14 +18,14 @@ interface Props {
 const PublicationProperties: FC<Props> = ({ view, publication, applicationSchemes }) => {
   if (view === ApplicationRoute.PromptPublications) {
     return (
-      <BasePublicationProperties publication={publication}>
+      <BasePublicationProperties view={view} publication={publication}>
         <PromptsPropertiesList publication={publication} />
       </BasePublicationProperties>
     );
   }
   if (view === ApplicationRoute.FilePublications) {
     return (
-      <BasePublicationProperties publication={publication}>
+      <BasePublicationProperties view={view} publication={publication}>
         <FilesProperties publication={publication} />
       </BasePublicationProperties>
     );
@@ -32,7 +33,7 @@ const PublicationProperties: FC<Props> = ({ view, publication, applicationScheme
 
   if (view === ApplicationRoute.ApplicationPublications) {
     return (
-      <BasePublicationProperties publication={publication} applicationSchemes={applicationSchemes || []}>
+      <BasePublicationProperties view={view} publication={publication} applicationSchemes={applicationSchemes || []}>
         <ApplicationProperties publication={publication} />
       </BasePublicationProperties>
     );
@@ -40,7 +41,7 @@ const PublicationProperties: FC<Props> = ({ view, publication, applicationScheme
 
   if (view === ApplicationRoute.ToolsetPublications) {
     return (
-      <BasePublicationProperties publication={publication} applicationSchemes={applicationSchemes || []}>
+      <BasePublicationProperties view={view} publication={publication}>
         <ToolsetProperties publication={publication} />
       </BasePublicationProperties>
     );
