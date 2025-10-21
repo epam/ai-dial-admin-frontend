@@ -28,6 +28,8 @@ const ParameterSchema: FC<Props> = ({ schemaURL, name, configuration, onChangeCo
         if (schema) {
           setIsLoading(false);
           setSchema(schema);
+        } else {
+          setIsLoading(false);
         }
       };
 
