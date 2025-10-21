@@ -16,10 +16,10 @@ interface Props {
   onChange?: (toolset: Toolset) => void;
   prefix?: string;
   isModal?: boolean;
-  readonly?: boolean;
+  disabled?: boolean;
 }
 
-const ToolsetEndpoint: FC<Props> = ({ entity, readonly, onChange, prefix, isModal }) => {
+const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModal }) => {
   const t = useI18n();
   const transportOptions: SelectOption[] = [
     { value: ToolsetTransport.HTTP, label: ToolsetTransport.HTTP.toUpperCase() },
@@ -32,7 +32,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, readonly, onChange, prefix, isModa
         <ReadonlyField elementId="endpoint" title={t(EntitiesI18nKey.ToolsetEndpoint)} value={prefix} />
       ) : (
         <DialTextInputField
-          disabled={readonly}
+          disabled={disabled}
           elementId="endpoint"
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
@@ -42,10 +42,9 @@ const ToolsetEndpoint: FC<Props> = ({ entity, readonly, onChange, prefix, isModa
       )}
       {!isModal && (
         <DialSelectField
-          disabled={readonly}
+          disabled={disabled}
           fieldTitle={t(EntityFieldsI18nKey.transport)}
           elementId="transport"
-          readonly={readonly}
           containerCssClass="w-[180px]"
           value={entity.transport || ToolsetTransport.SSE}
           options={transportOptions}

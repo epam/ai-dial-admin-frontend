@@ -1,8 +1,7 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
-import PublicationPermissions from '../Permissions';
-import { PopUpState } from '@/src/types/pop-up';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { render, screen, waitFor } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import PublicationPermissions from '../Permissions';
 
 const rules = [{ id: 'r1' }];
 const folderId = '/folder';
