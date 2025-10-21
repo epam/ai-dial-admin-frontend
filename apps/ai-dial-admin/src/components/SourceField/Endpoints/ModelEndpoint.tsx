@@ -10,6 +10,7 @@ import { getUrlError } from '@/src/utils/validation/url-error';
 import { useI18n } from '@/src/locales/client';
 import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
 import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
+import classNames from 'classnames';
 
 interface Props {
   entity: DialModel;
@@ -61,7 +62,7 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
       setName(value || '');
       onChange({
         ...entity,
-        endpoint: `${value}${postfix}`,
+        endpoint: `${value || ''}${postfix}`,
       });
     },
     [entity, onChange, postfix, t],
@@ -101,7 +102,7 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
   }, [isModal, entity, prefix]);
 
   return (
-    <div className="w-full flex flex-col gap-6 lg:w-[45%]">
+    <div className={classNames('flex flex-col gap-6', isModal ? 'w-full' : 'w-full lg:w-[45%]')}>
       {!isModal && (
         <DialRadioGroup
           radioButtons={modelTypeRadio}
