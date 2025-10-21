@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import BasePublicationProperties from '../Properties';
-import { EntitiesI18nKey, EntityFieldsI18nKey } from '../../../../constants/i18n';
+import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { ApplicationRoute } from '@/src/types/routes';
 
 const basePublication = {
   action: 'ADD',
@@ -14,7 +15,11 @@ const basePublication = {
 describe('BasePublicationProperties', () => {
   it('renders all main fields', () => {
     render(
-      <BasePublicationProperties publication={basePublication as any} applicationSchemes={[]}>
+      <BasePublicationProperties
+        view={ApplicationRoute.Prompts}
+        publication={basePublication as any}
+        applicationSchemes={[]}
+      >
         <div>ChildrenContent</div>
       </BasePublicationProperties>,
     );
@@ -31,7 +36,11 @@ describe('BasePublicationProperties', () => {
     };
     const applicationSchemes = [{ $id: 'runner-id', 'dial:applicationTypeDisplayName': 'RunnerName' }];
     render(
-      <BasePublicationProperties publication={publication as any} applicationSchemes={applicationSchemes as any}>
+      <BasePublicationProperties
+        view={ApplicationRoute.ApplicationPublications}
+        publication={publication as any}
+        applicationSchemes={applicationSchemes as any}
+      >
         <div>ChildrenContent</div>
       </BasePublicationProperties>,
     );

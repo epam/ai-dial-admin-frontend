@@ -13,11 +13,11 @@ interface Props {
 const ApplicationInfo: FC<Props> = ({ application }) => {
   return application ? (
     <div className="flex flex-col gap-y-6 w-full lg:w-[35%]">
-      <DisplayNameControl readonly={true} displayName={application?.displayName} />
-      <DescriptionControl entity={application} readonly={true} />
+      <DisplayNameControl disabled={true} displayName={application?.displayName} />
+      <DescriptionControl entity={application} disabled={true} />
 
-      <IconControl readonly={true} iconUrl={application.iconUrl} />
-      <TopicsControl readonly={true} entity={{ topics: application?.descriptionKeywords }} />
+      <IconControl disabled={true} iconUrl={application.iconUrl} />
+      <TopicsControl disabled={true} entity={{ topics: application?.descriptionKeywords }} />
     </div>
   ) : null;
 };
