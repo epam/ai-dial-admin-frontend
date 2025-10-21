@@ -19,7 +19,7 @@ import { ParsedPrompts } from '@/src/models/prompts';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { findFolderSiblings, getFolderName } from '@/src/utils/files/folder';
-import { addTrailingSlash, getFolderNameAndPath } from '@/src/utils/files/path';
+import { getFolderNameAndPath } from '@/src/utils/files/path';
 import { getSuccessNotification } from '@/src/utils/notification';
 import DeleteFolder from './DeleteFolder';
 import RenameFolder from './RenameFolder';
@@ -57,7 +57,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
 
       createFolderWithFiles(body, fileType, view).then((res) => {
         if (res.success) {
-          folderContext?.fetchFiles(`${addTrailingSlash(getFolderNameAndPath(path).path)}`, true);
+          folderContext?.fetchFiles?.(`${ROOT_FOLDER}/`, true);
           showNotification(getSuccessNotification(t(FoldersI18nKey.FolderCreateSuccess)));
         }
       });
