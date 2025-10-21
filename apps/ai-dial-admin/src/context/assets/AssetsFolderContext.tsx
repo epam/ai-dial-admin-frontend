@@ -31,11 +31,6 @@ export function createFolderContext<T extends DialFile>(
     const [data, setData] = useState<T[] | null>([]);
 
     const fetchFiles = (path: string, refreshData?: boolean, resetFolder?: boolean) => {
-      if (refreshData) {
-        setFetchedFoldersData({});
-        setExpandedFolders(new Set());
-      }
-
       getFilesFunc(path).then((fetched) => {
         if (fetched === undefined) {
           setData(null);
@@ -44,8 +39,8 @@ export function createFolderContext<T extends DialFile>(
 
         setFiles((prevFiles) => {
           const newFiles = mergeFiles(prevFiles, fetched, path) as T[];
-          if (prevFiles.length === 0) {
-            toggleFolder(newFiles[0], true);
+          if (prevFiles.length === 0 || refreshData) {
+            toggleFolder(newFiles[0], true, refreshData);
           }
 
           return newFiles;
@@ -53,7 +48,7 @@ export function createFolderContext<T extends DialFile>(
 
         const folderItems = fetched?.filter((f) => f.nodeType === DialFileNodeType.ITEM) as T[];
         setData(folderItems);
-        setFetchedFoldersData((prev) => ({ ...prev, [path]: folderItems }));
+        setFetchedFoldersData((prev) => (refreshData ? { [path]: folderItems } : { ...prev, [path]: folderItems }));
 
         if (!filePath || resetFolder) {
           setFilePath(path);
