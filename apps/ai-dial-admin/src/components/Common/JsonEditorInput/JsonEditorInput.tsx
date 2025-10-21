@@ -3,7 +3,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import Field from '@/src/components/Common/Field/Field';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
-import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { JSONEditorError } from '@/src/types/editor';
 
@@ -68,7 +68,7 @@ const JsonEditorInput: FC<Props> = ({ value, disabled, fieldTitle, elementId, on
         open={isModalOpen}
         selectedValue={jsonValue}
         onOpen={onOpenModal}
-        emptyValueText="no data"
+        emptyValueText={t(BasicI18nKey.NoData)}
       >
         <DialFormPopup
           onClose={onCloseModal}
