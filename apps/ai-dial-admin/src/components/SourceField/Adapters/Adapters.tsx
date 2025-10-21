@@ -20,6 +20,7 @@ import SelectAdapterModal from '@/src/components/SourceField/Adapters/SelectAdap
 import Field from '@/src/components/Common/Field/Field';
 import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
 import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
+import classNames from 'classnames';
 
 interface Props<T> {
   entity: T;
@@ -93,7 +94,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex lg:flex-row flex-col gap-2">
+      <div className="flex lg:flex-row flex-col gap-2 items-end">
         {isModal ? (
           <div className="w-full">
             <DialSelectField
@@ -110,33 +111,31 @@ const Adapters = <T extends DialModel | DialInterceptor>({
             />
           </div>
         ) : (
-          <div className="flex flex-row lg:w-[50%] gap-2">
-            <div className="flex-1 min-w-0">
-              <div className="w-full">
-                <Field fieldTitle={t(SourceI18nKey.Adapter)} htmlFor={'adapters'} />
-                <DialInputPopup
-                  open={isModalOpen}
-                  onOpen={onOpenModal}
-                  selectedValue={selectedAdapter?.name}
-                  elementId={'adapters'}
-                  errorText={errorText}
-                  emptyValueText={t(EntitiesI18nKey.NoAdapters)}
-                >
-                  <SelectAdapterModal
-                    selected={entity.source?.adapterName}
-                    onClose={onCloseModal}
-                    onApply={onSelect}
-                    adapters={adapters}
-                    isModalOpen={isModalOpen}
-                  />
-                </DialInputPopup>
-              </div>
+          <div className="flex w-full gap-2">
+            <div className="w-full lg:w-[45%]">
+              <Field fieldTitle={t(SourceI18nKey.Adapter)} htmlFor={'adapters'} />
+              <DialInputPopup
+                open={isModalOpen}
+                onOpen={onOpenModal}
+                selectedValue={selectedAdapter?.name}
+                elementId={'adapters'}
+                errorText={errorText}
+                emptyValueText={t(EntitiesI18nKey.NoAdapters)}
+              >
+                <SelectAdapterModal
+                  selected={entity.source?.adapterName}
+                  onClose={onCloseModal}
+                  onApply={onSelect}
+                  adapters={adapters}
+                  isModalOpen={isModalOpen}
+                />
+              </DialInputPopup>
             </div>
             {entity.source?.adapterName && (
               <DialButton
                 iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
                 variant={ButtonVariant.Secondary}
-                cssClass={errorText ? 'self-center mt-[3px]' : 'self-end'}
+                cssClass={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
                 title={t(SourceI18nKey.OpenAdapter)}
                 onClick={() => openAdapter()}
               />
