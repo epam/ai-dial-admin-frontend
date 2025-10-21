@@ -13,7 +13,6 @@ import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialFile } from '@/src/models/dial/file';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { getEntityPath, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
@@ -71,7 +70,7 @@ const BaseEntityList = <T extends object>({
   // entity for which the modals (delete and duplicate) is open
   const [currentEntity, setCurrentEntity] = useState<T | undefined>(void 0);
 
-  const [modalState, setModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType | undefined>(void 0);
 
   const [showColumnsPanel, setShowColumnsPanel] = useState(false);
@@ -85,7 +84,7 @@ const BaseEntityList = <T extends object>({
 
   const handleModalOpen = useCallback((modalType: ModalType) => {
     setModalType(modalType);
-    setModalState(PopUpState.Opened);
+    setIsModalOpen(true);
   }, []);
 
   const onOpenDeleteModal = useCallback(
@@ -181,8 +180,8 @@ const BaseEntityList = <T extends object>({
         moveFiles={moveFiles}
         bulkDelete={bulkDelete}
         context={context}
-        modalState={modalState}
-        setModalState={setModalState}
+        isModalOpen={isModalOpen}
+        setIsModalOpen={setIsModalOpen}
         modalType={modalType}
         setModalType={setModalType}
         currentEntity={currentEntity}

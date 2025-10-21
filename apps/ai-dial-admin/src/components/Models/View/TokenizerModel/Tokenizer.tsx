@@ -1,11 +1,9 @@
 import { FC, useCallback, useState } from 'react';
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, DialSwitch } from '@epam/ai-dial-ui-kit';
 
-import InputModal from '@/src/components/Common/InputModal/InputModal';
-import { EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModel } from '@/src/models/dial/model';
-import { PopUpState } from '@/src/types/pop-up';
 import TokenizedModelsModal from './TokenizedModelsModal';
 
 interface Props {
@@ -14,7 +12,7 @@ interface Props {
 }
 const TokenizerModelSwitch: FC<Props> = ({ model, onChangeModel }) => {
   const t = useI18n();
-  const [modalState, setIsModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const onSwitchTokenizerModel = useCallback(
     (value: boolean) => {
@@ -39,12 +37,12 @@ const TokenizerModelSwitch: FC<Props> = ({ model, onChangeModel }) => {
   );
 
   const onOpenModal = useCallback(() => {
-    setIsModalState(PopUpState.Opened);
-  }, [setIsModalState]);
+    setIsModalOpen(true);
+  }, [setIsModalOpen]);
 
   const onCloseModal = useCallback(() => {
-    setIsModalState(PopUpState.Closed);
-  }, [setIsModalState]);
+    setIsModalOpen(false);
+  }, [setIsModalOpen]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -56,14 +54,19 @@ const TokenizerModelSwitch: FC<Props> = ({ model, onChangeModel }) => {
       />
       {model.tokenizerModel != null && (
         <div className="pl-[42px] lg:w-[35%]">
-          <InputModal modalState={modalState} selectedValue={model.tokenizerModel} onOpenModal={onOpenModal}>
+          <DialInputPopup
+            open={isModalOpen}
+            selectedValue={model.tokenizerModel}
+            onOpen={onOpenModal}
+            emptyValueText={t(EntitiesI18nKey.NoModels)}
+          >
             <TokenizedModelsModal
               model={model}
               onSelectModelId={onSelectModelId}
-              modalState={modalState}
+              isModalOpen={isModalOpen}
               onClose={onCloseModal}
             />
-          </InputModal>
+          </DialInputPopup>
         </div>
       )}
     </div>

@@ -1,11 +1,11 @@
 import { FC, useCallback, useState } from 'react';
+import { DialErrorText, DialInputPopup } from '@epam/ai-dial-ui-kit';
 
-import ErrorText from '@/src/components/Common/ErrorText/ErrorText';
 import Field from '@/src/components/Common/Field/Field';
-import InputModal from '@/src/components/Common/InputModal/InputModal';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { PopUpState } from '@/src/types/pop-up';
 import MultiselectModal from './Modal/MultiselectModal';
+import { BasicI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
   elementId: string;
@@ -33,35 +33,37 @@ const Multiselect: FC<Props> = ({
   errorText,
   ...props
 }) => {
-  const [modalState, setIsModalState] = useState(PopUpState.Closed);
+  const t = useI18n();
+  const [isModalOpen, setIsModalState] = useState(false);
 
   const onOpenModal = useCallback(() => {
-    setIsModalState(PopUpState.Opened);
+    setIsModalState(true);
   }, [setIsModalState]);
 
   const onCloseModal = useCallback(() => {
-    setIsModalState(PopUpState.Closed);
+    setIsModalState(false);
   }, [setIsModalState]);
 
   return (
     <div className="flex flex-col">
       <Field fieldTitle={title} htmlFor={elementId} optional={optional} />
-      <InputModal
+      <DialInputPopup
         inputCssClasses={errorText ? 'dial-input-error' : ''}
-        modalState={modalState}
-        readonly={readonly}
+        open={isModalOpen}
+        disabled={readonly}
         selectedValue={selectedItems}
-        onOpenModal={onOpenModal}
+        onOpen={onOpenModal}
+        emptyValueText={t(BasicI18nKey.None)}
       >
         <MultiselectModal
           initSelectedItems={selectedItems}
           onSelectItems={onChangeItems}
-          modalState={modalState}
+          isModalOpen={isModalOpen}
           onClose={onCloseModal}
           {...props}
         />
-      </InputModal>
-      <ErrorText errorText={errorText} />
+      </DialInputPopup>
+      <DialErrorText errorText={errorText} />
     </div>
   );
 };

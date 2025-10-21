@@ -10,7 +10,6 @@ import { ButtonsI18nKey, EntitiesI18nKey, InterceptorsI18nKey, TabsI18nKey } fro
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getInterceptorsColumnDefs, getInterceptorsGridData } from './utils';
@@ -29,7 +28,7 @@ const EntityInterceptors = <T extends { interceptors?: string[] }>({
   const t = useI18n();
   const rowData = getInterceptorsGridData(interceptors, entity.interceptors);
   const [availableInterceptors, setAvailableInterceptors] = useState<DialInterceptor[]>([]);
-  const [addModalState, setAddModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     setAvailableInterceptors(interceptors);
@@ -41,9 +40,9 @@ const EntityInterceptors = <T extends { interceptors?: string[] }>({
         ...entity,
         interceptors: [...(entity.interceptors || []), ...interceptors.map((i) => i.name as string)],
       });
-      setAddModalState(PopUpState.Closed);
+      setIsModalOpen(false);
     },
-    [entity, onChangeEntity, setAddModalState],
+    [entity, onChangeEntity, setIsModalOpen],
   );
 
   const onRemoveInterceptor = useCallback(
@@ -73,12 +72,12 @@ const EntityInterceptors = <T extends { interceptors?: string[] }>({
   );
 
   const onOpenAddModal = useCallback(() => {
-    setAddModalState(PopUpState.Opened);
-  }, [setAddModalState]);
+    setIsModalOpen(true);
+  }, [setIsModalOpen]);
 
   const onCloseAddModal = useCallback(() => {
-    setAddModalState(PopUpState.Closed);
-  }, [setAddModalState]);
+    setIsModalOpen(false);
+  }, [setIsModalOpen]);
 
   const onOpen = (interceptor?: DialInterceptor) => {
     onOpenInNewTab(ApplicationRoute.Interceptors, interceptor);
@@ -104,12 +103,12 @@ const EntityInterceptors = <T extends { interceptors?: string[] }>({
       ) : (
         <Grid columnDefs={columns} rowData={rowData} additionalGridOptions={{ rowDragManaged: true, onRowDragEnd }} />
       )}
-      {addModalState === PopUpState.Opened &&
+      {isModalOpen &&
         createPortal(
           <AddEntitiesGrid
             modalTitle={t(InterceptorsI18nKey.Add)}
             emptyTitle={t(EntitiesI18nKey.NoInterceptors)}
-            modalState={addModalState}
+            isModalOpen={isModalOpen}
             entities={availableInterceptors}
             onClose={onCloseAddModal}
             onApply={onAddInterceptors}

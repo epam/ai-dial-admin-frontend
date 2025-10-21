@@ -23,7 +23,6 @@ import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportDependenciesConfig, ExportRequest } from '@/src/models/export';
 import { ExportFormat, ExportType } from '@/src/types/export';
-import { PopUpState } from '@/src/types/pop-up';
 import { downloadFile } from '@/src/utils/download';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 
@@ -37,7 +36,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
   const { showNotification } = useNotification();
   const [selectedExportFormat, setSelectedExportFormat] = useState(ExportFormat.ADMIN);
   const [selectedExportType, setSelectedExportType] = useState(ExportType.Full);
-  const [previewModalState, setPreviewModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [dependencies, setDependencies] = useState<ExportDependenciesConfig>({ ...fulDependenciesConfig });
   const [customExportData, setCustomExportData] = useState<Record<string, EntitiesGridData[]>>({});
   const [isExportDisable, setIsExportDisable] = useState(false);
@@ -135,7 +134,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
     if (selectedExportFormat === ExportFormat.ACTIVE_CONFIG) {
       onExportMap();
     } else {
-      setPreviewModalState(PopUpState.Opened);
+      setIsModalOpen(true);
     }
   }, [onExportMap, selectedExportFormat]);
 
@@ -210,13 +209,13 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
         </div>
       </div>
 
-      {previewModalState === PopUpState.Opened && (
+      {isModalOpen && (
         <PreviewModal
           exportRequest={exportRequest}
-          modalState={previewModalState}
-          onClose={() => setPreviewModalState(PopUpState.Closed)}
+          isModalOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
           onPrepare={(addSecrets) => {
-            setPreviewModalState(PopUpState.Closed);
+            setIsModalOpen(false);
             onExport(addSecrets);
           }}
         />

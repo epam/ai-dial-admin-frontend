@@ -10,7 +10,6 @@ import { DialApplication } from '@/src/models/dial/application';
 import { DialModel } from '@/src/models/dial/model';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { EntityType } from '@/src/types/entity-type';
-import { PopUpState } from '@/src/types/pop-up';
 import AddDependenciesModal from './AddDependenciesModal';
 
 interface Props {
@@ -26,18 +25,18 @@ const AddDependenciesButton: FC<Props> = ({ availableModels, availableApplicatio
     { id: EntityType.APPLICATION, name: t(MenuI18nKey.Applications) },
   ];
   const [entityType, setEntityType] = useState<EntityType>();
-  const [modalState, setModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [availableEntities, setAvailableEntities] = useState<EntitiesGridData[]>([]);
 
   const onClick = (type: EntityType) => {
     setEntityType(type);
     setAvailableEntities(type === EntityType.MODEL ? availableModels : availableApplications);
-    setModalState(PopUpState.Opened);
+    setIsModalOpen(true);
   };
 
   const onAddDependency = (dependencyName: string) => {
     addDependency(dependencyName);
-    setModalState(PopUpState.Closed);
+    setIsModalOpen(false);
   };
 
   return (
@@ -55,13 +54,13 @@ const AddDependenciesButton: FC<Props> = ({ availableModels, availableApplicatio
         ))}
       </Dropdown>
 
-      {modalState === PopUpState.Opened &&
+      {isModalOpen &&
         createPortal(
           <AddDependenciesModal
-            modalState={modalState}
+            isModalOpen={isModalOpen}
             entities={availableEntities}
             entityType={entityType}
-            onClose={() => setModalState(PopUpState.Closed)}
+            onClose={() => setIsModalOpen(false)}
             onApply={onAddDependency}
           />,
           document.body,

@@ -1,8 +1,7 @@
+import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import DeleteFolder from '../Modals/DeleteFolder';
-import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
-import { PopUpState } from '@/src/types/pop-up';
 
 describe('DeleteFolder', () => {
   const baseProps = {

@@ -1,8 +1,7 @@
-import { SettingsModalI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
-import { PopUpState } from '@/src/types/pop-up';
+import { ButtonsI18nKey, SettingsModalI18nKey } from '@/src/constants/i18n';
 import { fireEvent, render, screen } from '@testing-library/react';
-import SettingsModal from './SettingsModal';
 import { describe, expect, test, vi } from 'vitest';
+import SettingsModal from './SettingsModal';
 const mockOnClose = vi.fn();
 const mockOnConfirm = vi.fn();
 

@@ -12,7 +12,6 @@ import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { ImportFileType } from '@/src/types/import';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ModalType } from './Modals';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
@@ -21,7 +20,7 @@ interface Props {
   route: ApplicationRoute;
   itemsCount: number;
   context?: () => AssetsFolderContext<DialFile>;
-  setModalState: Dispatch<SetStateAction<PopUpState>>;
+  setIsModalOpen: Dispatch<SetStateAction<boolean>>;
   setModalType: Dispatch<SetStateAction<ModalType | undefined>>;
   setIsBulkView: Dispatch<SetStateAction<boolean>>;
   handleExport?: (fileType?: ImportFileType) => void;
@@ -31,7 +30,7 @@ const BulkButtons = ({
   route,
   itemsCount,
   context,
-  setModalState,
+  setIsModalOpen,
   setModalType,
   setIsBulkView,
   handleExport,
@@ -42,7 +41,7 @@ const BulkButtons = ({
   const bulkExport = () => {
     if (isAssetWithVersion(route)) {
       setModalType(ModalType.export);
-      setModalState(PopUpState.Opened);
+      setIsModalOpen(true);
     } else {
       handleExport?.();
     }
@@ -69,7 +68,7 @@ const BulkButtons = ({
           disable={!itemsCount}
           onClick={() => {
             setModalType(ModalType.deleteBulk);
-            setModalState(PopUpState.Opened);
+            setIsModalOpen(true);
           }}
         />
       )}

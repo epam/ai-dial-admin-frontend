@@ -1,10 +1,8 @@
 'use client';
 import { FC, useState } from 'react';
 
-import { ButtonVariant, DialButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
-import classNames from 'classnames';
+import { DialFormPopup, DialNoDataContent, PopupSize } from '@epam/ai-dial-ui-kit';
 
-import Popup from '@/src/components/Common/Popup/Popup';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import Grid from '@/src/components/Grid/Grid';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
@@ -13,31 +11,35 @@ import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { EntityType } from '@/src/types/entity-type';
-import { PopUpState } from '@/src/types/pop-up';
 
 interface Props {
-  modalState: PopUpState;
+  isModalOpen: boolean;
   entities: EntitiesGridData[];
   entityType?: EntityType;
   onClose: () => void;
   onApply: (dependencyName: string) => void;
 }
 
-const AddDependenciesModal: FC<Props> = ({ modalState, entities, entityType, onClose, onApply }) => {
+const AddDependenciesModal: FC<Props> = ({ isModalOpen, entities, entityType, onClose, onApply }) => {
   const t = useI18n() as (v: string) => string;
 
   const [selectedEntityName, setSelectedEntityName] = useState<string | undefined>();
-  const containerClassName = classNames('h-[800px] lg:max-w-[75%] md:max-w-[90%]');
 
   return (
-    <Popup
+    <DialFormPopup
       onClose={onClose}
-      heading={t(entityType === EntityType.MODEL ? EntitiesI18nKey.AddModel : EntitiesI18nKey.AddApplication)}
+      title={t(entityType === EntityType.MODEL ? EntitiesI18nKey.AddModel : EntitiesI18nKey.AddApplication)}
       portalId="AddDependencyEntities"
-      state={modalState}
-      containerClassName={containerClassName}
+      open={isModalOpen}
+      cssClass="h-[800px]"
+      size={PopupSize.Lg}
+      submitLabel={t(ButtonsI18nKey.Add)}
+      onSubmit={() => onApply(selectedEntityName as string)}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      onCancel={onClose}
+      disableSubmitButton={!selectedEntityName}
     >
-      <div className="flex flex-1 flex-col px-6 py-4 min-h-0">
+      <div className="flex h-full flex-col px-6 py-4 min-h-0">
         {!entities.length ? (
           <DialNoDataContent
             title={t(entityType === EntityType.MODEL ? EntitiesI18nKey.NoModels : EntitiesI18nKey.NoApplications)}
@@ -68,16 +70,7 @@ const AddDependenciesModal: FC<Props> = ({ modalState, entities, entityType, onC
           </div>
         )}
       </div>
-      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Add)}
-          onClick={() => onApply(selectedEntityName as string)}
-          disable={!selectedEntityName}
-        />
-      </div>
-    </Popup>
+    </DialFormPopup>
   );
 };
 

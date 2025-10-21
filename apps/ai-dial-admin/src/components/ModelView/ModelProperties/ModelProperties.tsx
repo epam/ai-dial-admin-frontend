@@ -8,7 +8,7 @@ import ForwardAuthTokenField from '@/src/components/EntityMainProperties/Forward
 import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
 import Limits from '@/src/components/ModelView/Limits/Limits';
 import Pricing from '@/src/components/ModelView/Pricing/Pricing';
-import TokenizerModelSwitch from '@/src/components/ModelView/TokenizerModel/Tokenizer';
+import TokenizerModelSwitch from '@/src/components/Models/View/TokenizerModel/Tokenizer';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModel } from '@/src/models/dial/model';

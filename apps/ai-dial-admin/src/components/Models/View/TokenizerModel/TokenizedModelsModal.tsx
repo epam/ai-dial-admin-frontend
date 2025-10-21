@@ -1,22 +1,20 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 
-import Popup from '@/src/components/Common/Popup/Popup';
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModel } from '@/src/models/dial/model';
-import { PopUpState } from '@/src/types/pop-up';
 import TokenizedModelsGrid from './TokenizedModelsGrid';
 
 interface Props {
   model: DialModel;
-  modalState: PopUpState;
+  isModalOpen: boolean;
   onClose: () => void;
   onSelectModelId: (name: string) => void;
 }
 
-const TokenizedModelsModal: FC<Props> = ({ model, modalState, onClose, onSelectModelId }) => {
+const TokenizedModelsModal: FC<Props> = ({ model, isModalOpen, onClose, onSelectModelId }) => {
   const t = useI18n();
 
   const [selectedModel, setSelectedModel] = useState(model.tokenizerModel);
@@ -40,20 +38,21 @@ const TokenizedModelsModal: FC<Props> = ({ model, modalState, onClose, onSelectM
   }, [model]);
 
   return (
-    <Popup onClose={onClose} heading={t(EntityFieldsI18nKey.tokenizerModel)} portalId="Model" state={modalState}>
+    <DialFormPopup
+      onClose={onClose}
+      title={t(EntityFieldsI18nKey.tokenizerModel)}
+      portalId="Model"
+      open={isModalOpen}
+      onSubmit={onApply}
+      onCancel={onClose}
+      disableSubmitButton={!selectedModel}
+      submitLabel={t(ButtonsI18nKey.Apply)}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+    >
       <div className="flex flex-col px-6 py-4 h-[400px]">
         <TokenizedModelsGrid selectedModel={selectedModel} onSelectModelId={onSelectModel} />
       </div>
-      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Apply)}
-          onClick={onApply}
-          disable={!selectedModel}
-        />
-      </div>
-    </Popup>
+    </DialFormPopup>
   );
 };
 
