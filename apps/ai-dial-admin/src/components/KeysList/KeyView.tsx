@@ -116,9 +116,11 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
   );
 
   const toggleJsonEditor = useCallback(() => {
+    setSelectedKey(cloneDeep(originalKey));
     setSelectedFormat(ExportFormat.ADMIN);
+
     setJsonEditorEnabled((prev) => !prev);
-  }, [setJsonEditorEnabled]);
+  }, [originalKey]);
 
   const onAddRoles = useCallback(
     (rows: EntitiesGridData[]) => {
@@ -217,37 +219,39 @@ const KeyView: FC<Props> = ({ originalKey, names, keys, roles }) => {
               setIsChanged={setIsChanged}
             />
           ) : (
-            <>
-              {activeTab === EntityViewTab.Properties && (
-                <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full">
-                  <KeyViewHeader selectedKey={selectedKey} />
-                  <div className="pt-6 w-full">
-                    <div className="lg:w-[35%]">
-                      <KeyProperties
-                        entity={selectedKey}
-                        names={names}
-                        keys={keys}
-                        onChangeKey={onChangeKey}
-                        isKeyImmutable={true}
-                      ></KeyProperties>
+            selectedFormat === ExportFormat.ADMIN && (
+              <>
+                {activeTab === EntityViewTab.Properties && (
+                  <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full">
+                    <KeyViewHeader selectedKey={selectedKey} />
+                    <div className="pt-6 w-full">
+                      <div className="lg:w-[35%]">
+                        <KeyProperties
+                          entity={selectedKey}
+                          names={names}
+                          keys={keys}
+                          onChangeKey={onChangeKey}
+                          isKeyImmutable={true}
+                        ></KeyProperties>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-              {activeTab === EntityViewTab.Roles && (
-                <AddEntitiesView
-                  viewTitle={t(TabsI18nKey.Roles)}
-                  customColumns={SIMPLE_ENTITY_COLUMNS}
-                  modalTitle={t(RolesI18nKey.AddRoles)}
-                  emptyDataTitle={t(EntitiesI18nKey.NoRoles)}
-                  roles={roles}
-                  onAdd={onAddRoles}
-                  onRemove={onRemoveRole}
-                  getRelevantDataForEntity={getRelevantRolesForKey.bind(this, selectedKey)}
-                />
-              )}
-              {activeTab === EntityViewTab.Audit && <EntityAudit entity={selectedKey} view={ApplicationRoute.Keys} />}
-            </>
+                )}
+                {activeTab === EntityViewTab.Roles && (
+                  <AddEntitiesView
+                    viewTitle={t(TabsI18nKey.Roles)}
+                    customColumns={SIMPLE_ENTITY_COLUMNS}
+                    modalTitle={t(RolesI18nKey.AddRoles)}
+                    emptyDataTitle={t(EntitiesI18nKey.NoRoles)}
+                    roles={roles}
+                    onAdd={onAddRoles}
+                    onRemove={onRemoveRole}
+                    getRelevantDataForEntity={getRelevantRolesForKey.bind(this, selectedKey)}
+                  />
+                )}
+                {activeTab === EntityViewTab.Audit && <EntityAudit entity={selectedKey} view={ApplicationRoute.Keys} />}
+              </>
+            )
           )}
         </div>
       </div>

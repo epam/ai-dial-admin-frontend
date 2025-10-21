@@ -219,9 +219,11 @@ const EntityView: FC<Props> = ({
   );
 
   const toggleJsonEditor = useCallback(() => {
+    setSelectedEntity(cloneDeep(originalEntity));
     setSelectedFormat(ExportFormat.ADMIN);
+
     setJsonEditorEnabled((prev) => !prev);
-  }, [setJsonEditorEnabled]);
+  }, [originalEntity]);
 
   const changeTab = useCallback(() => {
     setActiveTab(nextTab as EntityViewTab);
@@ -297,16 +299,18 @@ const EntityView: FC<Props> = ({
               setIsChanged={setIsChanged}
             />
           ) : (
-            <ViewContent
-              view={view}
-              applicationSchemes={applicationSchemes}
-              activeTab={activeTab}
-              selectedEntity={selectedEntity}
-              jsonEditorEnabled={jsonEditorEnabled}
-              isSkipRefresh={isSkipRefresh}
-              onChangeEntity={onChangeEntity}
-              {...props}
-            />
+            selectedFormat === ExportFormat.ADMIN && (
+              <ViewContent
+                view={view}
+                applicationSchemes={applicationSchemes}
+                activeTab={activeTab}
+                selectedEntity={selectedEntity}
+                jsonEditorEnabled={jsonEditorEnabled}
+                isSkipRefresh={isSkipRefresh}
+                onChangeEntity={onChangeEntity}
+                {...props}
+              />
+            )
           )}
         </div>
       </div>

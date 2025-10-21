@@ -119,9 +119,11 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
   );
 
   const toggleJsonEditor = useCallback(() => {
+    setSelectedRunner(cloneDeep(originalScheme));
     setSelectedFormat(ExportFormat.ADMIN);
+
     setJsonEditorEnabled((prev) => !prev);
-  }, [setJsonEditorEnabled]);
+  }, [originalScheme]);
 
   const onSave = useCallback(() => {
     const req =
@@ -165,39 +167,41 @@ const ApplicationRunnersView: FC<Props> = ({ originalScheme, roles }) => {
             setIsChanged={setIsChanged}
           />
         ) : (
-          <>
-            {activeTab === EntityViewTab.Properties && (
-              <div className="pt-3 w-full lg:w-[35%]">
-                <EntityHeader entity={selectedRunner} />
-                <div className="flex-1 min-h-0 pt-4">
-                  <SchemeProperties runner={selectedRunner} isImmutable={true} onChangeRunner={onChangeScheme} />
+          selectedFormat === ExportFormat.ADMIN && (
+            <>
+              {activeTab === EntityViewTab.Properties && (
+                <div className="pt-3 w-full lg:w-[35%]">
+                  <EntityHeader entity={selectedRunner} />
+                  <div className="flex-1 min-h-0 pt-4">
+                    <SchemeProperties runner={selectedRunner} isImmutable={true} onChangeRunner={onChangeScheme} />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {activeTab === EntityViewTab.Parameters && (
-              <SchemeParameters scheme={selectedRunner} onChangeScheme={onChangeScheme} />
-            )}
+              {activeTab === EntityViewTab.Parameters && (
+                <SchemeParameters scheme={selectedRunner} onChangeScheme={onChangeScheme} />
+              )}
 
-            {activeTab === EntityViewTab.Applications && (
-              <AppRunnerApplications appRunner={selectedRunner} onChangeAppRunner={onChangeScheme} />
-            )}
+              {activeTab === EntityViewTab.Applications && (
+                <AppRunnerApplications appRunner={selectedRunner} onChangeAppRunner={onChangeScheme} />
+              )}
 
-            {activeTab === EntityViewTab.Routes && (
-              <EntityRoutes
-                iAppRunnerView={true}
-                roles={roles}
-                routes={selectedRunner['dial:applicationTypeRoutes']}
-                onChangeRoutes={(routes) =>
-                  setSelectedRunner({ ...selectedRunner, ['dial:applicationTypeRoutes']: routes })
-                }
-              />
-            )}
+              {activeTab === EntityViewTab.Routes && (
+                <EntityRoutes
+                  iAppRunnerView={true}
+                  roles={roles}
+                  routes={selectedRunner['dial:applicationTypeRoutes']}
+                  onChangeRoutes={(routes) =>
+                    setSelectedRunner({ ...selectedRunner, ['dial:applicationTypeRoutes']: routes })
+                  }
+                />
+              )}
 
-            {activeTab === EntityViewTab.Audit && (
-              <EntityAudit entity={selectedRunner} view={ApplicationRoute.ApplicationRunners} />
-            )}
-          </>
+              {activeTab === EntityViewTab.Audit && (
+                <EntityAudit entity={selectedRunner} view={ApplicationRoute.ApplicationRunners} />
+              )}
+            </>
+          )
         )}
       </div>
     </div>
