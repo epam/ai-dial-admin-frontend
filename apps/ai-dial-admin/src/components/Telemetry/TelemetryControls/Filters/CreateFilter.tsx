@@ -140,7 +140,7 @@ const CreateFilter: FC<Props> = ({
         ) : (
           <DialInput
             elementId="filterValue"
-            onChange={setValue}
+            onChange={(v) => setValue(v || '')}
             placeholder={t(BasicI18nKey.Value)}
             value={value}
             cssClass={'py-[9px]'}

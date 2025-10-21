@@ -56,7 +56,7 @@ const Endpoint: FC<Props> = ({
   );
 
   const onChangeKey = useCallback(
-    (key: string) => {
+    (key?: string) => {
       updateEndpoint({ ...endpoint, key });
     },
     [endpoint, updateEndpoint],
@@ -68,14 +68,14 @@ const Endpoint: FC<Props> = ({
   }, [index, removeEndpoint]);
 
   const onChangeWeight = useCallback(
-    (weight: number | string) => {
+    (weight?: number | string) => {
       updateEndpoint({ ...endpoint, weight });
     },
     [endpoint, updateEndpoint],
   );
 
   const onChangeTier = useCallback(
-    (tier: number | string) => {
+    (tier?: number | string) => {
       updateEndpoint({ ...endpoint, tier });
     },
     [endpoint, updateEndpoint],

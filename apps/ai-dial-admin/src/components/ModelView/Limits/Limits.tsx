@@ -52,21 +52,21 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
   );
 
   const onChangeMaxTotalTokens = useCallback(
-    (maxTotalTokens: number | string) => {
+    (maxTotalTokens?: number | string) => {
       onChangeModel({ ...model, limits: { ...model.limits, maxTotalTokens } });
     },
     [onChangeModel, model],
   );
 
   const onChangeMaxCompletionTokens = useCallback(
-    (maxCompletionTokens: number | string) => {
+    (maxCompletionTokens?: number | string) => {
       onChangeModel({ ...model, limits: { ...model.limits, maxCompletionTokens } });
     },
     [onChangeModel, model],
   );
 
   const onChangeMaxPromptTokens = useCallback(
-    (maxPromptTokens: number | string) => {
+    (maxPromptTokens?: number | string) => {
       onChangeModel({ ...model, limits: { ...model.limits, maxPromptTokens } });
     },
     [onChangeModel, model],
