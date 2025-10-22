@@ -3,10 +3,11 @@
 import { cookies, headers } from 'next/headers';
 
 import { assetsApi } from '@/src/app/api/api';
+import { convertDefaultsToRecord } from '@/src/components/Defaults/utils';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
+import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { ResourceType } from '@/src/types/resource-type';
-import { AssetApp } from '@/src/models/dial/deployment-asset';
 
 export async function getApps(path: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -28,7 +29,16 @@ export async function getApp(folderId: string, name: string, version: string, et
 
 export async function updateApp(app: AssetApp, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.updateAssetWithEtag(token, app, ResourceType.APPLICATION, etag);
+
+  const applicationProperties = app.applicationPropertiesTemp
+    ? { ...convertDefaultsToRecord(app.applicationPropertiesTemp) }
+    : { ...app.applicationProperties };
+  const applicationProperty = {
+    ...app,
+    applicationProperties,
+  };
+  delete applicationProperty.applicationPropertiesTemp;
+  return assetsApi.updateAssetWithEtag(token, applicationProperty, ResourceType.APPLICATION, etag);
 }
 
 export async function removeApp(path: string, etag?: string) {

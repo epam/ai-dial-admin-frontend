@@ -81,6 +81,8 @@ export enum BasicI18nKey {
   And = 'Basic.And',
   Enabled = 'Basic.Enabled',
   Disabled = 'Basic.Disabled',
+  Yes = 'Basic.Yes',
+  No = 'Basic.No',
 }
 
 export enum EntitiesI18nKey {
