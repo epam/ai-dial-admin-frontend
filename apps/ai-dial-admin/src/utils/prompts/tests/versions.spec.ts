@@ -95,8 +95,8 @@ describe('Prompts utils :: getInitialVersion', () => {
     expect(res).toEqual('');
   });
 
-    test('Should return latest version + 1', () => {
-    const res = getInitialVersion({ versions: ['2.0.0-draft', '2.0.draft',] }, 'versions');
+  test('Should return latest version + 1', () => {
+    const res = getInitialVersion({ versions: ['2.0.0-draft', '2.0.draft'] }, 'versions');
     expect(res).toEqual('1.0.0');
   });
 });
