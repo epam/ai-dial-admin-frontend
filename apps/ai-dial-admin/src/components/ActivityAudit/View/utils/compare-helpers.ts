@@ -173,6 +173,17 @@ export const isAppRunnerParameter = (key: string, type?: ActivityAuditResourceTy
 };
 
 /**
+ * Check if need to put property in different section
+ *
+ * @param {string} key - property key
+ * @param {?ActivityAuditResourceType} [type] - resource type
+ * @returns {boolean} - check result
+ */
+export const isRoleSharingParameter = (key: string, type?: ActivityAuditResourceType): boolean => {
+  return type === ActivityAuditResourceType.ROLE && key === EntityParameterKeys.SHARE;
+};
+
+/**
  * Check if key related to path
  *
  * @param {string} key - property key
