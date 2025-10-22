@@ -168,7 +168,11 @@ const ToolsView: FC<Props> = ({ selectedToolset, isAssetToolset, readonly, origi
                 onChange={(value) =>
                   onChangeToolset?.({
                     ...selectedToolset,
-                    allowedTools: value ? [] : ['' /* to trigger validation error */],
+                    allowedTools: value
+                      ? []
+                      : originalToolset.allowedTools?.length
+                        ? [...originalToolset.allowedTools]
+                        : [''],
                   })
                 }
               />
