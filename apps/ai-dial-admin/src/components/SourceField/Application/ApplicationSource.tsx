@@ -11,16 +11,19 @@ import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
+import { ApplicationRoute } from '@/src/types/routes';
 import { SourceTypes } from './constants';
 
 interface Props {
   entity: DialApplication;
   runners?: DialApplicationScheme[];
+  view?: ApplicationRoute;
   isEntityImmutable?: boolean;
   onChangeEntity: (entity: DialApplication) => void;
 }
 
-const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntityImmutable }) => {
+const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, isEntityImmutable }) => {
   const t = useI18n() as (key: string) => string;
   const sources: SelectOption[] = useMemo(
     () => [
@@ -84,9 +87,17 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
 
   const onChangeAppRunner = useCallback(
     (value?: string) => {
-      onChangeEntity({ ...entity, customAppSchemaId: value, endpoint: void 0 });
+      const newEntity =
+        view === ApplicationRoute.AssetsApplications
+          ? {
+              ...entity,
+              applicationTypeSchemaId: value,
+              endpoint: void 0,
+            }
+          : { ...entity, customAppSchemaId: value, endpoint: void 0 };
+      onChangeEntity(newEntity);
     },
-    [entity, onChangeEntity],
+    [entity, onChangeEntity, view],
   );
 
   return (
@@ -114,7 +125,11 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
       {sourceType?.value === SourceTypes.APP_RUNNER && (
         <div className={classNames('flex flex-row gap-6 items-start')}>
           <AppRunners
-            selectedValue={entity.customAppSchemaId}
+            selectedValue={
+              view === ApplicationRoute.AssetsApplications
+                ? (entity as AssetApp).applicationTypeSchemaId
+                : entity.customAppSchemaId
+            }
             runners={runners}
             isEntityImmutable={isEntityImmutable}
             onChangeValue={onChangeAppRunner}
