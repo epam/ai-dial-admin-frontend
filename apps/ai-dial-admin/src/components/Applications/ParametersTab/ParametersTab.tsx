@@ -58,10 +58,10 @@ const ApplicationParametersTab: FC<Props> = ({
   const { currentTheme } = useTheme();
   const scheme = getAppRunner(entity as DialApplication, applicationSchemes);
 
-  const [appPropertiesTemp, setAppPropertiesTemp] = useState<ApplicationPropertiesTemp[]>([]);
+  const [appPropertiesTemp, setAppPropertiesTemp] = useState<ApplicationPropertiesTemp[] | undefined>();
   const [schemeProperties, setSchemeProperties] = useState<ApplicationPropertiesTemp[]>([]);
 
-  if (!scheme) {
+  if (!scheme && !appPropertiesTemp) {
     setAppPropertiesTemp(convertAppPropertiesToArray(entity?.applicationProperties || {}));
   }
 
@@ -100,7 +100,7 @@ const ApplicationParametersTab: FC<Props> = ({
     };
     const newEntity = {
       ...entity,
-      applicationPropertiesTemp: [...appPropertiesTemp, newProperty],
+      applicationPropertiesTemp: [...(appPropertiesTemp || []), newProperty],
     } as unknown as BaseEntity;
     onChangeEntity?.(newEntity, false);
   }, [appPropertiesTemp, entity, onChangeEntity]);
@@ -182,7 +182,7 @@ const ApplicationParametersTab: FC<Props> = ({
       <div className="flex-1 min-h-0">
         {paramsView === ParamsView.TABLE && (
           <TableView
-            properties={appPropertiesTemp}
+            properties={appPropertiesTemp || []}
             onChangeProperties={onChangeProperties}
             isSkipRefresh={isSkipRefresh}
           />

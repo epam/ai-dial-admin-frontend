@@ -53,6 +53,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
   const [selectedApp, setSelectedApp] = useState(cloneDeep(originalApp));
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
+  const [isSkipRefresh, setIsSkipRefresh] = useState<boolean>(true);
 
   const [key, setKey] = useState(0);
 
@@ -86,6 +87,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
+      setIsSkipRefresh(false);
     }
     setSelectedApp(cloneDeep(originalApp));
   }, [jsonEditorEnabled, originalApp, dispatch]);
@@ -122,8 +124,9 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
   }, [selectedApp, originalApp, router, fetchFiles, etag, showNotification]);
 
   const onChangeEntity = useCallback(
-    (entity: AssetApp) => {
+    (entity: AssetApp, skipRefresh?: boolean) => {
       setSelectedApp(entity);
+      setIsSkipRefresh(!!skipRefresh);
     },
     [setSelectedApp],
   );
@@ -180,7 +183,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
             view={ApplicationRoute.AssetsApplications}
             selectedEntity={selectedApp}
             jsonEditorEnabled={jsonEditorEnabled}
-            isSkipRefresh={false}
+            isSkipRefresh={isSkipRefresh}
             isChanged={isChanged}
             onSave={onSave}
             onChangeEntity={onChangeEntity as (entity: BaseEntity) => void}
