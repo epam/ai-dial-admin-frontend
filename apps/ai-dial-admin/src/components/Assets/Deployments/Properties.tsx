@@ -1,37 +1,44 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useMemo } from 'react';
+
 import { DialSelectField } from '@epam/ai-dial-ui-kit';
 
 import { getApp } from '@/src/app/[lang]/assets-applications/actions';
 import { getToolset } from '@/src/app/[lang]/assets-toolsets/actions';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
+import Defaults from '@/src/components/Defaults/Defaults';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
+import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
+import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
+import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
+import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { AssetApp, DeploymentAsset, AssetToolset } from '@/src/models/dial/deployment-asset';
+import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
+import { AssetApp, AssetToolset, DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
+import { Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
-import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
-import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
-import { Toolset } from '@/src/models/dial/toolset';
 
 interface Props {
   etag: string;
   view: ApplicationRoute;
   asset: DeploymentAsset;
   assets: DeploymentAsset[];
+  runners: DialApplicationScheme[];
   onChange: (asset: DeploymentAsset) => void;
 }
 
-const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, onChange }) => {
+const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, runners, onChange }) => {
   const t = useI18n() as (t: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -90,29 +97,51 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, onChange }
         <IconControl iconUrl={asset.iconUrl} onChange={(icon) => onChange({ ...asset, iconUrl: icon })} />
         <div className="lg:w-[35%] flex flex-col gap-y-6">
           <TopicsControl entity={asset} onChange={onChange} view={view} />
-
-          <FilePath
-            value={asset.folderId}
-            label={t(FoldersI18nKey.Storage)}
-            modalTitle={t(BasicI18nKey.MoveToFolder)}
-            placeholder={t(EntityPlaceholdersI18nKey.Path)}
-            onChange={(folderId) => onChange?.({ ...asset, folderId })}
-            context={
-              view === ApplicationRoute.AssetsApplications
-                ? (useAppsFolder as () => AssetsFolderContext<AssetApp | DialFile>)
-                : (useToolsetFolder as () => AssetsFolderContext<AssetToolset | DialFile>)
-            }
-          />
         </div>
-      </div>
 
-      <div className="flex flex-col gap-y-6">
+        <FilePath
+          inputCss="lg:w-[35%] lg:flex-0"
+          value={asset.folderId}
+          label={t(FoldersI18nKey.Storage)}
+          modalTitle={t(BasicI18nKey.MoveToFolder)}
+          placeholder={t(EntityPlaceholdersI18nKey.Path)}
+          onChange={(folderId) => onChange?.({ ...asset, folderId })}
+          context={
+            view === ApplicationRoute.AssetsApplications
+              ? (useAppsFolder as () => AssetsFolderContext<AssetApp | DialFile>)
+              : (useToolsetFolder as () => AssetsFolderContext<AssetToolset | DialFile>)
+          }
+        />
         {view === ApplicationRoute.AssetsToolsets && (
+          <ToolsetEndpoint entity={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} />
+        )}
+        {view === ApplicationRoute.AssetsApplications && (
           <>
-            <ToolsetEndpoint entity={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} />
+            <ApplicationSource
+              entity={asset}
+              onChangeEntity={onChange as (entity: DialApplication) => void}
+              runners={runners}
+              isEntityImmutable={true}
+            />
+            <EntityAttachments
+              entity={asset as DialApplication}
+              onChangeEntity={onChange as (entity: DialApplication) => void}
+            />
+            <Defaults
+              entity={asset as DialApplication}
+              onChangeEntity={onChange as (entity: DialApplication) => void}
+            />
+            <div className="flex flex-col gap-6 pt-3 lg:w-[35%]">
+              <ForwardAuthTokenField
+                view={view}
+                entity={asset}
+                onChangeEntity={onChange as (entity: DialApplication) => void}
+              />
+            </div>
+
+            <MaxRetryAttempts entity={asset} onChangeEntity={onChange} />
           </>
         )}
-        <MaxRetryAttempts entity={asset} onChangeEntity={onChange} />
       </div>
     </div>
   );
