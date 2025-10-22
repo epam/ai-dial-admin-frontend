@@ -63,7 +63,7 @@ const EditableCellRenderer = ({
     setInputValue(formattedValue);
 
     if (onChange) {
-      onChange(formattedValue, data, colDef?.field as string, node.rowIndex as number);
+      onChange(formattedValue, data, colDef?.field as string, node?.rowIndex as number);
     }
     if (setValue) {
       setValue(formattedValue);
