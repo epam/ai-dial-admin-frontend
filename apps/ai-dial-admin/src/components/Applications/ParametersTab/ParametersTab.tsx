@@ -51,9 +51,11 @@ const ApplicationParametersTab: FC<Props> = ({
   const frameConfig = useMemo(() => {
     if (scheme) {
       return getFrameConfig(scheme, currentTheme, session as UserSession);
+    } else if (entity?.editorUrl) {
+      return getFrameConfig(entity, currentTheme, session as UserSession);
     }
     return null;
-  }, [currentTheme, scheme, session]);
+  }, [currentTheme, entity, scheme, session]);
 
   const targetUrl = useMemo(() => {
     try {
