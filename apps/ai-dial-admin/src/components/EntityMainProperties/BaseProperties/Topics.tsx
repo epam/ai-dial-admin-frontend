@@ -28,7 +28,7 @@ const TopicsControl = <T extends { topics?: string[]; descriptionKeywords?: stri
 
   const changeTopics = useCallback(
     (items: string[]) => {
-      if (view === ApplicationRoute.AssetsApplications) {
+      if (isDeploymentAsset(view)) {
         onChange?.({ ...entity, descriptionKeywords: items });
       } else {
         onChange?.({ ...entity, topics: items });
