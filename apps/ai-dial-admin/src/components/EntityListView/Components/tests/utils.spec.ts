@@ -75,4 +75,44 @@ describe('Utils :: prepareEntityForDuplicate', () => {
       path: 'foldern__v',
     });
   });
+
+  test('Should return original entity for Apps', async () => {
+    const result1 = await prepareEntityForDuplicate(
+      ApplicationRoute.AssetsApplications,
+      { ...entity, folderId: 'folder' },
+      {
+        current: {
+          folderId: 'aaa',
+          name: 'app',
+          version: '1.0.0',
+        },
+      } as any,
+    );
+    expect(result1).toEqual({
+      ...entity,
+      description: 'd',
+      folderId: 'folder',
+      path: 'foldern__v',
+    });
+  });
+
+  test('Should return original entity for Toolsets', async () => {
+    const result1 = await prepareEntityForDuplicate(
+      ApplicationRoute.AssetsToolsets,
+      { ...entity, folderId: 'folder' },
+      {
+        current: {
+          folderId: 'aaa',
+          name: 'toolset',
+          version: '1.0.0',
+        },
+      } as any,
+    );
+    expect(result1).toEqual({
+      ...entity,
+      description: 'd',
+      folderId: 'folder',
+      path: 'foldern__v',
+    });
+  });
 });
