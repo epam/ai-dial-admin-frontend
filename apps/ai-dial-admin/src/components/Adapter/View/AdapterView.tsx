@@ -7,7 +7,8 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { createAdapter, removeAdapter, updateAdapter } from '@/src/app/[lang]/adapters/actions';
+import { removeAdapter, updateAdapter } from '@/src/app/[lang]/adapters/actions';
+import { createModel } from '@/src/app/[lang]/models/actions';
 import AdapterModels from '@/src/components/Adapter/ModelsView/AdapterModels';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
@@ -15,6 +16,7 @@ import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ButtonsI18nKey, CreateI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -26,9 +28,6 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import AdapterProperties from './AdapterProperties';
-import { createModel } from '../../../app/[lang]/models/actions';
-import { SOURCE_TYPE } from '../../SourceField/types';
-import { DialModel } from '../../../models/dial/model';
 
 interface Props {
   etag: string;
