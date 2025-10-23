@@ -33,7 +33,7 @@ export default [
         project: ['tsconfig.*?.json'],
       },
       globals: {
-        ...globals.browser,
+        ...browserGlobals,
         ...globals.node,
       },
     },
