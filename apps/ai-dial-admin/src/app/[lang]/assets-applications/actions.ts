@@ -29,14 +29,16 @@ export async function getApp(folderId: string, name: string, version: string, et
 
 export async function updateApp(app: AssetApp, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-
+  const defaults = app.defaultsTemp ? { ...convertDefaultsToRecord(app.defaultsTemp) } : { ...app.defaults };
   const applicationProperties = app.applicationPropertiesTemp
     ? { ...convertDefaultsToRecord(app.applicationPropertiesTemp) }
     : { ...app.applicationProperties };
   const applicationProperty = {
     ...app,
     applicationProperties,
+    defaults,
   };
+  delete applicationProperty.defaultsTemp;
   delete applicationProperty.applicationPropertiesTemp;
   return assetsApi.updateAssetWithEtag(token, applicationProperty, ResourceType.APPLICATION, etag);
 }
