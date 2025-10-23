@@ -97,7 +97,9 @@ const View: FC<Props> = ({ etag, template, names }) => {
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className="flex flex-row min-h-[34px] justify-between">
-        <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+        <div className="flex-1 min-w-0">
+          <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+        </div>
         <HeaderButtons
           view={ApplicationRoute.InterceptorTemplates}
           entity={selectedTemplate}
