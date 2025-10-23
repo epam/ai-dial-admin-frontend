@@ -3,3 +3,10 @@ export enum ParamsView {
   FORM = 'Form',
   UI = 'Ui',
 }
+
+export enum ParamsFields {
+  KEY = 'key',
+  VALUE = 'value',
+  TYPE = 'type',
+  REQUIRED = 'required',
+}

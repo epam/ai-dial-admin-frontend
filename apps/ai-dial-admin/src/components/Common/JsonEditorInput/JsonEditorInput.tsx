@@ -12,10 +12,11 @@ interface Props {
   fieldTitle?: string;
   elementId?: string;
   disabled?: boolean;
+  inputCss?: string;
   onChangeValue: (json: object) => void;
 }
 
-const JsonEditorInput: FC<Props> = ({ value, disabled, fieldTitle, elementId, onChangeValue }) => {
+const JsonEditorInput: FC<Props> = ({ value, disabled, fieldTitle, elementId, inputCss, onChangeValue }) => {
   const t = useI18n();
   const [isValid, setIsValid] = useState(false);
   const [jsonValue, setJsonValue] = useState<string | undefined>(undefined);
@@ -62,13 +63,14 @@ const JsonEditorInput: FC<Props> = ({ value, disabled, fieldTitle, elementId, on
 
   return (
     <div className="flex flex-col">
-      <Field fieldTitle={fieldTitle} htmlFor={elementId} />
+      {fieldTitle && <Field fieldTitle={fieldTitle} htmlFor={elementId} />}
       <DialInputPopup
         disabled={disabled}
         open={isModalOpen}
         selectedValue={jsonValue}
         onOpen={onOpenModal}
         emptyValueText={t(BasicI18nKey.NoData)}
+        inputCssClasses={inputCss}
       >
         <DialFormPopup
           onClose={onCloseModal}

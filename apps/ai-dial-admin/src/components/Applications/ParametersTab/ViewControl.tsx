@@ -1,7 +1,11 @@
-import { Dispatch, FC, SetStateAction, useCallback, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { VisualizerConnectorRequests } from '@epam/ai-dial-shared';
+import {
+  VisualizerConnectorEvents,
+  VisualizerConnectorRequest,
+  VisualizerConnectorRequests,
+} from '@epam/ai-dial-shared';
 import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 
@@ -29,6 +33,7 @@ const ViewControl: FC<Props> = ({ items, paramsView, setParamsView, onSave, isCh
 
   const [nextView, setNextView] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isIframeChanged, setIsIframeChanged] = useState<boolean>(false);
 
   const sendMessage = useCallback(async (visualizer?: VisualizerConnector | null) => {
     const messagePayload: DialAttachmentData = {
@@ -41,16 +46,29 @@ const ViewControl: FC<Props> = ({ items, paramsView, setParamsView, onSave, isCh
     visualizer?.send(VisualizerConnectorRequests.sendVisualizeData, messagePayload);
   }, []);
 
+  const handleMessage = useCallback(
+    (event: MessageEvent<VisualizerConnectorRequest>) => {
+      if (event.data?.type?.split('/')[1] !== VisualizerConnectorEvents.sendMessage) return;
+      setIsIframeChanged((event.data as { payload: { isChanged: boolean } }).payload.isChanged);
+    },
+    [setIsIframeChanged],
+  );
+
+  useEffect(() => {
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [handleMessage]);
+
   const onChange = useCallback(
     (value: string) => {
-      if (isChanged) {
+      if (isChanged || isIframeChanged) {
         setNextView(value);
         setIsModalOpen(true);
       } else {
         setParamsView(value as ParamsView);
       }
     },
-    [isChanged, setParamsView],
+    [isChanged, isIframeChanged, setParamsView],
   );
 
   const onCancel = useCallback(() => {

@@ -37,7 +37,8 @@ const ExportGrid: FC<Props> = ({ route, context }) => {
     exportRef.current = folderContext?.bulkSelectedData as Record<string, (DialFile | DialPrompt)[]>;
   }, [folderContext?.fetchedFoldersData, folderContext?.bulkSelectedData]);
 
-  const onChangeVersions = (value: string, name: string) => {
+  const onChangeVersions = (value: string, data: unknown) => {
+    const name = (data as { name: string }).name;
     setIsSkipRefresh(true);
     const newData = [...rowData];
     const prompt = newData.find((prompt) => prompt.name === name) as DialPrompt;

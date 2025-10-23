@@ -60,13 +60,59 @@ describe('Utils :: prepareEntityForDuplicate', () => {
   });
 
   test('Should return original entity for Prompts', async () => {
-    const result1 = await prepareEntityForDuplicate(ApplicationRoute.Prompts, entity, {
+    const result1 = await prepareEntityForDuplicate(ApplicationRoute.Prompts, { ...entity, folderId: 'folder' }, {
       current: {
         folderId: 'aaa',
         name: 'prompt',
         version: '1.0.0',
       },
     } as any);
-    expect(result1).toEqual({ ...entity, description: void 0, content: void 0 });
+    expect(result1).toEqual({
+      ...entity,
+      description: void 0,
+      content: void 0,
+      folderId: 'folder',
+      path: 'foldern__v',
+    });
+  });
+
+  test('Should return original entity for Apps', async () => {
+    const result1 = await prepareEntityForDuplicate(
+      ApplicationRoute.AssetsApplications,
+      { ...entity, folderId: 'folder' },
+      {
+        current: {
+          folderId: 'aaa',
+          name: 'app',
+          version: '1.0.0',
+        },
+      } as any,
+    );
+    expect(result1).toEqual({
+      ...entity,
+      description: 'd',
+      folderId: 'folder',
+      path: 'foldern__v',
+    });
+  });
+
+  test('Should return original entity for Toolsets', async () => {
+    const result1 = await prepareEntityForDuplicate(
+      ApplicationRoute.AssetsToolsets,
+      { ...entity, folderId: 'folder' },
+      {
+        current: {
+          folderId: 'aaa',
+          name: 'toolset',
+          version: '1.0.0',
+        },
+      } as any,
+    );
+    expect(result1).toEqual({
+      ...entity,
+      description: 'd',
+      folderId: 'folder',
+      path: 'foldern__v',
+    });
   });
 });
