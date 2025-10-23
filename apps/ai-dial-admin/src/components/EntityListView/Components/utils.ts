@@ -75,17 +75,10 @@ export const prepareEntityForDuplicate = async <T>(
     const app = fullEntity as AssetApp | null;
     const path = getCorrectPath(entity as AssetApp);
 
-    if (app?.endpoint) {
-      return {
-        ...entity,
-        path,
-        endpoint: app?.endpoint,
-      };
-    }
     return {
+      ...app,
       ...entity,
       path,
-      applicationTypeSchemaId: app?.applicationTypeSchemaId,
     };
   }
 
@@ -94,9 +87,8 @@ export const prepareEntityForDuplicate = async <T>(
     const path = getCorrectPath(entity as AssetToolset);
 
     return {
+      ...toolset,
       ...entity,
-      endpoint: toolset?.endpoint,
-      transport: toolset?.transport,
       path,
     };
   }
