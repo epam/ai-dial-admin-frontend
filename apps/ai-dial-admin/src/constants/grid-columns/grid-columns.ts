@@ -299,7 +299,10 @@ export const FILES_COLUMNS: ColDef[] = [
   AUTHOR_COLUMN,
 ];
 
-export const EXPORT_COLUMNS = (onChange: (value: string, name: string) => void, route?: ApplicationRoute): ColDef[] => {
+export const EXPORT_COLUMNS = (
+  onChange: (value: string, data: unknown) => void,
+  route?: ApplicationRoute,
+): ColDef[] => {
   const columns: ColDef[] = [NAME_COLUMN_WITH_SORT, AUTHOR_COLUMN, UPDATED_TIME_COLUMN];
 
   if (route === ApplicationRoute.Prompts) {
