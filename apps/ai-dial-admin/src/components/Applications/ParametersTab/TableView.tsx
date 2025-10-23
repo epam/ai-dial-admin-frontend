@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { GridApi, GridReadyEvent, IRowNode } from 'ag-grid-community';
@@ -19,9 +19,11 @@ interface Props {
   properties: ApplicationPropertiesTemp[];
   isSkipRefresh?: boolean;
   onChangeProperties: (properties: ApplicationPropertiesTemp[], isSkipRefresh?: boolean) => void;
+  isAddClicked: boolean;
+  setIsAddClicked: Dispatch<SetStateAction<boolean>>;
 }
 
-const TableView: FC<Props> = ({ properties, isSkipRefresh, onChangeProperties }) => {
+const TableView: FC<Props> = ({ properties, isSkipRefresh, onChangeProperties, isAddClicked, setIsAddClicked }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const [gridApi, setGridApi] = useState<GridApi>();
   const data = useMemo(() => properties, [properties]);
@@ -35,7 +37,8 @@ const TableView: FC<Props> = ({ properties, isSkipRefresh, onChangeProperties })
       if (value !== '' && field === ParamsFields.VALUE && property.type === DefaultItemType.number) {
         property.value = +value;
       } else {
-        property.value = value;
+        const key = field as keyof ApplicationPropertiesTemp;
+        property[key] = value as never;
       }
 
       properties.splice(index as number, 1, property);
@@ -54,7 +57,7 @@ const TableView: FC<Props> = ({ properties, isSkipRefresh, onChangeProperties })
   const onChangeSelect = useCallback(
     (value: string, _data: unknown, field?: string, index?: number) => {
       const properties = [...propRef.current];
-      const property = properties[index as number];
+      const property = { ...properties[index as number] };
 
       if (field === ParamsFields.VALUE) {
         if (property.type === DefaultItemType.boolean) {
@@ -72,6 +75,19 @@ const TableView: FC<Props> = ({ properties, isSkipRefresh, onChangeProperties })
     },
     [onChangeProperties],
   );
+
+  const onAddProperty = useCallback(() => {
+    const newProperty = {
+      key: '',
+      value: '',
+      type: 'string',
+      required: false,
+      isFromScheme: false,
+    };
+    const appPropertiesTemp = [...propRef.current, newProperty];
+
+    onChangeProperties(appPropertiesTemp, false);
+  }, [onChangeProperties]);
 
   const onRemoveProperty = useCallback(
     (_data?: ApplicationPropertiesTemp, index?: number) => {
@@ -113,6 +129,13 @@ const TableView: FC<Props> = ({ properties, isSkipRefresh, onChangeProperties })
   useEffect(() => {
     propRef.current = properties || [];
   }, [properties]);
+
+  useEffect(() => {
+    if (isAddClicked) {
+      onAddProperty();
+      setIsAddClicked(false);
+    }
+  });
 
   return !properties.length ? (
     <DialNoDataContent title={t(BasicI18nKey.NoParameters)} />

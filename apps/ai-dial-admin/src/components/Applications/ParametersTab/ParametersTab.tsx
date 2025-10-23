@@ -63,6 +63,7 @@ const ApplicationParametersTab: FC<Props> = ({
 
   const [appPropertiesTemp, setAppPropertiesTemp] = useState<ApplicationPropertiesTemp[] | undefined>();
   const [schemeProperties, setSchemeProperties] = useState<ApplicationPropertiesTemp[]>([]);
+  const [isAddClicked, setIsAddClicked] = useState(false);
 
   if (!scheme && !appPropertiesTemp) {
     setAppPropertiesTemp(convertAppPropertiesToArray(entity?.applicationProperties || {}));
@@ -94,21 +95,6 @@ const ApplicationParametersTab: FC<Props> = ({
   const showDropdown = useMemo(() => {
     return viewItems.length > 1;
   }, [viewItems.length]);
-
-  const onAddProperty = useCallback(() => {
-    const newProperty = {
-      key: '',
-      value: '',
-      type: 'string',
-      required: false,
-      isFromScheme: false,
-    };
-    const newEntity = {
-      ...entity,
-      applicationPropertiesTemp: [...(appPropertiesTemp || []), newProperty],
-    } as unknown as BaseEntity;
-    onChangeEntity?.(newEntity, false);
-  }, [appPropertiesTemp, entity, onChangeEntity]);
 
   const onChangeProperties = useCallback(
     (props?: ApplicationPropertiesTemp[], isSkipRefresh?: boolean) => {
@@ -181,7 +167,7 @@ const ApplicationParametersTab: FC<Props> = ({
               variant={ButtonVariant.Primary}
               iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
               title={t(ButtonsI18nKey.Add)}
-              onClick={() => onAddProperty()}
+              onClick={() => setIsAddClicked(true)}
             />
           )}
         </div>
@@ -189,6 +175,8 @@ const ApplicationParametersTab: FC<Props> = ({
       <div className="flex-1 min-h-0">
         {paramsView === ParamsView.TABLE && (
           <TableView
+            isAddClicked={isAddClicked}
+            setIsAddClicked={setIsAddClicked}
             properties={appPropertiesTemp || []}
             onChangeProperties={onChangeProperties}
             isSkipRefresh={isSkipRefresh}
