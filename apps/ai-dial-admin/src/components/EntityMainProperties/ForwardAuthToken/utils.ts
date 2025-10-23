@@ -18,6 +18,7 @@ export const getAlertTitlePerView = (view: ApplicationRoute): string => {
       return ForwardTokenI18nKey.UseForThisModel;
 
     case ApplicationRoute.Applications:
+    case ApplicationRoute.AssetsApplications:
       return ForwardTokenI18nKey.UseForThisApplication;
 
     case ApplicationRoute.Interceptors:
