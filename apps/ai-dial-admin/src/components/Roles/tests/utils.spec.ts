@@ -22,11 +22,11 @@ describe('getSharingData', () => {
   test('should return correct sharing data based on provided role', () => {
     const mockRole: DialRole = {
       share: {
-        [SharingType.APPLICATION]: { invitationTtl: '3600000', maxAcceptedUsers: '5' }, // 1 hour
-        [SharingType.TOOL_SET]: { invitationTtl: '7200000', maxAcceptedUsers: '10' },  // 2 hours
-        [SharingType.PROMPT]: { invitationTtl: '1800000', maxAcceptedUsers: '3' },     // 0.5 hours
-        [SharingType.FILE]: { invitationTtl: '600000', maxAcceptedUsers: '2' },        // 0.1666667 hours
-        [SharingType.CONVERSATION]: { invitationTtl: '1200000', maxAcceptedUsers: '4' }, // 0.333333 hours
+        [SharingType.APPLICATION]: { invitationTtl: '3600000', maxAcceptedUsers: '5' },
+        [SharingType.TOOL_SET]: { invitationTtl: '7200000', maxAcceptedUsers: '10' },
+        [SharingType.PROMPT]: { invitationTtl: '1800000', maxAcceptedUsers: '3' },
+        [SharingType.FILE]: { invitationTtl: '600000', maxAcceptedUsers: '2' },
+        [SharingType.CONVERSATION]: { invitationTtl: '1200000', maxAcceptedUsers: '4' },
       },
     };
 
