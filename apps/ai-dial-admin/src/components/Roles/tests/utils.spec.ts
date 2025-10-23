@@ -243,7 +243,7 @@ describe('isSetNoLimitsHidden', () => {
     });
 
     const result = isSetNoLimitsHidden(mockApi, mockNode);
-    expect(result).toBe(true);
+    expect(result).toBe(false);
   });
 
   test('should return true when invitationTtl is NO_LIMITS_VALUE and maxAcceptedUsers is NO_LIMITS_ACCEPTED_USERS', () => {
