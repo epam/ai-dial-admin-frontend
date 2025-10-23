@@ -1,44 +1,28 @@
-import { defineConfig, globalIgnores } from 'eslint/config';
+import js from '@eslint/js';
+import tsParser from '@typescript-eslint/parser';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
 import nx from '@nx/eslint-plugin';
 import globals from 'globals';
-import tsParser from '@typescript-eslint/parser';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import js from '@eslint/js';
-import { FlatCompat } from '@eslint/eslintrc';
+import nextPlugin from '@next/eslint-plugin-next';
+import prettierPlugin from 'eslint-plugin-prettier';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all,
-});
-
-export default defineConfig([
-  globalIgnores([
-    '**/node_modules',
-    '**/next',
-    '**/.next',
-    '**/next-env.d.ts',
-    '**/**.config.js',
-    '**/**.config.mjs',
-    '**/jest.config.ts',
-    '**/**.spec.ts',
-    '**/**.spec.tsx',
-  ]),
+export default [
   {
-    extends: compat.extends('eslint:recommended', 'prettier', 'next'),
-
-    plugins: {
-      '@nx': nx,
-    },
-
+    ignores: [
+      '**/node_modules',
+      '**/next',
+      '**/.next',
+      '**/next-env.d.ts',
+      '**/**.config.js',
+      '**/**.config.mjs',
+      '**/jest.config.ts',
+      '**/**.spec.ts',
+      '**/**.spec.tsx',
+    ],
+  },
+  {
+    files: ['**/*.{ts,tsx,js,jsx}'],
     languageOptions: {
-      globals: {
-        ...globals.node,
-      },
-
       parser: tsParser,
       ecmaVersion: 5,
       sourceType: 'commonjs',
@@ -46,15 +30,21 @@ export default defineConfig([
       parserOptions: {
         project: ['tsconfig.*?.json'],
       },
+      globals: globals.node,
     },
-  },
-  {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-
+    plugins: {
+      '@nx': nx,
+      prettier: prettierPlugin,
+      '@typescript-eslint': tsPlugin,
+      next: nextPlugin,
+    },
     rules: {
+      ...js.configs.recommended.rules,
+      ...tsPlugin.configs.recommended.rules,
+      ...nextPlugin.configs.recommended.rules,
+      ...prettierPlugin.configs.recommended.rules,
       '@next/next/no-html-link-for-pages': 'off',
       'react-hooks/exhaustive-deps': 'error',
-
       '@nx/enforce-module-boundaries': [
         'error',
         {
@@ -70,15 +60,8 @@ export default defineConfig([
           ],
         },
       ],
-
+      'no-console': ['error', { allow: ['warn', 'error', 'info'] }],
       'no-empty': 'error',
-
-      'no-console': [
-        'error',
-        {
-          allow: ['warn', 'error', 'info'],
-        },
-      ],
 
       'no-constant-condition': 'error',
 
@@ -89,19 +72,6 @@ export default defineConfig([
           maxBOF: 0,
         },
       ],
-    },
-  },
-  {
-    files: ['**/*.ts', '**/*.tsx'],
-
-    extends: compat.extends(
-      'plugin:@nx/typescript',
-      'plugin:@typescript-eslint/recommended',
-      'plugin:@typescript-eslint/stylistic',
-      'plugin:prettier/recommended',
-    ),
-
-    rules: {
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -112,11 +82,14 @@ export default defineConfig([
 
       '@typescript-eslint/no-explicit-any': 'warn',
       'prettier/prettier': 'error',
+
+      'no-multiple-empty-lines': [
+        'warn',
+        {
+          max: 1,
+          maxBOF: 0,
+        },
+      ],
     },
   },
-  {
-    files: ['**/*.js', '**/*.jsx'],
-    extends: compat.extends('plugin:@nx/javascript'),
-    rules: {},
-  },
-]);
+];
