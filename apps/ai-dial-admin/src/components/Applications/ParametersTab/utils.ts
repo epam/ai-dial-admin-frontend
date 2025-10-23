@@ -278,41 +278,30 @@ export const getAppPropertiesColumns = (
       headerName: 'Type',
       field: ParamsFields.TYPE,
       cellClass: NO_BORDER_CLASS,
-      cellRendererSelector: (params: ICellRendererParams) => {
-        if (!params.data.isFromScheme) {
-          return {
-            component: SelectCellRenderer,
-            params: {
-              items: [
-                {
-                  id: DefaultItemType.string,
-                  name: t(TypeI18nKey.String),
-                },
-                {
-                  id: DefaultItemType.number,
-                  name: t(TypeI18nKey.Number),
-                },
-                {
-                  id: DefaultItemType.boolean,
-                  name: t(TypeI18nKey.Boolean),
-                },
-                {
-                  id: DefaultItemType.object,
-                  name: t(TypeI18nKey.Object),
-                },
-              ],
-              onChange: onChangeSelect,
+      cellRenderer: SelectCellRenderer,
+      cellRendererParams: {
+        getItems: (data: ApplicationPropertiesTemp) => {
+          const items = [
+            {
+              id: DefaultItemType.string,
+              name: t(TypeI18nKey.String),
             },
-          };
-        } else {
-          return {
-            component: EditableCellRenderer,
-            params: {
-              inputType: params.data.type === TypeEntity.STRING ? 'text' : TypeEntity.NUMBER,
-              onChange: onChangeEditable,
+            {
+              id: DefaultItemType.number,
+              name: t(TypeI18nKey.Number),
             },
-          };
-        }
+            {
+              id: DefaultItemType.boolean,
+              name: t(TypeI18nKey.Boolean),
+            },
+            {
+              id: DefaultItemType.object,
+              name: t(TypeI18nKey.Object),
+            },
+          ];
+          return data.isFromScheme ? items.filter((i) => i.id === data.type) : items;
+        },
+        onChange: onChangeSelect,
       },
       flex: 1,
       maxWidth: 240,
@@ -333,4 +322,8 @@ export const getAppPropertiesColumns = (
 
 const formatRequired = (value: string, t: (stringToTranslate: string) => string) => {
   return value ? t(BasicI18nKey.Yes) : t(BasicI18nKey.No);
+};
+
+export const validateAppProperties = (properties: ApplicationPropertiesTemp[]): boolean => {
+  return !properties.some((p) => p.required && !p.value);
 };

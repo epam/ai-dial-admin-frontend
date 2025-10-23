@@ -11,9 +11,9 @@ import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationPropertiesTemp } from '@/src/models/dial/application';
-import { getAppPropertiesColumns } from './utils';
-import { ParamsFields } from './types';
 import { BooleanType } from '@/src/types/boolean';
+import { ParamsFields } from './types';
+import { getAppPropertiesColumns } from './utils';
 
 interface Props {
   properties: ApplicationPropertiesTemp[];
@@ -28,14 +28,18 @@ const TableView: FC<Props> = ({ properties, isSkipRefresh, onChangeProperties })
   const propRef = useRef(properties || []);
 
   const onChangeParam = useCallback(
-    (value: string, data: ApplicationPropertiesTemp, field: string, index?: number) => {
+    (value: string, _data: ApplicationPropertiesTemp, field: string, index?: number) => {
       const properties = [...propRef.current];
-      const property = properties[index as number];
+      const property = { ...properties[index as number] };
+
       if (value !== '' && field === ParamsFields.VALUE && property.type === DefaultItemType.number) {
         property.value = +value;
+      } else {
+        property.value = value;
       }
+
       properties.splice(index as number, 1, property);
-      onChangeProperties([...propRef.current], true);
+      onChangeProperties(properties, true);
     },
     [onChangeProperties],
   );

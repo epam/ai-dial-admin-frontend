@@ -15,6 +15,7 @@ import {
   getAppRunner,
   getFrameConfig,
   getInitialParamsView,
+  validateAppProperties,
 } from '@/src/components/Applications/ParametersTab/utils';
 import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer';
 import FrameRenderer from '@/src/components/FrameRenderer/FrameRenderer';
@@ -31,6 +32,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import TableView from './TableView';
 import ViewControl from './ViewControl';
 import { ParamsView } from './types';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   entity?: DialApplication | DialApplicationResource;
@@ -54,6 +56,7 @@ const ApplicationParametersTab: FC<Props> = ({
   onSave,
 }) => {
   const t = useI18n() as (s: string) => string;
+  const { dispatch } = useSaveValidationContext();
   const { data: session } = useSession();
   const { currentTheme } = useTheme();
   const scheme = getAppRunner(entity as DialApplication, applicationSchemes);
@@ -148,10 +151,12 @@ const ApplicationParametersTab: FC<Props> = ({
   );
 
   useEffect(() => {
-    setAppPropertiesTemp(
+    const properties =
       entity?.applicationPropertiesTemp ||
-        convertAppPropertiesToArray(entity?.applicationProperties || {}, schemeProperties),
-    );
+      convertAppPropertiesToArray(entity?.applicationProperties || {}, schemeProperties);
+    setAppPropertiesTemp(properties);
+    const isValid = validateAppProperties(properties);
+    dispatch({ type: ValidationActionType.SetField, field: 'appProperties', isValid });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entity?.applicationPropertiesTemp, entity?.applicationProperties]);
 

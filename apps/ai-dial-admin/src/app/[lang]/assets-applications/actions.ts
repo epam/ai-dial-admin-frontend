@@ -33,14 +33,14 @@ export async function updateApp(app: AssetApp, etag: string) {
   const applicationProperties = app.applicationPropertiesTemp
     ? { ...convertDefaultsToRecord(app.applicationPropertiesTemp) }
     : { ...app.applicationProperties };
-  const applicationProperty = {
+  const application = {
     ...app,
     applicationProperties,
     defaults,
   };
-  delete applicationProperty.defaultsTemp;
-  delete applicationProperty.applicationPropertiesTemp;
-  return assetsApi.updateAssetWithEtag(token, applicationProperty, ResourceType.APPLICATION, etag);
+  delete application.defaultsTemp;
+  delete application.applicationPropertiesTemp;
+  return assetsApi.updateAssetWithEtag(token, application, ResourceType.APPLICATION, etag);
 }
 
 export async function removeApp(path: string, etag?: string) {

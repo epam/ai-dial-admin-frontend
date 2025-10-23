@@ -1,6 +1,7 @@
 import { ChangeEvent, useEffect, useMemo, useState } from 'react';
 
 import { ColDef, ICellRendererParams, IRowNode } from 'ag-grid-community';
+import classNames from 'classnames';
 
 import Triangle from '@/public/images/icons/cell-triangle.svg';
 import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_VALUE } from '@/src/constants/role';
@@ -83,7 +84,10 @@ const EditableCellRenderer = ({
         value={correctValue}
         placeholder={correctPlaceholder}
         onChange={handleChange}
-        className="leading-[18px] h-[32px] dial-input px-2 py-1"
+        className={classNames(
+          'leading-[18px] h-[32px] dial-input px-2 py-1',
+          data.required && !correctValue ? 'dial-input-error' : '',
+        )}
       />
       {showTriangle && !hideTriangle && (
         <div className="absolute top-0 right-0 text-accent-tertiary">
