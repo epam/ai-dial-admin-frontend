@@ -7,6 +7,8 @@ import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import nextPlugin from '@next/eslint-plugin-next';
 import prettierPlugin from 'eslint-plugin-prettier';
 
+const { FocusEvent, MouseEvent, Notification, ...browserGlobals } = globals.browser;
+
 export default [
   {
     ignores: [
