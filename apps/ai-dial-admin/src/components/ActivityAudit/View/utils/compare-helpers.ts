@@ -1,4 +1,5 @@
 import { appRunnerParameterKeys, EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
+import { sharingDefaults } from '@/src/components/Roles/constants';
 import { getHoursFromMs } from '@/src/components/Roles/utils';
 import { ModelViewI18nKey } from '@/src/constants/i18n';
 import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_KEY, NO_LIMITS_VALUE } from '@/src/constants/role';
@@ -77,7 +78,7 @@ export const fillShareValues = (
 ) => {
   const val1 = v1?.[field as keyof typeof v1];
   const val2 = v2?.[field as keyof typeof v2];
-  const value = convertShareValue(v1 && !v2 ? val1 : val2, field);
+  const value = convertShareValue(v1 && !v2 ? val1 : val2, field, key);
   const status = getShareStatus(val1, val2, isCurrent);
   diffs.push({
     parameter: `${key}.${field}`,
@@ -111,12 +112,15 @@ export const getShareStatus = (v1?: string | null, v2?: string | null, isCurrent
  * @param {?string} [key] - field key
  * @returns {string} - converted value based on no limits constant
  */
-export const convertShareValue = (value?: string | null, key?: string): string => {
-  return !value || value === NO_LIMITS_VALUE || value === NO_LIMITS_ACCEPTED_USERS
-    ? NO_LIMITS_KEY
-    : key === 'invitationTtl'
-      ? getHoursFromMs(value).toString()
-      : value;
+export const convertShareValue = (value?: string | null, field?: string, key?: string): string => {
+  const isNoLimitsValue = value === NO_LIMITS_VALUE || value === NO_LIMITS_ACCEPTED_USERS;
+  if (isNoLimitsValue) {
+    return NO_LIMITS_KEY;
+  }
+
+  const defaultValue =
+    (sharingDefaults[key as keyof typeof sharingDefaults]?.[field as keyof DialRoleShare] as string) || NO_LIMITS_KEY;
+  return !value ? defaultValue : field === 'invitationTtl' ? getHoursFromMs(value).toString() : value;
 };
 
 /**
