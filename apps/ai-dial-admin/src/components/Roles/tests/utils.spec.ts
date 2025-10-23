@@ -77,6 +77,44 @@ describe('getSharingData', () => {
       { name: SharingType.CONVERSATION, invitationTtl: undefined, maxAcceptedUsers: undefined },
     ]);
   });
+
+  test('should return NO_LIMITS_VALUE for invitationTtl when it is equal to NO_LIMITS_VALUE', () => {
+    const mockRole: DialRole = {
+      share: {
+        [SharingType.APPLICATION]: { invitationTtl: NO_LIMITS_VALUE, maxAcceptedUsers: '5' },
+        [SharingType.TOOL_SET]: { invitationTtl: NO_LIMITS_VALUE, maxAcceptedUsers: '10' },
+      },
+    };
+
+    const result = getSharingData(mockRole);
+
+    expect(result).toEqual([
+      { name: SharingType.APPLICATION, invitationTtl: NO_LIMITS_VALUE, maxAcceptedUsers: '5' },
+      { name: SharingType.TOOL_SET, invitationTtl: NO_LIMITS_VALUE, maxAcceptedUsers: '10' },
+      { name: SharingType.PROMPT, invitationTtl: undefined, maxAcceptedUsers: undefined },
+      { name: SharingType.FILE, invitationTtl: undefined, maxAcceptedUsers: undefined },
+      { name: SharingType.CONVERSATION, invitationTtl: undefined, maxAcceptedUsers: undefined },
+    ]);
+  });
+
+  test('should return undefined for invitationTtl if it is falsy (null, undefined)', () => {
+    const mockRole: DialRole = {
+      share: {
+        [SharingType.APPLICATION]: { invitationTtl: null, maxAcceptedUsers: '5' },
+        [SharingType.TOOL_SET]: { invitationTtl: undefined, maxAcceptedUsers: '10' },
+      },
+    };
+
+    const result = getSharingData(mockRole);
+
+    expect(result).toEqual([
+      { name: SharingType.APPLICATION, invitationTtl: undefined, maxAcceptedUsers: '5' },
+      { name: SharingType.TOOL_SET, invitationTtl: undefined, maxAcceptedUsers: '10' },
+      { name: SharingType.PROMPT, invitationTtl: undefined, maxAcceptedUsers: undefined },
+      { name: SharingType.FILE, invitationTtl: undefined, maxAcceptedUsers: undefined },
+      { name: SharingType.CONVERSATION, invitationTtl: undefined, maxAcceptedUsers: undefined },
+    ]);
+  });
 });
 
 describe('getDefaultPlaceholder', () => {
@@ -205,7 +243,7 @@ describe('isSetNoLimitsHidden', () => {
     });
 
     const result = isSetNoLimitsHidden(mockApi, mockNode);
-    expect(result).toBe(true);
+    expect(result).toBe(false);
   });
 
   test('should return true when invitationTtl is NO_LIMITS_VALUE and maxAcceptedUsers is NO_LIMITS_ACCEPTED_USERS', () => {

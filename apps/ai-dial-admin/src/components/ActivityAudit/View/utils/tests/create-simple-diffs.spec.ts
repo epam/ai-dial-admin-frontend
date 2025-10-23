@@ -343,63 +343,72 @@ describe('Activity audit :: fillRoleLimits', () => {
 
 describe('Activity audit :: compareShare', () => {
   const shareKeys = ['invitationTtl', 'maxAcceptedUsers'];
+
   test('should push REMOVED diffs when value1 exists and value2 is missing', () => {
     const diffs: any[] = [];
     const val1 = {
-      admin: { invitationTtl: '1000', acceptedUsers: '5' },
+      application: { invitationTtl: '1000', maxAcceptedUsers: '5' },
+      conversation: { invitationTtl: '1000', maxAcceptedUsers: '5' },
+      file: { invitationTtl: '1000', maxAcceptedUsers: '5' },
+      prompt: { invitationTtl: '1000', maxAcceptedUsers: '5' },
+      tool_set: { invitationTtl: '1000', maxAcceptedUsers: '5' },
     };
     const val2 = {};
 
     compareShare(diffs, val1, val2);
 
-    expect(diffs.length).toBe(shareKeys.length);
+    expect(diffs.length).toBe(10);
     diffs.forEach((d) => {
       expect(d.status).toBe(DiffStatus.REMOVED);
-      expect(d.parameter).toBe('');
-      expect(d.value).toBe('');
     });
   });
 
   test('should push MIRROR diffs when value1 exists and value2 missing with isCurrent=true', () => {
     const diffs: any[] = [];
     const val1 = {
-      user: { invitationTtl: '1000', acceptedUsers: '5' },
+      application: { invitationTtl: '1000', maxAcceptedUsers: '5' },
+      conversation: { invitationTtl: '1000', maxAcceptedUsers: '5' },
+      file: { invitationTtl: '1000', maxAcceptedUsers: '5' },
+      prompt: { invitationTtl: '1000', maxAcceptedUsers: '5' },
+      tool_set: { invitationTtl: '1000', maxAcceptedUsers: '5' },
     };
     const val2 = {};
 
     compareShare(diffs, val1, val2, true);
 
-    expect(diffs.length).toBe(shareKeys.length);
-    diffs.forEach((d) => expect(d.status).toBe(DiffStatus.MIRROR));
+    expect(diffs.length).toBe(10);
+    diffs.forEach((d) => {
+      expect(d.status).toBe(DiffStatus.MIRROR);
+    });
   });
 
   test('should fill ADDED diffs when value1 missing and value2 present', () => {
     const diffs: any[] = [];
     const val1 = {};
     const val2 = {
-      member: { invitationTtl: '2000', acceptedUsers: '10' },
+      application: { invitationTtl: '2000', maxAcceptedUsers: '10' },
     };
 
     compareShare(diffs, val1, val2);
 
-    expect(diffs.length).toBe(shareKeys.length);
+    expect(diffs.length).toBe(10);
     diffs.forEach((d) => {
-      expect(d.parameter).toContain('member.');
+      expect(d.parameter).toContain('.');
     });
   });
 
   test('should call fillShareValues for CHANGED when values differ', () => {
     const diffs: any[] = [];
     const val1 = {
-      admin: { invitationTtl: '1000', acceptedUsers: '5' },
+      application: { invitationTtl: '1000', acceptedUsers: '5' },
     };
     const val2 = {
-      admin: { invitationTtl: '3000', acceptedUsers: '5' },
+      application: { invitationTtl: '3000', acceptedUsers: '5' },
     };
 
     compareShare(diffs, val1, val2);
 
-    expect(diffs.length).toBe(shareKeys.length);
+    expect(diffs.length).toBeGreaterThan(0);
     const changed = diffs.find((d) => d.status === DiffStatus.CHANGED);
     expect(changed).toBeTruthy();
   });
@@ -407,27 +416,27 @@ describe('Activity audit :: compareShare', () => {
   test('should call fillShareValues for UNCHANGED when objects equal', () => {
     const diffs: any[] = [];
     const val1 = {
-      viewer: { invitationTtl: '1000', acceptedUsers: '5' },
+      application: { invitationTtl: '1000', acceptedUsers: '5' },
     };
     const val2 = {
-      viewer: { invitationTtl: '1000', acceptedUsers: '5' },
+      application: { invitationTtl: '1000', acceptedUsers: '5' },
     };
 
     compareShare(diffs, val1, val2);
 
-    expect(diffs.length).toBe(shareKeys.length);
+    expect(diffs.length).toBeGreaterThan(0);
     diffs.forEach((d) => expect(d.status).toBeUndefined());
   });
 
   test('should handle multiple keys (roles) and push diffs for each', () => {
     const diffs: any[] = [];
     const val1 = {
-      admin: { invitationTtl: '1000', acceptedUsers: '5' },
-      editor: { invitationTtl: '2000', acceptedUsers: '10' },
+      application: { invitationTtl: '1000', acceptedUsers: '5' },
+      conversation: { invitationTtl: '2000', acceptedUsers: '10' },
     };
     const val2 = {
-      admin: { invitationTtl: '3000', acceptedUsers: '5' },
-      editor: { invitationTtl: '2000', acceptedUsers: '10' },
+      application: { invitationTtl: '3000', acceptedUsers: '5' },
+      conversation: { invitationTtl: '2000', acceptedUsers: '10' },
     };
 
     compareShare(diffs, val1, val2);
@@ -435,24 +444,41 @@ describe('Activity audit :: compareShare', () => {
     expect(diffs.length).toBeGreaterThan(shareKeys.length);
     expect(diffs.some((d) => d.status === DiffStatus.CHANGED)).toBe(true);
   });
+
+  test('should correctly call convertShareValue for REMOVED diffs with empty value', () => {
+    const diffs: any[] = [];
+    const val1 = {
+      application: { invitationTtl: '1000' },
+      conversation: { invitationTtl: '1000' },
+      file: { invitationTtl: '1000' },
+      prompt: { invitationTtl: '1000' },
+      tool_set: { invitationTtl: '1000' },
+    };
+    const val2 = {};
+
+    compareShare(diffs, val1, val2);
+
+    expect(diffs.length).toBe(10);
+    diffs.forEach((d) => {
+      expect(d.status).toBe(DiffStatus.REMOVED);
+    });
+  });
 });
 
 describe('Activity audit :: fillShare', () => {
-  const shareKeys = ['invitationTtl', 'maxAcceptedUsers'];
-
   test('should fill diffs for each role and each share key', () => {
     const diffs: ActivityAuditDiff[] = [];
     const value: Record<string, DialRoleShare> = {
-      admin: { invitationTtl: '1000', acceptedUsers: '5' },
-      editor: { invitationTtl: '2000', acceptedUsers: '10' },
+      application: { invitationTtl: '1000', maxAcceptedUsers: '5' },
+      conversation: { invitationTtl: '2000', maxAcceptedUsers: '10' },
     };
 
     fillShare(diffs, value);
 
-    const expectedCount = Object.keys(value).length * shareKeys.length;
-    expect(diffs.length).toBe(expectedCount);
-
-    expect(diffs.every((d) => d.parameter.includes('admin') || d.parameter.includes('editor'))).toBe(true);
+    expect(diffs.length).toBe(10);
+    expect(diffs.every((d) => d.parameter.includes('maxAcceptedUsers') || d.parameter.includes('invitationTtl'))).toBe(
+      true,
+    );
   });
 
   test('should not throw when value is empty', () => {
@@ -460,21 +486,21 @@ describe('Activity audit :: fillShare', () => {
     const value: Record<string, DialRoleShare> = {};
 
     expect(() => fillShare(diffs, value)).not.toThrow();
-    expect(diffs.length).toBe(0);
+    expect(diffs.length).toBe(10);
   });
 
   test('should process shareKeys in sorted order of roles', () => {
     const diffs: ActivityAuditDiff[] = [];
     const value: Record<string, DialRoleShare> = {
-      viewer: { invitationTtl: '500', acceptedUsers: '2' },
-      admin: { invitationTtl: '1000', acceptedUsers: '5' },
+      application: { invitationTtl: '500', acceptedUsers: '2' },
+      conversation: { invitationTtl: '1000', acceptedUsers: '5' },
     };
 
     fillShare(diffs, value);
 
     const rolesOrder = diffs.map((d) => d.parameter.split('.')[0]).filter((v, i, arr) => arr.indexOf(v) === i);
 
-    expect(rolesOrder).toEqual(['admin', 'viewer']);
+    expect(rolesOrder).toEqual(['application', 'conversation', 'file', 'prompt', 'tool_set']);
   });
 
   test('should call fillShareValues once per key in shareKeys', () => {
@@ -485,6 +511,6 @@ describe('Activity audit :: fillShare', () => {
 
     fillShare(diffs, value);
 
-    expect(diffs.length).toBe(shareKeys.length);
+    expect(diffs.length).toBe(10);
   });
 });

@@ -18,9 +18,11 @@ describe('EntityProperties :: ForwardAuthToken :: getAlertTitlePerView', () => {
   });
 
   test('Should return key for application', () => {
-    const res = getAlertTitlePerView(ApplicationRoute.Applications);
+    const res1 = getAlertTitlePerView(ApplicationRoute.Applications);
+    const res2 = getAlertTitlePerView(ApplicationRoute.AssetsApplications);
 
-    expect(res).toBe(ForwardTokenI18nKey.UseForThisApplication);
+    expect(res1).toBe(ForwardTokenI18nKey.UseForThisApplication);
+    expect(res2).toBe(ForwardTokenI18nKey.UseForThisApplication);
   });
 
   test('Should return key for Interceptor', () => {

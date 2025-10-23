@@ -156,8 +156,8 @@ const EntityView: FC<Props> = ({
           handleModalOpen(ModalType.entity);
         } else if (
           activeTab === EntityViewTab.Parameters &&
-          isIframeChanged &&
-          view === ApplicationRoute.Applications
+          (isIframeChanged || isChanged) &&
+          (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications)
         ) {
           setNextTab(tab);
           handleModalOpen(ModalType.parameters);
@@ -302,7 +302,7 @@ const EntityView: FC<Props> = ({
         </div>
 
         <div className="flex-1 overflow-auto mt-3 min-h-0">
-          {jsonEditorEnabled && activeTab !== EntityViewTab.Parameters ? (
+          {jsonEditorEnabled ? (
             <EntityJsonEditor
               key={key}
               entity={selectedEntity}

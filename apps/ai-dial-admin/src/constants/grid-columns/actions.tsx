@@ -36,11 +36,13 @@ export function getDeleteOperation<T>(onClick: (entity?: T) => void): ActionMenu
 
 export function getRemoveOperation<T>(
   onClick: (entity?: T, index?: number) => void,
+  hidden?: (api: GridApi, node: IRowNode) => boolean,
 ): ActionMenuOperationDeclaration<T> {
   return {
     icon: <IconTrash {...BASE_ICON_PROPS} />,
     id: ActionMenuOperation.Remove,
     onClick,
+    hidden,
   };
 }
 

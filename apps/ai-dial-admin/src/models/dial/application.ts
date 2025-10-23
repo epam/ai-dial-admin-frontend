@@ -1,4 +1,5 @@
 import { ChatEntity, ModifiedEntity } from './base-entity';
+import { DefaultsValue } from './defaults';
 import { DialRoute } from './route';
 import { DialScheme } from './scheme';
 
@@ -8,6 +9,8 @@ export interface DialApplication extends ChatEntity {
   editorUrl?: string;
   routes?: DialRoute[];
   dependencies?: string[];
+  applicationProperties?: Record<string, DefaultsValue>;
+  applicationPropertiesTemp?: ApplicationPropertiesTemp[];
 }
 
 export interface DialApplicationScheme extends ModifiedEntity, DialScheme {
@@ -36,9 +39,21 @@ export interface DialApplicationScheme extends ModifiedEntity, DialScheme {
 export enum TypeEntity {
   OBJECT = 'object',
   BOOLEAN = 'boolean',
+  ARRAY = 'array',
+  STRING = 'string',
+  NUMBER = 'number',
+  NULL = 'null',
 }
 
 export enum TypeBucketCopy {
   DISABLED = 'DISABLED',
   ENABLED = 'ENABLED',
+}
+
+export interface ApplicationPropertiesTemp {
+  key: string;
+  value: DefaultsValue;
+  type: string;
+  required: boolean;
+  isFromScheme?: boolean;
 }

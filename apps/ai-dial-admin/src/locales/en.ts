@@ -39,6 +39,8 @@ export default {
     And: 'And',
     Enabled: 'Enabled',
     Disabled: 'Disabled',
+    Yes: 'Yes',
+    No: 'No',
   },
   ReloadConfig: {
     ReloadTitle: 'Reload Config',

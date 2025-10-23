@@ -34,7 +34,7 @@ interface Props {
   isChanged?: boolean;
   etag?: string;
   onSave?: () => void;
-  onChangeEntity: (entity: BaseEntity) => void;
+  onChangeEntity: (entity: BaseEntity, isSkipRefresh?: boolean) => void;
 }
 
 const ViewContent: FC<Props> = ({
@@ -87,6 +87,8 @@ const ViewContent: FC<Props> = ({
           entity={selectedEntity}
           applicationSchemes={applicationSchemes}
           jsonEditorEnabled={jsonEditorEnabled}
+          isSkipRefresh={isSkipRefresh}
+          onChangeEntity={onChangeEntity}
         />
       )}
       {activeTab === EntityViewTab.Roles && (

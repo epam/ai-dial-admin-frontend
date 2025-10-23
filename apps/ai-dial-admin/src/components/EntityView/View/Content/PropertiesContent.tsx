@@ -49,6 +49,7 @@ const PropertiesContent: FC<Props> = ({
           etag={etag as string}
           asset={selectedEntity as DeploymentAsset}
           assets={assets || []}
+          runners={applicationSchemes || []}
           onChange={onChangeEntity}
         />
       );
