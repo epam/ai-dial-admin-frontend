@@ -5,10 +5,11 @@ import { IconUser } from '@tabler/icons-react';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
+  isMobile?: boolean;
   session: Session | null;
 }
 
-const UserInfo: FC<Props> = ({ session }) => {
+const UserInfo: FC<Props> = ({ session, isMobile }) => {
   const t = useI18n();
   return (
     <div className="flex items-center gap-3 p-4">
@@ -18,7 +19,7 @@ const UserInfo: FC<Props> = ({ session }) => {
       ) : (
         <IconUser width={18} height={18} />
       )}
-      <span className="grow small">{session?.user?.name || t('User')}</span>
+      {!isMobile && <span className="grow small">{session?.user?.name || t('User')}</span>}
     </div>
   );
 };
