@@ -21,7 +21,6 @@ import MenuItem from '../MenuItem/MenuItem';
 import MenuAction from './MenuAction';
 import MenuActions from './MenuActions';
 
-
 interface Props {
   disableMenuItems: string[];
   isSidebarOpen: boolean;
