@@ -18,11 +18,16 @@ export const getSharingData = (role?: DialRole): SharingGridData[] => {
 
   return types.map((type) => {
     const shareData = role?.share?.[type];
-    const invitationTtl = shareData?.invitationTtl;
+    const initialInvitationTtl = shareData?.invitationTtl;
+    const invitationTtl = (
+      initialInvitationTtl === NO_LIMITS_VALUE || !initialInvitationTtl
+        ? initialInvitationTtl
+        : getHoursFromMs(initialInvitationTtl)
+    )?.toString();
 
     return {
       name: type,
-      invitationTtl: (invitationTtl ? getHoursFromMs(invitationTtl) : invitationTtl)?.toString(),
+      invitationTtl: invitationTtl,
       maxAcceptedUsers: shareData?.maxAcceptedUsers,
     };
   });
@@ -64,8 +69,5 @@ export const isSetNoLimitsHidden = (api: GridApi, node: IRowNode) => {
     rowNode: node,
   });
 
-  return (
-    (!invitationTtl && !maxAcceptedUsers) ||
-    (invitationTtl === NO_LIMITS_VALUE && maxAcceptedUsers === NO_LIMITS_ACCEPTED_USERS)
-  );
+  return invitationTtl === NO_LIMITS_VALUE && maxAcceptedUsers === NO_LIMITS_ACCEPTED_USERS;
 };
