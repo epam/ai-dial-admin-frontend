@@ -3,11 +3,10 @@ import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 import nx from '@nx/eslint-plugin';
 import globals from 'globals';
+import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import nextPlugin from '@next/eslint-plugin-next';
 import prettierPlugin from 'eslint-plugin-prettier';
-
-const { FocusEvent, MouseEvent, Notification, ...browserGlobals } = globals.browser;
 
 export default [
   {
@@ -33,12 +32,13 @@ export default [
         project: ['tsconfig.*?.json'],
       },
       globals: {
-        ...browserGlobals,
+        ...globals.browser,
         ...globals.node,
       },
     },
     plugins: {
       '@nx': nx,
+      react: reactPlugin,
       prettier: prettierPlugin,
       '@typescript-eslint': tsPlugin,
       'react-hooks': reactHooksPlugin,
