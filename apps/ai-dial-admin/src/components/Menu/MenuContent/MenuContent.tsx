@@ -1,24 +1,25 @@
 'use client';
 
+import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
+import { IconDownload, IconUpload } from '@tabler/icons-react';
+import classNames from 'classnames';
+import { usePathname, useRouter } from 'next/navigation';
 import { FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { usePathname, useRouter } from 'next/navigation';
-import { IconDownload, IconUpload } from '@tabler/icons-react';
-import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
 
-import { MenuI18nKey, ReloadConfigI18nKey } from '@/src/constants/i18n';
-import { ApplicationRoute } from '@/src/types/routes';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { useI18n } from '@/src/locales/client';
 import { reloadConfig } from '@/src/app/actions';
+import { MenuI18nKey, ReloadConfigI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useI18n } from '@/src/locales/client';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getActualMenuItems } from '@/src/utils/env/get-menu-items';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { MENU_CONFIGURATION } from '../menu-configuration';
-
 import MenuItem from '../MenuItem/MenuItem';
 import MenuAction from './MenuAction';
+import MenuActions from './MenuActions';
 
 interface Props {
   disableMenuItems: string[];
@@ -82,29 +83,33 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
           </ul>
         </nav>
 
-        <div className="px-3 py-2 text-secondary flex flex-row gap-3 items-center">
-          {/* {isSidebarOpen && (
-            <MenuAction
-              tooltip={t(ReloadConfigI18nKey.ReloadTitle)}
-              icon={<IconRefresh {...BASE_ICON_PROPS} widths={24} height={24} />}
-              onClick={onOpenModal}
-            />
-          )} */}
-
-          <MenuAction
-            tooltip={t(MenuI18nKey.ImportConfig)}
-            icon={<IconDownload {...BASE_ICON_PROPS} widths={24} height={24} />}
-            onClick={() => {
-              router.push(ApplicationRoute.ImportConfig);
-            }}
-          />
-          {isSidebarOpen && (
-            <MenuAction
-              tooltip={t(MenuI18nKey.ExportConfig)}
-              icon={<IconUpload {...BASE_ICON_PROPS} widths={24} height={24} />}
-              onClick={() => {
-                router.push(ApplicationRoute.ExportConfig);
-              }}
+        <div
+          className={classNames(
+            'px-3 py-2 text-secondary flex flex-row gap-3 items-center',
+            isSidebarOpen ? 'justify-start' : 'justify-center',
+          )}
+        >
+          {isSidebarOpen ? (
+            <>
+              <MenuAction
+                tooltip={t(MenuI18nKey.ImportConfig)}
+                icon={<IconDownload {...BASE_ICON_PROPS} widths={24} height={24} />}
+                onClick={() => {
+                  router.push(ApplicationRoute.ImportConfig);
+                }}
+              />
+              <MenuAction
+                tooltip={t(MenuI18nKey.ExportConfig)}
+                icon={<IconUpload {...BASE_ICON_PROPS} widths={24} height={24} />}
+                onClick={() => {
+                  router.push(ApplicationRoute.ExportConfig);
+                }}
+              />
+            </>
+          ) : (
+            <MenuActions
+              onExport={() => router.push(ApplicationRoute.ExportConfig)}
+              onImport={() => router.push(ApplicationRoute.ImportConfig)}
             />
           )}
         </div>
