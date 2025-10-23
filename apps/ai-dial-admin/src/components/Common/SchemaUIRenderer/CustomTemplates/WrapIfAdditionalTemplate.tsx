@@ -3,9 +3,6 @@ import { FC } from 'react';
 import { DialInput, DialRemoveButton } from '@epam/ai-dial-ui-kit';
 import { ADDITIONAL_PROPERTY_FLAG, WrapIfAdditionalTemplateProps } from '@rjsf/utils';
 
-import { useI18n } from '@/src/locales/client';
-import { EntityFieldsI18nKey } from '@/src/constants/i18n';
-
 export const WrapIfAdditionalTemplate: FC<WrapIfAdditionalTemplateProps> = ({
   id,
   label,
@@ -18,7 +15,6 @@ export const WrapIfAdditionalTemplate: FC<WrapIfAdditionalTemplateProps> = ({
   readonly,
   onDropPropertyClick,
 }) => {
-  const t = useI18n();
   const additional = ADDITIONAL_PROPERTY_FLAG in schema;
 
   if (!additional) {
@@ -34,7 +30,7 @@ export const WrapIfAdditionalTemplate: FC<WrapIfAdditionalTemplateProps> = ({
             disabled={disabled}
             readonly={readonly}
             onBlur={({ target }) => onKeyChange(target.value)}
-            defaultValue={t(EntityFieldsI18nKey.new_key)}
+            defaultValue={label}
           />
         </div>
         <div className="bg-layer-2">{children}</div>

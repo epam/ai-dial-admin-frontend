@@ -1,9 +1,9 @@
-import { shareKeys } from '@/src/components/ActivityAudit/constants';
+import { shareEntities, shareKeys } from '@/src/components/ActivityAudit/constants';
 import { ActivityAuditDiff } from '@/src/models/activity-audit';
 import { DialRoleLimits, DialRoleShare } from '@/src/models/dial/role-limits';
 import { DiffStatus } from '@/src/types/activity-audit';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { convertRoleLimitsIntoString, fillShareValues } from './compare-helpers';
+import { convertRoleLimitsIntoString, convertShareValue, fillShareValues } from './compare-helpers';
 
 /**
  * Compare models
@@ -212,14 +212,16 @@ export const compareShare = (
   val2: Record<string, DialRoleShare>,
   isCurrent?: boolean,
 ): void => {
-  const allKeys = new Set([...Object.keys(val1 || {}), ...Object.keys(val2 || {})].sort());
-
-  allKeys.forEach((key) => {
+  shareEntities.forEach((key) => {
     const value1 = val1?.[key];
     const value2 = val2?.[key];
     if (value1 != null && value2 == null) {
-      shareKeys.forEach(() => {
-        diffs.push({ parameter: '', value: '', status: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED });
+      shareKeys.forEach((k) => {
+        diffs.push({
+          parameter: `${key}.${k}`,
+          value: convertShareValue('', k, key),
+          status: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED,
+        });
       });
     } else if (value1 == null && value2 != null) {
       shareKeys.forEach((k) => {
@@ -243,10 +245,9 @@ export const compareShare = (
  * @param {ActivityAuditDiff[]} diffs - result array
  * @param {Record<string, DialRoleShare>} value - value to compare
  */
-export const fillShare = (diffs: ActivityAuditDiff[], value: Record<string, DialRoleShare>) => {
-  const allKeys = Object.keys(value || {}).sort();
-  allKeys.forEach((key) => {
-    const val = value[key];
+export const fillShare = (diffs: ActivityAuditDiff[], value?: Record<string, DialRoleShare>) => {
+  shareEntities.forEach((key) => {
+    const val = value?.[key];
     shareKeys.forEach((k) => {
       fillShareValues(diffs, key, k, val);
     });

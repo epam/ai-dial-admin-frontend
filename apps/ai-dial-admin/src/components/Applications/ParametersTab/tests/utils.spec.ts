@@ -1,8 +1,19 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test, vi } from 'vitest';
 import { ParamsView } from '../types';
-import { getAppRunner, getFrameConfig, getInitialParamsView, generateViewItems } from '../utils';
+import {
+  getAppRunner,
+  getFrameConfig,
+  getInitialParamsView,
+  generateViewItems,
+  convertJsonSchema,
+  getTypeFromUnion,
+  convertAppPropertiesToArray,
+} from '../utils';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { DialSchemePropertyType } from '@/src/models/dial/scheme';
+import { ApplicationPropertiesTemp, DialApplicationScheme, TypeEntity } from '@/src/models/dial/application';
+import { DefaultsValue } from '@/src/models/dial/defaults';
 
 describe('getFrameConfig', () => {
   test('returns config for DialApplicationScheme', () => {
@@ -247,5 +258,426 @@ describe('generateViewItems', () => {
     expect(t).toHaveBeenCalledWith(EntitiesI18nKey[ParamsView.TABLE]);
     expect(t).toHaveBeenCalledWith(EntitiesI18nKey[ParamsView.FORM]);
     expect(t).toHaveBeenCalledWith(EntitiesI18nKey[ParamsView.UI]);
+  });
+});
+
+describe('convertJsonSchema', () => {
+  test('should handle basic schema with required fields', () => {
+    const schema: DialApplicationScheme = {
+      properties: {
+        field1: { type: TypeEntity.STRING },
+        field2: { type: TypeEntity.STRING },
+      },
+      required: ['field1'],
+    };
+
+    const schemeData: Record<string, DefaultsValue> = {
+      field1: 'value1',
+      field2: 'value2',
+    };
+
+    const result: ApplicationPropertiesTemp[] = convertJsonSchema(schema, schemeData);
+
+    expect(result).toEqual([
+      {
+        key: 'field1',
+        value: 'value1',
+        type: TypeEntity.STRING,
+        required: true,
+        isFromScheme: true,
+      },
+      {
+        key: 'field2',
+        value: 'value2',
+        type: TypeEntity.STRING,
+        required: false,
+        isFromScheme: true,
+      },
+    ]);
+  });
+
+  test('should handle schema with `anyOf` (union types)', () => {
+    const schema: DialApplicationScheme = {
+      properties: {
+        field1: { anyOf: [{ type: TypeEntity.STRING }, { type: TypeEntity.NUMBER }] },
+      },
+      required: [],
+    };
+
+    const schemeData: Record<string, DefaultsValue> = {
+      field1: 'value1',
+    };
+
+    const result: ApplicationPropertiesTemp[] = convertJsonSchema(schema, schemeData);
+
+    expect(result).toEqual([
+      {
+        key: 'field1',
+        value: 'value1',
+        type: TypeEntity.OBJECT,
+        required: false,
+        isFromScheme: true,
+      },
+    ]);
+  });
+
+  test('should handle schema with `oneOf` (union types)', () => {
+    const schema: DialApplicationScheme = {
+      properties: {
+        field1: { oneOf: [{ type: TypeEntity.STRING }, { type: TypeEntity.BOOLEAN }] },
+      },
+      required: [],
+    };
+
+    const schemeData: Record<string, DefaultsValue> = {
+      field1: true,
+    };
+
+    const result: ApplicationPropertiesTemp[] = convertJsonSchema(schema, schemeData);
+
+    expect(result).toEqual([
+      {
+        key: 'field1',
+        value: true,
+        type: TypeEntity.OBJECT,
+        required: false,
+        isFromScheme: true,
+      },
+    ]);
+  });
+
+  test('should handle array type schema correctly', () => {
+    const schema: DialApplicationScheme = {
+      properties: {
+        field1: { type: TypeEntity.ARRAY },
+      },
+      required: [],
+    };
+
+    const schemeData: Record<string, DefaultsValue> = {
+      field1: ['value1', 'value2'],
+    };
+
+    const result: ApplicationPropertiesTemp[] = convertJsonSchema(schema, schemeData);
+
+    expect(result).toEqual([
+      {
+        key: 'field1',
+        value: ['value1', 'value2'],
+        type: TypeEntity.OBJECT,
+        required: false,
+        isFromScheme: true,
+      },
+    ]);
+  });
+
+  test('should handle empty schema correctly', () => {
+    const schema: DialApplicationScheme = {
+      properties: {},
+      required: [],
+    };
+
+    const schemeData: Record<string, DefaultsValue> = {};
+
+    const result: ApplicationPropertiesTemp[] = convertJsonSchema(schema, schemeData);
+
+    expect(result).toEqual([]);
+  });
+
+  test('should handle schema with no required properties', () => {
+    const schema: DialApplicationScheme = {
+      properties: {
+        field1: { type: TypeEntity.STRING },
+        field2: { type: TypeEntity.NUMBER },
+      },
+      required: [],
+    };
+
+    const schemeData: Record<string, DefaultsValue> = {
+      field1: 'value1',
+      field2: 123,
+    };
+
+    const result: ApplicationPropertiesTemp[] = convertJsonSchema(schema, schemeData);
+
+    expect(result).toEqual([
+      {
+        key: 'field1',
+        value: 'value1',
+        type: TypeEntity.STRING,
+        required: false,
+        isFromScheme: true,
+      },
+      {
+        key: 'field2',
+        value: 123,
+        type: TypeEntity.NUMBER,
+        required: false,
+        isFromScheme: true,
+      },
+    ]);
+  });
+});
+
+describe('getTypeFromUnion', () => {
+  test('should return STRING for a STRING type', () => {
+    const types: DialSchemePropertyType[] = [{ type: TypeEntity.STRING }];
+    const result = getTypeFromUnion(types);
+    expect(result).toBe(TypeEntity.STRING);
+  });
+
+  test('should return NUMBER for a NUMBER type', () => {
+    const types: DialSchemePropertyType[] = [{ type: TypeEntity.NUMBER }];
+    const result = getTypeFromUnion(types);
+    expect(result).toBe(TypeEntity.NUMBER);
+  });
+
+  test('should return BOOLEAN for a BOOLEAN type', () => {
+    const types: DialSchemePropertyType[] = [{ type: TypeEntity.BOOLEAN }];
+    const result = getTypeFromUnion(types);
+    expect(result).toBe(TypeEntity.BOOLEAN);
+  });
+
+  test('should return OBJECT for an ARRAY type', () => {
+    const types: DialSchemePropertyType[] = [{ type: TypeEntity.ARRAY }];
+    const result = getTypeFromUnion(types);
+    expect(result).toBe(TypeEntity.OBJECT);
+  });
+
+  test('should return NULL type handling (remove NULL from types)', () => {
+    const types: DialSchemePropertyType[] = [{ type: TypeEntity.NULL }];
+    const result = getTypeFromUnion(types);
+    expect(result).toBe(TypeEntity.OBJECT);
+  });
+
+  test('should return OBJECT for a $ref type', () => {
+    const types: DialSchemePropertyType[] = [{ $ref: 'SomeRef' }];
+    const result = getTypeFromUnion(types);
+    expect(result).toBe(TypeEntity.OBJECT);
+  });
+
+  test('should return the correct type for multiple types', () => {
+    const types: DialSchemePropertyType[] = [{ type: TypeEntity.STRING }, { type: TypeEntity.NUMBER }];
+    const result = getTypeFromUnion(types);
+    expect(result).toBe(TypeEntity.OBJECT);
+  });
+
+  test('should return the correct type when combining types with $ref', () => {
+    const types: DialSchemePropertyType[] = [{ type: TypeEntity.STRING }, { $ref: 'SomeRef' }];
+    const result = getTypeFromUnion(types);
+    expect(result).toBe(TypeEntity.OBJECT);
+  });
+
+  test('should return OBJECT for a combination of NULL and other types', () => {
+    const types: DialSchemePropertyType[] = [{ type: TypeEntity.STRING }, { type: TypeEntity.NULL }];
+    const result = getTypeFromUnion(types);
+    expect(result).toBe(TypeEntity.STRING);
+  });
+
+  test('should handle an empty array and return OBJECT', () => {
+    const types: DialSchemePropertyType[] = [];
+    const result = getTypeFromUnion(types);
+    expect(result).toBe(TypeEntity.OBJECT);
+  });
+
+  test('should return OBJECT if only NULL is present', () => {
+    const types: DialSchemePropertyType[] = [{ type: TypeEntity.NULL }];
+    const result = getTypeFromUnion(types);
+    expect(result).toBe(TypeEntity.OBJECT);
+  });
+
+  test('should return OBJECT if both $ref and NULL are present', () => {
+    const types: DialSchemePropertyType[] = [{ $ref: 'SomeRef' }, { type: TypeEntity.NULL }];
+    const result = getTypeFromUnion(types);
+    expect(result).toBe(TypeEntity.OBJECT);
+  });
+});
+
+describe('convertAppPropertiesToArray', () => {
+  test('should convert properties to array correctly', () => {
+    const properties: Record<string, DefaultsValue> = {
+      field1: 'value1',
+      field2: 123,
+    };
+
+    const result = convertAppPropertiesToArray(properties);
+
+    expect(result).toEqual([
+      {
+        key: 'field1',
+        type: 'string',
+        value: 'value1',
+        required: false,
+        isFromScheme: false,
+      },
+      {
+        key: 'field2',
+        type: 'number',
+        value: 123,
+        required: false,
+        isFromScheme: false,
+      },
+    ]);
+  });
+
+  test('should update existing properties if they already exist in schemeProperties', () => {
+    const properties: Record<string, DefaultsValue> = {
+      field1: 'new value',
+    };
+
+    const schemeProperties: ApplicationPropertiesTemp[] = [
+      {
+        key: 'field1',
+        type: 'string',
+        value: 'old value',
+        required: false,
+        isFromScheme: true,
+      },
+    ];
+
+    const result = convertAppPropertiesToArray(properties, schemeProperties);
+
+    expect(result).toEqual([
+      {
+        key: 'field1',
+        type: 'string',
+        value: 'new value',
+        required: false,
+        isFromScheme: true,
+      },
+    ]);
+  });
+
+  test('should add new properties if they do not exist in schemeProperties', () => {
+    const properties: Record<string, DefaultsValue> = {
+      field1: 'value1',
+    };
+
+    const schemeProperties: ApplicationPropertiesTemp[] = [];
+
+    const result = convertAppPropertiesToArray(properties, schemeProperties);
+
+    expect(result).toEqual([
+      {
+        key: 'field1',
+        type: 'string',
+        value: 'value1',
+        required: false,
+        isFromScheme: false,
+      },
+    ]);
+  });
+
+  test('should sort the result based on isFromScheme property', () => {
+    const properties: Record<string, DefaultsValue> = {
+      field1: 'value1',
+      field2: 123,
+    };
+
+    const schemeProperties: ApplicationPropertiesTemp[] = [
+      {
+        key: 'field3',
+        type: 'string',
+        value: 'scheme value',
+        required: false,
+        isFromScheme: true,
+      },
+    ];
+
+    const result = convertAppPropertiesToArray(properties, schemeProperties);
+
+    expect(result).toEqual([
+      {
+        key: 'field3',
+        type: 'string',
+        value: 'scheme value',
+        required: false,
+        isFromScheme: true,
+      },
+      {
+        key: 'field1',
+        type: 'string',
+        value: 'value1',
+        required: false,
+        isFromScheme: false,
+      },
+      {
+        key: 'field2',
+        type: 'number',
+        value: 123,
+        required: false,
+        isFromScheme: false,
+      },
+    ]);
+  });
+
+  test('should handle empty properties object and return empty array', () => {
+    const properties: Record<string, DefaultsValue> = {};
+
+    const result = convertAppPropertiesToArray(properties);
+
+    expect(result).toEqual([]);
+  });
+
+  test('should work when no schemeProperties are provided', () => {
+    const properties: Record<string, DefaultsValue> = {
+      field1: 'value1',
+      field2: 123,
+    };
+
+    const result = convertAppPropertiesToArray(properties);
+
+    expect(result).toEqual([
+      {
+        key: 'field1',
+        type: 'string',
+        value: 'value1',
+        required: false,
+        isFromScheme: false,
+      },
+      {
+        key: 'field2',
+        type: 'number',
+        value: 123,
+        required: false,
+        isFromScheme: false,
+      },
+    ]);
+  });
+
+  test('should handle multiple properties with the same key', () => {
+    const properties: Record<string, DefaultsValue> = {
+      field1: 'value1',
+      field2: 123,
+    };
+
+    const schemeProperties: ApplicationPropertiesTemp[] = [
+      {
+        key: 'field1',
+        type: 'string',
+        value: 'old value',
+        required: false,
+        isFromScheme: true,
+      },
+    ];
+
+    const result = convertAppPropertiesToArray(properties, schemeProperties);
+
+    expect(result).toEqual([
+      {
+        key: 'field1',
+        type: 'string',
+        value: 'value1',
+        required: false,
+        isFromScheme: true,
+      },
+      {
+        key: 'field2',
+        type: 'number',
+        value: 123,
+        required: false,
+        isFromScheme: false,
+      },
+    ]);
   });
 });

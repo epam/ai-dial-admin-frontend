@@ -48,9 +48,14 @@ export const modifyNameVersionInPrompt = (input: string, newName?: string, newVe
 
 export const getInitialVersion = (versionsPerName: Record<string, string[]>, name?: string) => {
   const latest = versionsPerName[name as string]?.sort(compareVersions).at(-1)?.split('.');
+
   if (latest) {
+    if (isNaN(+latest[2])) {
+      return '1.0.0';
+    }
     latest[2] = `${+latest[2] + 1}`;
   }
+
   return latest?.join('.') || '';
 };
 

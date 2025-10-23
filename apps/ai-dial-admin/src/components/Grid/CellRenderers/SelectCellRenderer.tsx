@@ -13,7 +13,7 @@ export interface SelectCellRendererParams extends ICellRendererParams {
   isMulti?: boolean;
   items?: DropdownItemsModel[];
   getItems?: (data: unknown) => DropdownItemsModel[];
-  onChange: (value: string, name: string) => void;
+  onChange: (value: string, data: unknown, column?: string, index?: number) => void;
 }
 
 const SelectCellRenderer = (params: SelectCellRendererParams) => {
@@ -21,7 +21,7 @@ const SelectCellRenderer = (params: SelectCellRendererParams) => {
   const { items, allItemsCount } = getItems(params, t as (s: string) => string);
 
   const onChangeValue = (value: string) => {
-    params.onChange(value, params.data.name);
+    params.onChange(value, params.data, params.colDef?.field as string, params.node.rowIndex as number);
   };
 
   const value = params.value?.toString();
@@ -29,21 +29,24 @@ const SelectCellRenderer = (params: SelectCellRendererParams) => {
   const multipleValues = params.value?.toString().split(STRINGS_DELIMITER) as string[];
 
   return (
-    <Dropdown
-      className="w-full flex items-center"
-      selectedValue={params.isMulti ? void 0 : selectedValue}
-      multipleValues={params.isMulti ? multipleValues : void 0}
-    >
-      {items?.map((item, i) => (
-        <DropdownMenuItem
-          multipleValues={params.isMulti ? multipleValues : void 0}
-          allItemsCount={allItemsCount}
-          key={i}
-          dropdownItem={item}
-          onClick={() => onChangeValue(item.id)}
-        />
-      ))}
-    </Dropdown>
+    <div className="h-8 w-full">
+      <Dropdown
+        className="w-full flex items-center"
+        selectedValue={params.isMulti ? void 0 : selectedValue}
+        multipleValues={params.isMulti ? multipleValues : void 0}
+        selectedClassName="flex flex-row w-full items-center h-8 dial-input px-3 py-2 dial-input-field"
+      >
+        {items?.map((item, i) => (
+          <DropdownMenuItem
+            multipleValues={params.isMulti ? multipleValues : void 0}
+            allItemsCount={allItemsCount}
+            key={i}
+            dropdownItem={item}
+            onClick={() => onChangeValue(item.id)}
+          />
+        ))}
+      </Dropdown>
+    </div>
   );
 };
 

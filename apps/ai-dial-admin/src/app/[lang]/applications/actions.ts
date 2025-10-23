@@ -29,11 +29,17 @@ export async function updateApplication(application: DialApplication, etag: stri
   const defaults = application.defaultsTemp
     ? { ...convertDefaultsToRecord(application.defaultsTemp) }
     : { ...application.defaults };
+  const applicationProperties = application.applicationPropertiesTemp
+    ? { ...convertDefaultsToRecord(application.applicationPropertiesTemp) }
+    : { ...application.applicationProperties };
   const app = {
     ...application,
     routes: application.routes?.map((route) => ({ ...route, name: route.displayName || route.name })),
     defaults,
+    applicationProperties,
   };
   delete app.defaultsTemp;
+  delete app.applicationPropertiesTemp;
+
   return applicationsApi.updateApplication(app, token, etag);
 }
