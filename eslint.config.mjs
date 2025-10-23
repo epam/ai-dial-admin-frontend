@@ -3,6 +3,7 @@ import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 import nx from '@nx/eslint-plugin';
 import globals from 'globals';
+import jsxA11yPlugin from 'eslint-plugin-jsx-a11y';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import nextPlugin from '@next/eslint-plugin-next';
@@ -42,6 +43,7 @@ export default [
       prettier: prettierPlugin,
       '@typescript-eslint': tsPlugin,
       'react-hooks': reactHooksPlugin,
+      'jsx-a11y': jsxA11yPlugin,
       '@next/next': nextPlugin,
     },
     rules: {
@@ -51,6 +53,7 @@ export default [
       ...prettierPlugin.configs.recommended.rules,
       '@next/next/no-html-link-for-pages': 'off',
       'react-hooks/exhaustive-deps': 'error',
+      'no-redeclare': 'off',
       '@nx/enforce-module-boundaries': [
         'error',
         {
