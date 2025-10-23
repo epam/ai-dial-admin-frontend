@@ -1,10 +1,9 @@
 import { shareEntities, shareKeys } from '@/src/components/ActivityAudit/constants';
-import { NO_LIMITS_KEY } from '@/src/constants/role';
 import { ActivityAuditDiff } from '@/src/models/activity-audit';
 import { DialRoleLimits, DialRoleShare } from '@/src/models/dial/role-limits';
 import { DiffStatus } from '@/src/types/activity-audit';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { convertRoleLimitsIntoString, fillShareValues } from './compare-helpers';
+import { convertRoleLimitsIntoString, convertShareValue, fillShareValues } from './compare-helpers';
 
 /**
  * Compare models
@@ -220,7 +219,7 @@ export const compareShare = (
       shareKeys.forEach((k) => {
         diffs.push({
           parameter: `${key}.${k}`,
-          value: NO_LIMITS_KEY,
+          value: convertShareValue('', k, key),
           status: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED,
         });
       });
