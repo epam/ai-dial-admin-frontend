@@ -27,14 +27,13 @@ export default [
       parser: tsParser,
       ecmaVersion: 5,
       sourceType: 'commonjs',
-      env: {
-        browser: true,
-        node: true,
-      },
       parserOptions: {
         project: ['tsconfig.*?.json'],
       },
-      globals: globals.node,
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
     },
     plugins: {
       '@nx': nx,
