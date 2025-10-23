@@ -64,14 +64,9 @@ const CreateEntity = <T extends CreatePromptEntity>({
   const { showNotification } = useNotification();
 
   const [currentEntity, setEntity] = useState<T>(
-    route === ApplicationRoute.Models
-      ? ({
-          name: '',
-          description: '',
-        } as T)
-      : versionsMap
-        ? ({ name: '', description: '', version: '1.0.0' } as T)
-        : ({ name: '', description: '', ...initialValues } as T),
+    versionsMap
+      ? ({ name: '', description: '', version: '1.0.0' } as T)
+      : ({ name: '', description: '', ...initialValues } as T),
   );
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean | undefined>(void 0);
 
