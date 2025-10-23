@@ -3,6 +3,7 @@ import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 import nx from '@nx/eslint-plugin';
 import globals from 'globals';
+import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import nextPlugin from '@next/eslint-plugin-next';
 import prettierPlugin from 'eslint-plugin-prettier';
 
@@ -36,7 +37,8 @@ export default [
       '@nx': nx,
       prettier: prettierPlugin,
       '@typescript-eslint': tsPlugin,
-      next: nextPlugin,
+      'react-hooks': reactHooksPlugin,
+      '@next/next': nextPlugin,
     },
     rules: {
       ...js.configs.recommended.rules,
