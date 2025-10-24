@@ -5,16 +5,15 @@ import { Dispatch, FC, SetStateAction, useCallback } from 'react';
 import { CreateFolderSteps } from '@/src/components/Common/FolderCreate/constants';
 import RulesItemBody from '@/src/components/Rules/Item/RulesItemBody';
 import { DialRule } from '@/src/models/dial/rule';
-import { Step, StepStatus } from '@/src/models/step';
+import { Step, StepStatus } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   rules: DialRule[];
   setRules: Dispatch<SetStateAction<DialRule[]>>;
   setSteps: Dispatch<SetStateAction<Step[]>>;
-  setCurrentStep: Dispatch<SetStateAction<Step>>;
 }
 
-const FolderCreatePermissions: FC<Props> = ({ rules, setRules, setSteps, setCurrentStep }) => {
+const FolderCreatePermissions: FC<Props> = ({ rules, setRules, setSteps }) => {
   const onChangeRules = useCallback(
     (rules: DialRule[]) => {
       setRules(rules);
@@ -31,14 +30,8 @@ const FolderCreatePermissions: FC<Props> = ({ rules, setRules, setSteps, setCurr
         const index = prev.findIndex((step) => step.id === CreateFolderSteps.PERMISSIONS);
         return prev.map((item, i) => (i === index ? { ...item, status } : item));
       });
-      setCurrentStep((prev) => {
-        return {
-          ...prev,
-          status,
-        };
-      });
     },
-    [setCurrentStep, setRules, setSteps],
+    [setRules, setSteps],
   );
 
   return (

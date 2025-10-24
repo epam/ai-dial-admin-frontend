@@ -7,7 +7,7 @@ import {
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { FileImportMap } from '@/src/models/file';
 import { ImportStatus } from '@/src/types/import';
-import { StepStatus } from '@/src/models/step';
+import { StepStatus } from '@epam/ai-dial-ui-kit';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   changeFilesMap,

@@ -1,6 +1,7 @@
 'use client';
 
 import { FC, useCallback, useEffect, useState } from 'react';
+import { DialSteps, StepStatus } from '@epam/ai-dial-ui-kit';
 
 import { importJsonConfigs, importZipConfig } from '@/src/app/[lang]/import-config/actions';
 import { IMPORT_CONFIG_STEPS } from '@/src/constants/import';
@@ -12,7 +13,6 @@ import { useI18n } from '@/src/locales/client';
 import { isLargeFile } from '@/src/components/EntityListView/Import/import';
 import Files from './Files/Files';
 import ConfigurationPreview from './ConfigurationPreview/ConfigurationPreview';
-import { DialSteps, StepStatus } from '@epam/ai-dial-ui-kit';
 
 const ImportConfig: FC = () => {
   const t = useI18n() as (stringToTranslate: string) => string;
