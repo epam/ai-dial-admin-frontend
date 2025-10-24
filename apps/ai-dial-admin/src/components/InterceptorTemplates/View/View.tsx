@@ -113,7 +113,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
         >
           <DialButton
             variant={ButtonVariant.Secondary}
-            title={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.Interceptor)})}`}
+            title={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.Interceptor)}`}
             iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
             onClick={() => setIsModalOpen(true)}
           />

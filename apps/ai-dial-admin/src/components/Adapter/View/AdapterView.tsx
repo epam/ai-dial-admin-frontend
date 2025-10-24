@@ -124,6 +124,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, etag }) => {
           removeEntity={removeAdapter}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
+          childrenContainerClass={'flex-row-reverse'}
         >
           <DialButton
             variant={ButtonVariant.Secondary}
