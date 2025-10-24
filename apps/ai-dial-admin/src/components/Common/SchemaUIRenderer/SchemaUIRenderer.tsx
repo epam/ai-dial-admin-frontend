@@ -12,8 +12,9 @@ interface Props {
   data?: Record<string, unknown>;
   onChangeConfiguration: (data: Record<string, DefaultsValue>) => void;
   onGetSchemeDefaults?: (data: Record<string, DefaultsValue>) => void;
+  readonly?: boolean;
 }
-const SchemaUiRenderer: FC<Props> = ({ schema, data, onChangeConfiguration, onGetSchemeDefaults }) => {
+const SchemaUiRenderer: FC<Props> = ({ schema, data, onChangeConfiguration, onGetSchemeDefaults, readonly }) => {
   const onChange = useCallback(
     (data: IChangeEvent<any, RJSFSchema, any>) => {
       onChangeConfiguration(data.formData);
@@ -35,6 +36,8 @@ const SchemaUiRenderer: FC<Props> = ({ schema, data, onChangeConfiguration, onGe
       formData={data}
       onChange={onChange}
       onSubmit={onSubmit}
+      showErrorList={false}
+      readonly={readonly}
     >
       <></>
     </SchemaForm>

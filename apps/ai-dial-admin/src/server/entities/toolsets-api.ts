@@ -32,6 +32,6 @@ export class ToolsetsApi extends BaseApi {
   }
 
   updateToolset(toolset: Toolset, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(TOOLSET_URL(toolset.name), toolset, token, eTag);
+    return this.putActionWithEtag(TOOLSET_URL(encodeURIComponent(toolset.name || '')), toolset, token, eTag);
   }
 }

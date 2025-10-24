@@ -9,7 +9,7 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 export const ObjectFieldTemplate: FC<ObjectFieldTemplateProps> = (props) => {
-  const { title, properties, schema, uiSchema, formData, onAddClick } = props;
+  const { title, properties, schema, uiSchema, formData, onAddClick, readonly } = props;
   const t = useI18n() as (stringToTranslate: string) => string;
 
   return (
@@ -20,7 +20,7 @@ export const ObjectFieldTemplate: FC<ObjectFieldTemplateProps> = (props) => {
           <div key={prop.name}>{prop.content}</div>
         ))}
       </div>
-      {canExpand(schema, uiSchema, formData) && (
+      {canExpand(schema, uiSchema, formData) && !readonly && (
         <DialButton
           variant={ButtonVariant.Tertiary}
           onClick={onAddClick(schema)}

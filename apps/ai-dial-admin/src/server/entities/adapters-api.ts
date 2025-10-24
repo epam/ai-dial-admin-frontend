@@ -31,6 +31,6 @@ export class AdaptersApi extends BaseApi {
   }
 
   updateAdapter(adapter: DialAdapter, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(ADAPTER_URL(adapter.name), adapter, token, eTag);
+    return this.putActionWithEtag(ADAPTER_URL(encodeURIComponent(adapter.name || '')), adapter, token, eTag);
   }
 }

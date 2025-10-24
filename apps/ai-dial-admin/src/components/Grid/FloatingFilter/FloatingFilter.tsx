@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ChangeEvent } from 'react';
 
 import { IconSearch } from '@tabler/icons-react';
 import { IFloatingFilterParams, IFloatingFilterParent } from 'ag-grid-community';
@@ -9,7 +9,7 @@ import { useI18n } from '@/src/locales/client';
 const FloatingFilter = (props: IFloatingFilterParams) => {
   const t = useI18n();
 
-  const onInputChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onInputChanged = (e: ChangeEvent<HTMLInputElement>) => {
     props.parentFilterInstance((instance: IFloatingFilterParent) => {
       instance.onFloatingFilterChanged('contains', e.target.value);
     });
