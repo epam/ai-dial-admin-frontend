@@ -120,7 +120,7 @@ const Files: FC<Props> = ({
               fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
               fileCountError={t(ImportI18nKey.ArchiveDescription)}
               iconBeforeInput={<IconZip className="text-secondary" {...BASE_ICON_PROPS} />}
-              acceptTypes=".zip, application/x-zip-compressed"
+              acceptTypes=".zip, application/x-zip-compressed, application/zip"
               onChange={onChangeFile}
             />
           ) : (
