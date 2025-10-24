@@ -32,6 +32,11 @@ export class InterceptorTemplatesApi extends BaseApi {
     token: JWT | null,
     eTag: string,
   ): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(INTERCEPTOR_TEMPLATE_URL(template.name), template, token, eTag);
+    return this.putActionWithEtag(
+      INTERCEPTOR_TEMPLATE_URL(encodeURIComponent(template.name || '')),
+      template,
+      token,
+      eTag,
+    );
   }
 }

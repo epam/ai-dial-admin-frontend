@@ -23,12 +23,17 @@ export class InterceptorsApi extends BaseApi {
     return this.deleteAction(INTERCEPTOR_URL(name), token);
   }
 
-  createInterceptor(interceptors: DialInterceptor, token: JWT | null): Promise<ServerActionResponse> {
-    return this.postAction(INTERCEPTORS_URL, interceptors, token);
+  createInterceptor(interceptor: DialInterceptor, token: JWT | null): Promise<ServerActionResponse> {
+    return this.postAction(INTERCEPTORS_URL, interceptor, token);
   }
 
-  updateInterceptor(interceptors: DialInterceptor, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(INTERCEPTOR_URL(interceptors.name), interceptors, token, eTag);
+  updateInterceptor(interceptor: DialInterceptor, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(
+      INTERCEPTOR_URL(encodeURIComponent(interceptor.name || '')),
+      interceptor,
+      token,
+      eTag,
+    );
   }
 
   getConfigurationSchema(name: string, token: JWT | null): Promise<RJSFSchema | null> {

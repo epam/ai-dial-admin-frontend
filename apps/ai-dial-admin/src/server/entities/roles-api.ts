@@ -27,6 +27,6 @@ export class RolesApi extends BaseApi {
   }
 
   updateRole(role: DialRole, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(ROLE_URL(role.name), role, token, eTag);
+    return this.putActionWithEtag(ROLE_URL(encodeURIComponent(role.name || '')), role, token, eTag);
   }
 }

@@ -8,7 +8,7 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
-export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({ canAdd, items, onAddClick, title }) => {
+export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({ canAdd, items, onAddClick, title, readonly }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
 
   return (
@@ -21,7 +21,7 @@ export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({ canAdd, items,
           return (
             <li key={key} className="flex w-full gap-3 items-start lg:w-[45%]">
               <div className="flex w-full bg-layer-2 p-[18px]">{children}</div>
-              {hasRemove && (
+              {hasRemove && !readonly && (
                 <DialRemoveButton
                   onClick={onDropIndexClick(key)}
                   iconClass="text-error"
@@ -33,7 +33,7 @@ export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({ canAdd, items,
         })}
       </ul>
 
-      {canAdd && (
+      {canAdd && !readonly && (
         <DialButton
           variant={ButtonVariant.Tertiary}
           onClick={onAddClick}
