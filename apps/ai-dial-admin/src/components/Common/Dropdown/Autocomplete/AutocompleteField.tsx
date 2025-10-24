@@ -21,7 +21,7 @@ const AutocompleteField: FC<Props> = ({ fieldTitle, optional, onChange, elementI
     <div className="flex flex-col">
       <Field fieldTitle={fieldTitle} optional={optional} htmlFor={elementId} />
 
-      <DropdownAutocomplete inputId={elementId} onSelectItem={onChange} autocompleteValue={value} {...props} />
+      <DropdownAutocomplete onSelectItem={onChange} autocompleteValue={value} {...props} />
       <ErrorText errorText={errorText} />
     </div>
   );
