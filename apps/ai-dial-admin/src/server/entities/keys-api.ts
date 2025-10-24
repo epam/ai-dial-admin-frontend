@@ -26,6 +26,6 @@ export class KeysApi extends BaseApi {
   }
 
   updateKey(key: DialKey, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(KEY_URL(key.name), key, token, eTag);
+    return this.putActionWithEtag(KEY_URL(encodeURIComponent(key.name || '')), key, token, eTag);
   }
 }
