@@ -199,7 +199,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply 
 
   useEffect(() => {
     if (currentStepId === ImportSteps.FILES) {
-      const zipStatus = zipFile ? StepStatus.VALID : StepStatus.INVALID;
+      const zipStatus = zipFile ? StepStatus.VALID : void 0;
       const filesStatus = getMultipleImportStatus(fileType === FileType.JSON ? jsonFileMap : separateFileMap);
       const status = fileType === FileType.ARCHIVE ? zipStatus : filesStatus;
       setStepsState(status);
