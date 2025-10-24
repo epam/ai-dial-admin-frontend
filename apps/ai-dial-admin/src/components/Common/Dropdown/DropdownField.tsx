@@ -21,6 +21,8 @@ interface Props {
   optional?: boolean;
   elementId?: string;
   containerCssClass?: string;
+  elementCssClass?: string;
+  disabled?: boolean;
 }
 
 const DropdownField: FC<Props> = ({
