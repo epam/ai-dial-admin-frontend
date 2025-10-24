@@ -34,11 +34,13 @@ export const WrapIfAdditionalTemplate: FC<WrapIfAdditionalTemplateProps> = ({
           />
         </div>
         <div className="bg-layer-2">{children}</div>
-        <DialRemoveButton
-          onClick={onDropPropertyClick(label)}
-          iconClass="text-error"
-          cssClass="border rounded border-primary justify-start p-2"
-        />
+        {!readonly && (
+          <DialRemoveButton
+            onClick={onDropPropertyClick(label)}
+            iconClass="text-error"
+            cssClass="border rounded border-primary justify-start p-2"
+          />
+        )}
       </div>
     </div>
   );
