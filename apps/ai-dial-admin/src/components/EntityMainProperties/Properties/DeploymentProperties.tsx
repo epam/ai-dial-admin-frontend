@@ -120,7 +120,7 @@ const DeploymentProperties: FC<Props> = ({
           <IdControl entity={entity} onChangeEntity={onChangeName} isUniqueNameError={isUniqueNameError} />
         )}
         <AutocompleteField
-          elementId="displayName"
+          inputId="displayName"
           fieldTitle={t(EntityFieldsI18nKey.displayName)}
           placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
           value={entity.displayName}
