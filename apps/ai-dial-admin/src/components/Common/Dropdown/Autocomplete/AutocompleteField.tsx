@@ -13,6 +13,7 @@ interface Props extends DropdownAutocompleteProps {
   errorText?: string;
   value?: string | number | null;
   elementId?: string;
+  placeholder?: string;
   onChange: (value: string) => void;
 }
 
