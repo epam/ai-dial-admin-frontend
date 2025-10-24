@@ -98,6 +98,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
               )}
             </div>
             <AppRouteList
+              readonly={readonly}
               routes={routes}
               activeRoute={activeRoute}
               onClick={(tab) => setActiveRoute(tab)}
