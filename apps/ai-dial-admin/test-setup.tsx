@@ -1,6 +1,7 @@
 /* eslint-disable jsx-a11y/alt-text */
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
+import { ReactNode } from 'react';
 import { afterEach, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
@@ -51,7 +52,7 @@ vi.mock('@/src/context/AppContext', () => ({
 }));
 
 vi.mock('@/src/context/SaveValidationContext', () => ({
-  SaveValidationContextProvider: ({ children }: { children: React.ReactNode }) => children,
+  SaveValidationContextProvider: ({ children }: { children: ReactNode }) => children,
   useSaveValidationContext: () => ({
     isValid: true,
     dispatch: vi.fn(),
