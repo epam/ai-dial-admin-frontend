@@ -40,7 +40,7 @@ const FolderCreateModal: FC<Props> = ({ isModalOpen, folderPath, view, onClose, 
   const fileTypes = IMPORT_FILE_TYPES(t, view);
 
   const [steps, setSteps] = useState(CREATE_FOLDER_STEPS(t));
-  const [currentStepId, setCurrentStepId] = useState(steps[0]);
+  const [currentStepId, setCurrentStepId] = useState(steps[0].id);
 
   const [ignorePaths, setIgnorePaths] = useState(false);
   const [fileType, setFileType] = useState(fileTypes[0].id);
@@ -89,7 +89,7 @@ const FolderCreateModal: FC<Props> = ({ isModalOpen, folderPath, view, onClose, 
       footer={
         <FolderCreateModalButtons
           steps={steps}
-          currentStep={currentStepId}
+          currentStep={steps.find((s) => s.id === currentStepId)}
           setCurrentStep={setCurrentStepId}
           onFinishClick={onFinishClick}
           onClose={onClose}
