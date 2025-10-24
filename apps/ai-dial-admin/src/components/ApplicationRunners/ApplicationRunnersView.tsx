@@ -190,7 +190,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles }) => {
               )}
 
               {activeTab === EntityViewTab.Parameters && (
-                <ApplicationParametersTab view={ApplicationRoute.ApplicationRunners} />
+                <ApplicationParametersTab view={ApplicationRoute.ApplicationRunners} entity={selectedRunner} />
               )}
 
               {activeTab === EntityViewTab.Applications && (

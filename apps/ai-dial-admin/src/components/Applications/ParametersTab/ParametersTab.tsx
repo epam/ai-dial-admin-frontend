@@ -187,6 +187,9 @@ const ApplicationParametersTab: FC<Props> = ({
               data={entity?.applicationProperties}
               onChangeConfiguration={onChangeConfiguration}
               onGetSchemeDefaults={onGetSchemeDefaults}
+              readonly={
+                view === ApplicationRoute.ApplicationPublications || view === ApplicationRoute.ApplicationRunners
+              }
             />
           )}
         </div>
