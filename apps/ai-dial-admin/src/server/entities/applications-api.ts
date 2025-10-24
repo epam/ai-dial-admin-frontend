@@ -27,6 +27,6 @@ export class ApplicationsApi extends BaseApi {
   }
 
   updateApplication(application: DialApplication, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(APPLICATION_URL(application.name), application, token, eTag);
+    return this.putActionWithEtag(APPLICATION_URL(encodeURIComponent(application.name || '')), application, token, eTag);
   }
 }

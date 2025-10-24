@@ -30,6 +30,6 @@ export class ApplicationRunnersApi extends BaseApi {
     token: JWT | null,
     etag: string,
   ): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(APPLICATION_SCHEME_URL(scheme.$id), scheme, token, etag);
+    return this.putActionWithEtag(APPLICATION_SCHEME_URL(encodeURIComponent(scheme.$id || '')), scheme, token, etag);
   }
 }
