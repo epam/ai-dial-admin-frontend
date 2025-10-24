@@ -23,7 +23,7 @@ const ProfileButton = () => {
       {userMenuOpen ? (
         <IconX className="text-secondary" width={24} height={24} id="close-icon" />
       ) : (
-        <UserInfo session={session} />
+        <UserInfo isMobile={true} session={session} />
       )}
     </button>
   );

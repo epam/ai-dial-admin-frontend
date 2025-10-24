@@ -19,7 +19,7 @@ import { auditTabs, EntityViewTab, interceptorsTabs, propertiesTabs } from '@/sr
 import ExtendedProperties from '@/src/components/InterceptorTemplates/Properties/ExtendedProperties';
 import Interceptors from '@/src/components/InterceptorTemplates/View/Interceptors/Interceptors';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { ButtonsI18nKey, DeleteI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -113,7 +113,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
         >
           <DialButton
             variant={ButtonVariant.Secondary}
-            title={`${t(ButtonsI18nKey.Create)} ${t(DeleteI18nKey.Interceptor).toLowerCase()}`}
+            title={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.Interceptor)})}`}
             iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
             onClick={() => setIsModalOpen(true)}
           />

@@ -1,28 +1,33 @@
 'use client';
-import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
-
+import { ButtonVariant, DialButton, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
+import { IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
-import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
+import { useRouter } from 'next/navigation';
+import { FC, useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { removeAdapter, updateAdapter } from '@/src/app/[lang]/adapters/actions';
+import { createModel } from '@/src/app/[lang]/models/actions';
 import AdapterModels from '@/src/components/Adapter/ModelsView/AdapterModels';
+import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
-import { TabsI18nKey } from '@/src/constants/i18n';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { ButtonsI18nKey, CreateI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import AdapterProperties from './AdapterProperties';
-import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
   etag: string;
@@ -42,6 +47,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, etag }) => {
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
   const [key, setKey] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     setSelectedAdapter(cloneDeep(originalAdapter));
@@ -118,7 +124,14 @@ const AdapterView: FC<Props> = ({ originalAdapter, etag }) => {
           removeEntity={removeAdapter}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-        />
+        >
+          <DialButton
+            variant={ButtonVariant.Secondary}
+            title={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.Adapter)}`}
+            iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+            onClick={() => setIsModalOpen(true)}
+          />
+        </HeaderButtons>
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
         {jsonEditorEnabled ? (
@@ -152,6 +165,18 @@ const AdapterView: FC<Props> = ({ originalAdapter, etag }) => {
             {activeTab === EntityViewTab.Audit && (
               <EntityAudit entity={selectedAdapter} view={ApplicationRoute.Adapters} />
             )}
+            {isModalOpen &&
+              createPortal(
+                <CreateEntity
+                  route={ApplicationRoute.Models}
+                  isModalOpen={isModalOpen}
+                  createEntity={createModel}
+                  onClose={() => setIsModalOpen(false)}
+                  names={[]}
+                  initialValues={{ source: { $type: SOURCE_TYPE.ADAPTER, adapterName: selectedAdapter.name } }}
+                />,
+                document.body,
+              )}
           </>
         )}
       </div>
