@@ -15,7 +15,6 @@ import {
   getAppRunner,
   getFrameConfig,
   getInitialParamsView,
-  validateAppProperties,
 } from '@/src/components/Applications/ParametersTab/utils';
 import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer';
 import FrameRenderer from '@/src/components/FrameRenderer/FrameRenderer';
@@ -32,7 +31,6 @@ import { ApplicationRoute } from '@/src/types/routes';
 import TableView from './TableView';
 import ViewControl from './ViewControl';
 import { ParamsView } from './types';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   entity?: DialApplication | DialApplicationResource;
@@ -56,7 +54,6 @@ const ApplicationParametersTab: FC<Props> = ({
   onSave,
 }) => {
   const t = useI18n() as (s: string) => string;
-  const { dispatch } = useSaveValidationContext();
   const { data: session } = useSession();
   const { currentTheme } = useTheme();
   const scheme = getAppRunner(entity as DialApplication, applicationSchemes);
@@ -96,32 +93,6 @@ const ApplicationParametersTab: FC<Props> = ({
     return viewItems.length > 1;
   }, [viewItems.length]);
 
-  const onChangeProperties = useCallback(
-    (props?: ApplicationPropertiesTemp[], isSkipRefresh?: boolean) => {
-      const newEntity = {
-        ...entity,
-        applicationPropertiesTemp: props,
-      } as unknown as BaseEntity;
-      onChangeEntity?.(newEntity, isSkipRefresh);
-    },
-    [entity, onChangeEntity],
-  );
-
-  const onChangeConfiguration = useCallback(
-    (data: Record<string, unknown>) => {
-      if (paramsView === ParamsView.FORM) {
-        const newEntity = {
-          ...entity,
-          applicationProperties: {
-            ...data,
-          },
-        } as unknown as BaseEntity;
-        onChangeEntity?.(newEntity);
-      }
-    },
-    [entity, onChangeEntity, paramsView],
-  );
-
   const onGetSchemeDefaults = useCallback(
     (data: Record<string, DefaultsValue>) => {
       if (entity?.applicationPropertiesTemp) {
@@ -136,13 +107,38 @@ const ApplicationParametersTab: FC<Props> = ({
     [entity?.applicationProperties, entity?.applicationPropertiesTemp, scheme],
   );
 
+  const onChangeProperties = useCallback(
+    (props?: ApplicationPropertiesTemp[], isSkipRefresh?: boolean) => {
+      const newEntity = {
+        ...entity,
+        applicationPropertiesTemp: props,
+      } as unknown as BaseEntity;
+      onChangeEntity?.(newEntity, isSkipRefresh);
+    },
+    [entity, onChangeEntity],
+  );
+
+  const onChangeConfiguration = useCallback(
+    (data: Record<string, DefaultsValue>) => {
+      if (paramsView === ParamsView.FORM) {
+        const newEntity = {
+          ...entity,
+          applicationProperties: {
+            ...data,
+          },
+        } as unknown as BaseEntity;
+        onGetSchemeDefaults(data);
+        onChangeEntity?.(newEntity);
+      }
+    },
+    [entity, onChangeEntity, onGetSchemeDefaults, paramsView],
+  );
+
   useEffect(() => {
     const properties =
       entity?.applicationPropertiesTemp ||
       convertAppPropertiesToArray(entity?.applicationProperties || {}, schemeProperties);
     setAppPropertiesTemp(properties);
-    const isValid = validateAppProperties(properties);
-    dispatch({ type: ValidationActionType.SetField, field: 'appProperties', isValid });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entity?.applicationPropertiesTemp, entity?.applicationProperties]);
 

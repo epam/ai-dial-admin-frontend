@@ -48,8 +48,12 @@ const TableView: FC<Props> = ({ properties, isSkipRefresh, onChangeProperties, i
   );
 
   const onChangeJSON = useCallback(
-    (_value: object, _data: ApplicationPropertiesTemp, _field: string) => {
-      onChangeProperties([...propRef.current], true);
+    (value: object, _data: ApplicationPropertiesTemp, _field: string, index?: number) => {
+      const properties = [...propRef.current];
+      const property = { ...properties[index as number] };
+      property.value = value;
+      properties.splice(index as number, 1, property);
+      onChangeProperties(properties, true);
     },
     [onChangeProperties],
   );

@@ -35,6 +35,7 @@ const SchemaUiRenderer: FC<Props> = ({ schema, data, onChangeConfiguration, onGe
       formData={data}
       onChange={onChange}
       onSubmit={onSubmit}
+      showErrorList={false}
     >
       <></>
     </SchemaForm>
