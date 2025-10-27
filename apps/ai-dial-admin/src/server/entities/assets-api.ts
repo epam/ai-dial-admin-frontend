@@ -12,8 +12,8 @@ import { getFileName } from '@/src/utils/api/get-file-name';
 import { changePath, getFolderNameAndPath } from '@/src/utils/files/path';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
-import { Tool } from '@/src/models/dial/toolset';
-import { getToolsetSignInBody, getToolsetSignOutBody } from '@/src/utils/toolset/toolset-auth';
+import { Tool, ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
+import { getToolsetSignInBody, getToolsetBasicBody } from '@/src/utils/toolset/toolset-auth';
 
 export enum ResourceOperation {
   LIST = 'list',
@@ -221,15 +221,15 @@ export class AssetsApi extends BaseApi {
     return this.get(url, token).then((res) => (res as { tools: Tool[] })?.tools || []);
   }
 
-  signInToolset(toolset: AssetToolset, token: JWT | null, authCode?: string) {
+  signInToolset(toolset: AssetToolset, type: ToolsetAuthCredentialLevel, token: JWT | null, authCode?: string) {
     const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/signin`;
 
-    return this.postAction(url, getToolsetSignInBody(toolset, authCode), token);
+    return this.postAction(url, getToolsetSignInBody(toolset, type, authCode), token);
   }
 
-  signOutToolset(toolset: AssetToolset, token: JWT | null) {
+  signOutToolset(toolset: AssetToolset, type: ToolsetAuthCredentialLevel, token: JWT | null) {
     const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/signout`;
 
-    return this.postAction(url, getToolsetSignOutBody(toolset), token);
+    return this.postAction(url, getToolsetBasicBody(toolset, type), token);
   }
 }

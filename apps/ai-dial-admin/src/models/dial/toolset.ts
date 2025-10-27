@@ -22,13 +22,18 @@ export interface ToolsetAuthSettings {
   clientSecret?: string;
   redirectUri?: string;
   authorizationEndpoint?: string;
-  codeChallenge?: string;
   codeChallengeMethod?: string;
   tokenEndpoint?: string;
   scopesSupported?: string[];
 
   globalAuthStatus?: ToolsetAuthStatus;
   userLevelAuthStatus?: ToolsetAuthStatus;
+}
+
+export enum ToolsetAuthCredentialLevel {
+  GLOBAL = 'global',
+  USER = 'user',
+  APP = 'app',
 }
 
 export enum ToolsetAuthStatus {
