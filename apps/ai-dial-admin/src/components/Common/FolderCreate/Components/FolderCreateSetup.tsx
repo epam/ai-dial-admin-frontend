@@ -11,6 +11,8 @@ import {
   DialTextInputField,
   RadioButtonWithContent,
   RadioGroupOrientation,
+  Step,
+  StepStatus,
 } from '@epam/ai-dial-ui-kit';
 
 import Json from '@/public/images/icons/file/json.svg';
@@ -19,7 +21,6 @@ import { CreateFolderSteps } from '@/src/components/Common/FolderCreate/constant
 import { BasicI18nKey, ButtonsI18nKey, FoldersI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_ZIP_TYPE } from '@/src/constants/request-headers';
 import { useI18n } from '@/src/locales/client';
-import { Step, StepStatus } from '@/src/models/step';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
@@ -35,7 +36,6 @@ interface Props {
   setZipFile: Dispatch<SetStateAction<File | null | undefined>>;
   setSeparateFiles: Dispatch<SetStateAction<File[]>>;
   setSteps: Dispatch<SetStateAction<Step[]>>;
-  setCurrentStep: Dispatch<SetStateAction<Step>>;
   setFolderName: Dispatch<SetStateAction<string>>;
   folderName: string;
   ignorePaths?: boolean;
@@ -51,7 +51,6 @@ const FolderCreateSetup: FC<Props> = ({
   setZipFile,
   setSeparateFiles,
   setSteps,
-  setCurrentStep,
   setFolderName,
   folderName,
   ignorePaths,
@@ -87,7 +86,7 @@ const FolderCreateSetup: FC<Props> = ({
 
   const setCurrentSteps = useCallback(
     (allFiles: File[], name: string, errorText?: string) => {
-      const status = allFiles.length && name && !errorText ? StepStatus.VALID : StepStatus.INVALID;
+      const status = allFiles.length && name && !errorText ? StepStatus.VALID : void 0;
       setSteps((prev) => {
         const setupStepIndex = prev.findIndex((step) => step.id === CreateFolderSteps.FOLDER_SETUP);
         return prev.map((item, i) => {
@@ -101,14 +100,8 @@ const FolderCreateSetup: FC<Props> = ({
           }
         });
       });
-      setCurrentStep((prev) => {
-        return {
-          ...prev,
-          status,
-        };
-      });
     },
-    [setCurrentStep, setSteps],
+    [setSteps],
   );
 
   const changeName = useCallback(
