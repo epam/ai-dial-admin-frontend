@@ -1,19 +1,18 @@
 'use client';
 
-import { Dispatch, FC, SetStateAction } from 'react';
+import { FC } from 'react';
 
+import { ButtonVariant, DialButton, Step, StepStatus } from '@epam/ai-dial-ui-kit';
 import { IconArrowNarrowLeft } from '@tabler/icons-react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { Step, StepStatus } from '@/src/models/step';
 
 interface Props {
   steps: Step[];
-  currentStep: Step;
-  setCurrentStep: Dispatch<SetStateAction<Step>>;
+  currentStep?: Step;
+  setCurrentStep: (id: string) => void;
   onFinishClick: () => void;
   onClose: () => void;
 }
@@ -22,19 +21,19 @@ const FolderCreateModalButtons: FC<Props> = ({ steps, currentStep, setCurrentSte
   const t = useI18n();
 
   const onNextStep = () => {
-    const stepIndex = steps.findIndex((s) => s.id === currentStep.id);
-    setCurrentStep(steps[stepIndex + 1]);
+    const stepIndex = steps.findIndex((s) => s.id === currentStep?.id);
+    setCurrentStep(steps[stepIndex + 1]?.id as string);
   };
 
   const onPrevStep = () => {
-    const stepIndex = steps.findIndex((s) => s.id === currentStep.id);
-    setCurrentStep(steps[stepIndex - 1]);
+    const stepIndex = steps.findIndex((s) => s.id === currentStep?.id);
+    setCurrentStep(steps[stepIndex - 1]?.id as string);
   };
 
   return (
     <div className="flex flex-row items-center justify-between gap-2 px-6 py-4">
       <div>
-        {currentStep.id !== steps[0]?.id && (
+        {currentStep?.id !== steps[0]?.id && (
           <DialButton
             variant={ButtonVariant.Tertiary}
             title={t(ButtonsI18nKey.Back)}
@@ -45,15 +44,15 @@ const FolderCreateModalButtons: FC<Props> = ({ steps, currentStep, setCurrentSte
       </div>
       <div className="flex gap-2">
         <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        {currentStep.id !== steps.at(-1)?.id && (
+        {currentStep?.id !== steps.at(-1)?.id && (
           <DialButton
             variant={ButtonVariant.Primary}
             title={t(ButtonsI18nKey.Next)}
             onClick={onNextStep}
-            disable={currentStep.status !== StepStatus.VALID}
+            disable={currentStep?.status !== StepStatus.VALID}
           />
         )}
-        {currentStep.id === steps.at(-1)?.id && (
+        {currentStep?.id === steps.at(-1)?.id && (
           <DialButton
             variant={ButtonVariant.Primary}
             title={t(ButtonsI18nKey.Finish)}

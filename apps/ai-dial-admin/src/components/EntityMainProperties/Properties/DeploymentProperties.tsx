@@ -34,6 +34,7 @@ interface Props {
   runners?: DialApplicationScheme[];
   isEntityImmutable?: boolean;
   onChangeEntity: (entity: ChatEntity) => void;
+  initialValues?: Partial<ChatEntity>;
 }
 
 const DeploymentProperties: FC<Props> = ({
@@ -44,6 +45,7 @@ const DeploymentProperties: FC<Props> = ({
   isUniqueNameError,
   onChangeEntity,
   isEntityImmutable = false,
+  initialValues,
 }) => {
   const t = useI18n() as (str: string, param?: Record<string, number>) => string;
   const { dispatch } = useSaveValidationContext();
@@ -142,7 +144,7 @@ const DeploymentProperties: FC<Props> = ({
 
         <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
 
-        {view === ApplicationRoute.Applications && !isEntityImmutable && (
+        {view === ApplicationRoute.Applications && !isEntityImmutable && !initialValues && (
           <ApplicationSource
             entity={entity}
             runners={runners}

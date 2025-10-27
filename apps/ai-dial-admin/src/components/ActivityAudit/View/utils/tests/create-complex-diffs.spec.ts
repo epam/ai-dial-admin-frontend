@@ -711,7 +711,7 @@ describe('Activity audit :: compareDefaults', () => {
     const val1 = {};
     const val2 = { defaultKey: 'newValue' };
 
-    compareDefaults(diffMap, val1, val2);
+    compareDefaults(diffMap, 'defaults', val1, val2);
 
     const sectionKey = `${EntityParameterKeys.DEFAULTS}0`;
     expect(diffMap[sectionKey]).toHaveLength(3);
@@ -727,7 +727,7 @@ describe('Activity audit :: compareDefaults', () => {
     const val1 = { defaultKey: 'oldValue' };
     const val2 = {};
 
-    compareDefaults(diffMap, val1, val2);
+    compareDefaults(diffMap, 'defaults', val1, val2);
 
     const sectionKey = `${EntityParameterKeys.DEFAULTS}0`;
     const diff = diffMap[sectionKey];
@@ -744,7 +744,7 @@ describe('Activity audit :: compareDefaults', () => {
     const val1 = { defaultKey: 'oldValue' };
     const val2 = { defaultKey: 'newValue' };
 
-    compareDefaults(diffMap, val1, val2);
+    compareDefaults(diffMap, 'defaults', val1, val2);
 
     const sectionKey = `${EntityParameterKeys.DEFAULTS}0`;
     expect(diffMap[sectionKey]).toEqual([
@@ -759,7 +759,7 @@ describe('Activity audit :: compareDefaults', () => {
     const val1 = { defaultKey: 'same' };
     const val2 = { defaultKey: 'same' };
 
-    compareDefaults(diffMap, val1, val2);
+    compareDefaults(diffMap, 'defaults', val1, val2);
 
     const sectionKey = `${EntityParameterKeys.DEFAULTS}0`;
     expect(diffMap[sectionKey]).toEqual([
@@ -774,7 +774,7 @@ describe('Activity audit :: compareDefaults', () => {
     const val1 = { first: 'A', second: 'B' };
     const val2 = { first: 'C', second: 'B' };
 
-    compareDefaults(diffMap, val1, val2);
+    compareDefaults(diffMap, 'defaults', val1, val2);
 
     expect(Object.keys(diffMap)).toEqual([`${EntityParameterKeys.DEFAULTS}0`, `${EntityParameterKeys.DEFAULTS}1`]);
     expect(diffMap[`${EntityParameterKeys.DEFAULTS}0`].some((d) => d.status === DiffStatus.CHANGED)).toBe(true);
@@ -786,7 +786,7 @@ describe('Activity audit :: compareDefaults', () => {
     const val1 = {};
     const val2 = { newKey: 'newValue' };
 
-    compareDefaults(diffMap, val1, val2, true);
+    compareDefaults(diffMap, 'defaults', val1, val2, true);
 
     const sectionKey = `${EntityParameterKeys.DEFAULTS}0`;
     expect(diffMap[sectionKey].some((d) => d.status === DiffStatus.MIRROR)).toBe(true);
@@ -797,7 +797,7 @@ describe('Activity audit :: compareDefaults', () => {
     const val1 = { numberKey: 10, boolKey: true };
     const val2 = { numberKey: 15, boolKey: false };
 
-    compareDefaults(diffMap, val1, val2);
+    compareDefaults(diffMap, 'defaults', val1, val2);
 
     const keys = Object.keys(diffMap);
     expect(keys.length).toBe(2);
@@ -807,7 +807,7 @@ describe('Activity audit :: compareDefaults', () => {
 
   test('should not crash when both objects are empty', () => {
     const diffMap: Record<string, ActivityAuditDiff[]> = {};
-    compareDefaults(diffMap, {}, {});
+    compareDefaults(diffMap, 'defaults', {}, {});
     expect(diffMap).toEqual({});
   });
 });
@@ -817,7 +817,7 @@ describe('Activity audit :: fillDefaults', () => {
     const diffMap: Record<string, ActivityAuditDiff[]> = {};
     const value = { defaultKey: 'value1' };
 
-    fillDefaults(diffMap, value);
+    fillDefaults(diffMap, 'defaults', value);
 
     const sectionKey = `${EntityParameterKeys.DEFAULTS}0`;
     expect(Object.keys(diffMap)).toContain(sectionKey);
@@ -832,7 +832,7 @@ describe('Activity audit :: fillDefaults', () => {
     const diffMap: Record<string, ActivityAuditDiff[]> = {};
     const value = { first: 'one', second: 'two', third: 'three' };
 
-    fillDefaults(diffMap, value);
+    fillDefaults(diffMap, 'defaults', value);
 
     expect(Object.keys(diffMap)).toEqual([
       `${EntityParameterKeys.DEFAULTS}0`,
@@ -853,7 +853,7 @@ describe('Activity audit :: fillDefaults', () => {
       b: true,
     };
 
-    fillDefaults(diffMap, value);
+    fillDefaults(diffMap, 'defaults', value);
 
     const sections = Object.values(diffMap);
     const types = sections.map((diffs) => diffs.find((d) => d.parameter === 'type')?.value);
@@ -866,7 +866,7 @@ describe('Activity audit :: fillDefaults', () => {
     };
     const value = { newKey: 'newVal' };
 
-    fillDefaults(diffMap, value);
+    fillDefaults(diffMap, 'defaults', value);
 
     expect(diffMap[`${EntityParameterKeys.DEFAULTS}0`]).toEqual([
       { parameter: 'existing', value: 'keep' },
@@ -878,7 +878,7 @@ describe('Activity audit :: fillDefaults', () => {
 
   test('should not crash with empty object', () => {
     const diffMap: Record<string, ActivityAuditDiff[]> = {};
-    fillDefaults(diffMap, {});
+    fillDefaults(diffMap, 'defaults', {});
     expect(diffMap).toEqual({});
   });
 });
