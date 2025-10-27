@@ -17,7 +17,40 @@ interface Props {
 
 const ParameterSchema: FC<Props> = ({ schemaURL, name, configuration, onChangeConfiguration }) => {
   const t = useI18n();
-  const [schema, setSchema] = useState<RJSFSchema | null>(null);
+  const [schema, setSchema] = useState<RJSFSchema | null>({
+    $defs: {
+      DeIdentificationConfig: {
+        additionalProperties: true,
+        properties: {
+          info_types: {
+            default: ['PHONE_NUMBER', 'FIRST_NAME', 'LAST_NAME'],
+            items: {
+              type: 'string',
+            },
+            title: 'Info Types',
+            type: 'array',
+          },
+        },
+        title: 'DeIdentificationConfig',
+        type: 'object',
+      },
+    },
+    additionalProperties: true,
+    properties: {
+      deidentification_config: {
+        allOf: [
+          {
+            $ref: '#/$defs/DeIdentificationConfig',
+          },
+        ],
+        default: {
+          info_types: ['PHONE_NUMBER', 'FIRST_NAME', 'LAST_NAME'],
+        },
+      },
+    },
+    title: 'GoogleDLPAnonymizerConfig',
+    type: 'object',
+  });
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
