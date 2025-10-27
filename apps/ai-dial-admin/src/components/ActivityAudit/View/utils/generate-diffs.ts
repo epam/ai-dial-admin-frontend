@@ -214,8 +214,14 @@ export const compareObjectArray = (
   if (key === EntityParameterKeys.UPSTREAMS) {
     compareUpstreams(diffMap, val1 as DialModelEndpoint[], val2 as DialModelEndpoint[], isCurrent);
   }
-  if (key === EntityParameterKeys.DEFAULTS) {
-    compareDefaults(diffMap, val1 as Record<string, DefaultsValue>, val2 as Record<string, DefaultsValue>, isCurrent);
+  if (key === EntityParameterKeys.DEFAULTS || key === EntityParameterKeys.APP_PROPERTIES) {
+    compareDefaults(
+      diffMap,
+      key,
+      val1 as Record<string, DefaultsValue>,
+      val2 as Record<string, DefaultsValue>,
+      isCurrent,
+    );
   }
 };
 
@@ -234,8 +240,8 @@ export const fillObjectArray = (
   if (key === EntityParameterKeys.UPSTREAMS) {
     fillUpstreams(diffMap, value as DialModelEndpoint[]);
   }
-  if (key === EntityParameterKeys.DEFAULTS) {
-    fillDefaults(diffMap, value as Record<string, DefaultsValue>);
+  if (key === EntityParameterKeys.DEFAULTS || key === EntityParameterKeys.APP_PROPERTIES) {
+    fillDefaults(diffMap, key, value as Record<string, DefaultsValue>);
   }
 };
 
@@ -353,6 +359,7 @@ export const createSectionFromDiffs = (
     EntityParameterKeys.MODELS,
     EntityParameterKeys.DEPENDENCIES,
     EntityParameterKeys.DEFAULTS,
+    EntityParameterKeys.APP_PROPERTIES,
     EntityParameterKeys.SHARE,
   ];
   const sections: ActivityAuditSection = {};
@@ -360,7 +367,11 @@ export const createSectionFromDiffs = (
   sectionNames.forEach((name) => {
     if (name == EntityParameterKeys.ROLES) {
       setRolesDiffs(sections, current, compare);
-    } else if (name === EntityParameterKeys.UPSTREAMS || name === EntityParameterKeys.DEFAULTS) {
+    } else if (
+      name === EntityParameterKeys.UPSTREAMS ||
+      name === EntityParameterKeys.DEFAULTS ||
+      name === EntityParameterKeys.APP_PROPERTIES
+    ) {
       setObjectsArrayDiff(sections, name, current, compare);
     } else {
       const currentItem = current[name];

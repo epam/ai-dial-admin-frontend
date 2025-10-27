@@ -228,19 +228,21 @@ export const fillUpstreams = (diffMap: Record<string, ActivityAuditDiff[]>, valu
  * Compare defaults
  *
  * @param {Record<string, ActivityAuditDiff[]>} diffMap - result map
+ * @param {string} key - resource key
  * @param {Record<string, DefaultsValue>} val1 - first value to compare
  * @param {Record<string, DefaultsValue>} val2 - second value to compare
  * @param {?boolean} [isCurrent] - flag if current state is compared
  */
 export const compareDefaults = (
   diffMap: Record<string, ActivityAuditDiff[]>,
+  key: string,
   val1: Record<string, DefaultsValue>,
   val2: Record<string, DefaultsValue>,
   isCurrent?: boolean,
 ): void => {
   const allKeys = [...new Set([...Object.keys(val1), ...Object.keys(val2)])].sort();
   allKeys.forEach((defaultKey, index) => {
-    const sectionKey = `${EntityParameterKeys.DEFAULTS}${index}`;
+    const sectionKey = `${key}${index}`;
     if (!diffMap[sectionKey]) diffMap[sectionKey] = [];
     const v1 = val1[defaultKey];
     const v2 = val2[defaultKey];
@@ -263,11 +265,16 @@ export const compareDefaults = (
  * Fill defaults diff
  *
  * @param {Record<string, ActivityAuditDiff[]>} diffMap - result map
+ * @param {string} key - resource key
  * @param {Record<string, DefaultsValue>} value - value to fill
  */
-export const fillDefaults = (diffMap: Record<string, ActivityAuditDiff[]>, value: Record<string, DefaultsValue>) => {
+export const fillDefaults = (
+  diffMap: Record<string, ActivityAuditDiff[]>,
+  key: string,
+  value: Record<string, DefaultsValue>,
+) => {
   Object.keys(value).forEach((val, index) => {
-    const sectionKey = `${EntityParameterKeys.DEFAULTS}${index}`;
+    const sectionKey = `${key}${index}`;
     if (!diffMap[sectionKey]) diffMap[sectionKey] = [];
     fillSimpleObjects(diffMap[sectionKey], { key: val, value: value[val], type: typeof value[val] });
   });
