@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ButtonVariant, DialButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { RJSFSchema } from '@rjsf/utils';
@@ -31,6 +31,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import TableView from './TableView';
 import ViewControl from './ViewControl';
 import { ParamsView } from './types';
+import EntityJsonEditor from '../../EntityView/JsonEditor/JsonEditor';
 
 interface Props {
   entity?: DialApplication | DialApplicationResource;
@@ -41,6 +42,9 @@ interface Props {
   isChanged?: boolean;
   isSkipRefresh?: boolean;
   onSave?: () => void;
+  key?: number;
+  setIsChanged?: Dispatch<SetStateAction<boolean>>;
+  setSelectedEntity?: Dispatch<SetStateAction<BaseEntity>>;
 }
 
 const ApplicationParametersTab: FC<Props> = ({
@@ -52,6 +56,9 @@ const ApplicationParametersTab: FC<Props> = ({
   isChanged,
   isSkipRefresh,
   onSave,
+  key,
+  setIsChanged,
+  setSelectedEntity,
 }) => {
   const t = useI18n() as (s: string) => string;
   const { data: session } = useSession();
@@ -144,31 +151,41 @@ const ApplicationParametersTab: FC<Props> = ({
 
   return (
     <div className="flex flex-col w-full h-full pt-5">
-      <div className="flex flex-row justify-between mb-2">
-        <div className="flex flex-row gap-4 items-center">
-          <h1>{t(TabsI18nKey.Parameters)}</h1>
-          {showDropdown && (
-            <ViewControl
-              items={viewItems}
-              paramsView={paramsView}
-              setParamsView={setParamsView}
-              isChanged={isChanged}
-              onSave={onSave}
-            />
-          )}
+      {!jsonEditorEnabled && (
+        <div className="flex flex-row justify-between mb-2">
+          <div className="flex flex-row gap-4 items-center">
+            <h1>{t(TabsI18nKey.Parameters)}</h1>
+            {showDropdown && (
+              <ViewControl
+                items={viewItems}
+                paramsView={paramsView}
+                setParamsView={setParamsView}
+                isChanged={isChanged}
+                onSave={onSave}
+              />
+            )}
+          </div>
+          <div className="flex flex-row gap-4">
+            {paramsView === ParamsView.TABLE && (
+              <DialButton
+                variant={ButtonVariant.Primary}
+                iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+                title={t(ButtonsI18nKey.Add)}
+                onClick={() => setIsAddClicked(true)}
+              />
+            )}
+          </div>
         </div>
-        <div className="flex flex-row gap-4">
-          {paramsView === ParamsView.TABLE && (
-            <DialButton
-              variant={ButtonVariant.Primary}
-              iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-              title={t(ButtonsI18nKey.Add)}
-              onClick={() => setIsAddClicked(true)}
-            />
-          )}
-        </div>
-      </div>
+      )}
       <div className="flex-1 min-h-0">
+        {paramsView !== ParamsView.UI && jsonEditorEnabled && (
+          <EntityJsonEditor
+            key={key}
+            entity={entity as BaseEntity}
+            setSelectedEntity={setSelectedEntity as Dispatch<SetStateAction<BaseEntity>>}
+            setIsChanged={setIsChanged}
+          />
+        )}
         {paramsView === ParamsView.TABLE && (
           <TableView
             isAddClicked={isAddClicked}

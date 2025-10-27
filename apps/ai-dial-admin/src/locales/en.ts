@@ -861,6 +861,7 @@ export default {
     tool_setInvitationTtl: 'Toolsets expiration time',
     tool_setMaxAcceptedUsers: 'Toolsets max users',
     new_key: 'New key',
+    applicationProperties: 'Application properties',
   },
   EntityPlaceholders: {
     Project: 'Enter project',

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
 
 import { DialTabs } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
@@ -151,6 +151,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
           </div>
         )}
         <HeaderButtons
+          activeTab={activeTab}
           view={ApplicationRoute.AssetsApplications}
           entity={selectedApp}
           isChanged={isChanged}
@@ -164,7 +165,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
         />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
-        {jsonEditorEnabled ? (
+        {jsonEditorEnabled && !(ApplicationRoute.AssetsApplications && activeTab === EntityViewTab.Parameters) ? (
           <EntityJsonEditor
             key={key}
             entity={selectedApp}
@@ -187,6 +188,9 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
             isChanged={isChanged}
             onSave={onSave}
             onChangeEntity={onChangeEntity as (entity: BaseEntity) => void}
+            key={key}
+            setIsChanged={setIsChanged}
+            setSelectedEntity={setSelectedApp as Dispatch<SetStateAction<BaseEntity>>}
           />
         )}
       </div>

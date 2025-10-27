@@ -28,7 +28,14 @@ interface Props {
   initialValues?: Partial<BaseEntity>;
 }
 
-const EntityProperties: FC<Props> = ({ view, entity, names, onChangeEntity, isEntityImmutable = false }) => {
+const EntityProperties: FC<Props> = ({
+  view,
+  entity,
+  names,
+  onChangeEntity,
+  isEntityImmutable = false,
+  initialValues,
+}) => {
   const t = useI18n() as (t: string) => string;
   const { dispatch } = useSaveValidationContext();
   const { embeddedApps } = useAppContext();
@@ -66,7 +73,7 @@ const EntityProperties: FC<Props> = ({ view, entity, names, onChangeEntity, isEn
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
 
-      {view === ApplicationRoute.Interceptors && !isEntityImmutable && (
+      {view === ApplicationRoute.Interceptors && !isEntityImmutable && !initialValues && (
         <SourceField
           view={ApplicationRoute.Interceptors}
           entity={entity}

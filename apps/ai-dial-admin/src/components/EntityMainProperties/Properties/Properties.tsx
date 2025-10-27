@@ -16,6 +16,7 @@ interface Props<T> {
   isUniqueNameError?: boolean;
   isEntityImmutable?: boolean;
   onChangeEntity: (entity: object) => void;
+  initialValues?: Partial<T>;
 }
 
 const Properties = <T extends object>({

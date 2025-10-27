@@ -933,6 +933,7 @@ export enum EntityFieldsI18nKey {
   'tool_set.invitationTtl' = 'EntityFields.tool_setInvitationTtl',
   'tool_set.maxAcceptedUsers' = 'EntityFields.tool_setMaxAcceptedUsers',
   new_key = 'EntityFields.new_key',
+  applicationProperties = 'EntityFields.applicationProperties',
 }
 
 export enum ToolsetI18nKey {

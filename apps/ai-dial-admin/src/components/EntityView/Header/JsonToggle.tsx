@@ -2,11 +2,12 @@
 
 import { FC, useEffect, useState } from 'react';
 
-import classNames from 'classnames';
 import { DialSwitch } from '@epam/ai-dial-ui-kit';
+import classNames from 'classnames';
 
 import Dropdown from '@/src/components/Common/Dropdown/Dropdown';
 import DropdownMenuItem from '@/src/components/Common/Dropdown/DropdownItem';
+import { EntityViewTab } from '@/src/components/EntityView/View/utils';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
@@ -26,13 +27,21 @@ const ONLY_ADMIN_ENTITIES = [
 
 interface Props {
   view: ApplicationRoute;
+  activeTab?: EntityViewTab;
   selectedFormat?: ExportFormat;
   setSelectedFormat?: (format: ExportFormat) => void;
   jsonEditorEnabled: boolean;
   toggleJsonEditor?: () => void;
 }
 
-const JsonToggles: FC<Props> = ({ view, jsonEditorEnabled, selectedFormat, setSelectedFormat, toggleJsonEditor }) => {
+const JsonToggles: FC<Props> = ({
+  view,
+  activeTab,
+  jsonEditorEnabled,
+  selectedFormat,
+  setSelectedFormat,
+  toggleJsonEditor,
+}) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
   const staticEditorClassNames = 'pl-6 flex flex-row gap-x-3';
   const isTablet = useIsOnlyTabletScreen();
@@ -61,7 +70,12 @@ const JsonToggles: FC<Props> = ({ view, jsonEditorEnabled, selectedFormat, setSe
 
   return (
     <div className={classNames(editorClassNames)}>
-      {jsonEditorEnabled && !ONLY_ADMIN_ENTITIES.includes(view) ? (
+      {jsonEditorEnabled &&
+      !ONLY_ADMIN_ENTITIES.includes(view) &&
+      !(
+        (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications) &&
+        activeTab === EntityViewTab.Parameters
+      ) ? (
         <Dropdown
           selectedValue={selectedFormat == ExportFormat.CORE ? items[0] : items[1]}
           selectedClassName="bg-layer-4 cursor-pointer h-[22px] px-1 small rounded flex items-center justify-center"
