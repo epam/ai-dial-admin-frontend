@@ -2,7 +2,7 @@ import { JWT } from 'next-auth/jwt';
 
 import { DEFAULT_ETAG, IF_MATCH, IF_NONE_MATCH } from '@/src/constants/api-headers';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { Asset } from '@/src/models/dial/deployment-asset';
+import { Asset, AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -13,6 +13,7 @@ import { changePath, getFolderNameAndPath } from '@/src/utils/files/path';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
 import { Tool } from '@/src/models/dial/toolset';
+import { getToolsetSignInBody, getToolsetSignOutBody } from '@/src/utils/toolset/toolset-auth';
 
 export enum ResourceOperation {
   LIST = 'list',
@@ -168,7 +169,7 @@ export class AssetsApi extends BaseApi {
     return this.postFiles(url, body, token);
   }
 
-  // PROMPT SPECIFIC
+  // Prompt specific
 
   exportPrompts(
     token: JWT | null,
@@ -186,7 +187,7 @@ export class AssetsApi extends BaseApi {
     });
   }
 
-  // FILES SPECIFIC
+  // File specific
 
   downloadFile(token: JWT | null, path: string): Promise<Response> {
     const url = this.buildUrl(ResourceType.FILE, ResourceOperation.DOWNLOAD);
@@ -218,5 +219,17 @@ export class AssetsApi extends BaseApi {
   getTools(name: string, token: JWT | null) {
     const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/${name}/discovered-tools`;
     return this.get(url, token).then((res) => (res as { tools: Tool[] })?.tools || []);
+  }
+
+  signInToolset(toolset: AssetToolset, token: JWT | null, authCode?: string) {
+    const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/signin`;
+
+    return this.postAction(url, getToolsetSignInBody(toolset, authCode), token);
+  }
+
+  signOutToolset(toolset: AssetToolset, token: JWT | null) {
+    const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/signout`;
+
+    return this.postAction(url, getToolsetSignOutBody(toolset), token);
   }
 }

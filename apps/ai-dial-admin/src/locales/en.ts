@@ -974,5 +974,6 @@ export default {
     WithLogin: 'With login',
     WithLoginAndConfig: 'With login & configuration',
     WithoutLogin: 'Without login',
+    LogIn: 'Log In',
   },
 } as const;

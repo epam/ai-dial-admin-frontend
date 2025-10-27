@@ -5,7 +5,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
-import { DialTabs } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
 
 import { getToolsets, moveToolsets, removeToolset, updateToolset } from '@/src/app/[lang]/assets-toolsets/actions';
 import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
@@ -28,6 +28,9 @@ import { getErrorNotification } from '@/src/utils/notification';
 import ToolsView from '@/src/components/Toolsets/Tools/Tools';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
+import { ToolsetI18nKey } from '../../../constants/i18n';
+import { IconLogin } from '@tabler/icons-react';
+import { BASE_ICON_PROPS } from '../../../constants/main-layout';
 
 interface Props {
   etag: string;
@@ -133,6 +136,10 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
     [etag],
   );
 
+  const onLogin = useCallback(() => {
+    console.log('Log In clicked');
+  }, []);
+
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={headerClassName}>
@@ -152,7 +159,15 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
           toggleJsonEditor={toggleJsonEditor}
           existingVersions={toolsets?.map((app) => app.version) || []}
           context={useToolsetFolder as () => AssetsFolderContext<DialFile | AssetToolset>}
-        />
+          childrenContainerClass="flex-row-reverse"
+        >
+          <DialButton
+            variant={ButtonVariant.Secondary}
+            title={t(ToolsetI18nKey.LogIn)}
+            iconBefore={<IconLogin {...BASE_ICON_PROPS} />}
+            onClick={onLogin}
+          />
+        </HeaderButtons>
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
         {jsonEditorEnabled ? (

@@ -954,4 +954,5 @@ export enum ToolsetI18nKey {
   WithLogin = 'Toolset.WithLogin',
   WithLoginAndConfig = 'Toolset.WithLoginAndConfig',
   WithoutLogin = 'Toolset.WithoutLogin',
+  LogIn = 'Toolset.LogIn',
 }

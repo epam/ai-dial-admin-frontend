@@ -5,7 +5,7 @@ import { cookies, headers } from 'next/headers';
 import { deploymentsApi, toolSetsApi } from '@/src/app/api/api';
 import { Toolset } from '@/src/models/dial/toolset';
 import { getUserToken } from '@/src/utils/auth/auth-request';
-import { getAllowTools, getTransport } from '@/src/utils/entities/toolset-transport';
+import { getAllowTools, getTransport } from '@/src/utils/toolset/toolset-transport';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export async function removeToolset(name?: string) {

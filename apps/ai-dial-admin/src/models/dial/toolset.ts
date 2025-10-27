@@ -24,6 +24,15 @@ export interface ToolsetAuthSettings {
   authorizationEndpoint?: string;
   tokenEndpoint?: string;
   scopesSupported?: string[];
+
+  globalAuthStatus?: ToolsetAuthStatus;
+  userLevelAuthStatus?: ToolsetAuthStatus;
+}
+
+export enum ToolsetAuthStatus {
+  SIGNED_OUT = 'signed_out',
+  SIGNED_IN = 'signed_in',
+  FAILED = 'failed',
 }
 
 export enum ToolsetAuthType {
