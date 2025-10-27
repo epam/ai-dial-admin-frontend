@@ -43,6 +43,7 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 
 interface Props {
   view: ApplicationRoute;
+  activeTab: EntityViewTab;
   originalEntity: BaseEntity;
   names: string[];
   etag: string;
@@ -289,6 +290,7 @@ const EntityView: FC<Props> = ({
           )}
           <HeaderButtons
             view={view}
+            activeTab={activeTab}
             entity={selectedEntity}
             isChanged={isChanged}
             onSave={onTryToSave}

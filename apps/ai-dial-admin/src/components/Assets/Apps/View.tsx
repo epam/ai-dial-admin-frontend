@@ -151,6 +151,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
           </div>
         )}
         <HeaderButtons
+          activeTab={activeTab}
           view={ApplicationRoute.AssetsApplications}
           entity={selectedApp}
           isChanged={isChanged}
