@@ -304,7 +304,7 @@ const EntityView: FC<Props> = ({
         </div>
 
         <div className="flex-1 overflow-auto mt-3 min-h-0">
-          {jsonEditorEnabled ? (
+          {jsonEditorEnabled && !(ApplicationRoute.Applications && activeTab === EntityViewTab.Parameters) ? (
             <EntityJsonEditor
               key={key}
               entity={selectedEntity}
@@ -324,6 +324,9 @@ const EntityView: FC<Props> = ({
                 onChangeEntity={onChangeEntity}
                 isChanged={isChanged}
                 onSave={onSave}
+                key={key}
+                setIsChanged={setIsChanged}
+                setSelectedEntity={setSelectedEntity}
                 {...props}
               />
             )
