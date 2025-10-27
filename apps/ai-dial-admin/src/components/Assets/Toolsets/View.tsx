@@ -3,34 +3,41 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
+import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
+import { IconLogin } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
-import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
 
-import { getToolsets, moveToolsets, removeToolset, updateToolset } from '@/src/app/[lang]/assets-toolsets/actions';
+import {
+  getToolsets,
+  moveToolsets,
+  removeToolset,
+  signInToolset,
+  updateToolset,
+} from '@/src/app/[lang]/assets-toolsets/actions';
 import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
 import { EntityViewTab, propertiesTabs, toolsTabs } from '@/src/components/EntityView/View/utils';
+import ToolsView from '@/src/components/Toolsets/Tools/Tools';
 import { ROOT_FOLDER } from '@/src/constants/file';
+import { ToolsetI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialFile } from '@/src/models/dial/file';
-import { Toolset } from '@/src/models/dial/toolset';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
+import { DialFile } from '@/src/models/dial/file';
+import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
-import ToolsView from '@/src/components/Toolsets/Tools/Tools';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
-import { ToolsetI18nKey } from '../../../constants/i18n';
-import { IconLogin } from '@tabler/icons-react';
-import { BASE_ICON_PROPS } from '../../../constants/main-layout';
+import { encodeToolsetRedirectState } from '@/src/utils/toolset/toolset-auth';
 
 interface Props {
   etag: string;
@@ -137,8 +144,43 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
   );
 
   const onLogin = useCallback(() => {
-    console.log('Log In clicked');
-  }, []);
+    const authSettings = selectedToolset.authSettings;
+    if (authSettings && authSettings?.authenticationType === ToolsetAuthType.OAUTH) {
+      const callbackUrl = `${window.location.pathname}${window.location.search}`;
+      const state = {
+        callbackUrl,
+        toolsetId: selectedToolset.name,
+        credentialsLevel: authSettings.authenticationType,
+      };
+
+      const url = new URL(authSettings.authorizationEndpoint as string);
+      url.searchParams.set('response_type', 'code');
+      url.searchParams.set('client_id', authSettings.clientId as string);
+      // url.searchParams.set('redirect_uri', `${window.location.origin}${Routes.ToolsetSignIn}`);
+
+      if (authSettings.codeChallenge) {
+        url.searchParams.set('code_challenge', authSettings.codeChallenge);
+      }
+      if (authSettings.codeChallengeMethod) {
+        url.searchParams.set('code_challenge_method', authSettings.codeChallengeMethod);
+      }
+
+      url.searchParams.set('state', encodeToolsetRedirectState(state));
+      if (authSettings.scopesSupported) {
+        url.searchParams.set('scope', authSettings.scopesSupported?.join(' '));
+      }
+
+      window.location.assign(url.toString());
+    } else {
+      signInToolset(selectedToolset).then((res) => {
+        if (res.success) {
+          console.log('Sign-in successful', res);
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        }
+      });
+    }
+  }, [selectedToolset, showNotification]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">

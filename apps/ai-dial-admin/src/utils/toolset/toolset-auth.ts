@@ -26,3 +26,14 @@ export const getToolsetSignOutBody = (toolset: AssetToolset) => {
     authenticationType: toolset.authSettings?.authenticationType,
   };
 };
+
+export const encodeToolsetRedirectState = (state: Record<string, string | undefined>): string => {
+  const json = JSON.stringify(state);
+  const bytes = new TextEncoder().encode(json);
+  let bin = '';
+  for (const b of bytes) {
+    bin += String.fromCharCode(b);
+  }
+  const b64 = btoa(bin);
+  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+};
