@@ -43,7 +43,7 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 
 interface Props {
   view: ApplicationRoute;
-  activeTab: EntityViewTab;
+  activeTab?: EntityViewTab;
   originalEntity: BaseEntity;
   names: string[];
   etag: string;
