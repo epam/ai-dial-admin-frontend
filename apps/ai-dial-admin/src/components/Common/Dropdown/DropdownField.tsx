@@ -7,10 +7,8 @@ import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import Dropdown from './Dropdown';
 import DropdownMenuItem from './DropdownItem';
 import classNames from 'classnames';
-// TODO: temp: remove when use DropdownField from @epam/ai-dial-ui-kit
-import { DialInputFieldBaseProps } from '@epam/ai-dial-ui-kit/dist/src/components/InputField/InputField';
 
-interface Props extends DialInputFieldBaseProps {
+interface Props {
   items: DropdownItemsModel[];
   selectedClassName?: string;
   selectedValue?: string;
@@ -19,6 +17,13 @@ interface Props extends DialInputFieldBaseProps {
   prefix?: string;
   children?: ReactNode;
   listClassName?: string;
+  fieldTitle?: string;
+  optional?: boolean;
+  elementId?: string;
+  containerCssClass?: string;
+  elementCssClass?: string;
+  disabled?: boolean;
+  placeholder?: string;
 }
 
 const DropdownField: FC<Props> = ({
@@ -30,8 +35,6 @@ const DropdownField: FC<Props> = ({
   selectedValue,
   children,
   multipleValues,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  value,
   ...props
 }) => {
   return (
