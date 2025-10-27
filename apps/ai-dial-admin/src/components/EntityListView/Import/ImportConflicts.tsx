@@ -2,7 +2,7 @@
 import { Dispatch, FC, SetStateAction, useCallback } from 'react';
 
 import { CellValueChangedEvent, ColDef, GridReadyEvent, RowClassRules } from 'ag-grid-community';
-import { DialRadioGroup, RadioGroupOrientation, RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
+import { DialRadioGroup, RadioGroupOrientation, RadioButtonWithContent, StepStatus } from '@epam/ai-dial-ui-kit';
 
 import {
   changeFilesMap,
@@ -19,7 +19,6 @@ import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
-import { StepStatus } from '@/src/models/step';
 import { ConflictResolutionPolicy } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 

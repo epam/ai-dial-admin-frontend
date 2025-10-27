@@ -142,7 +142,7 @@ const Sidebar: FC<Props> = ({ isSidebarOpen, side, itemComponent }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const menuClassNames = `flex max-w-[95%] border-tertiary md:max-w-[45%] z-[100] ${isMobile ? 'absolute' : ''}`;
+  const menuClassNames = `flex max-w-[95%] border-tertiary md:max-w-[45%] z-[50] ${isMobile ? 'absolute' : ''}`;
 
   return isSidebarOpen ? (
     <Resizable ref={sideBarElementRef} {...resizeSettings} className={menuClassNames}>
