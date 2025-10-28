@@ -48,6 +48,10 @@ const nextConfig = {
             value: 'nosniff',
           },
           {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
             key: 'Cache-Control',
             value: 'no-store, no-cache, must-revalidate, proxy-revalidate', // Adjust as needed
           },
