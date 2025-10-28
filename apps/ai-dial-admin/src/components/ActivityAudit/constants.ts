@@ -42,6 +42,7 @@ export enum EntityParameterKeys {
   APP_RUNNER_ROUTES = 'dial:applicationTypeRoutes',
   SOURCE = 'source',
   DEFAULTS = 'defaults',
+  APP_PROPERTIES = 'applicationProperties',
 }
 
 export const dateKeys = ['expiresAt', 'keyGeneratedAt', 'createdAt', 'updatedAt'];
@@ -57,7 +58,11 @@ export const arrayParameterKeys = [
   EntityParameterKeys.METHODS,
 ];
 export const arrayStringParameterKeys = [EntityParameterKeys.PRICING, EntityParameterKeys.RESPONSE];
-export const arrayObjectParameterKeys = [EntityParameterKeys.UPSTREAMS, EntityParameterKeys.DEFAULTS];
+export const arrayObjectParameterKeys = [
+  EntityParameterKeys.UPSTREAMS,
+  EntityParameterKeys.DEFAULTS,
+  EntityParameterKeys.APP_PROPERTIES,
+];
 export const separateObjectParameterKeys = [
   EntityParameterKeys.INTERCEPTORS,
   EntityParameterKeys.ROLE_LIMITS,

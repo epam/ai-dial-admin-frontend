@@ -22,6 +22,7 @@ interface Props {
   versionsMap?: Record<string, string[]>;
   onChangeEntity: (entity: object) => void;
   runners?: DialApplicationScheme[];
+  initialValues?: Partial<Asset>;
 }
 
 const AssetProperties: FC<Props> = ({
@@ -32,6 +33,7 @@ const AssetProperties: FC<Props> = ({
   isEntityImmutable = false,
   versionsMap,
   runners,
+  initialValues,
 }) => {
   const t = useI18n() as (t: string) => string;
   const { dispatch } = useSaveValidationContext();
@@ -76,7 +78,7 @@ const AssetProperties: FC<Props> = ({
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
 
-      {view === ApplicationRoute.AssetsApplications && !isEntityImmutable && (
+      {view === ApplicationRoute.AssetsApplications && !isEntityImmutable && !initialValues && (
         <ApplicationSource
           view={view}
           entity={entity}

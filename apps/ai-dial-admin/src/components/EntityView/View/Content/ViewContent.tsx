@@ -1,5 +1,5 @@
 'use client';
-import { FC } from 'react';
+import { Dispatch, FC, SetStateAction } from 'react';
 
 import ApplicationParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import ApplicationAppRoutes from '@/src/components/EntityView/AppRoute/ApplicationAppRoutes';
@@ -35,6 +35,9 @@ interface Props {
   etag?: string;
   onSave?: () => void;
   onChangeEntity: (entity: BaseEntity, isSkipRefresh?: boolean) => void;
+  key?: number;
+  setIsChanged?: Dispatch<SetStateAction<boolean>>;
+  setSelectedEntity?: Dispatch<SetStateAction<BaseEntity>>;
 }
 
 const ViewContent: FC<Props> = ({
@@ -51,6 +54,9 @@ const ViewContent: FC<Props> = ({
   selectedEntity,
   onSave,
   onChangeEntity,
+  key,
+  setIsChanged,
+  setSelectedEntity,
   ...props
 }) => {
   return (
@@ -89,6 +95,9 @@ const ViewContent: FC<Props> = ({
           jsonEditorEnabled={jsonEditorEnabled}
           isSkipRefresh={isSkipRefresh}
           onChangeEntity={onChangeEntity}
+          key={key}
+          setIsChanged={setIsChanged}
+          setSelectedEntity={setSelectedEntity}
         />
       )}
       {activeTab === EntityViewTab.Roles && (

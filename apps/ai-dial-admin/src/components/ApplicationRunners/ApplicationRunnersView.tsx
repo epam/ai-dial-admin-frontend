@@ -2,15 +2,20 @@
 
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
+import { ButtonVariant, DialButtonDropdown, DialTabs, DropdownItem, TabModel } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
-import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 
 import { removeApplicationScheme, updateApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
+import { createApplication } from '@/src/app/[lang]/applications/actions';
+import { createApp } from '@/src/app/[lang]/assets-applications/actions';
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 import ApplicationParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
+import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
+import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
@@ -24,19 +29,23 @@ import {
   parametersTabs,
   propertiesTabs,
 } from '@/src/components/EntityView/View/utils';
-import { TabsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, CreateI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { Asset } from '@/src/models/dial/deployment-asset';
+import { DialFile } from '@/src/models/dial/file';
 import { DialRole } from '@/src/models/dial/role';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import AppRunnerApplications from './ConfigurationView/Applications';
 import SchemeProperties from './ConfigurationView/Properties';
-import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
   etag: string;
@@ -58,6 +67,15 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles }) => {
     auditTabs(t),
   ];
 
+  const items: DropdownItem[] = [
+    { key: 'Application', label: t(CreateI18nKey.Application), onClick: () => setIsCreateAppModalOpen(true) },
+    {
+      key: 'AssetApplication',
+      label: t(CreateI18nKey.AssetApplication),
+      onClick: () => setIsCreateAssetAppModalOpen(true),
+    },
+  ];
+
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedRunner, setSelectedRunner] = useState(cloneDeep(originalScheme));
   const [isChanged, setIsChanged] = useState(false);
@@ -65,6 +83,8 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles }) => {
   const [key, setKey] = useState(0);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
   const [coreRunner, setCoreRunner] = useState<DialApplicationScheme | null>(null);
+  const [isCreateAppModalOpen, setIsCreateAppModalOpen] = useState(false);
+  const [isCreateAssetAppModalOpen, setIsCreateAssetAppModalOpen] = useState(false);
 
   useEffect(() => {
     const name = originalScheme?.$id;
@@ -167,7 +187,10 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles }) => {
           toggleJsonEditor={toggleJsonEditor}
           selectedFormat={selectedFormat}
           setSelectedFormat={setSelectedFormat}
-        />
+          childrenContainerClass={'flex-row-reverse'}
+        >
+          <DialButtonDropdown title={t(ButtonsI18nKey.Create)} items={items} variant={ButtonVariant.Secondary} />
+        </HeaderButtons>
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
         {jsonEditorEnabled ? (
@@ -214,6 +237,30 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles }) => {
             </>
           )
         )}
+        {isCreateAppModalOpen &&
+          createPortal(
+            <CreateEntity
+              route={ApplicationRoute.Applications}
+              isModalOpen={isCreateAppModalOpen}
+              createEntity={createApplication}
+              onClose={() => setIsCreateAppModalOpen(false)}
+              names={[]}
+              initialValues={{ customAppSchemaId: selectedRunner.$id }}
+            />,
+            document.body,
+          )}
+        {isCreateAssetAppModalOpen &&
+          createPortal(
+            <CreateAsset
+              view={ApplicationRoute.AssetsApplications}
+              isModalOpen={isCreateAssetAppModalOpen}
+              onClose={() => setIsCreateAssetAppModalOpen(false)}
+              onCreate={createApp}
+              context={useAppsFolder as () => AssetsFolderContext<DialFile | Asset>}
+              initialValues={{ applicationTypeSchemaId: selectedRunner.$id }}
+            />,
+            document.body,
+          )}
       </div>
     </div>
   );
