@@ -1,7 +1,7 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialCollapsibleSidebar, DialFormPopup, DialTextInputField, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialCollapsibleSidebar, DialFormPopup, DialLabelledText, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { getVersionsPerName } from '@/src/components/Assets/utils';
 import FolderList from '@/src/components/Common/FolderList/FolderList';
@@ -104,12 +104,7 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
           <div className="flex flex-col flex-1 min-h-0 bg-layer-2 px-6 py-4">
             <h3>{t(EntityFieldsI18nKey.properties)}</h3>
             <div className="py-6">
-              <DialTextInputField
-                elementId="storageFolder"
-                fieldTitle={t(FoldersI18nKey.Storage)}
-                value={filePath}
-                disabled={true}
-              />
+              <DialLabelledText label={t(FoldersI18nKey.Storage)} text={filePath} />
             </div>
             <AssetProperties
               view={view}
