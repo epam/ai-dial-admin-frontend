@@ -3,15 +3,16 @@ import { redirect } from 'next/navigation';
 
 import { applicationRunnersApi, rolesApi } from '@/src/app/api/api';
 import ApplicationRunnersView from '@/src/components/ApplicationRunners/ApplicationRunnersView';
+import Page403 from '@/src/components/Page403/Page403';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { DialRole } from '@/src/models/dial/role';
 import { logError } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import Page403 from '@/src/components/Page403/Page403';
-import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
-import { DialRole } from '@/src/models/dial/role';
-import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,7 +43,9 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   return (
     <SaveValidationContextProvider>
-      <ApplicationRunnersView etag={etag} originalScheme={applicationScheme} roles={roles} />
+      <AppsFolderProvider>
+        <ApplicationRunnersView etag={etag} originalScheme={applicationScheme} roles={roles} />
+      </AppsFolderProvider>
     </SaveValidationContextProvider>
   );
 }

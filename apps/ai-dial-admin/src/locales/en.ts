@@ -251,6 +251,7 @@ export default {
       Adapter: 'Adapter',
       InterceptorTemplate: 'Interceptor Template',
       ApplicationRunner: 'Application Runner',
+      AssetApplication: 'Assets Application',
     },
   },
   UpdateEntity: {
