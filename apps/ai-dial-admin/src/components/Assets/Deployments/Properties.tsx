@@ -113,7 +113,11 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, runners, o
           }
         />
         {view === ApplicationRoute.AssetsToolsets && (
-          <ToolsetEndpoint entity={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} />
+          <>
+            <ToolsetEndpoint entity={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} />
+            {/* // TODO: waiting BE */}
+            {/* <Authentication toolset={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} /> */}
+          </>
         )}
         {view === ApplicationRoute.AssetsApplications && (
           <>
@@ -138,10 +142,9 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, runners, o
                 onChangeEntity={onChange as (entity: DialApplication) => void}
               />
             </div>
-
-            <MaxRetryAttempts entity={asset} onChangeEntity={onChange} />
           </>
         )}
+        <MaxRetryAttempts entity={asset} onChangeEntity={onChange} />
       </div>
     </div>
   );

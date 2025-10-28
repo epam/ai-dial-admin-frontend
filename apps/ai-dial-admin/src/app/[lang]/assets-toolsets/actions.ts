@@ -7,7 +7,8 @@ import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { getAllowTools, getTransport } from '@/src/utils/entities/toolset-transport';
+import { getAllowTools, getTransport } from '@/src/utils/toolset/toolset-transport';
+import { ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
 
 export async function getToolsets(path: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -55,4 +56,14 @@ export async function moveToolsets(paths: string[], newPath: string) {
 export async function getAssetTools(name: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return assetsApi.getTools(name, token);
+}
+
+export async function signInToolset(toolset: AssetToolset, type: ToolsetAuthCredentialLevel) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetsApi.signInToolset(toolset, type, token);
+}
+
+export async function signOutToolset(toolset: AssetToolset, type: ToolsetAuthCredentialLevel) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetsApi.signOutToolset(toolset, type, token);
 }

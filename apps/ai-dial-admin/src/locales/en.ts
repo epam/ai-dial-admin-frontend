@@ -846,6 +846,7 @@ export default {
     SourceContainer: 'Container',
     clientId: 'Client ID',
     clientSecret: 'Client Secret',
+    codeChallengeMethod: 'PKCE method',
     redirectUri: 'Redirect URI',
     tokenEndpoint: 'Default token endpoint',
     authorizationEndpoint: 'Default authorization endpoint',
@@ -976,5 +977,8 @@ export default {
     WithLogin: 'With login',
     WithLoginAndConfig: 'With login & configuration',
     WithoutLogin: 'Without login',
+    LogIn: 'Log In',
+    AsUser: 'As user',
+    AsAdmin: 'As admin',
   },
 } as const;
