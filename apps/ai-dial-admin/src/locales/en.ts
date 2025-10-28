@@ -845,6 +845,7 @@ export default {
     SourceContainer: 'Container',
     clientId: 'Client ID',
     clientSecret: 'Client Secret',
+    codeChallengeMethod: 'PKCE method',
     redirectUri: 'Redirect URI',
     tokenEndpoint: 'Default token endpoint',
     authorizationEndpoint: 'Default authorization endpoint',

@@ -15,7 +15,6 @@ import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttac
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
-import Authentication from '@/src/components/Toolsets/View/Authentication';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
@@ -116,7 +115,8 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, runners, o
         {view === ApplicationRoute.AssetsToolsets && (
           <>
             <ToolsetEndpoint entity={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} />
-            <Authentication toolset={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} />
+            {/* // TODO: waiting BE */}
+            {/* <Authentication toolset={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} /> */}
           </>
         )}
         {view === ApplicationRoute.AssetsApplications && (

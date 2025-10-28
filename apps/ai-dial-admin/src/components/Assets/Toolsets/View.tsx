@@ -159,6 +159,7 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
         const url = new URL(authSettings.authorizationEndpoint as string);
         url.searchParams.set('response_type', 'code');
         url.searchParams.set('client_id', authSettings.clientId as string);
+        // TODO: waiting BE
         // url.searchParams.set('redirect_uri', `${window.location.origin}${Routes.ToolsetSignIn}`);
 
         if (authSettings.codeChallengeMethod) {

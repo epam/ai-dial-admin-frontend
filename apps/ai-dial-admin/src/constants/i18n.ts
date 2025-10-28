@@ -916,6 +916,7 @@ export enum EntityFieldsI18nKey {
   containerId = 'EntityFields.SourceContainer',
   clientId = 'EntityFields.clientId',
   clientSecret = 'EntityFields.clientSecret',
+  codeChallengeMethod = 'EntityFields.codeChallengeMethod',
   redirectUri = 'EntityFields.redirectUri',
   authorizationEndpoint = 'EntityFields.authorizationEndpoint',
   authenticationType = 'EntityFields.authenticationType',

@@ -6,7 +6,7 @@ import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { ToolsetAuthSettings } from '@/src/models/dial/toolset';
+import { ToolsetAuthSettings, ToolsetCodeChallengeMethod } from '@/src/models/dial/toolset';
 
 enum AuthType {
   DYNAMIC = 'dynamic',
@@ -24,6 +24,12 @@ const OAuthSection: FC<Props> = ({ authSettings, onChange }) => {
   const types: SelectOption[] = [
     // { value: AuthType.DYNAMIC, label: t(ToolsetI18nKey.DynamicRegistration) },
     { value: AuthType.EXISTING, label: t(ToolsetI18nKey.ExistingClient) },
+  ];
+
+  const methods: SelectOption[] = [
+    { value: BasicI18nKey.None, label: t(BasicI18nKey.None) },
+    { value: ToolsetCodeChallengeMethod.PLAIN, label: ToolsetCodeChallengeMethod.PLAIN },
+    { value: ToolsetCodeChallengeMethod.S256, label: ToolsetCodeChallengeMethod.S256 },
   ];
 
   return (
@@ -93,6 +99,20 @@ const OAuthSection: FC<Props> = ({ authSettings, onChange }) => {
             endpoint={authSettings?.tokenEndpoint || ''}
             placeholder={t(EntityPlaceholdersI18nKey.TokenEndpoint)}
             onChange={(tokenEndpoint) => onChange({ ...(authSettings || {}), tokenEndpoint })}
+          />
+
+          <DialSelectField
+            containerCssClass="w-[192px]"
+            elementId="type"
+            fieldTitle={t(EntityFieldsI18nKey.codeChallengeMethod)}
+            value={!authSettings.codeChallengeMethod ? BasicI18nKey.None : authSettings.codeChallengeMethod}
+            options={methods}
+            onChange={(codeChallengeMethod) => {
+              onChange({
+                ...(authSettings || {}),
+                codeChallengeMethod: codeChallengeMethod === BasicI18nKey.None ? '' : codeChallengeMethod,
+              } as ToolsetAuthSettings);
+            }}
           />
         </div>
       )}
