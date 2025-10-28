@@ -10,9 +10,11 @@ import { cloneDeep } from 'lodash';
 
 import { removeApplicationScheme, updateApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import { createApplication } from '@/src/app/[lang]/applications/actions';
+import { createApp } from '@/src/app/[lang]/assets-applications/actions';
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 import ApplicationParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
+import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
@@ -28,10 +30,14 @@ import {
   propertiesTabs,
 } from '@/src/components/EntityView/View/utils';
 import { ButtonsI18nKey, CreateI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { Asset } from '@/src/models/dial/deployment-asset';
+import { DialFile } from '@/src/models/dial/file';
 import { DialRole } from '@/src/models/dial/role';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -63,6 +69,11 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles }) => {
 
   const items: DropdownItem[] = [
     { key: 'Application', label: t(CreateI18nKey.Application), onClick: () => setIsCreateAppModalOpen(true) },
+    {
+      key: 'AssetApplication',
+      label: t(CreateI18nKey.AssetApplication),
+      onClick: () => setIsCreateAssetAppModalOpen(true),
+    },
   ];
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -73,6 +84,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles }) => {
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
   const [coreRunner, setCoreRunner] = useState<DialApplicationScheme | null>(null);
   const [isCreateAppModalOpen, setIsCreateAppModalOpen] = useState(false);
+  const [isCreateAssetAppModalOpen, setIsCreateAssetAppModalOpen] = useState(false);
 
   useEffect(() => {
     const name = originalScheme?.$id;
@@ -234,6 +246,18 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles }) => {
               onClose={() => setIsCreateAppModalOpen(false)}
               names={[]}
               initialValues={{ customAppSchemaId: selectedRunner.$id }}
+            />,
+            document.body,
+          )}
+        {isCreateAssetAppModalOpen &&
+          createPortal(
+            <CreateAsset
+              view={ApplicationRoute.AssetsApplications}
+              isModalOpen={isCreateAssetAppModalOpen}
+              onClose={() => setIsCreateAssetAppModalOpen(false)}
+              onCreate={createApp}
+              context={useAppsFolder as () => AssetsFolderContext<DialFile | Asset>}
+              initialValues={{ applicationTypeSchemaId: selectedRunner.$id }}
             />,
             document.body,
           )}

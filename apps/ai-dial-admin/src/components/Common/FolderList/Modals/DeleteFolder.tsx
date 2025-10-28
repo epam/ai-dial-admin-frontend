@@ -101,7 +101,11 @@ const DeleteFolder: FC<Props> = ({ isModalOpen, view, selectedFolder, isBulkDele
           {t(FoldersI18nKey.DeleteFolderDescription, { asset: t(asset).toLowerCase() })}
         </div>
         <div className="flex flex-row gap-4 flex-1 min-h-0">
-          <DialCollapsibleSidebar width={360} title={t(FoldersI18nKey.Folders)} containerCssClass="border-primary">
+          <DialCollapsibleSidebar
+            width={360}
+            title={t(FoldersI18nKey.Folders)}
+            containerCssClass="border border-primary"
+          >
             <FolderList
               context={context}
               isFolderDelete={true}
