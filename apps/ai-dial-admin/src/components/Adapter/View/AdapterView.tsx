@@ -31,10 +31,11 @@ import AdapterProperties from './AdapterProperties';
 
 interface Props {
   etag: string;
+  modelsNames: string[];
   originalAdapter: DialAdapter;
 }
 
-const AdapterView: FC<Props> = ({ originalAdapter, etag }) => {
+const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -173,7 +174,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, etag }) => {
                   isModalOpen={isModalOpen}
                   createEntity={createModel}
                   onClose={() => setIsModalOpen(false)}
-                  names={[]}
+                  names={modelsNames}
                   initialValues={{ source: { $type: SOURCE_TYPE.ADAPTER, adapterName: selectedAdapter.name } }}
                 />,
                 document.body,
