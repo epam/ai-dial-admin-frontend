@@ -41,6 +41,7 @@ const IconControl: FC<Props> = ({ iconUrl, disabled = true, onChange }) => {
           open={isModalOpen}
           selectedValue={value}
           onOpen={onOpenModal}
+          disabled={disabled}
         >
           <IconGalleryModal
             isModalOpen={isModalOpen}
