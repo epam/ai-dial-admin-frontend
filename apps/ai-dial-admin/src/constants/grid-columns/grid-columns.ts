@@ -292,10 +292,19 @@ export const RUNNERS_COLUMNS: ColDef[] = [
 export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [...BASE_COLUMNS, UPDATED_AT_COLUMN];
 
 export const ASSETS_COLUMNS: ColDef[] = [
-  { field: 'name', colId: 'name', headerName: 'Display Name' },
   { field: 'version', headerName: 'Version' },
   AUTHOR_COLUMN,
   UPDATED_TIME_COLUMN,
+];
+
+export const DEPLOYMENT_ASSETS_COLUMNS: ColDef[] = [
+  { field: 'name', colId: 'name', headerName: 'ID' },
+  ...ASSETS_COLUMNS,
+];
+
+export const NON_DEPLOYMENT_ASSETS_COLUMNS: ColDef[] = [
+  { field: 'name', colId: 'name', headerName: 'Display Name' },
+  ...ASSETS_COLUMNS,
 ];
 
 export const FILES_COLUMNS: ColDef[] = [

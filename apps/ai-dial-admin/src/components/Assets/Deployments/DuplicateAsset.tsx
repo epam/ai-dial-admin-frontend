@@ -21,6 +21,8 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { duplicateEntityMap, getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
 import { addTrailingSlash } from '@/src/utils/files/path';
 import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/prompts/versions';
+import IdControl from '../../EntityMainProperties/BaseProperties/Id';
+import { isDeploymentAsset } from '@/src/utils/is-asset-view';
 
 interface Props {
   view: ApplicationRoute;
@@ -46,6 +48,7 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
   const [clonedAsset, setClonedAsset] = useState<Asset>({
     ...entity,
     name: getClonedEntityName(entity.name, duplicationType === DuplicationTypes.VERSION),
+    displayName: isDeploymentAsset(view) ? entity.displayName : void 0,
     version: getInitialVersion(versionsMap, entity?.name),
   });
   const [isValid, setIsValid] = useState(false);
@@ -59,8 +62,8 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
   }, [clonedAsset, versionsMap]);
 
   const onChangeName = useCallback(
-    (name?: string) => {
-      setClonedAsset({ ...clonedAsset, name });
+    (displayName?: string) => {
+      setClonedAsset({ ...clonedAsset, displayName });
     },
     [setClonedAsset, clonedAsset],
   );
@@ -116,12 +119,14 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
           orientation={RadioGroupOrientation.Column}
           onChange={onChangeDuplicationType}
         />
-        <DisplayNameControl
-          displayName={clonedAsset.name}
-          onChange={onChangeName}
+        <IdControl
+          entity={clonedAsset}
+          onChangeEntity={setClonedAsset}
           disabled={duplicationType === DuplicationTypes.VERSION}
-          required={true}
         />
+        {isDeploymentAsset(view) && (
+          <DisplayNameControl displayName={clonedAsset.displayName} onChange={onChangeName} required={true} />
+        )}
         <VersionControl version={clonedAsset.version} onChange={onChangeVersion} />
 
         {duplicationType === DuplicationTypes.ENTITY && (
