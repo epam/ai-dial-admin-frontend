@@ -28,9 +28,10 @@ describe('Constants :: grid columns', () => {
   });
 
   test('KEYS_COLUMNS returns expected columns', () => {
-    expect(Array.isArray(KEYS_COLUMNS)).toBe(true);
-    expect(KEYS_COLUMNS.some((c) => c.field === 'name')).toBe(true);
-    expect(KEYS_COLUMNS.some((c) => c.field === 'status')).toBe(true);
+    const t = (s: string) => s;
+    expect(Array.isArray(KEYS_COLUMNS(t))).toBe(true);
+    expect(KEYS_COLUMNS(t).some((c) => c.field === 'name')).toBe(true);
+    expect(KEYS_COLUMNS(t).some((c) => c.field === 'status')).toBe(true);
   });
 
   test('ASSETS_COLUMNS returns expected columns', () => {

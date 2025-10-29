@@ -7,18 +7,20 @@ import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { DialKey } from '@/src/models/dial/key';
 import { ApplicationRoute } from '@/src/types/routes';
 import { filterNames } from '@/src/utils/entities/filter-names';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
   data: DialKey[];
 }
 
 const KeysList: FC<Props> = ({ data }) => {
+  const t = useI18n() as (key: string) => string;
   const names = filterNames(data);
   const keys = data.map((entity) => entity.key as string);
 
   return (
     <BaseEntityList
-      baseColumns={KEYS_COLUMNS}
+      baseColumns={KEYS_COLUMNS(t)}
       names={names}
       keys={keys}
       data={data}

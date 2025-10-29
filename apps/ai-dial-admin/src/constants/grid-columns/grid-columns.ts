@@ -8,6 +8,7 @@ import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import {
   formatAttachment,
   getFormattedResourceType,
+  getTopics,
   numberValueFormatter,
   priceValueFormatter,
   sourceTypeFormatter,
@@ -20,6 +21,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
 import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
+import { getKeyStatus } from '../../utils/keys';
 
 const stringFilter: Partial<ColDef> = {
   filterParams: {
@@ -103,14 +105,15 @@ const DISPLAY_NAME_COLUMN_WITH_SORT: ColDef = { ...DISPLAY_NAME_COLUMN, sort: 'a
 export const NAME_COLUMN: ColDef = { field: 'name', colId: 'name', headerName: 'ID', hide: false };
 const NAME_COLUMN_WITH_SORT: ColDef = { ...NAME_COLUMN, sort: 'asc' };
 
-export const TOPIC_COLUMN: ColDef = {
+export const TOPICS_COLUMN: ColDef = {
   field: 'topics',
   colId: 'topics',
   headerName: 'Topics',
   cellRenderer: TopicsCellRenderer,
   cellRendererParams: (params: { data?: { topics?: string[]; descriptionKeywords?: string[] } }) => ({
-    topics: params.data?.topics || params.data?.descriptionKeywords || [],
+    topics: getTopics(params.data),
   }),
+  filterValueGetter: (params) => getTopics(params.data),
 };
 
 const ATTACHMENT_COLUMN = (t: (str: string) => string): ColDef => {
@@ -129,7 +132,8 @@ const SOURCE_TYPE_COLUMN = (t: (key: string) => string, view?: ApplicationRoute)
   headerName: 'Source type',
   hide: false,
   valueFormatter: ({ value }) => sourceTypeFormatter(value, t, view),
-  filterValueGetter: (params) => sourceTypeFormatter(params.data['source.$type'], t, view),
+  filterValueGetter: (params) =>
+    sourceTypeFormatter((params.data as { source: { $type: string } }).source.$type, t, view),
   tooltipValueGetter: ({ value }) => sourceTypeFormatter(value, t, view),
 });
 
@@ -183,7 +187,7 @@ export const MODELS_COLUMNS = (t: (str: string) => string, view?: ApplicationRou
   AUTHOR_COLUMN,
   { field: 'type', headerName: 'Type', hide: true },
   { field: 'overrideName', headerName: 'Override Name', hide: true },
-  TOPIC_COLUMN,
+  TOPICS_COLUMN,
   UPDATED_AT_COLUMN,
   ATTACHMENT_COLUMN(t),
   { field: 'maxInputAttachments', headerName: 'Max attachment number', hide: true },
@@ -197,7 +201,7 @@ export const MODELS_COLUMNS = (t: (str: string) => string, view?: ApplicationRou
 export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   ...BASE_COLUMNS,
   { field: 'endpoint', headerName: 'Endpoint', hide: false },
-  TOPIC_COLUMN,
+  TOPICS_COLUMN,
   AUTHOR_COLUMN,
   ATTACHMENT_COLUMN(t),
   { field: 'maxInputAttachments', headerName: 'Max attachment number', hide: true },
@@ -235,7 +239,7 @@ export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?
   return columns;
 };
 
-export const KEYS_COLUMNS: ColDef[] = [
+export const KEYS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   NAME_COLUMN_WITH_SORT,
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
@@ -257,6 +261,7 @@ export const KEYS_COLUMNS: ColDef[] = [
     headerName: 'Status',
     field: 'status',
     cellRenderer: KeyStatusCellRenderer,
+    filterValueGetter: ({ data }) => getKeyStatus(data, t).title,
   },
   {
     headerName: 'Project',
@@ -280,7 +285,7 @@ export const RUNNERS_COLUMNS: ColDef[] = [
   { field: 'dial:applicationTypeDisplayName', headerName: 'Display Name', sort: 'asc' },
   { field: '$id', headerName: 'ID' },
   DESCRIPTION_COLUMN,
-  TOPIC_COLUMN,
+  TOPICS_COLUMN,
   UPDATED_AT_COLUMN,
 ];
 
