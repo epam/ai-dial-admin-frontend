@@ -21,6 +21,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
 import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
+import { getKeyStatus } from '../../utils/keys';
 
 const stringFilter: Partial<ColDef> = {
   filterParams: {
@@ -238,7 +239,7 @@ export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?
   return columns;
 };
 
-export const KEYS_COLUMNS: ColDef[] = [
+export const KEYS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   NAME_COLUMN_WITH_SORT,
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
@@ -260,6 +261,7 @@ export const KEYS_COLUMNS: ColDef[] = [
     headerName: 'Status',
     field: 'status',
     cellRenderer: KeyStatusCellRenderer,
+    filterValueGetter: ({ data }) => getKeyStatus(data, t).title,
   },
   {
     headerName: 'Project',
