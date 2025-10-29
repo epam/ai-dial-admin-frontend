@@ -299,7 +299,10 @@ export const ASSETS_COLUMNS: ColDef[] = [
 
 export const DEPLOYMENT_ASSETS_COLUMNS: ColDef[] = [NAME_COLUMN, ...ASSETS_COLUMNS];
 
-export const NON_DEPLOYMENT_ASSETS_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN, ...ASSETS_COLUMNS];
+export const NON_DEPLOYMENT_ASSETS_COLUMNS: ColDef[] = [
+  { field: 'name', colId: 'name', headerName: 'Display Name' },
+  ...ASSETS_COLUMNS,
+];
 
 export const FILES_COLUMNS: ColDef[] = [
   { field: 'name', colId: 'name', headerName: 'Display Name', valueFormatter: ({ value }) => value },
