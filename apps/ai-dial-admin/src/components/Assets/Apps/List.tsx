@@ -6,7 +6,7 @@ import { bulkDeleteApps, createApp, moveApps, removeApp } from '@/src/app/[lang]
 import { filterLatestVersions, getVersionsPerName } from '@/src/components/Assets/utils';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import Page403 from '@/src/components/Page403/Page403';
-import { ASSETS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { DEPLOYMENT_ASSETS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { DialApplicationScheme } from '@/src/models/dial/application';
@@ -31,7 +31,7 @@ const AppsList: FC<Props> = ({ runners }) => {
 
   return (
     <BaseEntityList
-      baseColumns={ASSETS_COLUMNS}
+      baseColumns={DEPLOYMENT_ASSETS_COLUMNS}
       names={names}
       runners={runners}
       versionsMap={versionsMap}
