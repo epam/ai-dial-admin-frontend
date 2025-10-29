@@ -1,7 +1,7 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { adaptersApi } from '@/src/app/api/api';
+import { adaptersApi, modelsApi } from '@/src/app/api/api';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { logError } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -10,6 +10,8 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import AdapterView from '@/src/components/Adapter/View/AdapterView';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { filterDisplayNames } from '@/src/utils/entities/filter-names';
+import { DialModel } from '@/src/models/dial/model';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,12 +20,14 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   let etag = DEFAULT_ETAG;
   let adapter: DialAdapter | null = null;
+  let models: DialModel[] | null = null;
 
   try {
     adapter = await adaptersApi.getAdapter((await params.params).id, token, etag).then((res) => {
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as DialAdapter | null;
     });
+    models = await modelsApi.getModelsList(token);
   } catch (e) {
     logError(e, 'Failed to fetch adapter view data');
   }
@@ -34,7 +38,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   return (
     <SaveValidationContextProvider>
-      <AdapterView originalAdapter={adapter} etag={etag} />
+      <AdapterView originalAdapter={adapter} etag={etag} modelsNames={filterDisplayNames(models)} />
     </SaveValidationContextProvider>
   );
 }
