@@ -24,12 +24,16 @@ const Paths: FC<Props> = ({ title, optional, readonly, paths, onChangePaths }) =
   const [pathError, setPathError] = useState('');
 
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'path', isValid: !pathError });
-  }, [dispatch, pathError]);
+    if (optional) {
+      dispatch({ type: ValidationActionType.SetField, field: 'path', isValid: !pathError });
+    }
+  }, [dispatch, optional, pathError]);
 
   useEffect(() => {
-    setPathError(!paths || paths.length === 0 || paths.some((p) => !p) ? t(ErrorI18nKey.RequiredField) : '');
-  }, [paths, t]);
+    if (!optional) {
+      setPathError(!paths || paths.length === 0 || paths.some((p) => !p) ? t(ErrorI18nKey.RequiredField) : '');
+    }
+  }, [paths, optional, t]);
 
   const onAddPath = useCallback(() => {
     const newPaths = [...(paths || []), ''];
