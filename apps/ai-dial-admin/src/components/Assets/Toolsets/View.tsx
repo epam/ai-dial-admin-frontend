@@ -3,8 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
-import { IconLogin } from '@tabler/icons-react';
+import { DialTabs } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
@@ -22,8 +21,6 @@ import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
 import { EntityViewTab, propertiesTabs, toolsTabs } from '@/src/components/EntityView/View/utils';
 import ToolsView from '@/src/components/Toolsets/Tools/Tools';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { ToolsetI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -207,12 +204,13 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
             context={useToolsetFolder as () => AssetsFolderContext<DialFile | AssetToolset>}
             childrenContainerClass="flex-row-reverse"
           >
-            <DialButton
+            {/* TODO: waiting for BE */}
+            {/* <DialButton
               variant={ButtonVariant.Secondary}
               title={t(ToolsetI18nKey.LogIn)}
               iconBefore={<IconLogin {...BASE_ICON_PROPS} />}
               onClick={() => setIsModalOpen(true)}
-            />
+            /> */}
           </HeaderButtons>
         </div>
         <div className="flex-1 overflow-auto mt-3 min-h-0">
