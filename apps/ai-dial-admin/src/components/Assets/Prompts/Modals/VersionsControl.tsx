@@ -1,11 +1,11 @@
 import { FC, useCallback } from 'react';
 
-import { DropdownItem } from '@epam/ai-dial-ui-kit';
+import { SelectOption } from '@epam/ai-dial-ui-kit';
 
+import SecondaryDropdown from '@/src/components/Common/SecondaryDropdown/SecondaryDropdown';
 import { CompareI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { CompareView } from '@/src/types/activity-audit';
-import SecondaryDropdown from '@/src/components/Common/SecondaryDropdown/SecondaryDropdown';
 
 interface Props {
   version: string;
@@ -16,8 +16,8 @@ interface Props {
 const VersionsControl: FC<Props> = ({ version, setVersion, versions }) => {
   const t = useI18n();
 
-  const items: DropdownItem[] = versions.map((version) => {
-    return { key: version, label: version };
+  const items: SelectOption[] = versions.map((version) => {
+    return { value: version, label: version };
   });
 
   const onChange = useCallback(

@@ -1,5 +1,5 @@
 import { Dispatch, FC, SetStateAction, useCallback } from 'react';
-import { DropdownItem } from '@epam/ai-dial-ui-kit';
+import { SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { ActivityAuditI18nKey, CompareI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -15,13 +15,13 @@ interface Props {
 const FilterControl: FC<Props> = ({ diffView, setDiffView, isResources }) => {
   const t = useI18n();
 
-  const items: DropdownItem[] = [
+  const items: SelectOption[] = [
     {
-      key: DiffView.ALL,
+      value: DiffView.ALL,
       label: isResources ? t(ActivityAuditI18nKey.AllResources) : t(ActivityAuditI18nKey.AllParameters),
     },
     {
-      key: DiffView.DIFF,
+      value: DiffView.DIFF,
       label: t(ActivityAuditI18nKey.Differences),
     },
   ];

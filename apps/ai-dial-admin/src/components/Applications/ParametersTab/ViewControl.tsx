@@ -6,7 +6,7 @@ import {
   VisualizerConnectorRequest,
   VisualizerConnectorRequests,
 } from '@epam/ai-dial-shared';
-import { DialConfirmationPopup, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup, SelectOption } from '@epam/ai-dial-ui-kit';
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 
 import SecondaryDropdown from '@/src/components/Common/SecondaryDropdown/SecondaryDropdown';
@@ -18,7 +18,7 @@ import { DialAttachmentData } from '@/src/models/attachment-data';
 import { ParamsView } from './types';
 
 interface Props {
-  items: DropdownItem[];
+  items: SelectOption[];
   paramsView: ParamsView;
   setParamsView: Dispatch<SetStateAction<ParamsView>>;
   onSave?: () => void;

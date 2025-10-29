@@ -1,4 +1,4 @@
-import { DropdownItem } from '@epam/ai-dial-ui-kit';
+import { SelectOption } from '@epam/ai-dial-ui-kit';
 import { Dispatch, FC, SetStateAction, useCallback } from 'react';
 
 import SecondaryDropdown from '@/src/components/Common/SecondaryDropdown/SecondaryDropdown';
@@ -14,13 +14,13 @@ interface Props {
 const CompareControl: FC<Props> = ({ compareView, setCompareView }) => {
   const t = useI18n();
 
-  const items: DropdownItem[] = [
+  const items: SelectOption[] = [
     {
-      key: CompareView.NEXT,
+      value: CompareView.NEXT,
       label: t(ActivityAuditI18nKey.BeforeAfter),
     },
     {
-      key: CompareView.CURRENT,
+      value: CompareView.CURRENT,
       label: t(ActivityAuditI18nKey.BeforeCurrent),
     },
   ];

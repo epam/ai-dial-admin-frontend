@@ -2,9 +2,10 @@
 
 import { FC, useEffect, useState } from 'react';
 
-import { DialSwitch, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { DialSwitch, SelectOption } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
+import SecondaryDropdown from '@/src/components/Common/SecondaryDropdown/SecondaryDropdown';
 import { EntityViewTab } from '@/src/components/EntityView/View/utils';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
@@ -12,7 +13,6 @@ import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
-import SecondaryDropdown from '@/src/components/Common/SecondaryDropdown/SecondaryDropdown';
 
 const ONLY_ADMIN_ENTITIES = [
   ApplicationRoute.Adapters,
@@ -40,19 +40,19 @@ const JsonToggles: FC<Props> = ({
   setSelectedFormat,
   toggleJsonEditor,
 }) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n() as (value: string, options?: Record<string, string | number>) => string;
   const staticEditorClassNames = 'pl-6 flex flex-row gap-x-3';
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
   const [editorClassNames, setEditorClassNames] = useState(staticEditorClassNames);
 
-  const items: DropdownItem[] = [
+  const items: SelectOption[] = [
     {
-      key: ExportFormat.CORE,
+      value: ExportFormat.CORE,
       label: t(EntitiesI18nKey.Core),
     },
     {
-      key: ExportFormat.ADMIN,
+      value: ExportFormat.ADMIN,
       label: t(EntitiesI18nKey.Admin),
     },
   ];

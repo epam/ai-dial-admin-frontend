@@ -1,5 +1,5 @@
 import { ColDef, ICellRendererParams, ITooltipParams } from 'ag-grid-community';
-import { SelectOption, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { DefaultItemType } from '@/src/components/Defaults/types';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
@@ -72,27 +72,27 @@ export const generateViewItems = (
   route?: ApplicationRoute,
   showUi?: boolean,
   showForm?: boolean,
-): DropdownItem[] => {
+): SelectOption[] => {
   if (route === ApplicationRoute.ApplicationPublications || route === ApplicationRoute.ApplicationRunners) {
     return [];
   }
-  const items: DropdownItem[] = [
+  const items: SelectOption[] = [
     {
-      key: ParamsView.TABLE,
+      value: ParamsView.TABLE,
       label: t(EntitiesI18nKey[ParamsView.TABLE]),
     },
   ];
 
   if (showForm) {
     items.push({
-      key: ParamsView.FORM,
+      value: ParamsView.FORM,
       label: t(EntitiesI18nKey[ParamsView.FORM]),
     });
   }
 
   if (showUi) {
     items.push({
-      key: ParamsView.UI,
+      value: ParamsView.UI,
       label: t(EntitiesI18nKey[ParamsView.UI]),
     });
   }
@@ -126,7 +126,7 @@ export const convertJsonSchema = (
     }
 
     result.push({
-      key: key,
+      key,
       value: schemeData[key],
       type: typeValue,
       required: isRequired || false,
