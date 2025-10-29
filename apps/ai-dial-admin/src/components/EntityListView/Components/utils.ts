@@ -8,6 +8,7 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { Asset, AssetApp, AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 
 export const getData = async <T>(route: ApplicationRoute, ref: RefObject<T | undefined>) => {
   if (route === ApplicationRoute.Prompts) {
@@ -29,6 +30,16 @@ export const getData = async <T>(route: ApplicationRoute, ref: RefObject<T | und
 };
 
 export const getCorrectPath = (entity?: Asset | null) => `${entity?.folderId}${entity?.name}__${entity?.version}`;
+
+export const preparePathForAsset = (entity: BaseEntity, route: ApplicationRoute) => {
+  if (isAssetWithVersion(route)) {
+    return {
+      ...entity,
+      path: getCorrectPath(entity as Asset),
+    };
+  }
+  return entity;
+};
 
 export const prepareEntityForDuplicate = async <T>(
   route: ApplicationRoute,
@@ -62,34 +73,28 @@ export const prepareEntityForDuplicate = async <T>(
 
   if (route === ApplicationRoute.Prompts) {
     const prompt = fullEntity as DialPrompt | null;
-    const path = getCorrectPath(entity as DialPrompt);
     return {
       ...entity,
       description: prompt?.description,
       content: prompt?.content,
-      path,
     };
   }
 
   if (route === ApplicationRoute.AssetsApplications) {
     const app = fullEntity as AssetApp | null;
-    const path = getCorrectPath(entity as AssetApp);
 
     return {
       ...app,
       ...entity,
-      path,
     };
   }
 
   if (route === ApplicationRoute.AssetsToolsets) {
     const toolset = fullEntity as AssetToolset | null;
-    const path = getCorrectPath(entity as AssetToolset);
 
     return {
       ...toolset,
       ...entity,
-      path,
     };
   }
 

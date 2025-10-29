@@ -5,6 +5,8 @@ import {
   MODELS_COLUMNS,
   PROJECT_GRID_COLUMNS,
   ASSETS_COLUMNS,
+  DEPLOYMENT_ASSETS_COLUMNS,
+  NON_DEPLOYMENT_ASSETS_COLUMNS,
   PUBLICATION_COLUMNS,
   TELEMETRY_GRID_COLUMNS,
 } from '../grid-columns';
@@ -36,8 +38,18 @@ describe('Constants :: grid columns', () => {
 
   test('ASSETS_COLUMNS returns expected columns', () => {
     expect(Array.isArray(ASSETS_COLUMNS)).toBe(true);
-    expect(ASSETS_COLUMNS.some((c) => c.field === 'name')).toBe(true);
+    expect(ASSETS_COLUMNS.some((c) => c.field === 'author')).toBe(true);
     expect(ASSETS_COLUMNS.some((c) => c.field === 'version')).toBe(true);
+  });
+
+  test('DEPLOYMENT_ASSETS_COLUMNS returns expected columns', () => {
+    expect(Array.isArray(DEPLOYMENT_ASSETS_COLUMNS)).toBe(true);
+    expect(DEPLOYMENT_ASSETS_COLUMNS.some((c) => c.headerName === 'ID')).toBe(true);
+  });
+
+  test('NON_DEPLOYMENT_ASSETS_COLUMNS returns expected columns', () => {
+    expect(Array.isArray(NON_DEPLOYMENT_ASSETS_COLUMNS)).toBe(true);
+    expect(NON_DEPLOYMENT_ASSETS_COLUMNS.some((c) => c.headerName === 'Display Name')).toBe(true);
   });
 
   test('EXPORT_COLUMNS returns expected columns for prompts', () => {
