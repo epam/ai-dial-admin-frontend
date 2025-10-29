@@ -128,7 +128,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, etag }) => {
         >
           <DialButton
             variant={ButtonVariant.Secondary}
-            title={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.Adapter)}`}
+            title={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.Model)}`}
             iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
             onClick={() => setIsModalOpen(true)}
           />

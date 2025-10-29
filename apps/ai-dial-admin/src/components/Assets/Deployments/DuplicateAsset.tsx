@@ -13,13 +13,14 @@ import {
 } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
+import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { DuplicationTypes } from '@/src/types/prompt';
-import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/prompts/versions';
 import { ApplicationRoute } from '@/src/types/routes';
 import { duplicateEntityMap, getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
-import { Asset } from '@/src/models/dial/deployment-asset';
+import { addTrailingSlash } from '@/src/utils/files/path';
+import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/prompts/versions';
 
 interface Props {
   view: ApplicationRoute;
@@ -100,7 +101,7 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
       title={t(getCloneTitle(view, t))}
       portalId="DuplicateAsset"
       open={isModalOpen}
-      onSubmit={() => onDuplicate(clonedAsset)}
+      onSubmit={() => onDuplicate({ ...clonedAsset, folderId: addTrailingSlash(clonedAsset.folderId) })}
       onCancel={onClose}
       disableSubmitButton={!isValid}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
