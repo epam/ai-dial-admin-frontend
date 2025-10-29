@@ -157,7 +157,12 @@ const Containers = <T extends DialInterceptor | DialModel>({
         )}
       </div>
       {entity.source?.containerId && selectedContainer && !isModal && (
-        <Endpoints entity={entity} onChange={onChange} view={view} prefix={addTrailingSlash(selectedContainer?.url)} />
+        <Endpoints
+          entity={entity}
+          onChange={onChange}
+          view={view}
+          prefix={addTrailingSlash(selectedContainer?.url || '')}
+        />
       )}
     </div>
   );
