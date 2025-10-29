@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef } from 'react';
+import { Dispatch, ReactNode, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { generateExportList } from '@/src/components/Assets/ExportAssets/export';
 import {
@@ -22,14 +22,14 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { downloadFile, downloadJson } from '@/src/utils/download';
-import { prepareEntityForDuplicate } from '@/src/components/EntityListView/Components/utils';
+import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { getListOfPathsToBulkDelete, getListOfPathsToMove } from '@/src/utils/files/path';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import BulkButtons from './BulkButtons';
 import Modals, { ModalType } from './Modals';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
-import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { preparePathForAsset } from './utils';
 
 interface Props<T> {
   names?: string[];
@@ -82,6 +82,8 @@ const Actions = <T extends object>({
     return generateExportList(folderContext?.bulkSelectedData);
   }, [folderContext?.bulkSelectedData]);
 
+  const [duplicateModalContent, setDuplicateModalContent] = useState<ReactNode | null>(null);
+
   useEffect(() => {
     entityRef.current = currentEntity;
     filesRef.current = folderContext?.fetchedFoldersData;
@@ -95,8 +97,8 @@ const Actions = <T extends object>({
   const onDuplicate = useCallback(
     (clonedEntity: T) => {
       const duplicate = async () => {
-        const preparedEntity = (await prepareEntityForDuplicate(route, clonedEntity, entityRef)) as T;
-        const res = await createEntity?.(preparedEntity);
+        const preparedEntity = preparePathForAsset(clonedEntity, route);
+        const res = await createEntity?.(preparedEntity as T);
         if (res?.success) {
           handleModalClose();
           setCurrentEntity(void 0);
@@ -186,6 +188,33 @@ const Actions = <T extends object>({
     [exportData, folderContext, handleModalClose, route, setIsBulkView, showNotification, t],
   );
 
+  const getDuplicateModalContent = async () => {
+    if (currentEntity) {
+      const modal = await getDuplicateModal(
+        currentEntity,
+        entityRef,
+        names || [],
+        keys || [],
+        route,
+        versionsMap || {},
+        isModalOpen,
+        handleModalClose,
+        onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>,
+        context,
+      );
+      setDuplicateModalContent(modal);
+    }
+  };
+
+  useEffect(() => {
+    if (isModalOpen) {
+      getDuplicateModalContent();
+    } else {
+      setDuplicateModalContent(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isModalOpen]);
+
   return (
     <>
       {modalType && (isBulkView ? true : currentEntity) ? (
@@ -195,17 +224,7 @@ const Actions = <T extends object>({
           initialPath={(currentEntity as DialPrompt)?.folderId}
           isModalOpen={isModalOpen}
           modalType={modalType}
-          duplicateModal={getDuplicateModal(
-            currentEntity,
-            names || [],
-            keys || [],
-            route,
-            versionsMap || {},
-            isModalOpen,
-            handleModalClose,
-            onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>,
-            context,
-          )}
+          duplicateModal={duplicateModalContent}
           handleExport={onExport}
           handleClose={handleModalClose}
           removeEntity={removeEntity}
