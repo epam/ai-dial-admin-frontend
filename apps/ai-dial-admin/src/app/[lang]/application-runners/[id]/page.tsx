@@ -1,17 +1,18 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { applicationRunnersApi, rolesApi } from '@/src/app/api/api';
+import { applicationRunnersApi, applicationsApi, rolesApi } from '@/src/app/api/api';
 import ApplicationRunnersView from '@/src/components/ApplicationRunners/ApplicationRunnersView';
 import Page403 from '@/src/components/Page403/Page403';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
-import { DialApplicationScheme } from '@/src/models/dial/application';
+import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialRole } from '@/src/models/dial/role';
 import { logError } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
+import { filterDisplayNames } from '@/src/utils/entities/filter-names';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export const dynamic = 'force-dynamic';
@@ -22,6 +23,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   let etag = DEFAULT_ETAG;
   let applicationScheme: DialApplicationScheme | null | undefined = null;
   let roles: DialRole[] | null = [];
+  let applications: DialApplication[] | null = [];
 
   try {
     const id = decodeURIComponent((await params.params).id);
@@ -33,6 +35,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     if (roles === void 0 || applicationScheme === void 0) {
       return <Page403 />;
     }
+    applications = await applicationsApi.getApplicationsList(token);
   } catch (e) {
     logError(e, 'Failed to fetch application runner data');
   }
@@ -44,7 +47,12 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   return (
     <SaveValidationContextProvider>
       <AppsFolderProvider>
-        <ApplicationRunnersView etag={etag} originalScheme={applicationScheme} roles={roles} />
+        <ApplicationRunnersView
+          etag={etag}
+          originalScheme={applicationScheme}
+          roles={roles}
+          names={filterDisplayNames(applications)}
+        />
       </AppsFolderProvider>
     </SaveValidationContextProvider>
   );
