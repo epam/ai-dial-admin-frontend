@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   formatAttachment,
   getFormattedResourceType,
+  getTopics,
   numberValueFormatter,
   priceValueFormatter,
   sourceTypeFormatter,
@@ -40,6 +41,21 @@ describe('Formatters :: formatAttachment ', () => {
   test('Should return custom', () => {
     const result = formatAttachment(['*/*'] as any, (v: string) => v);
     expect(result).toEqual('Attachments.AllAttachments');
+  });
+});
+
+describe('Formatters :: getTopics', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  test('returns empty array', () => {
+    expect(getTopics({})).toEqual([]);
+    expect(getTopics()).toEqual([]);
+  });
+
+  test('returns topics array', () => {
+    expect(getTopics({ descriptionKeywords: ['topic1', 'topic2'] })).toEqual(['topic1', 'topic2']);
+    expect(getTopics({ topics: ['topic1', 'topic2'] })).toEqual(['topic1', 'topic2']);
   });
 });
 

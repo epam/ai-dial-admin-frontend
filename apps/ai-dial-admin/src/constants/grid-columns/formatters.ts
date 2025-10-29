@@ -17,6 +17,10 @@ export const getFormattedResourceType = (value: string, t: (key: string) => stri
   return value;
 };
 
+export const getTopics = (data?: { topics?: string[]; descriptionKeywords?: string[] }) => {
+  return data?.topics || data?.descriptionKeywords || [];
+};
+
 export const formatAttachment = (value: string, t: (stringToTranslate: string) => string) => {
   if (value && value?.[0] === ALL_ATTACHMENTS) {
     return t(AttachmentsI18nKey.AllAttachments);
