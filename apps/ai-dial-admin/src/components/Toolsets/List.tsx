@@ -6,7 +6,7 @@ import {
   AUTHOR_COLUMN,
   SIMPLE_ENTITY_COLUMNS,
   SOURCE_FIELD_COLUMNS,
-  TOPIC_COLUMN,
+  TOPICS_COLUMN,
 } from '@/src/constants/grid-columns/grid-columns';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -28,7 +28,7 @@ const ToolsetsList: FC<Props> = ({ data }) => {
         ...SIMPLE_ENTITY_COLUMNS,
         ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Toolsets),
         AUTHOR_COLUMN,
-        TOPIC_COLUMN,
+        TOPICS_COLUMN,
       ]}
       names={names}
       data={data}
