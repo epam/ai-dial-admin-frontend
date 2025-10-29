@@ -159,7 +159,7 @@ export const getComponentColDefs = (
   }
 
   if (type === EntityType.KEY) {
-    return [getComponentActionColumn(), ...KEYS_COLUMNS, actionColumn];
+    return [getComponentActionColumn(), ...KEYS_COLUMNS(t), actionColumn];
   }
 
   return [getComponentActionColumn(), ...SIMPLE_ENTITY_COLUMNS, actionColumn];
