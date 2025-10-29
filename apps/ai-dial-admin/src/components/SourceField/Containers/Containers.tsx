@@ -21,6 +21,7 @@ import { IconExternalLink } from '@tabler/icons-react';
 import Field from '@/src/components/Common/Field/Field';
 import SelectContainerModal from '@/src/components/SourceField/Containers/SelectContainerModal';
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
+import { addTrailingSlash } from '@/src/utils/files/path';
 
 interface Props<T> {
   entity: T;
@@ -156,7 +157,12 @@ const Containers = <T extends DialInterceptor | DialModel>({
         )}
       </div>
       {entity.source?.containerId && selectedContainer && !isModal && (
-        <Endpoints entity={entity} onChange={onChange} view={view} prefix={`${selectedContainer?.url}/`} />
+        <Endpoints
+          entity={entity}
+          onChange={onChange}
+          view={view}
+          prefix={addTrailingSlash(selectedContainer?.url || '')}
+        />
       )}
     </div>
   );
