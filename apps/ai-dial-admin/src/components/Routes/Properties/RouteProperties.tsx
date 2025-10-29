@@ -74,10 +74,9 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
   }, [isAppRoute, dispatch, route.upstreams?.length, route.response]);
 
   const selectedPermissions = useMemo(() => {
-    const values = (route as DialAppRoute).permissions?.map(
-      (p) => permissionsItems.find((i) => i.value === p)?.label as string,
+    return (route as DialAppRoute).permissions?.map(
+      (p) => permissionsItems.find((i) => i.value === p)?.value as string,
     );
-    return !values || !values?.length ? void 0 : values;
   }, [permissionsItems, route]);
 
   const onChangeDisplayName = useCallback(
@@ -245,6 +244,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
               disabled={readonly}
               placeholder={t(EntityPlaceholdersI18nKey.SelectPermission)}
               elementId="permissions"
+              multiple={true}
               options={permissionsItems}
               value={selectedPermissions}
               fieldTitle={t(EntityFieldsI18nKey.permissions)}
