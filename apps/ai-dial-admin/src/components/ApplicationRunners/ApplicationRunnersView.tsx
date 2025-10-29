@@ -51,9 +51,10 @@ interface Props {
   etag: string;
   originalScheme: DialApplicationScheme;
   roles: DialRole[] | null;
+  names: string[];
 }
 
-const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles }) => {
+const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -244,7 +245,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles }) => {
               isModalOpen={isCreateAppModalOpen}
               createEntity={createApplication}
               onClose={() => setIsCreateAppModalOpen(false)}
-              names={[]}
+              names={names}
               initialValues={{ customAppSchemaId: selectedRunner.$id }}
             />,
             document.body,
