@@ -216,16 +216,16 @@ describe('generateViewItems', () => {
   test('should include ParamsView.FORM when showForm is true', () => {
     const result = generateViewItems(t, undefined, false, true);
     expect(result).toContainEqual({
-      id: ParamsView.FORM,
-      name: t(EntitiesI18nKey[ParamsView.FORM]),
+      key: ParamsView.FORM,
+      label: t(EntitiesI18nKey[ParamsView.FORM]),
     });
   });
 
   test('should include ParamsView.UI when showUi is true', () => {
     const result = generateViewItems(t, undefined, true, false);
     expect(result).toContainEqual({
-      id: ParamsView.UI,
-      name: t(EntitiesI18nKey[ParamsView.UI]),
+      key: ParamsView.UI,
+      label: t(EntitiesI18nKey[ParamsView.UI]),
     });
   });
 
@@ -233,12 +233,12 @@ describe('generateViewItems', () => {
     const result = generateViewItems(t, undefined, true, true);
 
     expect(result).toContainEqual({
-      id: ParamsView.FORM,
-      name: t(EntitiesI18nKey[ParamsView.FORM]),
+      key: ParamsView.FORM,
+      label: t(EntitiesI18nKey[ParamsView.FORM]),
     });
     expect(result).toContainEqual({
-      id: ParamsView.UI,
-      name: t(EntitiesI18nKey[ParamsView.UI]),
+      key: ParamsView.UI,
+      label: t(EntitiesI18nKey[ParamsView.UI]),
     });
   });
 
@@ -246,8 +246,8 @@ describe('generateViewItems', () => {
     const result = generateViewItems(t, undefined, false, false);
     expect(result).toEqual([
       {
-        id: ParamsView.TABLE,
-        name: t(EntitiesI18nKey[ParamsView.TABLE]),
+        key: ParamsView.TABLE,
+        label: t(EntitiesI18nKey[ParamsView.TABLE]),
       },
     ]);
   });
