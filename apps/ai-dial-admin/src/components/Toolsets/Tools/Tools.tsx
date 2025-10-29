@@ -81,7 +81,7 @@ const ToolsView: FC<Props> = ({ selectedToolset, isAssetToolset, readonly, origi
         },
       );
     }
-  }, [selectedToolset?.name, isAssetToolset, isNotSavedToolset, selectedToolset.endpoint, selectedToolset]);
+  }, [selectedToolset?.name, isAssetToolset, isNotSavedToolset, selectedToolset?.endpoint, selectedToolset]);
 
   useEffect(() => {
     setUseAllTools(!selectedToolset?.allowedTools || selectedToolset?.allowedTools.length === 0);
