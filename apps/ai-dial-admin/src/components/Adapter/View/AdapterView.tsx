@@ -28,6 +28,8 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import AdapterProperties from './AdapterProperties';
+import { DialModelType } from '@/src/models/dial/model';
+import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
 
 interface Props {
   etag: string;
@@ -175,7 +177,13 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
                   createEntity={createModel}
                   onClose={() => setIsModalOpen(false)}
                   names={modelsNames}
-                  initialValues={{ source: { $type: SOURCE_TYPE.ADAPTER, adapterName: selectedAdapter.name } }}
+                  initialValues={{
+                    source: {
+                      $type: SOURCE_TYPE.ADAPTER,
+                      adapterName: selectedAdapter.name,
+                      completionEndpointPath: getEndpointPostfix(DialModelType.Chat),
+                    },
+                  }}
                 />,
                 document.body,
               )}
