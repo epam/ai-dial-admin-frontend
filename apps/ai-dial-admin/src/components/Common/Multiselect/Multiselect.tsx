@@ -10,7 +10,7 @@ import { useI18n } from '@/src/locales/client';
 interface Props {
   elementId: string;
   title: string;
-  readonly?: boolean;
+  disabled?: boolean;
   optional?: boolean;
   selectedItems?: string[];
   heading?: string;
@@ -28,7 +28,7 @@ const Multiselect: FC<Props> = ({
   elementId,
   selectedItems,
   title,
-  readonly,
+  disabled,
   optional,
   errorText,
   ...props
@@ -50,7 +50,7 @@ const Multiselect: FC<Props> = ({
       <DialInputPopup
         inputCssClasses={errorText ? 'dial-input-error' : ''}
         open={isModalOpen}
-        disabled={readonly}
+        disabled={disabled}
         selectedValue={selectedItems}
         onOpen={onOpenModal}
         emptyValueText={t(BasicI18nKey.None)}
