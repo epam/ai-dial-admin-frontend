@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   formatAttachment,
   getFormattedResourceType,
+  getTopics,
   numberValueFormatter,
   priceValueFormatter,
   sourceTypeFormatter,
@@ -43,6 +44,21 @@ describe('Formatters :: formatAttachment ', () => {
   });
 });
 
+describe('Formatters :: getTopics', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  test('returns empty array', () => {
+    expect(getTopics({})).toEqual([]);
+    expect(getTopics()).toEqual([]);
+  });
+
+  test('returns topics array', () => {
+    expect(getTopics({ descriptionKeywords: ['topic1', 'topic2'] })).toEqual(['topic1', 'topic2']);
+    expect(getTopics({ topics: ['topic1', 'topic2'] })).toEqual(['topic1', 'topic2']);
+  });
+});
+
 describe('Formatters :: numberValueFormatter', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -52,8 +68,9 @@ describe('Formatters :: numberValueFormatter', () => {
     expect(numberValueFormatter(12345)).toBe('12,345');
   });
 
-  test('returns empty string if data is missing', () => {
+  test('returns empty string if data is missing or invalid', () => {
     expect(numberValueFormatter(undefined)).toBe('');
+    expect(numberValueFormatter('dd' as any)).toBe('');
   });
 });
 
@@ -72,6 +89,10 @@ describe('Formatters :: priceValueFormatter', () => {
 });
 
 describe('Formatters :: sourceValueFormatter', () => {
+  test('return empty value', () => {
+    expect(sourceValueFormatter({ source: {} })).toBeUndefined();
+    expect(sourceValueFormatter({ source: { $type: 'AAA' } })).toBeUndefined();
+  });
   test('formats source value for ADAPTER type', () => {
     expect(sourceValueFormatter({ source: { $type: SOURCE_TYPE.ADAPTER, adapterName: 'Adapter1' } })).toBe('Adapter1');
   });
@@ -114,6 +135,9 @@ describe('Formatters :: sourceTypeFormatter', () => {
       SourceI18nKey.InterceptorDeployment,
     );
     expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Models)).toBe(SourceI18nKey.ModelDeployment);
+
+    expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Toolsets)).toBe(SourceI18nKey.MCPDeployment);
+    expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Application)).toBe(SOURCE_TYPE.CONTAINER);
   });
 
   test('formats source type for unknown type', () => {
