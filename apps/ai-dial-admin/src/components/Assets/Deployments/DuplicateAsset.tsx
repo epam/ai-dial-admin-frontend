@@ -3,6 +3,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
+import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
 import {
   BasicI18nKey,
@@ -20,9 +21,8 @@ import { DuplicationTypes } from '@/src/types/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { duplicateEntityMap, getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
 import { addTrailingSlash } from '@/src/utils/files/path';
-import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/prompts/versions';
-import IdControl from '../../EntityMainProperties/BaseProperties/Id';
 import { isDeploymentAsset } from '@/src/utils/is-asset-view';
+import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/prompts/versions';
 
 interface Props {
   view: ApplicationRoute;
