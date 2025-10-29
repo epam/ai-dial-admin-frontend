@@ -319,7 +319,7 @@ export const EXPORT_COLUMNS = (
       cellClass: NO_BORDER_CLASS,
       cellRenderer: SelectCellRenderer,
       cellRendererParams: {
-        getItems: (data: DialPrompt) => data.versions?.map((v) => ({ id: v, name: v })),
+        getItems: (data: DialPrompt) => data.versions?.map((v) => ({ value: v, label: v })),
         onChange,
         isMulti: true,
       },

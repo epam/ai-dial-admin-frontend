@@ -2,19 +2,17 @@
 
 import { FC, useEffect, useState } from 'react';
 
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialSwitch, DropdownItem } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
-import Dropdown from '@/src/components/Common/Dropdown/Dropdown';
-import DropdownMenuItem from '@/src/components/Common/Dropdown/DropdownItem';
 import { EntityViewTab } from '@/src/components/EntityView/View/utils';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
+import SecondaryDropdown from '@/src/components/Common/SecondaryDropdown/SecondaryDropdown';
 
 const ONLY_ADMIN_ENTITIES = [
   ApplicationRoute.Adapters,
@@ -48,14 +46,14 @@ const JsonToggles: FC<Props> = ({
   const isMobile = useIsMobileScreen();
   const [editorClassNames, setEditorClassNames] = useState(staticEditorClassNames);
 
-  const items: DropdownItemsModel[] = [
+  const items: DropdownItem[] = [
     {
-      id: ExportFormat.CORE,
-      name: t(EntitiesI18nKey.Core),
+      key: ExportFormat.CORE,
+      label: t(EntitiesI18nKey.Core),
     },
     {
-      id: ExportFormat.ADMIN,
-      name: t(EntitiesI18nKey.Admin),
+      key: ExportFormat.ADMIN,
+      label: t(EntitiesI18nKey.Admin),
     },
   ];
 
@@ -76,19 +74,11 @@ const JsonToggles: FC<Props> = ({
         (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications) &&
         activeTab === EntityViewTab.Parameters
       ) ? (
-        <Dropdown
-          selectedValue={selectedFormat == ExportFormat.CORE ? items[0] : items[1]}
-          selectedClassName="bg-layer-4 cursor-pointer h-[22px] px-1 small rounded flex items-center justify-center"
-        >
-          {items.map((item, i) => (
-            <DropdownMenuItem
-              key={i}
-              dropdownItem={item}
-              isActiveItem={selectedFormat === item.id}
-              onClick={() => setSelectedFormat?.(item.id as ExportFormat)}
-            />
-          ))}
-        </Dropdown>
+        <SecondaryDropdown
+          items={items}
+          selectedValue={selectedFormat}
+          onChange={(id) => setSelectedFormat?.(id as ExportFormat)}
+        />
       ) : null}
       <DialSwitch
         isOn={jsonEditorEnabled}

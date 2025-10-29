@@ -15,7 +15,7 @@ interface Props {
   onChange?: (iconUrl: string) => void;
 }
 
-const IconControl: FC<Props> = ({ iconUrl, disabled = true, onChange }) => {
+const IconControl: FC<Props> = ({ iconUrl, disabled = false, onChange }) => {
   const t = useI18n();
   const { themeUrl } = useAppContext();
   const value = useMemo(
