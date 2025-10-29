@@ -2,6 +2,6 @@ import { DialFile } from './file';
 import { DialRule } from './rule';
 
 export interface DialFolder extends DialFile {
-  children?: DialFolder[];
+  items?: DialFolder[];
   rules?: Record<string, DialRule[]>;
 }

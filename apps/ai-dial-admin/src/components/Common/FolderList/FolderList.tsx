@@ -161,7 +161,7 @@ const FolderList: FC<Props> = ({
       ? 'bg-accent-primary-alpha border-l-2 border-l-accent-primary rounded'
       : 'border-l-2 border-l-transparent';
     const iconClass =
-      !node.children?.some((c) => isFolder(c.nodeType)) &&
+      !node.items?.some((c) => isFolder(c.nodeType)) &&
       (isBulkDelete
         ? (folderContext as AssetsFolderContext<DialFile>)?.bulkSelectedData[node.path]
         : folderContext?.fetchedFoldersData[node.path])
@@ -177,8 +177,8 @@ const FolderList: FC<Props> = ({
           if (node.path === rootFolderPath) {
             return node;
           }
-          if (node.children) {
-            const found = findRootNode(node.children);
+          if (node.items) {
+            const found = findRootNode(node.items);
             if (found) return found;
           }
         }
@@ -191,13 +191,13 @@ const FolderList: FC<Props> = ({
     }
 
     return nodes?.map((node) => {
-      const { path, nodeType, children, name } = node;
+      const { path, nodeType, items, name } = node;
       const { baseClass, selectedClass, iconClass } = getFolderClassNames(node, level);
       const isExpanded = folderContext?.expandedFolders.has(path);
       const isMoveError =
         isFolderMove &&
         path === folderContext?.filePath &&
-        children?.some((c) => getFolderName(c.path) === getFolderName(folderPath || ''));
+        items?.some((c) => getFolderName(c.path) === getFolderName(folderPath || ''));
       const isMovableFolder = isFolderMove && folderPath === path;
 
       return (
@@ -246,7 +246,7 @@ const FolderList: FC<Props> = ({
             </div>
           )}
 
-          {isExpanded && children && <div key={`${path}-children`}>{renderTree(children, level + 1)}</div>}
+          {isExpanded && items && <div key={`${path}-children`}>{renderTree(items, level + 1)}</div>}
         </div>
       );
     });

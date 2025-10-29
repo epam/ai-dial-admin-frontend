@@ -55,8 +55,8 @@ export const generateFolderListFromBulkPaths = (paths: string[]): DialFile[] => 
         currentNode.push(newNode);
         existingNode = newNode;
       }
-      if (existingNode.children) {
-        currentNode = existingNode.children;
+      if (existingNode.items) {
+        currentNode = existingNode.items;
       }
     });
   });
