@@ -81,7 +81,7 @@ describe('generateFolderListFromBulkPaths', () => {
         name: 'public',
         path: 'public/',
         nodeType: DialFileNodeType.FOLDER,
-        children: [],
+        items: [],
       },
     ]);
   });
@@ -95,17 +95,17 @@ describe('generateFolderListFromBulkPaths', () => {
         name: 'public',
         path: 'public/',
         nodeType: DialFileNodeType.FOLDER,
-        children: [
+        items: [
           {
             name: 'child',
             path: 'public/child/',
             nodeType: DialFileNodeType.FOLDER,
-            children: [
+            items: [
               {
                 name: 'grand',
                 path: 'public/child/grand/',
                 nodeType: DialFileNodeType.FOLDER,
-                children: [],
+                items: [],
               },
             ],
           },
@@ -123,23 +123,23 @@ describe('generateFolderListFromBulkPaths', () => {
         name: 'public',
         path: 'public/',
         nodeType: DialFileNodeType.FOLDER,
-        children: [
+        items: [
           {
             name: 'child',
             path: 'public/child/',
             nodeType: DialFileNodeType.FOLDER,
-            children: [
+            items: [
               {
                 name: 'grand',
                 path: 'public/child/grand/',
                 nodeType: DialFileNodeType.FOLDER,
-                children: [],
+                items: [],
               },
               {
                 name: 'other',
                 path: 'public/child/other/',
                 nodeType: DialFileNodeType.FOLDER,
-                children: [],
+                items: [],
               },
             ],
           },
@@ -157,24 +157,24 @@ describe('generateFolderListFromBulkPaths', () => {
         name: 'public',
         path: 'public/',
         nodeType: DialFileNodeType.FOLDER,
-        children: [],
+        items: [],
       },
       {
         name: 'assets',
         path: 'assets/',
         nodeType: DialFileNodeType.FOLDER,
-        children: [],
+        items: [],
       },
       {
         name: 'content',
         path: 'content/',
         nodeType: DialFileNodeType.FOLDER,
-        children: [
+        items: [
           {
             name: 'posts',
             path: 'content/posts/',
             nodeType: DialFileNodeType.FOLDER,
-            children: [],
+            items: [],
           },
         ],
       },

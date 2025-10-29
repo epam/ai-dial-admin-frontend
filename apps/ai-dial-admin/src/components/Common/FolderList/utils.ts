@@ -49,7 +49,7 @@ export const generateFolderListFromBulkPaths = (paths: string[]): DialFile[] => 
           name: part,
           path: parts.slice(0, index + 1).join('/') + '/',
           nodeType: DialFileNodeType.FOLDER,
-          children: [],
+          items: [],
         } as unknown as DialFile;
 
         currentNode.push(newNode);
