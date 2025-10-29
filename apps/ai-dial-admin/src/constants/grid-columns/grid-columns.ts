@@ -8,6 +8,7 @@ import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import {
   formatAttachment,
   getFormattedResourceType,
+  getTopics,
   numberValueFormatter,
   priceValueFormatter,
   sourceTypeFormatter,
@@ -96,14 +97,15 @@ const DISPLAY_NAME_COLUMN_WITH_SORT: ColDef = { ...DISPLAY_NAME_COLUMN, sort: 'a
 export const NAME_COLUMN: ColDef = { field: 'name', colId: 'name', headerName: 'ID', hide: false };
 const NAME_COLUMN_WITH_SORT: ColDef = { ...NAME_COLUMN, sort: 'asc' };
 
-export const TOPIC_COLUMN: ColDef = {
+export const TOPICS_COLUMN: ColDef = {
   field: 'topics',
   colId: 'topics',
   headerName: 'Topics',
   cellRenderer: TopicsCellRenderer,
   cellRendererParams: (params: { data?: { topics?: string[]; descriptionKeywords?: string[] } }) => ({
-    topics: params.data?.topics || params.data?.descriptionKeywords || [],
+    topics: getTopics(params.data),
   }),
+  filterValueGetter: (params) => getTopics(params.data),
 };
 
 const ATTACHMENT_COLUMN = (t: (str: string) => string): ColDef => {
@@ -177,7 +179,7 @@ export const MODELS_COLUMNS = (t: (str: string) => string, view?: ApplicationRou
   AUTHOR_COLUMN,
   { field: 'type', headerName: 'Type', hide: true },
   { field: 'overrideName', headerName: 'Override Name', hide: true },
-  TOPIC_COLUMN,
+  TOPICS_COLUMN,
   UPDATED_AT_COLUMN,
   ATTACHMENT_COLUMN(t),
   { field: 'maxInputAttachments', headerName: 'Max attachment number', hide: true },
@@ -191,7 +193,7 @@ export const MODELS_COLUMNS = (t: (str: string) => string, view?: ApplicationRou
 export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   ...BASE_COLUMNS,
   { field: 'endpoint', headerName: 'Endpoint', hide: false },
-  TOPIC_COLUMN,
+  TOPICS_COLUMN,
   AUTHOR_COLUMN,
   ATTACHMENT_COLUMN(t),
   { field: 'maxInputAttachments', headerName: 'Max attachment number', hide: true },
@@ -274,7 +276,7 @@ export const RUNNERS_COLUMNS: ColDef[] = [
   { field: 'dial:applicationTypeDisplayName', headerName: 'Display Name', sort: 'asc' },
   { field: '$id', headerName: 'ID' },
   DESCRIPTION_COLUMN,
-  TOPIC_COLUMN,
+  TOPICS_COLUMN,
   UPDATED_AT_COLUMN,
 ];
 

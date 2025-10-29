@@ -17,6 +17,10 @@ export const getFormattedResourceType = (value: string, t: (key: string) => stri
   return value;
 };
 
+export const getTopics = (data?: { topics?: string[]; descriptionKeywords?: string[] }) => {
+  return data?.topics || data?.descriptionKeywords || [];
+};
+
 export const formatAttachment = (value: string, t: (stringToTranslate: string) => string) => {
   if (value && value?.[0] === ALL_ATTACHMENTS) {
     return t(AttachmentsI18nKey.AllAttachments);
@@ -38,17 +42,7 @@ export const priceValueFormatter = (value?: string | number) => {
 };
 
 export const numberValueFormatter = (value?: string | number) => {
-  let number = '';
-
-  try {
-    number = formatNumberByDelimiter(value);
-  } catch (e) {
-    if (e) {
-      number = '';
-    }
-  }
-
-  return number;
+  return formatNumberByDelimiter(value);
 };
 
 export const sourceTypeFormatter = (value: string, t: (key: string) => string, view?: ApplicationRoute) => {
