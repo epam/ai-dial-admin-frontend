@@ -25,6 +25,7 @@ import ToolsFilter from './Filter/ToolsFilter';
 import ToolItem from './ToolItem';
 import { ToolFilter } from './type';
 import { getFilteredTools } from './utils';
+import { AssetToolset } from '@/src/models/dial/deployment-asset';
 
 const filtersConfiguration = [
   ToolFilter.Enabled,
@@ -73,12 +74,14 @@ const ToolsView: FC<Props> = ({ selectedToolset, isAssetToolset, readonly, origi
   useEffect(() => {
     if (selectedToolset?.name) {
       setIsLoading(true);
-      (isAssetToolset ? getAssetTools(selectedToolset?.name) : getTools(selectedToolset?.name)).then((tools) => {
-        setIsLoading(false);
-        setAvailableTools(tools || []);
-      });
+      (isAssetToolset ? getAssetTools((selectedToolset as AssetToolset)?.path) : getTools(selectedToolset?.name)).then(
+        (tools) => {
+          setIsLoading(false);
+          setAvailableTools(tools || []);
+        },
+      );
     }
-  }, [selectedToolset?.name, isAssetToolset, isNotSavedToolset, selectedToolset?.endpoint]);
+  }, [selectedToolset?.name, isAssetToolset, isNotSavedToolset, selectedToolset.endpoint, selectedToolset]);
 
   useEffect(() => {
     setUseAllTools(!selectedToolset?.allowedTools || selectedToolset?.allowedTools.length === 0);
