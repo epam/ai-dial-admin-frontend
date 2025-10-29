@@ -46,10 +46,8 @@ export const numberValueFormatter = (value?: string | number) => {
 
   try {
     number = formatNumberByDelimiter(value);
-  } catch (e) {
-    if (e) {
-      number = '';
-    }
+  } catch {
+    number = '';
   }
 
   return number;

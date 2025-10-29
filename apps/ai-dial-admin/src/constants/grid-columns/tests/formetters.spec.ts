@@ -88,6 +88,10 @@ describe('Formatters :: priceValueFormatter', () => {
 });
 
 describe('Formatters :: sourceValueFormatter', () => {
+  test('return empty value', () => {
+    expect(sourceValueFormatter({ source: {} })).toBeUndefined();
+    expect(sourceValueFormatter({ source: { $type: 'AAA' } })).toBeUndefined();
+  });
   test('formats source value for ADAPTER type', () => {
     expect(sourceValueFormatter({ source: { $type: SOURCE_TYPE.ADAPTER, adapterName: 'Adapter1' } })).toBe('Adapter1');
   });
@@ -130,6 +134,9 @@ describe('Formatters :: sourceTypeFormatter', () => {
       SourceI18nKey.InterceptorDeployment,
     );
     expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Models)).toBe(SourceI18nKey.ModelDeployment);
+
+    expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Toolsets)).toBe(SourceI18nKey.MCPDeployment);
+    expect(sourceTypeFormatter(SOURCE_TYPE.CONTAINER, t, ApplicationRoute.Application)).toBe(SOURCE_TYPE.CONTAINER);
   });
 
   test('formats source type for unknown type', () => {
