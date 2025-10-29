@@ -42,15 +42,7 @@ export const priceValueFormatter = (value?: string | number) => {
 };
 
 export const numberValueFormatter = (value?: string | number) => {
-  let number = '';
-
-  try {
-    number = formatNumberByDelimiter(value);
-  } catch {
-    number = '';
-  }
-
-  return number;
+  return formatNumberByDelimiter(value);
 };
 
 export const sourceTypeFormatter = (value: string, t: (key: string) => string, view?: ApplicationRoute) => {

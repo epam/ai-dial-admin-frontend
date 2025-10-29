@@ -68,8 +68,9 @@ describe('Formatters :: numberValueFormatter', () => {
     expect(numberValueFormatter(12345)).toBe('12,345');
   });
 
-  test('returns empty string if data is missing', () => {
+  test('returns empty string if data is missing or invalid', () => {
     expect(numberValueFormatter(undefined)).toBe('');
+    expect(numberValueFormatter('dd' as any)).toBe('');
   });
 });
 
