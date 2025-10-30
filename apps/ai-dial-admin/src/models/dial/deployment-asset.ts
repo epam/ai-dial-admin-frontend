@@ -5,14 +5,14 @@ import { Toolset } from './toolset';
 
 export interface AssetApp extends DialFile, DialApplication {
   version: string;
-  children?: AssetApp[];
+  items?: AssetApp[];
   versions?: string[];
   applicationTypeSchemaId?: string;
 }
 
 export interface AssetToolset extends DialFile, Toolset {
   version: string;
-  children?: AssetToolset[];
+  items?: AssetToolset[];
   versions?: string[];
 }
 

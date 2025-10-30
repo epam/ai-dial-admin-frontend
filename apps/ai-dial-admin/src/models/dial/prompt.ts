@@ -5,6 +5,6 @@ export interface DialPrompt extends DialFile, BaseEntity {
   version: string;
   content: string;
   id?: string;
-  children?: DialPrompt[];
+  items?: DialPrompt[];
   versions?: string[];
 }

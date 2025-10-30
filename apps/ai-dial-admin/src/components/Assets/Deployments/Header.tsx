@@ -32,7 +32,7 @@ const DeploymentAssetHeader: FC<Props> = ({ asset }) => {
       <LabelledText label={t(EntityFieldsI18nKey.id)} text={asset.name} copyable={true} />
       {asset.author && <LabelledText label={t(EntitiesI18nKey.Author)} text={asset.author} />}
       <LabelledText label={t(EntityFieldsI18nKey.createdAt)} text={formatDateTimeToLocalString(asset.createdAt)} />
-      <LabelledText label={t(EntityFieldsI18nKey.updatedAt)} text={formatDateTimeToLocalString(asset.updateTime)} />
+      <LabelledText label={t(EntityFieldsI18nKey.updatedAt)} text={formatDateTimeToLocalString(asset.updatedAt)} />
       <LabelledText label={t(EntitiesI18nKey.FolderStorage)}>
         <div className="flex flex-row gap-1 items-center">
           <DialEllipsisTooltip text={removeTrailingSlash(asset.folderId)} />
