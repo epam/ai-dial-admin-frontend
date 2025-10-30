@@ -11,7 +11,12 @@ interface Props {
 const SecondaryDropdown: FC<Props> = ({ items, prefix, selectedValue }) => {
   return (
     <div className="w-fit">
-      <DialSelect options={items} value={selectedValue} cssClass="!px-1.5 !py-1 bg-layer-4 h-[25px] min-h-[25px]" />
+      <DialSelect
+        options={items}
+        prefix={prefix}
+        value={selectedValue}
+        cssClass="!px-1.5 !py-1 bg-layer-4 h-[25px] min-h-[25px]"
+      />
     </div>
   );
 };
