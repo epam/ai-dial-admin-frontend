@@ -1,6 +1,6 @@
 import { ColDef, Column, GridApi, IRowNode } from 'ag-grid-community';
 
-import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_VALUE } from '@/src/constants/role';
+import { UNLIMITED_ACCEPTED_USERS, UNLIMITED_VALUE } from '@/src/constants/role';
 import { DialRole } from '@/src/models/dial/role';
 import { DialRoleShare } from '@/src/models/dial/role-limits';
 import { sharingDefaults } from './constants';
@@ -20,7 +20,7 @@ export const getSharingData = (role?: DialRole): SharingGridData[] => {
     const shareData = role?.share?.[type];
     const initialInvitationTtl = shareData?.invitationTtl;
     const invitationTtl = (
-      initialInvitationTtl === NO_LIMITS_VALUE || !initialInvitationTtl
+      initialInvitationTtl === UNLIMITED_VALUE || !initialInvitationTtl
         ? initialInvitationTtl
         : getHoursFromMs(initialInvitationTtl)
     )?.toString();
@@ -69,5 +69,5 @@ export const isSetNoLimitsHidden = (api: GridApi, node: IRowNode) => {
     rowNode: node,
   });
 
-  return invitationTtl === NO_LIMITS_VALUE && maxAcceptedUsers === NO_LIMITS_ACCEPTED_USERS;
+  return invitationTtl === UNLIMITED_VALUE && maxAcceptedUsers === UNLIMITED_ACCEPTED_USERS;
 };
