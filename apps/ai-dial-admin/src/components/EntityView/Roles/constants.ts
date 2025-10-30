@@ -7,7 +7,7 @@ const limitValueFormatter = (value: string) => {
 };
 
 export const cellRenderParams = {
-  placeholder: RolesI18nKey.NoLimits,
+  placeholder: RolesI18nKey.NotSpecified,
   valueFormatter: limitValueFormatter,
   inputType: 'number',
 };

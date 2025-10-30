@@ -3,7 +3,7 @@
 import { FC, useEffect, useState } from 'react';
 import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
-import { NO_LIMITS_VALUE } from '@/src/constants/role';
+import { UNLIMITED_VALUE } from '@/src/constants/role';
 import { RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
@@ -21,7 +21,7 @@ const RoleCostLimit: FC<Props> = ({ selectedRole, onChangeRole }) => {
   useEffect(() => {
     setCostLimitExist(
       Object.keys(selectedRole.costLimit || {}).some(
-        (key) => (selectedRole.costLimit as Record<string, unknown>)[key] !== NO_LIMITS_VALUE,
+        (key) => (selectedRole.costLimit as Record<string, unknown>)[key] !== UNLIMITED_VALUE,
       ),
     );
   }, [selectedRole.costLimit]);
@@ -32,10 +32,10 @@ const RoleCostLimit: FC<Props> = ({ selectedRole, onChangeRole }) => {
       onChangeRole({
         ...selectedRole,
         costLimit: {
-          minute: NO_LIMITS_VALUE,
-          day: NO_LIMITS_VALUE,
-          week: NO_LIMITS_VALUE,
-          month: NO_LIMITS_VALUE,
+          minute: UNLIMITED_VALUE,
+          day: UNLIMITED_VALUE,
+          week: UNLIMITED_VALUE,
+          month: UNLIMITED_VALUE,
         },
       });
     }
