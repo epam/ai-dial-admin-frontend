@@ -236,8 +236,8 @@ export const fillUpstreams = (diffMap: Record<string, ActivityAuditDiff[]>, valu
 export const compareDefaults = (
   diffMap: Record<string, ActivityAuditDiff[]>,
   key: string,
-  val1: Record<string, DefaultsValue>,
-  val2: Record<string, DefaultsValue>,
+  val1: Record<string, DefaultsValue> = {},
+  val2: Record<string, DefaultsValue> = {},
   isCurrent?: boolean,
 ): void => {
   const allKeys = [...new Set([...Object.keys(val1), ...Object.keys(val2)])].sort();
