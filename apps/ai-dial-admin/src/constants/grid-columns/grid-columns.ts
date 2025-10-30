@@ -72,13 +72,6 @@ const CREATED_AT_COLUMN: ColDef = {
   ...dateTimeColumn,
 };
 
-const UPDATED_TIME_COLUMN: ColDef = {
-  field: 'updateTime',
-  headerName: 'Updated time',
-  hide: false,
-  ...dateTimeColumn,
-};
-
 const UPDATED_AT_COLUMN = {
   field: 'updatedAT',
   headerName: 'Updated time',
@@ -294,7 +287,7 @@ export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [...BASE_COLUMNS, UPDATED
 export const ASSETS_COLUMNS: ColDef[] = [
   { field: 'version', headerName: 'Version' },
   AUTHOR_COLUMN,
-  UPDATED_TIME_COLUMN,
+  UPDATED_AT_COLUMN,
 ];
 
 export const DEPLOYMENT_ASSETS_COLUMNS: ColDef[] = [NAME_COLUMN, ...ASSETS_COLUMNS];
@@ -314,7 +307,7 @@ export const EXPORT_COLUMNS = (
   onChange: (value: string, data: unknown) => void,
   route?: ApplicationRoute,
 ): ColDef[] => {
-  const columns: ColDef[] = [NAME_COLUMN_WITH_SORT, AUTHOR_COLUMN, UPDATED_TIME_COLUMN];
+  const columns: ColDef[] = [NAME_COLUMN_WITH_SORT, AUTHOR_COLUMN, UPDATED_AT_COLUMN];
 
   if (route === ApplicationRoute.Prompts) {
     columns.splice(1, 0, {
