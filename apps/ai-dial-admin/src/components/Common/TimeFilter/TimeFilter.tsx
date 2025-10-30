@@ -10,6 +10,7 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import RangePicker from '@/src/components/Common/RangePicker/RangePicker';
 import { TimeRange } from '@/src/models/time-range';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
+import SecondaryDropdown from '../SecondaryDropdown/SecondaryDropdown';
 
 interface Props {
   timePeriod: string;
@@ -59,36 +60,21 @@ const TimeFilter: FC<Props> = ({ timePeriod, onTimePeriodChange, timeRange, onTi
   }, [setShowCustomRange]);
 
   return (
-    <div>
-      <Dropdown
-        selectedClassName="flex items-center my-[5px] mr-2 px-1.5 py-1 small text-primary rounded bg-layer-3 cursor-pointer"
-        className="flex items-center"
-        selectedValue={
-          timePeriodOptionsConfig.find((item) => item.id === value) || {
-            id: 'Custom',
-            name: `${value}`,
-          }
-        }
-        prefix={t(TelemetryI18nKey.TimePeriod)}
-        listClassName={'w-[276px]'}
-        dismissRef={dismissRef}
-      >
-        <div className="flex flex-col max-h-[382px] overflow-scroll">
-          <div className="flex flex-col w-full">
-            <button className="flex items-center p-3 border-b border-b-secondary" onClick={onClick} aria-label="button">
-              <i className="mr-3">
-                {showCustomRange ? <IconChevronDown {...BASE_ICON_PROPS} /> : <IconChevronRight {...BASE_ICON_PROPS} />}
-              </i>
-              <p className="small text-primary">{t(TelemetryI18nKey.CustomTimeRage)}</p>
-            </button>
-            {showCustomRange && <RangePicker onChange={onRangeChange} timeRange={timeRange} />}
-          </div>
-          {timePeriodOptionsConfig.map((item, i) => (
-            <DropdownMenuItem key={i} dropdownItem={item} onClick={() => onItemSelect(item.id)} />
-          ))}
-        </div>
-      </Dropdown>
-    </div>
+    <SecondaryDropdown
+      prefix={t(TelemetryI18nKey.TimePeriod)}
+      items={timePeriodOptionsConfig}
+      onChange={onItemSelect}
+      selectedValue=""
+    />
+
+    //     selectedValue={
+    //       timePeriodOptionsConfig.find((item) => item.id === value) || {
+    //         id: 'Custom',
+    //         name: `${value}`,
+    //       }
+    //     }
+    //
+    // {showCustomRange && <RangePicker onChange={onRangeChange} timeRange={timeRange} />}
   );
 };
 
