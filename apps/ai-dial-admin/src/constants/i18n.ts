@@ -922,7 +922,7 @@ export enum EntityFieldsI18nKey {
   redirectUri = 'EntityFields.redirectUri',
   authorizationEndpoint = 'EntityFields.authorizationEndpoint',
   authenticationType = 'EntityFields.authenticationType',
-  authentication='EntityFields.authentication',
+  authentication = 'EntityFields.authentication',
   tokenEndpoint = 'EntityFields.tokenEndpoint',
   authSettings = 'EntityFields.authSettings',
   share = 'EntityFields.share',

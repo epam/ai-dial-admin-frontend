@@ -59,6 +59,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState(false);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const isToolsetSignedIn = useMemo(() => {
     return isLoggedInToToolset(selectedToolset);
   }, [selectedToolset]);
@@ -68,12 +69,6 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
   useEffect(() => {
     setSelectedToolset(cloneDeep(originalToolset));
   }, [originalToolset]);
-
-  useEffect(() => {
-    if (oAuthCode) {
-      signIn(ToolsetAuthCredentialLevel.USER, oAuthCode);
-    }
-  }, [oAuthCode]);
 
   const headerClassName = classNames(
     'flex flex-row min-h-[34px]',
@@ -161,6 +156,19 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
     [etag],
   );
 
+  const signIn = useCallback(
+    (type: ToolsetAuthCredentialLevel, code?: string) => {
+      signInToolset(selectedToolset, type, code).then((res) => {
+        if (res.success) {
+          router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        }
+      });
+    },
+    [router, selectedToolset, showNotification],
+  );
+
   const onLogin = useCallback(
     (type: ToolsetAuthCredentialLevel) => {
       const authSettings = selectedToolset.authSettings;
@@ -195,19 +203,10 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
         signIn(type);
       }
     },
-    [selectedToolset, showNotification],
+    [selectedToolset, signIn],
   );
 
-  const signIn = useCallback((type: ToolsetAuthCredentialLevel, code?: string) => {
-    signInToolset(selectedToolset, type, code).then((res) => {
-      if (res.success) {
-        router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
-      } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
-      }
-    });
-  }, []);
-
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onLogout = useCallback(() => {
     signOutToolset(selectedToolset, ToolsetAuthCredentialLevel.GLOBAL).then((res) => {
       if (res.success) {
@@ -216,7 +215,13 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedToolset, showNotification]);
+  }, [router, selectedToolset, showNotification]);
+
+  useEffect(() => {
+    if (oAuthCode) {
+      signIn(ToolsetAuthCredentialLevel.USER, oAuthCode);
+    }
+  }, [signIn, oAuthCode]);
 
   return (
     <>
