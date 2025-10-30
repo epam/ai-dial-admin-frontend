@@ -1,6 +1,12 @@
 'use client';
 
-import { DialFormPopup, DialRadioGroup, PopupSize, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import {
+  DialFormPopup,
+  DialRadioGroup,
+  PopupSize,
+  RadioButtonWithContent,
+  RadioGroupOrientation,
+} from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
