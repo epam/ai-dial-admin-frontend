@@ -30,7 +30,7 @@ export default [
       ecmaVersion: 5,
       sourceType: 'commonjs',
       parserOptions: {
-        project: ['tsconfig.*?.json'],
+        project: ['tsconfig.json', 'tsconfig.*?.json'],
       },
       globals: {
         ...globals.browser,
