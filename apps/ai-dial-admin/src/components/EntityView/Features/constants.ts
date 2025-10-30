@@ -20,6 +20,7 @@ export const placeholdersMap: Record<string, EntityPlaceholdersI18nKey> = {
 export const modelsSwitchFeatures: (keyof DialFeatures)[] = [
   'systemPromptSupported',
   'toolsSupported',
+  'temperatureSupported',
   'seedSupported',
   'urlAttachmentsSupported',
   'folderAttachmentsSupported',
