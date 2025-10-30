@@ -10,6 +10,22 @@ try {
   packageJson = '';
 }
 
+const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+const ContentSecurityPolicy = `
+    default-src 'self';
+    script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https: http: ${
+      process.env.NODE_ENV === 'production' ? '' : `'unsafe-eval'`
+    };
+
+    style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline';
+    img-src 'self' blob: data: https://authjs.dev;
+    font-src 'self' data: https://cdn.jsdelivr.net fonts.gstatic.com;
+    object-src 'none';
+    base-uri 'self';
+    frame-ancestors ${process.env.ALLOWED_FRAME_ANCESTORS ?? "'none'"};
+    ${process.env.NODE_ENV === 'production' ? 'upgrade-insecure-requests;' : ''}
+`;
+
 /**
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
@@ -54,6 +70,10 @@ const nextConfig = {
           {
             key: 'Cache-Control',
             value: 'no-store, no-cache, must-revalidate, proxy-revalidate', // Adjust as needed
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: ContentSecurityPolicy.replace(/\n/g, '').trim(),
           },
         ],
       },
