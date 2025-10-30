@@ -18,7 +18,7 @@ describe('ViewHeader', () => {
   };
 
   test('renders all labeled fields', () => {
-    render(<ViewHeader activity={baseActivity} isModalView={true} />);
+    render(<ViewHeader activity={baseActivity} />);
 
     expect(screen.getByText(ActivityAuditI18nKey.ActivityType)).toBeInTheDocument();
     expect(screen.getByText(ActivityAuditType.Create)).toBeInTheDocument();
@@ -30,8 +30,6 @@ describe('ViewHeader', () => {
     expect(screen.getByText('user@example.com')).toBeInTheDocument();
     expect(screen.getByText(ActivityAuditI18nKey.UserId)).toBeInTheDocument();
     expect(screen.getByText('userId')).toBeInTheDocument();
-    expect(screen.getByText(ActivityAuditI18nKey.ActivityId)).toBeInTheDocument();
-    expect(screen.getByText('act-1')).toBeInTheDocument();
   });
 
   test('calls openResourceInNewTab when resource external link is clicked', () => {
@@ -41,15 +39,6 @@ describe('ViewHeader', () => {
     // The first button is for resource external link
     fireEvent.click(buttons[0]);
     expect(global.open).toHaveBeenCalledWith('/en/models/123', '_blank');
-  });
-
-  test('calls openActivityInNewTab when activity external link is clicked in modal view', () => {
-    global.open = vi.fn();
-    render(<ViewHeader activity={baseActivity} isModalView={true} />);
-    const buttons = screen.getAllByRole('button');
-    // The second button is for activity external link
-    fireEvent.click(buttons[1]);
-    expect(global.open).toHaveBeenCalledWith('/activity-audit/act-1', '_blank');
   });
 
   test('renders children', () => {

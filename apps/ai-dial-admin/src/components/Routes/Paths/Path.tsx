@@ -69,7 +69,7 @@ const Path: FC<Props> = ({ index, path, readonly, optional, fieldTitle, allPaths
           fieldTitle={index === 0 ? fieldTitle : ''}
           onChange={(value) => onChangePath(index, value)}
           errorText={error}
-          invalid={!!error}
+          invalid={(isEmptyPath && index === 0 && isAllEmptyValues) || isInvalidPath}
         />
       </div>
       {!readonly && <DialRemoveButton onClick={() => onRemove(index)} cssClass={removeButtonClass} />}

@@ -2,7 +2,7 @@ import { appRunnerParameterKeys, EntityParameterKeys } from '@/src/components/Ac
 import { sharingDefaults } from '@/src/components/Roles/constants';
 import { getHoursFromMs } from '@/src/components/Roles/utils';
 import { ModelViewI18nKey } from '@/src/constants/i18n';
-import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_KEY, NO_LIMITS_VALUE } from '@/src/constants/role';
+import { UNLIMITED_ACCEPTED_USERS, NO_LIMITS_KEY, UNLIMITED_VALUE, UNLIMITED_KEY } from '@/src/constants/role';
 import { ActivityAuditDiff } from '@/src/models/activity-audit';
 import { DialModelPricing, PricingType } from '@/src/models/dial/model';
 import { DialRoleLimits, DialRoleShare } from '@/src/models/dial/role-limits';
@@ -113,9 +113,9 @@ export const getShareStatus = (v1?: string | null, v2?: string | null, isCurrent
  * @returns {string} - converted value based on no limits constant
  */
 export const convertShareValue = (value?: string | null, field?: string, key?: string): string => {
-  const isNoLimitsValue = value === NO_LIMITS_VALUE || value === NO_LIMITS_ACCEPTED_USERS;
+  const isNoLimitsValue = value === UNLIMITED_VALUE || value === UNLIMITED_ACCEPTED_USERS;
   if (isNoLimitsValue) {
-    return NO_LIMITS_KEY;
+    return UNLIMITED_KEY;
   }
 
   const defaultValue =

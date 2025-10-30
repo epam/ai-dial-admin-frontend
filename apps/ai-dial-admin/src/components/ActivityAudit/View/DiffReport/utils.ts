@@ -1,5 +1,5 @@
 import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
-import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_VALUE, NO_LIMITS_KEY } from '@/src/constants/role';
+import { UNLIMITED_ACCEPTED_USERS, UNLIMITED_VALUE, NO_LIMITS_KEY, UNLIMITED_KEY } from '@/src/constants/role';
 import { ActivityAuditDiff, ActivityAuditDiffSection } from '@/src/models/activity-audit';
 import { ActivityAuditResourceType, DiffStatus, DiffView } from '@/src/types/activity-audit';
 
@@ -26,8 +26,8 @@ const getRowDataByParameter = (
       if (item.parameter) {
         roleLimitsKeys.forEach((key) => {
           const value =
-            valueMap[key] === NO_LIMITS_VALUE || valueMap[key] === NO_LIMITS_ACCEPTED_USERS
-              ? NO_LIMITS_KEY
+            valueMap[key] === UNLIMITED_VALUE || valueMap[key] === UNLIMITED_ACCEPTED_USERS
+              ? UNLIMITED_KEY
               : valueMap[key];
           newObj[key] = value || NO_LIMITS_KEY;
         });
@@ -39,7 +39,7 @@ const getRowDataByParameter = (
     return data?.map((item) => {
       return {
         ...item,
-        value: item.value === NO_LIMITS_VALUE || item.value === NO_LIMITS_ACCEPTED_USERS ? NO_LIMITS_KEY : item.value,
+        value: item.value === UNLIMITED_VALUE || item.value === UNLIMITED_ACCEPTED_USERS ? UNLIMITED_KEY : item.value,
       };
     });
   }
