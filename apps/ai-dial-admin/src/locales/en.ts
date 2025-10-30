@@ -978,6 +978,7 @@ export default {
     WithLoginAndConfig: 'With login & configuration',
     WithoutLogin: 'Without login',
     LogIn: 'Log In',
+    LogOut: 'Log Out',
     AsUser: 'As user',
     AsAdmin: 'As admin',
   },

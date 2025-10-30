@@ -1,17 +1,19 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialTabs } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
+import { IconLogin, IconLogout } from '@tabler/icons-react';
 
 import {
   getToolsets,
   moveToolsets,
   removeToolset,
   signInToolset,
+  signOutToolset,
   updateToolset,
 } from '@/src/app/[lang]/assets-toolsets/actions';
 import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
@@ -28,7 +30,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
-import { Toolset, ToolsetAuthCredentialLevel, ToolsetAuthType } from '@/src/models/dial/toolset';
+import { Toolset, ToolsetAuthCredentialLevel, ToolsetAuthStatus, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -36,6 +38,8 @@ import { getErrorNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { encodeToolsetRedirectState } from '@/src/utils/toolset/toolset-auth';
 import LoginPopup from './LoginPopup';
+import { ToolsetI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
 interface Props {
   etag: string;
@@ -56,6 +60,14 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
   const [isChanged, setIsChanged] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState(false);
+
+  const isToolsetSignedIn = useMemo(() => {
+    const authSettings = selectedToolset.authSettings;
+    return (
+      authSettings?.userLevelAuthStatus === ToolsetAuthStatus.SIGNED_IN ||
+      authSettings?.globalAuthStatus === ToolsetAuthStatus.SIGNED_IN
+    );
+  }, [selectedToolset]);
 
   const [key, setKey] = useState(0);
 
@@ -156,8 +168,11 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
         const url = new URL(authSettings.authorizationEndpoint as string);
         url.searchParams.set('response_type', 'code');
         url.searchParams.set('client_id', authSettings.clientId as string);
-        // TODO: waiting BE
-        // url.searchParams.set('redirect_uri', `${window.location.origin}${Routes.ToolsetSignIn}`);
+
+        url.searchParams.set(
+          'redirect_uri',
+          `${window.location.origin}${ApplicationRoute.AssetsToolsets}/${selectedToolset.name}`,
+        );
 
         if (authSettings.codeChallengeMethod) {
           url.searchParams.set('code_challenge_method', authSettings.codeChallengeMethod);
@@ -182,6 +197,16 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
     [selectedToolset, showNotification],
   );
 
+  const onLogout = useCallback(() => {
+    signOutToolset(selectedToolset, ToolsetAuthCredentialLevel.GLOBAL).then((res) => {
+      if (res.success) {
+        console.warn('Sign-out successful', res);
+      } else {
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+      }
+    });
+  }, [selectedToolset, showNotification]);
+
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
@@ -204,13 +229,21 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
             context={useToolsetFolder as () => AssetsFolderContext<DialFile | AssetToolset>}
             childrenContainerClass="flex-row-reverse"
           >
-            {/* TODO: waiting for BE */}
-            {/* <DialButton
-              variant={ButtonVariant.Secondary}
-              title={t(ToolsetI18nKey.LogIn)}
-              iconBefore={<IconLogin {...BASE_ICON_PROPS} />}
-              onClick={() => setIsModalOpen(true)}
-            /> */}
+            {isToolsetSignedIn ? (
+              <DialButton
+                variant={ButtonVariant.Secondary}
+                title={t(ToolsetI18nKey.LogOut)}
+                iconBefore={<IconLogout {...BASE_ICON_PROPS} />}
+                onClick={onLogout}
+              />
+            ) : (
+              <DialButton
+                variant={ButtonVariant.Secondary}
+                title={t(ToolsetI18nKey.LogIn)}
+                iconBefore={<IconLogin {...BASE_ICON_PROPS} />}
+                onClick={() => setIsModalOpen(true)}
+              />
+            )}
           </HeaderButtons>
         </div>
         <div className="flex-1 overflow-auto mt-3 min-h-0">
