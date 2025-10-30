@@ -8,7 +8,7 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import AuthTypeSection from './Auth/AuthTypeSection';
 import Field from '@/src/components/Common/Field/Field';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   toolset: Toolset;
@@ -39,7 +39,7 @@ const Authentication: FC<Props> = ({ toolset, onChange }) => {
           authenticationType,
           redirectUri:
             authenticationType === ToolsetAuthType.OAUTH
-              ? `${window.location.origin}${ApplicationRoute.AssetsToolsets}/${getEntityPath(ApplicationRoute.AssetsToolsets, toolset)}`
+              ? `${window.location.origin}${getUrnForEntity(ApplicationRoute.AssetsToolsets, toolset)}`
               : '',
         },
       });

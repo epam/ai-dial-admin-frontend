@@ -4,9 +4,9 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
+import { IconLogin, IconLogout } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
-import { IconLogin, IconLogout } from '@tabler/icons-react';
 
 import {
   getToolsets,
@@ -23,6 +23,8 @@ import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
 import { EntityViewTab, propertiesTabs, toolsTabs } from '@/src/components/EntityView/View/utils';
 import ToolsView from '@/src/components/Toolsets/Tools/Tools';
 import { ROOT_FOLDER } from '@/src/constants/file';
+import { ToolsetI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -30,16 +32,14 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
-import { Toolset, ToolsetAuthCredentialLevel, ToolsetAuthStatus, ToolsetAuthType } from '@/src/models/dial/toolset';
+import { Toolset, ToolsetAuthCredentialLevel, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { encodeToolsetRedirectState, isLoggedInToToolset } from '@/src/utils/toolset/toolset-auth';
 import LoginPopup from './LoginPopup';
-import { ToolsetI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
 interface Props {
   etag: string;
@@ -73,7 +73,9 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
   }, [originalToolset]);
 
   useEffect(() => {
-    console.log('oAuthCode', oAuthCode);
+    if (oAuthCode) {
+      signIn(ToolsetAuthCredentialLevel.USER, oAuthCode);
+    }
   }, [oAuthCode]);
 
   const headerClassName = classNames(
@@ -118,7 +120,10 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
             moveToolsets(pathsToMove, newPath).then((r) => {
               if (r.every((response) => response.success)) {
                 router.push(
-                  `${ApplicationRoute.AssetsToolsets}/${getEntityPath(ApplicationRoute.AssetsToolsets, { name: updatedEntity.name, path: changePath(updatedEntity.path, newPath) })}`,
+                  getUrnForEntity(ApplicationRoute.AssetsToolsets, {
+                    name: updatedEntity.name,
+                    path: changePath(updatedEntity.path, newPath),
+                  }),
                 );
                 fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
               }
@@ -126,9 +131,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
           });
         } else {
           fetchFiles(updatedEntity.folderId);
-          router.push(
-            `${ApplicationRoute.AssetsToolsets}/${getEntityPath(ApplicationRoute.AssetsToolsets, updatedEntity)}`,
-          );
+          router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, updatedEntity));
         }
         router.refresh();
       } else {
@@ -172,7 +175,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
 
         url.searchParams.set(
           'redirect_uri',
-          `${window.location.origin}${getEntityPath(ApplicationRoute.AssetsToolsets, selectedToolset)}`,
+          `${window.location.origin}${getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset)}`,
         );
 
         if (authSettings.codeChallengeMethod) {
@@ -186,22 +189,26 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
 
         window.location.assign(url.toString());
       } else {
-        signInToolset(selectedToolset, type).then((res) => {
-          if (res.success) {
-            console.warn('Sign-in successful', res);
-          } else {
-            showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
-          }
-        });
+        signIn(type);
       }
     },
     [selectedToolset, showNotification],
   );
 
+  const signIn = useCallback((type: ToolsetAuthCredentialLevel, code?: string) => {
+    signInToolset(selectedToolset, type, code).then((res) => {
+      if (res.success) {
+        router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
+      } else {
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+      }
+    });
+  }, []);
+
   const onLogout = useCallback(() => {
     signOutToolset(selectedToolset, ToolsetAuthCredentialLevel.GLOBAL).then((res) => {
       if (res.success) {
-        console.warn('Sign-out successful', res);
+        router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
