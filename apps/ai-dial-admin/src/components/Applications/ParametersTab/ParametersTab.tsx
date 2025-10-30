@@ -32,6 +32,7 @@ import TableView from './TableView';
 import ViewControl from './ViewControl';
 import { ParamsView } from './types';
 import EntityJsonEditor from '../../EntityView/JsonEditor/JsonEditor';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   entity?: DialApplication | DialApplicationResource;
@@ -63,6 +64,7 @@ const ApplicationParametersTab: FC<Props> = ({
   const t = useI18n() as (s: string) => string;
   const { data: session } = useSession();
   const { currentTheme } = useTheme();
+  const { dispatch } = useSaveValidationContext();
   const scheme = getAppRunner(entity as DialApplication, applicationSchemes);
 
   const [appPropertiesTemp, setAppPropertiesTemp] = useState<ApplicationPropertiesTemp[] | undefined>();
@@ -121,8 +123,10 @@ const ApplicationParametersTab: FC<Props> = ({
         applicationPropertiesTemp: props,
       } as unknown as BaseEntity;
       onChangeEntity?.(newEntity, isSkipRefresh);
+      const isValid = !props?.some((p) => !p.key || p.value == null || p.value === '');
+      dispatch({ type: ValidationActionType.SetField, field: 'applicationProperties', isValid });
     },
-    [entity, onChangeEntity],
+    [dispatch, entity, onChangeEntity],
   );
 
   const onChangeConfiguration = useCallback(
