@@ -284,11 +284,7 @@ export const RUNNERS_COLUMNS: ColDef[] = [
 
 export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [...BASE_COLUMNS, UPDATED_AT_COLUMN];
 
-export const ASSETS_COLUMNS: ColDef[] = [
-  { field: 'version', headerName: 'Version' },
-  AUTHOR_COLUMN,
-  UPDATED_AT_COLUMN,
-];
+export const ASSETS_COLUMNS: ColDef[] = [{ field: 'version', headerName: 'Version' }, AUTHOR_COLUMN, UPDATED_AT_COLUMN];
 
 export const DEPLOYMENT_ASSETS_COLUMNS: ColDef[] = [NAME_COLUMN, ...ASSETS_COLUMNS];
 
