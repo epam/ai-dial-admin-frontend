@@ -134,6 +134,7 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, runners, o
               onChangeEntity={onChange as (entity: DialApplication) => void}
               runners={runners}
               isEntityImmutable={true}
+              view={view}
             />
             <EntityAttachments
               entity={asset as DialApplication}
