@@ -4,6 +4,7 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState
 
 import { IconFileTypeZip } from '@tabler/icons-react';
 import {
+  DialFileIcon,
   DialIcon,
   DialLoadFileAreaField,
   DialRadioGroup,
@@ -24,7 +25,6 @@ import { useI18n } from '@/src/locales/client';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
-import { getIcon } from '@/src/utils/files/icon';
 import { getErrorForFolderName } from '@/src/utils/validation/folder-error';
 
 interface Props {
@@ -81,7 +81,7 @@ const FolderCreateSetup: FC<Props> = ({
   const [nameErrorText, setNameErrorText] = useState('');
 
   const getFileIcon = (name: string) => {
-    return getIcon(getNameExtensionFromFile(name).extension);
+    return <DialFileIcon extension={getNameExtensionFromFile(name).extension} />;
   };
 
   const setCurrentSteps = useCallback(

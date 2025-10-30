@@ -8,6 +8,7 @@ import {
   RadioButtonWithContent,
   DialLoadFileAreaField,
   DialIcon,
+  DialFileIcon,
 } from '@epam/ai-dial-ui-kit';
 
 import Json from '@/public/images/icons/file/json.svg';
@@ -16,7 +17,6 @@ import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18
 import { useI18n } from '@/src/locales/client';
 import { ImportFileType } from '@/src/types/import';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
-import { getIcon } from '@/src/utils/files/icon';
 import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
@@ -57,7 +57,7 @@ const ImportFileTypeSelector: FC<Props> = ({
   }, [t, route]);
 
   const getFileIcon = (name: string) => {
-    return getIcon(getNameExtensionFromFile(name).extension);
+    return <DialFileIcon extension={getNameExtensionFromFile(name).extension} />;
   };
 
   return (
