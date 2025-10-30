@@ -2,8 +2,7 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialLoader } from '@epam/ai-dial-ui-kit';
-import { DialTabs } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialLoader, DialSwitch, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconRestore } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 
@@ -22,6 +21,7 @@ import { SYSTEM_ROLLBACK_ENTITIES, SYSTEM_ROLLBACK_TAB_NAME } from '@/src/compon
 import { getSystemRollbackColumns } from '@/src/components/ActivityAudit/Rollback/utils';
 import DiffLegend from '@/src/components/ActivityAudit/View/DiffReport/DiffLegend';
 import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
+import JsonView from '@/src/components/ActivityAudit/View/JsonView';
 import { mergeEntityMaps } from '@/src/components/ActivityAudit/View/utils/generate-diffs';
 import { ActivityAuditI18nKey, MenuI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -59,6 +59,8 @@ const SystemRollback: FC = () => {
 
   const [diffView, setDiffView] = useState(DiffView.ALL);
   const [activity, setActivity] = useState<DialActivity | undefined>(void 0);
+
+  const [isJsonView, setIsJsonView] = useState(false);
 
   const systemRollback = useCallback(() => {
     systemRollbackToRevision(rollbackRevision?.id);
@@ -166,6 +168,8 @@ const SystemRollback: FC = () => {
             title={t(RollbackI18nKey.System)}
             onClick={() => setIsRollBackModalOpen(true)}
           />
+          <div className="w-[1px] h-6 bg-layer-4"></div>
+          <DialSwitch switchId="jsonView" isOn={isJsonView} onChange={() => setIsJsonView(!isJsonView)} title="JSON" />
         </div>
       </div>
       <div className="flex flex-col min-h-0 flex-1 relative">
@@ -181,28 +185,35 @@ const SystemRollback: FC = () => {
             <DialLoader size={40} />
           ) : (
             <div className="flex-1 flex flex-col min-h-0">
-              <div className="flex-1 flex flex-row gap-8">
-                <div className="flex flex-col flex-1">
-                  <h3 className="mb-4 text-primary">{t(ActivityAuditI18nKey.CurrentState)}</h3>
-                  <AuditEntityGrid
-                    data={currentRows}
-                    columns={columns}
-                    diffView={diffView}
-                    rollbackRows={rollbackRows}
-                    activity={activity}
-                  />
+              {isJsonView ? (
+                <JsonView
+                  modified={JSON.stringify(rollbackRows || {}, null, 2)}
+                  original={JSON.stringify(currentRows || {}, null, 2)}
+                />
+              ) : (
+                <div className="flex-1 flex flex-row gap-8">
+                  <div className="flex flex-col flex-1">
+                    <h3 className="mb-4 text-primary">{t(ActivityAuditI18nKey.CurrentState)}</h3>
+                    <AuditEntityGrid
+                      data={currentRows}
+                      columns={columns}
+                      diffView={diffView}
+                      rollbackRows={rollbackRows}
+                      activity={activity}
+                    />
+                  </div>
+                  <div className="flex flex-col flex-1">
+                    <h3 className="mb-4 text-primary">{t(RollbackI18nKey.State)}</h3>
+                    <AuditEntityGrid
+                      data={rollbackRows}
+                      columns={columns}
+                      diffView={diffView}
+                      currentRows={currentRows}
+                      activity={activity}
+                    />
+                  </div>
                 </div>
-                <div className="flex flex-col flex-1">
-                  <h3 className="mb-4 text-primary">{t(RollbackI18nKey.State)}</h3>
-                  <AuditEntityGrid
-                    data={rollbackRows}
-                    columns={columns}
-                    diffView={diffView}
-                    currentRows={currentRows}
-                    activity={activity}
-                  />
-                </div>
-              </div>
+              )}
             </div>
           )}
         </div>
