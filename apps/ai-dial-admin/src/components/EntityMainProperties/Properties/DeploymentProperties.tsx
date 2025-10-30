@@ -162,7 +162,7 @@ const DeploymentProperties: FC<Props> = ({
         runners={runners}
       />
 
-      {(view === ApplicationRoute.Models || view === ApplicationRoute.Toolsets) && (
+      {(view === ApplicationRoute.Models || view === ApplicationRoute.Toolsets) && !initialValues && (
         <SourceField
           view={view}
           entity={entity}
