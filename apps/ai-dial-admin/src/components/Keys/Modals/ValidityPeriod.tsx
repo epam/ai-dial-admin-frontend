@@ -55,6 +55,7 @@ const ValidityPeriod: FC<Props> = ({ onChange }) => {
         value={selectedValue}
         options={items}
         elementId="period"
+        onChange={(value) => onChangeValue(value as string)}
         containerCssClass="w-[180px]"
       />
       <LabelledText label={t(EntityFieldsI18nKey.expiresAt)} text={formatDateTimeToLocalString(expirationTime) || ''} />
