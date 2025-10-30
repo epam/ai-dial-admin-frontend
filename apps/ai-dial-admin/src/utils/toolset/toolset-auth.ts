@@ -1,5 +1,5 @@
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
-import { ToolsetAuthCredentialLevel, ToolsetAuthType } from '@/src/models/dial/toolset';
+import { ToolsetAuthCredentialLevel, ToolsetAuthStatus, ToolsetAuthType } from '@/src/models/dial/toolset';
 
 export const getToolsetSignInBody = (toolset: AssetToolset, level: ToolsetAuthCredentialLevel, authCode?: string) => {
   const body = { ...getToolsetBasicBody(toolset, level) };
@@ -23,6 +23,20 @@ export const getToolsetBasicBody = (toolset: AssetToolset, level: ToolsetAuthCre
     credentials_level: level,
     authenticationType: toolset.authSettings?.authenticationType,
   };
+};
+
+export const isLoggedInToToolset = (toolset: AssetToolset): boolean => {
+  return isUserLoggedInToToolset(toolset) || isAdminLoggedInToToolset(toolset);
+};
+
+export const isUserLoggedInToToolset = (toolset: AssetToolset): boolean => {
+  const authSettings = toolset.authSettings;
+  return authSettings?.userLevelAuthStatus === ToolsetAuthStatus.SIGNED_IN;
+};
+
+export const isAdminLoggedInToToolset = (toolset: AssetToolset): boolean => {
+  const authSettings = toolset.authSettings;
+  return authSettings?.globalAuthStatus === ToolsetAuthStatus.SIGNED_IN;
 };
 
 export const encodeToolsetRedirectState = (state: Record<string, string | undefined>): string => {

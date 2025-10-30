@@ -752,6 +752,7 @@ export default {
     container: 'Container',
     authSettings: 'Authentication',
     authenticationType: 'Authentication type',
+    authentication: 'Authentication',
     name: 'Name',
     id: 'ID',
     displayName: 'Display name',
@@ -981,5 +982,8 @@ export default {
     LogOut: 'Log Out',
     AsUser: 'As user',
     AsAdmin: 'As admin',
+    LoggedOut: 'Logged out',
+    UserLoggedIn: 'Logged in as user',
+    AdminLoggedIn: 'Logged in as admin',
   },
 } as const;

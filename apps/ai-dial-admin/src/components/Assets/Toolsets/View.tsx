@@ -36,18 +36,19 @@ import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import { encodeToolsetRedirectState } from '@/src/utils/toolset/toolset-auth';
+import { encodeToolsetRedirectState, isLoggedInToToolset } from '@/src/utils/toolset/toolset-auth';
 import LoginPopup from './LoginPopup';
 import { ToolsetI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
 interface Props {
   etag: string;
+  oAuthCode?: string | null;
   originalToolset: AssetToolset;
   toolsets: AssetToolset[];
 }
 
-const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
+const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const tabs = [propertiesTabs(t), toolsTabs(t)];
   const router = useRouter();
@@ -62,11 +63,7 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState(false);
 
   const isToolsetSignedIn = useMemo(() => {
-    const authSettings = selectedToolset.authSettings;
-    return (
-      authSettings?.userLevelAuthStatus === ToolsetAuthStatus.SIGNED_IN ||
-      authSettings?.globalAuthStatus === ToolsetAuthStatus.SIGNED_IN
-    );
+    return isLoggedInToToolset(selectedToolset);
   }, [selectedToolset]);
 
   const [key, setKey] = useState(0);
@@ -74,6 +71,10 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
   useEffect(() => {
     setSelectedToolset(cloneDeep(originalToolset));
   }, [originalToolset]);
+
+  useEffect(() => {
+    console.log('oAuthCode', oAuthCode);
+  }, [oAuthCode]);
 
   const headerClassName = classNames(
     'flex flex-row min-h-[34px]',
@@ -171,7 +172,7 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
 
         url.searchParams.set(
           'redirect_uri',
-          `${window.location.origin}${ApplicationRoute.AssetsToolsets}/${selectedToolset.name}`,
+          `${window.location.origin}${getEntityPath(ApplicationRoute.AssetsToolsets, selectedToolset)}`,
         );
 
         if (authSettings.codeChallengeMethod) {

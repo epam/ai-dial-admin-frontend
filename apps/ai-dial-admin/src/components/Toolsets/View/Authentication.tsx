@@ -7,6 +7,8 @@ import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import AuthTypeSection from './Auth/AuthTypeSection';
 import Field from '@/src/components/Common/Field/Field';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getEntityPath } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   toolset: Toolset;
@@ -32,7 +34,14 @@ const Authentication: FC<Props> = ({ toolset, onChange }) => {
     (authenticationType: ToolsetAuthType) => {
       onChange({
         ...toolset,
-        authSettings: { ...toolset.authSettings, authenticationType },
+        authSettings: {
+          ...toolset.authSettings,
+          authenticationType,
+          redirectUri:
+            authenticationType === ToolsetAuthType.OAUTH
+              ? `${window.location.origin}${ApplicationRoute.AssetsToolsets}/${getEntityPath(ApplicationRoute.AssetsToolsets, toolset)}`
+              : '',
+        },
       });
     },
     [onChange, toolset],
