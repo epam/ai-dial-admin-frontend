@@ -287,7 +287,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
         {activeTab === EntityViewTab.Keys && (
           <AddEntitiesView
             viewTitle={t(TabsI18nKey.Keys)}
-            customColumns={KEYS_COLUMNS}
+            customColumns={KEYS_COLUMNS(t)}
             modalTitle={t(KeysI18nKey.AddKeys)}
             emptyDataTitle={t(EntitiesI18nKey.NoKeys)}
             keys={keys}

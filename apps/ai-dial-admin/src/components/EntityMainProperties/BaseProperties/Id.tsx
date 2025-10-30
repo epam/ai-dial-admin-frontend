@@ -14,6 +14,7 @@ interface Props<T> {
   names?: string[];
   isUrlId?: boolean;
   isUniqueNameError?: boolean;
+  disabled?: boolean;
   onChangeEntity?: (entity: T) => void;
 }
 
@@ -24,6 +25,7 @@ const IdControl = <T extends { name?: string }>({
   names,
   isUrlId,
   isUniqueNameError,
+  disabled,
   onChangeEntity,
 }: Props<T>) => {
   const t = useI18n() as (t: string) => string;
@@ -63,6 +65,7 @@ const IdControl = <T extends { name?: string }>({
       onChange={onChangeName}
       errorText={nameError?.text}
       invalid={!!nameError}
+      disabled={disabled}
     />
   );
 };

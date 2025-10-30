@@ -1,8 +1,10 @@
 import { DialFormPopup, DialTextInputField, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
 
-import { ButtonsI18nKey, CreateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { getCreateEntityTitle } from '@/src/utils/entities/create-entity';
+import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   isModalOpen: boolean;
@@ -11,14 +13,14 @@ interface Props {
 }
 
 const CreateRoute: FC<Props> = ({ isModalOpen, onClose, onCreate }) => {
-  const t = useI18n();
+  const t = useI18n() as (str: string) => string;
 
   const [name, setName] = useState('');
 
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(CreateI18nKey.Route)}
+      title={getCreateEntityTitle(ApplicationRoute.Routes, t)}
       submitLabel={t(ButtonsI18nKey.Create)}
       size={PopupSize.Sm}
       onSubmit={() => {

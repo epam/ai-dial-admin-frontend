@@ -26,7 +26,7 @@ export const getSystemRollbackColumns = (
     case ActivityAuditResourceType.TOOLSET:
       return SIMPLE_ENTITY_COLUMNS;
     case ActivityAuditResourceType.KEY:
-      return KEYS_COLUMNS;
+      return KEYS_COLUMNS(t);
     case ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA:
       return RUNNERS_COLUMNS;
     default:

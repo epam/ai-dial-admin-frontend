@@ -1,6 +1,7 @@
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
 import Menu from './Menu';
-import { render } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { MenuI18nKey } from '../../constants/i18n';
 
 vi.mock('next/navigation', () => ({
   usePathname: () => 'en',
@@ -8,8 +9,8 @@ vi.mock('next/navigation', () => ({
 }));
 
 describe('Menu', () => {
-  test('Should render successfully', () => {
-    const { baseElement } = render(<Menu disableMenuItems={[]} />);
-    expect(baseElement).toBeTruthy();
+  it('renders Sidebar and MenuContent with open state', () => {
+    render(<Menu disableMenuItems={['item1']} />);
+    expect(screen.getByText(MenuI18nKey.AccessManagement)).toBeInTheDocument();
   });
 });

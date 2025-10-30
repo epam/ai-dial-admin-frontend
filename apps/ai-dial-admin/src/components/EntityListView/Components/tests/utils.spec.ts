@@ -72,7 +72,6 @@ describe('Utils :: prepareEntityForDuplicate', () => {
       description: void 0,
       content: void 0,
       folderId: 'folder',
-      path: 'foldern__v',
     });
   });
 
@@ -92,7 +91,6 @@ describe('Utils :: prepareEntityForDuplicate', () => {
       ...entity,
       description: 'd',
       folderId: 'folder',
-      path: 'foldern__v',
     });
   });
 
@@ -112,7 +110,6 @@ describe('Utils :: prepareEntityForDuplicate', () => {
       ...entity,
       description: 'd',
       folderId: 'folder',
-      path: 'foldern__v',
     });
   });
 });

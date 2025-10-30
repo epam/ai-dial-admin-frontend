@@ -217,8 +217,8 @@ export class AssetsApi extends BaseApi {
   // Toolset specific
 
   getTools(name: string, token: JWT | null) {
-    const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/${name}/discovered-tools`;
-    return this.get(url, token).then((res) => (res as { tools: Tool[] })?.tools || []);
+    const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/discovered-tools`;
+    return this.post(url, { path: name }, token).then((res) => (res as { tools: Tool[] })?.tools || []);
   }
 
   signInToolset(toolset: AssetToolset, type: ToolsetAuthCredentialLevel, token: JWT | null, authCode?: string) {
