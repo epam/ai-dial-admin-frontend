@@ -61,16 +61,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
   const onCreate = useCallback(
     (name: string) => {
       handleModalClose();
-      onChangeRoutes([
-        ...(routes || []),
-        {
-          name,
-          displayName: name,
-          upstreams: [],
-          paths: [''],
-          attachmentPaths: { requestBody: [''], responseBody: [''] },
-        } as DialAppRoute,
-      ]);
+      onChangeRoutes([...(routes || []), { name, displayName: name, upstreams: [], paths: [''] } as DialAppRoute]);
     },
     [handleModalClose, onChangeRoutes, routes],
   );
