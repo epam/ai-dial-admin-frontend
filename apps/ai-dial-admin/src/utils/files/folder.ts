@@ -51,7 +51,7 @@ export const mergeFiles = <T extends DialFile>(
         name: getFolderName(targetPath),
         path: targetPath,
         nodeType: DialFileNodeType.FOLDER,
-        children: fillChildren(newFiles as T[]),
+        items: fillChildren(newFiles as T[]),
       } as T,
     ];
   }
@@ -63,13 +63,13 @@ export const mergeFiles = <T extends DialFile>(
         return {
           ...file,
           name: getFolderName(file.path),
-          children: newFiles?.length ? fillChildren(newFiles) : void 0,
+          items: newFiles?.length ? fillChildren(newFiles) : void 0,
         } as T;
-      } else if (file.children) {
+      } else if (file.items) {
         return {
           ...file,
           name: getFolderName(file.path),
-          children: mergeFiles([...file.children], newFiles, targetPath),
+          items: mergeFiles([...file.items], newFiles, targetPath),
         } as T;
       }
     }
@@ -109,14 +109,14 @@ export const fillFolderRules = (path: string, rules: Record<string, DialRule[]> 
 export const findFolderSiblings = (path: string, folder: DialFolder): string[] => {
   const traverse = (node: DialFolder, parent: DialFolder | null): string[] | null => {
     if (node.path === path) {
-      if (!parent || !parent.children) return [];
-      return parent.children
+      if (!parent || !parent.items) return [];
+      return parent.items
         .filter((sibling) => sibling.path !== path && sibling.nodeType === DialFileNodeType.FOLDER)
         .map((sibling) => sibling.path);
     }
 
-    if (node.children) {
-      for (const child of node.children) {
+    if (node.items) {
+      for (const child of node.items) {
         const result = traverse(child, node);
         if (result !== null) return result;
       }
@@ -139,12 +139,12 @@ export const findFolderSiblings = (path: string, folder: DialFolder): string[] =
 export const findFolderChildren = (path: string, folder: DialFolder): string[] => {
   const traverse = (node: DialFolder): string[] | null => {
     if (node.path === path) {
-      if (!node.children) return [];
-      return node.children.filter((child) => child.nodeType === DialFileNodeType.FOLDER).map((child) => child.path);
+      if (!node.items) return [];
+      return node.items.filter((child) => child.nodeType === DialFileNodeType.FOLDER).map((child) => child.path);
     }
 
-    if (node.children) {
-      for (const child of node.children) {
+    if (node.items) {
+      for (const child of node.items) {
         const result = traverse(child);
         if (result !== null) return result;
       }

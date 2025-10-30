@@ -41,7 +41,7 @@ describe('Folder Utils :: mergeFiles', () => {
         name: 'folder',
         path: 'somePath/folder',
         nodeType: DialFileNodeType.FOLDER,
-        children: [{ name: 'file1', path: 'somePath/folder/file1', nodeType: DialFileNodeType.ITEM }],
+        items: [{ name: 'file1', path: 'somePath/folder/file1', nodeType: DialFileNodeType.ITEM }],
       },
     ]);
   });
@@ -51,7 +51,7 @@ describe('Folder Utils :: mergeFiles', () => {
         name: 'folder',
         path: 'somePath/folder',
         nodeType: DialFileNodeType.FOLDER,
-        children: [],
+        items: [],
       },
     ];
     const newFiles = [{ name: 'file1', path: 'somePath/folder/file1', nodeType: DialFileNodeType.ITEM }];
@@ -61,7 +61,7 @@ describe('Folder Utils :: mergeFiles', () => {
       name: 'folder',
       path: 'somePath/folder',
       nodeType: DialFileNodeType.FOLDER,
-      children: [{ name: 'file1', path: 'somePath/folder/file1', nodeType: DialFileNodeType.ITEM }],
+      items: [{ name: 'file1', path: 'somePath/folder/file1', nodeType: DialFileNodeType.ITEM }],
     });
   });
 
@@ -71,17 +71,17 @@ describe('Folder Utils :: mergeFiles', () => {
         name: 'root',
         path: 'somePath',
         nodeType: DialFileNodeType.FOLDER,
-        children: [
+        items: [
           {
             name: 'folder1',
             path: 'somePath/folder1',
             nodeType: DialFileNodeType.FOLDER,
-            children: [
+            items: [
               {
                 name: 'folder2',
                 path: 'somePath/folder1/folder2',
                 nodeType: DialFileNodeType.FOLDER,
-                children: [],
+                items: [],
               },
             ],
           },
@@ -91,25 +91,25 @@ describe('Folder Utils :: mergeFiles', () => {
     const newFiles = [{ name: 'file2', path: 'somePath/folder1/folder2/file2', nodeType: DialFileNodeType.ITEM }];
     const result = mergeFiles(existing, newFiles, 'somePath/folder1/folder2');
 
-    const folder2 = result[0].children?.[0].children?.[0];
+    const folder2 = result[0].items?.[0].items?.[0];
     expect(folder2?.path).toBe('somePath/folder1/folder2');
-    expect(folder2?.children).toEqual([
+    expect(folder2?.items).toEqual([
       { name: 'file2', path: 'somePath/folder1/folder2/file2', nodeType: DialFileNodeType.ITEM },
     ]);
   });
 
-  test('should not assign children if newFiles is null', () => {
+  test('should not assign items if newFiles is null', () => {
     const existing = [
       {
         name: 'folder',
         path: 'somePath/folder',
         nodeType: DialFileNodeType.FOLDER,
-        children: [],
+        items: [],
       },
     ];
     const result = mergeFiles(existing, null, 'somePath/folder');
 
-    expect(result[0].children).toBeUndefined();
+    expect(result[0].items).toBeUndefined();
   });
 });
 
@@ -183,22 +183,22 @@ describe('Folder Utils :: findFolderSiblings', () => {
   const mockTree: DialFolder = {
     path: '/root',
     nodeType: DialFileNodeType.FOLDER,
-    children: [
+    items: [
       {
         path: '/root/folder1',
         nodeType: DialFileNodeType.FOLDER,
-        children: [
+        items: [
           {
             path: '/root/folder1/sub1',
             nodeType: DialFileNodeType.FOLDER,
-            children: [],
+            items: [],
           },
         ],
       },
       {
         path: '/root/folder2',
         nodeType: DialFileNodeType.FOLDER,
-        children: [],
+        items: [],
       },
       {
         path: '/root/file1.txt',
@@ -231,11 +231,11 @@ describe('Folder Utils :: findFolderSiblings', () => {
     const folderWithFileSibling: DialFolder = {
       path: '/parent',
       nodeType: DialFileNodeType.FOLDER,
-      children: [
+      items: [
         {
           path: '/parent/folderA',
           nodeType: DialFileNodeType.FOLDER,
-          children: [],
+          items: [],
         },
         {
           path: '/parent/fileA.txt',
@@ -252,15 +252,15 @@ describe('Folder Utils :: findFolderChildren', () => {
   const mockTree: DialFolder = {
     path: '/root',
     nodeType: DialFileNodeType.FOLDER,
-    children: [
+    items: [
       {
         path: '/root/folder1',
         nodeType: DialFileNodeType.FOLDER,
-        children: [
+        items: [
           {
             path: '/root/folder1/sub1',
             nodeType: DialFileNodeType.FOLDER,
-            children: [],
+            items: [],
           },
           {
             path: '/root/folder1/file1.txt',
@@ -271,26 +271,26 @@ describe('Folder Utils :: findFolderChildren', () => {
       {
         path: '/root/folder2',
         nodeType: DialFileNodeType.FOLDER,
-        children: [],
+        items: [],
       },
     ],
   };
 
-  test('returns children folder paths for a folder with children', () => {
+  test('returns items folder paths for a folder with items', () => {
     const result = findFolderChildren('/root/folder1', mockTree);
     expect(result).toEqual(['/root/folder1/sub1']);
   });
 
-  test('returns empty array if folder has no children', () => {
+  test('returns empty array if folder has no items', () => {
     const result = findFolderChildren('/root/folder2', mockTree);
     expect(result).toEqual([]);
   });
 
-  test('returns empty array if folder has only file children', () => {
+  test('returns empty array if folder has only file items', () => {
     const folderWithOnlyFiles: DialFolder = {
       path: '/files',
       nodeType: DialFileNodeType.FOLDER,
-      children: [
+      items: [
         {
           path: '/files/fileA.txt',
           nodeType: DialFileNodeType.FILE,
@@ -310,17 +310,17 @@ describe('Folder Utils :: findFolderChildren', () => {
     expect(result).toEqual([]);
   });
 
-  test('returns empty array if root has no children', () => {
+  test('returns empty array if root has no items', () => {
     const emptyRoot: DialFolder = {
       path: '/empty',
       nodeType: DialFileNodeType.FOLDER,
-      children: [],
+      items: [],
     };
     const result = findFolderChildren('/empty', emptyRoot);
     expect(result).toEqual([]);
   });
 
-  test('returns nested children correctly from deeper nodes', () => {
+  test('returns nested items correctly from deeper nodes', () => {
     const result = findFolderChildren('/root', mockTree);
     expect(result).toEqual(['/root/folder1', '/root/folder2']);
   });
