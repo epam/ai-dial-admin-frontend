@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { IconCaretDownFilled, IconCaretRightFilled, IconDotsVertical, IconFolder, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialEllipsisTooltip, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import ActionsDropdown from '@/src/components/Common/ActionsDropdown/ActionsDropdown';
 import {
@@ -13,7 +13,6 @@ import {
   getMoveFolderOperation,
   getRenameFolderOperation,
 } from '@/src/components/Common/FolderCreate/Components/Operations';
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { EntitiesI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -223,9 +222,7 @@ const FolderList: FC<Props> = ({
                       isMovableFolder || isFolderDelete ? 'text-accent-primary' : '',
                     )}
                   />
-                  <Tooltip tooltip={name}>
-                    <span className="pl-2 text-primary truncate">{name}</span>
-                  </Tooltip>
+                  <DialEllipsisTooltip text={name} />
                 </div>
 
                 {showFolderActions && (

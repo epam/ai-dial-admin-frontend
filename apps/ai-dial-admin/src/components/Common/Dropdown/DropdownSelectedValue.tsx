@@ -4,7 +4,7 @@ import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
+import { DialTooltip } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   selectedValue?: DropdownItemsModel;
@@ -46,30 +46,30 @@ const DropdownSelectedItem: FC<Props> = ({
     >
       {selectedValue?.name ? (
         <>
-          <Tooltip tooltip={selectedValue?.name} triggerClassName="flex-1 min-w-0 flex items-center">
+          <DialTooltip tooltip={selectedValue?.name} triggerClassName="flex-1 min-w-0 flex items-center">
             {selectedValue.icon && <span className="mr-2 text-icon-primary">{selectedValue.icon}</span>}
             <span className={selectedValueClassNames}>
               {prefix}
               {selectedValue?.name}
             </span>
-          </Tooltip>
+          </DialTooltip>
         </>
       ) : multipleValues ? (
         <div className="flex flex-1">
           {multipleValues.map((v) => {
             return (
               <div key={v}>
-                <Tooltip tooltip={v} triggerClassName="flex-1 min-w-0">
+                <DialTooltip tooltip={v} triggerClassName="flex-1 min-w-0">
                   <span className="inline-block rounded border border-icon-secondary p-1 mr-1">{v}</span>
-                </Tooltip>
+                </DialTooltip>
               </div>
             );
           })}
         </div>
       ) : (
-        <Tooltip tooltip={placeholder} triggerClassName="flex-1 min-w-0">
+        <DialTooltip tooltip={placeholder} triggerClassName="flex-1 min-w-0">
           <span className="flex-1 min-w-0 mr-2 text-secondary pointer-events-none">{placeholder}</span>
-        </Tooltip>
+        </DialTooltip>
       )}
 
       {isOpen ? <IconChevronUp {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
