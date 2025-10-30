@@ -26,7 +26,7 @@ import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/
 import { getListOfPathsToBulkDelete, getListOfPathsToMove } from '@/src/utils/files/path';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import BulkButtons from './BulkButtons';
 import Modals, { ModalType } from './Modals';
 import { preparePathForAsset } from './utils';
@@ -111,7 +111,7 @@ const Actions = <T extends object>({
               getCreateNotificationDescription(route, (preparedEntity as { name: string }).name, t),
             ),
           );
-          router.push(`${route}/${getEntityPath(route, preparedEntity)}`);
+          router.push(getUrnForEntity(route, preparedEntity));
           router.refresh();
         } else {
           showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage));

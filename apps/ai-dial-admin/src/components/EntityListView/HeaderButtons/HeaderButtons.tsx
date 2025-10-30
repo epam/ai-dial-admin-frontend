@@ -136,7 +136,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
 
   const getCreateModal = () => {
     if (route === ApplicationRoute.ApplicationRunners) {
-      return <CreateAppRunner isModalOpen={isModalOpen} onClose={handleModalClose} route={route} />;
+      return <CreateAppRunner isModalOpen={isModalOpen} onClose={handleModalClose} />;
     }
 
     if (route === ApplicationRoute.InterceptorTemplates) {

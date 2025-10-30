@@ -1,6 +1,6 @@
+import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 
 import { createAdapter } from '@/src/app/[lang]/adapters/actions';
 import AdapterProperties from '@/src/components/Adapter/View/AdapterProperties';
@@ -10,9 +10,9 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   isModalOpen: boolean;
@@ -52,14 +52,14 @@ const CreateAdapter: FC<Props> = ({ isModalOpen, onClose, names }) => {
   const onCreate = useCallback(() => {
     createAdapter(currentAdapter).then((res) => {
       if (res.success) {
-        const originalRoute = ApplicationRoute.Adapters.split('/')[1];
         showNotification(
           getSuccessNotification(
             getCreateNotificationTitle(ApplicationRoute.Adapters, t),
             getCreateNotificationDescription(ApplicationRoute.Adapters, currentAdapter.name, t),
           ),
         );
-        router.push(`${originalRoute}/${getEntityPath(ApplicationRoute.Adapters, res.response || currentAdapter)}`);
+        router.push(getUrnForEntity(ApplicationRoute.Adapters, res.response || currentAdapter));
+
         onClose();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));

@@ -30,7 +30,7 @@ import {
 } from '@/src/utils/entities/rollback-entity';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import JsonView from './JsonView';
 import { generateCurrentResource } from './utils/generate-diffs';
 
@@ -116,10 +116,7 @@ const AuditView: FC<Props> = ({
   }, [setIsLoading, activity, activityRevision, previousRevision, showNotification, t, onCloseModal, router]);
 
   const openActivityInNewTab = (activity: DialActivity) => {
-    window.open(
-      `${ApplicationRoute.ActivityAudit}/${getEntityPath(ApplicationRoute.ActivityAudit, activity)}`,
-      '_blank',
-    );
+    onOpenInNewTab(ApplicationRoute.ActivityAudit, activity);
   };
 
   return (
