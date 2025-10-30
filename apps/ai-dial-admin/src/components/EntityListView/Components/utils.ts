@@ -1,13 +1,14 @@
 import { RefObject } from 'react';
 
-import { ApplicationRoute } from '@/src/types/routes';
-import { BaseEntity } from '@/src/models/dial/base-entity';
-import { DialPrompt } from '@/src/models/dial/prompt';
-import { getPrompt } from '@/src/app/[lang]/prompts/actions';
 import { getApp } from '@/src/app/[lang]/assets-applications/actions';
-import { AssetApp, AssetToolset } from '@/src/models/dial/deployment-asset';
 import { getToolset } from '@/src/app/[lang]/assets-toolsets/actions';
+import { getPrompt } from '@/src/app/[lang]/prompts/actions';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { BaseEntity } from '@/src/models/dial/base-entity';
+import { Asset, AssetApp, AssetToolset } from '@/src/models/dial/deployment-asset';
+import { DialPrompt } from '@/src/models/dial/prompt';
+import { ApplicationRoute } from '@/src/types/routes';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 
 export const getData = async <T>(route: ApplicationRoute, ref: RefObject<T | undefined>) => {
   if (route === ApplicationRoute.Prompts) {
@@ -26,6 +27,18 @@ export const getData = async <T>(route: ApplicationRoute, ref: RefObject<T | und
   }
 
   return null;
+};
+
+export const getCorrectPath = (entity?: Asset | null) => `${entity?.folderId}${entity?.name}__${entity?.version}`;
+
+export const preparePathForAsset = (entity: BaseEntity, route: ApplicationRoute) => {
+  if (isAssetWithVersion(route)) {
+    return {
+      ...entity,
+      path: getCorrectPath(entity as Asset),
+    };
+  }
+  return entity;
 };
 
 export const prepareEntityForDuplicate = async <T>(
@@ -69,18 +82,19 @@ export const prepareEntityForDuplicate = async <T>(
 
   if (route === ApplicationRoute.AssetsApplications) {
     const app = fullEntity as AssetApp | null;
+
     return {
+      ...app,
       ...entity,
-      endpoint: app?.endpoint,
     };
   }
 
   if (route === ApplicationRoute.AssetsToolsets) {
     const toolset = fullEntity as AssetToolset | null;
+
     return {
+      ...toolset,
       ...entity,
-      endpoint: toolset?.endpoint,
-      transport: toolset?.transport,
     };
   }
 

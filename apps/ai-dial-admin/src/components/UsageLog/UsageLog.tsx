@@ -73,7 +73,11 @@ const UsageLog: FC<Props> = ({ route, entity, entityView }) => {
   return (
     <div className="flex flex-col h-full w-full bg-layer-2 rounded p-4">
       <div className="flex flex-row min-h-[34px] justify-between">
-        {!entityView && <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />}
+        {!entityView && (
+          <div className="flex-1 min-w-0">
+            <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+          </div>
+        )}
         <div className={classNames('flex items-center gap-4', entityView && 'justify-between w-full')}>
           <TimeFilter
             timePeriod={timePeriod}

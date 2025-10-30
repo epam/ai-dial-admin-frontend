@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 import classNames from 'classnames';
-import { DialSelectField, DialTextInputField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { Toolset } from '@/src/models/dial/toolset';
@@ -10,6 +10,7 @@ import { ToolsetTransport } from '@/src/types/toolset';
 import { useI18n } from '@/src/locales/client';
 
 import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
+import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
 
 interface Props {
   entity: Toolset;
@@ -27,16 +28,16 @@ const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModa
   ];
 
   return (
-    <div className={classNames('w-full flex flex-col gap-6', !isModal && ' lg:w-[45%]')}>
+    <div className={classNames('w-full flex flex-col gap-6', !isModal && 'lg:w-[45%]')}>
       {prefix ? (
         <ReadonlyField elementId="endpoint" title={t(EntitiesI18nKey.ToolsetEndpoint)} value={prefix} />
       ) : (
-        <DialTextInputField
+        <EndpointControl
+          id="endpoint"
           disabled={disabled}
-          elementId="endpoint"
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
-          value={entity.endpoint || ''}
+          endpoint={entity.endpoint}
           onChange={(endpoint) => onChange?.({ ...entity, endpoint })}
         />
       )}

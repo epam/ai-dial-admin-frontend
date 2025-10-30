@@ -15,7 +15,7 @@ interface Props {
   onChange?: (iconUrl: string) => void;
 }
 
-const IconControl: FC<Props> = ({ iconUrl, disabled = true, onChange }) => {
+const IconControl: FC<Props> = ({ iconUrl, disabled = false, onChange }) => {
   const t = useI18n();
   const { themeUrl } = useAppContext();
   const value = useMemo(
@@ -41,6 +41,7 @@ const IconControl: FC<Props> = ({ iconUrl, disabled = true, onChange }) => {
           open={isModalOpen}
           selectedValue={value}
           onOpen={onOpenModal}
+          disabled={disabled}
         >
           <IconGalleryModal
             isModalOpen={isModalOpen}
