@@ -6,7 +6,7 @@ import { RolesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRoleLimits } from '@/src/models/dial/role-limits';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { NO_LIMITS_VALUE } from '@/src/constants/role';
+import { UNLIMITED_VALUE } from '@/src/constants/role';
 
 interface Props {
   controlClassName?: string;
@@ -31,8 +31,8 @@ const LimitControl: FC<Props> = ({ limits, controlClassName, isCostInputs, onCha
   return (
     <DialNumberInputField
       containerCssClass={controlClassName}
-      placeholder={t(RolesI18nKey.NoLimits)}
-      value={limits?.[fieldKey] === NO_LIMITS_VALUE ? '' : (limits?.[fieldKey] as string)}
+      placeholder={t(RolesI18nKey.NotSpecified)}
+      value={limits?.[fieldKey] === UNLIMITED_VALUE ? '' : (limits?.[fieldKey] as string)}
       onChange={(value) => onChangeLimit(value, fieldKey)}
       iconBefore={isCostInputs ? <IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} /> : null}
       {...props}

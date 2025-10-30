@@ -354,7 +354,8 @@ export enum KeysI18nKey {
 export enum RolesI18nKey {
   DefaultLimits = 'Roles.DefaultLimits',
   DefaultInvitations = 'Roles.DefaultInvitations',
-  NoLimits = 'Roles.NoLimits',
+  NotSpecified = 'Roles.NotSpecified',
+  Unlimited = 'Roles.Unlimited',
   AddRoles = 'Roles.AddRoles',
   SetCostLimits = 'Roles.SetCostLimits',
   AvailableSpecificRoles = 'Roles.AvailableSpecificRoles',
