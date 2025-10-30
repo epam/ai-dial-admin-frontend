@@ -8,7 +8,7 @@ import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
 import { getApps, moveApps, removeApp, updateApp } from '@/src/app/[lang]/assets-applications/actions';
-import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
+import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
@@ -92,36 +92,42 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
     setSelectedApp(cloneDeep(originalApp));
   }, [jsonEditorEnabled, originalApp, dispatch]);
 
-  const onSave = useCallback(() => {
-    const isNeedToMove = getIsNeedToMove(selectedApp, originalApp);
-    const updatedEntity = getEntityForUpdate(selectedApp, originalApp);
-    updateApp(updatedEntity, etag).then((res) => {
-      if (res.success) {
-        if (isNeedToMove) {
-          getApps(addTrailingSlash(updatedEntity.folderId)).then((apps) => {
-            const pathsToMove = getListOfPathsToMove(updatedEntity, null, apps || []);
-            const newPath = removeTrailingSlash(selectedApp.folderId);
-            moveApps(pathsToMove, newPath).then((r) => {
-              if (r.every((response) => response.success)) {
-                router.push(
-                  `${ApplicationRoute.AssetsApplications}/${getEntityPath(ApplicationRoute.AssetsApplications, { name: updatedEntity.name, path: changePath(updatedEntity.path, newPath) })}`,
-                );
-                fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
-              }
-            });
-          });
-        } else {
-          fetchFiles(updatedEntity.folderId);
-          router.push(
-            `${ApplicationRoute.AssetsApplications}/${getEntityPath(ApplicationRoute.AssetsApplications, updatedEntity)}`,
-          );
-        }
-        router.refresh();
-      } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+  const onSave = useCallback(
+    (newVersion?: string) => {
+      const isNeedToMove = getIsNeedToMove(selectedApp, originalApp);
+      let updatedEntity = getEntityForUpdate(selectedApp, originalApp);
+      if (newVersion) {
+        updatedEntity = addNewVersion(updatedEntity, newVersion);
       }
-    });
-  }, [selectedApp, originalApp, router, fetchFiles, etag, showNotification]);
+      updateApp(updatedEntity, etag).then((res) => {
+        if (res.success) {
+          if (isNeedToMove) {
+            getApps(addTrailingSlash(updatedEntity.folderId)).then((apps) => {
+              const pathsToMove = getListOfPathsToMove(updatedEntity, null, apps || []);
+              const newPath = removeTrailingSlash(selectedApp.folderId);
+              moveApps(pathsToMove, newPath).then((r) => {
+                if (r.every((response) => response.success)) {
+                  router.push(
+                    `${ApplicationRoute.AssetsApplications}/${getEntityPath(ApplicationRoute.AssetsApplications, { name: updatedEntity.name, path: changePath(updatedEntity.path, newPath) })}`,
+                  );
+                  fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
+                }
+              });
+            });
+          } else {
+            fetchFiles(updatedEntity.folderId);
+            router.push(
+              `${ApplicationRoute.AssetsApplications}/${getEntityPath(ApplicationRoute.AssetsApplications, updatedEntity)}`,
+            );
+          }
+          router.refresh();
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        }
+      });
+    },
+    [selectedApp, originalApp, router, fetchFiles, etag, showNotification],
+  );
 
   const onChangeEntity = useCallback(
     (entity: AssetApp, skipRefresh?: boolean) => {
