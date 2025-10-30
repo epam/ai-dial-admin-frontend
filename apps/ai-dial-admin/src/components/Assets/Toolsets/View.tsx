@@ -14,7 +14,7 @@ import {
   signInToolset,
   updateToolset,
 } from '@/src/app/[lang]/assets-toolsets/actions';
-import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
+import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
@@ -93,36 +93,42 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
     setSelectedToolset(cloneDeep(originalToolset));
   }, [jsonEditorEnabled, originalToolset, dispatch]);
 
-  const onSave = useCallback(() => {
-    const isNeedToMove = getIsNeedToMove(selectedToolset, originalToolset);
-    const updatedEntity = getEntityForUpdate(selectedToolset, originalToolset);
-    updateToolset(updatedEntity, etag).then((res) => {
-      if (res.success) {
-        if (isNeedToMove) {
-          getToolsets(addTrailingSlash(updatedEntity.folderId)).then((toolsets) => {
-            const pathsToMove = getListOfPathsToMove(updatedEntity, null, toolsets || []);
-            const newPath = removeTrailingSlash(selectedToolset.folderId);
-            moveToolsets(pathsToMove, newPath).then((r) => {
-              if (r.every((response) => response.success)) {
-                router.push(
-                  `${ApplicationRoute.AssetsToolsets}/${getEntityPath(ApplicationRoute.AssetsToolsets, { name: updatedEntity.name, path: changePath(updatedEntity.path, newPath) })}`,
-                );
-                fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
-              }
-            });
-          });
-        } else {
-          fetchFiles(updatedEntity.folderId);
-          router.push(
-            `${ApplicationRoute.AssetsToolsets}/${getEntityPath(ApplicationRoute.AssetsToolsets, updatedEntity)}`,
-          );
-        }
-        router.refresh();
-      } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+  const onSave = useCallback(
+    (newVersion?: string) => {
+      const isNeedToMove = getIsNeedToMove(selectedToolset, originalToolset);
+      let updatedEntity = getEntityForUpdate(selectedToolset, originalToolset);
+      if (newVersion) {
+        updatedEntity = addNewVersion(updatedEntity, newVersion);
       }
-    });
-  }, [selectedToolset, originalToolset, router, fetchFiles, etag, showNotification]);
+      updateToolset(updatedEntity, etag).then((res) => {
+        if (res.success) {
+          if (isNeedToMove) {
+            getToolsets(addTrailingSlash(updatedEntity.folderId)).then((toolsets) => {
+              const pathsToMove = getListOfPathsToMove(updatedEntity, null, toolsets || []);
+              const newPath = removeTrailingSlash(selectedToolset.folderId);
+              moveToolsets(pathsToMove, newPath).then((r) => {
+                if (r.every((response) => response.success)) {
+                  router.push(
+                    `${ApplicationRoute.AssetsToolsets}/${getEntityPath(ApplicationRoute.AssetsToolsets, { name: updatedEntity.name, path: changePath(updatedEntity.path, newPath) })}`,
+                  );
+                  fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
+                }
+              });
+            });
+          } else {
+            fetchFiles(updatedEntity.folderId);
+            router.push(
+              `${ApplicationRoute.AssetsToolsets}/${getEntityPath(ApplicationRoute.AssetsToolsets, updatedEntity)}`,
+            );
+          }
+          router.refresh();
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        }
+      });
+    },
+    [selectedToolset, originalToolset, router, fetchFiles, etag, showNotification],
+  );
 
   const onChangeEntity = useCallback(
     (entity: Toolset) => {
