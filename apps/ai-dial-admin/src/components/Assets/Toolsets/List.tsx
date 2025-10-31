@@ -41,7 +41,6 @@ const ToolsetsList: FC = () => {
       moveFiles={moveToolsets}
       bulkDelete={bulkDeleteToolsets}
       context={useToolsetFolder as () => AssetsFolderContext<AssetToolset | DialFile>}
-      showFolders={true}
     />
   );
 };

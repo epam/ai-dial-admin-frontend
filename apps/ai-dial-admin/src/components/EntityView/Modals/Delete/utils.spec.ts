@@ -1,7 +1,8 @@
 import { DeleteI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import {
+  getBulkNotificationTitle,
   getConfirmation,
   getNoRelatedText,
   getNotificationDescription,
@@ -35,48 +36,54 @@ describe('EntityView :: Delete :: utils', () => {
   const tWithProps = (str: string, props?: Record<string, string>) => str + ' with props';
   const entity = { name: 'Test Entity', id: '1' };
 
-  it('getTitle returns a string', () => {
+  test('getTitle returns a string', () => {
     expect(getTitle(ApplicationRoute.Applications, tWithProps)).toBe(`${DeleteI18nKey.Title} with props`);
   });
 
-  it('getConfirmation returns a string', () => {
+  test('getBulkNotificationTitle returns a string', () => {
+    expect(getBulkNotificationTitle(ApplicationRoute.AssetApplication, tWithProps)).toBe(
+      `${DeleteI18nKey.NotificationTitle} with props`,
+    );
+  });
+
+  test('getConfirmation returns a string', () => {
     expect(getConfirmation(ApplicationRoute.Routes, tWithProps)).toBe(`${DeleteI18nKey.Confirming} with props`);
   });
 
-  it('getNotificationTitle returns a string', () => {
+  test('getNotificationTitle returns a string', () => {
     expect(getNotificationTitle(ApplicationRoute.Interceptors, tWithProps)).toBe(
       `${DeleteI18nKey.NotificationTitle} with props`,
     );
   });
 
-  it('getNotificationDescription returns a string', () => {
+  test('getNotificationDescription returns a string', () => {
     expect(getNotificationDescription(ApplicationRoute.Interceptors, 'aa', tWithProps)).toBe(
       `${DeleteI18nKey.NotificationDescription} with props`,
     );
   });
 
-  it('getWarningText returns a string', () => {
+  test('getWarningText returns a string', () => {
     expect(getWarningText(ApplicationRoute.ApplicationRunners, t)).toBe(DeleteI18nKey.ApplicationRunnerWarning);
     expect(getWarningText(ApplicationRoute.InterceptorTemplates, t)).toBe(DeleteI18nKey.InterceptorTemplateWarning);
     expect(getWarningText(ApplicationRoute.Adapters, t)).toBe(DeleteI18nKey.AdapterWarning);
     expect(getWarningText(ApplicationRoute.Models, t)).toBe('');
   });
 
-  it('getRelatedText returns a string', () => {
+  test('getRelatedText returns a string', () => {
     expect(getRelatedText(ApplicationRoute.ApplicationRunners, t)).toBe(DeleteI18nKey.RelatedApplications);
     expect(getRelatedText(ApplicationRoute.InterceptorTemplates, t)).toBe(DeleteI18nKey.RelatedInterceptors);
     expect(getRelatedText(ApplicationRoute.Adapters, t)).toBe(DeleteI18nKey.RelatedModels);
     expect(getRelatedText(ApplicationRoute.Models, t)).toBe('');
   });
 
-  it('getNoRelatedText returns a string', () => {
+  test('getNoRelatedText returns a string', () => {
     expect(getNoRelatedText(ApplicationRoute.ApplicationRunners, t)).toBe(DeleteI18nKey.NoApplications);
     expect(getNoRelatedText(ApplicationRoute.InterceptorTemplates, t)).toBe(DeleteI18nKey.NoInterceptors);
     expect(getNoRelatedText(ApplicationRoute.Adapters, t)).toBe(DeleteI18nKey.NoModels);
     expect(getNoRelatedText(ApplicationRoute.Models, t)).toBe('');
   });
 
-  it('getRelatedArtifacts returns an array', async () => {
+  test('getRelatedArtifacts returns an array', async () => {
     expect(await getRelatedArtifacts(ApplicationRoute.Models, entity)).toEqual([]);
     expect(
       await getRelatedArtifacts(ApplicationRoute.ApplicationRunners, { ...entity, applications: ['a2', 'a3'] }),

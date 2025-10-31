@@ -9,8 +9,8 @@ const deleteEntityMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.Models]: DeleteI18nKey.Model,
   [ApplicationRoute.Applications]: DeleteI18nKey.Application,
   [ApplicationRoute.AssetsApplications]: DeleteI18nKey.Application,
-  [ApplicationRoute.AssetsToolsets]: DeleteI18nKey.Toolsets,
-  [ApplicationRoute.Toolsets]: DeleteI18nKey.Toolsets,
+  [ApplicationRoute.AssetsToolsets]: DeleteI18nKey.Toolset,
+  [ApplicationRoute.Toolsets]: DeleteI18nKey.Toolset,
   [ApplicationRoute.Interceptors]: DeleteI18nKey.Interceptor,
   [ApplicationRoute.Routes]: DeleteI18nKey.Route,
   [ApplicationRoute.ApplicationRunners]: DeleteI18nKey.ApplicationRunner,
@@ -20,6 +20,19 @@ const deleteEntityMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.Files]: DeleteI18nKey.File,
   [ApplicationRoute.Adapters]: DeleteI18nKey.Adapter,
   [ApplicationRoute.InterceptorTemplates]: DeleteI18nKey.InterceptorTemplate,
+};
+
+const bulkDeleteEntityMap: Record<string, DeleteI18nKey> = {
+  [ApplicationRoute.AssetsApplications]: DeleteI18nKey.Applications,
+  [ApplicationRoute.AssetsToolsets]: DeleteI18nKey.Toolsets,
+  [ApplicationRoute.Prompts]: DeleteI18nKey.Prompts,
+};
+
+export const getBulkNotificationTitle = (
+  view: ApplicationRoute,
+  t: (str: string, props?: Record<string, string>) => string,
+) => {
+  return t(DeleteI18nKey.NotificationTitle, { entity: t(bulkDeleteEntityMap[view]) });
 };
 
 export const getTitle = (view: ApplicationRoute, t: (str: string, props?: Record<string, string>) => string) => {

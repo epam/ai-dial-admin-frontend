@@ -1,32 +1,32 @@
-import { describe, it, expect } from 'vitest';
-import { getFilteredTools } from './utils';
+import { describe, test, expect } from 'vitest';
 import { ToolFilter } from './type';
+import { getFilteredTools } from './utils';
 
 describe('getFilteredTools', () => {
   const tools = ['toolA', 'toolB', 'toolC'];
   const availableTools = [{ name: 'toolA' }, { name: 'toolC' }, { name: 'toolD' }];
 
-  it('returns enabled tools', () => {
+  test('returns enabled tools', () => {
     const result = getFilteredTools(tools, [ToolFilter.Enabled], availableTools);
     expect(result).toEqual(['toolA', 'toolC']);
   });
 
-  it('returns disabled tools', () => {
+  test('returns disabled tools', () => {
     const result = getFilteredTools(tools, [ToolFilter.Disabled], availableTools);
     expect(result).toEqual(['toolD']);
   });
 
-  it('returns auto detected tools', () => {
+  test('returns auto detected tools', () => {
     const result = getFilteredTools(tools, [ToolFilter.AutoDetected], availableTools);
     expect(result).toEqual(['toolA', 'toolC', 'toolD']);
   });
 
-  it('returns added manually tools', () => {
+  test('returns added manually tools', () => {
     const result = getFilteredTools(tools, [ToolFilter.AddedManually], availableTools);
     expect(result).toEqual(['toolB']);
   });
 
-  it('returns unique tools when multiple filters', () => {
+  test('returns unique tools when multiple filters', () => {
     const result = getFilteredTools(
       tools,
       [ToolFilter.Enabled, ToolFilter.Disabled, ToolFilter.AutoDetected, ToolFilter.AddedManually],
@@ -35,7 +35,7 @@ describe('getFilteredTools', () => {
     expect(result.sort()).toEqual(['toolA', 'toolB', 'toolC', 'toolD'].sort());
   });
 
-  it('returns empty array if no filters', () => {
+  test('returns empty array if no filters', () => {
     const result = getFilteredTools(tools, [], availableTools);
     expect(result).toEqual([]);
   });

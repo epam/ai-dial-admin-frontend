@@ -1,10 +1,10 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
-import NotificationPortal from '../NotificationPortal';
 import { NotificationType } from '@/src/models/notification';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
+import NotificationPortal from '../NotificationPortal';
 
 describe('NotificationPortal', () => {
-  it('renders Notification for non-dynamic notifications', () => {
+  test('renders Notification for non-dynamic notifications', () => {
     render(
       <NotificationPortal
         notifications={[{ id: '1', type: NotificationType.success, title: 'Success', onClose: vi.fn() }]}
@@ -13,7 +13,7 @@ describe('NotificationPortal', () => {
     expect(screen.getByText('Success')).toBeInTheDocument();
   });
 
-  it('renders DynamicNotification for dynamic notifications', () => {
+  test('renders DynamicNotification for dynamic notifications', () => {
     render(
       <NotificationPortal
         notifications={[{ id: '2', type: NotificationType.dynamic, title: 'Dynamic', onClose: vi.fn() }]}
@@ -22,7 +22,7 @@ describe('NotificationPortal', () => {
     expect(screen.getByText('Dynamic')).toBeInTheDocument();
   });
 
-  it('renders multiple notifications', () => {
+  test('renders multiple notifications', () => {
     render(
       <NotificationPortal
         notifications={[

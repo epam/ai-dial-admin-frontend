@@ -1,6 +1,6 @@
 @layer components {
   .tooltip {
-    @apply z-[55] break-words whitespace-pre-wrap rounded border border-primary bg-blackout px-2 py-1 tiny shadow max-w-[300px];
+    @apply z-[55] break-words whitespace-pre-wrap rounded border border-primary bg-layer-0 px-2 py-1 tiny shadow max-w-[300px];
   }
 }
 .tooltip-arrow {

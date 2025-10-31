@@ -1,5 +1,13 @@
 import { describe, test, expect } from 'vitest';
-import { getClonedEntityName } from '../duplicate-entity';
+import { getClonedEntityName, getCloneTitle } from '../duplicate-entity';
+import { ApplicationRoute } from '@/src/types/routes';
+import { DuplicateI18nKey } from '@/src/constants/i18n';
+
+describe('getCloneTitle function', () => {
+  test('should return an empty string when name is an empty string', () => {
+    expect(getCloneTitle(ApplicationRoute.Models, (s) => s)).toBe(DuplicateI18nKey.Title);
+  });
+});
 
 describe('getClonedEntityName function', () => {
   test('should return an empty string when name is an empty string', () => {

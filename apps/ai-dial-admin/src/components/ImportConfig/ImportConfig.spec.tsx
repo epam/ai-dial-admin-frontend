@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, test, vi } from 'vitest';
-import { ButtonsI18nKey } from '../../constants/i18n';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import ImportConfig from './ImportConfig';
 
 vi.mock('@/src/context/NotificationContext', () => ({

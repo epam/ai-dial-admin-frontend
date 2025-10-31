@@ -1,7 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ModelProperties from '../ModelProperties';
-import { ApplicationRoute } from '@/src/types/routes';
 
 const mockUpdateModel = vi.fn();
 const baseModel = {
@@ -15,7 +14,7 @@ describe('ModelProperties', () => {
     mockUpdateModel.mockClear();
   });
 
-  it('renders all main subcomponents', () => {
+  test('renders all main subcomponents', () => {
     render(
       <ModelProperties
         model={baseModel as any}
