@@ -5,6 +5,7 @@ import { FC } from 'react';
 import ErrorText from '@/src/components/Common/ErrorText/ErrorText';
 import Field from '@/src/components/Common/Field/Field';
 import DropdownAutocomplete, { DropdownAutocompleteProps } from './DropdownAutocomplete';
+import { DialErrorText } from '@epam/ai-dial-ui-kit';
 
 interface Props extends DropdownAutocompleteProps {
   items: string[];
@@ -23,7 +24,7 @@ const AutocompleteField: FC<Props> = ({ fieldTitle, optional, onChange, elementI
       <Field fieldTitle={fieldTitle} optional={optional} htmlFor={elementId} />
 
       <DropdownAutocomplete onSelectItem={onChange} autocompleteValue={value} {...props} />
-      <ErrorText errorText={errorText} />
+      <DialErrorText errorText={errorText} />
     </div>
   );
 };
