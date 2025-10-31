@@ -2,10 +2,9 @@ import { useRouter } from 'next/navigation';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialSwitch, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialSelectField, DialSwitch, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconReplace } from '@tabler/icons-react';
 
-import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
@@ -76,7 +75,7 @@ const PromptProperties: FC<Props> = ({
   }, [prompts]);
 
   const items = useMemo(() => {
-    return [...new Set([...versions, ...addedVersions])].map((v) => ({ id: v, name: v }));
+    return [...new Set([...versions, ...addedVersions])].map((v) => ({ value: v, label: v }));
   }, [addedVersions, versions]);
 
   const onChangeContent = useCallback(
@@ -201,22 +200,20 @@ const PromptProperties: FC<Props> = ({
               {isImmutable ? (
                 <VersionControl version={prompt.version} disabled={isImmutable} />
               ) : (
-                <DropdownField
-                  elementCssClass="lg:w-[35%]"
-                  selectedValue={prompt.version}
+                <DialSelectField
+                  value={prompt.version}
                   elementId="version"
-                  items={items}
+                  options={items}
                   fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
-                  onChange={onChangeVersion}
-                >
-                  <DialButton
-                    cssClass="w-full"
-                    variant={ButtonVariant.Tertiary}
-                    iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-                    title={t(ButtonsI18nKey.Create)}
-                    onClick={() => handleModalOpen(ModalType.addVersion)}
-                  />
-                </DropdownField>
+                  onChange={(v) => onChangeVersion(v as string)}
+                  // footer={  <DialButton
+                  //   cssClass="w-full"
+                  //   variant={ButtonVariant.Tertiary}
+                  //   iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+                  //   title={t(ButtonsI18nKey.Create)}
+                  //   onClick={() => handleModalOpen(ModalType.addVersion)}
+                  // />}
+                />
               )}
             </div>
             {!!prompts?.length && prompts.length > 1 && (
