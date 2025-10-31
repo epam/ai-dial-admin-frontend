@@ -5,20 +5,20 @@ import { describe, expect, test } from 'vitest';
 import {
   changeExportFileData,
   changeExportGridData,
-  changeExportPromptData,
+  changeExportAssetData,
   generateExportList,
-  generatePromptRowDataForExportGrid,
+  generateRowDataForExportGrid,
   getExportGridData,
 } from '../export';
 
-describe('generatePromptRowDataForExportGrid', () => {
+describe('generateRowDataForExportGrid', () => {
   test('Should return similar data', () => {
     const prompts = [
       { name: 'name1', version: '1.0.0' },
       { name: 'name2', version: '1.0.0' },
     ];
     const exportedPrompts = [];
-    const res = generatePromptRowDataForExportGrid(prompts, exportedPrompts);
+    const res = generateRowDataForExportGrid(prompts, exportedPrompts);
     expect(res).toEqual([
       { name: 'name1', version: '1.0.0', versions: ['1.0.0'] },
       { name: 'name2', version: '1.0.0', versions: ['1.0.0'] },
@@ -32,7 +32,7 @@ describe('generatePromptRowDataForExportGrid', () => {
       { name: 'name2', version: '1.0.0' },
     ];
     const exportedPrompts = [];
-    const res = generatePromptRowDataForExportGrid(prompts, exportedPrompts);
+    const res = generateRowDataForExportGrid(prompts, exportedPrompts);
     expect(res).toEqual([
       { name: 'name1', version: '3.0.0', versions: ['1.0.0', '2.0.0', '3.0.0'] },
       { name: 'name2', version: '1.0.0', versions: ['1.0.0'] },
@@ -50,7 +50,7 @@ describe('generatePromptRowDataForExportGrid', () => {
       { name: 'name1', version: '1.0.0' },
       { name: 'name1', version: '2.0.0' },
     ];
-    const res = generatePromptRowDataForExportGrid(prompts, exportedPrompts);
+    const res = generateRowDataForExportGrid(prompts, exportedPrompts);
     expect(res).toEqual([
       { name: 'name1', version: '1.0.0, 2.0.0', versions: ['1.0.0', '2.0.0', '3.0.0'] },
       { name: 'name2', version: '1.0.0', versions: ['1.0.0'] },
@@ -77,13 +77,13 @@ describe('changeExportFileData', () => {
   });
 });
 
-describe('changeExportPromptData', () => {
+describe('changeExportAssetData', () => {
   test('Should return object with new filePath if not exist', () => {
     const selected = [];
     const fetched = {};
     const exported = {};
     const filePath = 'filePath';
-    const res = changeExportPromptData(selected, fetched, filePath, exported);
+    const res = changeExportAssetData(selected, fetched, filePath, exported);
     expect(res).toEqual({});
   });
   test('Should return object with new filled data for filePath', () => {
@@ -91,7 +91,7 @@ describe('changeExportPromptData', () => {
     const fetched = { filePath: [{ name: 'name1', version: '1.0.0' }] };
     const exported = {};
     const filePath = 'filePath';
-    const res = changeExportPromptData(selected, fetched, filePath, exported);
+    const res = changeExportAssetData(selected, fetched, filePath, exported);
     expect(res).toEqual({ filePath: [{ name: 'name1', version: '1.0.0' }] });
   });
   test('Should return filtered object with data for filePath', () => {
@@ -106,7 +106,7 @@ describe('changeExportPromptData', () => {
     };
     const exported = {};
     const filePath = 'filePath';
-    const res = changeExportPromptData(selected, fetched, filePath, exported);
+    const res = changeExportAssetData(selected, fetched, filePath, exported);
     expect(res).toEqual({
       filePath: [
         { name: 'name1', version: '1.0.0' },
