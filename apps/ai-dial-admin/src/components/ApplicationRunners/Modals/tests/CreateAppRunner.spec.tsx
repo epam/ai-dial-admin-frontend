@@ -7,7 +7,6 @@ describe('CreateAppRunner', () => {
   const baseProps = {
     isModalOpen: true,
     onClose: vi.fn(),
-    route: '/app/application-runners',
   };
 
   beforeEach(() => {
