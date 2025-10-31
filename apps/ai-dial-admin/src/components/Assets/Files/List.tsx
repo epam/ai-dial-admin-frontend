@@ -25,8 +25,6 @@ const FilesList: FC = () => {
       removeEntity={removeFile}
       moveFiles={moveFiles}
       context={useFileFolder}
-      showFolders={true}
-      showExport={true}
     />
   );
 };

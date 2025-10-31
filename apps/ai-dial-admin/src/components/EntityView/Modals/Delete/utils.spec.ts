@@ -2,6 +2,7 @@ import { DeleteI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, it, vi } from 'vitest';
 import {
+  getBulkNotificationTitle,
   getConfirmation,
   getNoRelatedText,
   getNotificationDescription,
@@ -37,6 +38,10 @@ describe('EntityView :: Delete :: utils', () => {
 
   it('getTitle returns a string', () => {
     expect(getTitle(ApplicationRoute.Applications, tWithProps)).toBe(`${DeleteI18nKey.Title} with props`);
+  });
+
+  it('getBulkNotificationTitle returns a string', () => {
+    expect(getBulkNotificationTitle(ApplicationRoute.AssetApplication, tWithProps)).toBe(`${DeleteI18nKey.Title} with props`);
   });
 
   it('getConfirmation returns a string', () => {

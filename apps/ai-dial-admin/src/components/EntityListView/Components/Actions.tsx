@@ -11,7 +11,7 @@ import {
   getNotificationType,
 } from '@/src/components/EntityListView/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { ExportI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
+import { DeleteI18nKey, ExportI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -30,6 +30,7 @@ import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import BulkButtons from './BulkButtons';
 import Modals, { ModalType } from './Modals';
 import { preparePathForAsset } from './utils';
+import { getBulkNotificationTitle } from '../../EntityView/Modals/Delete/utils';
 
 interface Props<T> {
   names?: string[];
@@ -144,15 +145,13 @@ const Actions = <T extends object>({
   const onDeleteBulk = useCallback(() => {
     bulkDelete?.(getListOfPathsToBulkDelete(folderContext?.bulkSelectedData)).then((res) => {
       if (res.success) {
-        showNotification(
-          getSuccessNotification(t(PromptsI18nKey.DeleteSuccessTitle), t(PromptsI18nKey.DeleteSuccessDescription)),
-        );
+        showNotification(getSuccessNotification(getBulkNotificationTitle(route, t), t(DeleteI18nKey.ShortDescription)));
         setIsBulkView(false);
         folderContext?.setBulkSelectedData({});
         folderContext?.fetchFiles?.(`${ROOT_FOLDER}/`, true);
       }
     });
-  }, [bulkDelete, folderContext, setIsBulkView, showNotification, t]);
+  }, [bulkDelete, folderContext, route, setIsBulkView, showNotification, t]);
 
   const onExport = useCallback(
     (exportType?: ImportFileType) => {

@@ -194,11 +194,12 @@ export default {
     Notification: {
       Title: '{entity} deleted successfully',
       Description: '{entity} {entityId} has been deleted. It can be restored using Rollback.',
+      ShortDescription: 'They can be restored using Rollback.',
     },
     Entities: {
       Model: 'Model',
       Application: 'Application',
-      Toolsets: 'Toolsets',
+      Toolset: 'Toolset',
       Interceptor: 'Interceptor',
       Route: 'Route',
       Role: 'Role',
@@ -208,6 +209,11 @@ export default {
       Adapter: 'Adapter',
       InterceptorTemplate: 'Interceptor Template',
       ApplicationRunner: 'Application Runner',
+    },
+    BulkDelete: {
+      Prompt: 'Prompts',
+      Applications: 'Applications',
+      Toolsets: 'Toolsets',
     },
   },
   DuplicateEntity: {
@@ -540,8 +546,6 @@ export default {
     NewVersionCreate: 'Create new version',
     NewVersionSave: 'Save as New Version',
     NewVersionSaveDescription: 'Create a new version to save changes.',
-    DeleteSuccessTitle: 'Prompts deleted successfully',
-    DeleteSuccessDescription: 'You can restore them using rollback',
   },
   Keys: {
     SaveWithoutRoles: 'Save without adding Roles',

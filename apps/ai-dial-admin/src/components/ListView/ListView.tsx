@@ -15,6 +15,7 @@ import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isAssetView } from '@/src/utils/is-asset-view';
 
 interface Props<T> {
   emptyDataTitle: string;
@@ -24,7 +25,6 @@ interface Props<T> {
   columnDefs: ColDef[];
   additionalGridOptions?: GridOptions;
   showColumnsPanel?: boolean;
-  showFolders?: boolean;
   view?: ApplicationRoute;
   storageKey?: string;
   toggleColumnsPanel?: () => void;
@@ -41,7 +41,6 @@ const ListView = <T extends object>({
   children,
   additionalGridOptions,
   showColumnsPanel,
-  showFolders,
   view,
   storageKey,
   toggleColumnsPanel,
@@ -66,7 +65,7 @@ const ListView = <T extends object>({
         {children}
       </div>
       <div className="flex flex-1 min-h-0 gap-4">
-        {showFolders && (
+        {isAssetView(view) && (
           <DialCollapsibleSidebar
             width={320}
             title={title || ''}

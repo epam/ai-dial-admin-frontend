@@ -35,6 +35,7 @@ import { getErrorNotification, getPrepareNotification } from '@/src/utils/notifi
 import ResetFiltersButton from './ResetFiltersButton';
 import { getFormDataForImport } from './utils';
 import { Asset } from '@/src/models/dial/deployment-asset';
+import { isAssetView } from '@/src/utils/is-asset-view';
 
 interface Props<T> {
   names?: string[];
@@ -43,7 +44,6 @@ interface Props<T> {
   runners?: DialApplicationScheme[];
   route: ApplicationRoute;
   showColumnsButton?: boolean;
-  showExportImportButtons?: boolean;
   gridApi?: GridApi | null;
   toggleColumnsPanel: () => void;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
@@ -59,7 +59,6 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
   runners,
   route,
   showColumnsButton,
-  showExportImportButtons,
   gridApi,
   toggleColumnsPanel,
   createEntity,
@@ -183,7 +182,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
       )}
       {!isBulkView && (
         <>
-          {showExportImportButtons && (
+          {isAssetView(route) && (
             <>
               <DialButton
                 variant={ButtonVariant.Secondary}

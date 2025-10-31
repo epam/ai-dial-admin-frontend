@@ -35,8 +35,6 @@ interface Props<T> {
   moveFiles?: (paths: string[], newPath: string) => Promise<ServerActionResponse[]>;
   bulkDelete?: (paths: { path: string }[]) => Promise<ServerActionResponse>;
   showColumnsButton?: boolean;
-  showFolders?: boolean;
-  showExport?: boolean;
   context?: () => AssetsFolderContext<DialFile | Asset>;
 }
 
@@ -53,8 +51,6 @@ const BaseEntityList = <T extends object>({
   moveFiles,
   bulkDelete,
   showColumnsButton,
-  showFolders,
-  showExport,
   context,
 }: Props<T>) => {
   const t = useI18n() as (s: string) => string;
@@ -148,7 +144,6 @@ const BaseEntityList = <T extends object>({
         additionalGridOptions={gridOptions}
         showColumnsPanel={showColumnsPanel}
         toggleColumnsPanel={toggleColumnsPanel}
-        showFolders={showFolders}
         view={route}
         context={context}
         onGridReady={onGridReady}
@@ -161,7 +156,6 @@ const BaseEntityList = <T extends object>({
           runners={runners}
           route={route}
           showColumnsButton={showColumnsButton && data.length > 0}
-          showExportImportButtons={showExport}
           toggleColumnsPanel={toggleColumnsPanel}
           createEntity={createEntity}
           context={context}
