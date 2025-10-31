@@ -153,11 +153,12 @@ export enum DeleteI18nKey {
   // Notification
   NotificationTitle = 'DeleteEntity.Notification.Title',
   NotificationDescription = 'DeleteEntity.Notification.Description',
+  ShortDescription = 'DeleteEntity.Notification.ShortDescription',
 
   // Entities
   Model = 'DeleteEntity.Entities.Model',
   Application = 'DeleteEntity.Entities.Application',
-  Toolsets = 'DeleteEntity.Entities.Toolsets',
+  Toolset = 'DeleteEntity.Entities.Toolset',
   Route = 'DeleteEntity.Entities.Route',
   Interceptor = 'DeleteEntity.Entities.Interceptor',
   Role = 'DeleteEntity.Entities.Role',
@@ -167,6 +168,11 @@ export enum DeleteI18nKey {
   Adapter = 'DeleteEntity.Entities.Adapter',
   InterceptorTemplate = 'DeleteEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'DeleteEntity.Entities.ApplicationRunner',
+
+  // Bulk Delete
+  Applications = 'DeleteEntity.BulkDelete.Applications',
+  Toolsets = 'DeleteEntity.BulkDelete.Toolsets',
+  Prompts = 'DeleteEntity.BulkDelete.Prompts',
 
   //  No related artefacts
   AdapterWarning = 'DeleteEntity.NoRelatedArtefacts.AdapterWarning',
@@ -532,8 +538,6 @@ export enum PromptsI18nKey {
   NewVersionCreate = 'Prompts.NewVersionCreate',
   NewVersionSave = 'Prompts.NewVersionSave',
   NewVersionSaveDescription = 'Prompts.NewVersionSaveDescription',
-  DeleteSuccessTitle = 'Prompts.DeleteSuccessTitle',
-  DeleteSuccessDescription = 'Prompts.DeleteSuccessDescription',
 }
 
 export enum ImportI18nKey {

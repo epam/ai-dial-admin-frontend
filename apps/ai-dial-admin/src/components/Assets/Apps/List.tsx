@@ -42,7 +42,6 @@ const AppsList: FC<Props> = ({ runners }) => {
       moveFiles={moveApps}
       bulkDelete={bulkDeleteApps}
       context={useAppsFolder as () => AssetsFolderContext<AssetApp | DialFile>}
-      showFolders={true}
     />
   );
 };
