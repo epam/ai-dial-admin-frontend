@@ -29,7 +29,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { getTabsForAssetApp } from './utils';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
@@ -115,7 +115,10 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
               moveApps(pathsToMove, newPath).then((r) => {
                 if (r.every((response) => response.success)) {
                   router.push(
-                    `${ApplicationRoute.AssetsApplications}/${getEntityPath(ApplicationRoute.AssetsApplications, { name: updatedEntity.name, path: changePath(updatedEntity.path, newPath) })}`,
+                    getUrnForEntity(ApplicationRoute.AssetsApplications, {
+                      name: updatedEntity.name,
+                      path: changePath(updatedEntity.path, newPath),
+                    }),
                   );
                   fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
                 }
@@ -123,9 +126,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
             });
           } else {
             fetchFiles(updatedEntity.folderId);
-            router.push(
-              `${ApplicationRoute.AssetsApplications}/${getEntityPath(ApplicationRoute.AssetsApplications, updatedEntity)}`,
-            );
+            router.push(getUrnForEntity(ApplicationRoute.AssetsApplications, updatedEntity));
           }
           router.refresh();
         } else {

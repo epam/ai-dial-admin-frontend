@@ -9,7 +9,7 @@ import { useI18n } from '@/src/locales/client';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
 import BaseProperties from '@/src/components/InterceptorTemplates/Properties/BaseProperties';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -44,7 +44,7 @@ const Create: FC<Props> = ({ route, onClose, isModalOpen, names }) => {
           ),
         );
         onClose();
-        router.push(`${route}/${getEntityPath(route, template)}`);
+        router.push(getUrnForEntity(route, template));
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }

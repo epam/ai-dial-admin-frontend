@@ -11,16 +11,16 @@ import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
-import { getEntityPath, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import Actions from './Components/Actions';
 import { ModalType } from './Components/Modals';
 import { emptyDataTitleMap, listViewTitleMap } from './constants';
 import EntityListHeaderButtons from './HeaderButtons/HeaderButtons';
-import { Asset } from '@/src/models/dial/deployment-asset';
 
 interface Props<T> {
   data: T[];
@@ -58,8 +58,7 @@ const BaseEntityList = <T extends object>({
   const gridOptions: GridOptions = {
     onCellClicked: (e) => {
       if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
-        const originalRoute = route.split('/')[1]; // route starts with `/`
-        router.push(`${originalRoute}/${getEntityPath(route, e.data)}`);
+        router.push(getUrnForEntity(route, e.data));
       }
     },
   };

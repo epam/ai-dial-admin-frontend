@@ -51,7 +51,7 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
             title={t(EntityFieldsI18nKey.completionEndpoint)}
           />
         ) : null}
-        {view == ApplicationRoute.Toolsets && !isEntityImmutable && (
+        {view == ApplicationRoute.Toolsets && isEntityImmutable && (
           <>
             <IconControl iconUrl={entity.iconUrl} onChange={(icon) => onChangeEntity({ ...entity, iconUrl: icon })} />
             <TopicsControl

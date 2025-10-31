@@ -19,7 +19,7 @@ import { DropdownProps } from '../DropdownComponent';
 import { dropdownMenuClassNames } from '../constants';
 import DropdownAutocompleteItem from './DropdownAutocompleteItem';
 import classNames from 'classnames';
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
+import { DialTooltip } from '@epam/ai-dial-ui-kit';
 
 export interface DropdownAutocompleteProps extends DropdownProps {
   inputId: string;
@@ -95,7 +95,7 @@ const DropdownAutocomplete = forwardRef<HTMLDivElement, DropdownAutocompleteProp
 
     return (
       <>
-        <Tooltip tooltip={inputValue}>
+        <DialTooltip tooltip={inputValue}>
           <input
             id={inputId}
             type="text"
@@ -116,7 +116,7 @@ const DropdownAutocomplete = forwardRef<HTMLDivElement, DropdownAutocompleteProp
             })}
             className={classNames(invalid ? 'dial-input-error' : '', 'dial-input px-3 py-2')}
           />
-        </Tooltip>
+        </DialTooltip>
         <FloatingPortal>
           {open && (
             <FloatingFocusManager context={context} initialFocus={-1} visuallyHiddenDismiss>

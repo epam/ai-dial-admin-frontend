@@ -3,10 +3,10 @@ import classNames from 'classnames';
 import { ButtonHTMLAttributes, FocusEvent, forwardRef, MouseEvent, ReactNode, useContext } from 'react';
 
 import { DropdownItemsModel } from '@/src/models/dropdown-item';
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import { MenuContext } from './DropdownComponent';
 import { menuItemClassNames } from './constants';
 import { isChecked, isIndeterminate, isMultiSelectClickAvailable } from './utils';
+import { DialTooltip } from '@epam/ai-dial-ui-kit';
 
 interface DropdownMenuItemProps {
   dropdownItem?: DropdownItemsModel;
@@ -113,7 +113,7 @@ const DropdownMenuItem = forwardRef<HTMLButtonElement, DropdownMenuItemProps & B
                 <></>
               )}
               {!dropdownItem.description ? (
-                <Tooltip tooltip={dropdownItem.name} triggerClassName="text-left">
+                <DialTooltip tooltip={dropdownItem.name} triggerClassName="text-left">
                   <span
                     className={classNames(
                       'small',
@@ -124,15 +124,15 @@ const DropdownMenuItem = forwardRef<HTMLButtonElement, DropdownMenuItemProps & B
                   >
                     {dropdownItem.name}
                   </span>
-                </Tooltip>
+                </DialTooltip>
               ) : (
                 <div className="w-full flex justify-between items-center small">
-                  <Tooltip tooltip={dropdownItem.name} triggerClassName="text-left">
+                  <DialTooltip tooltip={dropdownItem.name} triggerClassName="text-left">
                     <span>{dropdownItem.name}</span>
-                  </Tooltip>
-                  <Tooltip tooltip={dropdownItem.description} triggerClassName="text-left">
+                  </DialTooltip>
+                  <DialTooltip tooltip={dropdownItem.description} triggerClassName="text-left">
                     <span className="text-secondary">{dropdownItem.description}</span>
-                  </Tooltip>
+                  </DialTooltip>
                 </div>
               )}
             </>

@@ -24,7 +24,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import PromptProperties from './Properties';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
@@ -107,7 +107,10 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
               movePrompts(pathsToMove, newPath).then((r) => {
                 if (r.every((response) => response.success)) {
                   router.push(
-                    `${ApplicationRoute.Prompts}/${getEntityPath(ApplicationRoute.Prompts, { name: (res.response as DialPrompt).name, path: changePath((res.response as DialPrompt).path, newPath) })}`,
+                    getUrnForEntity(ApplicationRoute.Prompts, {
+                      name: (res.response as DialPrompt).name,
+                      path: changePath((res.response as DialPrompt).path, newPath),
+                    }),
                   );
                   fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
                 }
@@ -115,7 +118,8 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
             });
           } else {
             fetchFiles(updatedEntity.folderId);
-            router.push(`${ApplicationRoute.Prompts}/${getEntityPath(ApplicationRoute.Prompts, res.response)}`);
+
+            router.push(getUrnForEntity(ApplicationRoute.Prompts, res.response));
           }
           router.refresh();
         } else {
