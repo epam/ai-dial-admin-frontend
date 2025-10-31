@@ -28,9 +28,10 @@ import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { getErrorNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { getTabsForAssetApp } from './utils';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
   etag: string;
@@ -101,6 +102,12 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
       }
       updateApp(updatedEntity, etag).then((res) => {
         if (res.success) {
+          showNotification(
+            getSuccessNotification(
+              getUpdateNotificationTitle(ApplicationRoute.AssetsApplications, t),
+              getUpdateNotificationDescription(ApplicationRoute.AssetsApplications, updatedEntity.name, t),
+            ),
+          );
           if (isNeedToMove) {
             getApps(addTrailingSlash(updatedEntity.folderId)).then((apps) => {
               const pathsToMove = getListOfPathsToMove(updatedEntity, null, apps || []);
@@ -127,7 +134,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
         }
       });
     },
-    [selectedApp, originalApp, router, fetchFiles, etag, showNotification],
+    [selectedApp, originalApp, etag, showNotification, t, router, fetchFiles],
   );
 
   const onChangeEntity = useCallback(
