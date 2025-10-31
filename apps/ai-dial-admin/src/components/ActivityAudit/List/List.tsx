@@ -4,10 +4,10 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { ButtonVariant, DialButton, DialConfirmationPopup, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconRefresh, IconRestore } from '@tabler/icons-react';
 import { GridApi, GridOptions, IDatasource, IGetRowsParams } from 'ag-grid-community';
 import classNames from 'classnames';
-import { DialButton, ButtonVariant, DialConfirmationPopup, DialTooltip } from '@epam/ai-dial-ui-kit';
 
 import { getActivities } from '@/src/app/[lang]/activity-audit/actions';
 import { getActivityAuditColumns, getGridFilters } from '@/src/components/ActivityAudit/List/utils';
@@ -24,23 +24,23 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/activity-audit';
+import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { FilterDto } from '@/src/models/request';
 import { TimeRange } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
 import { rollbackEntityPerType } from '@/src/utils/audit/get-rollback-request';
-import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
-import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
-import { DialApplicationScheme } from '@/src/models/dial/application';
 import {
   getRollbackErrorDescription,
   getRollbackErrorTitle,
   getRollbackSuccessDescription,
   getRollbackSuccessTitle,
 } from '@/src/utils/entities/rollback-entity';
+import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
+import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 
 interface Props {
   entity?: BaseEntity | DialApplicationScheme;
@@ -128,17 +128,14 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
     onCellClicked: !entity
       ? (e) => {
           if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
-            router.push(`${ApplicationRoute.ActivityAudit}/${getEntityPath(ApplicationRoute.ActivityAudit, e.data)}`);
+            router.push(getUrnForEntity(ApplicationRoute.ActivityAudit, e.data));
           }
         }
       : void 0,
   };
 
   const openInNewTab = useCallback((activity?: DialActivity) => {
-    window.open(
-      `${ApplicationRoute.ActivityAudit}/${getEntityPath(ApplicationRoute.ActivityAudit, activity)}`,
-      '_blank',
-    );
+    onOpenInNewTab(ApplicationRoute.ActivityAudit, activity);
   }, []);
 
   const onOpenConfirmationModal = useCallback((activity?: DialActivity) => {

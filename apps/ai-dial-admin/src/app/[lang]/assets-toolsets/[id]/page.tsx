@@ -21,7 +21,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function Page(params: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ path: string }>;
+  searchParams: Promise<{ path: string; code?: string }>;
 }) {
   const isEnableAuth = getIsEnableAuthToggle();
   const token = await getUserToken(isEnableAuth, headers(), cookies());
@@ -31,13 +31,16 @@ export default async function Page(params: {
     return redirect(SIGN_IN_LINK);
   }
 
+  let oAuthCode = null;
   let etag = DEFAULT_ETAG;
 
   let toolsets: AssetToolset[] = [];
   let toolset: AssetToolset | null = null;
 
   try {
-    const path = decodeURIComponent((await params.searchParams).path);
+    const searchParams = await params.searchParams;
+    oAuthCode = searchParams.code;
+    const path = decodeURIComponent(searchParams.path);
     const name = decodeURIComponent((await params.params).id);
 
     toolset = await assetsApi.getAssetWithEtag(token, path, ResourceType.TOOLSET, etag).then((res) => {
@@ -62,7 +65,7 @@ export default async function Page(params: {
   return (
     <SaveValidationContextProvider>
       <ToolsetFolderProvider>
-        <ToolsetView etag={etag} originalToolset={toolset} toolsets={toolsets || []} />
+        <ToolsetView oAuthCode={oAuthCode} etag={etag} originalToolset={toolset} toolsets={toolsets || []} />
       </ToolsetFolderProvider>
     </SaveValidationContextProvider>
   );
