@@ -32,10 +32,11 @@ import { Toolset, ToolsetAuthCredentialLevel, ToolsetAuthType } from '@/src/mode
 import { ApplicationRoute } from '@/src/types/routes';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { getErrorNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { encodeToolsetRedirectState } from '@/src/utils/toolset/toolset-auth';
 import LoginPopup from './LoginPopup';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
   etag: string;
@@ -101,6 +102,12 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
         updatedEntity = addNewVersion(updatedEntity, newVersion);
       }
       updateToolset(updatedEntity, etag).then((res) => {
+        showNotification(
+          getSuccessNotification(
+            getUpdateNotificationTitle(ApplicationRoute.AssetsToolsets, t),
+            getUpdateNotificationDescription(ApplicationRoute.AssetsToolsets, updatedEntity.name, t),
+          ),
+        );
         if (res.success) {
           if (isNeedToMove) {
             getToolsets(addTrailingSlash(updatedEntity.folderId)).then((toolsets) => {
@@ -127,7 +134,7 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
         }
       });
     },
-    [selectedToolset, originalToolset, router, fetchFiles, etag, showNotification],
+    [selectedToolset, originalToolset, etag, showNotification, t, router, fetchFiles],
   );
 
   const onChangeEntity = useCallback(
