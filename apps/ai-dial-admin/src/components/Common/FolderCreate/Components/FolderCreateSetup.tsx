@@ -5,7 +5,6 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState
 import { IconFileTypeZip } from '@tabler/icons-react';
 import {
   DialFileIcon,
-  DialIcon,
   DialLoadFileAreaField,
   DialRadioGroup,
   DialSwitch,
@@ -16,7 +15,6 @@ import {
   StepStatus,
 } from '@epam/ai-dial-ui-kit';
 
-import Json from '@/public/images/icons/file/json.svg';
 import Field from '@/src/components/Common/Field/Field';
 import { CreateFolderSteps } from '@/src/components/Common/FolderCreate/constants';
 import { BasicI18nKey, ButtonsI18nKey, FoldersI18nKey, ImportI18nKey } from '@/src/constants/i18n';
@@ -210,7 +208,7 @@ const FolderCreateSetup: FC<Props> = ({
               emptyTextSecondLine={t(BasicI18nKey.Or)}
               emptyButtonLabel={t(ButtonsI18nKey.Browse)}
               files={files}
-              iconBeforeInput={<DialIcon icon={<Json />} className="text-secondary" />}
+              iconBeforeInput={<DialFileIcon extension="json" />}
               acceptTypes="application/json"
               fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
               onChange={changeFile}

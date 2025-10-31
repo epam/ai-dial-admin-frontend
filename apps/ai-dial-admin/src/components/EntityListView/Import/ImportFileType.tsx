@@ -7,11 +7,9 @@ import {
   RadioGroupOrientation,
   RadioButtonWithContent,
   DialLoadFileAreaField,
-  DialIcon,
   DialFileIcon,
 } from '@epam/ai-dial-ui-kit';
 
-import Json from '@/public/images/icons/file/json.svg';
 import Field from '@/src/components/Common/Field/Field';
 import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -110,7 +108,7 @@ const ImportFileTypeSelector: FC<Props> = ({
             emptyTextSecondLine={t(BasicI18nKey.Or)}
             emptyButtonLabel={t(ButtonsI18nKey.Browse)}
             files={files}
-            iconBeforeInput={<DialIcon icon={<Json />} className="text-secondary" />}
+            iconBeforeInput={<DialFileIcon extension="json" />}
             acceptTypes="application/json"
             fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
             isInvalid={isInvalid}
