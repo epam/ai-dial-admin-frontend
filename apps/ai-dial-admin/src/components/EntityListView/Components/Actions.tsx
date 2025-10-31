@@ -1,9 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef } from 'react';
+import { Dispatch, ReactNode, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getPrompt } from '@/src/app/[lang]/prompts/actions';
 import { generateExportList } from '@/src/components/Assets/ExportAssets/export';
 import {
   getDuplicateModal,
@@ -21,16 +20,16 @@ import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { downloadFile, downloadJson } from '@/src/utils/download';
-import { prepareEntityForDuplicate } from '@/src/utils/entities/prepare-entity-for-duplicate';
+import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { getListOfPathsToBulkDelete, getListOfPathsToMove } from '@/src/utils/files/path';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import BulkButtons from './BulkButtons';
 import Modals, { ModalType } from './Modals';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
+import { preparePathForAsset } from './utils';
 
 interface Props<T> {
   names?: string[];
@@ -42,11 +41,11 @@ interface Props<T> {
   moveFiles?: (paths: string[], newPath: string) => Promise<ServerActionResponse[]>;
   bulkDelete?: (paths: { path: string }[]) => Promise<ServerActionResponse>;
   context?: () => AssetsFolderContext<DialFile>;
-  modalState: PopUpState;
+  isModalOpen: boolean;
   modalType?: ModalType;
   currentEntity?: T;
   isBulkView?: boolean;
-  setModalState: Dispatch<SetStateAction<PopUpState>>;
+  setIsModalOpen: Dispatch<SetStateAction<boolean>>;
   setModalType: Dispatch<SetStateAction<ModalType | undefined>>;
   setCurrentEntity: Dispatch<SetStateAction<T | undefined>>;
   setIsBulkView: Dispatch<SetStateAction<boolean>>;
@@ -62,11 +61,11 @@ const Actions = <T extends object>({
   moveFiles,
   bulkDelete,
   context,
-  modalState,
+  isModalOpen,
   modalType,
   currentEntity,
   isBulkView,
-  setModalState,
+  setIsModalOpen,
   setModalType,
   setCurrentEntity,
   setIsBulkView,
@@ -83,32 +82,27 @@ const Actions = <T extends object>({
     return generateExportList(folderContext?.bulkSelectedData);
   }, [folderContext?.bulkSelectedData]);
 
+  const [duplicateModalContent, setDuplicateModalContent] = useState<ReactNode | null>(null);
+
   useEffect(() => {
     entityRef.current = currentEntity;
     filesRef.current = folderContext?.fetchedFoldersData;
   }, [currentEntity, folderContext?.fetchedFoldersData]);
 
   const handleModalClose = useCallback(() => {
-    setModalState(PopUpState.Closed);
+    setIsModalOpen(false);
     setModalType(void 0);
-  }, [setModalState, setModalType]);
+  }, [setIsModalOpen, setModalType]);
 
   const onDuplicate = useCallback(
     (clonedEntity: T) => {
       const duplicate = async () => {
-        let prevPromptData = null;
-
-        if (route === ApplicationRoute.Prompts) {
-          const { folderId, name, version } = entityRef.current as DialPrompt;
-          prevPromptData = await getPrompt(folderId, name as string, version);
-        }
-
-        const preparedEntity = prepareEntityForDuplicate(route, clonedEntity, prevPromptData) as T;
-        const res = await createEntity?.(preparedEntity);
+        const preparedEntity = preparePathForAsset(clonedEntity, route);
+        const res = await createEntity?.(preparedEntity as T);
         if (res?.success) {
           handleModalClose();
           setCurrentEntity(void 0);
-          if (route === ApplicationRoute.Prompts) {
+          if (isAssetWithVersion(route)) {
             folderContext?.fetchFiles?.(folderContext?.filePath);
           }
           showNotification(
@@ -117,7 +111,7 @@ const Actions = <T extends object>({
               getCreateNotificationDescription(route, (preparedEntity as { name: string }).name, t),
             ),
           );
-          router.push(`${route}/${getEntityPath(route, preparedEntity)}`);
+          router.push(getUrnForEntity(route, preparedEntity));
           router.refresh();
         } else {
           showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage));
@@ -194,6 +188,33 @@ const Actions = <T extends object>({
     [exportData, folderContext, handleModalClose, route, setIsBulkView, showNotification, t],
   );
 
+  const getDuplicateModalContent = async () => {
+    if (currentEntity) {
+      const modal = await getDuplicateModal(
+        currentEntity,
+        entityRef,
+        names || [],
+        keys || [],
+        route,
+        versionsMap || {},
+        isModalOpen,
+        handleModalClose,
+        onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>,
+        context,
+      );
+      setDuplicateModalContent(modal);
+    }
+  };
+
+  useEffect(() => {
+    if (isModalOpen) {
+      getDuplicateModalContent();
+    } else {
+      setDuplicateModalContent(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isModalOpen]);
+
   return (
     <>
       {modalType && (isBulkView ? true : currentEntity) ? (
@@ -201,18 +222,9 @@ const Actions = <T extends object>({
           entity={currentEntity}
           route={route}
           initialPath={(currentEntity as DialPrompt)?.folderId}
-          isModalOpen={modalState === PopUpState.Opened}
+          isModalOpen={isModalOpen}
           modalType={modalType}
-          duplicateModal={getDuplicateModal(
-            currentEntity,
-            names || [],
-            keys || [],
-            route,
-            versionsMap || {},
-            modalState === PopUpState.Opened,
-            handleModalClose,
-            onDuplicate as (entity: BaseEntity) => Promise<ServerActionResponse>,
-          )}
+          duplicateModal={duplicateModalContent}
           handleExport={onExport}
           handleClose={handleModalClose}
           removeEntity={removeEntity}
@@ -227,7 +239,7 @@ const Actions = <T extends object>({
           itemsCount={exportData.length}
           route={route}
           context={context}
-          setModalState={setModalState}
+          setIsModalOpen={setIsModalOpen}
           setModalType={setModalType}
           setIsBulkView={setIsBulkView}
           handleExport={onExport}

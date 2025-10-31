@@ -1,9 +1,9 @@
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { FC, useState } from 'react';
+import { DialTabs } from '@epam/ai-dial-ui-kit';
 
 import ActivityAuditList from '@/src/components/ActivityAudit/List/List';
 import { routeAuditResource } from '@/src/components/ActivityAudit/View/Header/constants';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
 import { EntityViewTab } from '@/src/components/EntityView/View/utils';
 import Dashboard from '@/src/components/Telemetry/Dashboard';
 import { TabsI18nKey } from '@/src/constants/i18n';
@@ -31,7 +31,7 @@ const EntityAudit: FC<Props> = ({ entity, view }) => {
       <div className="bg-layer-3 h-full w-[296px] p-4 relative">
         <h1 className="mb-4">{t(TabsI18nKey.Audit)}</h1>
         <div className="flex-1 min-h-0 relative">
-          <Tabs
+          <DialTabs
             activeTab={activeTab}
             tabs={tabs}
             onClick={(tab) => setActiveTab(tab)}

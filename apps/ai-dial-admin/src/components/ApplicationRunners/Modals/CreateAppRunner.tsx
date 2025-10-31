@@ -12,15 +12,14 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   isModalOpen: boolean;
   onClose: () => void;
-  route: ApplicationRoute;
 }
 
-const CreateAppRunner: FC<Props> = ({ isModalOpen, onClose, route }) => {
+const CreateAppRunner: FC<Props> = ({ isModalOpen, onClose }) => {
   const t = useI18n() as (t: string) => string;
   const router = useRouter();
 
@@ -43,20 +42,19 @@ const CreateAppRunner: FC<Props> = ({ isModalOpen, onClose, route }) => {
   const onCreate = useCallback(() => {
     createApplicationScheme(currentScheme).then((res) => {
       if (res.success) {
-        const originalRoute = route.split('/')[1];
         showNotification(
           getSuccessNotification(
             getCreateNotificationTitle(ApplicationRoute.ApplicationRunners, t),
             getCreateNotificationDescription(ApplicationRoute.ApplicationRunners, currentScheme.$id, t),
           ),
         );
-        router.push(`${originalRoute}/${getEntityPath(ApplicationRoute.ApplicationRunners, currentScheme)}`);
+        router.push(getUrnForEntity(ApplicationRoute.ApplicationRunners, currentScheme));
         onClose();
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [currentScheme, route, showNotification, t, router, onClose]);
+  }, [currentScheme, showNotification, t, router, onClose]);
 
   // initial validation (disable save when no values entered yet)
   useEffect(() => {

@@ -1,16 +1,16 @@
 import { FC } from 'react';
 
-import ApplicationSource from '@/src/components/Applications/ApplicationSource/ApplicationSource';
+import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
 import Defaults from '@/src/components/Defaults/Defaults';
 import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
-import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMainProperties';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { ChatEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';
+import Properties from '@/src/components/EntityMainProperties/Properties/Properties';
 
 interface Props {
   entity: ChatEntity;
@@ -24,7 +24,7 @@ const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntit
   return (
     <div className="h-full flex flex-col pt-3">
       <div className="flex flex-col gap-6">
-        <EntityMainProperties
+        <Properties
           view={view}
           entity={entity}
           onChangeEntity={updateEntity}

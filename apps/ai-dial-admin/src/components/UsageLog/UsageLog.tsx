@@ -1,26 +1,25 @@
 'use client';
-import { FC, useCallback, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
+import { FC, useCallback, useState } from 'react';
 
-import { ApplicationRoute } from '@/src/types/routes';
-import { TimeRange } from '@/src/models/time-range';
-import { TelemetryQuery } from '@/src/models/telemetry';
-import { ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
-import { conversationsTabs, EntityViewTab, tracesTabs } from '@/src/components/EntityView/View/utils';
-import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
-import { getFormattedFilters } from '@/src/utils/telemetry';
 import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
+import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
+import { conversationsTabs, EntityViewTab, tracesTabs } from '@/src/components/EntityView/View/utils';
+import List from '@/src/components/UsageLog/List/List';
+import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
 import { USAGE_LOG_CONVERSATIONS_COLUMNS, USAGE_LOG_TRACES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { CONVERSATIONS_QUERY, TRACES_QUERY } from '@/src/constants/telemetry';
 import { useI18n } from '@/src/locales/client';
-import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
-import { IconRefresh } from '@tabler/icons-react';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
-import List from '@/src/components/UsageLog/List/List';
-import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
 import { BaseEntity } from '@/src/models/dial/base-entity';
+import { TelemetryQuery } from '@/src/models/telemetry';
+import { TimeRange } from '@/src/models/time-range';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getFormattedFilters } from '@/src/utils/telemetry';
+import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
+import { IconRefresh } from '@tabler/icons-react';
 
 interface Props {
   route: ApplicationRoute;
@@ -74,7 +73,11 @@ const UsageLog: FC<Props> = ({ route, entity, entityView }) => {
   return (
     <div className="flex flex-col h-full w-full bg-layer-2 rounded p-4">
       <div className="flex flex-row min-h-[34px] justify-between">
-        {!entityView && <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />}
+        {!entityView && (
+          <div className="flex-1 min-w-0">
+            <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+          </div>
+        )}
         <div className={classNames('flex items-center gap-4', entityView && 'justify-between w-full')}>
           <TimeFilter
             timePeriod={timePeriod}

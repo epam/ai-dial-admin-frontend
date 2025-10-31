@@ -1,17 +1,16 @@
 'use client';
+import { DialLoader, DialTabs } from '@epam/ai-dial-ui-kit';
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react';
-import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getEntities } from '@/src/app/[lang]/export-config/actions';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
 import AddEntitiesButton from '@/src/components/ExportConfig/AddEntities/AddEntitiesButton';
-import { getActualTabs } from '@/src/components/ExportConfig/Content/utils';
 import ConfigContentGrid from '@/src/components/ExportConfig/Content/ConfigContentGrid';
+import { getActualTabs } from '@/src/components/ExportConfig/Content/utils';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportDependenciesConfig } from '@/src/models/export';
-import { ExportFormat, ExportType } from '@/src/types/export';
 import { EntityType } from '@/src/types/entity-type';
+import { ExportFormat, ExportType } from '@/src/types/export';
 
 interface Props {
   selectedExportFormat: ExportFormat;
@@ -60,7 +59,7 @@ const ConfigContent: FC<Props> = ({
 
   return (
     <div className="flex-1 min-w-0 bg-layer-3 rounded p-4 flex flex-col h-full">
-      <Tabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
+      {selectedTab && <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />}
       <div className="flex-1 min-h-0 mt-4">
         <div className="h-full flex flex-col">
           {selectedTab && (

@@ -42,10 +42,12 @@ export enum EntityParameterKeys {
   APP_RUNNER_ROUTES = 'dial:applicationTypeRoutes',
   SOURCE = 'source',
   DEFAULTS = 'defaults',
+  APP_PROPERTIES = 'applicationProperties',
 }
 
 export const dateKeys = ['expiresAt', 'keyGeneratedAt', 'createdAt', 'updatedAt'];
 export const appRunnerParameterKeys = ['properties', '$defs'];
+export const shareEntities = ['application', 'conversation', 'file', 'prompt', 'tool_set'];
 export const shareKeys = ['invitationTtl', 'maxAcceptedUsers'];
 
 export const arrayParameterKeys = [
@@ -56,12 +58,15 @@ export const arrayParameterKeys = [
   EntityParameterKeys.METHODS,
 ];
 export const arrayStringParameterKeys = [EntityParameterKeys.PRICING, EntityParameterKeys.RESPONSE];
-export const arrayObjectParameterKeys = [EntityParameterKeys.UPSTREAMS, EntityParameterKeys.DEFAULTS];
+export const arrayObjectParameterKeys = [
+  EntityParameterKeys.UPSTREAMS,
+  EntityParameterKeys.DEFAULTS,
+  EntityParameterKeys.APP_PROPERTIES,
+];
 export const separateObjectParameterKeys = [
   EntityParameterKeys.INTERCEPTORS,
   EntityParameterKeys.ROLE_LIMITS,
   EntityParameterKeys.DEFAULT_ROLE_LIMIT,
-  EntityParameterKeys.COST_LIMIT,
   EntityParameterKeys.AUTH,
   EntityParameterKeys.FEATURES,
   EntityParameterKeys.APPLICATIONS,

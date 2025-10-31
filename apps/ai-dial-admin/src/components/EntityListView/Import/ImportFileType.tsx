@@ -1,16 +1,19 @@
 import { Dispatch, FC, SetStateAction, useMemo } from 'react';
 
-import { IconFileTypeZip } from '@tabler/icons-react';
-import { DialRadioGroup, DialSwitch, RadioGroupOrientation, RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
+import {
+  DialRadioGroup,
+  DialSwitch,
+  RadioGroupOrientation,
+  RadioButtonWithContent,
+  DialLoadFileAreaField,
+  DialFileIcon,
+} from '@epam/ai-dial-ui-kit';
 
-import Json from '@/public/images/icons/file/json.svg';
 import Field from '@/src/components/Common/Field/Field';
-import LoadFileAreaField from '@/src/components/Common/LoadFileArea/LoadFileAreaField';
-import { ImportI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ImportFileType } from '@/src/types/import';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
-import { getIcon } from '@/src/utils/files/icon';
 import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
@@ -51,7 +54,7 @@ const ImportFileTypeSelector: FC<Props> = ({
   }, [t, route]);
 
   const getFileIcon = (name: string) => {
-    return getIcon(getNameExtensionFromFile(name).extension);
+    return <DialFileIcon extension={getNameExtensionFromFile(name).extension} />;
   };
 
   return (
@@ -80,48 +83,50 @@ const ImportFileTypeSelector: FC<Props> = ({
       </div>
       <div className="mt-6 flex-1 min-h-0">
         {fileType === ImportFileType.ARCHIVE && (
-          <LoadFileAreaField
+          <DialLoadFileAreaField
             elementId="importArchive"
             files={files?.[0] ? [files[0]] : []}
             fieldTitle={t(ImportI18nKey.File)}
-            emptyTitle={t(ImportI18nKey.DropAnyFile)}
+            emptyTextFirstLine={t(ImportI18nKey.DropAnyFile)}
+            emptyTextSecondLine={t(BasicI18nKey.Or)}
+            emptyButtonLabel={t(ButtonsI18nKey.Browse)}
             maxFilesCount={1}
-            isMultiple={false}
-            iconBeforeInput={<IconFileTypeZip width={18} height={18} className="text-secondary" />}
+            multiple={false}
+            iconBeforeInput={<DialFileIcon extension="zip" cssClass="text-secondary" />}
             fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
             fileCountError={t(ImportI18nKey.ArchiveDescription)}
             acceptTypes="application/zip, .zip, application/x-zip-compressed"
-            onChangeFile={changeFile}
+            onChange={changeFile}
           />
         )}
         {fileType === ImportFileType.JSON && (
-          <LoadFileAreaField
+          <DialLoadFileAreaField
             elementId="importJSON"
             fieldTitle={t(ImportI18nKey.Files)}
-            emptyTitle={t(ImportI18nKey.DropFiles)}
+            emptyTextFirstLine={t(ImportI18nKey.DropFiles)}
+            emptyTextSecondLine={t(BasicI18nKey.Or)}
+            emptyButtonLabel={t(ButtonsI18nKey.Browse)}
             files={files}
-            iconBeforeInput={
-              <i className="text-secondary">
-                <Json />
-              </i>
-            }
+            iconBeforeInput={<DialFileIcon extension="json" cssClass="text-secondary" />}
             acceptTypes="application/json"
             fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
             isInvalid={isInvalid}
             errorText={t(ImportI18nKey.PromptError)}
-            onChangeFile={changeFile}
+            onChange={changeFile}
             maxFilesCount={maxFilesCount}
           />
         )}
         {fileType === ImportFileType.FILES && (
-          <LoadFileAreaField
+          <DialLoadFileAreaField
             elementId="importFiles"
             fieldTitle={t(ImportI18nKey.Files)}
-            emptyTitle={t(ImportI18nKey.DropAnyFile)}
+            emptyTextFirstLine={t(ImportI18nKey.DropAnyFile)}
+            emptyTextSecondLine={t(BasicI18nKey.Or)}
+            emptyButtonLabel={t(ButtonsI18nKey.Browse)}
             files={files}
             acceptTypes="/"
             fileFormatError={t(ImportI18nKey.FileErrorType)}
-            onChangeFile={changeFile}
+            onChange={changeFile}
             isInvalid={isInvalid}
             dynamicIcon={getFileIcon}
             errorText={t(ImportI18nKey.FileError)}

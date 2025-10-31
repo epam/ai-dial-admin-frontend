@@ -1,19 +1,19 @@
 'use client';
 
 import { FC, useCallback, useEffect, useState } from 'react';
-import { IconArrowNarrowRight, IconZip } from '@tabler/icons-react';
+import { IconArrowNarrowRight } from '@tabler/icons-react';
 import {
   ButtonVariant,
   RadioButtonWithContent,
   DialButton,
   DialRadioGroup,
   RadioGroupOrientation,
+  DialLoadFileAreaField,
+  DialFileIcon,
 } from '@epam/ai-dial-ui-kit';
 
-import Json from '@/public/images/icons/file/json.svg';
-import LoadFileAreaField from '@/src/components/Common/LoadFileArea/LoadFileAreaField';
 import { isLargeFile } from '@/src/components/EntityListView/Import/import';
-import { ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { IMPORT_RESOLUTIONS } from '@/src/constants/import';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -107,35 +107,35 @@ const Files: FC<Props> = ({
         </div>
         <div className="flex-1 min-h-0">
           {fileType === ImportFileType.ARCHIVE ? (
-            <LoadFileAreaField
+            <DialLoadFileAreaField
               elementId="localFile"
               fieldTitle={t(ImportI18nKey.File)}
-              emptyTitle={t(ImportI18nKey.DropZip)}
+              emptyTextFirstLine={t(ImportI18nKey.DropZip)}
+              emptyTextSecondLine={t(BasicI18nKey.Or)}
+              emptyButtonLabel={t(ButtonsI18nKey.Browse)}
               maxFilesCount={1}
               files={files.length === 0 ? files : [files[0]]}
-              isMultiple={false}
+              multiple={false}
               fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
               fileCountError={t(ImportI18nKey.ArchiveDescription)}
-              iconBeforeInput={<IconZip className="text-secondary" {...BASE_ICON_PROPS} />}
-              acceptTypes=".zip, application/x-zip-compressed"
-              onChangeFile={onChangeFile}
+              iconBeforeInput={<DialFileIcon extension="zip" cssClass="text-secondary" />}
+              acceptTypes=".zip, application/x-zip-compressed, application/zip"
+              onChange={onChangeFile}
             />
           ) : (
-            <LoadFileAreaField
+            <DialLoadFileAreaField
               elementId="localFile"
               fieldTitle={t(ImportI18nKey.Files)}
-              emptyTitle={t(ImportI18nKey.DropFiles)}
+              emptyTextFirstLine={t(ImportI18nKey.DropFiles)}
+              emptyTextSecondLine={t(BasicI18nKey.Or)}
+              emptyButtonLabel={t(ButtonsI18nKey.Browse)}
               files={files}
-              iconBeforeInput={
-                <i className="text-secondary">
-                  <Json />
-                </i>
-              }
+              iconBeforeInput={<DialFileIcon extension="json" cssClass="text-secondary" />}
               acceptTypes="application/JSON"
               fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
               isInvalid={isLargeFile}
               errorText={t(ImportI18nKey.FileError)}
-              onChangeFile={onChangeFile}
+              onChange={onChangeFile}
             />
           )}
         </div>

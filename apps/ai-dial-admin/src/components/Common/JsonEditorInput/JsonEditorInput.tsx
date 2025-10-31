@@ -1,38 +1,36 @@
+import { DialFormPopup, DialInputPopup } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import Field from '@/src/components/Common/Field/Field';
-import InputModal from '@/src/components/Common/InputModal/InputModal';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
-import Popup from '@/src/components/Common/Popup/Popup';
-import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { JSONEditorError } from '@/src/types/editor';
-import { PopUpState } from '@/src/types/pop-up';
 
 interface Props {
   value: object;
   fieldTitle?: string;
   elementId?: string;
   disabled?: boolean;
+  inputCss?: string;
   onChangeValue: (json: object) => void;
 }
 
-const JsonEditorInput: FC<Props> = ({ value, disabled, fieldTitle, elementId, onChangeValue }) => {
+const JsonEditorInput: FC<Props> = ({ value, disabled, fieldTitle, elementId, inputCss, onChangeValue }) => {
   const t = useI18n();
   const [isValid, setIsValid] = useState(false);
   const [jsonValue, setJsonValue] = useState<string | undefined>(undefined);
   const [isValidJSON, setIsValidJSON] = useState(false);
 
-  const [modalState, setModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const onOpenModal = useCallback(() => {
-    setModalState(PopUpState.Opened);
-  }, [setModalState]);
+    setIsModalOpen(true);
+  }, [setIsModalOpen]);
 
   const onCloseModal = useCallback(() => {
-    setModalState(PopUpState.Closed);
-  }, [setModalState]);
+    setIsModalOpen(false);
+  }, [setIsModalOpen]);
 
   useEffect(() => {
     try {
@@ -65,30 +63,31 @@ const JsonEditorInput: FC<Props> = ({ value, disabled, fieldTitle, elementId, on
 
   return (
     <div className="flex flex-col">
-      <Field fieldTitle={fieldTitle} htmlFor={elementId} />
-      <InputModal readonly={disabled} modalState={modalState} selectedValue={jsonValue} onOpenModal={onOpenModal}>
-        <Popup
+      {fieldTitle && <Field fieldTitle={fieldTitle} htmlFor={elementId} />}
+      <DialInputPopup
+        disabled={disabled}
+        open={isModalOpen}
+        selectedValue={jsonValue}
+        onOpen={onOpenModal}
+        emptyValueText={t(BasicI18nKey.NoData)}
+        inputCssClasses={inputCss}
+      >
+        <DialFormPopup
           onClose={onCloseModal}
-          heading={t(EntityPlaceholdersI18nKey.Object)}
-          portalId={'jsonInputModal'}
-          state={modalState}
+          title={t(EntityPlaceholdersI18nKey.Object)}
+          portalId="jsonInputModal"
+          open={isModalOpen}
+          submitLabel={t(ButtonsI18nKey.Apply)}
+          onSubmit={onApply}
+          cancelLabel={t(ButtonsI18nKey.Cancel)}
+          onCancel={onCloseModal}
+          disableSubmitButton={!isValid}
         >
-          <div className="px-6 py-4">
-            <div className="h-[540px] max-h-[35vh]">
-              <JsonEditorBase value={jsonValue} onChange={onChangeJsonValue} onValidateJSON={onValidateJSON} />
-            </div>
+          <div className="px-6 py-4 h-[540px] max-h-[35vh]">
+            <JsonEditorBase value={jsonValue} onChange={onChangeJsonValue} onValidateJSON={onValidateJSON} />
           </div>
-          <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-            <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onCloseModal} />
-            <DialButton
-              variant={ButtonVariant.Primary}
-              title={t(ButtonsI18nKey.Apply)}
-              onClick={onApply}
-              disable={!isValid}
-            />
-          </div>
-        </Popup>
-      </InputModal>
+        </DialFormPopup>
+      </DialInputPopup>
     </div>
   );
 };

@@ -2,19 +2,25 @@ import { exportFiles } from '@/src/app/[lang]/files/actions';
 import { exportPrompts } from '@/src/app/[lang]/prompts/actions';
 import DuplicateAdapter from '@/src/components/Adapter/Modals/DuplicateAdapter';
 import DuplicateScheme from '@/src/components/ApplicationRunners/Modals/DuplicateAppRunner';
-import DuplicatePrompt from '@/src/components/Assets/Prompts/Modals/DuplicatePrompt';
+import DuplicateAsset from '@/src/components/Assets/Deployments/DuplicateAsset';
 import DuplicatePopup from '@/src/components/EntityView/Modals/Duplicate/Duplicate';
 import DuplicateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Duplicate';
 import DuplicateKey from '@/src/components/Keys/Modals/DuplicateKey';
 import { MenuI18nKey } from '@/src/constants/i18n';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { DialPrompt } from '@/src/models/dial/prompt';
+import { Asset } from '@/src/models/dial/deployment-asset';
+import { DialFile } from '@/src/models/dial/file';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { prepareEntityForDuplicate } from './Components/utils';
+import { RefObject } from 'react';
 
-export const getDuplicateModal = <T extends object>(
+export const getDuplicateModal = async <T extends object>(
   currentEntity: T | undefined,
+  entityRef: RefObject<T | undefined>,
   names: string[],
   keys: string[],
   route: ApplicationRoute,
@@ -22,13 +28,14 @@ export const getDuplicateModal = <T extends object>(
   isModalOpen: boolean,
   handleModalClose: () => void,
   onDuplicate: (entity: BaseEntity) => Promise<ServerActionResponse>,
+  context?: () => AssetsFolderContext<DialFile | Asset>,
 ) => {
   if (!currentEntity) return null;
-
+  const preparedEntity = (await prepareEntityForDuplicate(route, currentEntity, entityRef)) as T;
   if (route === ApplicationRoute.ApplicationRunners) {
     return (
       <DuplicateScheme
-        entity={currentEntity}
+        entity={preparedEntity}
         onDuplicate={onDuplicate}
         isModalOpen={isModalOpen}
         onClose={handleModalClose}
@@ -39,7 +46,7 @@ export const getDuplicateModal = <T extends object>(
   if (route === ApplicationRoute.InterceptorTemplates) {
     return (
       <DuplicateInterceptorTemplate
-        template={currentEntity}
+        template={preparedEntity}
         onDuplicate={onDuplicate}
         isModalOpen={isModalOpen}
         onClose={handleModalClose}
@@ -50,7 +57,7 @@ export const getDuplicateModal = <T extends object>(
   if (route === ApplicationRoute.Adapters) {
     return (
       <DuplicateAdapter
-        adapter={currentEntity}
+        adapter={preparedEntity}
         onDuplicate={onDuplicate}
         isModalOpen={isModalOpen}
         onClose={handleModalClose}
@@ -61,7 +68,7 @@ export const getDuplicateModal = <T extends object>(
   if (route === ApplicationRoute.Keys) {
     return (
       <DuplicateKey
-        entity={currentEntity}
+        entity={preparedEntity}
         onDuplicate={onDuplicate}
         isModalOpen={isModalOpen}
         names={names}
@@ -71,10 +78,12 @@ export const getDuplicateModal = <T extends object>(
     );
   }
 
-  if (route === ApplicationRoute.Prompts) {
+  if (isAssetWithVersion(route)) {
     return (
-      <DuplicatePrompt
-        entity={currentEntity as DialPrompt}
+      <DuplicateAsset
+        context={context}
+        view={route}
+        entity={preparedEntity as Asset}
         versionsMap={versionsMap}
         onDuplicate={onDuplicate}
         isModalOpen={isModalOpen}
@@ -86,7 +95,7 @@ export const getDuplicateModal = <T extends object>(
     <DuplicatePopup
       view={route}
       names={names || []}
-      entity={currentEntity}
+      entity={preparedEntity}
       onDuplicate={onDuplicate}
       isModalOpen={isModalOpen}
       onClose={handleModalClose}

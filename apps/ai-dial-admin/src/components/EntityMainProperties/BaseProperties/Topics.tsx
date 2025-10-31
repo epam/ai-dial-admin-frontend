@@ -11,7 +11,7 @@ import { isDeploymentAsset } from '@/src/utils/is-asset-view';
 
 interface Props<T> {
   entity: T;
-  readonly?: boolean;
+  disabled?: boolean;
   onChange?: (entity: T) => void;
   view?: ApplicationRoute;
 }
@@ -28,7 +28,7 @@ const TopicsControl = <T extends { topics?: string[]; descriptionKeywords?: stri
 
   const changeTopics = useCallback(
     (items: string[]) => {
-      if (view === ApplicationRoute.AssetsApplications) {
+      if (isDeploymentAsset(view)) {
         onChange?.({ ...entity, descriptionKeywords: items });
       } else {
         onChange?.({ ...entity, topics: items });

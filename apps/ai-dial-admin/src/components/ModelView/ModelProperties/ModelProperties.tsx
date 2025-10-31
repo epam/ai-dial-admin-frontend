@@ -3,12 +3,12 @@ import { FC } from 'react';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import Defaults from '@/src/components/Defaults/Defaults';
 import UpstreamEndpoints from '@/src/components/UpstreamEndpoints/UpstreamEndpoints';
-import EntityMainProperties from '@/src/components/EntityMainProperties/EntityMainProperties';
+import DeploymentProperties from '@/src/components/EntityMainProperties/Properties/DeploymentProperties';
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
 import Limits from '@/src/components/ModelView/Limits/Limits';
 import Pricing from '@/src/components/ModelView/Pricing/Pricing';
-import TokenizerModelSwitch from '@/src/components/ModelView/TokenizerModel/Tokenizer';
+import TokenizerModelSwitch from '@/src/components/Models/View/TokenizerModel/Tokenizer';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModel } from '@/src/models/dial/model';
@@ -26,7 +26,7 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, updateModel }) => {
 
   return (
     <div className="h-full flex flex-col pt-3 gap-6">
-      <EntityMainProperties
+      <DeploymentProperties
         view={ApplicationRoute.Models}
         entity={model}
         onChangeEntity={updateModel}

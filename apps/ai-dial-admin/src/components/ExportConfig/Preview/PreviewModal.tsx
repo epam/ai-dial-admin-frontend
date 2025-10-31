@@ -1,9 +1,7 @@
+import { DialFormPopup, DialLoader, DialSwitch, DialTabs, PopupSize, TabModel } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
-import { DialSwitch, ButtonVariant, DialButton, DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { previewExportConfig } from '@/src/app/[lang]/export-config/actions';
-import Popup from '@/src/components/Common/Popup/Popup';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
 import ConfigContentGrid from '@/src/components/ExportConfig/Content/ConfigContentGrid';
 import { getPreviewTabs } from '@/src/components/ExportConfig/Preview/utils';
 import { ButtonsI18nKey, ExportI18nKey } from '@/src/constants/i18n';
@@ -11,20 +9,18 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportRequest } from '@/src/models/export';
-import { TabModel } from '@/src/models/tab';
-import { ExportType } from '@/src/types/export';
-import { PopUpState } from '@/src/types/pop-up';
-import { getErrorNotification } from '@/src/utils/notification';
 import { EntityType } from '@/src/types/entity-type';
+import { ExportType } from '@/src/types/export';
+import { getErrorNotification } from '@/src/utils/notification';
 
 interface Props {
   exportRequest: Partial<ExportRequest>;
-  modalState: PopUpState;
+  isModalOpen: boolean;
   onClose: () => void;
   onPrepare: (isIncludeSecret: boolean) => void;
 }
 
-const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, modalState, onClose }) => {
+const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, isModalOpen, onClose }) => {
   const t = useI18n() as (v: string) => string;
 
   const { showNotification } = useNotification();
@@ -65,21 +61,25 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, modalState, onClose
   }, [exportRequest, isIncludeSecret, showNotification, t]);
 
   return (
-    <Popup
+    <DialFormPopup
       onClose={onClose}
-      heading={t(ExportI18nKey.FilePreview)}
+      title={t(ExportI18nKey.FilePreview)}
       portalId="ExportFilePreview"
-      state={modalState}
-      containerClassName="h-[800px] lg:max-w-[75%] md:max-w-[90%]"
+      open={isModalOpen}
+      size={PopupSize.Lg}
+      submitLabel={t(ButtonsI18nKey.Export)}
+      onSubmit={() => onPrepare(isIncludeSecret)}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      onCancel={onClose}
     >
-      <div className="flex flex-col gap-4 py-6 px-6 flex-1 min-h-0 h-[674px]">
+      <div className="flex flex-col gap-4 py-6 px-6 h-[674px]">
         <div className="flex-1 min-h-0">
           {isLoadingData ? (
             <DialLoader size={50} />
           ) : (
             <div className="flex flex-col h-full">
               <div className="mb-3">
-                <Tabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
+                <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />
               </div>
               <div className="flex-1 min-h-0">
                 <ConfigContentGrid selectedTab={selectedTab as EntityType} tabData={data} isFull={true} />
@@ -94,15 +94,7 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, modalState, onClose
           onChange={toggleIncludeSecret}
         />
       </div>
-      <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={() => onClose()} />
-        <DialButton
-          variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Export)}
-          onClick={() => onPrepare(isIncludeSecret)}
-        />
-      </div>
-    </Popup>
+    </DialFormPopup>
   );
 };
 

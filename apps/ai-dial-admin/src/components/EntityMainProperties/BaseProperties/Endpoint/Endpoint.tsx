@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, ReactNode, useCallback, useEffect, useState } from 'react';
 
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -19,7 +19,7 @@ export interface Props extends EndpointControlProps {
   fieldTitle: string;
   placeholder: string;
   elementCssClass?: string;
-  iconAfterInput?: React.ReactNode;
+  iconAfterInput?: ReactNode;
 }
 
 const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, onChange, ...props }) => {

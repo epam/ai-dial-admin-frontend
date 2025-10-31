@@ -1,11 +1,10 @@
 import { FC, useCallback } from 'react';
+import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
-import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import PriceControl from '@/src/components/EntityMainProperties/BaseProperties/Price';
 import { BasicI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModel, PricingType } from '@/src/models/dial/model';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import classNames from 'classnames';
 import { getMultipliedValue } from './utils';
 
@@ -17,19 +16,19 @@ interface Props {
 const Pricing: FC<Props> = ({ model, onChangeModel }) => {
   const t = useI18n();
 
-  const items: DropdownItemsModel[] = [
+  const items: SelectOption[] = [
     {
-      id: BasicI18nKey.None,
-      name: t(BasicI18nKey.None),
+      value: BasicI18nKey.None,
+      label: t(BasicI18nKey.None),
     },
     {
-      id: PricingType.Token,
-      name: t(ModelViewI18nKey.Tokens),
+      value: PricingType.Token,
+      label: t(ModelViewI18nKey.Tokens),
       description: t(ModelViewI18nKey.PerMillion),
     },
     {
-      id: PricingType.CharWithoutWhitespace,
-      name: t(ModelViewI18nKey.CharWithoutWhitespace),
+      value: PricingType.CharWithoutWhitespace,
+      label: t(ModelViewI18nKey.CharWithoutWhitespace),
     },
   ];
 
@@ -55,16 +54,16 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
   );
 
   const onChangeCompletion = useCallback(
-    (completion: number | string) => {
-      const value = (isTokenType ? +completion / 1000000 : completion).toString();
+    (completion?: number | string) => {
+      const value = completion ? (isTokenType ? +completion / 1000000 : completion).toString() : void 0;
       onChangeModel({ ...model, pricing: { ...model.pricing, completion: value } });
     },
     [isTokenType, onChangeModel, model],
   );
 
   const onChangePrompt = useCallback(
-    (prompt: number | string) => {
-      const value = (isTokenType ? +prompt / 1000000 : prompt).toString();
+    (prompt?: number | string) => {
+      const value = prompt ? (isTokenType ? +prompt / 1000000 : prompt).toString() : void 0;
       onChangeModel({ ...model, pricing: { ...model.pricing, prompt: value } });
     },
     [isTokenType, onChangeModel, model],
@@ -73,12 +72,12 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
   return (
     <div className={pricingContainerClasses}>
       <div className="lg:w-[35%]">
-        <DropdownField
-          selectedValue={activeType}
+        <DialSelectField
+          value={activeType}
           elementId="pricing"
-          items={items}
+          options={items}
           fieldTitle={t(ModelViewI18nKey.CostUnit)}
-          onChange={onChangePricingType}
+          onChange={(type) => onChangePricingType(type as string)}
         />
       </div>
 

@@ -1,8 +1,7 @@
-import { SettingsModalI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
-import { PopUpState } from '@/src/types/pop-up';
+import { ButtonsI18nKey, SettingsModalI18nKey } from '@/src/constants/i18n';
 import { fireEvent, render, screen } from '@testing-library/react';
-import SettingsModal from './SettingsModal';
 import { describe, expect, test, vi } from 'vitest';
+import SettingsModal from './SettingsModal';
 const mockOnClose = vi.fn();
 const mockOnConfirm = vi.fn();
 
@@ -18,7 +17,7 @@ vi.mock('@/src/context/ThemeContext', () => ({
 
 describe('SettingsModal', () => {
   test('renders and allows theme selection and confirm', () => {
-    render(<SettingsModal modalState={PopUpState.Opened} onClose={mockOnClose} onConfirm={mockOnConfirm} />);
+    render(<SettingsModal isModalOpen={true} onClose={mockOnClose} onConfirm={mockOnConfirm} />);
 
     expect(screen.getByText(SettingsModalI18nKey.Settings)).toBeInTheDocument();
 

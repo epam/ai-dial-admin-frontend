@@ -65,8 +65,8 @@ const MultiselectContentModal: FC<Props> = ({
   );
 
   const onChangeNewItem = useCallback(
-    (topic: string, index: number) => {
-      newItems[index] = topic.trimStart();
+    (topic: string | undefined, index: number) => {
+      newItems[index] = topic?.trimStart() || '';
       setItems([...newItems]);
     },
     [setItems, newItems],

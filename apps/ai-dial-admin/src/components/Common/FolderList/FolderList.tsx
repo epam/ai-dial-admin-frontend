@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { IconCaretDownFilled, IconCaretRightFilled, IconDotsVertical, IconFolder, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialEllipsisTooltip, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import ActionsDropdown from '@/src/components/Common/ActionsDropdown/ActionsDropdown';
 import {
@@ -13,7 +13,6 @@ import {
   getMoveFolderOperation,
   getRenameFolderOperation,
 } from '@/src/components/Common/FolderCreate/Components/Operations';
-import Tooltip from '@/src/components/Common/Tooltip/Tooltip';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { EntitiesI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -161,7 +160,7 @@ const FolderList: FC<Props> = ({
       ? 'bg-accent-primary-alpha border-l-2 border-l-accent-primary rounded'
       : 'border-l-2 border-l-transparent';
     const iconClass =
-      !node.children?.some((c) => isFolder(c.nodeType)) &&
+      !node.items?.some((c) => isFolder(c.nodeType)) &&
       (isBulkDelete
         ? (folderContext as AssetsFolderContext<DialFile>)?.bulkSelectedData[node.path]
         : folderContext?.fetchedFoldersData[node.path])
@@ -177,8 +176,8 @@ const FolderList: FC<Props> = ({
           if (node.path === rootFolderPath) {
             return node;
           }
-          if (node.children) {
-            const found = findRootNode(node.children);
+          if (node.items) {
+            const found = findRootNode(node.items);
             if (found) return found;
           }
         }
@@ -191,13 +190,13 @@ const FolderList: FC<Props> = ({
     }
 
     return nodes?.map((node) => {
-      const { path, nodeType, children, name } = node;
+      const { path, nodeType, items, name } = node;
       const { baseClass, selectedClass, iconClass } = getFolderClassNames(node, level);
       const isExpanded = folderContext?.expandedFolders.has(path);
       const isMoveError =
         isFolderMove &&
         path === folderContext?.filePath &&
-        children?.some((c) => getFolderName(c.path) === getFolderName(folderPath || ''));
+        items?.some((c) => getFolderName(c.path) === getFolderName(folderPath || ''));
       const isMovableFolder = isFolderMove && folderPath === path;
 
       return (
@@ -218,14 +217,12 @@ const FolderList: FC<Props> = ({
                   <IconFolder
                     {...BASE_ICON_PROPS}
                     className={classNames(
-                      'flex-shrink-0',
+                      'flex-shrink-0 mr-2',
                       isMoveError ? 'text-error' : '',
                       isMovableFolder || isFolderDelete ? 'text-accent-primary' : '',
                     )}
                   />
-                  <Tooltip tooltip={name}>
-                    <span className="pl-2 text-primary truncate">{name}</span>
-                  </Tooltip>
+                  <DialEllipsisTooltip text={name} cssClass="text-primary" />
                 </div>
 
                 {showFolderActions && (
@@ -246,7 +243,7 @@ const FolderList: FC<Props> = ({
             </div>
           )}
 
-          {isExpanded && children && <div key={`${path}-children`}>{renderTree(children, level + 1)}</div>}
+          {isExpanded && items && <div key={`${path}-children`}>{renderTree(items, level + 1)}</div>}
         </div>
       );
     });

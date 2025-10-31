@@ -11,18 +11,16 @@ import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { AssetApp } from '@/src/models/dial/deployment-asset';
+import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
-import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getEntityPath, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import Actions from './Components/Actions';
 import { ModalType } from './Components/Modals';
 import { emptyDataTitleMap, listViewTitleMap } from './constants';
 import EntityListHeaderButtons from './HeaderButtons/HeaderButtons';
-import { isDeploymentAsset } from '@/src/utils/is-asset-view';
 
 interface Props<T> {
   data: T[];
@@ -39,7 +37,7 @@ interface Props<T> {
   showColumnsButton?: boolean;
   showFolders?: boolean;
   showExport?: boolean;
-  context?: () => AssetsFolderContext<DialFile | DialPrompt | AssetApp>;
+  context?: () => AssetsFolderContext<DialFile | Asset>;
 }
 
 const BaseEntityList = <T extends object>({
@@ -59,20 +57,19 @@ const BaseEntityList = <T extends object>({
   showExport,
   context,
 }: Props<T>) => {
-  const t = useI18n();
+  const t = useI18n() as (s: string) => string;
   const router = useRouter();
   const gridOptions: GridOptions = {
     onCellClicked: (e) => {
       if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
-        const originalRoute = route.split('/')[1]; // route starts with `/`
-        router.push(`${originalRoute}/${getEntityPath(route, e.data)}`);
+        router.push(getUrnForEntity(route, e.data));
       }
     },
   };
   // entity for which the modals (delete and duplicate) is open
   const [currentEntity, setCurrentEntity] = useState<T | undefined>(void 0);
 
-  const [modalState, setModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType | undefined>(void 0);
 
   const [showColumnsPanel, setShowColumnsPanel] = useState(false);
@@ -86,7 +83,7 @@ const BaseEntityList = <T extends object>({
 
   const handleModalOpen = useCallback((modalType: ModalType) => {
     setModalType(modalType);
-    setModalState(PopUpState.Opened);
+    setIsModalOpen(true);
   }, []);
 
   const onOpenDeleteModal = useCallback(
@@ -128,9 +125,9 @@ const BaseEntityList = <T extends object>({
   }, [closeColumnsPanel]);
 
   const getColumns = () => {
-    if (route === ApplicationRoute.Prompts) {
+    if (isAssetWithVersion(route)) {
       return ENTITIES_COLUMNS(baseColumns, onOpenDeleteModal, onOpenDuplicateModal, openInNewTab, onOpenMoveModal);
-    } else if (route === ApplicationRoute.Files || isDeploymentAsset(route)) {
+    } else if (route === ApplicationRoute.Files) {
       return ENTITIES_COLUMNS(baseColumns, onOpenDeleteModal, void 0, openInNewTab, onOpenMoveModal);
     }
     return ENTITIES_COLUMNS(baseColumns, onOpenDeleteModal, onOpenDuplicateModal, openInNewTab);
@@ -182,8 +179,8 @@ const BaseEntityList = <T extends object>({
         moveFiles={moveFiles}
         bulkDelete={bulkDelete}
         context={context}
-        modalState={modalState}
-        setModalState={setModalState}
+        isModalOpen={isModalOpen}
+        setIsModalOpen={setIsModalOpen}
         modalType={modalType}
         setModalType={setModalType}
         currentEntity={currentEntity}

@@ -12,13 +12,14 @@ import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operati
 import { ActionMenuOperation } from '@/src/types/action-menu-operations';
 
 interface Props {
+  readonly?: boolean;
   activeRoute?: string;
   routes?: DialAppRoute[];
   onClick: (route?: string) => void;
   onRemove: (route?: string) => void;
 }
 
-const AppRouteList: FC<Props> = ({ routes, activeRoute, onRemove, onClick }) => {
+const AppRouteList: FC<Props> = ({ readonly, routes, activeRoute, onRemove, onClick }) => {
   const t = useI18n() as (str: string) => string;
 
   const routeClassNames = classNames(
@@ -53,12 +54,14 @@ const AppRouteList: FC<Props> = ({ routes, activeRoute, onRemove, onClick }) => 
                 <span className="flex-1 min-w-0 mr-0 text-left" onClick={() => onClick(route.name)}>
                   {route.name}
                 </span>
-                <div className="invisible group-hover:visible text-primary mx-2 flex flex-row gap-2">
-                  <ActionsDropdown
-                    items={[getOperation(() => onRemove(route.name))]}
-                    icon={<IconDotsVertical {...BASE_ICON_PROPS} />}
-                  />
-                </div>
+                {!readonly && (
+                  <div className="invisible group-hover:visible text-primary mx-2 flex flex-row gap-2">
+                    <ActionsDropdown
+                      items={[getOperation(() => onRemove(route.name))]}
+                      icon={<IconDotsVertical {...BASE_ICON_PROPS} />}
+                    />
+                  </div>
+                )}
               </button>
             );
           })

@@ -1,3 +1,5 @@
+'use client';
+
 import { FC } from 'react';
 
 import { createRoute, removeRoute } from '@/src/app/[lang]/routes/actions';

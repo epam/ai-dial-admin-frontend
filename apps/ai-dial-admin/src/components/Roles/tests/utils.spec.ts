@@ -4,7 +4,7 @@ import { ColDef, Column, GridApi, IRowNode } from 'ag-grid-community';
 import { DialRole } from '@/src/models/dial/role';
 import { SharingType } from '../types';
 import { getSharingData, getDefaultPlaceholder, isResetToDefaultHidden, isSetNoLimitsHidden } from '../utils';
-import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_VALUE } from '@/src/constants/role';
+import { UNLIMITED_ACCEPTED_USERS, UNLIMITED_VALUE } from '@/src/constants/role';
 
 describe('getSharingData', () => {
   test('should return default sharing data when role is undefined', () => {
@@ -72,6 +72,44 @@ describe('getSharingData', () => {
     expect(result).toEqual([
       { name: SharingType.APPLICATION, invitationTtl: undefined, maxAcceptedUsers: undefined },
       { name: SharingType.TOOL_SET, invitationTtl: undefined, maxAcceptedUsers: undefined },
+      { name: SharingType.PROMPT, invitationTtl: undefined, maxAcceptedUsers: undefined },
+      { name: SharingType.FILE, invitationTtl: undefined, maxAcceptedUsers: undefined },
+      { name: SharingType.CONVERSATION, invitationTtl: undefined, maxAcceptedUsers: undefined },
+    ]);
+  });
+
+  test('should return UNLIMITED_VALUE for invitationTtl when it is equal to UNLIMITED_VALUE', () => {
+    const mockRole: DialRole = {
+      share: {
+        [SharingType.APPLICATION]: { invitationTtl: UNLIMITED_VALUE, maxAcceptedUsers: '5' },
+        [SharingType.TOOL_SET]: { invitationTtl: UNLIMITED_VALUE, maxAcceptedUsers: '10' },
+      },
+    };
+
+    const result = getSharingData(mockRole);
+
+    expect(result).toEqual([
+      { name: SharingType.APPLICATION, invitationTtl: UNLIMITED_VALUE, maxAcceptedUsers: '5' },
+      { name: SharingType.TOOL_SET, invitationTtl: UNLIMITED_VALUE, maxAcceptedUsers: '10' },
+      { name: SharingType.PROMPT, invitationTtl: undefined, maxAcceptedUsers: undefined },
+      { name: SharingType.FILE, invitationTtl: undefined, maxAcceptedUsers: undefined },
+      { name: SharingType.CONVERSATION, invitationTtl: undefined, maxAcceptedUsers: undefined },
+    ]);
+  });
+
+  test('should return undefined for invitationTtl if it is falsy (null, undefined)', () => {
+    const mockRole: DialRole = {
+      share: {
+        [SharingType.APPLICATION]: { invitationTtl: null, maxAcceptedUsers: '5' },
+        [SharingType.TOOL_SET]: { invitationTtl: undefined, maxAcceptedUsers: '10' },
+      },
+    };
+
+    const result = getSharingData(mockRole);
+
+    expect(result).toEqual([
+      { name: SharingType.APPLICATION, invitationTtl: undefined, maxAcceptedUsers: '5' },
+      { name: SharingType.TOOL_SET, invitationTtl: undefined, maxAcceptedUsers: '10' },
       { name: SharingType.PROMPT, invitationTtl: undefined, maxAcceptedUsers: undefined },
       { name: SharingType.FILE, invitationTtl: undefined, maxAcceptedUsers: undefined },
       { name: SharingType.CONVERSATION, invitationTtl: undefined, maxAcceptedUsers: undefined },
@@ -205,13 +243,13 @@ describe('isSetNoLimitsHidden', () => {
     });
 
     const result = isSetNoLimitsHidden(mockApi, mockNode);
-    expect(result).toBe(true);
+    expect(result).toBe(false);
   });
 
-  test('should return true when invitationTtl is NO_LIMITS_VALUE and maxAcceptedUsers is NO_LIMITS_ACCEPTED_USERS', () => {
+  test('should return true when invitationTtl is UNLIMITED_VALUE and maxAcceptedUsers is UNLIMITED_ACCEPTED_USERS', () => {
     mockApi.getCellValue.mockImplementation(({ colKey }: { colKey: string }) => {
-      if (colKey === 'invitationTtl') return NO_LIMITS_VALUE;
-      if (colKey === 'maxAcceptedUsers') return NO_LIMITS_ACCEPTED_USERS;
+      if (colKey === 'invitationTtl') return UNLIMITED_VALUE;
+      if (colKey === 'maxAcceptedUsers') return UNLIMITED_ACCEPTED_USERS;
     });
 
     mockApi.getColumn.mockImplementation((colKey: string) => {
@@ -257,7 +295,7 @@ describe('isSetNoLimitsHidden', () => {
     expect(result).toBe(false);
   });
 
-  test('should return false when both invitationTtl and maxAcceptedUsers are truthy but do not match NO_LIMITS_VALUE', () => {
+  test('should return false when both invitationTtl and maxAcceptedUsers are truthy but do not match UNLIMITED_VALUE', () => {
     mockApi.getCellValue.mockImplementation(({ colKey }: { colKey: string }) => {
       if (colKey === 'invitationTtl') return '3600';
       if (colKey === 'maxAcceptedUsers') return '10';

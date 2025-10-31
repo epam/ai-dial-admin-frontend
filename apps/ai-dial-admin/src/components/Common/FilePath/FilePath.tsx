@@ -1,7 +1,9 @@
-import { IconFolderShare } from '@tabler/icons-react';
 import { ChangeEvent, FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
+
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { IconFolderShare } from '@tabler/icons-react';
+import classNames from 'classnames';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -16,11 +18,12 @@ interface Props {
   modalTitle: string;
   disabled?: boolean;
   value?: string;
+  inputCss?: string;
   onChange: (value: string) => void;
   context: () => AssetsFolderContext<DialFile>;
 }
 
-const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, onChange, context }) => {
+const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, inputCss, onChange, context }) => {
   const t = useI18n();
   const [filePath, setFilePath] = useState(value);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -47,15 +50,17 @@ const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, 
       <label className="tiny mb-2 text-secondary" htmlFor="pathSelectButton">
         {label}
       </label>
-      <div className="flex">
-        <input
-          disabled={disabled}
-          type="text"
-          value={filePath}
-          onChange={onInputChange}
-          placeholder={placeholder}
-          className="dial-input py-2 px-3 mr-4 flex-1"
-        />
+      <div className="flex gap-4">
+        <div className={classNames('flex', inputCss || '')}>
+          <input
+            disabled={disabled}
+            type="text"
+            value={filePath}
+            onChange={onInputChange}
+            placeholder={placeholder}
+            className="dial-input py-2 px-3"
+          />
+        </div>
         <DialButton
           disable={disabled}
           variant={ButtonVariant.Secondary}

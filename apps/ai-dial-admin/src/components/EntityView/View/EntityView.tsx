@@ -5,10 +5,10 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
+import { DialTabs } from '@epam/ai-dial-ui-kit';
 
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { ModalType } from '@/src/components/EntityView/Modals/constants';
@@ -38,11 +38,12 @@ import {
 } from '@epam/ai-dial-shared';
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 import ViewContent from './Content/ViewContent';
-import { getEntityFromFile, getExportType, getFileFromEntity } from './core-entity-utils';
+import { getExportType } from './core-entity-utils';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
   view: ApplicationRoute;
+  activeTab?: EntityViewTab;
   originalEntity: BaseEntity;
   names: string[];
   etag: string;
@@ -91,7 +92,7 @@ const EntityView: FC<Props> = ({
     const name = (originalEntity as { name: string })?.name;
     if (!coreEntity && name) {
       getCoreEntity(name, getExportType(view)).then((data) => {
-        setCoreEntity(getEntityFromFile(view, name, data) as BaseEntity);
+        setCoreEntity(data);
       });
     }
   }, [coreEntity, originalEntity, view]);
@@ -156,8 +157,8 @@ const EntityView: FC<Props> = ({
           handleModalOpen(ModalType.entity);
         } else if (
           activeTab === EntityViewTab.Parameters &&
-          isIframeChanged &&
-          view === ApplicationRoute.Applications
+          (isIframeChanged || isChanged) &&
+          (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications)
         ) {
           setNextTab(tab);
           handleModalOpen(ModalType.parameters);
@@ -186,7 +187,7 @@ const EntityView: FC<Props> = ({
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreEntity(getFileFromEntity(view, selectedEntity))
+        ? updateCoreEntity(selectedEntity as Record<string, unknown>)
         : updateEntity(selectedEntity, etag);
 
     req.then((res) => {
@@ -226,9 +227,11 @@ const EntityView: FC<Props> = ({
   );
 
   const toggleJsonEditor = useCallback(() => {
+    setSelectedEntity(cloneDeep(originalEntity));
     setSelectedFormat(ExportFormat.ADMIN);
+
     setJsonEditorEnabled((prev) => !prev);
-  }, [setJsonEditorEnabled]);
+  }, [originalEntity]);
 
   const changeTab = useCallback(() => {
     setActiveTab(nextTab as EntityViewTab);
@@ -280,9 +283,14 @@ const EntityView: FC<Props> = ({
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
         <div className={headerClassName}>
-          <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
+          {!jsonEditorEnabled && (
+            <div className="flex-1 min-w-0 mr-3">
+              <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+            </div>
+          )}
           <HeaderButtons
             view={view}
+            activeTab={activeTab}
             entity={selectedEntity}
             isChanged={isChanged}
             onSave={onTryToSave}
@@ -296,7 +304,7 @@ const EntityView: FC<Props> = ({
         </div>
 
         <div className="flex-1 overflow-auto mt-3 min-h-0">
-          {jsonEditorEnabled && activeTab !== EntityViewTab.Parameters ? (
+          {jsonEditorEnabled && !(ApplicationRoute.Applications && activeTab === EntityViewTab.Parameters) ? (
             <EntityJsonEditor
               key={key}
               entity={selectedEntity}
@@ -304,19 +312,24 @@ const EntityView: FC<Props> = ({
               setIsChanged={setIsChanged}
             />
           ) : (
-            <ViewContent
-              view={view}
-              etag={etag}
-              applicationSchemes={applicationSchemes}
-              activeTab={activeTab}
-              selectedEntity={selectedEntity}
-              jsonEditorEnabled={jsonEditorEnabled}
-              isSkipRefresh={isSkipRefresh}
-              onChangeEntity={onChangeEntity}
-              isChanged={isChanged}
-              onSave={onSave}
-              {...props}
-            />
+            selectedFormat === ExportFormat.ADMIN && (
+              <ViewContent
+                view={view}
+                etag={etag}
+                applicationSchemes={applicationSchemes}
+                activeTab={activeTab}
+                selectedEntity={selectedEntity}
+                jsonEditorEnabled={jsonEditorEnabled}
+                isSkipRefresh={isSkipRefresh}
+                onChangeEntity={onChangeEntity}
+                isChanged={isChanged}
+                onSave={onSave}
+                key={key}
+                setIsChanged={setIsChanged}
+                setSelectedEntity={setSelectedEntity}
+                {...props}
+              />
+            )
           )}
         </div>
       </div>

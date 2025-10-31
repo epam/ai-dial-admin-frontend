@@ -3,16 +3,12 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
 import classNames from 'classnames';
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialRemoveButton, DialSelectField, DialTagInput, DialTextInputField } from '@epam/ai-dial-ui-kit';
 
-import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
-import TagInput from '@/src/components/Common/TagInput/TagInput';
 import { BasicI18nKey, ErrorI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRule, RuleFunction } from '@/src/models/dial/rule';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { getAttributeItems, getOperationItems } from '@/src/components/Rules/utils';
-import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 interface Props {
   rule: DialRule;
@@ -28,7 +24,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
   const ref = useRef<HTMLDivElement>(null);
   const isFirstLine = index === 0;
   const [errorText, setErrorText] = useState('');
-  const functionItems: DropdownItemsModel[] = getOperationItems(t);
+  const functionItems = getOperationItems(t);
   const attributeItems = getAttributeItems(t, attributes);
 
   const lineHorizontalChildClass = classNames('h-[1px] w-[16px] bg-accent-primary', errorText && 'mb-[18px]');
@@ -106,23 +102,23 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
       <div className={classNames(lineHorizontalChildClass, index === 0 && 'mt-[22px]')}></div>
       <div ref={ref} className={containerClass}>
         <div className={classNames(inputClass, 'w-[250px]')}>
-          <DropdownField
-            selectedValue={rule.source}
+          <DialSelectField
+            value={rule.source}
             elementId={'rule-attribute-' + index}
-            items={attributeItems}
+            options={attributeItems}
             fieldTitle={isFirstLine ? t(FoldersI18nKey.AttributeTitle) : ''}
             placeholder={t(FoldersI18nKey.AttributePlaceholder)}
-            onChange={onChangeSource}
+            onChange={(source) => onChangeSource(source as string)}
           />
         </div>
         <div className={classNames(inputClass, 'w-[160px]')}>
-          <DropdownField
-            selectedValue={rule.function}
+          <DialSelectField
+            value={rule.function}
             elementId={'rule-function-' + index}
-            items={functionItems}
+            options={functionItems}
             fieldTitle={isFirstLine ? t(FoldersI18nKey.OperationTitle) : ''}
             placeholder={t(FoldersI18nKey.OperationPlaceholder)}
-            onChange={onChangeFunction}
+            onChange={(fun) => onChangeFunction(fun as string)}
           />
         </div>
         <div className="w-full">
@@ -138,7 +134,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
               elementCssClass="h-[38px]"
             />
           ) : (
-            <TagInput
+            <DialTagInput
               elementId="rule-values"
               fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
               placeholder={t(FoldersI18nKey.ValuePlaceholder)}
@@ -149,7 +145,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
             />
           )}
         </div>
-        <RemoveButton onClick={onRemoveValue} cssClass={iconClass} />
+        <DialRemoveButton onClick={onRemoveValue} cssClass={iconClass} />
       </div>
     </>
   );

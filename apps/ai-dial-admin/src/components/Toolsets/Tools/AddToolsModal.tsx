@@ -2,11 +2,10 @@
 
 import { ButtonsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { PopUpState } from '@/src/types/pop-up';
 import MultiselectModal from '@/src/components/Common/Multiselect/Modal/MultiselectModal';
 
 interface Props {
-  modalState: PopUpState;
+  isModalOpen: boolean;
   onSelectItems?: (items: string[]) => void;
   onClose: () => void;
 }

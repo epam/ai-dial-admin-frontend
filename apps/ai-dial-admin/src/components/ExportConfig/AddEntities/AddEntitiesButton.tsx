@@ -12,7 +12,6 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { EntityType } from '@/src/types/entity-type';
-import { PopUpState } from '@/src/types/pop-up';
 import { getAvailableData, getButtonTitle } from './utils';
 
 interface Props {
@@ -26,7 +25,7 @@ const AddEntitiesButton: FC<Props> = ({ selectedTab, tabData, customExportData, 
   const t = useI18n() as (v: string) => string;
 
   const [buttonTitle, setButtonTitle] = useState('');
-  const [modalState, setModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [availableEntities, setAvailableEntities] = useState<EntitiesGridData[]>([]);
   const [entityTitle, setEntityTitle] = useState<EntityType | undefined>(void 0);
   const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
@@ -34,7 +33,7 @@ const AddEntitiesButton: FC<Props> = ({ selectedTab, tabData, customExportData, 
   const onClick = (id: EntityType) => {
     setEntityTitle(id);
     setAvailableEntities(getAvailableData(id, tabData, customExportData, selectedTab));
-    setModalState(PopUpState.Opened);
+    setIsModalOpen(true);
   };
 
   const onAddEntity = (entities: EntitiesGridData[], dependencies?: EntityType[]) => {
@@ -49,7 +48,7 @@ const AddEntitiesButton: FC<Props> = ({ selectedTab, tabData, customExportData, 
         [selectedTab]: [...existingItems, ...data],
       };
     });
-    setModalState(PopUpState.Closed);
+    setIsModalOpen(false);
   };
 
   useEffect(() => {
@@ -68,14 +67,14 @@ const AddEntitiesButton: FC<Props> = ({ selectedTab, tabData, customExportData, 
         onClick={() => onClick(selectedTab)}
       />
 
-      {modalState === PopUpState.Opened &&
+      {isModalOpen &&
         createPortal(
           <AddEntitiesModal
             selectedTab={entityTitle}
             columnDefs={columnDefs}
-            modalState={modalState}
+            isModalOpen={isModalOpen}
             entities={availableEntities}
-            onClose={() => setModalState(PopUpState.Closed)}
+            onClose={() => setIsModalOpen(false)}
             onApply={onAddEntity}
           />,
           document.body,

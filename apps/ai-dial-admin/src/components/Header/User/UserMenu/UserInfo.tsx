@@ -1,24 +1,27 @@
 import { Session } from 'next-auth';
-import Image from 'next/image';
 import { FC } from 'react';
 import { IconUser } from '@tabler/icons-react';
 
 import { useI18n } from '@/src/locales/client';
+import classNames from 'classnames';
 
 interface Props {
+  isUserIcon?: boolean;
   session: Session | null;
 }
 
-const UserInfo: FC<Props> = ({ session }) => {
+const UserInfo: FC<Props> = ({ session, isUserIcon }) => {
   const t = useI18n();
+  const size = isUserIcon ? 24 : 18;
   return (
-    <div className="flex items-center gap-3 p-4">
+    <div className={classNames('flex items-center gap-3', isUserIcon ? 'p-2' : 'p-4')}>
       {session?.user?.image ? (
-        <Image className="rounded" src={session?.user?.image} width={18} height={18} alt="User avatar" />
+        // eslint-disable-next-line @next/next/no-img-element
+        <img className="rounded" src={session?.user?.image} width={size} height={size} alt="User avatar" />
       ) : (
-        <IconUser width={18} height={18} />
+        <IconUser size={size} />
       )}
-      <span className="grow small">{session?.user?.name || t('User')}</span>
+      {!isUserIcon && <span className="grow small">{session?.user?.name || t('User')}</span>}
     </div>
   );
 };

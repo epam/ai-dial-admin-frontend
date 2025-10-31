@@ -1,11 +1,9 @@
 'use client';
 import { FC, useMemo, useState } from 'react';
 
+import { DialFormPopup, DialNoDataContent, PopupSize } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridOptions, SelectionChangedEvent } from 'ag-grid-community';
-import classNames from 'classnames';
-import { ButtonVariant, DialButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
-import Popup from '@/src/components/Common/Popup/Popup';
 import { getButtonTitle } from '@/src/components/ExportConfig/AddEntities/utils';
 import Grid from '@/src/components/Grid/Grid';
 import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
@@ -13,12 +11,11 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { EntityType } from '@/src/types/entity-type';
-import { PopUpState } from '@/src/types/pop-up';
 import { getEmptyDataTitleI18nKey } from '@/src/utils/entities/get-empty-data-title';
 import Dependencies from './Dependencies';
 
 interface Props {
-  modalState: PopUpState;
+  isModalOpen: boolean;
   selectedTab?: EntityType;
   entities: EntitiesGridData[];
   columnDefs?: ColDef[];
@@ -26,7 +23,7 @@ interface Props {
   onApply: (entities: EntitiesGridData[], dependencies?: EntityType[]) => void;
 }
 
-const AddEntitiesModal: FC<Props> = ({ modalState, selectedTab, entities, columnDefs, onClose, onApply }) => {
+const AddEntitiesModal: FC<Props> = ({ isModalOpen, selectedTab, entities, columnDefs, onClose, onApply }) => {
   const t = useI18n() as (v: string) => string;
   const [selectedEntities, setSelectedEntities] = useState<EntitiesGridData[]>([]);
   const [selectedDependencies, setSelectedDependencies] = useState<EntityType[]>([]);
@@ -55,17 +52,21 @@ const AddEntitiesModal: FC<Props> = ({ modalState, selectedTab, entities, column
     onSelectionChanged: onSelectionChanged,
   };
 
-  const containerClassName = classNames('h-[800px] lg:max-w-[75%] md:max-w-[90%]');
-
   return (
-    <Popup
+    <DialFormPopup
       onClose={onClose}
-      heading={modalTitle}
+      title={modalTitle}
       portalId="AddExportEntities"
-      state={modalState}
-      containerClassName={containerClassName}
+      open={isModalOpen}
+      size={PopupSize.Lg}
+      cssClass="h-[800px]"
+      onSubmit={() => onApply(selectedEntities, selectedDependencies)}
+      onCancel={onClose}
+      disableSubmitButton={!selectedEntities.length}
+      submitLabel={t(ButtonsI18nKey.Add)}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
     >
-      <div className="flex flex-1 flex-col px-6 py-4 min-h-0">
+      <div className="flex h-full flex-col px-6 py-4 min-h-0">
         {!entities.length ? (
           <DialNoDataContent title={t(emptyTitle)} />
         ) : (
@@ -81,16 +82,7 @@ const AddEntitiesModal: FC<Props> = ({ modalState, selectedTab, entities, column
           </div>
         )}
       </div>
-      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Add)}
-          onClick={() => onApply(selectedEntities, selectedDependencies)}
-          disable={!selectedEntities.length}
-        />
-      </div>
-    </Popup>
+    </DialFormPopup>
   );
 };
 

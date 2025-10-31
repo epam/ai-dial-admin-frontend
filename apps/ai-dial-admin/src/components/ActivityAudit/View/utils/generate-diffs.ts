@@ -9,7 +9,7 @@ import { ActivityAuditDiff, ActivityAuditSection } from '@/src/models/activity-a
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus } from '@/src/types/activity-audit';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { isAppRunnerParameter, sortKeys } from './compare-helpers';
+import { isAppRunnerParameter, isRoleSharingParameter, sortKeys } from './compare-helpers';
 import { setObjectsArrayDiff } from './set-objects-array-diffs';
 import { setRolesDiffs } from './set-roles-diffs';
 import {
@@ -62,12 +62,15 @@ export const generateCurrentResource = (
   };
 
   const allKeys = new Set([...Object.keys(current || {}), ...Object.keys(compare || {})].sort(sortKeys));
+  if (type === ActivityAuditResourceType.ROLE && !allKeys.has(EntityParameterKeys.SHARE)) {
+    allKeys.add(EntityParameterKeys.SHARE);
+  }
   if (current && compare) {
     allKeys.forEach((key) => {
       const val1 = current?.[key];
       const val2 = compare?.[key];
       const isObject = typeof val1 === 'object' || typeof val2 === 'object';
-      if (!isObject && !isAppRunnerParameter(key, type)) {
+      if (!isObject && !isAppRunnerParameter(key, type) && !isRoleSharingParameter(key, type)) {
         compareSimpleTypes(result.properties, key, val1, val2, isCurrent);
       } else {
         compareObjectTypes(result, key as EntityParameterKeys, val1 as object, val2 as object, type, isCurrent, t);
@@ -78,7 +81,7 @@ export const generateCurrentResource = (
     allKeys.forEach((key) => {
       const value = compare?.[key];
       const isObject = typeof value === 'object';
-      if (!isObject && !isAppRunnerParameter(key, type)) {
+      if (!isObject && !isAppRunnerParameter(key, type) && !isRoleSharingParameter(key, type)) {
         fillSimpleTypes(result.properties, key, value);
       } else {
         fillObjectTypes(result, key as EntityParameterKeys, value as object, type, t);
@@ -183,7 +186,10 @@ export const fillObjectTypes = (
   } else if (
     !diffMap[key] &&
     (separateObjectParameterKeys.includes(key) ||
-      (key === EntityParameterKeys.LIMITS && type === ActivityAuditResourceType.ROLE))
+      (type === ActivityAuditResourceType.ROLE &&
+        (key === EntityParameterKeys.LIMITS ||
+          key === EntityParameterKeys.SHARE ||
+          key === EntityParameterKeys.COST_LIMIT)))
   ) {
     diffMap[key] = [];
     fillSeparateObjects(diffMap[key], key, value);
@@ -208,8 +214,14 @@ export const compareObjectArray = (
   if (key === EntityParameterKeys.UPSTREAMS) {
     compareUpstreams(diffMap, val1 as DialModelEndpoint[], val2 as DialModelEndpoint[], isCurrent);
   }
-  if (key === EntityParameterKeys.DEFAULTS) {
-    compareDefaults(diffMap, val1 as Record<string, DefaultsValue>, val2 as Record<string, DefaultsValue>, isCurrent);
+  if (key === EntityParameterKeys.DEFAULTS || key === EntityParameterKeys.APP_PROPERTIES) {
+    compareDefaults(
+      diffMap,
+      key,
+      val1 as Record<string, DefaultsValue>,
+      val2 as Record<string, DefaultsValue>,
+      isCurrent,
+    );
   }
 };
 
@@ -228,8 +240,8 @@ export const fillObjectArray = (
   if (key === EntityParameterKeys.UPSTREAMS) {
     fillUpstreams(diffMap, value as DialModelEndpoint[]);
   }
-  if (key === EntityParameterKeys.DEFAULTS) {
-    fillDefaults(diffMap, value as Record<string, DefaultsValue>);
+  if (key === EntityParameterKeys.DEFAULTS || key === EntityParameterKeys.APP_PROPERTIES) {
+    fillDefaults(diffMap, key, value as Record<string, DefaultsValue>);
   }
 };
 
@@ -347,6 +359,7 @@ export const createSectionFromDiffs = (
     EntityParameterKeys.MODELS,
     EntityParameterKeys.DEPENDENCIES,
     EntityParameterKeys.DEFAULTS,
+    EntityParameterKeys.APP_PROPERTIES,
     EntityParameterKeys.SHARE,
   ];
   const sections: ActivityAuditSection = {};
@@ -354,7 +367,11 @@ export const createSectionFromDiffs = (
   sectionNames.forEach((name) => {
     if (name == EntityParameterKeys.ROLES) {
       setRolesDiffs(sections, current, compare);
-    } else if (name === EntityParameterKeys.UPSTREAMS || name === EntityParameterKeys.DEFAULTS) {
+    } else if (
+      name === EntityParameterKeys.UPSTREAMS ||
+      name === EntityParameterKeys.DEFAULTS ||
+      name === EntityParameterKeys.APP_PROPERTIES
+    ) {
       setObjectsArrayDiff(sections, name, current, compare);
     } else {
       const currentItem = current[name];

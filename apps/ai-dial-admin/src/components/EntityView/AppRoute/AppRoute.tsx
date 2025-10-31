@@ -11,7 +11,6 @@ import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
 import { DialRoleLimitsMap } from '@/src/models/dial/role-limits';
 import { DialAppRoute } from '@/src/models/dial/route';
-import { PopUpState } from '@/src/types/pop-up';
 import AppRouteList from './AppRouteList';
 
 interface Props {
@@ -26,7 +25,7 @@ interface Props {
 const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunnerView, routes, onChangeRoutes }) => {
   const t = useI18n() as (str: string) => string;
   const { dispatch } = useSaveValidationContext();
-  const [modalState, setModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [activeRoute, setActiveRoute] = useState<string | undefined>(undefined);
   const [activeRouteIndex, setActiveRouteIndex] = useState<number | null>(null);
@@ -42,11 +41,11 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
   }, [activeRoute, routes]);
 
   const handleModalClose = useCallback(() => {
-    setModalState(PopUpState.Closed);
+    setIsModalOpen(false);
   }, []);
 
   const handleModalOpen = useCallback(() => {
-    setModalState(PopUpState.Opened);
+    setIsModalOpen(true);
   }, []);
 
   const onChangeRoute = useCallback(
@@ -99,6 +98,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
               )}
             </div>
             <AppRouteList
+              readonly={readonly}
               routes={routes}
               activeRoute={activeRoute}
               onClick={(tab) => setActiveRoute(tab)}
@@ -120,9 +120,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
           )}
         </div>
       </div>
-      {modalState === PopUpState.Opened && (
-        <CreateRoute modalState={modalState} onClose={handleModalClose} onCreate={onCreate} />
-      )}
+      {isModalOpen && <CreateRoute isModalOpen={isModalOpen} onClose={handleModalClose} onCreate={onCreate} />}
     </>
   );
 };

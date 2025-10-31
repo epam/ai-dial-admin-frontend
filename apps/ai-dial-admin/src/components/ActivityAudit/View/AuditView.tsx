@@ -1,13 +1,17 @@
 'use client';
 
-import { IconRestore } from '@tabler/icons-react';
+import { useRouter } from 'next/navigation';
 import { FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { ButtonVariant, DialButton, DialConfirmationPopup, DialSwitch, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { IconExternalLink, IconRestore } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { useRouter } from 'next/navigation';
-import { ButtonVariant, DialButton, DialConfirmationPopup, DialTooltip } from '@epam/ai-dial-ui-kit';
 
+import CompareControl from '@/src/components/ActivityAudit/View/DiffReport/CompareControl';
+import EntityDiff from '@/src/components/ActivityAudit/View/DiffReport/EntityDiff';
+import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
+import ViewHeader from '@/src/components/ActivityAudit/View/Header/Header';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { ButtonsI18nKey, EntityFieldsI18nKey, RollbackI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -18,19 +22,17 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ActivityAuditEntity, CompareView, DiffView } from '@/src/types/activity-audit';
 import { ApplicationRoute } from '@/src/types/routes';
 import { rollbackEntityPerRevision } from '@/src/utils/audit/get-rollback-request';
-import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import EntityDiff from '@/src/components/ActivityAudit/View/DiffReport/EntityDiff';
-import CompareControl from '@/src/components/ActivityAudit/View/DiffReport/CompareControl';
-import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
-import ViewHeader from '@/src/components/ActivityAudit/View/Header/Header';
-import { generateCurrentResource } from './utils/generate-diffs';
 import {
   getRollbackErrorDescription,
   getRollbackErrorTitle,
   getRollbackSuccessDescription,
   getRollbackSuccessTitle,
 } from '@/src/utils/entities/rollback-entity';
+import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import JsonView from './JsonView';
+import { generateCurrentResource } from './utils/generate-diffs';
 
 interface Props {
   activity: DialActivity;
@@ -54,6 +56,7 @@ const AuditView: FC<Props> = ({
 
   const { showNotification } = useNotification();
 
+  const [isJsonView, setIsJsonView] = useState(false);
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [diffView, setDiffView] = useState(DiffView.ALL);
@@ -112,6 +115,10 @@ const AuditView: FC<Props> = ({
       });
   }, [setIsLoading, activity, activityRevision, previousRevision, showNotification, t, onCloseModal, router]);
 
+  const openActivityInNewTab = (activity: DialActivity) => {
+    onOpenInNewTab(ApplicationRoute.ActivityAudit, activity);
+  };
+
   return (
     <>
       <div
@@ -135,25 +142,64 @@ const AuditView: FC<Props> = ({
                 title={t(RollbackI18nKey.Resource)}
                 onClick={onOpenModal}
               />
+              <div className="w-[1px] h-6 bg-layer-4"></div>
+              <DialSwitch
+                switchId="jsonView"
+                isOn={isJsonView}
+                onChange={() => setIsJsonView(!isJsonView)}
+                title="JSON"
+              />
             </div>
           </div>
         )}
         <div className="flex-1 flex flex-col relative divide-y divide-primary min-h-0">
-          <ViewHeader activity={activity} isModalView={isModalView}>
-            {isModalView && (
-              <div className="flex flex-row gap-3">
-                {!hideComparator && <CompareControl compareView={compareView} setCompareView={setCompareView} />}
-                <FilterControl diffView={diffView} setDiffView={setDiffView} />
-              </div>
-            )}
-          </ViewHeader>
-          <EntityDiff
-            currentEntity={before}
-            compareEntity={after}
-            type={activity.resourceType}
-            diffView={diffView}
-            compareView={compareView}
-          />
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-row items-center justify-between">
+              {isModalView && (
+                <>
+                  <h3 className="flex flex-row items-center gap-x-3">
+                    <DialTooltip tooltip={activity.activityId}>{activity.activityId}</DialTooltip>
+                    <DialButton
+                      onClick={() => openActivityInNewTab(activity)}
+                      cssClass="text-secondary"
+                      iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
+                    />
+                  </h3>
+                  <div className="flex flex-row gap-3 items-center justify-end">
+                    {!hideComparator && <CompareControl compareView={compareView} setCompareView={setCompareView} />}
+                    <FilterControl diffView={diffView} setDiffView={setDiffView} />
+                    <div className="w-[1px] h-6 bg-layer-4"></div>
+                    <DialSwitch
+                      switchId="jsonView"
+                      isOn={isJsonView}
+                      onChange={() => setIsJsonView(!isJsonView)}
+                      title="JSON"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+            <ViewHeader activity={activity} />
+          </div>
+          {isJsonView ? (
+            <JsonView
+              modified={JSON.stringify(
+                (compareView === CompareView.NEXT ? activityRevision : (entity as ActivityAuditEntity)) || {},
+                null,
+                2,
+              )}
+              original={JSON.stringify(previousRevision || {}, null, 2)}
+              containerCss="mt-8 pt-8"
+            />
+          ) : (
+            <EntityDiff
+              currentEntity={before}
+              compareEntity={after}
+              type={activity.resourceType}
+              diffView={diffView}
+              compareView={compareView}
+            />
+          )}
         </div>
       </div>
       {isOpenModal &&

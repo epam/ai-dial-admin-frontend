@@ -1,13 +1,15 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 
-import { ButtonsI18nKey, DuplicateI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
 
 interface Props {
   isModalOpen: boolean;
@@ -17,9 +19,9 @@ interface Props {
 }
 
 const DuplicateAdapter: FC<Props> = ({ onDuplicate, isModalOpen, onClose, adapter }) => {
-  const t = useI18n();
+  const t = useI18n() as (t: string, props?: Record<string, string>) => string;
 
-  const [entity, setEntity] = useState<DialAdapter>({ ...adapter, name: '' });
+  const [entity, setEntity] = useState<DialAdapter>({ ...adapter, name: getClonedEntityName(adapter.name) });
   const { isValid, dispatch } = useSaveValidationContext();
 
   // initial validation on creation adapter (disable save when no values entered yet)
@@ -48,7 +50,7 @@ const DuplicateAdapter: FC<Props> = ({ onDuplicate, isModalOpen, onClose, adapte
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(DuplicateI18nKey.Adapter)}
+      title={t(getCloneTitle(ApplicationRoute.Adapters, t))}
       portalId="DuplicateAdapter"
       open={isModalOpen}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
@@ -60,7 +62,7 @@ const DuplicateAdapter: FC<Props> = ({ onDuplicate, isModalOpen, onClose, adapte
       <div className="flex flex-col gap-3 px-6 py-4 ">
         <IdControl entity={entity} onChangeEntity={setEntity} />
 
-        <DisplayNameControl displayName={entity.displayName} onChange={onChangeDisplayName} />
+        <DisplayNameControl displayName={entity.displayName} onChange={onChangeDisplayName} required={true} />
 
         <EndpointControl
           id="baseEndpoint"

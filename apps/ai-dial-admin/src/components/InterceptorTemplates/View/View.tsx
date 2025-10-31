@@ -7,10 +7,10 @@ import { createPortal } from 'react-dom';
 import { IconPlus } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialTabs } from '@epam/ai-dial-ui-kit';
 
 import { deleteInterceptorTemplate, updateInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { createInterceptor } from '@/src/app/[lang]/interceptors/actions';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
@@ -19,7 +19,7 @@ import { auditTabs, EntityViewTab, interceptorsTabs, propertiesTabs } from '@/sr
 import ExtendedProperties from '@/src/components/InterceptorTemplates/Properties/ExtendedProperties';
 import Interceptors from '@/src/components/InterceptorTemplates/View/Interceptors/Interceptors';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { ButtonsI18nKey, DeleteI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -97,7 +97,9 @@ const View: FC<Props> = ({ etag, template, names }) => {
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className="flex flex-row min-h-[34px] justify-between">
-        <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+        <div className="flex-1 min-w-0">
+          <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+        </div>
         <HeaderButtons
           view={ApplicationRoute.InterceptorTemplates}
           entity={selectedTemplate}
@@ -111,7 +113,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
         >
           <DialButton
             variant={ButtonVariant.Secondary}
-            title={`${t(ButtonsI18nKey.Create)} ${t(DeleteI18nKey.Interceptor).toLowerCase()}`}
+            title={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.Interceptor)}`}
             iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
             onClick={() => setIsModalOpen(true)}
           />

@@ -1,5 +1,5 @@
 import { activitiesTabs, conversationsTabs, dashboardTabs, tracesTabs } from '@/src/components/EntityView/View/utils';
-import { TabModel } from '@/src/models/tab';
+import { TabModel } from '@epam/ai-dial-ui-kit';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export const getAuditTabs = (

@@ -1,8 +1,7 @@
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { describe, expect, test } from 'vitest';
-import { getPromptVersionError, getVersionControlError } from '../version-error';
 import { ErrorType } from '@/src/types/error-type';
-import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
+import { getPromptVersionError, getVersionControlError } from '../version-error';
 
 describe('getPromptVersionError', () => {
   const t = (key: string) => key;
@@ -45,6 +44,11 @@ describe('getVersionControlError', () => {
       type: ErrorType.EMPTY,
       text: ErrorI18nKey.RequiredField,
     });
+
+    expect(getVersionControlError('', false, false)).toStrictEqual({
+      type: ErrorType.EMPTY,
+      text: '',
+    });
   });
 
   test('do not returns Error if version does not exist but required but hidden', () => {
@@ -55,6 +59,11 @@ describe('getVersionControlError', () => {
     expect(getVersionControlError('1'.repeat(256), false, false, t)).toStrictEqual({
       type: ErrorType.LENGTH,
       text: ErrorI18nKey.Length,
+    });
+
+    expect(getVersionControlError('1'.repeat(256), false, false)).toStrictEqual({
+      type: ErrorType.LENGTH,
+      text: '',
     });
   });
 });

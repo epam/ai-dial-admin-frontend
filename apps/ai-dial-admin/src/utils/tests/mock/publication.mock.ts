@@ -11,7 +11,7 @@ export const publicationPrompt = {
       path: 'Folder 1/Prompt 1',
       name: 'Prompt 1',
       description: 'Description 1',
-      updateTime: '2023-10-01T12:00:00Z',
+      updatedAt: '2023-10-01T12:00:00Z',
       content: 'Content 1',
     },
   ],

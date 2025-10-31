@@ -8,6 +8,7 @@ import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import {
   formatAttachment,
   getFormattedResourceType,
+  getTopics,
   numberValueFormatter,
   priceValueFormatter,
   sourceTypeFormatter,
@@ -20,6 +21,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
 import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
+import { getKeyStatus } from '../../utils/keys';
 
 const stringFilter: Partial<ColDef> = {
   filterParams: {
@@ -37,13 +39,15 @@ const stringFilter: Partial<ColDef> = {
 const dateTimeColumn: Partial<ColDef> = {
   valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
   tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
+  filterValueGetter: (params) => formatDateTimeToLocalString(params.data[params.colDef.field || '']),
 };
 
 const numericColumn: Partial<ColDef> = {
   cellClass: 'align-right',
   headerClass: 'align-right',
   comparator: numberValueComparator,
-  valueFormatter: (params) => numberValueFormatter(params),
+  valueFormatter: ({ value }) => numberValueFormatter(value),
+  filterValueGetter: (params) => numberValueFormatter(params.data[params.colDef.field || '']),
 };
 
 const priceColumn: Partial<ColDef> = {
@@ -57,7 +61,8 @@ const priceColumn: Partial<ColDef> = {
       hintTitle: 'Total Price',
     }, // TODO: Update when source of hints will be defined
   },
-  valueFormatter: (params) => `$${priceValueFormatter(params)}`,
+  valueFormatter: ({ value }) => `$${priceValueFormatter(value)}`,
+  filterValueGetter: (params) => priceValueFormatter(params.data[params.colDef.field || '']),
 };
 
 const CREATED_AT_COLUMN: ColDef = {
@@ -67,8 +72,8 @@ const CREATED_AT_COLUMN: ColDef = {
   ...dateTimeColumn,
 };
 
-const UPDATED_AT_COLUMN: ColDef = {
-  field: 'updateTime',
+const UPDATED_AT_COLUMN = {
+  field: 'updatedAt',
   headerName: 'Updated time',
   hide: false,
   ...dateTimeColumn,
@@ -93,14 +98,15 @@ const DISPLAY_NAME_COLUMN_WITH_SORT: ColDef = { ...DISPLAY_NAME_COLUMN, sort: 'a
 export const NAME_COLUMN: ColDef = { field: 'name', colId: 'name', headerName: 'ID', hide: false };
 const NAME_COLUMN_WITH_SORT: ColDef = { ...NAME_COLUMN, sort: 'asc' };
 
-export const TOPIC_COLUMN: ColDef = {
+export const TOPICS_COLUMN: ColDef = {
   field: 'topics',
   colId: 'topics',
   headerName: 'Topics',
   cellRenderer: TopicsCellRenderer,
   cellRendererParams: (params: { data?: { topics?: string[]; descriptionKeywords?: string[] } }) => ({
-    topics: params.data?.topics || params.data?.descriptionKeywords || [],
+    topics: getTopics(params.data),
   }),
+  filterValueGetter: (params) => getTopics(params.data),
 };
 
 const ATTACHMENT_COLUMN = (t: (str: string) => string): ColDef => {
@@ -109,6 +115,7 @@ const ATTACHMENT_COLUMN = (t: (str: string) => string): ColDef => {
     headerName: 'Attachment types',
     hide: true,
     valueFormatter: ({ value }) => formatAttachment(value, t),
+    filterValueGetter: (params) => formatAttachment(params.data[params.colDef.field || ''], t),
     tooltipValueGetter: ({ value }) => formatAttachment(value, t),
   };
 };
@@ -118,6 +125,8 @@ const SOURCE_TYPE_COLUMN = (t: (key: string) => string, view?: ApplicationRoute)
   headerName: 'Source type',
   hide: false,
   valueFormatter: ({ value }) => sourceTypeFormatter(value, t, view),
+  filterValueGetter: (params) =>
+    sourceTypeFormatter((params.data as { source: { $type: string } }).source.$type, t, view),
   tooltipValueGetter: ({ value }) => sourceTypeFormatter(value, t, view),
 });
 
@@ -125,8 +134,9 @@ const SOURCE_VALUE_COLUMN: ColDef = {
   field: 'endpoint',
   headerName: 'Source',
   hide: false,
-  valueFormatter: (params) => sourceValueFormatter(params),
-  tooltipValueGetter: (params) => sourceValueFormatter(params),
+  valueFormatter: ({ data, value }) => sourceValueFormatter(data, value) || '',
+  filterValueGetter: ({ data, colDef }) => sourceValueFormatter(data, data[colDef.field || '']),
+  tooltipValueGetter: ({ data, value }) => sourceValueFormatter(data, value),
 };
 
 export const SOURCE_FIELD_COLUMNS = (t: (key: string) => string, view?: ApplicationRoute): ColDef[] => [
@@ -139,14 +149,21 @@ export const TYPE_COLUMN = (t: (str: string) => string): ColDef => {
     field: 'type',
     headerName: 'Entity type',
     valueFormatter: (params) => t(params.value),
+    filterValueGetter: (params) => t(params.data[params.colDef.field || ''] as string),
     tooltipValueGetter: (params) => t(params.value),
   };
 };
 
-export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [NAME_COLUMN_WITH_SORT, DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN];
+export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [
+  NAME_COLUMN_WITH_SORT,
+  DISPLAY_NAME_COLUMN,
+  DESCRIPTION_COLUMN,
+  UPDATED_AT_COLUMN,
+];
 
 export const ENTITY_BASE_COLUMNS: ColDef[] = [NAME_COLUMN, DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN];
 export const DEPENDENCIES_COLUMNS = [NAME_COLUMN, DISPLAY_NAME_COLUMN, VERSION_COLUMN, DESCRIPTION_COLUMN];
+export const BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, NAME_COLUMN, DESCRIPTION_COLUMN];
 
 export const MODELS_COLUMNS = (t: (str: string) => string, view?: ApplicationRoute): ColDef[] => [
   DISPLAY_NAME_COLUMN_WITH_SORT,
@@ -163,7 +180,8 @@ export const MODELS_COLUMNS = (t: (str: string) => string, view?: ApplicationRou
   AUTHOR_COLUMN,
   { field: 'type', headerName: 'Type', hide: true },
   { field: 'overrideName', headerName: 'Override Name', hide: true },
-  TOPIC_COLUMN,
+  TOPICS_COLUMN,
+  UPDATED_AT_COLUMN,
   ATTACHMENT_COLUMN(t),
   { field: 'maxInputAttachments', headerName: 'Max attachment number', hide: true },
   { field: 'tokenizerModel', headerName: 'Tokenizer model', hide: true },
@@ -174,11 +192,9 @@ export const MODELS_COLUMNS = (t: (str: string) => string, view?: ApplicationRou
 ];
 
 export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
-  DISPLAY_NAME_COLUMN_WITH_SORT,
-  DESCRIPTION_COLUMN,
-  NAME_COLUMN,
+  ...BASE_COLUMNS,
   { field: 'endpoint', headerName: 'Endpoint', hide: false },
-  TOPIC_COLUMN,
+  TOPICS_COLUMN,
   AUTHOR_COLUMN,
   ATTACHMENT_COLUMN(t),
   { field: 'maxInputAttachments', headerName: 'Max attachment number', hide: true },
@@ -193,6 +209,7 @@ export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?
       headerName: 'Resource type',
       valueFormatter: ({ value }) => getFormattedResourceType(value, t),
       tooltipValueGetter: ({ value }) => getFormattedResourceType(value, t),
+      filterValueGetter: (params) => getFormattedResourceType(params.data[params.colDef.field || ''], t),
       ...stringFilter,
     },
     { field: 'resourceId', headerName: 'Resource identifier', ...stringFilter },
@@ -215,7 +232,7 @@ export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?
   return columns;
 };
 
-export const KEYS_COLUMNS: ColDef[] = [
+export const KEYS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   NAME_COLUMN_WITH_SORT,
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
@@ -237,6 +254,7 @@ export const KEYS_COLUMNS: ColDef[] = [
     headerName: 'Status',
     field: 'status',
     cellRenderer: KeyStatusCellRenderer,
+    filterValueGetter: ({ data }) => getKeyStatus(data, t).title,
   },
   {
     headerName: 'Project',
@@ -253,31 +271,38 @@ export const KEYS_COLUMNS: ColDef[] = [
     field: 'secured',
     hide: true,
   },
+  UPDATED_AT_COLUMN,
 ];
 
 export const RUNNERS_COLUMNS: ColDef[] = [
   { field: 'dial:applicationTypeDisplayName', headerName: 'Display Name', sort: 'asc' },
   { field: '$id', headerName: 'ID' },
   DESCRIPTION_COLUMN,
-  TOPIC_COLUMN,
-];
-
-export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
-
-export const ASSETS_COLUMNS: ColDef[] = [
-  { field: 'name', colId: 'name', headerName: 'Display Name' },
-  { field: 'version', headerName: 'Version' },
-  AUTHOR_COLUMN,
+  TOPICS_COLUMN,
   UPDATED_AT_COLUMN,
 ];
 
-export const FILES_COLUMNS: ColDef[] = [
+export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [...BASE_COLUMNS, UPDATED_AT_COLUMN];
+
+export const ASSETS_COLUMNS: ColDef[] = [{ field: 'version', headerName: 'Version' }, AUTHOR_COLUMN, UPDATED_AT_COLUMN];
+
+export const DEPLOYMENT_ASSETS_COLUMNS: ColDef[] = [NAME_COLUMN, ...ASSETS_COLUMNS];
+
+export const NON_DEPLOYMENT_ASSETS_COLUMNS: ColDef[] = [
   { field: 'name', colId: 'name', headerName: 'Display Name' },
+  ...ASSETS_COLUMNS,
+];
+
+export const FILES_COLUMNS: ColDef[] = [
+  { field: 'name', colId: 'name', headerName: 'Display Name', valueFormatter: ({ value }) => value },
   { field: 'extension', headerName: 'Extension' },
   AUTHOR_COLUMN,
 ];
 
-export const EXPORT_COLUMNS = (onChange: (value: string, name: string) => void, route?: ApplicationRoute): ColDef[] => {
+export const EXPORT_COLUMNS = (
+  onChange: (value: string, data: unknown) => void,
+  route?: ApplicationRoute,
+): ColDef[] => {
   const columns: ColDef[] = [NAME_COLUMN_WITH_SORT, AUTHOR_COLUMN, UPDATED_AT_COLUMN];
 
   if (route === ApplicationRoute.Prompts) {
@@ -347,7 +372,8 @@ export const TELEMETRY_COLUMNS: ColDef[] = [
     cellClass: 'align-right',
     headerClass: 'align-right',
     comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
+    valueFormatter: ({ value }) => numberValueFormatter(value),
+    filterValueGetter: (params) => numberValueFormatter(params.data[params.colDef.field || '']),
   },
   {
     field: 'prompts',
@@ -355,7 +381,8 @@ export const TELEMETRY_COLUMNS: ColDef[] = [
     cellClass: 'align-right',
     headerClass: 'align-right',
     comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
+    valueFormatter: ({ value }) => numberValueFormatter(value),
+    filterValueGetter: (params) => numberValueFormatter(params.data[params.colDef.field || '']),
   },
   {
     field: 'completions',
@@ -363,7 +390,8 @@ export const TELEMETRY_COLUMNS: ColDef[] = [
     cellClass: 'align-right',
     headerClass: 'align-right',
     comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
+    valueFormatter: ({ value }) => numberValueFormatter(value),
+    filterValueGetter: (params) => numberValueFormatter(params.data[params.colDef.field || '']),
   },
   {
     field: 'cost',
@@ -372,7 +400,8 @@ export const TELEMETRY_COLUMNS: ColDef[] = [
     cellClass: 'align-right',
     headerClass: 'align-right',
     comparator: numberValueComparator,
-    valueFormatter: (params) => numberValueFormatter(params),
+    valueFormatter: ({ value }) => numberValueFormatter(value),
+    filterValueGetter: (params) => numberValueFormatter(params.data[params.colDef.field || '']),
   },
 ];
 
@@ -483,5 +512,3 @@ export const MCP_CONTAINERS_COLUMNS: ColDef[] = [
   DESCRIPTION_COLUMN,
   { field: 'image', headerName: 'MCP Image' },
 ];
-
-export const SOURCE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, NAME_COLUMN, DESCRIPTION_COLUMN];

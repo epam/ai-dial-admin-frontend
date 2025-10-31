@@ -15,7 +15,6 @@ import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
 import { DialRoleLimitsMap } from '@/src/models/dial/role-limits';
 import { DialAppRoute } from '@/src/models/dial/route';
-import { PopUpState } from '@/src/types/pop-up';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
@@ -43,15 +42,15 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
     return roles.filter((role) => !userRoles?.includes(role.name as string));
   }, [roles, route.roleLimits]);
 
-  const [addModalState, setAddModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const onOpenAddModal = useCallback(() => {
-    setAddModalState(PopUpState.Opened);
-  }, [setAddModalState]);
+    setIsModalOpen(true);
+  }, [setIsModalOpen]);
 
   const onCloseAddModal = useCallback(() => {
-    setAddModalState(PopUpState.Closed);
-  }, [setAddModalState]);
+    setIsModalOpen(false);
+  }, [setIsModalOpen]);
 
   const onAddRoles = useCallback(
     (roles: DialRole[]) => {
@@ -137,12 +136,12 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
           </div>
         </div>
       </div>
-      {addModalState === PopUpState.Opened &&
+      {isModalOpen &&
         createPortal(
           <AddEntitiesGrid
             modalTitle={t(RolesI18nKey.AddRoles)}
             emptyTitle={t(EntitiesI18nKey.NoRoles)}
-            modalState={addModalState}
+            isModalOpen={isModalOpen}
             entities={availableRoles}
             onClose={onCloseAddModal}
             onApply={onAddRoles}

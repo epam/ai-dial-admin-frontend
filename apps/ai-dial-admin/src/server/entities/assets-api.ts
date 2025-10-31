@@ -2,7 +2,7 @@ import { JWT } from 'next-auth/jwt';
 
 import { DEFAULT_ETAG, IF_MATCH, IF_NONE_MATCH } from '@/src/constants/api-headers';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { AssetApp } from '@/src/models/dial/deployment-asset';
+import { Asset, AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -12,6 +12,8 @@ import { getFileName } from '@/src/utils/api/get-file-name';
 import { changePath, getFolderNameAndPath } from '@/src/utils/files/path';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
+import { Tool, ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
+import { getToolsetSignInBody, getToolsetBasicBody } from '@/src/utils/toolset/toolset-auth';
 
 export enum ResourceOperation {
   LIST = 'list',
@@ -47,14 +49,14 @@ export class AssetsApi extends BaseApi {
     token: JWT | null,
     path: string,
     type: ResourceType,
-  ): Promise<(AssetApp | DialPrompt | DialFile)[] | null | undefined> {
+  ): Promise<(Asset | DialFile)[] | null | undefined> {
     const url = this.buildUrl(type, ResourceOperation.LIST);
     if (type === ResourceType.FILE) {
       return this.post(ResourceBasePaths[type], { path }, token).then((response) =>
         response === void 0 ? void 0 : (response as { items: DialFile[] })?.items || [],
       );
     } else {
-      const allItems: AssetApp[] = [];
+      const allItems: Asset[] = [];
       let nextToken: string | undefined = undefined;
 
       while (true) {
@@ -63,7 +65,7 @@ export class AssetsApi extends BaseApi {
           body.nextToken = nextToken;
         }
 
-        const response = (await this.post(url, body, token)) as { items: AssetApp[]; nextToken?: string } | undefined;
+        const response = (await this.post(url, body, token)) as { items: Asset[]; nextToken?: string } | undefined;
 
         if (!response) break;
 
@@ -94,7 +96,7 @@ export class AssetsApi extends BaseApi {
 
   updateAssetWithEtag(
     token: JWT | null,
-    asset: AssetApp,
+    asset: Asset,
     type: ResourceType,
     etag: string,
   ): Promise<ServerActionResponse> {
@@ -102,9 +104,14 @@ export class AssetsApi extends BaseApi {
     return this.postAction(url, { ...asset }, token, { [IF_MATCH]: etag });
   }
 
-  updateAsset(token: JWT | null, asset: AssetApp, type: ResourceType): Promise<ServerActionResponse> {
+  updateAsset(token: JWT | null, asset: Asset, type: ResourceType): Promise<ServerActionResponse> {
     const url = this.buildUrl(type, ResourceOperation.UPDATE);
     return this.postAction(url, { ...asset }, token);
+  }
+
+  createAsset(asset: Asset, type: ResourceType, token: JWT | null): Promise<ServerActionResponse> {
+    const url = this.buildUrl(type, ResourceOperation.CREATE);
+    return this.postAction(url, { ...asset, folderId: asset.folderId || ROOT_FOLDER }, token);
   }
 
   removeAssetWithEtag(
@@ -162,16 +169,7 @@ export class AssetsApi extends BaseApi {
     return this.postFiles(url, body, token);
   }
 
-  // PROMPT SPECIFIC
-
-  createPrompt(prompt: DialPrompt, token: JWT | null): Promise<ServerActionResponse> {
-    const url = this.buildUrl(ResourceType.PROMPT, ResourceOperation.CREATE);
-    return this.postAction(
-      url,
-      { ...prompt, content: prompt.content || '', folderId: prompt.folderId || ROOT_FOLDER },
-      token,
-    );
-  }
+  // Prompt specific
 
   exportPrompts(
     token: JWT | null,
@@ -189,7 +187,7 @@ export class AssetsApi extends BaseApi {
     });
   }
 
-  // FILES SPECIFIC
+  // File specific
 
   downloadFile(token: JWT | null, path: string): Promise<Response> {
     const url = this.buildUrl(ResourceType.FILE, ResourceOperation.DOWNLOAD);
@@ -214,5 +212,24 @@ export class AssetsApi extends BaseApi {
         fileName: '',
       };
     });
+  }
+
+  // Toolset specific
+
+  getTools(name: string, token: JWT | null) {
+    const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/discovered-tools`;
+    return this.post(url, { path: name }, token).then((res) => (res as { tools: Tool[] })?.tools || []);
+  }
+
+  signInToolset(toolset: AssetToolset, type: ToolsetAuthCredentialLevel, token: JWT | null, authCode?: string) {
+    const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/signin`;
+
+    return this.postAction(url, getToolsetSignInBody(toolset, type, authCode), token);
+  }
+
+  signOutToolset(toolset: AssetToolset, type: ToolsetAuthCredentialLevel, token: JWT | null) {
+    const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/signout`;
+
+    return this.postAction(url, getToolsetBasicBody(toolset, type), token);
   }
 }

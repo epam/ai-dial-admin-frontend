@@ -81,6 +81,8 @@ export enum BasicI18nKey {
   And = 'Basic.And',
   Enabled = 'Basic.Enabled',
   Disabled = 'Basic.Disabled',
+  Yes = 'Basic.Yes',
+  No = 'Basic.No',
 }
 
 export enum EntitiesI18nKey {
@@ -100,6 +102,8 @@ export enum EntitiesI18nKey {
   NoAppRoutes = 'Entities.NoAppRoutes',
   NoUsageLog = 'Entities.NoUsageLog',
   NoActivityAudit = 'Entities.NoActivityAudit',
+  NoContainers = 'Entities.NoContainers',
+  NoTemplates = 'Entities.NoTemplates',
   NoFolders = 'Entities.NoFolders',
   NoResource = 'Entities.NoResource',
   NoInterceptorTemplates = 'Entities.NoInterceptorTemplates',
@@ -136,6 +140,10 @@ export enum EntitiesI18nKey {
   Table = 'Entities.Table',
   Form = 'Entities.Form',
   Ui = 'Entities.Ui',
+  NewVersion = 'Entities.NewVersion',
+  NewEntity = 'Entities.NewEntity',
+  DuplicationType = 'Entities.DuplicationType',
+  ToolsetEndpoint = 'Entities.ToolsetEndpoint',
 }
 
 export enum DeleteI18nKey {
@@ -236,6 +244,7 @@ export enum ButtonsI18nKey {
   OpenAppRunner = 'Buttons.OpenAppRunner',
   None = 'Buttons.None',
   BulkActions = 'Buttons.BulkActions',
+  AddAdditionalProperties = 'Buttons.AddAdditionalProperties',
 }
 
 export enum UpdateI18nKey {
@@ -282,6 +291,7 @@ export enum CreateI18nKey {
   Adapter = 'CreateEntity.Entities.Adapter',
   InterceptorTemplate = 'CreateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'CreateEntity.Entities.ApplicationRunner',
+  AssetApplication = 'CreateEntity.Entities.AssetApplication',
 }
 
 export enum UpstreamEndpointsI18nKey {
@@ -344,7 +354,8 @@ export enum KeysI18nKey {
 export enum RolesI18nKey {
   DefaultLimits = 'Roles.DefaultLimits',
   DefaultInvitations = 'Roles.DefaultInvitations',
-  NoLimits = 'Roles.NoLimits',
+  NotSpecified = 'Roles.NotSpecified',
+  Unlimited = 'Roles.Unlimited',
   AddRoles = 'Roles.AddRoles',
   SetCostLimits = 'Roles.SetCostLimits',
   AvailableSpecificRoles = 'Roles.AvailableSpecificRoles',
@@ -516,9 +527,6 @@ export enum CompareI18nKey {
 }
 
 export enum PromptsI18nKey {
-  NewVersion = 'Prompts.NewVersion',
-  NewPrompt = 'Prompts.NewPrompt',
-  DuplicationType = 'Prompts.DuplicationType',
   Export = 'Prompts.Export',
   Import = 'Prompts.Import',
   NewVersionCreate = 'Prompts.NewVersionCreate',
@@ -715,6 +723,7 @@ export enum ErrorI18nKey {
   DescriptionLength = 'Error.DescriptionLength',
   DisplayNameErrorModel = 'Error.DisplayNameErrorModel',
   NameExists = 'Error.NameExists',
+  DisplayNameExists = 'Error.DisplayNameExists',
   Unique = 'Error.Unique',
   Version = 'Error.Version',
   NameVersionCombination = 'Error.NameVersionCombination',
@@ -910,9 +919,11 @@ export enum EntityFieldsI18nKey {
   containerId = 'EntityFields.SourceContainer',
   clientId = 'EntityFields.clientId',
   clientSecret = 'EntityFields.clientSecret',
+  codeChallengeMethod = 'EntityFields.codeChallengeMethod',
   redirectUri = 'EntityFields.redirectUri',
   authorizationEndpoint = 'EntityFields.authorizationEndpoint',
   authenticationType = 'EntityFields.authenticationType',
+  authentication = 'EntityFields.authentication',
   tokenEndpoint = 'EntityFields.tokenEndpoint',
   authSettings = 'EntityFields.authSettings',
   share = 'EntityFields.share',
@@ -926,6 +937,8 @@ export enum EntityFieldsI18nKey {
   'prompt.maxAcceptedUsers' = 'EntityFields.promptMaxAcceptedUsers',
   'tool_set.invitationTtl' = 'EntityFields.tool_setInvitationTtl',
   'tool_set.maxAcceptedUsers' = 'EntityFields.tool_setMaxAcceptedUsers',
+  new_key = 'EntityFields.new_key',
+  applicationProperties = 'EntityFields.applicationProperties',
 }
 
 export enum ToolsetI18nKey {
@@ -947,4 +960,11 @@ export enum ToolsetI18nKey {
   WithLogin = 'Toolset.WithLogin',
   WithLoginAndConfig = 'Toolset.WithLoginAndConfig',
   WithoutLogin = 'Toolset.WithoutLogin',
+  LogIn = 'Toolset.LogIn',
+  LogOut = 'Toolset.LogOut',
+  AsUser = 'Toolset.AsUser',
+  AsAdmin = 'Toolset.AsAdmin',
+  LoggedOut = 'Toolset.LoggedOut',
+  UserLoggedIn = 'Toolset.UserLoggedIn',
+  AdminLoggedIn = 'Toolset.AdminLoggedIn',
 }

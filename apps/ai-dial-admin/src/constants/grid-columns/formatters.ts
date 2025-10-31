@@ -1,11 +1,10 @@
 import Big from 'big.js';
-import { ITooltipParams, ValueFormatterParams } from 'ag-grid-community';
 
 import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
 import { AttachmentsI18nKey, EntitiesI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { formatNumberByDelimiter } from '@/src/utils/formatting/number-formatting';
-import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export const getFormattedResourceType = (value: string, t: (key: string) => string): string => {
@@ -18,6 +17,10 @@ export const getFormattedResourceType = (value: string, t: (key: string) => stri
   return value;
 };
 
+export const getTopics = (data?: { topics?: string[]; descriptionKeywords?: string[] }) => {
+  return data?.topics || data?.descriptionKeywords || [];
+};
+
 export const formatAttachment = (value: string, t: (stringToTranslate: string) => string) => {
   if (value && value?.[0] === ALL_ATTACHMENTS) {
     return t(AttachmentsI18nKey.AllAttachments);
@@ -25,10 +28,10 @@ export const formatAttachment = (value: string, t: (stringToTranslate: string) =
   return value;
 };
 
-export const priceValueFormatter = (params: ValueFormatterParams) => {
+export const priceValueFormatter = (value?: string | number) => {
   let price = null;
   try {
-    price = new Big(params.data[params?.colDef?.field as string]).toString();
+    price = new Big(value || '').toString();
   } catch (e) {
     if (e) {
       price = '';
@@ -38,18 +41,8 @@ export const priceValueFormatter = (params: ValueFormatterParams) => {
   return price;
 };
 
-export const numberValueFormatter = (params: ValueFormatterParams) => {
-  let number = '';
-
-  try {
-    number = formatNumberByDelimiter(params.data[params?.colDef?.field as string]);
-  } catch (e) {
-    if (e) {
-      number = '';
-    }
-  }
-
-  return number;
+export const numberValueFormatter = (value?: string | number) => {
+  return formatNumberByDelimiter(value);
 };
 
 export const sourceTypeFormatter = (value: string, t: (key: string) => string, view?: ApplicationRoute) => {
@@ -75,19 +68,19 @@ export const sourceTypeFormatter = (value: string, t: (key: string) => string, v
   }
 };
 
-export const sourceValueFormatter = (params: ValueFormatterParams | ITooltipParams) => {
-  if (!params.data?.source?.$type) {
-    return params.value;
+export const sourceValueFormatter = (data?: { source: SOURCE_FIELD; endpoint?: string }, value?: string) => {
+  if (!data?.source?.$type) {
+    return value;
   }
-  if (params.data.source.$type === SOURCE_TYPE.ADAPTER) {
-    return params.data.source.adapterName;
-  } else if (params.data.source.$type === SOURCE_TYPE.RUNNER) {
-    return params.data.source.runnerName;
-  } else if (params.data.source.$type === SOURCE_TYPE.CONTAINER) {
-    return params.data.source.containerId;
-  } else if (params.data.source.$type === SOURCE_TYPE.ENDPOINTS) {
-    return params.data.endpoint;
+  if (data.source.$type === SOURCE_TYPE.ADAPTER) {
+    return data.source.adapterName;
+  } else if (data.source.$type === SOURCE_TYPE.RUNNER) {
+    return data.source.runnerName;
+  } else if (data.source.$type === SOURCE_TYPE.CONTAINER) {
+    return data.source.containerId;
+  } else if (data.source.$type === SOURCE_TYPE.ENDPOINTS) {
+    return data.endpoint;
   } else {
-    return params.value;
+    return value;
   }
 };

@@ -1,41 +1,45 @@
+import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
-import { PopUpState } from '@/src/types/pop-up';
-import { DialAdapter } from '@/src/models/dial/adapter';
-import { useI18n } from '@/src/locales/client';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
-import { SOURCE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+import { DialAdapter } from '@/src/models/dial/adapter';
 
-import Grid from '@/src/components/Grid/Grid';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import Popup from '@/src/components/Common/Popup/Popup';
+import Grid from '@/src/components/Grid/Grid';
 
 interface Props {
   selected?: string;
   adapters?: DialAdapter[];
-  modalState: PopUpState;
+  isModalOpen: boolean;
   onClose: () => void;
   onApply: (name?: string) => void;
 }
 
-const SelectAdapterModal: FC<Props> = ({ selected, adapters, modalState, onClose, onApply }) => {
+const SelectAdapterModal: FC<Props> = ({ selected, adapters, isModalOpen, onClose, onApply }) => {
   const t = useI18n();
 
   const [selectedRunner, setSelectedRunner] = useState(selected);
 
   return (
-    <Popup
+    <DialFormPopup
       onClose={onClose}
-      heading={t(CreateI18nKey.SelectAdapter)}
+      title={t(CreateI18nKey.SelectAdapter)}
       portalId="SelectAdapterModal"
-      state={modalState}
-      containerClassName={'h-[750px] lg:max-w-[65%]'}
+      open={isModalOpen}
+      size={PopupSize.Lg}
+      cssClass="h-[750px]"
+      onSubmit={() => onApply(selectedRunner)}
+      disableSubmitButton={!selectedRunner}
+      submitLabel={t(ButtonsI18nKey.Apply)}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      onCancel={onClose}
     >
-      <div className="flex flex-col px-6 py-4 flex-1 min-h-0">
+      <div className="flex flex-col px-6 py-4 h-full">
         <Grid
-          columnDefs={SOURCE_COLUMNS}
+          columnDefs={BASE_COLUMNS}
           additionalGridOptions={{
             rowSelection: { mode: 'singleRow', enableClickSelection: true },
             selectionColumnDef: {
@@ -54,7 +58,7 @@ const SelectAdapterModal: FC<Props> = ({ selected, adapters, modalState, onClose
             },
             onGridReady: (event) => {
               event.api?.updateGridOptions({
-                columnDefs: SOURCE_COLUMNS,
+                columnDefs: BASE_COLUMNS,
                 rowData: adapters,
               });
               event.api.forEachNode((node) => {
@@ -66,16 +70,7 @@ const SelectAdapterModal: FC<Props> = ({ selected, adapters, modalState, onClose
           }}
         />
       </div>
-      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Apply)}
-          disable={!selectedRunner}
-          onClick={() => onApply(selectedRunner)}
-        />
-      </div>
-    </Popup>
+    </DialFormPopup>
   );
 };
 

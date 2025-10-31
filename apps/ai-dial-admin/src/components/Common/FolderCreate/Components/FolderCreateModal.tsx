@@ -2,10 +2,10 @@
 
 import { FC, useState } from 'react';
 
-import { DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialPopup, DialSteps, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { CREATE_FOLDER_STEPS, CreateFolderSteps } from '@/src/components/Common/FolderCreate/constants';
-import Steps from '@/src/components/Common/Steps/Steps';
+
 import { FoldersI18nKey } from '@/src/constants/i18n';
 import { IMPORT_FILE_TYPES } from '@/src/constants/import';
 import { useI18n } from '@/src/locales/client';
@@ -13,7 +13,6 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { DialRule } from '@/src/models/dial/rule';
 import { FileImportMap } from '@/src/models/file';
 import { ParsedPrompts } from '@/src/models/prompts';
-import { Step } from '@/src/models/step';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import FolderCreateModalButtons from './FolderCreateModalButtons';
@@ -41,7 +40,7 @@ const FolderCreateModal: FC<Props> = ({ isModalOpen, folderPath, view, onClose, 
   const fileTypes = IMPORT_FILE_TYPES(t, view);
 
   const [steps, setSteps] = useState(CREATE_FOLDER_STEPS(t));
-  const [currentStep, setCurrentStep] = useState<Step>(steps[0]);
+  const [currentStepId, setCurrentStepId] = useState(steps[0].id);
 
   const [ignorePaths, setIgnorePaths] = useState(false);
   const [fileType, setFileType] = useState(fileTypes[0].id);
@@ -90,18 +89,18 @@ const FolderCreateModal: FC<Props> = ({ isModalOpen, folderPath, view, onClose, 
       footer={
         <FolderCreateModalButtons
           steps={steps}
-          currentStep={currentStep}
-          setCurrentStep={setCurrentStep}
+          currentStep={steps.find((s) => s.id === currentStepId)}
+          setCurrentStep={setCurrentStepId}
           onFinishClick={onFinishClick}
           onClose={onClose}
         />
       }
     >
       <div className="flex px-6 py-4 h-full flex-col">
-        <Steps steps={steps} currentStep={currentStep} setCurrentStep={setCurrentStep} />
+        <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStepId} />
         <div
           className={
-            currentStep.id === CreateFolderSteps.FOLDER_SETUP ? 'flex flex-col flex-1 min-h-0 pt-6 pb-4' : 'hidden'
+            currentStepId === CreateFolderSteps.FOLDER_SETUP ? 'flex flex-col flex-1 min-h-0 pt-6 pb-4' : 'hidden'
           }
         >
           <FolderCreateSetup
@@ -113,7 +112,6 @@ const FolderCreateModal: FC<Props> = ({ isModalOpen, folderPath, view, onClose, 
             setZipFile={setZipFile}
             setSeparateFiles={setSeparateFiles}
             setSteps={setSteps}
-            setCurrentStep={setCurrentStep}
             folderName={folderName}
             setFolderName={setFolderName}
             ignorePaths={ignorePaths}
@@ -122,31 +120,25 @@ const FolderCreateModal: FC<Props> = ({ isModalOpen, folderPath, view, onClose, 
         </div>
         <div
           className={
-            currentStep.id === CreateFolderSteps.FILE_REVIEW ? 'flex flex-col flex-1 min-h-0 pt-6 pb-4' : 'hidden'
+            currentStepId === CreateFolderSteps.FILE_REVIEW ? 'flex flex-col flex-1 min-h-0 pt-6 pb-4' : 'hidden'
           }
         >
           <FolderCreateReview
             view={view}
             files={fileType === ImportFileType.ARCHIVE ? (zipFile ? [zipFile] : []) : separateFiles}
             fileType={fileType}
-            currentStep={currentStep}
+            currentStepId={currentStepId}
             editedFileMap={editedFileMap}
             setEditedFileMap={setEditedFileMap}
             setSteps={setSteps}
-            setCurrentStep={setCurrentStep}
           />
         </div>
         <div
           className={
-            currentStep.id === CreateFolderSteps.PERMISSIONS ? 'flex flex-col flex-1 min-h-0 pt-6 pb-4' : 'hidden'
+            currentStepId === CreateFolderSteps.PERMISSIONS ? 'flex flex-col flex-1 min-h-0 pt-6 pb-4' : 'hidden'
           }
         >
-          <FolderCreatePermissions
-            rules={rules}
-            setRules={setRules}
-            setSteps={setSteps}
-            setCurrentStep={setCurrentStep}
-          />
+          <FolderCreatePermissions rules={rules} setRules={setRules} setSteps={setSteps} />
         </div>
       </div>
     </DialPopup>

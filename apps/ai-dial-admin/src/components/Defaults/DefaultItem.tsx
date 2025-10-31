@@ -2,11 +2,10 @@
 
 import { FC, useCallback, useMemo } from 'react';
 
-import { DialNumberInputField, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialNumberInputField, DialSelectField, DialTextInputField, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconTrash } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import DropdownField from '@/src/components/Common/Dropdown/DropdownField';
 import JsonEditorInput from '@/src/components/Common/JsonEditorInput/JsonEditorInput';
 import {
   BasicI18nKey,
@@ -18,7 +17,6 @@ import {
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DefaultsValue } from '@/src/models/dial/defaults';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { BooleanType } from '@/src/types/boolean';
 import { DefaultItemType } from './types';
 import { getDefaultValueByType, getValueByType } from './utils';
@@ -39,36 +37,36 @@ interface Props {
 const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
   const t = useI18n();
   const isFirstLine = index === 0;
-  const types: DropdownItemsModel[] = useMemo(
+  const types: SelectOption[] = useMemo(
     () => [
       {
-        id: DefaultItemType.string,
-        name: t(TypeI18nKey.String),
+        value: DefaultItemType.string,
+        label: t(TypeI18nKey.String),
       },
       {
-        id: DefaultItemType.number,
-        name: t(TypeI18nKey.Number),
+        value: DefaultItemType.number,
+        label: t(TypeI18nKey.Number),
       },
       {
-        id: DefaultItemType.boolean,
-        name: t(TypeI18nKey.Boolean),
+        value: DefaultItemType.boolean,
+        label: t(TypeI18nKey.Boolean),
       },
       {
-        id: DefaultItemType.object,
-        name: t(TypeI18nKey.Object),
+        value: DefaultItemType.object,
+        label: t(TypeI18nKey.Object),
       },
     ],
     [t],
   );
-  const booleans: DropdownItemsModel[] = useMemo(
+  const booleans: SelectOption[] = useMemo(
     () => [
       {
-        id: BooleanType.true,
-        name: t(BooleanI18nKey.true),
+        value: BooleanType.true,
+        label: t(BooleanI18nKey.true),
       },
       {
-        id: BooleanType.false,
-        name: t(BooleanI18nKey.false),
+        value: BooleanType.false,
+        label: t(BooleanI18nKey.false),
       },
     ],
     [t],
@@ -132,10 +130,10 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
             />
           )}
           {item.type === DefaultItemType.boolean && (
-            <DropdownField
-              selectedValue={item.value.toString()}
+            <DialSelectField
+              value={item.value.toString()}
               elementId={'entity-default-value ' + index}
-              items={booleans}
+              options={booleans}
               fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
               onChange={onChangeValue}
             />
@@ -150,12 +148,12 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove }) => {
           )}
         </div>
         <div className={classNames('min-w-[136px]')}>
-          <DropdownField
-            selectedValue={item.type}
+          <DialSelectField
+            value={item.type}
             elementId={'entity-default-type ' + index}
-            items={types}
+            options={types}
             fieldTitle={isFirstLine ? t(EntityFieldsI18nKey.type) : ''}
-            onChange={onChangeType}
+            onChange={(type) => onChangeType(type as string)}
           />
         </div>
       </div>

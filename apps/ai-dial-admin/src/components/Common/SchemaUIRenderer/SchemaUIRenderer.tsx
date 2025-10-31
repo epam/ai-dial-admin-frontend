@@ -1,27 +1,44 @@
-import { FC, useCallback } from 'react';
+import { createRef, FC, useCallback, useEffect } from 'react';
 
-import { IChangeEvent } from '@rjsf/core';
+import Form, { IChangeEvent } from '@rjsf/core';
 import { RJSFSchema } from '@rjsf/utils';
 import validator from '@rjsf/validator-ajv8';
 
 import { SchemaForm } from '@/src/components/Common/SchemaUIRenderer/CustomTemplates/CustomSchemaForm';
+import { DefaultsValue } from '@/src/models/dial/defaults';
 
 interface Props {
   schema: RJSFSchema;
   data?: Record<string, unknown>;
-  onChangeConfiguration: (data: Record<string, unknown>) => void;
+  onChangeConfiguration: (data: Record<string, DefaultsValue>) => void;
+  onGetSchemeDefaults?: (data: Record<string, DefaultsValue>) => void;
+  readonly?: boolean;
 }
-const SchemaUiRenderer: FC<Props> = ({ schema, data, onChangeConfiguration }) => {
+const SchemaUiRenderer: FC<Props> = ({ schema, data, onChangeConfiguration, onGetSchemeDefaults, readonly }) => {
   const onChange = useCallback(
     (data: IChangeEvent<any, RJSFSchema, any>) => {
       onChangeConfiguration(data.formData);
     },
     [onChangeConfiguration],
   );
-  const formData = data;
+  const onSubmit = (data: IChangeEvent<any, RJSFSchema, any>) => onGetSchemeDefaults?.(data.formData);
 
+  const formRef = createRef<Form>();
+  useEffect(() => {
+    formRef.current?.submit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
-    <SchemaForm schema={schema} validator={validator} formData={formData} onChange={onChange}>
+    <SchemaForm
+      ref={formRef}
+      schema={schema}
+      validator={validator}
+      formData={data}
+      onChange={onChange}
+      onSubmit={onSubmit}
+      showErrorList={false}
+      readonly={readonly}
+    >
       <></>
     </SchemaForm>
   );

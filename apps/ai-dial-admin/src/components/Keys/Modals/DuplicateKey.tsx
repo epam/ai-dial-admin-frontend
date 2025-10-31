@@ -2,13 +2,15 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 
 import ValidityPeriod from '@/src/components/Keys/Modals/ValidityPeriod';
-import { ButtonsI18nKey, DuplicateI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import KeyGenerateField from '../View/Properties/KeyGenerateField';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   isModalOpen: boolean;
@@ -27,7 +29,7 @@ const DuplicateKey: FC<Props> = ({ onDuplicate, isModalOpen, onClose, entity, na
   const [clonedEntity, setEntity] = useState<DialKey>({
     ...entity,
     key: '',
-    name: '',
+    name: getClonedEntityName(entity.name),
     expiresAt: void 0,
   });
 
@@ -59,7 +61,7 @@ const DuplicateKey: FC<Props> = ({ onDuplicate, isModalOpen, onClose, entity, na
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(DuplicateI18nKey.Key)}
+      title={t(getCloneTitle(ApplicationRoute.Keys, t))}
       portalId="DuplicateKey"
       open={isModalOpen}
       onSubmit={() => onDuplicate(clonedEntity)}
@@ -73,6 +75,7 @@ const DuplicateKey: FC<Props> = ({ onDuplicate, isModalOpen, onClose, entity, na
         <DisplayNameControl
           displayName={clonedEntity.displayName}
           onChange={(displayName?: string) => setEntity({ ...clonedEntity, displayName })}
+          required={true}
         />
 
         <KeyGenerateField keys={keys} selectedKey={clonedEntity} changeKey={onChangeKey} />

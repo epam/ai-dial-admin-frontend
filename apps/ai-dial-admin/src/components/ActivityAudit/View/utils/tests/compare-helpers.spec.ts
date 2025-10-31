@@ -1,5 +1,5 @@
 import { ModelViewI18nKey } from '@/src/constants/i18n';
-import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_KEY, NO_LIMITS_VALUE } from '@/src/constants/role';
+import { UNLIMITED_ACCEPTED_USERS, NO_LIMITS_KEY, UNLIMITED_VALUE, UNLIMITED_KEY } from '@/src/constants/role';
 import { PricingType } from '@/src/models/dial/model';
 import { ActivityAuditResourceType, DiffStatus } from '@/src/types/activity-audit';
 import { describe, expect, test } from 'vitest';
@@ -267,13 +267,25 @@ describe('Activity audit :: fillShareValues', () => {
     expect(diffs[0].status).toBeUndefined();
   });
 
-  test('should handle NO_LIMITS_VALUE correctly and convert it to NO_LIMITS_KEY', () => {
+  test('should handle UNLIMITED_VALUE correctly and convert it to NO_LIMITS_KEY', () => {
     const diffs: any[] = [];
     const v2 = { limit: NO_LIMITS_KEY };
 
     fillShareValues(diffs, 'limit', 'limit', undefined, v2, false);
 
     expect(diffs[0].value).toBe(NO_LIMITS_KEY);
+  });
+
+  test('should use correct key when calling convertShareValue', () => {
+    const diffs: any[] = [];
+    const v1 = { maxAcceptedUsers: '10' };
+    const v2 = { maxAcceptedUsers: '20' };
+
+    fillShareValues(diffs, 'application', 'maxAcceptedUsers', v1, v2, false);
+
+    expect(diffs[0].parameter).toBe('application.maxAcceptedUsers');
+    expect(diffs[0].value).toBe('20'); // assuming '20' would be the returned value
+    expect(diffs[0].status).toBe(DiffStatus.CHANGED);
   });
 });
 
@@ -314,40 +326,53 @@ describe('Activity audit :: getShareStatus', () => {
 
 describe('Activity audit :: convertShareValue', () => {
   test('should return NO_LIMITS_KEY when value is undefined', () => {
-    expect(convertShareValue(undefined, 'anyKey')).toBe(NO_LIMITS_KEY);
+    expect(convertShareValue(undefined, 'invitationTtl', 'anyKey')).toBe(NO_LIMITS_KEY);
   });
 
   test('should return NO_LIMITS_KEY when value is null', () => {
-    expect(convertShareValue(null, 'anyKey')).toBe(NO_LIMITS_KEY);
+    expect(convertShareValue(null, 'invitationTtl', 'anyKey')).toBe(NO_LIMITS_KEY);
   });
 
-  test('should return NO_LIMITS_KEY when value equals NO_LIMITS_VALUE', () => {
-    expect(convertShareValue(NO_LIMITS_VALUE, 'anyKey')).toBe(NO_LIMITS_KEY);
+  test('should return NO_LIMITS_KEY when value equals UNLIMITED_VALUE', () => {
+    expect(convertShareValue(UNLIMITED_VALUE, 'invitationTtl', 'anyKey')).toBe(UNLIMITED_KEY);
   });
 
-  test('should return NO_LIMITS_KEY when value equals NO_LIMITS_ACCEPTED_USERS', () => {
-    expect(convertShareValue(NO_LIMITS_ACCEPTED_USERS, 'anyKey')).toBe(NO_LIMITS_KEY);
+  test('should return NO_LIMITS_KEY when value equals UNLIMITED_ACCEPTED_USERS', () => {
+    expect(convertShareValue(UNLIMITED_ACCEPTED_USERS, 'invitationTtl', 'anyKey')).toBe(UNLIMITED_KEY);
   });
 
-  test('should convert milliseconds to hours when key is "invitationTtl"', () => {
+  test('should return default value from sharingDefaults when value is falsy and key is provided', () => {
+    expect(convertShareValue(undefined, 'invitationTtl', 'application')).toBe('72');
+    expect(convertShareValue(null, 'maxAcceptedUsers', 'application')).toBe('10');
+  });
+
+  test('should convert milliseconds to hours when field is "invitationTtl"', () => {
     const msValue = (2 * 60 * 60 * 1000).toString();
-    const result = convertShareValue(msValue, 'invitationTtl');
+    const result = convertShareValue(msValue, 'invitationTtl', 'anyKey');
     expect(result).toBe('2');
   });
 
-  test('should handle fractional hour conversion correctly', () => {
+  test('should handle fractional hour conversion correctly for "invitationTtl"', () => {
     const msValue = (1.5 * 60 * 60 * 1000).toString();
-    const result = convertShareValue(msValue, 'invitationTtl');
+    const result = convertShareValue(msValue, 'invitationTtl', 'anyKey');
     expect(result).toBe('1.5');
   });
 
-  test('should return the value unchanged when key is not "invitationTtl"', () => {
-    const result = convertShareValue('customValue', 'someOtherKey');
+  test('should return the value unchanged when field is not "invitationTtl"', () => {
+    const result = convertShareValue('customValue', 'anyOtherField', 'anyKey');
     expect(result).toBe('customValue');
   });
 
-  test('should treat an empty string as NO_LIMITS_KEY (since falsy)', () => {
-    expect(convertShareValue('', 'anyKey')).toBe(NO_LIMITS_KEY);
+  test('should treat an empty string as NO_LIMITS_KEY', () => {
+    expect(convertShareValue('', 'invitationTtl', 'anyKey')).toBe(NO_LIMITS_KEY);
+  });
+
+  test('should return default value from sharingDefaults when value is empty string', () => {
+    expect(convertShareValue('', 'invitationTtl', 'application')).toBe('72');
+  });
+
+  test('should return NO_LIMITS_KEY when value is falsy and no sharingDefaults exists for that key', () => {
+    expect(convertShareValue('', 'maxAcceptedUsers', 'someInvalidKey')).toBe(NO_LIMITS_KEY);
   });
 });
 

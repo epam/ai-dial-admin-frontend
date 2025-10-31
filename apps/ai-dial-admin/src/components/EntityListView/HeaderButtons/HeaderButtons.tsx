@@ -34,6 +34,7 @@ import { getFolderName } from '@/src/utils/files/folder';
 import { getErrorNotification, getPrepareNotification } from '@/src/utils/notification';
 import ResetFiltersButton from './ResetFiltersButton';
 import { getFormDataForImport } from './utils';
+import { Asset } from '@/src/models/dial/deployment-asset';
 
 interface Props<T> {
   names?: string[];
@@ -46,7 +47,7 @@ interface Props<T> {
   gridApi?: GridApi | null;
   toggleColumnsPanel: () => void;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
-  context?: () => AssetsFolderContext<DialFile>;
+  context?: () => AssetsFolderContext<Asset | DialFile>;
   setIsBulkView?: Dispatch<SetStateAction<boolean>>;
   isBulkView?: boolean;
 }
@@ -135,7 +136,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
 
   const getCreateModal = () => {
     if (route === ApplicationRoute.ApplicationRunners) {
-      return <CreateAppRunner isModalOpen={isModalOpen} onClose={handleModalClose} route={route} />;
+      return <CreateAppRunner isModalOpen={isModalOpen} onClose={handleModalClose} />;
     }
 
     if (route === ApplicationRoute.InterceptorTemplates) {
@@ -164,6 +165,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
         onClose={handleModalClose}
         names={names || []}
         versionsMap={versionsMap}
+        context={context}
       />
     );
   };

@@ -3,10 +3,12 @@
 import { ReactNode, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
+import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
+import { EntityViewTab } from '@/src/components/EntityView/View/utils';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
@@ -19,11 +21,11 @@ import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import JsonToggles from './JsonToggle';
-import DeleteConfirmationModal from '../Modals/Delete/Delete';
 import ModifiedEntityButtons from './ModifiedEntityButtons';
 
 interface Props<T> {
   view: ApplicationRoute;
+  activeTab?: EntityViewTab;
   entity: T;
   isChanged: boolean;
   jsonEditorEnabled: boolean;
@@ -97,10 +99,14 @@ const HeaderButtons = <T extends object>({
             existingVersions={existingVersions}
           />
         ) : (
-          <div className="flex flex-row items-center w-full">
+          <div className="flex flex-row items-center w-full gap-x-3">
             {!jsonEditorEnabled && (
               <div
-                className={`flex-1 flex flex-row gap-3 ${childrenContainerClass || ''} ${isSimple ? 'justify-center' : ''}`}
+                className={classNames(
+                  `flex-1 flex flex-row gap-3`,
+                  childrenContainerClass,
+                  isSimple ? 'justify-center' : '',
+                )}
               >
                 <DialButton
                   variant={ButtonVariant.Secondary}

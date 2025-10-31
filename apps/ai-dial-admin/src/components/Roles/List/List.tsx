@@ -1,3 +1,5 @@
+'use client';
+
 import { FC } from 'react';
 
 import { createRole, removeRole } from '@/src/app/[lang]/roles/actions';

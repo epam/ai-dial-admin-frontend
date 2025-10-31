@@ -1,14 +1,12 @@
-import { cloneElement, Dispatch, FC, ReactElement, SetStateAction, useCallback, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
-
-import { ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
+import { DialFormPopup, SelectOption } from '@epam/ai-dial-ui-kit';
 import { createPortal } from 'react-dom';
-import Popup from '@/src/components/Common/Popup/Popup';
+import { cloneElement, Dispatch, FC, ReactElement, SetStateAction, useCallback, useState } from 'react';
+
 import CreateFilter from '@/src/components/Telemetry/TelemetryControls/Filters/CreateFilter';
+import { ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ApplicationRoute } from '@/src/types/routes';
+import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 
 interface Props {
   type: FILTER_TYPE;
@@ -18,7 +16,7 @@ interface Props {
   setCondition: Dispatch<SetStateAction<FILTER_OPERATOR>>;
   setValue: Dispatch<SetStateAction<string>>;
   onCreate: () => void;
-  dropdownData: { projects: DropdownItemsModel[]; entities: DropdownItemsModel[] };
+  dropdownData: { projects: SelectOption[]; entities: SelectOption[] };
   reset: () => void;
   children: ReactElement;
   route: ApplicationRoute;
@@ -56,7 +54,17 @@ const AddFilterModal: FC<Props> = ({
       <div onClick={() => setIsOpen(true)}>{cloneElement(children)}</div>
       {isOpen &&
         createPortal(
-          <Popup onClose={onClose} heading={t(TelemetryI18nKey.AddFilter)} portalId="AddFilter" state={isOpen}>
+          <DialFormPopup
+            onClose={onClose}
+            title={t(TelemetryI18nKey.AddFilter)}
+            portalId="AddFilter"
+            onSubmit={addFilter}
+            onCancel={onClose}
+            disableSubmitButton={!(type && condition && value)}
+            submitLabel={t(ButtonsI18nKey.Apply)}
+            cancelLabel={t(ButtonsI18nKey.Cancel)}
+            open={isOpen}
+          >
             <div className="flex flex-col px-6 py-4 h-full">
               <CreateFilter
                 onClose={onClose}
@@ -70,22 +78,7 @@ const AddFilterModal: FC<Props> = ({
                 route={route}
               />
             </div>
-            <div className="flex flex-row items-center gap-2 px-6 py-4">
-              <DialButton
-                variant={ButtonVariant.Secondary}
-                cssClass="flex-grow justify-center"
-                title={t(ButtonsI18nKey.Cancel)}
-                onClick={onClose}
-              />
-              <DialButton
-                variant={ButtonVariant.Primary}
-                cssClass="flex-grow justify-center"
-                title={t(ButtonsI18nKey.Apply)}
-                onClick={addFilter}
-                disable={!(type && condition && value)}
-              />
-            </div>
-          </Popup>,
+          </DialFormPopup>,
           document.body,
         )}
     </>

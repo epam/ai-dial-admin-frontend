@@ -49,6 +49,7 @@ const PropertiesContent: FC<Props> = ({
           etag={etag as string}
           asset={selectedEntity as DeploymentAsset}
           assets={assets || []}
+          runners={applicationSchemes || []}
           onChange={onChangeEntity}
         />
       );
@@ -68,7 +69,7 @@ const PropertiesContent: FC<Props> = ({
   return (
     <div className="flex flex-col h-full w-full">
       {isDeploymentAsset(view) ? (
-        <DeploymentAssetHeader asset={selectedEntity as DeploymentAsset} />
+        <DeploymentAssetHeader asset={selectedEntity as DeploymentAsset} view={view} />
       ) : (
         <EntityHeader entity={selectedEntity} />
       )}

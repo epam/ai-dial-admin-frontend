@@ -28,11 +28,7 @@ const nextConfig = {
       },
     ];
   },
-  nx: {
-    // Set this to true if you would like to use SVGR
-    // See: https://github.com/gregberge/svgr
-    svgr: false,
-  },
+  nx: {},
   experimental: {
     serverActions: {
       bodySizeLimit: '4mb',
@@ -50,6 +46,10 @@ const nextConfig = {
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
           },
           {
             key: 'Cache-Control',

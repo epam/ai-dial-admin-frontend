@@ -1,36 +1,43 @@
 'use client';
-import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
-
+import { ButtonVariant, DialButton, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
+import { IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
+import { useRouter } from 'next/navigation';
+import { FC, useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { removeAdapter, updateAdapter } from '@/src/app/[lang]/adapters/actions';
+import { createModel } from '@/src/app/[lang]/models/actions';
 import AdapterModels from '@/src/components/Adapter/ModelsView/AdapterModels';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
+import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
-import { TabsI18nKey } from '@/src/constants/i18n';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { ButtonsI18nKey, CreateI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
-import { TabModel } from '@/src/models/tab';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import AdapterProperties from './AdapterProperties';
-import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { DialModelType } from '@/src/models/dial/model';
+import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
 
 interface Props {
   etag: string;
+  modelsNames: string[];
   originalAdapter: DialAdapter;
 }
 
-const AdapterView: FC<Props> = ({ originalAdapter, etag }) => {
+const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -43,6 +50,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, etag }) => {
   const [isChanged, setIsChanged] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
   const [key, setKey] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     setSelectedAdapter(cloneDeep(originalAdapter));
@@ -105,7 +113,11 @@ const AdapterView: FC<Props> = ({ originalAdapter, etag }) => {
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={headerClassName}>
-        <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
+        {!jsonEditorEnabled && (
+          <div className="flex-1 min-w-0">
+            <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+          </div>
+        )}
         <HeaderButtons
           view={ApplicationRoute.Adapters}
           entity={selectedAdapter}
@@ -115,7 +127,15 @@ const AdapterView: FC<Props> = ({ originalAdapter, etag }) => {
           removeEntity={removeAdapter}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-        />
+          childrenContainerClass={'flex-row-reverse'}
+        >
+          <DialButton
+            variant={ButtonVariant.Secondary}
+            title={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.Model)}`}
+            iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+            onClick={() => setIsModalOpen(true)}
+          />
+        </HeaderButtons>
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
         {jsonEditorEnabled ? (
@@ -149,6 +169,24 @@ const AdapterView: FC<Props> = ({ originalAdapter, etag }) => {
             {activeTab === EntityViewTab.Audit && (
               <EntityAudit entity={selectedAdapter} view={ApplicationRoute.Adapters} />
             )}
+            {isModalOpen &&
+              createPortal(
+                <CreateEntity
+                  route={ApplicationRoute.Models}
+                  isModalOpen={isModalOpen}
+                  createEntity={createModel}
+                  onClose={() => setIsModalOpen(false)}
+                  names={modelsNames}
+                  initialValues={{
+                    source: {
+                      $type: SOURCE_TYPE.ADAPTER,
+                      adapterName: selectedAdapter.name,
+                      completionEndpointPath: getEndpointPostfix(DialModelType.Chat),
+                    },
+                  }}
+                />,
+                document.body,
+              )}
           </>
         )}
       </div>

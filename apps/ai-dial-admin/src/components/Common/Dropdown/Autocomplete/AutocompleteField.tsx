@@ -2,24 +2,28 @@
 
 import { FC } from 'react';
 
-import ErrorText from '@/src/components/Common/ErrorText/ErrorText';
 import Field from '@/src/components/Common/Field/Field';
-import DropdownAutocomplete from './DropdownAutocomplete';
-// TODO: temp - remove after use Dial UI Kit Autocomplete
-import { DialInputFieldBaseProps } from '@epam/ai-dial-ui-kit/dist/src/components/InputField/InputField';
+import DropdownAutocomplete, { DropdownAutocompleteProps } from './DropdownAutocomplete';
+import { DialErrorText } from '@epam/ai-dial-ui-kit';
 
-interface Props extends DialInputFieldBaseProps {
+interface Props extends DropdownAutocompleteProps {
   items: string[];
+  fieldTitle?: string;
+  optional?: boolean;
+  errorText?: string;
+  value?: string | number | null;
+  elementId?: string;
+  placeholder?: string;
   onChange: (value: string) => void;
 }
 
-const AutocompleteField: FC<Props> = ({ fieldTitle, elementId, optional, onChange, errorText, value, ...props }) => {
+const AutocompleteField: FC<Props> = ({ fieldTitle, optional, onChange, elementId, errorText, value, ...props }) => {
   return (
     <div className="flex flex-col">
       <Field fieldTitle={fieldTitle} optional={optional} htmlFor={elementId} />
 
-      <DropdownAutocomplete inputId={elementId} onSelectItem={onChange} autocompleteValue={value} {...props} />
-      <ErrorText errorText={errorText} />
+      <DropdownAutocomplete onSelectItem={onChange} autocompleteValue={value} {...props} />
+      <DialErrorText errorText={errorText} />
     </div>
   );
 };

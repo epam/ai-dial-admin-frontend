@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { DialRadioGroup, RadioGroupOrientation, RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
 
-import { EntityFieldsI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 import { FieldError } from '@/src/models/error';
@@ -10,6 +10,7 @@ import { getUrlError } from '@/src/utils/validation/url-error';
 import { useI18n } from '@/src/locales/client';
 import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
 import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
+import classNames from 'classnames';
 
 interface Props {
   entity: DialModel;
@@ -44,8 +45,8 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
   }, [entity, prefix]);
 
   const onChangePath = useCallback(
-    (value: string) => {
-      setName(value);
+    (value?: string) => {
+      setName(value || '');
       onChange({
         ...entity,
         source: { ...(entity.source as SOURCE_FIELD), completionEndpointPath: `${value}${postfix}` },
@@ -55,13 +56,13 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
   );
 
   const onChangeEndpoint = useCallback(
-    (value: string) => {
+    (value?: string) => {
       const error = getUrlError(value, t, true);
       setEndpointError(error);
-      setName(value);
+      setName(value || '');
       onChange({
         ...entity,
-        endpoint: `${value}${postfix}`,
+        endpoint: `${value || ''}${postfix}`,
       });
     },
     [entity, onChange, postfix, t],
@@ -101,7 +102,7 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
   }, [isModal, entity, prefix]);
 
   return (
-    <div className="w-full flex flex-col gap-6 lg:w-[35%]">
+    <div className={classNames('flex flex-col gap-6', isModal ? 'w-full' : 'w-full lg:w-[45%]')}>
       {!isModal && (
         <DialRadioGroup
           radioButtons={modelTypeRadio}
@@ -130,11 +131,11 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
           fullValue={fullValue}
           fieldTitle={t(EntityFieldsI18nKey.endpoint)}
           suffix={postfix}
+          placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           onChange={onChangeEndpoint}
           errorText={endpointError?.text}
           invalid={!!endpointError}
           copyable={false}
-          inputContainerCssClass="w-full"
         />
       )}
     </div>

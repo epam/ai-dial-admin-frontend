@@ -30,16 +30,20 @@ export const getEntityPath = (
     case ApplicationRoute.Prompts:
     case ApplicationRoute.Files:
     case ApplicationRoute.AssetsApplications:
-    case ApplicationRoute.AssetsToolsets:
+    case ApplicationRoute.AssetsToolsets: {
+      const path =
+        (data as DialPrompt).path ||
+        `${(data as DialPrompt).folderId}${(data as DialPrompt).name}__${(data as DialPrompt).version}`;
       return forRemove
         ? decodeURIComponent((data as DialPrompt).path)
-        : `${encodeURIComponent((data as DialPrompt).name as string)}?path=${encodeURIComponent((data as DialPrompt).path)}`;
+        : `${encodeURIComponent((data as DialPrompt).name as string)}?path=${encodeURIComponent(path)}`;
+    }
 
     case ApplicationRoute.PromptPublications:
     case ApplicationRoute.FilePublications:
     case ApplicationRoute.ApplicationPublications:
     case ApplicationRoute.ToolsetPublications:
-      return `${encodeURIComponent((data as Publication).requestName)}?path=${(data as DialPrompt).path}`;
+      return `${encodeURIComponent((data as Publication).requestName)}?path=${(data as Publication).path}`;
 
     case ApplicationRoute.ActivityAudit:
       return (data as DialActivity).activityId;

@@ -18,6 +18,7 @@ import { DialRoleLimits } from '@/src/models/dial/role-limits';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { cellRenderParams } from './constants';
+import { UNLIMITED_VALUE } from '@/src/constants/role';
 
 export const getNoAvailableTitle = (view: ApplicationRoute) => {
   if (view === ApplicationRoute.Models) return RolesI18nKey.NotAvailableModel;
@@ -192,7 +193,7 @@ export const getRolesColumnDefs = (
   view: ApplicationRoute,
 ): ColDef[] => {
   const actions = [getOpenInNewTabOperation(open)];
-  const colDefs = [...SIMPLE_ENTITY_COLUMNS];
+  const colDefs = [...SIMPLE_ENTITY_COLUMNS.slice(0, 3)];
 
   if (view !== ApplicationRoute.Routes && view !== ApplicationRoute.Toolsets) {
     actions.push(
@@ -236,7 +237,7 @@ export const isSetNoLimitsHidden = (api: GridApi, node: IRowNode) => {
     rowNode: node,
   });
 
-  return !day && !minute && !month && !week;
+  return day === UNLIMITED_VALUE && minute === UNLIMITED_VALUE && month === UNLIMITED_VALUE && week === UNLIMITED_VALUE;
 };
 
 export const isResetToDefaultHidden = (api: GridApi, node: IRowNode, entity: EntityRoleLimits) => {

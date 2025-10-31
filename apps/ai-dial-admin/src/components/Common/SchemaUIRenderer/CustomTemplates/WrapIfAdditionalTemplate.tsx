@@ -1,9 +1,7 @@
 import { FC } from 'react';
 
-import { DialInput } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialRemoveButton } from '@epam/ai-dial-ui-kit';
 import { ADDITIONAL_PROPERTY_FLAG, WrapIfAdditionalTemplateProps } from '@rjsf/utils';
-
-import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 
 export const WrapIfAdditionalTemplate: FC<WrapIfAdditionalTemplateProps> = ({
   id,
@@ -36,11 +34,13 @@ export const WrapIfAdditionalTemplate: FC<WrapIfAdditionalTemplateProps> = ({
           />
         </div>
         <div className="bg-layer-2">{children}</div>
-        <RemoveButton
-          onClick={onDropPropertyClick(label)}
-          iconClass="text-error"
-          cssClass="border rounded border-primary justify-start p-2"
-        />
+        {!readonly && (
+          <DialRemoveButton
+            onClick={onDropPropertyClick(label)}
+            iconClass="text-error"
+            cssClass="border rounded border-primary justify-start p-2"
+          />
+        )}
       </div>
     </div>
   );

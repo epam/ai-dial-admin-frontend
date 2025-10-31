@@ -32,9 +32,9 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
   const actualConfig = getActualMenuItems(MENU_CONFIGURATION(40), disableMenuItems, embeddedApps);
 
   return (
-    <div className="flex flex-col w-full h-full overflow-auto">
+    <div className="flex flex-col w-full h-full overflow-auto sm:px-2">
       <div className="mb-6 flex flex-row justify-between bg-layer-2 p-[32px] relative">
-        <div className="flex flex-col w-full xl:w-[55%] z-[10]">
+        <div className="flex flex-col w-full xl:w-[55%] xl:z-10">
           <h1 className="mb-3">{t(WelcomeViewI18nKey.Title)}</h1>
           <p className="mb-2">{t(WelcomeViewI18nKey.Description)}</p>
           {docLink && (

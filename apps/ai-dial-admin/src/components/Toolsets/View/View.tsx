@@ -5,9 +5,9 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
+import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 
 import { removeToolset, updateToolset } from '@/src/app/[lang]/toolsets/actions';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
@@ -15,25 +15,20 @@ import EntityRolesModal from '@/src/components/EntityView/Modals/EmptyRoles/Empt
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
 import { auditTabs, EntityViewTab, propertiesTabs, rolesTabs, toolsTabs } from '@/src/components/EntityView/View/utils';
-import Tool from '@/src/components/Toolsets/Tools/Tools';
+import ToolsView from '@/src/components/Toolsets/Tools/Tools';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
 import { Toolset } from '@/src/models/dial/toolset';
-import { TabModel } from '@/src/models/tab';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import ToolsetProperties from './Properties';
 import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { ExportFormat } from '@/src/types/export';
-import {
-  getEntityFromFile,
-  getExportType,
-  getFileFromEntity,
-} from '@/src/components/EntityView/View/core-entity-utils';
+import { getExportType } from '@/src/components/EntityView/View/core-entity-utils';
 import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
@@ -70,7 +65,7 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
     const name = originalToolset?.name;
     if (!coreToolset && name) {
       getCoreEntity(name, getExportType(ApplicationRoute.Toolsets)).then((data) => {
-        setCoreToolset(getEntityFromFile(ApplicationRoute.Toolsets, name, data) as Toolset);
+        setCoreToolset(data);
       });
     }
   }, [coreToolset, originalToolset]);
@@ -123,7 +118,7 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreEntity(getFileFromEntity(ApplicationRoute.Toolsets, selectedToolset))
+        ? updateCoreEntity(selectedToolset as Record<string, unknown>)
         : updateToolset(selectedToolset, etag);
 
     req.then((res) => {
@@ -154,7 +149,11 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={headerClassName}>
-        <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
+        {!jsonEditorEnabled && (
+          <div className="flex-1 min-w-0">
+            <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+          </div>
+        )}
         <HeaderButtons
           view={ApplicationRoute.Toolsets}
           entity={selectedToolset}
@@ -183,7 +182,7 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
             )}
 
             {activeTab === EntityViewTab.Tools && (
-              <Tool
+              <ToolsView
                 originalToolset={originalToolset}
                 selectedToolset={selectedToolset}
                 onChangeToolset={onChangeToolset}

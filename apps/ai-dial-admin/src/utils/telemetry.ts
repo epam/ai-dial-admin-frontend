@@ -1,3 +1,8 @@
+import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
+import { SelectOption } from '@epam/ai-dial-ui-kit';
+import Big from 'big.js';
+import { EChartsOption } from 'echarts-for-react/src/types';
+
 import { lineChartDefaultOptions } from '@/src/components/Charts/LineChart/constants';
 import {
   filterConditionConfig,
@@ -5,13 +10,9 @@ import {
   filterTypeConfig,
   TELEMETRY_GRID_HEADERS_MAP,
 } from '@/src/constants/telemetry';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { FilterData, TelemetryData } from '@/src/models/telemetry';
 import { TimeRange } from '@/src/models/time-range';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
-import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import Big from 'big.js';
-import { EChartsOption } from 'echarts-for-react/src/types';
 
 export const getGridData = (data: TelemetryData): Record<string, string>[] => {
   return (
@@ -37,14 +38,14 @@ export const getFormattedDataFilters = (filters: FilterData[], entityName?: stri
   const userFilters = [];
 
   if (entityName) {
-    const left = filterTypeConfig.find((filterType) => filterType.id === FILTER_TYPE.Entity)?.filter;
+    const left = filterTypeConfig.find((filterType) => filterType.value === FILTER_TYPE.Entity)?.filter;
     const right = `'${entityName}'`;
     const operator = filterOperatorConfig[FILTER_OPERATOR.Equal];
     userFilters.push({ [operator]: { left: left, right: right } });
   }
 
   filters.forEach((filter) => {
-    const left = filterTypeConfig.find((filterType) => filterType.id === filter.type)?.filter;
+    const left = filterTypeConfig.find((filterType) => filterType.value === filter.type)?.filter;
     const right = `'${filter.value}'`;
     const operator = filterOperatorConfig[filter.condition];
 
@@ -90,14 +91,14 @@ export const getListingData = (data: TelemetryData): Record<string, string>[] =>
 
 export const getDefaultFilterValue = (
   type: FILTER_TYPE,
-  entities: DropdownItemsModel[],
-  projects: DropdownItemsModel[],
+  entities: SelectOption[],
+  projects: SelectOption[],
 ): string => {
   if (entities.length && projects.length) {
     if (type === FILTER_TYPE.Entity) {
-      return entities[0].id;
+      return entities[0].value;
     } else {
-      return projects[0].id;
+      return projects[0].value;
     }
   }
   return '';
@@ -114,7 +115,7 @@ export function prepareChartData(data: Record<string, string>[]): EChartsOption 
   return config;
 }
 
-export function getFilterTypeConfig(t: (key: string) => string) {
+export function getFilterTypeConfig(t: (key: string) => string): SelectOption[] {
   return getTranslatedConfig(filterTypeConfig, t);
 }
 
@@ -122,11 +123,11 @@ export function getFilterConditionConfig(t: (key: string) => string) {
   return getTranslatedConfig(filterConditionConfig, t);
 }
 
-function getTranslatedConfig<T extends { name: string }>(config: T[], t: (key: string) => string) {
+function getTranslatedConfig<T extends { value: string }>(config: T[], t: (key: string) => string): SelectOption[] {
   return config.map((item) => {
     return {
       ...item,
-      name: t(item.name),
+      label: t(item.value),
     };
   });
 }

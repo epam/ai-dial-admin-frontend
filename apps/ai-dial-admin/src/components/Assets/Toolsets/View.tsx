@@ -1,41 +1,52 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { DialTabs } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
-import { getToolsets, moveToolsets, removeToolset, updateToolset } from '@/src/app/[lang]/assets-toolsets/actions';
-import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
-import Tabs from '@/src/components/Common/Tabs/Tabs';
+import {
+  getToolsets,
+  moveToolsets,
+  removeToolset,
+  signInToolset,
+  signOutToolset,
+  updateToolset,
+} from '@/src/app/[lang]/assets-toolsets/actions';
+import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
 import { EntityViewTab, propertiesTabs, toolsTabs } from '@/src/components/EntityView/View/utils';
+import ToolsView from '@/src/components/Toolsets/Tools/Tools';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { DialFile } from '@/src/models/dial/file';
-import { Toolset } from '@/src/models/dial/toolset';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
+import { DialFile } from '@/src/models/dial/file';
+import { Toolset, ToolsetAuthCredentialLevel, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { getErrorNotification } from '@/src/utils/notification';
-import Tool from '@/src/components/Toolsets/Tools/Tools';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { encodeToolsetRedirectState, isLoggedInToToolset } from '@/src/utils/toolset/toolset-auth';
+import LoginPopup from './LoginPopup';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
   etag: string;
+  oAuthCode?: string | null;
   originalToolset: AssetToolset;
   toolsets: AssetToolset[];
 }
 
-const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
+const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const tabs = [propertiesTabs(t), toolsTabs(t)];
   const router = useRouter();
@@ -45,8 +56,14 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedToolset, setSelectedToolset] = useState(cloneDeep(originalToolset));
-  const [isChanged, setIsChanged] = useState<boolean>(false);
-  const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
+  const [isChanged, setIsChanged] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [jsonEditorEnabled, setJsonEditorEnabled] = useState(false);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const isToolsetSignedIn = useMemo(() => {
+    return isLoggedInToToolset(selectedToolset);
+  }, [selectedToolset]);
 
   const [key, setKey] = useState(0);
 
@@ -84,36 +101,49 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
     setSelectedToolset(cloneDeep(originalToolset));
   }, [jsonEditorEnabled, originalToolset, dispatch]);
 
-  const onSave = useCallback(() => {
-    const isNeedToMove = getIsNeedToMove(selectedToolset, originalToolset);
-    const updatedEntity = getEntityForUpdate(selectedToolset, originalToolset);
-    updateToolset(updatedEntity, etag).then((res) => {
-      if (res.success) {
-        if (isNeedToMove) {
-          getToolsets(addTrailingSlash(updatedEntity.folderId)).then((toolsets) => {
-            const pathsToMove = getListOfPathsToMove(updatedEntity, null, toolsets || []);
-            const newPath = removeTrailingSlash(selectedToolset.folderId);
-            moveToolsets(pathsToMove, newPath).then((r) => {
-              if (r.every((response) => response.success)) {
-                router.push(
-                  `${ApplicationRoute.AssetsToolsets}/${getEntityPath(ApplicationRoute.AssetsToolsets, { name: updatedEntity.name, path: changePath(updatedEntity.path, newPath) })}`,
-                );
-                fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
-              }
-            });
-          });
-        } else {
-          fetchFiles(updatedEntity.folderId);
-          router.push(
-            `${ApplicationRoute.AssetsToolsets}/${getEntityPath(ApplicationRoute.AssetsToolsets, updatedEntity)}`,
-          );
-        }
-        router.refresh();
-      } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+  const onSave = useCallback(
+    (newVersion?: string) => {
+      const isNeedToMove = getIsNeedToMove(selectedToolset, originalToolset);
+      let updatedEntity = getEntityForUpdate(selectedToolset, originalToolset);
+      if (newVersion) {
+        updatedEntity = addNewVersion(updatedEntity, newVersion);
       }
-    });
-  }, [selectedToolset, originalToolset, router, fetchFiles, etag, showNotification]);
+      updateToolset(updatedEntity, etag).then((res) => {
+        showNotification(
+          getSuccessNotification(
+            getUpdateNotificationTitle(ApplicationRoute.AssetsToolsets, t),
+            getUpdateNotificationDescription(ApplicationRoute.AssetsToolsets, updatedEntity.name, t),
+          ),
+        );
+        if (res.success) {
+          if (isNeedToMove) {
+            getToolsets(addTrailingSlash(updatedEntity.folderId)).then((toolsets) => {
+              const pathsToMove = getListOfPathsToMove(updatedEntity, null, toolsets || []);
+              const newPath = removeTrailingSlash(selectedToolset.folderId);
+              moveToolsets(pathsToMove, newPath).then((r) => {
+                if (r.every((response) => response.success)) {
+                  router.push(
+                    getUrnForEntity(ApplicationRoute.AssetsToolsets, {
+                      name: updatedEntity.name,
+                      path: changePath(updatedEntity.path, newPath),
+                    }),
+                  );
+                  fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
+                }
+              });
+            });
+          } else {
+            fetchFiles(updatedEntity.folderId);
+            router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, updatedEntity));
+          }
+          router.refresh();
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        }
+      });
+    },
+    [selectedToolset, originalToolset, etag, showNotification, t, router, fetchFiles],
+  );
 
   const onChangeEntity = useCallback(
     (entity: Toolset) => {
@@ -133,57 +163,150 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
     [etag],
   );
 
-  return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={headerClassName}>
-        <Tabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} jsonEditorEnabled={jsonEditorEnabled} />
-        <HeaderButtons
-          view={ApplicationRoute.AssetsToolsets}
-          entity={selectedToolset}
-          isChanged={isChanged}
-          onSave={onSave}
-          onDiscard={onDiscard}
-          removeEntity={onRemove}
-          jsonEditorEnabled={jsonEditorEnabled}
-          toggleJsonEditor={toggleJsonEditor}
-          existingVersions={toolsets?.map((app) => app.version) || []}
-          context={useToolsetFolder as () => AssetsFolderContext<DialFile | AssetToolset>}
-        />
-      </div>
-      <div className="flex-1 overflow-auto mt-3 min-h-0">
-        {jsonEditorEnabled ? (
-          <EntityJsonEditor
-            key={key}
-            entity={selectedToolset}
-            setSelectedEntity={setSelectedToolset}
-            setIsChanged={setIsChanged}
-          />
-        ) : (
-          <>
-            {activeTab === EntityViewTab.Properties && (
-              <ViewContent
-                activeTab={activeTab}
-                names={[]}
-                assets={toolsets || []}
-                view={ApplicationRoute.AssetsToolsets}
-                selectedEntity={selectedToolset}
-                jsonEditorEnabled={jsonEditorEnabled}
-                isSkipRefresh={false}
-                onChangeEntity={onChangeEntity}
-              />
-            )}
+  const signIn = useCallback(
+    (type: ToolsetAuthCredentialLevel, code?: string) => {
+      signInToolset(selectedToolset, type, code).then((res) => {
+        if (res.success) {
+          router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        }
+      });
+    },
+    [router, selectedToolset, showNotification],
+  );
 
-            {activeTab === EntityViewTab.Tools && (
-              <Tool
-                originalToolset={originalToolset}
-                selectedToolset={selectedToolset}
-                onChangeToolset={onChangeEntity}
+  const onLogin = useCallback(
+    (type: ToolsetAuthCredentialLevel) => {
+      const authSettings = selectedToolset.authSettings;
+      if (authSettings && authSettings?.authenticationType === ToolsetAuthType.OAUTH) {
+        const callbackUrl = `${window.location.pathname}${window.location.search}`;
+        const state = {
+          callbackUrl,
+          toolsetId: selectedToolset.name,
+          credentialsLevel: authSettings.authenticationType,
+        };
+
+        const url = new URL(authSettings.authorizationEndpoint as string);
+        url.searchParams.set('response_type', 'code');
+        url.searchParams.set('client_id', authSettings.clientId as string);
+
+        url.searchParams.set(
+          'redirect_uri',
+          `${window.location.origin}${getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset)}`,
+        );
+
+        if (authSettings.codeChallengeMethod) {
+          url.searchParams.set('code_challenge_method', authSettings.codeChallengeMethod);
+        }
+
+        url.searchParams.set('state', encodeToolsetRedirectState(state));
+        if (authSettings.scopesSupported) {
+          url.searchParams.set('scope', authSettings.scopesSupported?.join(' '));
+        }
+
+        window.location.assign(url.toString());
+      } else {
+        signIn(type);
+      }
+    },
+    [selectedToolset, signIn],
+  );
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const onLogout = useCallback(() => {
+    signOutToolset(selectedToolset, ToolsetAuthCredentialLevel.GLOBAL).then((res) => {
+      if (res.success) {
+        router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
+      } else {
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+      }
+    });
+  }, [router, selectedToolset, showNotification]);
+
+  useEffect(() => {
+    if (oAuthCode) {
+      signIn(ToolsetAuthCredentialLevel.USER, oAuthCode);
+    }
+  }, [signIn, oAuthCode]);
+
+  return (
+    <>
+      <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+        <div className={headerClassName}>
+          {!jsonEditorEnabled && (
+            <div className="flex-1 min-w-0">
+              <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+            </div>
+          )}
+          <HeaderButtons
+            view={ApplicationRoute.AssetsToolsets}
+            entity={selectedToolset}
+            isChanged={isChanged}
+            onSave={onSave}
+            onDiscard={onDiscard}
+            removeEntity={onRemove}
+            jsonEditorEnabled={jsonEditorEnabled}
+            toggleJsonEditor={toggleJsonEditor}
+            existingVersions={toolsets?.map((app) => app.version) || []}
+            context={useToolsetFolder as () => AssetsFolderContext<DialFile | AssetToolset>}
+            childrenContainerClass="flex-row-reverse"
+          >
+            {/* TODO: waiting for BE */}
+            {/* {isToolsetSignedIn ? (
+              <DialButton
+                variant={ButtonVariant.Secondary}
+                title={t(ToolsetI18nKey.LogOut)}
+                iconBefore={<IconLogout {...BASE_ICON_PROPS} />}
+                onClick={onLogout}
               />
-            )}
-          </>
-        )}
+            ) : (
+              <DialButton
+                variant={ButtonVariant.Secondary}
+                title={t(ToolsetI18nKey.LogIn)}
+                iconBefore={<IconLogin {...BASE_ICON_PROPS} />}
+                onClick={() => setIsModalOpen(true)}
+              />
+            )} */}
+          </HeaderButtons>
+        </div>
+        <div className="flex-1 overflow-auto mt-3 min-h-0">
+          {jsonEditorEnabled ? (
+            <EntityJsonEditor
+              key={key}
+              entity={selectedToolset}
+              setSelectedEntity={setSelectedToolset}
+              setIsChanged={setIsChanged}
+            />
+          ) : (
+            <>
+              {activeTab === EntityViewTab.Properties && (
+                <ViewContent
+                  activeTab={activeTab}
+                  names={[]}
+                  assets={toolsets || []}
+                  view={ApplicationRoute.AssetsToolsets}
+                  selectedEntity={selectedToolset}
+                  jsonEditorEnabled={jsonEditorEnabled}
+                  isSkipRefresh={false}
+                  onChangeEntity={onChangeEntity}
+                />
+              )}
+
+              {activeTab === EntityViewTab.Tools && (
+                <ToolsView
+                  isAssetToolset={true}
+                  originalToolset={originalToolset}
+                  selectedToolset={selectedToolset}
+                  onChangeToolset={onChangeEntity}
+                />
+              )}
+            </>
+          )}
+        </div>
       </div>
-    </div>
+      {isModalOpen && <LoginPopup isModalOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onLogin={onLogin} />}
+    </>
   );
 };
 

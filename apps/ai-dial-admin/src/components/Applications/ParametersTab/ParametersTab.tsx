@@ -1,59 +1,88 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { FC, useMemo, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
-import { IconPlus, IconReload } from '@tabler/icons-react';
+import { ButtonVariant, DialButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { RJSFSchema } from '@rjsf/utils';
+import { IconPlus } from '@tabler/icons-react';
+import classNames from 'classnames';
 
 import {
+  convertAppPropertiesToArray,
+  convertJsonSchema,
   generateViewItems,
   getAppRunner,
   getFrameConfig,
   getInitialParamsView,
 } from '@/src/components/Applications/ParametersTab/utils';
+import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer';
 import FrameRenderer from '@/src/components/FrameRenderer/FrameRenderer';
-import { ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
 import { UserSession } from '@/src/models/auth';
-import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
+import { ApplicationPropertiesTemp, DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialApplicationResource } from '@/src/models/dial/application-resource';
+import { BaseEntity } from '@/src/models/dial/base-entity';
+import { DefaultsValue } from '@/src/models/dial/defaults';
 import { ApplicationRoute } from '@/src/types/routes';
-import FormView from './FormView';
 import TableView from './TableView';
 import ViewControl from './ViewControl';
 import { ParamsView } from './types';
+import EntityJsonEditor from '../../EntityView/JsonEditor/JsonEditor';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   entity?: DialApplication | DialApplicationResource;
+  onChangeEntity?: (entity: BaseEntity, isSkipRefresh?: boolean) => void;
   applicationSchemes?: DialApplicationScheme[] | null;
   jsonEditorEnabled?: boolean;
   view?: ApplicationRoute;
   isChanged?: boolean;
+  isSkipRefresh?: boolean;
   onSave?: () => void;
+  key?: number;
+  setIsChanged?: Dispatch<SetStateAction<boolean>>;
+  setSelectedEntity?: Dispatch<SetStateAction<BaseEntity>>;
 }
 
 const ApplicationParametersTab: FC<Props> = ({
   entity,
+  onChangeEntity,
   applicationSchemes,
   jsonEditorEnabled,
   view,
   isChanged,
+  isSkipRefresh,
   onSave,
+  key,
+  setIsChanged,
+  setSelectedEntity,
 }) => {
   const t = useI18n() as (s: string) => string;
   const { data: session } = useSession();
   const { currentTheme } = useTheme();
+  const { dispatch } = useSaveValidationContext();
   const scheme = getAppRunner(entity as DialApplication, applicationSchemes);
+
+  const [appPropertiesTemp, setAppPropertiesTemp] = useState<ApplicationPropertiesTemp[] | undefined>();
+  const [schemeProperties, setSchemeProperties] = useState<ApplicationPropertiesTemp[]>([]);
+  const [isAddClicked, setIsAddClicked] = useState(false);
+
+  if (!scheme && !appPropertiesTemp) {
+    setAppPropertiesTemp(convertAppPropertiesToArray(entity?.applicationProperties || {}));
+  }
 
   const frameConfig = useMemo(() => {
     if (scheme) {
       return getFrameConfig(scheme, currentTheme, session as UserSession);
+    } else if (entity?.editorUrl) {
+      return getFrameConfig(entity, currentTheme, session as UserSession);
     }
     return null;
-  }, [currentTheme, scheme, session]);
+  }, [currentTheme, entity, scheme, session]);
 
   const targetUrl = useMemo(() => {
     try {
@@ -70,52 +99,121 @@ const ApplicationParametersTab: FC<Props> = ({
   const [paramsView, setParamsView] = useState(getInitialParamsView(view, !!targetUrl));
 
   const showDropdown = useMemo(() => {
-    return !!viewItems.length;
+    return viewItems.length > 1;
   }, [viewItems.length]);
 
-  const showResetToDefault = useMemo(() => {
-    return false;
-  }, []);
+  const onGetSchemeDefaults = useCallback(
+    (data: Record<string, DefaultsValue>) => {
+      if (entity?.applicationPropertiesTemp) {
+        setAppPropertiesTemp(entity.applicationPropertiesTemp || []);
+      } else {
+        const schemeProps = convertJsonSchema(scheme as unknown as DialApplicationScheme, data);
+        const appProperties = convertAppPropertiesToArray(entity?.applicationProperties || {}, schemeProps);
+        setSchemeProperties(schemeProps);
+        setAppPropertiesTemp(appProperties);
+      }
+    },
+    [entity?.applicationProperties, entity?.applicationPropertiesTemp, scheme],
+  );
 
-  const showAdd = useMemo(() => {
-    return false;
-  }, []);
+  const onChangeProperties = useCallback(
+    (props?: ApplicationPropertiesTemp[], isSkipRefresh?: boolean) => {
+      const newEntity = {
+        ...entity,
+        applicationPropertiesTemp: props,
+      } as unknown as BaseEntity;
+      onChangeEntity?.(newEntity, isSkipRefresh);
+      const isValid = !props?.some((p) => !p.key || p.value == null || p.value === '');
+      dispatch({ type: ValidationActionType.SetField, field: 'applicationProperties', isValid });
+    },
+    [dispatch, entity, onChangeEntity],
+  );
+
+  const onChangeConfiguration = useCallback(
+    (data: Record<string, DefaultsValue>) => {
+      if (paramsView === ParamsView.FORM) {
+        const newEntity = {
+          ...entity,
+          applicationProperties: {
+            ...data,
+          },
+        } as unknown as BaseEntity;
+        onGetSchemeDefaults(data);
+        onChangeEntity?.(newEntity);
+      }
+    },
+    [entity, onChangeEntity, onGetSchemeDefaults, paramsView],
+  );
+
+  useEffect(() => {
+    const properties =
+      entity?.applicationPropertiesTemp ||
+      convertAppPropertiesToArray(entity?.applicationProperties || {}, schemeProperties);
+    setAppPropertiesTemp(properties);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entity?.applicationPropertiesTemp, entity?.applicationProperties]);
 
   return (
     <div className="flex flex-col w-full h-full pt-5">
-      <div className="flex flex-row justify-between">
-        <div className="flex flex-row gap-4 items-center">
-          <h1>{t(TabsI18nKey.Parameters)}</h1>
-          {showDropdown && (
-            <ViewControl
-              items={viewItems}
-              paramsView={paramsView}
-              setParamsView={setParamsView}
-              isChanged={isChanged}
-              onSave={onSave}
-            />
-          )}
+      {!jsonEditorEnabled && (
+        <div className="flex flex-row justify-between mb-2">
+          <div className="flex flex-row gap-4 items-center">
+            <h1>{t(TabsI18nKey.Parameters)}</h1>
+            {showDropdown && (
+              <ViewControl
+                items={viewItems}
+                paramsView={paramsView}
+                setParamsView={setParamsView}
+                isChanged={isChanged}
+                onSave={onSave}
+              />
+            )}
+          </div>
+          <div className="flex flex-row gap-4">
+            {paramsView === ParamsView.TABLE && (
+              <DialButton
+                variant={ButtonVariant.Primary}
+                iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+                title={t(ButtonsI18nKey.Add)}
+                onClick={() => setIsAddClicked(true)}
+              />
+            )}
+          </div>
         </div>
-        <div className="flex flex-row gap-4">
-          {showResetToDefault && (
-            <DialButton
-              variant={ButtonVariant.Secondary}
-              iconBefore={<IconReload {...BASE_ICON_PROPS} />}
-              title={t(ButtonsI18nKey.ResetToDefault)}
-            />
-          )}
-          {showAdd && (
-            <DialButton
-              variant={ButtonVariant.Primary}
-              iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-              title={t(ButtonsI18nKey.Add)}
-            />
-          )}
-        </div>
-      </div>
+      )}
       <div className="flex-1 min-h-0">
-        {paramsView === ParamsView.TABLE && <TableView />}
-        {paramsView === ParamsView.FORM && <FormView />}
+        {paramsView !== ParamsView.UI && jsonEditorEnabled && (
+          <EntityJsonEditor
+            key={key}
+            entity={entity as BaseEntity}
+            setSelectedEntity={setSelectedEntity as Dispatch<SetStateAction<BaseEntity>>}
+            setIsChanged={setIsChanged}
+          />
+        )}
+        {paramsView === ParamsView.TABLE && (
+          <TableView
+            isAddClicked={isAddClicked}
+            setIsAddClicked={setIsAddClicked}
+            properties={appPropertiesTemp || []}
+            onChangeProperties={onChangeProperties}
+            isSkipRefresh={isSkipRefresh}
+          />
+        )}
+        <div className={classNames(paramsView === ParamsView.FORM ? 'block w-full h-full' : 'hidden')}>
+          {!scheme || !scheme?.properties || !Object.keys(scheme.properties).length ? (
+            <DialNoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
+          ) : (
+            <SchemaUiRenderer
+              schema={scheme as RJSFSchema}
+              data={entity?.applicationProperties}
+              onChangeConfiguration={onChangeConfiguration}
+              onGetSchemeDefaults={onGetSchemeDefaults}
+              readonly={
+                view === ApplicationRoute.ApplicationPublications || view === ApplicationRoute.ApplicationRunners
+              }
+            />
+          )}
+        </div>
         {paramsView === ParamsView.UI && (
           <FrameRenderer
             iframeUrl={targetUrl?.href ?? ''}

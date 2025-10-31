@@ -3,10 +3,12 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
-import { ButtonsI18nKey, DuplicateI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
 
 interface Props {
   isModalOpen: boolean;
@@ -16,9 +18,12 @@ interface Props {
 }
 
 const DuplicateScheme: FC<Props> = ({ onDuplicate, isModalOpen, onClose, entity }) => {
-  const t = useI18n();
+  const t = useI18n() as (t: string, props?: Record<string, string>) => string;
 
-  const [clonedEntity, setEntity] = useState<DialApplicationScheme>({ ...entity, $id: '' });
+  const [clonedEntity, setEntity] = useState<DialApplicationScheme>({
+    ...entity,
+    $id: getClonedEntityName(entity.$id),
+  });
   const { dispatch, isValid } = useSaveValidationContext();
 
   const onChangeId = useCallback(
@@ -44,7 +49,7 @@ const DuplicateScheme: FC<Props> = ({ onDuplicate, isModalOpen, onClose, entity 
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(DuplicateI18nKey.ApplicationRunner)}
+      title={t(getCloneTitle(ApplicationRoute.ApplicationRunners, t))}
       portalId="DuplicateScheme"
       open={isModalOpen}
       onSubmit={() => onDuplicate(clonedEntity)}
@@ -59,7 +64,11 @@ const DuplicateScheme: FC<Props> = ({ onDuplicate, isModalOpen, onClose, entity 
           entity={{ name: clonedEntity.$id }}
           onChangeEntity={(entity) => onChangeId(entity.name)}
         />
-        <DisplayNameControl displayName={clonedEntity['dial:applicationTypeDisplayName']} onChange={onChangeName} />
+        <DisplayNameControl
+          displayName={clonedEntity['dial:applicationTypeDisplayName']}
+          onChange={onChangeName}
+          required={true}
+        />
       </div>
     </DialFormPopup>
   );

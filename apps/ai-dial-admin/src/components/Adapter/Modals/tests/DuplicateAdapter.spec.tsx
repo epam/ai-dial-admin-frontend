@@ -1,6 +1,5 @@
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { DialAdapter } from '@/src/models/dial/adapter';
-import { PopUpState } from '@/src/types/pop-up';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import DuplicateAdapter from '../DuplicateAdapter';

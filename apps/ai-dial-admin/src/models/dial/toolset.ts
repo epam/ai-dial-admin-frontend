@@ -22,8 +22,29 @@ export interface ToolsetAuthSettings {
   clientSecret?: string;
   redirectUri?: string;
   authorizationEndpoint?: string;
+  codeChallengeMethod?: ToolsetCodeChallengeMethod;
   tokenEndpoint?: string;
   scopesSupported?: string[];
+
+  globalAuthStatus?: ToolsetAuthStatus;
+  userLevelAuthStatus?: ToolsetAuthStatus;
+}
+
+export enum ToolsetCodeChallengeMethod {
+  S256 = 'S256',
+  PLAIN = 'plain',
+}
+
+export enum ToolsetAuthCredentialLevel {
+  GLOBAL = 'global',
+  USER = 'user',
+  APP = 'app',
+}
+
+export enum ToolsetAuthStatus {
+  SIGNED_OUT = 'signed_out',
+  SIGNED_IN = 'signed_in',
+  FAILED = 'failed',
 }
 
 export enum ToolsetAuthType {

@@ -14,11 +14,11 @@ import { DialApplication } from '@/src/models/dial/application';
 import { DialKey } from '@/src/models/dial/key';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
-import { PopUpState } from '@/src/types/pop-up';
 import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { ENTITY_COLUMNS, getAvailableEntities, getEntitiesGridData } from '@/src/components/AddEntitiesTab/utils';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 
 interface Props {
   viewTitle?: string;
@@ -27,6 +27,7 @@ interface Props {
   roles?: DialRole[];
   keys?: DialKey[];
   customColumns?: ColDef[];
+  customActions?: ActionMenuOperationDeclaration<any>[];
   modalTitle?: string;
   emptyDataTitle?: string;
   onAdd?: (rows: EntitiesGridData[]) => void;
@@ -43,6 +44,7 @@ const AddEntitiesView: FC<Props> = ({
   keys,
   viewTitle,
   customColumns,
+  customActions,
   modalTitle,
   onAdd,
   onRemove,
@@ -56,15 +58,15 @@ const AddEntitiesView: FC<Props> = ({
   const data = getRelevantDataForEntity ? getRelevantDataForEntity(allEntities) : allEntities;
   const availableEntities = getAvailableEntities(data, allEntities);
 
-  const [modalState, setModalState] = useState(PopUpState.Closed);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const onOpenModal = useCallback(() => {
-    setModalState(PopUpState.Opened);
-  }, [setModalState]);
+    setIsModalOpen(true);
+  }, [setIsModalOpen]);
 
   const onCloseModal = useCallback(() => {
-    setModalState(PopUpState.Closed);
-  }, [setModalState]);
+    setIsModalOpen(false);
+  }, [setIsModalOpen]);
 
   const onAddEntity = useCallback(
     (rows: EntitiesGridData[]) => {
@@ -87,8 +89,11 @@ const AddEntitiesView: FC<Props> = ({
 
   const columns: ColDef[] = customColumns || ENTITY_COLUMNS(t);
   const columnDefs = useMemo<ColDef[]>(
-    () => [...columns, ACTION_COLUMN([getOpenInNewTabOperation(onOpen), getRemoveOperation(onRemoveEntity)])],
-    [columns, onOpen, onRemoveEntity],
+    () => [
+      ...columns,
+      ACTION_COLUMN([getOpenInNewTabOperation(onOpen), ...(customActions || []), getRemoveOperation(onRemoveEntity)]),
+    ],
+    [columns, customActions, onOpen, onRemoveEntity],
   );
 
   const onGridReady = (event: GridReadyEvent) => {
@@ -130,7 +135,7 @@ const AddEntitiesView: FC<Props> = ({
           <Grid additionalGridOptions={{ onGridReady }} />
         )}
       </div>
-      {modalState === PopUpState.Opened &&
+      {isModalOpen &&
         createPortal(
           <AddEntitiesGrid
             modalTitle={modalTitle || t(EntitiesI18nKey.AddEntities)}
@@ -140,7 +145,7 @@ const AddEntitiesView: FC<Props> = ({
               const { cellRenderer, ...definition } = c;
               return definition;
             })}
-            modalState={modalState}
+            isModalOpen={isModalOpen}
             entities={availableEntities}
             onClose={onCloseModal}
             onApply={onAddEntity}

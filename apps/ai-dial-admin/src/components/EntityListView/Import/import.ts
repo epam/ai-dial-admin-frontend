@@ -13,12 +13,12 @@ import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { ImportResult } from '@/src/models/import';
 import { Notification } from '@/src/models/notification';
 import { ParsedPrompts, PromptImportGridData } from '@/src/models/prompts';
-import { StepStatus } from '@/src/models/step';
 import { ImportStatus } from '@/src/types/import';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import FileNameCellRenderer from '@/src/components/Grid/CellRenderers/FileNameCellRenderer';
+import { StepStatus } from '@epam/ai-dial-ui-kit';
 
 /**
  * Generate notifications with results of JSON prompt results
@@ -83,10 +83,10 @@ export const getImportResults = (
  * @param {Map<string, FileImportMap>} map - map of selected files for import
  * @returns {StepStatus} - status string
  */
-export const getMultipleImportStatus = (map: Map<string, FileImportMap>): StepStatus => {
+export const getMultipleImportStatus = (map: Map<string, FileImportMap>): StepStatus | undefined => {
   const files = Array.from(map.values());
   if (files.length === 0) {
-    return StepStatus.INVALID;
+    return;
   } else if (files.some((value) => value.isInvalid)) {
     return StepStatus.ERROR;
   }
