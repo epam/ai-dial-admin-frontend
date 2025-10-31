@@ -1,22 +1,22 @@
 import { CreateI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { getCreateEntityTitle, getCreateNotificationDescription, getCreateNotificationTitle } from '../create-entity';
 
 describe('Create :: utils', () => {
   const tWithProps = (str: string, props?: Record<string, string>) => str + ' with props';
 
-  it('getCreateEntityTitle returns a string', () => {
+  test('getCreateEntityTitle returns a string', () => {
     expect(getCreateEntityTitle(ApplicationRoute.Applications, tWithProps)).toBe(`${CreateI18nKey.Title} with props`);
   });
 
-  it('getCreateNotificationTitle returns a string', () => {
+  test('getCreateNotificationTitle returns a string', () => {
     expect(getCreateNotificationTitle(ApplicationRoute.Interceptors, tWithProps)).toBe(
       `${CreateI18nKey.NotificationTitle} with props`,
     );
   });
 
-  it('getCreateNotificationDescription returns a string', () => {
+  test('getCreateNotificationDescription returns a string', () => {
     expect(getCreateNotificationDescription(ApplicationRoute.Interceptors, 'aa', tWithProps)).toBe(
       `${CreateI18nKey.NotificationDescription} with props`,
     );

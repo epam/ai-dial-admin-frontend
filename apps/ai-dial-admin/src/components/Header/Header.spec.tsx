@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
 import Header from './Header';
 
 vi.mock('next-auth/react', () => ({
@@ -9,12 +9,12 @@ vi.mock('next-auth/react', () => ({
 }));
 
 describe('Header', () => {
-  it('renders logo, user, and breadcrumbs', () => {
+  test('renders logo, user, and breadcrumbs', () => {
     render(<Header isEnableAuth={true} />);
     expect(screen.getByText('Admin')).toBeInTheDocument();
   });
 
-  it('calls toggleSidebar when menu button is clicked', () => {
+  test('calls toggleSidebar when menu button is clicked', () => {
     const { getByRole } = render(<Header isEnableAuth={false} />);
     const button = getByRole('button', { name: 'menu' });
     fireEvent.click(button);
