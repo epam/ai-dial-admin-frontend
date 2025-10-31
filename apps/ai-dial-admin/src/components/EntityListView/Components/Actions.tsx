@@ -11,7 +11,7 @@ import {
   getNotificationType,
 } from '@/src/components/EntityListView/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { DeleteI18nKey, ExportI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
+import { DeleteI18nKey, ExportI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -27,10 +27,10 @@ import { getListOfPathsToBulkDelete, getListOfPathsToMove } from '@/src/utils/fi
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { getBulkNotificationTitle } from '../../EntityView/Modals/Delete/utils';
 import BulkButtons from './BulkButtons';
 import Modals, { ModalType } from './Modals';
 import { preparePathForAsset } from './utils';
-import { getBulkNotificationTitle } from '../../EntityView/Modals/Delete/utils';
 
 interface Props<T> {
   names?: string[];
