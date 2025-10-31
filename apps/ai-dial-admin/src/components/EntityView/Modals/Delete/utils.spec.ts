@@ -42,7 +42,7 @@ describe('EntityView :: Delete :: utils', () => {
 
   test('getBulkNotificationTitle returns a string', () => {
     expect(getBulkNotificationTitle(ApplicationRoute.AssetApplication, tWithProps)).toBe(
-      `${DeleteI18nKey.Title} with props`,
+      `${DeleteI18nKey.NotificationTitle} with props`,
     );
   });
 
