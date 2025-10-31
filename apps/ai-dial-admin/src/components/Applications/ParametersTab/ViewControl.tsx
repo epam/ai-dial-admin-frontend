@@ -6,10 +6,9 @@ import {
   VisualizerConnectorRequest,
   VisualizerConnectorRequests,
 } from '@epam/ai-dial-shared';
-import { DialConfirmationPopup, SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup, SelectVariant, DialSelect, SelectOption, SelectSize } from '@epam/ai-dial-ui-kit';
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 
-import SecondaryDropdown from '@/src/components/Common/SecondaryDropdown/SecondaryDropdown';
 import { ButtonsI18nKey, CompareI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { useAppContext } from '@/src/context/AppContext';
@@ -89,11 +88,13 @@ const ViewControl: FC<Props> = ({ items, paramsView, setParamsView, onSave, isCh
 
   return (
     <>
-      <SecondaryDropdown
-        items={items}
+      <DialSelect
         prefix={`${t(CompareI18nKey.View)}: `}
-        selectedValue={paramsView}
-        onChange={onChange}
+        size={SelectSize.Sm}
+        variant={SelectVariant.Secondary}
+        options={items}
+        value={paramsView}
+        onChange={(v) => onChange(v as string)}
       />
       {createPortal(
         <DialConfirmationPopup

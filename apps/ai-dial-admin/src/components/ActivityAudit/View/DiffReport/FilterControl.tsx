@@ -1,10 +1,9 @@
 import { Dispatch, FC, SetStateAction, useCallback } from 'react';
-import { SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialSelect, SelectVariant, SelectOption, SelectSize } from '@epam/ai-dial-ui-kit';
 
 import { ActivityAuditI18nKey, CompareI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DiffView } from '@/src/types/activity-audit';
-import SecondaryDropdown from '@/src/components/Common/SecondaryDropdown/SecondaryDropdown';
 
 interface Props {
   diffView: string;
@@ -34,11 +33,13 @@ const FilterControl: FC<Props> = ({ diffView, setDiffView, isResources }) => {
   );
 
   return (
-    <SecondaryDropdown
-      items={items}
-      selectedValue={diffView}
+    <DialSelect
+      size={SelectSize.Sm}
+      variant={SelectVariant.Secondary}
+      options={items}
+      value={diffView}
       prefix={`${t(CompareI18nKey.View)}: `}
-      onChange={onChange}
+      onChange={(v) => onChange(v as string)}
     />
   );
 };

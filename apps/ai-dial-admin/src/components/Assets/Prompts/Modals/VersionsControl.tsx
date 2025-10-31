@@ -1,8 +1,7 @@
 import { FC, useCallback } from 'react';
 
-import { SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialSelect, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
 
-import SecondaryDropdown from '@/src/components/Common/SecondaryDropdown/SecondaryDropdown';
 import { CompareI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { CompareView } from '@/src/types/activity-audit';
@@ -28,7 +27,14 @@ const VersionsControl: FC<Props> = ({ version, setVersion, versions }) => {
   );
 
   return (
-    <SecondaryDropdown prefix={t(CompareI18nKey.Version)} items={items} selectedValue={version} onChange={onChange} />
+    <DialSelect
+      size={SelectSize.Sm}
+      variant={SelectVariant.Secondary}
+      options={items}
+      value={version}
+      onChange={(v) => onChange(v as string)}
+      prefix={t(CompareI18nKey.Version)}
+    />
   );
 };
 

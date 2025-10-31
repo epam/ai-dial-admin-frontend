@@ -2,10 +2,9 @@
 
 import { FC, useEffect, useState } from 'react';
 
-import { DialSwitch, SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialSelect, DialSwitch, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
-import SecondaryDropdown from '@/src/components/Common/SecondaryDropdown/SecondaryDropdown';
 import { EntityViewTab } from '@/src/components/EntityView/View/utils';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
@@ -74,9 +73,11 @@ const JsonToggles: FC<Props> = ({
         (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications) &&
         activeTab === EntityViewTab.Parameters
       ) ? (
-        <SecondaryDropdown
-          items={items}
-          selectedValue={selectedFormat}
+        <DialSelect
+          size={SelectSize.Sm}
+          variant={SelectVariant.Secondary}
+          options={items}
+          value={selectedFormat}
           onChange={(id) => setSelectedFormat?.(id as ExportFormat)}
         />
       ) : null}
