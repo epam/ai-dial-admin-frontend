@@ -1,7 +1,7 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
-import AddEntitiesView from '../AddEntitiesView';
 import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
+import AddEntitiesView from '../AddEntitiesView';
 
 // Mock createPortal to render modal content inline for test simplicity
 vi.mock('react-dom', () => ({
@@ -10,7 +10,7 @@ vi.mock('react-dom', () => ({
 }));
 
 describe('AddEntitiesView', () => {
-  it('renders the view title and entity count', () => {
+  test('renders the view title and entity count', () => {
     const customColumns = [{ field: 'custom', headerName: 'Custom' }];
     render(
       <AddEntitiesView
@@ -25,7 +25,7 @@ describe('AddEntitiesView', () => {
     expect(screen.getByText(EntitiesI18nKey.NoEntities)).toBeInTheDocument();
   });
 
-  it('calls onAdd when AddEntitiesGrid onApply is triggered', () => {
+  test('calls onAdd when AddEntitiesGrid onApply is triggered', () => {
     const onAdd = vi.fn();
     const models = [{ id: '1', name: 'Model1' }];
     render(<AddEntitiesView models={models} applications={[]} roles={[]} keys={[]} onAdd={onAdd} />);
@@ -37,14 +37,14 @@ describe('AddEntitiesView', () => {
     fireEvent.click(modalButtons[1]);
   });
 
-  it('calls onRemove when remove operation is triggered', () => {
+  test('calls onRemove when remove operation is triggered', () => {
     const onRemove = vi.fn();
     const models = [{ id: '1', name: 'Model1' }];
     render(<AddEntitiesView models={models} applications={[]} roles={[]} keys={[]} onRemove={onRemove} />);
     expect(typeof onRemove).toBe('function');
   });
 
-  it('renders with getRelevantDataForEntity', () => {
+  test('renders with getRelevantDataForEntity', () => {
     const getRelevantDataForEntity = vi.fn(() => []);
     render(
       <AddEntitiesView

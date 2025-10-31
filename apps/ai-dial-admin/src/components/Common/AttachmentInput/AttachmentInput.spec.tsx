@@ -1,6 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, test, vi } from 'vitest';
 
 import AttachmentInput from './AttachmentInput';
 import { AttachmentsI18nKey } from '@/src/constants/i18n';
@@ -26,14 +26,14 @@ const options = [
 ];
 
 describe('Common components - AttachmentInput', () => {
-  it('renders tags from initialValues', () => {
+  test('renders tags from initialValues', () => {
     render(<AttachmentInput availableItems={options} initialValues={['pdf']} />);
 
     expect(screen.getByText('PDF')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: AttachmentsI18nKey.UseAll })).toBeInTheDocument();
   });
 
-  it('filters suggestions while typing and adds one on click', async () => {
+  test('filters suggestions while typing and adds one on click', async () => {
     const onChange = vi.fn();
     render(<AttachmentInput availableItems={options} onChange={onChange} />);
 
@@ -50,7 +50,7 @@ describe('Common components - AttachmentInput', () => {
     expect(screen.queryByRole('list ')).toBeNull();
   });
 
-  it('selects all items with the “Select all” button and resets on remove', async () => {
+  test('selects all items with the “Select all” button and resets on remove', async () => {
     const onChange = vi.fn();
     render(<AttachmentInput availableItems={options} onChange={onChange} allValueLabel="ALL VALUES" />);
 

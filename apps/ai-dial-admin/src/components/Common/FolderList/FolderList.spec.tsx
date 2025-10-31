@@ -1,7 +1,7 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
-import FolderList from './FolderList';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
+import FolderList from './FolderList';
 
 const fakeContext = () => ({
   files: [],
@@ -16,7 +16,7 @@ const fakeContext = () => ({
 });
 
 describe('FolderList', () => {
-  it('renders no data message when files are empty', () => {
+  test('renders no data message when files are empty', () => {
     render(<FolderList context={fakeContext} />);
     expect(screen.getByText(EntitiesI18nKey.NoFolders)).toBeInTheDocument();
   });

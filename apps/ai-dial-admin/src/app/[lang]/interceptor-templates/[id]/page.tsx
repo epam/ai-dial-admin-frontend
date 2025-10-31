@@ -10,7 +10,7 @@ import { SaveValidationContextProvider } from '@/src/context/SaveValidationConte
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { getInterceptorsList } from '../../interceptors/actions';
+import { getInterceptorsList } from '@/src/app/[lang]/interceptors/actions';
 import { filterNames } from '@/src/utils/entities/filter-names';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';

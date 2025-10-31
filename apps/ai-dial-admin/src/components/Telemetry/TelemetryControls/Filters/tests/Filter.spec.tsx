@@ -1,13 +1,13 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import Filter from '../Filter';
 import { ApplicationRoute } from '@/src/types/routes';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
+import Filter from '../Filter';
 
 const baseFilterData = { type: 'Project', condition: 'Equal', value: 'val' };
 const baseDropdownData = { projects: [], entities: [] };
 
 describe('Filter', () => {
-  it('renders filter type, condition icon, and value', () => {
+  test('renders filter type, condition icon, and value', () => {
     render(
       <Filter
         id={1}
@@ -21,7 +21,7 @@ describe('Filter', () => {
     expect(screen.getByText('val')).toBeInTheDocument();
   });
 
-  it('calls onClose when close button is clicked', () => {
+  test('calls onClose when close button is clicked', () => {
     const onClose = vi.fn();
     render(
       <Filter
@@ -37,7 +37,7 @@ describe('Filter', () => {
     expect(onClose).toHaveBeenCalledWith(2);
   });
 
-  it('calls onEdit when addFilter is triggered', () => {
+  test('calls onEdit when addFilter is triggered', () => {
     const onEdit = vi.fn();
     // AddFilter is mocked to just render children, so we call addFilter manually
     render(
