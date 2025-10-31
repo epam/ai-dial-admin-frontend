@@ -1,6 +1,11 @@
-import { ToolsetAuthType } from '@/src/models/dial/toolset';
+import { ToolsetAuthStatus, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { describe, expect, test } from 'vitest';
-import { encodeToolsetRedirectState, getToolsetBasicBody, getToolsetSignInBody } from '../toolset-auth';
+import {
+  encodeToolsetRedirectState,
+  getToolsetBasicBody,
+  getToolsetSignInBody,
+  isLoggedInToToolset,
+} from '../toolset-auth';
 
 describe('toolset-auth utils', () => {
   test('getToolsetSignInBody returns OAUTH body with code', () => {
@@ -35,5 +40,42 @@ describe('toolset-auth utils', () => {
     expect(typeof encoded).toBe('string');
     // Should be base64url (no +, /, =)
     expect(encoded).not.toMatch(/[+/=]/);
+  });
+});
+
+describe('isLoggedInToToolset', () => {
+  test('returns true if userLevelAuthStatus is SIGNED_IN', () => {
+    const toolset = {
+      authSettings: {
+        userLevelAuthStatus: ToolsetAuthStatus.SIGNED_IN,
+        globalAuthStatus: ToolsetAuthStatus.SIGNED_OUT,
+      },
+    } as any;
+    expect(isLoggedInToToolset(toolset)).toBe(true);
+  });
+
+  test('returns true if globalAuthStatus is SIGNED_IN', () => {
+    const toolset = {
+      authSettings: {
+        userLevelAuthStatus: ToolsetAuthStatus.SIGNED_OUT,
+        globalAuthStatus: ToolsetAuthStatus.SIGNED_IN,
+      },
+    } as any;
+    expect(isLoggedInToToolset(toolset)).toBe(true);
+  });
+
+  test('returns false if both are SIGNED_OUT', () => {
+    const toolset = {
+      authSettings: {
+        userLevelAuthStatus: ToolsetAuthStatus.SIGNED_OUT,
+        globalAuthStatus: ToolsetAuthStatus.SIGNED_OUT,
+      },
+    } as any;
+    expect(isLoggedInToToolset(toolset)).toBe(false);
+  });
+
+  test('returns false if authSettings is missing', () => {
+    const toolset = {} as any;
+    expect(isLoggedInToToolset(toolset)).toBe(false);
   });
 });

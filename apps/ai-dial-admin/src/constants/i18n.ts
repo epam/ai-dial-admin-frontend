@@ -923,6 +923,7 @@ export enum EntityFieldsI18nKey {
   redirectUri = 'EntityFields.redirectUri',
   authorizationEndpoint = 'EntityFields.authorizationEndpoint',
   authenticationType = 'EntityFields.authenticationType',
+  authentication = 'EntityFields.authentication',
   tokenEndpoint = 'EntityFields.tokenEndpoint',
   authSettings = 'EntityFields.authSettings',
   share = 'EntityFields.share',
@@ -960,6 +961,10 @@ export enum ToolsetI18nKey {
   WithLoginAndConfig = 'Toolset.WithLoginAndConfig',
   WithoutLogin = 'Toolset.WithoutLogin',
   LogIn = 'Toolset.LogIn',
+  LogOut = 'Toolset.LogOut',
   AsUser = 'Toolset.AsUser',
   AsAdmin = 'Toolset.AsAdmin',
+  LoggedOut = 'Toolset.LoggedOut',
+  UserLoggedIn = 'Toolset.UserLoggedIn',
+  AdminLoggedIn = 'Toolset.AdminLoggedIn',
 }
