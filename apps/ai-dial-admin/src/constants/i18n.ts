@@ -723,6 +723,7 @@ export enum ErrorI18nKey {
   DescriptionLength = 'Error.DescriptionLength',
   DisplayNameErrorModel = 'Error.DisplayNameErrorModel',
   NameExists = 'Error.NameExists',
+  DisplayNameExists = 'Error.DisplayNameExists',
   Unique = 'Error.Unique',
   Version = 'Error.Version',
   NameVersionCombination = 'Error.NameVersionCombination',

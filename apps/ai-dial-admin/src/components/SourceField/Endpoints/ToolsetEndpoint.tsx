@@ -39,6 +39,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModa
           fieldTitle={t(EntitiesI18nKey.ExternalEndpoint)}
           endpoint={entity.endpoint}
           onChange={(endpoint) => onChange?.({ ...entity, endpoint })}
+          required={true}
         />
       )}
       {!isModal && (

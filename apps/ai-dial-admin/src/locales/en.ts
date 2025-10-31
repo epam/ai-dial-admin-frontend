@@ -934,6 +934,7 @@ export default {
     WarningEndpoint: 'The endpoint uses HTTP instead of HTTPS. This may expose data to security risks.',
     DescriptionLength: 'User can add any characters, but not more than 2048.',
     NameExists: 'This name already exists.',
+    DisplayNameExists: 'This display name already exists.',
     Unique: 'This field must be unique.',
     Version: 'For a model with this Display name, specifying a version is mandatory.',
     NameVersionCombination: 'This combination of name and version already exists. Specify another',

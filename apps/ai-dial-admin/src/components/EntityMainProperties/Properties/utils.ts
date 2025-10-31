@@ -19,6 +19,10 @@ export const getDisplayNameError = (
     return names.includes(displayName) && !version ? t(ErrorI18nKey.DisplayNameErrorModel) : '';
   }
 
+  if (view === ApplicationRoute.Applications || view === ApplicationRoute.Toolsets) {
+    return names.includes(displayName) ? t(ErrorI18nKey.DisplayNameExists) : '';
+  }
+
   return '';
 };
 
