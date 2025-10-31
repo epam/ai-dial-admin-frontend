@@ -2,7 +2,6 @@
 
 import { FC } from 'react';
 
-import ErrorText from '@/src/components/Common/ErrorText/ErrorText';
 import Field from '@/src/components/Common/Field/Field';
 import DropdownAutocomplete, { DropdownAutocompleteProps } from './DropdownAutocomplete';
 import { DialErrorText } from '@epam/ai-dial-ui-kit';
