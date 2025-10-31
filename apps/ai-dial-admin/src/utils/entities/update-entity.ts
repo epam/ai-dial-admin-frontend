@@ -4,6 +4,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 const createEntityMap: Record<string, UpdateI18nKey> = {
   [ApplicationRoute.Models]: UpdateI18nKey.Model,
   [ApplicationRoute.Applications]: UpdateI18nKey.Application,
+  [ApplicationRoute.AssetsApplications]: UpdateI18nKey.Application,
   [ApplicationRoute.ApplicationRunners]: UpdateI18nKey.ApplicationRunner,
   [ApplicationRoute.Keys]: UpdateI18nKey.Key,
   [ApplicationRoute.Roles]: UpdateI18nKey.Role,
@@ -12,6 +13,7 @@ const createEntityMap: Record<string, UpdateI18nKey> = {
   [ApplicationRoute.Routes]: UpdateI18nKey.Route,
   [ApplicationRoute.Adapters]: UpdateI18nKey.Adapter,
   [ApplicationRoute.Toolsets]: UpdateI18nKey.Toolsets,
+  [ApplicationRoute.AssetsToolsets]: UpdateI18nKey.Toolsets,
   [ApplicationRoute.InterceptorTemplates]: UpdateI18nKey.InterceptorTemplate,
 };
 
