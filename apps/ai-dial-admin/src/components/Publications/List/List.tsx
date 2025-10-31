@@ -10,7 +10,7 @@ import { getPublicationColumns } from '@/src/constants/grid-columns/grid-columns
 import { useI18n } from '@/src/locales/client';
 import { Publication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
-import { onOpenInNewTab, getEntityPath } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 interface Props<T> {
   data: T[];
@@ -33,7 +33,7 @@ const PublicationsList = <T extends Publication>({ data, route }: Props<T>) => {
   const gridOptions: GridOptions = {
     onCellClicked: (e) => {
       if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
-        router.push(`${route}/${getEntityPath(route, e.data)}`);
+        router.push(getUrnForEntity(route, e.data));
       }
     },
   };

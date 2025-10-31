@@ -73,7 +73,7 @@ const CREATED_AT_COLUMN: ColDef = {
 };
 
 const UPDATED_AT_COLUMN = {
-  field: 'updatedAT',
+  field: 'updatedAt',
   headerName: 'Updated time',
   hide: false,
   ...dateTimeColumn,

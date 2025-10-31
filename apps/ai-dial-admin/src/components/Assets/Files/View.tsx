@@ -3,9 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
+import { DialTabs } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
-import { DialTabs } from '@epam/ai-dial-ui-kit';
 
 import { moveFiles, removeFile } from '@/src/app/[lang]/files/actions';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
@@ -18,7 +18,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { addTrailingSlash, changePath } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import FileProperties from './Properties';
 
 interface Props {
@@ -60,10 +60,10 @@ const FileView: FC<Props> = ({ originalFile }) => {
     moveFiles([originalFile.path], selectedFile.folderId).then((r) => {
       if (r.every((response) => response.success)) {
         router.push(
-          `${ApplicationRoute.Files}/${getEntityPath(ApplicationRoute.Files, {
+          getUrnForEntity(ApplicationRoute.Files, {
             name: getNameExtensionFromFile(originalFile.name as string).name,
             path: changePath(originalFile.path, selectedFile.folderId),
-          })}`,
+          }),
         );
         fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
       }
