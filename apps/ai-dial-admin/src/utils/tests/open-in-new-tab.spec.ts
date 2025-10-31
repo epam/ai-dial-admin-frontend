@@ -1,10 +1,10 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
-import { getEntityPath,getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { getEntityPath, getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 
 describe('getUrnForEntity', () => {
-   test('returns correct URN for Prompts', () => {
+  test('returns correct URN for Prompts', () => {
     const entity = { path: 'folder/PromptName__v1', name: 'PromptName', folderId: 'folder', version: 'v1' };
     const urn = getUrnForEntity(ApplicationRoute.Prompts, entity);
     const originalRoute = ApplicationRoute.Prompts.split('/')?.[1];
@@ -12,21 +12,21 @@ describe('getUrnForEntity', () => {
     expect(urn).toContain(encodeURIComponent('PromptName'));
   });
 
-   test('returns correct URN for ActivityAudit', () => {
+  test('returns correct URN for ActivityAudit', () => {
     const entity = { activityId: 'act123' };
     const urn = getUrnForEntity(ApplicationRoute.ActivityAudit, entity);
     const originalRoute = ApplicationRoute.ActivityAudit.split('/')?.[1];
     expect(urn).toBe(`/${originalRoute}/act123`);
   });
 
-   test('returns correct URN for ModelDeployments with entityType', () => {
+  test('returns correct URN for ModelDeployments with entityType', () => {
     const entity = { id: 'modelId' };
     const urn = getUrnForEntity(ApplicationRoute.ModelDeployments, entity, 'MODEL');
     const originalRoute = ApplicationRoute.ModelDeployments.split('/')?.[1];
     expect(urn).toBe(`/${originalRoute}/${encodeURIComponent('modelId')}?entityType=MODEL`);
   });
 
-   test('returns correct URN for default case', () => {
+  test('returns correct URN for default case', () => {
     const entity = { name: 'DefaultName' };
     const urn = getUrnForEntity('OtherRoute' as any, entity);
     const originalRoute = 'OtherRoute'.split('/')?.[1];
