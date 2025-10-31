@@ -152,7 +152,7 @@ const Actions = <T extends object>({
         router.refresh();
       }
     });
-  }, [bulkDelete, folderContext, route, setIsBulkView, showNotification, t]);
+  }, [bulkDelete, folderContext, route, router, setIsBulkView, showNotification, t]);
 
   const onExport = useCallback(
     (exportType?: ImportFileType) => {
