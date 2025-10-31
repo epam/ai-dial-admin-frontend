@@ -10,7 +10,7 @@ const ExtraDataCellRenderer: FC<ICellRendererParams> = (props: ICellRendererPara
   return (
     <div className="h-6 w-full flex items-center justify-between">
       <div className="truncate mr-2">{props.value}</div>
-      {isJson && <DialFileIcon extension="json" />}
+      {isJson && <DialFileIcon extension="json" cssClass="text-secondary" />}
     </div>
   );
 };

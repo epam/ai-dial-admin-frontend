@@ -1,7 +1,7 @@
 'use client';
 
 import { FC, useCallback, useEffect, useState } from 'react';
-import { IconArrowNarrowRight, IconZip } from '@tabler/icons-react';
+import { IconArrowNarrowRight } from '@tabler/icons-react';
 import {
   ButtonVariant,
   RadioButtonWithContent,
@@ -118,7 +118,7 @@ const Files: FC<Props> = ({
               multiple={false}
               fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
               fileCountError={t(ImportI18nKey.ArchiveDescription)}
-              iconBeforeInput={<IconZip className="text-secondary" {...BASE_ICON_PROPS} />}
+              iconBeforeInput={<DialFileIcon extension="zip" cssClass="text-secondary" />}
               acceptTypes=".zip, application/x-zip-compressed, application/zip"
               onChange={onChangeFile}
             />
@@ -130,7 +130,7 @@ const Files: FC<Props> = ({
               emptyTextSecondLine={t(BasicI18nKey.Or)}
               emptyButtonLabel={t(ButtonsI18nKey.Browse)}
               files={files}
-              iconBeforeInput={<DialFileIcon extension="json" />}
+              iconBeforeInput={<DialFileIcon extension="json" cssClass="text-secondary" />}
               acceptTypes="application/JSON"
               fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
               isInvalid={isLargeFile}

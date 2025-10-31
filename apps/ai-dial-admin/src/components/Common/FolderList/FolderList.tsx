@@ -217,12 +217,12 @@ const FolderList: FC<Props> = ({
                   <IconFolder
                     {...BASE_ICON_PROPS}
                     className={classNames(
-                      'flex-shrink-0',
+                      'flex-shrink-0 mr-2',
                       isMoveError ? 'text-error' : '',
                       isMovableFolder || isFolderDelete ? 'text-accent-primary' : '',
                     )}
                   />
-                  <DialEllipsisTooltip text={name} />
+                  <DialEllipsisTooltip text={name} cssClass="text-primary" />
                 </div>
 
                 {showFolderActions && (
