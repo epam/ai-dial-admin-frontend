@@ -23,9 +23,10 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { getErrorNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import PromptProperties from './Properties';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
   originalPrompt: DialPrompt;
@@ -92,6 +93,12 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
       }
       createPrompt(updatedEntity as DialPrompt).then((res) => {
         if (res.success) {
+          showNotification(
+            getSuccessNotification(
+              getUpdateNotificationTitle(ApplicationRoute.Prompts, t),
+              getUpdateNotificationDescription(ApplicationRoute.Prompts, updatedEntity.name, t),
+            ),
+          );
           if (isNeedToMove) {
             const responsePrompt = res.response as DialPrompt;
             getPrompts(addTrailingSlash(responsePrompt.folderId)).then((prompts) => {
@@ -116,7 +123,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
         }
       });
     },
-    [selectedPrompt, originalPrompt, router, fetchFiles, showNotification],
+    [selectedPrompt, originalPrompt, showNotification, t, router, fetchFiles],
   );
 
   const onChangeEntity = useCallback(
