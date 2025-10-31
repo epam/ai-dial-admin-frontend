@@ -1,9 +1,7 @@
 import { IconChevronDown } from '@tabler/icons-react';
-import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
-import { FC, useEffect, useState } from 'react';
+import { DialConfirmationPopup, DialDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { FC, useEffect, useMemo, useState } from 'react';
 
-import Dropdown from '@/src/components/Common/Dropdown/Dropdown';
-import DropdownMenuItem from '@/src/components/Common/Dropdown/DropdownItem';
 import SettingsModal from '@/src/components/SettingsModal/SettingsModal';
 import { AuthI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -32,6 +30,7 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
   };
 
   const handleSettingsClick = () => setIsSettingsModalOpen(true);
+
   const handleLogOutClick = () => {
     if (!session) {
       handleLogout();
@@ -53,6 +52,28 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
     return () => window.clearTimeout(timeoutId);
   }, [isOpen]);
 
+  const dropdownItems: DropdownItem[] = useMemo(() => {
+    const res = [];
+    if (themes?.length) {
+      res.push({ key: 'settings', label: <SettingsItem />, onClick: handleSettingsClick });
+    }
+
+    if (isEnableAuth) {
+      res.push({
+        key: 'logout',
+        label: <LogoutItem session={session} />,
+        onClick: () => {
+          if (!session) {
+            handleLogout();
+          } else {
+            setIsLogoutConfirmationOpen(true);
+          }
+        },
+      });
+    }
+    return res;
+  }, [handleLogout, isEnableAuth, session, themes?.length]);
+
   return (
     <>
       {isMobile ? (
@@ -64,36 +85,15 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
           </div>
         </div>
       ) : (
-        <Dropdown
-          className="flex items-center"
-          onOpenChange={setIsOpen}
-          trigger={
-            <div role="menuitem" className="flex min-w-[120px] cursor-pointer items-center justify-between gap-2 pr-3">
-              <UserInfo session={session} />
-              <IconChevronDown
-                {...BASE_ICON_PROPS}
-                className={`shrink-0 text-primary transition-all ${isOpen ? 'rotate-180' : ''}`}
-              />
-            </div>
-          }
-        >
-          {themes?.length && (
-            <DropdownMenuItem
-              id="settings-menu-item"
-              className="hover:bg-accent-primary-alpha"
-              item={<SettingsItem />}
-              onClick={handleSettingsClick}
+        <DialDropdown menu={{ items: dropdownItems }} onOpenChange={(open) => setIsOpen(open)}>
+          <div role="menuitem" className="flex min-w-[120px] cursor-pointer items-center justify-between gap-2 pr-3">
+            <UserInfo session={session} />
+            <IconChevronDown
+              {...BASE_ICON_PROPS}
+              className={`shrink-0 text-primary transition-all ${isOpen ? 'rotate-180' : ''}`}
             />
-          )}
-          {isEnableAuth && (
-            <DropdownMenuItem
-              id="logout-menu-item"
-              className="hover:bg-accent-primary-alpha"
-              item={<LogoutItem session={session} />}
-              onClick={handleLogOutClick}
-            />
-          )}
-        </Dropdown>
+          </div>
+        </DialDropdown>
       )}
       {isLogoutConfirmationOpen && (
         <DialConfirmationPopup
