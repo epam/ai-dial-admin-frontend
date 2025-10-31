@@ -39,7 +39,7 @@ const LineChart: FC<Props> = ({ getData, refreshTime }) => {
 
     fetchData();
 
-    const timeout = refreshOptionsConfig.find((item) => item?.id === refreshTime)?.timeout;
+    const timeout = refreshOptionsConfig.find((item) => item?.value === refreshTime)?.timeout;
     if (!timeout) {
       return;
     }

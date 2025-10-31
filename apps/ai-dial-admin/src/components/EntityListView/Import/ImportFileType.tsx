@@ -1,22 +1,19 @@
 import { Dispatch, FC, SetStateAction, useMemo } from 'react';
 
-import { IconFileTypeZip } from '@tabler/icons-react';
 import {
   DialRadioGroup,
   DialSwitch,
   RadioGroupOrientation,
   RadioButtonWithContent,
   DialLoadFileAreaField,
-  DialIcon,
+  DialFileIcon,
 } from '@epam/ai-dial-ui-kit';
 
-import Json from '@/public/images/icons/file/json.svg';
 import Field from '@/src/components/Common/Field/Field';
 import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ImportFileType } from '@/src/types/import';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
-import { getIcon } from '@/src/utils/files/icon';
 import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
@@ -57,7 +54,7 @@ const ImportFileTypeSelector: FC<Props> = ({
   }, [t, route]);
 
   const getFileIcon = (name: string) => {
-    return getIcon(getNameExtensionFromFile(name).extension);
+    return <DialFileIcon extension={getNameExtensionFromFile(name).extension} />;
   };
 
   return (
@@ -95,7 +92,7 @@ const ImportFileTypeSelector: FC<Props> = ({
             emptyButtonLabel={t(ButtonsI18nKey.Browse)}
             maxFilesCount={1}
             multiple={false}
-            iconBeforeInput={<IconFileTypeZip width={18} height={18} className="text-secondary" />}
+            iconBeforeInput={<DialFileIcon extension="zip" cssClass="text-secondary" />}
             fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
             fileCountError={t(ImportI18nKey.ArchiveDescription)}
             acceptTypes="application/zip, .zip, application/x-zip-compressed"
@@ -110,7 +107,7 @@ const ImportFileTypeSelector: FC<Props> = ({
             emptyTextSecondLine={t(BasicI18nKey.Or)}
             emptyButtonLabel={t(ButtonsI18nKey.Browse)}
             files={files}
-            iconBeforeInput={<DialIcon icon={<Json />} className="text-secondary" />}
+            iconBeforeInput={<DialFileIcon extension="json" cssClass="text-secondary" />}
             acceptTypes="application/json"
             fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
             isInvalid={isInvalid}

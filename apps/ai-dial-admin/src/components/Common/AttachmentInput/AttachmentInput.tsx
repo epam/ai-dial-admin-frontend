@@ -4,10 +4,9 @@ import { FC, KeyboardEvent, useEffect, useRef, useState } from 'react';
 
 import classNames from 'classnames';
 import { isEqual } from 'lodash';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialTag } from '@epam/ai-dial-ui-kit';
 
 import Field from '@/src/components/Common/Field/Field';
-import Tag from '@/src/components/Common/TagInput/Tag';
 import { AttachmentsI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
@@ -169,7 +168,7 @@ const AttachmentInput: FC<Props> = ({
       <Field fieldTitle={fieldTitle} optional={optional} htmlFor={elementId} />
       {allSelected ? (
         <div className="flex">
-          <Tag key="all-values" tag={allValueLabel || ''} remove={() => removeAttachment(0)} />
+          <DialTag key="all-values" tag={allValueLabel || ''} remove={() => removeAttachment(0)} />
         </div>
       ) : (
         <div className={classNames('flex flex-row gap-2 items-center w-full', disable && 'pointer-events-none')}>
@@ -179,7 +178,7 @@ const AttachmentInput: FC<Props> = ({
               className={classNames('flex flex-wrap items-start gap-2', wraps ? 'flex-col-reverse' : 'flex-row')}
             >
               {selected.map((att, idx) => (
-                <Tag key={att.value} tag={att.label} remove={() => removeAttachment(idx)} />
+                <DialTag key={att.value} tag={att.label} remove={() => removeAttachment(idx)} />
               ))}
               <div className="flex items-center gap-2 flex-1 min-w-[180px]">
                 <input
