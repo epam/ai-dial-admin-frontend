@@ -58,9 +58,9 @@ export async function getAssetTools(name: string) {
   return assetsApi.getTools(name, token);
 }
 
-export async function signInToolset(toolset: AssetToolset, type: ToolsetAuthCredentialLevel) {
+export async function signInToolset(toolset: AssetToolset, type: ToolsetAuthCredentialLevel, authCode?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.signInToolset(toolset, type, token);
+  return assetsApi.signInToolset(toolset, type, token, authCode);
 }
 
 export async function signOutToolset(toolset: AssetToolset, type: ToolsetAuthCredentialLevel) {
