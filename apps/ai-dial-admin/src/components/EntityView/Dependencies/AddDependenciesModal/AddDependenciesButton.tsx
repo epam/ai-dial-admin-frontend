@@ -1,9 +1,8 @@
 'use client';
 import { FC, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { ButtonVariant, DialButtonDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 
-import Dropdown from '@/src/components/Common/Dropdown/Dropdown';
-import DropdownMenuItem from '@/src/components/Common/Dropdown/DropdownItem';
 import { ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
@@ -20,10 +19,15 @@ interface Props {
 
 const AddDependenciesButton: FC<Props> = ({ availableModels, availableApplications, addDependency }) => {
   const t = useI18n() as (v: string) => string;
-  const dropdownItems = [
-    { id: EntityType.MODEL, name: t(MenuI18nKey.Models) },
-    { id: EntityType.APPLICATION, name: t(MenuI18nKey.Applications) },
+  const dropdownItems: DropdownItem[] = [
+    { key: EntityType.MODEL, label: t(MenuI18nKey.Models), onClick: () => onClick(EntityType.MODEL) },
+    {
+      key: EntityType.APPLICATION,
+      label: t(MenuI18nKey.Applications),
+      onClick: () => onClick(EntityType.APPLICATION),
+    },
   ];
+
   const [entityType, setEntityType] = useState<EntityType>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [availableEntities, setAvailableEntities] = useState<EntitiesGridData[]>([]);
@@ -41,18 +45,7 @@ const AddDependenciesButton: FC<Props> = ({ availableModels, availableApplicatio
 
   return (
     <>
-      <Dropdown
-        listClassName={'w-[140px]'}
-        selectedClassName="primary flex items-center font-semibold py-[9px] cursor-pointer"
-        selectedValue={{
-          id: ButtonsI18nKey.Add,
-          name: t(ButtonsI18nKey.Add),
-        }}
-      >
-        {dropdownItems.map((item) => (
-          <DropdownMenuItem key={item.name} dropdownItem={item} onClick={() => onClick(item.id)} />
-        ))}
-      </Dropdown>
+      <DialButtonDropdown title={t(ButtonsI18nKey.Add)} items={dropdownItems} variant={ButtonVariant.Primary} />
 
       {isModalOpen &&
         createPortal(
