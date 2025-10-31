@@ -18,6 +18,7 @@ import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/gr
 import { ENTITY_COLUMNS, getAvailableEntities, getEntitiesGridData } from '@/src/components/AddEntitiesTab/utils';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 
 interface Props {
   viewTitle?: string;
@@ -26,6 +27,7 @@ interface Props {
   roles?: DialRole[];
   keys?: DialKey[];
   customColumns?: ColDef[];
+  customActions?: ActionMenuOperationDeclaration<any>[];
   modalTitle?: string;
   emptyDataTitle?: string;
   onAdd?: (rows: EntitiesGridData[]) => void;
@@ -42,6 +44,7 @@ const AddEntitiesView: FC<Props> = ({
   keys,
   viewTitle,
   customColumns,
+  customActions,
   modalTitle,
   onAdd,
   onRemove,
@@ -86,8 +89,11 @@ const AddEntitiesView: FC<Props> = ({
 
   const columns: ColDef[] = customColumns || ENTITY_COLUMNS(t);
   const columnDefs = useMemo<ColDef[]>(
-    () => [...columns, ACTION_COLUMN([getOpenInNewTabOperation(onOpen), getRemoveOperation(onRemoveEntity)])],
-    [columns, onOpen, onRemoveEntity],
+    () => [
+      ...columns,
+      ACTION_COLUMN([getOpenInNewTabOperation(onOpen), ...(customActions || []), getRemoveOperation(onRemoveEntity)]),
+    ],
+    [columns, customActions, onOpen, onRemoveEntity],
   );
 
   const onGridReady = (event: GridReadyEvent) => {

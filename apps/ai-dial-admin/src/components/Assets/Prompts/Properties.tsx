@@ -188,7 +188,7 @@ const PromptProperties: FC<Props> = ({
             {prompt.author && <LabelledText label={t(EntitiesI18nKey.Author)} text={prompt.author} />}
             <LabelledText
               label={t(EntityFieldsI18nKey.updatedAt)}
-              text={formatDateTimeToLocalString(prompt.updateTime)}
+              text={formatDateTimeToLocalString(prompt.updatedAt)}
             />
           </>
         )}

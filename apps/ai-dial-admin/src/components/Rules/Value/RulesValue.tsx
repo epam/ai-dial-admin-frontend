@@ -3,9 +3,8 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
 import classNames from 'classnames';
-import { DialRemoveButton, DialSelectField, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialRemoveButton, DialSelectField, DialTagInput, DialTextInputField } from '@epam/ai-dial-ui-kit';
 
-import TagInput from '@/src/components/Common/TagInput/TagInput';
 import { BasicI18nKey, ErrorI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialRule, RuleFunction } from '@/src/models/dial/rule';
@@ -135,7 +134,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
               elementCssClass="h-[38px]"
             />
           ) : (
-            <TagInput
+            <DialTagInput
               elementId="rule-values"
               fieldTitle={isFirstLine ? t(BasicI18nKey.Value) : ''}
               placeholder={t(FoldersI18nKey.ValuePlaceholder)}

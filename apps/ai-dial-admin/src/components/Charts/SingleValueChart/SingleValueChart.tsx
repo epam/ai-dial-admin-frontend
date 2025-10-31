@@ -35,7 +35,7 @@ const SingleValueChart: FC<Props> = ({ title, getData, unit, query, refreshTime 
 
     fetch();
 
-    const timeout = refreshOptionsConfig.find((item) => item?.id === refreshTime)?.timeout;
+    const timeout = refreshOptionsConfig.find((item) => item?.value === refreshTime)?.timeout;
     if (!timeout) {
       return;
     }

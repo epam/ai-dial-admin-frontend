@@ -39,7 +39,9 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
     [t],
   );
   const [sourceType, setSourceType] = useState<SelectOption | undefined>(
-    entity.endpoint || !entity.customAppSchemaId ? sources[0] : sources[1],
+    entity.endpoint || (!entity.customAppSchemaId && !(entity as AssetApp).applicationTypeSchemaId)
+      ? sources[0]
+      : sources[1],
   );
   const { dispatch } = useSaveValidationContext();
 

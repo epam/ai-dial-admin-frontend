@@ -8,6 +8,7 @@ import { getToolset } from '@/src/app/[lang]/assets-toolsets/actions';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import Defaults from '@/src/components/Defaults/Defaults';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
+import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
 import MaxRetryAttempts from '@/src/components/EntityMainProperties/BaseProperties/MaxRetryAttempts';
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
@@ -79,6 +80,13 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, runners, o
   return (
     <div className="h-full flex flex-col w-full gap-y-6">
       <div className="flex flex-col gap-y-6">
+        <div className="lg:w-[35%]">
+          <DisplayNameControl
+            displayName={asset.displayName}
+            required={true}
+            onChange={(displayName) => onChange({ ...asset, displayName })}
+          />
+        </div>
         <div className="flex items-end gap-4">
           <div className="w-[105px]">
             <DialSelectField
@@ -126,6 +134,7 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, runners, o
               onChangeEntity={onChange as (entity: DialApplication) => void}
               runners={runners}
               isEntityImmutable={true}
+              view={view}
             />
             <EntityAttachments
               entity={asset as DialApplication}

@@ -1,5 +1,5 @@
 import { ModelViewI18nKey } from '@/src/constants/i18n';
-import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_KEY, NO_LIMITS_VALUE } from '@/src/constants/role';
+import { UNLIMITED_ACCEPTED_USERS, NO_LIMITS_KEY, UNLIMITED_VALUE, UNLIMITED_KEY } from '@/src/constants/role';
 import { PricingType } from '@/src/models/dial/model';
 import { ActivityAuditResourceType, DiffStatus } from '@/src/types/activity-audit';
 import { describe, expect, test } from 'vitest';
@@ -267,7 +267,7 @@ describe('Activity audit :: fillShareValues', () => {
     expect(diffs[0].status).toBeUndefined();
   });
 
-  test('should handle NO_LIMITS_VALUE correctly and convert it to NO_LIMITS_KEY', () => {
+  test('should handle UNLIMITED_VALUE correctly and convert it to NO_LIMITS_KEY', () => {
     const diffs: any[] = [];
     const v2 = { limit: NO_LIMITS_KEY };
 
@@ -333,12 +333,12 @@ describe('Activity audit :: convertShareValue', () => {
     expect(convertShareValue(null, 'invitationTtl', 'anyKey')).toBe(NO_LIMITS_KEY);
   });
 
-  test('should return NO_LIMITS_KEY when value equals NO_LIMITS_VALUE', () => {
-    expect(convertShareValue(NO_LIMITS_VALUE, 'invitationTtl', 'anyKey')).toBe(NO_LIMITS_KEY);
+  test('should return NO_LIMITS_KEY when value equals UNLIMITED_VALUE', () => {
+    expect(convertShareValue(UNLIMITED_VALUE, 'invitationTtl', 'anyKey')).toBe(UNLIMITED_KEY);
   });
 
-  test('should return NO_LIMITS_KEY when value equals NO_LIMITS_ACCEPTED_USERS', () => {
-    expect(convertShareValue(NO_LIMITS_ACCEPTED_USERS, 'invitationTtl', 'anyKey')).toBe(NO_LIMITS_KEY);
+  test('should return NO_LIMITS_KEY when value equals UNLIMITED_ACCEPTED_USERS', () => {
+    expect(convertShareValue(UNLIMITED_ACCEPTED_USERS, 'invitationTtl', 'anyKey')).toBe(UNLIMITED_KEY);
   });
 
   test('should return default value from sharingDefaults when value is falsy and key is provided', () => {

@@ -41,7 +41,7 @@ const TelemetryGrid: FC<Props> = ({ columnDefs, title, getData, query, refreshTi
 
     fetch();
 
-    const timeout = refreshOptionsConfig.find((item) => item?.id === refreshTime)?.timeout;
+    const timeout = refreshOptionsConfig.find((item) => item?.value === refreshTime)?.timeout;
     if (!timeout) {
       return;
     }
