@@ -1,51 +1,37 @@
 'use client';
+import { DialSelect, SelectOption } from '@epam/ai-dial-ui-kit';
 import { ICellRendererParams } from 'ag-grid-community';
-import React from 'react';
 
-import Dropdown from '@/src/components/Common/Dropdown/Dropdown';
-import DropdownMenuItem from '@/src/components/Common/Dropdown/DropdownItem';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
+import { STRINGS_DELIMITER } from '@/src/constants/prompt';
 import { useI18n } from '@/src/locales/client';
 import { getItems } from './utils';
-import { STRINGS_DELIMITER } from '@/src/constants/prompt';
 
 export interface SelectCellRendererParams extends ICellRendererParams {
   isMulti?: boolean;
-  items?: DropdownItemsModel[];
-  getItems?: (data: unknown) => DropdownItemsModel[];
+  items?: SelectOption[];
+  getItems?: (data: unknown) => SelectOption[];
   onChange: (value: string, data: unknown, column?: string, index?: number) => void;
 }
 
 const SelectCellRenderer = (params: SelectCellRendererParams) => {
   const t = useI18n();
-  const { items, allItemsCount } = getItems(params, t as (s: string) => string);
+  const { items } = getItems(params, t as (s: string) => string);
 
   const onChangeValue = (value: string) => {
     params.onChange(value, params.data, params.colDef?.field as string, params.node.rowIndex as number);
   };
 
   const value = params.value?.toString();
-  const selectedValue = items?.find((item) => item.id === value);
   const multipleValues = params.value?.toString().split(STRINGS_DELIMITER) as string[];
 
   return (
     <div className="h-8 w-full">
-      <Dropdown
-        className="w-full flex items-center"
-        selectedValue={params.isMulti ? void 0 : selectedValue}
-        multipleValues={params.isMulti ? multipleValues : void 0}
-        selectedClassName="flex flex-row w-full items-center h-8 dial-input px-3 py-2 dial-input-field"
-      >
-        {items?.map((item, i) => (
-          <DropdownMenuItem
-            multipleValues={params.isMulti ? multipleValues : void 0}
-            allItemsCount={allItemsCount}
-            key={i}
-            dropdownItem={item}
-            onClick={() => onChangeValue(item.id)}
-          />
-        ))}
-      </Dropdown>
+      <DialSelect
+        options={items || []}
+        value={params.isMulti ? multipleValues : value}
+        multiple={params.isMulti}
+        onChange={(value) => onChangeValue(value as string)}
+      />
     </div>
   );
 };
