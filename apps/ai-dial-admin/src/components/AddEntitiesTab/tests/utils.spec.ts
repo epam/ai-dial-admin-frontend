@@ -47,9 +47,9 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
     ).toEqual([
       {
         day: 1,
-        minute: 'No Limits',
-        week: 'No Limits',
-        month: 'No Limits',
+        minute: 'Not specified',
+        week: 'Not specified',
+        month: 'Not specified',
         name: 'model',
         route: ApplicationRoute.Models,
         type: MenuI18nKey.Models,
@@ -68,7 +68,7 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
       ),
     ).toEqual([
       {
-        day: 'No Limits',
+        day: 'Not specified',
         minute: 1,
         week: 2,
         month: 3,
@@ -90,7 +90,7 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
       ),
     ).toEqual([
       {
-        day: 'No Limits',
+        day: 'Not specified',
         minute: 1,
         week: 2,
         month: 3,
@@ -116,15 +116,15 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
     ).toEqual([
       {
         day: 1,
-        minute: 'No Limits',
-        week: 'No Limits',
-        month: 'No Limits',
+        minute: 'Not specified',
+        week: 'Not specified',
+        month: 'Not specified',
         name: 'model',
         route: ApplicationRoute.Models,
         type: MenuI18nKey.Models,
       },
       {
-        day: 'No Limits',
+        day: 'Not specified',
         minute: 1,
         week: 2,
         month: 3,
@@ -154,18 +154,18 @@ describe('Add Entities tab :: getEntitiesForRole ', () => {
       ),
     ).toEqual([
       {
-        day: 'No Limits',
+        day: 'Not specified',
         minute: 10,
-        week: 'No Limits',
-        month: 'No Limits',
+        week: 'Not specified',
+        month: 'Not specified',
         name: 'model',
         route: ApplicationRoute.Models,
         type: MenuI18nKey.Models,
       },
       {
-        day: 'No Limits',
-        minute: 'No Limits',
-        week: 'No Limits',
+        day: 'Not specified',
+        minute: 'Not specified',
+        week: 'Not specified',
         month: 5,
       },
     ]);

@@ -20,7 +20,7 @@ import { DialRoleLimits, DialRoleLimitsMap } from '@/src/models/dial/role-limits
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import RolesDefaults from './RolesDefaults';
-import { NO_LIMITS_VALUE } from '@/src/constants/role';
+import { UNLIMITED_VALUE } from '@/src/constants/role';
 
 interface Props {
   entity: EntityRoleLimits;
@@ -118,7 +118,9 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
         ...entity,
         roleLimits: {
           ...entityRef.current.roleLimits,
-          [role?.name as string]: {},
+          [role?.name as string]: {
+            enabled: true,
+          },
         } as DialRoleLimitsMap,
       });
     },
@@ -129,7 +131,9 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
     const updatedRoleLimits: Record<string, DialRoleLimits> = {};
 
     Object.keys(entityRef.current.roleLimits || {}).forEach((roleName) => {
-      updatedRoleLimits[roleName] = {};
+      updatedRoleLimits[roleName] = {
+        enabled: true,
+      };
     });
     onChangeEntity({
       ...entity,
@@ -145,10 +149,10 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
           ...entityRef.current.roleLimits,
           [role?.name as string]: {
             ...entityRef.current.roleLimits?.[role?.name as string],
-            day: NO_LIMITS_VALUE,
-            minute: NO_LIMITS_VALUE,
-            month: NO_LIMITS_VALUE,
-            week: NO_LIMITS_VALUE,
+            day: UNLIMITED_VALUE,
+            minute: UNLIMITED_VALUE,
+            month: UNLIMITED_VALUE,
+            week: UNLIMITED_VALUE,
           },
         } as DialRoleLimitsMap,
       });

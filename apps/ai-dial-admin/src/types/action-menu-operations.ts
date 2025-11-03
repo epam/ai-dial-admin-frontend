@@ -4,7 +4,7 @@ export enum ActionMenuOperation {
   Open_in_new_tab = 'Open in a new tab',
   Remove = 'Remove',
   Reset_to_default_limits = 'Reset to default limits',
-  Set_no_limits = 'Set no limits',
+  Set_no_limits = 'Set unlimited',
   Move = 'Move to another folders',
   Publish = 'Publish',
   Unpublish = 'Unpublish',

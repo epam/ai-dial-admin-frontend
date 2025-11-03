@@ -368,10 +368,10 @@ export default {
   Roles: {
     DefaultLimits: 'Default limits',
     DefaultInvitations: 'Default invitation settings',
-    NoLimits: 'No Limits',
+    NotSpecified: 'Not specified',
+    Unlimited: 'Unlimited',
     AddRoles: 'Add Roles',
     ResetToDefaultLimits: 'Reset to default limits',
-    SetNoLimits: 'Set no limits',
     SetCostLimits: 'Set cost limits',
     AvailableSpecificRoles: 'Make available to specific roles',
     NotAvailableModel: 'This model will not be available to any end-users.',
