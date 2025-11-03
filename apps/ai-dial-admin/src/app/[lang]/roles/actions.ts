@@ -22,12 +22,12 @@ export async function createRole(role: DialRole) {
   return rolesApi.createRole(role, token);
 }
 
-export async function getCoreRole(role: string) {
+export async function getCoreRole(role: string, eTag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return rolesApi.getCoreRole(role, token);
+  return rolesApi.getCoreRole(role, eTag, token);
 }
 
-export async function updateCoreRole(role: DialRole) {
+export async function updateCoreRole(role: DialRole, eTag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return rolesApi.updateCoreRole(role, token);
+  return rolesApi.updateCoreRole(role, eTag, token);
 }

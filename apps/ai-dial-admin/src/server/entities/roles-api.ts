@@ -31,11 +31,11 @@ export class RolesApi extends BaseApi {
     return this.putActionWithEtag(ROLE_URL(encodeURIComponent(role.name || '')), role, token, eTag);
   }
 
-  getCoreRole(name: string, token: JWT | null) {
-    return this.get(CORE_ROLE_URL(name), token);
+  getCoreRole(name: string, eTag: string, token: JWT | null) {
+    return this.getActionWithEtag(CORE_ROLE_URL(name), eTag, token);
   }
 
-  updateCoreRole(role: DialRole, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putAction(CORE_ROLE_URL(encodeURIComponent(role.name || '')), role, token);
+  updateCoreRole(role: DialRole, eTag: string, token: JWT | null): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(CORE_ROLE_URL(encodeURIComponent(role.name || '')), role, token, eTag);
   }
 }
