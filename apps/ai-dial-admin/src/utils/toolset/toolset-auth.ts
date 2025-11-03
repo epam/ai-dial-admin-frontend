@@ -19,8 +19,8 @@ export const getToolsetSignInBody = (toolset: AssetToolset, level: ToolsetAuthCr
 
 export const getToolsetBasicBody = (toolset: AssetToolset, level: ToolsetAuthCredentialLevel) => {
   return {
-    // url: 'toolsets/{bucket}/{path}', // TODO: ask BE
-    credentials_level: level,
+    url: `toolsets/${toolset.path}`,
+    credentialsLevel: level,
     authenticationType: toolset.authSettings?.authenticationType,
   };
 };

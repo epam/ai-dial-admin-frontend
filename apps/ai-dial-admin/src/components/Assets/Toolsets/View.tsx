@@ -3,8 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialTabs } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
+import { IconLogin, IconLogout } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 
 import {
@@ -38,6 +39,8 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { encodeToolsetRedirectState, isLoggedInToToolset } from '@/src/utils/toolset/toolset-auth';
 import LoginPopup from './LoginPopup';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { ToolsetI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
 interface Props {
   etag: string;
@@ -60,7 +63,6 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const isToolsetSignedIn = useMemo(() => {
     return isLoggedInToToolset(selectedToolset);
   }, [selectedToolset]);
@@ -213,7 +215,6 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
     [selectedToolset, signIn],
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onLogout = useCallback(() => {
     signOutToolset(selectedToolset, ToolsetAuthCredentialLevel.GLOBAL).then((res) => {
       if (res.success) {
@@ -252,8 +253,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
             context={useToolsetFolder as () => AssetsFolderContext<DialFile | AssetToolset>}
             childrenContainerClass="flex-row-reverse"
           >
-            {/* TODO: waiting for BE */}
-            {/* {isToolsetSignedIn ? (
+            {isToolsetSignedIn ? (
               <DialButton
                 variant={ButtonVariant.Secondary}
                 title={t(ToolsetI18nKey.LogOut)}
@@ -267,7 +267,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
                 iconBefore={<IconLogin {...BASE_ICON_PROPS} />}
                 onClick={() => setIsModalOpen(true)}
               />
-            )} */}
+            )}
           </HeaderButtons>
         </div>
         <div className="flex-1 overflow-auto mt-3 min-h-0">
