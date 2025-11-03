@@ -1,12 +1,12 @@
 'use client';
 
-import { FC } from 'react';
 import { DialCheckbox, DialDropdown } from '@epam/ai-dial-ui-kit';
+import { FC, useState } from 'react';
 
-import SelectedFilter from './SelectedFilter';
-import { ToolFilter } from '../type';
-import { ToolsetI18nKey, BasicI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { ToolFilter } from '../type';
+import SelectedFilter from './SelectedFilter';
 
 interface Props {
   isAllSelected: boolean;
@@ -17,10 +17,12 @@ interface Props {
 
 const ToolsFilter: FC<Props> = ({ isAllSelected, onSelectFilter, selectedFilters, onSelectAll }) => {
   const t = useI18n();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   return (
     <DialDropdown
       listClassName="w-[200px]"
+      onOpenChange={(open) => setIsDropdownOpen(open)}
       renderOverlay={() => (
         <div className="bg-layer-0 rounded flex flex-col w-[200px]">
           <div className="py-2 px-4">
@@ -68,8 +70,9 @@ const ToolsFilter: FC<Props> = ({ isAllSelected, onSelectFilter, selectedFilters
           </div>
         </div>
       )}
-      trigger={<SelectedFilter selectedFilters={selectedFilters} />}
-    />
+    >
+      <SelectedFilter selectedFilters={selectedFilters} isDropdownOpen={isDropdownOpen} />
+    </DialDropdown>
   );
 };
 
