@@ -1,5 +1,6 @@
 import { ChangeEvent, HTMLProps, forwardRef, useCallback, useEffect } from 'react';
 
+import { DialTooltip } from '@epam/ai-dial-ui-kit';
 import {
   FloatingFocusManager,
   FloatingPortal,
@@ -14,14 +15,15 @@ import {
   useListNavigation,
   useRole,
 } from '@floating-ui/react';
-import { useRef, useState } from 'react';
-import { DropdownProps } from '../DropdownComponent';
-import { dropdownMenuClassNames } from '../constants';
-import DropdownAutocompleteItem from './DropdownAutocompleteItem';
 import classNames from 'classnames';
-import { DialTooltip } from '@epam/ai-dial-ui-kit';
+import { useRef, useState } from 'react';
+import DropdownAutocompleteItem from './DropdownAutocompleteItem';
 
-export interface DropdownAutocompleteProps extends DropdownProps {
+export const dropdownMenuClassNames = classNames(
+  'z-[53] overflow-auto rounded bg-layer-0 text-primary shadow focus-visible:outline-none',
+);
+
+export interface DropdownAutocompleteProps {
   inputId: string;
   items: string[];
   autocompleteValue?: string | number | null;

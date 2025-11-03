@@ -1,7 +1,12 @@
 import { ButtonHTMLAttributes, forwardRef } from 'react';
 
 import { useId, useListItem, useMergeRefs } from '@floating-ui/react';
-import { menuItemClassNames } from '../constants';
+import classNames from 'classnames';
+
+export const menuItemClassNames = classNames(
+  'flex w-full cursor-pointer items-center gap-3 focus-visible:border-none focus-visible:outline-none',
+  'hover:bg-accent-primary-alpha pl-3 border-l-2',
+);
 
 interface Props {
   label: string;

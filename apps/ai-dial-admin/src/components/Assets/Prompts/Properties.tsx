@@ -206,13 +206,15 @@ const PromptProperties: FC<Props> = ({
                   options={items}
                   fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
                   onChange={(v) => onChangeVersion(v as string)}
-                  // footer={  <DialButton
-                  //   cssClass="w-full"
-                  //   variant={ButtonVariant.Tertiary}
-                  //   iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-                  //   title={t(ButtonsI18nKey.Create)}
-                  //   onClick={() => handleModalOpen(ModalType.addVersion)}
-                  // />}
+                  footer={
+                    <DialButton
+                      cssClass="w-full"
+                      variant={ButtonVariant.Tertiary}
+                      iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+                      title={t(ButtonsI18nKey.Create)}
+                      onClick={() => handleModalOpen(ModalType.addVersion)}
+                    />
+                  }
                 />
               )}
             </div>

@@ -20,7 +20,7 @@ interface Props {
 const TimeFilter: FC<Props> = ({ timePeriod, onTimePeriodChange, timeRange, onTimeRangeChange }) => {
   const t = useI18n();
   const [showCustomRange, setShowCustomRange] = useState(false);
-  const [value, setValue] = useState<string>(timePeriod); //TODO: start value
+  const [value, setValue] = useState<string>(timePeriod);
 
   const onRangeChange = useCallback(
     (range: TimeRange) => {
@@ -34,7 +34,7 @@ const TimeFilter: FC<Props> = ({ timePeriod, onTimePeriodChange, timeRange, onTi
           return `${month}-${day}-${year}`;
         };
         const value = `${formatDate(startDate)} - ${formatDate(endDate)}`;
-        dismissRef.current?.dismiss();
+        // dismissRef.current?.dismiss();
         setValue(value);
       }
     },
@@ -63,17 +63,17 @@ const TimeFilter: FC<Props> = ({ timePeriod, onTimePeriodChange, timeRange, onTi
       prefix={t(TelemetryI18nKey.TimePeriod)}
       options={timePeriodOptionsConfig}
       value={value}
-      // header={
-      //   <div className="flex flex-col w-full">
-      //     <button className="flex items-center p-3 border-b border-b-secondary" onClick={onClick} aria-label="button">
-      //       <i className="mr-3">
-      //         {showCustomRange ? <IconChevronDown {...BASE_ICON_PROPS} /> : <IconChevronRight {...BASE_ICON_PROPS} />}
-      //       </i>
-      //       <p className="small text-primary">{t(TelemetryI18nKey.CustomTimeRage)}</p>
-      //     </button>
-      //     {showCustomRange && <RangePicker onChange={onRangeChange} timeRange={timeRange} />}
-      //   </div>
-      // }
+      header={
+        <div className="flex flex-col w-full">
+          <button className="flex items-center p-3 border-b border-b-secondary" onClick={onClick} aria-label="button">
+            <i className="mr-3">
+              {showCustomRange ? <IconChevronDown {...BASE_ICON_PROPS} /> : <IconChevronRight {...BASE_ICON_PROPS} />}
+            </i>
+            <p className="small text-primary">{t(TelemetryI18nKey.CustomTimeRage)}</p>
+          </button>
+          {showCustomRange && <RangePicker onChange={onRangeChange} timeRange={timeRange} />}
+        </div>
+      }
       onChange={(v) => onItemSelect(v as string)}
     />
   );
