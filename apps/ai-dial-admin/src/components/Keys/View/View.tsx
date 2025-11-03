@@ -67,11 +67,11 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
   useEffect(() => {
     const name = originalKey?.name;
     if (!coreKey && name) {
-      getCoreKey(name).then((data) => {
-        setCoreKey(data);
+      getCoreKey(name, etag).then((data) => {
+        setCoreKey(data.response as DialKey);
       });
     }
-  }, [coreKey, originalKey]);
+  }, [coreKey, etag, originalKey]);
 
   useEffect(() => {
     setSelectedKey(selectedFormat === ExportFormat.CORE ? cloneDeep(coreKey as DialKey) : cloneDeep(originalKey));
@@ -142,7 +142,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
     setIsOpenConfirmModal(false);
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreKey(selectedKey as Record<string, unknown>)
+        ? updateCoreKey(selectedKey as Record<string, unknown>, etag)
         : updateKey(selectedKey, etag);
 
     req.then((res) => {

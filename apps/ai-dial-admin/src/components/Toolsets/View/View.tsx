@@ -61,11 +61,11 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   useEffect(() => {
     const name = originalToolset?.name;
     if (!coreToolset && name) {
-      getCoreToolset(name).then((data) => {
-        setCoreToolset(data);
+      getCoreToolset(name, etag).then((data) => {
+        setCoreToolset(data.response as Toolset);
       });
     }
-  }, [coreToolset, originalToolset]);
+  }, [coreToolset, etag, originalToolset]);
 
   useEffect(() => {
     setSelectedToolset(
@@ -115,7 +115,7 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreToolset(selectedToolset as Record<string, unknown>)
+        ? updateCoreToolset(selectedToolset as Record<string, unknown>, etag)
         : updateToolset(selectedToolset, etag);
 
     req.then((res) => {
