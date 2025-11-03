@@ -19,19 +19,27 @@ describe('toolset-auth utils', () => {
   });
 
   test('getToolsetSignInBody returns APIKEY body with apiKeyHeader', () => {
-    const toolset = { authSettings: { authenticationType: ToolsetAuthType.API_KEY, apiKeyHeader: 'X-API-KEY' } } as any;
+    const toolset = {
+      path: 'public/toolset1',
+      authSettings: { authenticationType: ToolsetAuthType.API_KEY, apiKeyHeader: 'X-API-KEY' },
+    } as any;
     const result = getToolsetSignInBody(toolset, 'user');
     expect(result).toMatchObject({
-      credentials_level: 'user',
+      url: 'toolsets/public/toolset1',
+      credentialsLevel: 'user',
       authenticationType: ToolsetAuthType.API_KEY,
       apiKeyHeader: 'X-API-KEY',
     });
   });
 
   test('getToolsetBasicBody returns basic body', () => {
-    const toolset = { authSettings: { authenticationType: ToolsetAuthType.API_KEY } } as any;
+    const toolset = { path: 'public/toolset1', authSettings: { authenticationType: ToolsetAuthType.API_KEY } } as any;
     const result = getToolsetBasicBody(toolset, 'user');
-    expect(result).toMatchObject({ credentials_level: 'user', authenticationType: ToolsetAuthType.API_KEY });
+    expect(result).toMatchObject({
+      url: 'toolsets/public/toolset1',
+      credentialsLevel: 'user',
+      authenticationType: ToolsetAuthType.API_KEY,
+    });
   });
 
   test('encodeToolsetRedirectState encodes state to base64url', () => {
