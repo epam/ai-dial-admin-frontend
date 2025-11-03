@@ -1,6 +1,6 @@
-import { ButtonHTMLAttributes, forwardRef } from 'react';
+import { FC } from 'react';
 
-import { useId, useListItem, useMergeRefs } from '@floating-ui/react';
+import { useId } from '@floating-ui/react';
 import classNames from 'classnames';
 
 export const menuItemClassNames = classNames(
@@ -11,27 +11,23 @@ export const menuItemClassNames = classNames(
 interface Props {
   label: string;
   active: boolean;
+  onClick: (label: string) => void;
 }
 
-const DropdownAutocompleteItem = forwardRef<HTMLButtonElement, Props & ButtonHTMLAttributes<HTMLButtonElement>>(
-  function DropdownAutocompleteItem({ active, label, ...rest }, ref) {
-    const id = useId();
-    const item = useListItem({ label });
+const DropdownAutocompleteItem: FC<Props> = ({ active, label, onClick }) => {
+  const id = useId();
 
-    return (
-      <button
-        ref={useMergeRefs([item.ref, ref])}
-        role="option"
-        id={id}
-        aria-selected={active}
-        {...rest}
-        aria-label="dropdown-autocomplete-item"
-        className={menuItemClassNames}
-        style={{ ...rest.style }}
-      >
-        {label}
-      </button>
-    );
-  },
-);
+  return (
+    <button
+      role="option"
+      id={id}
+      onClick={() => onClick(label)}
+      aria-selected={active}
+      aria-label="dropdown-autocomplete-item"
+      className={menuItemClassNames}
+    >
+      {label}
+    </button>
+  );
+};
 export default DropdownAutocompleteItem;

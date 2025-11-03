@@ -79,7 +79,7 @@ const DropdownAutocomplete: FC<DropdownAutocompleteProps> = ({
     loop: true,
   });
 
-  const { getReferenceProps, getFloatingProps, getItemProps } = useInteractions([role, dismiss, listNav]);
+  const { getReferenceProps, getFloatingProps } = useInteractions([role, dismiss, listNav]);
 
   const onChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -105,28 +105,26 @@ const DropdownAutocomplete: FC<DropdownAutocompleteProps> = ({
 
   return (
     <>
-      <DialTooltip tooltip={inputValue}>
-        <input
-          id={inputId}
-          type="text"
-          {...getReferenceProps({
-            ref: refs.setReference,
-            onChange,
-            disabled,
-            value: inputValue,
-            placeholder: placeholder,
-            'aria-autocomplete': 'list',
-            onKeyDown: (event) => {
-              if (event.key === 'Enter' && activeIndex != null && filteredItems[activeIndex]) {
-                setInputValue(filteredItems[activeIndex]);
-                setActiveIndex(null);
-                setOpen(false);
-              }
-            },
-          })}
-          className={classNames(invalid ? 'dial-input-error' : '', 'dial-input px-3 py-2')}
-        />
-      </DialTooltip>
+      <input
+        id={inputId}
+        type="text"
+        {...getReferenceProps({
+          ref: refs.setReference,
+          onChange,
+          disabled,
+          value: inputValue,
+          placeholder: placeholder,
+          'aria-autocomplete': 'list',
+          onKeyDown: (event) => {
+            if (event.key === 'Enter' && activeIndex != null && filteredItems[activeIndex]) {
+              setInputValue(filteredItems[activeIndex]);
+              setActiveIndex(null);
+              setOpen(false);
+            }
+          },
+        })}
+        className={classNames(invalid ? 'dial-input-error' : '', 'dial-input px-3 py-2')}
+      />
       <FloatingPortal>
         {open && (
           <FloatingFocusManager context={context} initialFocus={-1} visuallyHiddenDismiss>
@@ -141,22 +139,16 @@ const DropdownAutocomplete: FC<DropdownAutocompleteProps> = ({
               })}
             >
               {filteredItems.map((item, index) => (
-                /* eslint-disable react/jsx-key */
                 <DropdownAutocompleteItem
-                  {...getItemProps({
-                    key: item,
-                    ref: (node) => {
-                      listRef.current[index] = node;
-                    },
-                    onClick: () => {
-                      setInputValue(item);
-                      onSelectItem?.(item);
-                      setOpen(false);
-                      refs.domReference.current?.focus();
-                    },
-                  })}
+                  key={index}
                   label={item}
                   active={activeIndex === index}
+                  onClick={() => {
+                    setInputValue(item);
+                    onSelectItem?.(item);
+                    setOpen(false);
+                    refs.domReference.current?.focus();
+                  }}
                 />
               ))}
             </div>
