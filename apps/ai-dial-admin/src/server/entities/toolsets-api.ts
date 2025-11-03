@@ -36,11 +36,11 @@ export class ToolsetsApi extends BaseApi {
     return this.putActionWithEtag(TOOLSET_URL(encodeURIComponent(toolset.name || '')), toolset, token, eTag);
   }
 
-  getCoreToolset(name: string, token: JWT | null) {
-    return this.getActionWithEtag(CORE_TOOLSET_URL(name), DEFAULT_ETAG, token);
+  getCoreToolset(name: string, eTag: string, token: JWT | null) {
+    return this.getActionWithEtag(CORE_TOOLSET_URL(name), eTag, token);
   }
 
-  updateCoreToolset(toolset: Toolset, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putAction(CORE_TOOLSET_URL(encodeURIComponent(toolset.name || '')), toolset, token);
+  updateCoreToolset(toolset: Toolset, eTag: string, token: JWT | null): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(CORE_TOOLSET_URL(encodeURIComponent(toolset.name || '')), toolset, token, eTag);
   }
 }
