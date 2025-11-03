@@ -1,4 +1,5 @@
 import { ColDef, ICellRendererParams, ITooltipParams } from 'ag-grid-community';
+import { SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { DefaultItemType } from '@/src/components/Defaults/types';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
@@ -17,7 +18,6 @@ import { DialApplicationResource } from '@/src/models/dial/application-resource'
 import { DefaultsValue } from '@/src/models/dial/defaults';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialSchemePropertyType } from '@/src/models/dial/scheme';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ParamsFields, ParamsView } from './types';
 
@@ -72,28 +72,28 @@ export const generateViewItems = (
   route?: ApplicationRoute,
   showUi?: boolean,
   showForm?: boolean,
-): DropdownItemsModel[] => {
+): SelectOption[] => {
   if (route === ApplicationRoute.ApplicationPublications || route === ApplicationRoute.ApplicationRunners) {
     return [];
   }
-  const items: DropdownItemsModel[] = [
+  const items: SelectOption[] = [
     {
-      id: ParamsView.TABLE,
-      name: t(EntitiesI18nKey[ParamsView.TABLE]),
+      value: ParamsView.TABLE,
+      label: t(EntitiesI18nKey[ParamsView.TABLE]),
     },
   ];
 
   if (showForm) {
     items.push({
-      id: ParamsView.FORM,
-      name: t(EntitiesI18nKey[ParamsView.FORM]),
+      value: ParamsView.FORM,
+      label: t(EntitiesI18nKey[ParamsView.FORM]),
     });
   }
 
   if (showUi) {
     items.push({
-      id: ParamsView.UI,
-      name: t(EntitiesI18nKey[ParamsView.UI]),
+      value: ParamsView.UI,
+      label: t(EntitiesI18nKey[ParamsView.UI]),
     });
   }
 
@@ -126,7 +126,7 @@ export const convertJsonSchema = (
     }
 
     result.push({
-      key: key,
+      key,
       value: schemeData[key],
       type: typeValue,
       required: isRequired || false,
@@ -281,25 +281,25 @@ export const getAppPropertiesColumns = (
       cellRenderer: SelectCellRenderer,
       cellRendererParams: {
         getItems: (data: ApplicationPropertiesTemp) => {
-          const items = [
+          const items: SelectOption[] = [
             {
-              id: DefaultItemType.string,
-              name: t(TypeI18nKey.String),
+              value: DefaultItemType.string,
+              label: t(TypeI18nKey.String),
             },
             {
-              id: DefaultItemType.number,
-              name: t(TypeI18nKey.Number),
+              value: DefaultItemType.number,
+              label: t(TypeI18nKey.Number),
             },
             {
-              id: DefaultItemType.boolean,
-              name: t(TypeI18nKey.Boolean),
+              value: DefaultItemType.boolean,
+              label: t(TypeI18nKey.Boolean),
             },
             {
-              id: DefaultItemType.object,
-              name: t(TypeI18nKey.Object),
+              value: DefaultItemType.object,
+              label: t(TypeI18nKey.Object),
             },
           ];
-          return data.isFromScheme ? items.filter((i) => i.id === data.type) : items;
+          return data.isFromScheme ? items.filter((i) => i.value === data.type) : items;
         },
         onChange: onChangeSelect,
       },
