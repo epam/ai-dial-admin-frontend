@@ -7,6 +7,7 @@ import { BaseApi } from '../base-api';
 
 export const KEYS_URL = `${API}/keys`;
 export const KEY_URL = (name?: string) => `${KEYS_URL}/${name}`;
+export const CORE_KEY_URL = (name?: string) => `${KEYS_URL}/core/${name}`;
 
 export class KeysApi extends BaseApi {
   getKeysList(token: JWT | null): Promise<DialKey[] | null> {
@@ -27,5 +28,13 @@ export class KeysApi extends BaseApi {
 
   updateKey(key: DialKey, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
     return this.putActionWithEtag(KEY_URL(encodeURIComponent(key.name || '')), key, token, eTag);
+  }
+
+  getCoreKey(name: string, token: JWT | null) {
+    return this.getAction(CORE_KEY_URL(name), token);
+  }
+
+  updateCoreKey(key: DialKey, token: JWT | null): Promise<ServerActionResponse> {
+    return this.putAction(CORE_KEY_URL(encodeURIComponent(key.name || '')), key, token);
   }
 }

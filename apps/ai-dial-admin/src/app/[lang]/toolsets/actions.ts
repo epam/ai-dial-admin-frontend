@@ -8,6 +8,16 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getAllowTools, getTransport } from '@/src/utils/toolset/toolset-transport';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
+export async function getCoreToolset(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return toolSetsApi.getCoreToolset(name, token);
+}
+
+export async function updateCoreToolset(toolset: Toolset) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return toolSetsApi.updateCoreToolset(toolset, token);
+}
+
 export async function removeToolset(name?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return toolSetsApi.removeToolset(token, name);

@@ -9,9 +9,7 @@ import { IconRefresh } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
-import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
-import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
-import { removeKey, updateKey } from '@/src/app/[lang]/keys/actions';
+import { getCoreKey, removeKey, updateCoreKey, updateKey } from '@/src/app/[lang]/keys/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import { getRelevantRolesForKey } from '@/src/components/AddEntitiesTab/utils';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
@@ -70,7 +68,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
   useEffect(() => {
     const name = originalKey?.name;
     if (!coreKey && name) {
-      getCoreEntity(name, getExportType(ApplicationRoute.Keys)).then((data) => {
+      getCoreKey(name).then((data) => {
         setCoreKey(data);
       });
     }
@@ -145,7 +143,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
     setIsOpenConfirmModal(false);
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreEntity(selectedKey as Record<string, unknown>)
+        ? updateCoreKey(selectedKey as Record<string, unknown>)
         : updateKey(selectedKey, etag);
 
     req.then((res) => {

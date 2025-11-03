@@ -8,6 +8,7 @@ import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const ROLES_URL = `${API}/roles`;
 export const ROLE_URL = (name?: string) => `${ROLES_URL}/${name}`;
+export const CORE_ROLE_URL = (name?: string) => `${ROLES_URL}/core/${name}`;
 
 export class RolesApi extends BaseApi {
   getRolesList(token: JWT | null): Promise<DialRole[] | null> {
@@ -28,5 +29,13 @@ export class RolesApi extends BaseApi {
 
   updateRole(role: DialRole, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
     return this.putActionWithEtag(ROLE_URL(encodeURIComponent(role.name || '')), role, token, eTag);
+  }
+
+  getCoreRole(name: string, token: JWT | null) {
+    return this.getAction(CORE_ROLE_URL(name), token);
+  }
+
+  updateCoreRole(role: DialRole, token: JWT | null): Promise<ServerActionResponse> {
+    return this.putAction(CORE_ROLE_URL(encodeURIComponent(role.name || '')), role, token);
   }
 }

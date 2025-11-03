@@ -21,3 +21,13 @@ export async function createRole(role: DialRole) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return rolesApi.createRole(role, token);
 }
+
+export async function getCoreRole(role: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return rolesApi.getCoreRole(role, token);
+}
+
+export async function updateCoreRole(role: DialRole) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return rolesApi.updateCoreRole(role, token);
+}
