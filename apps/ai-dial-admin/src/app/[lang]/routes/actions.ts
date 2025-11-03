@@ -22,3 +22,13 @@ export async function createRoute(route: DialRoute) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return routesApi.createRoute(route, token);
 }
+
+export async function getCoreRoute(name: string, eTag: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return routesApi.getCoreRoute(name, eTag, token);
+}
+
+export async function updateCoreRoute(route: DialRoute, eTag: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return routesApi.updateCoreRoute(route, eTag, token);
+}

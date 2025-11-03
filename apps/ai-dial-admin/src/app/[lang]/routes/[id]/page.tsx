@@ -7,7 +7,7 @@ import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { removeRoute, updateRoute } from '../actions';
+import { getCoreRoute, removeRoute, updateCoreRoute, updateRoute } from '../actions';
 import { DialRole } from '@/src/models/dial/role';
 import { logError } from '@/src/server/logger';
 import Page403 from '@/src/components/Page403/Page403';
@@ -55,6 +55,8 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
         etag={etag}
         removeEntity={removeRoute}
         updateEntity={updateRoute}
+        getCoreEntity={getCoreRoute}
+        updateCoreEntity={updateCoreRoute}
       />
     </SaveValidationContextProvider>
   );

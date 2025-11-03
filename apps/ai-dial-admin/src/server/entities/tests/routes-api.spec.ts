@@ -40,6 +40,18 @@ describe('Server :: RoutesApi', () => {
     expect(result.response).toEqual(JSON.stringify(mockRoute));
   });
 
+  test('Should calls getCoreRoute', async () => {
+    fetch.mockResponseOnce(JSON.stringify(mockRoute));
+
+    const result = await instance.getCoreRoute('route-1', 'etag123', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/routes/core/route-1'),
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result.response).toEqual(JSON.stringify(mockRoute));
+  });
+
   test('Should calls createRoute', async () => {
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
@@ -64,6 +76,22 @@ describe('Server :: RoutesApi', () => {
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/routes/route-1'),
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify(updatedRoute),
+      }),
+    );
+  });
+
+  test('Should call updateCoreRoute', async () => {
+    const updatedRoute = { ...mockRoute, description: 'Updated' };
+    const mockResponse = { success: true };
+    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+
+    await instance.updateCoreRoute(updatedRoute, 'etag123', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/routes/core/route-1'),
       expect.objectContaining({
         method: 'PUT',
         body: JSON.stringify(updatedRoute),
