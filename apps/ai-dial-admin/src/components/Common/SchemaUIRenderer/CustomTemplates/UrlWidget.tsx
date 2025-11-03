@@ -2,7 +2,7 @@ import { FC } from 'react';
 import type { WidgetProps } from '@rjsf/utils';
 import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 
-export const TextWidget: FC<WidgetProps> = ({
+export const URLWidget: FC<WidgetProps> = ({
   id,
   value,
   required,

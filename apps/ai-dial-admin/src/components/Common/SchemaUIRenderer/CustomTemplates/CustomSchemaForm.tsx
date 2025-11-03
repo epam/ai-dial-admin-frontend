@@ -6,6 +6,10 @@ import { FieldTemplate } from './FieldTemplate';
 import { TextWidget } from './TextWidget';
 import { TitleTemplate } from './TitleTemplate';
 import { WrapIfAdditionalTemplate } from './WrapIfAdditionalTemplate';
+import { URLWidget } from './UrlWidget';
+import AnyOfField from './AnyOfField';
+import SelectWidget from './SelectWidget';
+import { CheckboxWidget } from './CheckboxWidget';
 
 export const Theme = {
   templates: {
@@ -15,7 +19,8 @@ export const Theme = {
     FieldTemplate,
     WrapIfAdditionalTemplate,
   },
-  widgets: { TextWidget },
+  widgets: { TextWidget, URLWidget, SelectWidget, CheckboxWidget },
+  fields: { AnyOfField, OneOfField: AnyOfField },
 };
 
 export const SchemaForm = withTheme(Theme);

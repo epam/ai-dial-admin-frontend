@@ -13,7 +13,7 @@ export const ObjectFieldTemplate: FC<ObjectFieldTemplateProps> = (props) => {
   const t = useI18n() as (stringToTranslate: string) => string;
 
   return (
-    <fieldset className="p-6">
+    <fieldset className="p-6 bg-layer-0">
       {title && <p className="small mb-2">{title}</p>}
       <div className="space-y-3">
         {properties.map((prop) => (
