@@ -7,9 +7,7 @@ import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
-import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
-import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
-import { removeRole, updateRole } from '@/src/app/[lang]/roles/actions';
+import { getCoreRole, removeRole, updateCoreRole, updateRole } from '@/src/app/[lang]/roles/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import {
   getEntitiesForRole,
@@ -20,7 +18,6 @@ import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { isSetNoLimitsHidden } from '@/src/components/EntityView/Roles/utils';
-import { getExportType } from '@/src/components/EntityView/View/core-entity-utils';
 import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import { getSetNoLimitsOperation } from '@/src/constants/grid-columns/actions';
 import { KEYS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -82,7 +79,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   useEffect(() => {
     const name = (originalRole as { name: string })?.name;
     if (!coreRole && name) {
-      getCoreEntity(name, getExportType(ApplicationRoute.Roles)).then((data) => {
+      getCoreRole(name).then((data) => {
         setCoreRole(data);
       });
     }
@@ -194,7 +191,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreEntity(selectedRole as Record<string, unknown>)
+        ? updateCoreRole(selectedRole as Record<string, unknown>)
         : updateRole(selectedRole, etag);
 
     req.then((res) => {

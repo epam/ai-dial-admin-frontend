@@ -32,7 +32,7 @@ export class RolesApi extends BaseApi {
   }
 
   getCoreRole(name: string, token: JWT | null) {
-    return this.getAction(CORE_ROLE_URL(name), token);
+    return this.get(CORE_ROLE_URL(name), token);
   }
 
   updateCoreRole(role: DialRole, token: JWT | null): Promise<ServerActionResponse> {
