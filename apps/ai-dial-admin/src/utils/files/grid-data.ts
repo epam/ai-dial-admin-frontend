@@ -30,18 +30,19 @@ export const getGridFileData = (files: DialFile[]) => {
 
 export const getGridFileColumns = <T>(columns: ColDef[], actions: ActionMenuOperationDeclaration<T>[]) => {
   const modifiedColDefs = [...columns].slice(0, 2).map((colDef, index) => {
-    colDef.filter = false;
-    colDef.floatingFilter = false;
+    const column = { ...colDef };
+    column.filter = false;
+    column.floatingFilter = false;
 
     if (index === 0) {
-      colDef.cellRenderer = FileNameCellRenderer;
+      column.cellRenderer = FileNameCellRenderer;
     }
 
     if (index === 1) {
-      colDef.maxWidth = 168;
+      column.maxWidth = 168;
     }
 
-    return colDef;
+    return column;
   });
   return [...modifiedColDefs, ACTION_COLUMN(actions)];
 };
