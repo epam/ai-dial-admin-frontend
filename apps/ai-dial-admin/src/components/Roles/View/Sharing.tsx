@@ -5,7 +5,7 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IconReload } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
-import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_VALUE } from '@/src/constants/role';
+import { UNLIMITED_ACCEPTED_USERS, UNLIMITED_VALUE } from '@/src/constants/role';
 import { SHARING_COLUMNS } from '@/src/components/EntityView/Roles/utils';
 import Grid from '@/src/components/Grid/Grid';
 import { SharingGridData } from '@/src/components/Roles/models';
@@ -88,8 +88,8 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
           share: {
             ...entityRef.current.share,
             [data.name]: {
-              invitationTtl: NO_LIMITS_VALUE,
-              maxAcceptedUsers: NO_LIMITS_ACCEPTED_USERS,
+              invitationTtl: UNLIMITED_VALUE,
+              maxAcceptedUsers: UNLIMITED_ACCEPTED_USERS,
             },
           },
         });
