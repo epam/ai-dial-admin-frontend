@@ -34,7 +34,7 @@ describe('Server :: RolesApi', () => {
     const result = await instance.getCoreRole('admin', 'etag123', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/roles/admin'),
+      expect.stringContaining('/roles/core/admin'),
       expect.objectContaining({ method: 'GET' }),
     );
     expect(result.response).toEqual(JSON.stringify(exampleRole));
@@ -75,7 +75,7 @@ describe('Server :: RolesApi', () => {
     await instance.updateCoreRole(updatedRole, 'etag123', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/roles/admin'),
+      expect.stringContaining('/roles/core/admin'),
       expect.objectContaining({
         method: 'PUT',
         body: JSON.stringify(updatedRole),
