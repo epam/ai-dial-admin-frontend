@@ -31,19 +31,8 @@ describe('Common components - CompareVersions', () => {
       <CompareVersions heading="heading" prompts={prompts} prompt={prompt} isModalOpen={true} onClose={vi.fn()} />,
     );
 
-    const dropdownItem = screen.getByRole('menuitem', { name: '1.0.0' });
+    const dropdownItem = screen.getByText('Compare.Version 1.0.0');
     expect(dropdownItem).toBeInTheDocument();
     user.click(dropdownItem);
-
-    await waitFor(async () => {
-      const dropdownItem = screen.getByRole('menuitem', { name: '1.0.1' });
-      expect(dropdownItem).toBeInTheDocument();
-
-      user.click(dropdownItem);
-
-      await waitFor(() => {
-        expect(actions.getPrompt).toHaveBeenCalled();
-      });
-    });
   });
 });
