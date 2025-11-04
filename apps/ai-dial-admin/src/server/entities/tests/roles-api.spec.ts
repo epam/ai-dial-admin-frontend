@@ -31,7 +31,7 @@ describe('Server :: RolesApi', () => {
   test('Should calls a core role by name', async () => {
     fetch.mockResponseOnce(JSON.stringify(exampleRole));
 
-    const result = await instance.getCoreRole('admin', 'etag123', TOKEN_MOCK);
+    const result = await instance.getCoreRole('admin', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/roles/core/admin'),

@@ -18,7 +18,7 @@ describe('Applications schemes :: server actions', () => {
 
   test('Should call get core application scheme', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    getCoreRunner('scheme', 'etag').then(() => {
+    getCoreRunner('scheme').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];

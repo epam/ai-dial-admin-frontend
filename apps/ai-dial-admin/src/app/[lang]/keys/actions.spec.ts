@@ -23,7 +23,7 @@ describe('Keys :: server actions', () => {
 
   test('Should call get core key', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    getCoreKey('key', 'etag').then(() => {
+    getCoreKey('key').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];

@@ -68,11 +68,11 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, etag, 
   useEffect(() => {
     const name = originalInterceptor?.name;
     if (!coreInterceptor && name) {
-      getCoreInterceptor(name, etag).then((data) => {
+      getCoreInterceptor(name).then((data) => {
         setCoreInterceptor(data.response as DialInterceptor);
       });
     }
-  }, [coreInterceptor, etag, originalInterceptor]);
+  }, [coreInterceptor, originalInterceptor]);
 
   useEffect(() => {
     setSelectedInterceptor(

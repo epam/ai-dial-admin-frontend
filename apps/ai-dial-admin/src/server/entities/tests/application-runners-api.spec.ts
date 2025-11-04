@@ -43,7 +43,7 @@ describe('Server :: ApplicationRunnersApi', () => {
   test('Should fetch a core application scheme by id', async () => {
     fetch.mockResponseOnce(JSON.stringify([mockScheme]));
 
-    await instance.getCoreRunner(mockScheme.$id || '', 'etag123', TOKEN_MOCK);
+    await instance.getCoreRunner(mockScheme.$id || '', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${CORE_APPLICATION_SCHEME_URL(mockScheme.$id)}`,

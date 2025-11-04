@@ -61,11 +61,11 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   useEffect(() => {
     const name = originalToolset?.name;
     if (!coreToolset && name) {
-      getCoreToolset(name, etag).then((data) => {
+      getCoreToolset(name).then((data) => {
         setCoreToolset(data.response as Toolset);
       });
     }
-  }, [coreToolset, etag, originalToolset]);
+  }, [coreToolset, originalToolset]);
 
   useEffect(() => {
     setSelectedToolset(

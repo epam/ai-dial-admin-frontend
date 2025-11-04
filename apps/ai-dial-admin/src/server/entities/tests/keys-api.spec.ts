@@ -43,7 +43,7 @@ describe('Server :: KeysApi', () => {
   test('Should fetch a single key', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockKey));
 
-    const result = await instance.getCoreKey(mockKey.name || '', 'etag123', TOKEN_MOCK);
+    const result = await instance.getCoreKey(mockKey.name || '', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${CORE_KEY_URL(mockKey.name)}`,

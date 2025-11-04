@@ -79,11 +79,11 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   useEffect(() => {
     const name = (originalRole as { name: string })?.name;
     if (!coreRole && name) {
-      getCoreRole(name, etag).then((data) => {
+      getCoreRole(name).then((data) => {
         setCoreRole(data.response as DialRole);
       });
     }
-  }, [coreRole, etag, originalRole]);
+  }, [coreRole, originalRole]);
 
   useEffect(() => {
     setSelectedRole(selectedFormat === ExportFormat.CORE ? cloneDeep(coreRole as DialRole) : cloneDeep(originalRole));

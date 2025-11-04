@@ -67,11 +67,11 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
   useEffect(() => {
     const name = originalKey?.name;
     if (!coreKey && name) {
-      getCoreKey(name, etag).then((data) => {
+      getCoreKey(name).then((data) => {
         setCoreKey(data.response as DialKey);
       });
     }
-  }, [coreKey, etag, originalKey]);
+  }, [coreKey, originalKey]);
 
   useEffect(() => {
     setSelectedKey(selectedFormat === ExportFormat.CORE ? cloneDeep(coreKey as DialKey) : cloneDeep(originalKey));

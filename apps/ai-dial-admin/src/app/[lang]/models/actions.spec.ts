@@ -51,7 +51,7 @@ describe('Models :: server actions', () => {
 
   test('Should call get core model', async () => {
     fetch.mockResponseOnce(JSON.stringify({ data: 'response' }));
-    getCoreModel('model', 'etag').then(() => {
+    getCoreModel('model').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];

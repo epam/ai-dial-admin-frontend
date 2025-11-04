@@ -30,8 +30,8 @@ export class KeysApi extends BaseApi {
     return this.putActionWithEtag(KEY_URL(encodeURIComponent(key.name || '')), key, token, eTag);
   }
 
-  getCoreKey(name: string, eTag: string, token: JWT | null) {
-    return this.getActionWithEtag(CORE_KEY_URL(name), eTag, token);
+  getCoreKey(name: string, token: JWT | null) {
+    return this.getAction(CORE_KEY_URL(name), token);
   }
 
   updateCoreKey(key: DialKey, eTag: string, token: JWT | null): Promise<ServerActionResponse> {

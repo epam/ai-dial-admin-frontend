@@ -36,8 +36,8 @@ export class ApplicationsApi extends BaseApi {
     );
   }
 
-  getCoreApplication(name: string, eTag: string, token: JWT | null) {
-    return this.getActionWithEtag(CORE_APPLICATION_URL(name), eTag, token);
+  getCoreApplication(name: string, token: JWT | null) {
+    return this.getAction(CORE_APPLICATION_URL(name), token);
   }
 
   updateCoreApplication(app: DialApplication, eTag: string, token: JWT | null): Promise<ServerActionResponse> {

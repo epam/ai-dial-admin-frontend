@@ -51,7 +51,7 @@ interface Props {
   models?: DialModel[] | null;
   updateEntity: (entity: BaseEntity, etag: string) => Promise<ServerActionResponse>;
   updateCoreEntity: (entity: BaseEntity, etag: string) => Promise<ServerActionResponse>;
-  getCoreEntity: (entity: string, etag: string) => Promise<ServerActionResponse>;
+  getCoreEntity: (entity: string) => Promise<ServerActionResponse>;
   removeEntity: (entity?: string) => Promise<ServerActionResponse>;
 }
 
@@ -92,11 +92,11 @@ const EntityView: FC<Props> = ({
   useEffect(() => {
     const name = (originalEntity as { name: string })?.name;
     if (!coreEntity && name) {
-      getCoreEntity(name, etag).then((data) => {
+      getCoreEntity(name).then((data) => {
         setCoreEntity(data.response as BaseEntity);
       });
     }
-  }, [coreEntity, etag, getCoreEntity, originalEntity, view]);
+  }, [coreEntity, getCoreEntity, originalEntity, view]);
 
   useEffect(() => {
     setSelectedEntity(

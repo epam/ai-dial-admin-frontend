@@ -43,7 +43,7 @@ describe('Server :: ToolsetsApi', () => {
   test('Should calls getCoreToolset by name and return toolSet', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockToolset));
 
-    const result = await instance.getCoreToolset(mockToolset.name, 'etag123', TOKEN_MOCK);
+    const result = await instance.getCoreToolset(mockToolset.name, TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${CORE_TOOLSET_URL(mockToolset.name)}`,

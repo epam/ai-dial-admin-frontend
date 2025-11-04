@@ -8,9 +8,9 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getAllowTools, getTransport } from '@/src/utils/toolset/toolset-transport';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
-export async function getCoreToolset(name: string, eTag: string) {
+export async function getCoreToolset(name: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return toolSetsApi.getCoreToolset(name, eTag, token);
+  return toolSetsApi.getCoreToolset(name, token);
 }
 
 export async function updateCoreToolset(toolset: Toolset, eTag: string) {

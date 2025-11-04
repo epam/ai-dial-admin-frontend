@@ -42,7 +42,7 @@ describe('Server :: ModelsApi', () => {
   test('Should calls getCoreModel', async () => {
     fetch.mockResponseOnce(JSON.stringify(modelMock));
 
-    const result = await instance.getCoreModel('test-model', 'etag123', TOKEN_MOCK);
+    const result = await instance.getCoreModel('test-model', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/models/core/test-model'),

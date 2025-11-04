@@ -43,7 +43,7 @@ describe('Server :: ApplicationsApi', () => {
   test('Should calls getCoreApplication by name and return application', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockApp));
 
-    const result = await instance.getCoreApplication(mockApp.name || '', 'etag123', TOKEN_MOCK);
+    const result = await instance.getCoreApplication(mockApp.name || '', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${CORE_APPLICATION_URL(mockApp.name)}`,

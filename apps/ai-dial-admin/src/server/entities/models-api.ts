@@ -41,8 +41,8 @@ export class ModelsApi extends BaseApi {
     return this.putActionWithEtag(MODEL_URL(encodeURIComponent(model.name || '')), model, token, eTag);
   }
 
-  getCoreModel(name: string, eTag: string, token: JWT | null) {
-    return this.getActionWithEtag(CORE_MODEL_URL(name), eTag, token);
+  getCoreModel(name: string, token: JWT | null) {
+    return this.getAction(CORE_MODEL_URL(name), token);
   }
 
   updateCoreModel(model: DialModel, eTag: string, token: JWT | null): Promise<ServerActionResponse> {
