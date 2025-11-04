@@ -92,11 +92,11 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names 
   useEffect(() => {
     const name = originalScheme?.$id;
     if (!coreRunner && name) {
-      getCoreRunner(name, etag).then((data) => {
+      getCoreRunner(name).then((data) => {
         setCoreRunner(data.response as DialApplicationScheme);
       });
     }
-  }, [coreRunner, etag, originalScheme]);
+  }, [coreRunner, originalScheme]);
 
   useEffect(() => {
     setSelectedRunner(
@@ -152,7 +152,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names 
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreRunner(selectedRunner as Record<string, unknown>, etag)
+        ? updateCoreRunner(selectedRunner as Record<string, unknown>, originalScheme.$id || '', etag)
         : updateApplicationScheme(selectedRunner, etag);
 
     req.then((res) => {
@@ -169,7 +169,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names 
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedFormat, selectedRunner, etag, showNotification, t, router]);
+  }, [selectedFormat, selectedRunner, originalScheme.$id, etag, showNotification, t, router]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">

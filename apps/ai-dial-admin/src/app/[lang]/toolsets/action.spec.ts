@@ -21,7 +21,7 @@ describe('Toolsets :: server actions', () => {
 
   test('Should call get core toolset', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    getCoreToolset('tool', 'etag').then(() => {
+    getCoreToolset('tool').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];
@@ -81,7 +81,7 @@ describe('Toolsets :: server actions', () => {
 
   test('Should call update core toolset', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    updateCoreToolset({}, 'etag').then(() => {
+    updateCoreToolset({}, 'toolset', 'etag').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];

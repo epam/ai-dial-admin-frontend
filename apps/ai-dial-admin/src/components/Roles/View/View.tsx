@@ -79,11 +79,11 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   useEffect(() => {
     const name = (originalRole as { name: string })?.name;
     if (!coreRole && name) {
-      getCoreRole(name, etag).then((data) => {
+      getCoreRole(name).then((data) => {
         setCoreRole(data.response as DialRole);
       });
     }
-  }, [coreRole, etag, originalRole]);
+  }, [coreRole, originalRole]);
 
   useEffect(() => {
     setSelectedRole(selectedFormat === ExportFormat.CORE ? cloneDeep(coreRole as DialRole) : cloneDeep(originalRole));
@@ -191,7 +191,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreRole(selectedRole as Record<string, unknown>, etag)
+        ? updateCoreRole(selectedRole as Record<string, unknown>, originalRole.name || '', etag)
         : updateRole(selectedRole, etag);
 
     req.then((res) => {
@@ -208,7 +208,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedFormat, selectedRole, etag, showNotification, t, router]);
+  }, [selectedFormat, selectedRole, originalRole.name, etag, showNotification, t, router]);
 
   const onChangeRoleToken = useCallback(
     (value: number, data: DialRole, token: string) => {

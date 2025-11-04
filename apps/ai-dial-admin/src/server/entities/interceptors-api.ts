@@ -5,6 +5,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { RJSFSchema } from '@rjsf/utils';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const INTERCEPTORS_URL = `${API}/interceptors`;
 export const INTERCEPTOR_URL = (name?: string) => `${INTERCEPTORS_URL}/${name}`;
@@ -41,16 +42,16 @@ export class InterceptorsApi extends BaseApi {
     return this.get(CONFIGURATION_URL(name), token);
   }
 
-  getCoreInterceptor(name: string, etag: string, token: JWT | null) {
-    return this.getActionWithEtag(CORE_INTERCEPTOR_URL(name), etag, token);
+  getCoreInterceptor(name: string, token: JWT | null) {
+    return this.getActionWithEtag(CORE_INTERCEPTOR_URL(name), DEFAULT_ETAG, token);
   }
 
-  updateCoreInterceptor(interceptor: DialInterceptor, etag: string, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(
-      CORE_INTERCEPTOR_URL(encodeURIComponent(interceptor.name || '')),
-      interceptor,
-      token,
-      etag,
-    );
+  updateCoreInterceptor(
+    interceptor: DialInterceptor,
+    name: string,
+    etag: string,
+    token: JWT | null,
+  ): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(CORE_INTERCEPTOR_URL(encodeURIComponent(name || '')), interceptor, token, etag);
   }
 }

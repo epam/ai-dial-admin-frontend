@@ -31,11 +31,11 @@ export class RoutesApi extends BaseApi {
     return this.putActionWithEtag(ROUTE_URL(encodeURIComponent(route.name || '')), route, token, eTag);
   }
 
-  getCoreRoute(name: string, eTag: string, token: JWT | null) {
-    return this.getActionWithEtag(CORE_ROUTE_URL(name), eTag, token);
+  getCoreRoute(name: string, token: JWT | null) {
+    return this.getActionWithEtag(CORE_ROUTE_URL(name), DEFAULT_ETAG, token);
   }
 
-  updateCoreRoute(route: DialRoute, eTag: string, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(CORE_ROUTE_URL(encodeURIComponent(route.name || '')), route, token, eTag);
+  updateCoreRoute(route: DialRoute, name: string, eTag: string, token: JWT | null): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(CORE_ROUTE_URL(encodeURIComponent(name || '')), route, token, eTag);
   }
 }

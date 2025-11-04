@@ -43,7 +43,7 @@ describe('Server :: ApplicationRunnersApi', () => {
   test('Should fetch a core application scheme by id', async () => {
     fetch.mockResponseOnce(JSON.stringify([mockScheme]));
 
-    await instance.getCoreRunner(mockScheme.$id || '', 'etag123', TOKEN_MOCK);
+    await instance.getCoreRunner(mockScheme.$id || '', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${CORE_APPLICATION_SCHEME_URL(mockScheme.$id)}`,
@@ -81,10 +81,10 @@ describe('Server :: ApplicationRunnersApi', () => {
     const response = { success: true };
     fetch.mockResponseOnce(JSON.stringify(response));
 
-    await instance.updateCoreRunner(mockScheme, 'etag123', TOKEN_MOCK);
+    await instance.updateCoreRunner(mockScheme, 'runner', 'etag123', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${CORE_APPLICATION_SCHEME_URL(mockScheme.$id)}`,
+      `${TEST_URL}${CORE_APPLICATION_SCHEME_URL('runner')}`,
       expect.objectContaining({
         method: 'PUT',
         body: JSON.stringify(mockScheme),

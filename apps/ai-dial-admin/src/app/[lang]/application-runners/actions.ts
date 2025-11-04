@@ -32,12 +32,12 @@ export async function updateApplicationScheme(runner: DialApplicationScheme, eta
   );
 }
 
-export async function getCoreRunner(name: string, etag: string) {
+export async function getCoreRunner(name: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return applicationRunnersApi.getCoreRunner(name, etag, token);
+  return applicationRunnersApi.getCoreRunner(name, token);
 }
 
-export async function updateCoreRunner(toolset: DialApplicationScheme, etag: string) {
+export async function updateCoreRunner(toolset: DialApplicationScheme, name: string, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return applicationRunnersApi.updateCoreRunner(toolset, etag, token);
+  return applicationRunnersApi.updateCoreRunner(toolset, name, etag, token);
 }

@@ -4,6 +4,7 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const APPLICATION_SCHEMES_URL = `${API}/applicationTypeSchemas`;
 export const APPLICATION_SCHEME_URL = (id?: string) => `${APPLICATION_SCHEMES_URL}?id=${id}`;
@@ -34,16 +35,16 @@ export class ApplicationRunnersApi extends BaseApi {
     return this.putActionWithEtag(APPLICATION_SCHEME_URL(encodeURIComponent(scheme.$id || '')), scheme, token, etag);
   }
 
-  getCoreRunner(name: string, etag: string, token: JWT | null) {
-    return this.getActionWithEtag(CORE_APPLICATION_SCHEME_URL(name), etag, token);
+  getCoreRunner(name: string, token: JWT | null) {
+    return this.getActionWithEtag(CORE_APPLICATION_SCHEME_URL(name), DEFAULT_ETAG, token);
   }
 
-  updateCoreRunner(scheme: DialApplicationScheme, etag: string, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(
-      CORE_APPLICATION_SCHEME_URL(encodeURIComponent(scheme.$id || '')),
-      scheme,
-      token,
-      etag,
-    );
+  updateCoreRunner(
+    scheme: DialApplicationScheme,
+    id: string,
+    etag: string,
+    token: JWT | null,
+  ): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(CORE_APPLICATION_SCHEME_URL(encodeURIComponent(id || '')), scheme, token, etag);
   }
 }
