@@ -54,7 +54,7 @@ export async function getCoreApplication(name: string) {
   return applicationsApi.getCoreApplication(name, token);
 }
 
-export async function updateCoreApplication(app: DialApplication, eTag: string) {
+export async function updateCoreApplication(app: DialApplication, name: string, eTag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return applicationsApi.updateCoreApplication(app, eTag, token);
+  return applicationsApi.updateCoreApplication(app, name, eTag, token);
 }

@@ -40,7 +40,12 @@ export class ApplicationsApi extends BaseApi {
     return this.getAction(CORE_APPLICATION_URL(name), token);
   }
 
-  updateCoreApplication(app: DialApplication, eTag: string, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(CORE_APPLICATION_URL(encodeURIComponent(app.name || '')), app, token, eTag);
+  updateCoreApplication(
+    app: DialApplication,
+    name: string,
+    eTag: string,
+    token: JWT | null,
+  ): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(CORE_APPLICATION_URL(encodeURIComponent(name || '')), app, token, eTag);
   }
 }

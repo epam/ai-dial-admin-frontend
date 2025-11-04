@@ -45,12 +45,12 @@ export class InterceptorsApi extends BaseApi {
     return this.getAction(CORE_INTERCEPTOR_URL(name), token);
   }
 
-  updateCoreInterceptor(interceptor: DialInterceptor, etag: string, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(
-      CORE_INTERCEPTOR_URL(encodeURIComponent(interceptor.name || '')),
-      interceptor,
-      token,
-      etag,
-    );
+  updateCoreInterceptor(
+    interceptor: DialInterceptor,
+    name: string,
+    etag: string,
+    token: JWT | null,
+  ): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(CORE_INTERCEPTOR_URL(encodeURIComponent(name || '')), interceptor, token, etag);
   }
 }

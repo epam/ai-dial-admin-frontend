@@ -72,7 +72,7 @@ describe('Server :: RolesApi', () => {
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
     const updatedRole = { ...exampleRole, description: 'Updated description' };
-    await instance.updateCoreRole(updatedRole, 'etag123', TOKEN_MOCK);
+    await instance.updateCoreRole(updatedRole, 'role', 'etag123', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/roles/core/admin'),

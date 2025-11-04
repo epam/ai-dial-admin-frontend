@@ -89,7 +89,7 @@ describe('Server :: InterceptorsApi', () => {
   test('Should call updateCoreInterceptor with PUT method and body', async () => {
     fetch.mockResponseOnce(JSON.stringify({ success: true }));
 
-    await instance.updateCoreInterceptor(mockInterceptor, 'etag123', TOKEN_MOCK);
+    await instance.updateCoreInterceptor(mockInterceptor, 'interceptor', 'etag123', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${CORE_INTERCEPTOR_URL(mockInterceptor.name)}`,

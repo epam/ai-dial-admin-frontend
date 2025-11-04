@@ -91,7 +91,7 @@ describe('Models :: server actions', () => {
 
   test('Should call update core model', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    updateCoreModel({}, 'etag').then(() => {
+    updateCoreModel({}, 'model', 'etag').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];

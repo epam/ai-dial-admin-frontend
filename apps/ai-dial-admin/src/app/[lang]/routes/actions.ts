@@ -28,7 +28,7 @@ export async function getCoreRoute(name: string) {
   return routesApi.getCoreRoute(name, token);
 }
 
-export async function updateCoreRoute(route: DialRoute, eTag: string) {
+export async function updateCoreRoute(route: DialRoute, name: string, eTag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return routesApi.updateCoreRoute(route, eTag, token);
+  return routesApi.updateCoreRoute(route, name, eTag, token);
 }

@@ -86,7 +86,7 @@ describe('Server :: ToolsetsApi', () => {
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
-    await instance.updateCoreToolset(mockToolset, 'etag123', TOKEN_MOCK);
+    await instance.updateCoreToolset(mockToolset, 'toolset', 'etag123', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${CORE_TOOLSET_URL(mockToolset.name)}`,

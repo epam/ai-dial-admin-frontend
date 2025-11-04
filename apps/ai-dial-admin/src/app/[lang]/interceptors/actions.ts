@@ -17,14 +17,14 @@ export async function removeInterceptor(name?: string) {
   return interceptorsApi.removeInterceptor(token, name);
 }
 
-export async function getCoreInterceptor(interceptor: string, etag: string) {
+export async function getCoreInterceptor(interceptor: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return interceptorsApi.getCoreInterceptor(interceptor, etag, token);
+  return interceptorsApi.getCoreInterceptor(interceptor, token);
 }
 
-export async function updateCoreInterceptor(interceptor: DialInterceptor, etag: string) {
+export async function updateCoreInterceptor(interceptor: DialInterceptor, name: string, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return interceptorsApi.updateCoreInterceptor(interceptor, etag, token);
+  return interceptorsApi.updateCoreInterceptor(interceptor, name, etag, token);
 }
 
 export async function updateInterceptor(interceptor: DialInterceptor, etag: string) {

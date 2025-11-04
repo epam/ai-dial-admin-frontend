@@ -38,12 +38,12 @@ export class ApplicationRunnersApi extends BaseApi {
     return this.getAction(CORE_APPLICATION_SCHEME_URL(name), token);
   }
 
-  updateCoreRunner(scheme: DialApplicationScheme, etag: string, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(
-      CORE_APPLICATION_SCHEME_URL(encodeURIComponent(scheme.$id || '')),
-      scheme,
-      token,
-      etag,
-    );
+  updateCoreRunner(
+    scheme: DialApplicationScheme,
+    id: string,
+    etag: string,
+    token: JWT | null,
+  ): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(CORE_APPLICATION_SCHEME_URL(encodeURIComponent(id || '')), scheme, token, etag);
   }
 }

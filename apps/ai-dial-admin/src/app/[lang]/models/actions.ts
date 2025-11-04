@@ -68,7 +68,7 @@ export async function getCoreModel(name: string) {
   return modelsApi.getCoreModel(name, token);
 }
 
-export async function updateCoreModel(model: DialModel, eTag: string) {
+export async function updateCoreModel(model: DialModel, name: string, eTag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return modelsApi.updateCoreModel(model, eTag, token);
+  return modelsApi.updateCoreModel(model, name, eTag, token);
 }

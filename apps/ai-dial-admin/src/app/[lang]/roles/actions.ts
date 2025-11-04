@@ -27,7 +27,7 @@ export async function getCoreRole(role: string) {
   return rolesApi.getCoreRole(role, token);
 }
 
-export async function updateCoreRole(role: DialRole, eTag: string) {
+export async function updateCoreRole(role: DialRole, name: string, eTag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return rolesApi.updateCoreRole(role, eTag, token);
+  return rolesApi.updateCoreRole(role, name, eTag, token);
 }

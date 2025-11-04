@@ -191,7 +191,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreRole(selectedRole as Record<string, unknown>, etag)
+        ? updateCoreRole(selectedRole as Record<string, unknown>, originalRole.name || '', etag)
         : updateRole(selectedRole, etag);
 
     req.then((res) => {
@@ -208,7 +208,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedFormat, selectedRole, etag, showNotification, t, router]);
+  }, [selectedFormat, selectedRole, originalRole.name, etag, showNotification, t, router]);
 
   const onChangeRoleToken = useCallback(
     (value: number, data: DialRole, token: string) => {

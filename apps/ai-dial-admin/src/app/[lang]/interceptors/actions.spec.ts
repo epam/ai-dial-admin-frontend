@@ -50,7 +50,7 @@ describe('Interceptors :: server actions', () => {
 
   test('Should call update core interceptor', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    updateCoreInterceptor({}, 'etag').then(() => {
+    updateCoreInterceptor({}, 'interceptor', 'etag').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];

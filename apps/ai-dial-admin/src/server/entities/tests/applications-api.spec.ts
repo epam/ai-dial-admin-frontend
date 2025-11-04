@@ -86,7 +86,7 @@ describe('Server :: ApplicationsApi', () => {
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
-    await instance.updateCoreApplication(mockApp, 'etag123', TOKEN_MOCK);
+    await instance.updateCoreApplication(mockApp, 'app', 'etag123', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${CORE_APPLICATION_URL(mockApp.name)}`,

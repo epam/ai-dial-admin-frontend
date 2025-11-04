@@ -50,7 +50,7 @@ interface Props {
   applications?: DialApplication[] | null;
   models?: DialModel[] | null;
   updateEntity: (entity: BaseEntity, etag: string) => Promise<ServerActionResponse>;
-  updateCoreEntity: (entity: BaseEntity, etag: string) => Promise<ServerActionResponse>;
+  updateCoreEntity: (entity: BaseEntity, name: string, etag: string) => Promise<ServerActionResponse>;
   getCoreEntity: (entity: string) => Promise<ServerActionResponse>;
   removeEntity: (entity?: string) => Promise<ServerActionResponse>;
 }
@@ -188,7 +188,7 @@ const EntityView: FC<Props> = ({
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreEntity(selectedEntity as Record<string, unknown>, etag)
+        ? updateCoreEntity(selectedEntity as Record<string, unknown>, originalEntity.name || '', etag)
         : updateEntity(selectedEntity, etag);
 
     req.then((res) => {
@@ -205,7 +205,18 @@ const EntityView: FC<Props> = ({
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedFormat, updateCoreEntity, selectedEntity, etag, updateEntity, showNotification, view, t, router]);
+  }, [
+    selectedFormat,
+    updateCoreEntity,
+    selectedEntity,
+    originalEntity.name,
+    etag,
+    updateEntity,
+    showNotification,
+    view,
+    t,
+    router,
+  ]);
 
   const onTryToSave = useCallback(() => {
     if (

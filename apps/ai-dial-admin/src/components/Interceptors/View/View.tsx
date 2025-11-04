@@ -150,7 +150,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, etag, 
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreInterceptor(selectedInterceptor as Record<string, unknown>, etag)
+        ? updateCoreInterceptor(selectedInterceptor as Record<string, unknown>, originalInterceptor.name || '', etag)
         : updateInterceptor(selectedInterceptor, etag);
 
     req.then((res) => {
@@ -167,7 +167,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, etag, 
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedFormat, selectedInterceptor, etag, showNotification, t, router]);
+  }, [selectedFormat, selectedInterceptor, originalInterceptor.name, etag, showNotification, t, router]);
 
   const onChangeConfiguration = useCallback(
     (data: Record<string, unknown>) => {

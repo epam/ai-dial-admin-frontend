@@ -86,7 +86,7 @@ describe('Server :: KeysApi', () => {
     const response = { success: true };
     fetch.mockResponseOnce(JSON.stringify(response));
 
-    await instance.updateCoreKey(mockKey, 'etag123', TOKEN_MOCK);
+    await instance.updateCoreKey(mockKey, 'key', 'etag123', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${CORE_KEY_URL(mockKey.name)}`,

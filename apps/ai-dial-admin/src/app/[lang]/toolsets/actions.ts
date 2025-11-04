@@ -13,9 +13,9 @@ export async function getCoreToolset(name: string) {
   return toolSetsApi.getCoreToolset(name, token);
 }
 
-export async function updateCoreToolset(toolset: Toolset, eTag: string) {
+export async function updateCoreToolset(toolset: Toolset, name: string, eTag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return toolSetsApi.updateCoreToolset(toolset, eTag, token);
+  return toolSetsApi.updateCoreToolset(toolset, name, eTag, token);
 }
 
 export async function removeToolset(name?: string) {

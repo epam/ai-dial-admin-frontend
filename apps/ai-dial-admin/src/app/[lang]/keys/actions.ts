@@ -22,9 +22,9 @@ export async function getCoreKey(key: string) {
   return keysApi.getCoreKey(key, token);
 }
 
-export async function updateCoreKey(key: DialKey, eTag: string) {
+export async function updateCoreKey(key: DialKey, name: string, eTag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return keysApi.updateCoreKey(key, eTag, token);
+  return keysApi.updateCoreKey(key, name, eTag, token);
 }
 
 export async function createKey(key: DialKey) {
