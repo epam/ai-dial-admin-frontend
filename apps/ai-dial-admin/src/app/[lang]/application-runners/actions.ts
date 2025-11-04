@@ -31,3 +31,13 @@ export async function updateApplicationScheme(runner: DialApplicationScheme, eta
     etag,
   );
 }
+
+export async function getCoreRunner(name: string, etag: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return applicationRunnersApi.getCoreRunner(name, etag, token);
+}
+
+export async function updateCoreRunner(toolset: DialApplicationScheme, etag: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return applicationRunnersApi.updateCoreRunner(toolset, etag, token);
+}

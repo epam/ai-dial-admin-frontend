@@ -1,4 +1,4 @@
-import { createToolset, getTools, removeToolset, updateToolset } from './actions';
+import { createToolset, getCoreToolset, getTools, removeToolset, updateCoreToolset, updateToolset } from './actions';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
@@ -12,6 +12,16 @@ describe('Toolsets :: server actions', () => {
   test('Should call get tools', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     getTools('tool').then(() => {
+      expect(fetch.mock.calls.length).toEqual(1);
+
+      const call = fetch.mock.calls[0][1];
+      expect(call?.method).toBe('GET');
+    });
+  });
+
+  test('Should call get core toolset', async () => {
+    fetch.mockResponse(JSON.stringify({ data: 'response' }));
+    getCoreToolset('tool', 'etag').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];
@@ -61,7 +71,17 @@ describe('Toolsets :: server actions', () => {
 
   test('Should call update toolset', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    updateToolset({}).then(() => {
+    updateToolset({}, 'etag').then(() => {
+      expect(fetch.mock.calls.length).toEqual(1);
+
+      const call = fetch.mock.calls[0][1];
+      expect(call?.method).toBe('PUT');
+    });
+  });
+
+  test('Should call update core toolset', async () => {
+    fetch.mockResponse(JSON.stringify({ data: 'response' }));
+    updateCoreToolset({}, 'etag').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];

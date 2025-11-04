@@ -14,6 +14,11 @@ export async function getApplications() {
   return applicationsApi.getApplicationsList(token);
 }
 
+export async function getApplication(name: string, etag: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return applicationsApi.getApplication(name, token, etag);
+}
+
 export async function removeApplication(name?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return applicationsApi.removeApplication(token, name);
@@ -42,4 +47,14 @@ export async function updateApplication(application: DialApplication, etag: stri
   delete app.applicationPropertiesTemp;
 
   return applicationsApi.updateApplication(app, token, etag);
+}
+
+export async function getCoreApplication(name: string, eTag: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return applicationsApi.getCoreApplication(name, eTag, token);
+}
+
+export async function updateCoreApplication(app: DialApplication, eTag: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return applicationsApi.updateCoreApplication(app, eTag, token);
 }

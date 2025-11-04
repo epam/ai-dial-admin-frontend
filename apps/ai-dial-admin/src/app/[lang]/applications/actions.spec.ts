@@ -1,4 +1,11 @@
-import { createApplication, removeApplication, updateApplication } from './actions';
+import {
+  createApplication,
+  getCoreApplication,
+  removeApplication,
+  updateApplication,
+  updateCoreApplication,
+  getApplication,
+} from './actions';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
@@ -20,6 +27,16 @@ describe('Applications :: server actions', () => {
     });
   });
 
+  test('Should call get core application', async () => {
+    fetch.mockResponse(JSON.stringify({ data: 'response' }));
+    getCoreApplication('application', 'etag').then(() => {
+      expect(fetch.mock.calls.length).toEqual(1);
+
+      const call = fetch.mock.calls[0][1];
+      expect(call?.method).toBe('GET');
+    });
+  });
+
   test('Should call create application', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     createApplication({ name: 'application' }).then(() => {
@@ -32,11 +49,30 @@ describe('Applications :: server actions', () => {
 
   test('Should call update application', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    updateApplication({}).then(() => {
+    updateApplication({}, 'etag').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];
       expect(call?.method).toBe('PUT');
+    });
+  });
+
+  test('Should call update application', async () => {
+    fetch.mockResponse(JSON.stringify({ data: 'response' }));
+    updateCoreApplication({}, 'etag').then(() => {
+      expect(fetch.mock.calls.length).toEqual(1);
+      const call = fetch.mock.calls[0][1];
+      expect(call?.method).toBe('PUT');
+    });
+  });
+
+  test('Should call get application', async () => {
+    fetch.mockResponse(JSON.stringify({ data: 'response' }));
+    getApplication('name', 'etag').then(() => {
+      expect(fetch.mock.calls.length).toEqual(1);
+
+      const call = fetch.mock.calls[0][1];
+      expect(call?.method).toBe('GET');
     });
   });
 });

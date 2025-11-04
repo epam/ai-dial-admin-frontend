@@ -1,4 +1,4 @@
-import { exportConfig, getCoreEntity, getEntities, previewExportConfig } from './actions';
+import { exportConfig, getEntities, previewExportConfig } from './actions';
 
 import * as api from '@/src/app/api/api';
 import { utilityApi } from '@/src/app/api/api';
@@ -47,29 +47,6 @@ describe('Export config :: actions :: exportConfig', () => {
     expect(getUserToken).toHaveBeenCalled();
     expect(utilityApi.previewExportConfig).toHaveBeenCalledWith(mockRequest, fakeToken);
     expect(result).toBe(mockResponse);
-  });
-
-  test('should call utilityApi.getCoreEntity with token', async () => {
-    utilityApi.getCoreEntity.mockResolvedValue(mockResponse);
-
-    const result = await getCoreEntity('name', EntityType.MODEL);
-    expect(getUserToken).toHaveBeenCalled();
-    expect(utilityApi.getCoreEntity).toHaveBeenCalledWith(
-      {
-        $type: 'custom',
-        componentTypes: [],
-        addSecrets: true,
-        components: [
-          {
-            name: 'name',
-            type: 'MODEL',
-            dependencies: getAllAvailableDependencies('MODEL'),
-          },
-        ],
-        exportFormat: 'CORE',
-      },
-      fakeToken,
-    );
   });
 });
 

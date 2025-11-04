@@ -28,6 +28,18 @@ describe('Server :: RolesApi', () => {
     expect(result).toEqual(JSON.stringify([exampleRole]));
   });
 
+  test('Should calls a core role by name', async () => {
+    fetch.mockResponseOnce(JSON.stringify(exampleRole));
+
+    const result = await instance.getCoreRole('admin', 'etag123', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/roles/core/admin'),
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result.response).toEqual(JSON.stringify(exampleRole));
+  });
+
   test('Should calls a single role by name', async () => {
     fetch.mockResponseOnce(JSON.stringify(exampleRole));
 
@@ -51,6 +63,22 @@ describe('Server :: RolesApi', () => {
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify(exampleRole),
+      }),
+    );
+  });
+
+  test('Should update core role', async () => {
+    const mockResponse = { success: true };
+    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+
+    const updatedRole = { ...exampleRole, description: 'Updated description' };
+    await instance.updateCoreRole(updatedRole, 'etag123', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/roles/core/admin'),
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify(updatedRole),
       }),
     );
   });

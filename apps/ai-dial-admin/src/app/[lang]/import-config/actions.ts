@@ -9,14 +9,8 @@ import {
   PREVIEW_IMPORT_CONFIG_URL,
   PREVIEW_IMPORT_ZIP_CONFIG_URL,
 } from '@/src/server/utility-api';
-import { ConflictResolutionPolicy } from '@/src/types/import';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { getCoreFileFormat } from '@/src/utils/get-core-file';
-
-export async function updateCoreEntity(file: Record<string, unknown>) {
-  return importJsonConfigs(getCoreFileFormat(file, ConflictResolutionPolicy.OVERRIDE));
-}
 
 export async function importJsonConfigs(file: FormData) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
