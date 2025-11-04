@@ -36,9 +36,10 @@ export const CheckboxWidget: FC<WidgetProps> = ({ value, onChange, label }) => {
   }, [value]);
 
   return (
-    <div className="max-w-[200px]">
+    <div className="flex flex-col w-full bg-layer-2 p-[18px]">
       {label && <p className="small mb-2">{label}</p>}
       <DialSelect
+        cssClass="max-w-[200px]"
         options={booleans || []}
         value={boolValue}
         onChange={(value) => onChange(value === BooleanType.true)}

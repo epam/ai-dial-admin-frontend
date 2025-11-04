@@ -226,7 +226,7 @@ class AnyOfField<T = any, S extends StrictRJSFSchema = RJSFSchema, F extends For
     });
 
     return (
-      <div className="flex flex-col w-full bg-layer-2 p-[18px] gap-4">
+      <div className="flex flex-col w-full bg-layer-2">
         <div className="form-group max-w-[300px]">
           <Widget
             id={this.getFieldId()}

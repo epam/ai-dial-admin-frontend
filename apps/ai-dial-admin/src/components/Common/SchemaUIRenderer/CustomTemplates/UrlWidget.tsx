@@ -14,10 +14,10 @@ export const URLWidget: FC<WidgetProps> = ({
   label,
 }) => {
   return (
-    <div className="max-w-[600px]">
+    <div className="flex flex-col w-full bg-layer-2 p-[18px]">
       {!/\d$/.test(label) && <p className="small pb-3">{schema.title || label}</p>}
       <DialTextInputField
-        containerCssClass={'flex w-full'}
+        containerCssClass={'flex w-full max-w-[600px]'}
         elementId={id}
         disabled={disabled}
         readonly={readonly}

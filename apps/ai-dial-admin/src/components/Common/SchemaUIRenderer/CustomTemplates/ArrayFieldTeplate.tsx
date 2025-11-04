@@ -22,7 +22,8 @@ export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({ canAdd, items,
           const isString = schema.type === 'string';
           return (
             <li key={key} className={classNames('flex w-full gap-3 items-start', isString && 'lg:w-[45%]')}>
-              <div className="flex w-full bg-layer-2 p-[18px]">{children}</div>
+              {/* <div className="flex w-full bg-layer-2 p-[18px]">{children}</div> */}
+              {children}
               {hasRemove && !readonly && (
                 <DialRemoveButton
                   onClick={onDropIndexClick(key)}
