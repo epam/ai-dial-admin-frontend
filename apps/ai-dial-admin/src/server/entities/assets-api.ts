@@ -222,13 +222,13 @@ export class AssetsApi extends BaseApi {
   }
 
   signInToolset(toolset: AssetToolset, type: ToolsetAuthCredentialLevel, token: JWT | null, authCode?: string) {
-    const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/sign_in`;
+    const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/sign-in`;
 
     return this.postAction(url, getToolsetSignInBody(toolset, type, authCode), token);
   }
 
   signOutToolset(toolset: AssetToolset, type: ToolsetAuthCredentialLevel, token: JWT | null) {
-    const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/sign_out`;
+    const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/sign-out`;
 
     return this.postAction(url, getToolsetBasicBody(toolset, type), token);
   }
