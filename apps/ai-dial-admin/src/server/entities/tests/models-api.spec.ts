@@ -39,6 +39,18 @@ describe('Server :: ModelsApi', () => {
     expect(result.response).toEqual(JSON.stringify(modelMock));
   });
 
+  test('Should calls getCoreModel', async () => {
+    fetch.mockResponseOnce(JSON.stringify(modelMock));
+
+    const result = await instance.getCoreModel('test-model', 'etag123', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/models/core/test-model'),
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result.response).toEqual(JSON.stringify(modelMock));
+  });
+
   test('Should calls createModel', async () => {
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
@@ -63,6 +75,22 @@ describe('Server :: ModelsApi', () => {
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(`/models/${modelMock.name}`),
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify(updatedModel),
+      }),
+    );
+  });
+
+  test('Should calls updateCoreModel', async () => {
+    const updatedModel = { ...modelMock, description: 'Updated' };
+    const mockResponse = { success: true };
+    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+
+    await instance.updateCoreModel(updatedModel, 'etag123', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`/models/core/${modelMock.name}`),
       expect.objectContaining({
         method: 'PUT',
         body: JSON.stringify(updatedModel),

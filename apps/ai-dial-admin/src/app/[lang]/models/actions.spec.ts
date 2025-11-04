@@ -7,6 +7,8 @@ import {
   getModelsTopics,
   removeModel,
   updateModel,
+  getCoreModel,
+  updateCoreModel,
 } from './actions';
 
 const fetch = createFetchMock(vi);
@@ -47,6 +49,16 @@ describe('Models :: server actions', () => {
     });
   });
 
+  test('Should call get core model', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ data: 'response' }));
+    getCoreModel('model', 'etag').then(() => {
+      expect(fetch.mock.calls.length).toEqual(1);
+
+      const call = fetch.mock.calls[0][1];
+      expect(call?.method).toBe('GET');
+    });
+  });
+
   test('Should call remove model', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     removeModel('model').then(() => {
@@ -69,7 +81,17 @@ describe('Models :: server actions', () => {
 
   test('Should call update model', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    updateModel({}).then(() => {
+    updateModel({}, 'etag').then(() => {
+      expect(fetch.mock.calls.length).toEqual(1);
+
+      const call = fetch.mock.calls[0][1];
+      expect(call?.method).toBe('PUT');
+    });
+  });
+
+  test('Should call update core model', async () => {
+    fetch.mockResponse(JSON.stringify({ data: 'response' }));
+    updateCoreModel({}, 'etag').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];
