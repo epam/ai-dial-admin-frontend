@@ -49,10 +49,10 @@ const FileProperties: FC<Props> = ({ file, onChangeFile }) => {
   };
 
   const rowData = getGridFileData([file]);
-  const columnDefs = getGridFileColumns(FILES_COLUMNS, [
-    getPreviewOperation(preview, isPreviewActionHidden),
-    getDownloadOperation(download),
-  ]);
+  const columnDefs = getGridFileColumns(
+    [...FILES_COLUMNS],
+    [getPreviewOperation(preview, isPreviewActionHidden), getDownloadOperation(download)],
+  );
 
   return (
     <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full gap-6">
