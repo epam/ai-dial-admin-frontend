@@ -67,11 +67,11 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
   useEffect(() => {
     const name = originalKey?.name;
     if (!coreKey && name) {
-      getCoreKey(name, etag).then((data) => {
+      getCoreKey(name).then((data) => {
         setCoreKey(data.response as DialKey);
       });
     }
-  }, [coreKey, etag, originalKey]);
+  }, [coreKey, originalKey]);
 
   useEffect(() => {
     setSelectedKey(selectedFormat === ExportFormat.CORE ? cloneDeep(coreKey as DialKey) : cloneDeep(originalKey));
@@ -142,7 +142,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
     setIsOpenConfirmModal(false);
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreKey(selectedKey as Record<string, unknown>, etag)
+        ? updateCoreKey(selectedKey as Record<string, unknown>, originalKey.name || '', etag)
         : updateKey(selectedKey, etag);
 
     req.then((res) => {
@@ -159,7 +159,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedFormat, selectedKey, etag, showNotification, t, router]);
+  }, [selectedFormat, selectedKey, originalKey.name, etag, showNotification, t, router]);
 
   const onRotateKey = useCallback(
     (key: DialKey) => {

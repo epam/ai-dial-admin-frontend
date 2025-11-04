@@ -29,7 +29,7 @@ describe('Applications :: server actions', () => {
 
   test('Should call get core application', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    getCoreApplication('application', 'etag').then(() => {
+    getCoreApplication('application').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];
@@ -59,7 +59,7 @@ describe('Applications :: server actions', () => {
 
   test('Should call update application', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    updateCoreApplication({}, 'etag').then(() => {
+    updateCoreApplication({}, 'app', 'etag').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
       const call = fetch.mock.calls[0][1];
       expect(call?.method).toBe('PUT');

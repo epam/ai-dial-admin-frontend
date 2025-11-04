@@ -63,12 +63,12 @@ export async function getModelContainers() {
   return deploymentsApi.getModelContainers(token);
 }
 
-export async function getCoreModel(name: string, eTag: string) {
+export async function getCoreModel(name: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return modelsApi.getCoreModel(name, eTag, token);
+  return modelsApi.getCoreModel(name, token);
 }
 
-export async function updateCoreModel(model: DialModel, eTag: string) {
+export async function updateCoreModel(model: DialModel, name: string, eTag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return modelsApi.updateCoreModel(model, eTag, token);
+  return modelsApi.updateCoreModel(model, name, eTag, token);
 }

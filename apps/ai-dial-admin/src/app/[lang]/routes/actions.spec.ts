@@ -22,7 +22,7 @@ describe('Routes :: server actions', () => {
 
   test('Should call get core route', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    getCoreRoute('route', 'etag').then(() => {
+    getCoreRoute('route').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];

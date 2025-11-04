@@ -17,14 +17,14 @@ export async function updateKey(key: DialKey, eTag: string) {
   return keysApi.updateKey(key, token, eTag);
 }
 
-export async function getCoreKey(key: string, eTag: string) {
+export async function getCoreKey(key: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return keysApi.getCoreKey(key, eTag, token);
+  return keysApi.getCoreKey(key, token);
 }
 
-export async function updateCoreKey(key: DialKey, eTag: string) {
+export async function updateCoreKey(key: DialKey, name: string, eTag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return keysApi.updateCoreKey(key, eTag, token);
+  return keysApi.updateCoreKey(key, name, eTag, token);
 }
 
 export async function createKey(key: DialKey) {

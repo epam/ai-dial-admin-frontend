@@ -37,7 +37,7 @@ describe('Server :: InterceptorsApi', () => {
   test('should call getCoreInterceptor with correct name and method', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockInterceptor));
 
-    const result = await instance.getCoreInterceptor('test-interceptor', 'etag123', TOKEN_MOCK);
+    const result = await instance.getCoreInterceptor('test-interceptor', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${CORE_INTERCEPTOR_URL('test-interceptor')}`,
@@ -89,10 +89,10 @@ describe('Server :: InterceptorsApi', () => {
   test('Should call updateCoreInterceptor with PUT method and body', async () => {
     fetch.mockResponseOnce(JSON.stringify({ success: true }));
 
-    await instance.updateCoreInterceptor(mockInterceptor, 'etag123', TOKEN_MOCK);
+    await instance.updateCoreInterceptor(mockInterceptor, 'interceptor', 'etag123', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${CORE_INTERCEPTOR_URL(mockInterceptor.name)}`,
+      `${TEST_URL}${CORE_INTERCEPTOR_URL('interceptor')}`,
       expect.objectContaining({
         method: 'PUT',
         body: JSON.stringify(mockInterceptor),

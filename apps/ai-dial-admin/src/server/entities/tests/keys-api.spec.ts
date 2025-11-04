@@ -43,7 +43,7 @@ describe('Server :: KeysApi', () => {
   test('Should fetch a single key', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockKey));
 
-    const result = await instance.getCoreKey(mockKey.name || '', 'etag123', TOKEN_MOCK);
+    const result = await instance.getCoreKey(mockKey.name || '', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${CORE_KEY_URL(mockKey.name)}`,
@@ -86,10 +86,10 @@ describe('Server :: KeysApi', () => {
     const response = { success: true };
     fetch.mockResponseOnce(JSON.stringify(response));
 
-    await instance.updateCoreKey(mockKey, 'etag123', TOKEN_MOCK);
+    await instance.updateCoreKey(mockKey, 'key', 'etag123', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${CORE_KEY_URL(mockKey.name)}`,
+      `${TEST_URL}${CORE_KEY_URL('key')}`,
       expect.objectContaining({
         method: 'PUT',
         body: JSON.stringify(mockKey),

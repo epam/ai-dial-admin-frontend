@@ -36,11 +36,16 @@ export class ApplicationsApi extends BaseApi {
     );
   }
 
-  getCoreApplication(name: string, eTag: string, token: JWT | null) {
-    return this.getActionWithEtag(CORE_APPLICATION_URL(name), eTag, token);
+  getCoreApplication(name: string, token: JWT | null) {
+    return this.getActionWithEtag(CORE_APPLICATION_URL(name), DEFAULT_ETAG, token);
   }
 
-  updateCoreApplication(app: DialApplication, eTag: string, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(CORE_APPLICATION_URL(encodeURIComponent(app.name || '')), app, token, eTag);
+  updateCoreApplication(
+    app: DialApplication,
+    name: string,
+    eTag: string,
+    token: JWT | null,
+  ): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(CORE_APPLICATION_URL(encodeURIComponent(name || '')), app, token, eTag);
   }
 }

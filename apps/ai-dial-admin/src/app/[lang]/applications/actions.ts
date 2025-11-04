@@ -49,12 +49,12 @@ export async function updateApplication(application: DialApplication, etag: stri
   return applicationsApi.updateApplication(app, token, etag);
 }
 
-export async function getCoreApplication(name: string, eTag: string) {
+export async function getCoreApplication(name: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return applicationsApi.getCoreApplication(name, eTag, token);
+  return applicationsApi.getCoreApplication(name, token);
 }
 
-export async function updateCoreApplication(app: DialApplication, eTag: string) {
+export async function updateCoreApplication(app: DialApplication, name: string, eTag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return applicationsApi.updateCoreApplication(app, eTag, token);
+  return applicationsApi.updateCoreApplication(app, name, eTag, token);
 }

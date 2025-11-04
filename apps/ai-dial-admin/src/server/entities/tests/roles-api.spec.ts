@@ -31,7 +31,7 @@ describe('Server :: RolesApi', () => {
   test('Should calls a core role by name', async () => {
     fetch.mockResponseOnce(JSON.stringify(exampleRole));
 
-    const result = await instance.getCoreRole('admin', 'etag123', TOKEN_MOCK);
+    const result = await instance.getCoreRole('admin', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/roles/core/admin'),
@@ -72,10 +72,10 @@ describe('Server :: RolesApi', () => {
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
     const updatedRole = { ...exampleRole, description: 'Updated description' };
-    await instance.updateCoreRole(updatedRole, 'etag123', TOKEN_MOCK);
+    await instance.updateCoreRole(updatedRole, 'role', 'etag123', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/roles/core/admin'),
+      expect.stringContaining('/roles/core/role'),
       expect.objectContaining({
         method: 'PUT',
         body: JSON.stringify(updatedRole),

@@ -61,11 +61,11 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   useEffect(() => {
     const name = originalToolset?.name;
     if (!coreToolset && name) {
-      getCoreToolset(name, etag).then((data) => {
+      getCoreToolset(name).then((data) => {
         setCoreToolset(data.response as Toolset);
       });
     }
-  }, [coreToolset, etag, originalToolset]);
+  }, [coreToolset, originalToolset]);
 
   useEffect(() => {
     setSelectedToolset(
@@ -115,7 +115,7 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreToolset(selectedToolset as Record<string, unknown>, etag)
+        ? updateCoreToolset(selectedToolset as Record<string, unknown>, originalToolset.name || '', etag)
         : updateToolset(selectedToolset, etag);
 
     req.then((res) => {
@@ -133,7 +133,7 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
       }
       setIsModalOpen(false);
     });
-  }, [selectedFormat, selectedToolset, etag, showNotification, t, router]);
+  }, [selectedFormat, selectedToolset, originalToolset.name, etag, showNotification, t, router]);
 
   const onTryToSave = useCallback(() => {
     if (selectedFormat !== ExportFormat.CORE && isDisableRole(selectedToolset as EntityRoleLimits)) {

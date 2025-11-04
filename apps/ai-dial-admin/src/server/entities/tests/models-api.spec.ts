@@ -42,7 +42,7 @@ describe('Server :: ModelsApi', () => {
   test('Should calls getCoreModel', async () => {
     fetch.mockResponseOnce(JSON.stringify(modelMock));
 
-    const result = await instance.getCoreModel('test-model', 'etag123', TOKEN_MOCK);
+    const result = await instance.getCoreModel('test-model', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/models/core/test-model'),
@@ -87,10 +87,10 @@ describe('Server :: ModelsApi', () => {
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
 
-    await instance.updateCoreModel(updatedModel, 'etag123', TOKEN_MOCK);
+    await instance.updateCoreModel(updatedModel, 'model', 'etag123', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining(`/models/core/${modelMock.name}`),
+      expect.stringContaining(`/models/core/model`),
       expect.objectContaining({
         method: 'PUT',
         body: JSON.stringify(updatedModel),
