@@ -12,7 +12,7 @@ describe('toolset-auth utils', () => {
     const toolset = { authSettings: { authenticationType: ToolsetAuthType.OAUTH } } as any;
     const result = getToolsetSignInBody(toolset, 'admin', 'authcode');
     expect(result).toMatchObject({
-      credentials_level: 'admin',
+      credentialsLevel: 'admin',
       authenticationType: ToolsetAuthType.OAUTH,
       code: 'authcode',
     });
