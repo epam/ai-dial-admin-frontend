@@ -186,13 +186,13 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
             <>
               <DialButton
                 variant={ButtonVariant.Secondary}
-                title={t(ButtonsI18nKey.BulkActions)}
+                title={isTabletScreen ? '' : t(ButtonsI18nKey.BulkActions)}
                 iconBefore={<IconSquareCheck {...BASE_ICON_PROPS} />}
                 onClick={() => setIsBulkView?.(true)}
               />
               <DialButton
                 variant={ButtonVariant.Secondary}
-                title={t(ButtonsI18nKey.Import)}
+                title={isTabletScreen ? '' : t(ButtonsI18nKey.Import)}
                 iconBefore={<IconFileArrowLeft {...BASE_ICON_PROPS} />}
                 onClick={() => handleModalOpen(ModalType.import)}
               />
