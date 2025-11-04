@@ -13,19 +13,20 @@ try {
 const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
 const ContentSecurityPolicy = `
     default-src 'self';
-    script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https: http: ${
-      process.env.NODE_ENV === 'production' ? '' : `'unsafe-eval'`
-    };
-
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https:;
     style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline';
     img-src 'self' blob: data: https://authjs.dev;
     font-src 'self' data: https://cdn.jsdelivr.net fonts.gstatic.com;
+    frame-src 'self';
     object-src 'none';
     base-uri 'self';
-    frame-ancestors ${process.env.ALLOWED_FRAME_ANCESTORS ?? "'none'"};
     ${process.env.NODE_ENV === 'production' ? 'upgrade-insecure-requests;' : ''}
 `;
-
+    
+    // script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https: http: ${
+    //   process.env.NODE_ENV === 'production' ? '' : `'unsafe-eval'`
+    // };
+    // frame-ancestors ${process.env.ALLOWED_FRAME_ANCESTORS ?? "'none'"};
 /**
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
