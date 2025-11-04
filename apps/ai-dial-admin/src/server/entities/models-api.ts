@@ -42,7 +42,7 @@ export class ModelsApi extends BaseApi {
   }
 
   getCoreModel(name: string, token: JWT | null) {
-    return this.getAction(CORE_MODEL_URL(name), token);
+    return this.getActionWithEtag(CORE_MODEL_URL(name), DEFAULT_ETAG, token);
   }
 
   updateCoreModel(model: DialModel, name: string, eTag: string, token: JWT | null): Promise<ServerActionResponse> {

@@ -37,7 +37,7 @@ export class ApplicationsApi extends BaseApi {
   }
 
   getCoreApplication(name: string, token: JWT | null) {
-    return this.getAction(CORE_APPLICATION_URL(name), token);
+    return this.getActionWithEtag(CORE_APPLICATION_URL(name), DEFAULT_ETAG, token);
   }
 
   updateCoreApplication(

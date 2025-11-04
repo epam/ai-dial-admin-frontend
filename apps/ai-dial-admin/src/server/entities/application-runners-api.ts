@@ -4,6 +4,7 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const APPLICATION_SCHEMES_URL = `${API}/applicationTypeSchemas`;
 export const APPLICATION_SCHEME_URL = (id?: string) => `${APPLICATION_SCHEMES_URL}?id=${id}`;
@@ -35,7 +36,7 @@ export class ApplicationRunnersApi extends BaseApi {
   }
 
   getCoreRunner(name: string, token: JWT | null) {
-    return this.getAction(CORE_APPLICATION_SCHEME_URL(name), token);
+    return this.getActionWithEtag(CORE_APPLICATION_SCHEME_URL(name), DEFAULT_ETAG, token);
   }
 
   updateCoreRunner(

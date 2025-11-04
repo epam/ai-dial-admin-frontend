@@ -5,6 +5,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { RJSFSchema } from '@rjsf/utils';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const INTERCEPTORS_URL = `${API}/interceptors`;
 export const INTERCEPTOR_URL = (name?: string) => `${INTERCEPTORS_URL}/${name}`;
@@ -42,7 +43,7 @@ export class InterceptorsApi extends BaseApi {
   }
 
   getCoreInterceptor(name: string, token: JWT | null) {
-    return this.getAction(CORE_INTERCEPTOR_URL(name), token);
+    return this.getActionWithEtag(CORE_INTERCEPTOR_URL(name), DEFAULT_ETAG, token);
   }
 
   updateCoreInterceptor(

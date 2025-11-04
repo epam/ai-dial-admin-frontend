@@ -4,6 +4,7 @@ import { DialKey } from '@/src/models/dial/key';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const KEYS_URL = `${API}/keys`;
 export const KEY_URL = (name?: string) => `${KEYS_URL}/${name}`;
@@ -31,7 +32,7 @@ export class KeysApi extends BaseApi {
   }
 
   getCoreKey(name: string, token: JWT | null) {
-    return this.getAction(CORE_KEY_URL(name), token);
+    return this.getActionWithEtag(CORE_KEY_URL(name), DEFAULT_ETAG, token);
   }
 
   updateCoreKey(key: DialKey, name: string, eTag: string, token: JWT | null): Promise<ServerActionResponse> {

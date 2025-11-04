@@ -32,7 +32,7 @@ export class RoutesApi extends BaseApi {
   }
 
   getCoreRoute(name: string, token: JWT | null) {
-    return this.getAction(CORE_ROUTE_URL(name), token);
+    return this.getActionWithEtag(CORE_ROUTE_URL(name), DEFAULT_ETAG, token);
   }
 
   updateCoreRoute(route: DialRoute, name: string, eTag: string, token: JWT | null): Promise<ServerActionResponse> {
