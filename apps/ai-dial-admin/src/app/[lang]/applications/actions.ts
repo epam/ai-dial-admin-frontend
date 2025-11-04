@@ -14,6 +14,11 @@ export async function getApplications() {
   return applicationsApi.getApplicationsList(token);
 }
 
+export async function getApplication(name: string, etag: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return applicationsApi.getApplication(name, token, etag);
+}
+
 export async function removeApplication(name?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return applicationsApi.removeApplication(token, name);
