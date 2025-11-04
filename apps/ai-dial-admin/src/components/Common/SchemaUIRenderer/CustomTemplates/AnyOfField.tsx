@@ -106,6 +106,13 @@ class AnyOfField<T = any, S extends StrictRJSFSchema = RJSFSchema, F extends For
     return selectedOption;
   }
 
+  getNewFormDataByType(type?: string) {
+    if (type === 'string') {
+      return '';
+    }
+    return null;
+  }
+
   /** Callback handler to remember what the currently selected option is. In addition to that the `formData` is updated
    * to remove properties that are not part of the newly selected option schema, and then the updated data is passed to
    * the `onChange` handler.
@@ -129,8 +136,8 @@ class AnyOfField<T = any, S extends StrictRJSFSchema = RJSFSchema, F extends For
       // so that only the root objects themselves are created without adding undefined children properties
       newFormData = schemaUtils.getDefaultFormState(newOption, newFormData, 'excludeObjectChildren') as T;
     }
-    if (formData === null && newFormData === undefined) {
-      newFormData = null as T;
+    if (newFormData === undefined) {
+      newFormData = this.getNewFormDataByType(newOption?.type as string) as T;
     }
     this.setState({ selectedOption: intOption }, () => {
       onChange(newFormData, undefined, this.getFieldId());

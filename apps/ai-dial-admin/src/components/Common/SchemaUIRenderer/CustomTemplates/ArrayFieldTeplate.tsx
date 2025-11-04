@@ -7,6 +7,7 @@ import { IconPlus } from '@tabler/icons-react';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
+import classNames from 'classnames';
 
 export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({ canAdd, items, onAddClick, title, readonly }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
@@ -17,9 +18,10 @@ export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({ canAdd, items,
 
       <ul className="flex flex-col w-full gap-3">
         {items.map((item, key) => {
-          const { children, hasRemove, onDropIndexClick } = item;
+          const { children, hasRemove, onDropIndexClick, schema } = item;
+          const isString = schema.type === 'string';
           return (
-            <li key={key} className="flex w-full gap-3 items-start">
+            <li key={key} className={classNames('flex w-full gap-3 items-start', isString && 'lg:w-[45%]')}>
               <div className="flex w-full bg-layer-2 p-[18px]">{children}</div>
               {hasRemove && !readonly && (
                 <DialRemoveButton

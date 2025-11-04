@@ -7,7 +7,7 @@ import { BooleanI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { BooleanType } from '@/src/types/boolean';
 
-export const CheckboxWidget: FC<WidgetProps> = ({ value, onChange }) => {
+export const CheckboxWidget: FC<WidgetProps> = ({ value, onChange, label }) => {
   const t = useI18n();
   const booleans: SelectOption[] = useMemo(
     () => [
@@ -37,6 +37,7 @@ export const CheckboxWidget: FC<WidgetProps> = ({ value, onChange }) => {
 
   return (
     <div className="max-w-[200px]">
+      {label && <p className="small mb-2">{label}</p>}
       <DialSelect
         options={booleans || []}
         value={boolValue}

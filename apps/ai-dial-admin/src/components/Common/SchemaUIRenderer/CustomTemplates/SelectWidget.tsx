@@ -1,35 +1,24 @@
-import { useCallback } from 'react';
-import {
-  enumOptionsIndexForValue,
-  enumOptionsValueForIndex,
-  FormContextType,
-  RJSFSchema,
-  StrictRJSFSchema,
-  WidgetProps,
-} from '@rjsf/utils';
+import { FC, useCallback } from 'react';
+
+import { WidgetProps } from '@rjsf/utils';
 import { DialSelect } from '@epam/ai-dial-ui-kit';
 
-function SelectWidget<T = any, S extends StrictRJSFSchema = RJSFSchema, F extends FormContextType = any>({
-  options,
-  value,
-  multiple = false,
-  onChange,
-  label,
-}: WidgetProps<T, S, F>) {
-  const { enumOptions, emptyValue: optEmptyVal } = options;
+export const SelectWidget: FC<WidgetProps> = ({ options, value, multiple = false, onChange, label }) => {
+  const { enumOptions } = options;
   const emptyValue = multiple ? [] : '';
 
   const handleChange = useCallback(
     (value: string | string[]) => {
-      return onChange(enumOptionsValueForIndex<S>(value, enumOptions, optEmptyVal));
+      const val = enumOptions?.find((o) => o.value.toString() === value?.toString())?.value;
+      return onChange(val);
     },
-    [onChange, enumOptions, optEmptyVal],
+    [onChange, enumOptions],
   );
 
-  const selectedIndexes = enumOptionsIndexForValue<S>(value, enumOptions, multiple);
+  const selectedIndexes = enumOptions?.find((o) => o.value.toString() === value?.toString())?.value.toString();
 
   return (
-    <div>
+    <div className="max-w-[600px]">
       {label && <p className="small mb-2">{label}</p>}
       <DialSelect
         options={enumOptions?.map((o) => ({ ...o, value: o.value.toString() })) || []}
@@ -38,6 +27,4 @@ function SelectWidget<T = any, S extends StrictRJSFSchema = RJSFSchema, F extend
       />
     </div>
   );
-}
-
-export default SelectWidget;
+};
