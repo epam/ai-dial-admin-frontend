@@ -1,6 +1,9 @@
 import { FC } from 'react';
-import type { WidgetProps } from '@rjsf/utils';
+
 import { DialPasswordInput } from '@epam/ai-dial-ui-kit';
+import type { WidgetProps } from '@rjsf/utils';
+
+import { WidgetHeader } from './WidgetHeader';
 
 export const PasswordWidget: FC<WidgetProps> = ({
   id,
@@ -15,7 +18,7 @@ export const PasswordWidget: FC<WidgetProps> = ({
 }) => {
   return (
     <div className="flex flex-col w-full bg-layer-2 p-[18px]">
-      {!/\d$/.test(label) && <p className="small pb-3">{schema.title || label}</p>}
+      <WidgetHeader title={schema.title} label={label} />
       <DialPasswordInput
         containerCssClass={'flex w-full max-w-[600px]'}
         elementId={id}

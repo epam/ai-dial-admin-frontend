@@ -6,6 +6,7 @@ import type { WidgetProps } from '@rjsf/utils';
 import { BooleanI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { BooleanType } from '@/src/types/boolean';
+import { WidgetHeader } from './WidgetHeader';
 
 export const CheckboxWidget: FC<WidgetProps> = ({ value, onChange, label }) => {
   const t = useI18n();
@@ -37,7 +38,7 @@ export const CheckboxWidget: FC<WidgetProps> = ({ value, onChange, label }) => {
 
   return (
     <div className="flex flex-col w-full bg-layer-2 p-[18px]">
-      {label && <p className="small mb-2">{label}</p>}
+      {label && <WidgetHeader title={label} defaultHeader={true} />}
       <DialSelect
         cssClass="max-w-[200px]"
         options={booleans || []}

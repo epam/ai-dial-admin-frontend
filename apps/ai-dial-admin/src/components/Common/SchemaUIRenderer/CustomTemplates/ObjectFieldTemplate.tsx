@@ -4,9 +4,10 @@ import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 import { canExpand, ObjectFieldTemplateProps } from '@rjsf/utils';
 import { IconPlus } from '@tabler/icons-react';
 
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
+import { WidgetHeader } from './WidgetHeader';
 
 export const ObjectFieldTemplate: FC<ObjectFieldTemplateProps> = (props) => {
   const { title, properties, schema, uiSchema, formData, onAddClick, readonly } = props;
@@ -14,7 +15,7 @@ export const ObjectFieldTemplate: FC<ObjectFieldTemplateProps> = (props) => {
 
   return (
     <fieldset className="p-6 bg-layer-0">
-      {title && <p className="small mb-2">{title}</p>}
+      {title && <WidgetHeader title={title} defaultHeader={true} />}
       <div className="space-y-3">
         {properties.map((prop) => (
           <div key={prop.name}>{prop.content}</div>

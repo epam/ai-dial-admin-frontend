@@ -1,6 +1,9 @@
 import { FC } from 'react';
-import type { WidgetProps } from '@rjsf/utils';
+
 import { DialNumberInputField, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import type { WidgetProps } from '@rjsf/utils';
+
+import { WidgetHeader } from './WidgetHeader';
 
 export const TextWidget: FC<WidgetProps> = ({
   id,
@@ -15,7 +18,7 @@ export const TextWidget: FC<WidgetProps> = ({
 }) => {
   return (
     <div className="flex flex-col w-full bg-layer-2 p-[18px]">
-      {!/\d$/.test(label) && <p className="small pb-3">{schema.title || label}</p>}
+      <WidgetHeader label={label} title={schema.title} />
       {schema.type === 'string' && (
         <DialTextInputField
           containerCssClass={'flex w-full max-w-[600px]'}

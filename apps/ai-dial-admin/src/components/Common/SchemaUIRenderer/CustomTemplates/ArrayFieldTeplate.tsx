@@ -8,13 +8,14 @@ import classNames from 'classnames';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
+import { WidgetHeader } from './WidgetHeader';
 
 export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({ canAdd, items, onAddClick, title, readonly }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
 
   return (
     <fieldset className="flex flex-col p-6 gap-3">
-      {title && <p className="small">{title}</p>}
+      {title && <WidgetHeader title={title} defaultHeader={true} />}
 
       <ul className="flex flex-col w-full gap-3">
         {items.map((item, key) => {
