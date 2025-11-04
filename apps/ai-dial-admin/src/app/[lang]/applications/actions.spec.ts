@@ -40,7 +40,7 @@ describe('Applications :: server actions', () => {
     });
   });
 
-    test('Should call get application', async () => {
+  test('Should call get application', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     getApplication('name', 'etag').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
