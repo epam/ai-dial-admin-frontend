@@ -89,7 +89,7 @@ describe('Server :: ApplicationsApi', () => {
     await instance.updateCoreApplication(mockApp, 'app', 'etag123', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${CORE_APPLICATION_URL(mockApp.name)}`,
+      `${TEST_URL}${CORE_APPLICATION_URL('app')}`,
       expect.objectContaining({
         method: 'PUT',
         body: JSON.stringify(mockApp),

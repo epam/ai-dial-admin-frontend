@@ -89,7 +89,7 @@ describe('Server :: ToolsetsApi', () => {
     await instance.updateCoreToolset(mockToolset, 'toolset', 'etag123', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${CORE_TOOLSET_URL(mockToolset.name)}`,
+      `${TEST_URL}${CORE_TOOLSET_URL('toolset')}`,
       expect.objectContaining({
         method: 'PUT',
         body: JSON.stringify(mockToolset),

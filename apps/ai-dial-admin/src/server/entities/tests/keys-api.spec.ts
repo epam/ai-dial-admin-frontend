@@ -89,7 +89,7 @@ describe('Server :: KeysApi', () => {
     await instance.updateCoreKey(mockKey, 'key', 'etag123', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${CORE_KEY_URL(mockKey.name)}`,
+      `${TEST_URL}${CORE_KEY_URL('key')}`,
       expect.objectContaining({
         method: 'PUT',
         body: JSON.stringify(mockKey),

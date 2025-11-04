@@ -84,7 +84,7 @@ describe('Server :: ApplicationRunnersApi', () => {
     await instance.updateCoreRunner(mockScheme, 'runner', 'etag123', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${CORE_APPLICATION_SCHEME_URL(mockScheme.$id)}`,
+      `${TEST_URL}${CORE_APPLICATION_SCHEME_URL('runner')}`,
       expect.objectContaining({
         method: 'PUT',
         body: JSON.stringify(mockScheme),

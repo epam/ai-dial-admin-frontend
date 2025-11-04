@@ -92,7 +92,7 @@ describe('Server :: InterceptorsApi', () => {
     await instance.updateCoreInterceptor(mockInterceptor, 'interceptor', 'etag123', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${CORE_INTERCEPTOR_URL(mockInterceptor.name)}`,
+      `${TEST_URL}${CORE_INTERCEPTOR_URL('interceptor')}`,
       expect.objectContaining({
         method: 'PUT',
         body: JSON.stringify(mockInterceptor),

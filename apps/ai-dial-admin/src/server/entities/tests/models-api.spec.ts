@@ -90,7 +90,7 @@ describe('Server :: ModelsApi', () => {
     await instance.updateCoreModel(updatedModel, 'model', 'etag123', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining(`/models/core/${modelMock.name}`),
+      expect.stringContaining(`/models/core/model`),
       expect.objectContaining({
         method: 'PUT',
         body: JSON.stringify(updatedModel),
