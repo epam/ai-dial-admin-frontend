@@ -1,9 +1,11 @@
 import { RefObject } from 'react';
 
+import { getApplication } from '@/src/app/[lang]/applications/actions';
 import { getApp } from '@/src/app/[lang]/assets-applications/actions';
 import { getToolset } from '@/src/app/[lang]/assets-toolsets/actions';
 import { getPrompt } from '@/src/app/[lang]/prompts/actions';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { DialApplication } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { Asset, AssetApp, AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
@@ -24,6 +26,11 @@ export const getData = async <T>(route: ApplicationRoute, ref: RefObject<T | und
   if (route === ApplicationRoute.AssetsToolsets) {
     const { folderId, name, version } = ref.current as AssetToolset;
     return (await getToolset(folderId, name as string, version, DEFAULT_ETAG)).response;
+  }
+
+  if (route === ApplicationRoute.Applications) {
+    const { name } = ref.current as DialApplication;
+    return (await getApplication(name as string, DEFAULT_ETAG)).response;
   }
 
   return null;
@@ -47,6 +54,10 @@ export const prepareEntityForDuplicate = async <T>(
   ref: RefObject<T | undefined>,
 ) => {
   const fullEntity = await getData(route, ref);
+
+  if (route === ApplicationRoute.Applications) {
+    return fullEntity;
+  }
 
   if (route === ApplicationRoute.Roles) {
     return {
