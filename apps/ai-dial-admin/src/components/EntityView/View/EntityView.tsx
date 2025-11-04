@@ -102,7 +102,8 @@ const EntityView: FC<Props> = ({
     setSelectedEntity(
       selectedFormat === ExportFormat.CORE ? cloneDeep(coreEntity as BaseEntity) : cloneDeep(originalEntity),
     );
-  }, [selectedFormat, coreEntity, originalEntity]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFormat, originalEntity]);
 
   const headerClassName = classNames(
     'flex flex-row min-h-[34px]',

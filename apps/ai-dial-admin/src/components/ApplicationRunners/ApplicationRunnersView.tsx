@@ -102,7 +102,8 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names 
     setSelectedRunner(
       selectedFormat === ExportFormat.CORE ? cloneDeep(coreRunner as DialApplicationScheme) : cloneDeep(originalScheme),
     );
-  }, [selectedFormat, coreRunner, originalScheme]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFormat, originalScheme]);
 
   const headerClassName = classNames(
     'flex flex-row min-h-[34px]',
