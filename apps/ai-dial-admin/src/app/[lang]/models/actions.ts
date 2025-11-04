@@ -57,7 +57,18 @@ export async function createModel(model: DialModel) {
     token,
   );
 }
+
 export async function getModelContainers() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return deploymentsApi.getModelContainers(token);
+}
+
+export async function getCoreModel(name: string, eTag: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return modelsApi.getCoreModel(name, eTag, token);
+}
+
+export async function updateCoreModel(model: DialModel, eTag: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return modelsApi.updateCoreModel(model, eTag, token);
 }

@@ -6,16 +6,18 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 
-import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
-import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
-import { removeInterceptor, updateInterceptor } from '@/src/app/[lang]/interceptors/actions';
+import {
+  removeInterceptor,
+  updateInterceptor,
+  getCoreInterceptor,
+  updateCoreInterceptor,
+} from '@/src/app/[lang]/interceptors/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import { getRelevantDataForInterceptor } from '@/src/components/AddEntitiesTab/utils';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import { getExportType } from '@/src/components/EntityView/View/core-entity-utils';
 import { auditTabs, EntityViewTab, parameterSchemaTabs, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import ParameterSchema from '@/src/components/Interceptors/View/ParameterSchema/ParameterSchema';
 import { TabsI18nKey } from '@/src/constants/i18n';
@@ -66,11 +68,11 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, etag, 
   useEffect(() => {
     const name = originalInterceptor?.name;
     if (!coreInterceptor && name) {
-      getCoreEntity(name, getExportType(ApplicationRoute.Interceptors)).then((data) => {
-        setCoreInterceptor(data);
+      getCoreInterceptor(name, etag).then((data) => {
+        setCoreInterceptor(data.response as DialInterceptor);
       });
     }
-  }, [coreInterceptor, originalInterceptor]);
+  }, [coreInterceptor, etag, originalInterceptor]);
 
   useEffect(() => {
     setSelectedInterceptor(
@@ -148,7 +150,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, etag, 
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreEntity(selectedInterceptor as Record<string, unknown>)
+        ? updateCoreInterceptor(selectedInterceptor as Record<string, unknown>, etag)
         : updateInterceptor(selectedInterceptor, etag);
 
     req.then((res) => {

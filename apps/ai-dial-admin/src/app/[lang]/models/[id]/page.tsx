@@ -1,7 +1,7 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { removeModel, updateModel } from '@/src/app/[lang]/models/actions';
+import { getCoreModel, removeModel, updateCoreModel, updateModel } from '@/src/app/[lang]/models/actions';
 import { interceptorsApi, modelsApi, rolesApi } from '@/src/app/api/api';
 import EntityView from '@/src/components/EntityView/View/EntityView';
 import Page403 from '@/src/components/Page403/Page403';
@@ -58,6 +58,8 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
         originalEntity={model}
         removeEntity={removeModel}
         updateEntity={updateModel}
+        getCoreEntity={getCoreModel}
+        updateCoreEntity={updateCoreModel}
       />
     </SaveValidationContextProvider>
   );

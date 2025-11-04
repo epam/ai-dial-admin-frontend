@@ -1,5 +1,11 @@
 import createFetchMock from 'vitest-fetch-mock';
-import { InterceptorsApi, INTERCEPTORS_URL, INTERCEPTOR_URL, CONFIGURATION_URL } from '../interceptors-api';
+import {
+  InterceptorsApi,
+  INTERCEPTORS_URL,
+  INTERCEPTOR_URL,
+  CONFIGURATION_URL,
+  CORE_INTERCEPTOR_URL,
+} from '../interceptors-api';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -26,6 +32,18 @@ describe('Server :: InterceptorsApi', () => {
 
     expect(fetch).toHaveBeenCalledWith(`${TEST_URL}${INTERCEPTORS_URL}`, expect.objectContaining({ method: 'GET' }));
     expect(result).toEqual(JSON.stringify([mockInterceptor]));
+  });
+
+  test('should call getCoreInterceptor with correct name and method', async () => {
+    fetch.mockResponseOnce(JSON.stringify(mockInterceptor));
+
+    const result = await instance.getCoreInterceptor('test-interceptor', 'etag123', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${CORE_INTERCEPTOR_URL('test-interceptor')}`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result.response).toEqual(JSON.stringify(mockInterceptor));
   });
 
   test('should call getInterceptor with correct name and method', async () => {
@@ -61,6 +79,20 @@ describe('Server :: InterceptorsApi', () => {
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${INTERCEPTOR_URL(mockInterceptor.name)}`,
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify(mockInterceptor),
+      }),
+    );
+  });
+
+  test('Should call updateCoreInterceptor with PUT method and body', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+
+    await instance.updateCoreInterceptor(mockInterceptor, 'etag123', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${CORE_INTERCEPTOR_URL(mockInterceptor.name)}`,
       expect.objectContaining({
         method: 'PUT',
         body: JSON.stringify(mockInterceptor),

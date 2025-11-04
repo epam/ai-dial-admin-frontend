@@ -8,11 +8,14 @@ import { ButtonVariant, DialButtonDropdown, DialTabs, DropdownItem, TabModel } f
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
-import { removeApplicationScheme, updateApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
+import {
+  getCoreRunner,
+  removeApplicationScheme,
+  updateApplicationScheme,
+  updateCoreRunner,
+} from '@/src/app/[lang]/application-runners/actions';
 import { createApplication } from '@/src/app/[lang]/applications/actions';
 import { createApp } from '@/src/app/[lang]/assets-applications/actions';
-import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
-import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 import ApplicationParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
@@ -21,7 +24,6 @@ import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import { getExportType } from '@/src/components/EntityView/View/core-entity-utils';
 import {
   appRouteTab,
   auditTabs,
@@ -90,11 +92,11 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names 
   useEffect(() => {
     const name = originalScheme?.$id;
     if (!coreRunner && name) {
-      getCoreEntity(name, getExportType(ApplicationRoute.ApplicationRunners)).then((data) => {
-        setCoreRunner(data);
+      getCoreRunner(name, etag).then((data) => {
+        setCoreRunner(data.response as DialApplicationScheme);
       });
     }
-  }, [coreRunner, originalScheme]);
+  }, [coreRunner, etag, originalScheme]);
 
   useEffect(() => {
     setSelectedRunner(
@@ -150,7 +152,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names 
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreEntity(selectedRunner as Record<string, unknown>)
+        ? updateCoreRunner(selectedRunner as Record<string, unknown>, etag)
         : updateApplicationScheme(selectedRunner, etag);
 
     req.then((res) => {
