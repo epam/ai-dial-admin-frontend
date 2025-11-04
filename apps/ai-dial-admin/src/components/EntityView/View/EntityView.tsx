@@ -181,6 +181,7 @@ const EntityView: FC<Props> = ({
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
+    dispatch({ type: ValidationActionType.Reset });
     setSelectedEntity(cloneDeep(originalEntity));
     setIsSkipRefresh(false);
   }, [jsonEditorEnabled, originalEntity, dispatch]);

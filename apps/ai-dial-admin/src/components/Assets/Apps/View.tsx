@@ -88,8 +88,9 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
-      setIsSkipRefresh(false);
     }
+    dispatch({ type: ValidationActionType.Reset });
+    setIsSkipRefresh(false);
     setSelectedApp(cloneDeep(originalApp));
   }, [jsonEditorEnabled, originalApp, dispatch]);
 

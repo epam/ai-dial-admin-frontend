@@ -24,7 +24,7 @@ export interface Props extends EndpointControlProps {
 
 const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, onChange, ...props }) => {
   const t = useI18n() as (t: string) => string;
-  const { dispatch } = useSaveValidationContext();
+  const { dispatch, resetCounter } = useSaveValidationContext();
   const [endpointError, setEndpointError] = useState<FieldError | null>(null);
 
   const validateEndpoint = useCallback(
@@ -53,6 +53,13 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, o
     },
     [onChange, validateEndpoint],
   );
+
+  useEffect(() => {
+    if (resetCounter) {
+      validateEndpoint(endpoint);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetCounter]);
 
   return (
     <DialTextInputField

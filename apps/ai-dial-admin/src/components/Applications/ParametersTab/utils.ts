@@ -245,12 +245,12 @@ export const getAppPropertiesColumns = (
             params: {
               items: [
                 {
-                  id: 'true',
-                  name: 'True',
+                  value: 'true',
+                  label: 'True',
                 },
                 {
-                  id: 'false',
-                  name: 'False',
+                  value: 'false',
+                  label: 'False',
                 },
               ],
               onChange: onChangeSelect,

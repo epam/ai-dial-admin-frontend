@@ -20,6 +20,7 @@ interface ValidationState {
   isValid: boolean;
   jsonErrors: JSONEditorError[] | null;
   jsonErrorNotifications: JSONEditorErrorNotification[];
+  resetCounter: number;
 }
 
 interface SaveValidationContextType {
@@ -27,6 +28,7 @@ interface SaveValidationContextType {
   dispatch: Dispatch<ValidationAction>;
   jsonErrorNotifications: JSONEditorErrorNotification[];
   jsonErrors: JSONEditorError[] | null;
+  resetCounter: number;
 }
 
 const validationReducer = (state: ValidationState, action: ValidationAction): ValidationState => {
@@ -62,6 +64,7 @@ const validationReducer = (state: ValidationState, action: ValidationAction): Va
         ...state,
         fieldValidations: new Map(),
         isValid: true,
+        resetCounter: state.resetCounter + 1,
       };
     }
     default:
@@ -74,6 +77,7 @@ const initialState: ValidationState = {
   isValid: true,
   jsonErrors: [],
   jsonErrorNotifications: [],
+  resetCounter: 0,
 };
 
 const SaveValidationContext = createContext<SaveValidationContextType | undefined>(undefined);
@@ -88,6 +92,7 @@ export const SaveValidationContextProvider = ({ children }: { children: ReactNod
         jsonErrorNotifications: state.jsonErrorNotifications,
         dispatch,
         jsonErrors: state.jsonErrors,
+        resetCounter: state.resetCounter,
       }}
     >
       {children}
