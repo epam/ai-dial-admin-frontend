@@ -71,7 +71,8 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
     setSelectedToolset(
       selectedFormat === ExportFormat.CORE ? cloneDeep(coreToolset as Toolset) : cloneDeep(originalToolset),
     );
-  }, [selectedFormat, coreToolset, originalToolset]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFormat, originalToolset]);
 
   useEffect(() => {
     const isEqualAdminToolset = isEqualSkippingUndefined(originalToolset, selectedToolset);
