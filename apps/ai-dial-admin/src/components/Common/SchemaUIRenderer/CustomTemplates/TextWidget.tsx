@@ -15,6 +15,7 @@ export const TextWidget: FC<WidgetProps> = ({
   placeholder,
   schema,
   label,
+  rawErrors,
 }) => {
   return schema.__additional_property ? (
     <DialTextInputField
@@ -26,6 +27,7 @@ export const TextWidget: FC<WidgetProps> = ({
       placeholder={placeholder}
       optional={!required}
       invalid={required ? !value : false}
+      errorText={rawErrors?.[0] || ''}
       value={value}
     />
   ) : (
@@ -41,6 +43,7 @@ export const TextWidget: FC<WidgetProps> = ({
           placeholder={placeholder}
           optional={!required}
           invalid={required ? !value : false}
+          errorText={rawErrors?.[0] || ''}
           value={value}
         />
       )}
@@ -50,6 +53,9 @@ export const TextWidget: FC<WidgetProps> = ({
           elementId={id}
           value={value}
           placeholder={placeholder}
+          optional={!required}
+          invalid={required ? !value : false}
+          errorText={rawErrors?.[0] || ''}
           onChange={onChange}
         />
       )}
