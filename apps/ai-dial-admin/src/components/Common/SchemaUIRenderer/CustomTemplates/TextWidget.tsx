@@ -1,9 +1,11 @@
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 
 import { DialNumberInputField, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import type { WidgetProps } from '@rjsf/utils';
 
-import { WidgetHeader } from './WidgetHeader';
+import { ErrorI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+import { WidgetHeader } from '@/src/components/Common/SchemaUIRenderer/Components/WidgetHeader';
 
 export const TextWidget: FC<WidgetProps> = ({
   id,
@@ -15,8 +17,15 @@ export const TextWidget: FC<WidgetProps> = ({
   placeholder,
   schema,
   label,
-  rawErrors,
 }) => {
+  const t = useI18n() as (str: string) => string;
+  const invalid = useMemo(() => {
+    return required ? !value : false;
+  }, [required, value]);
+  const errorText = useMemo(() => {
+    return !invalid || readonly ? '' : t(ErrorI18nKey.RequiredField);
+  }, [invalid, readonly, t]);
+
   return schema.__additional_property ? (
     <DialTextInputField
       containerCssClass={'flex w-full max-w-[600px]'}
@@ -26,13 +35,13 @@ export const TextWidget: FC<WidgetProps> = ({
       onChange={onChange}
       placeholder={placeholder}
       optional={!required}
-      invalid={required ? !value : false}
-      errorText={rawErrors?.[0] || ''}
+      invalid={invalid}
+      errorText={errorText}
       value={value}
     />
   ) : (
     <div className="flex flex-col w-full bg-layer-2 p-[18px]">
-      <WidgetHeader label={label} title={schema.title} />
+      <WidgetHeader label={label} title={schema.title} description={schema.description} />
       {schema.type === 'string' && (
         <DialTextInputField
           containerCssClass={'flex w-full max-w-[600px]'}
@@ -42,8 +51,8 @@ export const TextWidget: FC<WidgetProps> = ({
           onChange={onChange}
           placeholder={placeholder}
           optional={!required}
-          invalid={required ? !value : false}
-          errorText={rawErrors?.[0] || ''}
+          invalid={invalid}
+          errorText={errorText}
           value={value}
         />
       )}
@@ -54,8 +63,9 @@ export const TextWidget: FC<WidgetProps> = ({
           value={value}
           placeholder={placeholder}
           optional={!required}
-          invalid={required ? !value : false}
-          errorText={rawErrors?.[0] || ''}
+          readonly={readonly}
+          invalid={invalid}
+          errorText={errorText}
           onChange={onChange}
         />
       )}

@@ -3,12 +3,12 @@ import { FC, useMemo } from 'react';
 import { DialSelect, SelectOption } from '@epam/ai-dial-ui-kit';
 import type { WidgetProps } from '@rjsf/utils';
 
+import { WidgetHeader } from '@/src/components/Common/SchemaUIRenderer/Components/WidgetHeader';
 import { BooleanI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { BooleanType } from '@/src/types/boolean';
-import { WidgetHeader } from './WidgetHeader';
 
-export const CheckboxWidget: FC<WidgetProps> = ({ value, onChange, label }) => {
+export const CheckboxWidget: FC<WidgetProps> = ({ value, onChange, label, schema }) => {
   const t = useI18n();
   const booleans: SelectOption[] = useMemo(
     () => [
@@ -37,10 +37,9 @@ export const CheckboxWidget: FC<WidgetProps> = ({ value, onChange, label }) => {
   }, [value]);
 
   return (
-    <div className="flex flex-col w-full bg-layer-2 p-[18px]">
-      {label && <WidgetHeader title={label} defaultHeader={true} />}
+    <div className="flex flex-col w-full bg-layer-2 p-[18px] max-w-[200px]">
+      {label && <WidgetHeader title={label} defaultHeader={true} description={schema.description} />}
       <DialSelect
-        cssClass="max-w-[200px]"
         options={booleans || []}
         value={boolValue}
         onChange={(value) => onChange(value === BooleanType.true)}

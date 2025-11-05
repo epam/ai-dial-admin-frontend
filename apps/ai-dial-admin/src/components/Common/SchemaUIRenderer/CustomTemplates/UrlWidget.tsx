@@ -1,9 +1,11 @@
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 
 import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 import type { WidgetProps } from '@rjsf/utils';
 
-import { WidgetHeader } from './WidgetHeader';
+import { WidgetHeader } from '@/src/components/Common/SchemaUIRenderer/Components/WidgetHeader';
+import { ErrorI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 
 export const URLWidget: FC<WidgetProps> = ({
   id,
@@ -16,9 +18,16 @@ export const URLWidget: FC<WidgetProps> = ({
   schema,
   label,
 }) => {
+  const t = useI18n() as (str: string) => string;
+  const invalid = useMemo(() => {
+    return required ? !value : false;
+  }, [required, value]);
+  const errorText = useMemo(() => {
+    return !invalid || readonly ? '' : t(ErrorI18nKey.RequiredField);
+  }, [invalid, readonly, t]);
   return (
     <div className="flex flex-col w-full bg-layer-2 p-[18px]">
-      <WidgetHeader label={label} title={schema.title} />
+      <WidgetHeader label={label} title={schema.title} description={schema.description} />
       <DialTextInputField
         containerCssClass={'flex w-full max-w-[600px]'}
         elementId={id}
@@ -27,7 +36,8 @@ export const URLWidget: FC<WidgetProps> = ({
         onChange={onChange}
         placeholder={placeholder}
         optional={!required}
-        invalid={required ? !value : false}
+        invalid={invalid}
+        errorText={errorText}
         value={value}
       />
     </div>
