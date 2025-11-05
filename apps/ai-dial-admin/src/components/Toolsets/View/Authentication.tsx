@@ -13,6 +13,8 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 interface Props {
   toolset: Toolset;
   onChange: (entity: Toolset) => void;
+  apiKeyValue?: string;
+  onChangeKeyValue: (apiKeyValue?: string) => void;
 }
 
 export interface AuthConfig {
@@ -20,7 +22,7 @@ export interface AuthConfig {
   title: string;
   icon?: ReactNode;
 }
-const Authentication: FC<Props> = ({ toolset, onChange }) => {
+const Authentication: FC<Props> = ({ toolset, onChange, ...props }) => {
   const t = useI18n();
   const selectedAuthType = useMemo(() => toolset.authSettings?.authenticationType || ToolsetAuthType.NONE, [toolset]);
 
@@ -48,7 +50,7 @@ const Authentication: FC<Props> = ({ toolset, onChange }) => {
   );
 
   return (
-    <div className="flex flex-col gap-y-3">
+    <div className="flex flex-col gap-y-3 w-full lg:w-[45%]">
       <Field fieldTitle={t(EntityFieldsI18nKey.authSettings)} />
       {authOptions.map((option) => (
         <AuthTypeSection
@@ -58,6 +60,7 @@ const Authentication: FC<Props> = ({ toolset, onChange }) => {
           onClick={onChangeAuthType}
           authSettings={toolset.authSettings}
           onChange={(authSettings) => onChange({ ...toolset, authSettings })}
+          {...props}
         />
       ))}
     </div>

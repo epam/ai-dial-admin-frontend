@@ -19,11 +19,13 @@ interface Props {
   config: AuthConfig;
   isSelected: boolean;
   onClick: (type: ToolsetAuthType) => void;
+  apiKeyValue?: string;
   authSettings?: ToolsetAuthSettings;
   onChange: (authSettings: ToolsetAuthSettings) => void;
+  onChangeKeyValue: (apiKeyValue?: string) => void;
 }
 
-const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings, onChange }) => {
+const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings, onChange, ...props }) => {
   const t = useI18n();
 
   const [selectedAuthType, setSelectedAuthType] = useState(AuthType.With_login);
@@ -92,7 +94,7 @@ const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings,
             onChange={onChangeAuth}
           />
           {selectedAuthType === AuthType.With_login && config.id === ToolsetAuthType.API_KEY && (
-            <ApiKeySection authSettings={authSettings} onChange={onChange} />
+            <ApiKeySection authSettings={authSettings} onChange={onChange} {...props} />
           )}
 
           {selectedAuthType === AuthType.With_config_and_login && config.id === ToolsetAuthType.OAUTH && (

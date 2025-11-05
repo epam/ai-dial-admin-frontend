@@ -221,10 +221,16 @@ export class AssetsApi extends BaseApi {
     return this.post(url, { path: name }, token).then((res) => (res as { tools: Tool[] })?.tools || []);
   }
 
-  signInToolset(toolset: AssetToolset, type: ToolsetAuthCredentialLevel, token: JWT | null, authCode?: string) {
+  signInToolset(
+    toolset: AssetToolset,
+    type: ToolsetAuthCredentialLevel,
+    token: JWT | null,
+    apiKey?: string,
+    authCode?: string,
+  ) {
     const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/sign-in`;
 
-    return this.postAction(url, getToolsetSignInBody(toolset, type, authCode), token);
+    return this.postAction(url, getToolsetSignInBody(toolset, type, apiKey, authCode), token);
   }
 
   signOutToolset(toolset: AssetToolset, type: ToolsetAuthCredentialLevel, token: JWT | null) {

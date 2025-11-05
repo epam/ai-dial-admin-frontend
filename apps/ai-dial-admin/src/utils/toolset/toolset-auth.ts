@@ -1,20 +1,19 @@
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { ToolsetAuthCredentialLevel, ToolsetAuthStatus, ToolsetAuthType } from '@/src/models/dial/toolset';
 
-export const getToolsetSignInBody = (toolset: AssetToolset, level: ToolsetAuthCredentialLevel, authCode?: string) => {
+export const getToolsetSignInBody = (
+  toolset: AssetToolset,
+  level: ToolsetAuthCredentialLevel,
+  apiKey?: string,
+  authCode?: string,
+) => {
   const body = { ...getToolsetBasicBody(toolset, level) };
 
   if (toolset.authSettings?.authenticationType === ToolsetAuthType.OAUTH) {
-    return {
-      ...body,
-      code: authCode,
-    };
+    return { ...body, code: authCode };
   }
 
-  return {
-    ...body,
-    apiKeyHeader: toolset.authSettings?.apiKeyHeader,
-  };
+  return { ...body, apiKey };
 };
 
 export const getToolsetBasicBody = (toolset: AssetToolset, level: ToolsetAuthCredentialLevel) => {

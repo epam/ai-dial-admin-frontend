@@ -21,10 +21,7 @@ interface Props {
 const OAuthSection: FC<Props> = ({ authSettings, onChange }) => {
   const t = useI18n();
 
-  const types: SelectOption[] = [
-    // { value: AuthType.DYNAMIC, label: t(ToolsetI18nKey.DynamicRegistration) },
-    { value: AuthType.EXISTING, label: t(ToolsetI18nKey.ExistingClient) },
-  ];
+  const types: SelectOption[] = [{ value: AuthType.EXISTING, label: t(ToolsetI18nKey.ExistingClient) }];
 
   const methods: SelectOption[] = [
     { value: BasicI18nKey.None, label: t(BasicI18nKey.None) },
@@ -48,14 +45,15 @@ const OAuthSection: FC<Props> = ({ authSettings, onChange }) => {
             } as ToolsetAuthSettings);
           }}
         />
-        <DialTextInputField
-          containerCssClass="w-[360px]"
-          elementId="redirectUri"
-          fieldTitle={t(EntityFieldsI18nKey.redirectUri)}
-          value={authSettings?.redirectUri || ''}
-          placeholder={t(EntityPlaceholdersI18nKey.RedirectUri)}
-          onChange={(redirectUri) => onChange({ ...(authSettings || {}), redirectUri } as ToolsetAuthSettings)}
-        />
+        <div className="flex-1 min-w-0">
+          <DialTextInputField
+            elementId="redirectUri"
+            fieldTitle={t(EntityFieldsI18nKey.redirectUri)}
+            value={authSettings?.redirectUri || ''}
+            placeholder={t(EntityPlaceholdersI18nKey.RedirectUri)}
+            onChange={(redirectUri) => onChange({ ...(authSettings || {}), redirectUri } as ToolsetAuthSettings)}
+          />
+        </div>
       </div>
 
       {authSettings?.clientId != null && (

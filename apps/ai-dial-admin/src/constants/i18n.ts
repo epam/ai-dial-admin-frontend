@@ -817,12 +817,14 @@ export enum EntityPlaceholdersI18nKey {
   ToolName = 'EntityPlaceholders.ToolName',
   Hour = 'EntityPlaceholders.Hour',
   Object = 'EntityPlaceholders.Object',
+  Header = 'EntityPlaceholders.Header',
 }
 
 export enum EntityFieldsI18nKey {
   roleLimits = 'EntityFields.roleLimits',
   isPublic = 'EntityFields.isPublic',
   apiKeyHeader = 'EntityFields.apiKeyHeader',
+  apiKeyValue = 'EntityFields.apiKeyValue',
   costLimit = 'EntityFields.costLimit',
   defaultRoleLimit = 'EntityFields.defaultRoleLimit',
   fieldsHashingOrder = 'EntityFields.fieldsHashingOrder',
