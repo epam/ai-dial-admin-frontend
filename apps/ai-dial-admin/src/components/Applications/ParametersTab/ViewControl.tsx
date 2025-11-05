@@ -69,9 +69,12 @@ const ViewControl: FC<Props> = ({ items, paramsView, setParamsView, onSave, isCh
   );
 
   const onCancel = useCallback(() => {
+    if (nextView) {
+      setParamsView(nextView as ParamsView);
+    }
     setNextView(null);
     setIsModalOpen(false);
-  }, []);
+  }, [nextView, setParamsView]);
 
   const onConfirm = useCallback(() => {
     if (paramsView === ParamsView.UI) {
@@ -83,6 +86,7 @@ const ViewControl: FC<Props> = ({ items, paramsView, setParamsView, onSave, isCh
       }, 2000);
     } else {
       onSave?.();
+      setIsModalOpen(false);
     }
   }, [nextView, onCancel, onSave, paramsView, sendMessage, setParamsView, visualizerConnector]);
 

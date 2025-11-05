@@ -202,7 +202,11 @@ const ApplicationParametersTab: FC<Props> = ({
             isSkipRefresh={isSkipRefresh}
           />
         )}
-        <div className={classNames(paramsView === ParamsView.FORM ? 'block w-full h-full' : 'hidden')}>
+        <div
+          className={classNames(
+            paramsView === ParamsView.FORM && !jsonEditorEnabled ? 'block w-full h-full' : 'hidden',
+          )}
+        >
           {!scheme || !scheme?.properties || !Object.keys(scheme.properties).length ? (
             <DialNoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
           ) : (
