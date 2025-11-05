@@ -49,7 +49,7 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
       setName(value || '');
       onChange({
         ...entity,
-        source: { ...(entity.source as SOURCE_FIELD), completionEndpointPath: `${value}${postfix}` },
+        source: { ...(entity.source as SOURCE_FIELD), completionEndpointPath: `${value || ''}${postfix}` },
       });
     },
     [entity, onChange, postfix],
