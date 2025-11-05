@@ -16,7 +16,19 @@ export const TextWidget: FC<WidgetProps> = ({
   schema,
   label,
 }) => {
-  return (
+  return schema.__additional_property ? (
+    <DialTextInputField
+      containerCssClass={'flex w-full max-w-[600px]'}
+      elementId={id}
+      disabled={disabled}
+      readonly={readonly}
+      onChange={onChange}
+      placeholder={placeholder}
+      optional={!required}
+      invalid={required ? !value : false}
+      value={value}
+    />
+  ) : (
     <div className="flex flex-col w-full bg-layer-2 p-[18px]">
       <WidgetHeader label={label} title={schema.title} />
       {schema.type === 'string' && (
@@ -32,8 +44,14 @@ export const TextWidget: FC<WidgetProps> = ({
           value={value}
         />
       )}
-      {schema.type === 'number' && (
-        <DialNumberInputField elementId={id} value={value} placeholder={placeholder} onChange={onChange} />
+      {(schema.type === 'number' || schema.type === 'integer') && (
+        <DialNumberInputField
+          containerCssClass={'flex w-full max-w-[600px]'}
+          elementId={id}
+          value={value}
+          placeholder={placeholder}
+          onChange={onChange}
+        />
       )}
     </div>
   );
