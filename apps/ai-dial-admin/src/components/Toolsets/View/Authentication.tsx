@@ -14,7 +14,7 @@ interface Props {
   toolset: Toolset;
   onChange: (entity: Toolset) => void;
   apiKeyValue?: string;
-  onChangeKeyValue: (apiKeyValue?: string) => void;
+  onChangeKeyValue?: (apiKeyValue: string) => void;
 }
 
 export interface AuthConfig {

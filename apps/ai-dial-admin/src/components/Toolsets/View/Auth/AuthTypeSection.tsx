@@ -22,7 +22,7 @@ interface Props {
   apiKeyValue?: string;
   authSettings?: ToolsetAuthSettings;
   onChange: (authSettings: ToolsetAuthSettings) => void;
-  onChangeKeyValue: (apiKeyValue?: string) => void;
+  onChangeKeyValue?: (apiKeyValue: string) => void;
 }
 
 const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings, onChange, ...props }) => {

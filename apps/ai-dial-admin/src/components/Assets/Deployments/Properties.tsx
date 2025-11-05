@@ -37,10 +37,21 @@ interface Props {
   asset: DeploymentAsset;
   assets: DeploymentAsset[];
   runners: DialApplicationScheme[];
+  apiKeyValue?: string;
+  onChangeKeyValue?: (apiKeyValue: string) => void;
   onChange: (asset: DeploymentAsset) => void;
 }
 
-const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, runners, onChange }) => {
+const DeploymentProperties: FC<Props> = ({
+  apiKeyValue,
+  onChangeKeyValue,
+  etag,
+  asset,
+  view,
+  assets,
+  runners,
+  onChange,
+}) => {
   const t = useI18n() as (t: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -124,7 +135,12 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, runners, o
         {view === ApplicationRoute.AssetsToolsets && (
           <>
             <ToolsetEndpoint entity={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} />
-            <Authentication toolset={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} />
+            <Authentication
+              onChangeKeyValue={onChangeKeyValue}
+              apiKeyValue={apiKeyValue}
+              toolset={asset as AssetToolset}
+              onChange={onChange as (entity: Toolset) => void}
+            />
           </>
         )}
         {view === ApplicationRoute.AssetsApplications && (

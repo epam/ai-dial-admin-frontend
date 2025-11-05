@@ -36,7 +36,11 @@ import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { encodeToolsetRedirectState, isLoggedInToToolset } from '@/src/utils/toolset/toolset-auth';
+import {
+  encodeToolsetRedirectState,
+  isLoggedInToToolset,
+  isUserLoggedInToToolset,
+} from '@/src/utils/toolset/toolset-auth';
 import LoginPopup from './LoginPopup';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { ToolsetI18nKey } from '@/src/constants/i18n';
@@ -45,11 +49,12 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 interface Props {
   etag: string;
   oAuthCode?: string | null;
+  isUserLevel?: boolean;
   originalToolset: AssetToolset;
   toolsets: AssetToolset[];
 }
 
-const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) => {
+const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, isUserLevel }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const tabs = [propertiesTabs(t), toolsTabs(t)];
   const router = useRouter();
@@ -62,6 +67,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
   const [isChanged, setIsChanged] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState(false);
+  const [apiKeyValue, setApiKeyValue] = useState<string>('');
 
   const isToolsetSignedIn = useMemo(() => {
     return isLoggedInToToolset(selectedToolset);
@@ -167,7 +173,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
 
   const signIn = useCallback(
     (type: ToolsetAuthCredentialLevel, code?: string) => {
-      signInToolset(selectedToolset, type, code).then((res) => {
+      signInToolset(selectedToolset, type, apiKeyValue, code).then((res) => {
         if (res.success) {
           router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
         } else {
@@ -175,7 +181,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
         }
       });
     },
-    [router, selectedToolset, showNotification],
+    [router, selectedToolset, showNotification, apiKeyValue],
   );
 
   const onLogin = useCallback(
@@ -195,7 +201,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
 
         url.searchParams.set(
           'redirect_uri',
-          `${window.location.origin}${getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset)}`,
+          `${window.location.origin}${getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset)}?isUser=${type === ToolsetAuthCredentialLevel.USER}`,
         );
 
         if (authSettings.codeChallengeMethod) {
@@ -216,7 +222,10 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
   );
 
   const onLogout = useCallback(() => {
-    signOutToolset(selectedToolset, ToolsetAuthCredentialLevel.GLOBAL).then((res) => {
+    const level = isUserLoggedInToToolset(selectedToolset)
+      ? ToolsetAuthCredentialLevel.USER
+      : ToolsetAuthCredentialLevel.GLOBAL;
+    signOutToolset(selectedToolset, level).then((res) => {
       if (res.success) {
         router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
       } else {
@@ -227,9 +236,10 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
 
   useEffect(() => {
     if (oAuthCode) {
-      signIn(ToolsetAuthCredentialLevel.USER, oAuthCode);
+      signIn(isUserLevel ? ToolsetAuthCredentialLevel.USER : ToolsetAuthCredentialLevel.GLOBAL, oAuthCode);
     }
-  }, [signIn, oAuthCode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [oAuthCode, isUserLevel]);
 
   return (
     <>
@@ -290,6 +300,8 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
                   jsonEditorEnabled={jsonEditorEnabled}
                   isSkipRefresh={false}
                   onChangeEntity={onChangeEntity}
+                  apiKeyValue={apiKeyValue}
+                  onChangeKeyValue={setApiKeyValue}
                 />
               )}
 

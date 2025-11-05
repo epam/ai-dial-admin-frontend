@@ -1,4 +1,4 @@
-import { DialPasswordInputField } from '@epam/ai-dial-ui-kit';
+import { DialPasswordInputField, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -9,7 +9,7 @@ interface Props {
   apiKeyValue?: string;
   authSettings?: ToolsetAuthSettings;
   onChange: (authSettings: ToolsetAuthSettings) => void;
-  onChangeKeyValue: (apiKeyValue?: string) => void;
+  onChangeKeyValue?: (apiKeyValue: string) => void;
 }
 
 const ApiKeySection: FC<Props> = ({ authSettings, onChange, onChangeKeyValue, apiKeyValue }) => {
@@ -17,7 +17,7 @@ const ApiKeySection: FC<Props> = ({ authSettings, onChange, onChangeKeyValue, ap
 
   return (
     <div className="flex flex-col gap-y-4">
-      <DialPasswordInputField
+      <DialTextInputField
         elementId="apiKeyHeader"
         fieldTitle={t(EntityFieldsI18nKey.apiKeyHeader)}
         placeholder={t(EntityPlaceholdersI18nKey.Header)}
@@ -29,7 +29,7 @@ const ApiKeySection: FC<Props> = ({ authSettings, onChange, onChangeKeyValue, ap
         fieldTitle={t(EntityFieldsI18nKey.apiKeyValue)}
         placeholder={t(EntityPlaceholdersI18nKey.Value)}
         value={apiKeyValue}
-        onChange={onChangeKeyValue}
+        onChange={(v) => onChangeKeyValue?.(v || '')}
       />
     </div>
   );
