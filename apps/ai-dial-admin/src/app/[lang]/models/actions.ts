@@ -52,7 +52,6 @@ export async function createModel(model: DialModel) {
       ...model,
       ...DEFAULT_ROLE_LIMITS,
       type: model.type || DialModelType.Chat,
-      endpointDeploymentName: model.name,
     },
     token,
   );
