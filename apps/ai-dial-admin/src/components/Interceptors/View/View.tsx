@@ -80,7 +80,8 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, etag, 
         ? cloneDeep(coreInterceptor as DialInterceptor)
         : cloneDeep(originalInterceptor),
     );
-  }, [selectedFormat, coreInterceptor, originalInterceptor]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFormat, originalInterceptor]);
 
   const headerClassName = classNames(
     'flex flex-row min-h-[34px]',
