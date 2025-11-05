@@ -12,7 +12,8 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   toolset: Toolset;
-  onChange: (entity: Toolset) => void;
+  disabled?: boolean;
+  onChange?: (entity: Toolset) => void;
   apiKeyValue?: string;
   onChangeKeyValue?: (apiKeyValue: string) => void;
 }
@@ -22,7 +23,7 @@ export interface AuthConfig {
   title: string;
   icon?: ReactNode;
 }
-const Authentication: FC<Props> = ({ toolset, onChange, ...props }) => {
+const Authentication: FC<Props> = ({ disabled, toolset, onChange, ...props }) => {
   const t = useI18n();
   const selectedAuthType = useMemo(() => toolset.authSettings?.authenticationType || ToolsetAuthType.NONE, [toolset]);
 
@@ -34,15 +35,14 @@ const Authentication: FC<Props> = ({ toolset, onChange, ...props }) => {
 
   const onChangeAuthType = useCallback(
     (authenticationType: ToolsetAuthType) => {
-      onChange({
+      onChange?.({
         ...toolset,
         authSettings: {
-          ...toolset.authSettings,
           authenticationType,
           redirectUri:
             authenticationType === ToolsetAuthType.OAUTH
               ? `${window.location.origin}${getUrnForEntity(ApplicationRoute.AssetsToolsets, toolset)}`
-              : '',
+              : void 0,
         },
       });
     },
@@ -52,17 +52,27 @@ const Authentication: FC<Props> = ({ toolset, onChange, ...props }) => {
   return (
     <div className="flex flex-col gap-y-3 w-full lg:w-[45%]">
       <Field fieldTitle={t(EntityFieldsI18nKey.authSettings)} />
-      {authOptions.map((option) => (
+      {disabled ? (
         <AuthTypeSection
-          key={option.id}
-          config={option}
-          isSelected={option.id === selectedAuthType}
-          onClick={onChangeAuthType}
+          config={authOptions.find((option) => option.id === selectedAuthType)!}
+          isSelected={true}
+          disabled={true}
           authSettings={toolset.authSettings}
-          onChange={(authSettings) => onChange({ ...toolset, authSettings })}
           {...props}
         />
-      ))}
+      ) : (
+        authOptions.map((option) => (
+          <AuthTypeSection
+            key={option.id}
+            config={option}
+            isSelected={option.id === selectedAuthType}
+            onClick={onChangeAuthType}
+            authSettings={toolset.authSettings}
+            onChange={(authSettings) => onChange?.({ ...toolset, authSettings })}
+            {...props}
+          />
+        ))
+      )}
     </div>
   );
 };

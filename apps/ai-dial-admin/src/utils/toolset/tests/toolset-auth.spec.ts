@@ -1,4 +1,4 @@
-import { ToolsetAuthStatus, ToolsetAuthType } from '@/src/models/dial/toolset';
+import { ToolsetAuthCredentialLevel, ToolsetAuthStatus, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { describe, expect, test } from 'vitest';
 import {
   encodeToolsetRedirectState,
@@ -10,9 +10,9 @@ import {
 describe('toolset-auth utils', () => {
   test('getToolsetSignInBody returns OAUTH body with code', () => {
     const toolset = { authSettings: { authenticationType: ToolsetAuthType.OAUTH } } as any;
-    const result = getToolsetSignInBody(toolset, 'admin', 'authcode');
+    const result = getToolsetSignInBody(toolset, ToolsetAuthCredentialLevel.APP, void 0, 'authcode');
     expect(result).toMatchObject({
-      credentialsLevel: 'admin',
+      credentialsLevel: ToolsetAuthCredentialLevel.APP,
       authenticationType: ToolsetAuthType.OAUTH,
       code: 'authcode',
     });
@@ -23,21 +23,21 @@ describe('toolset-auth utils', () => {
       path: 'public/toolset1',
       authSettings: { authenticationType: ToolsetAuthType.API_KEY, apiKeyHeader: 'X-API-KEY' },
     } as any;
-    const result = getToolsetSignInBody(toolset, 'user');
+    const result = getToolsetSignInBody(toolset, ToolsetAuthCredentialLevel.USER, 'value');
     expect(result).toMatchObject({
       url: 'toolsets/public/toolset1',
-      credentialsLevel: 'user',
+      credentialsLevel: ToolsetAuthCredentialLevel.USER,
       authenticationType: ToolsetAuthType.API_KEY,
-      apiKeyHeader: 'X-API-KEY',
+      apiKey: 'value',
     });
   });
 
   test('getToolsetBasicBody returns basic body', () => {
     const toolset = { path: 'public/toolset1', authSettings: { authenticationType: ToolsetAuthType.API_KEY } } as any;
-    const result = getToolsetBasicBody(toolset, 'user');
+    const result = getToolsetBasicBody(toolset, ToolsetAuthCredentialLevel.USER);
     expect(result).toMatchObject({
       url: 'toolsets/public/toolset1',
-      credentialsLevel: 'user',
+      credentialsLevel: ToolsetAuthCredentialLevel.USER,
       authenticationType: ToolsetAuthType.API_KEY,
     });
   });

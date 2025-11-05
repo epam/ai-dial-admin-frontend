@@ -174,11 +174,10 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
   const signIn = useCallback(
     (type: ToolsetAuthCredentialLevel, code?: string) => {
       signInToolset(selectedToolset, type, apiKeyValue, code).then((res) => {
-        if (res.success) {
-          router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
-        } else {
+        if (!res.success) {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
         }
+        router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
       });
     },
     [router, selectedToolset, showNotification, apiKeyValue],

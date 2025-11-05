@@ -788,7 +788,6 @@ export enum EntityPlaceholdersI18nKey {
   Maintainer = 'EntityPlaceholders.Maintainer',
   Type = 'EntityPlaceholders.Type',
   Title = 'EntityPlaceholders.Title',
-  Header = 'EntityPlaceholders.Header',
   Tier = 'EntityPlaceholders.Tier',
   Weight = 'EntityPlaceholders.Weight',
   UpstreamEndpoint = 'EntityPlaceholders.UpstreamEndpoint',

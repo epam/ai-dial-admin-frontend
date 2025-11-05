@@ -6,6 +6,7 @@ import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Ic
 import { DialToolsetResource } from '@/src/models/dial/application-resource';
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
+import Authentication from '@/src/components/Toolsets/View/Authentication';
 
 interface Props {
   toolset: DialToolsetResource;
@@ -20,6 +21,7 @@ const ToolsetInfo: FC<Props> = ({ toolset }) => {
       <IconControl disabled={true} iconUrl={toolset.iconUrl} />
       <TopicsControl disabled={true} entity={{ topics: toolset?.descriptionKeywords }} />
       <ToolsetEndpoint disabled={true} entity={toolset} />
+      <Authentication disabled={true} toolset={toolset} />
     </div>
   ) : null;
 };

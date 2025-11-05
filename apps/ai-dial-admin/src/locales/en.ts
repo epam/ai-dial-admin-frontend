@@ -888,7 +888,6 @@ export default {
     Title: 'Enter title',
     Weight: 'Enter weight',
     Tier: 'Enter tier',
-    Header: 'Enter header',
     RedirectUri: 'Enter redirect  URI',
     ClientId: 'Enter client ID',
     ClientSecret: 'Enter client secret',

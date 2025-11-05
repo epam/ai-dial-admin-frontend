@@ -8,11 +8,12 @@ import { ToolsetAuthSettings } from '@/src/models/dial/toolset';
 interface Props {
   apiKeyValue?: string;
   authSettings?: ToolsetAuthSettings;
-  onChange: (authSettings: ToolsetAuthSettings) => void;
+  disabled?: boolean;
+  onChange?: (authSettings: ToolsetAuthSettings) => void;
   onChangeKeyValue?: (apiKeyValue: string) => void;
 }
 
-const ApiKeySection: FC<Props> = ({ authSettings, onChange, onChangeKeyValue, apiKeyValue }) => {
+const ApiKeySection: FC<Props> = ({ disabled, authSettings, onChange, onChangeKeyValue, apiKeyValue }) => {
   const t = useI18n();
 
   return (
@@ -22,13 +23,15 @@ const ApiKeySection: FC<Props> = ({ authSettings, onChange, onChangeKeyValue, ap
         fieldTitle={t(EntityFieldsI18nKey.apiKeyHeader)}
         placeholder={t(EntityPlaceholdersI18nKey.Header)}
         value={authSettings?.apiKeyHeader}
-        onChange={(apiKeyHeader) => onChange({ ...(authSettings || {}), apiKeyHeader } as ToolsetAuthSettings)}
+        disabled={disabled}
+        onChange={(apiKeyHeader) => onChange?.({ ...(authSettings || {}), apiKeyHeader } as ToolsetAuthSettings)}
       />
       <DialPasswordInputField
         elementId="apiKeyValue"
         fieldTitle={t(EntityFieldsI18nKey.apiKeyValue)}
         placeholder={t(EntityPlaceholdersI18nKey.Value)}
         value={apiKeyValue}
+        disabled={disabled}
         onChange={(v) => onChangeKeyValue?.(v || '')}
       />
     </div>
