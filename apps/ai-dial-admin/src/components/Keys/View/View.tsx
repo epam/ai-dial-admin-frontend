@@ -75,7 +75,8 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
 
   useEffect(() => {
     setSelectedKey(selectedFormat === ExportFormat.CORE ? cloneDeep(coreKey as DialKey) : cloneDeep(originalKey));
-  }, [selectedFormat, coreKey, originalKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFormat, originalKey]);
 
   useEffect(() => {
     const isEqualAdminKey = isEqualSkippingUndefined(originalKey, selectedKey);

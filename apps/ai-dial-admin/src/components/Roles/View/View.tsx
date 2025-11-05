@@ -87,7 +87,8 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
 
   useEffect(() => {
     setSelectedRole(selectedFormat === ExportFormat.CORE ? cloneDeep(coreRole as DialRole) : cloneDeep(originalRole));
-  }, [selectedFormat, coreRole, originalRole]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFormat, originalRole]);
 
   useEffect(() => {
     const isEqualAdminRole = isEqualSkippingUndefined(originalRole, selectedRole);
