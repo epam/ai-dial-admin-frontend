@@ -16,8 +16,8 @@ export const ObjectFieldTemplate: FC<ObjectFieldTemplateProps> = (props) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const isRoot = schema['dial:applicationTypeDisplayName'];
   return (schema?.additionalProperties as any)?.oneOf ? null : (
-    <WidgetToggler title={title}>
-      <fieldset className={classNames('p-6 w-full', isRoot ? 'bg-layer-0' : 'bg-layer-1')}>
+    <WidgetToggler title={title} isRoot={isRoot}>
+      <fieldset className={classNames('py-6 pl-6 w-full', isRoot ? 'bg-layer-0 pr-6' : 'bg-layer-1')}>
         {title && <WidgetHeader title={title} defaultHeader={true} description={schema.description} />}
         <div className="space-y-3">
           {properties.map((prop) => (

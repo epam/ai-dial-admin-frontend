@@ -204,7 +204,7 @@ const ApplicationParametersTab: FC<Props> = ({
         )}
         <div
           className={classNames(
-            paramsView === ParamsView.FORM && !jsonEditorEnabled ? 'block w-full h-full' : 'hidden',
+            paramsView === ParamsView.FORM && !jsonEditorEnabled ? 'block w-full h-full overflow-y-auto' : 'hidden',
           )}
         >
           {!scheme || !scheme?.properties || !Object.keys(scheme.properties).length ? (
