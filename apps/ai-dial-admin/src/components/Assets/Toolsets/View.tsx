@@ -200,7 +200,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
 
         url.searchParams.set(
           'redirect_uri',
-          `${window.location.origin}${getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset)}?isUser=${type === ToolsetAuthCredentialLevel.USER}`,
+          `${window.location.origin}${getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset)}&isUser=${type === ToolsetAuthCredentialLevel.USER}`,
         );
 
         if (authSettings.codeChallengeMethod) {
