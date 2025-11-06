@@ -13,7 +13,7 @@ import { Toolset } from '@/src/models/dial/toolset';
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { isValidSourceField } from '@/src/components/SourceField/utils';
-import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
+import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { useI18n } from '@/src/locales/client';
 
 import Containers from '@/src/components/SourceField/Containers/Containers';
