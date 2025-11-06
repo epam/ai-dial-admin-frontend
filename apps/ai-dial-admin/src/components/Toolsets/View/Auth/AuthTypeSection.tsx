@@ -11,19 +11,21 @@ import OAuthSection from './OAuthSection';
 
 enum AuthType {
   With_login = 'With_login',
-  Without_login = 'Without_login',
   With_config_and_login = 'With_config_and_login',
 }
 
 interface Props {
   config: AuthConfig;
   isSelected: boolean;
-  onClick: (type: ToolsetAuthType) => void;
+  disabled?: boolean;
+  onClick?: (type: ToolsetAuthType) => void;
+  apiKeyValue?: string;
   authSettings?: ToolsetAuthSettings;
-  onChange: (authSettings: ToolsetAuthSettings) => void;
+  onChange?: (authSettings: ToolsetAuthSettings) => void;
+  onChangeKeyValue?: (apiKeyValue: string) => void;
 }
 
-const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings, onChange }) => {
+const AuthTypeSection: FC<Props> = ({ disabled, config, isSelected, onClick, authSettings, onChange, ...props }) => {
   const t = useI18n();
 
   const [selectedAuthType, setSelectedAuthType] = useState(AuthType.With_login);
@@ -36,12 +38,7 @@ const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings,
       },
     ];
 
-    if (config.id === ToolsetAuthType.API_KEY) {
-      buttons.push({
-        id: AuthType.Without_login,
-        name: t(ToolsetI18nKey.WithoutLogin),
-      });
-    } else if (config.id === ToolsetAuthType.OAUTH) {
+    if (config.id === ToolsetAuthType.OAUTH) {
       buttons.push({
         id: AuthType.With_config_and_login,
         name: t(ToolsetI18nKey.WithLoginAndConfig),
@@ -52,17 +49,13 @@ const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings,
   }, [config.id, t]);
 
   useEffect(() => {
-    const value = authSettings?.clientId
-      ? AuthType.With_config_and_login
-      : config.id === ToolsetAuthType.API_KEY
-        ? AuthType.Without_login
-        : AuthType.With_login;
+    const value = authSettings?.clientId ? AuthType.With_config_and_login : AuthType.With_login;
     setSelectedAuthType(value);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleOnClick = useCallback(() => {
-    onClick(config.id);
+    onClick?.(config.id);
   }, [config.id, onClick]);
 
   const onChangeAuth = useCallback((value: string) => {
@@ -84,19 +77,22 @@ const AuthTypeSection: FC<Props> = ({ config, isSelected, onClick, authSettings,
       </div>
       {isSelected && config.id !== ToolsetAuthType.NONE && (
         <div className="flex flex-col gap-4 border-t border-tertiary p-4">
-          <DialRadioGroup
-            elementId="auth"
-            activeRadioButton={selectedAuthType}
-            orientation={RadioGroupOrientation.Row}
-            radioButtons={radioLogin}
-            onChange={onChangeAuth}
-          />
+          {config.id === ToolsetAuthType.OAUTH && (
+            <DialRadioGroup
+              elementId="auth"
+              disabled={disabled}
+              activeRadioButton={selectedAuthType}
+              orientation={RadioGroupOrientation.Row}
+              radioButtons={radioLogin}
+              onChange={onChangeAuth}
+            />
+          )}
           {selectedAuthType === AuthType.With_login && config.id === ToolsetAuthType.API_KEY && (
-            <ApiKeySection authSettings={authSettings} onChange={onChange} />
+            <ApiKeySection disabled={disabled} authSettings={authSettings} onChange={onChange} {...props} />
           )}
 
           {selectedAuthType === AuthType.With_config_and_login && config.id === ToolsetAuthType.OAUTH && (
-            <OAuthSection authSettings={authSettings} onChange={onChange} />
+            <OAuthSection disabled={disabled} authSettings={authSettings} onChange={onChange} />
           )}
         </div>
       )}

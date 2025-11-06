@@ -3,8 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialTabs } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
+import { IconLogin, IconLogout } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 
 import {
@@ -35,18 +36,25 @@ import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { encodeToolsetRedirectState, isLoggedInToToolset } from '@/src/utils/toolset/toolset-auth';
+import {
+  encodeToolsetRedirectState,
+  isLoggedInToToolset,
+  isUserLoggedInToToolset,
+} from '@/src/utils/toolset/toolset-auth';
 import LoginPopup from './LoginPopup';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
-
+import { ToolsetI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+let isSignInProcessed = false;
 interface Props {
   etag: string;
   oAuthCode?: string | null;
+  isUserLevel?: boolean;
   originalToolset: AssetToolset;
   toolsets: AssetToolset[];
 }
 
-const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) => {
+const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, isUserLevel }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const tabs = [propertiesTabs(t), toolsTabs(t)];
   const router = useRouter();
@@ -59,8 +67,8 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
   const [isChanged, setIsChanged] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState(false);
+  const [apiKeyValue, setApiKeyValue] = useState<string>('');
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const isToolsetSignedIn = useMemo(() => {
     return isLoggedInToToolset(selectedToolset);
   }, [selectedToolset]);
@@ -165,15 +173,16 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
 
   const signIn = useCallback(
     (type: ToolsetAuthCredentialLevel, code?: string) => {
-      signInToolset(selectedToolset, type, code).then((res) => {
-        if (res.success) {
-          router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
-        } else {
+      isSignInProcessed = true;
+      signInToolset(selectedToolset, type, apiKeyValue, code).then((res) => {
+        isSignInProcessed = false;
+        if (!res.success) {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
         }
+        router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
       });
     },
-    [router, selectedToolset, showNotification],
+    [router, selectedToolset, showNotification, apiKeyValue],
   );
 
   const onLogin = useCallback(
@@ -193,9 +202,11 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
 
         url.searchParams.set(
           'redirect_uri',
-          `${window.location.origin}${getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset)}`,
+          `${window.location.origin}${getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset)}&isUser=${type === ToolsetAuthCredentialLevel.USER}`,
         );
-
+        if (authSettings.codeChallenge) {
+          url.searchParams.set('code_challenge', authSettings.codeChallenge);
+        }
         if (authSettings.codeChallengeMethod) {
           url.searchParams.set('code_challenge_method', authSettings.codeChallengeMethod);
         }
@@ -213,9 +224,11 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
     [selectedToolset, signIn],
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onLogout = useCallback(() => {
-    signOutToolset(selectedToolset, ToolsetAuthCredentialLevel.GLOBAL).then((res) => {
+    const level = isUserLoggedInToToolset(selectedToolset)
+      ? ToolsetAuthCredentialLevel.USER
+      : ToolsetAuthCredentialLevel.GLOBAL;
+    signOutToolset(selectedToolset, level).then((res) => {
       if (res.success) {
         router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
       } else {
@@ -225,10 +238,11 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
   }, [router, selectedToolset, showNotification]);
 
   useEffect(() => {
-    if (oAuthCode) {
-      signIn(ToolsetAuthCredentialLevel.USER, oAuthCode);
+    if (oAuthCode && !isSignInProcessed) {
+      signIn(isUserLevel ? ToolsetAuthCredentialLevel.USER : ToolsetAuthCredentialLevel.GLOBAL, oAuthCode);
     }
-  }, [signIn, oAuthCode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
@@ -252,8 +266,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
             context={useToolsetFolder as () => AssetsFolderContext<DialFile | AssetToolset>}
             childrenContainerClass="flex-row-reverse"
           >
-            {/* TODO: waiting for BE */}
-            {/* {isToolsetSignedIn ? (
+            {isToolsetSignedIn ? (
               <DialButton
                 variant={ButtonVariant.Secondary}
                 title={t(ToolsetI18nKey.LogOut)}
@@ -267,7 +280,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
                 iconBefore={<IconLogin {...BASE_ICON_PROPS} />}
                 onClick={() => setIsModalOpen(true)}
               />
-            )} */}
+            )}
           </HeaderButtons>
         </div>
         <div className="flex-1 overflow-auto mt-3 min-h-0">
@@ -290,6 +303,8 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
                   jsonEditorEnabled={jsonEditorEnabled}
                   isSkipRefresh={false}
                   onChangeEntity={onChangeEntity}
+                  apiKeyValue={apiKeyValue}
+                  onChangeKeyValue={setApiKeyValue}
                 />
               )}
 
