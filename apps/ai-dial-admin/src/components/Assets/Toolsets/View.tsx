@@ -109,13 +109,13 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
         updatedEntity = addNewVersion(updatedEntity, newVersion);
       }
       updateToolset(updatedEntity, etag).then((res) => {
-        showNotification(
-          getSuccessNotification(
-            getUpdateNotificationTitle(ApplicationRoute.AssetsToolsets, t),
-            getUpdateNotificationDescription(ApplicationRoute.AssetsToolsets, updatedEntity.name, t),
-          ),
-        );
         if (res.success) {
+          showNotification(
+            getSuccessNotification(
+              getUpdateNotificationTitle(ApplicationRoute.AssetsToolsets, t),
+              getUpdateNotificationDescription(ApplicationRoute.AssetsToolsets, updatedEntity.name, t),
+            ),
+          );
           if (isNeedToMove) {
             getToolsets(addTrailingSlash(updatedEntity.folderId)).then((toolsets) => {
               const pathsToMove = getListOfPathsToMove(updatedEntity, null, toolsets || []);
