@@ -36,16 +36,6 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, o
     [dispatch, id, required, t, textBeforeInput],
   );
 
-  useEffect(() => {
-    if (required) {
-      dispatch({ type: ValidationActionType.SetField, field: id, isValid: !!endpoint });
-    }
-    return () => {
-      dispatch({ type: ValidationActionType.SetField, field: id, isValid: true });
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [required]);
-
   const onChangeEndpoint = useCallback(
     (value?: string) => {
       validateEndpoint(value);
@@ -55,11 +45,21 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, o
   );
 
   useEffect(() => {
-    if (resetCounter) {
+    if (required) {
+      dispatch({ type: ValidationActionType.SetField, field: id, isValid: !!endpoint });
+    }
+
+    dispatch({ type: ValidationActionType.SetField, field: id, isValid: true });
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [required]);
+
+  useEffect(() => {
+    if (resetCounter || endpoint != null) {
       validateEndpoint(endpoint);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetCounter]);
+  }, [resetCounter, endpoint]);
 
   return (
     <DialTextInputField
