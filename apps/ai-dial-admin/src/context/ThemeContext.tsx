@@ -34,15 +34,17 @@ export const ThemeProvider = ({
   const [currentThemeId, setCurrentThemeId] = useState<string>(DEFAULT_THEME);
   const [currentThemeLogo, setCurrentThemeLogo] = useState<string | undefined>(void 0);
 
+  const excludedImageNames = ['logo', 'favicon', 'config'];
   const images = themeImages
     ? themeImages
-        .map((image) => {
-          return {
-            url: `${image.name}`,
-            name: image.name.split('.')[0],
-          };
+        .map((image) => ({
+          url: image.name,
+          name: image.name.split('.')[0],
+        }))
+        .filter(({ name }) => {
+          const lower = name.toLowerCase();
+          return name && !excludedImageNames.some((word) => lower.includes(word));
         })
-        .filter((image) => image.name && !image.name.toLowerCase().includes('logo'))
     : null;
 
   useEffect(() => {
