@@ -23,7 +23,7 @@ export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({
 
   return (
     <WidgetToggler title={title}>
-      <fieldset className="flex flex-col p-6 gap-3 bg-layer-1 w-full">
+      <fieldset className="flex flex-col py-6 pl-6 gap-3 bg-layer-1 w-full">
         {title && <WidgetHeader title={title} defaultHeader={true} description={schema.description} />}
 
         <ul className="flex flex-col w-full gap-3">
