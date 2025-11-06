@@ -17,7 +17,7 @@ export const PasswordWidget: FC<WidgetProps> = ({
   label,
 }) => {
   return (
-    <div className="flex flex-col w-full bg-layer-2 p-[18px]">
+    <div className="flex flex-col w-full bg-layer-2 py-[18px] pl-[18px]">
       <WidgetHeader title={schema.title} label={label} description={schema.description} />
       <DialPasswordInput
         containerCssClass={'flex w-full max-w-[600px]'}
