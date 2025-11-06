@@ -19,7 +19,7 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import SelectAdapterModal from '@/src/components/SourceField/Adapters/SelectAdapterModal';
 import Field from '@/src/components/Common/Field/Field';
 import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
-import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
+import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import classNames from 'classnames';
 
 interface Props<T> {

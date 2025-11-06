@@ -9,7 +9,7 @@ import { FieldError } from '@/src/models/error';
 import { getUrlError } from '@/src/utils/validation/url-error';
 import { useI18n } from '@/src/locales/client';
 import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
-import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
+import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import classNames from 'classnames';
 
 interface Props {

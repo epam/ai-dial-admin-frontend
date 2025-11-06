@@ -16,20 +16,20 @@ import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
-import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ButtonsI18nKey, CreateI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
+import { DialModelType } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import AdapterProperties from './AdapterProperties';
-import { DialModel, DialModelType } from '@/src/models/dial/model';
-import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
 
 interface Props {
   etag: string;
@@ -110,16 +110,6 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
     });
   }, [selectedAdapter, etag, showNotification, t, router]);
 
-  const onCreateModel = useCallback((model: DialModel) => {
-    return createModel({
-      ...model,
-      source: {
-        ...model.source,
-        completionEndpointPath: `${model.name}${getEndpointPostfix(DialModelType.Chat)}`,
-      } as SOURCE_FIELD,
-    });
-  }, []);
-
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <div className={headerClassName}>
@@ -184,7 +174,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
                 <CreateEntity
                   route={ApplicationRoute.Models}
                   isModalOpen={isModalOpen}
-                  createEntity={onCreateModel}
+                  createEntity={createModel}
                   onClose={() => setIsModalOpen(false)}
                   names={modelsNames}
                   initialValues={{
