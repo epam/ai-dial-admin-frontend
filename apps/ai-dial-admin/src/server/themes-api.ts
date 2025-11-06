@@ -10,7 +10,7 @@ export class ThemesApi {
   }
 
   getImages(): Promise<{ name: string }[] | null> {
-    return fetch(`${THEMES_URL}`)
+    return fetch(THEMES_URL)
       .then((res) => res.json())
       .catch(() => null);
   }
