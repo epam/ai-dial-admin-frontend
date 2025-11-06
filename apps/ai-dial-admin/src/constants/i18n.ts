@@ -827,7 +827,6 @@ export enum EntityFieldsI18nKey {
   costLimit = 'EntityFields.costLimit',
   defaultRoleLimit = 'EntityFields.defaultRoleLimit',
   fieldsHashingOrder = 'EntityFields.fieldsHashingOrder',
-  endpointDeploymentName = 'EntityFields.endpointDeploymentName',
   content = 'EntityFields.content',
   name = 'EntityFields.name',
   id = 'EntityFields.id',

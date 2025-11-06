@@ -750,7 +750,6 @@ export default {
     isPublic: 'Is Public',
     defaultRoleLimit: 'Default role limit',
     fieldsHashingOrder: 'Hashing order',
-    endpointDeploymentName: 'Endpoint deployment name',
     endpoint: 'Endpoint',
     keyValue: 'Key value',
     container: 'Container',
