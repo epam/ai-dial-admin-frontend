@@ -11,7 +11,6 @@ import OAuthSection from './OAuthSection';
 
 enum AuthType {
   With_login = 'With_login',
-  Without_login = 'Without_login',
   With_config_and_login = 'With_config_and_login',
 }
 
@@ -39,12 +38,7 @@ const AuthTypeSection: FC<Props> = ({ disabled, config, isSelected, onClick, aut
       },
     ];
 
-    if (config.id === ToolsetAuthType.API_KEY) {
-      buttons.push({
-        id: AuthType.Without_login,
-        name: t(ToolsetI18nKey.WithoutLogin),
-      });
-    } else if (config.id === ToolsetAuthType.OAUTH) {
+    if (config.id === ToolsetAuthType.OAUTH) {
       buttons.push({
         id: AuthType.With_config_and_login,
         name: t(ToolsetI18nKey.WithLoginAndConfig),
@@ -55,11 +49,7 @@ const AuthTypeSection: FC<Props> = ({ disabled, config, isSelected, onClick, aut
   }, [config.id, t]);
 
   useEffect(() => {
-    const value = authSettings?.clientId
-      ? AuthType.With_config_and_login
-      : config.id === ToolsetAuthType.API_KEY
-        ? AuthType.Without_login
-        : AuthType.With_login;
+    const value = authSettings?.clientId ? AuthType.With_config_and_login : AuthType.With_login;
     setSelectedAuthType(value);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -87,14 +77,16 @@ const AuthTypeSection: FC<Props> = ({ disabled, config, isSelected, onClick, aut
       </div>
       {isSelected && config.id !== ToolsetAuthType.NONE && (
         <div className="flex flex-col gap-4 border-t border-tertiary p-4">
-          <DialRadioGroup
-            elementId="auth"
-            disabled={disabled}
-            activeRadioButton={selectedAuthType}
-            orientation={RadioGroupOrientation.Row}
-            radioButtons={radioLogin}
-            onChange={onChangeAuth}
-          />
+          {config.id === ToolsetAuthType.OAUTH && (
+            <DialRadioGroup
+              elementId="auth"
+              disabled={disabled}
+              activeRadioButton={selectedAuthType}
+              orientation={RadioGroupOrientation.Row}
+              radioButtons={radioLogin}
+              onChange={onChangeAuth}
+            />
+          )}
           {selectedAuthType === AuthType.With_login && config.id === ToolsetAuthType.API_KEY && (
             <ApiKeySection disabled={disabled} authSettings={authSettings} onChange={onChange} {...props} />
           )}

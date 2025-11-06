@@ -45,7 +45,7 @@ import LoginPopup from './LoginPopup';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { ToolsetI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-
+let isSignInProcessed = false;
 interface Props {
   etag: string;
   oAuthCode?: string | null;
@@ -173,7 +173,9 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
 
   const signIn = useCallback(
     (type: ToolsetAuthCredentialLevel, code?: string) => {
+      isSignInProcessed = true;
       signInToolset(selectedToolset, type, apiKeyValue, code).then((res) => {
+        isSignInProcessed = false;
         if (!res.success) {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
         }
@@ -202,7 +204,9 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
           'redirect_uri',
           `${window.location.origin}${getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset)}&isUser=${type === ToolsetAuthCredentialLevel.USER}`,
         );
-
+        if (authSettings.codeChallenge) {
+          url.searchParams.set('code_challenge', authSettings.codeChallenge);
+        }
         if (authSettings.codeChallengeMethod) {
           url.searchParams.set('code_challenge_method', authSettings.codeChallengeMethod);
         }
@@ -234,11 +238,11 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
   }, [router, selectedToolset, showNotification]);
 
   useEffect(() => {
-    if (oAuthCode) {
+    if (oAuthCode && !isSignInProcessed) {
       signIn(isUserLevel ? ToolsetAuthCredentialLevel.USER : ToolsetAuthCredentialLevel.GLOBAL, oAuthCode);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [oAuthCode, isUserLevel]);
+  }, []);
 
   return (
     <>
