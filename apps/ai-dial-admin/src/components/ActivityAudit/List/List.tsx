@@ -193,7 +193,13 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
             );
             onRefresh();
           } else {
-            showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage));
+            console.error('Rollback failed', res?.error);
+            showNotification(
+              getErrorNotification(
+                getRollbackErrorTitle(selectedActivity.resourceType, t),
+                getRollbackErrorDescription(selectedActivity.resourceType, t),
+              ),
+            );
           }
         })
         .catch(() => {

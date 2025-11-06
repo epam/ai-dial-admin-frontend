@@ -7,6 +7,11 @@ import {
 } from '@/src/app/[lang]/application-runners/actions';
 import { createApplication, removeApplication, updateApplication } from '@/src/app/[lang]/applications/actions';
 import { createInterceptor, removeInterceptor, updateInterceptor } from '@/src/app/[lang]/interceptors/actions';
+import {
+  createInterceptorTemplate,
+  deleteInterceptorTemplate,
+  updateInterceptorTemplate,
+} from '@/src/app/[lang]/interceptor-templates/actions';
 import { createKey, removeKey, updateKey } from '@/src/app/[lang]/keys/actions';
 import { createModel, removeModel, updateModel } from '@/src/app/[lang]/models/actions';
 import { createRole, removeRole, updateRole } from '@/src/app/[lang]/roles/actions';
@@ -70,6 +75,8 @@ export const getUpdateAction = (type?: ActivityAuditResourceType): any => {
       return updateToolset;
     case ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA:
       return updateApplicationScheme;
+    case ActivityAuditResourceType.INTERCEPTOR_TEMPLATE:
+      return updateInterceptorTemplate;
     default:
       return null;
   }
@@ -95,6 +102,8 @@ export const getCreateAction = (type?: ActivityAuditResourceType) => {
       return createToolset;
     case ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA:
       return createApplicationScheme;
+    case ActivityAuditResourceType.INTERCEPTOR_TEMPLATE:
+      return createInterceptorTemplate;
     default:
       return null;
   }
@@ -120,6 +129,8 @@ export const getDeleteAction = (type?: ActivityAuditResourceType) => {
       return removeToolset;
     case ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA:
       return removeApplicationScheme;
+    case ActivityAuditResourceType.INTERCEPTOR_TEMPLATE:
+      return deleteInterceptorTemplate;
     default:
       return null;
   }
