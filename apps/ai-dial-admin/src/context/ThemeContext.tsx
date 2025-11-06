@@ -42,7 +42,7 @@ export const ThemeProvider = ({
             name: image.name.split('.')[0],
           };
         })
-        .filter((image) => image.name && image.name.toLowerCase().includes('logo'))
+        .filter((image) => image.name && !image.name.toLowerCase().includes('logo'))
     : null;
 
   useEffect(() => {
