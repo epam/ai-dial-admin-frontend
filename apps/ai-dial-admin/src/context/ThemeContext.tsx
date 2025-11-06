@@ -9,7 +9,12 @@ interface ThemeContextType {
   currentThemeLogo?: string;
   themesImageConfig?: ThemeImages;
   themes?: Theme[];
-  images: string[] | null;
+  images:
+    | {
+        url: string;
+        name: string;
+      }[]
+    | null;
   setTheme: (themeId: string) => void;
 }
 
@@ -24,12 +29,21 @@ export const ThemeProvider = ({
 }: {
   children: ReactNode;
   themesConfiguration: ThemeConfiguration | null;
-  themeImages?: string;
+  themeImages?: { name: string }[] | null;
 }) => {
   const [currentThemeId, setCurrentThemeId] = useState<string>(DEFAULT_THEME);
   const [currentThemeLogo, setCurrentThemeLogo] = useState<string | undefined>(void 0);
 
-  const images = themeImages?.split(',').map((name) => name.trim()) || null;
+  const images = themeImages
+    ? themeImages
+        .map((image) => {
+          return {
+            url: `${image.name}`,
+            name: image.name.split('.')[0],
+          };
+        })
+        .filter((image) => image.name && image.name.toLowerCase().includes('logo'))
+    : null;
 
   useEffect(() => {
     const storedTheme = typeof window !== 'undefined' ? getFromLocalStorage('theme') : null;
