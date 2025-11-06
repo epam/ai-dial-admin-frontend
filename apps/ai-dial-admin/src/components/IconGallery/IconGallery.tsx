@@ -3,7 +3,6 @@ import Image from 'next/image';
 import { FC } from 'react';
 
 import Empty from '@/public/images/icons/empty.svg';
-import { getIconsConfig } from '@/src/components/IconGallery/Icons.config';
 import { useTheme } from '@/src/context/ThemeContext';
 import { getIconPath } from '@/src/utils/themes/icon-path';
 
@@ -48,7 +47,6 @@ const Icon: FC<IconProps> = ({ url, name, selected, onClick }) => {
 
 const IconGallery: FC<Props> = ({ selectedIcon, setSelectedIcon }) => {
   const { images } = useTheme();
-  const icons = getIconsConfig(images);
 
   return (
     <>
@@ -56,7 +54,7 @@ const IconGallery: FC<Props> = ({ selectedIcon, setSelectedIcon }) => {
         <Icon url={''} name={'None'} onClick={() => setSelectedIcon('')} selected={!selectedIcon} />
       </div>
       <div className="flex flex-row flex-wrap gap-10">
-        {icons?.map((icon, index) => (
+        {images?.map((icon, index) => (
           <Icon
             key={index}
             url={getIconPath(icon.url)}

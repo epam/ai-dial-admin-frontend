@@ -740,6 +740,7 @@ export enum ErrorI18nKey {
   InvalidStatus = 'Error.InvalidStatus',
   EditorErrorLine = 'Error.EditorErrorLine',
   MaxNumberError = 'Error.MaxNumberError',
+  CommentError = 'Error.CommentError',
 }
 
 export enum SourceI18nKey {
@@ -827,7 +828,6 @@ export enum EntityFieldsI18nKey {
   costLimit = 'EntityFields.costLimit',
   defaultRoleLimit = 'EntityFields.defaultRoleLimit',
   fieldsHashingOrder = 'EntityFields.fieldsHashingOrder',
-  endpointDeploymentName = 'EntityFields.endpointDeploymentName',
   content = 'EntityFields.content',
   name = 'EntityFields.name',
   id = 'EntityFields.id',

@@ -61,17 +61,6 @@ const DeploymentProperties: FC<Props> = ({
       : getVersionError(isVersionOptional, (entity as DialModel).displayVersion as string, t);
   }, [entity, isVersionOptional, t]);
 
-  const onChangeName = useCallback(
-    (newEntity: ChatEntity) => {
-      if (view === ApplicationRoute.Models) {
-        (newEntity as DialModel).endpointDeploymentName = newEntity.name;
-      }
-
-      onChangeEntity(newEntity);
-    },
-    [onChangeEntity, view],
-  );
-
   const onChangeDisplayName = useCallback(
     (displayName: string) => {
       setIsVersionOptional(!names.includes(displayName));
@@ -119,7 +108,7 @@ const DeploymentProperties: FC<Props> = ({
     <div className="w-full flex flex-col gap-y-6">
       <div className={classNames('flex flex-col gap-y-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
         {!isEntityImmutable && (
-          <IdControl entity={entity} onChangeEntity={onChangeName} isUniqueNameError={isUniqueNameError} />
+          <IdControl entity={entity} onChangeEntity={onChangeEntity} isUniqueNameError={isUniqueNameError} />
         )}
         <AutocompleteField
           inputId="displayName"

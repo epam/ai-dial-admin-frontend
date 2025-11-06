@@ -1,8 +1,10 @@
 import { FC } from 'react';
 import { createPortal } from 'react-dom';
+
 import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { ModalType } from './constants';
 import EntityRolesModal from './EmptyRoles/EmptyRoles';
@@ -17,6 +19,7 @@ interface Props {
 
 const EntityViewModals: FC<Props> = ({ isModalOpen, modalType, handleConfirm, handleClose, handleCancel }) => {
   const t = useI18n();
+  const { isValid } = useSaveValidationContext();
 
   return (
     <>
@@ -29,6 +32,7 @@ const EntityViewModals: FC<Props> = ({ isModalOpen, modalType, handleConfirm, ha
             description={t(EntitiesI18nKey.SaveChangesDescription)}
             confirmLabel={t(ButtonsI18nKey.Save)}
             cancelLabel={t(ButtonsI18nKey.OpenWithoutSave)}
+            disableConfirmButton={!isValid}
             onConfirm={() => handleConfirm(ModalType.entity)}
             onClose={() => handleClose()}
             onCancel={() => handleCancel(ModalType.entity)}

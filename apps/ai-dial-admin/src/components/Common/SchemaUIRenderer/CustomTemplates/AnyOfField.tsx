@@ -18,6 +18,7 @@ import {
   TranslatableString,
   UiSchema,
 } from '@rjsf/utils';
+import { WidgetToggler } from '@/src/components/Common/SchemaUIRenderer/Components/WidgetToggler';
 
 /** Type used for the state of the `AnyOfField` component */
 type AnyOfFieldState<S extends StrictRJSFSchema = RJSFSchema> = {
@@ -226,34 +227,38 @@ class AnyOfField<T = any, S extends StrictRJSFSchema = RJSFSchema, F extends For
     });
 
     return (
-      <div className="flex flex-col w-full bg-layer-2">
-        <div className="form-group max-w-[300px]">
-          <Widget
-            id={this.getFieldId()}
-            name={`${name}${schema.oneOf ? '__oneof_select' : '__anyof_select'}`}
-            schema={{ type: 'number', default: 0 } as S}
-            onChange={this.onOptionChange}
-            onBlur={onBlur}
-            onFocus={onFocus}
-            disabled={disabled || isEmpty(enumOptions)}
-            multiple={false}
-            rawErrors={rawErrors}
-            errorSchema={fieldErrorSchema}
-            value={selectedOption >= 0 ? selectedOption : undefined}
-            options={{ enumOptions, ...uiOptions }}
-            registry={registry}
-            formContext={formContext}
-            placeholder={placeholder}
-            autocomplete={autocomplete}
-            autofocus={autofocus}
-            label={title ?? name}
-            hideLabel={!displayLabel}
-            readonly={readonly}
-          />
-        </div>
-        {optionSchema && optionSchema.type !== 'null' && (
-          <_SchemaField {...this.props} schema={optionSchema} uiSchema={optionUiSchema} />
-        )}
+      <div className="flex flex-row w-full bg-layer-2">
+        <WidgetToggler title={title ?? name}>
+          <div className="flex flex-col flex-1">
+            <div className="form-group max-w-[300px]">
+              <Widget
+                id={this.getFieldId()}
+                name={`${name}${schema.oneOf ? '__oneof_select' : '__anyof_select'}`}
+                schema={{ type: 'number', default: 0 } as S}
+                onChange={this.onOptionChange}
+                onBlur={onBlur}
+                onFocus={onFocus}
+                disabled={disabled || isEmpty(enumOptions)}
+                multiple={false}
+                rawErrors={rawErrors}
+                errorSchema={fieldErrorSchema}
+                value={selectedOption >= 0 ? selectedOption : undefined}
+                options={{ enumOptions, ...uiOptions }}
+                registry={registry}
+                formContext={formContext}
+                placeholder={placeholder}
+                autocomplete={autocomplete}
+                autofocus={autofocus}
+                label={title ?? name}
+                hideLabel={!displayLabel}
+                readonly={readonly}
+              />
+            </div>
+            {optionSchema && optionSchema.type !== 'null' && (
+              <_SchemaField {...this.props} schema={optionSchema} uiSchema={optionUiSchema} />
+            )}
+          </div>
+        </WidgetToggler>
       </div>
     );
   }

@@ -3,7 +3,6 @@ import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 
 export interface DialModel extends ChatEntity {
   type?: DialModelType;
-  endpointDeploymentName?: string;
   tokenizerModel?: string;
   overrideName?: string;
   limits?: DialModelLimit;

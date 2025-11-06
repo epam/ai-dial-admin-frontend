@@ -71,7 +71,8 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
     setSelectedToolset(
       selectedFormat === ExportFormat.CORE ? cloneDeep(coreToolset as Toolset) : cloneDeep(originalToolset),
     );
-  }, [selectedFormat, coreToolset, originalToolset]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFormat, originalToolset]);
 
   useEffect(() => {
     const isEqualAdminToolset = isEqualSkippingUndefined(originalToolset, selectedToolset);
@@ -136,12 +137,16 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   }, [selectedFormat, selectedToolset, originalToolset.name, etag, showNotification, t, router]);
 
   const onTryToSave = useCallback(() => {
-    if (selectedFormat !== ExportFormat.CORE && isDisableRole(selectedToolset as EntityRoleLimits)) {
+    if (
+      selectedFormat !== ExportFormat.CORE &&
+      isDisableRole(selectedToolset as EntityRoleLimits) &&
+      !jsonEditorEnabled
+    ) {
       setIsModalOpen(true);
     } else {
       onSave();
     }
-  }, [onSave, selectedFormat, selectedToolset]);
+  }, [jsonEditorEnabled, onSave, selectedFormat, selectedToolset]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">

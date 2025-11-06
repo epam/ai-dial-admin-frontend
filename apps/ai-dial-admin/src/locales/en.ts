@@ -750,7 +750,6 @@ export default {
     isPublic: 'Is Public',
     defaultRoleLimit: 'Default role limit',
     fieldsHashingOrder: 'Hashing order',
-    endpointDeploymentName: 'Endpoint deployment name',
     endpoint: 'Endpoint',
     keyValue: 'Key value',
     container: 'Container',
@@ -952,6 +951,7 @@ export default {
     DisplayNameErrorModel:
       'This name is used by versionless model. Specify version for model with this display name to group models.',
     EditorErrorLine: 'The error line is {line}',
+    CommentError: 'Comment must be at least 15 characters long',
   },
   Source: {
     OpenTemplate: 'Open template',

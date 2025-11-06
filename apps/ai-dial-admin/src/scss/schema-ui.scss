@@ -1,10 +1,5 @@
 .rjsf {
-  fieldset {
-    &:nth-child(odd) {
-      @apply bg-layer-1;
-    }
-    &:nth-child(even) {
-      @apply bg-layer-2;
-    }
+  .error-detail {
+    @apply hidden;
   }
 }
