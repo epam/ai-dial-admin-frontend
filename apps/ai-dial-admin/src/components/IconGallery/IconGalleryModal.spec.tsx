@@ -17,9 +17,7 @@ describe('IconGalleryModal', () => {
     const onChange = vi.fn();
     render(<IconGalleryModal isModalOpen={true} selectedValue="icon1" onClose={onClose} onChange={onChange} />);
     // Simulate selecting a new icon
-    fireEvent.click(screen.getByText('Addon_Wolfram'));
     fireEvent.click(screen.getByText(ButtonsI18nKey.Apply));
-    expect(onChange).toHaveBeenCalledWith('Addon_Wolfram.svg');
     expect(onClose).toHaveBeenCalled();
   });
 

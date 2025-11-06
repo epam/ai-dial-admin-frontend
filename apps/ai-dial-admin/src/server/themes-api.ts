@@ -9,6 +9,12 @@ export class ThemesApi {
       .catch(() => null);
   }
 
+  getImages(): Promise<{ name: string }[] | null> {
+    return fetch(THEMES_URL)
+      .then((res) => res.json())
+      .catch(() => null);
+  }
+
   async getThemeIconUrl(iconName: string): Promise<Response | void> {
     if (THEMES_URL == null) {
       return;
