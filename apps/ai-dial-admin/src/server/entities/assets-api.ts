@@ -100,19 +100,16 @@ export class AssetsApi extends BaseApi {
     type: ResourceType,
     etag: string,
   ): Promise<ServerActionResponse> {
-    console.log('updateAsset', asset);
     const url = this.buildUrl(type, ResourceOperation.UPDATE);
     return this.postAction(url, { ...asset }, token, { [IF_MATCH]: etag });
   }
 
   updateAsset(token: JWT | null, asset: Asset, type: ResourceType): Promise<ServerActionResponse> {
-    console.log('updateAsset', asset);
     const url = this.buildUrl(type, ResourceOperation.UPDATE);
     return this.postAction(url, { ...asset }, token);
   }
 
   createAsset(asset: Asset, type: ResourceType, token: JWT | null): Promise<ServerActionResponse> {
-    console.log('createAsset', asset);
     const url = this.buildUrl(type, ResourceOperation.CREATE);
     return this.postAction(url, { ...asset, folderId: asset.folderId || ROOT_FOLDER }, token);
   }
@@ -232,7 +229,7 @@ export class AssetsApi extends BaseApi {
     authCode?: string,
   ) {
     const url = `${ResourceBasePaths[ResourceType.TOOLSET]}/sign-in`;
-    console.log('signInToolset', getToolsetSignInBody(toolset, type, apiKey, authCode));
+
     return this.postAction(url, getToolsetSignInBody(toolset, type, apiKey, authCode), token);
   }
 
