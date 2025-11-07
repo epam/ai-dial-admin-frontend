@@ -178,12 +178,14 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
         if (!res.success) {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
         } else {
-          showNotification(getSuccessNotification(ToolsetI18nKey.SuccessLogin, ToolsetI18nKey.SuccessLoginDescription));
+          showNotification(
+            getSuccessNotification(t(ToolsetI18nKey.SuccessLogin), t(ToolsetI18nKey.SuccessLoginDescription)),
+          );
         }
         router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
       });
     },
-    [router, selectedToolset, showNotification],
+    [router, selectedToolset, showNotification, t],
   );
 
   const onLogin = useCallback(
@@ -232,12 +234,14 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
     signOutToolset(selectedToolset, level).then((res) => {
       if (res.success) {
         router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
-        showNotification(getSuccessNotification(ToolsetI18nKey.SuccessLogout, ToolsetI18nKey.SuccessLogoutDescription));
+        showNotification(
+          getSuccessNotification(t(ToolsetI18nKey.SuccessLogout), t(ToolsetI18nKey.SuccessLogoutDescription)),
+        );
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [router, selectedToolset, showNotification]);
+  }, [router, selectedToolset, showNotification, t]);
 
   useEffect(() => {
     if (oAuthCode && !isSignInProcessed) {
