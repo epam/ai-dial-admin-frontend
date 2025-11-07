@@ -59,70 +59,70 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) => {
         </div>
       </div>
 
-      {authSettings?.clientId != null && (
-        <div className="flex flex-col gap-y-3 mt-3 w-full">
-          <DialTextInputField
-            disabled={disabled}
-            elementId="clientId"
-            fieldTitle={t(EntityFieldsI18nKey.clientId)}
-            value={authSettings?.clientId || ''}
-            placeholder={t(EntityPlaceholdersI18nKey.ClientId)}
-            onChange={(clientId) => onChange?.({ ...(authSettings || {}), clientId })}
-          />
-          <DialPasswordInputField
-            disabled={disabled}
-            elementId="clientSecret"
-            fieldTitle={t(EntityFieldsI18nKey.clientSecret)}
-            value={authSettings?.clientSecret || ''}
-            placeholder={t(EntityPlaceholdersI18nKey.ClientSecret)}
-            onChange={(clientSecret) => onChange?.({ ...(authSettings || {}), clientSecret })}
-          />
-          <Multiselect
-            elementId="scopes"
-            disabled={disabled}
-            selectedItems={authSettings.scopesSupported}
-            allItems={authSettings.scopesSupported}
-            onChangeItems={(scopesSupported: string[]) => {
-              onChange?.({ ...(authSettings || {}), scopesSupported });
-            }}
-            heading={t(EntityFieldsI18nKey.scopes)}
-            title={t(EntityFieldsI18nKey.scopes)}
-            addTitle={t(BasicI18nKey.AddField)}
-          />
-          <EndpointControl
-            disabled={disabled}
-            id="authEndpoint"
-            fieldTitle={t(EntityFieldsI18nKey.authorizationEndpoint)}
-            endpoint={authSettings?.authorizationEndpoint || ''}
-            placeholder={t(EntityPlaceholdersI18nKey.AuthorizationEndpoint)}
-            onChange={(authorizationEndpoint) => onChange?.({ ...(authSettings || {}), authorizationEndpoint })}
-          />
+      <div className="flex flex-col gap-y-3 mt-3 w-full">
+        <DialTextInputField
+          disabled={disabled}
+          elementId="clientId"
+          fieldTitle={t(EntityFieldsI18nKey.clientId)}
+          value={authSettings?.clientId || ''}
+          placeholder={t(EntityPlaceholdersI18nKey.ClientId)}
+          onChange={(clientId) => onChange?.({ ...(authSettings || {}), clientId } as ToolsetAuthSettings)}
+        />
+        <DialPasswordInputField
+          disabled={disabled}
+          elementId="clientSecret"
+          fieldTitle={t(EntityFieldsI18nKey.clientSecret)}
+          value={authSettings?.clientSecret || ''}
+          placeholder={t(EntityPlaceholdersI18nKey.ClientSecret)}
+          onChange={(clientSecret) => onChange?.({ ...(authSettings || {}), clientSecret } as ToolsetAuthSettings)}
+        />
+        <Multiselect
+          elementId="scopes"
+          disabled={disabled}
+          selectedItems={authSettings?.scopesSupported}
+          allItems={authSettings?.scopesSupported}
+          onChangeItems={(scopesSupported: string[]) => {
+            onChange?.({ ...(authSettings || {}), scopesSupported } as ToolsetAuthSettings);
+          }}
+          heading={t(EntityFieldsI18nKey.scopes)}
+          title={t(EntityFieldsI18nKey.scopes)}
+          addTitle={t(BasicI18nKey.AddField)}
+        />
+        <EndpointControl
+          disabled={disabled}
+          id="authEndpoint"
+          fieldTitle={t(EntityFieldsI18nKey.authorizationEndpoint)}
+          endpoint={authSettings?.authorizationEndpoint || ''}
+          placeholder={t(EntityPlaceholdersI18nKey.AuthorizationEndpoint)}
+          onChange={(authorizationEndpoint) =>
+            onChange?.({ ...(authSettings || {}), authorizationEndpoint } as ToolsetAuthSettings)
+          }
+        />
 
-          <EndpointControl
-            id="tokenEndpoint"
-            disabled={disabled}
-            fieldTitle={t(EntityFieldsI18nKey.tokenEndpoint)}
-            endpoint={authSettings?.tokenEndpoint || ''}
-            placeholder={t(EntityPlaceholdersI18nKey.TokenEndpoint)}
-            onChange={(tokenEndpoint) => onChange?.({ ...(authSettings || {}), tokenEndpoint })}
-          />
+        <EndpointControl
+          id="tokenEndpoint"
+          disabled={disabled}
+          fieldTitle={t(EntityFieldsI18nKey.tokenEndpoint)}
+          endpoint={authSettings?.tokenEndpoint || ''}
+          placeholder={t(EntityPlaceholdersI18nKey.TokenEndpoint)}
+          onChange={(tokenEndpoint) => onChange?.({ ...(authSettings || {}), tokenEndpoint } as ToolsetAuthSettings)}
+        />
 
-          <DialSelectField
-            containerCssClass="w-[192px]"
-            elementId="type"
-            disabled={disabled}
-            fieldTitle={t(EntityFieldsI18nKey.codeChallengeMethod)}
-            value={!authSettings.codeChallengeMethod ? BasicI18nKey.None : authSettings.codeChallengeMethod}
-            options={methods}
-            onChange={(codeChallengeMethod) => {
-              onChange?.({
-                ...(authSettings || {}),
-                codeChallengeMethod: codeChallengeMethod === BasicI18nKey.None ? '' : codeChallengeMethod,
-              } as ToolsetAuthSettings);
-            }}
-          />
-        </div>
-      )}
+        <DialSelectField
+          containerCssClass="w-[192px]"
+          elementId="type"
+          disabled={disabled}
+          fieldTitle={t(EntityFieldsI18nKey.codeChallengeMethod)}
+          value={!authSettings?.codeChallengeMethod ? BasicI18nKey.None : authSettings.codeChallengeMethod}
+          options={methods}
+          onChange={(codeChallengeMethod) => {
+            onChange?.({
+              ...(authSettings || {}),
+              codeChallengeMethod: codeChallengeMethod === BasicI18nKey.None ? '' : codeChallengeMethod,
+            } as ToolsetAuthSettings);
+          }}
+        />
+      </div>
     </div>
   );
 };

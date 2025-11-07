@@ -177,6 +177,8 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
         isSignInProcessed = false;
         if (!res.success) {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        } else {
+          showNotification(getSuccessNotification(ToolsetI18nKey.SuccessLogin, ToolsetI18nKey.SuccessLoginDescription));
         }
         router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
       });
@@ -230,6 +232,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
     signOutToolset(selectedToolset, level).then((res) => {
       if (res.success) {
         router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
+        showNotification(getSuccessNotification(ToolsetI18nKey.SuccessLogout, ToolsetI18nKey.SuccessLogoutDescription));
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
@@ -317,7 +320,14 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
           )}
         </div>
       </div>
-      {isModalOpen && <LoginPopup isModalOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onLogin={onLogin} />}
+      {isModalOpen && (
+        <LoginPopup
+          type={selectedToolset.authSettings?.authenticationType}
+          isModalOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onLogin={onLogin}
+        />
+      )}
     </>
   );
 };
