@@ -22,12 +22,11 @@ const ContentSecurityPolicy = `
     base-uri 'self';
     ${process.env.NODE_ENV === 'production' ? 'upgrade-insecure-requests;' : ''}
     frame-ancestors ${process.env.ALLOWED_FRAME_ANCESTORS ?? "'none'"};
+    script-src 'self' 'nonce-${nonce}' 'https: http: ${
+    process.env.NODE_ENV === 'production' ? '' : `'unsafe-eval'`
+    }';
 `;
 
-    // script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https: http: ${
-    //   process.env.NODE_ENV === 'production' ? '' : `'unsafe-eval'`
-    // };
-    // frame-ancestors ${process.env.ALLOWED_FRAME_ANCESTORS ?? "'none'"};
 /**
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
