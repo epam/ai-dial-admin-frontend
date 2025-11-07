@@ -25,8 +25,8 @@ const LoginPopup: FC<Props> = ({ type, isModalOpen, onClose, onLogin }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
 
   const radioButtons: RadioButtonWithContent[] = [
-    { id: ToolsetAuthCredentialLevel.GLOBAL, name: t(ToolsetI18nKey.AsAdmin) },
-    { id: ToolsetAuthCredentialLevel.USER, name: t(ToolsetI18nKey.AsUser) },
+    { id: ToolsetAuthCredentialLevel.GLOBAL, name: t(ToolsetI18nKey.Organization) },
+    { id: ToolsetAuthCredentialLevel.USER, name: t(ToolsetI18nKey.Personal) },
   ];
 
   const [authType, setAuthType] = useState(radioButtons[0].id);
