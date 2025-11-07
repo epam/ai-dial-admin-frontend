@@ -84,5 +84,5 @@ export const toolSetsApi = new ToolsetsApi({
 });
 
 export const assetsApi = new AssetsApi({
-  host: 'http://localhost:57060/',
+  host: process.env.DIAL_ADMIN_API_URL,
 });
