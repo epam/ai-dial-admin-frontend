@@ -38,10 +38,6 @@ interface Props {
   key?: number;
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
   setSelectedEntity?: Dispatch<SetStateAction<BaseEntity>>;
-
-  // asset toolset specific props
-  apiKeyValue?: string;
-  onChangeKeyValue?: (apiKeyValue: string) => void;
 }
 
 const ViewContent: FC<Props> = ({

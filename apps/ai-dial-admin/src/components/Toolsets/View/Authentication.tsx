@@ -14,8 +14,6 @@ interface Props {
   toolset: Toolset;
   disabled?: boolean;
   onChange?: (entity: Toolset) => void;
-  apiKeyValue?: string;
-  onChangeKeyValue?: (apiKeyValue: string) => void;
 }
 
 export interface AuthConfig {

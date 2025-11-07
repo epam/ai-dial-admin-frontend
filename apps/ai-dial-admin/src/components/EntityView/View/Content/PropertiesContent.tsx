@@ -22,10 +22,6 @@ interface Props {
   assets?: DeploymentAsset[] | null;
   selectedEntity: BaseEntity;
   onChangeEntity: (entity: BaseEntity) => void;
-
-  // asset toolset specific props
-  apiKeyValue?: string;
-  onChangeKeyValue?: (apiKeyValue: string) => void;
 }
 
 const PropertiesContent: FC<Props> = ({
@@ -35,8 +31,6 @@ const PropertiesContent: FC<Props> = ({
   etag,
   assets,
   selectedEntity,
-  onChangeKeyValue,
-  apiKeyValue,
   onChangeEntity,
 }) => {
   const getPropertiesView = useCallback(() => {
@@ -57,8 +51,6 @@ const PropertiesContent: FC<Props> = ({
           assets={assets || []}
           runners={applicationSchemes || []}
           onChange={onChangeEntity}
-          apiKeyValue={apiKeyValue}
-          onChangeKeyValue={onChangeKeyValue}
         />
       );
     }
@@ -72,7 +64,7 @@ const PropertiesContent: FC<Props> = ({
         updateEntity={onChangeEntity}
       />
     );
-  }, [view, selectedEntity, applicationSchemes, names, onChangeEntity, etag, assets, apiKeyValue, onChangeKeyValue]);
+  }, [view, selectedEntity, applicationSchemes, names, onChangeEntity, etag, assets]);
 
   return (
     <div className="flex flex-col h-full w-full">
