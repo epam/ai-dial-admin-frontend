@@ -19,10 +19,8 @@ interface Props {
   isSelected: boolean;
   disabled?: boolean;
   onClick?: (type: ToolsetAuthType) => void;
-  apiKeyValue?: string;
   authSettings?: ToolsetAuthSettings;
   onChange?: (authSettings: ToolsetAuthSettings) => void;
-  onChangeKeyValue?: (apiKeyValue: string) => void;
 }
 
 const AuthTypeSection: FC<Props> = ({ disabled, config, isSelected, onClick, authSettings, onChange, ...props }) => {
@@ -87,7 +85,7 @@ const AuthTypeSection: FC<Props> = ({ disabled, config, isSelected, onClick, aut
               onChange={onChangeAuth}
             />
           )}
-          {selectedAuthType === AuthType.With_login && config.id === ToolsetAuthType.API_KEY && (
+          {config.id === ToolsetAuthType.API_KEY && (
             <ApiKeySection disabled={disabled} authSettings={authSettings} onChange={onChange} {...props} />
           )}
 

@@ -67,7 +67,6 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
   const [isChanged, setIsChanged] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState(false);
-  const [apiKeyValue, setApiKeyValue] = useState<string>('');
 
   const isToolsetSignedIn = useMemo(() => {
     return isLoggedInToToolset(selectedToolset);
@@ -172,7 +171,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
   );
 
   const signIn = useCallback(
-    (type: ToolsetAuthCredentialLevel, code?: string) => {
+    (type: ToolsetAuthCredentialLevel, apiKeyValue?: string, code?: string) => {
       isSignInProcessed = true;
       signInToolset(selectedToolset, type, apiKeyValue, code).then((res) => {
         isSignInProcessed = false;
@@ -182,11 +181,11 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
         router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
       });
     },
-    [router, selectedToolset, showNotification, apiKeyValue],
+    [router, selectedToolset, showNotification],
   );
 
   const onLogin = useCallback(
-    (type: ToolsetAuthCredentialLevel) => {
+    (type: ToolsetAuthCredentialLevel, apiKeyValue: string) => {
       const authSettings = selectedToolset.authSettings;
       if (authSettings && authSettings?.authenticationType === ToolsetAuthType.OAUTH) {
         const callbackUrl = `${window.location.pathname}${window.location.search}`;
@@ -218,7 +217,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
 
         window.location.assign(url.toString());
       } else {
-        signIn(type);
+        signIn(type, apiKeyValue);
       }
     },
     [selectedToolset, signIn],
@@ -303,8 +302,6 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
                   jsonEditorEnabled={jsonEditorEnabled}
                   isSkipRefresh={false}
                   onChangeEntity={onChangeEntity}
-                  apiKeyValue={apiKeyValue}
-                  onChangeKeyValue={setApiKeyValue}
                 />
               )}
 
