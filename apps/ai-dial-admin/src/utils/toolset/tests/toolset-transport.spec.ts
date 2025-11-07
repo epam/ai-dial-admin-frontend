@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { getTransport, getAllowTools } from '../toolset-transport';
 import { ToolsetTransport } from '@/src/types/toolset';
+import { describe, expect } from 'vitest';
+import { getAllowTools, getTransport } from '../toolset-transport';
 
 describe('toolset-transport utils', () => {
   test('getTransport returns HTTP for http endpoint', () => {
