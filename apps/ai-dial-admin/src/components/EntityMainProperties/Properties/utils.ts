@@ -2,6 +2,7 @@ import { ErrorI18nKey } from '@/src/constants/i18n';
 import { MAX_NAME_SYMBOLS, MIN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isWrongFieldLength } from '@/src/utils/validation/name-error';
+import { DialModel } from '@/src/models/dial/model';
 
 export const getDisplayNameError = (
   view: ApplicationRoute,
@@ -28,14 +29,19 @@ export const getDisplayNameError = (
 
 export const getVersionError = (
   isVersionOptional: boolean,
-  displayVersion: string,
+  model: DialModel,
+  versionsMap: Record<string, string[]>,
   t: (str: string, param?: Record<string, number>) => string,
 ) => {
   if (!isVersionOptional) {
-    const hasDisplayVersion = !!displayVersion;
+    const hasDisplayVersion = !!versionsMap.displayVersion;
 
     if (!hasDisplayVersion) {
       return t(ErrorI18nKey.Version);
+    }
+
+    if (versionsMap[model.displayName || '']?.includes(model.displayVersion as string)) {
+      return t(ErrorI18nKey.Unique);
     }
   }
   return '';
