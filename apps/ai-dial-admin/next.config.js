@@ -21,8 +21,9 @@ const ContentSecurityPolicy = `
     object-src 'none';
     base-uri 'self';
     ${process.env.NODE_ENV === 'production' ? 'upgrade-insecure-requests;' : ''}
+    frame-ancestors ${process.env.ALLOWED_FRAME_ANCESTORS ?? "'none'"};
 `;
-    
+
     // script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https: http: ${
     //   process.env.NODE_ENV === 'production' ? '' : `'unsafe-eval'`
     // };
