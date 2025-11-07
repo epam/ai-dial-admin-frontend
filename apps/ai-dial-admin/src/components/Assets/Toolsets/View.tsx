@@ -238,7 +238,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
 
   useEffect(() => {
     if (oAuthCode && !isSignInProcessed) {
-      signIn(isUserLevel ? ToolsetAuthCredentialLevel.USER : ToolsetAuthCredentialLevel.GLOBAL, oAuthCode);
+      signIn(isUserLevel ? ToolsetAuthCredentialLevel.USER : ToolsetAuthCredentialLevel.GLOBAL, void 0, oAuthCode);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
