@@ -34,7 +34,7 @@ export const getVersionError = (
   t: (str: string, param?: Record<string, number>) => string,
 ) => {
   if (!isVersionOptional) {
-    const hasDisplayVersion = !!versionsMap.displayVersion;
+    const hasDisplayVersion = !!model.displayName;
 
     if (!hasDisplayVersion) {
       return t(ErrorI18nKey.Version);

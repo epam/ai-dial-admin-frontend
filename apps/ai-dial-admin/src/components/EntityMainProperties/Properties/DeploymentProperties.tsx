@@ -25,7 +25,7 @@ import { isDeploymentsEnabled } from '@/src/utils/plugins';
 import { useAppContext } from '@/src/context/AppContext';
 import { getModelContainers } from '@/src/app/[lang]/models/actions';
 import { getToolsetContainers } from '@/src/app/[lang]/toolsets/actions';
-import { getNamesConfigurations } from '../../../utils/entities/filter-names';
+import { getNamesConfigurations } from '@/src/utils/entities/filter-names';
 
 interface Props {
   view: ApplicationRoute;
@@ -61,9 +61,7 @@ const DeploymentProperties: FC<Props> = ({
   }, [names]);
 
   const versionError = useMemo(() => {
-    return entity.displayName
-      ? void 0
-      : getVersionError(isVersionOptional, entity as DialModel, namesConfiguration.versionsMap, t);
+    return getVersionError(isVersionOptional, entity as DialModel, namesConfiguration.versionsMap, t);
   }, [entity, isVersionOptional, namesConfiguration.versionsMap, t]);
 
   const onChangeDisplayName = useCallback(

@@ -7,7 +7,7 @@ export const getNamesConfigurations = (namesWithVersions: string[]) => {
   namesWithVersions.forEach((name) => {
     const [displayName, displayVersion] = name.split('___');
     names.push(displayName);
-    if (displayVersion) {
+    if (displayVersion !== '') {
       if (!versionsMap[displayName]) {
         versionsMap[displayName] = [];
       }
