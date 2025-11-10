@@ -3,7 +3,7 @@
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 
 import {
@@ -35,6 +35,7 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import InterceptorProperties from './Properties';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   originalInterceptor: DialInterceptor;
@@ -49,6 +50,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, etag, 
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
+  const getReqRef = useRef(useProtectedRequest());
 
   const tabs: TabModel[] = [
     propertiesTabs(t),
@@ -68,8 +70,8 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, etag, 
   useEffect(() => {
     const name = originalInterceptor?.name;
     if (!coreInterceptor && name) {
-      getCoreInterceptor(name).then((data) => {
-        setCoreInterceptor(data.response as DialInterceptor);
+      getReqRef.current(getCoreInterceptor, name).then((data) => {
+        setCoreInterceptor(data.response);
       });
     }
   }, [coreInterceptor, originalInterceptor]);
@@ -151,8 +153,13 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, etag, 
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreInterceptor(selectedInterceptor as Record<string, unknown>, originalInterceptor.name || '', etag)
-        : updateInterceptor(selectedInterceptor, etag);
+        ? getReqRef.current(
+            updateCoreInterceptor,
+            selectedInterceptor as Record<string, unknown>,
+            originalInterceptor.name || '',
+            etag,
+          )
+        : getReqRef.current(updateInterceptor, selectedInterceptor, etag);
 
     req.then((res) => {
       if (res.success) {

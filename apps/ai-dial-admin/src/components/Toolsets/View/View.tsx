@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
@@ -28,6 +28,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import ToolsetProperties from './Properties';
 import { ExportFormat } from '@/src/types/export';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { useProtectedRequest } from '../../../hooks/use-protected-request';
 
 interface Props {
   etag: string;
@@ -41,6 +42,7 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
+  const getReqRef = useRef(useProtectedRequest());
 
   const tabs: TabModel[] = [propertiesTabs(t), toolsTabs(t), rolesTabs(t), auditTabs(t)];
 
@@ -61,8 +63,8 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   useEffect(() => {
     const name = originalToolset?.name;
     if (!coreToolset && name) {
-      getCoreToolset(name).then((data) => {
-        setCoreToolset(data.response as Toolset);
+      getReqRef.current(getCoreToolset, name).then((data) => {
+        setCoreToolset(data.response);
       });
     }
   }, [coreToolset, originalToolset]);
@@ -116,8 +118,13 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreToolset(selectedToolset as Record<string, unknown>, originalToolset.name || '', etag)
-        : updateToolset(selectedToolset, etag);
+        ? getReqRef.current(
+            updateCoreToolset,
+            selectedToolset as Record<string, unknown>,
+            originalToolset.name || '',
+            etag,
+          )
+        : getReqRef.current(updateToolset, selectedToolset, etag);
 
     req.then((res) => {
       if (res.success) {

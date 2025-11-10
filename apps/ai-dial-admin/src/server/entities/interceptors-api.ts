@@ -42,7 +42,7 @@ export class InterceptorsApi extends BaseApi {
     return this.get(CONFIGURATION_URL(name), token);
   }
 
-  getCoreInterceptor(name: string, token: JWT | null) {
+  getCoreInterceptor(name: string, token: JWT | null): Promise<ServerActionResponse<DialInterceptor>> {
     return this.getActionWithEtag(CORE_INTERCEPTOR_URL(name), DEFAULT_ETAG, token);
   }
 

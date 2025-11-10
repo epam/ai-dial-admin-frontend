@@ -38,6 +38,7 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import RoleProperties from './Properties';
+import { useProtectedRequest } from '../../../hooks/use-protected-request';
 
 interface Props {
   originalRole: DialRole;
@@ -51,6 +52,7 @@ interface Props {
 const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications, keys }) => {
   const t = useI18n() as (str: string) => string;
   const router = useRouter();
+  const getReqRef = useRef(useProtectedRequest());
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
 
@@ -79,8 +81,8 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   useEffect(() => {
     const name = (originalRole as { name: string })?.name;
     if (!coreRole && name) {
-      getCoreRole(name).then((data) => {
-        setCoreRole(data.response as DialRole);
+      getReqRef.current(getCoreRole, name).then((data) => {
+        setCoreRole(data.response);
       });
     }
   }, [coreRole, originalRole]);
@@ -192,8 +194,8 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreRole(selectedRole as Record<string, unknown>, originalRole.name || '', etag)
-        : updateRole(selectedRole, etag);
+        ? getReqRef.current(updateCoreRole, selectedRole as Record<string, unknown>, originalRole.name || '', etag)
+        : getReqRef.current(updateRole, selectedRole, etag);
 
     req.then((res) => {
       if (res.success) {

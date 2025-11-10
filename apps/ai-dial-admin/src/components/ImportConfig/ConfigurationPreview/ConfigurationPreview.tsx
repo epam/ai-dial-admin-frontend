@@ -18,6 +18,7 @@ import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { EntityType } from '@/src/types/entity-type';
 import { ImportFileType } from '@/src/types/import';
 import { getErrorNotification } from '@/src/utils/notification';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   importBody: FormData;
@@ -30,6 +31,7 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
   const t = useI18n() as (v: string) => string;
   const { showNotification } = useNotification();
   const showNotificationRef = useRef(showNotification);
+  const getReqRef = useRef(useProtectedRequest());
 
   const [tabs, setTabs] = useState<TabModel[]>([]);
   const [selectedTab, setSelectedTab] = useState('');
@@ -41,7 +43,10 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
 
   useEffect(() => {
     setIsLoading(true);
-    (fileType == ImportFileType.ARCHIVE ? previewZipConfig(importBody) : previewJsonConfigs(importBody)).then((res) => {
+    (fileType == ImportFileType.ARCHIVE
+      ? getReqRef.current(previewZipConfig, importBody)
+      : getReqRef.current(previewJsonConfigs, importBody)
+    ).then((res) => {
       setIsLoading(false);
       if (res.success) {
         const fileConfiguration = res.response as FileConfiguration;
