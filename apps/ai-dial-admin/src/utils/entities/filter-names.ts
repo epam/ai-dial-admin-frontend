@@ -1,4 +1,39 @@
 import { BaseEntity } from '@/src/models/dial/base-entity';
+import { DialModel } from '@/src/models/dial/model';
+
+export const getNamesConfigurations = (namesWithVersions: string[]) => {
+  const names: string[] = [];
+  const versionsMap: Record<string, string[]> = {};
+  namesWithVersions.forEach((name) => {
+    const [displayName, displayVersion] = name.split('___');
+    names.push(displayName);
+    if (displayVersion !== '') {
+      if (!versionsMap[displayName]) {
+        versionsMap[displayName] = [];
+      }
+      versionsMap[displayName].push(displayVersion);
+    }
+  });
+
+  return {
+    names,
+    versionsMap,
+  };
+};
+
+export const filterDisplayNamesWithVersions = (
+  entities?: DialModel[] | null,
+  currentDisplayName?: string,
+): string[] => {
+  return (
+    (entities?.reduce((acc, curr) => {
+      if (curr.displayName != null && curr.displayName !== currentDisplayName) {
+        acc.push(`${curr.displayName}___${curr.displayVersion}`);
+      }
+      return acc;
+    }, [] as string[]) as string[]) || []
+  );
+};
 
 export const filterDisplayNames = (entities?: BaseEntity[] | null, currentDisplayName?: string): string[] => {
   return (
