@@ -12,7 +12,7 @@ import { convertRoleLimitsIntoString, convertShareValue, fillShareValues } from 
  * @param {string[]} val1 - first value to compare
  * @param {string[]} val2 - second value to compare
  */
-export const compareModels = (diffs: ActivityAuditDiff[], val1: string[], val2: string[], isCurrent?: boolean) => {
+export const compareEntities = (diffs: ActivityAuditDiff[], val1: string[], val2: string[], isCurrent?: boolean) => {
   const sortedVal1 = (val1 || []).slice().sort();
   const sortedVal2 = (val2 || []).slice().sort();
 
@@ -56,35 +56,6 @@ export const compareModels = (diffs: ActivityAuditDiff[], val1: string[], val2: 
       status: isCurrent ? DiffStatus.MIRROR : DiffStatus.ADDED,
     });
     j++;
-  }
-};
-
-/**
- * Compare entities
- *
- * @param {ActivityAuditDiff[]} diffs - result array
- * @param {string[]} val1 - first value to compare
- * @param {string[]} val2 - second value to compare
- */
-export const compareEntities = (diffs: ActivityAuditDiff[], val1: string[], val2: string[], isCurrent?: boolean) => {
-  const len = Math.max(val1?.length || 0, val2?.length || 0);
-  for (let i = 0; i < len; i++) {
-    const value1 = val1?.[i];
-    const value2 = val2?.[i];
-
-    if (value1 != null && value2 == null) {
-      diffs.push({ parameter: '', value: '', status: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED });
-    } else if (value1 == null && value2 != null) {
-      diffs.push({
-        parameter: value2 || '',
-        value: value2 || '',
-        status: isCurrent ? DiffStatus.MIRROR : DiffStatus.ADDED,
-      });
-    } else if (value1 != null && value2 != null && value1 !== value2) {
-      diffs.push({ parameter: value2 || '', value: value2 || '', status: DiffStatus.CHANGED });
-    } else {
-      diffs.push({ parameter: value1 || '', value: value1 || '' });
-    }
   }
 };
 

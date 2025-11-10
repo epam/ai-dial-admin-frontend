@@ -24,7 +24,7 @@ describe('Activity audit :: compareEntities', () => {
     ]);
   });
 
-  test('should push ADDED when val1 missing and val2 exists', () => {
+  test('should push ADDED when val1 is missing and val2 exists', () => {
     const diffs: ActivityAuditDiff[] = [];
     compareEntities(diffs, [], ['x', 'y']);
 
@@ -50,7 +50,8 @@ describe('Activity audit :: compareEntities', () => {
     compareEntities(diffs, ['old1', 'same'], ['new1', 'same']);
 
     expect(diffs).toEqual([
-      { parameter: 'new1', value: 'new1', status: DiffStatus.CHANGED },
+      { parameter: 'new1', value: 'new1', status: DiffStatus.ADDED },
+      { parameter: '', value: '', status: DiffStatus.REMOVED },
       { parameter: 'same', value: 'same' },
     ]);
   });
@@ -71,8 +72,9 @@ describe('Activity audit :: compareEntities', () => {
 
     expect(diffs).toEqual([
       { parameter: 'a', value: 'a' },
-      { parameter: 'x', value: 'x', status: DiffStatus.CHANGED },
       { parameter: '', value: '', status: DiffStatus.REMOVED },
+      { parameter: '', value: '', status: DiffStatus.REMOVED },
+      { parameter: 'x', value: 'x', status: DiffStatus.ADDED },
     ]);
   });
 
@@ -81,6 +83,34 @@ describe('Activity audit :: compareEntities', () => {
     compareEntities(diffs, [], []);
 
     expect(diffs).toEqual([]);
+  });
+
+  test('should handle one empty array and the other containing a value', () => {
+    const diffs: ActivityAuditDiff[] = [];
+    compareEntities(diffs, [], ['item']);
+
+    expect(diffs).toEqual([{ parameter: 'item', value: 'item', status: DiffStatus.ADDED }]);
+  });
+
+  test('should push MIRROR when one array has a value and the other is empty with isCurrent=true', () => {
+    const diffs: ActivityAuditDiff[] = [];
+    compareEntities(diffs, ['item'], [], true);
+    compareEntities(diffs, [], ['item'], true);
+
+    expect(diffs).toEqual([
+      { parameter: '', value: '', status: DiffStatus.MIRROR },
+      { parameter: 'item', value: 'item', status: DiffStatus.MIRROR },
+    ]);
+  });
+
+  test('should sort arrays before comparison to prevent index-related differences', () => {
+    const diffs: ActivityAuditDiff[] = [];
+    compareEntities(diffs, ['banana', 'apple'], ['apple', 'banana']);
+
+    expect(diffs).toEqual([
+      { parameter: 'apple', value: 'apple' },
+      { parameter: 'banana', value: 'banana' },
+    ]);
   });
 });
 
