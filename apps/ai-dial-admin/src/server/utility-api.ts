@@ -56,7 +56,7 @@ export class UtilityApi extends BaseApi {
     return this.head(DEPLOYMENT_URL(name), token);
   }
 
-  getAppProcessStatus(token: JWT | null): Promise<AppProcessStatus | null> {
-    return this.get(`${EXPORT_CONFIG_URL}/status`, token);
+  getAppProcessStatus(token: JWT | null): Promise<ServerActionResponse<AppProcessStatus>> {
+    return this.getAction(`${EXPORT_CONFIG_URL}/status`, token);
   }
 }

@@ -1,7 +1,8 @@
 'use client';
 import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
+import { IconRefresh } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useRef, useState } from 'react';
 
 import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
@@ -12,6 +13,7 @@ import { USAGE_LOG_CONVERSATIONS_COLUMNS, USAGE_LOG_TRACES_COLUMNS } from '@/src
 import { ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { CONVERSATIONS_QUERY, TRACES_QUERY } from '@/src/constants/telemetry';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { TelemetryQuery } from '@/src/models/telemetry';
@@ -19,7 +21,6 @@ import { TimeRange } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFormattedFilters } from '@/src/utils/telemetry';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
-import { IconRefresh } from '@tabler/icons-react';
 
 interface Props {
   route: ApplicationRoute;
@@ -30,6 +31,8 @@ interface Props {
 const UsageLog: FC<Props> = ({ route, entity, entityView }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const tabs = [tracesTabs(t), conversationsTabs(t)];
+  const getReq = useProtectedRequest();
+  const getReqRef = useRef(getReq);
 
   const [activeTab, setActiveTab] = useState(entityView || EntityViewTab.Traces);
   const [timePeriod, setTimePeriod] = useState(DEFAULT_TIME_PERIOD);
@@ -43,7 +46,7 @@ const UsageLog: FC<Props> = ({ route, entity, entityView }) => {
         query.query.from.where = getFormattedFilters(timeRange, [], entity?.name || null);
       }
 
-      return getDashboardData(query);
+      return getReqRef.current(getDashboardData, query);
     },
     [entity?.name, timeRange],
   );

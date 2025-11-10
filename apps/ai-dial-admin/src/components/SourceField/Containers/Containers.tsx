@@ -22,6 +22,7 @@ import Field from '@/src/components/Common/Field/Field';
 import SelectContainerModal from '@/src/components/SourceField/Containers/SelectContainerModal';
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
 import { addTrailingSlash } from '@/src/utils/files/path';
+import { useProtectedRequest } from '../../../hooks/use-protected-request';
 
 interface Props<T> {
   entity: T;
@@ -43,6 +44,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
   const t = useI18n() as (key: string) => string;
   const { showNotification } = useNotification();
   const { embeddedApps } = useAppContext();
+  const getReqRef = useRef(useProtectedRequest());
   const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
   const showNotificationRef = useRef(showNotification);
 
@@ -92,7 +94,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
 
   useEffect(() => {
     const fetchContainers = async () => {
-      const containers = await getContainers();
+      const containers = (await getReqRef.current(getContainers)).response;
       if (containers?.length) {
         setContainers(containers.filter((container) => container.status === 'running') || []);
       }

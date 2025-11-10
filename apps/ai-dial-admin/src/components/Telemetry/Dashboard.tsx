@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useState } from 'react';
+import React, { FC, useCallback, useRef, useState } from 'react';
 import LineChart from '@/src/components/Charts/LineChart/LineChart';
 import SingleValueChartsDashboard from '@/src/components/Charts/SingleValueChart/SingleValueChartsDashboard';
 import TelemetryGrid from '@/src/components/Telemetry/TelemetryGrid';
@@ -15,6 +15,7 @@ import { useI18n } from '@/src/locales/client';
 import TelemetryControls from '@/src/components/Telemetry/TelemetryControls/TelemetryControls';
 import { ApplicationRoute } from '@/src/types/routes';
 import { BaseEntity } from '@/src/models/dial/base-entity';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   route: ApplicationRoute;
@@ -27,6 +28,7 @@ const Dashboard: FC<Props> = ({ route, entity }) => {
   const [refreshTime, setRefreshTime] = useState(DEFAULT_REFRESH_TIME);
   const [timePeriod, setTimePeriod] = useState(DEFAULT_TIME_PERIOD);
   const [timeRange, setTimeRange] = useState<TimeRange>(getTimeRangeById(DEFAULT_TIME_PERIOD));
+  const getReqRef = useRef(useProtectedRequest());
 
   const getData = useCallback(
     (query: TelemetryQuery) => {
@@ -36,7 +38,7 @@ const Dashboard: FC<Props> = ({ route, entity }) => {
         query.query.from.where = getFormattedFilters(timeRange, filters, entity?.name || null);
       }
 
-      return getDashboardData(query);
+      return getReqRef.current(getDashboardData, query);
     },
     [entity?.name, filters, timeRange],
   );

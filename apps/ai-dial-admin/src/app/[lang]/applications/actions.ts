@@ -11,7 +11,7 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export async function getApplications() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return applicationsApi.getApplicationsList(token);
+  return applicationsApi.getApplicationsListAction(token);
 }
 
 export async function getApplication(name: string, etag: string) {

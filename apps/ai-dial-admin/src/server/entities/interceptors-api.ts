@@ -42,8 +42,8 @@ export class InterceptorsApi extends BaseApi {
     );
   }
 
-  getConfigurationSchema(name: string, token: JWT | null): Promise<RJSFSchema | null> {
-    return this.get(CONFIGURATION_URL(name), token);
+  getConfigurationSchema(name: string, token: JWT | null): Promise<ServerActionResponse<RJSFSchema>> {
+    return this.getAction(CONFIGURATION_URL(name), token);
   }
 
   getCoreInterceptor(name: string, token: JWT | null): Promise<ServerActionResponse<DialInterceptor>> {

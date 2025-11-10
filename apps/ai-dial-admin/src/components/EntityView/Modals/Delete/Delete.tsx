@@ -17,7 +17,7 @@ import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getConfirmation, getNotificationDescription, getNotificationTitle, getTitle } from './utils';
 import { isAssetView, isBuildersView } from '@/src/utils/is-asset-view';
 import RelatedArtefacts from './RelatedArtefact';
-import { useProtectedRequest } from '../../../../hooks/use-protected-request';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Artefact {
   name?: string;

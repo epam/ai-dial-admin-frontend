@@ -28,7 +28,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import ToolsetProperties from './Properties';
 import { ExportFormat } from '@/src/types/export';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
-import { useProtectedRequest } from '../../../hooks/use-protected-request';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   etag: string;

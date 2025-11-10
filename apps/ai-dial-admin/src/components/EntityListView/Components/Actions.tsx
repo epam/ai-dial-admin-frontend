@@ -145,7 +145,7 @@ const Actions = <T extends object>({
   );
 
   const onDeleteBulk = useCallback(() => {
-    bulkDelete?.(getListOfPathsToBulkDelete(folderContext?.bulkSelectedData)).then((res) => {
+    getReqRef.current(bulkDelete, getListOfPathsToBulkDelete(folderContext?.bulkSelectedData)).then((res) => {
       if (res.success) {
         showNotification(getSuccessNotification(getBulkNotificationTitle(route, t), t(DeleteI18nKey.ShortDescription)));
         setIsBulkView(false);

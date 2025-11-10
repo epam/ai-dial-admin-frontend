@@ -11,6 +11,7 @@ import { getErrorNotification } from '@/src/utils/notification';
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import HintSidebar from '@/src/components/Common/HintSIdebar/HintSidebar';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   children: ReactNode;
@@ -22,15 +23,15 @@ const CHECK_STATUS_INTERVAL = 2 * 60 * 1000;
 
 const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
   const isTabletScreen = useIsTabletScreen();
-  const { showNotification } = useNotification();
-  const showNotificationRef = useRef(showNotification);
+  const showNotificationRef = useRef(useNotification().showNotification);
+  const getReqRef = useRef(useProtectedRequest());
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const t = useI18n();
 
   const checkAppStatus = useCallback((): void => {
-    getAppProcessStatus().then((response) => {
-      if (!response?.success && response?.errorMessage) {
-        showNotificationRef.current(getErrorNotification(t(ErrorI18nKey.ServerError), response?.errorMessage));
+    getReqRef.current(getAppProcessStatus).then((response) => {
+      if (!response.response?.success && response.response?.errorMessage) {
+        showNotificationRef.current(getErrorNotification(t(ErrorI18nKey.ServerError), response?.response.errorMessage));
       }
     });
   }, [t]);

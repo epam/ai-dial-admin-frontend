@@ -21,8 +21,7 @@ interface Props {
 const AdapterModels: FC<Props> = ({ adapter, onChangeAdapter }) => {
   const t = useI18n() as (t: string) => string;
   const getReqRef = useRef(useProtectedRequest());
-  const { showNotification } = useNotification();
-  const showNotificationRef = useRef(showNotification);
+  const showNotificationRef = useRef(useNotification().showNotification);
 
   const [models, setModels] = useState<DialModel[]>([]);
 

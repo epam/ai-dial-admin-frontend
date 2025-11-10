@@ -48,7 +48,7 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import AppRunnerApplications from './ConfigurationView/Applications';
 import SchemeProperties from './ConfigurationView/Properties';
-import { useProtectedRequest } from '../../hooks/use-protected-request';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   etag: string;
