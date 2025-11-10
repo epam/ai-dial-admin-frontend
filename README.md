@@ -85,6 +85,8 @@ AI DIAL Admin uses environment variables for configuration. All environment vari
 | `EMBEDDED_APPS`            |    No    | Defines integrated plugins                                                                                                                     | JSON             |                 |
 | `DIAL_DEPLOYMENTS_API_URL` |    No    | AI DIAL Deployments API url.                                                                                                                   | JSON             |                 |
 | `ENABLE_EXPORT_CONFIG_MAP` |    No    | Available on the **Export config** page to export configuration from Core config source.                                                       | JSON             | false           |
+| `ALLOWED_IFRAME_ORIGINS`            |    No    | Specifies all URLs that are allowed to embed DIAL Admin within an iframe. | Any origin valid format. List of space separated URLs.                                                                                                                                                              | `none`                                                                                                                          |
+
 
 ### Environment Variables for the Configuration of Auth Providers
 
