@@ -17,6 +17,10 @@ export class InterceptorsApi extends BaseApi {
     return this.get(INTERCEPTORS_URL, token);
   }
 
+  getInterceptorsListAction(token: JWT | null): Promise<ServerActionResponse<DialInterceptor[]>> {
+    return this.getAction(INTERCEPTORS_URL, token);
+  }
+
   getInterceptor(name: string, token: JWT | null, eTag: string) {
     return this.getActionWithEtag(INTERCEPTOR_URL(name), eTag, token);
   }

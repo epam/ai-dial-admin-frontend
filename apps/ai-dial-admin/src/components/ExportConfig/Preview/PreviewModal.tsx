@@ -12,6 +12,7 @@ import { ExportRequest } from '@/src/models/export';
 import { EntityType } from '@/src/types/entity-type';
 import { ExportType } from '@/src/types/export';
 import { getErrorNotification } from '@/src/utils/notification';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   exportRequest: Partial<ExportRequest>;
@@ -25,7 +26,7 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, isModalOpen, onClos
 
   const { showNotification } = useNotification();
   const showNotificationRef = useRef(showNotification);
-
+  const getReqRef = useRef(useProtectedRequest());
   const [isIncludeSecret, setIsIncludeSecret] = useState<boolean>(false);
   const [tabs, setTabs] = useState<TabModel[]>([]);
   const [data, setData] = useState<Record<string, EntitiesGridData[]>>({});
@@ -42,22 +43,24 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, isModalOpen, onClos
     }
 
     setIsLoadingData(true);
-    previewExportConfig({
-      ...exportRequest,
-      addSecrets: isIncludeSecret,
-    } as ExportRequest).then((res) => {
-      setIsLoadingData(false);
-      if (res.success) {
-        const data = res.response as Record<string, EntitiesGridData[]>;
-        const { convertedData, tabs } = getPreviewTabs(data, isIncludeSecret, exportRequest.exportFormat, t);
+    getReqRef
+      .current(previewExportConfig, {
+        ...exportRequest,
+        addSecrets: isIncludeSecret,
+      } as ExportRequest)
+      .then((res) => {
+        setIsLoadingData(false);
+        if (res.success) {
+          const data = res.response as Record<string, EntitiesGridData[]>;
+          const { convertedData, tabs } = getPreviewTabs(data, isIncludeSecret, exportRequest.exportFormat, t);
 
-        setData(convertedData);
-        setTabs(tabs);
-        setSelectedTab(tabs[0]?.id);
-      } else {
-        showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage));
-      }
-    });
+          setData(convertedData);
+          setTabs(tabs);
+          setSelectedTab(tabs[0]?.id);
+        } else {
+          showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage));
+        }
+      });
   }, [exportRequest, isIncludeSecret, showNotification, t]);
 
   return (

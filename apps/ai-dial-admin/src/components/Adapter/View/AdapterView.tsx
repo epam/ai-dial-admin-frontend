@@ -4,7 +4,7 @@ import { IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { removeAdapter, updateAdapter } from '@/src/app/[lang]/adapters/actions';
@@ -30,6 +30,7 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import AdapterProperties from './AdapterProperties';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   etag: string;
@@ -42,6 +43,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
+  const getReqRef = useRef(useProtectedRequest());
 
   const tabs: TabModel[] = [propertiesTabs(t), { id: EntityViewTab.Models, name: t(TabsI18nKey.Models) }, auditTabs(t)];
 
@@ -95,7 +97,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   }, [setJsonEditorEnabled]);
 
   const onSave = useCallback(() => {
-    updateAdapter(selectedAdapter, etag).then((res) => {
+    getReqRef.current(updateAdapter, selectedAdapter, etag).then((res) => {
       if (res.success) {
         showNotification(
           getSuccessNotification(
