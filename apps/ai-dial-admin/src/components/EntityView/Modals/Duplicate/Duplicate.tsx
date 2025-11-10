@@ -16,6 +16,8 @@ import {
   getCloneTitle,
 } from '@/src/utils/entities/duplicate-entity';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { RoutesForCheckingUniqueName } from '@/src/components/EntityListView/CreateEntity/constants';
+import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 
 type ClonedEntity = BaseEntity | DialModel;
 interface Props {
@@ -37,6 +39,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
       ? { ...entity, name: getClonedEntityName(entity.name) }
       : { ...entity, name: getClonedEntityName(entity.name), displayVersion: void 0, displayName: void 0 },
   );
+  const [isUniqueNameError, setIsUniqueNameError] = useState<boolean | undefined>(void 0);
 
   const onChangeVersion = useCallback(
     (displayVersion?: string) => {
@@ -58,15 +61,26 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const onDuplicateClick = useCallback(async () => {
+    const isUnique = RoutesForCheckingUniqueName.includes(view)
+      ? await checkIsUniqueDeploymentName(clonedEntity.name as string)
+      : true;
+    setIsUniqueNameError(!isUnique);
+
+    if (!isUnique) return;
+
+    onDuplicate(clonedEntity);
+  }, [view, clonedEntity, onDuplicate]);
+
   return (
     <DialFormPopup
       onClose={onClose}
       title={t(getCloneTitle(view, t))}
       portalId="CloneEntity"
       open={isModalOpen}
-      onSubmit={() => onDuplicate(clonedEntity)}
+      onSubmit={onDuplicateClick}
       onCancel={onClose}
-      disableSubmitButton={!isValid}
+      disableSubmitButton={(isUniqueNameError != null && !isUniqueNameError) || !isValid}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Duplicate)}
     >
@@ -75,7 +89,12 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
           <div className="text-secondary small mb-4">{t(duplicateModalDescriptionMap[view])}</div>
         )}
         <div className="flex flex-col gap-6">
-          <IdControl entity={clonedEntity} onChangeEntity={setEntity} names={names} />
+          <IdControl
+            entity={clonedEntity}
+            isUniqueNameError={isUniqueNameError}
+            onChangeEntity={setEntity}
+            names={names}
+          />
           <DisplayNameControl displayName={clonedEntity.displayName} onChange={onChangeDisplayName} required={true} />
 
           {view === ApplicationRoute.Models && (

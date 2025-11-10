@@ -274,21 +274,22 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
             context={useToolsetFolder as () => AssetsFolderContext<DialFile | AssetToolset>}
             childrenContainerClass="flex-row-reverse"
           >
-            {isToolsetSignedIn ? (
-              <DialButton
-                variant={ButtonVariant.Secondary}
-                title={t(ToolsetI18nKey.LogOut)}
-                iconBefore={<IconLogout {...BASE_ICON_PROPS} />}
-                onClick={onLogout}
-              />
-            ) : (
-              <DialButton
-                variant={ButtonVariant.Secondary}
-                title={t(ToolsetI18nKey.LogIn)}
-                iconBefore={<IconLogin {...BASE_ICON_PROPS} />}
-                onClick={() => setIsModalOpen(true)}
-              />
-            )}
+            {selectedToolset.authSettings?.authenticationType !== ToolsetAuthType.NONE &&
+              (isToolsetSignedIn ? (
+                <DialButton
+                  variant={ButtonVariant.Secondary}
+                  title={t(ToolsetI18nKey.LogOut)}
+                  iconBefore={<IconLogout {...BASE_ICON_PROPS} />}
+                  onClick={onLogout}
+                />
+              ) : (
+                <DialButton
+                  variant={ButtonVariant.Secondary}
+                  title={t(ToolsetI18nKey.LogIn)}
+                  iconBefore={<IconLogin {...BASE_ICON_PROPS} />}
+                  onClick={() => setIsModalOpen(true)}
+                />
+              ))}
           </HeaderButtons>
         </div>
         <div className="flex-1 overflow-auto mt-3 min-h-0">
