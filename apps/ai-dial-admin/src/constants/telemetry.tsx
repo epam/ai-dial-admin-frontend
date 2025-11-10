@@ -42,15 +42,15 @@ export const filterConditionConfig = [
 ];
 
 export const refreshOptionsConfig = [
-  { id: 'off', name: 'Off', timeout: null },
-  { id: '30s', name: '30s', timeout: 30 * 1000 },
-  { id: '1m', name: '1m', timeout: 60 * 1000 },
-  { id: '5m', name: '5m', timeout: 5 * 60 * 1000 },
-  { id: '15m', name: '15m', timeout: 15 * 60 * 1000 },
-  { id: '30m', name: '30m', timeout: 30 * 60 * 1000 },
-  { id: '1h', name: '1h', timeout: 60 * 60 * 1000 },
-  { id: '2h', name: '2h', timeout: 2 * 60 * 60 * 1000 },
-  { id: '1d', name: '1d', timeout: 24 * 60 * 60 * 1000 },
+  { value: 'off', label: 'Off', timeout: null },
+  { value: '30s', label: '30s', timeout: 30 * 1000 },
+  { value: '1m', label: '1m', timeout: 60 * 1000 },
+  { value: '5m', label: '5m', timeout: 5 * 60 * 1000 },
+  { value: '15m', label: '15m', timeout: 15 * 60 * 1000 },
+  { value: '30m', label: '30m', timeout: 30 * 60 * 1000 },
+  { value: '1h', label: '1h', timeout: 60 * 60 * 1000 },
+  { value: '2h', label: '2h', timeout: 2 * 60 * 60 * 1000 },
+  { value: '1d', label: '1d', timeout: 24 * 60 * 60 * 1000 },
 ];
 
 export const UNIQ_USERS_QUERY: TelemetryQuery = {

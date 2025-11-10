@@ -36,8 +36,6 @@ const PromptsList: FC = () => {
       moveFiles={movePrompts}
       bulkDelete={bulkDeletePrompts}
       context={usePromptFolder as () => AssetsFolderContext<DialFile | DialPrompt>}
-      showFolders={true}
-      showExport={true}
     />
   );
 };

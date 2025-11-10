@@ -1,7 +1,7 @@
 'use client';
 
 import { FC, useCallback, useEffect, useState } from 'react';
-import { IconArrowNarrowRight, IconZip } from '@tabler/icons-react';
+import { IconArrowNarrowRight } from '@tabler/icons-react';
 import {
   ButtonVariant,
   RadioButtonWithContent,
@@ -9,10 +9,9 @@ import {
   DialRadioGroup,
   RadioGroupOrientation,
   DialLoadFileAreaField,
-  DialIcon,
+  DialFileIcon,
 } from '@epam/ai-dial-ui-kit';
 
-import Json from '@/public/images/icons/file/json.svg';
 import { isLargeFile } from '@/src/components/EntityListView/Import/import';
 import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { IMPORT_RESOLUTIONS } from '@/src/constants/import';
@@ -119,7 +118,7 @@ const Files: FC<Props> = ({
               multiple={false}
               fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
               fileCountError={t(ImportI18nKey.ArchiveDescription)}
-              iconBeforeInput={<IconZip className="text-secondary" {...BASE_ICON_PROPS} />}
+              iconBeforeInput={<DialFileIcon extension="zip" cssClass="text-secondary" />}
               acceptTypes=".zip, application/x-zip-compressed, application/zip"
               onChange={onChangeFile}
             />
@@ -131,7 +130,7 @@ const Files: FC<Props> = ({
               emptyTextSecondLine={t(BasicI18nKey.Or)}
               emptyButtonLabel={t(ButtonsI18nKey.Browse)}
               files={files}
-              iconBeforeInput={<DialIcon icon={<Json />} className="text-secondary" />}
+              iconBeforeInput={<DialFileIcon extension="json" cssClass="text-secondary" />}
               acceptTypes="application/JSON"
               fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
               isInvalid={isLargeFile}

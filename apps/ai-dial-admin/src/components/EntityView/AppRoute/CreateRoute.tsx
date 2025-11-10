@@ -1,10 +1,10 @@
 import { DialFormPopup, DialTextInputField, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useState } from 'react';
 
-import { getCreateEntityTitle } from '@/src/utils/entities/create-entity';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getCreateEntityTitle } from '@/src/utils/entities/create-entity';
 
 interface Props {
   isModalOpen: boolean;

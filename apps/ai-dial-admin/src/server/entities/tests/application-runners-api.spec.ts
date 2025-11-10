@@ -1,8 +1,13 @@
-import { DialApplicationScheme } from '@/src/models/dial/application';
+import { DialApplicationScheme, TypeEntity } from '@/src/models/dial/application';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { APPLICATION_SCHEMES_URL, APPLICATION_SCHEME_URL, ApplicationRunnersApi } from '../application-runners-api';
+import {
+  APPLICATION_SCHEMES_URL,
+  APPLICATION_SCHEME_URL,
+  ApplicationRunnersApi,
+  CORE_APPLICATION_SCHEME_URL,
+} from '../application-runners-api';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -14,7 +19,7 @@ describe('Server :: ApplicationRunnersApi', () => {
     $id: 'app-scheme-123',
     title: 'Test Scheme',
     description: 'Schema description',
-    type: 'object',
+    type: TypeEntity.OBJECT,
     properties: {},
     required: [],
   };
@@ -35,10 +40,21 @@ describe('Server :: ApplicationRunnersApi', () => {
     expect(result).toEqual(JSON.stringify([mockScheme]));
   });
 
+  test('Should fetch a core application scheme by id', async () => {
+    fetch.mockResponseOnce(JSON.stringify([mockScheme]));
+
+    await instance.getCoreRunner(mockScheme.$id || '', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${CORE_APPLICATION_SCHEME_URL(mockScheme.$id)}`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
   test('Should fetch a single application scheme by id', async () => {
     fetch.mockResponseOnce(JSON.stringify([mockScheme]));
 
-    await instance.getApplicationScheme(mockScheme.$id, TOKEN_MOCK, 'etag123');
+    await instance.getApplicationScheme(mockScheme.$id || '', TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${APPLICATION_SCHEME_URL(mockScheme.$id)}`,
@@ -61,11 +77,26 @@ describe('Server :: ApplicationRunnersApi', () => {
     );
   });
 
+  test('Should calls updateCoreRunner with correct data', async () => {
+    const response = { success: true };
+    fetch.mockResponseOnce(JSON.stringify(response));
+
+    await instance.updateCoreRunner(mockScheme, 'runner', 'etag123', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${CORE_APPLICATION_SCHEME_URL('runner')}`,
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify(mockScheme),
+      }),
+    );
+  });
+
   test('Should calls updateApplicationScheme with correct data', async () => {
     const response = { success: true };
     fetch.mockResponseOnce(JSON.stringify(response));
 
-    const result = await instance.updateApplicationScheme(mockScheme, TOKEN_MOCK, 'etag123');
+    await instance.updateApplicationScheme(mockScheme, TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${APPLICATION_SCHEME_URL(mockScheme.$id)}`,

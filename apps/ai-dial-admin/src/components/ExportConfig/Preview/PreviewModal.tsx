@@ -66,13 +66,14 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, isModalOpen, onClos
       title={t(ExportI18nKey.FilePreview)}
       portalId="ExportFilePreview"
       open={isModalOpen}
+      cssClass="h-[754px]"
       size={PopupSize.Lg}
       submitLabel={t(ButtonsI18nKey.Export)}
       onSubmit={() => onPrepare(isIncludeSecret)}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       onCancel={onClose}
     >
-      <div className="flex flex-col gap-4 py-6 px-6 h-[674px]">
+      <div className="flex flex-col gap-4 py-6 px-6 h-full">
         <div className="flex-1 min-h-0">
           {isLoadingData ? (
             <DialLoader size={50} />

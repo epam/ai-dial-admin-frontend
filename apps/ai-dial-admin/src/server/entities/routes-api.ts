@@ -8,6 +8,7 @@ import { BaseApi } from '../base-api';
 
 export const ROUTES_URL = `${API}/routes`;
 export const ROUTE_URL = (name?: string) => `${ROUTES_URL}/${name}`;
+export const CORE_ROUTE_URL = (name?: string) => `${ROUTES_URL}/${name}`;
 
 export class RoutesApi extends BaseApi {
   getRoutesList(token: JWT | null): Promise<DialRoute[] | null> {
@@ -22,11 +23,19 @@ export class RoutesApi extends BaseApi {
     return this.deleteAction(ROUTE_URL(name), token);
   }
 
-  createRoute(routes: DialRoute, token: JWT | null): Promise<ServerActionResponse> {
-    return this.postAction(ROUTES_URL, routes, token);
+  createRoute(route: DialRoute, token: JWT | null): Promise<ServerActionResponse> {
+    return this.postAction(ROUTES_URL, route, token);
   }
 
-  updateRoute(routes: DialRoute, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(ROUTE_URL(encodeURIComponent(routes.name || '')), routes, token, eTag);
+  updateRoute(route: DialRoute, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(ROUTE_URL(encodeURIComponent(route.name || '')), route, token, eTag);
+  }
+
+  getCoreRoute(name: string, token: JWT | null) {
+    return this.getActionWithEtag(CORE_ROUTE_URL(name), DEFAULT_ETAG, token);
+  }
+
+  updateCoreRoute(route: DialRoute, name: string, eTag: string, token: JWT | null): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(CORE_ROUTE_URL(encodeURIComponent(name || '')), route, token, eTag);
   }
 }

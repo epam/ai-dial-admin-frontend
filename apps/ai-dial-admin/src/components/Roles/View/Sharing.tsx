@@ -5,7 +5,6 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IconReload } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
-import { NO_LIMITS_ACCEPTED_USERS, NO_LIMITS_VALUE } from '@/src/constants/role';
 import { SHARING_COLUMNS } from '@/src/components/EntityView/Roles/utils';
 import Grid from '@/src/components/Grid/Grid';
 import { SharingGridData } from '@/src/components/Roles/models';
@@ -14,10 +13,9 @@ import {
   getMsFromHours,
   getSharingData,
   isResetToDefaultHidden,
-  isSetNoLimitsHidden,
 } from '@/src/components/Roles/utils';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
-import { getResetOperation, getSetNoLimitsOperation } from '@/src/constants/grid-columns/actions';
+import { getResetOperation } from '@/src/constants/grid-columns/actions';
 import { RolesI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -80,24 +78,6 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
     [onChangeRole],
   );
 
-  const onSetNoLimits = useCallback(
-    (data?: SharingGridData) => {
-      if (data) {
-        onChangeRole({
-          ...entityRef.current,
-          share: {
-            ...entityRef.current.share,
-            [data.name]: {
-              invitationTtl: NO_LIMITS_VALUE,
-              maxAcceptedUsers: NO_LIMITS_ACCEPTED_USERS,
-            },
-          },
-        });
-      }
-    },
-    [onChangeRole],
-  );
-
   const isResetAvailable = useMemo(() => {
     return (
       selectedRole.share &&
@@ -112,14 +92,11 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
     return [
       ...SHARING_COLUMNS(t, onChangeTypeSharing, (node, colDef) => getDefaultPlaceholder(node, colDef)),
       ACTION_COLUMN(
-        [
-          getResetOperation(onResetSharingToDefault, (api, node) => isResetToDefaultHidden(api, node)),
-          getSetNoLimitsOperation(onSetNoLimits, (api, node) => isSetNoLimitsHidden(api, node)),
-        ],
+        [getResetOperation(onResetSharingToDefault, (api, node) => isResetToDefaultHidden(api, node))],
         true,
       ),
     ];
-  }, [onChangeTypeSharing, onResetSharingToDefault, onSetNoLimits, t]);
+  }, [onChangeTypeSharing, onResetSharingToDefault, t]);
 
   const data = getSharingData(selectedRole);
 

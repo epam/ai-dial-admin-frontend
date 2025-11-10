@@ -1,10 +1,11 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialTabs } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
+import { IconLogin, IconLogout } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 
 import {
@@ -12,9 +13,10 @@ import {
   moveToolsets,
   removeToolset,
   signInToolset,
+  signOutToolset,
   updateToolset,
 } from '@/src/app/[lang]/assets-toolsets/actions';
-import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
+import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
@@ -32,18 +34,27 @@ import { Toolset, ToolsetAuthCredentialLevel, ToolsetAuthType } from '@/src/mode
 import { ApplicationRoute } from '@/src/types/routes';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import { getErrorNotification } from '@/src/utils/notification';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import { encodeToolsetRedirectState } from '@/src/utils/toolset/toolset-auth';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import {
+  encodeToolsetRedirectState,
+  isLoggedInToToolset,
+  isUserLoggedInToToolset,
+} from '@/src/utils/toolset/toolset-auth';
 import LoginPopup from './LoginPopup';
-
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { ToolsetI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+let isSignInProcessed = false;
 interface Props {
   etag: string;
+  oAuthCode?: string | null;
+  isUserLevel?: boolean;
   originalToolset: AssetToolset;
   toolsets: AssetToolset[];
 }
 
-const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
+const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, isUserLevel }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const tabs = [propertiesTabs(t), toolsTabs(t)];
   const router = useRouter();
@@ -56,6 +67,10 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
   const [isChanged, setIsChanged] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState(false);
+
+  const isToolsetSignedIn = useMemo(() => {
+    return isLoggedInToToolset(selectedToolset);
+  }, [selectedToolset]);
 
   const [key, setKey] = useState(0);
 
@@ -93,36 +108,49 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
     setSelectedToolset(cloneDeep(originalToolset));
   }, [jsonEditorEnabled, originalToolset, dispatch]);
 
-  const onSave = useCallback(() => {
-    const isNeedToMove = getIsNeedToMove(selectedToolset, originalToolset);
-    const updatedEntity = getEntityForUpdate(selectedToolset, originalToolset);
-    updateToolset(updatedEntity, etag).then((res) => {
-      if (res.success) {
-        if (isNeedToMove) {
-          getToolsets(addTrailingSlash(updatedEntity.folderId)).then((toolsets) => {
-            const pathsToMove = getListOfPathsToMove(updatedEntity, null, toolsets || []);
-            const newPath = removeTrailingSlash(selectedToolset.folderId);
-            moveToolsets(pathsToMove, newPath).then((r) => {
-              if (r.every((response) => response.success)) {
-                router.push(
-                  `${ApplicationRoute.AssetsToolsets}/${getEntityPath(ApplicationRoute.AssetsToolsets, { name: updatedEntity.name, path: changePath(updatedEntity.path, newPath) })}`,
-                );
-                fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
-              }
-            });
-          });
-        } else {
-          fetchFiles(updatedEntity.folderId);
-          router.push(
-            `${ApplicationRoute.AssetsToolsets}/${getEntityPath(ApplicationRoute.AssetsToolsets, updatedEntity)}`,
-          );
-        }
-        router.refresh();
-      } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+  const onSave = useCallback(
+    (newVersion?: string) => {
+      const isNeedToMove = getIsNeedToMove(selectedToolset, originalToolset);
+      let updatedEntity = getEntityForUpdate(selectedToolset, originalToolset);
+      if (newVersion) {
+        updatedEntity = addNewVersion(updatedEntity, newVersion);
       }
-    });
-  }, [selectedToolset, originalToolset, router, fetchFiles, etag, showNotification]);
+      updateToolset(updatedEntity, etag).then((res) => {
+        if (res.success) {
+          showNotification(
+            getSuccessNotification(
+              getUpdateNotificationTitle(ApplicationRoute.AssetsToolsets, t),
+              getUpdateNotificationDescription(ApplicationRoute.AssetsToolsets, updatedEntity.name, t),
+            ),
+          );
+          if (isNeedToMove) {
+            getToolsets(addTrailingSlash(updatedEntity.folderId)).then((toolsets) => {
+              const pathsToMove = getListOfPathsToMove(updatedEntity, null, toolsets || []);
+              const newPath = removeTrailingSlash(selectedToolset.folderId);
+              moveToolsets(pathsToMove, newPath).then((r) => {
+                if (r.every((response) => response.success)) {
+                  router.push(
+                    getUrnForEntity(ApplicationRoute.AssetsToolsets, {
+                      name: updatedEntity.name,
+                      path: changePath(updatedEntity.path, newPath),
+                    }),
+                  );
+                  fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
+                }
+              });
+            });
+          } else {
+            fetchFiles(updatedEntity.folderId);
+            router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, updatedEntity));
+          }
+          router.refresh();
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        }
+      });
+    },
+    [selectedToolset, originalToolset, etag, showNotification, t, router, fetchFiles],
+  );
 
   const onChangeEntity = useCallback(
     (entity: Toolset) => {
@@ -142,8 +170,26 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
     [etag],
   );
 
+  const signIn = useCallback(
+    (type: ToolsetAuthCredentialLevel, apiKeyValue?: string, code?: string) => {
+      isSignInProcessed = true;
+      signInToolset(selectedToolset, type, apiKeyValue, code).then((res) => {
+        isSignInProcessed = false;
+        if (!res.success) {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        } else {
+          showNotification(
+            getSuccessNotification(t(ToolsetI18nKey.SuccessLogin), t(ToolsetI18nKey.SuccessLoginDescription)),
+          );
+        }
+        router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
+      });
+    },
+    [router, selectedToolset, showNotification, t],
+  );
+
   const onLogin = useCallback(
-    (type: ToolsetAuthCredentialLevel) => {
+    (type: ToolsetAuthCredentialLevel, apiKeyValue: string) => {
       const authSettings = selectedToolset.authSettings;
       if (authSettings && authSettings?.authenticationType === ToolsetAuthType.OAUTH) {
         const callbackUrl = `${window.location.pathname}${window.location.search}`;
@@ -156,9 +202,14 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
         const url = new URL(authSettings.authorizationEndpoint as string);
         url.searchParams.set('response_type', 'code');
         url.searchParams.set('client_id', authSettings.clientId as string);
-        // TODO: waiting BE
-        // url.searchParams.set('redirect_uri', `${window.location.origin}${Routes.ToolsetSignIn}`);
 
+        url.searchParams.set(
+          'redirect_uri',
+          `${window.location.origin}${getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset)}&isUser=${type === ToolsetAuthCredentialLevel.USER}`,
+        );
+        if (authSettings.codeChallenge) {
+          url.searchParams.set('code_challenge', authSettings.codeChallenge);
+        }
         if (authSettings.codeChallengeMethod) {
           url.searchParams.set('code_challenge_method', authSettings.codeChallengeMethod);
         }
@@ -170,17 +221,34 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
 
         window.location.assign(url.toString());
       } else {
-        signInToolset(selectedToolset, type).then((res) => {
-          if (res.success) {
-            console.warn('Sign-in successful', res);
-          } else {
-            showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
-          }
-        });
+        signIn(type, apiKeyValue);
       }
     },
-    [selectedToolset, showNotification],
+    [selectedToolset, signIn],
   );
+
+  const onLogout = useCallback(() => {
+    const level = isUserLoggedInToToolset(selectedToolset)
+      ? ToolsetAuthCredentialLevel.USER
+      : ToolsetAuthCredentialLevel.GLOBAL;
+    signOutToolset(selectedToolset, level).then((res) => {
+      if (res.success) {
+        router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
+        showNotification(
+          getSuccessNotification(t(ToolsetI18nKey.SuccessLogout), t(ToolsetI18nKey.SuccessLogoutDescription)),
+        );
+      } else {
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+      }
+    });
+  }, [router, selectedToolset, showNotification, t]);
+
+  useEffect(() => {
+    if (oAuthCode && !isSignInProcessed) {
+      signIn(isUserLevel ? ToolsetAuthCredentialLevel.USER : ToolsetAuthCredentialLevel.GLOBAL, void 0, oAuthCode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
@@ -204,13 +272,22 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
             context={useToolsetFolder as () => AssetsFolderContext<DialFile | AssetToolset>}
             childrenContainerClass="flex-row-reverse"
           >
-            {/* TODO: waiting for BE */}
-            {/* <DialButton
-              variant={ButtonVariant.Secondary}
-              title={t(ToolsetI18nKey.LogIn)}
-              iconBefore={<IconLogin {...BASE_ICON_PROPS} />}
-              onClick={() => setIsModalOpen(true)}
-            /> */}
+            {selectedToolset.authSettings?.authenticationType !== ToolsetAuthType.NONE &&
+              (isToolsetSignedIn ? (
+                <DialButton
+                  variant={ButtonVariant.Secondary}
+                  title={t(ToolsetI18nKey.LogOut)}
+                  iconBefore={<IconLogout {...BASE_ICON_PROPS} />}
+                  onClick={onLogout}
+                />
+              ) : (
+                <DialButton
+                  variant={ButtonVariant.Secondary}
+                  title={t(ToolsetI18nKey.LogIn)}
+                  iconBefore={<IconLogin {...BASE_ICON_PROPS} />}
+                  onClick={() => setIsModalOpen(true)}
+                />
+              ))}
           </HeaderButtons>
         </div>
         <div className="flex-1 overflow-auto mt-3 min-h-0">
@@ -248,7 +325,14 @@ const ToolsetView: FC<Props> = ({ etag, originalToolset, toolsets }) => {
           )}
         </div>
       </div>
-      {isModalOpen && <LoginPopup isModalOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onLogin={onLogin} />}
+      {isModalOpen && (
+        <LoginPopup
+          type={selectedToolset.authSettings?.authenticationType}
+          isModalOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onLogin={onLogin}
+        />
+      )}
     </>
   );
 };

@@ -11,7 +11,7 @@ import {
   getNotificationType,
 } from '@/src/components/EntityListView/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { ExportI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
+import { DeleteI18nKey, ExportI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -26,7 +26,8 @@ import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/
 import { getListOfPathsToBulkDelete, getListOfPathsToMove } from '@/src/utils/files/path';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { getBulkNotificationTitle } from '@/src/components/EntityView/Modals/Delete/utils';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import BulkButtons from './BulkButtons';
 import Modals, { ModalType } from './Modals';
 import { preparePathForAsset } from './utils';
@@ -111,7 +112,7 @@ const Actions = <T extends object>({
               getCreateNotificationDescription(route, (preparedEntity as { name: string }).name, t),
             ),
           );
-          router.push(`${route}/${getEntityPath(route, preparedEntity)}`);
+          router.push(getUrnForEntity(route, preparedEntity));
           router.refresh();
         } else {
           showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage));
@@ -144,15 +145,14 @@ const Actions = <T extends object>({
   const onDeleteBulk = useCallback(() => {
     bulkDelete?.(getListOfPathsToBulkDelete(folderContext?.bulkSelectedData)).then((res) => {
       if (res.success) {
-        showNotification(
-          getSuccessNotification(t(PromptsI18nKey.DeleteSuccessTitle), t(PromptsI18nKey.DeleteSuccessDescription)),
-        );
+        showNotification(getSuccessNotification(getBulkNotificationTitle(route, t), t(DeleteI18nKey.ShortDescription)));
         setIsBulkView(false);
         folderContext?.setBulkSelectedData({});
         folderContext?.fetchFiles?.(`${ROOT_FOLDER}/`, true);
+        router.refresh();
       }
     });
-  }, [bulkDelete, folderContext, setIsBulkView, showNotification, t]);
+  }, [bulkDelete, folderContext, route, router, setIsBulkView, showNotification, t]);
 
   const onExport = useCallback(
     (exportType?: ImportFileType) => {

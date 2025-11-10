@@ -153,11 +153,12 @@ export enum DeleteI18nKey {
   // Notification
   NotificationTitle = 'DeleteEntity.Notification.Title',
   NotificationDescription = 'DeleteEntity.Notification.Description',
+  ShortDescription = 'DeleteEntity.Notification.ShortDescription',
 
   // Entities
   Model = 'DeleteEntity.Entities.Model',
   Application = 'DeleteEntity.Entities.Application',
-  Toolsets = 'DeleteEntity.Entities.Toolsets',
+  Toolset = 'DeleteEntity.Entities.Toolset',
   Route = 'DeleteEntity.Entities.Route',
   Interceptor = 'DeleteEntity.Entities.Interceptor',
   Role = 'DeleteEntity.Entities.Role',
@@ -167,6 +168,11 @@ export enum DeleteI18nKey {
   Adapter = 'DeleteEntity.Entities.Adapter',
   InterceptorTemplate = 'DeleteEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'DeleteEntity.Entities.ApplicationRunner',
+
+  // Bulk Delete
+  Applications = 'DeleteEntity.BulkDelete.Applications',
+  Toolsets = 'DeleteEntity.BulkDelete.Toolsets',
+  Prompts = 'DeleteEntity.BulkDelete.Prompts',
 
   //  No related artefacts
   AdapterWarning = 'DeleteEntity.NoRelatedArtefacts.AdapterWarning',
@@ -354,7 +360,8 @@ export enum KeysI18nKey {
 export enum RolesI18nKey {
   DefaultLimits = 'Roles.DefaultLimits',
   DefaultInvitations = 'Roles.DefaultInvitations',
-  NoLimits = 'Roles.NoLimits',
+  NotSpecified = 'Roles.NotSpecified',
+  Unlimited = 'Roles.Unlimited',
   AddRoles = 'Roles.AddRoles',
   SetCostLimits = 'Roles.SetCostLimits',
   AvailableSpecificRoles = 'Roles.AvailableSpecificRoles',
@@ -531,8 +538,6 @@ export enum PromptsI18nKey {
   NewVersionCreate = 'Prompts.NewVersionCreate',
   NewVersionSave = 'Prompts.NewVersionSave',
   NewVersionSaveDescription = 'Prompts.NewVersionSaveDescription',
-  DeleteSuccessTitle = 'Prompts.DeleteSuccessTitle',
-  DeleteSuccessDescription = 'Prompts.DeleteSuccessDescription',
 }
 
 export enum ImportI18nKey {
@@ -579,6 +584,8 @@ export enum ImportI18nKey {
   PathsPrompt = 'Import.PathsPrompt',
   PathsFile = 'Import.PathsFile',
   Changes = 'Import.Changes',
+  FileSizeErrorHeader = 'Import.FileSizeErrorHeader',
+  FileSizeErrorDescription = 'Import.FileSizeErrorDescription',
 }
 
 export enum ExportI18nKey {
@@ -722,6 +729,7 @@ export enum ErrorI18nKey {
   DescriptionLength = 'Error.DescriptionLength',
   DisplayNameErrorModel = 'Error.DisplayNameErrorModel',
   NameExists = 'Error.NameExists',
+  DisplayNameExists = 'Error.DisplayNameExists',
   Unique = 'Error.Unique',
   Version = 'Error.Version',
   NameVersionCombination = 'Error.NameVersionCombination',
@@ -734,6 +742,7 @@ export enum ErrorI18nKey {
   InvalidStatus = 'Error.InvalidStatus',
   EditorErrorLine = 'Error.EditorErrorLine',
   MaxNumberError = 'Error.MaxNumberError',
+  CommentError = 'Error.CommentError',
 }
 
 export enum SourceI18nKey {
@@ -782,7 +791,6 @@ export enum EntityPlaceholdersI18nKey {
   Maintainer = 'EntityPlaceholders.Maintainer',
   Type = 'EntityPlaceholders.Type',
   Title = 'EntityPlaceholders.Title',
-  Header = 'EntityPlaceholders.Header',
   Tier = 'EntityPlaceholders.Tier',
   Weight = 'EntityPlaceholders.Weight',
   UpstreamEndpoint = 'EntityPlaceholders.UpstreamEndpoint',
@@ -811,16 +819,17 @@ export enum EntityPlaceholdersI18nKey {
   ToolName = 'EntityPlaceholders.ToolName',
   Hour = 'EntityPlaceholders.Hour',
   Object = 'EntityPlaceholders.Object',
+  Header = 'EntityPlaceholders.Header',
 }
 
 export enum EntityFieldsI18nKey {
   roleLimits = 'EntityFields.roleLimits',
   isPublic = 'EntityFields.isPublic',
   apiKeyHeader = 'EntityFields.apiKeyHeader',
+  apiKeyValue = 'EntityFields.apiKeyValue',
   costLimit = 'EntityFields.costLimit',
   defaultRoleLimit = 'EntityFields.defaultRoleLimit',
   fieldsHashingOrder = 'EntityFields.fieldsHashingOrder',
-  endpointDeploymentName = 'EntityFields.endpointDeploymentName',
   content = 'EntityFields.content',
   name = 'EntityFields.name',
   id = 'EntityFields.id',
@@ -921,6 +930,7 @@ export enum EntityFieldsI18nKey {
   redirectUri = 'EntityFields.redirectUri',
   authorizationEndpoint = 'EntityFields.authorizationEndpoint',
   authenticationType = 'EntityFields.authenticationType',
+  authentication = 'EntityFields.authentication',
   tokenEndpoint = 'EntityFields.tokenEndpoint',
   authSettings = 'EntityFields.authSettings',
   share = 'EntityFields.share',
@@ -958,6 +968,14 @@ export enum ToolsetI18nKey {
   WithLoginAndConfig = 'Toolset.WithLoginAndConfig',
   WithoutLogin = 'Toolset.WithoutLogin',
   LogIn = 'Toolset.LogIn',
-  AsUser = 'Toolset.AsUser',
-  AsAdmin = 'Toolset.AsAdmin',
+  LogOut = 'Toolset.LogOut',
+  Personal = 'Toolset.Personal',
+  Organization = 'Toolset.Organization',
+  LoggedOut = 'Toolset.LoggedOut',
+  UserLoggedIn = 'Toolset.UserLoggedIn',
+  AdminLoggedIn = 'Toolset.AdminLoggedIn',
+  SuccessLogin = 'Toolset.SuccessLogin',
+  SuccessLoginDescription = 'Toolset.SuccessLoginDescription',
+  SuccessLogout = 'Toolset.SuccessLogout',
+  SuccessLogoutDescription = 'Toolset.SuccessLogoutDescription',
 }

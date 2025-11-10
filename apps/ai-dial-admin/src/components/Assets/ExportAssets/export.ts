@@ -3,44 +3,41 @@ import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getGridFileData } from '@/src/utils/files/grid-data';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { Asset } from '@/src/models/dial/deployment-asset';
 
 /**
- * Converts array of DialPrompt into correct row data, joining multiple versions of prompts into one
+ * Converts array of Assets into correct row data, joining multiple versions of prompts into one
  *
- * @param {DialPrompt[]} prompts - DialPrompt array
- * @param {?DialPrompt[]} [exportedPrompts] - DialPrompt array of already selected for import
- * @returns {DialPrompt[]} - DialPrompt array
+ * @param {Asset[]} assets - Asset array
+ * @param {?Asset[]} [exportedAssets] - Asset array of already selected for import
+ * @returns {Asset[]} - Asset array
  */
-export const generatePromptRowDataForExportGrid = (
-  prompts: DialPrompt[],
-  exportedPrompts?: DialPrompt[],
-): DialPrompt[] => {
-  const promptMap = prompts?.reduce((map, prompt) => {
-    const exported = exportedPrompts?.filter((p) => p.name === prompt.name);
-    const isAddVersion = exported?.some((p) => p.version === prompt.version);
+export const generateRowDataForExportGrid = (assets: Asset[], exportedAssets?: Asset[]): Asset[] => {
+  const assetMap = assets?.reduce((map, asset) => {
+    const exported = exportedAssets?.filter((p) => p.name === asset.name);
+    const isAddVersion = exported?.some((p) => p.version === asset.version);
 
-    const existingPrompt = map.get(prompt.name as string);
-    if (existingPrompt) {
-      existingPrompt.versions?.push(prompt.version);
+    const existingAsset = map.get(asset.name as string);
+    if (existingAsset) {
+      existingAsset.versions?.push(asset.version);
       if (isAddVersion) {
-        existingPrompt.version = existingPrompt.version
-          ? `${existingPrompt.version}, ${prompt.version}`
-          : prompt.version;
+        existingAsset.version = existingAsset.version ? `${existingAsset.version}, ${asset.version}` : asset.version;
       } else {
-        existingPrompt.version = exported?.length ? existingPrompt.version : prompt.version;
+        existingAsset.version = exported?.length ? existingAsset.version : asset.version;
       }
     } else {
-      map.set(prompt.name as string, {
-        ...prompt,
-        version: exported?.length && !isAddVersion ? '' : prompt.version,
-        versions: [prompt.version],
+      map.set(asset.name as string, {
+        ...asset,
+        version: exported?.length && !isAddVersion ? '' : asset.version,
+        versions: [asset.version],
       });
     }
 
     return map;
-  }, new Map<string, DialPrompt>());
+  }, new Map<string, Asset>());
 
-  return promptMap ? Array.from(promptMap.values()) : [];
+  return assetMap ? Array.from(assetMap.values()) : [];
 };
 
 /**
@@ -79,27 +76,21 @@ export const changeExportData = <T extends DialFile | DialPrompt>(
 };
 
 /**
- * Function which generate correct data for exporting prompts
+ * Function which generate correct data for exporting assets
  *
- * @param {DialPrompt[]} selectedPrompts - array of selected prompts
- * @param {Record<string, DialPrompt[]>} fetchedFoldersData - correct data which should be added for export
+ * @param {Asset[]} selectedAsset - array of selected assets
+ * @param {Record<string, Asset[]>} fetchedFoldersData - correct data which should be added for export
  * @param {string} filePath - current folder path
- * @param {Record<string, DialPrompt[]>} exportedPrompts  - array of already selected items for export
- * @returns {Record<string, DialPrompt[]>} - export DialPrompt map
+ * @param {Record<string, Asset[]>} exportedAsset  - array of already selected items for export
+ * @returns {Record<string, Asset[]>} - export Asset map
  */
-export const changeExportPromptData = (
-  selectedPrompts: DialPrompt[],
-  fetchedFoldersData: Record<string, DialPrompt[]>,
+export const changeExportAssetData = (
+  selectedAsset: Asset[],
+  fetchedFoldersData: Record<string, Asset[]>,
   filePath: string,
-  exportedPrompts: Record<string, DialPrompt[]>,
-): Record<string, DialPrompt[]> => {
-  return changeExportData<DialPrompt>(
-    selectedPrompts,
-    fetchedFoldersData,
-    filePath,
-    exportedPrompts,
-    findPromptVersions,
-  );
+  exportedAsset: Record<string, Asset[]>,
+): Record<string, Asset[]> => {
+  return changeExportData<Asset>(selectedAsset, fetchedFoldersData, filePath, exportedAsset, findAssetVersions);
 };
 
 /**
@@ -121,16 +112,16 @@ export const changeExportFileData = (
 };
 
 /**
- * Function which find all selected prompt version for export
+ * Function which find all selected asset version for export
  *
- * @param {DialPrompt} prompt - selected DialPrompt
- * @param {DialPrompt[]} fetched - all prompts from folder
- * @returns {DialPrompt[]} - DialPrompt array with all selected version
+ * @param {Asset} asset - selected Asset
+ * @param {Asset[]} fetched - all assets from folder
+ * @returns {Asset[]} - Asset array with all selected version
  */
-export const findPromptVersions = (prompt: DialPrompt, fetched: DialPrompt[]): DialPrompt[] => {
-  const versions = prompt.version.split(STRINGS_DELIMITER);
+export const findAssetVersions = (asset: Asset, fetched: Asset[]): Asset[] => {
+  const versions = asset.version.split(STRINGS_DELIMITER);
   return versions
-    .map((version) => fetched.find((p) => p.name === prompt.name && p.version === version) as DialPrompt)
+    .map((version) => fetched.find((p) => p.name === asset.name && p.version === version) as Asset)
     .filter(Boolean);
 };
 
@@ -173,13 +164,14 @@ export const getExportGridData = (
   fetched?: (DialPrompt | DialFile)[],
   selected?: (DialPrompt | DialFile)[],
 ): (DialPrompt | DialFile)[] => {
-  if (route === ApplicationRoute.Prompts) {
-    return generatePromptRowDataForExportGrid(fetched as DialPrompt[], selected as DialPrompt[]);
+  if (isAssetWithVersion(route)) {
+    return generateRowDataForExportGrid(fetched as DialPrompt[], selected as DialPrompt[]);
   }
 
   if (route === ApplicationRoute.Files) {
     return getGridFileData(fetched as DialFile[]);
   }
+
   return [];
 };
 
@@ -195,17 +187,17 @@ export const getExportGridData = (
  */
 export const changeExportGridData = (
   route?: ApplicationRoute,
-  fetched?: Record<string, (DialPrompt | DialFile)[]>,
-  selected?: Record<string, (DialPrompt | DialFile)[]>,
+  fetched?: Record<string, (Asset | DialFile)[]>,
+  selected?: Record<string, (Asset | DialFile)[]>,
   selectedRows?: (DialPrompt | DialFile)[],
   filePath?: string,
-): Record<string, DialPrompt[]> => {
-  if (route === ApplicationRoute.Prompts) {
-    return changeExportPromptData(
-      selectedRows as DialPrompt[],
-      fetched as Record<string, DialPrompt[]>,
+): Record<string, Asset[]> => {
+  if (isAssetWithVersion(route)) {
+    return changeExportAssetData(
+      selectedRows as Asset[],
+      fetched as Record<string, Asset[]>,
       filePath as string,
-      selected as Record<string, DialPrompt[]>,
+      selected as Record<string, Asset[]>,
     );
   }
 

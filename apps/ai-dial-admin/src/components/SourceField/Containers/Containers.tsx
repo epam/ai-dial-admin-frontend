@@ -8,7 +8,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { DialModel } from '@/src/models/dial/model';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
-import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
+import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { useNotification } from '@/src/context/NotificationContext';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';

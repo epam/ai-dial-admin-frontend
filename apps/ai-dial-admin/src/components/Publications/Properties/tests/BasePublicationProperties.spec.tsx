@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import BasePublicationProperties from '../Properties';
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
+import BasePublicationProperties from '../Properties';
 
 const basePublication = {
   action: 'ADD',
@@ -13,7 +13,7 @@ const basePublication = {
 };
 
 describe('BasePublicationProperties', () => {
-  it('renders all main fields', () => {
+  test('renders all main fields', () => {
     render(
       <BasePublicationProperties
         view={ApplicationRoute.Prompts}
@@ -29,7 +29,7 @@ describe('BasePublicationProperties', () => {
     expect(screen.getByText(EntitiesI18nKey.FolderStorage)).toBeInTheDocument();
   });
 
-  it('renders runner if runnerId exists', () => {
+  test('renders runner if runnerId exists', () => {
     const publication = {
       ...basePublication,
       applicationResources: [{ applicationTypeSchemaId: 'runner-id' }],

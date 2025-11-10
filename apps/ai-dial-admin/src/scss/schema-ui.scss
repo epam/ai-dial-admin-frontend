@@ -1,24 +1,5 @@
 .rjsf {
-  fieldset {
-    &:nth-child(odd) {
-      @apply bg-layer-0;
-    }
-    &:nth-child(even) {
-      @apply bg-layer-2;
-    }
-
-    fieldset:nth-child(odd) {
-      @apply bg-layer-2;
-    }
-    fieldset:nth-child(even) {
-      @apply bg-layer-0;
-    }
-
-    fieldset fieldset:nth-child(odd) {
-      @apply bg-layer-0;
-    }
-    fieldset fieldset:nth-child(even) {
-      @apply bg-layer-2;
-    }
+  .error-detail {
+    @apply hidden;
   }
 }

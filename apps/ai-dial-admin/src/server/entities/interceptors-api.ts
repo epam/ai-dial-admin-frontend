@@ -5,9 +5,11 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { RJSFSchema } from '@rjsf/utils';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const INTERCEPTORS_URL = `${API}/interceptors`;
 export const INTERCEPTOR_URL = (name?: string) => `${INTERCEPTORS_URL}/${name}`;
+export const CORE_INTERCEPTOR_URL = (name?: string) => `${INTERCEPTORS_URL}/core/${name}`;
 export const CONFIGURATION_URL = (name: string) => `${API}/deployments/${name}/configuration`;
 
 export class InterceptorsApi extends BaseApi {
@@ -38,5 +40,18 @@ export class InterceptorsApi extends BaseApi {
 
   getConfigurationSchema(name: string, token: JWT | null): Promise<RJSFSchema | null> {
     return this.get(CONFIGURATION_URL(name), token);
+  }
+
+  getCoreInterceptor(name: string, token: JWT | null) {
+    return this.getActionWithEtag(CORE_INTERCEPTOR_URL(name), DEFAULT_ETAG, token);
+  }
+
+  updateCoreInterceptor(
+    interceptor: DialInterceptor,
+    name: string,
+    etag: string,
+    token: JWT | null,
+  ): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(CORE_INTERCEPTOR_URL(encodeURIComponent(name || '')), interceptor, token, etag);
   }
 }

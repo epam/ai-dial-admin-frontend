@@ -12,7 +12,6 @@ import { Resizable, ResizableProps, ResizeCallback } from 're-resizable';
 import { LeftSideBarResizeIcon, RightSideBarResizeIcon } from './ResizeIcons';
 import { MOBILE_SIDEBAR_MIN_WIDTH, SIDEBAR_DEFAULT_WIDTH, SIDEBAR_HEIGHT, SIDEBAR_MIN_WIDTH } from './constants';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
-import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 
 interface Props {
   isSidebarOpen: boolean;
@@ -132,7 +131,6 @@ const Sidebar: FC<Props> = ({ isSidebarOpen, side, itemComponent }) => {
     sidebarWidth,
   ]);
   const isTablet = useIsTabletScreen();
-  const isMobile = useIsMobileScreen();
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -142,7 +140,7 @@ const Sidebar: FC<Props> = ({ isSidebarOpen, side, itemComponent }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const menuClassNames = `flex max-w-[95%] border-tertiary md:max-w-[45%] z-[50] ${isMobile ? 'absolute' : ''}`;
+  const menuClassNames = 'flex max-w-[95%] border-tertiary md:max-w-[45%] z-[51] absolute lg:relative xl:relative';
 
   return isSidebarOpen ? (
     <Resizable ref={sideBarElementRef} {...resizeSettings} className={menuClassNames}>

@@ -1,5 +1,4 @@
 {
-  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "jsx": "preserve",
     "allowJs": true,
@@ -7,25 +6,29 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
+    "incremental": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "incremental": true,
     "plugins": [
       {
         "name": "next"
       }
-    ],
-    "types": ["node", "@testing-library/jest-dom"]
+    ]
   },
+  "files": [],
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.js",
-    "**/*.jsx",
     "../../apps/ai-dial-admin/.next/types/**/*.ts",
     "../../dist/apps/ai-dial-admin/.next/types/**/*.ts",
     "next-env.d.ts",
     ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "**.config.ts", "**/*.spec.ts", "**/*.test.ts"]
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ],
+  "extends": "../../tsconfig.base.json"
 }

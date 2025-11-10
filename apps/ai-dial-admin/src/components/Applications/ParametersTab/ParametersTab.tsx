@@ -17,9 +17,11 @@ import {
   getInitialParamsView,
 } from '@/src/components/Applications/ParametersTab/utils';
 import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer';
+import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import FrameRenderer from '@/src/components/FrameRenderer/FrameRenderer';
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
 import { UserSession } from '@/src/models/auth';
@@ -27,11 +29,11 @@ import { ApplicationPropertiesTemp, DialApplication, DialApplicationScheme } fro
 import { DialApplicationResource } from '@/src/models/dial/application-resource';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DefaultsValue } from '@/src/models/dial/defaults';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
 import TableView from './TableView';
 import ViewControl from './ViewControl';
 import { ParamsView } from './types';
-import EntityJsonEditor from '../../EntityView/JsonEditor/JsonEditor';
 
 interface Props {
   entity?: DialApplication | DialApplicationResource;
@@ -63,6 +65,7 @@ const ApplicationParametersTab: FC<Props> = ({
   const t = useI18n() as (s: string) => string;
   const { data: session } = useSession();
   const { currentTheme } = useTheme();
+  const { dispatch } = useSaveValidationContext();
   const scheme = getAppRunner(entity as DialApplication, applicationSchemes);
 
   const [appPropertiesTemp, setAppPropertiesTemp] = useState<ApplicationPropertiesTemp[] | undefined>();
@@ -83,15 +86,17 @@ const ApplicationParametersTab: FC<Props> = ({
   }, [currentTheme, entity, scheme, session]);
 
   const targetUrl = useMemo(() => {
+    const id =
+      view === ApplicationRoute.AssetsApplications ? `applications/${(entity as AssetApp).path}` : entity?.name;
     try {
-      const iframeUrl = `${frameConfig?.host}?authProvider=${frameConfig?.providerId}&theme=${frameConfig?.theme}&id=${entity?.name}`;
+      const iframeUrl = `${frameConfig?.host}?authProvider=${frameConfig?.providerId}&theme=${frameConfig?.theme}&id=${id}`;
       return new URL(iframeUrl);
     } catch (error) {
       if (error) {
         return null;
       }
     }
-  }, [entity, frameConfig]);
+  }, [entity, frameConfig, view]);
 
   const viewItems = generateViewItems(t, view, !!targetUrl, !!frameConfig);
   const [paramsView, setParamsView] = useState(getInitialParamsView(view, !!targetUrl));
@@ -121,8 +126,10 @@ const ApplicationParametersTab: FC<Props> = ({
         applicationPropertiesTemp: props,
       } as unknown as BaseEntity;
       onChangeEntity?.(newEntity, isSkipRefresh);
+      const isValid = !props?.some((p) => !p.key || p.value == null || p.value === '');
+      dispatch({ type: ValidationActionType.SetField, field: 'applicationProperties', isValid });
     },
-    [entity, onChangeEntity],
+    [dispatch, entity, onChangeEntity],
   );
 
   const onChangeConfiguration = useCallback(
@@ -195,7 +202,11 @@ const ApplicationParametersTab: FC<Props> = ({
             isSkipRefresh={isSkipRefresh}
           />
         )}
-        <div className={classNames(paramsView === ParamsView.FORM ? 'block w-full h-full' : 'hidden')}>
+        <div
+          className={classNames(
+            paramsView === ParamsView.FORM && !jsonEditorEnabled ? 'block w-full h-full overflow-y-auto' : 'hidden',
+          )}
+        >
           {!scheme || !scheme?.properties || !Object.keys(scheme.properties).length ? (
             <DialNoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
           ) : (

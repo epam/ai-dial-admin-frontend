@@ -10,7 +10,7 @@ export const getFormDataForImport = (
   resolutionStrategy: string,
   rules?: DialRule[],
   flatImport?: boolean,
-): FormData => {
+): { body: FormData; fileSize: number } => {
   const config: { path: string; conflictResolutionStrategy: string; rules?: DialRule[]; flatImport?: boolean } = {
     flatImport,
     path,
@@ -24,6 +24,7 @@ export const getFormDataForImport = (
     type: APPLICATION_JSON_TYPE,
   });
   const body = new FormData();
+  let fileSize = 0;
   body.append('config', configBlob, 'config.json');
 
   if (fileType === ImportFileType.ARCHIVE) {
@@ -36,7 +37,11 @@ export const getFormDataForImport = (
   } else {
     (file as File[]).forEach((f) => {
       body.append('files', f);
+      fileSize += f.size;
     });
   }
-  return body;
+  return {
+    body,
+    fileSize,
+  };
 };

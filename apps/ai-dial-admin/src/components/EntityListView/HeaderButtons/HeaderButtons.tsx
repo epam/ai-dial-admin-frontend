@@ -35,6 +35,8 @@ import { getErrorNotification, getPrepareNotification } from '@/src/utils/notifi
 import ResetFiltersButton from './ResetFiltersButton';
 import { getFormDataForImport } from './utils';
 import { Asset } from '@/src/models/dial/deployment-asset';
+import { isAssetView } from '@/src/utils/is-asset-view';
+import { MAX_FILE_SIZE_MB } from '@/src/constants/file';
 
 interface Props<T> {
   names?: string[];
@@ -43,7 +45,6 @@ interface Props<T> {
   runners?: DialApplicationScheme[];
   route: ApplicationRoute;
   showColumnsButton?: boolean;
-  showExportImportButtons?: boolean;
   gridApi?: GridApi | null;
   toggleColumnsPanel: () => void;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
@@ -59,7 +60,6 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
   runners,
   route,
   showColumnsButton,
-  showExportImportButtons,
   gridApi,
   toggleColumnsPanel,
   createEntity,
@@ -92,7 +92,14 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
       path: string,
       ignorePaths?: boolean,
     ) => {
-      const body = getFormDataForImport(path, file, fileType, conflictResolutionStrategy, void 0, ignorePaths);
+      const { body, fileSize } = getFormDataForImport(
+        path,
+        file,
+        fileType,
+        conflictResolutionStrategy,
+        void 0,
+        ignorePaths,
+      );
       const folderName = getFolderName(path) || '';
       const prepareNotificationId = showNotification(
         getPrepareNotification(
@@ -104,22 +111,32 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
       const translatedType = t(
         route === ApplicationRoute.Prompts ? MenuI18nKey.Prompts : MenuI18nKey.Files,
       ).toLowerCase();
-
-      importFunction(body, fileType).then((res) => {
+      if (fileSize > MAX_FILE_SIZE_MB * (1024 * 1024)) {
         removeNotification(prepareNotificationId);
-        if (res.success) {
-          const error = (res.response as { error: string })?.error;
-          if (error) {
-            showNotification(getErrorNotification(t(ImportI18nKey.ArchiveErrorTitle), error));
+        showNotification(
+          getErrorNotification(
+            t(ImportI18nKey.FileSizeErrorHeader),
+            t(ImportI18nKey.FileSizeErrorDescription, { size: `${MAX_FILE_SIZE_MB} MB` }),
+          ),
+        );
+      } else {
+        importFunction(body, fileType).then((res) => {
+          removeNotification(prepareNotificationId);
+          if (res.success) {
+            const error = (res.response as { error: string })?.error;
+            if (error) {
+              showNotification(getErrorNotification(t(ImportI18nKey.ArchiveErrorTitle), error));
+            } else {
+              const results = (res.response as { importResults: ImportResult[] }).importResults;
+              getImportResults(results, folderName, translatedType, t, showNotification);
+              folderContext?.fetchFiles(`${path}`);
+            }
           } else {
-            const results = (res.response as { importResults: ImportResult[] }).importResults;
-            getImportResults(results, folderName, translatedType, t, showNotification);
-            folderContext?.fetchFiles(`${path}`);
+            showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
           }
-        } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
-        }
-      });
+        });
+      }
+
       handleModalClose();
     },
     [folderContext, handleModalClose, removeNotification, route, showNotification, t],
@@ -136,7 +153,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
 
   const getCreateModal = () => {
     if (route === ApplicationRoute.ApplicationRunners) {
-      return <CreateAppRunner isModalOpen={isModalOpen} onClose={handleModalClose} route={route} />;
+      return <CreateAppRunner isModalOpen={isModalOpen} onClose={handleModalClose} />;
     }
 
     if (route === ApplicationRoute.InterceptorTemplates) {
@@ -183,17 +200,17 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
       )}
       {!isBulkView && (
         <>
-          {showExportImportButtons && (
+          {isAssetView(route) && (
             <>
               <DialButton
                 variant={ButtonVariant.Secondary}
-                title={t(ButtonsI18nKey.BulkActions)}
+                title={isTabletScreen ? '' : t(ButtonsI18nKey.BulkActions)}
                 iconBefore={<IconSquareCheck {...BASE_ICON_PROPS} />}
                 onClick={() => setIsBulkView?.(true)}
               />
               <DialButton
                 variant={ButtonVariant.Secondary}
-                title={t(ButtonsI18nKey.Import)}
+                title={isTabletScreen ? '' : t(ButtonsI18nKey.Import)}
                 iconBefore={<IconFileArrowLeft {...BASE_ICON_PROPS} />}
                 onClick={() => handleModalOpen(ModalType.import)}
               />

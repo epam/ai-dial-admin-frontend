@@ -119,6 +119,7 @@
   }
 
   .ag-cell {
+    user-select: text;
     @apply flex items-center;
     &.ag-grid-no-border,
     &.ag-cell-focus {

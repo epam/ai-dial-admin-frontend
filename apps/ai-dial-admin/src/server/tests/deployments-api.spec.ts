@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import { DeploymentsApi, BASE_CONTAINERS_URL } from '../deployments-api';
 import createFetchMock from 'vitest-fetch-mock';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -8,7 +8,7 @@ fetch.enableMocks();
 describe('DeploymentsApi', () => {
   const instance = new DeploymentsApi({ host: TEST_URL });
 
-  it('calls getInterceptorContainers with correct URL and token', async () => {
+  test('calls getInterceptorContainers with correct URL and token', async () => {
     fetch.mockResponseOnce(['container1']);
     await instance.getInterceptorContainers(TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
@@ -19,7 +19,7 @@ describe('DeploymentsApi', () => {
     );
   });
 
-  it('calls getModelContainers with correct URL and token', async () => {
+  test('calls getModelContainers with correct URL and token', async () => {
     fetch.mockResponseOnce(['container2']);
     await instance.getModelContainers(TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
@@ -30,7 +30,7 @@ describe('DeploymentsApi', () => {
     );
   });
 
-  it('calls getMcpContainers with correct URL and token', async () => {
+  test('calls getMcpContainers with correct URL and token', async () => {
     fetch.mockResponseOnce(['container2']);
     await instance.getMcpContainers(TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(

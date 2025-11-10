@@ -7,8 +7,6 @@ import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 import { DialTabs } from '@epam/ai-dial-ui-kit';
 
-import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
-import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { ModalType } from '@/src/components/EntityView/Modals/constants';
@@ -38,7 +36,6 @@ import {
 } from '@epam/ai-dial-shared';
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 import ViewContent from './Content/ViewContent';
-import { getExportType } from './core-entity-utils';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
@@ -53,6 +50,8 @@ interface Props {
   applications?: DialApplication[] | null;
   models?: DialModel[] | null;
   updateEntity: (entity: BaseEntity, etag: string) => Promise<ServerActionResponse>;
+  updateCoreEntity: (entity: BaseEntity, name: string, etag: string) => Promise<ServerActionResponse>;
+  getCoreEntity: (entity: string) => Promise<ServerActionResponse>;
   removeEntity: (entity?: string) => Promise<ServerActionResponse>;
 }
 
@@ -63,6 +62,8 @@ const EntityView: FC<Props> = ({
   etag,
   updateEntity,
   removeEntity,
+  getCoreEntity,
+  updateCoreEntity,
   ...props
 }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
@@ -91,17 +92,18 @@ const EntityView: FC<Props> = ({
   useEffect(() => {
     const name = (originalEntity as { name: string })?.name;
     if (!coreEntity && name) {
-      getCoreEntity(name, getExportType(view)).then((data) => {
-        setCoreEntity(data);
+      getCoreEntity(name).then((data) => {
+        setCoreEntity(data.response as BaseEntity);
       });
     }
-  }, [coreEntity, originalEntity, view]);
+  }, [coreEntity, getCoreEntity, originalEntity, view]);
 
   useEffect(() => {
     setSelectedEntity(
       selectedFormat === ExportFormat.CORE ? cloneDeep(coreEntity as BaseEntity) : cloneDeep(originalEntity),
     );
-  }, [selectedFormat, coreEntity, originalEntity]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFormat, originalEntity]);
 
   const headerClassName = classNames(
     'flex flex-row min-h-[34px]',
@@ -180,6 +182,7 @@ const EntityView: FC<Props> = ({
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
+    dispatch({ type: ValidationActionType.Reset });
     setSelectedEntity(cloneDeep(originalEntity));
     setIsSkipRefresh(false);
   }, [jsonEditorEnabled, originalEntity, dispatch]);
@@ -187,7 +190,7 @@ const EntityView: FC<Props> = ({
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreEntity(selectedEntity as Record<string, unknown>)
+        ? updateCoreEntity(selectedEntity as Record<string, unknown>, originalEntity.name || '', etag)
         : updateEntity(selectedEntity, etag);
 
     req.then((res) => {
@@ -204,7 +207,18 @@ const EntityView: FC<Props> = ({
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedFormat, view, selectedEntity, updateEntity, etag, showNotification, t, router]);
+  }, [
+    selectedFormat,
+    updateCoreEntity,
+    selectedEntity,
+    originalEntity.name,
+    etag,
+    updateEntity,
+    showNotification,
+    view,
+    t,
+    router,
+  ]);
 
   const onTryToSave = useCallback(() => {
     if (

@@ -1,5 +1,5 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
 import ProfileButton from './ProfileButton';
 
 const toggleUserMenu = vi.fn();
@@ -9,12 +9,12 @@ vi.mock('@/src/context/AppContext', () => ({
 }));
 
 describe('ProfileButton', () => {
-  it('renders user icon when no image and menu closed', () => {
+  test('renders user icon when no image and menu closed', () => {
     render(<ProfileButton />);
     expect(screen.getByLabelText('Account settings')).toBeInTheDocument();
   });
 
-  it('calls toggleUserMenu on click', () => {
+  test('calls toggleUserMenu on click', () => {
     render(<ProfileButton />);
     fireEvent.click(screen.getByLabelText('Account settings'));
     expect(toggleUserMenu).toHaveBeenCalled();

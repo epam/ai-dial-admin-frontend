@@ -1,11 +1,10 @@
-import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
 
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { ApplicationRoute } from '@/src/types/routes';
 
+import { ButtonsI18nKey, EntityFieldsI18nKey, FeaturesI18nKey } from '@/src/constants/i18n';
 import View from './View';
-import { BasicI18nKey, ButtonsI18nKey, EntityFieldsI18nKey, FeaturesI18nKey } from '@/src/constants/i18n';
 
 const template: InterceptorTemplate = {
   name: 'test-template',
@@ -16,7 +15,7 @@ const template: InterceptorTemplate = {
 };
 
 describe('View', () => {
-  it('Should render correctly', () => {
+  test('Should render correctly', () => {
     render(<View etag="qqqq" names={[]} template={template} />);
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Delete })).toBeInTheDocument();

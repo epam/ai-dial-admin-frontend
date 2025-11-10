@@ -8,11 +8,14 @@ import { ButtonVariant, DialButtonDropdown, DialTabs, DropdownItem, TabModel } f
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
-import { removeApplicationScheme, updateApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
+import {
+  getCoreRunner,
+  removeApplicationScheme,
+  updateApplicationScheme,
+  updateCoreRunner,
+} from '@/src/app/[lang]/application-runners/actions';
 import { createApplication } from '@/src/app/[lang]/applications/actions';
 import { createApp } from '@/src/app/[lang]/assets-applications/actions';
-import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
-import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
 import ApplicationParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
@@ -21,7 +24,6 @@ import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import { getExportType } from '@/src/components/EntityView/View/core-entity-utils';
 import {
   appRouteTab,
   auditTabs,
@@ -90,8 +92,8 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names 
   useEffect(() => {
     const name = originalScheme?.$id;
     if (!coreRunner && name) {
-      getCoreEntity(name, getExportType(ApplicationRoute.ApplicationRunners)).then((data) => {
-        setCoreRunner(data);
+      getCoreRunner(name).then((data) => {
+        setCoreRunner(data.response as DialApplicationScheme);
       });
     }
   }, [coreRunner, originalScheme]);
@@ -100,7 +102,8 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names 
     setSelectedRunner(
       selectedFormat === ExportFormat.CORE ? cloneDeep(coreRunner as DialApplicationScheme) : cloneDeep(originalScheme),
     );
-  }, [selectedFormat, coreRunner, originalScheme]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFormat, originalScheme]);
 
   const headerClassName = classNames(
     'flex flex-row min-h-[34px]',
@@ -150,7 +153,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names 
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreEntity(selectedRunner as Record<string, unknown>)
+        ? updateCoreRunner(selectedRunner as Record<string, unknown>, originalScheme.$id || '', etag)
         : updateApplicationScheme(selectedRunner, etag);
 
     req.then((res) => {
@@ -167,7 +170,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names 
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedFormat, selectedRunner, etag, showNotification, t, router]);
+  }, [selectedFormat, selectedRunner, originalScheme.$id, etag, showNotification, t, router]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">

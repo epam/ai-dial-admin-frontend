@@ -3,7 +3,8 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import PublicationHeader from '../Header';
-import { ButtonsI18nKey } from '../../../../constants/i18n';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
+
 describe('BasePublicationHeader', () => {
   test('Should render approve and decline buttons', () => {
     render(

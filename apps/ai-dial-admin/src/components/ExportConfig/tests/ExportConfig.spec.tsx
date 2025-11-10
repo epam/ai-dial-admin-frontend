@@ -1,7 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
 import ExportConfig from '../ExportConfig';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
 
 vi.mock('@/src/app/[lang]/export-config/actions', async (importOriginal) => {
   const actual = await importOriginal();
@@ -13,7 +12,7 @@ vi.mock('@/src/app/[lang]/export-config/actions', async (importOriginal) => {
 });
 
 describe('ExportConfig', () => {
-  it('renders export config title and button', () => {
+  test('renders export config title and button', () => {
     render(<ExportConfig enableExportConfigMap={true} />);
     expect(screen.getByText(/ExportConfig/i)).toBeInTheDocument();
     expect(screen.getByRole('button')).toBeInTheDocument();

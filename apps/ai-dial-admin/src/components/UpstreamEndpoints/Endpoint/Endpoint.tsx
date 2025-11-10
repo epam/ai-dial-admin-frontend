@@ -27,6 +27,7 @@ interface Props {
   numEndpoints: number;
   endpoint: DialModelEndpoint;
   isKeyOptional?: boolean;
+  required?: boolean;
   updateEndpoint: (endpoint: DialModelEndpoint) => void;
   removeEndpoint: (index: number) => void;
 }
@@ -36,6 +37,7 @@ const Endpoint: FC<Props> = ({
   index,
   endpoint,
   isKeyOptional,
+  required,
   numEndpoints,
   updateEndpoint,
   removeEndpoint,
@@ -125,6 +127,7 @@ const Endpoint: FC<Props> = ({
               fieldTitle={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.Endpoints) : ''}
               onChange={onChangeEndPointUrl}
               iconAfterInput={<WarningIcon endpointWarning={endpointWarning} />}
+              required={required}
             />
           </div>
 

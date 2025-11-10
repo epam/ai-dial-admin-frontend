@@ -8,6 +8,7 @@ import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const TOOLSETS_URL = `${API}/toolSets`;
 export const TOOLSET_URL = (name?: string) => `${TOOLSETS_URL}/${name}`;
+export const CORE_TOOLSET_URL = (name?: string) => `${TOOLSETS_URL}/core/${name}`;
 export const TOOLS_URL = (name?: string) => `${TOOLSET_URL(name)}/discovered-tools`;
 
 export class ToolsetsApi extends BaseApi {
@@ -33,5 +34,13 @@ export class ToolsetsApi extends BaseApi {
 
   updateToolset(toolset: Toolset, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
     return this.putActionWithEtag(TOOLSET_URL(encodeURIComponent(toolset.name || '')), toolset, token, eTag);
+  }
+
+  getCoreToolset(name: string, token: JWT | null) {
+    return this.getActionWithEtag(CORE_TOOLSET_URL(name), DEFAULT_ETAG, token);
+  }
+
+  updateCoreToolset(toolset: Toolset, name: string, eTag: string, token: JWT | null): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(CORE_TOOLSET_URL(encodeURIComponent(name || '')), toolset, token, eTag);
   }
 }

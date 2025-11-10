@@ -1,4 +1,10 @@
-import { createInterceptor, removeInterceptor, updateInterceptor } from './actions';
+import {
+  createInterceptor,
+  getCoreInterceptor,
+  removeInterceptor,
+  updateCoreInterceptor,
+  updateInterceptor,
+} from './actions';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
@@ -8,6 +14,17 @@ fetch.enableMocks();
 describe('Interceptors :: server actions', () => {
   beforeEach(() => {
     fetch.resetMocks();
+  });
+
+  test('Should call get core interceptor', async () => {
+    fetch.mockResponse(JSON.stringify({ data: 'response' }));
+    getCoreInterceptor('interceptor').then(() => {
+      expect(fetch.mock.calls.length).toEqual(1);
+
+      const call = fetch.mock.calls[0][1];
+
+      expect(call?.method).toBe('GET');
+    });
   });
 
   test('Should call remove interceptor', async () => {
@@ -31,9 +48,19 @@ describe('Interceptors :: server actions', () => {
     });
   });
 
+  test('Should call update core interceptor', async () => {
+    fetch.mockResponse(JSON.stringify({ data: 'response' }));
+    updateCoreInterceptor({}, 'interceptor', 'etag').then(() => {
+      expect(fetch.mock.calls.length).toEqual(1);
+
+      const call = fetch.mock.calls[0][1];
+      expect(call?.method).toBe('PUT');
+    });
+  });
+
   test('Should call update interceptor', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    updateInterceptor({}).then(() => {
+    updateInterceptor({}, 'etag').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];

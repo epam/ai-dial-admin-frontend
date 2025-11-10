@@ -10,6 +10,7 @@ export const MODELS_URL = `${API}/models`;
 export const MODELS_TOPICS = `${API}/topics`;
 export const MODELS_TOKENIZERS = `${API}/tokenizers`;
 export const MODEL_URL = (id?: string) => `${MODELS_URL}/${id || ''}`;
+export const CORE_MODEL_URL = (id?: string) => `${MODELS_URL}/core/${id || ''}`;
 
 export class ModelsApi extends BaseApi {
   getModelsList(token: JWT | null): Promise<DialModel[] | null> {
@@ -38,5 +39,13 @@ export class ModelsApi extends BaseApi {
 
   updateModel(model: DialModel, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
     return this.putActionWithEtag(MODEL_URL(encodeURIComponent(model.name || '')), model, token, eTag);
+  }
+
+  getCoreModel(name: string, token: JWT | null) {
+    return this.getActionWithEtag(CORE_MODEL_URL(name), DEFAULT_ETAG, token);
+  }
+
+  updateCoreModel(model: DialModel, name: string, eTag: string, token: JWT | null): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(CORE_MODEL_URL(encodeURIComponent(name || '')), model, token, eTag);
   }
 }

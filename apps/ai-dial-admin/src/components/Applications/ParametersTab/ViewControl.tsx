@@ -6,21 +6,18 @@ import {
   VisualizerConnectorRequest,
   VisualizerConnectorRequests,
 } from '@epam/ai-dial-shared';
-import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup, SelectVariant, DialSelect, SelectOption, SelectSize } from '@epam/ai-dial-ui-kit';
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 
-import Dropdown from '@/src/components/Common/Dropdown/Dropdown';
-import DropdownMenuItem from '@/src/components/Common/Dropdown/DropdownItem';
 import { ButtonsI18nKey, CompareI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAttachmentData } from '@/src/models/attachment-data';
-import { DropdownItemsModel } from '@/src/models/dropdown-item';
 import { ParamsView } from './types';
 
 interface Props {
-  items: DropdownItemsModel[];
+  items: SelectOption[];
   paramsView: ParamsView;
   setParamsView: Dispatch<SetStateAction<ParamsView>>;
   onSave?: () => void;
@@ -72,9 +69,12 @@ const ViewControl: FC<Props> = ({ items, paramsView, setParamsView, onSave, isCh
   );
 
   const onCancel = useCallback(() => {
+    if (nextView) {
+      setParamsView(nextView as ParamsView);
+    }
     setNextView(null);
     setIsModalOpen(false);
-  }, []);
+  }, [nextView, setParamsView]);
 
   const onConfirm = useCallback(() => {
     if (paramsView === ParamsView.UI) {
@@ -86,21 +86,20 @@ const ViewControl: FC<Props> = ({ items, paramsView, setParamsView, onSave, isCh
       }, 2000);
     } else {
       onSave?.();
+      setIsModalOpen(false);
     }
   }, [nextView, onCancel, onSave, paramsView, sendMessage, setParamsView, visualizerConnector]);
 
   return (
-    <div className="w-fit">
-      <Dropdown
-        selectedClassName="flex items-center my-[5px] mr-2 px-1.5 py-1 small text-primary rounded bg-layer-4 cursor-pointer"
-        selectedValue={items.find((item) => item.id === paramsView)}
+    <>
+      <DialSelect
         prefix={`${t(CompareI18nKey.View)}: `}
-        listClassName={'w-[175px]'}
-      >
-        {items.map((item, i) => (
-          <DropdownMenuItem className="gap-0" key={i} dropdownItem={item} onClick={() => onChange(item.id)} />
-        ))}
-      </Dropdown>
+        size={SelectSize.Sm}
+        variant={SelectVariant.Secondary}
+        options={items}
+        value={paramsView}
+        onChange={(v) => onChange(v as string)}
+      />
       {createPortal(
         <DialConfirmationPopup
           open={isModalOpen}
@@ -114,7 +113,7 @@ const ViewControl: FC<Props> = ({ items, paramsView, setParamsView, onSave, isCh
         />,
         document.body,
       )}
-    </div>
+    </>
   );
 };
 

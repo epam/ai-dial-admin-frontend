@@ -14,7 +14,7 @@ import { DialFile } from '@/src/models/dial/file';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ModalType } from './Modals';
-import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { isAssetWithVersion, isDeploymentAsset } from '@/src/utils/is-asset-view';
 
 interface Props {
   route: ApplicationRoute;
@@ -53,13 +53,15 @@ const BulkButtons = ({
         {itemsCount} {t(BasicI18nKey.Selected)}
       </div>
       <div className="bg-layer-4 h-5 w-[1px]"></div>
-      <DialButton
-        variant={ButtonVariant.Secondary}
-        title={t(ButtonsI18nKey.Export)}
-        iconBefore={<IconFileArrowRight {...BASE_ICON_PROPS} />}
-        disable={!itemsCount}
-        onClick={bulkExport}
-      />
+      {!isDeploymentAsset(route) && (
+        <DialButton
+          variant={ButtonVariant.Secondary}
+          title={t(ButtonsI18nKey.Export)}
+          iconBefore={<IconFileArrowRight {...BASE_ICON_PROPS} />}
+          disable={!itemsCount}
+          onClick={bulkExport}
+        />
+      )}
       {isAssetWithVersion(route) && (
         <DialButton
           variant={ButtonVariant.Secondary}

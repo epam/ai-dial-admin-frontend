@@ -23,13 +23,13 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
+import { DialModelType } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import AdapterProperties from './AdapterProperties';
-import { DialModelType } from '@/src/models/dial/model';
-import { getEndpointPostfix } from '@/src/components/ModelView/ModelProperties/utils';
 
 interface Props {
   etag: string;

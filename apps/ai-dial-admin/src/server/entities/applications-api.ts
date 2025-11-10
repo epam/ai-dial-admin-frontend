@@ -8,6 +8,7 @@ import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const APPLICATIONS_URL = `${API}/applications`;
 export const APPLICATION_URL = (name?: string) => `${APPLICATIONS_URL}/${name}`;
+export const CORE_APPLICATION_URL = (name?: string) => `${APPLICATIONS_URL}/core/${name}`;
 
 export class ApplicationsApi extends BaseApi {
   getApplicationsList(token: JWT | null): Promise<DialApplication[] | null> {
@@ -33,5 +34,18 @@ export class ApplicationsApi extends BaseApi {
       token,
       eTag,
     );
+  }
+
+  getCoreApplication(name: string, token: JWT | null) {
+    return this.getActionWithEtag(CORE_APPLICATION_URL(name), DEFAULT_ETAG, token);
+  }
+
+  updateCoreApplication(
+    app: DialApplication,
+    name: string,
+    eTag: string,
+    token: JWT | null,
+  ): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(CORE_APPLICATION_URL(encodeURIComponent(name || '')), app, token, eTag);
   }
 }

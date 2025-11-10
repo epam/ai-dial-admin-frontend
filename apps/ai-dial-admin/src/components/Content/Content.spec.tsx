@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import Content from './Content';
 
 describe('Content', () => {
-  it('renders children', () => {
+  test('renders children', () => {
     render(
       <Content isEnableAuth={true} beVersion={'1.0.0'}>
         <div>Test Content</div>
@@ -12,7 +12,7 @@ describe('Content', () => {
     expect(screen.getByText('Test Content')).toBeInTheDocument();
   });
 
-  it('renders with beVersion', () => {
+  test('renders with beVersion', () => {
     render(
       <Content isEnableAuth={false} beVersion={'2.3.4'}>
         <span>Versioned</span>

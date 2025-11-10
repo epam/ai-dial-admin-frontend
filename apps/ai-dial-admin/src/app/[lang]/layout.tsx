@@ -36,6 +36,7 @@ export default async function Layout({ children, params }: { children: ReactNode
   };
 
   const themesConfiguration = await themesApi.getThemesConfiguration();
+  const themesImages = await themesApi.getImages();
 
   const beVersion = await utilityApi.getBeVersion(token);
   const embeddedApps: EmbeddedApp[] = JSON.parse(process.env.EMBEDDED_APPS || '[]');
@@ -47,7 +48,7 @@ export default async function Layout({ children, params }: { children: ReactNode
         featureFlags={featureFlags}
         embeddedApps={embeddedApps}
       >
-        <ThemeProvider themesConfiguration={themesConfiguration} themeImages={process.env.THEMES_CONFIG_IMAGES}>
+        <ThemeProvider themesConfiguration={themesConfiguration} themeImages={themesImages}>
           <RuleFolderProvider attributes={process.env.PUBLICATION_FILTERS}>
             <PromptFolderProvider>
               <I18nProvider locale={lang}>

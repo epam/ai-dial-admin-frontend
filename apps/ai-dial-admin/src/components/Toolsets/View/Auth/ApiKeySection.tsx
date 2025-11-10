@@ -1,4 +1,4 @@
-import { DialPasswordInputField } from '@epam/ai-dial-ui-kit';
+import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -7,20 +7,22 @@ import { ToolsetAuthSettings } from '@/src/models/dial/toolset';
 
 interface Props {
   authSettings?: ToolsetAuthSettings;
-  onChange: (authSettings: ToolsetAuthSettings) => void;
+  disabled?: boolean;
+  onChange?: (authSettings: ToolsetAuthSettings) => void;
 }
 
-const ApiKeySection: FC<Props> = ({ authSettings, onChange }) => {
+const ApiKeySection: FC<Props> = ({ disabled, authSettings, onChange }) => {
   const t = useI18n();
 
   return (
     <div className="flex flex-col gap-y-4">
-      <DialPasswordInputField
-        elementId="apiKeyValue"
+      <DialTextInputField
+        elementId="apiKeyHeader"
         fieldTitle={t(EntityFieldsI18nKey.apiKeyHeader)}
-        placeholder={t(EntityPlaceholdersI18nKey.Value)}
+        placeholder={t(EntityPlaceholdersI18nKey.Header)}
         value={authSettings?.apiKeyHeader}
-        onChange={(apiKeyHeader) => onChange({ ...(authSettings || {}), apiKeyHeader } as ToolsetAuthSettings)}
+        disabled={disabled}
+        onChange={(apiKeyHeader) => onChange?.({ ...(authSettings || {}), apiKeyHeader } as ToolsetAuthSettings)}
       />
     </div>
   );

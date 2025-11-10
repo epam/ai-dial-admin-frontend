@@ -25,6 +25,7 @@ import { isDeploymentsEnabled } from '@/src/utils/plugins';
 import { useAppContext } from '@/src/context/AppContext';
 import { getModelContainers } from '@/src/app/[lang]/models/actions';
 import { getToolsetContainers } from '@/src/app/[lang]/toolsets/actions';
+import { getNamesConfigurations } from '@/src/utils/entities/filter-names';
 
 interface Props {
   view: ApplicationRoute;
@@ -55,27 +56,24 @@ const DeploymentProperties: FC<Props> = ({
   const [isVersionOptional, setIsVersionOptional] = useState(true);
   const [displayNameError, setDisplayNameError] = useState<string | undefined>(void 0);
 
+  const namesConfiguration = useMemo(() => {
+    return getNamesConfigurations(names);
+  }, [names]);
+
   const versionError = useMemo(() => {
-    return entity.displayName
-      ? void 0
-      : getVersionError(isVersionOptional, (entity as DialModel).displayVersion as string, t);
-  }, [entity, isVersionOptional, t]);
-
-  const onChangeName = useCallback(
-    (newEntity: ChatEntity) => {
-      if (view === ApplicationRoute.Models) {
-        (newEntity as DialModel).endpointDeploymentName = newEntity.name;
-      }
-
-      onChangeEntity(newEntity);
-    },
-    [onChangeEntity, view],
-  );
+    return getVersionError(isVersionOptional, entity as DialModel, namesConfiguration.versionsMap, t);
+  }, [entity, isVersionOptional, namesConfiguration.versionsMap, t]);
 
   const onChangeDisplayName = useCallback(
     (displayName: string) => {
-      setIsVersionOptional(!names.includes(displayName));
-      const error = getDisplayNameError(view, displayName as string, names, t, (entity as DialModel).displayVersion);
+      setIsVersionOptional(!namesConfiguration.names.includes(displayName));
+      const error = getDisplayNameError(
+        view,
+        displayName as string,
+        namesConfiguration.names,
+        t,
+        (entity as DialModel).displayVersion,
+      );
       setDisplayNameError(error);
 
       dispatch({
@@ -86,7 +84,7 @@ const DeploymentProperties: FC<Props> = ({
 
       onChangeEntity({ ...entity, displayName });
     },
-    [names, dispatch, view, t, onChangeEntity, entity],
+    [namesConfiguration.names, dispatch, view, t, onChangeEntity, entity],
   );
 
   useEffect(() => {
@@ -104,7 +102,13 @@ const DeploymentProperties: FC<Props> = ({
   const onChangeVersion = useCallback(
     (displayVersion?: string) => {
       onChangeEntity({ ...entity, displayVersion } as DialModel);
-      const error = getDisplayNameError(view, entity.displayName as string, names, t, displayVersion);
+      const error = getDisplayNameError(
+        view,
+        entity.displayName as string,
+        namesConfiguration.names,
+        t,
+        displayVersion,
+      );
       setDisplayNameError(error);
       dispatch({
         type: ValidationActionType.SetField,
@@ -112,14 +116,14 @@ const DeploymentProperties: FC<Props> = ({
         isValid: !error,
       });
     },
-    [onChangeEntity, entity, view, names, t, dispatch],
+    [onChangeEntity, entity, view, namesConfiguration.names, t, dispatch],
   );
 
   return (
     <div className="w-full flex flex-col gap-y-6">
       <div className={classNames('flex flex-col gap-y-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
         {!isEntityImmutable && (
-          <IdControl entity={entity} onChangeEntity={onChangeName} isUniqueNameError={isUniqueNameError} />
+          <IdControl entity={entity} onChangeEntity={onChangeEntity} isUniqueNameError={isUniqueNameError} />
         )}
         <AutocompleteField
           inputId="displayName"
@@ -129,7 +133,7 @@ const DeploymentProperties: FC<Props> = ({
           errorText={displayNameError}
           onChange={onChangeDisplayName}
           invalid={!!displayNameError}
-          items={uniq(names)}
+          items={uniq(namesConfiguration.names)}
         />
 
         {view === ApplicationRoute.Models && (

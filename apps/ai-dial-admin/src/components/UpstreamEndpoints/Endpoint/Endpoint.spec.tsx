@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import Endpoint from './Endpoint';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import Endpoint from './Endpoint';
 
 const baseEndpoint = {
   endpoint: 'http://test',
@@ -20,7 +20,7 @@ describe('Endpoint', () => {
     removeEndpoint = vi.fn();
   });
 
-  it('renders all main fields and remove button', () => {
+  test('renders all main fields and remove button', () => {
     render(
       <Endpoint
         index={0}
@@ -40,7 +40,7 @@ describe('Endpoint', () => {
     expect(screen.getByLabelText('remove')).toBeInTheDocument();
   });
 
-  it('calls updateEndpoint on endpoint url change', () => {
+  test('calls updateEndpoint on endpoint url change', () => {
     render(
       <Endpoint
         index={0}
@@ -57,7 +57,7 @@ describe('Endpoint', () => {
     expect(updateEndpoint).toHaveBeenCalledWith({ ...baseEndpoint, endpoint: 'new-url' });
   });
 
-  it('calls updateEndpoint on key, weight, and tier change', () => {
+  test('calls updateEndpoint on key, weight, and tier change', () => {
     render(
       <Endpoint
         index={0}
@@ -78,7 +78,7 @@ describe('Endpoint', () => {
     expect(updateEndpoint).toHaveBeenCalledWith({ ...baseEndpoint, tier: 3 });
   });
 
-  it('calls removeEndpoint on remove button click', () => {
+  test('calls removeEndpoint on remove button click', () => {
     render(
       <Endpoint
         index={0}
@@ -93,7 +93,7 @@ describe('Endpoint', () => {
     expect(removeEndpoint).toHaveBeenCalledWith(0);
   });
 
-  it('does not render remove button if readonly', () => {
+  test('does not render remove button if readonly', () => {
     render(
       <Endpoint
         index={0}

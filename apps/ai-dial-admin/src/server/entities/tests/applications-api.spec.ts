@@ -2,7 +2,7 @@ import { DialApplication } from '@/src/models/dial/application';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { APPLICATIONS_URL, APPLICATION_URL, ApplicationsApi } from '../applications-api';
+import { APPLICATIONS_URL, APPLICATION_URL, ApplicationsApi, CORE_APPLICATION_URL } from '../applications-api';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -31,10 +31,22 @@ describe('Server :: ApplicationsApi', () => {
   test('Should calls getApplication by name and return application', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockApp));
 
-    const result = await instance.getApplication(mockApp.name, TOKEN_MOCK, 'etag123');
+    const result = await instance.getApplication(mockApp.name || '', TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${APPLICATION_URL(mockApp.name)}`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result.response).toEqual(JSON.stringify(mockApp));
+  });
+
+  test('Should calls getCoreApplication by name and return application', async () => {
+    fetch.mockResponseOnce(JSON.stringify(mockApp));
+
+    const result = await instance.getCoreApplication(mockApp.name || '', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${CORE_APPLICATION_URL(mockApp.name)}`,
       expect.objectContaining({ method: 'GET' }),
     );
     expect(result.response).toEqual(JSON.stringify(mockApp));
@@ -63,6 +75,21 @@ describe('Server :: ApplicationsApi', () => {
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${APPLICATION_URL(mockApp.name)}`,
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify(mockApp),
+      }),
+    );
+  });
+
+  test('Should calls updateCoreApplication with correct payload', async () => {
+    const mockResponse = { success: true };
+    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+
+    await instance.updateCoreApplication(mockApp, 'app', 'etag123', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${CORE_APPLICATION_URL('app')}`,
       expect.objectContaining({
         method: 'PUT',
         body: JSON.stringify(mockApp),

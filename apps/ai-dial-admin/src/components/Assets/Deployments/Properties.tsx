@@ -29,6 +29,7 @@ import { Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
+import Authentication from '@/src/components/Toolsets/View/Authentication';
 
 interface Props {
   etag: string;
@@ -123,8 +124,7 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, runners, o
         {view === ApplicationRoute.AssetsToolsets && (
           <>
             <ToolsetEndpoint entity={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} />
-            {/* // TODO: waiting BE */}
-            {/* <Authentication toolset={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} /> */}
+            <Authentication toolset={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} />
           </>
         )}
         {view === ApplicationRoute.AssetsApplications && (
@@ -134,6 +134,7 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, runners, o
               onChangeEntity={onChange as (entity: DialApplication) => void}
               runners={runners}
               isEntityImmutable={true}
+              view={view}
             />
             <EntityAttachments
               entity={asset as DialApplication}

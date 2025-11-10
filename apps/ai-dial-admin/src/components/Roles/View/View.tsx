@@ -3,11 +3,11 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
+import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
-import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 
-import { removeRole, updateRole } from '@/src/app/[lang]/roles/actions';
+import { getCoreRole, removeRole, updateCoreRole, updateRole } from '@/src/app/[lang]/roles/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
 import {
   getEntitiesForRole,
@@ -15,29 +15,29 @@ import {
   ROLES_ENTITIES_COLUMNS,
 } from '@/src/components/AddEntitiesTab/utils';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
-import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
+import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import { isSetNoLimitsHidden } from '@/src/components/EntityView/Roles/utils';
+import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import { getSetNoLimitsOperation } from '@/src/constants/grid-columns/actions';
 import { KEYS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, KeysI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { UNLIMITED_VALUE } from '@/src/constants/role';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
-import { DialRoleLimits } from '@/src/models/dial/role-limits';
 import { DialKey } from '@/src/models/dial/key';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
+import { DialRoleLimits } from '@/src/models/dial/role-limits';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { ApplicationRoute } from '@/src/types/routes';
-import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
-import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { getCoreEntity } from '@/src/app/[lang]/export-config/actions';
 import { ExportFormat } from '@/src/types/export';
-import { getExportType } from '@/src/components/EntityView/View/core-entity-utils';
-import { updateCoreEntity } from '@/src/app/[lang]/import-config/actions';
-import RoleProperties from './Properties';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import RoleProperties from './Properties';
 
 interface Props {
   originalRole: DialRole;
@@ -79,15 +79,16 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   useEffect(() => {
     const name = (originalRole as { name: string })?.name;
     if (!coreRole && name) {
-      getCoreEntity(name, getExportType(ApplicationRoute.Roles)).then((data) => {
-        setCoreRole(data);
+      getCoreRole(name).then((data) => {
+        setCoreRole(data.response as DialRole);
       });
     }
   }, [coreRole, originalRole]);
 
   useEffect(() => {
     setSelectedRole(selectedFormat === ExportFormat.CORE ? cloneDeep(coreRole as DialRole) : cloneDeep(originalRole));
-  }, [selectedFormat, coreRole, originalRole]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFormat, originalRole]);
 
   useEffect(() => {
     const isEqualAdminRole = isEqualSkippingUndefined(originalRole, selectedRole);
@@ -191,7 +192,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreEntity(selectedRole as Record<string, unknown>)
+        ? updateCoreRole(selectedRole as Record<string, unknown>, originalRole.name || '', etag)
         : updateRole(selectedRole, etag);
 
     req.then((res) => {
@@ -208,7 +209,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     });
-  }, [selectedFormat, selectedRole, etag, showNotification, t, router]);
+  }, [selectedFormat, selectedRole, originalRole.name, etag, showNotification, t, router]);
 
   const onChangeRoleToken = useCallback(
     (value: number, data: DialRole, token: string) => {
@@ -228,6 +229,31 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
       };
 
       onChangeRole(updatedEntity, true);
+    },
+    [onChangeRole],
+  );
+
+  const onSetNoLimits = useCallback(
+    (role?: DialRole) => {
+      if (role) {
+        const limits = entityRef.current.limits ?? {};
+        const updatedLimits = {
+          ...limits,
+          [role?.name as string]: {
+            ...limits[role?.name as string],
+            day: UNLIMITED_VALUE,
+            minute: UNLIMITED_VALUE,
+            month: UNLIMITED_VALUE,
+            week: UNLIMITED_VALUE,
+          },
+        };
+
+        const updatedEntity = {
+          ...entityRef.current,
+          limits: updatedLimits,
+        };
+        onChangeRole(updatedEntity);
+      }
     },
     [onChangeRole],
   );
@@ -280,6 +306,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
             onAdd={onAddEntities}
             onRemove={onRemoveEntity}
             customColumns={ROLES_ENTITIES_COLUMNS(t, onChangeRoleToken)}
+            customActions={[getSetNoLimitsOperation(onSetNoLimits, isSetNoLimitsHidden)]}
             getRelevantDataForEntity={getEntitiesForRole.bind(this, selectedRole)}
             isSkipRefresh={isSkipRefresh}
           />

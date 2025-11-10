@@ -2,7 +2,7 @@ import { DialKey } from '@/src/models/dial/key';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { KEY_URL, KEYS_URL, KeysApi } from '../keys-api';
+import { CORE_KEY_URL, KEY_URL, KEYS_URL, KeysApi } from '../keys-api';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -31,10 +31,22 @@ describe('Server :: KeysApi', () => {
   test('Should fetch a single key', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockKey));
 
-    const result = await instance.getKey(mockKey.name, TOKEN_MOCK, 'etag123');
+    const result = await instance.getKey(mockKey.name || '', TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${KEY_URL(mockKey.name)}`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result.response).toEqual(JSON.stringify(mockKey));
+  });
+
+  test('Should fetch a single key', async () => {
+    fetch.mockResponseOnce(JSON.stringify(mockKey));
+
+    const result = await instance.getCoreKey(mockKey.name || '', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${CORE_KEY_URL(mockKey.name)}`,
       expect.objectContaining({ method: 'GET' }),
     );
     expect(result.response).toEqual(JSON.stringify(mockKey));
@@ -63,6 +75,21 @@ describe('Server :: KeysApi', () => {
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${KEY_URL(mockKey.name)}`,
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify(mockKey),
+      }),
+    );
+  });
+
+  test('Should update core key', async () => {
+    const response = { success: true };
+    fetch.mockResponseOnce(JSON.stringify(response));
+
+    await instance.updateCoreKey(mockKey, 'key', 'etag123', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${CORE_KEY_URL('key')}`,
       expect.objectContaining({
         method: 'PUT',
         body: JSON.stringify(mockKey),

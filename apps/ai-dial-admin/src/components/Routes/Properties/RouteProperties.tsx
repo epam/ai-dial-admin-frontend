@@ -233,7 +233,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
             </div>
           </div>
         ) : (
-          <UpstreamEndpoints readonly={readonly} entity={route} onChangeEntity={updateRoute} />
+          <UpstreamEndpoints readonly={readonly} entity={route} onChangeEntity={updateRoute} required={true} />
         )}
 
         <MaxRetryAttempts readonly={readonly} entity={route} onChangeEntity={updateRoute} />
