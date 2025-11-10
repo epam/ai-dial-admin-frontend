@@ -28,13 +28,13 @@ export const compareEntities = (diffs: ActivityAuditDiff[], val1: string[], val2
       i++;
       j++;
     } else if (value1 != null && (value2 == null || value1 < value2)) {
-      diffs.push({ parameter: '', value: '', status: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED });
+      diffs.push({ parameter: '', value: '', status: DiffStatus.MIRROR });
       i++;
     } else if (value2 != null && (value1 == null || value1 > value2)) {
       diffs.push({
         parameter: value2 || '',
         value: value2 || '',
-        status: isCurrent ? DiffStatus.MIRROR : DiffStatus.ADDED,
+        status: isCurrent ? DiffStatus.REMOVED : DiffStatus.ADDED,
       });
       j++;
     } else {
@@ -45,7 +45,7 @@ export const compareEntities = (diffs: ActivityAuditDiff[], val1: string[], val2
   }
 
   while (i < sortedVal1.length) {
-    diffs.push({ parameter: '', value: '', status: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED });
+    diffs.push({ parameter: '', value: '', status: DiffStatus.MIRROR });
     i++;
   }
 
@@ -53,7 +53,7 @@ export const compareEntities = (diffs: ActivityAuditDiff[], val1: string[], val2
     diffs.push({
       parameter: sortedVal2[j] || '',
       value: sortedVal2[j] || '',
-      status: isCurrent ? DiffStatus.MIRROR : DiffStatus.ADDED,
+      status: isCurrent ? DiffStatus.REMOVED : DiffStatus.ADDED,
     });
     j++;
   }

@@ -14,13 +14,13 @@ import {
 } from '../create-simple-diffs';
 
 describe('Activity audit :: compareEntities', () => {
-  test('should push REMOVED when val1 exists and val2 is missing', () => {
+  test('should push MIRROR when val1 exists and val2 is missing', () => {
     const diffs: ActivityAuditDiff[] = [];
     compareEntities(diffs, ['a', 'b'], []);
 
     expect(diffs).toEqual([
-      { parameter: '', value: '', status: DiffStatus.REMOVED },
-      { parameter: '', value: '', status: DiffStatus.REMOVED },
+      { parameter: '', value: '', status: DiffStatus.MIRROR },
+      { parameter: '', value: '', status: DiffStatus.MIRROR },
     ]);
   });
 
@@ -41,7 +41,7 @@ describe('Activity audit :: compareEntities', () => {
 
     expect(diffs).toEqual([
       { parameter: '', value: '', status: DiffStatus.MIRROR },
-      { parameter: 'b', value: 'b', status: DiffStatus.MIRROR },
+      { parameter: 'b', value: 'b', status: DiffStatus.REMOVED },
     ]);
   });
 
@@ -51,7 +51,7 @@ describe('Activity audit :: compareEntities', () => {
 
     expect(diffs).toEqual([
       { parameter: 'new1', value: 'new1', status: DiffStatus.ADDED },
-      { parameter: '', value: '', status: DiffStatus.REMOVED },
+      { parameter: '', value: '', status: DiffStatus.MIRROR },
       { parameter: 'same', value: 'same' },
     ]);
   });
@@ -72,8 +72,8 @@ describe('Activity audit :: compareEntities', () => {
 
     expect(diffs).toEqual([
       { parameter: 'a', value: 'a' },
-      { parameter: '', value: '', status: DiffStatus.REMOVED },
-      { parameter: '', value: '', status: DiffStatus.REMOVED },
+      { parameter: '', value: '', status: DiffStatus.MIRROR },
+      { parameter: '', value: '', status: DiffStatus.MIRROR },
       { parameter: 'x', value: 'x', status: DiffStatus.ADDED },
     ]);
   });
@@ -99,7 +99,7 @@ describe('Activity audit :: compareEntities', () => {
 
     expect(diffs).toEqual([
       { parameter: '', value: '', status: DiffStatus.MIRROR },
-      { parameter: 'item', value: 'item', status: DiffStatus.MIRROR },
+      { parameter: 'item', value: 'item', status: DiffStatus.REMOVED },
     ]);
   });
 
