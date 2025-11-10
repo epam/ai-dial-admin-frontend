@@ -17,7 +17,7 @@ export const useProtectedRequest = (options?: ProtectedRequestOptions) => {
   const { update: updateSession } = useAuthConfig();
   const router = useRouter();
 
-  return async (actionFn: (...r: any[]) => Promise<ServerActionResponse>, ...args: any[]) => {
+  return async (actionFn: ((...r: any[]) => Promise<ServerActionResponse>) | undefined, ...args: any[]) => {
     const { maxRetries = 0, retryDelay = 1000 } = options ?? {};
 
     const ensureSessionValidity = async (session: Session | null) => {
@@ -33,7 +33,7 @@ export const useProtectedRequest = (options?: ProtectedRequestOptions) => {
 
     const executeWithRetry = async (retryCount = 0): Promise<ServerActionResponse> => {
       try {
-        const response = await actionFn(...args);
+        const response = await actionFn?.(...args);
 
         if (response?.success) {
           return response;
@@ -48,12 +48,18 @@ export const useProtectedRequest = (options?: ProtectedRequestOptions) => {
             return response;
           }
 
-          const secondResponse = await actionFn(...args);
+          const secondResponse = await actionFn?.(...args);
           if (secondResponse?.success || secondResponse?.status !== UNAUTHORIZED_ERROR) {
             if (!secondResponse?.success && secondResponse?.status) {
               console.error(`Received response with status code ${secondResponse.status}`);
             }
-            return secondResponse;
+            return (
+              secondResponse || {
+                success: false,
+                status: 500,
+                errorMessage: 'No response received after session refresh',
+              }
+            );
           }
 
           console.error('Received 401 after session refresh');
@@ -70,9 +76,15 @@ export const useProtectedRequest = (options?: ProtectedRequestOptions) => {
         }
 
         if (!response?.status) {
-          console.error(`Received final response with status code ${response.status}`);
+          console.error(`Received final response with status code ${response?.status}`);
         }
-        return response;
+        return (
+          response || {
+            success: false,
+            status: 500,
+            errorMessage: 'No response received from the server',
+          }
+        );
       } catch (error) {
         console.error(`Error executing request: ${error}`);
 
@@ -85,7 +97,7 @@ export const useProtectedRequest = (options?: ProtectedRequestOptions) => {
         return {
           success: false,
           statusCode: 500,
-          error: `Request failed after ${maxRetries} retries: ${error}`,
+          errorMessage: `Request failed after ${maxRetries} retries: ${error}`,
         } as ServerActionResponse;
       }
     };
