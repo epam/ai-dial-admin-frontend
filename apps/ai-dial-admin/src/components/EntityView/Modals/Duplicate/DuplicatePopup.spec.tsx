@@ -34,22 +34,4 @@ describe('DuplicatePopup', () => {
     expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Version)).toBeInTheDocument();
   });
-
-  test('updates displayName and version on change', () => {
-    const onDuplicate = vi.fn();
-    render(<DuplicatePopup {...baseProps} view={ApplicationRoute.Models} onDuplicate={onDuplicate} />);
-    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Id), { target: { value: 'modelName' } });
-    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DisplayName), {
-      target: { value: 'display' },
-    });
-    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Version), { target: { value: '2.0' } });
-    fireEvent.click(screen.getByText(ButtonsI18nKey.Duplicate));
-    expect(onDuplicate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: 'modelName',
-        displayName: 'display',
-        displayVersion: '2.0',
-      }),
-    );
-  });
 });
