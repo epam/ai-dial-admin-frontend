@@ -5,6 +5,7 @@ import { getCoreModel, removeModel, updateCoreModel, updateModel } from '@/src/a
 import { interceptorsApi, modelsApi, rolesApi } from '@/src/app/api/api';
 import EntityView from '@/src/components/EntityView/View/EntityView';
 import Page403 from '@/src/components/Page403/Page403';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
@@ -12,9 +13,8 @@ import { DialRole } from '@/src/models/dial/role';
 import { logError } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
-import { filterDisplayNames } from '@/src/utils/entities/filter-names';
+import { filterDisplayNamesWithVersions } from '@/src/utils/entities/filter-names';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,7 +46,8 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Models);
   }
 
-  const names = filterDisplayNames(models, model.displayName);
+  const names = filterDisplayNamesWithVersions(models, model.displayName);
+
   return (
     <SaveValidationContextProvider>
       <EntityView
