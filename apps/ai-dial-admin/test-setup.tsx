@@ -13,6 +13,12 @@ vi.mock('@/src/locales/client', () => ({
   useCurrentLocale: () => 'en',
 }));
 
+vi.mock('next-auth/react', () => ({
+  useSession: vi.fn(() => {
+    return { session: { providerId: 'provider' } };
+  }),
+}));
+
 vi.mock('next/headers', () => ({
   headers: vi.fn(),
   cookies: vi.fn(),
