@@ -34,7 +34,6 @@ import { DialRoleLimits, DialRoleShare } from '@/src/models/dial/role-limits';
 import {
   compareEntities,
   compareInterceptors,
-  compareModels,
   compareRoleLimits,
   compareShare,
   fillEntities,
@@ -284,13 +283,10 @@ export const compareSeparateObjects = (
     key === EntityParameterKeys.KEYS ||
     key === EntityParameterKeys.ROLES ||
     key === EntityParameterKeys.ROUTES ||
-    key === EntityParameterKeys.DEPENDENCIES
+    key === EntityParameterKeys.DEPENDENCIES ||
+    key === EntityParameterKeys.MODELS
   ) {
     compareEntities(diffs, val1 as string[], val2 as string[], isCurrent);
-  }
-
-  if (key === EntityParameterKeys.MODELS) {
-    compareModels(diffs, val1 as string[], val2 as string[], isCurrent);
   }
 };
 
