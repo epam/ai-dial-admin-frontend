@@ -1,5 +1,25 @@
 import { describe, test, expect } from 'vitest';
-import { filterDisplayNames, filterNames } from '../filter-names';
+import { filterDisplayNames, filterDisplayNamesWithVersions, filterNames } from '../filter-names';
+
+describe('filterDisplayNamesWithVersions', () => {
+  test('returns display names from entities', () => {
+    const entities = [
+      { displayName: 'Entity1', displayVersion: '1.0.0' },
+      { displayName: 'Entity2', displayVersion: '2.0.0' },
+      { displayName: null },
+      {},
+    ];
+    expect(filterDisplayNamesWithVersions(entities)).toEqual(['Entity1___1.0.0', 'Entity2___2.0.0']);
+  });
+
+  test('returns empty array if entities is undefined', () => {
+    expect(filterDisplayNamesWithVersions(undefined)).toEqual([]);
+  });
+
+  test('returns empty array if entities is null', () => {
+    expect(filterDisplayNamesWithVersions(null)).toEqual([]);
+  });
+});
 
 describe('filterDisplayNames', () => {
   test('returns display names from entities', () => {
