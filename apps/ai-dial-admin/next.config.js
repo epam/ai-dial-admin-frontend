@@ -10,19 +10,15 @@ try {
   packageJson = '';
 }
 
-const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
 const ContentSecurityPolicy = `
     default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' https:;
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' ${process.env.ALLOWED_IFRAME_ORIGINS || ''} https:;
     style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline';
     img-src 'self' blob: data: https://authjs.dev;
     font-src 'self' data: https://cdn.jsdelivr.net fonts.gstatic.com;
-    frame-src 'self';
     object-src 'none';
     base-uri 'self';
     ${process.env.NODE_ENV === 'production' ? 'upgrade-insecure-requests;' : ''}
-    frame-ancestors ${process.env.ALLOWED_FRAME_ANCESTORS ?? "'none'"};
-    script-src 'self' 'nonce-${nonce}' 'https: http:';
 `;
 
 /**
