@@ -44,3 +44,5 @@ export const imageTypes: Record<string, string> = {
   '.bmp': 'image/bmp',
   '.avif': 'image/avif',
 };
+
+export const MAX_FILE_SIZE_MB = 4;

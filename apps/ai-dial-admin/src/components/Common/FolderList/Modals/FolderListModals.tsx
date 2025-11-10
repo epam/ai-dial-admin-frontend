@@ -53,7 +53,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
       path: string,
       ignorePaths?: boolean,
     ) => {
-      const body = getFormDataForImport(path, file, fileType, ConflictResolutionPolicy.SKIP, rules, ignorePaths);
+      const body = getFormDataForImport(path, file, fileType, ConflictResolutionPolicy.SKIP, rules, ignorePaths).body;
 
       createFolderWithFiles(body, fileType, view).then((res) => {
         if (res.success) {

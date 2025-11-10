@@ -613,6 +613,8 @@ export default {
     PathsPrompt: 'Prompt paths',
     PathsFile: 'File paths',
     Changes: 'Changes',
+    FileSizeErrorHeader: 'File size limit error',
+    FileSizeErrorDescription: 'Size of files is more than {size}',
   },
   Export: {
     Config: 'Config',

@@ -584,6 +584,8 @@ export enum ImportI18nKey {
   PathsPrompt = 'Import.PathsPrompt',
   PathsFile = 'Import.PathsFile',
   Changes = 'Import.Changes',
+  FileSizeErrorHeader = 'Import.FileSizeErrorHeader',
+  FileSizeErrorDescription = 'Import.FileSizeErrorDescription',
 }
 
 export enum ExportI18nKey {

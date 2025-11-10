@@ -114,7 +114,7 @@ const FolderCreateReview: FC<Props> = ({
 
     if (view === ApplicationRoute.Prompts && files.length) {
       if (fileType === ImportFileType.ARCHIVE) {
-        const body = getFormDataForImport('public/', files[0], fileType, ConflictResolutionPolicy.SKIP);
+        const body = getFormDataForImport('public/', files[0], fileType, ConflictResolutionPolicy.SKIP).body;
         previewPromptZip(body).then((data) => {
           const preview = generatePreviewData(
             (data.response as { resourcePreviews: ZipFilePreview[] }).resourcePreviews,
