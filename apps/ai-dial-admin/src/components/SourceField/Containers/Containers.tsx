@@ -22,12 +22,13 @@ import Field from '@/src/components/Common/Field/Field';
 import SelectContainerModal from '@/src/components/SourceField/Containers/SelectContainerModal';
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
 import { addTrailingSlash } from '@/src/utils/files/path';
-import { useProtectedRequest } from '../../../hooks/use-protected-request';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { ServerActionResponse } from '@/src/models/server-action';
 
 interface Props<T> {
   entity: T;
   onChange: (entity: T) => void;
-  getContainers: () => Promise<Container[] | null>;
+  getContainers: () => Promise<ServerActionResponse<Container[]>>;
   view?: ApplicationRoute;
   isModal?: boolean;
   errorText?: string;
@@ -94,7 +95,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
 
   useEffect(() => {
     const fetchContainers = async () => {
-      const containers = (await getReqRef.current(getContainers)).response;
+      const containers = (await getReqRef.current(getContainers)).response as Container[] | null;
       if (containers?.length) {
         setContainers(containers.filter((container) => container.status === 'running') || []);
       }

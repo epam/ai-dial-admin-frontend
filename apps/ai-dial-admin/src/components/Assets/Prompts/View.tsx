@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { DialTabs } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
@@ -27,6 +27,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import PromptProperties from './Properties';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   originalPrompt: DialPrompt;
@@ -39,6 +40,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
   const router = useRouter();
   const { fetchFiles } = usePromptFolder();
   const { showNotification } = useNotification();
+  const getReqRef = useRef(useProtectedRequest());
   const { dispatch } = useSaveValidationContext();
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedPrompt, setSelectedPrompt] = useState(cloneDeep(originalPrompt));
@@ -91,7 +93,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
       if (newVersion) {
         updatedEntity = addNewVersion(updatedEntity as DialPrompt, newVersion);
       }
-      createPrompt(updatedEntity as DialPrompt).then((res) => {
+      getReqRef.current(createPrompt, updatedEntity as DialPrompt).then((res) => {
         if (res.success) {
           showNotification(
             getSuccessNotification(

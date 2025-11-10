@@ -15,6 +15,10 @@ export class InterceptorTemplatesApi extends BaseApi {
     return this.get(INTERCEPTOR_TEMPLATES_URL, token);
   }
 
+  getInterceptorTemplatesListAction(token: JWT | null): Promise<ServerActionResponse<InterceptorTemplate[]>> {
+    return this.getAction(INTERCEPTOR_TEMPLATES_URL, token);
+  }
+
   getInterceptorTemplate(name: string, token: JWT | null, eTag: string) {
     return this.getActionWithEtag(INTERCEPTOR_TEMPLATE_URL(name), eTag, token);
   }

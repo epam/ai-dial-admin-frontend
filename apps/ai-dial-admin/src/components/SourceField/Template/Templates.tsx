@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ButtonVariant, DialButton, DialInputPopup, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
@@ -17,11 +17,13 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import classNames from 'classnames';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props<T> {
   entity: T;
   onChange: (entity: T) => void;
-  getRunners: () => Promise<InterceptorTemplate[] | null>;
+  getRunners: () => Promise<ServerActionResponse<InterceptorTemplate[]>>;
   errorText?: string;
   isModal?: boolean;
 }
@@ -35,6 +37,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
 }: Props<T>) => {
   const t = useI18n();
   const { showNotification } = useNotification();
+  const getReqRef = useRef(useProtectedRequest());
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [runners, setRunners] = useState<InterceptorTemplate[]>([]);
@@ -71,7 +74,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
 
   useEffect(() => {
     const fetchRunners = async () => {
-      const runners = await getRunners();
+      const runners = (await getReqRef.current(getRunners)).response;
       if (runners?.length) {
         setRunners(runners);
       }
