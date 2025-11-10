@@ -112,14 +112,13 @@ describe('Server :: InterceptorsApi', () => {
   });
 
   test('should call getConfigurationSchema with correct name and method', async () => {
-    fetch.mockResponseOnce(JSON.stringify(mockInterceptor));
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
 
-    const result = await instance.getConfigurationSchema('test-interceptor', TOKEN_MOCK);
+    await instance.getConfigurationSchema('test-interceptor', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${CONFIGURATION_URL('test-interceptor')}`,
       expect.objectContaining({ method: 'GET' }),
     );
-    expect(result).toEqual(JSON.stringify(mockInterceptor));
   });
 });

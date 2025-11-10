@@ -67,6 +67,6 @@ describe('Server :: UtilityApi', () => {
     fetch.mockResponseOnce(JSON.stringify({ running: true }));
 
     const result = await instance.getAppProcessStatus(TOKEN_MOCK);
-    expect(result).toEqual(JSON.stringify({ running: true }));
+    expect(result.response).toEqual(JSON.stringify({ running: true }));
   });
 });
