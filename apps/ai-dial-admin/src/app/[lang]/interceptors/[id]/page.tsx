@@ -14,6 +14,9 @@ import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { filterNames } from '@/src/utils/entities/filter-names';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { getInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
+import { InterceptorTemplate } from '@/src/models/interceptor-template';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +29,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   let models: DialModel[] | null = [];
   let applications: DialApplication[] | null = [];
+  let interceptorTemplate: InterceptorTemplate | null = null;
 
   try {
     interceptors = await interceptorsApi.getInterceptorsList(token);
@@ -36,6 +40,13 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as DialModel | null;
     });
+
+    if (interceptor?.source?.$type === SOURCE_TYPE.RUNNER) {
+      interceptorTemplate = await getInterceptorTemplate(interceptor.source?.runnerName as string, etag).then((res) => {
+        etag = res?.etag || DEFAULT_ETAG;
+        return res?.response as InterceptorTemplate | null;
+      });
+    }
 
     if (interceptors === void 0 || models === void 0 || applications === void 0 || interceptor === void 0) {
       return <Page403 />;
@@ -58,6 +69,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
         models={models || []}
         etag={etag}
         applications={applications || []}
+        interceptorTemplate={interceptorTemplate}
       />
     </SaveValidationContextProvider>
   );
