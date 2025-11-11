@@ -14,7 +14,6 @@ import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEnt
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
-import { EntityViewTab, getInterceptorTemplateTabs } from '@/src/components/EntityView/View/utils';
 import ExtendedProperties from '@/src/components/InterceptorTemplates/Properties/ExtendedProperties';
 import Interceptors from '@/src/components/InterceptorTemplates/View/Interceptors/Interceptors';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
@@ -27,6 +26,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { EntityViewTab, getInterceptorTemplateTabs } from '@/src/utils/tabs/utils';
 
 interface Props {
   etag: string;

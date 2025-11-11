@@ -25,7 +25,6 @@ import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import { EntityViewTab, getAppRunnerTabs } from '@/src/components/EntityView/View/utils';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
@@ -43,6 +42,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { EntityViewTab, getAppRunnerTabs } from '@/src/utils/tabs/utils';
 import AppRunnerApplications from './ConfigurationView/Applications';
 import SchemeProperties from './ConfigurationView/Properties';
 

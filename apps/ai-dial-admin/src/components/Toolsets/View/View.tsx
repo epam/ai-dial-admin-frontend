@@ -14,7 +14,6 @@ import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor'
 import EntityRolesModal from '@/src/components/EntityView/Modals/EmptyRoles/EmptyRoles';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
-import { EntityViewTab, getToolsetTabs } from '@/src/components/EntityView/View/utils';
 import ToolsView from '@/src/components/Toolsets/Tools/Tools';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -27,6 +26,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { EntityViewTab, getToolsetTabs } from '@/src/utils/tabs/utils';
 import ToolsetProperties from './Properties';
 
 interface Props {

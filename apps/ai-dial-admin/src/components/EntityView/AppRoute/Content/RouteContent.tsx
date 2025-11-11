@@ -3,11 +3,11 @@ import { FC, useState } from 'react';
 
 import { DialTabs } from '@epam/ai-dial-ui-kit';
 
-import { EntityViewTab, getRouteTabs } from '@/src/components/EntityView/View/utils';
 import RouteProperties from '@/src/components/Routes/Properties/RouteProperties';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
 import { DialAppRoute } from '@/src/models/dial/route';
+import { EntityViewTab, getRouteTabs } from '@/src/utils/tabs/utils';
 import RouteAttachments from './RouteAttachments';
 import RouteRoles from './RouteRoles';
 

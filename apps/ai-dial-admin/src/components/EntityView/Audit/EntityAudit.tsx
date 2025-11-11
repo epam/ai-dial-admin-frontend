@@ -5,7 +5,6 @@ import { DialTabs } from '@epam/ai-dial-ui-kit';
 
 import ActivityAuditList from '@/src/components/ActivityAudit/List/List';
 import { routeAuditResource } from '@/src/components/ActivityAudit/View/Header/constants';
-import { EntityViewTab, getAuditTabs } from '@/src/components/EntityView/View/utils';
 import Dashboard from '@/src/components/Telemetry/Dashboard';
 import UsageLog from '@/src/components/UsageLog/UsageLog';
 import { TabsI18nKey } from '@/src/constants/i18n';
@@ -13,6 +12,7 @@ import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
 import { TabOrientation } from '@/src/types/tab';
+import { EntityViewTab, getAuditTabs } from '@/src/utils/tabs/utils';
 
 interface Props {
   entity: BaseEntity;

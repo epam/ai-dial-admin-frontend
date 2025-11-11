@@ -1,11 +1,11 @@
 import { DialTabs } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useState } from 'react';
 
-import { EntityViewTab, getTabsForAsset } from '@/src/components/EntityView/View/utils';
 import ToolsView from '@/src/components/Toolsets/Tools/Tools';
 import { useI18n } from '@/src/locales/client';
 import { ToolsetPublication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
+import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import ToolsetInfo from './Info';
 
 interface Props {

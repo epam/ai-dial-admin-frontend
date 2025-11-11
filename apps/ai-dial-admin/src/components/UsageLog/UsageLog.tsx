@@ -8,7 +8,6 @@ import classNames from 'classnames';
 
 import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
-import { EntityViewTab, getUsageLogTabs } from '@/src/components/EntityView/View/utils';
 import List from '@/src/components/UsageLog/List/List';
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
 import { USAGE_LOG_CONVERSATIONS_COLUMNS, USAGE_LOG_TRACES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -20,6 +19,7 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { TelemetryQuery } from '@/src/models/telemetry';
 import { TimeRange } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
+import { EntityViewTab, getUsageLogTabs } from '@/src/utils/tabs/utils';
 import { getFormattedFilters } from '@/src/utils/telemetry';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 

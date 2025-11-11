@@ -22,7 +22,6 @@ import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import { EntityViewTab, getInterceptorTabs } from '@/src/components/EntityView/View/utils';
 import ParameterSchema from '@/src/components/Interceptors/View/ParameterSchema/ParameterSchema';
 import { DESCRIPTION_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
@@ -40,6 +39,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { EntityViewTab, getInterceptorTabs } from '@/src/utils/tabs/utils';
 import InterceptorProperties from './Properties';
 
 interface Props {

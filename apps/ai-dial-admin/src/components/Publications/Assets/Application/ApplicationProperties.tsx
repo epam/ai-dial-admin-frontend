@@ -5,11 +5,11 @@ import { DialTabs } from '@epam/ai-dial-ui-kit';
 import ApplicationParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import FilesProperties from '@/src/components/Publications/Assets/Files/FilesProperties';
 
-import { EntityViewTab, getPublicationTabs } from '@/src/components/EntityView/View/utils';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationPublication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
+import { EntityViewTab, getPublicationTabs } from '@/src/utils/tabs/utils';
 import ApplicationInfo from './ApplicationInfo';
 
 interface Props {

@@ -1,18 +1,18 @@
+import { TabsI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
+import { describe, expect, test, vi } from 'vitest';
 import {
+  appRouteTab,
   auditTab,
+  dependenciesTab,
   featuresTab,
+  getAuditTabs,
   getViewTabs,
   interceptorsTab,
   parametersTab,
   propertiesTab,
   rolesTab,
-  appRouteTab,
-  dependenciesTab,
-  getAuditTabs
 } from '../utils';
-import { describe, expect, test, vi } from 'vitest';
-import { TabsI18nKey } from '@/src/constants/i18n';
 
 const t = vi.fn((id) => id);
 

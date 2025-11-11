@@ -111,7 +111,7 @@ export const getRelevantDataForInterceptor = (
 /**
  * Get app runners that are using the interceptor
  *
- * @param {DialAdapter} adapter - interceptor '/'
+ * @param {DialInterceptor} interceptor - interceptor '/'
  * @param {EntitiesGridData[]} allEntities - all available app runners in interceptor  '/'
  * @returns {EntitiesGridData[]} - array of relevant app runners
  */

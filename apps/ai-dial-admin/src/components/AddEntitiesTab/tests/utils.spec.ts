@@ -8,6 +8,7 @@ import {
   getEntitiesForRole,
   getRelevantDataForAppRunner,
   getRelevantModelsForAdapter,
+  getRelevantAppRunnersForInterceptor,
 } from '../utils';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { MenuI18nKey } from '@/src/constants/i18n';
@@ -18,6 +19,7 @@ const data = [
   { name: 'application', type: MenuI18nKey.Applications, route: ApplicationRoute.Applications },
   { name: 'role', type: MenuI18nKey.Roles, route: ApplicationRoute.Roles },
   { name: 'key', type: MenuI18nKey.Keys, route: ApplicationRoute.Keys },
+  { $id: 'applicationRunner', type: MenuI18nKey.ApplicationRunners, route: ApplicationRoute.ApplicationRunners },
 ];
 
 const keys = [{ name: 'key', type: MenuI18nKey.Keys, route: ApplicationRoute.Keys }];
@@ -25,7 +27,13 @@ const keys = [{ name: 'key', type: MenuI18nKey.Keys, route: ApplicationRoute.Key
 describe('Add Entities tab :: getEntitiesGridData', () => {
   test('Should return all items', () => {
     expect(
-      getEntitiesGridData([{ name: 'model' }], [{ name: 'application' }], [{ name: 'role' }], [{ name: 'key' }]),
+      getEntitiesGridData(
+        [{ name: 'model' }],
+        [{ name: 'application' }],
+        [{ name: 'role' }],
+        [{ name: 'key' }],
+        [{ $id: 'applicationRunner' }],
+      ),
     ).toEqual(data);
   });
 });
@@ -182,6 +190,18 @@ describe('Add Entities tab :: getRelevantDataForInterceptor ', () => {
   });
 });
 
+describe('Add Entities tab :: getRelevantAppRunnersForInterceptor ', () => {
+  test('Should return empty array', () => {
+    expect(getRelevantAppRunnersForInterceptor({}, data)).toEqual([]);
+  });
+
+  test('Should return array with model', () => {
+    expect(
+      getRelevantAppRunnersForInterceptor({ applicationRunners: ['applicationRunner', 'applicationRunner1'] }, data),
+    ).toEqual([data[4]]);
+  });
+});
+
 describe('Add Entities tab :: getRelevantDataForAppRunner ', () => {
   test('Should return empty array', () => {
     expect(getRelevantDataForAppRunner({}, data)).toEqual([]);
@@ -200,6 +220,7 @@ describe('Add Entities tab :: getAvailableEntities ', () => {
       { name: 'application', type: MenuI18nKey.Applications, route: ApplicationRoute.Applications },
       { name: 'role', type: MenuI18nKey.Roles, route: ApplicationRoute.Roles },
       { name: 'key', type: MenuI18nKey.Keys, route: ApplicationRoute.Keys },
+      { $id: 'applicationRunner', type: MenuI18nKey.ApplicationRunners, route: ApplicationRoute.ApplicationRunners },
     ]);
   });
 

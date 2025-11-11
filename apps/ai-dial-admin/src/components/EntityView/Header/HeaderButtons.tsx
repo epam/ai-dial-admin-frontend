@@ -8,7 +8,6 @@ import { IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
-import { EntityViewTab } from '@/src/components/EntityView/View/utils';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
@@ -20,6 +19,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
+import { EntityViewTab } from '@/src/utils/tabs/utils';
 import JsonToggles from './JsonToggle';
 import ModifiedEntityButtons from './ModifiedEntityButtons';
 

@@ -12,7 +12,6 @@ import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/compon
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
-import { EntityViewTab, getTabsForAsset } from '@/src/components/EntityView/View/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
@@ -31,6 +30,7 @@ import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 
 interface Props {
   etag: string;
