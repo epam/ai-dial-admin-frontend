@@ -46,8 +46,8 @@ export class ActivityAuditApi extends BaseApi {
     token: JWT | null,
     sorts: SortDto[],
     filters: FilterDto[],
-  ): Promise<ActivityAuditRevision[] | null> {
-    return this.post(
+  ): Promise<ServerActionResponse<ActivityAuditRevision[]>> {
+    return this.postAction(
       `${ACTIVITY_AUDIT_URL}`,
       {
         pageSize,

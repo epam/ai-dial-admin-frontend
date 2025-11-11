@@ -1,5 +1,5 @@
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useMemo } from 'react';
+import { FC, useCallback, useMemo, useRef } from 'react';
 
 import { DialSelectField } from '@epam/ai-dial-ui-kit';
 
@@ -30,6 +30,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 import Authentication from '@/src/components/Toolsets/View/Authentication';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   etag: string;
@@ -44,7 +45,7 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, runners, o
   const t = useI18n() as (t: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
-
+  const getReqRef = useRef(useProtectedRequest());
   const items = useMemo(() => {
     return assets.map((asset) => ({ value: asset.version, label: asset.version }));
   }, [assets]);
@@ -53,7 +54,7 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, runners, o
     async (version: string) => {
       const getAsset = view === ApplicationRoute.AssetsApplications ? getApp : getToolset;
 
-      getAsset?.(asset.folderId, asset.name as string, version, etag).then((res) => {
+      getReqRef.current(getAsset, asset.folderId, asset.name as string, version, etag).then((res) => {
         if (res.success) {
           const found = res.response as DeploymentAsset;
 
