@@ -35,6 +35,7 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import InterceptorProperties from './Properties';
+import { InterceptorTemplate } from '@/src/models/interceptor-template';
 
 interface Props {
   originalInterceptor: DialInterceptor;
@@ -42,9 +43,17 @@ interface Props {
   etag: string;
   models: DialModel[];
   applications: DialApplication[];
+  interceptorTemplate?: InterceptorTemplate | null;
 }
 
-const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, etag, applications }) => {
+const InterceptorView: FC<Props> = ({
+  originalInterceptor,
+  names,
+  models,
+  etag,
+  applications,
+  interceptorTemplate,
+}) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -235,7 +244,9 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, models, etag, 
                   selectedInterceptor.defaults?.custom_fields?.['interceptor_configuration' as keyof DefaultsValue]
                 }
                 onChangeConfiguration={onChangeConfiguration}
-                schemaURL={selectedInterceptor.features?.configurationEndpoint}
+                schemaURL={
+                  selectedInterceptor.features?.configurationEndpoint || interceptorTemplate?.configurationEndpoint
+                }
                 name={selectedInterceptor.name as string}
               />
             )}
