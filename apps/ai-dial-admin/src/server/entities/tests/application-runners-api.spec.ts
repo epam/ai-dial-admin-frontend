@@ -92,6 +92,7 @@ describe('Server :: ApplicationRunnersApi', () => {
     );
   });
 
+
   test('Should calls updateApplicationScheme with correct data', async () => {
     const response = { success: true };
     fetch.mockResponseOnce(JSON.stringify(response));
@@ -103,6 +104,21 @@ describe('Server :: ApplicationRunnersApi', () => {
       expect.objectContaining({
         method: 'PUT',
         body: JSON.stringify(mockScheme),
+      }),
+    );
+  });
+
+  test('Should calls updateApplicationScheme with correct data', async () => {
+    const response = { success: true };
+    fetch.mockResponseOnce(JSON.stringify(response));
+
+    await instance.updateApplicationScheme({ ...mockScheme, $id: void 0 }, TOKEN_MOCK, 'etag123');
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${APPLICATION_SCHEME_URL('')}`,
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({ ...mockScheme, $id: void 0 }),
       }),
     );
   });

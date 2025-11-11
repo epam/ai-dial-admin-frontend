@@ -70,7 +70,7 @@ describe('Server :: Adapters', () => {
   test('Should calls getAdapter and fetches a specific adapter', async () => {
     fetch.mockResponseOnce(JSON.stringify(adapter));
 
-    const result = await instance.getAdapter(adapter.name, TOKEN_MOCK, 'etag123');
+    const result = await instance.getAdapter(adapter.name || '', TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(`/adapters/${adapter.name}`),
@@ -90,6 +90,21 @@ describe('Server :: Adapters', () => {
       expect.objectContaining({
         method: 'PUT',
         body: JSON.stringify(adapter),
+      }),
+    );
+  });
+
+  test('Should calls updateAdapter and sends updated data via PUT', async () => {
+    const mockResponse: ServerActionResponse = { success: true };
+    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+
+    await instance.updateAdapter({ ...adapter, name: void 0 }, TOKEN_MOCK, 'etag123');
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`/adapters/`),
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({ ...adapter, name: void 0 }),
       }),
     );
   });

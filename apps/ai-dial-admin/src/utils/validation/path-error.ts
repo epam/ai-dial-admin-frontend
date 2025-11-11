@@ -1,6 +1,5 @@
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { ErrorType } from '@/src/types/error-type';
-import { describe, it, expect } from 'vitest';
 
 // todo when correct regexp will be found return all validation
 // const PATH_REGEX = /^\/(?=.{1,})([a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*\/?)?$/;

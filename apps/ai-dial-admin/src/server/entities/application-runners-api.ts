@@ -8,7 +8,7 @@ import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const APPLICATION_SCHEMES_URL = `${API}/applicationTypeSchemas`;
 export const APPLICATION_SCHEME_URL = (id?: string) => `${APPLICATION_SCHEMES_URL}?id=${id}`;
-export const CORE_APPLICATION_SCHEME_URL = (id?: string) => `${APPLICATION_SCHEMES_URL}/core?id=${id}`;
+export const CORE_APPLICATION_SCHEME_URL = (id: string) => `${APPLICATION_SCHEMES_URL}/core?id=${id}`;
 
 export class ApplicationRunnersApi extends BaseApi {
   getApplicationSchemesList(token: JWT | null): Promise<DialApplicationScheme[] | null> {
@@ -45,6 +45,6 @@ export class ApplicationRunnersApi extends BaseApi {
     etag: string,
     token: JWT | null,
   ): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(CORE_APPLICATION_SCHEME_URL(encodeURIComponent(id || '')), scheme, token, etag);
+    return this.putActionWithEtag(CORE_APPLICATION_SCHEME_URL(encodeURIComponent(id)), scheme, token, etag);
   }
 }

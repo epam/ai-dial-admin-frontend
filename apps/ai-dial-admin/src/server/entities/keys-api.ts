@@ -7,8 +7,8 @@ import { BaseApi } from '../base-api';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const KEYS_URL = `${API}/keys`;
-export const KEY_URL = (name?: string) => `${KEYS_URL}/${name}`;
-export const CORE_KEY_URL = (name?: string) => `${KEYS_URL}/core/${name}`;
+export const KEY_URL = (name?: string) => `${KEYS_URL}/${name || ''}`;
+export const CORE_KEY_URL = (name: string) => `${KEYS_URL}/core/${name}`;
 
 export class KeysApi extends BaseApi {
   getKeysList(token: JWT | null): Promise<DialKey[] | null> {
@@ -36,6 +36,6 @@ export class KeysApi extends BaseApi {
   }
 
   updateCoreKey(key: DialKey, name: string, eTag: string, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(CORE_KEY_URL(encodeURIComponent(name || '')), key, token, eTag);
+    return this.putActionWithEtag(CORE_KEY_URL(encodeURIComponent(name)), key, token, eTag);
   }
 }

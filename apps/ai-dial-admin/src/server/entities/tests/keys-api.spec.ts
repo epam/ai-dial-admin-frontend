@@ -82,6 +82,21 @@ describe('Server :: KeysApi', () => {
     );
   });
 
+  test('Should update a key', async () => {
+    const response = { success: true };
+    fetch.mockResponseOnce(JSON.stringify(response));
+
+    await instance.updateKey({...mockKey, name: undefined }, TOKEN_MOCK, 'etag123');
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${KEY_URL()}`,
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({...mockKey, name: undefined }),
+      }),
+    );
+  });
+
   test('Should update core key', async () => {
     const response = { success: true };
     fetch.mockResponseOnce(JSON.stringify(response));

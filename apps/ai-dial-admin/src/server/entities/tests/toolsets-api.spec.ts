@@ -2,7 +2,7 @@ import { DialToolset } from '@/src/models/dial/toolset';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { CORE_TOOLSET_URL, TOOLSETS_URL, TOOLSET_URL, ToolsetsApi } from '../toolsets-api';
+import { CORE_TOOLSET_URL, TOOLSETS_URL, TOOLSET_URL, TOOLS_URL, ToolsetsApi } from '../toolsets-api';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -40,6 +40,18 @@ describe('Server :: ToolsetsApi', () => {
     expect(result.response).toEqual(JSON.stringify(mockToolset));
   });
 
+  test('Should calls getTools ', async () => {
+    fetch.mockResponseOnce({ tools: [{ name: 't1' }, { name: 't2' }] });
+
+    const result = await instance.getTools(mockToolset.name, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TOOLS_URL(mockToolset.name)}`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result).toEqual([]);
+  });
+
   test('Should calls getCoreToolset by name and return toolSet', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockToolset));
 
@@ -63,6 +75,21 @@ describe('Server :: ToolsetsApi', () => {
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify(mockToolset),
+      }),
+    );
+  });
+
+  test('Should calls updateToolset with correct payload', async () => {
+    const mockResponse = { success: true };
+    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+
+    await instance.updateToolset({ ...mockToolset, name: void 0 }, TOKEN_MOCK, 'etag123');
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TOOLSET_URL()}`,
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({ ...mockToolset, name: void 0 }),
       }),
     );
   });

@@ -71,6 +71,50 @@ describe('Server :: RoutesApi', () => {
     );
   });
 
+  test('Should call updateRoute', async () => {
+    const updatedRoute = { ...mockRoute, description: 'Updated' };
+    const mockResponse = { success: true };
+    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+
+    await instance.updateRoute({ ...updatedRoute, name: void 0 }, TOKEN_MOCK, 'etag123');
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/routes/'),
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({ ...updatedRoute, name: void 0 }),
+      }),
+    );
+  });
+
+  test('Should update core route', async () => {
+    const mockResponse = { success: true };
+    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+
+    const updatedRoute = { ...mockRoute, description: 'Updated' };
+    await instance.updateCoreRoute(updatedRoute, 'route', 'etag123', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/routes/core/route'),
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify(updatedRoute),
+      }),
+    );
+  });
+
+  test('Should calls a core route by name', async () => {
+    const mockResponse = { success: true };
+    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+
+    await instance.getCoreRoute('admin', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/routes/core/admin'),
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
   test('Should call removeRoute', async () => {
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));
