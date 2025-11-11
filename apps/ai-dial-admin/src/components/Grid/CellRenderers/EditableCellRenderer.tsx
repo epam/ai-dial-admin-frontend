@@ -90,7 +90,7 @@ const EditableCellRenderer = ({
         className={classNames(
           'leading-[18px] h-[32px] dial-input px-2 py-1',
           data.required && !correctValue ? 'dial-input-error' : '',
-          isMaxValue && 'placeholder-white',
+          isMaxValue && 'placeholder-primary',
         )}
       />
       {showTriangle && !hideTriangle && (
