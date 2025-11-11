@@ -142,6 +142,7 @@ export default {
     // add entity or entities
     AddModel: 'Add Model',
     AddApplication: 'Add Application',
+    AddApplicationRunner: 'Add Application Runners',
     AddEntities: 'Add Entities',
 
     // entity control
@@ -420,6 +421,7 @@ export default {
     Conversations: 'Conversations',
     Attachments: 'Attachments',
     ParameterSchema: 'Parameter Scheme',
+    ApplicationRunners: 'Application Runners',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',

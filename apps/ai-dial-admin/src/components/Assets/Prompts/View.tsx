@@ -11,7 +11,7 @@ import { createPrompt, getPrompt, getPrompts, movePrompts, removePrompt } from '
 import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import { EntityViewTab, getTabsForAsset } from '@/src/components/EntityView/View/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
@@ -21,12 +21,12 @@ import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import PromptProperties from './Properties';
-import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
   originalPrompt: DialPrompt;
@@ -35,7 +35,7 @@ interface Props {
 
 const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
-  const tabs = [propertiesTabs(t)];
+  const tabs = getTabsForAsset(t, ApplicationRoute.Prompts);
   const router = useRouter();
   const { fetchFiles } = usePromptFolder();
   const { showNotification } = useNotification();

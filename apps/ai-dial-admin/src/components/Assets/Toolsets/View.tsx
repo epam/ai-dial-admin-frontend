@@ -4,8 +4,8 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
-import classNames from 'classnames';
 import { IconLogin, IconLogout } from '@tabler/icons-react';
+import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
 import {
@@ -20,9 +20,11 @@ import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/compon
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
-import { EntityViewTab, propertiesTabs, toolsTabs } from '@/src/components/EntityView/View/utils';
+import { EntityViewTab, getTabsForAsset } from '@/src/components/EntityView/View/utils';
 import ToolsView from '@/src/components/Toolsets/Tools/Tools';
 import { ROOT_FOLDER } from '@/src/constants/file';
+import { ToolsetI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -32,6 +34,7 @@ import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { Toolset, ToolsetAuthCredentialLevel, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -42,9 +45,6 @@ import {
   isUserLoggedInToToolset,
 } from '@/src/utils/toolset/toolset-auth';
 import LoginPopup from './LoginPopup';
-import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
-import { ToolsetI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 let isSignInProcessed = false;
 interface Props {
   etag: string;
@@ -56,7 +56,7 @@ interface Props {
 
 const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, isUserLevel }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
-  const tabs = [propertiesTabs(t), toolsTabs(t)];
+  const tabs = getTabsForAsset(t, ApplicationRoute.AssetsToolsets);
   const router = useRouter();
   const { fetchFiles } = useToolsetFolder();
   const { showNotification } = useNotification();

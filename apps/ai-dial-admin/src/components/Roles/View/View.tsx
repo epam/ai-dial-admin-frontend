@@ -18,7 +18,7 @@ import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { isSetNoLimitsHidden } from '@/src/components/EntityView/Roles/utils';
-import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import { EntityViewTab, getRoleTabs } from '@/src/components/EntityView/View/utils';
 import { getSetNoLimitsOperation } from '@/src/constants/grid-columns/actions';
 import { KEYS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, KeysI18nKey, TabsI18nKey } from '@/src/constants/i18n';
@@ -54,12 +54,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
 
-  const tabs: TabModel[] = [
-    propertiesTabs(t),
-    { id: EntityViewTab.Entities, name: t(TabsI18nKey.Entities) },
-    { id: EntityViewTab.Keys, name: t(TabsI18nKey.Keys) },
-    auditTabs(t),
-  ];
+  const tabs: TabModel[] = getRoleTabs(t);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedRole, setSelectedRole] = useState(cloneDeep(originalRole));

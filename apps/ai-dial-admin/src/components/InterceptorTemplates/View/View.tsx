@@ -4,10 +4,9 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
-import { DialTabs } from '@epam/ai-dial-ui-kit';
 
 import { deleteInterceptorTemplate, updateInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { createInterceptor } from '@/src/app/[lang]/interceptors/actions';
@@ -15,7 +14,7 @@ import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEnt
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
-import { auditTabs, EntityViewTab, interceptorsTabs, propertiesTabs } from '@/src/components/EntityView/View/utils';
+import { EntityViewTab, getInterceptorTemplateTabs } from '@/src/components/EntityView/View/utils';
 import ExtendedProperties from '@/src/components/InterceptorTemplates/Properties/ExtendedProperties';
 import Interceptors from '@/src/components/InterceptorTemplates/View/Interceptors/Interceptors';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
@@ -25,9 +24,9 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 
 interface Props {
   etag: string;
@@ -45,7 +44,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
   const [selectedTemplate, setSelectedTemplate] = useState(cloneDeep(template));
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const tabs = [propertiesTabs(t), interceptorsTabs(t), auditTabs(t)];
+  const tabs = getInterceptorTemplateTabs(t);
 
   // todo change when source field will be added to create interceptor template modal
   const source = useMemo(() => {

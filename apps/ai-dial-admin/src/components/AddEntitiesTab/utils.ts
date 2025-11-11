@@ -14,6 +14,7 @@ import {
   getKeysForEntitiesGrid,
   getModelsForEntitiesGrid,
   getRolesForEntitiesGrid,
+  getRunnersForEntitiesGrid,
 } from '@/src/utils/entities/entities-list-view';
 import { DialAdapter } from '@/src/models/dial/adapter';
 
@@ -46,6 +47,7 @@ export const getEntitiesGridData = (
   applications?: DialApplication[],
   roles?: DialRole[],
   keys?: DialKey[],
+  appRunners?: DialApplicationScheme[],
 ): EntitiesGridData[] => {
   const data: EntitiesGridData[] = [];
 
@@ -53,6 +55,7 @@ export const getEntitiesGridData = (
   data.push(...getApplicationsForEntitiesGrid(applications));
   data.push(...getRolesForEntitiesGrid(roles));
   data.push(...getKeysForEntitiesGrid(keys));
+  data.push(...getRunnersForEntitiesGrid(appRunners));
 
   return data;
 };
@@ -100,6 +103,30 @@ export const getRelevantDataForInterceptor = (
     const entity = allEntities.find((m) => m.name === entityName);
     if (entity) {
       data.push(entity as EntitiesGridData);
+    }
+  });
+  return data;
+};
+
+/**
+ * Get app runners that are using the interceptor
+ *
+ * @param {DialAdapter} adapter - interceptor '/'
+ * @param {EntitiesGridData[]} allEntities - all available app runners in interceptor  '/'
+ * @returns {EntitiesGridData[]} - array of relevant app runners
+ */
+export const getRelevantAppRunnersForInterceptor = (
+  interceptor: DialInterceptor,
+  allEntities: EntitiesGridData[],
+): EntitiesGridData[] => {
+  const data: EntitiesGridData[] = [];
+  if (!interceptor.applicationRunners) {
+    return data;
+  }
+  interceptor.applicationRunners.forEach((runner) => {
+    const entity = allEntities.find((m) => m.$id === runner);
+    if (entity) {
+      data.push(entity);
     }
   });
   return data;

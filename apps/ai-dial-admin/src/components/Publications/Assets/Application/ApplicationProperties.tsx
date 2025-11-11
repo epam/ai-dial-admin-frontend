@@ -5,8 +5,7 @@ import { DialTabs } from '@epam/ai-dial-ui-kit';
 import ApplicationParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import FilesProperties from '@/src/components/Publications/Assets/Files/FilesProperties';
 
-import { EntityViewTab, parametersTabs, propertiesTabs } from '@/src/components/EntityView/View/utils';
-import { TabsI18nKey } from '@/src/constants/i18n';
+import { EntityViewTab, getPublicationTabs } from '@/src/components/EntityView/View/utils';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationPublication } from '@/src/models/dial/publications';
@@ -20,10 +19,9 @@ interface Props {
 
 const ApplicationProperties: FC<Props> = ({ publication, applicationSchemes }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
-  const tabs = [propertiesTabs(t), parametersTabs(t), { id: EntityViewTab.Files, name: t(TabsI18nKey.Files) }];
+  const tabs = getPublicationTabs(t);
   const application = publication.applicationResources?.[0];
   const [selectedTab, setSelectedTab] = useState(tabs[0].id);
-
   useEffect(() => {
     const permissionContent = document.getElementById('publication-permissions');
     if (selectedTab === EntityViewTab.Properties) {

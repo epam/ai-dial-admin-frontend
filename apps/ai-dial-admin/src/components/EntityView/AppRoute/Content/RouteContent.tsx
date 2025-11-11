@@ -1,14 +1,15 @@
 'use client';
 import { FC, useState } from 'react';
+
 import { DialTabs } from '@epam/ai-dial-ui-kit';
 
-import { attachmentsTabs, EntityViewTab, propertiesTabs, rolesTabs } from '@/src/components/EntityView/View/utils';
-import { useI18n } from '@/src/locales/client';
-import { DialAppRoute } from '@/src/models/dial/route';
+import { EntityViewTab, getRouteTabs } from '@/src/components/EntityView/View/utils';
 import RouteProperties from '@/src/components/Routes/Properties/RouteProperties';
+import { useI18n } from '@/src/locales/client';
+import { DialRole } from '@/src/models/dial/role';
+import { DialAppRoute } from '@/src/models/dial/route';
 import RouteAttachments from './RouteAttachments';
 import RouteRoles from './RouteRoles';
-import { DialRole } from '@/src/models/dial/role';
 
 interface Props {
   route: DialAppRoute;
@@ -22,8 +23,7 @@ interface Props {
 const RouteContent: FC<Props> = ({ route, readonly, onChangeRoute, ...props }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
 
-  const tabs = [propertiesTabs(t), attachmentsTabs(t), rolesTabs(t)];
-
+  const tabs = getRouteTabs(t);
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
 
   return (

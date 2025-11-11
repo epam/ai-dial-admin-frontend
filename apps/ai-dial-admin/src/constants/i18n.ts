@@ -113,6 +113,7 @@ export enum EntitiesI18nKey {
   NoConfigurationSchema = 'Entities.NoConfigurationSchema',
   AddModel = 'Entities.AddModel',
   AddApplication = 'Entities.AddApplication',
+  AddApplicationRunner = 'Entities.AddApplicationRunner',
   AddEntities = 'Entities.AddEntities',
   SourceType = 'Entities.SourceType',
   Source = 'Entities.Source',
@@ -432,6 +433,7 @@ export enum TabsI18nKey {
   Attachments = 'Tabs.Attachments',
   Tools = 'Tabs.Tools',
   ParameterSchema = 'Tabs.ParameterSchema',
+  ApplicationRunners = 'Tabs.ApplicationRunners',
 }
 
 export enum InterceptorsI18nKey {

@@ -10,7 +10,7 @@ import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { DialApplication } from '@/src/models/dial/application';
+import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialKey } from '@/src/models/dial/key';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
@@ -26,6 +26,7 @@ interface Props {
   applications?: DialApplication[];
   roles?: DialRole[];
   keys?: DialKey[];
+  appRunners?: DialApplicationScheme[];
   customColumns?: ColDef[];
   customActions?: ActionMenuOperationDeclaration<any>[];
   modalTitle?: string;
@@ -42,6 +43,7 @@ const AddEntitiesView: FC<Props> = ({
   applications,
   roles,
   keys,
+  appRunners,
   viewTitle,
   customColumns,
   customActions,
@@ -54,7 +56,7 @@ const AddEntitiesView: FC<Props> = ({
   const t = useI18n() as (stringToTranslate: string) => string;
 
   const [gridApi, setGridApi] = useState<GridApi>();
-  const allEntities = getEntitiesGridData(models, applications, roles, keys);
+  const allEntities = getEntitiesGridData(models, applications, roles, keys, appRunners);
   const data = getRelevantDataForEntity ? getRelevantDataForEntity(allEntities) : allEntities;
   const availableEntities = getAvailableEntities(data, allEntities);
 

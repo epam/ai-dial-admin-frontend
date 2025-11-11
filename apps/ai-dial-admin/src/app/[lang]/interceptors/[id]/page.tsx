@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
 import { cookies, headers } from 'next/headers';
 
-import { applicationsApi, interceptorsApi, modelsApi } from '@/src/app/api/api';
+import { applicationRunnersApi, applicationsApi, interceptorsApi, modelsApi } from '@/src/app/api/api';
 import InterceptorView from '@/src/components/Interceptors/View/View';
-import { DialApplication } from '@/src/models/dial/application';
+import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -30,12 +30,13 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   let models: DialModel[] | null = [];
   let applications: DialApplication[] | null = [];
   let interceptorTemplate: InterceptorTemplate | null = null;
+  let appRunners: DialApplicationScheme[] | null = [];
 
   try {
     interceptors = await interceptorsApi.getInterceptorsList(token);
     models = await modelsApi.getModelsList(token);
     applications = await applicationsApi.getApplicationsList(token);
-
+    appRunners = await applicationRunnersApi.getApplicationSchemesList(token);
     interceptor = await interceptorsApi.getInterceptor((await params.params).id, token, etag).then((res) => {
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as DialModel | null;
@@ -71,6 +72,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
         etag={etag}
         applications={applications || []}
         interceptorTemplate={interceptorTemplate}
+        appRunners={appRunners || []}
       />
     </SaveValidationContextProvider>
   );
