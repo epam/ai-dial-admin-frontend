@@ -126,7 +126,7 @@ const ApplicationParametersTab: FC<Props> = ({
         applicationPropertiesTemp: props,
       } as unknown as BaseEntity;
       onChangeEntity?.(newEntity, isSkipRefresh);
-      const isValid = !props?.some((p) => !p.key || p.value == null || p.value === '');
+      const isValid = !props?.some((p) => !p.key || p.value === void 0 || p.value === '');
       dispatch({ type: ValidationActionType.SetField, field: 'applicationProperties', isValid });
     },
     [dispatch, entity, onChangeEntity],
