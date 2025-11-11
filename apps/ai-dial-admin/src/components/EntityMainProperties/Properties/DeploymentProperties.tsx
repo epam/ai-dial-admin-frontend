@@ -52,13 +52,15 @@ const DeploymentProperties: FC<Props> = ({
   const { dispatch } = useSaveValidationContext();
   const { embeddedApps } = useAppContext();
   const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
-
-  const [isVersionOptional, setIsVersionOptional] = useState(true);
   const [displayNameError, setDisplayNameError] = useState<string | undefined>(void 0);
 
   const namesConfiguration = useMemo(() => {
     return getNamesConfigurations(names);
   }, [names]);
+
+  const isVersionOptional = useMemo(() => {
+    return !namesConfiguration.names.includes(entity.displayName as string);
+  }, [entity.displayName, namesConfiguration.names]);
 
   const versionError = useMemo(() => {
     return getVersionError(isVersionOptional, entity as DialModel, namesConfiguration.versionsMap, t);
@@ -66,7 +68,6 @@ const DeploymentProperties: FC<Props> = ({
 
   const onChangeDisplayName = useCallback(
     (displayName: string) => {
-      setIsVersionOptional(!namesConfiguration.names.includes(displayName));
       const error = getDisplayNameError(
         view,
         displayName as string,
