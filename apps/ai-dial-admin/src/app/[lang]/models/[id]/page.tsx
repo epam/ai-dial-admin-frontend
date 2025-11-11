@@ -46,7 +46,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     redirect(ApplicationRoute.Models);
   }
 
-  const names = filterDisplayNamesWithVersions(models, model.displayName);
+  const names = filterDisplayNamesWithVersions(models);
 
   return (
     <SaveValidationContextProvider>
