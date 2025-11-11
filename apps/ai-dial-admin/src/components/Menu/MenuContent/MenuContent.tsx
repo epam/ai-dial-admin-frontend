@@ -1,21 +1,16 @@
 'use client';
 
-import { DialConfirmationPopup } from '@epam/ai-dial-ui-kit';
 import { IconDownload, IconUpload } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { usePathname, useRouter } from 'next/navigation';
-import { FC, useCallback, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { FC } from 'react';
 
-import { reloadConfig } from '@/src/app/actions';
-import { MenuI18nKey, ReloadConfigI18nKey } from '@/src/constants/i18n';
+import { MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
-import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getActualMenuItems } from '@/src/utils/env/get-menu-items';
-import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { MENU_CONFIGURATION } from '../menu-configuration';
 import MenuItem from '../MenuItem/MenuItem';
 import MenuAction from './MenuAction';
@@ -39,32 +34,6 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   const actualConfig = getActualMenuItems(MENU_CONFIGURATION(24), disableMenuItems, embeddedApps);
 
   const activeMenuGroup = actualConfig.find((config) => config.items.some((item) => item.href === pathname));
-  const { showNotification } = useNotification();
-  const [isOpenModal, setIsOpenModal] = useState(false);
-  const [isLoadingReload, setIsLoadingReload] = useState(false);
-
-  const onCloseModal = useCallback(() => {
-    setIsOpenModal(false);
-  }, [setIsOpenModal]);
-
-  const onConfirmReload = useCallback(() => {
-    setIsLoadingReload(true);
-
-    reloadConfig().then((res) => {
-      if (res.success) {
-        showNotification(
-          getSuccessNotification(
-            t(ReloadConfigI18nKey.ConfigReloadedTitle),
-            t(ReloadConfigI18nKey.ConfigReloadedDescription),
-          ),
-        );
-      } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
-      }
-      setIsLoadingReload(false);
-      onCloseModal();
-    });
-  }, [showNotification, setIsLoadingReload, onCloseModal, t]);
 
   return (
     <>
@@ -114,19 +83,6 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
           )}
         </div>
       </div>
-      {isOpenModal &&
-        createPortal(
-          <DialConfirmationPopup
-            open={isOpenModal}
-            description={t(ReloadConfigI18nKey.ReloadDescription)}
-            title={t(ReloadConfigI18nKey.ReloadTitle)}
-            onConfirm={onConfirmReload}
-            onClose={onCloseModal}
-            isLoading={isLoadingReload}
-            confirmLabel={t(ReloadConfigI18nKey.Reload)}
-          />,
-          document.body,
-        )}
     </>
   );
 };

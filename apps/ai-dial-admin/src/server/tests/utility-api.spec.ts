@@ -22,13 +22,6 @@ describe('Server :: UtilityApi', () => {
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/version'), expect.anything());
   });
 
-  test('should reload config', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ success: true }));
-
-    const res = await instance.reloadConfig(TOKEN_MOCK);
-    expect(res).toEqual({ response: JSON.stringify({ success: true }), success: true });
-  });
-
   test('should import json config', async () => {
     const formData = new FormData();
     fetch.mockResponseOnce(JSON.stringify({ success: true }));

@@ -42,13 +42,6 @@ export default {
     Yes: 'Yes',
     No: 'No',
   },
-  ReloadConfig: {
-    ReloadTitle: 'Reload Config',
-    Reload: 'Reload',
-    ReloadDescription: 'All changes will be delivered to environment',
-    ConfigReloadedTitle: 'Config reloaded successfully',
-    ConfigReloadedDescription: 'Changes have been delivered to environment',
-  },
   Menu: {
     Entities: 'Entities',
     AccessManagement: 'Access Management',

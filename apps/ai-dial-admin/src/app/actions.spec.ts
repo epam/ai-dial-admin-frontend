@@ -3,7 +3,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { checkIsUniqueDeploymentName, getAppProcessStatus, reloadConfig } from './actions';
+import { checkIsUniqueDeploymentName, getAppProcessStatus } from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -14,17 +14,6 @@ describe('Server actions', () => {
     vi.clearAllMocks();
     getUserToken.mockResolvedValue(TOKEN_MOCK);
     getIsEnableAuthToggle.mockReturnValue(true);
-  });
-
-  test('reloadConfig should call utilityApi.reloadConfig with token', async () => {
-    const mockResponse = { success: true };
-    utilityApi.reloadConfig.mockResolvedValue(mockResponse);
-
-    const result = await reloadConfig();
-
-    expect(getUserToken).toHaveBeenCalled();
-    expect(utilityApi.reloadConfig).toHaveBeenCalledWith(TOKEN_MOCK);
-    expect(result).toBe(mockResponse);
   });
 
   test('checkIsUniqueDeploymentName should return true when response is null', async () => {
