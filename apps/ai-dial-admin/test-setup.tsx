@@ -77,6 +77,16 @@ vi.mock('next/image', () => ({
   },
 }));
 
+global.IntersectionObserver = vi.fn(() => ({
+  root: null,
+  rootMargin: '',
+  thresholds: [],
+  takeRecords: vi.fn(),
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+
 global.ResizeObserver = vi.fn(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
