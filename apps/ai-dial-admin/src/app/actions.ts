@@ -5,7 +5,6 @@ import { cookies, headers } from 'next/headers';
 import { utilityApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { AppProcessStatus } from '@/src/models/app-process-status';
 
 export async function reloadConfig() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -18,7 +17,7 @@ export async function checkIsUniqueDeploymentName(name: string): Promise<boolean
   return response === null;
 }
 
-export async function getAppProcessStatus(): Promise<AppProcessStatus | null> {
+export async function getAppProcessStatus() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return utilityApi.getAppProcessStatus(token);
 }

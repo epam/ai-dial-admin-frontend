@@ -1,20 +1,19 @@
-import { FC, MouseEvent, useCallback, useEffect, useState } from 'react';
-import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { ButtonVariant, DialButton, DialLoader } from '@epam/ai-dial-ui-kit';
+import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
+import { FC, MouseEvent, useCallback, useEffect, useState } from 'react';
 
-import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { ApplicationRoute } from '@/src/types/routes';
-import { TelemetryData, TelemetryQuery } from '@/src/models/telemetry';
-import { ServerActionResponse } from '@/src/models/server-action';
-import { getListingData } from '@/src/utils/telemetry';
-import { useI18n } from '@/src/locales/client';
-import { IconColumns2 } from '@tabler/icons-react';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { useI18n } from '@/src/locales/client';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { TelemetryData, TelemetryQuery } from '@/src/models/telemetry';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getListingData } from '@/src/utils/telemetry';
+import { IconColumns2 } from '@tabler/icons-react';
 
-import ListView from '@/src/components/ListView/ListView';
 import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/ResetFiltersButton';
-import Page403 from '@/src/components/Page403/Page403';
+import ListView from '@/src/components/ListView/ListView';
 
 interface Props {
   route: ApplicationRoute;
@@ -64,9 +63,7 @@ const List: FC<Props> = ({ route, getData, query, columnDefs, title, emptyDataTi
       const response = await getData(query);
       if (response.success) {
         const data = getListingData(response.response as TelemetryData);
-        if (data === void 0) {
-          return <Page403 />;
-        }
+
         setData(data);
       } else {
         setData([]);

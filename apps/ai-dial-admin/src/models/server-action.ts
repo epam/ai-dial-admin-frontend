@@ -1,6 +1,6 @@
-export interface ServerActionResponse {
+export interface ServerActionResponse<T extends object = any> {
   success: boolean;
-  response?: unknown;
+  response?: T;
   errorHeader?: string;
   errorMessage?: string;
   status?: number;

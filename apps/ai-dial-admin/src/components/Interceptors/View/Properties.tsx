@@ -2,20 +2,20 @@
 
 import { FC } from 'react';
 
-import { EntitiesI18nKey } from '@/src/constants/i18n';
-import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { ApplicationRoute } from '@/src/types/routes';
 import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
 import { getInterceptorContainers } from '@/src/app/[lang]/interceptors/actions';
 import { getSourceItems } from '@/src/components/SourceField/constants';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
-import { isDeploymentsEnabled } from '@/src/utils/plugins';
 import { useI18n } from '@/src/locales/client';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { ApplicationRoute } from '@/src/types/routes';
+import { isDeploymentsEnabled } from '@/src/utils/plugins';
 
 import Defaults from '@/src/components/Defaults/Defaults';
 import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
-import EntityProperties from '@/src/components/EntityMainProperties/Properties/EntityProperties';
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
+import EntityProperties from '@/src/components/EntityMainProperties/Properties/EntityProperties';
 import SourceField from '@/src/components/SourceField/SourceField';
 
 interface Props {
@@ -25,6 +25,7 @@ interface Props {
 }
 const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChangeInterceptor }) => {
   const t = useI18n();
+
   const { embeddedApps } = useAppContext();
   const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
 

@@ -32,6 +32,7 @@ import { PromptImportGridData } from '@/src/models/prompts';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   view?: ApplicationRoute;
@@ -55,6 +56,7 @@ const FolderCreateReview: FC<Props> = ({
   const t = useI18n() as (stringToTranslate: string) => string;
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [count, setCount] = useState<number>(0);
+  const getReqRef = useRef(useProtectedRequest());
 
   const prevFilesRef = useRef<File[]>([]);
 
@@ -115,7 +117,7 @@ const FolderCreateReview: FC<Props> = ({
     if (view === ApplicationRoute.Prompts && files.length) {
       if (fileType === ImportFileType.ARCHIVE) {
         const body = getFormDataForImport('public/', files[0], fileType, ConflictResolutionPolicy.SKIP).body;
-        previewPromptZip(body).then((data) => {
+        getReqRef.current(previewPromptZip, body).then((data) => {
           const preview = generatePreviewData(
             (data.response as { resourcePreviews: ZipFilePreview[] }).resourcePreviews,
           );

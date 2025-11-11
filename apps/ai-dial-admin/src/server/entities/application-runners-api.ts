@@ -35,7 +35,7 @@ export class ApplicationRunnersApi extends BaseApi {
     return this.putActionWithEtag(APPLICATION_SCHEME_URL(encodeURIComponent(scheme.$id || '')), scheme, token, etag);
   }
 
-  getCoreRunner(name: string, token: JWT | null) {
+  getCoreRunner(name: string, token: JWT | null): Promise<ServerActionResponse<DialApplicationScheme>> {
     return this.getActionWithEtag(CORE_APPLICATION_SCHEME_URL(name), DEFAULT_ETAG, token);
   }
 

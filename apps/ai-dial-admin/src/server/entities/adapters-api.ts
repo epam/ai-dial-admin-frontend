@@ -14,7 +14,7 @@ export class AdaptersApi extends BaseApi {
     return this.get(ADAPTERS_URL, token);
   }
 
-  getAdaptersListAction(token: JWT | null): Promise<ServerActionResponse> {
+  getAdaptersListAction(token: JWT | null): Promise<ServerActionResponse<DialAdapter[]>> {
     return this.getAction(ADAPTERS_URL, token);
   }
 

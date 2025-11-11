@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { IconPlus } from '@tabler/icons-react';
@@ -28,6 +28,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   etag: string;
@@ -39,6 +40,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
+  const getReqRef = useRef(useProtectedRequest());
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isChanged, setIsChanged] = useState(false);
@@ -65,7 +67,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
   );
 
   const onSave = useCallback(() => {
-    updateInterceptorTemplate(selectedTemplate, etag).then((res) => {
+    getReqRef.current(updateInterceptorTemplate, selectedTemplate, etag).then((res) => {
       if (res.success) {
         showNotification(
           getSuccessNotification(

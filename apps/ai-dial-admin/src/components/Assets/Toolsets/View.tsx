@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
@@ -45,6 +45,7 @@ import LoginPopup from './LoginPopup';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { ToolsetI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 let isSignInProcessed = false;
 interface Props {
   etag: string;
@@ -61,6 +62,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
   const { fetchFiles } = useToolsetFolder();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
+  const getReqRef = useRef(useProtectedRequest());
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedToolset, setSelectedToolset] = useState(cloneDeep(originalToolset));
@@ -115,7 +117,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
       if (newVersion) {
         updatedEntity = addNewVersion(updatedEntity, newVersion);
       }
-      updateToolset(updatedEntity, etag).then((res) => {
+      getReqRef.current(updateToolset, updatedEntity, etag).then((res) => {
         if (res.success) {
           showNotification(
             getSuccessNotification(
@@ -173,7 +175,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
   const signIn = useCallback(
     (type: ToolsetAuthCredentialLevel, apiKeyValue?: string, code?: string) => {
       isSignInProcessed = true;
-      signInToolset(selectedToolset, type, apiKeyValue, code).then((res) => {
+      getReqRef.current(signInToolset, selectedToolset, type, apiKeyValue, code).then((res) => {
         isSignInProcessed = false;
         if (!res.success) {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
@@ -231,7 +233,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
     const level = isUserLoggedInToToolset(selectedToolset)
       ? ToolsetAuthCredentialLevel.USER
       : ToolsetAuthCredentialLevel.GLOBAL;
-    signOutToolset(selectedToolset, level).then((res) => {
+    getReqRef.current(signOutToolset, selectedToolset, level).then((res) => {
       if (res.success) {
         router.push(getUrnForEntity(ApplicationRoute.AssetsToolsets, selectedToolset));
         showNotification(

@@ -9,7 +9,7 @@ import { convertDefaultsToRecord } from '@/src/components/Defaults/utils';
 
 export async function getInterceptorsList() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return interceptorsApi.getInterceptorsList(token);
+  return interceptorsApi.getInterceptorsListAction(token);
 }
 
 export async function removeInterceptor(name?: string) {

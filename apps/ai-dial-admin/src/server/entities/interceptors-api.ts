@@ -17,6 +17,10 @@ export class InterceptorsApi extends BaseApi {
     return this.get(INTERCEPTORS_URL, token);
   }
 
+  getInterceptorsListAction(token: JWT | null): Promise<ServerActionResponse<DialInterceptor[]>> {
+    return this.getAction(INTERCEPTORS_URL, token);
+  }
+
   getInterceptor(name: string, token: JWT | null, eTag: string) {
     return this.getActionWithEtag(INTERCEPTOR_URL(name), eTag, token);
   }
@@ -38,11 +42,11 @@ export class InterceptorsApi extends BaseApi {
     );
   }
 
-  getConfigurationSchema(name: string, token: JWT | null): Promise<RJSFSchema | null> {
-    return this.get(CONFIGURATION_URL(name), token);
+  getConfigurationSchema(name: string, token: JWT | null): Promise<ServerActionResponse<RJSFSchema>> {
+    return this.getAction(CONFIGURATION_URL(name), token);
   }
 
-  getCoreInterceptor(name: string, token: JWT | null) {
+  getCoreInterceptor(name: string, token: JWT | null): Promise<ServerActionResponse<DialInterceptor>> {
     return this.getActionWithEtag(CORE_INTERCEPTOR_URL(name), DEFAULT_ETAG, token);
   }
 

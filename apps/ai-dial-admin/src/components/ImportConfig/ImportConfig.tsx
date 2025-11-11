@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { DialSteps, StepStatus } from '@epam/ai-dial-ui-kit';
 
 import { importJsonConfigs, importZipConfig } from '@/src/app/[lang]/import-config/actions';
@@ -13,6 +13,7 @@ import { useI18n } from '@/src/locales/client';
 import { isLargeFile } from '@/src/components/EntityListView/Import/import';
 import Files from './Files/Files';
 import ConfigurationPreview from './ConfigurationPreview/ConfigurationPreview';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 const ImportConfig: FC = () => {
   const t = useI18n() as (stringToTranslate: string) => string;
@@ -21,12 +22,16 @@ const ImportConfig: FC = () => {
   const [importBody, setImportBody] = useState<FormData>(new FormData());
   const [files, setFiles] = useState<File[]>([]);
   const [fileType, setFileType] = useState(ImportFileType.ARCHIVE);
+  const getReqRef = useRef(useProtectedRequest());
 
   const [steps, setSteps] = useState(IMPORT_CONFIG_STEPS(t));
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
 
   const onImportFile = useCallback(() => {
-    (fileType == ImportFileType.ARCHIVE ? importZipConfig(importBody) : importJsonConfigs(importBody)).then((res) => {
+    (fileType == ImportFileType.ARCHIVE
+      ? getReqRef.current(importZipConfig, importBody)
+      : getReqRef.current(importJsonConfigs, importBody)
+    ).then((res) => {
       if (res.success) {
         showNotification(
           getSuccessNotification(t(ImportI18nKey.ConfigImported), t(ImportI18nKey.ConfigImportedDescription)),

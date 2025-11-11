@@ -11,6 +11,7 @@ import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns
 import { useNotification } from '@/src/context/NotificationContext';
 import { DialTokenizer } from '@/src/models/dial/model';
 import { getErrorNotification } from '@/src/utils/notification';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   selectedModel?: string;
@@ -21,15 +22,15 @@ const TokenizedModelsGrid: FC<Props> = ({ onSelectModelId, selectedModel }) => {
   const [data, setData] = useState<DialTokenizer[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { showNotification } = useNotification();
-  const showNotificationRef = useRef(showNotification);
+  const getReqRef = useRef(useProtectedRequest());
+  const showNotificationRef = useRef(useNotification().showNotification);
 
   useEffect(() => {
     setIsLoading(true);
 
-    getModelsTokenizers().then((res) => {
+    getReqRef.current(getModelsTokenizers).then((res) => {
       if (res.success) {
-        setData((res.response as DialTokenizer[]) || []);
+        setData(res.response || []);
         setIsLoading(false);
       } else {
         showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage));

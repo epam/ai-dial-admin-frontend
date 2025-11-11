@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import { EntitiesI18nKey } from '@/src/constants/i18n';
@@ -7,6 +7,7 @@ import { useI18n } from '@/src/locales/client';
 
 import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer';
 import { RJSFSchema } from '@rjsf/utils';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   schemaURL?: string;
@@ -17,6 +18,7 @@ interface Props {
 
 const ParameterSchema: FC<Props> = ({ schemaURL, name, configuration, onChangeConfiguration }) => {
   const t = useI18n();
+  const getReqRef = useRef(useProtectedRequest());
   const [schema, setSchema] = useState<RJSFSchema | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -24,7 +26,7 @@ const ParameterSchema: FC<Props> = ({ schemaURL, name, configuration, onChangeCo
     if (schemaURL) {
       const fetchSchema = async () => {
         setIsLoading(true);
-        const schema = await getConfigurationSchema(name);
+        const schema = (await getReqRef.current(getConfigurationSchema, name)).response;
         if (schema) {
           setIsLoading(false);
           setSchema(schema);

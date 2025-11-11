@@ -99,7 +99,7 @@ export const getNoRelatedText = (view: ApplicationRoute, t: (str: string) => str
 
 const getRelatedApplications = (entity: { applications?: string[] }) => {
   return getApplications().then((res) => {
-    return res?.reduce((acc, curr) => {
+    return res.response?.reduce((acc, curr) => {
       if (entity.applications?.includes(curr.name as string)) {
         acc.push(curr);
       }
@@ -110,7 +110,7 @@ const getRelatedApplications = (entity: { applications?: string[] }) => {
 
 const getRelatedModels = (entity: { models?: string[] }) => {
   return getModels().then((res) => {
-    return res?.reduce((acc, curr) => {
+    return res.response?.reduce((acc, curr) => {
       if (entity.models?.includes(curr.name as string)) {
         acc.push(curr);
       }
@@ -121,7 +121,7 @@ const getRelatedModels = (entity: { models?: string[] }) => {
 
 const getRelatedInterceptors = (entity: { interceptors?: string[] }) => {
   return getInterceptorsList().then((res) => {
-    return res?.reduce((acc, curr) => {
+    return res?.response?.reduce((acc, curr) => {
       if (entity.interceptors?.includes(curr.name as string)) {
         acc.push(curr);
       }
