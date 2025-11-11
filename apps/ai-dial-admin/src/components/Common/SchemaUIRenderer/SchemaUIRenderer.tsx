@@ -38,6 +38,7 @@ const SchemaUiRenderer: FC<Props> = ({ schema, data, onChangeConfiguration, onGe
       onSubmit={onSubmit}
       showErrorList={false}
       readonly={readonly}
+      noValidate={true}
     >
       <></>
     </SchemaForm>
