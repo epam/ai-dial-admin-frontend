@@ -1,6 +1,6 @@
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import DuplicateScheme from '../DuplicateAppRunner';
 
 const baseEntity = {
@@ -9,7 +9,7 @@ const baseEntity = {
 };
 
 describe('DuplicateScheme', () => {
-  it('renders and calls onDuplicate on submit', () => {
+  test('renders and calls onDuplicate on submit', () => {
     const onDuplicate = vi.fn();
     const onClose = vi.fn();
     render(
@@ -21,7 +21,7 @@ describe('DuplicateScheme', () => {
     expect(onDuplicate).toHaveBeenCalledWith({ $id: 'new-id', 'dial:applicationTypeDisplayName': 'New Name' });
   });
 
-  it('calls onClose on cancel', () => {
+  test('calls onClose on cancel', () => {
     const onDuplicate = vi.fn();
     const onClose = vi.fn();
     render(

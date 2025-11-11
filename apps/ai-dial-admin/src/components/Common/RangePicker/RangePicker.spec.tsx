@@ -1,6 +1,6 @@
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, test, vi } from 'vitest';
 import RangePicker from './RangePicker';
 
 const getDate = (year: number, month: number, day: number, h = 0, m = 0, s = 0) => {
@@ -8,14 +8,14 @@ const getDate = (year: number, month: number, day: number, h = 0, m = 0, s = 0) 
 };
 
 describe('RangePicker', () => {
-  it('renders start and end date pickers and button', () => {
+  test('renders start and end date pickers and button', () => {
     render(<RangePicker timeRange={null} onChange={vi.fn()} />);
     expect(screen.getByLabelText(BasicI18nKey.From)).toBeInTheDocument();
     expect(screen.getByLabelText(BasicI18nKey.To)).toBeInTheDocument();
     expect(screen.getByText(ButtonsI18nKey.Apply)).toBeInTheDocument();
   });
 
-  it('calls onChange with correct range when button is clicked', () => {
+  test('calls onChange with correct range when button is clicked', () => {
     const onChange = vi.fn();
     const start = getDate(2023, 1, 1);
     const end = getDate(2023, 1, 2);
