@@ -9,11 +9,14 @@ import {
   colorSchemeDark,
   ColumnApiModule,
   ColumnAutoSizeModule,
+  ColumnState,
+  EventApiModule,
   GridApi,
   GridOptions,
   GridReadyEvent,
   GridSizeChangedEvent,
   GridStateModule,
+  InfiniteRowModelModule,
   ITextFilterParams,
   ITooltipParams,
   ModuleRegistry,
@@ -24,19 +27,16 @@ import {
   RowSelectionModule,
   RowStyleModule,
   TextFilterModule,
-  InfiniteRowModelModule,
   themeBalham,
   TooltipModule,
-  ColumnState,
-  EventApiModule,
 } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { baseColumnComparator } from './comparators/base-column-comparator';
-import { getColumnsStateFromStorage, GridModel, saveColumnsStateToStorage } from './grid-columns';
-import { getRowHeight } from './grid-rows';
+import { ROW_HEIGHT } from './constants';
 import FloatingFilter from './FloatingFilter/FloatingFilter';
+import { getColumnsStateFromStorage, GridModel, saveColumnsStateToStorage } from './grid-columns';
 
 interface Props<T> {
   columnDefs?: ColDef[];
@@ -92,7 +92,6 @@ const Grid = <T extends object>({
   storageKey,
   onGridReady: gridReadyCb,
 }: Props<T>) => {
-  const [rowHeight, setRowHeight] = useState(getRowHeight());
   const [gridApi, setGridApi] = useState<GridApi>();
 
   const onStateChanged = useCallback(
@@ -110,13 +109,10 @@ const Grid = <T extends object>({
     [storageKey],
   );
 
-  const onGridSizeChanged = useCallback(
-    (e: GridSizeChangedEvent) => {
-      e.api.sizeColumnsToFit();
-      setRowHeight(getRowHeight());
-    },
-    [setRowHeight],
-  );
+  const onGridSizeChanged = useCallback((e: GridSizeChangedEvent) => {
+    e.api.sizeColumnsToFit();
+    e.api.refreshHeader();
+  }, []);
 
   const setGridColumnsState = (e: GridReadyEvent, defaultSorts: ColumnState[]) => {
     if (storageKey) {
@@ -132,6 +128,8 @@ const Grid = <T extends object>({
     setGridApi(e.api);
     gridReadyCb?.(e.api);
     e.api.sizeColumnsToFit();
+    e.api.refreshHeader();
+
     const defaultSorts =
       columnDefs
         ?.filter((col) => col.sort)
@@ -168,7 +166,7 @@ const Grid = <T extends object>({
       <AgGridReact
         rowModelType="clientSide"
         headerHeight={30}
-        rowHeight={rowHeight}
+        rowHeight={ROW_HEIGHT}
         cellSelection={false}
         theme={themeBalham.withPart(colorSchemeDark).withParams({ ...GRID_THEME_COLORS })}
         autoSizeStrategy={{ type: 'fitGridWidth' }}
