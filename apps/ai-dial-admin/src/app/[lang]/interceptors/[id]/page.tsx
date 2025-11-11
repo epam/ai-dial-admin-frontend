@@ -42,10 +42,11 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     });
 
     if (interceptor?.source?.$type === SOURCE_TYPE.RUNNER) {
-      interceptorTemplate = await getInterceptorTemplate(interceptor.source?.runnerName as string, etag).then((res) => {
-        etag = res?.etag || DEFAULT_ETAG;
-        return res?.response as InterceptorTemplate | null;
-      });
+      interceptorTemplate = await getInterceptorTemplate(interceptor.source?.runnerName as string, DEFAULT_ETAG).then(
+        (res) => {
+          return res?.response as InterceptorTemplate | null;
+        },
+      );
     }
 
     if (interceptors === void 0 || models === void 0 || applications === void 0 || interceptor === void 0) {
