@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { ErrorType } from '@/src/types/error-type';
-import { getErrorForPath } from '../path-error';
+import { getErrorForPath, isValidPaths } from '../path-error';
 
 describe('Utils :: validations :: getErrorForPath', () => {
   const mockT = vi.fn().mockReturnValue('Translated Text');
@@ -57,5 +57,20 @@ describe('Utils :: validations :: getErrorForPath', () => {
     const validPath = '/valid-path_123';
     const res = getErrorForPath(validPath);
     expect(res).toBeNull();
+  });
+});
+
+describe('isValidPaths', () => {
+  test('should return false for empty array', () => {
+    expect(isValidPaths([])).toBe(false);
+  });
+
+  test('should return false if all paths are valid', () => {
+    expect(isValidPaths(['validPath'])).toBe(false);
+  });
+
+  test('should return true if any path is invalid', () => {
+    expect(isValidPaths([''])).toBe(true);
+    expect(isValidPaths(['validPath', ''])).toBe(true);
   });
 });

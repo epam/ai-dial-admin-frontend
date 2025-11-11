@@ -1,5 +1,6 @@
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { ErrorType } from '@/src/types/error-type';
+import { describe, it, expect } from 'vitest';
 
 // todo when correct regexp will be found return all validation
 // const PATH_REGEX = /^\/(?=.{1,})([a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*\/?)?$/;
@@ -11,7 +12,6 @@ export const isValidRoutePath = (_path: string): boolean => {
 
 export const isValidPaths = (paths: string[]): boolean => {
   const validPaths = paths.filter((path) => !!getErrorForPath(path));
-
   return !(validPaths.length === 0);
 };
 
