@@ -34,7 +34,7 @@ const PublicationProperties: FC<Props> = ({ view, publication, applicationScheme
   if (view === ApplicationRoute.ApplicationPublications) {
     return (
       <BasePublicationProperties view={view} publication={publication} applicationSchemes={applicationSchemes || []}>
-        <ApplicationProperties publication={publication} />
+        <ApplicationProperties publication={publication} applicationSchemes={applicationSchemes || []} />
       </BasePublicationProperties>
     );
   }
