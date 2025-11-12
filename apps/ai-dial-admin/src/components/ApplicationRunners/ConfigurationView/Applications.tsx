@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { getApplications } from '@/src/app/[lang]/applications/actions';
 import AddEntitiesView from '@/src/components/AddEntitiesTab/AddEntitiesView';
@@ -8,6 +8,7 @@ import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   appRunner: DialApplicationScheme;
@@ -16,12 +17,14 @@ interface Props {
 
 const AppRunnerApplications: FC<Props> = ({ appRunner, onChangeAppRunner }) => {
   const t = useI18n();
-
+  const getReqRef = useRef(useProtectedRequest());
   const [applications, setApplications] = useState<DialApplication[]>([]);
 
   useEffect(() => {
-    getApplications().then((res) => {
-      setApplications(res || []);
+    getReqRef.current(getApplications).then((res) => {
+      if (res.success) {
+        setApplications(res.response || []);
+      }
     });
   }, [appRunner]);
 

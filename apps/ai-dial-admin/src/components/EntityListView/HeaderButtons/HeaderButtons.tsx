@@ -1,6 +1,6 @@
 'use client';
 
-import { Dispatch, MouseEvent, SetStateAction, useCallback, useState } from 'react';
+import { Dispatch, MouseEvent, SetStateAction, useCallback, useRef, useState } from 'react';
 
 import { IconColumns2, IconFileArrowLeft, IconPlus, IconSquareCheck } from '@tabler/icons-react';
 import { GridApi } from 'ag-grid-community';
@@ -37,6 +37,7 @@ import { getFormDataForImport } from './utils';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { isAssetView } from '@/src/utils/is-asset-view';
 import { MAX_FILE_SIZE_MB } from '@/src/constants/file';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props<T> {
   names?: string[];
@@ -69,6 +70,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
 }: Props<T>) => {
   const t = useI18n() as (t: string, options?: Record<string, string | number>) => string;
   const { showNotification, removeNotification } = useNotification();
+  const getReqRef = useRef(useProtectedRequest());
 
   const folderContext = context?.();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -120,7 +122,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
           ),
         );
       } else {
-        importFunction(body, fileType).then((res) => {
+        getReqRef.current(importFunction, body, fileType).then((res) => {
           removeNotification(prepareNotificationId);
           if (res.success) {
             const error = (res.response as { error: string })?.error;

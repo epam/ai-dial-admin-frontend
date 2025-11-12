@@ -9,7 +9,6 @@ import { AppProcessStatus } from '@/src/models/app-process-status';
 
 export const VERSION_URL = `${API}/version`;
 const CONFIG_URL = `${API}/configs`;
-export const RELOAD_CONFIG_URL = `${CONFIG_URL}/reload`;
 export const IMPORT_CONFIG_URL = `${CONFIG_URL}/import`;
 export const PREVIEW_IMPORT_CONFIG_URL = `${IMPORT_CONFIG_URL}/preview`;
 export const IMPORT_ZIP_CONFIG_URL = `${IMPORT_CONFIG_URL}/zip`;
@@ -22,10 +21,6 @@ export const DEPLOYMENT_URL = (name: string) => `${API}/deployments/${name}`;
 export class UtilityApi extends BaseApi {
   getBeVersion(token: JWT | null): Promise<string | null> {
     return this.get(VERSION_URL, token, { Accept: 'text/plain' }).catch(() => null) as Promise<string | null>;
-  }
-
-  reloadConfig(token: JWT | null): Promise<ServerActionResponse> {
-    return this.getAction(RELOAD_CONFIG_URL, token);
   }
 
   importJsonConfigs(url: string, token: JWT | null, file: FormData): Promise<ServerActionResponse> {
@@ -56,7 +51,7 @@ export class UtilityApi extends BaseApi {
     return this.head(DEPLOYMENT_URL(name), token);
   }
 
-  getAppProcessStatus(token: JWT | null): Promise<AppProcessStatus | null> {
-    return this.get(`${EXPORT_CONFIG_URL}/status`, token);
+  getAppProcessStatus(token: JWT | null): Promise<ServerActionResponse<AppProcessStatus>> {
+    return this.getAction(`${EXPORT_CONFIG_URL}/status`, token);
   }
 }

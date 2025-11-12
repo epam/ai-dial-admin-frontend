@@ -40,8 +40,8 @@ export class FoldersApi extends BaseApi {
     );
   }
 
-  getRules(token: JWT | null, path: string): Promise<Record<string, DialRule[]> | null> {
-    return this.get(`${FOLDERS_URL}?path=${path}`, token);
+  getRules(token: JWT | null, path: string): Promise<ServerActionResponse<Record<string, DialRule[]>>> {
+    return this.getAction(`${FOLDERS_URL}?path=${path}`, token);
   }
 
   updateRules(token: JWT | null, targetFolder: string, rules: DialRule[]): Promise<ServerActionResponse> {

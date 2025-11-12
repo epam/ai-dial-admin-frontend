@@ -15,6 +15,10 @@ export class ApplicationsApi extends BaseApi {
     return this.get(APPLICATIONS_URL, token);
   }
 
+  getApplicationsListAction(token: JWT | null): Promise<ServerActionResponse<DialApplication[]>> {
+    return this.getAction(APPLICATIONS_URL, token);
+  }
+
   getApplication(name: string, token: JWT | null, eTag: string) {
     return this.getActionWithEtag(APPLICATION_URL(name), eTag || DEFAULT_ETAG, token);
   }

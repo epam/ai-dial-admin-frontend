@@ -24,8 +24,8 @@ import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
 interface Props<T> {
   entity: T;
   onChange: (entity: T) => void;
-  getContainers: () => Promise<Container[] | null>;
-  getRunners?: () => Promise<InterceptorTemplate[] | null>;
+  getContainers: () => Promise<ServerActionResponse<Container[]>>;
+  getRunners?: () => Promise<ServerActionResponse<InterceptorTemplate[]>>;
   getAdapters?: () => Promise<ServerActionResponse | null>;
   sourceItems: SelectOption[];
   elementId: string;

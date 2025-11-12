@@ -34,7 +34,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     if (auditViewId === SYSTEM_ROLLBACK_ID) {
       return <SystemRollback />;
     }
-    activity = await activityAuditApi.getActivityById(auditViewId, token);
+    activity = (await activityAuditApi.getActivityById(auditViewId, token)).response as DialActivity;
     if (activity === void 0) {
       return <Page403 />;
     }

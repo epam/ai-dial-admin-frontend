@@ -58,6 +58,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
   // initial validation (disable save when no values entered yet)
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!clonedEntity.name });
+    dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!clonedEntity.displayName });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -80,7 +81,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
       open={isModalOpen}
       onSubmit={onDuplicateClick}
       onCancel={onClose}
-      disableSubmitButton={(isUniqueNameError != null && !isUniqueNameError) || !isValid}
+      disableSubmitButton={(isUniqueNameError != null && isUniqueNameError) || !isValid}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Duplicate)}
     >

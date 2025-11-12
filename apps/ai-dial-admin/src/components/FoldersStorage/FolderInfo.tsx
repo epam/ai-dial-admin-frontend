@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import classNames from 'classnames';
 import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
@@ -13,6 +13,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialRule } from '@/src/models/dial/rule';
 import FolderInfoHeader from './FolderInfoHeader';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   isReadonly?: boolean;
@@ -25,9 +26,10 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
   const [editableRules, setEditableRules] = useState(fetchedFoldersRule?.[filePath]);
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const [isSaveDisable, setIsSaveDisable] = useState<boolean>(false);
+  const getReqRef = useRef(useProtectedRequest());
 
   const onSave = useCallback(() => {
-    updateRules(filePath, editableRules?.[filePath] as DialRule[]).then((data) => {
+    getReqRef.current(updateRules, filePath, editableRules?.[filePath] as DialRule[]).then((data) => {
       if (data.success) {
         fetchRules?.(filePath);
         setOriginalRules(editableRules);

@@ -10,12 +10,12 @@ import { SaveValidationContextProvider } from '@/src/context/SaveValidationConte
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { getInterceptorsList } from '@/src/app/[lang]/interceptors/actions';
 import { filterNames } from '@/src/utils/entities/filter-names';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
+import { interceptorsApi } from '@/src/app/api/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,7 +33,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   let interceptors: DialInterceptor[] | null = null;
 
   try {
-    interceptors = await getInterceptorsList();
+    interceptors = await interceptorsApi.getInterceptorsList(token);
     interceptorTemplate = await getInterceptorTemplate((await params.params).id, etag).then((res) => {
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as InterceptorTemplate | null;

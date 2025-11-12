@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { ButtonVariant, DialButton, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
@@ -32,6 +32,7 @@ import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getAdapterTabs } from '@/src/utils/tabs/utils';
 import AdapterProperties from './AdapterProperties';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   etag: string;
@@ -44,6 +45,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
+  const getReqRef = useRef(useProtectedRequest());
 
   const tabs: TabModel[] = getAdapterTabs(t);
 
@@ -97,7 +99,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   }, [setJsonEditorEnabled]);
 
   const onSave = useCallback(() => {
-    updateAdapter(selectedAdapter, etag).then((res) => {
+    getReqRef.current(updateAdapter, selectedAdapter, etag).then((res) => {
       if (res.success) {
         showNotification(
           getSuccessNotification(

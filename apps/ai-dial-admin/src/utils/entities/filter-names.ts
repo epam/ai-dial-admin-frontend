@@ -21,13 +21,14 @@ export const getNamesConfigurations = (namesWithVersions: string[]) => {
   };
 };
 
-export const filterDisplayNamesWithVersions = (
-  entities?: DialModel[] | null,
-  currentDisplayName?: string,
-): string[] => {
+export const filterDisplayNamesWithVersions = (entities?: DialModel[] | null, currentModel?: DialModel): string[] => {
   return (
     (entities?.reduce((acc, curr) => {
-      if (curr.displayName != null && curr.displayName !== currentDisplayName) {
+      if (
+        curr.displayName != null &&
+        curr.displayName !== currentModel?.displayName &&
+        curr.displayVersion !== currentModel?.displayVersion
+      ) {
         acc.push(`${curr.displayName}___${curr.displayVersion}`);
       }
       return acc;

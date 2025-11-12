@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { ButtonVariant, DialButton, DialConfirmationPopup, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
@@ -33,6 +33,7 @@ import { EntityViewTab, getKeyTabs } from '@/src/utils/tabs/utils';
 import KeyRotateModal from '../Modals/KeyRotateModal';
 import KeyViewHeader from './Header/Header';
 import KeyProperties from './Properties/Properties';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   originalKey: DialKey;
@@ -46,6 +47,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
   const t = useI18n() as (str: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
+  const getReqRef = useRef(useProtectedRequest());
   const { dispatch } = useSaveValidationContext();
   const tabs: TabModel[] = getKeyTabs(t);
 
@@ -67,8 +69,8 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
   useEffect(() => {
     const name = originalKey?.name;
     if (!coreKey && name) {
-      getCoreKey(name).then((data) => {
-        setCoreKey(data.response as DialKey);
+      getReqRef.current(getCoreKey, name).then((data) => {
+        setCoreKey(data.response);
       });
     }
   }, [coreKey, originalKey]);
@@ -143,8 +145,8 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
     setIsOpenConfirmModal(false);
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreKey(selectedKey as Record<string, unknown>, originalKey.name || '', etag)
-        : updateKey(selectedKey, etag);
+        ? getReqRef.current(updateCoreKey, selectedKey as Record<string, unknown>, originalKey.name || '', etag)
+        : getReqRef.current(updateKey, selectedKey, etag);
 
     req.then((res) => {
       if (res.success) {
@@ -165,7 +167,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
   const onRotateKey = useCallback(
     (key: DialKey) => {
       setIsRotateModalOpen(false);
-      updateKey(key, etag).then((res) => {
+      getReqRef.current(updateKey, key, etag).then((res) => {
         if (res.success) {
           router.refresh();
           showNotification(

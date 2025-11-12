@@ -84,7 +84,7 @@ export const mergeFiles = <T extends DialFile>(
  * @param {Record<string, DialRule[]>} rules - rules map for folder, can include parent rules
  * @returns {Record<string, DialRule[]>} - rules map, including missed parent rules
  */
-export const fillFolderRules = (path: string, rules: Record<string, DialRule[]> | null): Record<string, DialRule[]> => {
+export const fillFolderRules = (path: string, rules?: Record<string, DialRule[]>): Record<string, DialRule[]> => {
   const parentFolders = path.split('/').filter(Boolean);
   const result: Record<string, DialRule[]> = { ...(rules || {}) };
 

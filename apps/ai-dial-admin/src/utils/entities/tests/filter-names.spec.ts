@@ -1,15 +1,46 @@
 import { describe, test, expect } from 'vitest';
-import { filterDisplayNames, filterDisplayNamesWithVersions, filterNames } from '../filter-names';
+import {
+  filterDisplayNames,
+  filterDisplayNamesWithVersions,
+  filterNames,
+  getNamesConfigurations,
+} from '../filter-names';
+
+describe('getNamesConfigurations', () => {
+  test('should split names and versions correctly', () => {
+    const input = ['ModelA___v1', 'ModelB___v2', 'ModelA___v2', 'ModelC___'];
+    const result = getNamesConfigurations(input);
+    expect(result.names).toEqual(['ModelA', 'ModelB', 'ModelA', 'ModelC']);
+    expect(result.versionsMap).toEqual({
+      ModelA: ['v1', 'v2'],
+      ModelB: ['v2'],
+    });
+  });
+
+  test('should handle empty input', () => {
+    const result = getNamesConfigurations([]);
+    expect(result.names).toEqual([]);
+    expect(result.versionsMap).toEqual({});
+  });
+
+  test('should handle names without versions', () => {
+    const input = ['ModelA___', 'ModelB___'];
+    const result = getNamesConfigurations(input);
+    expect(result.names).toEqual(['ModelA', 'ModelB']);
+    expect(result.versionsMap).toEqual({});
+  });
+});
 
 describe('filterDisplayNamesWithVersions', () => {
   test('returns display names from entities', () => {
     const entities = [
       { displayName: 'Entity1', displayVersion: '1.0.0' },
       { displayName: 'Entity2', displayVersion: '2.0.0' },
+      { displayName: 'Entity3' },
       { displayName: null },
       {},
     ];
-    expect(filterDisplayNamesWithVersions(entities)).toEqual(['Entity1___1.0.0', 'Entity2___2.0.0']);
+    expect(filterDisplayNamesWithVersions(entities, { displayName: 'Entity2' })).toEqual(['Entity1___1.0.0']);
   });
 
   test('returns empty array if entities is undefined', () => {

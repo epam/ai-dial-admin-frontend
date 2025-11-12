@@ -40,7 +40,7 @@ export const RuleFolderProvider = ({ children, attributes }: { children: ReactNo
     getRules(path).then((rules) => {
       setFetchedFoldersRule((prev) => ({
         ...prev,
-        [path]: fillFolderRules(path, rules) as Record<string, DialRule[]>,
+        [path]: fillFolderRules(path, rules.response) as Record<string, DialRule[]>,
       }));
     });
   };
@@ -76,7 +76,7 @@ export const RuleFolderProvider = ({ children, attributes }: { children: ReactNo
     const processNext = (hasNext: boolean) => {
       if (!pathParts || index >= pathParts.length || !hasNext) {
         getRules(currentPath).then((rules) => {
-          tempRules[currentPath] = fillFolderRules(currentPath, rules) as Record<string, DialRule[]>;
+          tempRules[currentPath] = fillFolderRules(currentPath, rules.response) as Record<string, DialRule[]>;
           const { name, path } = getFolderNameAndPath(currentPath);
           setCurrentFolder(tempFoldersData[addTrailingSlash(path)]?.find((folder) => folder.name === name));
           setFetchedFoldersRule(tempRules);
@@ -94,7 +94,7 @@ export const RuleFolderProvider = ({ children, attributes }: { children: ReactNo
 
       Promise.all([getFolders(currentPath), getRules(currentPath)])
         .then(([folders, rules]) => {
-          tempRules[currentPath] = fillFolderRules(currentPath, rules) as Record<string, DialRule[]>;
+          tempRules[currentPath] = fillFolderRules(currentPath, rules.response) as Record<string, DialRule[]>;
 
           const nextFolderPath = pathParts[index + 1] ? currentPath + pathParts[index + 1] + '/' : void 0;
 
@@ -132,7 +132,7 @@ export const RuleFolderProvider = ({ children, attributes }: { children: ReactNo
     Promise.all([getFolders(path), getRules(path)]).then(([folders, rules]) => {
       setFetchedFoldersRule((prev) => ({
         ...prev,
-        [path]: fillFolderRules(path, rules) as Record<string, DialRule[]>,
+        [path]: fillFolderRules(path, rules.response) as Record<string, DialRule[]>,
       }));
       if (folders && folders.length) {
         const files = folders?.map((f) => ({ ...f, nodeType: DialFileNodeType.FOLDER }));

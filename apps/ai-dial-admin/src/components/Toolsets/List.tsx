@@ -22,6 +22,7 @@ interface Props {
 const ToolsetsList: FC<Props> = ({ data }) => {
   const t = useI18n() as (key: string) => string;
   const names = filterDisplayNames(data);
+
   return (
     <BaseEntityList
       baseColumns={[

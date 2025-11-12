@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { ButtonVariant, DialButtonDropdown, DialTabs, DropdownItem, TabModel } from '@epam/ai-dial-ui-kit';
@@ -45,6 +45,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { EntityViewTab, getAppRunnerTabs } from '@/src/utils/tabs/utils';
 import AppRunnerApplications from './ConfigurationView/Applications';
 import SchemeProperties from './ConfigurationView/Properties';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   etag: string;
@@ -59,6 +60,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
+  const getReqRef = useRef(useProtectedRequest());
 
   const tabs: TabModel[] = getAppRunnerTabs(t);
 
@@ -84,8 +86,8 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
   useEffect(() => {
     const name = originalScheme?.$id;
     if (!coreRunner && name) {
-      getCoreRunner(name).then((data) => {
-        setCoreRunner(data.response as DialApplicationScheme);
+      getReqRef.current(getCoreRunner, name).then((data) => {
+        setCoreRunner(data.response);
       });
     }
   }, [coreRunner, originalScheme]);
@@ -145,8 +147,8 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreRunner(selectedRunner as Record<string, unknown>, originalScheme.$id || '', etag)
-        : updateApplicationScheme(selectedRunner, etag);
+        ? getReqRef.current(updateCoreRunner, selectedRunner as Record<string, unknown>, originalScheme.$id || '', etag)
+        : getReqRef.current(updateApplicationScheme, selectedRunner, etag);
 
     req.then((res) => {
       if (res.success) {

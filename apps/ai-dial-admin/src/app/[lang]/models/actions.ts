@@ -13,7 +13,7 @@ import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 
 export async function getModels() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return modelsApi.getModelsList(token);
+  return modelsApi.getModelsListAction(token);
 }
 
 export async function getModelsTopics() {

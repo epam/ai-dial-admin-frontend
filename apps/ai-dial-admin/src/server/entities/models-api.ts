@@ -1,6 +1,6 @@
 import { JWT } from 'next-auth/jwt';
 
-import { DialModel } from '@/src/models/dial/model';
+import { DialModel, DialTokenizer } from '@/src/models/dial/model';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
 import { BaseApi } from '@/src/server/base-api';
@@ -17,11 +17,15 @@ export class ModelsApi extends BaseApi {
     return this.get(MODELS_URL, token);
   }
 
+  getModelsListAction(token: JWT | null): Promise<ServerActionResponse<DialModel[]>> {
+    return this.getAction(MODELS_URL, token);
+  }
+
   getModelsTopics(token: JWT | null): Promise<ServerActionResponse> {
     return this.getAction(MODELS_TOPICS, token);
   }
 
-  getModelsTokenizers(token: JWT | null): Promise<ServerActionResponse> {
+  getModelsTokenizers(token: JWT | null): Promise<ServerActionResponse<DialTokenizer[]>> {
     return this.getAction(MODELS_TOKENIZERS, token);
   }
 

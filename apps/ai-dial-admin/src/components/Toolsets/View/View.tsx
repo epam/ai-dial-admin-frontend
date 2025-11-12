@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
@@ -17,6 +17,7 @@ import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
 import ToolsView from '@/src/components/Toolsets/Tools/Tools';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
@@ -41,6 +42,7 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
+  const getReqRef = useRef(useProtectedRequest());
 
   const tabs: TabModel[] = getToolsetTabs(t);
 
@@ -61,8 +63,8 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   useEffect(() => {
     const name = originalToolset?.name;
     if (!coreToolset && name) {
-      getCoreToolset(name).then((data) => {
-        setCoreToolset(data.response as Toolset);
+      getReqRef.current(getCoreToolset, name).then((data) => {
+        setCoreToolset(data.response);
       });
     }
   }, [coreToolset, originalToolset]);
@@ -116,8 +118,13 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreToolset(selectedToolset as Record<string, unknown>, originalToolset.name || '', etag)
-        : updateToolset(selectedToolset, etag);
+        ? getReqRef.current(
+            updateCoreToolset,
+            selectedToolset as Record<string, unknown>,
+            originalToolset.name || '',
+            etag,
+          )
+        : getReqRef.current(updateToolset, selectedToolset, etag);
 
     req.then((res) => {
       if (res.success) {

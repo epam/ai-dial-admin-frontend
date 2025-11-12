@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
@@ -20,6 +20,7 @@ import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -38,6 +39,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
+  const getReqRef = useRef(useProtectedRequest());
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isChanged, setIsChanged] = useState(false);
@@ -64,7 +66,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
   );
 
   const onSave = useCallback(() => {
-    updateInterceptorTemplate(selectedTemplate, etag).then((res) => {
+    getReqRef.current(updateInterceptorTemplate, selectedTemplate, etag).then((res) => {
       if (res.success) {
         showNotification(
           getSuccessNotification(

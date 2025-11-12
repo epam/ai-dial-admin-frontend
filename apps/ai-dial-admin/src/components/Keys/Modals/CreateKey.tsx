@@ -1,6 +1,6 @@
 import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { createKey } from '@/src/app/[lang]/keys/actions';
 import KeyProperties from '@/src/components/Keys/View/Properties/Properties';
@@ -13,6 +13,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   isModalOpen: boolean;
@@ -24,6 +25,7 @@ interface Props {
 const CreateKey: FC<Props> = ({ isModalOpen, names, keys, onClose }) => {
   const t = useI18n() as (t: string) => string;
   const router = useRouter();
+  const getReqRef = useRef(useProtectedRequest());
 
   const { showNotification } = useNotification();
   const { isValid, dispatch } = useSaveValidationContext();
@@ -48,7 +50,7 @@ const CreateKey: FC<Props> = ({ isModalOpen, names, keys, onClose }) => {
   );
 
   const onCreate = useCallback(() => {
-    createKey(currentKey).then((res) => {
+    getReqRef.current(createKey, currentKey).then((res) => {
       if (res.success) {
         showNotification(
           getSuccessNotification(

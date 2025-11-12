@@ -31,6 +31,7 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import BulkButtons from './BulkButtons';
 import Modals, { ModalType } from './Modals';
 import { preparePathForAsset } from './utils';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props<T> {
   names?: string[];
@@ -75,6 +76,7 @@ const Actions = <T extends object>({
   const router = useRouter();
   const { showNotification } = useNotification();
   const folderContext = context?.();
+  const getReqRef = useRef(useProtectedRequest());
 
   const entityRef = useRef(currentEntity);
   const filesRef = useRef(folderContext?.fetchedFoldersData);
@@ -99,7 +101,7 @@ const Actions = <T extends object>({
     (clonedEntity: T) => {
       const duplicate = async () => {
         const preparedEntity = preparePathForAsset(clonedEntity, route);
-        const res = await createEntity?.(preparedEntity as T);
+        const res = await getReqRef.current(createEntity, preparedEntity as T);
         if (res?.success) {
           handleModalClose();
           setCurrentEntity(void 0);
@@ -143,7 +145,7 @@ const Actions = <T extends object>({
   );
 
   const onDeleteBulk = useCallback(() => {
-    bulkDelete?.(getListOfPathsToBulkDelete(folderContext?.bulkSelectedData)).then((res) => {
+    getReqRef.current(bulkDelete, getListOfPathsToBulkDelete(folderContext?.bulkSelectedData)).then((res) => {
       if (res.success) {
         showNotification(getSuccessNotification(getBulkNotificationTitle(route, t), t(DeleteI18nKey.ShortDescription)));
         setIsBulkView(false);

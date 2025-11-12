@@ -1,7 +1,7 @@
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import BasePublicationProperties from '../Properties';
 
 const basePublication = {
@@ -11,6 +11,11 @@ const basePublication = {
   folderId: 'folder',
   rules: [],
 };
+vi.mock('next-auth/react', () => ({
+  useSession: vi.fn(() => {
+    return { session: { providerId: 'provider' } };
+  }),
+}));
 
 describe('BasePublicationProperties', () => {
   test('renders all main fields', () => {

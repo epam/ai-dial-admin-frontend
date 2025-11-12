@@ -31,7 +31,7 @@ export class RolesApi extends BaseApi {
     return this.putActionWithEtag(ROLE_URL(encodeURIComponent(role.name || '')), role, token, eTag);
   }
 
-  getCoreRole(name: string, token: JWT | null) {
+  getCoreRole(name: string, token: JWT | null): Promise<ServerActionResponse<DialRole>> {
     return this.getActionWithEtag(CORE_ROLE_URL(name), DEFAULT_ETAG, token);
   }
 

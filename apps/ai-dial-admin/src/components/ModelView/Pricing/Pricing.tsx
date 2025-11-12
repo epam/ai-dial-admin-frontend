@@ -6,7 +6,7 @@ import { BasicI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModel, PricingType } from '@/src/models/dial/model';
 import classNames from 'classnames';
-import { getMultipliedValue } from './utils';
+import { getMultipliedValue, getPriceRealValue } from './utils';
 
 interface Props {
   model: DialModel;
@@ -55,7 +55,7 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
 
   const onChangeCompletion = useCallback(
     (completion?: number | string) => {
-      const value = completion ? (isTokenType ? +completion / 1000000 : completion).toString() : void 0;
+      const value = getPriceRealValue(completion, isTokenType);
       onChangeModel({ ...model, pricing: { ...model.pricing, completion: value } });
     },
     [isTokenType, onChangeModel, model],
@@ -63,7 +63,7 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
 
   const onChangePrompt = useCallback(
     (prompt?: number | string) => {
-      const value = prompt ? (isTokenType ? +prompt / 1000000 : prompt).toString() : void 0;
+      const value = getPriceRealValue(prompt, isTokenType);
       onChangeModel({ ...model, pricing: { ...model.pricing, prompt: value } });
     },
     [isTokenType, onChangeModel, model],
