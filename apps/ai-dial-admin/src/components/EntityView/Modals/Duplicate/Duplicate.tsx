@@ -18,8 +18,8 @@ import {
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { RoutesForCheckingUniqueName } from '@/src/components/EntityListView/CreateEntity/constants';
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
-import { getDisplayNameError, getVersionError } from '../../../EntityMainProperties/Properties/utils';
-import { getNamesConfigurations } from '../../../../utils/entities/filter-names';
+import { getDisplayNameError, getVersionError } from '@/src/components/EntityMainProperties/Properties/utils';
+import { getNamesConfigurations } from '@/src/utils/entities/filter-names';
 
 type ClonedEntity = BaseEntity | DialModel;
 interface Props {
@@ -47,6 +47,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
   }, [names]);
 
   const [displayNameError, setDisplayNameError] = useState<string | undefined>(void 0);
+
   const isVersionOptional = useMemo(() => {
     return !namesConfiguration.names.includes(clonedEntity.displayName as string);
   }, [clonedEntity.displayName, namesConfiguration.names]);
