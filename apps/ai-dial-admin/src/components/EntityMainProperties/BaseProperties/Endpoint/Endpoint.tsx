@@ -5,7 +5,7 @@ import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { getUrlError } from '@/src/utils/validation/url-error';
 import { DialTextInputField } from '@epam/ai-dial-ui-kit';
-import ComplexInput from '../../../Common/ComplexInput/ComplexInput';
+import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
 
 export interface EndpointControlProps {
   endpoint?: string | null;
