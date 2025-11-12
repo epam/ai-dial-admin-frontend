@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { IconCaretDownFilled, IconCaretRightFilled } from '@tabler/icons-react';
 import classNames from 'classnames';
@@ -13,6 +13,7 @@ import { BasicI18nKey, ButtonsI18nKey, RollbackI18nKey } from '@/src/constants/i
 import { useI18n } from '@/src/locales/client';
 import { FilterOperatorDto } from '@/src/types/request';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   initialRevisions: ActivityAuditRevision[];
@@ -24,6 +25,7 @@ interface Props {
 
 const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, isModalOpen, onClose, onApply }) => {
   const t = useI18n();
+  const getReqRef = useRef(useProtectedRequest());
 
   const [selectedRevision, setSelectedRevision] = useState<ActivityAuditRevision | undefined>(rollBackRevision);
   const [revisions, setRevisions] = useState<ActivityAuditRevision[]>(initialRevisions);
@@ -47,20 +49,21 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, isMo
     if (startDate && endDate) {
       setSelectedRevision(void 0);
       setIsLoading(true);
-      getRevisions(1000, 0, sorts, [
-        {
-          column: 'timestamp',
-          operator: FilterOperatorDto.GREATER_THEN_OR_EQUAL,
-          value: startDate.getTime(),
-        },
-        {
-          column: 'timestamp',
-          operator: FilterOperatorDto.LESS_THEN_OR_EQUAL,
-          value: endDate.getTime(),
-        },
-      ])
-        .then((revisions) => {
-          setRevisions(revisions || []);
+      getReqRef
+        .current(getRevisions, 1000, 0, sorts, [
+          {
+            column: 'timestamp',
+            operator: FilterOperatorDto.GREATER_THEN_OR_EQUAL,
+            value: startDate.getTime(),
+          },
+          {
+            column: 'timestamp',
+            operator: FilterOperatorDto.LESS_THEN_OR_EQUAL,
+            value: endDate.getTime(),
+          },
+        ])
+        .then((res) => {
+          setRevisions(res.response || []);
         })
         .finally(() => setIsLoading(false));
     }
