@@ -92,7 +92,6 @@ describe('Server :: ApplicationRunnersApi', () => {
     );
   });
 
-
   test('Should calls updateApplicationScheme with correct data', async () => {
     const response = { success: true };
     fetch.mockResponseOnce(JSON.stringify(response));
