@@ -6,7 +6,8 @@ import { DialFile, DialFileNodeType } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
 import { DialRule } from '@/src/models/dial/rule';
 import { fillFolderRules, mergeFiles } from '@/src/utils/files/folder';
-import { addTrailingSlash, getFolderNameAndPath, isFolder } from '@/src/utils/files/path';
+import { addTrailingSlash } from '@/src/utils/url';
+import { getFolderNameAndPath, isFolder } from '@/src/utils/files/path';
 
 export interface RuleFolderContextType {
   fetchFiles: (path: string) => void;

@@ -1,11 +1,12 @@
-import { FC, ReactNode, useCallback, useEffect, useState } from 'react';
+import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
+import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
+import { addTrailingSlash } from '@/src/utils/url';
 import { getUrlError } from '@/src/utils/validation/url-error';
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
-import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
 
 export interface EndpointControlProps {
   endpoint?: string | null;
@@ -27,6 +28,10 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, o
   const t = useI18n() as (t: string) => string;
   const { dispatch, resetCounter } = useSaveValidationContext();
   const [endpointError, setEndpointError] = useState<FieldError | null>(null);
+
+  const fullValue = useMemo(() => {
+    return textBeforeInput ? `${addTrailingSlash(textBeforeInput)}${endpoint}` : endpoint || '';
+  }, [endpoint, textBeforeInput]);
 
   const validateEndpoint = useCallback(
     (value?: string | null) => {
@@ -72,6 +77,7 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, o
       invalid={!!endpointError}
       onChange={onChangeEndpoint}
       copyable={true}
+      fullValue={fullValue}
       {...props}
     />
   ) : (
