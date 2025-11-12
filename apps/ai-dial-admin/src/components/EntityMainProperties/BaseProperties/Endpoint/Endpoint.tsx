@@ -5,6 +5,7 @@ import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { getUrlError } from '@/src/utils/validation/url-error';
 import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+import ComplexInput from '../../../Common/ComplexInput/ComplexInput';
 
 export interface EndpointControlProps {
   endpoint?: string | null;
@@ -61,7 +62,19 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, o
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetCounter, endpoint]);
 
-  return (
+  return textBeforeInput ? (
+    <ComplexInput
+      textBeforeInput={textBeforeInput}
+      elementId={id}
+      value={endpoint || ''}
+      optional={!required}
+      errorText={endpointError?.text}
+      invalid={!!endpointError}
+      onChange={onChangeEndpoint}
+      copyable={true}
+      {...props}
+    />
+  ) : (
     <DialTextInputField
       textBeforeInput={textBeforeInput}
       elementId={id}
