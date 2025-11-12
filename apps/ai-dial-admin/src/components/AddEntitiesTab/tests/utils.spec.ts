@@ -197,7 +197,7 @@ describe('Add Entities tab :: getRelevantAppRunnersForInterceptor ', () => {
 
   test('Should return array with model', () => {
     expect(
-      getRelevantAppRunnersForInterceptor({ applicationRunners: ['applicationRunner', 'applicationRunner1'] }, data),
+      getRelevantAppRunnersForInterceptor({ applicationTypeSchemas: ['applicationRunner', 'applicationRunner1'] }, data),
     ).toEqual([data[4]]);
   });
 });

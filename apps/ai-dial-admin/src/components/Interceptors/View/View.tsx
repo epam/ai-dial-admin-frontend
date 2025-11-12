@@ -162,7 +162,7 @@ const InterceptorView: FC<Props> = ({
       const newRunners = rows.map((row) => row.$id as string);
       onChangeInterceptor({
         ...selectedInterceptor,
-        applicationRunners: [...(selectedInterceptor.applicationRunners || []), ...newRunners],
+        applicationTypeSchemas: [...(selectedInterceptor.applicationTypeSchemas || []), ...newRunners],
       });
     },
     [onChangeInterceptor, selectedInterceptor],
@@ -171,7 +171,9 @@ const InterceptorView: FC<Props> = ({
   const onRemoveRunner = useCallback(
     (row: EntitiesGridData) => {
       const newInterceptor = cloneDeep(selectedInterceptor);
-      newInterceptor.applicationRunners = newInterceptor.applicationRunners?.filter((runner) => runner !== row.$id);
+      newInterceptor.applicationTypeSchemas = newInterceptor.applicationTypeSchemas?.filter(
+        (runner) => runner !== row.$id,
+      );
       onChangeInterceptor(newInterceptor);
     },
     [onChangeInterceptor, selectedInterceptor],

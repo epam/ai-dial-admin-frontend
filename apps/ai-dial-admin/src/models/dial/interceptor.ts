@@ -10,5 +10,5 @@ export interface DialInterceptor extends BaseEntity, EntityDefaults {
   forwardAuthToken?: boolean;
   author?: string;
   features?: DialFeatures;
-  applicationRunners?: string[];
+  applicationTypeSchemas?: string[];
 }

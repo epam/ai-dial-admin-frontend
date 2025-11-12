@@ -120,10 +120,10 @@ export const getRelevantAppRunnersForInterceptor = (
   allEntities: EntitiesGridData[],
 ): EntitiesGridData[] => {
   const data: EntitiesGridData[] = [];
-  if (!interceptor.applicationRunners) {
+  if (!interceptor.applicationTypeSchemas) {
     return data;
   }
-  interceptor.applicationRunners.forEach((runner) => {
+  interceptor.applicationTypeSchemas.forEach((runner) => {
     const entity = allEntities.find((m) => m.$id === runner);
     if (entity) {
       data.push(entity);
