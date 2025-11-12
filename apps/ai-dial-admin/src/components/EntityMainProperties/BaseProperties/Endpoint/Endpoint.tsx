@@ -48,9 +48,9 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, o
   useEffect(() => {
     if (required) {
       dispatch({ type: ValidationActionType.SetField, field: id, isValid: !!endpoint });
+    } else {
+      dispatch({ type: ValidationActionType.SetField, field: id, isValid: true });
     }
-
-    dispatch({ type: ValidationActionType.SetField, field: id, isValid: true });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [required]);
