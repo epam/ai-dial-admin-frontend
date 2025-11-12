@@ -13,11 +13,12 @@ import { getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplica
 interface Props {
   isModalOpen: boolean;
   onClose: () => void;
+  names: string[];
   entity: DialApplicationScheme;
   onDuplicate: (entity: DialApplicationScheme) => void;
 }
 
-const DuplicateScheme: FC<Props> = ({ onDuplicate, isModalOpen, onClose, entity }) => {
+const DuplicateScheme: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose, entity }) => {
   const t = useI18n() as (t: string, props?: Record<string, string>) => string;
 
   const [clonedEntity, setEntity] = useState<DialApplicationScheme>({
@@ -63,6 +64,7 @@ const DuplicateScheme: FC<Props> = ({ onDuplicate, isModalOpen, onClose, entity 
           isUrlId={true}
           entity={{ name: clonedEntity.$id }}
           onChangeEntity={(entity) => onChangeId(entity.name)}
+          names={names}
         />
         <DisplayNameControl
           displayName={clonedEntity['dial:applicationTypeDisplayName']}
