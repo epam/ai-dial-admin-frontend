@@ -107,6 +107,21 @@ describe('Server :: ApplicationRunnersApi', () => {
     );
   });
 
+  test('Should calls updateApplicationScheme with correct data', async () => {
+    const response = { success: true };
+    fetch.mockResponseOnce(JSON.stringify(response));
+
+    await instance.updateApplicationScheme({ ...mockScheme, $id: void 0 }, TOKEN_MOCK, 'etag123');
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${APPLICATION_SCHEME_URL('')}`,
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({ ...mockScheme, $id: void 0 }),
+      }),
+    );
+  });
+
   test('Should calls removeApplicationScheme with DELETE method', async () => {
     const response = { success: true };
     fetch.mockResponseOnce(JSON.stringify(response));

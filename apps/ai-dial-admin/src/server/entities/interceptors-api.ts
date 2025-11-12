@@ -8,8 +8,8 @@ import { BaseApi } from '../base-api';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const INTERCEPTORS_URL = `${API}/interceptors`;
-export const INTERCEPTOR_URL = (name?: string) => `${INTERCEPTORS_URL}/${name}`;
-export const CORE_INTERCEPTOR_URL = (name?: string) => `${INTERCEPTORS_URL}/core/${name}`;
+export const INTERCEPTOR_URL = (name?: string) => `${INTERCEPTORS_URL}/${name || ''}`;
+export const CORE_INTERCEPTOR_URL = (name: string) => `${INTERCEPTORS_URL}/core/${name}`;
 export const CONFIGURATION_URL = (name: string) => `${API}/deployments/${name}/configuration`;
 
 export class InterceptorsApi extends BaseApi {
@@ -56,6 +56,6 @@ export class InterceptorsApi extends BaseApi {
     etag: string,
     token: JWT | null,
   ): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(CORE_INTERCEPTOR_URL(encodeURIComponent(name || '')), interceptor, token, etag);
+    return this.putActionWithEtag(CORE_INTERCEPTOR_URL(encodeURIComponent(name)), interceptor, token, etag);
   }
 }

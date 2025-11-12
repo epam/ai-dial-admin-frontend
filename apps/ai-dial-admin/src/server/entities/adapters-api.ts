@@ -4,7 +4,6 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '../api';
 import { BaseApi } from '../base-api';
 import { DialAdapter } from '@/src/models/dial/adapter';
-import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const ADAPTERS_URL = `${API}/adapters`;
 export const ADAPTER_URL = (id?: string) => `${ADAPTERS_URL}/${id || ''}`;
@@ -27,7 +26,7 @@ export class AdaptersApi extends BaseApi {
   }
 
   getAdapter(name: string, token: JWT | null, eTag: string) {
-    return this.getActionWithEtag(ADAPTER_URL(name), eTag || DEFAULT_ETAG, token);
+    return this.getActionWithEtag(ADAPTER_URL(name), eTag, token);
   }
 
   updateAdapter(adapter: DialAdapter, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
