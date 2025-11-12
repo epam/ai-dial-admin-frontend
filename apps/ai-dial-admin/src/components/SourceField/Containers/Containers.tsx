@@ -21,7 +21,7 @@ import { IconExternalLink } from '@tabler/icons-react';
 import Field from '@/src/components/Common/Field/Field';
 import SelectContainerModal from '@/src/components/SourceField/Containers/SelectContainerModal';
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
-import { addTrailingSlash } from '@/src/utils/files/path';
+import { addTrailingSlash } from '@/src/utils/url';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { ServerActionResponse } from '@/src/models/server-action';
 
