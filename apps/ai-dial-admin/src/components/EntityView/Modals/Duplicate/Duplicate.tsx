@@ -1,5 +1,5 @@
 import { DialFormPopup } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
@@ -18,6 +18,8 @@ import {
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { RoutesForCheckingUniqueName } from '@/src/components/EntityListView/CreateEntity/constants';
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
+import { getDisplayNameError, getVersionError } from '../../../EntityMainProperties/Properties/utils';
+import { getNamesConfigurations } from '../../../../utils/entities/filter-names';
 
 type ClonedEntity = BaseEntity | DialModel;
 interface Props {
@@ -30,15 +32,29 @@ interface Props {
 }
 
 const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onClose, entity }) => {
-  const t = useI18n() as (t: string, props?: Record<string, string>) => string;
+  const t = useI18n() as (t: string, props?: Record<string, string | number>) => string;
   const isSimple = isSimpleEntity(view);
   const { isValid, dispatch } = useSaveValidationContext();
 
   const [clonedEntity, setEntity] = useState<ClonedEntity>(
     isSimple
       ? { ...entity, name: getClonedEntityName(entity.name) }
-      : { ...entity, name: getClonedEntityName(entity.name), displayVersion: void 0, displayName: void 0 },
+      : { ...entity, name: getClonedEntityName(entity.name), displayVersion: void 0 },
   );
+
+  const namesConfiguration = useMemo(() => {
+    return getNamesConfigurations(names);
+  }, [names]);
+
+  const [displayNameError, setDisplayNameError] = useState<string | undefined>(void 0);
+  const isVersionOptional = useMemo(() => {
+    return !namesConfiguration.names.includes(clonedEntity.displayName as string);
+  }, [clonedEntity.displayName, namesConfiguration.names]);
+
+  const versionError = useMemo(() => {
+    return getVersionError(isVersionOptional, clonedEntity as DialModel, namesConfiguration.versionsMap, t);
+  }, [clonedEntity, isVersionOptional, namesConfiguration.versionsMap, t]);
+
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean | undefined>(void 0);
 
   const onChangeVersion = useCallback(
@@ -50,9 +66,24 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
 
   const onChangeDisplayName = useCallback(
     (displayName?: string) => {
+      const error = getDisplayNameError(
+        view,
+        displayName as string,
+        namesConfiguration.names,
+        t,
+        (entity as DialModel).displayVersion,
+      );
+      setDisplayNameError(error);
+
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'displayName',
+        isValid: !error,
+      });
+
       setEntity({ ...clonedEntity, displayName });
     },
-    [setEntity, clonedEntity],
+    [view, namesConfiguration.names, t, entity, dispatch, clonedEntity],
   );
 
   // initial validation (disable save when no values entered yet)
@@ -61,6 +92,13 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
     dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!clonedEntity.displayName });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (view === ApplicationRoute.Models) {
+      dispatch({ type: ValidationActionType.SetField, field: 'displayVersion', isValid: !versionError });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [versionError, (entity as DialModel).displayVersion, t, view, dispatch]);
 
   const onDuplicateClick = useCallback(async () => {
     const isUnique = RoutesForCheckingUniqueName.includes(view)
@@ -102,7 +140,9 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
             <VersionControl
               version={(clonedEntity as DialModel).displayVersion}
               onChange={onChangeVersion}
-              optional={true}
+              error={versionError}
+              optional={isVersionOptional}
+              hideError={!!displayNameError}
             />
           )}
         </div>
