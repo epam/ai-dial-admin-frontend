@@ -1,4 +1,5 @@
 import { addTrailingSlash } from '../url';
+import { describe, expect, test } from 'vitest';
 
 describe('Utils :: addTrailingSlash', () => {
   test('Should add slash', () => {
