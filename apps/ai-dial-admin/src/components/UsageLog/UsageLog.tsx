@@ -31,8 +31,7 @@ interface Props {
 const UsageLog: FC<Props> = ({ route, entity, entityView }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const tabs = [tracesTabs(t), conversationsTabs(t)];
-  const getReq = useProtectedRequest();
-  const getReqRef = useRef(getReq);
+  const getReqRef = useRef(useProtectedRequest());
 
   const [activeTab, setActiveTab] = useState(entityView || EntityViewTab.Traces);
   const [timePeriod, setTimePeriod] = useState(DEFAULT_TIME_PERIOD);

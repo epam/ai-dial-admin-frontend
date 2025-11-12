@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 
 import { DialLoader, DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
@@ -10,6 +10,9 @@ import { DialActivity } from '@/src/models/activity-audit';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { getRevisionRouteForEntityType } from '@/src/utils/audit/get-revision-route';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { useNotification } from '@/src/context/NotificationContext';
+import { getErrorNotification } from '@/src/utils/notification';
 
 interface Props {
   auditViewId?: string;
@@ -35,6 +38,8 @@ const ActivityDetails: FC<Props> = ({
   const t = useI18n();
 
   const [loading, setLoading] = useState(false);
+  const getReqRef = useRef(useProtectedRequest());
+  const { showNotification } = useNotification();
   const [activity, setActivity] = useState<DialActivity | null>(partialActivity || null);
   const [activityRevision, setActivityRevision] = useState<ActivityAuditEntity | null>(currentState || null);
   const [previousRevision, setPreviousRevision] = useState<ActivityAuditEntity | null>(rollBackState || null);
@@ -42,32 +47,38 @@ const ActivityDetails: FC<Props> = ({
   useEffect(() => {
     if (!auditViewId) return;
     setLoading(true);
-    getActivityById(auditViewId as string)
-      .then((activityDetails) => {
-        if (!activityDetails) return;
-        setActivity({
-          activityId: activityDetails.activityId,
-          epochTimestampMs: activityDetails.epochTimestampMs,
-          initiatedEmail: activityDetails.initiatedEmail,
-          activityType: activityDetails.activityType,
-          resourceType: activityDetails.resourceType,
-        } as DialActivity);
-        const route = getRevisionRouteForEntityType(
-          activityDetails?.resourceType,
-          decodeURIComponent(activityDetails?.resourceId as string),
-        );
-        if (!route) return;
-        Promise.all([
-          getRevisionDetails(`${route}${activityDetails.revision}`),
-          getRevisionDetails(`${route}${activityDetails.revision - 1}`),
-        ])
-          .then(([revision, prevRevision]) => {
-            setActivityRevision(revision);
-            setPreviousRevision(prevRevision);
-          })
-          .catch((err) => {
-            console.error('Error fetching revisions:', err);
-          });
+    getReqRef
+      .current(getActivityById, auditViewId as string)
+      .then((res) => {
+        const activityDetails = res.response;
+        if (res.success) {
+          if (!activityDetails) return;
+          setActivity({
+            activityId: activityDetails.activityId,
+            epochTimestampMs: activityDetails.epochTimestampMs,
+            initiatedEmail: activityDetails.initiatedEmail,
+            activityType: activityDetails.activityType,
+            resourceType: activityDetails.resourceType,
+          } as DialActivity);
+          const route = getRevisionRouteForEntityType(
+            activityDetails?.resourceType,
+            decodeURIComponent(activityDetails?.resourceId as string),
+          );
+          if (!route) return;
+          Promise.all([
+            getRevisionDetails(`${route}${activityDetails.revision}`),
+            getRevisionDetails(`${route}${activityDetails.revision - 1}`),
+          ])
+            .then(([revision, prevRevision]) => {
+              setActivityRevision(revision);
+              setPreviousRevision(prevRevision);
+            })
+            .catch((err) => {
+              console.error('Error fetching revisions:', err);
+            });
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        }
       })
       .catch((err) => {
         console.error('Error fetching activity:', err);
@@ -75,7 +86,7 @@ const ActivityDetails: FC<Props> = ({
       .finally(() => {
         setLoading(false);
       });
-  }, [auditViewId]);
+  }, [auditViewId, showNotification]);
 
   return (
     <DialPopup

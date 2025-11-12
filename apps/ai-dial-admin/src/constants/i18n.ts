@@ -438,14 +438,6 @@ export enum InterceptorsI18nKey {
   Add = 'Interceptors.Add',
 }
 
-export enum ReloadConfigI18nKey {
-  Reload = 'ReloadConfig.Reload',
-  ReloadTitle = 'ReloadConfig.ReloadTitle',
-  ReloadDescription = 'ReloadConfig.ReloadDescription',
-  ConfigReloadedTitle = 'ReloadConfig.ConfigReloadedTitle',
-  ConfigReloadedDescription = 'ReloadConfig.ConfigReloadedDescription',
-}
-
 export enum TelemetryI18nKey {
   SystemUsage = 'Telemetry.SystemUsage',
   EntitiesConsumption = 'Telemetry.EntitiesConsumption',
