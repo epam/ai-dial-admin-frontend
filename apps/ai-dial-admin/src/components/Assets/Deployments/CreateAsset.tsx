@@ -75,6 +75,10 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
   useEffect(() => {
     setCurrentEntity((prev) => ({ ...prev, folderId: filePath }));
     dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!currentEntity.name });
+
+    if (view === ApplicationRoute.AssetsApplications || view === ApplicationRoute.AssetsToolsets) {
+      dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!currentEntity.displayName });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filePath]);
 
