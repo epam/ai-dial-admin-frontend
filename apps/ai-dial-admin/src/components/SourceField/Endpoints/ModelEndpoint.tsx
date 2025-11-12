@@ -11,7 +11,7 @@ import { useI18n } from '@/src/locales/client';
 import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import classNames from 'classnames';
-import { addTrailingSlash } from '@/src/utils/url';
+import { addTrailingSlash, removeSlash } from '@/src/utils/url';
 
 interface Props {
   entity: DialModel;
@@ -32,7 +32,7 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
   const [name, setName] = useState('');
   const [endpointError, setEndpointError] = useState<FieldError | null>(null);
   const fullValue = useMemo(() => {
-    return prefix ? `${addTrailingSlash(prefix)}${entity.endpoint}` : entity.endpoint || '';
+    return prefix ? `${addTrailingSlash(prefix)}${removeSlash(entity.endpoint || '')}` : entity.endpoint || '';
   }, [entity.endpoint, prefix]);
 
   const onChangePath = useCallback(
