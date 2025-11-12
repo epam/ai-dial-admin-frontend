@@ -39,6 +39,7 @@ export const getDuplicateModal = async <T extends object>(
         onDuplicate={onDuplicate}
         isModalOpen={isModalOpen}
         onClose={handleModalClose}
+        names={names}
       />
     );
   }
@@ -57,6 +58,7 @@ export const getDuplicateModal = async <T extends object>(
   if (route === ApplicationRoute.Adapters) {
     return (
       <DuplicateAdapter
+        names={names}
         adapter={preparedEntity}
         onDuplicate={onDuplicate}
         isModalOpen={isModalOpen}

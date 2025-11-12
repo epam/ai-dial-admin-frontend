@@ -14,11 +14,12 @@ import { getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplica
 interface Props {
   isModalOpen: boolean;
   onClose: () => void;
+  names: string[];
   adapter: DialAdapter;
   onDuplicate: (entity: DialAdapter) => void;
 }
 
-const DuplicateAdapter: FC<Props> = ({ onDuplicate, isModalOpen, onClose, adapter }) => {
+const DuplicateAdapter: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose, adapter }) => {
   const t = useI18n() as (t: string, props?: Record<string, string>) => string;
 
   const [entity, setEntity] = useState<DialAdapter>({ ...adapter, name: getClonedEntityName(adapter.name) });
@@ -60,7 +61,7 @@ const DuplicateAdapter: FC<Props> = ({ onDuplicate, isModalOpen, onClose, adapte
       disableSubmitButton={!isValid}
     >
       <div className="flex flex-col gap-3 px-6 py-4 ">
-        <IdControl entity={entity} onChangeEntity={setEntity} />
+        <IdControl entity={entity} onChangeEntity={setEntity} names={names} />
 
         <DisplayNameControl displayName={entity.displayName} onChange={onChangeDisplayName} required={true} />
 

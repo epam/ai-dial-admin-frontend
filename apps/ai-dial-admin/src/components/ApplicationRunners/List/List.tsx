@@ -14,8 +14,8 @@ interface Props {
 
 const ApplicationRunnersList: FC<Props> = ({ data }) => {
   const names = data?.reduce((acc, curr) => {
-    if (curr['dial:applicationTypeDisplayName'] != null) {
-      acc.push(curr['dial:applicationTypeDisplayName']);
+    if (curr.$id != null) {
+      acc.push(curr.$id);
     }
     return acc;
   }, [] as string[]) as string[];
