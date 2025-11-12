@@ -30,7 +30,7 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, o
   const [endpointError, setEndpointError] = useState<FieldError | null>(null);
 
   const fullValue = useMemo(() => {
-    return textBeforeInput ? `${addTrailingSlash(textBeforeInput)}${endpoint}` : endpoint || '';
+    return textBeforeInput ? `${addTrailingSlash(textBeforeInput)}${endpoint || ''}` : endpoint || '';
   }, [endpoint, textBeforeInput]);
 
   const validateEndpoint = useCallback(
