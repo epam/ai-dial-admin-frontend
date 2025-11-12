@@ -14,7 +14,7 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useRuleFolder } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialRule } from '@/src/models/dial/rule';
-import { addTrailingSlash } from '@/src/utils/files/path';
+import { addTrailingSlash } from '@/src/utils/url';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { getErrorNotification } from '@/src/utils/notification';
