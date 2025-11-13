@@ -33,7 +33,13 @@ const LimitControl: FC<Props> = ({ limits, controlClassName, isCostInputs, onCha
     <DialNumberInputField
       containerCssClass={controlClassName}
       placeholder={t(RolesI18nKey.NotSpecified)}
-      value={limits?.[fieldKey] === UNLIMITED_VALUE ? '' : new Big(limits?.[fieldKey] as string).toFixed()}
+      value={
+        limits?.[fieldKey] === UNLIMITED_VALUE
+          ? ''
+          : (limits?.[fieldKey] as string)
+            ? new Big(limits?.[fieldKey] as string).toFixed()
+            : ''
+      }
       onChange={(value) => onChangeLimit(value, fieldKey)}
       iconBefore={isCostInputs ? <IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} /> : null}
       {...props}

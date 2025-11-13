@@ -40,10 +40,22 @@ describe('Server :: InterceptorTemplatesApi', () => {
     expect(result).toEqual(JSON.stringify([mockTemplate]));
   });
 
+  test('Should fetch interceptor templates list', async () => {
+    fetch.mockResponseOnce(JSON.stringify([mockTemplate]));
+
+    const result = await instance.getInterceptorTemplatesListAction(TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${INTERCEPTOR_TEMPLATES_URL}`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result.response).toEqual(JSON.stringify([mockTemplate]));
+  });
+
   test('Should fetch interceptor template', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockTemplate));
 
-    const result = await instance.getInterceptorTemplate(mockTemplate.name, TOKEN_MOCK, 'etag123');
+    const result = await instance.getInterceptorTemplate(mockTemplate.name || '', TOKEN_MOCK, 'etag123');
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${INTERCEPTOR_TEMPLATES_URL}/${mockTemplate.name}`,
@@ -76,6 +88,20 @@ describe('Server :: InterceptorTemplatesApi', () => {
       expect.objectContaining({
         method: 'PUT',
         body: JSON.stringify(mockTemplate),
+      }),
+    );
+  });
+
+  test('Should update interceptor template', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+
+    const result = await instance.updateInterceptorTemplate({ ...mockTemplate, name: void 0 }, TOKEN_MOCK, 'etag123');
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${INTERCEPTOR_TEMPLATE_URL()}`,
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({ ...mockTemplate, name: void 0 }),
       }),
     );
   });

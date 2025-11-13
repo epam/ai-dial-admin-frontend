@@ -6,7 +6,7 @@ import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ServerActionResponse } from '@/src/models/server-action';
 
 export const INTERCEPTOR_TEMPLATES_URL = `${API}/interceptor-runners`;
-export const INTERCEPTOR_TEMPLATE_URL = (name?: string) => `${INTERCEPTOR_TEMPLATES_URL}/${name}`;
+export const INTERCEPTOR_TEMPLATE_URL = (name?: string) => `${INTERCEPTOR_TEMPLATES_URL}/${name || ''}`;
 export const DELETE_INTERCEPTOR_TEMPLATE_URL = (name?: string) =>
   `${INTERCEPTOR_TEMPLATE_URL(name)}?removeInterceptor=true`;
 

@@ -48,7 +48,7 @@ const DeploymentProperties: FC<Props> = ({
   isEntityImmutable = false,
   initialValues,
 }) => {
-  const t = useI18n() as (str: string, param?: Record<string, number>) => string;
+  const t = useI18n() as (str: string, param?: Record<string, string | number>) => string;
   const { dispatch } = useSaveValidationContext();
   const { embeddedApps } = useAppContext();
   const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);

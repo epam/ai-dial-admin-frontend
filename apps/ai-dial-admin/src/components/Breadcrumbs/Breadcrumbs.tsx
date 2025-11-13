@@ -45,7 +45,7 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
 
           return (
             <li key={`${href}_${index}`} className="flex items-center group">
-              <Link href={href} className={linkClassNames}>
+              <Link prefetch={false} href={href} className={linkClassNames}>
                 {decodeURIComponent(label)}
               </Link>
               {breadcrumbs.length !== index + 1 && (

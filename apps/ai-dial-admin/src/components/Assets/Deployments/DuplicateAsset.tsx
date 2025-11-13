@@ -20,7 +20,7 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { DuplicationTypes } from '@/src/types/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { duplicateEntityMap, getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
-import { addTrailingSlash } from '@/src/utils/files/path';
+import { addTrailingSlash } from '@/src/utils/url';
 import { isDeploymentAsset } from '@/src/utils/is-asset-view';
 import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/prompts/versions';
 

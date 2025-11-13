@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialModel } from '@/src/models/dial/model';
+import { describe, expect, test } from 'vitest';
 import { getDependenciesData } from '../utils';
 
 describe('getDependenciesData', () => {
@@ -17,7 +17,7 @@ describe('getDependenciesData', () => {
     { name: 'appC', type: MenuI18nKey.Applications },
   ];
 
-  it('should correctly separate dependencies and available entities', () => {
+  test('should correctly separate dependencies and available entities', () => {
     const dependencies = ['modelB', 'appC'];
 
     const { data, filteredApplications, filteredModels } = getDependenciesData(dependencies, models, applications);
@@ -44,7 +44,7 @@ describe('getDependenciesData', () => {
     expect(filteredApplications).not.toEqual(expect.arrayContaining([expect.objectContaining({ name: 'appC' })]));
   });
 
-  it('should return empty rowData if no dependencies match', () => {
+  test('should return empty rowData if no dependencies match', () => {
     const dependencies: string[] = ['nonexistent'];
 
     const { data, filteredApplications, filteredModels } = getDependenciesData(dependencies, models, applications);
@@ -54,7 +54,7 @@ describe('getDependenciesData', () => {
     expect(filteredModels).toHaveLength(applications.length);
   });
 
-  it('should return all entities in rowData if all dependencies match', () => {
+  test('should return all entities in rowData if all dependencies match', () => {
     const dependencies = [...models.map((m) => m.name), ...applications.map((a) => a.name)];
 
     const { data, filteredApplications, filteredModels } = getDependenciesData(dependencies, models, applications);

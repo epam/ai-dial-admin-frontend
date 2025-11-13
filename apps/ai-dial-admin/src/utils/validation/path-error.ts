@@ -11,7 +11,6 @@ export const isValidRoutePath = (_path: string): boolean => {
 
 export const isValidPaths = (paths: string[]): boolean => {
   const validPaths = paths.filter((path) => !!getErrorForPath(path));
-
   return !(validPaths.length === 0);
 };
 

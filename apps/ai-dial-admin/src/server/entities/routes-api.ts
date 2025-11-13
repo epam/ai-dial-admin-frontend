@@ -7,8 +7,8 @@ import { API } from '../api';
 import { BaseApi } from '../base-api';
 
 export const ROUTES_URL = `${API}/routes`;
-export const ROUTE_URL = (name?: string) => `${ROUTES_URL}/${name}`;
-export const CORE_ROUTE_URL = (name?: string) => `${ROUTES_URL}/${name}`;
+export const ROUTE_URL = (name?: string) => `${ROUTES_URL}/${name || ''}`;
+export const CORE_ROUTE_URL = (name: string) => `${ROUTES_URL}/core/${name}`;
 
 export class RoutesApi extends BaseApi {
   getRoutesList(token: JWT | null): Promise<DialRoute[] | null> {
@@ -16,7 +16,7 @@ export class RoutesApi extends BaseApi {
   }
 
   getRoute(name: string, token: JWT | null, eTag: string) {
-    return this.getActionWithEtag(ROUTE_URL(name), eTag || DEFAULT_ETAG, token);
+    return this.getActionWithEtag(ROUTE_URL(name), eTag, token);
   }
 
   removeRoute(token: JWT | null, name?: string): Promise<ServerActionResponse> {
@@ -36,6 +36,6 @@ export class RoutesApi extends BaseApi {
   }
 
   updateCoreRoute(route: DialRoute, name: string, eTag: string, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(CORE_ROUTE_URL(encodeURIComponent(name || '')), route, token, eTag);
+    return this.putActionWithEtag(CORE_ROUTE_URL(encodeURIComponent(name)), route, token, eTag);
   }
 }

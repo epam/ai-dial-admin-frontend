@@ -28,6 +28,15 @@ describe('Server :: ApplicationsApi', () => {
     expect(result).toEqual(JSON.stringify([mockApp]));
   });
 
+  test('Should calls getApplicationsListAction and return list', async () => {
+    fetch.mockResponseOnce(JSON.stringify([mockApp]));
+
+    const result = await instance.getApplicationsListAction(TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(`${TEST_URL}${APPLICATIONS_URL}`, expect.objectContaining({ method: 'GET' }));
+    expect(result.response).toEqual(JSON.stringify([mockApp]));
+  });
+
   test('Should calls getApplication by name and return application', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockApp));
 
@@ -78,6 +87,21 @@ describe('Server :: ApplicationsApi', () => {
       expect.objectContaining({
         method: 'PUT',
         body: JSON.stringify(mockApp),
+      }),
+    );
+  });
+
+  test('Should calls updateApplication with correct payload', async () => {
+    const mockResponse = { success: true };
+    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+
+    await instance.updateApplication({ ...mockApp, name: void 0 }, TOKEN_MOCK, 'etag123');
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${APPLICATION_URL()}`,
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({ ...mockApp, name: void 0 }),
       }),
     );
   });

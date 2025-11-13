@@ -7,8 +7,8 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const APPLICATIONS_URL = `${API}/applications`;
-export const APPLICATION_URL = (name?: string) => `${APPLICATIONS_URL}/${name}`;
-export const CORE_APPLICATION_URL = (name?: string) => `${APPLICATIONS_URL}/core/${name}`;
+export const APPLICATION_URL = (name?: string) => `${APPLICATIONS_URL}/${name || ''}`;
+export const CORE_APPLICATION_URL = (name: string) => `${APPLICATIONS_URL}/core/${name}`;
 
 export class ApplicationsApi extends BaseApi {
   getApplicationsList(token: JWT | null): Promise<DialApplication[] | null> {
@@ -20,7 +20,7 @@ export class ApplicationsApi extends BaseApi {
   }
 
   getApplication(name: string, token: JWT | null, eTag: string) {
-    return this.getActionWithEtag(APPLICATION_URL(name), eTag || DEFAULT_ETAG, token);
+    return this.getActionWithEtag(APPLICATION_URL(name), eTag, token);
   }
 
   removeApplication(token: JWT | null, name?: string): Promise<ServerActionResponse> {
@@ -50,6 +50,6 @@ export class ApplicationsApi extends BaseApi {
     eTag: string,
     token: JWT | null,
   ): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(CORE_APPLICATION_URL(encodeURIComponent(name || '')), app, token, eTag);
+    return this.putActionWithEtag(CORE_APPLICATION_URL(encodeURIComponent(name)), app, token, eTag);
   }
 }
