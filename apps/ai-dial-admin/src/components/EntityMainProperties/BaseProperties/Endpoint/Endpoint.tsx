@@ -5,7 +5,7 @@ import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
-import { addTrailingSlash } from '@/src/utils/url';
+import { addTrailingSlash, removeSlash } from '@/src/utils/url';
 import { getUrlError } from '@/src/utils/validation/url-error';
 
 export interface EndpointControlProps {
@@ -30,7 +30,8 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, o
   const [endpointError, setEndpointError] = useState<FieldError | null>(null);
 
   const fullValue = useMemo(() => {
-    return textBeforeInput ? `${addTrailingSlash(textBeforeInput)}${endpoint || ''}` : endpoint || '';
+    const value = endpoint ? removeSlash(endpoint) : '';
+    return textBeforeInput ? `${addTrailingSlash(textBeforeInput)}${value}` : value;
   }, [endpoint, textBeforeInput]);
 
   const validateEndpoint = useCallback(
