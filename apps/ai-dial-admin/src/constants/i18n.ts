@@ -93,6 +93,9 @@ export enum EntitiesI18nKey {
   NoFiles = 'Entities.NoFiles',
   NoPublications = 'Entities.NoPublications',
   NoInterceptors = 'Entities.NoInterceptors',
+  NoLocalInterceptors = 'Entities.NoLocalInterceptors',
+  NoGlobalInterceptors = 'Entities.NoGlobalInterceptors',
+  NoRunnerInterceptors = 'Entities.NoRunnerInterceptors',
   NoAdapters = 'Entities.NoAdapters',
   NoEntities = 'Entities.NoEntities',
   NoModels = 'Entities.NoModels',
@@ -438,6 +441,9 @@ export enum TabsI18nKey {
 
 export enum InterceptorsI18nKey {
   Add = 'Interceptors.Add',
+  Local = 'Interceptors.Local',
+  Global = 'Interceptors.Global',
+  Runner = 'Interceptors.Runner',
 }
 
 export enum TelemetryI18nKey {

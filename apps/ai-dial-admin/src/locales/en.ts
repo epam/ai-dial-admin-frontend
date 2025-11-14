@@ -109,6 +109,9 @@ export default {
     // no data
     NoApplications: 'No Applications',
     NoInterceptors: 'No Interceptors',
+    NoLocalInterceptors: 'No Local Interceptors',
+    NoGlobalInterceptors: 'No Global Interceptors',
+    NoRunnerInterceptors: 'No Runner Interceptors',
     NoEntities: 'No Entities',
     NoAdapters: 'No Adapters',
     NoModels: 'No Models',
@@ -450,6 +453,9 @@ export default {
   },
   Interceptors: {
     Add: 'Add Interceptors',
+    Local: 'Local Interceptors',
+    Global: 'Global Interceptors',
+    Runner: 'Runner Interceptors',
   },
   Telemetry: {
     SystemUsage: 'System Usage',

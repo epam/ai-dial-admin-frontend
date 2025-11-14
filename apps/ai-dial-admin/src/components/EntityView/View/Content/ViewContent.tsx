@@ -114,6 +114,7 @@ const ViewContent: FC<Props> = ({
           entity={selectedEntity as DialModel | DialApplication}
           interceptors={interceptors || []}
           onChangeEntity={onChangeEntity}
+          view={view}
         />
       )}
       {activeTab === EntityViewTab.Dependencies && (

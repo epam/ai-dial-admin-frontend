@@ -219,6 +219,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
                   entity={selectedRunner as ChatEntity}
                   interceptors={interceptors || []}
                   onChangeEntity={onChangeScheme}
+                  view={ApplicationRoute.ApplicationRunners}
                 />
               )}
 

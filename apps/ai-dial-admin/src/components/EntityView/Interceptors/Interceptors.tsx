@@ -1,8 +1,9 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
+
 import { ButtonVariant, DialButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { RowDragEvent } from 'ag-grid-community';
-import { useCallback, useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import Grid from '@/src/components/Grid/Grid';
@@ -13,25 +14,33 @@ import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import CollapsableInterceptors from './CollapsableInterceptors';
 import { getInterceptorsColumnDefs, getInterceptorsGridData } from './utils';
 
 interface Props<T> {
   entity: T;
   interceptors: DialInterceptor[];
   onChangeEntity: (entity: T) => void;
+  view: ApplicationRoute;
 }
 
 const EntityInterceptors = <T extends { interceptors?: string[] }>({
   entity,
   interceptors,
   onChangeEntity,
+  view,
 }: Props<T>) => {
   const t = useI18n();
   const rowData = getInterceptorsGridData(interceptors, entity.interceptors);
   const [availableInterceptors, setAvailableInterceptors] = useState<DialInterceptor[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const isCollapsableView = useMemo(() => {
+    return view === ApplicationRoute.Models || view === ApplicationRoute.Applications;
+  }, [view]);
+
   useEffect(() => {
+    //todo recheck
     setAvailableInterceptors(interceptors);
   }, [entity, interceptors]);
 
@@ -72,37 +81,47 @@ const EntityInterceptors = <T extends { interceptors?: string[] }>({
     [entity, onChangeEntity],
   );
 
-  const onOpenAddModal = useCallback(() => {
-    setIsModalOpen(true);
-  }, [setIsModalOpen]);
-
-  const onCloseAddModal = useCallback(() => {
-    setIsModalOpen(false);
-  }, [setIsModalOpen]);
-
   const onOpen = (interceptor?: DialInterceptor) => {
     onOpenInNewTab(ApplicationRoute.Interceptors, interceptor);
   };
 
   const columns = getInterceptorsColumnDefs(onRemoveInterceptor, onOpen);
 
+  const additionalGridOptions = useMemo(() => {
+    return { rowDragManaged: true, onRowDragEnd };
+  }, [onRowDragEnd]);
+
+  const button = (
+    <DialButton
+      variant={ButtonVariant.Primary}
+      iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+      title={t(ButtonsI18nKey.Add)}
+      onClick={() => setIsModalOpen(true)}
+    />
+  );
+
+  const localInterceptors = !entity.interceptors?.length ? (
+    <DialNoDataContent
+      title={isCollapsableView ? t(EntitiesI18nKey.NoLocalInterceptors) : t(EntitiesI18nKey.NoInterceptors)}
+    />
+  ) : (
+    <Grid columnDefs={columns} rowData={rowData} additionalGridOptions={additionalGridOptions} />
+  );
+
   return (
-    <div className="h-full flex flex-col pt-3">
-      <div className="mb-4 flex flex-row items-center justify-between">
-        <h1>
-          {t(TabsI18nKey.Interceptors)}: {entity.interceptors?.length}
-        </h1>
-        <DialButton
-          variant={ButtonVariant.Primary}
-          iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-          title={t(ButtonsI18nKey.Add)}
-          onClick={onOpenAddModal}
-        />
-      </div>
-      {!entity.interceptors?.length ? (
-        <DialNoDataContent title={t(EntitiesI18nKey.NoInterceptors)} />
+    <>
+      {isCollapsableView ? (
+        <CollapsableInterceptors entity={entity} localInterceptors={localInterceptors} headerButton={button} />
       ) : (
-        <Grid columnDefs={columns} rowData={rowData} additionalGridOptions={{ rowDragManaged: true, onRowDragEnd }} />
+        <div className="h-full flex flex-col pt-3">
+          <div className="mb-4 flex flex-row items-center justify-between">
+            <h1>
+              {t(TabsI18nKey.Interceptors)}: {entity.interceptors?.length}
+            </h1>
+            {button}
+          </div>
+          {localInterceptors}
+        </div>
       )}
       {isModalOpen &&
         createPortal(
@@ -111,13 +130,13 @@ const EntityInterceptors = <T extends { interceptors?: string[] }>({
             emptyTitle={t(EntitiesI18nKey.NoInterceptors)}
             isModalOpen={isModalOpen}
             entities={availableInterceptors}
-            onClose={onCloseAddModal}
+            onClose={() => setIsModalOpen(false)}
             onApply={onAddInterceptors}
             columnDefs={[DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN, NAME_COLUMN]}
           />,
           document.body,
         )}
-    </div>
+    </>
   );
 };
 
