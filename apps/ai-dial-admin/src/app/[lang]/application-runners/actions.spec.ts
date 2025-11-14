@@ -67,7 +67,7 @@ describe('Applications schemes :: server actions', () => {
     });
   });
 
-   test('Should call get application scheme', async () => {
+  test('Should call get application scheme', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     getApplicationScheme('scheme', 'etag123').then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
