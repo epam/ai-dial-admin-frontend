@@ -109,6 +109,9 @@ export default {
     // no data
     NoApplications: 'No Applications',
     NoInterceptors: 'No Interceptors',
+    NoLocalInterceptors: 'No Local Interceptors',
+    NoGlobalInterceptors: 'No Global Interceptors',
+    NoRunnerInterceptors: 'No Runner Interceptors',
     NoEntities: 'No Entities',
     NoAdapters: 'No Adapters',
     NoModels: 'No Models',
@@ -135,6 +138,7 @@ export default {
     // add entity or entities
     AddModel: 'Add Model',
     AddApplication: 'Add Application',
+    AddApplicationRunner: 'Add Application Runners',
     AddEntities: 'Add Entities',
 
     // entity control
@@ -413,6 +417,7 @@ export default {
     Conversations: 'Conversations',
     Attachments: 'Attachments',
     ParameterSchema: 'Parameter Scheme',
+    ApplicationRunners: 'Application Runners',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',
@@ -448,6 +453,9 @@ export default {
   },
   Interceptors: {
     Add: 'Add Interceptors',
+    Local: 'Local Interceptors',
+    Global: 'Global Interceptors',
+    Runner: 'Runner Interceptors',
   },
   Telemetry: {
     SystemUsage: 'System Usage',

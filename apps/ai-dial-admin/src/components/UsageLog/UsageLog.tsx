@@ -1,12 +1,13 @@
 'use client';
+
+import { FC, useCallback, useRef, useState } from 'react';
+
 import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { FC, useCallback, useRef, useState } from 'react';
 
 import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
-import { conversationsTabs, EntityViewTab, tracesTabs } from '@/src/components/EntityView/View/utils';
 import List from '@/src/components/UsageLog/List/List';
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
 import { USAGE_LOG_CONVERSATIONS_COLUMNS, USAGE_LOG_TRACES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
@@ -19,6 +20,7 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { TelemetryQuery } from '@/src/models/telemetry';
 import { TimeRange } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
+import { EntityViewTab, getUsageLogTabs } from '@/src/utils/tabs/utils';
 import { getFormattedFilters } from '@/src/utils/telemetry';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 
@@ -30,7 +32,7 @@ interface Props {
 
 const UsageLog: FC<Props> = ({ route, entity, entityView }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
-  const tabs = [tracesTabs(t), conversationsTabs(t)];
+  const tabs = getUsageLogTabs(t);
   const getReqRef = useRef(useProtectedRequest());
 
   const [activeTab, setActiveTab] = useState(entityView || EntityViewTab.Traces);

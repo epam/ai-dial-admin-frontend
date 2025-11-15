@@ -5,13 +5,13 @@ import { FC, useEffect, useState } from 'react';
 import { DialSelect, DialSwitch, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
-import { EntityViewTab } from '@/src/components/EntityView/View/utils';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
+import { EntityViewTab } from '@/src/utils/tabs/utils';
 
 const ONLY_ADMIN_ENTITIES = [
   ApplicationRoute.Adapters,

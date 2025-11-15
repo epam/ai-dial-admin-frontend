@@ -1,12 +1,12 @@
-import { getByRole, render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { describe, expect, test, vi } from 'vitest';
 
+import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
 import { ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
+import { EntityViewTab } from '@/src/utils/tabs/utils';
 import UsageLog from './UsageLog';
-import { EntityViewTab } from '@/src/components/EntityView/View/utils';
 
 vi.mock('next-auth/react', () => ({
   useSession: vi.fn(() => {

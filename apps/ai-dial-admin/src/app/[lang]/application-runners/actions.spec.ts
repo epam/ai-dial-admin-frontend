@@ -1,5 +1,6 @@
 import {
   createApplicationScheme,
+  getApplicationScheme,
   getCoreRunner,
   removeApplicationScheme,
   updateApplicationScheme,
@@ -63,6 +64,16 @@ describe('Applications schemes :: server actions', () => {
 
       const call = fetch.mock.calls[0][1];
       expect(call?.method).toBe('PUT');
+    });
+  });
+
+  test('Should call get application scheme', async () => {
+    fetch.mockResponse(JSON.stringify({ data: 'response' }));
+    getApplicationScheme('scheme', 'etag123').then(() => {
+      expect(fetch.mock.calls.length).toEqual(1);
+
+      const call = fetch.mock.calls[0][1];
+      expect(call?.method).toBe('GET');
     });
   });
 });

@@ -1,7 +1,60 @@
-import { ApplicationRoute } from '@/src/types/routes';
-import { describe, expect, test } from 'vitest';
-import { getAuditTabs } from '../utils';
 import { TabsI18nKey } from '@/src/constants/i18n';
+import { ApplicationRoute } from '@/src/types/routes';
+import { describe, expect, test, vi } from 'vitest';
+import {
+  appRouteTab,
+  auditTab,
+  dependenciesTab,
+  featuresTab,
+  getAuditTabs,
+  getViewTabs,
+  interceptorsTab,
+  parametersTab,
+  propertiesTab,
+  rolesTab,
+} from '../utils';
+
+const t = vi.fn((id) => id);
+
+describe('getViewTabs', () => {
+  test('Should return tabs for models', () => {
+    const res = getViewTabs(t, ApplicationRoute.Models);
+    expect(res).toEqual([propertiesTab(t), featuresTab(t), rolesTab(t), interceptorsTab(t), auditTab(t)]);
+  });
+
+  test('Should return tabs for application', () => {
+    const res = getViewTabs(t, ApplicationRoute.Applications);
+    expect(res).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      parametersTab(t),
+      rolesTab(t),
+      interceptorsTab(t),
+      dependenciesTab(t),
+      appRouteTab(t),
+      auditTab(t),
+    ]);
+  });
+
+  test('Should return tabs for application with editor', () => {
+    const res = getViewTabs(t, ApplicationRoute.Applications);
+    expect(res).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      parametersTab(t),
+      rolesTab(t),
+      interceptorsTab(t),
+      dependenciesTab(t),
+      appRouteTab(t),
+      auditTab(t),
+    ]);
+  });
+
+  test('Should return tabs for routes', () => {
+    const res = getViewTabs(t, ApplicationRoute.Routes);
+    expect(res).toEqual([propertiesTab(t), rolesTab(t), auditTab(t)]);
+  });
+});
 
 describe('getAuditTabs', () => {
   const t = (s: string) => s;

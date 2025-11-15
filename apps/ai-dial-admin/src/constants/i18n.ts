@@ -93,6 +93,9 @@ export enum EntitiesI18nKey {
   NoFiles = 'Entities.NoFiles',
   NoPublications = 'Entities.NoPublications',
   NoInterceptors = 'Entities.NoInterceptors',
+  NoLocalInterceptors = 'Entities.NoLocalInterceptors',
+  NoGlobalInterceptors = 'Entities.NoGlobalInterceptors',
+  NoRunnerInterceptors = 'Entities.NoRunnerInterceptors',
   NoAdapters = 'Entities.NoAdapters',
   NoEntities = 'Entities.NoEntities',
   NoModels = 'Entities.NoModels',
@@ -113,6 +116,7 @@ export enum EntitiesI18nKey {
   NoConfigurationSchema = 'Entities.NoConfigurationSchema',
   AddModel = 'Entities.AddModel',
   AddApplication = 'Entities.AddApplication',
+  AddApplicationRunner = 'Entities.AddApplicationRunner',
   AddEntities = 'Entities.AddEntities',
   SourceType = 'Entities.SourceType',
   Source = 'Entities.Source',
@@ -432,10 +436,14 @@ export enum TabsI18nKey {
   Attachments = 'Tabs.Attachments',
   Tools = 'Tabs.Tools',
   ParameterSchema = 'Tabs.ParameterSchema',
+  ApplicationRunners = 'Tabs.ApplicationRunners',
 }
 
 export enum InterceptorsI18nKey {
   Add = 'Interceptors.Add',
+  Local = 'Interceptors.Local',
+  Global = 'Interceptors.Global',
+  Runner = 'Interceptors.Runner',
 }
 
 export enum TelemetryI18nKey {

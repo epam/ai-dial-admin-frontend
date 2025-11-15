@@ -12,12 +12,12 @@ import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/compon
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
-import { EntityViewTab } from '@/src/components/EntityView/View/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
@@ -26,14 +26,13 @@ import { DialFile } from '@/src/models/dial/file';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
-import { addTrailingSlash } from '@/src/utils/url';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { getTabsForAssetApp } from './utils';
-import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
+import { addTrailingSlash } from '@/src/utils/url';
 
 interface Props {
   etag: string;
@@ -47,7 +46,7 @@ interface Props {
 
 const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, schemes, interceptors }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
-  const tabs = getTabsForAssetApp(t);
+  const tabs = getTabsForAsset(t, ApplicationRoute.AssetsApplications);
   const router = useRouter();
   const { fetchFiles } = useAppsFolder();
   const { showNotification } = useNotification();

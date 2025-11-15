@@ -1,9 +1,9 @@
 import { ColDef } from 'ag-grid-community';
 
-import { ACTION_COLUMN, DRAGGABLE_COL_DEF } from '@/src/constants/ag-grid';
+import { ACTION_COLUMN, DRAGGABLE_COL_DEF, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { NAME_COLUMN, DESCRIPTION_COLUMN } from '@/src/constants/grid-columns/grid-columns';
+import { NAME_COLUMN, DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 
 export const getInterceptorsGridData = (interceptors?: BaseEntity[], interceptorNames?: string[]): BaseEntity[] => {
   return (
@@ -14,17 +14,31 @@ export const getInterceptorsGridData = (interceptors?: BaseEntity[], interceptor
 };
 
 export const getInterceptorsColumnDefs = (
-  remove: (entity?: BaseEntity, index?: number) => void,
   open: (entity?: BaseEntity) => void,
-): ColDef[] => [
-  DRAGGABLE_COL_DEF,
-  {
-    headerName: 'Order',
-    field: 'order',
-    valueGetter: (params) => (params.node?.rowIndex || 0) + 1,
-    width: 86,
-  },
-  NAME_COLUMN,
-  DESCRIPTION_COLUMN,
-  ACTION_COLUMN([getOpenInNewTabOperation(open), getRemoveOperation(remove)]),
-];
+  remove?: (entity?: BaseEntity, index?: number) => void,
+  startIndex?: number,
+): ColDef[] => {
+  const actions = [getOpenInNewTabOperation(open)];
+  if (remove) {
+    actions.push(getRemoveOperation(remove));
+  }
+  const columns: ColDef[] = [
+    remove ? DRAGGABLE_COL_DEF : UTILITY_COLUMN,
+    {
+      headerName: 'Order',
+      field: 'order',
+      valueGetter: (params) => (params.node?.rowIndex || 0) + 1 + (startIndex || 0),
+      width: 60,
+      maxWidth: 60,
+      minWidth: 60,
+      filter: false,
+      floatingFilter: false,
+    },
+    DISPLAY_NAME_COLUMN,
+    DESCRIPTION_COLUMN,
+    NAME_COLUMN,
+    ACTION_COLUMN(actions),
+  ];
+
+  return [...columns];
+};

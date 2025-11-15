@@ -23,29 +23,26 @@ import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
+import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import {
-  appRouteTab,
-  auditTabs,
-  EntityViewTab,
-  parametersTabs,
-  propertiesTabs,
-} from '@/src/components/EntityView/View/utils';
-import { ButtonsI18nKey, CreateI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { ChatEntity } from '@/src/models/dial/base-entity';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialRole } from '@/src/models/dial/role';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { EntityViewTab, getAppRunnerTabs } from '@/src/utils/tabs/utils';
 import AppRunnerApplications from './ConfigurationView/Applications';
 import SchemeProperties from './ConfigurationView/Properties';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -55,22 +52,17 @@ interface Props {
   originalScheme: DialApplicationScheme;
   roles: DialRole[] | null;
   names: string[];
+  interceptors: DialInterceptor[] | null;
 }
 
-const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names }) => {
+const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names, interceptors }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
 
-  const tabs: TabModel[] = [
-    propertiesTabs(t),
-    parametersTabs(t),
-    { id: EntityViewTab.Applications, name: t(TabsI18nKey.Applications) },
-    appRouteTab(t),
-    auditTabs(t),
-  ];
+  const tabs: TabModel[] = getAppRunnerTabs(t);
 
   const items: DropdownItem[] = [
     { key: 'Application', label: t(CreateI18nKey.Application), onClick: () => setIsCreateAppModalOpen(true) },
@@ -220,6 +212,15 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names 
 
               {activeTab === EntityViewTab.Parameters && (
                 <ApplicationParametersTab view={ApplicationRoute.ApplicationRunners} entity={selectedRunner} />
+              )}
+
+              {activeTab === EntityViewTab.Interceptors && (
+                <EntityInterceptors
+                  entity={selectedRunner as ChatEntity}
+                  interceptors={interceptors || []}
+                  onChangeEntity={onChangeScheme}
+                  view={ApplicationRoute.ApplicationRunners}
+                />
               )}
 
               {activeTab === EntityViewTab.Applications && (

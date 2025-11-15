@@ -9,7 +9,6 @@ import { cloneDeep } from 'lodash';
 
 import { moveFiles, removeFile } from '@/src/app/[lang]/files/actions';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
-import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { useI18n } from '@/src/locales/client';
@@ -20,6 +19,7 @@ import { changePath } from '@/src/utils/files/path';
 import { addTrailingSlash } from '@/src/utils/url';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import FileProperties from './Properties';
 
 interface Props {
@@ -28,7 +28,7 @@ interface Props {
 
 const FileView: FC<Props> = ({ originalFile }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
-  const tabs = [propertiesTabs(t)];
+  const tabs = getTabsForAsset(t, ApplicationRoute.Files);
   const router = useRouter();
   const { fetchFiles } = useFileFolder();
 
