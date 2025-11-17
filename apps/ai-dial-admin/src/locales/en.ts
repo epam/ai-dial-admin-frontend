@@ -812,6 +812,7 @@ export default {
     $schema: 'Scheme',
     title: 'Title',
     applicationTypeRoutes: 'App Routes',
+    applicationTypeInterceptors: 'Interceptors',
     routes: 'App Routes',
     apiKeyHeader: 'API key header',
     apiKeyValue: 'API key value',

@@ -40,6 +40,7 @@ export enum EntityParameterKeys {
   // app routes
   ROUTES = 'routes',
   APP_RUNNER_ROUTES = 'dial:applicationTypeRoutes',
+  APP_RUNNER_INTERCEPTORS = 'dial:applicationTypeInterceptors',
   SOURCE = 'source',
   DEFAULTS = 'defaults',
   APP_PROPERTIES = 'applicationProperties',
@@ -77,4 +78,5 @@ export const separateObjectParameterKeys = [
   EntityParameterKeys.MODELS,
   EntityParameterKeys.DEPENDENCIES,
   EntityParameterKeys.SOURCE,
+  EntityParameterKeys.APP_RUNNER_INTERCEPTORS,
 ];
