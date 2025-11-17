@@ -407,6 +407,7 @@ export enum FeaturesI18nKey {
   accessibleByPerRequestKey = 'Features.accessibleByPerRequestKey',
   configurationEndpoint = 'Features.configurationEndpoint',
   rateEndpoint = 'Features.rateEndpoint',
+  supportCommentInRateResponse = 'Features.supportCommentInRateResponse',
   tokenizeEndpoint = 'Features.tokenizeEndpoint',
   truncatePromptEndpoint = 'Features.truncatePromptEndpoint',
 }

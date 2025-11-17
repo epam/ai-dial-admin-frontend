@@ -446,6 +446,7 @@ export default {
     configurationEndpoint: 'Configuration endpoint',
     rateEndpoint: 'Rate endpoint',
     tokenizeEndpoint: 'Tokenize endpoint',
+    supportCommentInRateResponse: 'Support comment in rate response',
     truncatePromptEndpoint: 'Truncate prompt endpoint',
   },
   Topics: {

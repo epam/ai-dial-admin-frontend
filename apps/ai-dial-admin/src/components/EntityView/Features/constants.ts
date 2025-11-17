@@ -30,6 +30,7 @@ export const modelsSwitchFeatures: (keyof DialFeatures)[] = [
   'cacheSupported',
   'autoCachingSupported',
   'parallelToolCallsSupported',
+  'supportCommentInRateResponse',
 ];
 
 export const applicationSwitchFeatures: (keyof DialFeatures)[] = [
@@ -42,4 +43,5 @@ export const applicationSwitchFeatures: (keyof DialFeatures)[] = [
   'accessibleByPerRequestKey',
   'contentPartsSupported',
   'consentRequired',
+  'supportCommentInRateResponse',
 ];
