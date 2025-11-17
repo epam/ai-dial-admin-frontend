@@ -145,6 +145,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
       <CompletionEndpointControl
         endpoint={runner['dial:applicationTypeCompletionEndpoint']}
         onChange={onChangeCompletionEndPoint}
+        required={true}
       />
       <ConfigurationEndpointControl
         endpoint={runner['dial:applicationTypeConfigurationEndpoint']}
