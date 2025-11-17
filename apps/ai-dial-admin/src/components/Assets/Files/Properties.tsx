@@ -9,13 +9,7 @@ import Grid from '@/src/components/Grid/Grid';
 import { FILE_DOWNLOAD, FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
 import { getDownloadOperation, getPreviewOperation } from '@/src/constants/grid-columns/actions';
 import { FILES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import {
-  BasicI18nKey,
-  EntitiesI18nKey,
-  EntityFieldsI18nKey,
-  EntityPlaceholdersI18nKey,
-  FoldersI18nKey,
-} from '@/src/constants/i18n';
+import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
@@ -69,7 +63,7 @@ const FileProperties: FC<Props> = ({ file, onChangeFile }) => {
         <div className="lg:w-[35%]">
           <FilePath
             value={file.folderId}
-            label={t(FoldersI18nKey.Storage)}
+            label={t(EntitiesI18nKey.FolderStorage)}
             modalTitle={t(BasicI18nKey.MoveToFolder)}
             placeholder={t(EntityPlaceholdersI18nKey.Path)}
             onChange={onChangePath}

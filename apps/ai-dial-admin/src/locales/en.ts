@@ -672,7 +672,6 @@ export default {
     FolderCreate: 'Create Folder',
     FolderCreatePlaceholder: 'Enter folder name',
     FolderCreateSuccess: 'Folder created successfully',
-    Storage: 'Storage folder',
     Rename: 'Rename',
     FolderName: 'Folder name',
     RenameFolderError: 'This name is used by another folder in the current directory.',

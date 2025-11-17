@@ -641,7 +641,6 @@ export enum FoldersI18nKey {
   FolderCreate = 'Folder.FolderCreate',
   FolderCreatePlaceholder = 'Folder.FolderCreatePlaceholder',
   FolderCreateSuccess = 'Folder.FolderCreateSuccess',
-  Storage = 'Folder.Storage',
   Rename = 'Folder.Rename',
   FolderName = 'Folder.FolderName',
   RenameFolderError = 'Folder.RenameFolderError',

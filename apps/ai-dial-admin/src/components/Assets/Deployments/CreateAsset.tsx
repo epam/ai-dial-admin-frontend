@@ -6,7 +6,7 @@ import { DialCollapsibleSidebar, DialFormPopup, DialLabelledText, PopupSize } fr
 import { getVersionsPerName } from '@/src/components/Assets/utils';
 import FolderList from '@/src/components/Common/FolderList/FolderList';
 import AssetProperties from '@/src/components/EntityMainProperties/Properties/AssetProperties';
-import { ButtonsI18nKey, EntityFieldsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -108,7 +108,7 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
           <div className="flex flex-col flex-1 min-h-0 bg-layer-2 px-6 py-4">
             <h3>{t(EntityFieldsI18nKey.properties)}</h3>
             <div className="py-6">
-              <DialLabelledText label={t(FoldersI18nKey.Storage)} text={filePath} />
+              <DialLabelledText label={t(EntitiesI18nKey.FolderStorage)} text={filePath} />
             </div>
             <AssetProperties
               view={view}
