@@ -5,13 +5,7 @@ import FilePath from '@/src/components/Common/FilePath/FilePath';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
-import {
-  BasicI18nKey,
-  ButtonsI18nKey,
-  EntitiesI18nKey,
-  EntityPlaceholdersI18nKey,
-  FoldersI18nKey,
-} from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { Asset } from '@/src/models/dial/deployment-asset';
@@ -132,7 +126,7 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
         {duplicationType === DuplicationTypes.ENTITY && (
           <FilePath
             value={clonedAsset.folderId}
-            label={t(FoldersI18nKey.Storage)}
+            label={t(EntitiesI18nKey.FolderStorage)}
             modalTitle={t(BasicI18nKey.MoveToFolder)}
             placeholder={t(EntityPlaceholdersI18nKey.Path)}
             onChange={onChangePath}
