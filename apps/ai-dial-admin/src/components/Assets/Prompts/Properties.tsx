@@ -20,7 +20,6 @@ import {
   EntitiesI18nKey,
   EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
-  FoldersI18nKey,
   PromptsI18nKey,
 } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -253,14 +252,14 @@ const PromptProperties: FC<Props> = ({
             {isImmutable ? (
               <DialTextInputField
                 elementId="version"
-                fieldTitle={t(FoldersI18nKey.Storage)}
+                fieldTitle={t(EntitiesI18nKey.FolderStorage)}
                 value={prompt.path}
                 disabled={isImmutable}
               />
             ) : (
               <FilePath
                 value={prompt.folderId}
-                label={t(FoldersI18nKey.Storage)}
+                label={t(EntitiesI18nKey.FolderStorage)}
                 modalTitle={t(BasicI18nKey.MoveToFolder)}
                 placeholder={t(EntityPlaceholdersI18nKey.Path)}
                 onChange={onChangePath}

@@ -16,7 +16,7 @@ import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttac
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
-import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
@@ -112,7 +112,7 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, runners, o
         <FilePath
           inputCss="lg:w-[35%] lg:flex-0"
           value={asset.folderId}
-          label={t(FoldersI18nKey.Storage)}
+          label={t(EntitiesI18nKey.FolderStorage)}
           modalTitle={t(BasicI18nKey.MoveToFolder)}
           placeholder={t(EntityPlaceholdersI18nKey.Path)}
           onChange={(folderId) => onChange?.({ ...asset, folderId })}
