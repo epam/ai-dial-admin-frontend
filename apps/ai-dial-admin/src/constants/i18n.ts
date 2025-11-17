@@ -888,6 +888,7 @@ export enum EntityFieldsI18nKey {
   entities = 'EntityFields.entities',
   routes = 'EntityFields.routes',
   'dial:applicationTypeRoutes' = 'EntityFields.applicationTypeRoutes',
+  'dial:applicationTypeInterceptors' = 'EntityFields.applicationTypeInterceptors',
   'dial:applicationTypeCompletionEndpoint' = 'EntityFields.applicationTypeCompletionEndpoint',
   'dial:applicationTypeDisplayName' = 'EntityFields.applicationTypeDisplayName',
   title = 'EntityFields.title',
