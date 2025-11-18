@@ -30,7 +30,7 @@ interface Props<T> {
   view: ApplicationRoute;
   activeTab?: EntityViewTab;
   entity: T;
-  onChangeEntity: (entity: T) => void;
+  onChangeEntity?: (entity: T) => void;
   isChanged: boolean;
   jsonEditorEnabled: boolean;
   hideJsonEditor?: boolean;
