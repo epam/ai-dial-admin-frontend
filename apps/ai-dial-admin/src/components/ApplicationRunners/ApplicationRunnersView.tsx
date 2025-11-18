@@ -205,7 +205,12 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
                 <div className="pt-3 w-full lg:w-[35%]">
                   <EntityHeader entity={selectedRunner} />
                   <div className="flex-1 min-h-0 pt-4">
-                    <SchemeProperties runner={selectedRunner} isImmutable={true} onChangeRunner={onChangeScheme} />
+                    <SchemeProperties
+                      names={names}
+                      runner={selectedRunner}
+                      isImmutable={true}
+                      onChangeRunner={onChangeScheme}
+                    />
                   </div>
                 </div>
               )}
