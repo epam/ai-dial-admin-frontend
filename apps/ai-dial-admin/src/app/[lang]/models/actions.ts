@@ -49,14 +49,15 @@ export async function updateModel(model: DialModel, etag: string) {
 
 export async function createModel(model: DialModel) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const type = model.type || DialModelType.Chat;
   return modelsApi.createModel(
     {
       ...model,
       ...DEFAULT_ROLE_LIMITS,
-      type: model.type || DialModelType.Chat,
+      type,
       source: {
         ...model.source,
-        completionEndpointPath: `${model.name}${getEndpointPostfix(DialModelType.Chat)}`,
+        completionEndpointPath: `${model.name}${getEndpointPostfix(type)}`,
       } as SOURCE_FIELD,
     },
     token,
