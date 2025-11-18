@@ -51,7 +51,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
 }: Props<T>) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
-  const [source, setSource] = useState(sourceItems[0].value);
+  const [source, setSource] = useState<string>();
   const [errorText, setErrorText] = useState('');
 
   const onChangeEntity = useCallback(
@@ -102,7 +102,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
 
       onChangeEntity(entityWithSource);
     } else {
-      setSource(entity.source.$type);
+      setSource(entity.source.$type || sourceItems[0].value);
     }
   }, [entity, isModal, onChangeEntity, sourceItems, view]);
 
