@@ -81,10 +81,18 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
           field: 'completionEndpoint',
           isValid: true,
         });
+
+        if (sourceType !== SOURCE_TYPE.ENDPOINTS && view === ApplicationRoute.Toolsets) {
+          dispatch({
+            type: ValidationActionType.SetField,
+            field: 'endpoint',
+            isValid: true,
+          });
+        }
         onChangeEntity({ ...entity, source: { ...entity.source, $type: sourceType as SOURCE_TYPE }, endpoint: '' });
       }
     },
-    [dispatch, entity, onChangeEntity, source],
+    [dispatch, entity, onChangeEntity, source, view],
   );
 
   useEffect(() => {
