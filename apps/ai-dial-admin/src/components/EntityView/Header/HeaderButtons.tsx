@@ -1,12 +1,13 @@
 'use client';
 
-import { ReactNode, useCallback, useEffect, useState } from 'react';
+import { Dispatch, ReactNode, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
+import AssetVersionControl from '@/src/components/Assets/Deployments/AssetVersionControl';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -14,11 +15,13 @@ import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
+import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import JsonToggles from './JsonToggle';
 import ModifiedEntityButtons from './ModifiedEntityButtons';
@@ -27,10 +30,12 @@ interface Props<T> {
   view: ApplicationRoute;
   activeTab?: EntityViewTab;
   entity: T;
+  onChangeEntity: (entity: T) => void;
   isChanged: boolean;
   jsonEditorEnabled: boolean;
   hideJsonEditor?: boolean;
-  existingVersions?: string[];
+  addedVersions?: string[];
+  setAddedVersions?: Dispatch<SetStateAction<string[]>>;
   selectedFormat?: ExportFormat;
   setSelectedFormat?: (format: ExportFormat) => void;
   children?: ReactNode;
@@ -40,11 +45,14 @@ interface Props<T> {
   toggleJsonEditor?: () => void;
   context?: () => AssetsFolderContext<DialFile>;
   childrenContainerClass?: string;
+  assets?: Asset[];
+  etag?: string;
 }
 
 const HeaderButtons = <T extends object>({
   view,
   entity,
+  onChangeEntity,
   isChanged,
   onDiscard,
   onSave,
@@ -52,9 +60,12 @@ const HeaderButtons = <T extends object>({
   jsonEditorEnabled,
   hideJsonEditor,
   children,
-  existingVersions,
+  addedVersions,
+  setAddedVersions,
   context,
   childrenContainerClass,
+  assets,
+  etag,
   ...props
 }: Props<T>) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
@@ -67,6 +78,14 @@ const HeaderButtons = <T extends object>({
   const isMobile = useIsMobileScreen();
   const [containerClassNames, setContainerClassNames] = useState(staticContainerClassnames);
   const [buttonsClassNames, setButtonsClassNames] = useState('');
+
+  const existingVersions = useMemo(() => {
+    return assets?.map((asset) => asset.version) || [];
+  }, [assets]);
+
+  const isAssetView = useMemo(() => {
+    return isAssetWithVersion(view);
+  }, [view]);
 
   const onOpenModal = useCallback(() => {
     setIsModalOpen(true);
@@ -99,22 +118,35 @@ const HeaderButtons = <T extends object>({
             existingVersions={existingVersions}
           />
         ) : (
-          <div className="flex flex-row items-center w-full gap-x-3">
+          <div className="flex flex-row items-center w-full gap-x-4">
             {!jsonEditorEnabled && (
               <div
                 className={classNames(
-                  `flex-1 flex flex-row gap-3`,
+                  `flex-1 flex flex-row gap-x-4`,
                   childrenContainerClass,
                   isSimple ? 'justify-center' : '',
                 )}
               >
-                <DialButton
-                  variant={ButtonVariant.Secondary}
-                  cssClass={classNames(buttonsClassNames, isSimple ? 'min-w-[150px] lg:min-w-0' : '')}
-                  title={t(ButtonsI18nKey.Delete)}
-                  iconBefore={<IconTrashX {...BASE_ICON_PROPS} />}
-                  onClick={onOpenModal}
-                />
+                <div className="flex flex-row gap-x-4">
+                  {isAssetView && (
+                    <AssetVersionControl
+                      view={view}
+                      asset={entity as Asset}
+                      addedVersions={addedVersions || []}
+                      setAddedVersions={setAddedVersions}
+                      assets={assets}
+                      onChangeAsset={onChangeEntity as (entity: Asset) => void}
+                      etag={etag}
+                    />
+                  )}
+                  <DialButton
+                    variant={ButtonVariant.Secondary}
+                    cssClass={classNames(buttonsClassNames, isSimple ? 'min-w-[150px] lg:min-w-0' : '')}
+                    title={t(ButtonsI18nKey.Delete)}
+                    iconBefore={<IconTrashX {...BASE_ICON_PROPS} />}
+                    onClick={onOpenModal}
+                  />
+                </div>
                 {children}
               </div>
             )}

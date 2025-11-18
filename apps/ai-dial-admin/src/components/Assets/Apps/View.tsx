@@ -171,13 +171,15 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
           activeTab={activeTab}
           view={ApplicationRoute.AssetsApplications}
           entity={selectedApp}
+          onChangeEntity={onChangeEntity}
           isChanged={isChanged}
           onSave={onSave}
           onDiscard={onDiscard}
           removeEntity={onRemove}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          existingVersions={assets?.map((app) => app.version) || []}
+          assets={assets}
+          etag={etag}
           context={useAppsFolder as () => AssetsFolderContext<DialFile | AssetApp>}
         />
       </div>
@@ -193,7 +195,6 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
           <ViewContent
             activeTab={activeTab}
             names={[]}
-            assets={assets}
             models={models}
             applications={applications}
             applicationSchemes={schemes}

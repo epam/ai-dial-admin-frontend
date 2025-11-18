@@ -18,21 +18,11 @@ interface Props {
   names: string[];
   applicationSchemes?: DialApplicationScheme[] | null;
   view: ApplicationRoute;
-  etag?: string;
-  assets?: DeploymentAsset[] | null;
   selectedEntity: BaseEntity;
   onChangeEntity: (entity: BaseEntity) => void;
 }
 
-const PropertiesContent: FC<Props> = ({
-  applicationSchemes,
-  names,
-  view,
-  etag,
-  assets,
-  selectedEntity,
-  onChangeEntity,
-}) => {
+const PropertiesContent: FC<Props> = ({ applicationSchemes, names, view, selectedEntity, onChangeEntity }) => {
   const getPropertiesView = useCallback(() => {
     if (view === ApplicationRoute.Models) {
       return <ModelProperties model={selectedEntity} modelsNames={names} updateModel={onChangeEntity} />;
@@ -46,9 +36,7 @@ const PropertiesContent: FC<Props> = ({
       return (
         <DeploymentProperties
           view={view}
-          etag={etag as string}
           asset={selectedEntity as DeploymentAsset}
-          assets={assets || []}
           runners={applicationSchemes || []}
           onChange={onChangeEntity}
         />
@@ -64,7 +52,7 @@ const PropertiesContent: FC<Props> = ({
         updateEntity={onChangeEntity}
       />
     );
-  }, [view, selectedEntity, applicationSchemes, names, onChangeEntity, etag, assets]);
+  }, [view, selectedEntity, applicationSchemes, names, onChangeEntity]);
 
   return (
     <div className="flex flex-col h-full w-full">
