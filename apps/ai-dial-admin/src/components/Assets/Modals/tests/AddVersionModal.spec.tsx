@@ -5,7 +5,6 @@ import { describe, expect, test, vi } from 'vitest';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import AddVersionModal from '../AddVersionModal';
 
-
 describe('Common components - AddVersionModal', () => {
   const user = userEvent.setup();
   const onClose = vi.fn();
