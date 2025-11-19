@@ -407,6 +407,7 @@ export enum FeaturesI18nKey {
   accessibleByPerRequestKey = 'Features.accessibleByPerRequestKey',
   configurationEndpoint = 'Features.configurationEndpoint',
   rateEndpoint = 'Features.rateEndpoint',
+  supportCommentInRateResponse = 'Features.supportCommentInRateResponse',
   tokenizeEndpoint = 'Features.tokenizeEndpoint',
   truncatePromptEndpoint = 'Features.truncatePromptEndpoint',
 }
@@ -640,7 +641,6 @@ export enum FoldersI18nKey {
   FolderCreate = 'Folder.FolderCreate',
   FolderCreatePlaceholder = 'Folder.FolderCreatePlaceholder',
   FolderCreateSuccess = 'Folder.FolderCreateSuccess',
-  Storage = 'Folder.Storage',
   Rename = 'Folder.Rename',
   FolderName = 'Folder.FolderName',
   RenameFolderError = 'Folder.RenameFolderError',

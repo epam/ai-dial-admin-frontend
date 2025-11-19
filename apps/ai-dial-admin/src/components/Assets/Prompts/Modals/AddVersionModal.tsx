@@ -33,7 +33,7 @@ const AddVersionModal: FC<Props> = ({
       open={isModalOpen}
       onCancel={onClose}
       onSubmit={() => onConfirm(version)}
-      disableSubmitButton={existingVersions.includes(version)}
+      disableSubmitButton={!version || existingVersions.includes(version)}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Create)}
     >

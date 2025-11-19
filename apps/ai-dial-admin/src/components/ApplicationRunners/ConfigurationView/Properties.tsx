@@ -9,10 +9,11 @@ import AppRunnerExtendedProperties from './ExtendedProperties';
 interface Props {
   runner: DialApplicationScheme;
   isImmutable?: boolean;
+  names: string[];
   onChangeRunner: (entity: DialApplicationScheme) => void;
 }
 
-const SchemeProperties: FC<Props> = ({ runner, isImmutable, onChangeRunner }) => {
+const SchemeProperties: FC<Props> = ({ names, runner, isImmutable, onChangeRunner }) => {
   const onChangeId = useCallback(
     (id?: string) => {
       onChangeRunner({
@@ -33,7 +34,12 @@ const SchemeProperties: FC<Props> = ({ runner, isImmutable, onChangeRunner }) =>
   return (
     <div className="flex flex-col gap-6 h-full">
       {!isImmutable && (
-        <IdControl isUrlId={true} entity={{ name: runner.$id }} onChangeEntity={(entity) => onChangeId(entity.name)} />
+        <IdControl
+          names={names}
+          isUrlId={true}
+          entity={{ name: runner.$id }}
+          onChangeEntity={(entity) => onChangeId(entity.name)}
+        />
       )}
 
       <DisplayNameControl
