@@ -457,6 +457,9 @@ export default {
     Local: 'Local Interceptors',
     Global: 'Global Interceptors',
     Runner: 'Runner Interceptors',
+    GlobalAlert:
+      'This interceptor is applied to all entities in the system as a global. To manage entity relationships list, use the JSON editor.',
+    GlobalMessage: 'Interceptor is Global',
   },
   Telemetry: {
     SystemUsage: 'System Usage',

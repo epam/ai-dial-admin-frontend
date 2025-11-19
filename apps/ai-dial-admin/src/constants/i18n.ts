@@ -445,6 +445,8 @@ export enum InterceptorsI18nKey {
   Local = 'Interceptors.Local',
   Global = 'Interceptors.Global',
   Runner = 'Interceptors.Runner',
+  GlobalAlert = 'Interceptors.GlobalAlert',
+  GlobalMessage = 'Interceptors.GlobalMessage',
 }
 
 export enum TelemetryI18nKey {
