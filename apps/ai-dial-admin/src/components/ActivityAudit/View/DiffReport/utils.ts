@@ -50,24 +50,24 @@ const getRowDataByParameter = (
  * Calculate number of changes in diff section
  *
  * @param {ActivityAuditDiffSection[]} sections - section where need to check changes
- * @param {?DiffStatus} [status] - status which need to check
+ * @param {?DiffStatus} [diffStatus] - status which need to check
  * @returns {number} - result of status changes count
  */
-export const getDiffCount = (sections: ActivityAuditDiffSection[], status?: DiffStatus): number => {
+export const getDiffCount = (sections: ActivityAuditDiffSection[], diffStatus?: DiffStatus): number => {
   let count = 0;
 
   sections.forEach((section) => {
     Object.values(section).forEach((arr) => {
       if (Array.isArray(arr)) {
         arr.forEach((item) => {
-          if (item.status === status) {
+          if (item.diffStatus === diffStatus) {
             count++;
           }
         });
       }
     });
   });
-  return status === DiffStatus.CHANGED ? count / 2 : count;
+  return diffStatus === DiffStatus.CHANGED ? count / 2 : count;
 };
 
 /**
@@ -90,8 +90,8 @@ export const filterNotEmptySections = (
       const current = getRowDataByParameter(item.current, name, index, type);
       const compare = getRowDataByParameter(item.compare, name, index, type);
 
-      const currentData = diffView === DiffView.ALL ? current : current?.filter((d) => d.status);
-      const compareData = diffView === DiffView.ALL ? compare : compare?.filter((d) => d.status);
+      const currentData = diffView === DiffView.ALL ? current : current?.filter((d) => d.diffStatus);
+      const compareData = diffView === DiffView.ALL ? compare : compare?.filter((d) => d.diffStatus);
 
       const hasData = (currentData && currentData.length > 0) || (compareData && compareData.length > 0);
 

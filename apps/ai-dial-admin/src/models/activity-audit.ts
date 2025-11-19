@@ -15,7 +15,7 @@ export interface DialActivity {
 export interface ActivityAuditDiff {
   parameter: string;
   value: string;
-  status?: DiffStatus;
+  diffStatus?: DiffStatus;
 }
 
 export interface ActivityAuditDiffSection {

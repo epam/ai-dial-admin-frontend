@@ -140,14 +140,14 @@ const SystemRollback: FC = () => {
         ? currentState?.get(selectedTab as ActivityAuditResourceType)
         : currentState
             ?.get(selectedTab as ActivityAuditResourceType)
-            ?.filter((data) => data.status)) as ActivityAuditDiff[],
+            ?.filter((data) => data.diffStatus)) as ActivityAuditDiff[],
     );
     setRollbackRows(
       (diffView === DiffView.ALL
         ? rollbackState?.get(selectedTab as ActivityAuditResourceType)
         : rollbackState
             ?.get(selectedTab as ActivityAuditResourceType)
-            ?.filter((data) => data.status)) as ActivityAuditDiff[],
+            ?.filter((data) => data.diffStatus)) as ActivityAuditDiff[],
     );
   }, [currentState, diffView, rollbackState, selectedTab]);
 

@@ -36,8 +36,8 @@ describe('Activity audit :: generateCurrentResource ', () => {
     const result = generateCurrentResource(current, compare);
     expect(result).toEqual({
       properties: [
-        { parameter: 'name', value: '', status: DiffStatus.REMOVED },
-        { parameter: 'age', value: '30', status: DiffStatus.ADDED },
+        { parameter: 'name', value: '', diffStatus: DiffStatus.REMOVED },
+        { parameter: 'age', value: '30', diffStatus: DiffStatus.ADDED },
       ],
     });
   });
@@ -48,7 +48,7 @@ describe('Activity audit :: generateCurrentResource ', () => {
     const result = generateCurrentResource(current, compare);
     expect(result).toEqual({
       properties: [
-        { parameter: 'name', value: 'Doe', status: DiffStatus.CHANGED },
+        { parameter: 'name', value: 'Doe', diffStatus: DiffStatus.CHANGED },
         { parameter: 'age', value: '30' },
       ],
     });
@@ -61,9 +61,9 @@ describe('Activity audit :: generateCurrentResource ', () => {
     expect(result).toEqual({
       properties: [
         { parameter: 'name', value: 'John' },
-        { parameter: 'age', value: '31', status: DiffStatus.CHANGED },
-        { parameter: 'city', value: 'NY', status: DiffStatus.ADDED },
-        { parameter: 'country', value: '', status: DiffStatus.REMOVED },
+        { parameter: 'age', value: '31', diffStatus: DiffStatus.CHANGED },
+        { parameter: 'city', value: 'NY', diffStatus: DiffStatus.ADDED },
+        { parameter: 'country', value: '', diffStatus: DiffStatus.REMOVED },
       ],
     });
   });
@@ -113,10 +113,10 @@ describe('Activity audit :: compareObjectArray', () => {
     });
 
     const key3Section = Object.values(diffs).find((arr) => arr.some((d) => d.value === 'val3'));
-    expect(key3Section?.some((d) => d.status === DiffStatus.ADDED)).toBe(true);
+    expect(key3Section?.some((d) => d.diffStatus === DiffStatus.ADDED)).toBe(true);
 
     const key2Section = Object.values(diffs).find((arr) => arr.some((d) => d.value === 'val2'));
-    expect(key2Section?.some((d) => d.status === undefined)).toBe(true);
+    expect(key2Section?.some((d) => d.diffStatus === undefined)).toBe(true);
   });
 
   test('should do nothing for unknown key', () => {
@@ -343,7 +343,7 @@ describe('Activity audit :: mergeEntityMaps', () => {
     const output = result.get(ActivityAuditResourceType.MODEL)!;
 
     expect(output).toHaveLength(1);
-    expect(output[0]).toEqual({ ...entity1, status: DiffStatus.ADDED });
+    expect(output[0]).toEqual({ ...entity1, diffStatus: DiffStatus.ADDED });
   });
 
   test('should mark entity as removed when only in previous and isCurrent=false', () => {
@@ -354,7 +354,7 @@ describe('Activity audit :: mergeEntityMaps', () => {
     const output = result.get(ActivityAuditResourceType.MODEL)!;
 
     expect(output).toHaveLength(1);
-    expect(output[0]).toEqual({ status: DiffStatus.MIRROR });
+    expect(output[0]).toEqual({ diffStatus: DiffStatus.MIRROR });
   });
 
   test('should mark entity as changed when values differ', () => {
@@ -365,7 +365,7 @@ describe('Activity audit :: mergeEntityMaps', () => {
     const output = result.get(ActivityAuditResourceType.MODEL)!;
 
     expect(output).toHaveLength(1);
-    expect(output[0]).toEqual({ ...entity1Changed, status: DiffStatus.CHANGED });
+    expect(output[0]).toEqual({ ...entity1Changed, diffStatus: DiffStatus.CHANGED });
   });
 
   test('should not add status when entities are equal', () => {
@@ -393,8 +393,8 @@ describe('Activity audit :: mergeEntityMaps', () => {
     const modelOutput = result.get(ActivityAuditResourceType.MODEL)!;
     const roleOutput = result.get(ActivityAuditResourceType.ROLE)!;
 
-    expect(modelOutput[0]).toEqual({ ...entity1, status: DiffStatus.CHANGED });
-    expect(roleOutput[0]).toEqual({ ...entity2, status: DiffStatus.ADDED });
+    expect(modelOutput[0]).toEqual({ ...entity1, diffStatus: DiffStatus.CHANGED });
+    expect(roleOutput[0]).toEqual({ ...entity2, diffStatus: DiffStatus.ADDED });
   });
 
   test('should return empty array if both inputs are null or empty', () => {
