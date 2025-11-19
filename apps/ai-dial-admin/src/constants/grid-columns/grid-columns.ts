@@ -109,6 +109,12 @@ export const TOPICS_COLUMN: ColDef = {
   filterValueGetter: (params) => getTopics(params.data),
 };
 
+export const STATUS_COLUMN: ColDef = {
+  field: 'status',
+  headerName: 'Status',
+  hide: false,
+};
+
 const ATTACHMENT_COLUMN = (t: (str: string) => string): ColDef => {
   return {
     field: 'inputAttachmentTypes',

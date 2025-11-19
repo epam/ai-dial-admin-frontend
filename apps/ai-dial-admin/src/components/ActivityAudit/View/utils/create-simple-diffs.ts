@@ -28,24 +28,24 @@ export const compareEntities = (diffs: ActivityAuditDiff[], val1: string[], val2
       i++;
       j++;
     } else if (value1 != null && (value2 == null || value1 < value2)) {
-      diffs.push({ parameter: '', value: '', status: DiffStatus.MIRROR });
+      diffs.push({ parameter: '', value: '', diffStatus: DiffStatus.MIRROR });
       i++;
     } else if (value2 != null && (value1 == null || value1 > value2)) {
       diffs.push({
         parameter: value2 || '',
         value: value2 || '',
-        status: isCurrent ? DiffStatus.REMOVED : DiffStatus.ADDED,
+        diffStatus: isCurrent ? DiffStatus.REMOVED : DiffStatus.ADDED,
       });
       j++;
     } else {
-      diffs.push({ parameter: value2 || '', value: value2 || '', status: DiffStatus.CHANGED });
+      diffs.push({ parameter: value2 || '', value: value2 || '', diffStatus: DiffStatus.CHANGED });
       i++;
       j++;
     }
   }
 
   while (i < sortedVal1.length) {
-    diffs.push({ parameter: '', value: '', status: DiffStatus.MIRROR });
+    diffs.push({ parameter: '', value: '', diffStatus: DiffStatus.MIRROR });
     i++;
   }
 
@@ -53,7 +53,7 @@ export const compareEntities = (diffs: ActivityAuditDiff[], val1: string[], val2
     diffs.push({
       parameter: sortedVal2[j] || '',
       value: sortedVal2[j] || '',
-      status: isCurrent ? DiffStatus.REMOVED : DiffStatus.ADDED,
+      diffStatus: isCurrent ? DiffStatus.REMOVED : DiffStatus.ADDED,
     });
     j++;
   }
@@ -93,11 +93,11 @@ export const compareInterceptors = (
     const parameter = i.toString();
 
     if (value1 != null && value2 == null) {
-      diffs.push({ parameter, value: '', status: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED });
+      diffs.push({ parameter, value: '', diffStatus: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED });
     } else if (value1 == null && value2 != null) {
-      diffs.push({ parameter, value: value2 || '', status: isCurrent ? DiffStatus.MIRROR : DiffStatus.ADDED });
+      diffs.push({ parameter, value: value2 || '', diffStatus: isCurrent ? DiffStatus.MIRROR : DiffStatus.ADDED });
     } else if (value1 != null && value2 != null && value1 !== value2) {
-      diffs.push({ parameter, value: value2 || '', status: DiffStatus.CHANGED });
+      diffs.push({ parameter, value: value2 || '', diffStatus: DiffStatus.CHANGED });
     } else {
       diffs.push({ parameter, value: value1 || '' });
     }
@@ -136,15 +136,15 @@ export const compareRoleLimits = (
     const value1 = val1?.[key];
     const value2 = val2?.[key];
     if (value1 != null && value2 == null) {
-      diffs.push({ parameter: '', value: '', status: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED });
+      diffs.push({ parameter: '', value: '', diffStatus: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED });
     } else if (value1 == null && value2 != null) {
       diffs.push({
         parameter: key,
         value: convertRoleLimitsIntoString(value2),
-        status: isCurrent ? DiffStatus.MIRROR : DiffStatus.ADDED,
+        diffStatus: isCurrent ? DiffStatus.MIRROR : DiffStatus.ADDED,
       });
     } else if (value1 != null && value2 != null && !isEqualSkippingUndefined(value1, value2)) {
-      diffs.push({ parameter: key, value: convertRoleLimitsIntoString(value2), status: DiffStatus.CHANGED });
+      diffs.push({ parameter: key, value: convertRoleLimitsIntoString(value2), diffStatus: DiffStatus.CHANGED });
     } else {
       diffs.push({ parameter: key, value: convertRoleLimitsIntoString(value1) });
     }
@@ -187,7 +187,7 @@ export const compareShare = (
         diffs.push({
           parameter: `${key}.${k}`,
           value: convertShareValue('', k, key),
-          status: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED,
+          diffStatus: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED,
         });
       });
     } else if (value1 == null && value2 != null) {

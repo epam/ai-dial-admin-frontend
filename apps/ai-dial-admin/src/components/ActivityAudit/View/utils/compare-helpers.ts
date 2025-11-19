@@ -79,11 +79,11 @@ export const fillShareValues = (
   const val1 = v1?.[field as keyof typeof v1];
   const val2 = v2?.[field as keyof typeof v2];
   const value = convertShareValue(v1 && !v2 ? val1 : val2, field, key);
-  const status = getShareStatus(val1, val2, isCurrent);
+  const diffStatus = getShareStatus(val1, val2, isCurrent);
   diffs.push({
     parameter: `${key}.${field}`,
     value,
-    status,
+    diffStatus,
   });
 };
 

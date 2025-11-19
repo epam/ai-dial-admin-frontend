@@ -410,18 +410,18 @@ export const mergeEntityMaps = (
       const previousEntity = previousMap.get(name);
 
       if (currentEntity && !previousEntity) {
-        return { ...currentEntity, status: isCurrent ? DiffStatus.ADDED : DiffStatus.REMOVED };
+        return { ...currentEntity, diffStatus: isCurrent ? DiffStatus.ADDED : DiffStatus.REMOVED };
       }
 
       if (!currentEntity && previousEntity) {
-        return { status: DiffStatus.MIRROR };
+        return { diffStatus: DiffStatus.MIRROR };
       }
 
       if (currentEntity && previousEntity) {
         if (isEqualSkippingUndefined(currentEntity, previousEntity)) {
           return currentEntity as unknown as EntitiesGridData;
         } else {
-          return { ...currentEntity, status: DiffStatus.CHANGED };
+          return { ...currentEntity, diffStatus: DiffStatus.CHANGED };
         }
       }
 

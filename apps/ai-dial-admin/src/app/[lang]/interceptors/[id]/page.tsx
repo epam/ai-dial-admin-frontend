@@ -1,22 +1,23 @@
-import { redirect } from 'next/navigation';
 import { cookies, headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 
+import { getInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { applicationRunnersApi, applicationsApi, interceptorsApi, modelsApi } from '@/src/app/api/api';
 import InterceptorView from '@/src/components/Interceptors/View/View';
+import Page403 from '@/src/components/Page403/Page403';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
+import { InterceptorTemplate } from '@/src/models/interceptor-template';
+import { logError } from '@/src/server/logger';
+import { InterceptorStatus } from '@/src/types/interceptor-status';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
-import { logError } from '@/src/server/logger';
-import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import Page403 from '@/src/components/Page403/Page403';
-import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { filterNames } from '@/src/utils/entities/filter-names';
-import { DEFAULT_ETAG } from '@/src/constants/api-headers';
-import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { getInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
-import { InterceptorTemplate } from '@/src/models/interceptor-template';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +27,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   let etag = DEFAULT_ETAG;
   let interceptors: DialInterceptor[] | null = [];
   let interceptor: DialInterceptor | null = null;
+  let globalInterceptors: string[] | null = [];
 
   let models: DialModel[] | null = [];
   let applications: DialApplication[] | null = [];
@@ -41,6 +43,15 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as DialModel | null;
     });
+    // todo fill when api ready
+    globalInterceptors = [];
+
+    interceptor = {
+      ...interceptor,
+      status: globalInterceptors?.includes(interceptor?.name as string)
+        ? InterceptorStatus.GLOBAL
+        : InterceptorStatus.LOCAL,
+    };
 
     if (interceptor?.source?.$type === SOURCE_TYPE.RUNNER) {
       interceptorTemplate = await getInterceptorTemplate(interceptor.source?.runnerName as string, DEFAULT_ETAG).then(

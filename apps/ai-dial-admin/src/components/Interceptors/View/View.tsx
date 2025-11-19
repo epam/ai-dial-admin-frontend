@@ -1,9 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
+import { AlertVariant, DialAlert, DialNoDataContent, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
+import { IconWorldStar } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
@@ -24,7 +25,7 @@ import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import ParameterSchema from '@/src/components/Interceptors/View/ParameterSchema/ParameterSchema';
 import { DESCRIPTION_COLUMN } from '@/src/constants/grid-columns/grid-columns';
-import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, InterceptorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -36,6 +37,7 @@ import { DialModel } from '@/src/models/dial/model';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ExportFormat } from '@/src/types/export';
+import { InterceptorStatus } from '@/src/types/interceptor-status';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -77,6 +79,10 @@ const InterceptorView: FC<Props> = ({
   const [key, setKey] = useState(0);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
   const [coreInterceptor, setCoreInterceptor] = useState<DialInterceptor | null>(null);
+
+  const showGlobalError = useMemo(() => {
+    return originalInterceptor.status === InterceptorStatus.GLOBAL;
+  }, [originalInterceptor.status]);
 
   useEffect(() => {
     const name = originalInterceptor?.name;
@@ -295,15 +301,26 @@ const InterceptorView: FC<Props> = ({
                 getRelevantDataForEntity={getRelevantAppRunnersForInterceptor.bind(this, selectedInterceptor)}
               />
             )}
-            {activeTab === EntityViewTab.Entities && (
-              <AddEntitiesView
-                models={models}
-                applications={applications}
-                onAdd={onAddEntities}
-                onRemove={onRemoveEntity}
-                getRelevantDataForEntity={getRelevantDataForInterceptor.bind(this, selectedInterceptor)}
-              />
-            )}
+            {activeTab === EntityViewTab.Entities &&
+              (showGlobalError ? (
+                <div className="flex flex-col h-full">
+                  <div className="flex-1">
+                    <DialNoDataContent
+                      icon={<IconWorldStar strokeWidth={1} size={60} />}
+                      title={t(InterceptorsI18nKey.GlobalMessage)}
+                    />
+                  </div>
+                  <DialAlert variant={AlertVariant.Info} message={t(InterceptorsI18nKey.GlobalAlert)} />
+                </div>
+              ) : (
+                <AddEntitiesView
+                  models={models}
+                  applications={applications}
+                  onAdd={onAddEntities}
+                  onRemove={onRemoveEntity}
+                  getRelevantDataForEntity={getRelevantDataForInterceptor.bind(this, selectedInterceptor)}
+                />
+              ))}
             {activeTab === EntityViewTab.Audit && (
               <EntityAudit entity={originalInterceptor} view={ApplicationRoute.Interceptors} />
             )}

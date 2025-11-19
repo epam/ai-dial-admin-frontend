@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { getDiffCount } from '../utils';
 
 describe('Activity audit :: getDiffCount', () => {
-  const createItem = (status?: DiffStatus) => ({ parameter: 'param', value: 'val', status });
+  const createItem = (diffStatus?: DiffStatus) => ({ parameter: 'param', value: 'val', diffStatus });
 
   test('should count ADD statuses correctly', () => {
     const sections = [

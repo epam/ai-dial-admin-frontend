@@ -32,18 +32,18 @@ export const compareSimpleTypes = (
 ): void => {
   const isTime = dateKeys.includes(key);
   if (isSimpleValueAddedOrRemoved(val1, val2)) {
-    diffs.push({ parameter: key, value: '', status: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED });
+    diffs.push({ parameter: key, value: '', diffStatus: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED });
   } else if (isSimpleValueAddedOrRemoved(val2, val1)) {
     diffs.push({
       parameter: key,
       value: isTime ? formatDateTimeToLocalString(val2 as number) : val2?.toString() || '',
-      status: isCurrent ? DiffStatus.MIRROR : DiffStatus.ADDED,
+      diffStatus: isCurrent ? DiffStatus.MIRROR : DiffStatus.ADDED,
     });
   } else if (isSimpleValueChanged(val1, val2)) {
     diffs.push({
       parameter: key,
       value: isTime ? formatDateTimeToLocalString(val2 as number) : val2?.toString() || '',
-      status: DiffStatus.CHANGED,
+      diffStatus: DiffStatus.CHANGED,
     });
   } else {
     diffs.push({

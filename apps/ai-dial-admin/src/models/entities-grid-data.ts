@@ -17,5 +17,5 @@ export interface EntitiesGridData extends BaseEntity {
   path?: string;
   $id?: string; // application runner
   dependencies?: (EntityType | string)[];
-  status?: DiffStatus;
+  diffStatus?: DiffStatus;
 }

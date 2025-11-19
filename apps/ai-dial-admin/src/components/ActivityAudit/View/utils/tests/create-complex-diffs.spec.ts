@@ -27,19 +27,19 @@ describe('Activity audit :: compareSimpleTypes', () => {
   test('should push REMOVE when val1 is defined and val2 is null', () => {
     const diffs = [];
     compareSimpleTypes(diffs, 'key', 'value1', void 0);
-    expect(diffs).toEqual([{ parameter: 'key', value: '', status: DiffStatus.REMOVED }]);
+    expect(diffs).toEqual([{ parameter: 'key', value: '', diffStatus: DiffStatus.REMOVED }]);
   });
 
   test('should push ADD when val1 is null and val2 is defined', () => {
     const diffs = [];
     compareSimpleTypes(diffs, 'key', void 0, 'value2');
-    expect(diffs).toEqual([{ parameter: 'key', value: 'value2', status: DiffStatus.ADDED }]);
+    expect(diffs).toEqual([{ parameter: 'key', value: 'value2', diffStatus: DiffStatus.ADDED }]);
   });
 
   test('should push CHANGE when val1 and val2 are different', () => {
     const diffs = [];
     compareSimpleTypes(diffs, 'key', 'old', 'new');
-    expect(diffs).toEqual([{ parameter: 'key', value: 'new', status: DiffStatus.CHANGED }]);
+    expect(diffs).toEqual([{ parameter: 'key', value: 'new', diffStatus: DiffStatus.CHANGED }]);
   });
 
   test('should push unchanged value when val1 and val2 are the same', () => {
@@ -51,13 +51,13 @@ describe('Activity audit :: compareSimpleTypes', () => {
   test('should handle number types and push CHANGE if different', () => {
     const diffs = [];
     compareSimpleTypes(diffs, 'count', 1, 2);
-    expect(diffs).toEqual([{ parameter: 'count', value: '2', status: DiffStatus.CHANGED }]);
+    expect(diffs).toEqual([{ parameter: 'count', value: '2', diffStatus: DiffStatus.CHANGED }]);
   });
 
   test('should handle boolean types and push CHANGE if different', () => {
     const diffs = [];
     compareSimpleTypes(diffs, 'enabled', true, false);
-    expect(diffs).toEqual([{ parameter: 'enabled', value: 'false', status: DiffStatus.CHANGED }]);
+    expect(diffs).toEqual([{ parameter: 'enabled', value: 'false', diffStatus: DiffStatus.CHANGED }]);
   });
 
   test('should push unchanged value for boolean true === true', () => {
@@ -109,7 +109,7 @@ describe('Activity audit :: compareSimpleObjects', () => {
   test('should push CHANGED for primitive difference', () => {
     const diffs: ActivityAuditDiff[] = [];
     compareSimpleObjects(diffs, { name: 'Alice' }, { name: 'Bob' });
-    expect(diffs).toEqual([{ parameter: 'name', value: 'Bob', status: DiffStatus.CHANGED }]);
+    expect(diffs).toEqual([{ parameter: 'name', value: 'Bob', diffStatus: DiffStatus.CHANGED }]);
   });
 
   test('should push unchanged value when both primitives are same', () => {
@@ -122,7 +122,7 @@ describe('Activity audit :: compareSimpleObjects', () => {
     const diffs: ActivityAuditDiff[] = [];
     compareSimpleObjects(diffs, { name: 'Alice' }, { name: 'Alice', country: 'US' });
     expect(diffs).toEqual([
-      { parameter: 'country', value: 'US', status: DiffStatus.ADDED },
+      { parameter: 'country', value: 'US', diffStatus: DiffStatus.ADDED },
       { parameter: 'name', value: 'Alice' },
     ]);
   });
@@ -131,7 +131,7 @@ describe('Activity audit :: compareSimpleObjects', () => {
     const diffs: ActivityAuditDiff[] = [];
     compareSimpleObjects(diffs, { name: 'Alice', age: 25 }, { name: 'Alice' });
     expect(diffs).toEqual([
-      { parameter: 'age', value: '', status: DiffStatus.REMOVED },
+      { parameter: 'age', value: '', diffStatus: DiffStatus.REMOVED },
       { parameter: 'name', value: 'Alice' },
     ]);
   });
@@ -139,7 +139,7 @@ describe('Activity audit :: compareSimpleObjects', () => {
   test('should handle nested object by calling compareStringArray', () => {
     const diffs: ActivityAuditDiff[] = [];
     compareSimpleObjects(diffs, { config: { enabled: true } }, { config: { enabled: false } });
-    expect(diffs).toEqual([{ parameter: 'config', value: 'enabled: false', status: DiffStatus.CHANGED }]);
+    expect(diffs).toEqual([{ parameter: 'config', value: 'enabled: false', diffStatus: DiffStatus.CHANGED }]);
   });
 
   test('should handle mix of primitive and nested values', () => {
@@ -151,21 +151,21 @@ describe('Activity audit :: compareSimpleObjects', () => {
     );
 
     expect(diffs).toEqual([
-      { parameter: 'name', value: 'Bob', status: DiffStatus.CHANGED },
-      { parameter: 'settings', value: 'theme: light', status: DiffStatus.CHANGED },
+      { parameter: 'name', value: 'Bob', diffStatus: DiffStatus.CHANGED },
+      { parameter: 'settings', value: 'theme: light', diffStatus: DiffStatus.CHANGED },
     ]);
   });
 
   test('should correctly apply isCurrent flag for added values', () => {
     const diffs: ActivityAuditDiff[] = [];
     compareSimpleObjects(diffs, {}, { key: 'value' }, true);
-    expect(diffs).toEqual([{ parameter: 'key', value: 'value', status: DiffStatus.MIRROR }]);
+    expect(diffs).toEqual([{ parameter: 'key', value: 'value', diffStatus: DiffStatus.MIRROR }]);
   });
 
   test('should correctly apply isCurrent flag for removed values', () => {
     const diffs: ActivityAuditDiff[] = [];
     compareSimpleObjects(diffs, { key: 'value' }, {}, true);
-    expect(diffs).toEqual([{ parameter: 'key', value: '', status: DiffStatus.MIRROR }]);
+    expect(diffs).toEqual([{ parameter: 'key', value: '', diffStatus: DiffStatus.MIRROR }]);
   });
 
   test('should handle empty objects gracefully', () => {
@@ -177,7 +177,7 @@ describe('Activity audit :: compareSimpleObjects', () => {
   test('should handle undefined objects gracefully', () => {
     const diffs: ActivityAuditDiff[] = [];
     compareSimpleObjects(diffs, undefined as any, { a: 'x' });
-    expect(diffs).toEqual([{ parameter: 'a', value: 'x', status: DiffStatus.ADDED }]);
+    expect(diffs).toEqual([{ parameter: 'a', value: 'x', diffStatus: DiffStatus.ADDED }]);
   });
 });
 
@@ -250,7 +250,7 @@ describe('Activity audit :: compareStringArray', () => {
     expect(diffs[0]).toEqual({
       parameter: 'key',
       value: '',
-      status: DiffStatus.REMOVED,
+      diffStatus: DiffStatus.REMOVED,
     });
   });
 
@@ -263,7 +263,7 @@ describe('Activity audit :: compareStringArray', () => {
     expect(diffs[0]).toEqual({
       parameter: 'key',
       value: 'a: 1, b: 2',
-      status: DiffStatus.ADDED,
+      diffStatus: DiffStatus.ADDED,
     });
   });
 
@@ -277,7 +277,7 @@ describe('Activity audit :: compareStringArray', () => {
     expect(diffs[0]).toEqual({
       parameter: 'key',
       value: 'a: 1, b: 3',
-      status: DiffStatus.CHANGED,
+      diffStatus: DiffStatus.CHANGED,
     });
   });
 
@@ -304,7 +304,7 @@ describe('Activity audit :: compareStringArray', () => {
     expect(diffs[0].parameter).toBe(EntityParameterKeys.PRICING);
     expect(diffs[0].value).toContain('input: 3000');
     expect(diffs[0].value).toContain('ModelView.Pricing.Tokens ModelView.Pricing.PerMillion');
-    expect(diffs[0].status).toBe(DiffStatus.CHANGED);
+    expect(diffs[0].diffStatus).toBe(DiffStatus.CHANGED);
   });
 
   test('should push ADDED with MIRROR status if isCurrent is true', () => {
@@ -316,7 +316,7 @@ describe('Activity audit :: compareStringArray', () => {
     expect(diffs[0]).toEqual({
       parameter: 'key',
       value: 'a: 1',
-      status: DiffStatus.MIRROR,
+      diffStatus: DiffStatus.MIRROR,
     });
   });
 
@@ -329,7 +329,7 @@ describe('Activity audit :: compareStringArray', () => {
     expect(diffs[0]).toEqual({
       parameter: 'key',
       value: '',
-      status: DiffStatus.MIRROR,
+      diffStatus: DiffStatus.MIRROR,
     });
   });
 });
@@ -406,7 +406,9 @@ describe('Activity audit :: compareDefaultLimits', () => {
 
     expect(diffs.length).toBe(roleLimitsKeys.length);
     expect(
-      diffs.every((d) => d.status === DiffStatus.CHANGED || d.status === DiffStatus.REMOVED || d.status === undefined),
+      diffs.every(
+        (d) => d.diffStatus === DiffStatus.CHANGED || d.diffStatus === DiffStatus.REMOVED || d.diffStatus === undefined,
+      ),
     ).toBe(true);
   });
 
@@ -418,7 +420,7 @@ describe('Activity audit :: compareDefaultLimits', () => {
     compareDefaultLimits(diffs, val1, val2);
 
     expect(diffs.length).toBe(roleLimitsKeys.length);
-    expect(diffs.some((d) => d.status === DiffStatus.CHANGED)).toBe(true);
+    expect(diffs.some((d) => d.diffStatus === DiffStatus.CHANGED)).toBe(true);
   });
 
   test('should push CHANGED for differing values', () => {
@@ -429,10 +431,10 @@ describe('Activity audit :: compareDefaultLimits', () => {
     compareDefaultLimits(diffs, val1, val2);
 
     const minuteDiff = diffs.find((d) => d.parameter === 'minute');
-    expect(minuteDiff?.status).toBe(DiffStatus.CHANGED);
+    expect(minuteDiff?.diffStatus).toBe(DiffStatus.CHANGED);
 
     const dayDiff = diffs.find((d) => d.parameter === 'day');
-    expect(dayDiff?.status).toBeUndefined();
+    expect(dayDiff?.diffStatus).toBeUndefined();
   });
 
   test('should treat missing values as NO_LIMITS_KEY', () => {
@@ -457,7 +459,7 @@ describe('Activity audit :: compareDefaultLimits', () => {
     compareDefaultLimits(diffs, val1, val2, true);
 
     const minuteDiff = diffs.find((d) => d.parameter === 'minute');
-    expect(minuteDiff?.status).toBe(DiffStatus.CHANGED);
+    expect(minuteDiff?.diffStatus).toBe(DiffStatus.CHANGED);
   });
 });
 
@@ -559,7 +561,7 @@ describe('Activity audit :: compareUpstreams', () => {
     const sectionKey = `${EntityParameterKeys.UPSTREAMS}0`;
     const diffs = diffMap[sectionKey];
 
-    expect(diffs.some((d) => d.status === DiffStatus.REMOVED)).toBe(true);
+    expect(diffs.some((d) => d.diffStatus === DiffStatus.REMOVED)).toBe(true);
     expect(diffs.every((d) => d.parameter)).toBe(true);
   });
 
@@ -573,7 +575,7 @@ describe('Activity audit :: compareUpstreams', () => {
     const sectionKey = `${EntityParameterKeys.UPSTREAMS}0`;
     const diffs = diffMap[sectionKey];
 
-    expect(diffs.some((d) => d.status === DiffStatus.ADDED)).toBe(true);
+    expect(diffs.some((d) => d.diffStatus === DiffStatus.ADDED)).toBe(true);
     expect(diffs.find((d) => d.parameter === 'endpoint')?.value).toBe('api2');
   });
 
@@ -587,7 +589,7 @@ describe('Activity audit :: compareUpstreams', () => {
     const sectionKey = `${EntityParameterKeys.UPSTREAMS}0`;
     const diffs = diffMap[sectionKey];
 
-    expect(diffs.some((d) => d.status === DiffStatus.CHANGED)).toBe(true);
+    expect(diffs.some((d) => d.diffStatus === DiffStatus.CHANGED)).toBe(true);
     expect(diffs.find((d) => d.parameter === 'timeout')?.value).toBe('2000');
   });
 
@@ -624,7 +626,7 @@ describe('Activity audit :: compareUpstreams', () => {
     compareUpstreams(diffMap, val1, val2, true);
 
     const sectionKey = `${EntityParameterKeys.UPSTREAMS}0`;
-    expect(diffMap[sectionKey].some((d) => d.status === DiffStatus.MIRROR)).toBe(true);
+    expect(diffMap[sectionKey].some((d) => d.diffStatus === DiffStatus.MIRROR)).toBe(true);
   });
 });
 
@@ -718,7 +720,7 @@ describe('Activity audit :: compareDefaults', () => {
     expect(diffMap[sectionKey][0]).toEqual({
       parameter: 'key',
       value: 'defaultKey',
-      status: DiffStatus.ADDED,
+      diffStatus: DiffStatus.ADDED,
     });
   });
 
@@ -735,7 +737,7 @@ describe('Activity audit :: compareDefaults', () => {
     expect(diff[0]).toEqual({
       parameter: 'key',
       value: '',
-      status: DiffStatus.REMOVED,
+      diffStatus: DiffStatus.REMOVED,
     });
   });
 
@@ -750,7 +752,7 @@ describe('Activity audit :: compareDefaults', () => {
     expect(diffMap[sectionKey]).toEqual([
       { parameter: 'key', value: 'defaultKey' },
       { parameter: 'type', value: 'string' },
-      { parameter: 'value', value: 'newValue', status: DiffStatus.CHANGED },
+      { parameter: 'value', value: 'newValue', diffStatus: DiffStatus.CHANGED },
     ]);
   });
 
@@ -777,8 +779,8 @@ describe('Activity audit :: compareDefaults', () => {
     compareDefaults(diffMap, 'defaults', val1, val2);
 
     expect(Object.keys(diffMap)).toEqual([`${EntityParameterKeys.DEFAULTS}0`, `${EntityParameterKeys.DEFAULTS}1`]);
-    expect(diffMap[`${EntityParameterKeys.DEFAULTS}0`].some((d) => d.status === DiffStatus.CHANGED)).toBe(true);
-    expect(diffMap[`${EntityParameterKeys.DEFAULTS}1`].some((d) => d.status === DiffStatus.CHANGED)).toBe(false);
+    expect(diffMap[`${EntityParameterKeys.DEFAULTS}0`].some((d) => d.diffStatus === DiffStatus.CHANGED)).toBe(true);
+    expect(diffMap[`${EntityParameterKeys.DEFAULTS}1`].some((d) => d.diffStatus === DiffStatus.CHANGED)).toBe(false);
   });
 
   test('should apply isCurrent flag correctly (MIRROR status)', () => {
@@ -789,7 +791,7 @@ describe('Activity audit :: compareDefaults', () => {
     compareDefaults(diffMap, 'defaults', val1, val2, true);
 
     const sectionKey = `${EntityParameterKeys.DEFAULTS}0`;
-    expect(diffMap[sectionKey].some((d) => d.status === DiffStatus.MIRROR)).toBe(true);
+    expect(diffMap[sectionKey].some((d) => d.diffStatus === DiffStatus.MIRROR)).toBe(true);
   });
 
   test('should handle numeric and boolean defaults correctly', () => {
@@ -801,8 +803,8 @@ describe('Activity audit :: compareDefaults', () => {
 
     const keys = Object.keys(diffMap);
     expect(keys.length).toBe(2);
-    expect(diffMap[keys[0]].some((d) => d.status === DiffStatus.CHANGED)).toBe(true);
-    expect(diffMap[keys[1]].some((d) => d.status === DiffStatus.CHANGED)).toBe(true);
+    expect(diffMap[keys[0]].some((d) => d.diffStatus === DiffStatus.CHANGED)).toBe(true);
+    expect(diffMap[keys[1]].some((d) => d.diffStatus === DiffStatus.CHANGED)).toBe(true);
   });
 
   test('should not crash when both objects are empty', () => {
@@ -896,7 +898,7 @@ describe('Activity audit :: compareAppRunnerParameters', () => {
     expect(diffs[0]).toEqual({
       parameter: key,
       value: 'newValue',
-      status: DiffStatus.CHANGED,
+      diffStatus: DiffStatus.CHANGED,
     });
   });
 
@@ -911,7 +913,7 @@ describe('Activity audit :: compareAppRunnerParameters', () => {
     expect(diffs[0]).toEqual({
       parameter: key,
       value: '',
-      status: DiffStatus.REMOVED,
+      diffStatus: DiffStatus.REMOVED,
     });
   });
 
@@ -925,7 +927,7 @@ describe('Activity audit :: compareAppRunnerParameters', () => {
 
     expect(diffs[0].parameter).toBe(key);
     expect(diffs[0].value).toBe('a: 1, b: 3');
-    expect(diffs[0].status).toBe(DiffStatus.CHANGED);
+    expect(diffs[0].diffStatus).toBe(DiffStatus.CHANGED);
   });
 
   test('should detect ADDED when val1 is undefined for non-path key', () => {
@@ -938,7 +940,7 @@ describe('Activity audit :: compareAppRunnerParameters', () => {
 
     expect(diffs[0].parameter).toBe(key);
     expect(diffs[0].value).toBe('a: 1');
-    expect(diffs[0].status).toBe(DiffStatus.ADDED);
+    expect(diffs[0].diffStatus).toBe(DiffStatus.ADDED);
   });
 
   test('should detect REMOVED when val2 is undefined for non-path key', () => {
@@ -951,7 +953,7 @@ describe('Activity audit :: compareAppRunnerParameters', () => {
 
     expect(diffs[0].parameter).toBe(key);
     expect(diffs[0].value).toBe('');
-    expect(diffs[0].status).toBe(DiffStatus.REMOVED);
+    expect(diffs[0].diffStatus).toBe(DiffStatus.REMOVED);
   });
 
   test('should push unchanged value when objects are equal', () => {

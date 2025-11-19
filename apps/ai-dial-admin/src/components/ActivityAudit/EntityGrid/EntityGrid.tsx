@@ -50,21 +50,21 @@ const AuditEntityGrid: FC<Props> = ({
 
   const rowClassRules: RowClassRules = {
     'ag-error-row ag-error-border': (params) => {
-      return (params.data as ActivityAuditDiff).status === DiffStatus.REMOVED;
+      return (params.data as ActivityAuditDiff).diffStatus === DiffStatus.REMOVED;
     },
     'ag-new-row ag-new-border': (params) => {
-      return (params.data as ActivityAuditDiff).status === DiffStatus.ADDED;
+      return (params.data as ActivityAuditDiff).diffStatus === DiffStatus.ADDED;
     },
     'ag-changed-row ag-changed-border': (params) => {
-      return (params.data as ActivityAuditDiff).status === DiffStatus.CHANGED;
+      return (params.data as ActivityAuditDiff).diffStatus === DiffStatus.CHANGED;
     },
     'ag-empty-row': (params) => {
-      return (params.data as ActivityAuditDiff).status === DiffStatus.MIRROR;
+      return (params.data as ActivityAuditDiff).diffStatus === DiffStatus.MIRROR;
     },
   };
 
   const onRowClicked = (e: CellClickedEvent) => {
-    if (!e.data.status || e.data.status === DiffStatus.MIRROR) return;
+    if (!e.data.diffStatus || e.data.diffStatus === DiffStatus.MIRROR) return;
     const id = e.data.name || e.data.key || e.data.$id;
     setResourceId(id);
     const { current, rollback } = getCurrentAndRollbackEntities(e.data, id, rollbackRows, currentRows);

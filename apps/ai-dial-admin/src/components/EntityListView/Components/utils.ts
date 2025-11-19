@@ -72,6 +72,7 @@ export const prepareEntityForDuplicate = async <T>(
     return {
       ...entity,
       entities: [],
+      applicationTypeSchemas: [],
     };
   }
 
