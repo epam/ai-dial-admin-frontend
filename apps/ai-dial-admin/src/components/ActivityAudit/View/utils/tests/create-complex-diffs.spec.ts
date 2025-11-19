@@ -406,7 +406,9 @@ describe('Activity audit :: compareDefaultLimits', () => {
 
     expect(diffs.length).toBe(roleLimitsKeys.length);
     expect(
-      diffs.every((d) => d.diffStatus === DiffStatus.CHANGED || d.diffStatus === DiffStatus.REMOVED || d.diffStatus === undefined),
+      diffs.every(
+        (d) => d.diffStatus === DiffStatus.CHANGED || d.diffStatus === DiffStatus.REMOVED || d.diffStatus === undefined,
+      ),
     ).toBe(true);
   });
 

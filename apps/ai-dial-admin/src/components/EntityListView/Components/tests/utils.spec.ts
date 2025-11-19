@@ -40,7 +40,7 @@ describe('Utils :: prepareEntityForDuplicate', () => {
       version: 'v',
       entities: [],
       roles: ['roles'],
-      applicationTypeSchemas: []
+      applicationTypeSchemas: [],
     });
   });
 

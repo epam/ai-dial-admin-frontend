@@ -290,7 +290,9 @@ describe('Activity audit :: compareRoleLimits', () => {
     const val1 = { guest: { maxCalls: 1, maxDuration: 5 } };
     const val2 = { guest: { maxCalls: 2, maxDuration: 5 } };
     compareRoleLimits(diffs, val1, val2);
-    expect(diffs).toEqual([{ parameter: 'guest', value: 'maxCalls: 2, maxDuration: 5', diffStatus: DiffStatus.CHANGED }]);
+    expect(diffs).toEqual([
+      { parameter: 'guest', value: 'maxCalls: 2, maxDuration: 5', diffStatus: DiffStatus.CHANGED },
+    ]);
   });
 
   test('should push unchanged value when val1 and val2 are equal', () => {
