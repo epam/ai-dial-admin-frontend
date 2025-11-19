@@ -1,15 +1,17 @@
 'use client';
 
-import { useCallback } from 'react';
-import { ApplicationRoute } from '@/src/types/routes';
-import BasePublicationHeader from '@/src/components/Publications/Properties/Header';
-import { ServerActionResponse } from '@/src/models/server-action';
-import PublicationProperties from '@/src/components/Publications/View/Properties';
-import { Publication } from '@/src/models/dial/publications';
 import { useRouter } from 'next/navigation';
-import { getErrorNotification } from '@/src/utils/notification';
+import { useCallback, useState } from 'react';
+
+import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import BasePublicationHeader from '@/src/components/Publications/Properties/Header';
+import PublicationProperties from '@/src/components/Publications/View/Properties';
 import { useNotification } from '@/src/context/NotificationContext';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { Publication } from '@/src/models/dial/publications';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getErrorNotification } from '@/src/utils/notification';
 
 interface Props<T> {
   view: ApplicationRoute;
@@ -28,6 +30,7 @@ const PublicationView = <T extends Publication>({
 }: Props<T>) => {
   const router = useRouter();
   const { showNotification } = useNotification();
+  const [isJsonView, setIsJsonView] = useState<boolean>(false);
 
   const onApprove = useCallback(() => {
     approvePublication(publication.path).then((res) => {
@@ -58,10 +61,21 @@ const PublicationView = <T extends Publication>({
         <div className="flex flex-row mb-3">
           <h1>{publication.requestName}</h1>
         </div>
-        <BasePublicationHeader onApprove={onApprove} onDecline={onDecline} action={publication.action} route={view} />
+        <BasePublicationHeader
+          onApprove={onApprove}
+          onDecline={onDecline}
+          action={publication.action}
+          route={view}
+          isJsonView={isJsonView}
+          setIsJsonView={setIsJsonView}
+        />
       </div>
       <div className="flex-1 overflow-auto mt-3 min-h-0">
-        <PublicationProperties view={view} publication={publication} applicationSchemes={applicationSchemes} />
+        {isJsonView ? (
+          <EntityJsonEditor entity={publication} readonly={true} />
+        ) : (
+          <PublicationProperties view={view} publication={publication} applicationSchemes={applicationSchemes} />
+        )}
       </div>
     </div>
   );
