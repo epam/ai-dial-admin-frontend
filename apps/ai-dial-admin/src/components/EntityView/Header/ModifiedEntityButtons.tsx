@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import classNames from 'classnames';
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import classNames from 'classnames';
 
-import AddVersionModal from '@/src/components/Assets/Prompts/Modals/AddVersionModal';
+import AddVersionModal from '@/src/components/Assets/Modals/AddVersionModal';
 import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
 import { ButtonsI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -16,8 +16,8 @@ import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
-import { generateNewInitialVersion } from '@/src/utils/prompts/versions';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { generateNewInitialVersion } from '@/src/utils/prompts/versions';
 
 interface Props<T> {
   view: ApplicationRoute;

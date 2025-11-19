@@ -842,6 +842,7 @@ export enum EntityFieldsI18nKey {
   allowedTools = 'EntityFields.allowedTools',
   displayName = 'EntityFields.displayName',
   displayVersion = 'EntityFields.displayVersion',
+  version = 'EntityFields.version',
   adapter = 'EntityFields.adapter',
   iconUrl = 'EntityFields.iconUrl',
   rewritePath = 'EntityFields.rewritePath',

@@ -10,11 +10,12 @@ import { JSONEditorError } from '@/src/types/editor';
 
 interface Props<T> {
   entity: T | null;
-  setSelectedEntity: Dispatch<SetStateAction<T>>;
+  setSelectedEntity?: Dispatch<SetStateAction<T>>;
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
+  readonly?: boolean;
 }
 
-const EntityJsonEditor = <T extends object>({ entity, setSelectedEntity, setIsChanged }: Props<T>) => {
+const EntityJsonEditor = <T extends object>({ entity, setSelectedEntity, setIsChanged, readonly }: Props<T>) => {
   const { dispatch, jsonErrorNotifications } = useSaveValidationContext();
   const { removeNotification } = useNotification();
   const [entityModel, setEntityModel] = useState<string>('');
@@ -36,7 +37,7 @@ const EntityJsonEditor = <T extends object>({ entity, setSelectedEntity, setIsCh
     (updatedConfig?: string) => {
       if (updatedConfig) {
         try {
-          setSelectedEntity(JSON.parse(updatedConfig));
+          setSelectedEntity?.(JSON.parse(updatedConfig));
         } catch (error) {
           if (error) {
             setIsChanged?.(true);
@@ -61,7 +62,14 @@ const EntityJsonEditor = <T extends object>({ entity, setSelectedEntity, setIsCh
     return null;
   }
 
-  return <JsonEditorBase value={entityModel} onChange={onChangeJSON} onValidateJSON={onValidateJSON} />;
+  return (
+    <JsonEditorBase
+      value={entityModel}
+      onChange={onChangeJSON}
+      onValidateJSON={onValidateJSON}
+      options={readonly ? { readOnly: true } : void 0}
+    />
+  );
 };
 
 export default EntityJsonEditor;

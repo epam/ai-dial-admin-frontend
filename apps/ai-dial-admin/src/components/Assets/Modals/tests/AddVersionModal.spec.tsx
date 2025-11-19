@@ -3,8 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-
-import AddVersionModal from '@/src/components/Assets/Prompts/Modals/AddVersionModal';
+import AddVersionModal from '../AddVersionModal';
 
 describe('Common components - AddVersionModal', () => {
   const user = userEvent.setup();

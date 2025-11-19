@@ -10,7 +10,6 @@ import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interce
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity, EntityRoleLimits } from '@/src/models/dial/base-entity';
-import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
@@ -25,14 +24,12 @@ interface Props {
   roles?: DialRole[] | null;
   interceptors?: DialInterceptor[] | null;
   applications?: DialApplication[] | null;
-  assets?: AssetApp[] | null;
   models?: DialModel[] | null;
   view: ApplicationRoute;
   selectedEntity: BaseEntity;
   jsonEditorEnabled: boolean;
   isSkipRefresh: boolean;
   isChanged?: boolean;
-  etag?: string;
   onSave?: () => void;
   onChangeEntity: (entity: BaseEntity, isSkipRefresh?: boolean) => void;
   key?: number;
@@ -57,17 +54,17 @@ const ViewContent: FC<Props> = ({
   key,
   setIsChanged,
   setSelectedEntity,
-  ...props
+  names,
 }) => {
   return (
     <>
       {activeTab === EntityViewTab.Properties && (
         <PropertiesContent
+          names={names}
           applicationSchemes={applicationSchemes}
           view={view}
           selectedEntity={selectedEntity}
           onChangeEntity={onChangeEntity}
-          {...props}
         />
       )}
       {activeTab === EntityViewTab.Features && (

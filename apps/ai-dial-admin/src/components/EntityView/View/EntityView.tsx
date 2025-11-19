@@ -314,6 +314,8 @@ const EntityView: FC<Props> = ({
             toggleJsonEditor={toggleJsonEditor}
             selectedFormat={selectedFormat}
             setSelectedFormat={setSelectedFormat}
+            etag={etag}
+            onChangeEntity={onChangeEntity}
           />
         </div>
 
@@ -329,7 +331,6 @@ const EntityView: FC<Props> = ({
             selectedFormat === ExportFormat.ADMIN && (
               <ViewContent
                 view={view}
-                etag={etag}
                 applicationSchemes={applicationSchemes}
                 activeTab={activeTab}
                 selectedEntity={selectedEntity}
