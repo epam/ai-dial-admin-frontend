@@ -8,7 +8,7 @@ This project is a web application built using [Next.js](https://nextjs.org/), a 
 
 ## Set Up Developer Environment
 
-This project is managed by [NX](https://nx.dev/).
+This project is managed by [NX](https://nx.dev/). 
 
 Before diving into the development environment, install Node.js (version >=20) and npm on your system. If you don't already have them, follow the [instruction](https://nodejs.org/en/download/).
 
