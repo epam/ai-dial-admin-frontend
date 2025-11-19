@@ -139,6 +139,7 @@ const DeploymentProperties: FC<Props> = ({
 
         {view === ApplicationRoute.Models && (
           <VersionControl
+            title={t(EntityFieldsI18nKey.displayVersion)}
             version={(entity as DialModel).displayVersion}
             onChange={onChangeVersion}
             error={versionError}

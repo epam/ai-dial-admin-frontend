@@ -7,7 +7,7 @@ import { DialTabs } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
-import { createPrompt, getPrompt, getPrompts, movePrompts, removePrompt } from '@/src/app/[lang]/prompts/actions';
+import { createPrompt, getPrompts, movePrompts, removePrompt } from '@/src/app/[lang]/prompts/actions';
 import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
@@ -29,6 +29,7 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
 import PromptProperties from './Properties';
+import { Asset } from '@/src/models/dial/deployment-asset';
 
 interface Props {
   originalPrompt: DialPrompt;
@@ -155,13 +156,16 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
         <HeaderButtons
           view={ApplicationRoute.Prompts}
           entity={selectedPrompt}
+          onChangeEntity={onChangeEntity}
           isChanged={isChanged}
           onSave={onSave}
           onDiscard={onDiscard}
           removeEntity={removePrompt}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          existingVersions={prompts?.map((prompt) => prompt.version) || []}
+          assets={prompts as Asset[]}
+          addedVersions={addedVersions}
+          setAddedVersions={setAddedVersions}
           context={usePromptFolder as () => AssetsFolderContext<DialFile | DialPrompt>}
         />
       </div>
@@ -176,15 +180,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
         ) : (
           <>
             {activeTab === EntityViewTab.Properties && (
-              <PromptProperties
-                prompt={selectedPrompt}
-                prompts={prompts || []}
-                onChangePrompt={onChangeEntity}
-                getPrompt={getPrompt}
-                addedVersions={addedVersions}
-                setAddedVersions={setAddedVersions}
-                setSelectedPrompt={setSelectedPrompt}
-              />
+              <PromptProperties prompt={selectedPrompt} onChangePrompt={onChangeEntity} />
             )}
           </>
         )}

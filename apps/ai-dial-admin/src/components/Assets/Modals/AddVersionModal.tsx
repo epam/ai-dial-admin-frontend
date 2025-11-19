@@ -4,6 +4,7 @@ import { FC, useState } from 'react';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
 import { ButtonsI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props {
   heading: string;
@@ -24,6 +25,7 @@ const AddVersionModal: FC<Props> = ({
 }) => {
   const t = useI18n();
   const [version, setVersion] = useState<string>(prefilledVersion || '');
+  const { isValid } = useSaveValidationContext();
 
   return (
     <DialFormPopup
@@ -33,7 +35,7 @@ const AddVersionModal: FC<Props> = ({
       open={isModalOpen}
       onCancel={onClose}
       onSubmit={() => onConfirm(version)}
-      disableSubmitButton={!version || existingVersions.includes(version)}
+      disableSubmitButton={existingVersions.includes(version) || !isValid}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Create)}
     >

@@ -1,25 +1,25 @@
 import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { checkIsUniqueDeploymentName } from '@/src/app/actions';
+import { RoutesForCheckingUniqueName } from '@/src/components/EntityListView/CreateEntity/constants';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
+import { getDisplayNameError, getVersionError } from '@/src/components/EntityMainProperties/Properties/utils';
+import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import {
   duplicateModalDescriptionMap,
   getClonedEntityName,
   getCloneTitle,
 } from '@/src/utils/entities/duplicate-entity';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { RoutesForCheckingUniqueName } from '@/src/components/EntityListView/CreateEntity/constants';
-import { checkIsUniqueDeploymentName } from '@/src/app/actions';
-import { getDisplayNameError, getVersionError } from '@/src/components/EntityMainProperties/Properties/utils';
 import { getNamesConfigurations } from '@/src/utils/entities/filter-names';
+import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 
 type ClonedEntity = BaseEntity | DialModel;
 interface Props {
@@ -139,6 +139,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
 
           {view === ApplicationRoute.Models && (
             <VersionControl
+              title={t(EntityFieldsI18nKey.displayVersion)}
               version={(clonedEntity as DialModel).displayVersion}
               onChange={onChangeVersion}
               error={versionError}

@@ -40,7 +40,7 @@ const JsonToggles: FC<Props> = ({
   toggleJsonEditor,
 }) => {
   const t = useI18n() as (value: string, options?: Record<string, string | number>) => string;
-  const staticEditorClassNames = 'pl-6 flex flex-row gap-x-3';
+  const staticEditorClassNames = 'flex flex-row gap-x-4';
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
   const [editorClassNames, setEditorClassNames] = useState(staticEditorClassNames);
@@ -67,6 +67,7 @@ const JsonToggles: FC<Props> = ({
 
   return (
     <div className={classNames(editorClassNames)}>
+      <div className="w-[1px] h-6 bg-layer-4"></div>
       {jsonEditorEnabled &&
       !ONLY_ADMIN_ENTITIES.includes(view) &&
       !(

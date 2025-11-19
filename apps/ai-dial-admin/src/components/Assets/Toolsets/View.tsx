@@ -265,13 +265,15 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
           <HeaderButtons
             view={ApplicationRoute.AssetsToolsets}
             entity={selectedToolset}
+            onChangeEntity={onChangeEntity}
             isChanged={isChanged}
             onSave={onSave}
             onDiscard={onDiscard}
             removeEntity={onRemove}
             jsonEditorEnabled={jsonEditorEnabled}
             toggleJsonEditor={toggleJsonEditor}
-            existingVersions={toolsets?.map((app) => app.version) || []}
+            assets={toolsets || []}
+            etag={etag}
             context={useToolsetFolder as () => AssetsFolderContext<DialFile | AssetToolset>}
             childrenContainerClass="flex-row-reverse"
           >
@@ -307,7 +309,6 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
                 <ViewContent
                   activeTab={activeTab}
                   names={[]}
-                  assets={toolsets || []}
                   view={ApplicationRoute.AssetsToolsets}
                   selectedEntity={selectedToolset}
                   jsonEditorEnabled={jsonEditorEnabled}
