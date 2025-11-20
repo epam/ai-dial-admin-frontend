@@ -111,7 +111,6 @@ const Grid = <T extends object>({
 
   const onGridSizeChanged = useCallback((e: GridSizeChangedEvent) => {
     e.api.sizeColumnsToFit();
-    e.api.refreshHeader();
   }, []);
 
   const setGridColumnsState = (e: GridReadyEvent, defaultSorts: ColumnState[]) => {
@@ -128,7 +127,6 @@ const Grid = <T extends object>({
     setGridApi(e.api);
     gridReadyCb?.(e.api);
     e.api.sizeColumnsToFit();
-    e.api.refreshHeader();
 
     const defaultSorts =
       columnDefs
@@ -176,6 +174,7 @@ const Grid = <T extends object>({
           floatingFilter: true,
           floatingFilterComponent: FloatingFilter,
           resizable: true,
+          flex: 1,
           filter: 'agTextColumnFilter',
           filterParams: {
             filterPlaceholder: 'Enter value',
