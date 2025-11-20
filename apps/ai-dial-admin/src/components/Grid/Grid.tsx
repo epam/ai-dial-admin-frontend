@@ -174,6 +174,7 @@ const Grid = <T extends object>({
           floatingFilter: true,
           floatingFilterComponent: FloatingFilter,
           resizable: true,
+          flex: 1,
           filter: 'agTextColumnFilter',
           filterParams: {
             filterPlaceholder: 'Enter value',
