@@ -36,4 +36,8 @@ describe('getClonedEntityName function', () => {
   test('should handle names with trailing spaces', () => {
     expect(getClonedEntityName('entity ')).toBe('entity _(copy)');
   });
+
+  test('should handle names with custom split symbol', () => {
+    expect(getClonedEntityName('entity ', false, '/')).toBe('entity /(copy)');
+  });
 });

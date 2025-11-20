@@ -111,7 +111,11 @@ const Actions = <T extends object>({
           showNotification(
             getSuccessNotification(
               getCreateNotificationTitle(route, t),
-              getCreateNotificationDescription(route, (preparedEntity as { name: string }).name, t),
+              getCreateNotificationDescription(
+                route,
+                (preparedEntity as { name: string }).name || (preparedEntity as { $id: string }).$id,
+                t,
+              ),
             ),
           );
           router.push(getUrnForEntity(route, preparedEntity));
