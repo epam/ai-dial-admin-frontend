@@ -45,7 +45,7 @@ const CollapsableInterceptors = <T extends { interceptors?: string[] }>({
         </CollapsableSection>
       )}
       <CollapsableSection
-        title={`${t(InterceptorsI18nKey.Local)}: ${entity.interceptors?.length}`}
+        title={`${t(InterceptorsI18nKey.Local)}: ${entity.interceptors?.length || 0}`}
         headerButton={headerButton}
       >
         {localInterceptors}
