@@ -5,7 +5,7 @@ import { ButtonVariant, DialConfirmationPopup, DialButton, DialTextAreaField, Di
 import { IconCircleX, IconWorldOff, IconWorldShare } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import { ButtonsI18nKey, ErrorI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey, ErrorI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
@@ -100,7 +100,7 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
               switchId="jsonView"
               isOn={isJsonView}
               onChange={() => setIsJsonView(!isJsonView)}
-              title="JSON"
+              title={t(EntitiesI18nKey.JSONViewer)}
             />
           )}
         </div>

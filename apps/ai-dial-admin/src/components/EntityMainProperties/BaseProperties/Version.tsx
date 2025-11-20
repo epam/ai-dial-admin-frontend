@@ -6,6 +6,7 @@ import { FieldError } from '@/src/models/error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getVersionControlError } from '@/src/utils/validation/version-error';
 import { useI18n } from '@/src/locales/client';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   version?: string;
@@ -17,9 +18,10 @@ interface Props {
   onChange?: (version?: string) => void;
   hideError?: boolean;
   title?: string;
+  view?: ApplicationRoute;
 }
 
-const VersionControl: FC<Props> = ({ version, error, optional, hideError, onChange, title, ...props }) => {
+const VersionControl: FC<Props> = ({ version, error, optional, hideError, onChange, title, view, ...props }) => {
   const t = useI18n() as (str: string, options?: Record<string, string | number>) => string;
   const { dispatch } = useSaveValidationContext();
 
@@ -27,18 +29,21 @@ const VersionControl: FC<Props> = ({ version, error, optional, hideError, onChan
 
   const onChangeVersion = useCallback(
     (version?: string) => {
-      const error = getVersionControlError(version, optional, hideError, t);
-      setVersionError(error);
-      dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !error });
+      if (view !== ApplicationRoute.Models) {
+        const error = getVersionControlError(version, optional, hideError, t);
+        setVersionError(error);
+        dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !error });
+      }
       onChange?.(version);
     },
-    [dispatch, hideError, onChange, optional, t],
+    [dispatch, hideError, onChange, optional, t, view],
   );
 
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !!version });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [version, optional, hideError]);
+    if (view !== ApplicationRoute.Models) {
+      dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: !!version });
+    }
+  }, [version, optional, view, dispatch]);
 
   return (
     <DialTextInputField
