@@ -40,7 +40,10 @@ describe('filterDisplayNamesWithVersions', () => {
       { displayName: null },
       {},
     ];
-    expect(filterDisplayNamesWithVersions(entities, { displayName: 'Entity2' })).toEqual(['Entity1___1.0.0']);
+    expect(filterDisplayNamesWithVersions(entities, { displayName: 'Entity2' })).toEqual([
+      'Entity1___1.0.0',
+      'Entity3___',
+    ]);
   });
 
   test('returns empty array if entities is undefined', () => {
