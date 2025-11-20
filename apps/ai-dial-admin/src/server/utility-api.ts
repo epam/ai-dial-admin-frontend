@@ -16,6 +16,7 @@ export const PREVIEW_IMPORT_ZIP_CONFIG_URL = `${IMPORT_ZIP_CONFIG_URL}/preview`;
 export const EXPORT_CONFIG_URL = `${CONFIG_URL}/export`;
 export const EXPORT_CONFIG_MAP_URL = `${EXPORT_CONFIG_URL}/raw/core`;
 export const EXPORT_PREVIEW_CONFIG_URL = `${EXPORT_CONFIG_URL}/preview`;
+export const RELOAD_CONFIG_URL = `${CONFIG_URL}/sync/status`;
 export const DEPLOYMENT_URL = (name: string) => `${API}/deployments/${name}`;
 
 export class UtilityApi extends BaseApi {
@@ -52,6 +53,6 @@ export class UtilityApi extends BaseApi {
   }
 
   getAppProcessStatus(token: JWT | null): Promise<ServerActionResponse<AppProcessStatus>> {
-    return this.getAction(`${EXPORT_CONFIG_URL}/status`, token);
+    return this.getAction(RELOAD_CONFIG_URL, token);
   }
 }
