@@ -4,32 +4,26 @@ import { LimitType } from '../constants';
 
 describe('ModelView/Limits utils', () => {
   test('getActiveLimitType returns SeparateTokenAndCompletions if both maxCompletionTokens and maxPromptTokens exist', () => {
-    const model = {
-      limits: {
-        maxCompletionTokens: 100,
-        maxPromptTokens: 200,
-      },
+    const limit = {
+      maxCompletionTokens: 100,
+      maxPromptTokens: 200,
     } as any;
-    expect(getActiveLimitType(model)).toBe(LimitType.SeparateTokenAndCompletions);
+    expect(getActiveLimitType(limit)).toBe(LimitType.SeparateTokenAndCompletions);
   });
 
   test('getActiveLimitType returns Total if only maxTotalTokens exists', () => {
-    const model = {
-      limits: {
-        maxTotalTokens: 300,
-      },
+    const limit = {
+      maxTotalTokens: 300,
     } as any;
-    expect(getActiveLimitType(model)).toBe(LimitType.Total);
+    expect(getActiveLimitType(limit)).toBe(LimitType.Total);
   });
 
   test('getActiveLimitType returns None if no limits', () => {
-    const model = { limits: undefined } as any;
-    expect(getActiveLimitType(model)).toBe(LimitType.None);
+    expect(getActiveLimitType(void 0)).toBe(LimitType.None);
   });
 
   test('getActiveLimitType returns None if limits object is empty', () => {
-    const model = { limits: {} } as any;
-    expect(getActiveLimitType(model)).toBe(LimitType.None);
+    expect(getActiveLimitType({})).toBe(LimitType.None);
   });
 
   test('isLimitTypeTotal returns true for Total', () => {
