@@ -14,16 +14,57 @@ describe('getAppRoutes', () => {
     ];
     const result = getAppRoutes(routes as any);
     expect(result).toEqual([
-      { name: 'Display 1', displayName: 'Display 1' },
-      { name: 'route2', displayName: '' },
-      { name: 'route3' },
+      {
+        name: 'Display 1',
+        displayName: 'Display 1',
+        paths: [],
+        attachmentPaths: {
+          requestBody: [],
+          responseBody: [],
+        },
+      },
+      {
+        name: 'route2',
+        displayName: '',
+        paths: [],
+        attachmentPaths: {
+          requestBody: [],
+          responseBody: [],
+        },
+      },
+      {
+        name: 'route3',
+        paths: [],
+        attachmentPaths: {
+          requestBody: [],
+          responseBody: [],
+        },
+      },
     ]);
   });
 
   test('uses name if displayName is missing', () => {
     const routes = [{ name: 'routeA' }, { name: 'routeB', displayName: undefined }];
     const result = getAppRoutes(routes as any);
-    expect(result).toEqual([{ name: 'routeA' }, { name: 'routeB', displayName: undefined }]);
+    expect(result).toEqual([
+      {
+        name: 'routeA',
+        paths: [],
+        attachmentPaths: {
+          requestBody: [],
+          responseBody: [],
+        },
+      },
+      {
+        name: 'routeB',
+        displayName: undefined,
+        paths: [],
+        attachmentPaths: {
+          requestBody: [],
+          responseBody: [],
+        },
+      },
+    ]);
   });
   test('cleans empty strings from paths and attachmentPaths', () => {
     const routes = [
