@@ -112,12 +112,19 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
     (event: RowDragEvent) => {
       const newRowData: string[] = [];
       event.api.forEachNode((node) => newRowData.push(node.data.name));
-      onChangeEntity({
-        ...entity,
-        interceptors: newRowData,
-      });
+      if (isAppRunnerView) {
+        onChangeEntity({
+          ...entity,
+          'dial:applicationTypeInterceptors': newRowData,
+        });
+      } else {
+        onChangeEntity({
+          ...entity,
+          interceptors: newRowData,
+        });
+      }
     },
-    [entity, onChangeEntity],
+    [entity, isAppRunnerView, onChangeEntity],
   );
 
   const onOpen = (interceptor?: DialInterceptor) => {
