@@ -23,7 +23,7 @@ const DuplicateScheme: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose, 
 
   const [clonedEntity, setEntity] = useState<DialApplicationScheme>({
     ...entity,
-    $id: getClonedEntityName(entity.$id),
+    $id: getClonedEntityName(entity.$id, false, '/'),
   });
   const { dispatch, isValid } = useSaveValidationContext();
 
