@@ -46,13 +46,15 @@ const SchemeProperties: FC<Props> = ({ names, runner, isImmutable, onChangeRunne
 
       {isImmutable && <AppRunnerExtendedProperties runner={runner} onChangeRunner={onChangeRunner} />}
 
-      <CompletionEndpointControl
-        endpoint={runner['dial:applicationTypeCompletionEndpoint']}
-        onChange={(endpoint?: string) =>
-          onChangeRunner({ ...runner, 'dial:applicationTypeCompletionEndpoint': endpoint })
-        }
-        required={true}
-      />
+      {!isImmutable && (
+        <CompletionEndpointControl
+          endpoint={runner['dial:applicationTypeCompletionEndpoint']}
+          onChange={(endpoint?: string) =>
+            onChangeRunner({ ...runner, 'dial:applicationTypeCompletionEndpoint': endpoint })
+          }
+          required={true}
+        />
+      )}
     </div>
   );
 };
