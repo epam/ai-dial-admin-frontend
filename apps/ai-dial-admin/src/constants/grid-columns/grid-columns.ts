@@ -161,8 +161,8 @@ export const TYPE_COLUMN = (t: (str: string) => string): ColDef => {
 };
 
 export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [
-  NAME_COLUMN_WITH_SORT,
   DISPLAY_NAME_COLUMN,
+  NAME_COLUMN_WITH_SORT,
   DESCRIPTION_COLUMN,
   UPDATED_AT_COLUMN,
 ];
