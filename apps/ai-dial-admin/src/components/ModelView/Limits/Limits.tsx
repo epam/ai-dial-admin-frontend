@@ -1,5 +1,5 @@
 import { DialNumberInputField, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 
 import { BasicI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -29,7 +29,7 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
       label: t(ModelViewI18nKey.SeparatelyPromptsAndCompletions),
     },
   ];
-  const activeLimitType = getActiveLimitType(model);
+  const activeLimitType = useMemo(() => getActiveLimitType(model?.limits), [model.limits]);
 
   const onChangeLimitType = useCallback(
     (type: string) => {

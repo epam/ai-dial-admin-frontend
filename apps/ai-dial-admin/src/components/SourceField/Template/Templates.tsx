@@ -6,7 +6,7 @@ import { IconExternalLink } from '@tabler/icons-react';
 import Field from '@/src/components/Common/Field/Field';
 import SelectRunnerModal from '@/src/components/SourceField/Template/SelectRunnerModal';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, EntitiesI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -100,8 +100,8 @@ const Templates = <T extends DialModel | DialInterceptor>({
               onChange={(value) => onSelect(value as string)}
               elementId={'source-type'}
               value={runners.find((runner) => runner.name === entity.source?.runnerName)?.name}
-              placeholder={t(CreateI18nKey.SelectAdapter)}
-              fieldTitle={t(EntityFieldsI18nKey.adapter)}
+              placeholder={t(CreateI18nKey.SelectInterceptorTemplate)}
+              fieldTitle={t(SourceI18nKey.InterceptorTemplate)}
             />
           </div>
         ) : (
