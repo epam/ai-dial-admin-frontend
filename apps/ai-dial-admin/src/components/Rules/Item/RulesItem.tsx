@@ -62,7 +62,7 @@ const RulesItem: FC<Props> = ({
   const ruleIndentClass = classNames('flex items-center');
   const lineHorizontalClass = classNames('h-[1px] w-full bg-accent-secondary');
   const containerClass = classNames(
-    'flex-1 flex flex-col bg-layer-2 p-4 rounded',
+    'flex-1 flex flex-col bg-layer-2 p-6 rounded',
     isAlwaysToggled && folderName && 'bg-layer-3',
   );
   const ruleContainerClass = classNames('flex flex-col h-full', isCollapsed && 'hidden');

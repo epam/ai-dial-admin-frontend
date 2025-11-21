@@ -17,12 +17,12 @@ describe('ActionColumn', () => {
   test('renders dropdown with visible items and ActionTrigger', () => {
     const { container } = render(<ActionColumn {...baseProps} />);
 
-    expect(container.querySelector('.tabler-icon-dots')).toBeInTheDocument();
+    expect(container.querySelector('.tabler-icon-dots-vertical')).toBeInTheDocument();
   });
 
   test('renders nothing if data is null', () => {
     const { container } = render(<ActionColumn {...baseProps} data={null} />);
 
-    expect(container.querySelector('.tabler-icon-dots')).toBeNull();
+    expect(container.querySelector('.tabler-icon-dots-vertical')).toBeNull();
   });
 });

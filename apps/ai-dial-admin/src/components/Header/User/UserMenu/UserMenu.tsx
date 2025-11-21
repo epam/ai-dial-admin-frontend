@@ -86,7 +86,7 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
         </div>
       ) : (
         <DialDropdown menu={{ items: dropdownItems }} onOpenChange={(open) => setIsOpen(open)}>
-          <div role="menuitem" className="flex min-w-[120px] cursor-pointer items-center justify-between gap-2 pr-3">
+          <div role="menuitem" className="flex min-w-[120px] cursor-pointer items-center justify-between gap-2 pr-6">
             <UserInfo session={session} />
             <IconChevronDown
               {...BASE_ICON_PROPS}
