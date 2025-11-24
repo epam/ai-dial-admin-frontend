@@ -9,14 +9,14 @@ export const BASE_CONTAINERS_URL = `${API}/deployments`;
 
 export class DeploymentsApi extends BaseApi {
   getInterceptorContainers(token: JWT | null): Promise<ServerActionResponse<Container[]>> {
-    return this.getAction(`${BASE_CONTAINERS_URL}?imageDefinitionType=INTERCEPTOR`, token);
+    return this.getAction(`${BASE_CONTAINERS_URL}?type=INTERCEPTOR`, token);
   }
 
   getModelContainers(token: JWT | null): Promise<ServerActionResponse<Container[]>> {
-    return this.getAction(`${BASE_CONTAINERS_URL}?imageDefinitionType=NIM`, token);
+    return this.getAction(`${BASE_CONTAINERS_URL}?type=NIM`, token);
   }
 
   getMcpContainers(token: JWT | null): Promise<ServerActionResponse<Container[]>> {
-    return this.getAction(`${BASE_CONTAINERS_URL}?imageDefinitionType=MCP`, token);
+    return this.getAction(`${BASE_CONTAINERS_URL}?type=MCP`, token);
   }
 }
