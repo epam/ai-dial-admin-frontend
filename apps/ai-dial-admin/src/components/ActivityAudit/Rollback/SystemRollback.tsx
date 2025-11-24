@@ -152,7 +152,7 @@ const SystemRollback: FC = () => {
   }, [currentState, diffView, rollbackState, selectedTab]);
 
   return (
-    <div className="flex flex-col bg-layer-2 rounded p-6 flex-1 min-h-0">
+    <div className="flex flex-col bg-layer-2 rounded py-4 px-6 flex-1 min-h-0">
       <div className="flex flex-row justify-between mb-4 items-center h-[38x]">
         <h1>{t(RollbackI18nKey.System)}</h1>
         <div className="flex flex-row gap-3 items-center">
