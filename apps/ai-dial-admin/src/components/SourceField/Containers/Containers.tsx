@@ -111,7 +111,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
   }, [containers, selectedContainer, entity]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-y-8">
       <div className="flex lg:flex-row flex-col gap-2 items-end">
         {isModal ? (
           <div className="flex flex-col w-full">

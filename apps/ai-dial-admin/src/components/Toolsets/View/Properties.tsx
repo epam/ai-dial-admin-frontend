@@ -26,7 +26,7 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
           isEntityImmutable={true}
           view={ApplicationRoute.Toolsets}
         />
-        <div className="flex flex-col gap-y-6 lg:w-[35%] mt-6">
+        <div className="flex flex-col gap-y-8 lg:w-[35%] mt-6">
           <MaxRetryAttempts entity={selectedToolset} onChangeEntity={onChangeToolset} />
         </div>
       </div>

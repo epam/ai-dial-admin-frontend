@@ -44,7 +44,7 @@ const LoginPopup: FC<Props> = ({ type, isModalOpen, onClose, onLogin }) => {
       size={PopupSize.Sm}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
     >
-      <div className="flex px-6 py-4 h-full flex-col gap-y-6">
+      <div className="flex px-6 py-4 h-full flex-col gap-y-8">
         <DialRadioGroup
           fieldTitle={t(EntityFieldsI18nKey.authenticationType)}
           orientation={RadioGroupOrientation.Column}

@@ -160,7 +160,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
 
   return (
     <div className="h-full flex flex-col pt-3 w-full">
-      <div className="flex flex-col gap-6 lg:w-[35%]">
+      <div className="flex flex-col gap-y-8 lg:w-[35%]">
         <DisplayNameControl
           displayName={route.displayName || route.name}
           required={true}
@@ -204,7 +204,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
           onChange={onChangeOutput}
         />
       </div>
-      <div className="mt-6 flex flex-col gap-6">
+      <div className="mt-6 flex flex-col gap-y-8">
         {route.response ? (
           <div className="flex lg:w-[60%]">
             <div className="mr-2">
@@ -238,7 +238,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
 
         <MaxRetryAttempts readonly={readonly} entity={route} onChangeEntity={updateRoute} />
 
-        <div className="lg:w-[25%] flex flex-col gap-6">
+        <div className="lg:w-[25%] flex flex-col gap-y-8">
           {isAppRoute && (
             <DialSelectField
               disabled={readonly}

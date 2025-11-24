@@ -59,7 +59,7 @@ const DuplicateScheme: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose, 
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Duplicate)}
     >
-      <div className="flex flex-col px-6 py-4 gap-y-6">
+      <div className="flex flex-col px-6 py-4 gap-y-8">
         <IdControl
           isUrlId={true}
           entity={{ name: clonedEntity.$id }}

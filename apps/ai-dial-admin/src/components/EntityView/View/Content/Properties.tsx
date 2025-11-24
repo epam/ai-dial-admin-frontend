@@ -23,7 +23,7 @@ interface Props {
 const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntity }) => {
   return (
     <div className="h-full flex flex-col pt-3">
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-y-8">
         <Properties
           view={view}
           entity={entity}
@@ -43,7 +43,7 @@ const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntit
 
         {view === ApplicationRoute.Applications && <Defaults entity={entity} onChangeEntity={updateEntity} />}
       </div>
-      <div className="flex flex-col gap-6 pt-3 lg:w-[35%]">
+      <div className="flex flex-col gap-y-8 pt-3 lg:w-[35%]">
         <ForwardAuthTokenField view={view} entity={entity} onChangeEntity={updateEntity} />
 
         {view === ApplicationRoute.Applications && (

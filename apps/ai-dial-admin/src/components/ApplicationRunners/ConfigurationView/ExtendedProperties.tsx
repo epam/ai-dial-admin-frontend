@@ -101,7 +101,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
   );
 
   return (
-    <div className="flex flex-col gap-6 h-full">
+    <div className="flex flex-col gap-y-8 h-full">
       <IconControl
         iconUrl={runner['dial:applicationTypeIconUrl']}
         onChange={(icon: string) => {
@@ -119,7 +119,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
         }}
       />
 
-      <div className="lg:w-[35%] flex flex-col gap-y-6">
+      <div className="lg:w-[35%] flex flex-col gap-y-8">
         <DialSelectField
           value={runner.type || BasicI18nKey.None}
           elementId="type"

@@ -26,7 +26,7 @@ const SchemeProperties: FC<Props> = ({ names, runner, isImmutable, onChangeRunne
   );
 
   return (
-    <div className="flex flex-col gap-6 h-full">
+    <div className="flex flex-col gap-y-8 h-full">
       {!isImmutable && (
         <IdControl
           names={names}

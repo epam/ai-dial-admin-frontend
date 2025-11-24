@@ -106,7 +106,7 @@ const EntityView: FC<Props> = ({
   }, [selectedFormat, originalEntity]);
 
   const headerClassName = classNames(
-    'flex flex-row min-h-[34px]',
+    'flex flex-row min-h-[34px] mb-8',
     jsonEditorEnabled ? 'justify-end' : 'justify-between',
   );
 
@@ -319,7 +319,7 @@ const EntityView: FC<Props> = ({
           />
         </div>
 
-        <div className="flex-1 overflow-auto mt-3 min-h-0">
+        <div className="flex-1 overflow-auto min-h-0">
           {jsonEditorEnabled && !(ApplicationRoute.Applications && activeTab === EntityViewTab.Parameters) ? (
             <EntityJsonEditor
               key={key}
