@@ -49,7 +49,7 @@ const ValidityPeriod: FC<Props> = ({ onChange }) => {
   }, []);
 
   return (
-    <div className="flex flex-row gap-y-8">
+    <div className="flex flex-row gap-8">
       <DialSelectField
         fieldTitle={t(KeysI18nKey.ValidityPeriod)}
         value={selectedValue}

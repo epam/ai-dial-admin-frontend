@@ -48,29 +48,31 @@ const Authentication: FC<Props> = ({ disabled, toolset, onChange, ...props }) =>
   );
 
   return (
-    <div className="flex flex-col gap-y-3 w-full lg:w-[45%]">
+    <div className="flex flex-col gap-y-2 w-full lg:w-[45%]">
       <Field fieldTitle={t(EntityFieldsI18nKey.authSettings)} />
-      {disabled ? (
-        <AuthTypeSection
-          config={authOptions.find((option) => option.id === selectedAuthType)!}
-          isSelected={true}
-          disabled={true}
-          authSettings={toolset.authSettings}
-          {...props}
-        />
-      ) : (
-        authOptions.map((option) => (
+      <div className="flex flex-col gap-y-3">
+        {disabled ? (
           <AuthTypeSection
-            key={option.id}
-            config={option}
-            isSelected={option.id === selectedAuthType}
-            onClick={onChangeAuthType}
+            config={authOptions.find((option) => option.id === selectedAuthType)!}
+            isSelected={true}
+            disabled={true}
             authSettings={toolset.authSettings}
-            onChange={(authSettings) => onChange?.({ ...toolset, authSettings })}
             {...props}
           />
-        ))
-      )}
+        ) : (
+          authOptions.map((option) => (
+            <AuthTypeSection
+              key={option.id}
+              config={option}
+              isSelected={option.id === selectedAuthType}
+              onClick={onChangeAuthType}
+              authSettings={toolset.authSettings}
+              onChange={(authSettings) => onChange?.({ ...toolset, authSettings })}
+              {...props}
+            />
+          ))
+        )}
+      </div>
     </div>
   );
 };

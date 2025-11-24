@@ -204,7 +204,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
           onChange={onChangeOutput}
         />
       </div>
-      <div className="mt-6 flex flex-col gap-y-8">
+      <div className="flex flex-col gap-y-8">
         {route.response ? (
           <div className="flex lg:w-[60%]">
             <div className="mr-2">
