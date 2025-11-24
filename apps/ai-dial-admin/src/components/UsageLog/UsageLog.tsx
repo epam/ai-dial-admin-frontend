@@ -75,8 +75,8 @@ const UsageLog: FC<Props> = ({ route, entity, entityView }) => {
   }, [timePeriod]);
 
   return (
-    <div className="flex flex-col h-full w-full bg-layer-2 rounded p-4">
-      <div className="flex flex-row min-h-[34px] justify-between">
+    <div className="flex flex-col h-full w-full bg-layer-2 rounded py-4 px-6">
+      <div className="flex flex-row h-[38px] justify-between mb-4">
         {!entityView && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
@@ -97,7 +97,7 @@ const UsageLog: FC<Props> = ({ route, entity, entityView }) => {
           />
         </div>
       </div>
-      <div className="flex flex-1 rounded overflow-auto my-3 min-h-0 border border-primary">
+      <div className="flex flex-1 rounded overflow-auto min-h-0 border border-primary">
         {activeTab === EntityViewTab.Traces && (
           <List
             route={route}

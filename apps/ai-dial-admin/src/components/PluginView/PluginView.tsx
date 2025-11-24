@@ -97,7 +97,7 @@ const PluginView: FC<Props> = ({ slug }) => {
   }, [frameConfig?.host, frameConfig?.providerId, frameConfig?.theme, pathname, searchParams, slug]);
 
   return (
-    <div className="flex flex-col bg-layer-2 rounded p-6 flex-1 min-h-0">
+    <div className="flex flex-col bg-layer-2 rounded py-4 px-6 flex-1 min-h-0">
       {error || !frameConfig ? (
         <DialNoDataContent title={t(BasicI18nKey.NoData)} />
       ) : (
