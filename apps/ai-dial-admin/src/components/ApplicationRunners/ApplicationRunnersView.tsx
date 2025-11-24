@@ -127,7 +127,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
-    setSelectedRunner(originalScheme);
+    setSelectedRunner(cloneDeep(originalScheme));
   }, [jsonEditorEnabled, originalScheme, dispatch]);
 
   const onChangeScheme = useCallback(

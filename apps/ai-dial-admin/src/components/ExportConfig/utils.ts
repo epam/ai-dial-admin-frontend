@@ -222,6 +222,7 @@ export const isEntityWithDependency = (entity: string): boolean => {
     entity === EntityType.APPLICATION ||
     entity === EntityType.TOOLSET ||
     entity === EntityType.ROLE ||
-    entity === EntityType.KEY
+    entity === EntityType.KEY ||
+    entity === EntityType.APPLICATION_TYPE_SCHEMA
   );
 };
