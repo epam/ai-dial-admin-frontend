@@ -14,14 +14,12 @@ const RolesDefaults: FC<Props> = ({ entity, onChangeEntity }) => {
   const t = useI18n();
 
   return (
-    <div className="flex flex-row gap-6 mb-8">
-      <div className="flex flex-col">
-        <h1 className="mb-4">{t(RolesI18nKey.DefaultLimits)}</h1>
-        <LimitsControl
-          limits={entity.defaultRoleLimit}
-          onChangeLimits={(defaultRoleLimit) => onChangeEntity({ ...entity, defaultRoleLimit })}
-        />
-      </div>
+    <div className="flex flex-col">
+      <h1 className="mb-4">{t(RolesI18nKey.DefaultLimits)}</h1>
+      <LimitsControl
+        limits={entity.defaultRoleLimit}
+        onChangeLimits={(defaultRoleLimit) => onChangeEntity({ ...entity, defaultRoleLimit })}
+      />
     </div>
   );
 };
