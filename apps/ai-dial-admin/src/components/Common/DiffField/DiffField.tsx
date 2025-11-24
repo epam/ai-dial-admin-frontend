@@ -26,6 +26,8 @@ const DiffField: FC<Props> = ({ original, modified, fieldTitle, cssClass }) => {
     <div className={classNames('flex flex-col w-full flex-1', cssClass)}>
       <Field fieldTitle={fieldTitle} />
       <DiffEditor
+        keepCurrentModifiedModel={true}
+        keepCurrentOriginalModel={true}
         original={original}
         modified={modified}
         language={'Markdown'}
