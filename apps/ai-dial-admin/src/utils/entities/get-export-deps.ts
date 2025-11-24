@@ -22,7 +22,7 @@ export const getAllAvailableDependencies = (type?: EntityType): EntityType[] => 
   }
 
   if (type === EntityType.MODEL) {
-    return [EntityType.ADAPTER, EntityType.INTERCEPTOR];
+    return [EntityType.INTERCEPTOR];
   }
 
   if (type === EntityType.APPLICATION) {

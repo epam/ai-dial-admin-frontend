@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@epam/ai-dial-shared": "^0.39.0",
-    "@epam/ai-dial-ui-kit": "0.4.0-rc.63",
+    "@epam/ai-dial-ui-kit": "0.5.0-rc.12",
     "@epam/ai-dial-visualizer-connector": "^0.39.0",
     "@floating-ui/react": "^0.27.16",
     "@monaco-editor/react": "^4.7.0",
@@ -124,6 +124,7 @@
     "@babel/core": "7.28.4",
     "esbuild": "0.25.10",
     "koa": "3.0.3",
+    "glob": "10.5.0",
     "react": "19.1.1",
     "react-dom": "19.1.1"
   },
