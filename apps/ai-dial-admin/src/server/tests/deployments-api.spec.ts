@@ -12,7 +12,7 @@ describe('DeploymentsApi', () => {
     fetch.mockResponseOnce(['container1']);
     await instance.getInterceptorContainers(TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining(`${BASE_CONTAINERS_URL}?imageDefinitionType=INTERCEPTOR`),
+      expect.stringContaining(`${BASE_CONTAINERS_URL}?type=INTERCEPTOR`),
       expect.objectContaining({
         method: 'GET',
       }),
@@ -23,7 +23,7 @@ describe('DeploymentsApi', () => {
     fetch.mockResponseOnce(['container2']);
     await instance.getModelContainers(TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining(`${BASE_CONTAINERS_URL}?imageDefinitionType=NIM`),
+      expect.stringContaining(`${BASE_CONTAINERS_URL}?type=NIM`),
       expect.objectContaining({
         method: 'GET',
       }),
@@ -34,7 +34,7 @@ describe('DeploymentsApi', () => {
     fetch.mockResponseOnce(['container2']);
     await instance.getMcpContainers(TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining(`${BASE_CONTAINERS_URL}?imageDefinitionType=MCP`),
+      expect.stringContaining(`${BASE_CONTAINERS_URL}?type=MCP`),
       expect.objectContaining({
         method: 'GET',
       }),
