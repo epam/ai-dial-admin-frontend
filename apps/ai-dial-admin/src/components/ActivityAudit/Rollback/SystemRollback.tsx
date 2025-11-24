@@ -153,7 +153,7 @@ const SystemRollback: FC = () => {
 
   return (
     <div className="flex flex-col bg-layer-2 rounded p-6 flex-1 min-h-0">
-      <div className="flex flex-row justify-between mb-4 items-center">
+      <div className="flex flex-row justify-between mb-4 items-center h-[38x]">
         <h1>{t(RollbackI18nKey.System)}</h1>
         <div className="flex flex-row gap-3 items-center">
           <FilterControl diffView={diffView} setDiffView={setDiffView} isResources={true} />
