@@ -124,7 +124,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
         {activeTab === EntityViewTab.Properties && (
           <>
             <EntityHeader entity={selectedTemplate} />
-            <div className="flex-1 min-h-0 pt-4">
+            <div className="flex-1 min-h-0 pt-8">
               <ExtendedProperties template={selectedTemplate} onChange={onChange} />
             </div>
           </>

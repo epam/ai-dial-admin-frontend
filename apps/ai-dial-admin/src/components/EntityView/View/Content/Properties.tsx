@@ -22,7 +22,7 @@ interface Props {
 
 const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntity }) => {
   return (
-    <div className="h-full flex flex-col pt-3">
+    <div className="h-full flex flex-col pt-3 gap-y-8">
       <div className="flex flex-col gap-y-8">
         <Properties
           view={view}

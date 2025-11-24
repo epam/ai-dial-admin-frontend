@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
-import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
 import { getCoreRole, removeRole, updateCoreRole, updateRole } from '@/src/app/[lang]/roles/actions';
@@ -39,6 +38,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { EntityViewTab, getRoleTabs } from '@/src/utils/tabs/utils';
 import RoleProperties from './Properties';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { getViewHeaderClassNames } from '@/src/utils/entities/view';
 
 interface Props {
   originalRole: DialRole;
@@ -67,11 +67,6 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
   const [coreRole, setCoreRole] = useState<DialKey | null>(null);
   const entityRef = useRef(selectedRole);
-
-  const headerClassName = classNames(
-    'flex flex-row min-h-[34px]',
-    jsonEditorEnabled ? 'justify-end' : 'justify-between',
-  );
 
   useEffect(() => {
     const name = (originalRole as { name: string })?.name;
@@ -257,7 +252,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={headerClassName}>
+      <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
         {!jsonEditorEnabled && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />

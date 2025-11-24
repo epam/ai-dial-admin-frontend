@@ -31,12 +31,12 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
   const t = useI18n();
 
   const checkAppStatus = useCallback((): void => {
-    getReqRef.current(getAppProcessStatus).then((response) => {
-      const state = response.response as AppProcessStatus;
-      if (!state?.success && state.errors?.length > 0) {
-        showNotificationRef.current(getErrorNotification(t(ErrorI18nKey.ServerError), state.errors.join('; ')));
-      }
-    });
+    // getReqRef.current(getAppProcessStatus).then((response) => {
+    //   const state = response.response as AppProcessStatus;
+    //   if (!state?.success && state.errors?.length > 0) {
+    //     showNotificationRef.current(getErrorNotification(t(ErrorI18nKey.ServerError), state.errors.join('; ')));
+    //   }
+    // });
   }, [t]);
 
   useEffect(() => {

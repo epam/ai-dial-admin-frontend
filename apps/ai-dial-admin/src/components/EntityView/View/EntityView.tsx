@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import { DialTabs } from '@epam/ai-dial-ui-kit';
-import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
@@ -37,6 +36,7 @@ import {
 } from '@epam/ai-dial-shared';
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 import ViewContent from './Content/ViewContent';
+import { getViewHeaderClassNames } from '@/src/utils/entities/view';
 
 interface Props {
   view: ApplicationRoute;
@@ -104,11 +104,6 @@ const EntityView: FC<Props> = ({
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFormat, originalEntity]);
-
-  const headerClassName = classNames(
-    'flex flex-row min-h-[34px] mb-8',
-    jsonEditorEnabled ? 'justify-end' : 'justify-between',
-  );
 
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
@@ -296,7 +291,7 @@ const EntityView: FC<Props> = ({
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-        <div className={headerClassName}>
+        <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
           {!jsonEditorEnabled && (
             <div className="flex-1 min-w-0 mr-3">
               <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
