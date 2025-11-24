@@ -40,7 +40,6 @@ const FileView: FC<Props> = ({ originalFile }) => {
     setSelectedFile(cloneDeep(originalFile));
   }, [originalFile]);
 
-
   useEffect(() => {
     setIsChanged(!isEqualSkippingUndefined(originalFile, selectedFile));
   }, [selectedFile, originalFile]);
