@@ -13,9 +13,10 @@ interface Props {
   modified?: string;
   fieldTitle: string;
   cssClass?: string;
+  language?: string;
 }
 
-const DiffField: FC<Props> = ({ original, modified, fieldTitle, cssClass }) => {
+const DiffField: FC<Props> = ({ original, modified, fieldTitle, cssClass, language }) => {
   const { currentTheme } = useTheme();
 
   function handleBeforeMount(monaco: Monaco) {
@@ -30,7 +31,7 @@ const DiffField: FC<Props> = ({ original, modified, fieldTitle, cssClass }) => {
         keepCurrentOriginalModel={true}
         original={original}
         modified={modified}
-        language={'Markdown'}
+        language={language || 'Markdown'}
         beforeMount={handleBeforeMount}
         height="100%"
         theme={currentTheme}

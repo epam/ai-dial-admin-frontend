@@ -28,7 +28,7 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
   );
 
   const containerClassNames = classNames(
-    'flex-row items-center px-4 ',
+    'flex-row items-center pr-4 pl-10',
     mobile ? 'lg:hidden flex md:px-0 pb-2 mb-2 overflow-x-auto cursor-move' : 'lg:flex hidden',
   );
 
