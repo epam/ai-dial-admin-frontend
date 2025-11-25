@@ -27,7 +27,7 @@ const ExtendedProperties: FC<Props> = ({ template, onChange }) => {
   );
 
   return (
-    <div className="flex flex-col gap-y-8 mt-3">
+    <div className="flex flex-col gap-y-8">
       <div className="lg:w-[35%]">
         <BaseProperties template={template} setTemplate={onChange} isImmutable={true} />
       </div>

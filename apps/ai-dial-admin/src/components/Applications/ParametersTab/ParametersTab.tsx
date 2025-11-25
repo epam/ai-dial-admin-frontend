@@ -157,7 +157,7 @@ const ApplicationParametersTab: FC<Props> = ({
   }, [entity?.applicationPropertiesTemp, entity?.applicationProperties]);
 
   return (
-    <div className="flex flex-col w-full h-full pt-5">
+    <div className="flex flex-col w-full h-full">
       {!jsonEditorEnabled && (
         <div className="flex flex-row justify-between mb-2">
           <div className="flex flex-row gap-4 items-center">

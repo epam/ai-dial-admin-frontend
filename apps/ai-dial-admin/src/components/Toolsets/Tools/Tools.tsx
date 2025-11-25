@@ -156,7 +156,7 @@ const ToolsView: FC<Props> = ({ selectedToolset, isAssetToolset, readonly, origi
       {isLoading ? (
         <DialLoader size={40} />
       ) : (
-        <div className="pt-3 w-full flex flex-col h-full gap-y-2">
+        <div className="w-full flex flex-col h-full gap-y-2">
           <div className="flex flex-row items-center mb-3">
             <h1 className="mr-4">
               {t(ToolsetI18nKey.Tools)}
