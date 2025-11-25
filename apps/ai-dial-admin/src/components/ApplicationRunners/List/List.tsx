@@ -3,7 +3,7 @@
 import { FC } from 'react';
 
 import { createApplicationScheme, removeApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
-import { RUNNERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { LIST_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -24,7 +24,7 @@ const ApplicationRunnersList: FC<Props> = ({ data }) => {
     <BaseEntityList
       data={data}
       names={names}
-      baseColumns={RUNNERS_COLUMNS}
+      baseColumns={LIST_RUNNER_COLUMNS}
       route={ApplicationRoute.ApplicationRunners}
       createEntity={createApplicationScheme}
       removeEntity={removeApplicationScheme}
