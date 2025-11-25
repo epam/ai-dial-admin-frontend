@@ -4,7 +4,6 @@ import { uniq } from 'lodash';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
-import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/AutocompleteField';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
@@ -26,6 +25,7 @@ import { useAppContext } from '@/src/context/AppContext';
 import { getModelContainers } from '@/src/app/[lang]/models/actions';
 import { getToolsetContainers } from '@/src/app/[lang]/toolsets/actions';
 import { getNamesConfigurations } from '@/src/utils/entities/filter-names';
+import { DialSelectField } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   view: ApplicationRoute;
@@ -126,15 +126,18 @@ const DeploymentProperties: FC<Props> = ({
         {!isEntityImmutable && (
           <IdControl entity={entity} onChangeEntity={onChangeEntity} isUniqueNameError={isUniqueNameError} />
         )}
-        <AutocompleteField
-          inputId="displayName"
+
+        <DialSelectField
+          elementId="displayName"
           fieldTitle={t(EntityFieldsI18nKey.displayName)}
           placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
+          inlineSearch={true}
           value={entity.displayName}
-          errorText={displayNameError}
-          onChange={onChangeDisplayName}
-          invalid={!!displayNameError}
-          items={uniq(namesConfiguration.names)}
+          onChange={(value) => onChangeDisplayName(value as string)}
+          error={displayNameError}
+          options={uniq(namesConfiguration.names)
+            .sort()
+            .map((name) => ({ value: name, label: name }))}
         />
 
         {view === ApplicationRoute.Models && (

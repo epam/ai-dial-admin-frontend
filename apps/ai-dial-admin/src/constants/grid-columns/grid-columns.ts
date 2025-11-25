@@ -282,11 +282,11 @@ export const KEYS_COLUMNS = (t: (str: string) => string): ColDef[] => [
 
 export const RUNNERS_COLUMNS: ColDef[] = [
   { field: 'dial:applicationTypeDisplayName', headerName: 'Display Name', sort: 'asc' },
-  { field: '$id', headerName: 'ID' },
   DESCRIPTION_COLUMN,
-  TOPICS_COLUMN,
-  UPDATED_AT_COLUMN,
+  { field: '$id', headerName: 'ID' },
 ];
+
+export const LIST_RUNNER_COLUMNS: ColDef[] = [...RUNNERS_COLUMNS, TOPICS_COLUMN, UPDATED_AT_COLUMN];
 
 export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [...BASE_COLUMNS, UPDATED_AT_COLUMN];
 

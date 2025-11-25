@@ -23,7 +23,7 @@ import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import ParameterSchema from '@/src/components/Interceptors/View/ParameterSchema/ParameterSchema';
-import { DESCRIPTION_COLUMN } from '@/src/constants/grid-columns/grid-columns';
+import { RUNNERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, InterceptorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -283,11 +283,7 @@ const InterceptorView: FC<Props> = ({
             {activeTab === EntityViewTab.ApplicationRunners && (
               <AddEntitiesView
                 viewTitle={t(TabsI18nKey.ApplicationRunners)}
-                customColumns={[
-                  { field: 'dial:applicationTypeDisplayName', headerName: 'Display Name', sort: 'asc' },
-                  DESCRIPTION_COLUMN,
-                  { field: '$id', headerName: 'ID' },
-                ]}
+                customColumns={RUNNERS_COLUMNS}
                 modalTitle={t(EntitiesI18nKey.AddApplicationRunner)}
                 emptyDataTitle={t(EntitiesI18nKey.NoApplicationRunners)}
                 appRunners={appRunners}
