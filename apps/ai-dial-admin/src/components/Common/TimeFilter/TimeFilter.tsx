@@ -65,6 +65,11 @@ const TimeFilter: FC<Props> = ({ timePeriod, onTimePeriodChange, timeRange, onTi
       options={timePeriodOptionsConfig}
       value={value}
       dismissRef={dismissRef}
+      customSelectedValue={
+        timePeriodOptionsConfig.some((item) => item.value === value)
+          ? void 0
+          : `${t(TelemetryI18nKey.Custom)}: ${value}`
+      }
       header={
         <div className="flex flex-col w-full">
           <button className="flex items-center p-3 border-b border-b-secondary" onClick={onClick} aria-label="button">
@@ -80,37 +85,12 @@ const TimeFilter: FC<Props> = ({ timePeriod, onTimePeriodChange, timeRange, onTi
     />
   );
 
-  //   <div>
-  //     <Dropdown
-  //       selectedClassName="flex items-center my-[5px] mr-2 px-1.5 py-1 small text-primary rounded bg-layer-3 cursor-pointer"
-  //       className="flex items-center"
   //       selectedValue={
   //         timePeriodOptionsConfig.find((item) => item.id === value) || {
   //           id: 'Custom',
   //           name: `${value}`,
   //         }
   //       }
-  //       prefix={t(TelemetryI18nKey.TimePeriod)}
-  //       listClassName={'w-[276px]'}
-  //       dismissRef={dismissRef}
-  //     >
-  //       <div className="flex flex-col max-h-[382px] overflow-scroll">
-  //         <div className="flex flex-col w-full">
-  //           <button className="flex items-center p-3 border-b border-b-secondary" onClick={onClick} aria-label="button">
-  //             <i className="mr-3">
-  //               {showCustomRange ? <IconChevronDown {...BASE_ICON_PROPS} /> : <IconChevronRight {...BASE_ICON_PROPS} />}
-  //             </i>
-  //             <p className="small text-primary">{t(TelemetryI18nKey.CustomTimeRage)}</p>
-  //           </button>
-  //           {showCustomRange && <RangePicker onChange={onRangeChange} timeRange={timeRange} />}
-  //         </div>
-  //         {timePeriodOptionsConfig.map((item, i) => (
-  //           <DropdownMenuItem key={i} dropdownItem={item} onClick={() => onItemSelect(item.id)} />
-  //         ))}
-  //       </div>
-  //     </Dropdown>
-  //   </div>
-  // );
 };
 
 export default TimeFilter;
