@@ -16,7 +16,7 @@ interface Props {
 
 const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset }) => {
   return (
-    <div className="pt-3 w-full">
+    <div className="w-full">
       <EntityHeader entity={selectedToolset} />
       <div className="flex-1 min-h-0 pt-8 gap-y-8 flex flex-col">
         <DeploymentProperties

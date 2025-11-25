@@ -213,7 +213,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
             />
           </HeaderButtons>
         </div>
-        <div className="flex-1 overflow-auto mt-3 min-h-0">
+        <div className="flex-1 overflow-auto min-h-0">
           {jsonEditorEnabled ? (
             <EntityJsonEditor
               key={key}

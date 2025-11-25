@@ -70,7 +70,7 @@ const PublicationView = <T extends Publication>({
           setIsJsonView={setIsJsonView}
         />
       </div>
-      <div className="flex-1 overflow-auto mt-3 min-h-0">
+      <div className="flex-1 overflow-auto min-h-0">
         {isJsonView ? (
           <EntityJsonEditor entity={publication} readonly={true} />
         ) : (

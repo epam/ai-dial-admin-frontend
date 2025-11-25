@@ -469,6 +469,7 @@ export default {
     TimePeriod: 'Time Period: ',
     AddFilter: 'Add filter',
     CustomTimeRage: 'Custom Time Range',
+    Custom: 'Custom',
     UniqueUsers: 'Unique users',
     RequestCount: 'Request count',
     TotalTokens: 'Total tokens',

@@ -88,7 +88,7 @@ const DeploymentProperties: FC<Props> = ({ asset, view, runners, onChange }) => 
               entity={asset as DialApplication}
               onChangeEntity={onChange as (entity: DialApplication) => void}
             />
-            <div className="flex flex-col gap-y-8 pt-3 lg:w-[35%]">
+            <div className="flex flex-col gap-y-8 lg:w-[35%]">
               <ForwardAuthTokenField
                 view={view}
                 entity={asset}

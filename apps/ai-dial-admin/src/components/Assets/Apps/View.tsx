@@ -178,7 +178,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
           context={useAppsFolder as () => AssetsFolderContext<DialFile | AssetApp>}
         />
       </div>
-      <div className="flex-1 overflow-auto mt-3 min-h-0">
+      <div className="flex-1 overflow-auto min-h-0">
         {jsonEditorEnabled && !(ApplicationRoute.AssetsApplications && activeTab === EntityViewTab.Parameters) ? (
           <EntityJsonEditor
             key={key}

@@ -457,6 +457,7 @@ export enum TelemetryI18nKey {
   AddFilter = 'Telemetry.AddFilter',
   TimePeriod = 'Telemetry.TimePeriod',
   CustomTimeRage = 'Telemetry.CustomTimeRage',
+  Custom = 'Telemetry.Custom',
   UniqueUsers = 'Telemetry.UniqueUsers',
   RequestCount = 'Telemetry.RequestCount',
   TotalTokens = 'Telemetry.TotalTokens',
