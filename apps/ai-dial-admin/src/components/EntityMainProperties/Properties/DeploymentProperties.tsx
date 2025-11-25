@@ -121,8 +121,8 @@ const DeploymentProperties: FC<Props> = ({
   );
 
   return (
-    <div className="w-full flex flex-col gap-y-6">
-      <div className={classNames('flex flex-col gap-y-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
+    <div className="w-full flex flex-col gap-y-8">
+      <div className={classNames('flex flex-col gap-y-8', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
         {!isEntityImmutable && (
           <IdControl entity={entity} onChangeEntity={onChangeEntity} isUniqueNameError={isUniqueNameError} />
         )}

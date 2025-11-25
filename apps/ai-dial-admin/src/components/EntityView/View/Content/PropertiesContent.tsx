@@ -61,7 +61,7 @@ const PropertiesContent: FC<Props> = ({ applicationSchemes, names, view, selecte
       ) : (
         <EntityHeader entity={selectedEntity} />
       )}
-      <div className="flex-1 min-h-0 pt-4">{getPropertiesView()}</div>
+      <div className="flex-1 min-h-0 pt-8">{getPropertiesView()}</div>
     </div>
   );
 };

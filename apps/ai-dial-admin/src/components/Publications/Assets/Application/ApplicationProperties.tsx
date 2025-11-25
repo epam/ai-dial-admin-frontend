@@ -32,7 +32,7 @@ const ApplicationProperties: FC<Props> = ({ publication, applicationSchemes }) =
   }, [selectedTab]);
 
   return application ? (
-    <div className="flex flex-col gap-y-6 h-full">
+    <div className="flex flex-col gap-y-8 h-full">
       <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab as EntityViewTab)} />
       <div className="flex-1 min-h-0 pt-[25px] lg:pt-0">
         {selectedTab === EntityViewTab.Properties && <ApplicationInfo application={application} />}

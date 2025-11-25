@@ -14,7 +14,7 @@ interface Props {
 
 const BaseProperties: FC<Props> = ({ template, setTemplate, names, isImmutable }) => {
   return (
-    <div className="flex flex-col gap-6 h-full">
+    <div className="flex flex-col gap-y-8 h-full">
       {!isImmutable && <IdControl entity={template} names={names} onChangeEntity={setTemplate} />}
       <DisplayNameControl
         required={true}

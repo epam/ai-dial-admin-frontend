@@ -5,7 +5,6 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { AlertVariant, DialAlert, DialNoDataContent, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 import { IconWorldStar } from '@tabler/icons-react';
-import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
 import {
@@ -44,6 +43,7 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getInterceptorTabs } from '@/src/utils/tabs/utils';
 import InterceptorProperties from './Properties';
+import { getViewHeaderClassNames } from '@/src/utils/entities/view';
 
 interface Props {
   originalInterceptor: DialInterceptor;
@@ -101,11 +101,6 @@ const InterceptorView: FC<Props> = ({
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFormat, originalInterceptor]);
-
-  const headerClassName = classNames(
-    'flex flex-row min-h-[34px]',
-    jsonEditorEnabled ? 'justify-end' : 'justify-between',
-  );
 
   useEffect(() => {
     const isEqualAdminInterceptor = isEqualSkippingUndefined(originalInterceptor, selectedInterceptor);
@@ -232,7 +227,7 @@ const InterceptorView: FC<Props> = ({
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={headerClassName}>
+      <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
         {!jsonEditorEnabled && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
@@ -264,7 +259,7 @@ const InterceptorView: FC<Props> = ({
             {activeTab === EntityViewTab.Properties && (
               <>
                 <EntityHeader entity={selectedInterceptor} />
-                <div className="flex-1 min-h-0 pt-4">
+                <div className="flex-1 min-h-0 pt-8">
                   <InterceptorProperties
                     selectedInterceptor={selectedInterceptor}
                     onChangeInterceptor={onChangeInterceptor}

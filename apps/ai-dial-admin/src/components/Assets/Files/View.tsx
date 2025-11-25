@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import { DialTabs } from '@epam/ai-dial-ui-kit';
-import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
 import { moveFiles, removeFile } from '@/src/app/[lang]/files/actions';
@@ -21,6 +20,7 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import FileProperties from './Properties';
+import { getViewHeaderClassNames } from '@/src/utils/entities/view';
 
 interface Props {
   originalFile: DialFile;
@@ -39,8 +39,6 @@ const FileView: FC<Props> = ({ originalFile }) => {
   useEffect(() => {
     setSelectedFile(cloneDeep(originalFile));
   }, [originalFile]);
-
-  const headerClassName = classNames('flex flex-row min-h-[34px] justify-between');
 
   useEffect(() => {
     setIsChanged(!isEqualSkippingUndefined(originalFile, selectedFile));
@@ -80,7 +78,7 @@ const FileView: FC<Props> = ({ originalFile }) => {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={headerClassName}>
+      <div className={getViewHeaderClassNames()}>
         <div className="flex-1 min-w-0">
           <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
         </div>

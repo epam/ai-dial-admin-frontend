@@ -49,13 +49,13 @@ const FileProperties: FC<Props> = ({ file, onChangeFile }) => {
   );
 
   return (
-    <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full gap-6">
+    <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full gap-y-8">
       <div className="flex flex-row gap-10">
         <LabelledText label={t(EntityFieldsI18nKey.displayName)} text={file.name} />
         {file.author && <LabelledText label={t(EntitiesI18nKey.Author)} text={file.author} />}
       </div>
 
-      <div className="flex flex-col gap-6 pt-6">
+      <div className="flex flex-col gap-y-8 pt-6">
         <div className="flex flex-col">
           <Field fieldTitle={t(EntitiesI18nKey.Source)} />
           <Grid columnDefs={columnDefs} rowData={rowData} />

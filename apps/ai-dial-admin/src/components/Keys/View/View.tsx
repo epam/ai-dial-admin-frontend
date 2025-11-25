@@ -6,7 +6,6 @@ import { createPortal } from 'react-dom';
 
 import { ButtonVariant, DialButton, DialConfirmationPopup, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
-import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
 import { getCoreKey, removeKey, updateCoreKey, updateKey } from '@/src/app/[lang]/keys/actions';
@@ -34,6 +33,7 @@ import KeyRotateModal from '../Modals/KeyRotateModal';
 import KeyViewHeader from './Header/Header';
 import KeyProperties from './Properties/Properties';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { getViewHeaderClassNames } from '@/src/utils/entities/view';
 
 interface Props {
   originalKey: DialKey;
@@ -60,11 +60,6 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
   const [key, setKey] = useState(0);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
   const [coreKey, setCoreKey] = useState<DialKey | null>(null);
-
-  const headerClassName = classNames(
-    'flex flex-row min-h-[34px]',
-    jsonEditorEnabled ? 'justify-end' : 'justify-between',
-  );
 
   useEffect(() => {
     const name = originalKey?.name;
@@ -192,7 +187,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-        <div className={headerClassName}>
+        <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
           {!jsonEditorEnabled && (
             <div className="flex-1 min-w-0">
               <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />

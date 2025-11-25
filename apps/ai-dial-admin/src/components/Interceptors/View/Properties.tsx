@@ -30,9 +30,9 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
   const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
 
   return (
-    <div className="h-full flex flex-col gap-6 w-full">
-      <div className="flex flex-col gap-6">
-        <div className="lg:w-[35%] flex flex-col gap-6 mt-3">
+    <div className="h-full flex flex-col gap-y-8 w-full">
+      <div className="flex flex-col gap-y-8">
+        <div className="lg:w-[35%] flex flex-col gap-y-8 mt-3">
           <EntityProperties
             entity={selectedInterceptor}
             onChangeEntity={onChangeInterceptor}
@@ -48,7 +48,7 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
           />
         </div>
       </div>
-      <div className="flex flex-col gap-6 w-full">
+      <div className="flex flex-col gap-y-8 w-full">
         <SourceField
           view={ApplicationRoute.Interceptors}
           entity={selectedInterceptor}

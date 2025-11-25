@@ -162,7 +162,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
         <div className="flex-1 min-h-0 gap-x-3 flex flex-row w-full">
           <div className="border border-primary p-4 rounded w-[240px] flex flex-col">
             <h3 className="mb-4">{t(ExportI18nKey.Structure)}</h3>
-            <div className="flex flex-1 flex-col gap-y-6 min-h-0 min-w-0 overflow-auto">
+            <div className="flex flex-1 flex-col gap-y-8 min-h-0 min-w-0 overflow-auto">
               <DialRadioGroup
                 radioButtons={exportFormats}
                 activeRadioButton={selectedExportFormat}

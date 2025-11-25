@@ -103,7 +103,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
   );
 
   return (
-    <div className="h-full flex flex-col gap-6">
+    <div className="h-full flex flex-col gap-y-8">
       <div className="lg:w-[180px]">
         <DialSelectField
           value={sourceType?.value}
@@ -114,7 +114,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
         />
       </div>
       {sourceType?.value === SourceTypes.ENDPOINTS && (
-        <div className={classNames('flex flex-col gap-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
+        <div className={classNames('flex flex-col gap-y-8', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
           <CompletionEndpointControl required={true} endpoint={entity.endpoint} onChange={onChangeEndpoint} />
           {isEntityImmutable && (
             <>
@@ -125,7 +125,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
         </div>
       )}
       {sourceType?.value === SourceTypes.APP_RUNNER && (
-        <div className={classNames('flex flex-row gap-6 items-start')}>
+        <div className={classNames('flex flex-row gap-y-8 items-start')}>
           <AppRunners
             selectedValue={
               view === ApplicationRoute.AssetsApplications

@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
 import { DialTabs } from '@epam/ai-dial-ui-kit';
-import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
 import { getApps, moveApps, removeApp, updateApp } from '@/src/app/[lang]/assets-applications/actions';
@@ -33,6 +32,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
+import { getViewHeaderClassNames } from '@/src/utils/entities/view';
 
 interface Props {
   etag: string;
@@ -63,11 +63,6 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
   useEffect(() => {
     setSelectedApp(cloneDeep(originalApp));
   }, [originalApp]);
-
-  const headerClassName = classNames(
-    'flex flex-row min-h-[34px]',
-    jsonEditorEnabled ? 'justify-end' : 'justify-between',
-  );
 
   useEffect(() => {
     if (Object.keys(selectedApp).length && originalApp) {
@@ -161,7 +156,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={headerClassName}>
+      <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
         {!jsonEditorEnabled && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
