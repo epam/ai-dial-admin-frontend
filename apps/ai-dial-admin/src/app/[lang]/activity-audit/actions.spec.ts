@@ -4,6 +4,7 @@ import {
   getActivities,
   getEntitiesForRevision,
   getRevisionDetails,
+  getRevisions,
   systemRollbackToRevision,
   getActivityById,
 } from './actions';
@@ -16,6 +17,7 @@ vi.mock('@/src/app/api/api', () => ({
     getRevisionDetails: vi.fn(),
     getEntitiesForRevision: vi.fn(),
     rollbackToRevision: vi.fn(),
+    getRevisions: vi.fn(),
     getActivityById: vi.fn(),
   },
 }));
@@ -79,6 +81,19 @@ describe('Activity API Service', () => {
       const result = await getEntitiesForRevision(url, 1);
 
       expect(activityAuditApi.getEntitiesForRevision).toHaveBeenCalledWith(`${url}1`, mockToken);
+      expect(result).toEqual(mockResponse);
+    });
+  });
+
+  describe('getRevisions', () => {
+    test('should call system rollback', async () => {
+      const mockResponse = { data: 'revision' };
+
+      activityAuditApi.getRevisions.mockResolvedValue(mockResponse);
+
+      const result = await getRevisions(1, 1, [], []);
+
+      expect(activityAuditApi.getRevisions).toHaveBeenCalledWith(1, 1, mockToken, [], []);
       expect(result).toEqual(mockResponse);
     });
   });

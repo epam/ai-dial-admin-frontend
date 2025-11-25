@@ -1,4 +1,12 @@
-import { createToolset, getCoreToolset, getTools, removeToolset, updateCoreToolset, updateToolset } from './actions';
+import {
+  createToolset,
+  getCoreToolset,
+  getTools,
+  getToolsetContainers,
+  removeToolset,
+  updateCoreToolset,
+  updateToolset,
+} from './actions';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
@@ -12,6 +20,16 @@ describe('Toolsets :: server actions', () => {
   test('Should call get tools', async () => {
     fetch.mockResponse(JSON.stringify({ data: 'response' }));
     getTools('tool').then(() => {
+      expect(fetch.mock.calls.length).toEqual(1);
+
+      const call = fetch.mock.calls[0][1];
+      expect(call?.method).toBe('GET');
+    });
+  });
+
+  test('Should call get Toolset Containers', async () => {
+    fetch.mockResponse(JSON.stringify({ data: 'response' }));
+    getToolsetContainers().then(() => {
       expect(fetch.mock.calls.length).toEqual(1);
 
       const call = fetch.mock.calls[0][1];
