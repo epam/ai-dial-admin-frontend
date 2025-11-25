@@ -1,3 +1,9 @@
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import { deploymentsApi, toolSetsApi } from '@/src/app/api/api';
+import { getUserToken } from '@/src/utils/auth/auth-request';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   createToolset,
   getCoreToolset,
@@ -7,103 +13,85 @@ import {
   updateCoreToolset,
   updateToolset,
 } from './actions';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import createFetchMock from 'vitest-fetch-mock';
 
-const fetch = createFetchMock(vi);
-fetch.enableMocks();
+vi.mock('@/src/utils/auth/auth-request');
+vi.mock('@/src/utils/env/get-auth-toggle');
+vi.mock('@/src/app/api/api');
+
 describe('Toolsets :: server actions', () => {
   beforeEach(() => {
-    fetch.resetMocks();
+    vi.clearAllMocks();
+    (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
+    (getIsEnableAuthToggle as any).mockReturnValue(true);
   });
 
-  test('Should call get tools', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    getTools('tool').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call getTools action', async () => {
+    (toolSetsApi.getTools as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('GET');
-    });
+    const result = await getTools('test');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(toolSetsApi.getTools).toHaveBeenCalledWith('test', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call get Toolset Containers', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    getToolsetContainers().then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call getToolsetContainers action', async () => {
+    (deploymentsApi.getMcpContainers as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('GET');
-    });
+    const result = await getToolsetContainers();
+    expect(getUserToken).toHaveBeenCalled();
+    expect(deploymentsApi.getMcpContainers).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call get core toolset', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    getCoreToolset('tool').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call getCoreToolset action', async () => {
+    (toolSetsApi.getCoreToolset as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('GET');
-    });
+    const result = await getCoreToolset('test');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(toolSetsApi.getCoreToolset).toHaveBeenCalledWith('test', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call remove toolset', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    removeToolset('toolset').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call removeToolset action', async () => {
+    (toolSetsApi.removeToolset as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('DELETE');
-    });
+    const result = await removeToolset('test');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(toolSetsApi.removeToolset).toHaveBeenCalledWith(TOKEN_MOCK, 'test');
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call create toolset', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    createToolset({ name: 'toolset', endpoint: 'http://example' }).then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call createToolset action', async () => {
+    (toolSetsApi.createToolset as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('POST');
-    });
+    const result = await createToolset({ name: 'test' });
+    expect(getUserToken).toHaveBeenCalled();
+    expect(toolSetsApi.createToolset).toHaveBeenCalledWith(
+      {
+        name: 'test',
+        allowedTools: undefined,
+        transport: 'sse',
+      },
+      TOKEN_MOCK,
+    );
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call create toolset', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    createToolset({ name: 'toolset', endpoint: 'https://example' }).then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call updateToolset action', async () => {
+    (toolSetsApi.updateToolset as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('POST');
-    });
+    const result = await updateToolset({ name: 'test' }, 'etag');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(toolSetsApi.updateToolset).toHaveBeenCalledWith({ name: 'test' }, TOKEN_MOCK, 'etag');
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call create toolset', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    createToolset({ name: 'toolset', endpoint: 'sse://example' }).then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call updateCoreToolset action', async () => {
+    (toolSetsApi.updateCoreToolset as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('POST');
-    });
-  });
-
-  test('Should call update toolset', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    updateToolset({}, 'etag').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
-
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('PUT');
-    });
-  });
-
-  test('Should call update core toolset', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    updateCoreToolset({}, 'toolset', 'etag').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
-
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('PUT');
-    });
+    const result = await updateCoreToolset({ name: 'test' }, 'test', 'etag');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(toolSetsApi.updateCoreToolset).toHaveBeenCalledWith({ name: 'test' }, 'test', 'etag', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
   });
 });

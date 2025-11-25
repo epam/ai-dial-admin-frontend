@@ -1,8 +1,9 @@
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { utilityApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { checkIsUniqueDeploymentName, getAppProcessStatus } from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
@@ -12,12 +13,12 @@ vi.mock('@/src/app/api/api');
 describe('Server actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    getUserToken.mockResolvedValue(TOKEN_MOCK);
-    getIsEnableAuthToggle.mockReturnValue(true);
+    (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
+    (getIsEnableAuthToggle as any).mockReturnValue(true);
   });
 
-  test('checkIsUniqueDeploymentName should return true when response is null', async () => {
-    utilityApi.checkDeploymentByName.mockResolvedValue(null);
+  test('Should call checkIsUniqueDeploymentName action', async () => {
+    (utilityApi.checkDeploymentByName as any).mockResolvedValue(null);
 
     const result = await checkIsUniqueDeploymentName('my-deployment');
 
@@ -26,22 +27,21 @@ describe('Server actions', () => {
     expect(result).toBe(true);
   });
 
-  test('checkIsUniqueDeploymentName should return false when response is not null', async () => {
-    utilityApi.checkDeploymentByName.mockResolvedValue({ status: 200 });
+  test('Should call checkIsUniqueDeploymentName action and return false', async () => {
+    (utilityApi.checkDeploymentByName as any).mockResolvedValue({ status: 200 });
 
     const result = await checkIsUniqueDeploymentName('existing-deployment');
 
     expect(result).toBe(false);
   });
 
-  test('getAppProcessStatus should return status data', async () => {
-    const mockStatus = { status: 'IDLE' };
-    utilityApi.getAppProcessStatus.mockResolvedValue(mockStatus);
+  test('Should call getAppProcessStatus action', async () => {
+    (utilityApi.getAppProcessStatus as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await getAppProcessStatus();
 
     expect(getUserToken).toHaveBeenCalled();
     expect(utilityApi.getAppProcessStatus).toHaveBeenCalledWith(TOKEN_MOCK);
-    expect(result).toBe(mockStatus);
+    expect(result).toBe(RESPONSE_MOCK);
   });
 });
