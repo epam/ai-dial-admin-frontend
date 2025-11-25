@@ -11,6 +11,7 @@ interface Props {
   headerButton?: ReactNode;
 }
 
+// TODO: move to ui-kit after merging design systems
 const CollapsableSection: FC<Props> = ({ title, children, headerButton }) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
 

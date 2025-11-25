@@ -34,7 +34,7 @@ const InterceptorEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) =
   );
 
   return (
-    <div className={classNames('flex flex-col gap-6', !isModal && 'lg:w-[35%]')}>
+    <div className={classNames('flex flex-col gap-y-8', !isModal && 'lg:w-[35%]')}>
       {prefix ? (
         <>
           <CompletionEndpointControl

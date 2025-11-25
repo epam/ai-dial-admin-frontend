@@ -54,7 +54,7 @@ const DiffSection: FC<Props> = ({ sections, name, type, diffView, compareView })
         </div>
         <DiffLegend added={added} changed={changed} removed={removed} />
       </button>
-      <div className={classNames('flex flex-col gap-6 px-6 py-4', isCollapsed && 'hidden')}>
+      <div className={classNames('flex flex-col gap-y-8 px-6 py-4', isCollapsed && 'hidden')}>
         {validSections.map(({ index, currentData, compareData }) => (
           <div key={index} className="flex flex-row gap-8">
             <div className="flex flex-col flex-1">

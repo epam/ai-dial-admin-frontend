@@ -15,7 +15,7 @@ interface Props {
 const DiffLegend: FC<Props> = ({ description, added, removed, changed }) => {
   const t = useI18n();
 
-  const containerClass = classNames('flex flex-row small', description ? 'gap-6 text-secondary' : 'gap-2 text-primary');
+  const containerClass = classNames('flex flex-row small', description ? 'gap-8 text-secondary' : 'gap-2 text-primary');
   const itemClass = classNames('flex items-center gap-1');
   const descriptionClass = classNames(description ? '' : 'hidden');
   const rectangleClass = classNames(

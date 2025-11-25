@@ -14,7 +14,7 @@ interface Props {
 
 const ToolsetInfo: FC<Props> = ({ toolset }) => {
   return toolset ? (
-    <div className="flex flex-col gap-y-6 w-full lg:w-[35%]">
+    <div className="flex flex-col gap-y-8 w-full lg:w-[35%]">
       <DisplayNameControl disabled={true} displayName={toolset?.displayName} />
       <DescriptionControl entity={toolset} disabled={true} />
 

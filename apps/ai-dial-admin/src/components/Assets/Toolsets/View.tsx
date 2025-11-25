@@ -5,7 +5,6 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconLogin, IconLogout } from '@tabler/icons-react';
-import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
 import {
@@ -47,6 +46,7 @@ import {
 } from '@/src/utils/toolset/toolset-auth';
 import { addTrailingSlash } from '@/src/utils/url';
 import LoginPopup from './LoginPopup';
+import { getViewHeaderClassNames } from '@/src/utils/entities/view';
 let isSignInProcessed = false;
 interface Props {
   etag: string;
@@ -80,11 +80,6 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
   useEffect(() => {
     setSelectedToolset(cloneDeep(originalToolset));
   }, [originalToolset]);
-
-  const headerClassName = classNames(
-    'flex flex-row min-h-[34px]',
-    jsonEditorEnabled ? 'justify-end' : 'justify-between',
-  );
 
   useEffect(() => {
     if (Object.keys(selectedToolset).length && originalToolset) {
@@ -256,7 +251,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-        <div className={headerClassName}>
+        <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
           {!jsonEditorEnabled && (
             <div className="flex-1 min-w-0">
               <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
@@ -295,7 +290,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
               ))}
           </HeaderButtons>
         </div>
-        <div className="flex-1 overflow-auto mt-3 min-h-0">
+        <div className="flex-1 overflow-auto min-h-0">
           {jsonEditorEnabled ? (
             <EntityJsonEditor
               key={key}

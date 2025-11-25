@@ -20,7 +20,7 @@ const RoleProperties: FC<Props> = ({ selectedRole, names, isSkipRefresh, onChang
     <div className="w-full mt-3 flex flex-col">
       <div className="lg:w-[35%] mt-3 w-full">
         <EntityHeader entity={selectedRole} />
-        <div className="flex-1 min-h-0 pt-4">
+        <div className="flex-1 min-h-0 pt-8">
           <EntityProperties
             entity={selectedRole}
             onChangeEntity={onChangeRole}

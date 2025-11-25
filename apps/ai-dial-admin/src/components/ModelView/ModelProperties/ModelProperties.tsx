@@ -25,7 +25,7 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, updateModel }) => {
   const t = useI18n();
 
   return (
-    <div className="h-full flex flex-col pt-3 gap-6">
+    <div className="h-full flex flex-col pt-3 gap-8">
       <DeploymentProperties
         view={ApplicationRoute.Models}
         entity={model}

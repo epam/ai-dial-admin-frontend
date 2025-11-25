@@ -5,7 +5,6 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { ButtonVariant, DialButtonDropdown, DialTabs, DropdownItem, TabModel } from '@epam/ai-dial-ui-kit';
-import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
 import {
@@ -46,6 +45,7 @@ import { EntityViewTab, getAppRunnerTabs } from '@/src/utils/tabs/utils';
 import AppRunnerApplications from './ConfigurationView/Applications';
 import SchemeProperties from './ConfigurationView/Properties';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { getViewHeaderClassNames } from '@/src/utils/entities/view';
 
 interface Props {
   etag: string;
@@ -98,11 +98,6 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFormat, originalScheme]);
-
-  const headerClassName = classNames(
-    'flex flex-row min-h-[34px]',
-    jsonEditorEnabled ? 'justify-end' : 'justify-between',
-  );
 
   useEffect(() => {
     const isEqualAdminRunner = isEqualSkippingUndefined(originalScheme, selectedRunner);
@@ -168,7 +163,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={headerClassName}>
+      <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
         {!jsonEditorEnabled && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
@@ -190,7 +185,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
           <DialButtonDropdown title={t(ButtonsI18nKey.Create)} items={items} variant={ButtonVariant.Secondary} />
         </HeaderButtons>
       </div>
-      <div className="flex-1 overflow-auto mt-3 min-h-0">
+      <div className="flex-1 overflow-auto min-h-0">
         {jsonEditorEnabled ? (
           <EntityJsonEditor
             key={key}
@@ -204,7 +199,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
               {activeTab === EntityViewTab.Properties && (
                 <div className="pt-3 w-full lg:w-[35%]">
                   <EntityHeader entity={selectedRunner} />
-                  <div className="flex-1 min-h-0 pt-4">
+                  <div className="flex-1 min-h-0 pt-8">
                     <SchemeProperties
                       names={names}
                       runner={selectedRunner}

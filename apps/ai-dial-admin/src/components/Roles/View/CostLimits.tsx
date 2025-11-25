@@ -42,7 +42,7 @@ const RoleCostLimit: FC<Props> = ({ selectedRole, onChangeRole }) => {
   };
 
   return (
-    <div className="w-full mt-6">
+    <div className="w-full">
       <DialSwitch
         switchId="costLimit"
         title={t(RolesI18nKey.SetCostLimits)}

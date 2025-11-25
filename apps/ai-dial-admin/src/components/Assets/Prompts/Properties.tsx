@@ -110,12 +110,12 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isImmutable, publ
       </div>
 
       <div className="pt-6">
-        <div className="flex flex-col gap-6 pr-6">
-          <div className="flex items-end gap-4">
-            <div className="w-[105px]">
-              {isImmutable && <VersionControl version={prompt.version} disabled={isImmutable} />}
+        <div className="flex flex-col gap-y-8 pr-6">
+          {isImmutable && (
+            <div className="flex items-end gap-4 w-[105px]">
+              <VersionControl version={prompt.version} disabled={isImmutable} />
             </div>
-          </div>
+          )}
           <div className="lg:w-[35%]">
             <DescriptionControl entity={prompt} onChangeEntity={onChangePrompt} disabled={isImmutable} />
           </div>

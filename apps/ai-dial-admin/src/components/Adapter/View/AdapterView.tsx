@@ -6,7 +6,6 @@ import { createPortal } from 'react-dom';
 
 import { ButtonVariant, DialButton, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
-import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
 import { removeAdapter, updateAdapter } from '@/src/app/[lang]/adapters/actions';
@@ -33,6 +32,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { EntityViewTab, getAdapterTabs } from '@/src/utils/tabs/utils';
 import AdapterProperties from './AdapterProperties';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { getViewHeaderClassNames } from '@/src/utils/entities/view';
 
 interface Props {
   etag: string;
@@ -59,11 +59,6 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   useEffect(() => {
     setSelectedAdapter(cloneDeep(originalAdapter));
   }, [originalAdapter]);
-
-  const headerClassName = classNames(
-    'flex flex-row min-h-[34px]',
-    jsonEditorEnabled ? 'justify-end' : 'justify-between',
-  );
 
   useEffect(() => {
     setIsChanged(!isEqualSkippingUndefined(originalAdapter, selectedAdapter));
@@ -116,7 +111,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={headerClassName}>
+      <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
         {!jsonEditorEnabled && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
@@ -141,7 +136,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
           />
         </HeaderButtons>
       </div>
-      <div className="flex-1 overflow-auto mt-3 min-h-0">
+      <div className="flex-1 overflow-auto min-h-0">
         {jsonEditorEnabled ? (
           <EntityJsonEditor
             key={key}
@@ -154,7 +149,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
             {activeTab === EntityViewTab.Properties && (
               <>
                 <EntityHeader entity={selectedAdapter} />
-                <div className="lg:w-[35%] flex flex-col pt-4">
+                <div className="lg:w-[35%] flex flex-col pt-8">
                   <div className="flex-1 min-h-0">
                     <AdapterProperties
                       entity={selectedAdapter}

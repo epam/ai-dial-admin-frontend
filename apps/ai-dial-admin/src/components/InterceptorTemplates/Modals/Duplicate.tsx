@@ -44,7 +44,7 @@ const DuplicateTemplate: FC<Props> = ({ onDuplicate, isModalOpen, onClose, templ
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Duplicate)}
     >
-      <div className="flex flex-col px-6 py-4 gap-y-6">
+      <div className="flex flex-col px-6 py-4 gap-y-8">
         <IdControl entity={clonedTemplate} names={names} onChangeEntity={setTemplate} />
 
         <DisplayNameControl

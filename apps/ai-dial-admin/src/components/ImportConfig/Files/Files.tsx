@@ -86,7 +86,7 @@ const Files: FC<Props> = ({
           onClick={onNextStep}
         />
       </div>
-      <div className="flex-1 min-h-0 gap-y-6 flex flex-col w-full overflow-auto">
+      <div className="flex-1 min-h-0 gap-y-8 flex flex-col w-full overflow-auto">
         <DialRadioGroup
           radioButtons={IMPORT_RESOLUTIONS(t)}
           activeRadioButton={activeResolution}

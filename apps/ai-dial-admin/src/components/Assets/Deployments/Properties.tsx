@@ -34,8 +34,8 @@ const DeploymentProperties: FC<Props> = ({ asset, view, runners, onChange }) => 
   const t = useI18n() as (t: string) => string;
 
   return (
-    <div className="h-full flex flex-col w-full gap-y-6">
-      <div className="flex flex-col gap-y-6">
+    <div className="h-full flex flex-col w-full gap-y-8">
+      <div className="flex flex-col gap-y-8">
         <div className="lg:w-[35%]">
           <DisplayNameControl
             displayName={asset.displayName}
@@ -48,7 +48,7 @@ const DeploymentProperties: FC<Props> = ({ asset, view, runners, onChange }) => 
         </div>
 
         <IconControl iconUrl={asset.iconUrl} onChange={(icon) => onChange({ ...asset, iconUrl: icon })} />
-        <div className="lg:w-[35%] flex flex-col gap-y-6">
+        <div className="lg:w-[35%] flex flex-col gap-y-8">
           <TopicsControl entity={asset} onChange={onChange} view={view} />
         </div>
 
@@ -88,7 +88,7 @@ const DeploymentProperties: FC<Props> = ({ asset, view, runners, onChange }) => 
               entity={asset as DialApplication}
               onChangeEntity={onChange as (entity: DialApplication) => void}
             />
-            <div className="flex flex-col gap-6 pt-3 lg:w-[35%]">
+            <div className="flex flex-col gap-y-8 lg:w-[35%]">
               <ForwardAuthTokenField
                 view={view}
                 entity={asset}
