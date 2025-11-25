@@ -26,7 +26,7 @@ describe('Interceptors :: server actions', () => {
     (getIsEnableAuthToggle as any).mockReturnValue(true);
   });
 
-  test('Should call get core interceptor', async () => {
+  test('Should call getCoreInterceptor action', async () => {
     (interceptorsApi.getCoreInterceptor as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await getCoreInterceptor('interceptor');
@@ -35,7 +35,7 @@ describe('Interceptors :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call get interceptors', async () => {
+  test('Should call getInterceptorsList action', async () => {
     (interceptorsApi.getInterceptorsList as any).mockResolvedValue(RESPONSE_MOCK);
 
     await getInterceptorsList();
@@ -43,7 +43,7 @@ describe('Interceptors :: server actions', () => {
     expect(interceptorsApi.getInterceptorsListAction).toHaveBeenCalledWith(TOKEN_MOCK);
   });
 
-  test('Should call getInterceptorContainers', async () => {
+  test('Should call getInterceptorContainers action ', async () => {
     (deploymentsApi.getInterceptorContainers as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await getInterceptorContainers();
@@ -52,7 +52,7 @@ describe('Interceptors :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call remove interceptor', async () => {
+  test('Should call removeInterceptor action', async () => {
     (interceptorsApi.removeInterceptor as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await removeInterceptor('interceptor');
@@ -61,7 +61,7 @@ describe('Interceptors :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call create interceptor', async () => {
+  test('Should call createInterceptor action', async () => {
     (interceptorsApi.createInterceptor as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await createInterceptor({ name: 'interceptor' });
@@ -70,7 +70,7 @@ describe('Interceptors :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call update core interceptor', async () => {
+  test('Should call updateCoreInterceptor action', async () => {
     (interceptorsApi.updateCoreInterceptor as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await updateCoreInterceptor({}, 'interceptor', 'etag');
@@ -79,7 +79,7 @@ describe('Interceptors :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call update interceptor', async () => {
+  test('Should call updateInterceptor action', async () => {
     (interceptorsApi.updateInterceptor as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await updateInterceptor({}, 'etag');
@@ -88,7 +88,7 @@ describe('Interceptors :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call update interceptor', async () => {
+  test('Should call updateInterceptor action', async () => {
     (interceptorsApi.updateInterceptor as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await updateInterceptor({ defaultsTemp: [{ key: 'key', type: 'type', value: 'value' }] }, 'etag');
@@ -97,7 +97,7 @@ describe('Interceptors :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call get Configuration Schema', async () => {
+  test('Should call getConfigurationSchema action', async () => {
     (interceptorsApi.getConfigurationSchema as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await getConfigurationSchema('name');

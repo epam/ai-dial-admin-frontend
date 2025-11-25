@@ -25,7 +25,7 @@ describe('Import Config :: server actions', () => {
     (getIsEnableAuthToggle as any).mockReturnValue(true);
   });
 
-  test('Should call importJsonConfigs with correct params', async () => {
+  test('Should call importJsonConfigs action', async () => {
     (utilityApi.importJsonConfigs as any).mockResolvedValue(RESPONSE_MOCK);
     const result = await importJsonConfigs(mockFormData);
     expect(getUserToken).toHaveBeenCalled();
@@ -33,7 +33,7 @@ describe('Import Config :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call importZipConfig with correct params', async () => {
+  test('Should call importZipConfig action', async () => {
     (utilityApi.importZipConfig as any).mockResolvedValue(RESPONSE_MOCK);
     const result = await importZipConfig(mockFormData);
     expect(getUserToken).toHaveBeenCalled();
@@ -41,7 +41,7 @@ describe('Import Config :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call previewJsonConfigs with correct params', async () => {
+  test('Should call previewJsonConfigs action', async () => {
     (utilityApi.importJsonConfigs as any).mockResolvedValue(RESPONSE_MOCK);
     const result = await previewJsonConfigs(mockFormData);
     expect(getUserToken).toHaveBeenCalled();
@@ -49,7 +49,7 @@ describe('Import Config :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call previewZipConfig with correct params', async () => {
+  test('Should call previewZipConfig action', async () => {
     (utilityApi.importZipConfig as any).mockResolvedValue(RESPONSE_MOCK);
     const result = await previewZipConfig(mockFormData);
     expect(getUserToken).toHaveBeenCalled();
