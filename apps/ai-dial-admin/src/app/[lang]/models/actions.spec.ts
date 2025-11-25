@@ -1,101 +1,151 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import createFetchMock from 'vitest-fetch-mock';
+
+import { adaptersApi, deploymentsApi, modelsApi } from '@/src/app/api/api';
+import { getUserToken } from '@/src/utils/auth/auth-request';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   createModel,
+  getCoreModel,
+  getModelContainers,
+  getModels,
   getModelsAdapters,
   getModelsTokenizers,
   getModelsTopics,
   removeModel,
-  updateModel,
-  getCoreModel,
   updateCoreModel,
+  updateModel,
 } from './actions';
 
-const fetch = createFetchMock(vi);
-fetch.enableMocks();
+vi.mock('@/src/utils/auth/auth-request');
+vi.mock('@/src/utils/env/get-auth-toggle');
+vi.mock('@/src/app/api/api');
 
 describe('Models :: server actions', () => {
   beforeEach(() => {
-    fetch.resetMocks();
+    vi.clearAllMocks();
+    (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
+    (getIsEnableAuthToggle as any).mockReturnValue(true);
   });
 
-  test('Should call get models topics', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ data: 'response' }));
-    getModelsTopics().then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call getModelsTopics action', async () => {
+    (modelsApi.getModelsTopics as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('GET');
-    });
+    const result = await getModelsTopics();
+    expect(getUserToken).toHaveBeenCalled();
+    expect(modelsApi.getModelsTopics).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call get models tokenizers', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ data: 'response' }));
-    getModelsTokenizers().then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call getModelsTokenizers action', async () => {
+    (modelsApi.getModelsTokenizers as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('GET');
-    });
+    const result = await getModelsTokenizers();
+    expect(getUserToken).toHaveBeenCalled();
+    expect(modelsApi.getModelsTokenizers).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call get models adapters', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ data: 'response' }));
-    getModelsAdapters().then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call getModelsAdapters action', async () => {
+    (adaptersApi.getAdaptersListAction as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('GET');
-    });
+    const result = await getModelsAdapters();
+    expect(getUserToken).toHaveBeenCalled();
+    expect(adaptersApi.getAdaptersListAction).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call get core model', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ data: 'response' }));
-    getCoreModel('model').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call getModels action', async () => {
+    (modelsApi.getModelsListAction as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('GET');
-    });
+    const result = await getModels();
+    expect(getUserToken).toHaveBeenCalled();
+    expect(modelsApi.getModelsListAction).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call remove model', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    removeModel('model').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call getModelContainers action', async () => {
+    (deploymentsApi.getModelContainers as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('DELETE');
-    });
+    const result = await getModelContainers();
+    expect(getUserToken).toHaveBeenCalled();
+    expect(deploymentsApi.getModelContainers).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call create model', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    createModel({ name: 'model' }).then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call getCoreModel action', async () => {
+    (modelsApi.getCoreModel as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('POST');
-    });
+    const result = await getCoreModel('test');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(modelsApi.getCoreModel).toHaveBeenCalledWith('test', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call update model', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    updateModel({}, 'etag').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call removeModel action', async () => {
+    (modelsApi.removeModel as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('PUT');
-    });
+    const result = await removeModel('test');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(modelsApi.removeModel).toHaveBeenCalledWith(TOKEN_MOCK, 'test');
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call update core model', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    updateCoreModel({}, 'model', 'etag').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call createModel action', async () => {
+    (modelsApi.createModel as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('PUT');
-    });
+    const result = await createModel({ name: 'test' });
+    expect(getUserToken).toHaveBeenCalled();
+    expect(modelsApi.createModel).toHaveBeenCalledWith(
+      {
+        name: 'test',
+        source: {
+          completionEndpointPath: 'test/chat/completions',
+        },
+        type: 'chat',
+        defaultRoleLimit: {
+          day: null,
+          minute: null,
+          month: null,
+          week: null,
+        },
+      },
+      TOKEN_MOCK,
+    );
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call updateModel action', async () => {
+    (modelsApi.updateModel as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await updateModel({ name: 'test' }, 'etag');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(modelsApi.updateModel).toHaveBeenCalledWith({ name: 'test', defaults: {} }, TOKEN_MOCK, 'etag');
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call updateModel action', async () => {
+    (modelsApi.updateModel as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await updateModel(
+      { name: 'test', defaultsTemp: [{ key: 'key', type: 'str', value: 'value' }] },
+      'etag',
+    );
+    expect(getUserToken).toHaveBeenCalled();
+    expect(modelsApi.updateModel).toHaveBeenCalledWith(
+      { name: 'test', defaults: { key: 'value' } },
+      TOKEN_MOCK,
+      'etag',
+    );
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call updateCoreModel action', async () => {
+    (modelsApi.updateCoreModel as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await updateCoreModel({ name: 'test' }, 'test', 'etag');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(modelsApi.updateCoreModel).toHaveBeenCalledWith({ name: 'test' }, 'test', 'etag', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
   });
 });

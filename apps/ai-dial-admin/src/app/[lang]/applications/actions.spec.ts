@@ -1,3 +1,9 @@
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import { applicationsApi } from '@/src/app/api/api';
+import { getUserToken } from '@/src/utils/auth/auth-request';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { TOKEN_MOCK, RESPONSE_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   createApplication,
   getCoreApplication,
@@ -5,74 +11,114 @@ import {
   updateApplication,
   updateCoreApplication,
   getApplication,
+  getApplications,
 } from './actions';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import createFetchMock from 'vitest-fetch-mock';
 
-const fetch = createFetchMock(vi);
-fetch.enableMocks();
+vi.mock('@/src/utils/auth/auth-request');
+vi.mock('@/src/utils/env/get-auth-toggle');
+vi.mock('@/src/app/api/api');
 
 describe('Applications :: server actions', () => {
   beforeEach(() => {
-    fetch.resetMocks();
+    vi.clearAllMocks();
+    (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
+    (getIsEnableAuthToggle as any).mockReturnValue(true);
   });
 
-  test('Should call remove application', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    removeApplication('application').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call removeApplication action', async () => {
+    (applicationsApi.removeApplication as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('DELETE');
-    });
+    const result = await removeApplication('test');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(applicationsApi.removeApplication).toHaveBeenCalledWith(TOKEN_MOCK, 'test');
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call get core application', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    getCoreApplication('application').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call getCoreApplication action', async () => {
+    (applicationsApi.getCoreApplication as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('GET');
-    });
+    const result = await getCoreApplication('test');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(applicationsApi.getCoreApplication).toHaveBeenCalledWith('test', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call create application', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    createApplication({ name: 'application' }).then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call createApplication action', async () => {
+    (applicationsApi.createApplication as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('POST');
-    });
+    const result = await createApplication({ name: 'test' });
+    expect(getUserToken).toHaveBeenCalled();
+    expect(applicationsApi.createApplication).toHaveBeenCalledWith(
+      {
+        name: 'test',
+        defaultRoleLimit: {
+          day: null,
+          minute: null,
+          month: null,
+          week: null,
+        },
+      },
+      TOKEN_MOCK,
+    );
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call update application', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    updateApplication({}, 'etag').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call updateApplication action', async () => {
+    (applicationsApi.updateApplication as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('PUT');
-    });
+    const result = await updateApplication({ name: 'test' }, 'etag');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(applicationsApi.updateApplication).toHaveBeenCalledWith(
+      { name: 'test', applicationProperties: {}, defaults: {}, routes: void 0 },
+      TOKEN_MOCK,
+      'etag',
+    );
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call update application', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    updateCoreApplication({}, 'app', 'etag').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('PUT');
-    });
+  test('Should call updateApplication action', async () => {
+    (applicationsApi.updateApplication as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await updateApplication(
+      {
+        name: 'test',
+        applicationPropertiesTemp: [{ key: 'key', required: true, type: 'str', value: 'value' }],
+        defaultsTemp: [{ key: 'key', type: 'str', value: 'value' }],
+      },
+      'etag',
+    );
+    expect(getUserToken).toHaveBeenCalled();
+    expect(applicationsApi.updateApplication).toHaveBeenCalledWith(
+      { name: 'test', applicationProperties: { key: 'value' }, defaults: { key: 'value' }, routes: void 0 },
+      TOKEN_MOCK,
+      'etag',
+    );
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call get application', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    getApplication('name', 'etag').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call updateCoreApplication action', async () => {
+    (applicationsApi.updateCoreApplication as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('GET');
-    });
+    const result = await updateCoreApplication({ name: 'test' }, 'test', 'etag');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(applicationsApi.updateCoreApplication).toHaveBeenCalledWith({ name: 'test' }, 'test', 'etag', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getApplication action', async () => {
+    (applicationsApi.getApplication as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getApplication('test', 'etag');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(applicationsApi.getApplication).toHaveBeenCalledWith('test', TOKEN_MOCK, 'etag');
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getApplications action', async () => {
+    (applicationsApi.getApplicationsListAction as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getApplications();
+    expect(getUserToken).toHaveBeenCalled();
+    expect(applicationsApi.getApplicationsListAction).toHaveBeenCalledWith(TOKEN_MOCK);
   });
 });
