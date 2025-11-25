@@ -23,7 +23,7 @@ describe('Interceptor templates :: server actions', () => {
     (getIsEnableAuthToggle as any).mockReturnValue(true);
   });
 
-  test('Should call get interceptors templates list', async () => {
+  test('Should call getInterceptorTemplatesList action', async () => {
     (interceptorTemplatesApi.getInterceptorTemplatesList as any).mockResolvedValue(RESPONSE_MOCK);
 
     await getInterceptorTemplatesList();
@@ -31,7 +31,7 @@ describe('Interceptor templates :: server actions', () => {
     expect(interceptorTemplatesApi.getInterceptorTemplatesListAction).toHaveBeenCalledWith(TOKEN_MOCK);
   });
 
-  test('Should call get interceptor template', async () => {
+  test('Should call getInterceptorTemplate action', async () => {
     (interceptorTemplatesApi.getInterceptorTemplate as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await getInterceptorTemplate('test', 'etag');
@@ -40,7 +40,7 @@ describe('Interceptor templates :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call create interceptor template', async () => {
+  test('Should call createInterceptorTemplate action', async () => {
     (interceptorTemplatesApi.createInterceptorTemplate as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await createInterceptorTemplate({ name: 'test', description: 'test' });
@@ -52,7 +52,7 @@ describe('Interceptor templates :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call update interceptor template', async () => {
+  test('Should call updateInterceptorTemplate action', async () => {
     (interceptorTemplatesApi.updateInterceptorTemplate as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await updateInterceptorTemplate({ name: 'test', description: 'test' }, 'etag');
@@ -65,7 +65,7 @@ describe('Interceptor templates :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call delete interceptor template', async () => {
+  test('Should call deleteInterceptorTemplate action', async () => {
     (interceptorTemplatesApi.deleteInterceptorTemplate as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await deleteInterceptorTemplate('test');
