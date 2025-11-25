@@ -77,7 +77,7 @@ const EntityDependencies: FC<Props> = ({ entity, applications, models, onChangeE
   }, [applications, entity, models]);
 
   return (
-    <div className="h-full flex flex-col pt-3">
+    <div className="h-full flex flex-col">
       <div className="mb-4 flex flex-row items-center justify-between">
         <h1>
           {t(TabsI18nKey.Dependencies)}: {entity.dependencies?.length || 0}

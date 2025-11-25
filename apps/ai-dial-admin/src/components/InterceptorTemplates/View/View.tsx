@@ -28,6 +28,7 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getInterceptorTemplateTabs } from '@/src/utils/tabs/utils';
+import { getViewHeaderClassNames } from '@/src/utils/entities/view';
 
 interface Props {
   etag: string;
@@ -97,7 +98,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className="flex flex-row min-h-[34px] justify-between">
+      <div className={getViewHeaderClassNames()}>
         <div className="flex-1 min-w-0">
           <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
         </div>

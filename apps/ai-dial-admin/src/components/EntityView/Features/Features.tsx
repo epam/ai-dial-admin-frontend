@@ -47,7 +47,7 @@ const EntityFeatures = <T extends { features?: DialFeatures }>({ view, entity, o
   );
 
   return (
-    <div className="h-full flex flex-col pt-3 gap-y-9 lg:w-[35%]">
+    <div className="h-full flex flex-col gap-y-9 lg:w-[35%]">
       {textKeys.map((key) => {
         return (
           <EndpointControl

@@ -26,7 +26,7 @@ const AdapterModelsGrid: FC<Props> = ({ models }) => {
   const columnDefs = [...ENTITY_BASE_COLUMNS, ACTION_COLUMN([getOpenInNewTabOperation(open)])];
 
   return (
-    <div className="h-full flex flex-col pt-3">
+    <div className="h-full flex flex-col">
       <div className="mb-4 flex flex-row items-center justify-between">
         <h1>
           {t(TabsI18nKey.Models)}: {rowData.length}
