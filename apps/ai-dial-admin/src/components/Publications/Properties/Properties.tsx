@@ -33,7 +33,7 @@ const BasePublicationProperties: FC<Props> = ({ view, publication, children, app
   const runner = applicationSchemes?.find((app) => app.$id === runnerId);
 
   return (
-    <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full">
+    <div className="h-full flex flex-col divide-y divide-primary w-full">
       <div className="flex flex-col sm:flex-row gap-8">
         {(view === ApplicationRoute.Prompts || view === ApplicationRoute.Files) && (
           <LabelledText label={t(EntitiesI18nKey.Action)}>

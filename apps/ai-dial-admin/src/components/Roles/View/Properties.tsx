@@ -17,10 +17,10 @@ interface Props {
 
 const RoleProperties: FC<Props> = ({ selectedRole, names, isSkipRefresh, onChangeRole }) => {
   return (
-    <div className="w-full mt-3 flex flex-col">
-      <div className="lg:w-[35%] mt-3 w-full">
+    <div className="w-full flex flex-col gap-y-8">
+      <div className="w-full">
         <EntityHeader entity={selectedRole} />
-        <div className="flex-1 min-h-0 pt-8">
+        <div className="flex-1 min-h-0 pt-8 lg:w-[35%] w-full">
           <EntityProperties
             entity={selectedRole}
             onChangeEntity={onChangeRole}
