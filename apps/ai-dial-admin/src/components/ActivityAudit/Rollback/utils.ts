@@ -5,7 +5,7 @@ import {
   APPLICATIONS_COLUMNS,
   KEYS_COLUMNS,
   MODELS_COLUMNS,
-  RUNNERS_COLUMNS,
+  LIST_RUNNER_COLUMNS,
   SIMPLE_ENTITY_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -28,7 +28,7 @@ export const getSystemRollbackColumns = (
     case ActivityAuditResourceType.KEY:
       return KEYS_COLUMNS(t);
     case ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA:
-      return RUNNERS_COLUMNS;
+      return LIST_RUNNER_COLUMNS;
     default:
       return [];
   }
