@@ -62,10 +62,12 @@ const InterceptorEndpoint: FC<Props> = ({ entity, onChange, prefix, isModal }) =
       ) : (
         <>
           <CompletionEndpointControl endpoint={entity.endpoint} onChange={onChangeCompletionEndpoint} required={true} />
-          <ConfigurationEndpointControl
-            endpoint={entity.features?.configurationEndpoint}
-            onChange={onChangeConfigurationEndpoint}
-          />
+          {!isModal && (
+            <ConfigurationEndpointControl
+              endpoint={entity.features?.configurationEndpoint}
+              onChange={onChangeConfigurationEndpoint}
+            />
+          )}
         </>
       )}
     </div>
