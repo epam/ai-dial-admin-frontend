@@ -159,7 +159,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
   );
 
   return (
-    <div className="h-full flex flex-col pt-3 w-full">
+    <div className="h-full flex flex-col w-full gap-y-8">
       <div className="flex flex-col gap-y-8 lg:w-[35%]">
         <DisplayNameControl
           displayName={route.displayName || route.name}

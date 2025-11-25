@@ -62,7 +62,7 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, o
   }, [required]);
 
   useEffect(() => {
-    if (resetCounter || endpoint != null) {
+    if (resetCounter || (endpoint != null && endpoint.length > 0)) {
       validateEndpoint(endpoint);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

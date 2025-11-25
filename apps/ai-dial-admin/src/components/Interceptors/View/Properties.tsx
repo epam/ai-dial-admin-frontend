@@ -32,7 +32,7 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
   return (
     <div className="h-full flex flex-col gap-y-8 w-full">
       <div className="flex flex-col gap-y-8">
-        <div className="lg:w-[35%] flex flex-col gap-y-8 mt-3">
+        <div className="lg:w-[35%] flex flex-col gap-y-8">
           <EntityProperties
             entity={selectedInterceptor}
             onChangeEntity={onChangeInterceptor}

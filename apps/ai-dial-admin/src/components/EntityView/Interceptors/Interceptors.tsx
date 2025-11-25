@@ -172,7 +172,7 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
           headerButton={button}
         />
       ) : (
-        <div className="h-full flex flex-col pt-3">
+        <div className="h-full flex flex-col">
           <div className="mb-4 flex flex-row items-center justify-between">
             <h1>
               {t(TabsI18nKey.Interceptors)}: {entityInterceptors?.length || 0}

@@ -14,7 +14,7 @@ interface Props {
 const KeyViewHeader: FC<Props> = ({ selectedKey }) => {
   const t = useI18n();
   return (
-    <div className="flex flex-row gap-10 w-full mb-8">
+    <div className="flex flex-row gap-8 w-full mb-8">
       <LabelledText label={t(EntityFieldsI18nKey.id)} text={selectedKey.name} copyable={true} />
       <LabelledText
         label={t(EntityFieldsI18nKey.createdAt)}
