@@ -1,24 +1,21 @@
-import { exportConfig, getEntities, previewExportConfig } from './actions';
+import { exportConfig, exportConfigMap, getEntities, previewExportConfig } from './actions';
 
 import * as api from '@/src/app/api/api';
 import { utilityApi } from '@/src/app/api/api';
+import { EntityType } from '@/src/types/entity-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import * as entityUtils from '@/src/utils/entities/entities-list-view';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { EntityType } from '@/src/types/entity-type';
-import { getAllAvailableDependencies } from '@/src/utils/entities/get-export-deps';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 vi.mock('@/src/utils/auth/auth-request');
+vi.mock('@/src/utils/env/get-auth-toggle');
 vi.mock('@/src/app/api/api');
 vi.mock('@/src/utils/entities/entities-list-view');
 
 const mockedEntityData = [{ id: '1' }, { id: '2' }];
 
-vi.mock('@/src/utils/auth/auth-request');
-vi.mock('@/src/utils/env/get-auth-toggle');
-vi.mock('@/src/app/api/api');
 
 describe('Export config :: actions :: exportConfig', () => {
   const fakeToken = 'mocked-token';
@@ -46,6 +43,15 @@ describe('Export config :: actions :: exportConfig', () => {
     const result = await previewExportConfig(mockRequest as any);
     expect(getUserToken).toHaveBeenCalled();
     expect(utilityApi.previewExportConfig).toHaveBeenCalledWith(mockRequest, fakeToken);
+    expect(result).toBe(mockResponse);
+  });
+
+  test('should call utilityApi.exportConfigMap with token', async () => {
+    utilityApi.exportConfigMap.mockResolvedValue(mockResponse);
+
+    const result = await exportConfigMap();
+    expect(getUserToken).toHaveBeenCalled();
+    expect(utilityApi.exportConfigMap).toHaveBeenCalledWith(fakeToken);
     expect(result).toBe(mockResponse);
   });
 });
@@ -125,6 +131,14 @@ describe('Export config :: actions :: getEntities', () => {
     entityUtils.getInterceptorsForEntitiesGrid.mockReturnValue(mockedEntityData);
 
     const result = await getEntities(EntityType.INTERCEPTOR);
+    expect(result).toEqual(mockedEntityData);
+  });
+
+  test('should return ADAPTER entities', async () => {
+    api.adaptersApi.getAdaptersList.mockResolvedValue(['adapter1']);
+    entityUtils.getAdaptersForEntitiesGrid.mockReturnValue(mockedEntityData);
+
+    const result = await getEntities(EntityType.ADAPTER);
     expect(result).toEqual(mockedEntityData);
   });
 
