@@ -133,6 +133,7 @@ const DeploymentProperties: FC<Props> = ({
           placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
           inlineSearch={true}
           value={entity.displayName}
+          customSelectedValue={entity.displayName}
           onChange={(value) => onChangeDisplayName(value as string)}
           error={displayNameError}
           options={uniq(namesConfiguration.names)
