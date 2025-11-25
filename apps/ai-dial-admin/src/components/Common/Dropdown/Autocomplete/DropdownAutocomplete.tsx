@@ -15,13 +15,12 @@ import {
   useRole,
 } from '@floating-ui/react';
 import { useRef, useState } from 'react';
-import { DropdownProps } from '../DropdownComponent';
 import { dropdownMenuClassNames } from '../constants';
 import DropdownAutocompleteItem from './DropdownAutocompleteItem';
 import classNames from 'classnames';
 import { DialTooltip } from '@epam/ai-dial-ui-kit';
 
-export interface DropdownAutocompleteProps extends DropdownProps {
+export interface DropdownAutocompleteProps {
   inputId: string;
   items: string[];
   autocompleteValue?: string | number | null;
