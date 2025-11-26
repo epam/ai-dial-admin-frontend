@@ -152,7 +152,6 @@ describe('Entities :: tabs', () => {
   test('returns correct tabs for toolsets', () => {
     expect(getToolsetTabs(t)).toEqual([propertiesTab(t), toolsTab(t), rolesTab(t), auditTab(t)]);
   });
-  
 
   test('returns correct tabs for adapter', () => {
     expect(getAdapterTabs(t)).toEqual([propertiesTab(t), modelsTab(t), auditTab(t)]);
