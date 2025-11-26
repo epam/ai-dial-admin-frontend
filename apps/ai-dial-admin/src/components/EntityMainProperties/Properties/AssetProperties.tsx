@@ -64,7 +64,7 @@ const AssetProperties: FC<Props> = ({
   );
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-y-8">
       {!isEntityImmutable && (
         <IdControl
           fieldTitle={isDeployment ? t(EntityFieldsI18nKey.id) : t(EntityFieldsI18nKey.displayName)}

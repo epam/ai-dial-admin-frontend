@@ -9,7 +9,7 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export async function getInterceptorTemplatesList() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return interceptorTemplatesApi.getInterceptorTemplatesList(token);
+  return interceptorTemplatesApi.getInterceptorTemplatesListAction(token);
 }
 
 export async function getInterceptorTemplate(name: string, etag: string) {

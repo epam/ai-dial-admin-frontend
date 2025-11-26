@@ -8,10 +8,11 @@ import { DEFAULT_ROLE_LIMITS } from '@/src/constants/role';
 import { DialApplication } from '@/src/models/dial/application';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { getAppRoutes } from '@/src/utils/entities/app-routes';
 
 export async function getApplications() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return applicationsApi.getApplicationsList(token);
+  return applicationsApi.getApplicationsListAction(token);
 }
 
 export async function getApplication(name: string, etag: string) {
@@ -34,12 +35,14 @@ export async function updateApplication(application: DialApplication, etag: stri
   const defaults = application.defaultsTemp
     ? { ...convertDefaultsToRecord(application.defaultsTemp) }
     : { ...application.defaults };
+
   const applicationProperties = application.applicationPropertiesTemp
     ? { ...convertDefaultsToRecord(application.applicationPropertiesTemp) }
     : { ...application.applicationProperties };
+
   const app = {
     ...application,
-    routes: application.routes?.map((route) => ({ ...route, name: route.displayName || route.name })),
+    routes: getAppRoutes(application.routes),
     defaults,
     applicationProperties,
   };

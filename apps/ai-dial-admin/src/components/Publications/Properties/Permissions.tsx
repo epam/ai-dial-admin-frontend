@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { IconReplace, IconBrandStackshare } from '@tabler/icons-react';
@@ -14,8 +14,11 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useRuleFolder } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialRule } from '@/src/models/dial/rule';
-import { addTrailingSlash } from '@/src/utils/files/path';
+import { addTrailingSlash } from '@/src/utils/url';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { getErrorNotification } from '@/src/utils/notification';
+import { useNotification } from '@/src/context/NotificationContext';
 
 interface Props {
   rules: DialRule[];
@@ -25,6 +28,8 @@ interface Props {
 
 const PublicationPermissions: FC<Props> = ({ rules, folderId, showCompare }) => {
   const t = useI18n();
+  const getReqRef = useRef(useProtectedRequest());
+  const showNotificationRef = useRef(useNotification().showNotification);
   const { fetchFolderHierarchy, isLoading } = useRuleFolder();
 
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
@@ -39,11 +44,16 @@ const PublicationPermissions: FC<Props> = ({ rules, folderId, showCompare }) => 
       setShowCompareButton(false);
     } else {
       setShowStructureButton(true);
-      getRules(folderId).then((folderRules) => {
-        const rule = folderRules?.[folderId] || [];
-        setCompareRules(rule);
-        setShowCompareButton(showCompare && !isEqualSkippingUndefined(rule, rules));
+      getReqRef.current(getRules, folderId).then((res) => {
+        if (res.success) {
+          const rule = res.response?.[folderId] || [];
+          setCompareRules(rule);
+          setShowCompareButton(showCompare && !isEqualSkippingUndefined(rule, rules));
+        } else {
+          showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage));
+        }
       });
+
       fetchFolderHierarchy?.(folderId);
     }
 

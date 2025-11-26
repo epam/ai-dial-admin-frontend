@@ -49,7 +49,7 @@ export default async function Layout({ children, params }: { children: ReactNode
         embeddedApps={embeddedApps}
       >
         <ThemeProvider themesConfiguration={themesConfiguration} themeImages={themesImages}>
-          <RuleFolderProvider attributes={process.env.PUBLICATION_FILTERS}>
+          <RuleFolderProvider attributes={process.env.PUBLICATION_FILTERS || 'title,role,dial_roles'}>
             <PromptFolderProvider>
               <I18nProvider locale={lang}>
                 <NotificationProvider>

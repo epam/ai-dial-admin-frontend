@@ -8,13 +8,17 @@ import { BaseApi } from '../base-api';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const INTERCEPTORS_URL = `${API}/interceptors`;
-export const INTERCEPTOR_URL = (name?: string) => `${INTERCEPTORS_URL}/${name}`;
-export const CORE_INTERCEPTOR_URL = (name?: string) => `${INTERCEPTORS_URL}/core/${name}`;
+export const INTERCEPTOR_URL = (name?: string) => `${INTERCEPTORS_URL}/${name || ''}`;
+export const CORE_INTERCEPTOR_URL = (name: string) => `${INTERCEPTORS_URL}/core/${name}`;
 export const CONFIGURATION_URL = (name: string) => `${API}/deployments/${name}/configuration`;
 
 export class InterceptorsApi extends BaseApi {
   getInterceptorsList(token: JWT | null): Promise<DialInterceptor[] | null> {
     return this.get(INTERCEPTORS_URL, token);
+  }
+
+  getInterceptorsListAction(token: JWT | null): Promise<ServerActionResponse<DialInterceptor[]>> {
+    return this.getAction(INTERCEPTORS_URL, token);
   }
 
   getInterceptor(name: string, token: JWT | null, eTag: string) {
@@ -38,11 +42,11 @@ export class InterceptorsApi extends BaseApi {
     );
   }
 
-  getConfigurationSchema(name: string, token: JWT | null): Promise<RJSFSchema | null> {
-    return this.get(CONFIGURATION_URL(name), token);
+  getConfigurationSchema(name: string, token: JWT | null): Promise<ServerActionResponse<RJSFSchema>> {
+    return this.getAction(CONFIGURATION_URL(name), token);
   }
 
-  getCoreInterceptor(name: string, token: JWT | null) {
+  getCoreInterceptor(name: string, token: JWT | null): Promise<ServerActionResponse<DialInterceptor>> {
     return this.getActionWithEtag(CORE_INTERCEPTOR_URL(name), DEFAULT_ETAG, token);
   }
 
@@ -52,6 +56,6 @@ export class InterceptorsApi extends BaseApi {
     etag: string,
     token: JWT | null,
   ): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(CORE_INTERCEPTOR_URL(encodeURIComponent(name || '')), interceptor, token, etag);
+    return this.putActionWithEtag(CORE_INTERCEPTOR_URL(encodeURIComponent(name)), interceptor, token, etag);
   }
 }

@@ -1,25 +1,28 @@
 'use client';
+
+import { FC, useCallback, useRef, useState } from 'react';
+
 import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
+import { IconRefresh } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { FC, useCallback, useState } from 'react';
 
 import { getDashboardData } from '@/src/app/[lang]/dashboard/actions';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
-import { conversationsTabs, EntityViewTab, tracesTabs } from '@/src/components/EntityView/View/utils';
 import List from '@/src/components/UsageLog/List/List';
 import { DEFAULT_TIME_PERIOD } from '@/src/constants/global-time-filter';
 import { USAGE_LOG_CONVERSATIONS_COLUMNS, USAGE_LOG_TRACES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { CONVERSATIONS_QUERY, TRACES_QUERY } from '@/src/constants/telemetry';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { TelemetryQuery } from '@/src/models/telemetry';
 import { TimeRange } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
+import { EntityViewTab, getUsageLogTabs } from '@/src/utils/tabs/utils';
 import { getFormattedFilters } from '@/src/utils/telemetry';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
-import { IconRefresh } from '@tabler/icons-react';
 
 interface Props {
   route: ApplicationRoute;
@@ -29,7 +32,8 @@ interface Props {
 
 const UsageLog: FC<Props> = ({ route, entity, entityView }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
-  const tabs = [tracesTabs(t), conversationsTabs(t)];
+  const tabs = getUsageLogTabs(t);
+  const getReqRef = useRef(useProtectedRequest());
 
   const [activeTab, setActiveTab] = useState(entityView || EntityViewTab.Traces);
   const [timePeriod, setTimePeriod] = useState(DEFAULT_TIME_PERIOD);
@@ -43,7 +47,7 @@ const UsageLog: FC<Props> = ({ route, entity, entityView }) => {
         query.query.from.where = getFormattedFilters(timeRange, [], entity?.name || null);
       }
 
-      return getDashboardData(query);
+      return getReqRef.current(getDashboardData, query);
     },
     [entity?.name, timeRange],
   );
@@ -71,8 +75,8 @@ const UsageLog: FC<Props> = ({ route, entity, entityView }) => {
   }, [timePeriod]);
 
   return (
-    <div className="flex flex-col h-full w-full bg-layer-2 rounded p-4">
-      <div className="flex flex-row min-h-[34px] justify-between">
+    <div className="flex flex-col h-full w-full bg-layer-2 rounded py-4 px-6">
+      <div className="flex flex-row h-[38px] justify-between mb-4">
         {!entityView && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
@@ -93,7 +97,7 @@ const UsageLog: FC<Props> = ({ route, entity, entityView }) => {
           />
         </div>
       </div>
-      <div className="flex flex-1 rounded overflow-auto my-3 min-h-0 border border-primary">
+      <div className="flex flex-1 rounded overflow-auto min-h-0 border border-primary">
         {activeTab === EntityViewTab.Traces && (
           <List
             route={route}

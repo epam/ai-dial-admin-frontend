@@ -1,13 +1,12 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
-import { DialTabs } from '@epam/ai-dial-ui-kit';
 
 import { deleteInterceptorTemplate, updateInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { createInterceptor } from '@/src/app/[lang]/interceptors/actions';
@@ -15,19 +14,21 @@ import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEnt
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
-import { auditTabs, EntityViewTab, interceptorsTabs, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import ExtendedProperties from '@/src/components/InterceptorTemplates/Properties/ExtendedProperties';
 import Interceptors from '@/src/components/InterceptorTemplates/View/Interceptors/Interceptors';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { EntityViewTab, getInterceptorTemplateTabs } from '@/src/utils/tabs/utils';
+import { getViewHeaderClassNames } from '@/src/utils/entities/view';
 
 interface Props {
   etag: string;
@@ -39,13 +40,14 @@ const View: FC<Props> = ({ etag, template, names }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
+  const getReqRef = useRef(useProtectedRequest());
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isChanged, setIsChanged] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(cloneDeep(template));
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const tabs = [propertiesTabs(t), interceptorsTabs(t), auditTabs(t)];
+  const tabs = getInterceptorTemplateTabs(t);
 
   // todo change when source field will be added to create interceptor template modal
   const source = useMemo(() => {
@@ -65,7 +67,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
   );
 
   const onSave = useCallback(() => {
-    updateInterceptorTemplate(selectedTemplate, etag).then((res) => {
+    getReqRef.current(updateInterceptorTemplate, selectedTemplate, etag).then((res) => {
       if (res.success) {
         showNotification(
           getSuccessNotification(
@@ -96,7 +98,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className="flex flex-row min-h-[34px] justify-between">
+      <div className={getViewHeaderClassNames()}>
         <div className="flex-1 min-w-0">
           <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
         </div>
@@ -119,11 +121,11 @@ const View: FC<Props> = ({ etag, template, names }) => {
           />
         </HeaderButtons>
       </div>
-      <div className="flex-1 overflow-auto mt-3 min-h-0">
+      <div className="flex-1 overflow-auto min-h-0">
         {activeTab === EntityViewTab.Properties && (
           <>
             <EntityHeader entity={selectedTemplate} />
-            <div className="flex-1 min-h-0 pt-4">
+            <div className="flex-1 min-h-0 pt-8">
               <ExtendedProperties template={selectedTemplate} onChange={onChange} />
             </div>
           </>

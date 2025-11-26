@@ -99,6 +99,22 @@ describe('Server :: RolesApi', () => {
     );
   });
 
+  test('Should update an existing role', async () => {
+    const mockResponse = { success: true };
+    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+
+    const updatedRole = { ...exampleRole, description: 'Updated description' };
+    await instance.updateRole({ ...updatedRole, name: void 0 }, TOKEN_MOCK, 'etag123');
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/roles/'),
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({ ...updatedRole, name: void 0 }),
+      }),
+    );
+  });
+
   test('Should delete a role by name', async () => {
     const mockResponse = { success: true };
     fetch.mockResponseOnce(JSON.stringify(mockResponse));

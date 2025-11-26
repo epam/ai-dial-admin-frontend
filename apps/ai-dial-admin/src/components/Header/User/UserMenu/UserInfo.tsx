@@ -14,7 +14,7 @@ const UserInfo: FC<Props> = ({ session, isUserIcon }) => {
   const t = useI18n();
   const size = isUserIcon ? 24 : 18;
   return (
-    <div className={classNames('flex items-center gap-3', isUserIcon ? 'p-2' : 'p-4')}>
+    <div className={classNames('flex items-center gap-3', isUserIcon ? 'p-2' : 'py-4 pl-4')}>
       {session?.user?.image ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img className="rounded" src={session?.user?.image} width={size} height={size} alt="User avatar" />

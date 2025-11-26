@@ -1,10 +1,5 @@
-import { useRouter } from 'next/navigation';
-import { FC, useCallback, useMemo } from 'react';
+import { FC } from 'react';
 
-import { DialSelectField } from '@epam/ai-dial-ui-kit';
-
-import { getApp } from '@/src/app/[lang]/assets-applications/actions';
-import { getToolset } from '@/src/app/[lang]/assets-toolsets/actions';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import Defaults from '@/src/components/Defaults/Defaults';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
@@ -16,71 +11,31 @@ import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttac
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
-import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import Authentication from '@/src/components/Toolsets/View/Authentication';
+import { BasicI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
-import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetApp, AssetToolset, DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getErrorNotification } from '@/src/utils/notification';
-import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
-import Authentication from '@/src/components/Toolsets/View/Authentication';
 
 interface Props {
-  etag: string;
   view: ApplicationRoute;
   asset: DeploymentAsset;
-  assets: DeploymentAsset[];
   runners: DialApplicationScheme[];
   onChange: (asset: DeploymentAsset) => void;
 }
 
-const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, runners, onChange }) => {
+const DeploymentProperties: FC<Props> = ({ asset, view, runners, onChange }) => {
   const t = useI18n() as (t: string) => string;
-  const router = useRouter();
-  const { showNotification } = useNotification();
-
-  const items = useMemo(() => {
-    return assets.map((asset) => ({ value: asset.version, label: asset.version }));
-  }, [assets]);
-
-  const onChangeVersion = useCallback(
-    async (version: string) => {
-      const getAsset = view === ApplicationRoute.AssetsApplications ? getApp : getToolset;
-
-      getAsset?.(asset.folderId, asset.name as string, version, etag).then((res) => {
-        if (res.success) {
-          const found = res.response as DeploymentAsset;
-
-          if (found) {
-            onChange?.({} as DeploymentAsset);
-            router.push(
-              `${view}/${`${encodeURIComponent(found.name as string)}?path=${encodeURIComponent(found.path)}`}`,
-            );
-          } else {
-            const path = modifyNameVersionInPrompt(asset.path, void 0, version);
-            onChange?.({
-              ...asset,
-              version,
-              path,
-            });
-          }
-        } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
-        }
-      });
-    },
-    [view, asset, etag, onChange, router, showNotification],
-  );
 
   return (
-    <div className="h-full flex flex-col w-full gap-y-6">
-      <div className="flex flex-col gap-y-6">
+    <div className="h-full flex flex-col w-full gap-y-8">
+      <div className="flex flex-col gap-y-8">
         <div className="lg:w-[35%]">
           <DisplayNameControl
             displayName={asset.displayName}
@@ -88,30 +43,19 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, runners, o
             onChange={(displayName) => onChange({ ...asset, displayName })}
           />
         </div>
-        <div className="flex items-end gap-4">
-          <div className="w-[105px]">
-            <DialSelectField
-              value={asset.version}
-              elementId="version"
-              options={items}
-              fieldTitle={t(EntityFieldsI18nKey.displayVersion)}
-              onChange={(version) => onChangeVersion(version as string)}
-            />
-          </div>
-        </div>
         <div className="lg:w-[35%]">
           <DescriptionControl entity={asset} onChangeEntity={onChange} />
         </div>
 
         <IconControl iconUrl={asset.iconUrl} onChange={(icon) => onChange({ ...asset, iconUrl: icon })} />
-        <div className="lg:w-[35%] flex flex-col gap-y-6">
+        <div className="lg:w-[35%] flex flex-col gap-y-8">
           <TopicsControl entity={asset} onChange={onChange} view={view} />
         </div>
 
         <FilePath
           inputCss="lg:w-[35%] lg:flex-0"
           value={asset.folderId}
-          label={t(FoldersI18nKey.Storage)}
+          label={t(EntitiesI18nKey.FolderStorage)}
           modalTitle={t(BasicI18nKey.MoveToFolder)}
           placeholder={t(EntityPlaceholdersI18nKey.Path)}
           onChange={(folderId) => onChange?.({ ...asset, folderId })}
@@ -144,7 +88,7 @@ const DeploymentProperties: FC<Props> = ({ etag, asset, view, assets, runners, o
               entity={asset as DialApplication}
               onChangeEntity={onChange as (entity: DialApplication) => void}
             />
-            <div className="flex flex-col gap-6 pt-3 lg:w-[35%]">
+            <div className="flex flex-col gap-y-8 lg:w-[35%]">
               <ForwardAuthTokenField
                 view={view}
                 entity={asset}

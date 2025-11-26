@@ -70,7 +70,7 @@ const DuplicateKey: FC<Props> = ({ onDuplicate, isModalOpen, onClose, entity, na
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Duplicate)}
     >
-      <div className="flex flex-col gap-6 px-6 py-4">
+      <div className="flex flex-col gap-y-8 px-6 py-4">
         <IdControl entity={clonedEntity} names={names} onChangeEntity={setEntity} />
         <DisplayNameControl
           displayName={clonedEntity.displayName}

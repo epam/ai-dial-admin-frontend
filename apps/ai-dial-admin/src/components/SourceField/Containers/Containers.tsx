@@ -21,12 +21,14 @@ import { IconExternalLink } from '@tabler/icons-react';
 import Field from '@/src/components/Common/Field/Field';
 import SelectContainerModal from '@/src/components/SourceField/Containers/SelectContainerModal';
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
-import { addTrailingSlash } from '@/src/utils/files/path';
+import { addTrailingSlash } from '@/src/utils/url';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { ServerActionResponse } from '@/src/models/server-action';
 
 interface Props<T> {
   entity: T;
   onChange: (entity: T) => void;
-  getContainers: () => Promise<Container[] | null>;
+  getContainers: () => Promise<ServerActionResponse<Container[]>>;
   view?: ApplicationRoute;
   isModal?: boolean;
   errorText?: string;
@@ -43,6 +45,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
   const t = useI18n() as (key: string) => string;
   const { showNotification } = useNotification();
   const { embeddedApps } = useAppContext();
+  const getReqRef = useRef(useProtectedRequest());
   const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
   const showNotificationRef = useRef(showNotification);
 
@@ -92,7 +95,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
 
   useEffect(() => {
     const fetchContainers = async () => {
-      const containers = await getContainers();
+      const containers = (await getReqRef.current(getContainers)).response as Container[] | null;
       if (containers?.length) {
         setContainers(containers.filter((container) => container.status === 'running') || []);
       }
@@ -108,7 +111,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
   }, [containers, selectedContainer, entity]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-y-8">
       <div className="flex lg:flex-row flex-col gap-2 items-end">
         {isModal ? (
           <div className="flex flex-col w-full">

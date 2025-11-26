@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ButtonVariant, DialButton, DialInputPopup, DialSelectField } from '@epam/ai-dial-ui-kit';
+import classNames from 'classnames';
+import { IconExternalLink } from '@tabler/icons-react';
 
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -13,14 +15,13 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import { useI18n } from '@/src/locales/client';
-import { IconExternalLink } from '@tabler/icons-react';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
 import SelectAdapterModal from '@/src/components/SourceField/Adapters/SelectAdapterModal';
 import Field from '@/src/components/Common/Field/Field';
 import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
-import classNames from 'classnames';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props<T> {
   entity: T;
@@ -38,8 +39,8 @@ const Adapters = <T extends DialModel | DialInterceptor>({
   isModal,
 }: Props<T>) => {
   const t = useI18n();
-  const { showNotification } = useNotification();
-  const showNotificationRef = useRef(showNotification);
+  const showNotificationRef = useRef(useNotification().showNotification);
+  const getReqRef = useRef(useProtectedRequest());
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [adapters, setAdapters] = useState<DialAdapter[]>([]);
@@ -77,23 +78,24 @@ const Adapters = <T extends DialModel | DialInterceptor>({
 
   useEffect(() => {
     const fetchRunners = async () => {
-      const res = await getModelsAdapters();
-      if (res.success) {
-        setAdapters((res.response as DialAdapter[]) || []);
-      } else {
-        showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage));
-      }
+      getReqRef.current(getModelsAdapters).then((res) => {
+        if (res.success) {
+          setAdapters(res.response || []);
+        } else {
+          showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage));
+        }
+      });
     };
 
-    fetchRunners().catch((error) => showNotification(getErrorNotification(error.errorHeader, error.errorMessage)));
-  }, [getAdapters, showNotification]);
+    fetchRunners();
+  }, [getAdapters]);
 
   useEffect(() => {
     setSelectedAdapter(adapters?.find((adapter) => adapter.name === entity.source?.adapterName) || null);
   }, [entity, adapters]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-y-8">
       <div className="flex lg:flex-row flex-col gap-2 items-end">
         {isModal ? (
           <div className="w-full">

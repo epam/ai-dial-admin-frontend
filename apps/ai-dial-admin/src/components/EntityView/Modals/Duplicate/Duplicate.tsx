@@ -1,23 +1,25 @@
 import { DialFormPopup } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { checkIsUniqueDeploymentName } from '@/src/app/actions';
+import { RoutesForCheckingUniqueName } from '@/src/components/EntityListView/CreateEntity/constants';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
+import { getDisplayNameError, getVersionError } from '@/src/components/EntityMainProperties/Properties/utils';
+import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import {
   duplicateModalDescriptionMap,
   getClonedEntityName,
   getCloneTitle,
 } from '@/src/utils/entities/duplicate-entity';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { RoutesForCheckingUniqueName } from '@/src/components/EntityListView/CreateEntity/constants';
-import { checkIsUniqueDeploymentName } from '@/src/app/actions';
+import { getNamesConfigurations } from '@/src/utils/entities/filter-names';
+import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 
 type ClonedEntity = BaseEntity | DialModel;
 interface Props {
@@ -30,15 +32,30 @@ interface Props {
 }
 
 const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onClose, entity }) => {
-  const t = useI18n() as (t: string, props?: Record<string, string>) => string;
+  const t = useI18n() as (t: string, props?: Record<string, string | number>) => string;
   const isSimple = isSimpleEntity(view);
   const { isValid, dispatch } = useSaveValidationContext();
 
   const [clonedEntity, setEntity] = useState<ClonedEntity>(
     isSimple
       ? { ...entity, name: getClonedEntityName(entity.name) }
-      : { ...entity, name: getClonedEntityName(entity.name), displayVersion: void 0, displayName: void 0 },
+      : { ...entity, name: getClonedEntityName(entity.name), displayVersion: void 0 },
   );
+
+  const namesConfiguration = useMemo(() => {
+    return getNamesConfigurations(names);
+  }, [names]);
+
+  const [displayNameError, setDisplayNameError] = useState<string | undefined>(void 0);
+
+  const isVersionOptional = useMemo(() => {
+    return !namesConfiguration.names.includes(clonedEntity.displayName as string);
+  }, [clonedEntity.displayName, namesConfiguration.names]);
+
+  const versionError = useMemo(() => {
+    return getVersionError(isVersionOptional, clonedEntity as DialModel, namesConfiguration.versionsMap, t);
+  }, [clonedEntity, isVersionOptional, namesConfiguration.versionsMap, t]);
+
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean | undefined>(void 0);
 
   const onChangeVersion = useCallback(
@@ -50,16 +67,39 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
 
   const onChangeDisplayName = useCallback(
     (displayName?: string) => {
+      const error = getDisplayNameError(
+        view,
+        displayName as string,
+        namesConfiguration.names,
+        t,
+        (entity as DialModel).displayVersion,
+      );
+      setDisplayNameError(error);
+
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: 'displayName',
+        isValid: !error,
+      });
+
       setEntity({ ...clonedEntity, displayName });
     },
-    [setEntity, clonedEntity],
+    [view, namesConfiguration.names, t, entity, dispatch, clonedEntity],
   );
 
   // initial validation (disable save when no values entered yet)
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!clonedEntity.name });
+    dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!clonedEntity.displayName });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (view === ApplicationRoute.Models) {
+      dispatch({ type: ValidationActionType.SetField, field: 'displayVersion', isValid: !versionError });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [versionError, (entity as DialModel).displayVersion, t, view, dispatch]);
 
   const onDuplicateClick = useCallback(async () => {
     const isUnique = RoutesForCheckingUniqueName.includes(view)
@@ -80,7 +120,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
       open={isModalOpen}
       onSubmit={onDuplicateClick}
       onCancel={onClose}
-      disableSubmitButton={(isUniqueNameError != null && !isUniqueNameError) || !isValid}
+      disableSubmitButton={(isUniqueNameError != null && isUniqueNameError) || !isValid}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Duplicate)}
     >
@@ -88,7 +128,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
         {!!duplicateModalDescriptionMap[view] && (
           <div className="text-secondary small mb-4">{t(duplicateModalDescriptionMap[view])}</div>
         )}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-y-8">
           <IdControl
             entity={clonedEntity}
             isUniqueNameError={isUniqueNameError}
@@ -99,9 +139,12 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
 
           {view === ApplicationRoute.Models && (
             <VersionControl
+              title={t(EntityFieldsI18nKey.displayVersion)}
               version={(clonedEntity as DialModel).displayVersion}
               onChange={onChangeVersion}
-              optional={true}
+              error={versionError}
+              optional={isVersionOptional}
+              hideError={!!displayNameError}
             />
           )}
         </div>

@@ -9,13 +9,7 @@ import Grid from '@/src/components/Grid/Grid';
 import { FILE_DOWNLOAD, FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
 import { getDownloadOperation, getPreviewOperation } from '@/src/constants/grid-columns/actions';
 import { FILES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import {
-  BasicI18nKey,
-  EntitiesI18nKey,
-  EntityFieldsI18nKey,
-  EntityPlaceholdersI18nKey,
-  FoldersI18nKey,
-} from '@/src/constants/i18n';
+import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
@@ -55,13 +49,13 @@ const FileProperties: FC<Props> = ({ file, onChangeFile }) => {
   );
 
   return (
-    <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full gap-6">
-      <div className="flex flex-row gap-10">
+    <div className="h-full flex flex-col divide-y divide-primary w-full gap-y-8">
+      <div className="flex flex-row gap-8 mb-8">
         <LabelledText label={t(EntityFieldsI18nKey.displayName)} text={file.name} />
         {file.author && <LabelledText label={t(EntitiesI18nKey.Author)} text={file.author} />}
       </div>
 
-      <div className="flex flex-col gap-6 pt-6">
+      <div className="flex flex-col gap-y-8">
         <div className="flex flex-col">
           <Field fieldTitle={t(EntitiesI18nKey.Source)} />
           <Grid columnDefs={columnDefs} rowData={rowData} />
@@ -69,7 +63,7 @@ const FileProperties: FC<Props> = ({ file, onChangeFile }) => {
         <div className="lg:w-[35%]">
           <FilePath
             value={file.folderId}
-            label={t(FoldersI18nKey.Storage)}
+            label={t(EntitiesI18nKey.FolderStorage)}
             modalTitle={t(BasicI18nKey.MoveToFolder)}
             placeholder={t(EntityPlaceholdersI18nKey.Path)}
             onChange={onChangePath}

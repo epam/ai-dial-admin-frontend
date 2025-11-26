@@ -1,33 +1,34 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import classNames from 'classnames';
-import { cloneDeep } from 'lodash';
 import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
+import { cloneDeep } from 'lodash';
 
-import { removeToolset, updateToolset, updateCoreToolset, getCoreToolset } from '@/src/app/[lang]/toolsets/actions';
+import { getCoreToolset, removeToolset, updateCoreToolset, updateToolset } from '@/src/app/[lang]/toolsets/actions';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import EntityRolesModal from '@/src/components/EntityView/Modals/EmptyRoles/EmptyRoles';
 import EntityRoles from '@/src/components/EntityView/Roles/Roles';
 import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
-import { auditTabs, EntityViewTab, propertiesTabs, rolesTabs, toolsTabs } from '@/src/components/EntityView/View/utils';
 import ToolsView from '@/src/components/Toolsets/Tools/Tools';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { EntityRoleLimits } from '@/src/models/dial/base-entity';
 import { DialRole } from '@/src/models/dial/role';
 import { Toolset } from '@/src/models/dial/toolset';
+import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { EntityViewTab, getToolsetTabs } from '@/src/utils/tabs/utils';
 import ToolsetProperties from './Properties';
-import { ExportFormat } from '@/src/types/export';
-import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { getViewHeaderClassNames } from '@/src/utils/entities/view';
 
 interface Props {
   etag: string;
@@ -41,8 +42,9 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
+  const getReqRef = useRef(useProtectedRequest());
 
-  const tabs: TabModel[] = [propertiesTabs(t), toolsTabs(t), rolesTabs(t), auditTabs(t)];
+  const tabs: TabModel[] = getToolsetTabs(t);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -53,16 +55,12 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   const [key, setKey] = useState(0);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
   const [coreToolset, setCoreToolset] = useState<Toolset | null>(null);
-  const headerClassName = classNames(
-    'flex flex-row min-h-[34px]',
-    jsonEditorEnabled ? 'justify-end' : 'justify-between',
-  );
 
   useEffect(() => {
     const name = originalToolset?.name;
     if (!coreToolset && name) {
-      getCoreToolset(name).then((data) => {
-        setCoreToolset(data.response as Toolset);
+      getReqRef.current(getCoreToolset, name).then((data) => {
+        setCoreToolset(data.response);
       });
     }
   }, [coreToolset, originalToolset]);
@@ -116,8 +114,13 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreToolset(selectedToolset as Record<string, unknown>, originalToolset.name || '', etag)
-        : updateToolset(selectedToolset, etag);
+        ? getReqRef.current(
+            updateCoreToolset,
+            selectedToolset as Record<string, unknown>,
+            originalToolset.name || '',
+            etag,
+          )
+        : getReqRef.current(updateToolset, selectedToolset, etag);
 
     req.then((res) => {
       if (res.success) {
@@ -150,7 +153,7 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={headerClassName}>
+      <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
         {!jsonEditorEnabled && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
@@ -169,7 +172,7 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
           setSelectedFormat={setSelectedFormat}
         />
       </div>
-      <div className="flex-1 overflow-auto mt-3 min-h-0">
+      <div className="flex-1 overflow-auto min-h-0">
         {jsonEditorEnabled ? (
           <EntityJsonEditor
             key={key}

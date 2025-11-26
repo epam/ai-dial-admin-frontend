@@ -42,13 +42,6 @@ export default {
     Yes: 'Yes',
     No: 'No',
   },
-  ReloadConfig: {
-    ReloadTitle: 'Reload Config',
-    Reload: 'Reload',
-    ReloadDescription: 'All changes will be delivered to environment',
-    ConfigReloadedTitle: 'Config reloaded successfully',
-    ConfigReloadedDescription: 'Changes have been delivered to environment',
-  },
   Menu: {
     Entities: 'Entities',
     AccessManagement: 'Access Management',
@@ -116,6 +109,9 @@ export default {
     // no data
     NoApplications: 'No Applications',
     NoInterceptors: 'No Interceptors',
+    NoLocalInterceptors: 'No Local Interceptors',
+    NoGlobalInterceptors: 'No Global Interceptors',
+    NoRunnerInterceptors: 'No Runner Interceptors',
     NoEntities: 'No Entities',
     NoAdapters: 'No Adapters',
     NoModels: 'No Models',
@@ -142,6 +138,7 @@ export default {
     // add entity or entities
     AddModel: 'Add Model',
     AddApplication: 'Add Application',
+    AddApplicationRunner: 'Add Application Runners',
     AddEntities: 'Add Entities',
 
     // entity control
@@ -420,6 +417,7 @@ export default {
     Conversations: 'Conversations',
     Attachments: 'Attachments',
     ParameterSchema: 'Parameter Scheme',
+    ApplicationRunners: 'Application Runners',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',
@@ -448,6 +446,7 @@ export default {
     configurationEndpoint: 'Configuration endpoint',
     rateEndpoint: 'Rate endpoint',
     tokenizeEndpoint: 'Tokenize endpoint',
+    supportCommentInRateResponse: 'Support comment in rate response',
     truncatePromptEndpoint: 'Truncate prompt endpoint',
   },
   Topics: {
@@ -455,6 +454,12 @@ export default {
   },
   Interceptors: {
     Add: 'Add Interceptors',
+    Local: 'Local Interceptors',
+    Global: 'Global Interceptors',
+    Runner: 'Runner Interceptors',
+    GlobalAlert:
+      'This interceptor is applied to all entities in the system as a global. To manage entity relationships list, use the JSON editor.',
+    GlobalMessage: 'Interceptor is Global',
   },
   Telemetry: {
     SystemUsage: 'System Usage',
@@ -464,6 +469,7 @@ export default {
     TimePeriod: 'Time Period: ',
     AddFilter: 'Add filter',
     CustomTimeRage: 'Custom Time Range',
+    Custom: 'Custom',
     UniqueUsers: 'Unique users',
     RequestCount: 'Request count',
     TotalTokens: 'Total tokens',
@@ -670,7 +676,6 @@ export default {
     FolderCreate: 'Create Folder',
     FolderCreatePlaceholder: 'Enter folder name',
     FolderCreateSuccess: 'Folder created successfully',
-    Storage: 'Storage folder',
     Rename: 'Rename',
     FolderName: 'Folder name',
     RenameFolderError: 'This name is used by another folder in the current directory.',
@@ -764,7 +769,8 @@ export default {
     adapter: 'Adapter',
     description: 'Description',
     author: 'Maintainer',
-    displayVersion: 'Version',
+    displayVersion: 'Display Version',
+    version: 'Version',
     iconUrl: 'Icon',
     forwardAuthToken: 'Forward auth token',
     features: 'Features',
@@ -811,6 +817,7 @@ export default {
     $schema: 'Scheme',
     title: 'Title',
     applicationTypeRoutes: 'App Routes',
+    applicationTypeInterceptors: 'Interceptors',
     routes: 'App Routes',
     apiKeyHeader: 'API key header',
     apiKeyValue: 'API key value',
@@ -871,6 +878,7 @@ export default {
     tool_setMaxAcceptedUsers: 'Toolsets max users',
     new_key: 'New key',
     applicationProperties: 'Application properties',
+    applicationTypeSchemas: 'Application runners',
   },
   EntityPlaceholders: {
     Project: 'Enter project',

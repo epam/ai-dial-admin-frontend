@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { getMultipliedValue } from '../utils';
+import { getMultipliedValue, getPriceRealValue } from '../utils';
 
 describe('getMultipliedValue', () => {
   test('should multiply the value by 1,000,000 and round to 6 decimal places when isTokenType is true', () => {
@@ -35,5 +35,32 @@ describe('getMultipliedValue', () => {
   test('should handle invalid number values gracefully', () => {
     expect(getMultipliedValue('invalid', true)).toBe('NaN');
     expect(getMultipliedValue('invalid', false)).toBe('invalid');
+  });
+});
+
+describe('getPriceRealValue', () => {
+  test('should divide by 1000000 when isTokenType is true', () => {
+    expect(getPriceRealValue(2000000, true)).toBe('2');
+    expect(getPriceRealValue('3000000', true)).toBe('3');
+  });
+
+  test('should return value as string when isTokenType is false', () => {
+    expect(getPriceRealValue(42, false)).toBe('42');
+    expect(getPriceRealValue('42', false)).toBe('42');
+  });
+
+  test('should return "0" when value is 0', () => {
+    expect(getPriceRealValue(0, true)).toBe('0');
+    expect(getPriceRealValue(0, false)).toBe('0');
+  });
+
+  test('should return undefined when value is undefined', () => {
+    expect(getPriceRealValue(undefined, true)).toBeUndefined();
+    expect(getPriceRealValue(undefined, false)).toBeUndefined();
+  });
+
+  test('should return undefined when value is null', () => {
+    expect(getPriceRealValue(null as any, true)).toBeUndefined();
+    expect(getPriceRealValue(null as any, false)).toBeUndefined();
   });
 });

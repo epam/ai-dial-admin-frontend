@@ -48,6 +48,7 @@ const JsonEditorBase: FC<Props> = ({ value, onChange, onValidateJSON, options })
       options={{
         ...editorOptions,
         ...(options ?? {}),
+        fixedOverflowWidgets: true,
       }}
     />
   );

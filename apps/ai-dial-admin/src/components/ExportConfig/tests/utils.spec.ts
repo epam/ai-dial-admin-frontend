@@ -156,8 +156,13 @@ describe('Export Config Utils :: isEntityWithDependency', () => {
 
     expect(res).toEqual(true);
   });
-  test('Should return false for app runner', () => {
+  test('Should return true for app runner', () => {
     const res = isEntityWithDependency(EntityType.APPLICATION_TYPE_SCHEMA);
+
+    expect(res).toEqual(true);
+  });
+  test('Should return false for adapter', () => {
+    const res = isEntityWithDependency(EntityType.ADAPTER);
 
     expect(res).toEqual(false);
   });

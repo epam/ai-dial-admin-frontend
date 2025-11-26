@@ -51,7 +51,7 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
   );
 
   return (
-    <div className="flex flex-col gap-6 w-full">
+    <div className="flex flex-col gap-y-8 w-full">
       <AttachmentInput
         initialValues={entity.inputAttachmentTypes}
         fieldTitle={t(AttachmentsI18nKey.Attachments)}
@@ -61,7 +61,7 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
         inputClass="lg:w-[35%] lg:flex-0"
         onChange={(values) => onChangeAttachmentTypes(values)}
       />
-      {entity.inputAttachmentTypes?.length && (
+      {!!entity.inputAttachmentTypes?.length && (
         <DialNumberInputField
           containerCssClass="w-[148px]"
           elementId="maxAttachment"

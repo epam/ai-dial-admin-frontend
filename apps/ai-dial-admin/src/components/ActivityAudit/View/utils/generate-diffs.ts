@@ -259,7 +259,7 @@ export const compareSeparateObjects = (
   val2: object,
   isCurrent?: boolean,
 ): void => {
-  if (key === EntityParameterKeys.INTERCEPTORS) {
+  if (key === EntityParameterKeys.INTERCEPTORS || key === EntityParameterKeys.APP_RUNNER_INTERCEPTORS) {
     compareInterceptors(diffs, val1 as string[], val2 as string[], isCurrent);
   }
   if (key === EntityParameterKeys.ROLE_LIMITS || key === EntityParameterKeys.LIMITS) {
@@ -284,7 +284,8 @@ export const compareSeparateObjects = (
     key === EntityParameterKeys.ROLES ||
     key === EntityParameterKeys.ROUTES ||
     key === EntityParameterKeys.DEPENDENCIES ||
-    key === EntityParameterKeys.MODELS
+    key === EntityParameterKeys.MODELS ||
+    key === EntityParameterKeys.APP_RUNNERS
   ) {
     compareEntities(diffs, val1 as string[], val2 as string[], isCurrent);
   }
@@ -298,7 +299,7 @@ export const compareSeparateObjects = (
  * @param {object} value - value to fill
  */
 export const fillSeparateObjects = (diffs: ActivityAuditDiff[], key: string, value: object) => {
-  if (key === EntityParameterKeys.INTERCEPTORS) {
+  if (key === EntityParameterKeys.INTERCEPTORS || key === EntityParameterKeys.APP_RUNNER_INTERCEPTORS) {
     fillInterceptors(diffs, value as string[]);
   }
   if (key === EntityParameterKeys.ROLE_LIMITS || key === EntityParameterKeys.LIMITS) {
@@ -323,7 +324,8 @@ export const fillSeparateObjects = (diffs: ActivityAuditDiff[], key: string, val
     key === EntityParameterKeys.ROLES ||
     key === EntityParameterKeys.ROUTES ||
     key === EntityParameterKeys.MODELS ||
-    key === EntityParameterKeys.DEPENDENCIES
+    key === EntityParameterKeys.DEPENDENCIES ||
+    key === EntityParameterKeys.APP_RUNNERS
   ) {
     fillEntities(diffs, value as string[]);
   }
@@ -357,6 +359,8 @@ export const createSectionFromDiffs = (
     EntityParameterKeys.DEFAULTS,
     EntityParameterKeys.APP_PROPERTIES,
     EntityParameterKeys.SHARE,
+    EntityParameterKeys.APP_RUNNER_INTERCEPTORS,
+    EntityParameterKeys.APP_RUNNERS,
   ];
   const sections: ActivityAuditSection = {};
 
@@ -409,18 +413,18 @@ export const mergeEntityMaps = (
       const previousEntity = previousMap.get(name);
 
       if (currentEntity && !previousEntity) {
-        return { ...currentEntity, status: isCurrent ? DiffStatus.ADDED : DiffStatus.REMOVED };
+        return { ...currentEntity, diffStatus: isCurrent ? DiffStatus.ADDED : DiffStatus.REMOVED };
       }
 
       if (!currentEntity && previousEntity) {
-        return { status: DiffStatus.MIRROR };
+        return { diffStatus: DiffStatus.MIRROR };
       }
 
       if (currentEntity && previousEntity) {
         if (isEqualSkippingUndefined(currentEntity, previousEntity)) {
           return currentEntity as unknown as EntitiesGridData;
         } else {
-          return { ...currentEntity, status: DiffStatus.CHANGED };
+          return { ...currentEntity, diffStatus: DiffStatus.CHANGED };
         }
       }
 

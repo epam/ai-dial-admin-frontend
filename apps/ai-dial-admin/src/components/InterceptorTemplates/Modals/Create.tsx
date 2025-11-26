@@ -1,6 +1,6 @@
 import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { createInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
@@ -14,6 +14,7 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import BaseProperties from '@/src/components/InterceptorTemplates/Properties/BaseProperties';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   route: ApplicationRoute;
@@ -27,6 +28,7 @@ const Create: FC<Props> = ({ route, onClose, isModalOpen, names }) => {
   const router = useRouter();
   const { showNotification } = useNotification();
   const { isValid, dispatch } = useSaveValidationContext();
+  const getReqRef = useRef(useProtectedRequest());
 
   const [template, setTemplate] = useState<InterceptorTemplate>({
     name: '',
@@ -35,7 +37,7 @@ const Create: FC<Props> = ({ route, onClose, isModalOpen, names }) => {
   });
 
   const onCreate = useCallback(() => {
-    createInterceptorTemplate(template).then((res) => {
+    getReqRef.current(createInterceptorTemplate, template).then((res) => {
       if (res.success) {
         showNotification(
           getSuccessNotification(

@@ -5,7 +5,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { isAssetView } from '@/src/utils/is-asset-view';
 import AssetProperties from './AssetProperties';
-import { Asset } from '../../../models/dial/deployment-asset';
+import { Asset } from '@/src/models/dial/deployment-asset';
 
 interface Props<T> {
   view: ApplicationRoute;

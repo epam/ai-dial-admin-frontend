@@ -1,4 +1,4 @@
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import {
   VisualizerConnectorEvents,
@@ -27,6 +27,7 @@ const FrameRenderer = forwardRef<HTMLDivElement, Props>(
     const visualizerRef = useRef<VisualizerConnector>(null);
 
     const [loading, setLoading] = useState<boolean>(true);
+    const [isEmptyData, setIsEmptyData] = useState<boolean>(false);
 
     useImperativeHandle(ref, () => containerRef.current as HTMLDivElement);
 
@@ -42,6 +43,7 @@ const FrameRenderer = forwardRef<HTMLDivElement, Props>(
 
         if (event.data.type === `${name}/${VisualizerConnectorEvents.readyToInteract}`) {
           setLoading(false);
+          setIsEmptyData(false);
         }
       },
       [onMessage, name],
@@ -80,8 +82,16 @@ const FrameRenderer = forwardRef<HTMLDivElement, Props>(
     useEffect(() => {
       if (!!visualizerRef.current && containerRef.current) {
         sendMessage(visualizerRef.current, jsonEditorEnabled);
+        const timeoutId = setTimeout(() => {
+          if (loading) {
+            setLoading(false);
+            setIsEmptyData(true);
+          }
+        }, 10000);
+
+        return () => clearTimeout(timeoutId);
       }
-    }, [loading, sendMessage, jsonEditorEnabled]);
+    }, [sendMessage, jsonEditorEnabled, loading]);
 
     useEffect(() => {
       window.addEventListener('message', handleMessage);
@@ -95,7 +105,11 @@ const FrameRenderer = forwardRef<HTMLDivElement, Props>(
             <DialLoader size={40} />
           </div>
         )}
-        <div ref={containerRef} className={containerClassNames} />
+        {isEmptyData ? (
+          <DialNoDataContent title={'Error loading application custom UI'} />
+        ) : (
+          <div ref={containerRef} className={containerClassNames} />
+        )}
       </div>
     );
   },

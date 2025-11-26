@@ -1,10 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
 import { DialTabs } from '@epam/ai-dial-ui-kit';
-import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
 import { getApps, moveApps, removeApp, updateApp } from '@/src/app/[lang]/assets-applications/actions';
@@ -12,12 +11,12 @@ import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/compon
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import ViewContent from '@/src/components/EntityView/View/Content/ViewContent';
-import { EntityViewTab } from '@/src/components/EntityView/View/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
@@ -26,12 +25,14 @@ import { DialFile } from '@/src/models/dial/file';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
-import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { getTabsForAssetApp } from './utils';
-import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
+import { addTrailingSlash } from '@/src/utils/url';
+import { getViewHeaderClassNames } from '@/src/utils/entities/view';
 
 interface Props {
   etag: string;
@@ -45,10 +46,11 @@ interface Props {
 
 const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, schemes, interceptors }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
-  const tabs = getTabsForAssetApp(t);
+  const tabs = getTabsForAsset(t, ApplicationRoute.AssetsApplications);
   const router = useRouter();
   const { fetchFiles } = useAppsFolder();
   const { showNotification } = useNotification();
+  const getReqRef = useRef(useProtectedRequest());
   const { dispatch } = useSaveValidationContext();
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedApp, setSelectedApp] = useState(cloneDeep(originalApp));
@@ -61,11 +63,6 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
   useEffect(() => {
     setSelectedApp(cloneDeep(originalApp));
   }, [originalApp]);
-
-  const headerClassName = classNames(
-    'flex flex-row min-h-[34px]',
-    jsonEditorEnabled ? 'justify-end' : 'justify-between',
-  );
 
   useEffect(() => {
     if (Object.keys(selectedApp).length && originalApp) {
@@ -101,7 +98,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
       if (newVersion) {
         updatedEntity = addNewVersion(updatedEntity, newVersion);
       }
-      updateApp(updatedEntity, etag).then((res) => {
+      getReqRef.current(updateApp, updatedEntity, etag).then((res) => {
         if (res.success) {
           showNotification(
             getSuccessNotification(
@@ -159,7 +156,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={headerClassName}>
+      <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
         {!jsonEditorEnabled && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
@@ -169,17 +166,19 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
           activeTab={activeTab}
           view={ApplicationRoute.AssetsApplications}
           entity={selectedApp}
+          onChangeEntity={onChangeEntity}
           isChanged={isChanged}
           onSave={onSave}
           onDiscard={onDiscard}
           removeEntity={onRemove}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          existingVersions={assets?.map((app) => app.version) || []}
+          assets={assets}
+          etag={etag}
           context={useAppsFolder as () => AssetsFolderContext<DialFile | AssetApp>}
         />
       </div>
-      <div className="flex-1 overflow-auto mt-3 min-h-0">
+      <div className="flex-1 overflow-auto min-h-0">
         {jsonEditorEnabled && !(ApplicationRoute.AssetsApplications && activeTab === EntityViewTab.Parameters) ? (
           <EntityJsonEditor
             key={key}
@@ -191,7 +190,6 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
           <ViewContent
             activeTab={activeTab}
             names={[]}
-            assets={assets}
             models={models}
             applications={applications}
             applicationSchemes={schemes}

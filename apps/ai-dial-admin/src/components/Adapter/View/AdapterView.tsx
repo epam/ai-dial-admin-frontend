@@ -1,11 +1,12 @@
 'use client';
+
+import { useRouter } from 'next/navigation';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+
 import { ButtonVariant, DialButton, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
-import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
-import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 
 import { removeAdapter, updateAdapter } from '@/src/app/[lang]/adapters/actions';
 import { createModel } from '@/src/app/[lang]/models/actions';
@@ -15,9 +16,8 @@ import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { ButtonsI18nKey, CreateI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -29,7 +29,10 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { EntityViewTab, getAdapterTabs } from '@/src/utils/tabs/utils';
 import AdapterProperties from './AdapterProperties';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { getViewHeaderClassNames } from '@/src/utils/entities/view';
 
 interface Props {
   etag: string;
@@ -42,8 +45,9 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
+  const getReqRef = useRef(useProtectedRequest());
 
-  const tabs: TabModel[] = [propertiesTabs(t), { id: EntityViewTab.Models, name: t(TabsI18nKey.Models) }, auditTabs(t)];
+  const tabs: TabModel[] = getAdapterTabs(t);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedAdapter, setSelectedAdapter] = useState(cloneDeep(originalAdapter));
@@ -55,11 +59,6 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   useEffect(() => {
     setSelectedAdapter(cloneDeep(originalAdapter));
   }, [originalAdapter]);
-
-  const headerClassName = classNames(
-    'flex flex-row min-h-[34px]',
-    jsonEditorEnabled ? 'justify-end' : 'justify-between',
-  );
 
   useEffect(() => {
     setIsChanged(!isEqualSkippingUndefined(originalAdapter, selectedAdapter));
@@ -95,7 +94,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   }, [setJsonEditorEnabled]);
 
   const onSave = useCallback(() => {
-    updateAdapter(selectedAdapter, etag).then((res) => {
+    getReqRef.current(updateAdapter, selectedAdapter, etag).then((res) => {
       if (res.success) {
         showNotification(
           getSuccessNotification(
@@ -112,7 +111,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={headerClassName}>
+      <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
         {!jsonEditorEnabled && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
@@ -137,7 +136,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
           />
         </HeaderButtons>
       </div>
-      <div className="flex-1 overflow-auto mt-3 min-h-0">
+      <div className="flex-1 overflow-auto min-h-0">
         {jsonEditorEnabled ? (
           <EntityJsonEditor
             key={key}
@@ -150,7 +149,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
             {activeTab === EntityViewTab.Properties && (
               <>
                 <EntityHeader entity={selectedAdapter} />
-                <div className="lg:w-[35%] flex flex-col pt-4">
+                <div className="lg:w-[35%] flex flex-col pt-8">
                   <div className="flex-1 min-h-0">
                     <AdapterProperties
                       entity={selectedAdapter}

@@ -1,32 +1,35 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { DialTabs } from '@epam/ai-dial-ui-kit';
-import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
-import { createPrompt, getPrompt, getPrompts, movePrompts, removePrompt } from '@/src/app/[lang]/prompts/actions';
+import { createPrompt, getPrompts, movePrompts, removePrompt } from '@/src/app/[lang]/prompts/actions';
 import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import { EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
-import { addTrailingSlash, changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { changePath, getListOfPathsToMove, removeTrailingSlash } from '@/src/utils/files/path';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
+import { addTrailingSlash } from '@/src/utils/url';
 import PromptProperties from './Properties';
-import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { Asset } from '@/src/models/dial/deployment-asset';
+import { getViewHeaderClassNames } from '@/src/utils/entities/view';
 
 interface Props {
   originalPrompt: DialPrompt;
@@ -35,10 +38,11 @@ interface Props {
 
 const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
-  const tabs = [propertiesTabs(t)];
+  const tabs = getTabsForAsset(t, ApplicationRoute.Prompts);
   const router = useRouter();
   const { fetchFiles } = usePromptFolder();
   const { showNotification } = useNotification();
+  const getReqRef = useRef(useProtectedRequest());
   const { dispatch } = useSaveValidationContext();
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedPrompt, setSelectedPrompt] = useState(cloneDeep(originalPrompt));
@@ -51,11 +55,6 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
   useEffect(() => {
     setSelectedPrompt(cloneDeep(originalPrompt));
   }, [originalPrompt]);
-
-  const headerClassName = classNames(
-    'flex flex-row min-h-[34px]',
-    jsonEditorEnabled ? 'justify-end' : 'justify-between',
-  );
 
   useEffect(() => {
     if (Object.keys(selectedPrompt).length && originalPrompt) {
@@ -91,7 +90,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
       if (newVersion) {
         updatedEntity = addNewVersion(updatedEntity as DialPrompt, newVersion);
       }
-      createPrompt(updatedEntity as DialPrompt).then((res) => {
+      getReqRef.current(createPrompt, updatedEntity as DialPrompt).then((res) => {
         if (res.success) {
           showNotification(
             getSuccessNotification(
@@ -143,7 +142,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={headerClassName}>
+      <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
         {!jsonEditorEnabled && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
@@ -152,17 +151,20 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
         <HeaderButtons
           view={ApplicationRoute.Prompts}
           entity={selectedPrompt}
+          onChangeEntity={onChangeEntity}
           isChanged={isChanged}
           onSave={onSave}
           onDiscard={onDiscard}
           removeEntity={removePrompt}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          existingVersions={prompts?.map((prompt) => prompt.version) || []}
+          assets={prompts as Asset[]}
+          addedVersions={addedVersions}
+          setAddedVersions={setAddedVersions}
           context={usePromptFolder as () => AssetsFolderContext<DialFile | DialPrompt>}
         />
       </div>
-      <div className="flex-1 overflow-auto mt-3 min-h-0">
+      <div className="flex-1 overflow-auto min-h-0">
         {jsonEditorEnabled ? (
           <EntityJsonEditor
             key={key}
@@ -173,15 +175,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
         ) : (
           <>
             {activeTab === EntityViewTab.Properties && (
-              <PromptProperties
-                prompt={selectedPrompt}
-                prompts={prompts || []}
-                onChangePrompt={onChangeEntity}
-                getPrompt={getPrompt}
-                addedVersions={addedVersions}
-                setAddedVersions={setAddedVersions}
-                setSelectedPrompt={setSelectedPrompt}
-              />
+              <PromptProperties prompt={selectedPrompt} onChangePrompt={onChangeEntity} />
             )}
           </>
         )}

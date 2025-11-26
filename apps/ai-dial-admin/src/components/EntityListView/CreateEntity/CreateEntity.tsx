@@ -1,6 +1,6 @@
 import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import { isValidSourceField } from '@/src/components/SourceField/utils';
@@ -27,6 +27,7 @@ import { isAssetView } from '@/src/utils/is-asset-view';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface CreatePromptEntity extends BaseEntity {
   version?: string;
@@ -60,7 +61,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
   const router = useRouter();
   const folderContext = context?.();
   const { isValid, dispatch } = useSaveValidationContext();
-
+  const getReqRef = useRef(useProtectedRequest());
   const { showNotification } = useNotification();
 
   const [currentEntity, setEntity] = useState<T>(
@@ -87,7 +88,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
     if (isAssetView(route)) {
       entity.folderId = folderContext?.filePath;
     }
-    createEntity?.(entity).then((res) => {
+    getReqRef.current(createEntity, entity).then((res) => {
       if (res.success) {
         if (isAssetView(route)) {
           folderContext?.fetchFiles(folderContext?.filePath);
@@ -114,8 +115,9 @@ const CreateEntity = <T extends CreatePromptEntity>({
   // initial validation (disable save when no values entered yet)
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!currentEntity.name });
-    if (!versionsMap)
+    if (!versionsMap || route === ApplicationRoute.AssetsApplications || route === ApplicationRoute.AssetsToolsets) {
       dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!currentEntity.displayName });
+    }
 
     if ((route === ApplicationRoute.Models || route === ApplicationRoute.Toolsets) && !initialValues) {
       dispatch({

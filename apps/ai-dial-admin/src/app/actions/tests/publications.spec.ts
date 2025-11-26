@@ -1,42 +1,37 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import createFetchMock from 'vitest-fetch-mock';
+
+import { publicationsApi } from '@/src/app/api/api';
+import { getUserToken } from '@/src/utils/auth/auth-request';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { approvePublication, declinePublication } from '../publications';
 
-const fetch = createFetchMock(vi);
-fetch.enableMocks();
+vi.mock('@/src/utils/auth/auth-request');
+vi.mock('@/src/utils/env/get-auth-toggle');
+vi.mock('@/src/app/api/api');
 
 describe('Publications :: server actions', () => {
   beforeEach(() => {
-    fetch.resetMocks();
+    vi.clearAllMocks();
+    (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
+    (getIsEnableAuthToggle as any).mockReturnValue(true);
   });
 
-  test('Should call approve publication', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    approvePublication('path').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call approvePublication action', async () => {
+    (publicationsApi.approvePublication as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('POST');
-    });
+    const result = await approvePublication('test');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(publicationsApi.approvePublication).toHaveBeenCalledWith(TOKEN_MOCK, 'test');
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call decline publication', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    declinePublication('path', 'comment').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call declinePublication action', async () => {
+    (publicationsApi.declinePublication as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('POST');
-    });
-  });
-
-  test('Should call decline publication with empty comment', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    declinePublication('path').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
-
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('POST');
-    });
+    const result = await declinePublication('path', 'test');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(publicationsApi.declinePublication).toHaveBeenCalledWith(TOKEN_MOCK, 'path', 'test');
+    expect(result).toBe(RESPONSE_MOCK);
   });
 });

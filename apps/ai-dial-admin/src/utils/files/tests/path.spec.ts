@@ -1,7 +1,6 @@
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
 import {
-  addTrailingSlash,
   changeFolderName,
   changePath,
   checkPaths,
@@ -155,18 +154,6 @@ describe('Utils :: file :: removeTrailingSlash', () => {
 
   test('Should return empty string if path not provided', () => {
     expect(removeTrailingSlash(undefined)).toBe('');
-  });
-});
-
-describe('Utils :: file :: addTrailingSlash', () => {
-  test('Should add slash', () => {
-    const res = addTrailingSlash('folder1/folder2/all/folder');
-    expect(res).toEqual('folder1/folder2/all/folder/');
-  });
-
-  test('Should not add slash if exists', () => {
-    const res = addTrailingSlash('folder1/folder2/all/folder/');
-    expect(res).toEqual('folder1/folder2/all/folder/');
   });
 });
 

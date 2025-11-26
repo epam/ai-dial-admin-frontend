@@ -8,7 +8,8 @@ import { SaveValidationContextProvider } from '@/src/context/SaveValidationConte
 import { DialFile } from '@/src/models/dial/file';
 import { logError } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
-import { addTrailingSlash, getFolderNameAndPath } from '@/src/utils/files/path';
+import { getFolderNameAndPath } from '@/src/utils/files/path';
+import { addTrailingSlash } from '@/src/utils/url';
 
 export const dynamic = 'force-dynamic';
 

@@ -7,9 +7,9 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const TOOLSETS_URL = `${API}/toolSets`;
-export const TOOLSET_URL = (name?: string) => `${TOOLSETS_URL}/${name}`;
-export const CORE_TOOLSET_URL = (name?: string) => `${TOOLSETS_URL}/core/${name}`;
-export const TOOLS_URL = (name?: string) => `${TOOLSET_URL(name)}/discovered-tools`;
+export const TOOLSET_URL = (name?: string) => `${TOOLSETS_URL}/${name || ''}`;
+export const CORE_TOOLSET_URL = (name: string) => `${TOOLSETS_URL}/core/${name}`;
+export const TOOLS_URL = (name: string) => `${TOOLSET_URL(name)}/discovered-tools`;
 
 export class ToolsetsApi extends BaseApi {
   getToolsetList(token: JWT | null): Promise<Toolset[] | null> {
@@ -17,7 +17,7 @@ export class ToolsetsApi extends BaseApi {
   }
 
   getToolset(name: string, token: JWT | null, eTag: string) {
-    return this.getActionWithEtag(TOOLSET_URL(name), eTag || DEFAULT_ETAG, token);
+    return this.getActionWithEtag(TOOLSET_URL(name), eTag, token);
   }
 
   getTools(name: string, token: JWT | null): Promise<Tool[] | null> {
@@ -41,6 +41,6 @@ export class ToolsetsApi extends BaseApi {
   }
 
   updateCoreToolset(toolset: Toolset, name: string, eTag: string, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(CORE_TOOLSET_URL(encodeURIComponent(name || '')), toolset, token, eTag);
+    return this.putActionWithEtag(CORE_TOOLSET_URL(encodeURIComponent(name)), toolset, token, eTag);
   }
 }

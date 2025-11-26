@@ -8,7 +8,7 @@ export const getDisplayNameError = (
   view: ApplicationRoute,
   displayName: string,
   names: string[],
-  t: (str: string, param?: Record<string, number>) => string,
+  t: (str: string, param?: Record<string, number | string>) => string,
   version?: string,
 ) => {
   const isWrongLength = isWrongFieldLength(displayName);

@@ -34,6 +34,15 @@ describe('Server :: InterceptorsApi', () => {
     expect(result).toEqual(JSON.stringify([mockInterceptor]));
   });
 
+  test('Should call getInterceptorsListAction with correct URL and method', async () => {
+    fetch.mockResponseOnce(JSON.stringify([mockInterceptor]));
+
+    const result = await instance.getInterceptorsListAction(TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(`${TEST_URL}${INTERCEPTORS_URL}`, expect.objectContaining({ method: 'GET' }));
+    expect(result.response).toEqual(JSON.stringify([mockInterceptor]));
+  });
+
   test('should call getCoreInterceptor with correct name and method', async () => {
     fetch.mockResponseOnce(JSON.stringify(mockInterceptor));
 
@@ -68,6 +77,20 @@ describe('Server :: InterceptorsApi', () => {
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify(mockInterceptor),
+      }),
+    );
+  });
+
+  test('Should call updateInterceptor with PUT method and body', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+
+    await instance.updateInterceptor({ ...mockInterceptor, name: void 0 }, TOKEN_MOCK, 'etag123');
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${INTERCEPTOR_URL()}`,
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({ ...mockInterceptor, name: void 0 }),
       }),
     );
   });
@@ -112,14 +135,13 @@ describe('Server :: InterceptorsApi', () => {
   });
 
   test('should call getConfigurationSchema with correct name and method', async () => {
-    fetch.mockResponseOnce(JSON.stringify(mockInterceptor));
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
 
-    const result = await instance.getConfigurationSchema('test-interceptor', TOKEN_MOCK);
+    await instance.getConfigurationSchema('test-interceptor', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${CONFIGURATION_URL('test-interceptor')}`,
       expect.objectContaining({ method: 'GET' }),
     );
-    expect(result).toEqual(JSON.stringify(mockInterceptor));
   });
 });

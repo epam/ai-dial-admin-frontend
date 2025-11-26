@@ -1,12 +1,11 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { ButtonVariant, DialButton, DialConfirmationPopup, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
-import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
 import { getCoreKey, removeKey, updateCoreKey, updateKey } from '@/src/app/[lang]/keys/actions';
@@ -15,7 +14,6 @@ import { getRelevantRolesForKey } from '@/src/components/AddEntitiesTab/utils';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import { auditTabs, EntityViewTab, propertiesTabs, rolesTabs } from '@/src/components/EntityView/View/utils';
 import { SIMPLE_ENTITY_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, KeysI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -30,9 +28,12 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { EntityViewTab, getKeyTabs } from '@/src/utils/tabs/utils';
 import KeyRotateModal from '../Modals/KeyRotateModal';
 import KeyViewHeader from './Header/Header';
 import KeyProperties from './Properties/Properties';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { getViewHeaderClassNames } from '@/src/utils/entities/view';
 
 interface Props {
   originalKey: DialKey;
@@ -46,8 +47,9 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
   const t = useI18n() as (str: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
+  const getReqRef = useRef(useProtectedRequest());
   const { dispatch } = useSaveValidationContext();
-  const tabs: TabModel[] = [propertiesTabs(t), rolesTabs(t), auditTabs(t)];
+  const tabs: TabModel[] = getKeyTabs(t);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isOpenConfirmModal, setIsOpenConfirmModal] = useState(false);
@@ -59,16 +61,11 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
   const [coreKey, setCoreKey] = useState<DialKey | null>(null);
 
-  const headerClassName = classNames(
-    'flex flex-row min-h-[34px]',
-    jsonEditorEnabled ? 'justify-end' : 'justify-between',
-  );
-
   useEffect(() => {
     const name = originalKey?.name;
     if (!coreKey && name) {
-      getCoreKey(name).then((data) => {
-        setCoreKey(data.response as DialKey);
+      getReqRef.current(getCoreKey, name).then((data) => {
+        setCoreKey(data.response);
       });
     }
   }, [coreKey, originalKey]);
@@ -143,8 +140,8 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
     setIsOpenConfirmModal(false);
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreKey(selectedKey as Record<string, unknown>, originalKey.name || '', etag)
-        : updateKey(selectedKey, etag);
+        ? getReqRef.current(updateCoreKey, selectedKey as Record<string, unknown>, originalKey.name || '', etag)
+        : getReqRef.current(updateKey, selectedKey, etag);
 
     req.then((res) => {
       if (res.success) {
@@ -165,7 +162,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
   const onRotateKey = useCallback(
     (key: DialKey) => {
       setIsRotateModalOpen(false);
-      updateKey(key, etag).then((res) => {
+      getReqRef.current(updateKey, key, etag).then((res) => {
         if (res.success) {
           router.refresh();
           showNotification(
@@ -190,7 +187,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-        <div className={headerClassName}>
+        <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
           {!jsonEditorEnabled && (
             <div className="flex-1 min-w-0">
               <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
@@ -216,7 +213,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
             />
           </HeaderButtons>
         </div>
-        <div className="flex-1 overflow-auto mt-3 min-h-0">
+        <div className="flex-1 overflow-auto min-h-0">
           {jsonEditorEnabled ? (
             <EntityJsonEditor
               key={key}
@@ -228,18 +225,16 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
             selectedFormat === ExportFormat.ADMIN && (
               <>
                 {activeTab === EntityViewTab.Properties && (
-                  <div className="h-full flex flex-col pt-3 divide-y divide-primary w-full">
+                  <div className="h-full flex flex-col divide-y divide-primary w-full">
                     <KeyViewHeader selectedKey={selectedKey} />
-                    <div className="pt-6 w-full">
-                      <div className="lg:w-[35%]">
-                        <KeyProperties
-                          entity={selectedKey}
-                          names={names}
-                          keys={keys}
-                          onChangeKey={onChangeKey}
-                          isKeyImmutable={true}
-                        ></KeyProperties>
-                      </div>
+                    <div className="lg:w-[35%]">
+                      <KeyProperties
+                        entity={selectedKey}
+                        names={names}
+                        keys={keys}
+                        onChangeKey={onChangeKey}
+                        isKeyImmutable={true}
+                      ></KeyProperties>
                     </div>
                   </div>
                 )}

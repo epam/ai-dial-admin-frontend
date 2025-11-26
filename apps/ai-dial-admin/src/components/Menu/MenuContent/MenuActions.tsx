@@ -18,13 +18,13 @@ const MenuActions: FC<Props> = ({ onExport, onImport }) => {
     {
       key: t(MenuI18nKey.ImportConfig),
       label: t(MenuI18nKey.ImportConfig),
-      icon: <IconDownload {...BASE_ICON_PROPS} widths={24} height={24} />,
+      icon: <IconDownload className="text-secondary" {...BASE_ICON_PROPS} widths={24} height={24} />,
       onClick: onImport,
     },
     {
       key: t(MenuI18nKey.ExportConfig),
       label: t(MenuI18nKey.ExportConfig),
-      icon: <IconUpload {...BASE_ICON_PROPS} widths={24} height={24} />,
+      icon: <IconUpload className="text-secondary" {...BASE_ICON_PROPS} widths={24} height={24} />,
       onClick: onExport,
     },
   ];

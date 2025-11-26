@@ -26,8 +26,8 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
     [model, onChangeModel],
   );
   return (
-    <div className="w-full flex flex-col gap-6">
-      <div className="w-full flex flex-col gap-6 lg:w-[35%]">
+    <div className="w-full flex flex-col gap-y-8">
+      <div className="w-full flex flex-col gap-y-8 lg:w-[35%]">
         <DialTextInputField
           elementId="overrideName"
           fieldTitle={t(EntityFieldsI18nKey.overrideName)}

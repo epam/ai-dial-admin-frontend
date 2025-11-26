@@ -24,8 +24,8 @@ import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
 interface Props<T> {
   entity: T;
   onChange: (entity: T) => void;
-  getContainers: () => Promise<Container[] | null>;
-  getRunners?: () => Promise<InterceptorTemplate[] | null>;
+  getContainers: () => Promise<ServerActionResponse<Container[]>>;
+  getRunners?: () => Promise<ServerActionResponse<InterceptorTemplate[]>>;
   getAdapters?: () => Promise<ServerActionResponse | null>;
   sourceItems: SelectOption[];
   elementId: string;
@@ -51,7 +51,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
 }: Props<T>) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
-  const [source, setSource] = useState(sourceItems[0].value);
+  const [source, setSource] = useState<string>();
   const [errorText, setErrorText] = useState('');
 
   const onChangeEntity = useCallback(
@@ -76,10 +76,23 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
     (sourceType: string) => {
       if (sourceType !== source) {
         setSource(sourceType as SOURCE_TYPE);
+        dispatch({
+          type: ValidationActionType.SetField,
+          field: 'completionEndpoint',
+          isValid: true,
+        });
+
+        if (sourceType !== SOURCE_TYPE.ENDPOINTS && view === ApplicationRoute.Toolsets) {
+          dispatch({
+            type: ValidationActionType.SetField,
+            field: 'endpoint',
+            isValid: true,
+          });
+        }
         onChangeEntity({ ...entity, source: { ...entity.source, $type: sourceType as SOURCE_TYPE }, endpoint: '' });
       }
     },
-    [entity, onChangeEntity, source],
+    [dispatch, entity, onChangeEntity, source, view],
   );
 
   useEffect(() => {
@@ -97,12 +110,12 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
 
       onChangeEntity(entityWithSource);
     } else {
-      setSource(entity.source.$type);
+      setSource(entity.source.$type || sourceItems[0].value);
     }
   }, [entity, isModal, onChangeEntity, sourceItems, view]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-y-8">
       <DialSelectField
         elementId={elementId}
         containerCssClass="w-[180px]"

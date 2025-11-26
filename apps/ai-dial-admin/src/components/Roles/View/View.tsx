@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
-import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
 import { getCoreRole, removeRole, updateCoreRole, updateRole } from '@/src/app/[lang]/roles/actions';
@@ -18,7 +17,6 @@ import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { isSetNoLimitsHidden } from '@/src/components/EntityView/Roles/utils';
-import { auditTabs, EntityViewTab, propertiesTabs } from '@/src/components/EntityView/View/utils';
 import { getSetNoLimitsOperation } from '@/src/constants/grid-columns/actions';
 import { KEYS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, KeysI18nKey, TabsI18nKey } from '@/src/constants/i18n';
@@ -37,7 +35,10 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { EntityViewTab, getRoleTabs } from '@/src/utils/tabs/utils';
 import RoleProperties from './Properties';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { getViewHeaderClassNames } from '@/src/utils/entities/view';
 
 interface Props {
   originalRole: DialRole;
@@ -51,15 +52,11 @@ interface Props {
 const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications, keys }) => {
   const t = useI18n() as (str: string) => string;
   const router = useRouter();
+  const getReqRef = useRef(useProtectedRequest());
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
 
-  const tabs: TabModel[] = [
-    propertiesTabs(t),
-    { id: EntityViewTab.Entities, name: t(TabsI18nKey.Entities) },
-    { id: EntityViewTab.Keys, name: t(TabsI18nKey.Keys) },
-    auditTabs(t),
-  ];
+  const tabs: TabModel[] = getRoleTabs(t);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedRole, setSelectedRole] = useState(cloneDeep(originalRole));
@@ -71,16 +68,11 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   const [coreRole, setCoreRole] = useState<DialKey | null>(null);
   const entityRef = useRef(selectedRole);
 
-  const headerClassName = classNames(
-    'flex flex-row min-h-[34px]',
-    jsonEditorEnabled ? 'justify-end' : 'justify-between',
-  );
-
   useEffect(() => {
     const name = (originalRole as { name: string })?.name;
     if (!coreRole && name) {
-      getCoreRole(name).then((data) => {
-        setCoreRole(data.response as DialRole);
+      getReqRef.current(getCoreRole, name).then((data) => {
+        setCoreRole(data.response);
       });
     }
   }, [coreRole, originalRole]);
@@ -192,8 +184,8 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreRole(selectedRole as Record<string, unknown>, originalRole.name || '', etag)
-        : updateRole(selectedRole, etag);
+        ? getReqRef.current(updateCoreRole, selectedRole as Record<string, unknown>, originalRole.name || '', etag)
+        : getReqRef.current(updateRole, selectedRole, etag);
 
     req.then((res) => {
       if (res.success) {
@@ -260,7 +252,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={headerClassName}>
+      <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
         {!jsonEditorEnabled && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
@@ -279,7 +271,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
           setSelectedFormat={setSelectedFormat}
         />
       </div>
-      <div className="flex-1 overflow-auto mt-3 min-h-0">
+      <div className="flex-1 overflow-auto min-h-0">
         {jsonEditorEnabled ? (
           <EntityJsonEditor
             key={key}

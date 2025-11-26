@@ -109,6 +109,12 @@ export const TOPICS_COLUMN: ColDef = {
   filterValueGetter: (params) => getTopics(params.data),
 };
 
+export const STATUS_COLUMN: ColDef = {
+  field: 'status',
+  headerName: 'Status',
+  hide: false,
+};
+
 const ATTACHMENT_COLUMN = (t: (str: string) => string): ColDef => {
   return {
     field: 'inputAttachmentTypes',
@@ -155,15 +161,15 @@ export const TYPE_COLUMN = (t: (str: string) => string): ColDef => {
 };
 
 export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [
-  NAME_COLUMN_WITH_SORT,
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
+  NAME_COLUMN_WITH_SORT,
   UPDATED_AT_COLUMN,
 ];
 
 export const ENTITY_BASE_COLUMNS: ColDef[] = [NAME_COLUMN, DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN];
 export const DEPENDENCIES_COLUMNS = [NAME_COLUMN, DISPLAY_NAME_COLUMN, VERSION_COLUMN, DESCRIPTION_COLUMN];
-export const BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, NAME_COLUMN, DESCRIPTION_COLUMN];
+export const BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
 
 export const MODELS_COLUMNS = (t: (str: string) => string, view?: ApplicationRoute): ColDef[] => [
   DISPLAY_NAME_COLUMN_WITH_SORT,
@@ -276,11 +282,11 @@ export const KEYS_COLUMNS = (t: (str: string) => string): ColDef[] => [
 
 export const RUNNERS_COLUMNS: ColDef[] = [
   { field: 'dial:applicationTypeDisplayName', headerName: 'Display Name', sort: 'asc' },
-  { field: '$id', headerName: 'ID' },
   DESCRIPTION_COLUMN,
-  TOPICS_COLUMN,
-  UPDATED_AT_COLUMN,
+  { field: '$id', headerName: 'ID' },
 ];
+
+export const LIST_RUNNER_COLUMNS: ColDef[] = [...RUNNERS_COLUMNS, TOPICS_COLUMN, UPDATED_AT_COLUMN];
 
 export const INTERCEPTOR_TEMPLATES_COLUMNS: ColDef[] = [...BASE_COLUMNS, UPDATED_AT_COLUMN];
 

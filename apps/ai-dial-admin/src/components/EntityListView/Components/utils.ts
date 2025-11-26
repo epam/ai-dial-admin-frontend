@@ -72,6 +72,7 @@ export const prepareEntityForDuplicate = async <T>(
     return {
       ...entity,
       entities: [],
+      applicationTypeSchemas: [],
     };
   }
 
@@ -93,6 +94,7 @@ export const prepareEntityForDuplicate = async <T>(
 
   if (route === ApplicationRoute.AssetsApplications) {
     const app = fullEntity as AssetApp | null;
+    delete app?.reference;
 
     return {
       ...app,

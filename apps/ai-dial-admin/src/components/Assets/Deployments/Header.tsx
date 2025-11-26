@@ -57,7 +57,7 @@ const DeploymentAssetHeader: FC<Props> = ({ view, asset }) => {
   }, [asset, t]);
 
   return (
-    <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary mb-3">
+    <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
       <LabelledText label={t(EntityFieldsI18nKey.id)} text={asset.name} copyable={true} />
       {asset.author && <LabelledText label={t(EntitiesI18nKey.Author)} text={asset.author} />}
       <LabelledText label={t(EntityFieldsI18nKey.createdAt)} text={formatDateTimeToLocalString(asset.createdAt)} />

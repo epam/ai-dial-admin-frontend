@@ -13,6 +13,12 @@ vi.mock('@/src/locales/client', () => ({
   useCurrentLocale: () => 'en',
 }));
 
+vi.mock('next-auth/react', () => ({
+  useSession: vi.fn(() => {
+    return { session: { providerId: 'provider' } };
+  }),
+}));
+
 vi.mock('next/headers', () => ({
   headers: vi.fn(),
   cookies: vi.fn(),
@@ -69,6 +75,16 @@ vi.mock('next/image', () => ({
     // eslint-disable-next-line @next/next/no-img-element
     return <img {...props} />;
   },
+}));
+
+global.IntersectionObserver = vi.fn(() => ({
+  root: null,
+  rootMargin: '',
+  thresholds: [],
+  takeRecords: vi.fn(),
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
 }));
 
 global.ResizeObserver = vi.fn(() => ({

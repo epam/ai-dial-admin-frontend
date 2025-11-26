@@ -63,6 +63,10 @@ const textColors = {
   'controls-disable': 'var(--controls-text-disable, #333942)',
 };
 
+const placeholderColor = {
+  primary: 'var(--text-primary, #F3F4F6)',
+};
+
 const buttonsTextColors = {
   'controls-primary': 'var(--controls-primary, #FCFCFC)',
   'controls-accent': 'var(--controls-accent, #5c8dea)',
@@ -91,6 +95,7 @@ module.exports = {
     borderColor: borderColors,
     stroke: borderColors,
     divideColor: borderColors,
+    placeholderColor: placeholderColor,
     textColor: { ...textColors, ...buttonsTextColors, ...iconColors },
     gradientColorStops: backgroundsColors,
     extend: {

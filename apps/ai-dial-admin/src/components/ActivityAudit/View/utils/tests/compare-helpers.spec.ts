@@ -188,7 +188,7 @@ describe('Activity audit :: fillShareValues', () => {
     expect(diffs[0]).toEqual({
       parameter: 'limit.limit',
       value: '200',
-      status: DiffStatus.CHANGED,
+      diffStatus: DiffStatus.CHANGED,
     });
   });
 
@@ -201,7 +201,7 @@ describe('Activity audit :: fillShareValues', () => {
 
     expect(diffs).toHaveLength(1);
     expect(diffs[0].value).toBe(NO_LIMITS_KEY);
-    expect(diffs[0].status).toBeUndefined();
+    expect(diffs[0].diffStatus).toBeUndefined();
   });
 
   test('should use val1 when v1 exists and v2 is missing', () => {
@@ -214,7 +214,7 @@ describe('Activity audit :: fillShareValues', () => {
     expect(diffs[0]).toEqual({
       parameter: 'name.name',
       value: 'John',
-      status: undefined,
+      diffStatus: undefined,
     });
   });
 
@@ -227,7 +227,7 @@ describe('Activity audit :: fillShareValues', () => {
     expect(diffs[0]).toEqual({
       parameter: 'invitationTtl.invitationTtl',
       value: '2',
-      status: DiffStatus.ADDED,
+      diffStatus: DiffStatus.ADDED,
     });
   });
 
@@ -240,7 +240,7 @@ describe('Activity audit :: fillShareValues', () => {
     expect(diffs[0]).toEqual({
       parameter: 'limit.limit',
       value: '500',
-      status: DiffStatus.ADDED,
+      diffStatus: DiffStatus.ADDED,
     });
   });
 
@@ -253,7 +253,7 @@ describe('Activity audit :: fillShareValues', () => {
     expect(diffs[0]).toEqual({
       parameter: 'rate.rate',
       value: '999',
-      status: DiffStatus.MIRROR,
+      diffStatus: DiffStatus.MIRROR,
     });
   });
 
@@ -264,7 +264,7 @@ describe('Activity audit :: fillShareValues', () => {
 
     fillShareValues(diffs, 'quota', 'quota', v1, v2, false);
 
-    expect(diffs[0].status).toBeUndefined();
+    expect(diffs[0].diffStatus).toBeUndefined();
   });
 
   test('should handle UNLIMITED_VALUE correctly and convert it to NO_LIMITS_KEY', () => {
@@ -285,7 +285,7 @@ describe('Activity audit :: fillShareValues', () => {
 
     expect(diffs[0].parameter).toBe('application.maxAcceptedUsers');
     expect(diffs[0].value).toBe('20'); // assuming '20' would be the returned value
-    expect(diffs[0].status).toBe(DiffStatus.CHANGED);
+    expect(diffs[0].diffStatus).toBe(DiffStatus.CHANGED);
   });
 });
 

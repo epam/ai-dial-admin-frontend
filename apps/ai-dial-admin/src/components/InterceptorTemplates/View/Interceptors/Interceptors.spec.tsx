@@ -33,7 +33,7 @@ describe('Interceptors', () => {
   });
 
   test('should render grid with interceptors', async () => {
-    (getInterceptorsList as Mock).mockResolvedValue(interceptors);
+    (getInterceptorsList as Mock).mockResolvedValue({ success: true, response: interceptors });
 
     render(<Interceptors interceptorList={['Interceptor-1']} />);
 

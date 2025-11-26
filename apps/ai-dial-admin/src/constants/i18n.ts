@@ -93,6 +93,9 @@ export enum EntitiesI18nKey {
   NoFiles = 'Entities.NoFiles',
   NoPublications = 'Entities.NoPublications',
   NoInterceptors = 'Entities.NoInterceptors',
+  NoLocalInterceptors = 'Entities.NoLocalInterceptors',
+  NoGlobalInterceptors = 'Entities.NoGlobalInterceptors',
+  NoRunnerInterceptors = 'Entities.NoRunnerInterceptors',
   NoAdapters = 'Entities.NoAdapters',
   NoEntities = 'Entities.NoEntities',
   NoModels = 'Entities.NoModels',
@@ -113,6 +116,7 @@ export enum EntitiesI18nKey {
   NoConfigurationSchema = 'Entities.NoConfigurationSchema',
   AddModel = 'Entities.AddModel',
   AddApplication = 'Entities.AddApplication',
+  AddApplicationRunner = 'Entities.AddApplicationRunner',
   AddEntities = 'Entities.AddEntities',
   SourceType = 'Entities.SourceType',
   Source = 'Entities.Source',
@@ -403,6 +407,7 @@ export enum FeaturesI18nKey {
   accessibleByPerRequestKey = 'Features.accessibleByPerRequestKey',
   configurationEndpoint = 'Features.configurationEndpoint',
   rateEndpoint = 'Features.rateEndpoint',
+  supportCommentInRateResponse = 'Features.supportCommentInRateResponse',
   tokenizeEndpoint = 'Features.tokenizeEndpoint',
   truncatePromptEndpoint = 'Features.truncatePromptEndpoint',
 }
@@ -432,18 +437,16 @@ export enum TabsI18nKey {
   Attachments = 'Tabs.Attachments',
   Tools = 'Tabs.Tools',
   ParameterSchema = 'Tabs.ParameterSchema',
+  ApplicationRunners = 'Tabs.ApplicationRunners',
 }
 
 export enum InterceptorsI18nKey {
   Add = 'Interceptors.Add',
-}
-
-export enum ReloadConfigI18nKey {
-  Reload = 'ReloadConfig.Reload',
-  ReloadTitle = 'ReloadConfig.ReloadTitle',
-  ReloadDescription = 'ReloadConfig.ReloadDescription',
-  ConfigReloadedTitle = 'ReloadConfig.ConfigReloadedTitle',
-  ConfigReloadedDescription = 'ReloadConfig.ConfigReloadedDescription',
+  Local = 'Interceptors.Local',
+  Global = 'Interceptors.Global',
+  Runner = 'Interceptors.Runner',
+  GlobalAlert = 'Interceptors.GlobalAlert',
+  GlobalMessage = 'Interceptors.GlobalMessage',
 }
 
 export enum TelemetryI18nKey {
@@ -454,6 +457,7 @@ export enum TelemetryI18nKey {
   AddFilter = 'Telemetry.AddFilter',
   TimePeriod = 'Telemetry.TimePeriod',
   CustomTimeRage = 'Telemetry.CustomTimeRage',
+  Custom = 'Telemetry.Custom',
   UniqueUsers = 'Telemetry.UniqueUsers',
   RequestCount = 'Telemetry.RequestCount',
   TotalTokens = 'Telemetry.TotalTokens',
@@ -640,7 +644,6 @@ export enum FoldersI18nKey {
   FolderCreate = 'Folder.FolderCreate',
   FolderCreatePlaceholder = 'Folder.FolderCreatePlaceholder',
   FolderCreateSuccess = 'Folder.FolderCreateSuccess',
-  Storage = 'Folder.Storage',
   Rename = 'Folder.Rename',
   FolderName = 'Folder.FolderName',
   RenameFolderError = 'Folder.RenameFolderError',
@@ -840,6 +843,7 @@ export enum EntityFieldsI18nKey {
   allowedTools = 'EntityFields.allowedTools',
   displayName = 'EntityFields.displayName',
   displayVersion = 'EntityFields.displayVersion',
+  version = 'EntityFields.version',
   adapter = 'EntityFields.adapter',
   iconUrl = 'EntityFields.iconUrl',
   rewritePath = 'EntityFields.rewritePath',
@@ -889,6 +893,7 @@ export enum EntityFieldsI18nKey {
   entities = 'EntityFields.entities',
   routes = 'EntityFields.routes',
   'dial:applicationTypeRoutes' = 'EntityFields.applicationTypeRoutes',
+  'dial:applicationTypeInterceptors' = 'EntityFields.applicationTypeInterceptors',
   'dial:applicationTypeCompletionEndpoint' = 'EntityFields.applicationTypeCompletionEndpoint',
   'dial:applicationTypeDisplayName' = 'EntityFields.applicationTypeDisplayName',
   title = 'EntityFields.title',
@@ -946,6 +951,7 @@ export enum EntityFieldsI18nKey {
   'tool_set.maxAcceptedUsers' = 'EntityFields.tool_setMaxAcceptedUsers',
   new_key = 'EntityFields.new_key',
   applicationProperties = 'EntityFields.applicationProperties',
+  applicationTypeSchemas = 'EntityFields.applicationTypeSchemas',
 }
 
 export enum ToolsetI18nKey {

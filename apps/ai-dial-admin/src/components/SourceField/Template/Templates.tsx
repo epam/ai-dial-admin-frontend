@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ButtonVariant, DialButton, DialInputPopup, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
@@ -6,7 +6,7 @@ import { IconExternalLink } from '@tabler/icons-react';
 import Field from '@/src/components/Common/Field/Field';
 import SelectRunnerModal from '@/src/components/SourceField/Template/SelectRunnerModal';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { CreateI18nKey, EntitiesI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -17,11 +17,13 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import classNames from 'classnames';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props<T> {
   entity: T;
   onChange: (entity: T) => void;
-  getRunners: () => Promise<InterceptorTemplate[] | null>;
+  getRunners: () => Promise<ServerActionResponse<InterceptorTemplate[]>>;
   errorText?: string;
   isModal?: boolean;
 }
@@ -35,6 +37,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
 }: Props<T>) => {
   const t = useI18n();
   const { showNotification } = useNotification();
+  const getReqRef = useRef(useProtectedRequest());
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [runners, setRunners] = useState<InterceptorTemplate[]>([]);
@@ -71,7 +74,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
 
   useEffect(() => {
     const fetchRunners = async () => {
-      const runners = await getRunners();
+      const runners = (await getReqRef.current(getRunners)).response;
       if (runners?.length) {
         setRunners(runners);
       }
@@ -85,7 +88,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
   }, [entity, runners]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-y-8">
       <div className="flex lg:flex-row flex-col gap-2 items-end">
         {isModal ? (
           <div className="flex flex-col w-full">
@@ -97,8 +100,8 @@ const Templates = <T extends DialModel | DialInterceptor>({
               onChange={(value) => onSelect(value as string)}
               elementId={'source-type'}
               value={runners.find((runner) => runner.name === entity.source?.runnerName)?.name}
-              placeholder={t(CreateI18nKey.SelectAdapter)}
-              fieldTitle={t(EntityFieldsI18nKey.adapter)}
+              placeholder={t(CreateI18nKey.SelectInterceptorTemplate)}
+              fieldTitle={t(SourceI18nKey.InterceptorTemplate)}
             />
           </div>
         ) : (

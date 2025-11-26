@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 
 import { useRouter } from 'next/navigation';
 import { ConfirmationPopupVariant, DialConfirmationPopup, DialEllipsisTooltip, PopupSize } from '@epam/ai-dial-ui-kit';
@@ -17,6 +17,7 @@ import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { getConfirmation, getNotificationDescription, getNotificationTitle, getTitle } from './utils';
 import { isAssetView, isBuildersView } from '@/src/utils/is-asset-view';
 import RelatedArtefacts from './RelatedArtefact';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Artefact {
   name?: string;
@@ -54,6 +55,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
   const router = useRouter();
   const { showNotification } = useNotification();
   const folderContext = context?.();
+  const getReqRef = useRef(useProtectedRequest());
   const modalSize = isBuildersView(view) ? PopupSize.Md : PopupSize.Sm;
 
   const showSuccessNotification = useCallback(
@@ -68,7 +70,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
   const onConfirmRemoving = useCallback(() => {
     const entityKey = getEntityPath(view, entity, true);
 
-    removeEntity(entityKey).then((res) => {
+    getReqRef.current(removeEntity, entityKey).then((res) => {
       if (res.success) {
         onCloseModal();
         resetCurrentEntity?.();

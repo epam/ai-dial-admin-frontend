@@ -19,8 +19,8 @@ describe('Activity audit :: compareEntities', () => {
     compareEntities(diffs, ['a', 'b'], []);
 
     expect(diffs).toEqual([
-      { parameter: '', value: '', status: DiffStatus.MIRROR },
-      { parameter: '', value: '', status: DiffStatus.MIRROR },
+      { parameter: '', value: '', diffStatus: DiffStatus.MIRROR },
+      { parameter: '', value: '', diffStatus: DiffStatus.MIRROR },
     ]);
   });
 
@@ -29,8 +29,8 @@ describe('Activity audit :: compareEntities', () => {
     compareEntities(diffs, [], ['x', 'y']);
 
     expect(diffs).toEqual([
-      { parameter: 'x', value: 'x', status: DiffStatus.ADDED },
-      { parameter: 'y', value: 'y', status: DiffStatus.ADDED },
+      { parameter: 'x', value: 'x', diffStatus: DiffStatus.ADDED },
+      { parameter: 'y', value: 'y', diffStatus: DiffStatus.ADDED },
     ]);
   });
 
@@ -40,8 +40,8 @@ describe('Activity audit :: compareEntities', () => {
     compareEntities(diffs, [], ['b'], true);
 
     expect(diffs).toEqual([
-      { parameter: '', value: '', status: DiffStatus.MIRROR },
-      { parameter: 'b', value: 'b', status: DiffStatus.REMOVED },
+      { parameter: '', value: '', diffStatus: DiffStatus.MIRROR },
+      { parameter: 'b', value: 'b', diffStatus: DiffStatus.REMOVED },
     ]);
   });
 
@@ -50,8 +50,8 @@ describe('Activity audit :: compareEntities', () => {
     compareEntities(diffs, ['old1', 'same'], ['new1', 'same']);
 
     expect(diffs).toEqual([
-      { parameter: 'new1', value: 'new1', status: DiffStatus.ADDED },
-      { parameter: '', value: '', status: DiffStatus.MIRROR },
+      { parameter: 'new1', value: 'new1', diffStatus: DiffStatus.ADDED },
+      { parameter: '', value: '', diffStatus: DiffStatus.MIRROR },
       { parameter: 'same', value: 'same' },
     ]);
   });
@@ -72,9 +72,9 @@ describe('Activity audit :: compareEntities', () => {
 
     expect(diffs).toEqual([
       { parameter: 'a', value: 'a' },
-      { parameter: '', value: '', status: DiffStatus.MIRROR },
-      { parameter: '', value: '', status: DiffStatus.MIRROR },
-      { parameter: 'x', value: 'x', status: DiffStatus.ADDED },
+      { parameter: '', value: '', diffStatus: DiffStatus.MIRROR },
+      { parameter: '', value: '', diffStatus: DiffStatus.MIRROR },
+      { parameter: 'x', value: 'x', diffStatus: DiffStatus.ADDED },
     ]);
   });
 
@@ -89,7 +89,7 @@ describe('Activity audit :: compareEntities', () => {
     const diffs: ActivityAuditDiff[] = [];
     compareEntities(diffs, [], ['item']);
 
-    expect(diffs).toEqual([{ parameter: 'item', value: 'item', status: DiffStatus.ADDED }]);
+    expect(diffs).toEqual([{ parameter: 'item', value: 'item', diffStatus: DiffStatus.ADDED }]);
   });
 
   test('should push MIRROR when one array has a value and the other is empty with isCurrent=true', () => {
@@ -98,8 +98,8 @@ describe('Activity audit :: compareEntities', () => {
     compareEntities(diffs, [], ['item'], true);
 
     expect(diffs).toEqual([
-      { parameter: '', value: '', status: DiffStatus.MIRROR },
-      { parameter: 'item', value: 'item', status: DiffStatus.REMOVED },
+      { parameter: '', value: '', diffStatus: DiffStatus.MIRROR },
+      { parameter: 'item', value: 'item', diffStatus: DiffStatus.REMOVED },
     ]);
   });
 
@@ -162,7 +162,7 @@ describe('Activity audit :: compareInterceptors', () => {
     compareInterceptors(diffs, ['a', 'b'], ['a', null as unknown as string]);
     expect(diffs).toEqual([
       { parameter: '0', value: 'a' },
-      { parameter: '1', value: '', status: DiffStatus.REMOVED },
+      { parameter: '1', value: '', diffStatus: DiffStatus.REMOVED },
     ]);
   });
 
@@ -171,7 +171,7 @@ describe('Activity audit :: compareInterceptors', () => {
     compareInterceptors(diffs, ['a', null as unknown as string], ['a', 'b']);
     expect(diffs).toEqual([
       { parameter: '0', value: 'a' },
-      { parameter: '1', value: 'b', status: DiffStatus.ADDED },
+      { parameter: '1', value: 'b', diffStatus: DiffStatus.ADDED },
     ]);
   });
 
@@ -179,7 +179,7 @@ describe('Activity audit :: compareInterceptors', () => {
     const diffs = [];
     compareInterceptors(diffs, ['old', 'same'], ['new', 'same']);
     expect(diffs).toEqual([
-      { parameter: '0', value: 'new', status: DiffStatus.CHANGED },
+      { parameter: '0', value: 'new', diffStatus: DiffStatus.CHANGED },
       { parameter: '1', value: 'same' },
     ]);
   });
@@ -198,8 +198,8 @@ describe('Activity audit :: compareInterceptors', () => {
     compareInterceptors(diffs, ['one', 'two', 'three'], ['one']);
     expect(diffs).toEqual([
       { parameter: '0', value: 'one' },
-      { parameter: '1', value: '', status: DiffStatus.REMOVED },
-      { parameter: '2', value: '', status: DiffStatus.REMOVED },
+      { parameter: '1', value: '', diffStatus: DiffStatus.REMOVED },
+      { parameter: '2', value: '', diffStatus: DiffStatus.REMOVED },
     ]);
   });
 
@@ -208,8 +208,8 @@ describe('Activity audit :: compareInterceptors', () => {
     compareInterceptors(diffs, ['one'], ['one', 'two', 'three']);
     expect(diffs).toEqual([
       { parameter: '0', value: 'one' },
-      { parameter: '1', value: 'two', status: DiffStatus.ADDED },
-      { parameter: '2', value: 'three', status: DiffStatus.ADDED },
+      { parameter: '1', value: 'two', diffStatus: DiffStatus.ADDED },
+      { parameter: '2', value: 'three', diffStatus: DiffStatus.ADDED },
     ]);
   });
 
@@ -274,7 +274,7 @@ describe('Activity audit :: compareRoleLimits', () => {
     const val1 = { admin: { maxCalls: 5, maxDuration: 10 } };
     const val2 = {};
     compareRoleLimits(diffs, val1, val2);
-    expect(diffs).toEqual([{ parameter: '', value: '', status: DiffStatus.REMOVED }]);
+    expect(diffs).toEqual([{ parameter: '', value: '', diffStatus: DiffStatus.REMOVED }]);
   });
 
   test('should push ADD when val1 does not have key and val2 does', () => {
@@ -282,7 +282,7 @@ describe('Activity audit :: compareRoleLimits', () => {
     const val1 = {};
     const val2 = { user: { maxCalls: 3, maxDuration: 15 } };
     compareRoleLimits(diffs, val1, val2);
-    expect(diffs).toEqual([{ parameter: 'user', value: 'maxCalls: 3, maxDuration: 15', status: DiffStatus.ADDED }]);
+    expect(diffs).toEqual([{ parameter: 'user', value: 'maxCalls: 3, maxDuration: 15', diffStatus: DiffStatus.ADDED }]);
   });
 
   test('should push CHANGE when val1 and val2 have same key but different values', () => {
@@ -290,7 +290,9 @@ describe('Activity audit :: compareRoleLimits', () => {
     const val1 = { guest: { maxCalls: 1, maxDuration: 5 } };
     const val2 = { guest: { maxCalls: 2, maxDuration: 5 } };
     compareRoleLimits(diffs, val1, val2);
-    expect(diffs).toEqual([{ parameter: 'guest', value: 'maxCalls: 2, maxDuration: 5', status: DiffStatus.CHANGED }]);
+    expect(diffs).toEqual([
+      { parameter: 'guest', value: 'maxCalls: 2, maxDuration: 5', diffStatus: DiffStatus.CHANGED },
+    ]);
   });
 
   test('should push unchanged value when val1 and val2 are equal', () => {
@@ -310,11 +312,11 @@ describe('Activity audit :: compareRoleLimits', () => {
   test('should handle val1 or val2 being null or undefined', () => {
     const diffs1 = [];
     compareRoleLimits(diffs1, null as any, { user: { maxCalls: 1, maxDuration: 1 } });
-    expect(diffs1).toEqual([{ parameter: 'user', value: 'maxCalls: 1, maxDuration: 1', status: DiffStatus.ADDED }]);
+    expect(diffs1).toEqual([{ parameter: 'user', value: 'maxCalls: 1, maxDuration: 1', diffStatus: DiffStatus.ADDED }]);
 
     const diffs2 = [];
     compareRoleLimits(diffs2, { user: { maxCalls: 1, maxDuration: 1 } }, null as any);
-    expect(diffs2).toEqual([{ parameter: '', value: '', status: DiffStatus.REMOVED }]);
+    expect(diffs2).toEqual([{ parameter: '', value: '', diffStatus: DiffStatus.REMOVED }]);
   });
 });
 
@@ -389,7 +391,7 @@ describe('Activity audit :: compareShare', () => {
 
     expect(diffs.length).toBe(10);
     diffs.forEach((d) => {
-      expect(d.status).toBe(DiffStatus.REMOVED);
+      expect(d.diffStatus).toBe(DiffStatus.REMOVED);
     });
   });
 
@@ -408,7 +410,7 @@ describe('Activity audit :: compareShare', () => {
 
     expect(diffs.length).toBe(10);
     diffs.forEach((d) => {
-      expect(d.status).toBe(DiffStatus.MIRROR);
+      expect(d.diffStatus).toBe(DiffStatus.MIRROR);
     });
   });
 
@@ -439,7 +441,7 @@ describe('Activity audit :: compareShare', () => {
     compareShare(diffs, val1, val2);
 
     expect(diffs.length).toBeGreaterThan(0);
-    const changed = diffs.find((d) => d.status === DiffStatus.CHANGED);
+    const changed = diffs.find((d) => d.diffStatus === DiffStatus.CHANGED);
     expect(changed).toBeTruthy();
   });
 
@@ -455,7 +457,7 @@ describe('Activity audit :: compareShare', () => {
     compareShare(diffs, val1, val2);
 
     expect(diffs.length).toBeGreaterThan(0);
-    diffs.forEach((d) => expect(d.status).toBeUndefined());
+    diffs.forEach((d) => expect(d.diffStatus).toBeUndefined());
   });
 
   test('should handle multiple keys (roles) and push diffs for each', () => {
@@ -472,7 +474,7 @@ describe('Activity audit :: compareShare', () => {
     compareShare(diffs, val1, val2);
 
     expect(diffs.length).toBeGreaterThan(shareKeys.length);
-    expect(diffs.some((d) => d.status === DiffStatus.CHANGED)).toBe(true);
+    expect(diffs.some((d) => d.diffStatus === DiffStatus.CHANGED)).toBe(true);
   });
 
   test('should correctly call convertShareValue for REMOVED diffs with empty value', () => {
@@ -490,7 +492,7 @@ describe('Activity audit :: compareShare', () => {
 
     expect(diffs.length).toBe(10);
     diffs.forEach((d) => {
-      expect(d.status).toBe(DiffStatus.REMOVED);
+      expect(d.diffStatus).toBe(DiffStatus.REMOVED);
     });
   });
 });

@@ -1,5 +1,5 @@
 'use client';
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 import { changeFolder, createFolderWithFiles, removeFolder } from '@/src/app/[lang]/folders-storage/actions';
@@ -23,6 +23,7 @@ import { getFolderNameAndPath } from '@/src/utils/files/path';
 import { getSuccessNotification } from '@/src/utils/notification';
 import DeleteFolder from './DeleteFolder';
 import RenameFolder from './RenameFolder';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 export enum ModalType {
   create = 'create',
@@ -44,6 +45,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
   const folderContext = context?.();
   const { showNotification } = useNotification();
+  const getReqRef = useRef(useProtectedRequest());
 
   const createFolder = useCallback(
     (
@@ -55,7 +57,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
     ) => {
       const body = getFormDataForImport(path, file, fileType, ConflictResolutionPolicy.SKIP, rules, ignorePaths).body;
 
-      createFolderWithFiles(body, fileType, view).then((res) => {
+      getReqRef.current(createFolderWithFiles, body, fileType, view).then((res) => {
         if (res.success) {
           folderContext?.fetchFiles?.(`${ROOT_FOLDER}/`, true);
           showNotification(getSuccessNotification(t(FoldersI18nKey.FolderCreateSuccess)));
@@ -69,7 +71,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
   const renameFolder = useCallback(
     (newName: string) => {
       handleClose();
-      changeFolder(selectedFolder, newName, getResourceTypeByView(view)).then((result) => {
+      getReqRef.current(changeFolder, selectedFolder, newName, getResourceTypeByView(view)).then((result) => {
         if (result.success) {
           folderContext?.fetchFiles?.(`${getFolderNameAndPath(selectedFolder).path}/`, false, true);
         }
@@ -80,7 +82,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
 
   const deleteFolder = useCallback(() => {
     handleClose();
-    removeFolder(encodeURIComponent(selectedFolder)).then((result) => {
+    getReqRef.current(removeFolder, encodeURIComponent(selectedFolder)).then((result) => {
       if (result.success) {
         folderContext?.fetchFiles?.(`${getFolderNameAndPath(selectedFolder).path}/`, false, true);
       }
@@ -90,13 +92,18 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
   const moveFolder = useCallback(
     (newName: string) => {
       handleClose();
-      changeFolder(selectedFolder, `${newName}/${getFolderName(selectedFolder)}`, getResourceTypeByView(view)).then(
-        (result) => {
+      getReqRef
+        .current(
+          changeFolder,
+          selectedFolder,
+          `${newName}/${getFolderName(selectedFolder)}`,
+          getResourceTypeByView(view),
+        )
+        .then((result) => {
           if (result.success) {
             folderContext?.fetchFiles?.(`${ROOT_FOLDER}/`, true);
           }
-        },
-      );
+        });
     },
     [folderContext, handleClose, selectedFolder, view],
   );

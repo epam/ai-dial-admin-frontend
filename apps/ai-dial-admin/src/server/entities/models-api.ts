@@ -1,6 +1,6 @@
 import { JWT } from 'next-auth/jwt';
 
-import { DialModel } from '@/src/models/dial/model';
+import { DialModel, DialTokenizer } from '@/src/models/dial/model';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
 import { BaseApi } from '@/src/server/base-api';
@@ -10,18 +10,22 @@ export const MODELS_URL = `${API}/models`;
 export const MODELS_TOPICS = `${API}/topics`;
 export const MODELS_TOKENIZERS = `${API}/tokenizers`;
 export const MODEL_URL = (id?: string) => `${MODELS_URL}/${id || ''}`;
-export const CORE_MODEL_URL = (id?: string) => `${MODELS_URL}/core/${id || ''}`;
+export const CORE_MODEL_URL = (id: string) => `${MODELS_URL}/core/${id}`;
 
 export class ModelsApi extends BaseApi {
   getModelsList(token: JWT | null): Promise<DialModel[] | null> {
     return this.get(MODELS_URL, token);
   }
 
+  getModelsListAction(token: JWT | null): Promise<ServerActionResponse<DialModel[]>> {
+    return this.getAction(MODELS_URL, token);
+  }
+
   getModelsTopics(token: JWT | null): Promise<ServerActionResponse> {
     return this.getAction(MODELS_TOPICS, token);
   }
 
-  getModelsTokenizers(token: JWT | null): Promise<ServerActionResponse> {
+  getModelsTokenizers(token: JWT | null): Promise<ServerActionResponse<DialTokenizer[]>> {
     return this.getAction(MODELS_TOKENIZERS, token);
   }
 
@@ -34,7 +38,7 @@ export class ModelsApi extends BaseApi {
   }
 
   getModel(name: string, token: JWT | null, eTag: string) {
-    return this.getActionWithEtag(MODEL_URL(name), eTag || DEFAULT_ETAG, token);
+    return this.getActionWithEtag(MODEL_URL(name), eTag, token);
   }
 
   updateModel(model: DialModel, token: JWT | null, eTag: string): Promise<ServerActionResponse> {
@@ -46,6 +50,6 @@ export class ModelsApi extends BaseApi {
   }
 
   updateCoreModel(model: DialModel, name: string, eTag: string, token: JWT | null): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(CORE_MODEL_URL(encodeURIComponent(name || '')), model, token, eTag);
+    return this.putActionWithEtag(CORE_MODEL_URL(encodeURIComponent(name)), model, token, eTag);
   }
 }

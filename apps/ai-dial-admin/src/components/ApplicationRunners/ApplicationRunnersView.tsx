@@ -1,11 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { ButtonVariant, DialButtonDropdown, DialTabs, DropdownItem, TabModel } from '@epam/ai-dial-ui-kit';
-import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
 
 import {
@@ -23,52 +22,47 @@ import EntityRoutes from '@/src/components/EntityView/AppRoute/AppRoute';
 import EntityAudit from '@/src/components/EntityView/Audit/EntityAudit';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
+import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import {
-  appRouteTab,
-  auditTabs,
-  EntityViewTab,
-  parametersTabs,
-  propertiesTabs,
-} from '@/src/components/EntityView/View/utils';
-import { ButtonsI18nKey, CreateI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { ChatEntity } from '@/src/models/dial/base-entity';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialRole } from '@/src/models/dial/role';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { EntityViewTab, getAppRunnerTabs } from '@/src/utils/tabs/utils';
 import AppRunnerApplications from './ConfigurationView/Applications';
 import SchemeProperties from './ConfigurationView/Properties';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { getViewHeaderClassNames } from '@/src/utils/entities/view';
 
 interface Props {
   etag: string;
   originalScheme: DialApplicationScheme;
   roles: DialRole[] | null;
   names: string[];
+  interceptors: DialInterceptor[] | null;
 }
 
-const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names }) => {
+const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names, interceptors }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
+  const getReqRef = useRef(useProtectedRequest());
 
-  const tabs: TabModel[] = [
-    propertiesTabs(t),
-    parametersTabs(t),
-    { id: EntityViewTab.Applications, name: t(TabsI18nKey.Applications) },
-    appRouteTab(t),
-    auditTabs(t),
-  ];
+  const tabs: TabModel[] = getAppRunnerTabs(t);
 
   const items: DropdownItem[] = [
     { key: 'Application', label: t(CreateI18nKey.Application), onClick: () => setIsCreateAppModalOpen(true) },
@@ -92,8 +86,8 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names 
   useEffect(() => {
     const name = originalScheme?.$id;
     if (!coreRunner && name) {
-      getCoreRunner(name).then((data) => {
-        setCoreRunner(data.response as DialApplicationScheme);
+      getReqRef.current(getCoreRunner, name).then((data) => {
+        setCoreRunner(data.response);
       });
     }
   }, [coreRunner, originalScheme]);
@@ -104,11 +98,6 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names 
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFormat, originalScheme]);
-
-  const headerClassName = classNames(
-    'flex flex-row min-h-[34px]',
-    jsonEditorEnabled ? 'justify-end' : 'justify-between',
-  );
 
   useEffect(() => {
     const isEqualAdminRunner = isEqualSkippingUndefined(originalScheme, selectedRunner);
@@ -133,7 +122,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names 
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
-    setSelectedRunner(originalScheme);
+    setSelectedRunner(cloneDeep(originalScheme));
   }, [jsonEditorEnabled, originalScheme, dispatch]);
 
   const onChangeScheme = useCallback(
@@ -153,8 +142,8 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names 
   const onSave = useCallback(() => {
     const req =
       selectedFormat === ExportFormat.CORE
-        ? updateCoreRunner(selectedRunner as Record<string, unknown>, originalScheme.$id || '', etag)
-        : updateApplicationScheme(selectedRunner, etag);
+        ? getReqRef.current(updateCoreRunner, selectedRunner as Record<string, unknown>, originalScheme.$id || '', etag)
+        : getReqRef.current(updateApplicationScheme, selectedRunner, etag);
 
     req.then((res) => {
       if (res.success) {
@@ -174,7 +163,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names 
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={headerClassName}>
+      <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
         {!jsonEditorEnabled && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
@@ -196,7 +185,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names 
           <DialButtonDropdown title={t(ButtonsI18nKey.Create)} items={items} variant={ButtonVariant.Secondary} />
         </HeaderButtons>
       </div>
-      <div className="flex-1 overflow-auto mt-3 min-h-0">
+      <div className="flex-1 overflow-auto min-h-0">
         {jsonEditorEnabled ? (
           <EntityJsonEditor
             key={key}
@@ -208,16 +197,30 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names 
           selectedFormat === ExportFormat.ADMIN && (
             <>
               {activeTab === EntityViewTab.Properties && (
-                <div className="pt-3 w-full lg:w-[35%]">
+                <div className="w-full flex flex-col">
                   <EntityHeader entity={selectedRunner} />
-                  <div className="flex-1 min-h-0 pt-4">
-                    <SchemeProperties runner={selectedRunner} isImmutable={true} onChangeRunner={onChangeScheme} />
+                  <div className="flex-1 min-h-0 pt-8 lg:w-[35%]">
+                    <SchemeProperties
+                      names={names}
+                      runner={selectedRunner}
+                      isImmutable={true}
+                      onChangeRunner={onChangeScheme}
+                    />
                   </div>
                 </div>
               )}
 
               {activeTab === EntityViewTab.Parameters && (
                 <ApplicationParametersTab view={ApplicationRoute.ApplicationRunners} entity={selectedRunner} />
+              )}
+
+              {activeTab === EntityViewTab.Interceptors && (
+                <EntityInterceptors
+                  entity={selectedRunner as ChatEntity}
+                  interceptors={interceptors || []}
+                  onChangeEntity={onChangeScheme}
+                  view={ApplicationRoute.ApplicationRunners}
+                />
               )}
 
               {activeTab === EntityViewTab.Applications && (

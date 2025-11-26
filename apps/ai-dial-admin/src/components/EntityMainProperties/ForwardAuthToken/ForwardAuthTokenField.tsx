@@ -69,7 +69,7 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
       id: USE_ID,
       name: titleKey ? t(titleKey as ForwardTokenI18nKey) : '',
       content: (
-        <div className="flex flex-col gap-y-6 mt-3">
+        <div className="flex flex-col gap-y-8 mt-3">
           <DialAlert variant={AlertVariant.Error} message={t(ForwardTokenI18nKey.ForwardTokenModalAlert)} />
           <DialTextInputField
             elementId="entityName"

@@ -1,16 +1,19 @@
 'use client';
 import { FC, ReactNode, useCallback, useEffect, useRef } from 'react';
-import UserMobile from '@/src/components/Header/User/UserMobile';
-import Breadcrumbs from '@/src/components/Breadcrumbs/Breadcrumbs';
-import Footer from '@/src/components/Footer/Footer';
-import Blackout from '@/src/components/Common/Blackout/Blackout';
-import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
-import { useNotification } from '@/src/context/NotificationContext';
+
 import { getAppProcessStatus } from '@/src/app/actions';
-import { getErrorNotification } from '@/src/utils/notification';
-import { ErrorI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
+import Breadcrumbs from '@/src/components/Breadcrumbs/Breadcrumbs';
+import Blackout from '@/src/components/Common/Blackout/Blackout';
 import HintSidebar from '@/src/components/Common/HintSIdebar/HintSidebar';
+import Footer from '@/src/components/Footer/Footer';
+import UserMobile from '@/src/components/Header/User/UserMobile';
+import { ErrorI18nKey } from '@/src/constants/i18n';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { useI18n } from '@/src/locales/client';
+import { AppProcessStatus } from '@/src/models/app-process-status';
+import { getErrorNotification } from '@/src/utils/notification';
 
 interface Props {
   children: ReactNode;
@@ -22,15 +25,16 @@ const CHECK_STATUS_INTERVAL = 2 * 60 * 1000;
 
 const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
   const isTabletScreen = useIsTabletScreen();
-  const { showNotification } = useNotification();
-  const showNotificationRef = useRef(showNotification);
+  const showNotificationRef = useRef(useNotification().showNotification);
+  const getReqRef = useRef(useProtectedRequest());
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const t = useI18n();
 
   const checkAppStatus = useCallback((): void => {
-    getAppProcessStatus().then((response) => {
-      if (!response?.success && response?.errorMessage) {
-        showNotificationRef.current(getErrorNotification(t(ErrorI18nKey.ServerError), response?.errorMessage));
+    getReqRef.current(getAppProcessStatus).then((response) => {
+      const state = response.response as AppProcessStatus;
+      if (!state?.success && state.errors?.length > 0) {
+        showNotificationRef.current(getErrorNotification(t(ErrorI18nKey.ServerError), state.errors.join('; ')));
       }
     });
   }, [t]);
@@ -53,7 +57,7 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
       <Blackout />
       <UserMobile isEnableAuth={isEnableAuth} />
       <div className="flex flex-row h-full w-full">
-        <div className="h-full w-full lg:p-4 py-4 md:px-6 px-0 flex flex-col">
+        <div className="h-full w-full lg:p-6 py-6 md:px-6 px-0 flex flex-col">
           {isTabletScreen && <Breadcrumbs mobile={true} />}
           {children}
         </div>

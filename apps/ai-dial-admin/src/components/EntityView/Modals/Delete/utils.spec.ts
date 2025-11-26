@@ -16,19 +16,19 @@ import {
 vi.mock('@/src/app/[lang]/interceptors/actions', () => ({
   getInterceptorsList: vi
     .fn()
-    .mockResolvedValue([{ name: 'i1' }, { name: 'i2' }, { name: 'i3' }, { name: 'i4' }, { name: 'i5' }]),
+    .mockResolvedValue({ response: [{ name: 'i1' }, { name: 'i2' }, { name: 'i3' }, { name: 'i4' }, { name: 'i5' }] }),
 }));
 
 vi.mock('@/src/app/[lang]/models/actions', () => ({
   getModels: vi
     .fn()
-    .mockResolvedValue([{ name: 'm1' }, { name: 'm2' }, { name: 'm3' }, { name: 'm4' }, { name: 'm5' }]),
+    .mockResolvedValue({ response: [{ name: 'm1' }, { name: 'm2' }, { name: 'm3' }, { name: 'm4' }, { name: 'm5' }] }),
 }));
 
 vi.mock('@/src/app/[lang]/applications/actions', () => ({
   getApplications: vi
     .fn()
-    .mockResolvedValue([{ name: 'a1' }, { name: 'a2' }, { name: 'a3' }, { name: 'a4' }, { name: 'a5' }]),
+    .mockResolvedValue({ response: [{ name: 'a1' }, { name: 'a2' }, { name: 'a3' }, { name: 'a4' }, { name: 'a5' }] }),
 }));
 
 describe('EntityView :: Delete :: utils', () => {
@@ -41,7 +41,7 @@ describe('EntityView :: Delete :: utils', () => {
   });
 
   test('getBulkNotificationTitle returns a string', () => {
-    expect(getBulkNotificationTitle(ApplicationRoute.AssetApplication, tWithProps)).toBe(
+    expect(getBulkNotificationTitle(ApplicationRoute.AssetsApplications, tWithProps)).toBe(
       `${DeleteI18nKey.NotificationTitle} with props`,
     );
   });

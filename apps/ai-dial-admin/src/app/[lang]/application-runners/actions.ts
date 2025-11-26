@@ -6,6 +6,7 @@ import { applicationRunnersApi } from '@/src/app/api/api';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { getAppRoutes } from '@/src/utils/entities/app-routes';
 
 export async function removeApplicationScheme(id?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -22,14 +23,16 @@ export async function updateApplicationScheme(runner: DialApplicationScheme, eta
   return applicationRunnersApi.updateApplicationScheme(
     {
       ...runner,
-      'dial:applicationTypeRoutes': runner['dial:applicationTypeRoutes']?.map((route) => ({
-        ...route,
-        name: route.displayName || route.name,
-      })),
+      'dial:applicationTypeRoutes': getAppRoutes(runner['dial:applicationTypeRoutes']),
     },
     token,
     etag,
   );
+}
+
+export async function getApplicationScheme(name: string, etag: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return applicationRunnersApi.getApplicationScheme(name, token, etag);
 }
 
 export async function getCoreRunner(name: string) {
@@ -37,7 +40,7 @@ export async function getCoreRunner(name: string) {
   return applicationRunnersApi.getCoreRunner(name, token);
 }
 
-export async function updateCoreRunner(toolset: DialApplicationScheme, name: string, etag: string) {
+export async function updateCoreRunner(runner: DialApplicationScheme, name: string, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return applicationRunnersApi.updateCoreRunner(toolset, name, etag, token);
+  return applicationRunnersApi.updateCoreRunner(runner, name, etag, token);
 }

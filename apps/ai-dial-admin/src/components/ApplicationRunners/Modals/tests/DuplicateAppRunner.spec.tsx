@@ -1,27 +1,33 @@
-import { DialApplicationScheme } from '@/src/models/dial/application';
-import { render } from '@testing-library/react';
-import { fireEvent } from '@testing-library/dom';
-import DuplicateScheme from '@/src/components/ApplicationRunners/Modals/DuplicateAppRunner';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
+import DuplicateScheme from '../DuplicateAppRunner';
 
-describe('Components :: DuplicateScheme', () => {
-  let scheme = {
-    'dial:applicationTypeDisplayName': 'name',
-    'dial:applicationTypeCompletionEndpoint': 'endpoint',
-    'dial:applicationTypeViewerUrl': 'url',
-    'dial:applicationTypeEditorUrl': 'url',
-    $id: 'id',
-  } as DialApplicationScheme;
+const baseEntity = {
+  $id: 'app-1',
+  'dial:applicationTypeDisplayName': 'AppName',
+};
 
-  const onDuplicate = (en: DialApplicationScheme) => {
-    scheme = en;
-  };
-
-  test('Should render successfully', () => {
-    const { baseElement } = render(
-      <DuplicateScheme entity={scheme} onDuplicate={onDuplicate} onClose={vi.fn()} isModalOpen={true} />,
+describe('DuplicateScheme', () => {
+  test('renders and calls onDuplicate on submit', () => {
+    const onDuplicate = vi.fn();
+    const onClose = vi.fn();
+    render(
+      <DuplicateScheme isModalOpen={true} onDuplicate={onDuplicate} onClose={onClose} entity={baseEntity as any} />,
     );
+    fireEvent.change(screen.getAllByRole('textbox')[0], { target: { value: 'new-id' } });
+    fireEvent.change(screen.getAllByRole('textbox')[1], { target: { value: 'New Name' } });
+    fireEvent.click(screen.getByText(ButtonsI18nKey.Duplicate));
+    expect(onDuplicate).toHaveBeenCalledWith({ $id: 'new-id', 'dial:applicationTypeDisplayName': 'New Name' });
+  });
 
-    expect(baseElement).toBeTruthy();
+  test('calls onClose on cancel', () => {
+    const onDuplicate = vi.fn();
+    const onClose = vi.fn();
+    render(
+      <DuplicateScheme isModalOpen={true} onDuplicate={onDuplicate} onClose={onClose} entity={baseEntity as any} />,
+    );
+    fireEvent.click(screen.getByText(ButtonsI18nKey.Cancel));
+    expect(onClose).toHaveBeenCalled();
   });
 });

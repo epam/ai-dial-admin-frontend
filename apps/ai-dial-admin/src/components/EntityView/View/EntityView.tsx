@@ -3,16 +3,14 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import classNames from 'classnames';
-import { cloneDeep } from 'lodash';
 import { DialTabs } from '@epam/ai-dial-ui-kit';
+import { cloneDeep } from 'lodash';
 
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { ModalType } from '@/src/components/EntityView/Modals/constants';
 import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
 import { isDisableRole } from '@/src/components/EntityView/Roles/utils';
-import { EntityViewTab, getViewTabs } from '@/src/components/EntityView/View/utils';
 import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -27,8 +25,10 @@ import { DialRole } from '@/src/models/dial/role';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { EntityViewTab, getViewTabs } from '@/src/utils/tabs/utils';
 import {
   VisualizerConnectorEvents,
   VisualizerConnectorRequest,
@@ -36,7 +36,7 @@ import {
 } from '@epam/ai-dial-shared';
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 import ViewContent from './Content/ViewContent';
-import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { getViewHeaderClassNames } from '@/src/utils/entities/view';
 
 interface Props {
   view: ApplicationRoute;
@@ -104,11 +104,6 @@ const EntityView: FC<Props> = ({
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFormat, originalEntity]);
-
-  const headerClassName = classNames(
-    'flex flex-row min-h-[34px]',
-    jsonEditorEnabled ? 'justify-end' : 'justify-between',
-  );
 
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
@@ -296,7 +291,7 @@ const EntityView: FC<Props> = ({
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-        <div className={headerClassName}>
+        <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
           {!jsonEditorEnabled && (
             <div className="flex-1 min-w-0 mr-3">
               <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
@@ -314,10 +309,12 @@ const EntityView: FC<Props> = ({
             toggleJsonEditor={toggleJsonEditor}
             selectedFormat={selectedFormat}
             setSelectedFormat={setSelectedFormat}
+            etag={etag}
+            onChangeEntity={onChangeEntity}
           />
         </div>
 
-        <div className="flex-1 overflow-auto mt-3 min-h-0">
+        <div className="flex-1 overflow-auto min-h-0">
           {jsonEditorEnabled && !(ApplicationRoute.Applications && activeTab === EntityViewTab.Parameters) ? (
             <EntityJsonEditor
               key={key}
@@ -329,7 +326,6 @@ const EntityView: FC<Props> = ({
             selectedFormat === ExportFormat.ADMIN && (
               <ViewContent
                 view={view}
-                etag={etag}
                 applicationSchemes={applicationSchemes}
                 activeTab={activeTab}
                 selectedEntity={selectedEntity}

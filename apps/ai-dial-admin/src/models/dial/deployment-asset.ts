@@ -8,6 +8,7 @@ export interface AssetApp extends DialFile, DialApplication {
   items?: AssetApp[];
   versions?: string[];
   applicationTypeSchemaId?: string;
+  reference?: string;
 }
 
 export interface AssetToolset extends DialFile, Toolset {

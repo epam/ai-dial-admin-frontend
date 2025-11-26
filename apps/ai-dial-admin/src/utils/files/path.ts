@@ -2,6 +2,7 @@ import { DialFile, DialFileNodeType } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { findFolderChildren, getFolderName } from './folder';
+import { addTrailingSlash } from '@/src/utils/url';
 
 export const isFolder = (type?: DialFileNodeType) => type === DialFileNodeType.FOLDER;
 
@@ -11,13 +12,6 @@ export const removeTrailingSlash = (path?: string) => {
   }
 
   return path.replace(/\/{2,}/g, '/').replace(/(.+)\/$/, '$1');
-};
-
-export const addTrailingSlash = (path: string) => {
-  if (path.endsWith('/')) {
-    return path;
-  }
-  return `${path}/`;
 };
 
 export const checkPaths = (initialPath?: string, filePath?: string) => {

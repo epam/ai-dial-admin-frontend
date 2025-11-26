@@ -9,7 +9,7 @@ import {
   APPLICATIONS_COLUMNS,
   KEYS_COLUMNS,
   MODELS_COLUMNS,
-  RUNNERS_COLUMNS,
+  LIST_RUNNER_COLUMNS,
   SIMPLE_ENTITY_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
 import { DialApplicationScheme } from '@/src/models/dial/application';
@@ -155,7 +155,7 @@ export const getComponentColDefs = (
   }
 
   if (type === EntityType.APPLICATION_TYPE_SCHEMA) {
-    return [getComponentActionColumn(), ...RUNNERS_COLUMNS, actionColumn];
+    return [getComponentActionColumn(), ...LIST_RUNNER_COLUMNS, actionColumn];
   }
 
   if (type === EntityType.KEY) {

@@ -1,11 +1,11 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialConfirmationPopup, DialButton, DialTextAreaField } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialConfirmationPopup, DialButton, DialTextAreaField, DialSwitch } from '@epam/ai-dial-ui-kit';
 import { IconCircleX, IconWorldOff, IconWorldShare } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import { ButtonsI18nKey, ErrorI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey, ErrorI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
@@ -19,9 +19,11 @@ interface Props {
   onDecline: (comment: string) => void;
   route: ApplicationRoute;
   action: ActionType;
+  setIsJsonView: (value: boolean) => void;
+  isJsonView: boolean;
 }
 
-const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action }) => {
+const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJsonView, setIsJsonView }) => {
   const t = useI18n() as (t: string) => string;
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
@@ -91,6 +93,14 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action }) =
               title={t(ButtonsI18nKey.Unpublish)}
               onClick={() => setIsOpenApproveModal(true)}
               iconBefore={<IconWorldOff {...BASE_ICON_PROPS} />}
+            />
+          )}
+          {route !== ApplicationRoute.FilePublications && (
+            <DialSwitch
+              switchId="jsonView"
+              isOn={isJsonView}
+              onChange={() => setIsJsonView(!isJsonView)}
+              title={t(EntitiesI18nKey.JSONViewer)}
             />
           )}
         </div>

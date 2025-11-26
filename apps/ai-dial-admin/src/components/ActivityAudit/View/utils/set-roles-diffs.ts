@@ -66,23 +66,23 @@ export const mergeLimits = (limits: ActivityAuditDiff[], shareLimits: ActivityAu
     return `${value1}, ${value2}`;
   };
 
-  limits.forEach(({ parameter, value, status }) => {
-    mergedMap.set(parameter, { value, status });
+  limits.forEach(({ parameter, value, diffStatus }) => {
+    mergedMap.set(parameter, { value, diffStatus });
   });
 
-  shareLimits.forEach(({ parameter, value, status }) => {
+  shareLimits.forEach(({ parameter, value, diffStatus }) => {
     if (mergedMap.has(parameter)) {
       const current = mergedMap.get(parameter);
       current.value = mergeValues(current.value, value);
-      current.status = status || current.status;
+      current.diffStatus = diffStatus || current.diffStatus;
     } else {
-      mergedMap.set(parameter, { value, status });
+      mergedMap.set(parameter, { value, diffStatus });
     }
   });
 
-  return Array.from(mergedMap, ([parameter, { value, status }]) => ({
+  return Array.from(mergedMap, ([parameter, { value, diffStatus }]) => ({
     parameter,
     value,
-    status,
+    diffStatus,
   }));
 };

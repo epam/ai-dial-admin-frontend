@@ -3,7 +3,7 @@ import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import {
   KEYS_COLUMNS,
   ENTITY_BASE_COLUMNS,
-  RUNNERS_COLUMNS,
+  LIST_RUNNER_COLUMNS,
   SIMPLE_ENTITY_COLUMNS,
 } from '@/src/constants/grid-columns/grid-columns';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
@@ -58,7 +58,7 @@ export const getActualColDefs = (
     columns = [...KEYS_COLUMNS(t)];
   }
   if (type === EntityType.APPLICATION_TYPE_SCHEMA) {
-    columns = [...RUNNERS_COLUMNS];
+    columns = [...LIST_RUNNER_COLUMNS];
   }
   if (type === EntityType.ADAPTER) {
     columns = [...SIMPLE_ENTITY_COLUMNS];
@@ -222,6 +222,7 @@ export const isEntityWithDependency = (entity: string): boolean => {
     entity === EntityType.APPLICATION ||
     entity === EntityType.TOOLSET ||
     entity === EntityType.ROLE ||
-    entity === EntityType.KEY
+    entity === EntityType.KEY ||
+    entity === EntityType.APPLICATION_TYPE_SCHEMA
   );
 };

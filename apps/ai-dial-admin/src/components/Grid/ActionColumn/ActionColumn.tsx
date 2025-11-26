@@ -1,6 +1,6 @@
 'use client';
 
-import { IconDots } from '@tabler/icons-react';
+import { IconDotsVertical } from '@tabler/icons-react';
 import { CustomCellRendererProps } from 'ag-grid-react';
 
 import ActionsDropdown from '@/src/components/Common/ActionsDropdown/ActionsDropdown';
@@ -25,7 +25,7 @@ const ActionColumn = <T extends object>({ items, data, api, node, disabledInstea
       <ActionsDropdown
         data={data}
         rowIndex={node.rowIndex as number}
-        icon={<IconDots width={16} height={16} stroke={2} />}
+        icon={<IconDotsVertical size={16} className="text-secondary" stroke={2} />}
         items={dropdownItems}
         actionTriggerClass="flex h-[24px] hover:bg-accent-primary-alpha items-center justify-center rounded w-[24px]"
       />

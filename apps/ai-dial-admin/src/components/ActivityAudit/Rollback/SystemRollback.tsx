@@ -1,5 +1,5 @@
 'use client';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { ButtonVariant, DialButton, DialLoader, DialSwitch, DialTabs } from '@epam/ai-dial-ui-kit';
@@ -31,6 +31,7 @@ import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ActivityAuditEntity, ActivityAuditResourceType, DiffView } from '@/src/types/activity-audit';
 import { getRevisionRouteForAllEntities } from '@/src/utils/audit/get-revision-route';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 const SystemRollback: FC = () => {
   const t = useI18n() as (t: string) => string;
@@ -39,6 +40,7 @@ const SystemRollback: FC = () => {
     id: e,
     name: t(MenuI18nKey[`${SYSTEM_ROLLBACK_TAB_NAME[e]}` as keyof typeof MenuI18nKey]),
   }));
+  const getReqRef = useRef(useProtectedRequest());
 
   const [selectedTab, setSelectedTab] = useState(tabs[0].id);
   const [columns, setColumns] = useState<ColDef[]>([]);
@@ -113,13 +115,16 @@ const SystemRollback: FC = () => {
 
   useEffect(() => {
     if (!revisions) {
-      getRevisions(100, 0, sorts, []).then((revisions) => {
-        setRevisions(revisions);
-        const current = revisions?.at(0);
-        const rollback = revisions?.at(1);
-        setCurrentRevision(current);
-        setRollbackRevision(rollback);
-        fetchRevisionEntities(current, rollback);
+      getReqRef.current(getRevisions, 100, 0, sorts, []).then((res) => {
+        if (res.success) {
+          const revisions = res.response;
+          setRevisions(revisions);
+          const current = revisions?.at(0);
+          const rollback = revisions?.at(1);
+          setCurrentRevision(current);
+          setRollbackRevision(rollback);
+          fetchRevisionEntities(current, rollback);
+        }
       });
     }
   }, [fetchRevisionEntities, revisions]);
@@ -135,20 +140,20 @@ const SystemRollback: FC = () => {
         ? currentState?.get(selectedTab as ActivityAuditResourceType)
         : currentState
             ?.get(selectedTab as ActivityAuditResourceType)
-            ?.filter((data) => data.status)) as ActivityAuditDiff[],
+            ?.filter((data) => data.diffStatus)) as ActivityAuditDiff[],
     );
     setRollbackRows(
       (diffView === DiffView.ALL
         ? rollbackState?.get(selectedTab as ActivityAuditResourceType)
         : rollbackState
             ?.get(selectedTab as ActivityAuditResourceType)
-            ?.filter((data) => data.status)) as ActivityAuditDiff[],
+            ?.filter((data) => data.diffStatus)) as ActivityAuditDiff[],
     );
   }, [currentState, diffView, rollbackState, selectedTab]);
 
   return (
-    <div className="flex flex-col bg-layer-2 rounded p-4 flex-1 min-h-0">
-      <div className="flex flex-row justify-between mb-3">
+    <div className="flex flex-col bg-layer-2 rounded py-4 px-6 flex-1 min-h-0">
+      <div className="flex flex-row justify-between mb-4 items-center h-[38x]">
         <h1>{t(RollbackI18nKey.System)}</h1>
         <div className="flex flex-row gap-3 items-center">
           <FilterControl diffView={diffView} setDiffView={setDiffView} isResources={true} />

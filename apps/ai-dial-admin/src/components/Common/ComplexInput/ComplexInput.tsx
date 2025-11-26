@@ -11,6 +11,7 @@ interface Props extends DialInputProps {
   errorText?: string;
   fullValue?: string;
   copyable?: boolean;
+  optional?: boolean;
 }
 
 const ComplexInput: FC<Props> = ({ fullValue, fieldTitle, copyable = true, ...props }) => {

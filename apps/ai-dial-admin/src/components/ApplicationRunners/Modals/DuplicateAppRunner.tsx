@@ -13,16 +13,17 @@ import { getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplica
 interface Props {
   isModalOpen: boolean;
   onClose: () => void;
+  names: string[];
   entity: DialApplicationScheme;
   onDuplicate: (entity: DialApplicationScheme) => void;
 }
 
-const DuplicateScheme: FC<Props> = ({ onDuplicate, isModalOpen, onClose, entity }) => {
+const DuplicateScheme: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose, entity }) => {
   const t = useI18n() as (t: string, props?: Record<string, string>) => string;
 
   const [clonedEntity, setEntity] = useState<DialApplicationScheme>({
     ...entity,
-    $id: getClonedEntityName(entity.$id),
+    $id: getClonedEntityName(entity.$id, false, '/'),
   });
   const { dispatch, isValid } = useSaveValidationContext();
 
@@ -58,11 +59,12 @@ const DuplicateScheme: FC<Props> = ({ onDuplicate, isModalOpen, onClose, entity 
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Duplicate)}
     >
-      <div className="flex flex-col px-6 py-4 gap-y-6">
+      <div className="flex flex-col px-6 py-4 gap-y-8">
         <IdControl
           isUrlId={true}
           entity={{ name: clonedEntity.$id }}
           onChangeEntity={(entity) => onChangeId(entity.name)}
+          names={names}
         />
         <DisplayNameControl
           displayName={clonedEntity['dial:applicationTypeDisplayName']}

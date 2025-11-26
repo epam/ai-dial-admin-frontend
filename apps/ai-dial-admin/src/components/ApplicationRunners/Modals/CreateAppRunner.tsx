@@ -1,6 +1,6 @@
 import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { createApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationView/Properties';
@@ -13,16 +13,18 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 interface Props {
   isModalOpen: boolean;
+  names: string[];
   onClose: () => void;
 }
 
-const CreateAppRunner: FC<Props> = ({ isModalOpen, onClose }) => {
+const CreateAppRunner: FC<Props> = ({ isModalOpen, names, onClose }) => {
   const t = useI18n() as (t: string) => string;
   const router = useRouter();
-
+  const getReqRef = useRef(useProtectedRequest());
   const { showNotification } = useNotification();
 
   const [currentScheme, setScheme] = useState<DialApplicationScheme>({
@@ -40,7 +42,7 @@ const CreateAppRunner: FC<Props> = ({ isModalOpen, onClose }) => {
   );
 
   const onCreate = useCallback(() => {
-    createApplicationScheme(currentScheme).then((res) => {
+    getReqRef.current(createApplicationScheme, currentScheme).then((res) => {
       if (res.success) {
         showNotification(
           getSuccessNotification(
@@ -80,7 +82,7 @@ const CreateAppRunner: FC<Props> = ({ isModalOpen, onClose }) => {
       disableSubmitButton={!isValid}
     >
       <div className="flex flex-col px-6 py-4">
-        <SchemeProperties runner={currentScheme} onChangeRunner={onChangeScheme} />
+        <SchemeProperties names={names} runner={currentScheme} onChangeRunner={onChangeScheme} />
       </div>
     </DialFormPopup>
   );

@@ -4,7 +4,6 @@ import { uniq } from 'lodash';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
-import AutocompleteField from '@/src/components/Common/Dropdown/Autocomplete/AutocompleteField';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
@@ -26,6 +25,7 @@ import { useAppContext } from '@/src/context/AppContext';
 import { getModelContainers } from '@/src/app/[lang]/models/actions';
 import { getToolsetContainers } from '@/src/app/[lang]/toolsets/actions';
 import { getNamesConfigurations } from '@/src/utils/entities/filter-names';
+import { DialSelectField } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   view: ApplicationRoute;
@@ -48,17 +48,19 @@ const DeploymentProperties: FC<Props> = ({
   isEntityImmutable = false,
   initialValues,
 }) => {
-  const t = useI18n() as (str: string, param?: Record<string, number>) => string;
+  const t = useI18n() as (str: string, param?: Record<string, string | number>) => string;
   const { dispatch } = useSaveValidationContext();
   const { embeddedApps } = useAppContext();
   const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
-
-  const [isVersionOptional, setIsVersionOptional] = useState(true);
   const [displayNameError, setDisplayNameError] = useState<string | undefined>(void 0);
 
   const namesConfiguration = useMemo(() => {
     return getNamesConfigurations(names);
   }, [names]);
+
+  const isVersionOptional = useMemo(() => {
+    return !namesConfiguration.names.includes(entity.displayName as string);
+  }, [entity.displayName, namesConfiguration.names]);
 
   const versionError = useMemo(() => {
     return getVersionError(isVersionOptional, entity as DialModel, namesConfiguration.versionsMap, t);
@@ -66,7 +68,6 @@ const DeploymentProperties: FC<Props> = ({
 
   const onChangeDisplayName = useCallback(
     (displayName: string) => {
-      setIsVersionOptional(!namesConfiguration.names.includes(displayName));
       const error = getDisplayNameError(
         view,
         displayName as string,
@@ -120,24 +121,30 @@ const DeploymentProperties: FC<Props> = ({
   );
 
   return (
-    <div className="w-full flex flex-col gap-y-6">
-      <div className={classNames('flex flex-col gap-y-6', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
+    <div className="w-full flex flex-col gap-y-8">
+      <div className={classNames('flex flex-col gap-y-8', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
         {!isEntityImmutable && (
           <IdControl entity={entity} onChangeEntity={onChangeEntity} isUniqueNameError={isUniqueNameError} />
         )}
-        <AutocompleteField
-          inputId="displayName"
+
+        <DialSelectField
+          elementId="displayName"
           fieldTitle={t(EntityFieldsI18nKey.displayName)}
           placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
+          inlineSearch={true}
           value={entity.displayName}
-          errorText={displayNameError}
-          onChange={onChangeDisplayName}
-          invalid={!!displayNameError}
-          items={uniq(namesConfiguration.names)}
+          customSelectedValue={entity.displayName}
+          onChange={(value) => onChangeDisplayName(value as string)}
+          error={displayNameError}
+          options={uniq(namesConfiguration.names)
+            .sort()
+            .map((name) => ({ value: name, label: name }))}
         />
 
         {view === ApplicationRoute.Models && (
           <VersionControl
+            view={view}
+            title={t(EntityFieldsI18nKey.displayVersion)}
             version={(entity as DialModel).displayVersion}
             onChange={onChangeVersion}
             error={versionError}

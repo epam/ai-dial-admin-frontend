@@ -51,7 +51,7 @@ describe('Server :: ActivityAuditApi', () => {
       expect.objectContaining({ method: 'GET' }),
     );
 
-    expect(result).toEqual(JSON.stringify(mockActivity));
+    expect(result.response).toEqual(JSON.stringify(mockActivity));
   });
 
   test('Should calls getRevisionDetails and sends GET request to full URL and returns details', async () => {
@@ -79,7 +79,7 @@ describe('Server :: ActivityAuditApi', () => {
       expect.objectContaining({ method: 'POST' }),
     );
 
-    expect(result).toEqual(JSON.stringify(mockDetails));
+    expect(result.response).toEqual(JSON.stringify(mockDetails));
   });
 
   test('Should calls getEntitiesForRevision and sends GET request to full URL and returns entities', async () => {
