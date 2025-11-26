@@ -1,71 +1,76 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import createFetchMock from 'vitest-fetch-mock';
 
+import { interceptorTemplatesApi } from '@/src/app/api/api';
+import { getUserToken } from '@/src/utils/auth/auth-request';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { TOKEN_MOCK, RESPONSE_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
-  getInterceptorTemplatesList,
-  getInterceptorTemplate,
   createInterceptorTemplate,
-  updateInterceptorTemplate,
   deleteInterceptorTemplate,
+  getInterceptorTemplate,
+  getInterceptorTemplatesList,
+  updateInterceptorTemplate,
 } from './actions';
 
-const fetch = createFetchMock(vi);
-fetch.enableMocks();
+vi.mock('@/src/utils/auth/auth-request');
+vi.mock('@/src/utils/env/get-auth-toggle');
+vi.mock('@/src/app/api/api');
 
 describe('Interceptor templates :: server actions', () => {
   beforeEach(() => {
-    fetch.resetMocks();
+    vi.clearAllMocks();
+    (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
+    (getIsEnableAuthToggle as any).mockReturnValue(true);
   });
 
-  test('Should call get interceptors templates list', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    getInterceptorTemplatesList().then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call getInterceptorTemplatesList action', async () => {
+    (interceptorTemplatesApi.getInterceptorTemplatesList as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('GET');
-    });
+    await getInterceptorTemplatesList();
+    expect(getUserToken).toHaveBeenCalled();
+    expect(interceptorTemplatesApi.getInterceptorTemplatesListAction).toHaveBeenCalledWith(TOKEN_MOCK);
   });
 
-  test('Should call get interceptor template', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    getInterceptorTemplate('test').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call getInterceptorTemplate action', async () => {
+    (interceptorTemplatesApi.getInterceptorTemplate as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('GET');
-    });
+    const result = await getInterceptorTemplate('test', 'etag');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(interceptorTemplatesApi.getInterceptorTemplate).toHaveBeenCalledWith('test', TOKEN_MOCK, 'etag');
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call create interceptor template', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    createInterceptorTemplate({ name: 'test', description: 'test' }).then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call createInterceptorTemplate action', async () => {
+    (interceptorTemplatesApi.createInterceptorTemplate as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('POST');
-      expect(call?.body).toBe(JSON.stringify({ name: 'test', description: 'test' }));
-    });
+    const result = await createInterceptorTemplate({ name: 'test', description: 'test' });
+    expect(getUserToken).toHaveBeenCalled();
+    expect(interceptorTemplatesApi.createInterceptorTemplate).toHaveBeenCalledWith(
+      { name: 'test', description: 'test' },
+      TOKEN_MOCK,
+    );
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call update interceptor template', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    updateInterceptorTemplate({ name: 'test', description: 'test' }).then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call updateInterceptorTemplate action', async () => {
+    (interceptorTemplatesApi.updateInterceptorTemplate as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('PUT');
-      expect(call?.body).toBe(JSON.stringify({ name: 'test', description: 'test' }));
-    });
+    const result = await updateInterceptorTemplate({ name: 'test', description: 'test' }, 'etag');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(interceptorTemplatesApi.updateInterceptorTemplate).toHaveBeenCalledWith(
+      { name: 'test', description: 'test' },
+      TOKEN_MOCK,
+      'etag',
+    );
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call delete interceptor template', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    deleteInterceptorTemplate('test').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call deleteInterceptorTemplate action', async () => {
+    (interceptorTemplatesApi.deleteInterceptorTemplate as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('DELETE');
-    });
+    const result = await deleteInterceptorTemplate('test');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(interceptorTemplatesApi.deleteInterceptorTemplate).toHaveBeenCalledWith(TOKEN_MOCK, 'test');
+    expect(result).toBe(RESPONSE_MOCK);
   });
 });

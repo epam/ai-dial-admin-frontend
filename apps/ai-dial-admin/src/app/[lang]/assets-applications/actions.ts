@@ -14,9 +14,9 @@ export async function getApps(path: string) {
   return assetsApi.getAssetList(token, path, ResourceType.APPLICATION);
 }
 
-export async function createApp(toolset: AssetApp) {
+export async function createApp(app: AssetApp) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.createAsset(toolset, ResourceType.APPLICATION, token);
+  return assetsApi.createAsset(app, ResourceType.APPLICATION, token);
 }
 
 export async function getApp(folderId: string, name: string, version: string, etag: string) {
