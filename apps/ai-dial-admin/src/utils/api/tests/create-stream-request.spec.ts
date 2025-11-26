@@ -54,6 +54,10 @@ describe('Utils :: api :: streamRequest', () => {
     test('returns null for unknown extension', () => {
       expect(getContentType('file.unknown')).toBe(null);
     });
+
+    test('returns "image/svg+xml" for unknown extension', () => {
+      expect(getContentType('file.svg')).toBe('image/svg+xml');
+    });
   });
 
   describe('createReadableStream', () => {
@@ -70,7 +74,9 @@ describe('Utils :: api :: streamRequest', () => {
 
   describe('streamRequest error handling', () => {
     test('returns promise resolving to null on error', async () => {
-      (sendRequest as vi.Mock).mockImplementation(() => { throw new Error('fail'); });
+      (sendRequest as vi.Mock).mockImplementation(() => {
+        throw new Error('fail');
+      });
       const promise = streamRequest('url', 'file.txt', { access_token: 'token' }, true);
       expect(promise).toBeInstanceOf(Promise);
     });
