@@ -26,11 +26,19 @@ import {
   filesTab,
   conversationsTab,
   tracesTab,
+  getRoleTabs,
+  keysTab,
+  getRouteTabs,
+  attachmentsTab,
+  getAppRunnerTabs,
+  applicationsTab,
+  getAdapterTabs,
+  modelsTab,
 } from '../utils';
 
 const t = vi.fn((id) => id);
 
-describe('getViewTabs', () => {
+describe('Entities :: tabs', () => {
   test('Should return tabs for models', () => {
     const res = getViewTabs(t, ApplicationRoute.Models);
     expect(res).toEqual([propertiesTab(t), featuresTab(t), rolesTab(t), interceptorsTab(t), auditTab(t)]);
@@ -68,10 +76,6 @@ describe('getViewTabs', () => {
     const res = getViewTabs(t, ApplicationRoute.Routes);
     expect(res).toEqual([propertiesTab(t), rolesTab(t), auditTab(t)]);
   });
-});
-
-describe('getAuditTabs', () => {
-  const t = (s: string) => s;
 
   test('returns dashboard and activities tabs if dashboardEnabled and view is Models', () => {
     const tabs = getAuditTabs(t, { dashboardEnabled: true }, ApplicationRoute.Models);
@@ -102,64 +106,71 @@ describe('getAuditTabs', () => {
     const tabs = getAuditTabs(t, { dashboardEnabled: true }, ApplicationRoute.Home);
     expect(tabs).toEqual([{ id: 'Activities', name: TabsI18nKey.Activities }]);
   });
-});
-
-describe('getTabsForAsset', () => {
   test('returns correct tabs for AssetsApplications', () => {
-    const tabs = getTabsForAsset(t, ApplicationRoute.AssetsApplications);
-    expect(tabs).toEqual([propertiesTab(t), featuresTab(t), parametersTab(t), interceptorsTab(t), dependenciesTab(t)]);
+    expect(getTabsForAsset(t, ApplicationRoute.AssetsApplications)).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      parametersTab(t),
+      interceptorsTab(t),
+      dependenciesTab(t),
+    ]);
   });
 
   test('returns correct tabs for AssetsToolsets', () => {
-    const tabs = getTabsForAsset(t, ApplicationRoute.AssetsToolsets);
-    expect(tabs).toEqual([propertiesTab(t), toolsTab(t)]);
+    expect(getTabsForAsset(t, ApplicationRoute.AssetsToolsets)).toEqual([propertiesTab(t), toolsTab(t)]);
   });
 
-  test('returns only properties tab for other routes', () => {
+  test('returns correct tabs for toolset', () => {
     const tabs = getTabsForAsset(t, ApplicationRoute.ActivityAudit);
     expect(tabs).toEqual([propertiesTab(t)]);
   });
-});
 
-describe('getToolsetTabs', () => {
-  test('returns correct tabs for toolset', () => {
-    const tabs = getToolsetTabs(t);
-    expect(tabs).toEqual([propertiesTab(t), toolsTab(t), rolesTab(t), auditTab(t)]);
-  });
-});
-
-describe('getKeyTabs', () => {
   test('returns correct tabs for key', () => {
-    const tabs = getKeyTabs(t);
-    expect(tabs).toEqual([propertiesTab(t), rolesTab(t), auditTab(t)]);
+    expect(getKeyTabs(t)).toEqual([propertiesTab(t), rolesTab(t), auditTab(t)]);
   });
-});
 
-describe('getPublicationTabs', () => {
   test('returns correct tabs for publication', () => {
-    const tabs = getPublicationTabs(t);
-    expect(tabs).toEqual([propertiesTab(t), parametersTab(t), filesTab(t)]);
+    expect(getPublicationTabs(t)).toEqual([propertiesTab(t), parametersTab(t), filesTab(t)]);
   });
-});
 
-describe('getUsageLogTabs', () => {
+  test('returns correct tabs for routes', () => {
+    expect(getRouteTabs(t)).toEqual([propertiesTab(t), attachmentsTab(t), rolesTab(t)]);
+  });
+
+  test('returns correct tabs for roles', () => {
+    expect(getRoleTabs(t)).toEqual([propertiesTab(t), entitiesTab(t), keysTab(t), auditTab(t)]);
+  });
+
   test('returns correct tabs for usage log', () => {
-    const tabs = getUsageLogTabs(t);
-    expect(tabs).toEqual([tracesTab(t), conversationsTab(t)]);
+    expect(getUsageLogTabs(t)).toEqual([tracesTab(t), conversationsTab(t)]);
   });
-});
 
-describe('getInterceptorTemplateTabs', () => {
   test('returns correct tabs for interceptor template', () => {
-    const tabs = getInterceptorTemplateTabs(t);
-    expect(tabs).toEqual([propertiesTab(t), interceptorsTab(t), auditTab(t)]);
+    expect(getInterceptorTemplateTabs(t)).toEqual([propertiesTab(t), interceptorsTab(t), auditTab(t)]);
   });
-});
 
-describe('getInterceptorTabs', () => {
+  test('returns correct tabs for toolsets', () => {
+    expect(getToolsetTabs(t)).toEqual([propertiesTab(t), toolsTab(t), rolesTab(t), auditTab(t)]);
+  });
+  
+
+  test('returns correct tabs for adapter', () => {
+    expect(getAdapterTabs(t)).toEqual([propertiesTab(t), modelsTab(t), auditTab(t)]);
+  });
+
+  test('returns correct tabs for app runner', () => {
+    expect(getAppRunnerTabs(t)).toEqual([
+      propertiesTab(t),
+      parametersTab(t),
+      interceptorsTab(t),
+      applicationsTab(t),
+      appRouteTab(t),
+      auditTab(t),
+    ]);
+  });
+
   test('returns correct tabs for interceptor', () => {
-    const tabs = getInterceptorTabs(t);
-    expect(tabs).toEqual([
+    expect(getInterceptorTabs(t)).toEqual([
       propertiesTab(t),
       parameterSchemaTab(t),
       entitiesTab(t),
