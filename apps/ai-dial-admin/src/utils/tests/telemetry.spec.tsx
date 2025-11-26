@@ -7,6 +7,7 @@ import {
   getFilterConditionConfig,
   getFormattedDataFilters,
   getFormattedFilters,
+  getDefaultFilterValue,
 } from '../telemetry';
 import { describe, test, vi, expect } from 'vitest';
 
@@ -112,11 +113,13 @@ describe('Utils :: telemetry :: getListingData', () => {
       data: [
         ['2023-10-01T00:00:00Z', '100'],
         ['2023-10-01T01:00:00Z', '200'],
+        ['undefined', '300'],
       ],
     });
     expect(result).toEqual([
       { time: '2023-10-01T00:00:00Z', requests: '100' },
       { time: '2023-10-01T01:00:00Z', requests: '200' },
+      { time: '', requests: '300' },
     ]);
   });
 
@@ -149,6 +152,23 @@ describe('Utils :: telemetry :: getFilterTypeConfig', () => {
     const t = (key: string) => key;
     const result = getFilterTypeConfig(t);
     expect(result).toBeTruthy();
+  });
+});
+
+describe('Utils :: telemetry :: getDefaultFilterValue', () => {
+  test('returns correct result', () => {
+    expect(
+      getDefaultFilterValue(FILTER_TYPE.Entity, [{ label: 'a', value: 'aValue' }], [{ label: 'b', value: 'bValue' }]),
+    ).toEqual('aValue');
+
+     expect(
+      getDefaultFilterValue(FILTER_TYPE.Project, [{ label: 'a', value: 'aValue' }], [{ label: 'b', value: 'bValue' }]),
+    ).toEqual('bValue');
+  });
+
+  test('returns correct result', () => {
+    const result = getDefaultFilterValue(FILTER_TYPE.Entity, [], []);
+    expect(result).toBe('');
   });
 });
 
