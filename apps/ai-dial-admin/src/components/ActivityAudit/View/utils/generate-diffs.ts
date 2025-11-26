@@ -284,7 +284,8 @@ export const compareSeparateObjects = (
     key === EntityParameterKeys.ROLES ||
     key === EntityParameterKeys.ROUTES ||
     key === EntityParameterKeys.DEPENDENCIES ||
-    key === EntityParameterKeys.MODELS
+    key === EntityParameterKeys.MODELS ||
+    key === EntityParameterKeys.APP_RUNNERS
   ) {
     compareEntities(diffs, val1 as string[], val2 as string[], isCurrent);
   }
@@ -323,7 +324,8 @@ export const fillSeparateObjects = (diffs: ActivityAuditDiff[], key: string, val
     key === EntityParameterKeys.ROLES ||
     key === EntityParameterKeys.ROUTES ||
     key === EntityParameterKeys.MODELS ||
-    key === EntityParameterKeys.DEPENDENCIES
+    key === EntityParameterKeys.DEPENDENCIES ||
+    key === EntityParameterKeys.APP_RUNNERS
   ) {
     fillEntities(diffs, value as string[]);
   }
@@ -358,6 +360,7 @@ export const createSectionFromDiffs = (
     EntityParameterKeys.APP_PROPERTIES,
     EntityParameterKeys.SHARE,
     EntityParameterKeys.APP_RUNNER_INTERCEPTORS,
+    EntityParameterKeys.APP_RUNNERS,
   ];
   const sections: ActivityAuditSection = {};
 
