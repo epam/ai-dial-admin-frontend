@@ -873,6 +873,7 @@ export default {
     tool_setMaxAcceptedUsers: 'Toolsets max users',
     new_key: 'New key',
     applicationProperties: 'Application properties',
+    applicationTypeSchemas: 'Application runners',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
