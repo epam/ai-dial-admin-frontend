@@ -22,7 +22,9 @@ describe('sendRequest', () => {
   });
 
   test('returns promise resolving to null on error', async () => {
-    (fetch as any).mockImplementation(() => { throw new Error('fail'); });
+    (fetch as any).mockImplementation(() => {
+      throw new Error('fail');
+    });
     const promise = sendRequest(url, type, headers, dto);
     // The promise never resolves, but we can check it's a Promise
     expect(promise).toBeInstanceOf(Promise);

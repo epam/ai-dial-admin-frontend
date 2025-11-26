@@ -161,7 +161,7 @@ describe('Utils :: telemetry :: getDefaultFilterValue', () => {
       getDefaultFilterValue(FILTER_TYPE.Entity, [{ label: 'a', value: 'aValue' }], [{ label: 'b', value: 'bValue' }]),
     ).toEqual('aValue');
 
-     expect(
+    expect(
       getDefaultFilterValue(FILTER_TYPE.Project, [{ label: 'a', value: 'aValue' }], [{ label: 'b', value: 'bValue' }]),
     ).toEqual('bValue');
   });
