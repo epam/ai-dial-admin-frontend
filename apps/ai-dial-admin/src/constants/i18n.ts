@@ -951,6 +951,7 @@ export enum EntityFieldsI18nKey {
   'tool_set.maxAcceptedUsers' = 'EntityFields.tool_setMaxAcceptedUsers',
   new_key = 'EntityFields.new_key',
   applicationProperties = 'EntityFields.applicationProperties',
+  applicationTypeSchemas = 'EntityFields.applicationTypeSchemas',
 }
 
 export enum ToolsetI18nKey {
