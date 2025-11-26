@@ -1,5 +1,6 @@
-import { describe, test, expect, vi } from 'vitest';
-import { safeDecodeJwt, getUser, callbacks, tokenConfig } from '../auth-callbacks';
+import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { safeDecodeJwt, getUser, callbacks, refreshAccessToken, tokenConfig } from '../auth-callbacks';
+import { NextClient } from '../nextauth-client';
 
 describe('auth-callbacks', () => {
   test('safeDecodeJwt returns decoded payload for valid JWT', () => {
@@ -79,4 +80,106 @@ describe('auth-callbacks', () => {
     expect(result.providerId).toBe('prov');
   });
 
+  describe('tokenConfig', () => {
+    test('calls client.callback when provider.idToken is true', async () => {
+      const callbackSpy = vi.fn().mockResolvedValue('tokens-cb');
+      const client = { callback: callbackSpy };
+      const context = {
+        client,
+        provider: { idToken: true, callbackUrl: 'url', id: 'provider' },
+        params: {},
+        checks: {},
+      };
+      const result = await tokenConfig.request?.(context as any);
+      expect(callbackSpy).toHaveBeenCalledWith('url', {}, {});
+      expect(result).toEqual({ tokens: 'tokens-cb' });
+    });
+
+    test('calls client.oauthCallback when provider.idToken is false', async () => {
+      const oauthCallbackSpy = vi.fn().mockResolvedValue('tokens-oauth');
+      const client = { oauthCallback: oauthCallbackSpy };
+      const context = {
+        client,
+        provider: { idToken: false, callbackUrl: 'url', id: 'provider' },
+        params: {},
+        checks: {},
+      };
+      const result = await tokenConfig.request?.(context as any);
+      expect(oauthCallbackSpy).toHaveBeenCalledWith('url', {}, {});
+      expect(result).toEqual({ tokens: 'tokens-oauth' });
+    });
+  });
+
+  const mockToken = {
+    providerId: 'provider',
+    userId: 'user1',
+    refreshToken: 'refresh-token',
+    accessTokenExpires: Date.now() - 1000, // expired
+    access_token: 'old-access-token',
+    user: { isAdmin: false },
+  };
+
+  describe('refreshAccessToken', () => {
+    let client: any;
+    beforeEach(() => {
+      client = {
+        refresh: vi.fn().mockResolvedValue({
+          access_token: 'new-access-token',
+          expires_in: 3600,
+          refresh_token: 'new-refresh-token',
+        }),
+      };
+      NextClient.setClient(client, { id: 'provider' });
+      vi.spyOn(NextClient, 'getRefreshToken').mockImplementation(() => undefined);
+      vi.spyOn(NextClient, 'setIsRefreshTokenStart').mockImplementation(() => {});
+      vi.spyOn(NextClient, 'delay').mockResolvedValue(undefined);
+    });
+
+    test('refreshes token and returns new token', async () => {
+      const result = await refreshAccessToken({ ...mockToken });
+      expect(result.access_token).toBe('new-access-token');
+      expect(result.refreshToken).toBe('new-refresh-token');
+      expect(result.accessTokenExpires).toBeGreaterThan(Date.now());
+      expect(result.user).toBeDefined();
+    });
+
+    test('returns error if no providerId', async () => {
+      const result = (await refreshAccessToken({ ...mockToken, providerId: undefined })) as any;
+      expect(result.error).toBe('RefreshAccessTokenError');
+    });
+
+    test('returns error if no client', async () => {
+      NextClient.setClient(null, { id: 'provider' });
+      const result = (await refreshAccessToken({ ...mockToken })) as any;
+      expect(result.error).toBe('RefreshAccessTokenError');
+    });
+
+    test('returns error if refresh throws', async () => {
+      client.refresh.mockRejectedValue(new Error('fail'));
+      const result = (await refreshAccessToken({ ...mockToken })) as any;
+      expect(result.error).toBe('RefreshAccessTokenError');
+    });
+
+    test('returns error if refreshedTokens missing expires_in and expires_at', async () => {
+      client.refresh.mockResolvedValue({ access_token: 'x', refresh_token: 'y' });
+      const result = (await refreshAccessToken({ ...mockToken })) as any;
+      expect(result.error).toBe('RefreshAccessTokenError');
+    });
+
+    test('returns error if no refresh_token in refreshedTokens and token', async () => {
+      client.refresh.mockResolvedValue({ access_token: 'x', expires_in: 3600 });
+      const result = (await refreshAccessToken({ ...mockToken, refreshToken: undefined })) as any;
+      expect(result.error).toBe('RefreshAccessTokenError');
+    });
+
+    test('returns old token if not expired', async () => {
+      vi.spyOn(Date, 'now').mockReturnValue(1000);
+      vi.spyOn(NextClient, 'getRefreshToken').mockImplementation(() => ({
+        isRefreshing: true,
+        token: { ...mockToken, accessTokenExpires: 2000 },
+      }));
+      const result = await refreshAccessToken({ ...mockToken, accessTokenExpires: 2000 });
+      expect(result.accessTokenExpires).toBe(2000);
+    });
+  });
 });
