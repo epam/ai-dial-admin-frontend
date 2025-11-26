@@ -83,6 +83,7 @@ const AssetVersionControl: FC<Props> = ({
 
   const onChangeVersion = useCallback(
     async (version: string) => {
+      if (version === asset.version) return;
       if (isDeployment) {
         const getAsset = view === ApplicationRoute.AssetsApplications ? getApp : getToolset;
         getReqRef.current(getAsset, asset.folderId, asset.name as string, version, etag).then((res) => {
@@ -98,7 +99,7 @@ const AssetVersionControl: FC<Props> = ({
         changeAssetForNewVersion(version, newVersionAsset);
       }
     },
-    [isDeployment, view, asset.folderId, asset.name, etag, changeAssetForNewVersion, showNotification],
+    [asset, isDeployment, view, etag, changeAssetForNewVersion, showNotification],
   );
 
   const handleModalClose = useCallback(() => {
