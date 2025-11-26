@@ -12,7 +12,7 @@ describe('Page404', () => {
     expect(screen.getByText('Please check the URL or go back to the')).toBeInTheDocument();
     expect(screen.getByText('Homepage')).toBeInTheDocument();
 
-    const link = screen.getByRole('link', { name: MenuI18nKey.Homepage });
+    const link = screen.getByText('Homepage');
     expect(link).toHaveAttribute('href', ApplicationRoute.Home);
   });
 });
