@@ -1,111 +1,86 @@
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import {
   getActivities,
   getEntitiesForRevision,
   getRevisionDetails,
+  getRevisions,
   systemRollbackToRevision,
   getActivityById,
 } from './actions';
 import { activityAuditApi } from '@/src/app/api/api';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { TOKEN_MOCK, RESPONSE_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { FilterDto, SortDto } from '@/src/models/request';
+import { SortDirectionDto } from '@/src/types/request';
 
-vi.mock('@/src/app/api/api', () => ({
-  activityAuditApi: {
-    getActivitiesList: vi.fn(),
-    getRevisionDetails: vi.fn(),
-    getEntitiesForRevision: vi.fn(),
-    rollbackToRevision: vi.fn(),
-    getActivityById: vi.fn(),
-  },
-}));
+vi.mock('@/src/utils/auth/auth-request');
+vi.mock('@/src/utils/env/get-auth-toggle');
+vi.mock('@/src/app/api/api');
 
-vi.mock('@/src/utils/auth/auth-request', () => ({
-  getUserToken: vi.fn(),
-}));
-
-vi.mock('@/src/utils/env/get-auth-toggle', () => ({
-  getIsEnableAuthToggle: vi.fn(),
-}));
-
-describe('Activity API Service', () => {
-  const mockToken = 'mock-token';
-
+describe('Activity audit :: server action', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-
-    getIsEnableAuthToggle.mockReturnValue(true);
-    getUserToken.mockResolvedValue(mockToken);
+    (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
+    (getIsEnableAuthToggle as any).mockReturnValue(true);
   });
 
-  describe('getActivities', () => {
-    test('should fetch activities with correct params', async () => {
-      const pageSize = 10;
-      const pageNumber = 2;
-      const sorts = [{ field: 'date', direction: 'desc' }];
-      const filters = [{ field: 'user', value: 'john' }];
-      const mockResponse = { data: 'activities' };
+  test('Should call getActivitiesList action', async () => {
+    (activityAuditApi.getActivitiesList as any).mockResolvedValue(RESPONSE_MOCK);
 
-      activityAuditApi.getActivitiesList.mockResolvedValue(mockResponse);
+    const pageSize = 10;
+    const pageNumber = 2;
+    const sorts = [{ column: 'date', direction: SortDirectionDto.DESC }] as SortDto[];
+    const filters = [{ column: 'user', value: 'john' }] as FilterDto[];
 
-      const result = await getActivities(pageSize, pageNumber, sorts, filters);
+    const result = await getActivities(pageSize, pageNumber, sorts, filters);
 
-      expect(activityAuditApi.getActivitiesList).toHaveBeenCalledWith(pageSize, pageNumber, mockToken, sorts, filters);
-      expect(result).toEqual(mockResponse);
-    });
+    expect(activityAuditApi.getActivitiesList).toHaveBeenCalledWith(pageSize, pageNumber, TOKEN_MOCK, sorts, filters);
+    expect(result).toEqual(RESPONSE_MOCK);
   });
 
-  describe('getRevisionDetails', () => {
-    test('should fetch revision details with correct params', async () => {
-      const url = '/revisions/123';
-      const mockResponse = { data: 'revision' };
+  test('Should call getRevisionDetails action', async () => {
+    (activityAuditApi.getRevisionDetails as any).mockResolvedValue(RESPONSE_MOCK);
+    const url = '/revisions/123';
+    const result = await getRevisionDetails(url);
 
-      activityAuditApi.getRevisionDetails.mockResolvedValue(mockResponse);
-
-      const result = await getRevisionDetails(url);
-
-      expect(activityAuditApi.getRevisionDetails).toHaveBeenCalledWith(url, mockToken);
-      expect(result).toEqual(mockResponse);
-    });
+    expect(activityAuditApi.getRevisionDetails).toHaveBeenCalledWith(url, TOKEN_MOCK);
+    expect(result).toEqual(RESPONSE_MOCK);
   });
 
-  describe('getEntitiesForRevision', () => {
-    test('should fetch entities for revision', async () => {
-      const url = '/revisions/';
-      const mockResponse = { data: 'revision' };
+  test('Should call getEntitiesForRevision action', async () => {
+    (activityAuditApi.getActivityById as any).mockResolvedValue(RESPONSE_MOCK);
+    const url = '/revisions/';
+    await getEntitiesForRevision(url, 1);
 
-      activityAuditApi.getEntitiesForRevision.mockResolvedValue(mockResponse);
-
-      const result = await getEntitiesForRevision(url, 1);
-
-      expect(activityAuditApi.getEntitiesForRevision).toHaveBeenCalledWith(`${url}1`, mockToken);
-      expect(result).toEqual(mockResponse);
-    });
+    expect(activityAuditApi.getEntitiesForRevision).toHaveBeenCalledWith(`${url}1`, TOKEN_MOCK);
   });
 
-  describe('systemRollbackToRevision', () => {
-    test('should call system rollback', async () => {
-      const mockResponse = { data: 'revision' };
+  test('Should call getRevisions action', async () => {
+    (activityAuditApi.getRevisions as any).mockResolvedValue(RESPONSE_MOCK);
 
-      activityAuditApi.rollbackToRevision.mockResolvedValue(mockResponse);
+    const result = await getRevisions(1, 1, [], []);
 
-      const result = await systemRollbackToRevision(1);
-
-      expect(activityAuditApi.rollbackToRevision).toHaveBeenCalledWith(1, mockToken);
-      expect(result).toEqual(mockResponse);
-    });
+    expect(activityAuditApi.getRevisions).toHaveBeenCalledWith(1, 1, TOKEN_MOCK, [], []);
+    expect(result).toEqual(RESPONSE_MOCK);
   });
 
-  describe('getActivityById', () => {
-    test('should call system rollback', async () => {
-      const mockResponse = { data: 'revision' };
+  test('Should call systemRollbackToRevision action', async () => {
+    (activityAuditApi.rollbackToRevision as any).mockResolvedValue(RESPONSE_MOCK);
 
-      activityAuditApi.getActivityById.mockResolvedValue(mockResponse);
+    const result = await systemRollbackToRevision(1);
 
-      const result = await getActivityById('id');
+    expect(activityAuditApi.rollbackToRevision).toHaveBeenCalledWith(1, TOKEN_MOCK);
+    expect(result).toEqual(RESPONSE_MOCK);
+  });
 
-      expect(activityAuditApi.getActivityById).toHaveBeenCalledWith('id', mockToken);
-      expect(result).toEqual(mockResponse);
-    });
+  test('Should call getActivityById action', async () => {
+    (activityAuditApi.getActivityById as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getActivityById('id');
+
+    expect(activityAuditApi.getActivityById).toHaveBeenCalledWith('id', TOKEN_MOCK);
+    expect(result).toEqual(RESPONSE_MOCK);
   });
 });
