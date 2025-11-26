@@ -40,7 +40,7 @@ export async function getCoreRunner(name: string) {
   return applicationRunnersApi.getCoreRunner(name, token);
 }
 
-export async function updateCoreRunner(toolset: DialApplicationScheme, name: string, etag: string) {
+export async function updateCoreRunner(runner: DialApplicationScheme, name: string, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return applicationRunnersApi.updateCoreRunner(toolset, name, etag, token);
+  return applicationRunnersApi.updateCoreRunner(runner, name, etag, token);
 }

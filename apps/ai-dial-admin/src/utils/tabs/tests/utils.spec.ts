@@ -7,11 +7,25 @@ import {
   dependenciesTab,
   featuresTab,
   getAuditTabs,
+  getTabsForAsset,
+  getToolsetTabs,
   getViewTabs,
   interceptorsTab,
   parametersTab,
   propertiesTab,
+  getKeyTabs,
   rolesTab,
+  toolsTab,
+  getPublicationTabs,
+  getUsageLogTabs,
+  getInterceptorTemplateTabs,
+  getInterceptorTabs,
+  parameterSchemaTab,
+  entitiesTab,
+  applicationRunnersTab,
+  filesTab,
+  conversationsTab,
+  tracesTab,
 } from '../utils';
 
 const t = vi.fn((id) => id);
@@ -87,5 +101,70 @@ describe('getAuditTabs', () => {
   test('returns only activities tab for other views', () => {
     const tabs = getAuditTabs(t, { dashboardEnabled: true }, ApplicationRoute.Home);
     expect(tabs).toEqual([{ id: 'Activities', name: TabsI18nKey.Activities }]);
+  });
+});
+
+describe('getTabsForAsset', () => {
+  test('returns correct tabs for AssetsApplications', () => {
+    const tabs = getTabsForAsset(t, ApplicationRoute.AssetsApplications);
+    expect(tabs).toEqual([propertiesTab(t), featuresTab(t), parametersTab(t), interceptorsTab(t), dependenciesTab(t)]);
+  });
+
+  test('returns correct tabs for AssetsToolsets', () => {
+    const tabs = getTabsForAsset(t, ApplicationRoute.AssetsToolsets);
+    expect(tabs).toEqual([propertiesTab(t), toolsTab(t)]);
+  });
+
+  test('returns only properties tab for other routes', () => {
+    const tabs = getTabsForAsset(t, ApplicationRoute.ActivityAudit);
+    expect(tabs).toEqual([propertiesTab(t)]);
+  });
+});
+
+describe('getToolsetTabs', () => {
+  test('returns correct tabs for toolset', () => {
+    const tabs = getToolsetTabs(t);
+    expect(tabs).toEqual([propertiesTab(t), toolsTab(t), rolesTab(t), auditTab(t)]);
+  });
+});
+
+describe('getKeyTabs', () => {
+  test('returns correct tabs for key', () => {
+    const tabs = getKeyTabs(t);
+    expect(tabs).toEqual([propertiesTab(t), rolesTab(t), auditTab(t)]);
+  });
+});
+
+describe('getPublicationTabs', () => {
+  test('returns correct tabs for publication', () => {
+    const tabs = getPublicationTabs(t);
+    expect(tabs).toEqual([propertiesTab(t), parametersTab(t), filesTab(t)]);
+  });
+});
+
+describe('getUsageLogTabs', () => {
+  test('returns correct tabs for usage log', () => {
+    const tabs = getUsageLogTabs(t);
+    expect(tabs).toEqual([tracesTab(t), conversationsTab(t)]);
+  });
+});
+
+describe('getInterceptorTemplateTabs', () => {
+  test('returns correct tabs for interceptor template', () => {
+    const tabs = getInterceptorTemplateTabs(t);
+    expect(tabs).toEqual([propertiesTab(t), interceptorsTab(t), auditTab(t)]);
+  });
+});
+
+describe('getInterceptorTabs', () => {
+  test('returns correct tabs for interceptor', () => {
+    const tabs = getInterceptorTabs(t);
+    expect(tabs).toEqual([
+      propertiesTab(t),
+      parameterSchemaTab(t),
+      entitiesTab(t),
+      applicationRunnersTab(t),
+      auditTab(t),
+    ]);
   });
 });

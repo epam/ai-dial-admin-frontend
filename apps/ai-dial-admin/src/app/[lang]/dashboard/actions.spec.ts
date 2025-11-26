@@ -1,29 +1,29 @@
-import { getDashboardData } from './actions';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import { telemetryApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { telemetryApi } from '@/src/app/api/api';
-import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { getDashboardData } from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
 vi.mock('@/src/app/api/api');
 
 describe('Export config :: actions :: getDashboardData', () => {
-  const mockQuery = { from: '2024-01-01', to: '2024-01-31' };
-  const mockDashboardData = { totalUsers: 100 };
-
   beforeEach(() => {
     vi.clearAllMocks();
-    getUserToken.mockResolvedValue(TOKEN_MOCK);
-    getIsEnableAuthToggle.mockReturnValue(true);
-    telemetryApi.getDashboardData.mockResolvedValue(mockDashboardData);
+    (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
+    (getIsEnableAuthToggle as any).mockReturnValue(true);
   });
 
-  test('should call getUserToken and fetch dashboard data', async () => {
-    const result = await getDashboardData(mockQuery);
+  test('Should call getDashboardData action', async () => {
+    (telemetryApi.getDashboardData as any).mockResolvedValue(RESPONSE_MOCK);
 
-    expect(telemetryApi.getDashboardData).toHaveBeenCalledWith(mockQuery, TOKEN_MOCK);
-    expect(result).toBe(mockDashboardData);
+    const query = { $type: 'type', query: { expressions: ['aaa'], from: '2024-01-01' } };
+    const result = await getDashboardData(query);
+
+    expect(telemetryApi.getDashboardData).toHaveBeenCalledWith(query, TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
   });
 });

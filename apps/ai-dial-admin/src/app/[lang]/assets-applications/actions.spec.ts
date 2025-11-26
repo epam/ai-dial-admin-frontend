@@ -1,74 +1,146 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import createFetchMock from 'vitest-fetch-mock';
-import { getApps, removeApp, moveApps, bulkDeleteApps, getApp, updateApp } from './actions';
 
-const fetch = createFetchMock(vi);
-fetch.enableMocks();
+import { assetsApi } from '@/src/app/api/api';
+import { getUserToken } from '@/src/utils/auth/auth-request';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { getApps, removeApp, moveApps, bulkDeleteApps, getApp, updateApp, createApp } from './actions';
+import { DialFileNodeType } from '@/src/models/dial/file';
+import { ResourceType } from '@/src/types/resource-type';
 
-describe('Assets application server actions', () => {
+vi.mock('@/src/utils/auth/auth-request');
+vi.mock('@/src/utils/env/get-auth-toggle');
+vi.mock('@/src/app/api/api');
+
+describe('Assets application :: server actions', () => {
   beforeEach(() => {
-    fetch.resetMocks();
+    vi.clearAllMocks();
+    (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
+    (getIsEnableAuthToggle as any).mockReturnValue(true);
   });
 
-  test('Should call get apps', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    getApps('path').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call getApps action', async () => {
+    (assetsApi.getAssetList as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('POST');
+    const result = await getApps('test');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(assetsApi.getAssetList).toHaveBeenCalledWith(TOKEN_MOCK, 'test', ResourceType.APPLICATION);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getApp action', async () => {
+    (assetsApi.getAssetWithEtag as any).mockResolvedValue(RESPONSE_MOCK);
+    (assetsApi.getAssetList as any).mockResolvedValue([{ name: 'app', version: '1.0.0', path: 'app-path' }]);
+
+    const result = await getApp('app-path', 'app', '1.0.0', 'etag');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(assetsApi.getAssetWithEtag).toHaveBeenCalledWith(TOKEN_MOCK, 'app-path', ResourceType.APPLICATION, 'etag');
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call updateApp action', async () => {
+    (assetsApi.updateAssetWithEtag as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await updateApp(
+      {
+        folderId: 'public',
+        applicationPropertiesTemp: [{ key: 'key', required: true, type: 'str', value: 'value' }],
+        defaultsTemp: [{ key: 'key', type: 'str', value: 'value' }],
+        nodeType: DialFileNodeType.FOLDER,
+        path: 'test',
+        version: '1.0',
+      },
+      'etag',
+    );
+    expect(getUserToken).toHaveBeenCalled();
+    expect(assetsApi.updateAssetWithEtag).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      {
+        folderId: 'public',
+        nodeType: DialFileNodeType.FOLDER,
+        applicationProperties: { key: 'value' },
+        defaults: { key: 'value' },
+        path: 'test',
+        version: '1.0',
+      },
+
+      ResourceType.APPLICATION,
+      'etag',
+    );
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call updateApp action', async () => {
+    (assetsApi.updateAssetWithEtag as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await updateApp(
+      { folderId: 'public', nodeType: DialFileNodeType.FOLDER, path: 'test', version: '1.0' },
+      'etag',
+    );
+    expect(getUserToken).toHaveBeenCalled();
+    expect(assetsApi.updateAssetWithEtag).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      {
+        folderId: 'public',
+        nodeType: DialFileNodeType.FOLDER,
+        applicationProperties: {},
+        defaults: {},
+        path: 'test',
+        version: '1.0',
+      },
+      ResourceType.APPLICATION,
+      'etag',
+    );
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call createApp action', async () => {
+    (assetsApi.createAsset as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await createApp({
+      folderId: 'public',
+      nodeType: DialFileNodeType.FOLDER,
+      path: 'test',
+      version: '1.0',
     });
+    expect(getUserToken).toHaveBeenCalled();
+    expect(assetsApi.createAsset).toHaveBeenCalledWith(
+      {
+        folderId: 'public',
+        nodeType: DialFileNodeType.FOLDER,
+        path: 'test',
+        version: '1.0',
+      },
+      ResourceType.APPLICATION,
+      TOKEN_MOCK,
+    );
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call get app', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    await getApp('path', 'app', '1.0.0');
+  test('Should call removeApp action', async () => {
+    (assetsApi.removeAssetWithEtag as any).mockResolvedValue(RESPONSE_MOCK);
 
-    expect(fetch.mock.calls.length).toEqual(2);
-
-    const call = fetch.mock.calls[0][1];
-    const call2 = fetch.mock.calls[1][1];
-    expect(call?.method).toBe('POST');
-    expect(call2?.method).toBe('POST');
+    const result = await removeApp('test', 'etag');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(assetsApi.removeAssetWithEtag).toHaveBeenCalledWith(TOKEN_MOCK, 'test', ResourceType.APPLICATION, 'etag');
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call update app', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    updateApp({}).then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call moveApps action', async () => {
+    (assetsApi.moveAssets as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('POST');
-    });
+    const result = await moveApps(['path'], 'newPath');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(assetsApi.moveAssets).toHaveBeenCalledWith(TOKEN_MOCK, ['path'], 'newPath', ResourceType.APPLICATION);
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call remove app', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    removeApp('app').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
+  test('Should call bulkDeleteApps action', async () => {
+    (assetsApi.bulkDeleteAssets as any).mockResolvedValue(RESPONSE_MOCK);
 
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('POST');
-    });
-  });
-
-  test('Should call move apps', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    moveApps(['path'], 'newPath').then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
-
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('POST');
-    });
-  });
-
-  test('Should call bulk delete apps', async () => {
-    fetch.mockResponse(JSON.stringify({ data: 'response' }));
-    bulkDeleteApps([{ path: 'path' }]).then(() => {
-      expect(fetch.mock.calls.length).toEqual(1);
-
-      const call = fetch.mock.calls[0][1];
-      expect(call?.method).toBe('POST');
-    });
+    const result = await bulkDeleteApps([{ path: 'path' }]);
+    expect(getUserToken).toHaveBeenCalled();
+    expect(assetsApi.bulkDeleteAssets).toHaveBeenCalledWith(TOKEN_MOCK, [{ path: 'path' }], ResourceType.APPLICATION);
+    expect(result).toBe(RESPONSE_MOCK);
   });
 });
