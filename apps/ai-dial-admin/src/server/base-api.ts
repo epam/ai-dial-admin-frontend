@@ -112,10 +112,11 @@ export class BaseApi {
   ): Promise<Response | R | null | undefined> {
     return sendRequest(`${this.config.host || ''}${url}`, type, { ...getApiHeaders(token), ...initHeaders }, dto).then(
       (res) => {
-        console.log('Response received for', url, 'Status:', res);
         if (isFailedRequest(res)) {
+          const traceparent = res.headers.get('traceparent');
           logger.error(`Request status ${res.status}`);
           logger.error(`Request error Url  ${res.url}`);
+          logger.error(`Request error traceparent  ${traceparent}`);
 
           if (res.status === 403) {
             return void 0;
@@ -138,17 +139,17 @@ export class BaseApi {
 
   private handleResponse(res: Response, type: string): Promise<ServerActionResponse> {
     const etag = res.headers.get('etag') || undefined;
-    console.log('Response received for', res);
+
     if (isFailedRequest(res)) {
       this.setLoggerRequestInfoError(res);
 
       return res.text().then((error) => {
         const errObject = getParsedError(error);
         this.setLoggerRequestError(error, res);
-
+        const traceparent = res.headers.get('traceparent');
         return {
           success: false,
-          errorMessage: getErrorMessage(errObject, res.status),
+          errorMessage: `Traceparent: ${traceparent}, ${getErrorMessage(errObject, res.status)}`,
           errorHeader: getError(errObject),
           status: res.status,
           etag,
