@@ -239,9 +239,9 @@ export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?
 };
 
 export const KEYS_COLUMNS = (t: (str: string) => string): ColDef[] => [
-  NAME_COLUMN_WITH_SORT,
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
+  NAME_COLUMN_WITH_SORT,
   {
     ...CREATED_AT_COLUMN,
     hide: true,

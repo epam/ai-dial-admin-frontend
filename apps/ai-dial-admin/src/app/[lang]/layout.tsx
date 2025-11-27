@@ -3,7 +3,10 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { ReactNode } from 'react';
 
+import '@epam/ai-dial-ui-kit/styles.css';
+
 import '@/src/app/[lang]/global.scss';
+
 import { themesApi, utilityApi } from '@/src/app/api/api';
 import Content from '@/src/components/Content/Content';
 import Header from '@/src/components/Header/Header';
