@@ -2,7 +2,9 @@ import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 
 import {
   IconCopy,
+  IconDownload,
   IconExternalLink,
+  IconEye,
   IconFolderShare,
   IconInfinity,
   IconRefresh,
@@ -26,6 +28,8 @@ import {
   getResourceRollbackOperation,
   getSetNoLimitsOperation,
   getViewDetailsOperation,
+  getDownloadOperation,
+  getPreviewOperation,
 } from '../actions';
 
 const CLICK = vi.fn();
@@ -91,6 +95,20 @@ describe('Actions :: getResourceRollbackOperation', () => {
     const res = getViewDetailsOperation(CLICK);
     expect(res.id).toBe(ActionMenuOperation.View_details);
     expect(res.icon).toEqual(<OpenPopup {...BASE_ICON_PROPS} />);
+    expect(res.onClick).toEqual(CLICK);
+  });
+
+  test('Should set VIEW_DETAILS_OPERATION', () => {
+    const res = getDownloadOperation(CLICK);
+    expect(res.id).toBe(ActionMenuOperation.Download);
+    expect(res.icon).toEqual(<IconDownload {...BASE_ICON_PROPS} />);
+    expect(res.onClick).toEqual(CLICK);
+  });
+
+  test('Should set Download', () => {
+    const res = getPreviewOperation(CLICK);
+    expect(res.id).toBe(ActionMenuOperation.Preview);
+    expect(res.icon).toEqual(<IconEye {...BASE_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
   });
 

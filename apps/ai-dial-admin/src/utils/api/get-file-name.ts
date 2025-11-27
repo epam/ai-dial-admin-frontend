@@ -7,7 +7,7 @@ export const CONTENT_DISPOSITION_HEADER = 'content-disposition';
  * @returns {string} - file name
  */
 export const getFileName = (res?: Response) => {
-  const content = res?.headers.get(CONTENT_DISPOSITION_HEADER);
+  const content = res?.headers?.get?.(CONTENT_DISPOSITION_HEADER);
   let name = content?.split('filename=')[1];
   if (name?.startsWith('"')) {
     name = name.substring(1, name.length);
