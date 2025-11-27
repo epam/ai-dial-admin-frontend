@@ -123,7 +123,7 @@ const RolesGrid: FC<Props> = ({
       {!data.length ? (
         <DialNoDataContent title={t(EntitiesI18nKey.NoRoles)} />
       ) : (
-        <Grid additionalGridOptions={{ onGridReady }} />
+        <Grid additionalGridOptions={{ onGridReady, suppressCellFocus: true, suppressHeaderFocus: true }} />
       )}
     </div>
   );

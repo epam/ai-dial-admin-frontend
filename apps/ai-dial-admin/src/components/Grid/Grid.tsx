@@ -26,6 +26,7 @@ import {
   RowDragModule,
   RowSelectionModule,
   RowStyleModule,
+  SuppressKeyboardEventParams,
   TextFilterModule,
   themeBalham,
   TooltipModule,
@@ -183,6 +184,13 @@ const Grid = <T extends object>({
           comparator: baseColumnComparator.bind(this),
           tooltipValueGetter: (p: ITooltipParams) => p.data?.[(p.colDef as ColDef)?.field || ''],
           tooltipComponent: tooltipRenderer,
+          suppressKeyboardEvent: (params: SuppressKeyboardEventParams) => {
+            const event = params.event;
+            if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+              return true;
+            }
+            return false;
+          },
         }}
         onGridSizeChanged={onGridSizeChanged}
         onFilterChanged={onStateChanged}
