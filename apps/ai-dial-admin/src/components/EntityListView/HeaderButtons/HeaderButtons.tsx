@@ -6,16 +6,14 @@ import { IconColumns2, IconFileArrowLeft, IconPlus, IconSquareCheck } from '@tab
 import { GridApi } from 'ag-grid-community';
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import { importFiles } from '@/src/app/[lang]/files/actions';
-import { importPrompts } from '@/src/app/[lang]/prompts/actions';
 import CreateAdapter from '@/src/components/Adapter/Modals/CreateAdapter';
 import CreateAppRunner from '@/src/components/ApplicationRunners/Modals/CreateAppRunner';
 import Modals, { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
-import { getImportResults } from '@/src/components/EntityListView/Import/import';
+import { getImportResults } from '@/src/components/EntityListView/Import/utils';
 import CreateInterceptorTemplate from '@/src/components/InterceptorTemplates/Modals/Create';
 import CreateKey from '@/src/components/Keys/Modals/CreateKey';
-import { ButtonsI18nKey, ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -33,7 +31,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
 import { getErrorNotification, getPrepareNotification } from '@/src/utils/notification';
 import ResetFiltersButton from './ResetFiltersButton';
-import { getFormDataForImport } from './utils';
+import { getFormDataForImport, getImportFunction, getImportTitle } from './utils';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { isAssetView } from '@/src/utils/is-asset-view';
 import { MAX_FILE_SIZE_MB } from '@/src/constants/file';
@@ -109,10 +107,11 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
           t(ImportI18nKey.PrepareDescription, { folder: folderName }),
         ),
       );
-      const importFunction = route === ApplicationRoute.Prompts ? importPrompts : importFiles;
-      const translatedType = t(
-        route === ApplicationRoute.Prompts ? MenuI18nKey.Prompts : MenuI18nKey.Files,
-      ).toLowerCase();
+
+      const importFunction = getImportFunction(route);
+      const translatedType = t(getImportTitle(route)).toLowerCase();
+      if (!importFunction) return;
+
       if (fileSize > MAX_FILE_SIZE_MB * (1024 * 1024)) {
         removeNotification(prepareNotificationId);
         showNotification(
@@ -210,12 +209,14 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
                 iconBefore={<IconSquareCheck {...BASE_ICON_PROPS} />}
                 onClick={() => setIsBulkView?.(true)}
               />
-              <DialButton
-                variant={ButtonVariant.Secondary}
-                title={isTabletScreen ? '' : t(ButtonsI18nKey.Import)}
-                iconBefore={<IconFileArrowLeft {...BASE_ICON_PROPS} />}
-                onClick={() => handleModalOpen(ModalType.import)}
-              />
+              {route !== ApplicationRoute.AssetsToolsets && (
+                <DialButton
+                  variant={ButtonVariant.Secondary}
+                  title={isTabletScreen ? '' : t(ButtonsI18nKey.Import)}
+                  iconBefore={<IconFileArrowLeft {...BASE_ICON_PROPS} />}
+                  onClick={() => handleModalOpen(ModalType.import)}
+                />
+              )}
             </>
           )}
           {!!createEntity && (

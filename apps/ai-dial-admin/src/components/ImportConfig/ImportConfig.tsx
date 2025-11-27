@@ -10,7 +10,7 @@ import { ImportI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { ImportFileType, ImportSteps } from '@/src/types/import';
 import { useI18n } from '@/src/locales/client';
-import { isLargeFile } from '@/src/components/EntityListView/Import/import';
+import { isLargeFile } from '@/src/components/EntityListView/Import/utils';
 import Files from './Files/Files';
 import ConfigurationPreview from './ConfigurationPreview/ConfigurationPreview';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';

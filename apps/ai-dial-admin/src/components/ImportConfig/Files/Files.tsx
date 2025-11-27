@@ -12,7 +12,7 @@ import {
   DialFileIcon,
 } from '@epam/ai-dial-ui-kit';
 
-import { isLargeFile } from '@/src/components/EntityListView/Import/import';
+import { isLargeFile } from '@/src/components/EntityListView/Import/utils';
 import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { IMPORT_RESOLUTIONS } from '@/src/constants/import';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';

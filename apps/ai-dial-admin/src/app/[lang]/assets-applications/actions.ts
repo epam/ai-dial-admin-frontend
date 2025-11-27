@@ -8,6 +8,7 @@ import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { ImportFileType } from '@/src/types/import';
 
 export async function getApps(path: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -25,6 +26,11 @@ export async function getApp(folderId: string, name: string, version: string, et
   const path = apps?.find((app) => app.name === name && (app as AssetApp).version === version)?.path as string;
 
   return assetsApi.getAssetWithEtag(token, path, ResourceType.APPLICATION, etag);
+}
+
+export async function importApps(body: FormData, fileType: ImportFileType) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetsApi.importAssets(token, body, fileType, ResourceType.APPLICATION);
 }
 
 export async function updateApp(app: AssetApp, etag: string) {

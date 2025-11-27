@@ -15,10 +15,12 @@ import {
   getAssetTools,
   createToolset,
   signOutToolset,
+  importToolsets,
 } from './actions';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { ResourceType } from '@/src/types/resource-type';
 import { ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
+import { ImportFileType } from '../../../types/import';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -172,6 +174,20 @@ describe('Assets Toolset :: server actions', () => {
       { path: 'path', folderId: 'test', nodeType: DialFileNodeType.FOLDER, version: '1.0' },
       ToolsetAuthCredentialLevel.GLOBAL,
       TOKEN_MOCK,
+    );
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call importToolsets action', async () => {
+    (assetsApi.importAssets as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await importToolsets({} as FormData, ImportFileType.ARCHIVE);
+    expect(getUserToken).toHaveBeenCalled();
+    expect(assetsApi.importAssets).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      {} as FormData,
+      ImportFileType.ARCHIVE,
+      ResourceType.PROMPT,
     );
     expect(result).toBe(RESPONSE_MOCK);
   });

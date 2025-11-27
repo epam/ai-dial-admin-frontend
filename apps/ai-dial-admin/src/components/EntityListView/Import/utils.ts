@@ -6,7 +6,13 @@ import {
   modifyNameVersionInPrompt,
 } from '@/src/utils/prompts/versions';
 import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
-import { ImportI18nKey } from '@/src/constants/i18n';
+import {
+  ApplicationsI18nKey,
+  FoldersI18nKey,
+  ImportI18nKey,
+  PromptsI18nKey,
+  ToolsetI18nKey,
+} from '@/src/constants/i18n';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
@@ -19,6 +25,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import FileNameCellRenderer from '@/src/components/Grid/CellRenderers/FileNameCellRenderer';
 import { StepStatus } from '@epam/ai-dial-ui-kit';
+import { ApplicationRoute } from '../../../types/routes';
 
 /**
  * Generate notifications with results of JSON prompt results
@@ -371,4 +378,19 @@ export const changeFilesMap = (
     newMap.set(key, updatedValue);
   }
   return newMap;
+};
+
+export const getModalTitle = (route: ApplicationRoute | undefined, t: (t: string) => string) => {
+  switch (route) {
+    case ApplicationRoute.Prompts:
+      return t(PromptsI18nKey.Import);
+    case ApplicationRoute.Files:
+      return t(FoldersI18nKey.Import);
+    case ApplicationRoute.AssetsApplications:
+      return t(ApplicationsI18nKey.Import);
+    case ApplicationRoute.AssetsToolsets:
+      return t(ToolsetI18nKey.Import);
+    default:
+      return '';
+  }
 };

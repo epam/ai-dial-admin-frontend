@@ -12,7 +12,7 @@ import {
   generatePromptRowDataForImportGrid,
   isErrorFileNode,
   isErrorPromptNode,
-} from '@/src/components/EntityListView/Import/import';
+} from '@/src/components/EntityListView/Import/utils';
 import Grid from '@/src/components/Grid/Grid';
 import { ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';

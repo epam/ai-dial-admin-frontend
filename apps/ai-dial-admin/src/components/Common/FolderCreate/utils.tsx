@@ -5,7 +5,7 @@ import {
   generatePromptColumnsForImportGrid,
   isInvalidJson,
   isLargeFile,
-} from '@/src/components/EntityListView/Import/import';
+} from '@/src/components/EntityListView/Import/utils';
 import { DialFile } from '@/src/models/dial/file';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { ParsedPrompts, PromptImportGridData } from '@/src/models/prompts';
