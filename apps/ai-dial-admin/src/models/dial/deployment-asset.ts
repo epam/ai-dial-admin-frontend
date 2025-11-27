@@ -9,12 +9,14 @@ export interface AssetApp extends DialFile, DialApplication {
   versions?: string[];
   applicationTypeSchemaId?: string;
   reference?: string;
+  displayVersion?: string;
 }
 
 export interface AssetToolset extends DialFile, Toolset {
   version: string;
   items?: AssetToolset[];
   versions?: string[];
+  displayVersion?: string;
 }
 
 export type DeploymentAsset = AssetApp | AssetToolset;

@@ -18,7 +18,12 @@ export async function getToolsets(path: string) {
 export async function createToolset(toolset: AssetToolset) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return assetsApi.createAsset(
-    { ...toolset, allowedTools: getAllowTools(toolset), transport: getTransport(toolset) },
+    {
+      ...toolset,
+      allowedTools: getAllowTools(toolset),
+      transport: getTransport(toolset),
+      displayVersion: toolset.version,
+    },
     ResourceType.TOOLSET,
     token,
   );
@@ -35,7 +40,12 @@ export async function getToolset(folderId: string, name: string, version: string
 
 export async function updateToolset(toolset: AssetToolset, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.updateAssetWithEtag(token, toolset, ResourceType.TOOLSET, etag);
+  return assetsApi.updateAssetWithEtag(
+    token,
+    { ...toolset, displayVersion: toolset.version },
+    ResourceType.TOOLSET,
+    etag,
+  );
 }
 
 export async function removeToolset(path: string, etag?: string) {
