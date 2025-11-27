@@ -1,7 +1,8 @@
-import { DialApplicationScheme, TypeEntity } from '@/src/models/dial/application';
-import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
+
+import { DialApplicationScheme, TypeEntity } from '@/src/models/dial/application';
+import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   APPLICATION_SCHEMES_URL,
   APPLICATION_SCHEME_URL,
@@ -46,7 +47,7 @@ describe('Server :: ApplicationRunnersApi', () => {
     await instance.getCoreRunner(mockScheme.$id || '', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${CORE_APPLICATION_SCHEME_URL(mockScheme.$id)}`,
+      `${TEST_URL}${CORE_APPLICATION_SCHEME_URL(mockScheme.$id || '')}`,
       expect.objectContaining({ method: 'GET' }),
     );
   });
@@ -63,8 +64,7 @@ describe('Server :: ApplicationRunnersApi', () => {
   });
 
   test('Should calls createApplicationScheme with correct data', async () => {
-    const response = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(response));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.createApplicationScheme(mockScheme, TOKEN_MOCK);
 
@@ -78,8 +78,7 @@ describe('Server :: ApplicationRunnersApi', () => {
   });
 
   test('Should calls updateCoreRunner with correct data', async () => {
-    const response = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(response));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.updateCoreRunner(mockScheme, 'runner', 'etag123', TOKEN_MOCK);
 
@@ -93,8 +92,7 @@ describe('Server :: ApplicationRunnersApi', () => {
   });
 
   test('Should calls updateApplicationScheme with correct data', async () => {
-    const response = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(response));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.updateApplicationScheme(mockScheme, TOKEN_MOCK, 'etag123');
 
@@ -108,8 +106,7 @@ describe('Server :: ApplicationRunnersApi', () => {
   });
 
   test('Should calls updateApplicationScheme with correct data', async () => {
-    const response = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(response));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.updateApplicationScheme({ ...mockScheme, $id: void 0 }, TOKEN_MOCK, 'etag123');
 
@@ -123,8 +120,7 @@ describe('Server :: ApplicationRunnersApi', () => {
   });
 
   test('Should calls removeApplicationScheme with DELETE method', async () => {
-    const response = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(response));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.removeApplicationScheme(TOKEN_MOCK, mockScheme.$id);
 

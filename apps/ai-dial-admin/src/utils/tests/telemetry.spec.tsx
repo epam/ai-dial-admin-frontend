@@ -5,9 +5,14 @@ import {
   prepareChartData,
   getFilterTypeConfig,
   getFilterConditionConfig,
+  getFormattedDataFilters,
+  getFormattedFilters,
+  getDefaultFilterValue,
 } from '../telemetry';
 import { describe, test, vi, expect } from 'vitest';
+
 import { lineChartDefaultOptions } from '@/src/components/Charts/LineChart/constants';
+import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 
 describe('Utils :: telemetry :: getListingData', () => {
   test('returns correct result', () => {
@@ -44,6 +49,13 @@ describe('Utils :: telemetry :: getGridData', () => {
       { name: 'value4', requests: 'value6' },
     ]);
   });
+
+  test('returns empty result', () => {
+    const result = getGridData({
+      headers: ['deployment', 'count'],
+    });
+    expect(result).toEqual([]);
+  });
 });
 
 describe('Utils :: telemetry :: getSingleValueChartData', () => {
@@ -56,8 +68,41 @@ describe('Utils :: telemetry :: getSingleValueChartData', () => {
   });
 
   test('returns empty array for empty data', () => {
-    const result = getSingleValueChartData({ headers: [], data: [] });
-    expect(result).toEqual(0);
+    expect(getSingleValueChartData({ headers: [], data: [] })).toEqual(0);
+    expect(getSingleValueChartData({ headers: [] })).toEqual(0);
+  });
+});
+
+describe('Utils :: telemetry :: getFormattedDataFilters', () => {
+  test('returns filter for entityName only', () => {
+    const result = getFormattedDataFilters([], 'EntityName');
+    expect(result).toEqual([{ $eq: { left: 'deployment', right: "'EntityName'" } }]);
+  });
+
+  test('returns filters for data only', () => {
+    const filters = [
+      { type: FILTER_TYPE.Project, value: 'Project1', condition: FILTER_OPERATOR.Equal },
+      { type: FILTER_TYPE.Entity, value: 'Entity1', condition: FILTER_OPERATOR.NotEqual },
+    ];
+    const result = getFormattedDataFilters(filters, null);
+    expect(result).toEqual([
+      { $eq: { left: 'project_id', right: "'Project1'" } },
+      { $ne: { left: 'deployment', right: "'Entity1'" } },
+    ]);
+  });
+
+  test('returns filters for both entityName and data', () => {
+    const filters = [{ type: FILTER_TYPE.Project, value: 'Project1', condition: FILTER_OPERATOR.Equal }];
+    const result = getFormattedDataFilters(filters, 'EntityName');
+    expect(result).toEqual([
+      { $eq: { left: 'deployment', right: "'EntityName'" } },
+      { $eq: { left: 'project_id', right: "'Project1'" } },
+    ]);
+  });
+
+  test('returns empty array for no filters and no entityName', () => {
+    const result = getFormattedDataFilters([], null);
+    expect(result).toEqual([]);
   });
 });
 
@@ -68,17 +113,19 @@ describe('Utils :: telemetry :: getListingData', () => {
       data: [
         ['2023-10-01T00:00:00Z', '100'],
         ['2023-10-01T01:00:00Z', '200'],
+        ['undefined', '300'],
       ],
     });
     expect(result).toEqual([
       { time: '2023-10-01T00:00:00Z', requests: '100' },
       { time: '2023-10-01T01:00:00Z', requests: '200' },
+      { time: '', requests: '300' },
     ]);
   });
 
   test('returns empty array for empty data', () => {
-    const result = getListingData({ headers: [], data: [] });
-    expect(result).toEqual([]);
+    expect(getListingData({ headers: [], data: [] })).toEqual([]);
+    expect(getListingData({ headers: [] })).toEqual([]);
   });
 });
 
@@ -108,10 +155,56 @@ describe('Utils :: telemetry :: getFilterTypeConfig', () => {
   });
 });
 
+describe('Utils :: telemetry :: getDefaultFilterValue', () => {
+  test('returns correct result', () => {
+    expect(
+      getDefaultFilterValue(FILTER_TYPE.Entity, [{ label: 'a', value: 'aValue' }], [{ label: 'b', value: 'bValue' }]),
+    ).toEqual('aValue');
+
+    expect(
+      getDefaultFilterValue(FILTER_TYPE.Project, [{ label: 'a', value: 'aValue' }], [{ label: 'b', value: 'bValue' }]),
+    ).toEqual('bValue');
+  });
+
+  test('returns correct result', () => {
+    const result = getDefaultFilterValue(FILTER_TYPE.Entity, [], []);
+    expect(result).toBe('');
+  });
+});
+
 describe('Utils :: telemetry :: getFilterConditionConfig', () => {
   test('returns correct result', () => {
     const t = (key: string) => key;
     const result = getFilterConditionConfig(t);
     expect(result).toBeTruthy();
+  });
+});
+
+const mockTimeRange = {
+  startDate: new Date('2023-01-01T00:00:00.000Z'),
+  endDate: new Date('2023-01-02T00:00:00.000Z'),
+};
+
+describe('getFormattedFilters', () => {
+  test('returns $and with time and data filters', () => {
+    const filters = [
+      { type: 'entity', value: 'Entity1', condition: 'eq' },
+      { type: 'project', value: 'Project1', condition: 'neq' },
+    ];
+
+    const result = getFormattedFilters(mockTimeRange, filters, 'EntityName');
+    expect(result.$and[0]).toEqual({
+      $gte: {
+        left: '_time',
+        right: `'2023-01-01T00:00:00.000Z'`,
+      },
+    });
+    expect(result.$and[1]).toEqual({
+      $lt: {
+        left: '_time',
+        right: `'2023-01-02T00:00:00.000Z'`,
+      },
+    });
+    expect(result.$and[2]).toEqual({ $eq: { left: 'deployment', right: "'EntityName'" } });
   });
 });

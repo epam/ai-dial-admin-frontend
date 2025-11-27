@@ -1,5 +1,5 @@
 import { DialRole } from '@/src/models/dial/role';
-import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 import { RolesApi } from '../roles-api';
@@ -53,8 +53,7 @@ describe('Server :: RolesApi', () => {
   });
 
   test('Should create a new role', async () => {
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.createRole(exampleRole, TOKEN_MOCK);
 
@@ -68,8 +67,7 @@ describe('Server :: RolesApi', () => {
   });
 
   test('Should update core role', async () => {
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     const updatedRole = { ...exampleRole, description: 'Updated description' };
     await instance.updateCoreRole(updatedRole, 'role', 'etag123', TOKEN_MOCK);
@@ -84,8 +82,7 @@ describe('Server :: RolesApi', () => {
   });
 
   test('Should update an existing role', async () => {
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     const updatedRole = { ...exampleRole, description: 'Updated description' };
     await instance.updateRole(updatedRole, TOKEN_MOCK, 'etag123');
@@ -100,8 +97,7 @@ describe('Server :: RolesApi', () => {
   });
 
   test('Should update an existing role', async () => {
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     const updatedRole = { ...exampleRole, description: 'Updated description' };
     await instance.updateRole({ ...updatedRole, name: void 0 }, TOKEN_MOCK, 'etag123');
@@ -116,8 +112,7 @@ describe('Server :: RolesApi', () => {
   });
 
   test('Should delete a role by name', async () => {
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.removeRole(TOKEN_MOCK, 'admin');
 

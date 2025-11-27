@@ -10,7 +10,7 @@ import { NextClient, RefreshToken } from './nextauth-client';
 
 const waitRefreshTokenTimeout = 5;
 
-const safeDecodeJwt = (accessToken: string) => {
+export const safeDecodeJwt = (accessToken: string) => {
   try {
     return decodeJwt(accessToken);
   } catch (err) {
@@ -20,7 +20,7 @@ const safeDecodeJwt = (accessToken: string) => {
   }
 };
 
-const getUser = (accessToken: string | undefined, providerId: string) => {
+export const getUser = (accessToken: string | undefined, providerId: string) => {
   const rolesFieldName =
     process.env[`AUTH_${providerId.toUpperCase()}_DIAL_ROLES_FIELD`] ?? process.env.DIAL_ROLES_FIELD ?? 'dial_roles';
   const adminRoleNames = (
@@ -57,7 +57,7 @@ export const tokenConfig: TokenEndpointHandler = {
  * `accessToken` and `accessTokenExpires`. If an error occurs,
  * returns the old token and an error property
  */
-async function refreshAccessToken(token: Token) {
+export async function refreshAccessToken(token: Token) {
   const displayedTokenSub = process.env.SHOW_TOKEN_SUB === 'true' ? token.sub : '******';
   try {
     if (!token.providerId) {

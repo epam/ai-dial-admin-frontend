@@ -6,7 +6,7 @@ import {
   CONFIGURATION_URL,
   CORE_INTERCEPTOR_URL,
 } from '../interceptors-api';
-import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { TEST_URL, TOKEN_MOCK, RESPONSE_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -68,7 +68,7 @@ describe('Server :: InterceptorsApi', () => {
   });
 
   test('Should call createInterceptor with POST method and body', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.createInterceptor(mockInterceptor, TOKEN_MOCK);
 
@@ -82,7 +82,7 @@ describe('Server :: InterceptorsApi', () => {
   });
 
   test('Should call updateInterceptor with PUT method and body', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.updateInterceptor({ ...mockInterceptor, name: void 0 }, TOKEN_MOCK, 'etag123');
 
@@ -96,7 +96,7 @@ describe('Server :: InterceptorsApi', () => {
   });
 
   test('Should call updateInterceptor with PUT method and body', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.updateInterceptor(mockInterceptor, TOKEN_MOCK, 'etag123');
 
@@ -110,7 +110,7 @@ describe('Server :: InterceptorsApi', () => {
   });
 
   test('Should call updateCoreInterceptor with PUT method and body', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.updateCoreInterceptor(mockInterceptor, 'interceptor', 'etag123', TOKEN_MOCK);
 
@@ -124,7 +124,7 @@ describe('Server :: InterceptorsApi', () => {
   });
 
   test('Should calls removeInterceptor with DELETE method', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.removeInterceptor(TOKEN_MOCK, mockInterceptor.name);
 
@@ -135,7 +135,7 @@ describe('Server :: InterceptorsApi', () => {
   });
 
   test('should call getConfigurationSchema with correct name and method', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.getConfigurationSchema('test-interceptor', TOKEN_MOCK);
 

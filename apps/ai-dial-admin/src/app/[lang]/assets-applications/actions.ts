@@ -16,7 +16,7 @@ export async function getApps(path: string) {
 
 export async function createApp(app: AssetApp) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.createAsset(app, ResourceType.APPLICATION, token);
+  return assetsApi.createAsset({ ...app, displayVersion: app.version }, ResourceType.APPLICATION, token);
 }
 
 export async function getApp(folderId: string, name: string, version: string, etag: string) {
@@ -37,6 +37,7 @@ export async function updateApp(app: AssetApp, etag: string) {
     ...app,
     applicationProperties,
     defaults,
+    displayVersion: app.version,
   };
   delete application.defaultsTemp;
   delete application.applicationPropertiesTemp;
