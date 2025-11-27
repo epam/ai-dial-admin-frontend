@@ -97,6 +97,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
                 value: runner.name as string,
                 label: runner.displayName || runner.name || '',
               }))}
+              searchable={true}F
               onChange={(value) => onSelect(value as string)}
               elementId={'source-type'}
               value={runners.find((runner) => runner.name === entity.source?.runnerName)?.name}
