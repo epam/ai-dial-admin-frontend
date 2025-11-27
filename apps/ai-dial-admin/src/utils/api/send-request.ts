@@ -1,4 +1,5 @@
 import { logError } from '@/src/server/logger';
+import { getTraceId } from '@/src/telemetry/get-trace-id';
 
 export const CACHE: RequestInit = { cache: 'no-store' };
 
@@ -13,7 +14,10 @@ export const sendRequest = async <T extends object>(
       body: JSON.stringify(dto),
       method: type,
       ...CACHE,
-      headers,
+      headers: {
+        ...(headers || {}),
+        traceparent: getTraceId(),
+      },
     });
   } catch (e) {
     logError(e, 'Send request failed');

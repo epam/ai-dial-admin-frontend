@@ -22,7 +22,7 @@ async function middlewareFn(req: NextRequest) {
 
   const i18nResponse = await I18nMiddleware(req);
 
-  i18nResponse.headers.set('x-trace-id', traceId);
+  i18nResponse.headers.set('traceparent', traceId);
 
   return i18nResponse;
 }

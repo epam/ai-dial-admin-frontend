@@ -112,6 +112,7 @@ export class BaseApi {
   ): Promise<Response | R | null | undefined> {
     return sendRequest(`${this.config.host || ''}${url}`, type, { ...getApiHeaders(token), ...initHeaders }, dto).then(
       (res) => {
+        console.log('Response received for', url, 'Status:', res);
         if (isFailedRequest(res)) {
           logger.error(`Request status ${res.status}`);
           logger.error(`Request error Url  ${res.url}`);
@@ -137,7 +138,7 @@ export class BaseApi {
 
   private handleResponse(res: Response, type: string): Promise<ServerActionResponse> {
     const etag = res.headers.get('etag') || undefined;
-
+    console.log('Response received for', res);
     if (isFailedRequest(res)) {
       this.setLoggerRequestInfoError(res);
 
