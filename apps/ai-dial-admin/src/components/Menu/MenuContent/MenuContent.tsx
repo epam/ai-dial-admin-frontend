@@ -3,7 +3,7 @@
 import { IconDownload, IconUpload } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { usePathname, useRouter } from 'next/navigation';
-import { FC } from 'react';
+import { FC, useState } from 'react';
 
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -35,55 +35,75 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
 
   const activeMenuGroup = actualConfig.find((config) => config.items.some((item) => item.href === pathname));
 
-  return (
-    <>
-      <div className="flex flex-col h-full divide-tertiary divide-y">
-        <nav className="p-2 overflow-auto flex-1 min-h-0">
-          <ul className="divide-primary divide-y">
-            {actualConfig.map((config, i) => (
-              <MenuItem
-                key={i}
-                config={config}
-                activeMenuItem={pathname}
-                isOpenByDefault={activeMenuGroup?.key === config.key}
-                isSidebarOpen={isSidebarOpen}
-              />
-            ))}
-          </ul>
-        </nav>
+  const [hovered, setHovered] = useState(false);
 
+  const handleImport = () => {
+    router.push(ApplicationRoute.ImportConfig);
+  };
+
+  const handleExport = () => {
+    router.push(ApplicationRoute.ExportConfig);
+  };
+
+  const MenuNavigation = ({ showExpanded }: { showExpanded?: boolean }) => (
+    <nav className={classNames('p-2', showExpanded ? 'flex-1' : 'overflow-auto flex-1 min-h-0')}>
+      <ul className="divide-primary divide-y">
+        {actualConfig.map((config, i) => (
+          <MenuItem
+            key={`menu-${showExpanded ? 'expanded' : 'default'}-${i}`}
+            config={config}
+            activeMenuItem={pathname}
+            isOpenByDefault={activeMenuGroup?.key === config.key}
+            isSidebarOpen={showExpanded || isSidebarOpen}
+          />
+        ))}
+      </ul>
+    </nav>
+  );
+
+  const MenuActionsBar = () => (
+    <div className={classNames(actionsClassNames, 'justify-start')}>
+      <MenuAction
+        tooltip={t(MenuI18nKey.ImportConfig)}
+        icon={<IconDownload {...BASE_ICON_PROPS} widths={24} height={24} />}
+        onClick={handleImport}
+      />
+      <MenuAction
+        tooltip={t(MenuI18nKey.ExportConfig)}
+        icon={<IconUpload {...BASE_ICON_PROPS} widths={24} height={24} />}
+        onClick={handleExport}
+      />
+    </div>
+  );
+
+  const actionsClassNames = 'px-3 py-2 text-secondary flex flex-row gap-3 items-center';
+  const menuClassNames = 'flex flex-col divide-tertiary divide-y';
+
+  return (
+    <div
+      className={classNames(menuClassNames, 'h-full')}
+      onMouseEnter={() => !isSidebarOpen && setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <MenuNavigation />
+
+      {isSidebarOpen ? (
+        <MenuActionsBar />
+      ) : hovered ? (
         <div
-          className={classNames(
-            'px-3 py-2 text-secondary flex flex-row gap-3 items-center',
-            isSidebarOpen ? 'justify-start' : 'justify-center',
-          )}
+          className={classNames(menuClassNames, 'absolute left-0 top-0 bottom-0 w-72 bg-layer-3')}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
         >
-          {isSidebarOpen ? (
-            <>
-              <MenuAction
-                tooltip={t(MenuI18nKey.ImportConfig)}
-                icon={<IconDownload {...BASE_ICON_PROPS} widths={24} height={24} />}
-                onClick={() => {
-                  router.push(ApplicationRoute.ImportConfig);
-                }}
-              />
-              <MenuAction
-                tooltip={t(MenuI18nKey.ExportConfig)}
-                icon={<IconUpload {...BASE_ICON_PROPS} widths={24} height={24} />}
-                onClick={() => {
-                  router.push(ApplicationRoute.ExportConfig);
-                }}
-              />
-            </>
-          ) : (
-            <MenuActions
-              onExport={() => router.push(ApplicationRoute.ExportConfig)}
-              onImport={() => router.push(ApplicationRoute.ImportConfig)}
-            />
-          )}
+          <MenuNavigation showExpanded />
+          <MenuActionsBar />
         </div>
-      </div>
-    </>
+      ) : (
+        <div className={classNames(actionsClassNames, 'justify-center')}>
+          <MenuActions onExport={handleExport} onImport={handleImport} />
+        </div>
+      )}
+    </div>
   );
 };
 
