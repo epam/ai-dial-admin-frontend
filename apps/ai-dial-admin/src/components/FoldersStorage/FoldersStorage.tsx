@@ -30,7 +30,7 @@ const FoldersStorage: FC<Props> = ({ initialPath }) => {
       <div className="flex flex-row flex-wrap justify-between mb-4 items-center h-[38px]">
         <h1>{t(MenuI18nKey.FoldersStorage)}</h1>
       </div>
-      <div className="flex flex-1 gap-4 pt-4 min-h-0">
+      <div className="flex flex-1 gap-4 min-h-0">
         <DialCollapsibleSidebar
           width={480}
           title={t(MenuI18nKey.FoldersStorage)}
