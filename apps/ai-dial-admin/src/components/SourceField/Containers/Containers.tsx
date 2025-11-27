@@ -116,6 +116,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
         {isModal ? (
           <div className="flex flex-col w-full">
             <DialSelectField
+              searchable={true}
               options={containers.map((container) => ({ value: container.id, label: container.name }))}
               onChange={(container) => onSelect(container as string)}
               elementId={'source-type'}

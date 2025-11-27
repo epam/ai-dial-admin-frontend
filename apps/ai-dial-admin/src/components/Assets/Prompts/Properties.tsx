@@ -86,8 +86,8 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isImmutable, publ
   }, [isJSONContentMode, prompt.content]);
 
   return (
-    <div className="h-full flex flex-col divide-y divide-primary w-full">
-      <div className="flex flex-row gap-8 mb-8">
+    <div className="h-full flex flex-col w-full">
+      <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
         {publication ? (
           <>
             <LabelledText label={t(EntityFieldsI18nKey.displayName)} text={prompt.name} copyable={true} />
@@ -110,7 +110,7 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isImmutable, publ
       </div>
 
       <div>
-        <div className="flex flex-col gap-y-8 pr-6">
+        <div className="flex flex-col gap-y-8 pr-6 mt-8">
           {isImmutable && (
             <div className="flex items-end gap-4 w-[105px]">
               <VersionControl version={prompt.version} disabled={isImmutable} />
