@@ -18,5 +18,5 @@ export default async function Page() {
     return redirect(SIGN_IN_LINK);
   }
 
-  return <PluginView slug={'models-deployments'} />;
+  return <PluginView slug={'model-deployments'} />;
 }
