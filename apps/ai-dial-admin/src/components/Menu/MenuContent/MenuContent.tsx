@@ -81,7 +81,7 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
 
   return (
     <div
-      className={classNames(menuClassNames, 'h-full ')}
+      className={classNames(menuClassNames, 'h-full')}
       onMouseEnter={() => !isSidebarOpen && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -91,7 +91,7 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
         <MenuActionsBar />
       ) : hovered ? (
         <div
-          className={classNames(menuClassNames, 'absolute left-0 top-0 bottom-0 w-72 bg-layer-3 ')}
+          className={classNames(menuClassNames, 'absolute left-0 top-0 bottom-0 w-72 bg-layer-3')}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
         >
