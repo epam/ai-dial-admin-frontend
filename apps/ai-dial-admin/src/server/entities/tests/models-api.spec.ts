@@ -1,5 +1,5 @@
 import { DialModel } from '@/src/models/dial/model';
-import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 import { ModelsApi } from '../models-api';
@@ -61,8 +61,7 @@ describe('Server :: ModelsApi', () => {
   });
 
   test('Should calls createModel', async () => {
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.createModel(modelMock, TOKEN_MOCK);
 
@@ -77,8 +76,7 @@ describe('Server :: ModelsApi', () => {
 
   test('Should calls updateModel', async () => {
     const updatedModel = { ...modelMock, description: 'Updated' };
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.updateModel(updatedModel, TOKEN_MOCK, 'etag123');
 
@@ -93,8 +91,7 @@ describe('Server :: ModelsApi', () => {
 
   test('Should calls updateModel', async () => {
     const updatedModel = { ...modelMock, description: 'Updated' };
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.updateModel({ ...updatedModel, name: void 0 }, TOKEN_MOCK, 'etag123');
 
@@ -109,8 +106,7 @@ describe('Server :: ModelsApi', () => {
 
   test('Should calls updateCoreModel', async () => {
     const updatedModel = { ...modelMock, description: 'Updated' };
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.updateCoreModel(updatedModel, 'model', 'etag123', TOKEN_MOCK);
 
@@ -124,8 +120,7 @@ describe('Server :: ModelsApi', () => {
   });
 
   test('Should calls removeModel', async () => {
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.removeModel(TOKEN_MOCK, 'test-model');
 
@@ -136,8 +131,7 @@ describe('Server :: ModelsApi', () => {
   });
 
   test('Should calls getModelsTopics', async () => {
-    const mockResponse = { success: true, data: ['topic1', 'topic2'] };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.getModelsTopics(TOKEN_MOCK);
 
@@ -145,8 +139,7 @@ describe('Server :: ModelsApi', () => {
   });
 
   test('Should calls getModelsTokenizers', async () => {
-    const mockResponse = { success: true, data: ['tokenizer1'] };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.getModelsTokenizers(TOKEN_MOCK);
 

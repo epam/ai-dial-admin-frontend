@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { TEST_URL, TOKEN_MOCK, RESPONSE_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   DELETE_INTERCEPTOR_TEMPLATE_URL,
   INTERCEPTOR_TEMPLATE_URL,
@@ -65,7 +65,7 @@ describe('Server :: InterceptorTemplatesApi', () => {
   });
 
   test('Should create interceptor template', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     const result = await instance.createInterceptorTemplate(mockTemplate, TOKEN_MOCK);
 
@@ -79,7 +79,7 @@ describe('Server :: InterceptorTemplatesApi', () => {
   });
 
   test('Should update interceptor template', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     const result = await instance.updateInterceptorTemplate(mockTemplate, TOKEN_MOCK, 'etag123');
 
@@ -93,7 +93,7 @@ describe('Server :: InterceptorTemplatesApi', () => {
   });
 
   test('Should update interceptor template', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     const result = await instance.updateInterceptorTemplate({ ...mockTemplate, name: void 0 }, TOKEN_MOCK, 'etag123');
 
@@ -107,7 +107,7 @@ describe('Server :: InterceptorTemplatesApi', () => {
   });
 
   test('Should delete interceptor template', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     const result = await instance.deleteInterceptorTemplate(TOKEN_MOCK, mockTemplate.name);
 

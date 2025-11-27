@@ -1,7 +1,7 @@
 import { JWT } from 'next-auth/jwt';
 import { expect, test, describe, vi, beforeEach } from 'vitest';
 
-import { streamRequest } from '../create-stream-request';
+import { streamRequest, createReadableStream, getContentType } from '../create-stream-request';
 import { sendRequest } from '../send-request';
 
 vi.mock('../send-request', () => ({
@@ -48,5 +48,37 @@ describe('Utils :: api :: streamRequest', () => {
     const response = await streamRequest(mockUrl, mockFileName, mockToken, false);
 
     expect(response.headers.get('Content-Disposition')).toBe(`attachment; filename=${mockFileName}`);
+  });
+
+  describe('getContentType', () => {
+    test('returns null for unknown extension', () => {
+      expect(getContentType('file.unknown')).toBe(null);
+    });
+
+    test('returns "image/svg+xml" for unknown extension', () => {
+      expect(getContentType('file.svg')).toBe('image/svg+xml');
+    });
+  });
+
+  describe('createReadableStream', () => {
+    test('returns a ReadableStream instance', () => {
+      const mockStream = {
+        getReader: () => ({
+          read: vi.fn().mockResolvedValue({ done: true }),
+        }),
+      };
+      const result = createReadableStream(mockStream as any);
+      expect(result).toBeInstanceOf(ReadableStream);
+    });
+  });
+
+  describe('streamRequest error handling', () => {
+    test('returns promise resolving to null on error', async () => {
+      (sendRequest as vi.Mock).mockImplementation(() => {
+        throw new Error('fail');
+      });
+      const promise = streamRequest('url', 'file.txt', { access_token: 'token' }, true);
+      expect(promise).toBeInstanceOf(Promise);
+    });
   });
 });
