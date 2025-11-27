@@ -49,7 +49,7 @@ const FileProperties: FC<Props> = ({ file, onChangeFile }) => {
   );
 
   return (
-    <div className="h-full flex flex-col w-full gap-y-8">
+    <div className="h-full flex flex-col w-full">
       <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
         <LabelledText label={t(EntityFieldsI18nKey.displayName)} text={file.name} />
         {file.author && <LabelledText label={t(EntitiesI18nKey.Author)} text={file.author} />}
