@@ -120,34 +120,36 @@ const HeaderButtons = <T extends object>({
         ) : (
           <div className="flex flex-row items-center w-full gap-x-4">
             {!jsonEditorEnabled && (
-              <div
-                className={classNames(
-                  `flex-1 flex flex-row gap-x-4`,
-                  childrenContainerClass,
-                  isSimple ? 'justify-center' : '',
-                )}
-              >
-                <div className="flex flex-row gap-x-4">
-                  {isAssetView && (
-                    <AssetVersionControl
-                      view={view}
-                      asset={entity as Asset}
-                      addedVersions={addedVersions || []}
-                      setAddedVersions={setAddedVersions}
-                      assets={assets}
-                      onChangeAsset={onChangeEntity as (entity: Asset) => void}
-                      etag={etag}
-                    />
-                  )}
-                  <DialButton
-                    variant={ButtonVariant.Secondary}
-                    cssClass={classNames(buttonsClassNames, isSimple ? 'min-w-[150px] lg:min-w-0' : '')}
-                    title={t(ButtonsI18nKey.Delete)}
-                    iconBefore={<IconTrashX {...BASE_ICON_PROPS} />}
-                    onClick={onOpenModal}
+              <div className={classNames('flex-1 flex flex-row gap-x-4', isSimple ? 'justify-center' : '')}>
+                {isAssetView && (
+                  <AssetVersionControl
+                    view={view}
+                    asset={entity as Asset}
+                    addedVersions={addedVersions || []}
+                    setAddedVersions={setAddedVersions}
+                    assets={assets}
+                    onChangeAsset={onChangeEntity as (entity: Asset) => void}
+                    etag={etag}
                   />
+                )}
+                <div
+                  className={classNames(
+                    'flex-1 flex flex-row gap-x-4',
+                    childrenContainerClass,
+                    isSimple ? 'justify-center' : '',
+                  )}
+                >
+                  <div className="flex flex-row gap-x-4">
+                    <DialButton
+                      variant={ButtonVariant.Secondary}
+                      cssClass={classNames(buttonsClassNames, isSimple ? 'min-w-[150px] lg:min-w-0' : '')}
+                      title={t(ButtonsI18nKey.Delete)}
+                      iconBefore={<IconTrashX {...BASE_ICON_PROPS} />}
+                      onClick={onOpenModal}
+                    />
+                  </div>
+                  {children}
                 </div>
-                {children}
               </div>
             )}
             {!hideJsonEditor && <JsonToggles view={view} jsonEditorEnabled={jsonEditorEnabled} {...props} />}
