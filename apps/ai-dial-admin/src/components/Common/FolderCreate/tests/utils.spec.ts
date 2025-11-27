@@ -2,7 +2,7 @@ import {
   generateFileColumnsForImportGrid,
   generatePromptColumnsForImportGrid,
   isLargeFile,
-} from '@/src/components/EntityListView/Import/import';
+} from '@/src/components/EntityListView/Import/utils';
 import { FileImportGridData } from '@/src/models/file';
 import { PromptImportGridData } from '@/src/models/prompts';
 import { ImportFileType } from '@/src/types/import';
