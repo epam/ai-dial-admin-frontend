@@ -20,7 +20,7 @@ import {
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { ResourceType } from '@/src/types/resource-type';
 import { ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
-import { ImportFileType } from '../../../types/import';
+import { ImportFileType } from '@/src/types/import';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');

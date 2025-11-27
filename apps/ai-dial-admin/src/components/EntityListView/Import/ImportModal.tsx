@@ -215,7 +215,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply 
       onClose={onClose}
       title={getModalTitle(route, t)}
       portalId="ImportModal"
-      cssClass="h-[660px]"
+      cssClass="!h-[660px]"
       open={isModalOpen}
       footer={
         <ImportModalButtons

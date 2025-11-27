@@ -52,5 +52,5 @@ export async function importPrompts(body: FormData, fileType: ImportFileType) {
 
 export async function exportPrompts(paths: string[], type?: ImportFileType) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return await assetsApi.exportPrompts(token, paths, type);
+  return await assetsApi.exportAssets(token, ResourceType.PROMPT, paths, type);
 }

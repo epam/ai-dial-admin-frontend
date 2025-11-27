@@ -64,3 +64,8 @@ export async function moveApps(paths: string[], newPath: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return assetsApi.moveAssets(token, paths, newPath, ResourceType.APPLICATION);
 }
+
+export async function exportApps(paths: string[], type?: ImportFileType) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return await assetsApi.exportAssets(token, ResourceType.APPLICATION, paths, type);
+}

@@ -120,11 +120,11 @@ describe('Assets Prompt :: server actions', () => {
   });
 
   test('Should call exportPrompts action', async () => {
-    (assetsApi.exportPrompts as any).mockResolvedValue(RESPONSE_MOCK);
+    (assetsApi.exportAssets as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await exportPrompts(['test']);
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.exportPrompts).toHaveBeenCalledWith(TOKEN_MOCK, ['test'], void 0);
+    expect(assetsApi.exportAssets).toHaveBeenCalledWith(TOKEN_MOCK, ['test'], void 0);
     expect(result).toBe(RESPONSE_MOCK);
   });
 

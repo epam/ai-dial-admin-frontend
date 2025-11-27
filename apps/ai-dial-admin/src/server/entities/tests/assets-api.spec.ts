@@ -96,9 +96,9 @@ describe('PromptsApi', () => {
     );
   });
 
-  test('Should calls exportPrompts', async () => {
+  test('Should calls exportAssets', async () => {
     fetchMock.mockResponseOnce({});
-    await instance.exportPrompts(TOKEN_MOCK, ['test'], ImportFileType.FILES);
+    await instance.exportAssets(TOKEN_MOCK, ResourceType.APPLICATION, ['test'], ImportFileType.FILES);
 
     expect(fetchMock).toHaveBeenCalledWith(
       `${TEST_URL}${ResourceBasePaths[ResourceType.PROMPT]}/export/json`,
@@ -109,9 +109,9 @@ describe('PromptsApi', () => {
     );
   });
 
-  test('Should calls exportPrompts', async () => {
+  test('Should calls exportAssets', async () => {
     fetchMock.mockResponseOnce({});
-    await instance.exportPrompts(TOKEN_MOCK, ['test'], ImportFileType.ARCHIVE);
+    await instance.exportAssets(TOKEN_MOCK, ResourceType.APPLICATION, ['test'], ImportFileType.ARCHIVE);
 
     expect(fetchMock).toHaveBeenCalledWith(
       `${TEST_URL}${ResourceBasePaths[ResourceType.PROMPT]}/export`,
