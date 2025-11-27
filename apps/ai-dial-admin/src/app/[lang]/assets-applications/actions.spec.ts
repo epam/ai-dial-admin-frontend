@@ -4,7 +4,17 @@ import { assetsApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { getApps, removeApp, moveApps, bulkDeleteApps, getApp, updateApp, createApp, importApps, exportApps } from './actions';
+import {
+  getApps,
+  removeApp,
+  moveApps,
+  bulkDeleteApps,
+  getApp,
+  updateApp,
+  createApp,
+  importApps,
+  exportApps,
+} from './actions';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { ResourceType } from '@/src/types/resource-type';
 import { ImportFileType } from '@/src/types/import';
@@ -48,7 +58,7 @@ describe('Assets application :: server actions', () => {
       TOKEN_MOCK,
       {} as FormData,
       ImportFileType.ARCHIVE,
-      ResourceType.PROMPT,
+      ResourceType.APPLICATION,
     );
     expect(result).toBe(RESPONSE_MOCK);
   });
@@ -58,7 +68,7 @@ describe('Assets application :: server actions', () => {
 
     const result = await exportApps(['test']);
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.exportAssets).toHaveBeenCalledWith(TOKEN_MOCK, ['test'], void 0);
+    expect(assetsApi.exportAssets).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.APPLICATION, ['test'], void 0);
     expect(result).toBe(RESPONSE_MOCK);
   });
 

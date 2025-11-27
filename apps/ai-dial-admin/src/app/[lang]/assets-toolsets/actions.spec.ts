@@ -187,7 +187,7 @@ describe('Assets Toolset :: server actions', () => {
       TOKEN_MOCK,
       {} as FormData,
       ImportFileType.ARCHIVE,
-      ResourceType.PROMPT,
+      ResourceType.TOOLSET,
     );
     expect(result).toBe(RESPONSE_MOCK);
   });

@@ -124,7 +124,7 @@ describe('Assets Prompt :: server actions', () => {
 
     const result = await exportPrompts(['test']);
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.exportAssets).toHaveBeenCalledWith(TOKEN_MOCK, ['test'], void 0);
+    expect(assetsApi.exportAssets).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, ['test'], void 0);
     expect(result).toBe(RESPONSE_MOCK);
   });
 

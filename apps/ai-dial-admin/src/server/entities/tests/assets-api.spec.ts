@@ -101,7 +101,7 @@ describe('PromptsApi', () => {
     await instance.exportAssets(TOKEN_MOCK, ResourceType.APPLICATION, ['test'], ImportFileType.FILES);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      `${TEST_URL}${ResourceBasePaths[ResourceType.PROMPT]}/export/json`,
+      `${TEST_URL}${ResourceBasePaths[ResourceType.APPLICATION]}/export/json`,
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({ paths: ['test'] }),
@@ -114,7 +114,7 @@ describe('PromptsApi', () => {
     await instance.exportAssets(TOKEN_MOCK, ResourceType.APPLICATION, ['test'], ImportFileType.ARCHIVE);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      `${TEST_URL}${ResourceBasePaths[ResourceType.PROMPT]}/export`,
+      `${TEST_URL}${ResourceBasePaths[ResourceType.APPLICATION]}/export`,
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({ paths: ['test'] }),
