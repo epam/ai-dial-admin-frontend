@@ -12,10 +12,10 @@ try {
 
 const ContentSecurityPolicy = `
     default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' ${process.env.ALLOWED_IFRAME_ORIGINS || ''} https:;
-    frame-src 'self' https://mydial.epam.com ${process.env.ALLOWED_IFRAME_ORIGINS || ''} https:;  
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' ${process.env.ALLOWED_IFRAME_ORIGINS || ''};
+    frame-src 'self' ${process.env.ALLOWED_IFRAME_ORIGINS || ''};  
     style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline';
-    img-src 'self' blob: data: ${process.env.ALLOWED_IMAGE_ORIGINS || ''} https:;
+    img-src 'self' blob: data: ${process.env.ALLOWED_IMAGE_ORIGINS || ''};
     font-src 'self' data: https://cdn.jsdelivr.net fonts.gstatic.com;
     object-src 'none';
     base-uri 'self';
