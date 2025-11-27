@@ -84,7 +84,7 @@ const FolderCreateModal: FC<Props> = ({ isModalOpen, folderPath, view, onClose, 
       title={t(FoldersI18nKey.FolderCreate)}
       portalId="CreateFolder"
       open={isModalOpen}
-      cssClass="h-[660px]"
+      cssClass="!h-[660px]"
       size={PopupSize.Lg}
       footer={
         <FolderCreateModalButtons

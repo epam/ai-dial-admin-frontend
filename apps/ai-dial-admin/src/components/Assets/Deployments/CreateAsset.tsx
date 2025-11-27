@@ -88,7 +88,7 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
       title={t(getCreateEntityTitle(view, t))}
       portalId="CreateAsset"
       size={PopupSize.Lg}
-      cssClass="h-[750px]"
+      cssClass="!h-[750px]"
       open={isModalOpen}
       onSubmit={() => onSubmit()}
       onCancel={onClose}

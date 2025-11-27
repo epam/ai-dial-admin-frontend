@@ -37,7 +37,7 @@ const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOp
       portalId="SelectAppRunnerModal"
       open={isModalOpen}
       size={PopupSize.Lg}
-      cssClass="h-[750px]"
+      cssClass="!h-[750px]"
       onSubmit={() => onApply(selectedRunner === t(BasicI18nKey.None) ? void 0 : selectedRunner)}
       disableSubmitButton={!selectedRunner}
       submitLabel={t(ButtonsI18nKey.Apply)}

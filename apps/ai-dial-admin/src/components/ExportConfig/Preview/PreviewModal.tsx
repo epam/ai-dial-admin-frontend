@@ -69,7 +69,7 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, isModalOpen, onClos
       title={t(ExportI18nKey.FilePreview)}
       portalId="ExportFilePreview"
       open={isModalOpen}
-      cssClass="h-[754px]"
+      cssClass="!h-[754px]"
       size={PopupSize.Lg}
       submitLabel={t(ButtonsI18nKey.Export)}
       onSubmit={() => onPrepare(isIncludeSecret)}

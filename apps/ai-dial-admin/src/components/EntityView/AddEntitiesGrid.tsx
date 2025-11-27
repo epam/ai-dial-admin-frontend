@@ -51,7 +51,7 @@ const AddEntitiesGrid = <T extends object>({
       title={modalTitle}
       portalId="AddEntity"
       open={isModalOpen}
-      cssClass="h-[800px]"
+      cssClass="!h-[800px]"
       size={PopupSize.Lg}
       submitLabel={t(ButtonsI18nKey.Apply)}
       onSubmit={() => onApply(selectedEntities)}

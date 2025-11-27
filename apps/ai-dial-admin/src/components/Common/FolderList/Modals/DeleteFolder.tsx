@@ -87,7 +87,7 @@ const DeleteFolder: FC<Props> = ({ isModalOpen, view, selectedFolder, isBulkDele
       portalId="DeleteFolder"
       open={isModalOpen}
       size={PopupSize.Lg}
-      cssClass="h-[750px]"
+      cssClass="!h-[750px]"
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Delete)}
       onSubmit={() => {

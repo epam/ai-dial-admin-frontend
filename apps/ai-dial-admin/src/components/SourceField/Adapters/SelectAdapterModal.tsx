@@ -30,7 +30,7 @@ const SelectAdapterModal: FC<Props> = ({ selected, adapters, isModalOpen, onClos
       portalId="SelectAdapterModal"
       open={isModalOpen}
       size={PopupSize.Lg}
-      cssClass="h-[750px]"
+      cssClass="!h-[750px]"
       onSubmit={() => onApply(selectedRunner)}
       disableSubmitButton={!selectedRunner}
       submitLabel={t(ButtonsI18nKey.Apply)}

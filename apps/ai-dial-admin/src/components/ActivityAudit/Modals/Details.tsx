@@ -95,7 +95,7 @@ const ActivityDetails: FC<Props> = ({
       portalId="ActivityDetailsModal"
       open={isModalOpen}
       size={PopupSize.Lg}
-      cssClass="h-[800px]"
+      cssClass="!h-[800px]"
       dividers={true}
     >
       <div className="h-full px-6 py-4">

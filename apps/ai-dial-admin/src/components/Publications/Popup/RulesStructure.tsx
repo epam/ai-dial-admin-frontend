@@ -23,7 +23,7 @@ const RulesStructure: FC<Props> = ({ isLoading, isOpen, onClose }) => {
       title={t(FoldersI18nKey.ReviewStructure)}
       portalId="RulesStructure"
       open={isOpen}
-      cssClass="min-h-[200px]"
+      cssClass="!min-h-[200px]"
       size={PopupSize.Lg}
     >
       {isLoading ? (
