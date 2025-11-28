@@ -88,7 +88,7 @@ const CompareVersions: FC<Props> = ({ heading, isModalOpen, onClose, prompts, pr
           fieldTitle={t(EntityFieldsI18nKey.description)}
           original={original?.description}
           modified={modified?.description}
-          cssClass={'max-h-[200px]'}
+          className={'max-h-[200px]'}
         />
         <DiffField
           fieldTitle={t(EntityFieldsI18nKey.content)}
