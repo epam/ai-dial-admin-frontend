@@ -111,7 +111,6 @@ const View: FC<Props> = ({ etag, template, names }) => {
           removeEntity={deleteInterceptorTemplate}
           hideJsonEditor={true}
           jsonEditorEnabled={false}
-          childrenContainerClass={'flex-row-reverse'}
         >
           <DialButton
             variant={ButtonVariant.Secondary}

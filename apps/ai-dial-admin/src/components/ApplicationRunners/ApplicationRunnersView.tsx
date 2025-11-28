@@ -180,7 +180,6 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
           toggleJsonEditor={toggleJsonEditor}
           selectedFormat={selectedFormat}
           setSelectedFormat={setSelectedFormat}
-          childrenContainerClass={'flex-row-reverse'}
         >
           <DialButtonDropdown title={t(ButtonsI18nKey.Create)} items={items} variant={ButtonVariant.Secondary} />
         </HeaderButtons>

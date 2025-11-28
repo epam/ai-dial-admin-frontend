@@ -270,7 +270,6 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
             assets={toolsets || []}
             etag={etag}
             context={useToolsetFolder as () => AssetsFolderContext<DialFile | AssetToolset>}
-            childrenContainerClass="flex-row-reverse"
           >
             {selectedToolset.authSettings?.authenticationType !== ToolsetAuthType.NONE &&
               (isToolsetSignedIn ? (
