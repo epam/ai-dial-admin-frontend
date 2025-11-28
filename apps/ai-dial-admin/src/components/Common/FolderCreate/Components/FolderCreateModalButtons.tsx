@@ -36,27 +36,27 @@ const FolderCreateModalButtons: FC<Props> = ({ steps, currentStep, setCurrentSte
         {currentStep?.id !== steps[0]?.id && (
           <DialButton
             variant={ButtonVariant.Tertiary}
-            title={t(ButtonsI18nKey.Back)}
+            label={t(ButtonsI18nKey.Back)}
             onClick={onPrevStep}
             iconBefore={<IconArrowNarrowLeft {...BASE_ICON_PROPS} />}
           />
         )}
       </div>
       <div className="flex gap-2">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton variant={ButtonVariant.Secondary} label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         {currentStep?.id !== steps.at(-1)?.id && (
           <DialButton
             variant={ButtonVariant.Primary}
-            title={t(ButtonsI18nKey.Next)}
+            label={t(ButtonsI18nKey.Next)}
             onClick={onNextStep}
-            disable={currentStep?.status !== StepStatus.VALID}
+            disabled={currentStep?.status !== StepStatus.VALID}
           />
         )}
         {currentStep?.id === steps.at(-1)?.id && (
           <DialButton
             variant={ButtonVariant.Primary}
-            title={t(ButtonsI18nKey.Finish)}
-            disable={steps.some((s) => s.status !== StepStatus.VALID)}
+            label={t(ButtonsI18nKey.Finish)}
+            disabled={steps.some((s) => s.status !== StepStatus.VALID)}
             onClick={onFinishClick}
           />
         )}

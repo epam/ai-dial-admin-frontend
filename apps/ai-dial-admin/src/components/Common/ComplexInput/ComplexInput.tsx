@@ -20,7 +20,7 @@ const ComplexInput: FC<Props> = ({ fullValue, fieldTitle, copyable = true, ...pr
       <div className="flex-1 min-w-0">
         <DialTextInputField containerCssClass="w-full" fieldTitle={fieldTitle} {...props} elementCssClass="w-full" />
       </div>
-      {copyable && <CopyButton title={fieldTitle} field={fullValue} isFullButton={true} />}
+      {copyable && <CopyButton label={fieldTitle} field={fullValue} isFullButton={true} />}
     </div>
   );
 };

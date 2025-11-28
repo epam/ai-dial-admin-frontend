@@ -134,8 +134,8 @@ const HeaderButtons = <T extends object>({
                   <div className="flex flex-row gap-x-4">
                     <DialButton
                       variant={ButtonVariant.Secondary}
-                      cssClass={classNames(buttonsClassNames, isSimple ? 'min-w-[150px] lg:min-w-0' : '')}
-                      title={t(ButtonsI18nKey.Delete)}
+                      className={classNames(buttonsClassNames, isSimple ? 'min-w-[150px] lg:min-w-0' : '')}
+                      label={t(ButtonsI18nKey.Delete)}
                       iconBefore={<IconTrashX {...BASE_ICON_PROPS} />}
                       onClick={onOpenModal}
                     />

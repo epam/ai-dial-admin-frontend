@@ -137,8 +137,8 @@ const Adapters = <T extends DialModel | DialInterceptor>({
               <DialButton
                 iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
                 variant={ButtonVariant.Secondary}
-                cssClass={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
-                title={t(SourceI18nKey.OpenAdapter)}
+                className={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
+                label={t(SourceI18nKey.OpenAdapter)}
                 onClick={() => openAdapter()}
               />
             )}

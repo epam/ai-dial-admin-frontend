@@ -237,7 +237,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
           />
           <DialButton
             variant={ButtonVariant.Secondary}
-            title={t(ButtonsI18nKey.Refresh)}
+            label={t(ButtonsI18nKey.Refresh)}
             iconBefore={<IconRefresh {...BASE_ICON_PROPS} />}
             onClick={onRefresh}
           />
@@ -245,7 +245,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
             <DialButton
               iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
               variant={ButtonVariant.Secondary}
-              title={t(RollbackI18nKey.System)}
+              label={t(RollbackI18nKey.System)}
               onClick={systemRollback}
             />
           )}

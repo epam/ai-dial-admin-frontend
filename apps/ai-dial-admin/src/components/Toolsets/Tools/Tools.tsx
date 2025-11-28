@@ -197,7 +197,7 @@ const ToolsView: FC<Props> = ({ selectedToolset, isAssetToolset, readonly, origi
                 {!readonly && (
                   <DialButton
                     variant={ButtonVariant.Primary}
-                    title={t(ButtonsI18nKey.Add)}
+                    label={t(ButtonsI18nKey.Add)}
                     iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
                     onClick={onOpenModal}
                   />

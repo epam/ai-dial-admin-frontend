@@ -45,7 +45,7 @@ const ResetFiltersButton: FC<Props> = ({ gridApi }) => {
 
   return (
     <DialButton
-      title={t(ButtonsI18nKey.ResetFilters)}
+      label={t(ButtonsI18nKey.ResetFilters)}
       variant={ButtonVariant.Tertiary}
       iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
       onClick={resetFilters}

@@ -207,7 +207,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
           >
             <DialButton
               variant={ButtonVariant.Primary}
-              title={t(ButtonsI18nKey.Rotate)}
+              label={t(ButtonsI18nKey.Rotate)}
               iconBefore={<IconRefresh {...BASE_ICON_PROPS} />}
               onClick={() => setIsRotateModalOpen(true)}
             />

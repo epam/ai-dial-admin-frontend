@@ -48,7 +48,7 @@ const ViewHeader: FC<Props> = ({ activity, children }) => {
               {activity.activityType != ActivityAuditType.Delete && (
                 <DialButton
                   onClick={() => openResourceInNewTab(activity)}
-                  cssClass="text-secondary"
+                  className="text-secondary"
                   iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
                 />
               )}

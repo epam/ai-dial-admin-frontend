@@ -15,7 +15,7 @@ const ReadonlyField: FC<Props> = ({ value, title, elementId }) => {
       elementId={elementId || 'readonlyField'}
       disabled={true}
       value={value}
-      iconAfter={<CopyButton field={value || ''} title={title} cssClass="ml-2" />}
+      iconAfter={<CopyButton field={value || ''} label={title} className="ml-2" />}
     />
   );
 };

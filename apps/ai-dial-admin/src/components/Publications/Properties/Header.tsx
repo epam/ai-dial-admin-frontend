@@ -73,24 +73,24 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
         <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
           <DialButton
             variant={ButtonVariant.Secondary}
-            cssClass={buttonsClassNames}
-            title={t(ButtonsI18nKey.Decline)}
+            className={buttonsClassNames}
+            label={t(ButtonsI18nKey.Decline)}
             onClick={() => setIsOpenDeclineModal(true)}
             iconBefore={<IconCircleX {...BASE_ICON_PROPS} />}
           />
           {action === ActionType.ADD ? (
             <DialButton
               variant={ButtonVariant.Primary}
-              cssClass={classNames(buttonsClassNames, approveButtonClassNames)}
-              title={t(ButtonsI18nKey.Publish)}
+              className={classNames(buttonsClassNames, approveButtonClassNames)}
+              label={t(ButtonsI18nKey.Publish)}
               onClick={() => setIsOpenApproveModal(true)}
               iconBefore={<IconWorldShare {...BASE_ICON_PROPS} />}
             />
           ) : (
             <DialButton
               variant={ButtonVariant.Primary}
-              cssClass={classNames(buttonsClassNames, approveButtonClassNames)}
-              title={t(ButtonsI18nKey.Unpublish)}
+              className={classNames(buttonsClassNames, approveButtonClassNames)}
+              label={t(ButtonsI18nKey.Unpublish)}
               onClick={() => setIsOpenApproveModal(true)}
               iconBefore={<IconWorldOff {...BASE_ICON_PROPS} />}
             />

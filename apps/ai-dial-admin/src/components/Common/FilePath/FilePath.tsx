@@ -62,10 +62,10 @@ const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, 
           />
         </div>
         <DialButton
-          disable={disabled}
+          disabled={disabled}
           variant={ButtonVariant.Secondary}
           onClick={onOpenFilePathModal}
-          title={t(ButtonsI18nKey.Move)}
+          label={t(ButtonsI18nKey.Move)}
           iconBefore={<IconFolderShare {...BASE_ICON_PROPS} />}
         />
       </div>

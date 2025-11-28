@@ -101,7 +101,7 @@ const List: FC<Props> = ({ route, getData, query, columnDefs, title, emptyDataTi
         {!!data?.length && (
           <DialButton
             variant={ButtonVariant.Tertiary}
-            title={t(ButtonsI18nKey.Columns)}
+            label={t(ButtonsI18nKey.Columns)}
             iconBefore={<IconColumns2 {...BASE_ICON_PROPS} />}
             onClick={onToggleColumnsPanel}
           />

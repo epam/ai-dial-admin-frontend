@@ -195,7 +195,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
       {showColumnsButton && (
         <DialButton
           variant={ButtonVariant.Tertiary}
-          title={t(ButtonsI18nKey.Columns)}
+          label={t(ButtonsI18nKey.Columns)}
           iconBefore={<IconColumns2 {...BASE_ICON_PROPS} />}
           onClick={onToggleColumnsPanel}
         />
@@ -206,13 +206,13 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
             <>
               <DialButton
                 variant={ButtonVariant.Secondary}
-                title={isTabletScreen ? '' : t(ButtonsI18nKey.BulkActions)}
+                label={isTabletScreen ? '' : t(ButtonsI18nKey.BulkActions)}
                 iconBefore={<IconSquareCheck {...BASE_ICON_PROPS} />}
                 onClick={() => setIsBulkView?.(true)}
               />
               <DialButton
                 variant={ButtonVariant.Secondary}
-                title={isTabletScreen ? '' : t(ButtonsI18nKey.Import)}
+                label={isTabletScreen ? '' : t(ButtonsI18nKey.Import)}
                 iconBefore={<IconFileArrowLeft {...BASE_ICON_PROPS} />}
                 onClick={() => handleModalOpen(ModalType.import)}
               />
@@ -221,7 +221,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
           {!!createEntity && (
             <DialButton
               variant={ButtonVariant.Primary}
-              title={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}
+              label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}
               iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
               onClick={() => handleModalOpen(ModalType.create)}
             />

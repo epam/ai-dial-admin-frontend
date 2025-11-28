@@ -69,7 +69,7 @@ const DeploymentAssetHeader: FC<Props> = ({ view, asset }) => {
           <DialEllipsisTooltip text={removeTrailingSlash(asset.folderId)} />
           <DialButton
             onClick={() => openFolderStorageInNewTab(asset.folderId)}
-            cssClass="text-secondary"
+            className="text-secondary"
             iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
           />
         </div>
