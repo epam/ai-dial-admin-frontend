@@ -25,8 +25,8 @@ const Notification: FC<NotificationConfig> = ({ type, title, description, onClos
           <p className="small-text-semi truncate">{title}</p>
         </div>
         <DialButton
-          ariaLabel="close"
-          cssClass={'absolute right-0'}
+          aria-label="close"
+          className={'absolute right-0'}
           onClick={onClose}
           iconBefore={<IconX height={18} width={18} />}
         />

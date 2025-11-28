@@ -84,7 +84,7 @@ const UpstreamEndpoints: FC<Props> = ({ readonly, entity, onChangeEntity, isKeyO
         <div>
           <DialButton
             variant={ButtonVariant.Secondary}
-            title={t(UpstreamEndpointsI18nKey.AddUpstream)}
+            label={t(UpstreamEndpointsI18nKey.AddUpstream)}
             iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
             onClick={onAddEndpoint}
           />

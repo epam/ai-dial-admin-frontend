@@ -53,10 +53,10 @@ const ExportModal: FC<Props> = ({ isModalOpen, route, onClose, onApply }) => {
         />
       </div>
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton variant={ButtonVariant.Secondary} label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         <DialButton
           variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Export)}
+          label={t(ButtonsI18nKey.Export)}
           onClick={() => onApply?.(exportType as ImportFileType)}
         />
       </div>

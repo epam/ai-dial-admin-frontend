@@ -147,7 +147,7 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
     <DialButton
       variant={ButtonVariant.Primary}
       iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-      title={t(ButtonsI18nKey.Add)}
+      label={t(ButtonsI18nKey.Add)}
       onClick={() => setIsModalOpen(true)}
     />
   );

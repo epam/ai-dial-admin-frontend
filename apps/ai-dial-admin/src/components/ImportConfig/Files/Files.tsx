@@ -80,8 +80,8 @@ const Files: FC<Props> = ({
         <h1>{t(ImportI18nKey.Files)}</h1>
         <DialButton
           variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Next)}
-          disable={!isFilesValid}
+          label={t(ButtonsI18nKey.Next)}
+          disabled={!isFilesValid}
           iconAfter={<IconArrowNarrowRight {...BASE_ICON_PROPS} />}
           onClick={onNextStep}
         />

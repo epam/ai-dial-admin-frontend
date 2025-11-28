@@ -36,7 +36,7 @@ const ToolItem: FC<Props> = ({ tool, isAddedManual, onRemoveTool, isEnabled, rea
             <div className="invisible group-hover:visible">
               <DialButton
                 variant={ButtonVariant.Secondary}
-                title={t(ButtonsI18nKey.Delete)}
+                label={t(ButtonsI18nKey.Delete)}
                 iconBefore={<IconTrash {...BASE_ICON_PROPS} />}
                 onClick={() => onRemoveTool?.(tool)}
               />

@@ -69,8 +69,8 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
         <h1>{t(ImportI18nKey.Configuration)}</h1>
         <DialButton
           variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Import)}
-          disable={isLoading || !files}
+          label={t(ButtonsI18nKey.Import)}
+          disabled={isLoading || !files}
           iconBefore={<IconDownload {...BASE_ICON_PROPS} />}
           onClick={onImportFile}
         />

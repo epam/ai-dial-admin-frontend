@@ -177,7 +177,7 @@ const ApplicationParametersTab: FC<Props> = ({
               <DialButton
                 variant={ButtonVariant.Primary}
                 iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-                title={t(ButtonsI18nKey.Add)}
+                label={t(ButtonsI18nKey.Add)}
                 onClick={() => setIsAddClicked(true)}
               />
             )}

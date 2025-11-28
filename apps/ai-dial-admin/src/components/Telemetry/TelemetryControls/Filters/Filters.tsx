@@ -96,7 +96,7 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route }) => {
         ))}
       <AddFilter addFilter={addFilter} dropdownData={{ projects, entities }} route={route}>
         <DialButton
-          title={t(TelemetryI18nKey.AddFilter)}
+          label={t(TelemetryI18nKey.AddFilter)}
           iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
           variant={ButtonVariant.Tertiary}
         />
