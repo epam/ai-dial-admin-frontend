@@ -198,7 +198,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
         );
         router.refresh();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [selectedFormat, selectedRole, originalRole.name, etag, showNotification, t, router]);

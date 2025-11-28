@@ -104,7 +104,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
         );
         router.refresh();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [selectedAdapter, etag, showNotification, t, router]);

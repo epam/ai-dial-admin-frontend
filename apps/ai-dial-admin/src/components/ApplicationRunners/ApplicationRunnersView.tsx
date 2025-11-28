@@ -156,7 +156,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
         );
         router.refresh();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [selectedFormat, selectedRunner, originalScheme.$id, etag, showNotification, t, router]);

@@ -77,7 +77,7 @@ const ActivityDetails: FC<Props> = ({
               console.error('Error fetching revisions:', err);
             });
         } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       })
       .catch((err) => {

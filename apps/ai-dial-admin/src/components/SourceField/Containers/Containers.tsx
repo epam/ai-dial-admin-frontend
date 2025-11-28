@@ -102,7 +102,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
     };
 
     fetchContainers().catch((error) =>
-      showNotificationRef.current(getErrorNotification(error.errorHeader, error.errorMessage)),
+      showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId)),
     );
   }, [getContainers]);
 

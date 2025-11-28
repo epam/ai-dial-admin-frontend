@@ -204,7 +204,7 @@ const InterceptorView: FC<Props> = ({
         );
         router.refresh();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [selectedFormat, selectedInterceptor, originalInterceptor.name, etag, showNotification, t, router]);

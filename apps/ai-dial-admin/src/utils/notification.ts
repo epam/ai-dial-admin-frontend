@@ -3,9 +3,10 @@ import { NotificationType, Notification } from '@/src/models/notification';
 export const getErrorNotification = (
   title?: string,
   description?: string,
+  requestId?: string,
   duration: number | null = null,
 ): Notification => {
-  return getNotification(NotificationType.error, title, description, duration);
+  return getNotification(NotificationType.error, title, description, duration, requestId);
 };
 
 export const getSuccessNotification = (
@@ -29,11 +30,13 @@ export const getNotification = (
   title?: string,
   description?: string,
   duration?: number | null,
+  requestId?: string,
 ): Notification => {
   return {
     type,
     title: title ?? '',
     description: description ?? '',
     duration,
+    requestId,
   };
 };

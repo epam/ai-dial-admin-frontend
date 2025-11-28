@@ -134,7 +134,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
               folderContext?.fetchFiles(`${path}`);
             }
           } else {
-            showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+            showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
           }
         });
       }

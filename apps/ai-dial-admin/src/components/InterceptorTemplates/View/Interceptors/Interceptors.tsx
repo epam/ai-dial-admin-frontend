@@ -41,7 +41,7 @@ const Interceptors: FC<Props> = ({ interceptorList }) => {
             ) || [],
           );
         } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       });
     };
