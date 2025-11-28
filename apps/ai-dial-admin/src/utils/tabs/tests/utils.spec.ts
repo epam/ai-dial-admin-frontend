@@ -80,31 +80,31 @@ describe('Entities :: tabs', () => {
   test('returns dashboard and activities tabs if dashboardEnabled and view is Models', () => {
     const tabs = getAuditTabs(t, { dashboardEnabled: true }, ApplicationRoute.Models);
     expect(tabs).toEqual([
-      { id: 'Dashboard', name: TabsI18nKey.Dashboard },
-      { id: 'Traces', name: TabsI18nKey.Traces },
-      { id: 'Conversations', name: TabsI18nKey.Conversations },
-      { id: 'Activities', name: TabsI18nKey.Activities },
+      { id: 'Dashboard', label: TabsI18nKey.Dashboard },
+      { id: 'Traces', label: TabsI18nKey.Traces },
+      { id: 'Conversations', label: TabsI18nKey.Conversations },
+      { id: 'Activities', label: TabsI18nKey.Activities },
     ]);
   });
 
   test('returns dashboard and activities tabs if dashboardEnabled and view is Applications', () => {
     const tabs = getAuditTabs(t, { dashboardEnabled: true }, ApplicationRoute.Applications);
     expect(tabs).toEqual([
-      { id: 'Dashboard', name: TabsI18nKey.Dashboard },
-      { id: 'Traces', name: TabsI18nKey.Traces },
-      { id: 'Conversations', name: TabsI18nKey.Conversations },
-      { id: 'Activities', name: TabsI18nKey.Activities },
+      { id: 'Dashboard', label: TabsI18nKey.Dashboard },
+      { id: 'Traces', label: TabsI18nKey.Traces },
+      { id: 'Conversations', label: TabsI18nKey.Conversations },
+      { id: 'Activities', label: TabsI18nKey.Activities },
     ]);
   });
 
   test('returns only activities tab if dashboardEnabled is false', () => {
     const tabs = getAuditTabs(t, { dashboardEnabled: false }, ApplicationRoute.Models);
-    expect(tabs).toEqual([{ id: 'Activities', name: TabsI18nKey.Activities }]);
+    expect(tabs).toEqual([{ id: 'Activities', label: TabsI18nKey.Activities }]);
   });
 
   test('returns only activities tab for other views', () => {
     const tabs = getAuditTabs(t, { dashboardEnabled: true }, ApplicationRoute.Home);
-    expect(tabs).toEqual([{ id: 'Activities', name: TabsI18nKey.Activities }]);
+    expect(tabs).toEqual([{ id: 'Activities', label: TabsI18nKey.Activities }]);
   });
   test('returns correct tabs for AssetsApplications', () => {
     expect(getTabsForAsset(t, ApplicationRoute.AssetsApplications)).toEqual([

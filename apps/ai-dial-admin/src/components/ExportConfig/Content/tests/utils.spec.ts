@@ -38,12 +38,12 @@ describe('Config content Utils :: getDataWithoutItem', () => {
 
   test('Should remove data from Models', () => {
     const result = getDataWithoutItem(
-      [{ name: 'name1' }, { name: 'name2' }, { name: 'name3' }, { name: 'name4' }, { name: 'name5' }],
-      { name: 'name5' },
+      [{ label: 'name1' }, { label: 'name2' }, { label: 'name3' }, { label: 'name4' }, { label: 'name5' }],
+      { label: 'name5' },
       EntityType.MODEL,
     );
 
-    expect(result).toEqual([{ name: 'name1' }, { name: 'name2' }, { name: 'name3' }, { name: 'name4' }]);
+    expect(result).toEqual([{ label: 'name1' }, { label: 'name2' }, { label: 'name3' }, { label: 'name4' }]);
   });
 });
 
@@ -61,30 +61,30 @@ describe('Config content Utils :: getActualTabs', () => {
   test('Should return tabs for full core config', () => {
     const res = getActualTabs(ExportType.FULL, ExportFormat.CORE, { roles: true, files: true }, mockTranslate);
 
-    expect(res).toEqual([{ id: EntityType.ROLE, name: MenuI18nKey.Roles }]);
+    expect(res).toEqual([{ id: EntityType.ROLE, label: MenuI18nKey.Roles }]);
   });
 
   test('Should return tabs for custom admin config', () => {
     const res = getActualTabs(ExportType.Custom, ExportFormat.ADMIN, { roles: true, files: true }, mockTranslate);
 
     expect(res).toEqual([
-      { id: EntityType.MODEL, name: MenuI18nKey.Models },
-      { id: EntityType.APPLICATION, name: MenuI18nKey.Applications },
-      { id: EntityType.TOOLSET, name: MenuI18nKey.Toolsets },
-      { id: EntityType.INTERCEPTOR, name: MenuI18nKey.Interceptors },
-      { id: EntityType.ROUTE, name: MenuI18nKey.Routes },
-      { id: EntityType.APPLICATION_TYPE_SCHEMA, name: MenuI18nKey.ApplicationRunners },
-      { id: EntityType.ADAPTER, name: MenuI18nKey.Adapters },
-      { id: EntityType.INTERCEPTOR_RUNNER, name: MenuI18nKey.InterceptorTemplates },
-      { id: EntityType.ROLE, name: MenuI18nKey.Roles },
-      { id: EntityType.KEY, name: MenuI18nKey.Keys },
+      { id: EntityType.MODEL, label: MenuI18nKey.Models },
+      { id: EntityType.APPLICATION, label: MenuI18nKey.Applications },
+      { id: EntityType.TOOLSET, label: MenuI18nKey.Toolsets },
+      { id: EntityType.INTERCEPTOR, label: MenuI18nKey.Interceptors },
+      { id: EntityType.ROUTE, label: MenuI18nKey.Routes },
+      { id: EntityType.APPLICATION_TYPE_SCHEMA, label: MenuI18nKey.ApplicationRunners },
+      { id: EntityType.ADAPTER, label: MenuI18nKey.Adapters },
+      { id: EntityType.INTERCEPTOR_RUNNER, label: MenuI18nKey.InterceptorTemplates },
+      { id: EntityType.ROLE, label: MenuI18nKey.Roles },
+      { id: EntityType.KEY, label: MenuI18nKey.Keys },
     ]);
   });
 
   test('Should include ADAPTER tab for non-core formats', () => {
     const res = getActualTabs(ExportType.FULL, ExportFormat.ADMIN, { adapters: true }, mockTranslate);
 
-    expect(res).toEqual([{ id: EntityType.ADAPTER, name: MenuI18nKey.Adapters }]);
+    expect(res).toEqual([{ id: EntityType.ADAPTER, label: MenuI18nKey.Adapters }]);
   });
 
   test('Should not include ADAPTER tab for CORE format', () => {
@@ -113,16 +113,16 @@ describe('Config content Utils :: getActualTabs', () => {
     );
 
     expect(res).toEqual([
-      { id: EntityType.MODEL, name: MenuI18nKey.Models },
-      { id: EntityType.APPLICATION, name: MenuI18nKey.Applications },
-      { id: EntityType.TOOLSET, name: MenuI18nKey.Toolsets },
-      { id: EntityType.INTERCEPTOR, name: MenuI18nKey.Interceptors },
-      { id: EntityType.ROUTE, name: MenuI18nKey.Routes },
-      { id: EntityType.APPLICATION_TYPE_SCHEMA, name: MenuI18nKey.ApplicationRunners },
-      { id: EntityType.ADAPTER, name: MenuI18nKey.Adapters },
-      { id: EntityType.INTERCEPTOR_RUNNER, name: MenuI18nKey.InterceptorTemplates },
-      { id: EntityType.ROLE, name: MenuI18nKey.Roles },
-      { id: EntityType.KEY, name: MenuI18nKey.Keys },
+      { id: EntityType.MODEL, label: MenuI18nKey.Models },
+      { id: EntityType.APPLICATION, label: MenuI18nKey.Applications },
+      { id: EntityType.TOOLSET, label: MenuI18nKey.Toolsets },
+      { id: EntityType.INTERCEPTOR, label: MenuI18nKey.Interceptors },
+      { id: EntityType.ROUTE, label: MenuI18nKey.Routes },
+      { id: EntityType.APPLICATION_TYPE_SCHEMA, label: MenuI18nKey.ApplicationRunners },
+      { id: EntityType.ADAPTER, label: MenuI18nKey.Adapters },
+      { id: EntityType.INTERCEPTOR_RUNNER, label: MenuI18nKey.InterceptorTemplates },
+      { id: EntityType.ROLE, label: MenuI18nKey.Roles },
+      { id: EntityType.KEY, label: MenuI18nKey.Keys },
     ]);
   });
 });
