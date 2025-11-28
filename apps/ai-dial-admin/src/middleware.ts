@@ -2,7 +2,6 @@ import withAuth from 'next-auth/middleware';
 import { createI18nMiddleware } from 'next-international/middleware';
 import { NextRequest } from 'next/server';
 
-import { getTraceId } from '@/src/telemetry/get-trace-id';
 import { cookies } from '@/src/utils/auth/auth-cookies';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
@@ -18,13 +17,7 @@ export const config = {
 };
 
 async function middlewareFn(req: NextRequest) {
-  const traceId = getTraceId();
-
-  const i18nResponse = await I18nMiddleware(req);
-
-  i18nResponse.headers.set('traceparent', traceId);
-
-  return i18nResponse;
+  return I18nMiddleware(req);
 }
 
 const authMiddleware = withAuth(middlewareFn, { cookies });

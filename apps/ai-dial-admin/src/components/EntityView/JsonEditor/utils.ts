@@ -14,7 +14,12 @@ export const showEditorErrorNotifications = ({
 }) => {
   return errors.map((error) => {
     const id = showNotification(
-      getErrorNotification(error.message, t(ErrorI18nKey.EditorErrorLine, { line: error.startLineNumber }), null),
+      getErrorNotification(
+        error.message,
+        t(ErrorI18nKey.EditorErrorLine, { line: error.startLineNumber }),
+        void 0,
+        null,
+      ),
     );
     return { id, ...error };
   });

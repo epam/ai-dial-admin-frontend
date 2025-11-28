@@ -1,6 +1,5 @@
 import { logError } from '@/src/server/logger';
 import { CACHE } from './send-request';
-import { getTraceId } from '@/src/telemetry/get-trace-id';
 
 export const fileRequest = async (
   url: string,
@@ -13,10 +12,7 @@ export const fileRequest = async (
       body: dto as FormData,
       method: method || 'POST',
       ...CACHE,
-      headers: {
-        ...(headers || {}),
-        traceparent: getTraceId(),
-      },
+      headers,
     });
   } catch (e) {
     logError(e, 'File request failed');
