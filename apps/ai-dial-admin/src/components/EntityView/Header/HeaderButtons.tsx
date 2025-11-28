@@ -44,7 +44,6 @@ interface Props<T> {
   removeEntity: (entity: string) => Promise<ServerActionResponse>;
   toggleJsonEditor?: () => void;
   context?: () => AssetsFolderContext<DialFile>;
-  childrenContainerClass?: string;
   assets?: Asset[];
   etag?: string;
 }
@@ -63,7 +62,6 @@ const HeaderButtons = <T extends object>({
   addedVersions,
   setAddedVersions,
   context,
-  childrenContainerClass,
   assets,
   etag,
   ...props
@@ -132,13 +130,7 @@ const HeaderButtons = <T extends object>({
                     etag={etag}
                   />
                 )}
-                <div
-                  className={classNames(
-                    'flex-1 flex flex-row gap-x-4',
-                    childrenContainerClass,
-                    isSimple ? 'justify-center' : '',
-                  )}
-                >
+                <div className={classNames('flex-1 flex flex-row gap-x-4', isSimple ? 'justify-center' : '')}>
                   <div className="flex flex-row gap-x-4">
                     <DialButton
                       variant={ButtonVariant.Secondary}
