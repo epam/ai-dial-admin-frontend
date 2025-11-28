@@ -146,12 +146,12 @@ export class BaseApi {
       return res.text().then((error) => {
         const errObject = getParsedError(error);
         this.setLoggerRequestError(error, res);
-        const traceparent = res.headers.get('traceparent');
         return {
           success: false,
-          errorMessage: `Traceparent: ${traceparent}, ${getErrorMessage(errObject, res.status)}`,
+          errorMessage: getErrorMessage(errObject, res.status),
           errorHeader: getError(errObject),
           status: res.status,
+          requestId: res.headers.get('traceparent') as string | undefined,
           etag,
         };
       });
@@ -164,6 +164,7 @@ export class BaseApi {
           errorMessage: getErrorMessage(r as ErrorObject, res.status),
           errorHeader: getError(r as ErrorObject),
           status: res.status,
+          requestId: res.headers.get('traceparent') as string | undefined,
           etag,
         };
       }
