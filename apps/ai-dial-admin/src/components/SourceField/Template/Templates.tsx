@@ -80,7 +80,9 @@ const Templates = <T extends DialModel | DialInterceptor>({
       }
     };
 
-    fetchRunners().catch((error) => showNotification(getErrorNotification(error.errorHeader, error.errorMessage)));
+    fetchRunners().catch((error) =>
+      showNotification(getErrorNotification(error.errorHeader, error.errorMessage, error.requestId)),
+    );
   }, [getRunners, showNotification]);
 
   useEffect(() => {

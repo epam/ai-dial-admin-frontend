@@ -106,7 +106,7 @@ const AuditView: FC<Props> = ({
           );
           router.push(ApplicationRoute.ActivityAudit);
         } else {
-          showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage));
+          showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage, res?.requestId));
         }
 
         onCloseModal();

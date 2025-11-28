@@ -91,7 +91,7 @@ const AssetVersionControl: FC<Props> = ({
             const newVersionAsset = res.response as DeploymentAsset;
             changeAssetForNewVersion(version, newVersionAsset);
           } else {
-            showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+            showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
           }
         });
       } else {

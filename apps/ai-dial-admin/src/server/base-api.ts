@@ -113,8 +113,10 @@ export class BaseApi {
     return sendRequest(`${this.config.host || ''}${url}`, type, { ...getApiHeaders(token), ...initHeaders }, dto).then(
       (res) => {
         if (isFailedRequest(res)) {
+          const traceparent = res.headers.get('traceparent');
           logger.error(`Request status ${res.status}`);
           logger.error(`Request error Url  ${res.url}`);
+          logger.error(`Request error traceparent  ${traceparent}`);
 
           if (res.status === 403) {
             return void 0;
@@ -144,12 +146,12 @@ export class BaseApi {
       return res.text().then((error) => {
         const errObject = getParsedError(error);
         this.setLoggerRequestError(error, res);
-
         return {
           success: false,
           errorMessage: getErrorMessage(errObject, res.status),
           errorHeader: getError(errObject),
           status: res.status,
+          requestId: res.headers.get('traceparent') as string | undefined,
           etag,
         };
       });
@@ -162,6 +164,7 @@ export class BaseApi {
           errorMessage: getErrorMessage(r as ErrorObject, res.status),
           errorHeader: getError(r as ErrorObject),
           status: res.status,
+          requestId: res.headers.get('traceparent') as string | undefined,
           etag,
         };
       }

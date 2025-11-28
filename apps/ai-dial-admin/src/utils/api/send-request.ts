@@ -1,5 +1,4 @@
 import { logError } from '@/src/server/logger';
-
 export const CACHE: RequestInit = { cache: 'no-store' };
 
 export const sendRequest = async <T extends object>(

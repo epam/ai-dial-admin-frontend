@@ -13,7 +13,7 @@ export const NotificationIcons: Record<NotificationType, ReactNode> = {
   dynamic: <IconChevronDown {...BASE_ICON_PROPS} />,
 };
 
-const Notification: FC<NotificationConfig> = ({ type, title, description, onClose }) => {
+const Notification: FC<NotificationConfig> = ({ type, title, description, requestId, onClose }) => {
   const Icon = NotificationIcons[type];
   const iconClassNames = classNames('inline mr-2', NotificationIconColor[type]);
 
@@ -32,6 +32,9 @@ const Notification: FC<NotificationConfig> = ({ type, title, description, onClos
         />
       </div>
       {description ? <p className="tiny text-secondary break-words whitespace-pre-wrap mt-2">{description}</p> : null}
+      {requestId ? (
+        <p className="tiny text-secondary break-words whitespace-pre-wrap mt-2">Request ID: {requestId}</p>
+      ) : null}
     </div>
   );
 };

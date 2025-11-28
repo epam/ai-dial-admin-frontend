@@ -133,7 +133,7 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
         );
         router.refresh();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
       setIsModalOpen(false);
     });

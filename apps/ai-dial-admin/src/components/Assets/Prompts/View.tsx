@@ -122,7 +122,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
           }
           router.refresh();
         } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       });
     },

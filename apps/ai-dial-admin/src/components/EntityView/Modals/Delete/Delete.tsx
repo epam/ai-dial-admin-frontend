@@ -83,7 +83,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
         }
         router.refresh();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [

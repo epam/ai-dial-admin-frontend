@@ -82,7 +82,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
         if (res.success) {
           setAdapters(res.response || []);
         } else {
-          showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage));
+          showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       });
     };

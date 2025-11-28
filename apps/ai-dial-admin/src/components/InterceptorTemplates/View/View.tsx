@@ -77,7 +77,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
         );
         router.refresh();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [selectedTemplate, etag, showNotification, t, router]);

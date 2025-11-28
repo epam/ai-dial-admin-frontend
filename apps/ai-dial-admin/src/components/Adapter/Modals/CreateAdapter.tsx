@@ -63,7 +63,7 @@ const CreateAdapter: FC<Props> = ({ isModalOpen, onClose, names }) => {
 
         onClose();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [currentAdapter, showNotification, t, router, onClose]);
