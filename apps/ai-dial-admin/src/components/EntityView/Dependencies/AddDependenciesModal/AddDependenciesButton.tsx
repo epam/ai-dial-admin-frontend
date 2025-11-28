@@ -45,7 +45,7 @@ const AddDependenciesButton: FC<Props> = ({ availableModels, availableApplicatio
 
   return (
     <>
-      <DialButtonDropdown title={t(ButtonsI18nKey.Add)} items={dropdownItems} variant={ButtonVariant.Primary} />
+      <DialButtonDropdown label={t(ButtonsI18nKey.Add)} items={dropdownItems} variant={ButtonVariant.Primary} />
 
       {isModalOpen &&
         createPortal(

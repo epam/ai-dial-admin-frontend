@@ -138,7 +138,7 @@ const CreateFilter: FC<Props> = ({
           />
         )}
       </div>
-      <CloseButton onClose={onClose} cssClass="hidden md:flex" />
+      <CloseButton onClose={onClose} className="hidden md:flex" />
     </div>
   );
 };

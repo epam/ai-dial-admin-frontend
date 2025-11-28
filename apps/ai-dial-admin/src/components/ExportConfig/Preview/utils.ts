@@ -35,7 +35,7 @@ export const getPreviewTabs = (
         convertedData[EntityType.ROLE] = data[key];
         tabs.push({
           id: EntityType.ROLE,
-          name: `${t(MenuI18nKey.Roles)}: ${data[key].length}`,
+          label: `${t(MenuI18nKey.Roles)}: ${data[key].length}`,
         });
       }
 
@@ -43,7 +43,7 @@ export const getPreviewTabs = (
         convertedData[EntityType.KEY] = data[key];
         tabs.push({
           id: EntityType.KEY,
-          name: `${t(MenuI18nKey.Keys)}: ${data[key].length}`,
+          label: `${t(MenuI18nKey.Keys)}: ${data[key].length}`,
         });
       }
 
@@ -51,7 +51,7 @@ export const getPreviewTabs = (
         convertedData[EntityType.APPLICATION_TYPE_SCHEMA] = data[key];
         tabs.push({
           id: EntityType.APPLICATION_TYPE_SCHEMA,
-          name: `${t(MenuI18nKey.ApplicationRunners)}: ${data[key].length}`,
+          label: `${t(MenuI18nKey.ApplicationRunners)}: ${data[key].length}`,
         });
       }
 
@@ -59,7 +59,7 @@ export const getPreviewTabs = (
         convertedData[EntityType.INTERCEPTOR] = data[key];
         tabs.push({
           id: EntityType.INTERCEPTOR,
-          name: `${t(MenuI18nKey.Interceptors)}: ${data[key].length}`,
+          label: `${t(MenuI18nKey.Interceptors)}: ${data[key].length}`,
         });
       }
 
@@ -67,7 +67,7 @@ export const getPreviewTabs = (
         convertedData[EntityType.ADAPTER] = data[key];
         tabs.push({
           id: EntityType.ADAPTER,
-          name: `${t(MenuI18nKey.Adapters)}: ${data[key].length}`,
+          label: `${t(MenuI18nKey.Adapters)}: ${data[key].length}`,
         });
       }
 
@@ -75,7 +75,7 @@ export const getPreviewTabs = (
         convertedData[EntityType.PROMPT] = data[key];
         tabs.push({
           id: EntityType.PROMPT,
-          name: `${t(MenuI18nKey.Prompts)}: ${data[key].length}`,
+          label: `${t(MenuI18nKey.Prompts)}: ${data[key].length}`,
         });
       }
 
@@ -83,7 +83,7 @@ export const getPreviewTabs = (
         convertedData[EntityType.FILE] = data[key];
         tabs.push({
           id: EntityType.FILE,
-          name: `${t(MenuI18nKey.Files)}: ${data[key].length}`,
+          label: `${t(MenuI18nKey.Files)}: ${data[key].length}`,
         });
       }
 
@@ -92,7 +92,7 @@ export const getPreviewTabs = (
 
         tabs.push({
           id: EntityType.APPLICATION,
-          name: `${t(MenuI18nKey.Applications)}: ${data[key].length}`,
+          label: `${t(MenuI18nKey.Applications)}: ${data[key].length}`,
         });
       }
 
@@ -100,7 +100,7 @@ export const getPreviewTabs = (
         convertedData[EntityType.MODEL] = getModelsForEntitiesGrid(data[key] as DialModel[]);
         tabs.push({
           id: EntityType.MODEL,
-          name: `${t(MenuI18nKey.Models)}: ${data[key].length}`,
+          label: `${t(MenuI18nKey.Models)}: ${data[key].length}`,
         });
       }
 
@@ -108,7 +108,7 @@ export const getPreviewTabs = (
         convertedData[EntityType.ROUTE] = getRoutesForEntitiesGrid(data[key] as DialModel[]);
         tabs.push({
           id: EntityType.ROUTE,
-          name: `${t(MenuI18nKey.Routes)}: ${data[key].length}`,
+          label: `${t(MenuI18nKey.Routes)}: ${data[key].length}`,
         });
       }
 
@@ -116,7 +116,7 @@ export const getPreviewTabs = (
         convertedData[EntityType.TOOLSET] = getToolsetsForEntitiesGrid(data[key]);
         tabs.push({
           id: EntityType.TOOLSET,
-          name: `${t(MenuI18nKey.Toolsets)}: ${data[key].length}`,
+          label: `${t(MenuI18nKey.Toolsets)}: ${data[key].length}`,
         });
       }
     }

@@ -40,7 +40,7 @@ const getConfigurationTabs = (preview: Record<string, BaseEntity[]>, t: (v: stri
       if (previewItem && previewItem.length) {
         return {
           ...entityTab,
-          name: `${entityTab.name} (${previewItem.length})`,
+          label: `${entityTab.name} (${previewItem.length})`,
         };
       }
       return null;
