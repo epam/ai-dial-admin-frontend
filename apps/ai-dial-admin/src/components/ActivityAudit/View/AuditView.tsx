@@ -4,7 +4,14 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialConfirmationPopup, DialSwitch, DialTooltip } from '@epam/ai-dial-ui-kit';
+import {
+  ButtonVariant,
+  DialButton,
+  DialConfirmationPopup,
+  DialEllipsisTooltip,
+  DialSwitch,
+  DialTooltip,
+} from '@epam/ai-dial-ui-kit';
 import { IconExternalLink, IconRestore } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -130,8 +137,8 @@ const AuditView: FC<Props> = ({
         {!isModalView && (
           <div className="flex flex-row flex-wrap justify-between mb-6 gap-3">
             <h1 className="flex flex-row items-center gap-x-3">
-              <DialTooltip tooltip={activity.activityId}>{activity.activityId}</DialTooltip>
-              <CopyButton field={activity.activityId} title={t(EntityFieldsI18nKey.id)} />
+              <DialEllipsisTooltip text={activity.activityId} />
+              <CopyButton field={activity.activityId} label={t(EntityFieldsI18nKey.id)} />
             </h1>
             <div className="flex flex-row items-center gap-4 flex-wrap">
               <CompareControl compareView={compareView} setCompareView={setCompareView} />

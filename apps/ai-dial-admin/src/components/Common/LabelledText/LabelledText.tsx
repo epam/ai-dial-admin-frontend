@@ -18,7 +18,7 @@ const LabelledText: FC<Props> = ({ label, text, children, copyable }) => {
       postfix={
         copyable ? (
           <div className="ml-2 flex items-center justify-center">
-            <CopyButton field={text || ''} title={label} />
+            <CopyButton field={text || ''} label={label} />
           </div>
         ) : null
       }

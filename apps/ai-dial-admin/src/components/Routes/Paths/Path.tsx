@@ -72,7 +72,7 @@ const Path: FC<Props> = ({ index, path, readonly, optional, fieldTitle, allPaths
           invalid={!!error}
         />
       </div>
-      {!readonly && <DialRemoveButton onClick={() => onRemove(index)} cssClass={removeButtonClass} />}
+      {!readonly && <DialRemoveButton onClick={() => onRemove(index)} className={removeButtonClass} />}
     </div>
   );
 };

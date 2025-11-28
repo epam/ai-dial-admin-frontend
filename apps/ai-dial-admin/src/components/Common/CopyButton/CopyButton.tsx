@@ -9,25 +9,25 @@ import { useI18n } from '@/src/locales/client';
 import { getSuccessNotification } from '@/src/utils/notification';
 
 interface Props {
-  title: string;
+  label: string;
   className?: string;
   field?: string;
   isFullButton?: boolean;
 }
 
-const CopyButton: FC<Props> = ({ title, field, className, isFullButton = false }) => {
+const CopyButton: FC<Props> = ({ label, field, className, isFullButton = false }) => {
   const { showNotification } = useNotification();
   const t = useI18n() as (stringToTranslate: string) => string;
 
   const onClick = useCallback(() => {
     if (field) {
       navigator.clipboard.writeText(field);
-      showNotification(getSuccessNotification(`${title} ${t(BasicI18nKey.CopiedSuccessfully)}`));
+      showNotification(getSuccessNotification(`${label} ${t(BasicI18nKey.CopiedSuccessfully)}`));
     }
-  }, [field, title, showNotification, t]);
+  }, [field, label, showNotification, t]);
 
   const props = isFullButton
-    ? { variant: ButtonVariant.Secondary, title: t(ButtonsI18nKey.Copy) }
+    ? { variant: ButtonVariant.Secondary, label: t(ButtonsI18nKey.Copy) }
     : { className: 'cursor-pointer text-secondary hover:text-accent-primary' };
 
   return (

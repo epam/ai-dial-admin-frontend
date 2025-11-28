@@ -29,8 +29,8 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
 
   const lineHorizontalChildClass = classNames('h-[1px] w-[16px] bg-accent-primary', errorText && 'mb-[18px]');
   const containerClass = classNames('flex-1 flex flex-row gap-x-2 items-center');
-  const inputClass = classNames('flex-shrink-0', errorText && 'pb-[18px]');
-  const iconClass = classNames(
+  const inputClassName = classNames('flex-shrink-0', errorText && 'pb-[18px]');
+  const iconClassName = classNames(
     'cursor-pointer',
     index === 0 ? 'mt-[24px]' : 'flex items-center',
     errorText && 'pb-[18px]',
@@ -101,7 +101,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
     <>
       <div className={classNames(lineHorizontalChildClass, index === 0 && 'mt-[22px]')}></div>
       <div ref={ref} className={containerClass}>
-        <div className={classNames(inputClass, 'w-[250px]')}>
+        <div className={classNames(inputClassName, 'w-[250px]')}>
           <DialSelectField
             value={rule.source}
             elementId={'rule-attribute-' + index}
@@ -111,7 +111,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
             onChange={(source) => onChangeSource(source as string)}
           />
         </div>
-        <div className={classNames(inputClass, 'w-[160px]')}>
+        <div className={classNames(inputClassName, 'w-[160px]')}>
           <DialSelectField
             value={rule.function}
             elementId={'rule-function-' + index}
@@ -145,7 +145,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
             />
           )}
         </div>
-        <DialRemoveButton onClick={onRemoveValue} cssClass={iconClass} />
+        <DialRemoveButton onClick={onRemoveValue} className={iconClassName} />
       </div>
     </>
   );
