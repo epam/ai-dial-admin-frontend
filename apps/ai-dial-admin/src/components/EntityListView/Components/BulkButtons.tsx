@@ -56,7 +56,7 @@ const BulkButtons = ({
       {!isDeploymentAsset(route) && (
         <DialButton
           variant={ButtonVariant.Secondary}
-          title={t(ButtonsI18nKey.Export)}
+          label={t(ButtonsI18nKey.Export)}
           iconBefore={<IconFileArrowRight {...BASE_ICON_PROPS} />}
           disable={!itemsCount}
           onClick={bulkExport}
@@ -65,7 +65,7 @@ const BulkButtons = ({
       {isAssetWithVersion(route) && (
         <DialButton
           variant={ButtonVariant.Secondary}
-          title={t(ButtonsI18nKey.Delete)}
+          label={t(ButtonsI18nKey.Delete)}
           iconBefore={<IconTrashX {...BASE_ICON_PROPS} />}
           disable={!itemsCount}
           onClick={() => {

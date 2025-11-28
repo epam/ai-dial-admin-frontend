@@ -154,7 +154,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
           <DialButton
             variant={ButtonVariant.Primary}
             iconBefore={<IconUpload {...BASE_ICON_PROPS} />}
-            title={t(ButtonsI18nKey.Export)}
+            label={t(ButtonsI18nKey.Export)}
             disable={isExportDisable}
             onClick={onTryExport}
           />

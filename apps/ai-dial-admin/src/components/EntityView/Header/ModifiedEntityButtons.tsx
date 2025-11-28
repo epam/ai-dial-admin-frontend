@@ -77,25 +77,25 @@ const ModifiedEntityButtons = <T extends object>({
       <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
         <DialButton
           variant={ButtonVariant.Secondary}
-          cssClass={buttonsClassNames}
-          title={t(ButtonsI18nKey.Discard)}
+          className={buttonsClassNames}
+          label={t(ButtonsI18nKey.Discard)}
           onClick={onDiscard}
         />
         {isAssetWithVersion(view) && (
           <DialButton
             variant={ButtonVariant.Secondary}
-            cssClass={buttonsClassNames}
-            title={t(ButtonsI18nKey.SaveAsNewVersion)}
+            className={buttonsClassNames}
+            label={t(ButtonsI18nKey.SaveAsNewVersion)}
             onClick={() => setIsModalOpen(true)}
-            disable={jsonEditorEnabled ? false : !isValid}
+            disabled={jsonEditorEnabled ? false : !isValid}
           />
         )}
         <DialButton
           variant={ButtonVariant.Primary}
-          cssClass={buttonsClassNames}
-          title={t(ButtonsI18nKey.Save)}
+          className={buttonsClassNames}
+          label={t(ButtonsI18nKey.Save)}
           onClick={() => onTryToSave()}
-          disable={jsonEditorEnabled ? false : !isValid}
+          disabled={jsonEditorEnabled ? false : !isValid}
         />
       </div>
       {isModalOpen &&

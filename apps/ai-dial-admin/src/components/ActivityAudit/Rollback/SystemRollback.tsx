@@ -170,7 +170,7 @@ const SystemRollback: FC = () => {
           <DialButton
             iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
             variant={ButtonVariant.Primary}
-            title={t(RollbackI18nKey.System)}
+            label={t(RollbackI18nKey.System)}
             onClick={() => setIsRollBackModalOpen(true)}
           />
           <div className="w-[1px] h-6 bg-layer-4"></div>

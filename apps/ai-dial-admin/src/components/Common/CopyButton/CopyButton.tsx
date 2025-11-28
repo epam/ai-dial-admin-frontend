@@ -10,12 +10,12 @@ import { getSuccessNotification } from '@/src/utils/notification';
 
 interface Props {
   title: string;
-  cssClass?: string;
+  className?: string;
   field?: string;
   isFullButton?: boolean;
 }
 
-const CopyButton: FC<Props> = ({ title, field, cssClass, isFullButton = false }) => {
+const CopyButton: FC<Props> = ({ title, field, className, isFullButton = false }) => {
   const { showNotification } = useNotification();
   const t = useI18n() as (stringToTranslate: string) => string;
 
@@ -28,12 +28,12 @@ const CopyButton: FC<Props> = ({ title, field, cssClass, isFullButton = false })
 
   const props = isFullButton
     ? { variant: ButtonVariant.Secondary, title: t(ButtonsI18nKey.Copy) }
-    : { cssClass: 'cursor-pointer text-secondary hover:text-accent-primary' };
+    : { className: 'cursor-pointer text-secondary hover:text-accent-primary' };
 
   return (
     <DialButton
-      cssClass={cssClass}
-      ariaLabel="copy"
+      className={className}
+      aria-label="copy"
       onClick={onClick}
       iconBefore={<IconCopy {...BASE_ICON_PROPS} />}
       {...props}

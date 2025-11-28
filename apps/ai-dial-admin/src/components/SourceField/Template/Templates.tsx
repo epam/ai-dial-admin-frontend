@@ -130,8 +130,8 @@ const Templates = <T extends DialModel | DialInterceptor>({
               <DialButton
                 variant={ButtonVariant.Secondary}
                 iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
-                cssClass={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
-                title={t(SourceI18nKey.OpenTemplate)}
+                className={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
+                label={t(SourceI18nKey.OpenTemplate)}
                 onClick={() => openTemplate()}
               />
             )}

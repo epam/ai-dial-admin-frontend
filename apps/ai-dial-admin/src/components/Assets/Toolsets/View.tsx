@@ -276,14 +276,14 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
               (isToolsetSignedIn ? (
                 <DialButton
                   variant={ButtonVariant.Secondary}
-                  title={t(ToolsetI18nKey.LogOut)}
+                  label={t(ToolsetI18nKey.LogOut)}
                   iconBefore={<IconLogout {...BASE_ICON_PROPS} />}
                   onClick={onLogout}
                 />
               ) : (
                 <DialButton
                   variant={ButtonVariant.Secondary}
-                  title={t(ToolsetI18nKey.LogIn)}
+                  label={t(ToolsetI18nKey.LogIn)}
                   iconBefore={<IconLogin {...BASE_ICON_PROPS} />}
                   onClick={() => setIsModalOpen(true)}
                 />

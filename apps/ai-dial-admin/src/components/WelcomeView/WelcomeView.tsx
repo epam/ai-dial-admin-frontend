@@ -42,7 +42,7 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
               <DialButton
                 iconBefore={<IconFileDescription {...BASE_ICON_PROPS} />}
                 variant={ButtonVariant.Primary}
-                title={t(WelcomeViewI18nKey.ViewDocumentation)}
+                label={t(WelcomeViewI18nKey.ViewDocumentation)}
                 onClick={() => {
                   window.open(docLink, '_blank');
                 }}
@@ -60,8 +60,8 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
           <DialButton
             iconBefore={<IconDownload {...BASE_ICON_PROPS} widths={24} height={24} />}
             variant={ButtonVariant.Secondary}
-            cssClass="p-4 lg:px-3 lg:py-2 h-[56px] w-[56px] lg:h-[42px] lg:w-auto"
-            title={isTabletScreen ? '' : t(MenuI18nKey.ImportConfig)}
+            className="p-4 lg:px-3 lg:py-2 h-[56px] w-[56px] lg:h-[42px] lg:w-auto"
+            label={isTabletScreen ? '' : t(MenuI18nKey.ImportConfig)}
             onClick={() => {
               router.push(ApplicationRoute.ImportConfig);
             }}
@@ -69,8 +69,8 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
           <DialButton
             iconBefore={<IconUpload {...BASE_ICON_PROPS} widths={24} height={24} />}
             variant={ButtonVariant.Secondary}
-            cssClass="p-4 lg:px-3 lg:py-2 h-[56px] w-[56px] lg:h-[42px] lg:w-auto"
-            title={isTabletScreen ? '' : t(MenuI18nKey.ExportConfig)}
+            className="p-4 lg:px-3 lg:py-2 h-[56px] w-[56px] lg:h-[42px] lg:w-auto"
+            label={isTabletScreen ? '' : t(MenuI18nKey.ExportConfig)}
             onClick={() => {
               router.push(ApplicationRoute.ExportConfig);
             }}
@@ -79,8 +79,8 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
             <DialButton
               iconBefore={<IconExternalLink {...BASE_ICON_PROPS} widths={24} height={24} />}
               variant={ButtonVariant.Secondary}
-              cssClass="secondary p-4 lg:px-3 lg:py-2 h-[56px] lg:h-[42px]"
-              title={dialButtonName || t(WelcomeViewI18nKey.OpenDial)}
+              className="secondary p-4 lg:px-3 lg:py-2 h-[56px] lg:h-[42px]"
+              label={dialButtonName || t(WelcomeViewI18nKey.OpenDial)}
               onClick={() => {
                 window.open(dialLink, '_blank');
               }}

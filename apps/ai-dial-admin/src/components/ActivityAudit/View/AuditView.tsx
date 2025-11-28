@@ -139,7 +139,7 @@ const AuditView: FC<Props> = ({
               <DialButton
                 iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
                 variant={ButtonVariant.Secondary}
-                title={t(RollbackI18nKey.Resource)}
+                label={t(RollbackI18nKey.Resource)}
                 onClick={onOpenModal}
               />
               <div className="w-[1px] h-6 bg-layer-4"></div>
@@ -161,7 +161,7 @@ const AuditView: FC<Props> = ({
                     <DialTooltip tooltip={activity.activityId}>{activity.activityId}</DialTooltip>
                     <DialButton
                       onClick={() => openActivityInNewTab(activity)}
-                      cssClass="text-secondary"
+                      className="text-secondary"
                       iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
                     />
                   </h3>

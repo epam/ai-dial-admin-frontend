@@ -36,8 +36,8 @@ export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({
                 {hasRemove && !readonly && (
                   <DialRemoveButton
                     onClick={onDropIndexClick(key)}
-                    iconClass="text-error"
-                    cssClass="border rounded border-primary justify-start p-2"
+                    iconClassName="text-error"
+                    className="border rounded border-primary justify-start p-2"
                   />
                 )}
               </li>
@@ -49,8 +49,8 @@ export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({
           <DialButton
             variant={ButtonVariant.Tertiary}
             onClick={onAddClick}
-            title={`${t(ButtonsI18nKey.Add)} ${title}`}
-            cssClass="w-fit"
+            label={`${t(ButtonsI18nKey.Add)} ${title}`}
+            className="w-fit"
             iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
           />
         )}

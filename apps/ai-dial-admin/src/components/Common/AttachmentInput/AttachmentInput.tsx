@@ -202,17 +202,17 @@ const AttachmentInput: FC<Props> = ({
           {!allSelected && (
             <DialButton
               variant={ButtonVariant.Secondary}
-              title={t(AttachmentsI18nKey.UseAll)}
+              label={t(AttachmentsI18nKey.UseAll)}
               onClick={handleSelectAll}
-              disable={disable}
+              disabled={disable}
             />
           )}
           {!!selected.length && (
             <DialButton
               variant={ButtonVariant.Secondary}
-              title={t(ButtonsI18nKey.None)}
+              label={t(ButtonsI18nKey.None)}
               onClick={handleSelectNone}
-              disable={disable}
+              disabled={disable}
             />
           )}
         </div>

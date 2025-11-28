@@ -87,7 +87,7 @@ const Defaults: FC<Props> = ({ entity, onChangeEntity }) => {
         <div>
           <DialButton
             variant={ButtonVariant.Tertiary}
-            title={t(ButtonsI18nKey.AddDefault)}
+            label={t(ButtonsI18nKey.AddDefault)}
             iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
             onClick={onAddItem}
           />
