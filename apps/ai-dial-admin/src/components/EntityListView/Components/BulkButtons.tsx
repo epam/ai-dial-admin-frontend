@@ -58,7 +58,7 @@ const BulkButtons = ({
           variant={ButtonVariant.Secondary}
           label={t(ButtonsI18nKey.Export)}
           iconBefore={<IconFileArrowRight {...BASE_ICON_PROPS} />}
-          disable={!itemsCount}
+          disabled={!itemsCount}
           onClick={bulkExport}
         />
       )}
@@ -67,7 +67,7 @@ const BulkButtons = ({
           variant={ButtonVariant.Secondary}
           label={t(ButtonsI18nKey.Delete)}
           iconBefore={<IconTrashX {...BASE_ICON_PROPS} />}
-          disable={!itemsCount}
+          disabled={!itemsCount}
           onClick={() => {
             setModalType(ModalType.deleteBulk);
             setIsModalOpen(true);

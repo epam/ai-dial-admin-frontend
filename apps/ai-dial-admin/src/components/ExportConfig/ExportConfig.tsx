@@ -155,7 +155,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
             variant={ButtonVariant.Primary}
             iconBefore={<IconUpload {...BASE_ICON_PROPS} />}
             label={t(ButtonsI18nKey.Export)}
-            disable={isExportDisable}
+            disabled={isExportDisable}
             onClick={onTryExport}
           />
         </div>

@@ -45,7 +45,7 @@ const FolderInfoHeader: FC<Props> = ({ isChanged, isSaveDisable, title, save, di
             className={buttonsClassNames}
             label={t(ButtonsI18nKey.Save)}
             onClick={save}
-            disable={isSaveDisable}
+            disabled={isSaveDisable}
           />
         </div>
       )}
