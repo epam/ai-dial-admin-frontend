@@ -13,7 +13,7 @@ import { defaultResource, resourceFromAttributes } from '@opentelemetry/resource
 
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { NodeSDK, logs } from '@opentelemetry/sdk-node';
-import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-node';
+import { ConsoleSpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-node';
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 function getPrometheusMetricExporter() {
@@ -61,6 +61,8 @@ const sdk = new NodeSDK({
   instrumentations: [getNodeAutoInstrumentations(), httpInstrumentation, pinoInstrumentation],
   spanProcessors: [defaultSpanProcessor],
   logRecordProcessors: [logRecordProcessor],
+  traceExporter: new ConsoleSpanExporter(),
+  spanProcessor: new SimpleSpanProcessor(new ConsoleSpanExporter()),
 });
 sdk.start();
 
