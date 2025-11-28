@@ -38,12 +38,12 @@ describe('Config content Utils :: getDataWithoutItem', () => {
 
   test('Should remove data from Models', () => {
     const result = getDataWithoutItem(
-      [{ label: 'name1' }, { label: 'name2' }, { label: 'name3' }, { label: 'name4' }, { label: 'name5' }],
-      { label: 'name5' },
+      [{ name: 'name1' }, { name: 'name2' }, { name: 'name3' }, { name: 'name4' }, { name: 'name5' }],
+      { name: 'name5' },
       EntityType.MODEL,
     );
 
-    expect(result).toEqual([{ label: 'name1' }, { label: 'name2' }, { label: 'name3' }, { label: 'name4' }]);
+    expect(result).toEqual([{ name: 'name1' }, { name: 'name2' }, { name: 'name3' }, { name: 'name4' }]);
   });
 });
 
@@ -51,15 +51,15 @@ describe('Config content Utils :: getActualTabs', () => {
   const mockTranslate = (v: string) => v;
 
   test('Should return empty tabs', () => {
-    const res1 = getActualTabs(ExportType.FULL, ExportFormat.CORE, {}, mockTranslate);
-    const res2 = getActualTabs(ExportType.FULL, ExportFormat.ADMIN, {}, mockTranslate);
+    const res1 = getActualTabs(ExportType.Full, ExportFormat.CORE, {}, mockTranslate);
+    const res2 = getActualTabs(ExportType.Full, ExportFormat.ADMIN, {}, mockTranslate);
 
     expect(res1).toEqual([]);
     expect(res2).toEqual([]);
   });
 
   test('Should return tabs for full core config', () => {
-    const res = getActualTabs(ExportType.FULL, ExportFormat.CORE, { roles: true, files: true }, mockTranslate);
+    const res = getActualTabs(ExportType.Full, ExportFormat.CORE, { roles: true, files: true }, mockTranslate);
 
     expect(res).toEqual([{ id: EntityType.ROLE, label: MenuI18nKey.Roles }]);
   });
@@ -82,20 +82,20 @@ describe('Config content Utils :: getActualTabs', () => {
   });
 
   test('Should include ADAPTER tab for non-core formats', () => {
-    const res = getActualTabs(ExportType.FULL, ExportFormat.ADMIN, { adapters: true }, mockTranslate);
+    const res = getActualTabs(ExportType.Full, ExportFormat.ADMIN, { adapters: true }, mockTranslate);
 
     expect(res).toEqual([{ id: EntityType.ADAPTER, label: MenuI18nKey.Adapters }]);
   });
 
   test('Should not include ADAPTER tab for CORE format', () => {
-    const res = getActualTabs(ExportType.FULL, ExportFormat.CORE, { adapters: true }, mockTranslate);
+    const res = getActualTabs(ExportType.Full, ExportFormat.CORE, { adapters: true }, mockTranslate);
 
     expect(res).toEqual([]);
   });
 
   test('Should return all tabs if all flags set and format is ADMIN', () => {
     const res = getActualTabs(
-      ExportType.FULL,
+      ExportType.Full,
       ExportFormat.ADMIN,
       {
         models: true,
