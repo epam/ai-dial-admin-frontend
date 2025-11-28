@@ -29,10 +29,16 @@ describe('Server - api', () => {
   });
 
   test('Should check return texts', async () => {
-    const error = { success: false, errorHeader: 'Request error', errorMessage: 'Error status: 400', status: 400 };
+    const error = {
+      success: false,
+      errorHeader: 'Request error',
+      errorMessage: 'Error status: 400',
+      requestId: null,
+      status: 400,
+    };
     fetch.mockResponseOnce(JSON.stringify('Error get'), {
       status: 400,
-      error: JSON.stringify({ message: 'message', error: 'header' }),
+      error: JSON.stringify({ message: 'message', error: 'header', requestId: null }),
     } as any);
     (new BaseApi({ host: '' }) as any).getAction(TEST_GET_URL).then((res) => {
       expect(res).toEqual(error);
