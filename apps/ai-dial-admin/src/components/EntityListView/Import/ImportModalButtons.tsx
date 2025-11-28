@@ -50,7 +50,7 @@ const ImportModalButtons: FC<Props> = ({ steps, currentStep, onChangeStep, onFin
       {currentStep?.id === steps.at(-1)?.id && (
         <DialButton
           variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Finish)}
+          label={t(ButtonsI18nKey.Finish)}
           disabled={steps.some((s) => s.status !== StepStatus.VALID)}
           onClick={onFinishClick}
         />
