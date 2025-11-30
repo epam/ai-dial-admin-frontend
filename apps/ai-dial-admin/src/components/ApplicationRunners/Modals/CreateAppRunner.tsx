@@ -53,7 +53,7 @@ const CreateAppRunner: FC<Props> = ({ isModalOpen, names, onClose }) => {
         router.push(getUrnForEntity(ApplicationRoute.ApplicationRunners, currentScheme));
         onClose();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [currentScheme, showNotification, t, router, onClose]);

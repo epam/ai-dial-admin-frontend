@@ -33,7 +33,7 @@ const ImportModalButtons: FC<Props> = ({ steps, currentStep, onChangeStep, onFin
       {currentStep?.id !== steps[0]?.id && (
         <DialButton
           variant={ButtonVariant.Secondary}
-          title={t(ButtonsI18nKey.Previous)}
+          label={t(ButtonsI18nKey.Previous)}
           onClick={onPrevStep}
           iconBefore={<IconArrowNarrowLeft {...BASE_ICON_PROPS} />}
         />
@@ -41,17 +41,17 @@ const ImportModalButtons: FC<Props> = ({ steps, currentStep, onChangeStep, onFin
       {currentStep?.id !== steps.at(-1)?.id && (
         <DialButton
           variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Next)}
+          label={t(ButtonsI18nKey.Next)}
           onClick={onNextStep}
           iconAfter={<IconArrowNarrowRight {...BASE_ICON_PROPS} />}
-          disable={currentStep?.status !== StepStatus.VALID}
+          disabled={currentStep?.status !== StepStatus.VALID}
         />
       )}
       {currentStep?.id === steps.at(-1)?.id && (
         <DialButton
           variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Finish)}
-          disable={steps.some((s) => s.status !== StepStatus.VALID)}
+          label={t(ButtonsI18nKey.Finish)}
+          disabled={steps.some((s) => s.status !== StepStatus.VALID)}
           onClick={onFinishClick}
         />
       )}

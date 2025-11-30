@@ -91,7 +91,7 @@ const AssetVersionControl: FC<Props> = ({
             const newVersionAsset = res.response as DeploymentAsset;
             changeAssetForNewVersion(version, newVersionAsset);
           } else {
-            showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+            showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
           }
         });
       } else {
@@ -134,10 +134,10 @@ const AssetVersionControl: FC<Props> = ({
           footer={
             !isDeployment && (
               <DialButton
-                cssClass="w-full min-h-[34px] h-[34px]"
+                className="w-full min-h-[34px] h-[34px]"
                 variant={ButtonVariant.Tertiary}
                 iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-                title={t(ButtonsI18nKey.Create)}
+                label={t(ButtonsI18nKey.Create)}
               />
             )
           }
@@ -148,7 +148,7 @@ const AssetVersionControl: FC<Props> = ({
           <DialButton
             variant={ButtonVariant.Secondary}
             iconBefore={<IconReplace {...BASE_ICON_PROPS} />}
-            title={t(CompareI18nKey.CompareVersions)}
+            label={t(CompareI18nKey.CompareVersions)}
             onClick={() => handleModalOpen(ModalType.compareVersions)}
           />
         )}

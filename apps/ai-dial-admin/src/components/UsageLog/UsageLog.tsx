@@ -91,7 +91,7 @@ const UsageLog: FC<Props> = ({ route, entity, entityView }) => {
           />
           <DialButton
             variant={ButtonVariant.Secondary}
-            title={t(ButtonsI18nKey.Refresh)}
+            label={t(ButtonsI18nKey.Refresh)}
             iconBefore={<IconRefresh {...BASE_ICON_PROPS} />}
             onClick={onRefresh}
           />

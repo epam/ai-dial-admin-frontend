@@ -41,7 +41,7 @@ const MenuItem: FC<Props> = ({ config, activeMenuItem, isOpenByDefault = false, 
         <button className={menuBlockClassNames} onClick={onClick} aria-label="button">
           <div className="flex flex-row items-center flex-1 min-w-0">
             <div className={classNames('mr-4', iconClassNames)}>{config.icon}</div>
-            <span className="text-left truncate"> {t(config.key) ?? ''}</span>
+            <span className="text-left truncate text-primary"> {t(config.key) ?? ''}</span>
           </div>
           {isSidebarOpen && (
             <div className={classNames('ml-4', iconClassNames)}>

@@ -1,5 +1,5 @@
 import { Publication } from '@/src/models/dial/publications';
-import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 import { PublicationsApi } from '../publications-api';
@@ -93,8 +93,7 @@ describe('Server :: Publications', () => {
   });
 
   test('Should calls declinePublication', async () => {
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     const path = '/decline/path';
     const comment = 'No good';
@@ -111,8 +110,7 @@ describe('Server :: Publications', () => {
   });
 
   test('Should calls approvePublication', async () => {
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     const path = '/approve/path';
     await instance.approvePublication(TOKEN_MOCK, path);

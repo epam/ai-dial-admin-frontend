@@ -154,7 +154,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
         );
         router.refresh();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [selectedFormat, selectedKey, originalKey.name, etag, showNotification, t, router]);
@@ -169,7 +169,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
             getSuccessNotification(t(KeysI18nKey.RotateKeySuccessTitle), t(KeysI18nKey.RotateKeySuccessDescription)),
           );
         } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       });
     },
@@ -207,7 +207,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
           >
             <DialButton
               variant={ButtonVariant.Primary}
-              title={t(ButtonsI18nKey.Rotate)}
+              label={t(ButtonsI18nKey.Rotate)}
               iconBefore={<IconRefresh {...BASE_ICON_PROPS} />}
               onClick={() => setIsRotateModalOpen(true)}
             />

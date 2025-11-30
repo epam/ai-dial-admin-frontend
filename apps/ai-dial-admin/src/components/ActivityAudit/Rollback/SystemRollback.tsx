@@ -38,7 +38,7 @@ const SystemRollback: FC = () => {
 
   const tabs = SYSTEM_ROLLBACK_ENTITIES.map((e) => ({
     id: e,
-    name: t(MenuI18nKey[`${SYSTEM_ROLLBACK_TAB_NAME[e]}` as keyof typeof MenuI18nKey]),
+    label: t(MenuI18nKey[`${SYSTEM_ROLLBACK_TAB_NAME[e]}` as keyof typeof MenuI18nKey]),
   }));
   const getReqRef = useRef(useProtectedRequest());
 
@@ -170,7 +170,7 @@ const SystemRollback: FC = () => {
           <DialButton
             iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
             variant={ButtonVariant.Primary}
-            title={t(RollbackI18nKey.System)}
+            label={t(RollbackI18nKey.System)}
             onClick={() => setIsRollBackModalOpen(true)}
           />
           <div className="w-[1px] h-6 bg-layer-4"></div>

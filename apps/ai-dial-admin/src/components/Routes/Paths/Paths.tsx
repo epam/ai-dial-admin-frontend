@@ -82,7 +82,7 @@ const Paths: FC<Props> = ({ title, optional, readonly, paths, onChangePaths }) =
         <div>
           <DialButton
             variant={ButtonVariant.Secondary}
-            title={t(RoutesI18nKey.AddPaths)}
+            label={t(RoutesI18nKey.AddPaths)}
             iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
             onClick={onAddPath}
           />

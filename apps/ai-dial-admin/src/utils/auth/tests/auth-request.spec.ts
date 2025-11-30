@@ -13,4 +13,10 @@ describe('Utils :: auth :: getUserToken ', () => {
 
     expect(res).toBeNull();
   });
+
+  test('Should return null', async () => {
+    const res = await getUserToken(true, {} as any, {} as any);
+
+    expect(res).toBeNull();
+  });
 });

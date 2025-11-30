@@ -102,7 +102,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
     };
 
     fetchContainers().catch((error) =>
-      showNotificationRef.current(getErrorNotification(error.errorHeader, error.errorMessage)),
+      showNotificationRef.current(getErrorNotification(error.errorHeader, error.errorMessage, error.requestId)),
     );
   }, [getContainers]);
 
@@ -116,6 +116,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
         {isModal ? (
           <div className="flex flex-col w-full">
             <DialSelectField
+              searchable={true}
               options={containers.map((container) => ({ value: container.id, label: container.name }))}
               onChange={(container) => onSelect(container as string)}
               elementId={'source-type'}
@@ -150,8 +151,8 @@ const Containers = <T extends DialInterceptor | DialModel>({
             {entity.source?.containerId && deploymentsEnabled && (
               <DialButton
                 iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
-                cssClass={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
-                title={t(SourceI18nKey.OpenContainer)}
+                className={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
+                label={t(SourceI18nKey.OpenContainer)}
                 variant={ButtonVariant.Secondary}
                 onClick={() => openContainer()}
               />

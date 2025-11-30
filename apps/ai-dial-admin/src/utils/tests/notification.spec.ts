@@ -4,7 +4,7 @@ import { getErrorNotification, getNotification, getPrepareNotification, getSucce
 
 describe('Utils :: getErrorNotification', () => {
   test('Should return error notification', () => {
-    const result = getErrorNotification('header', 'description', null);
+    const result = getErrorNotification('header', 'description', void 0, null);
     expect(result).toEqual({
       type: NotificationType.error,
       title: 'header',
@@ -14,11 +14,12 @@ describe('Utils :: getErrorNotification', () => {
   });
 
   test('Should return empty error notification with duration 12', () => {
-    const result = getErrorNotification(void 0, void 0, 12);
+    const result = getErrorNotification(void 0, void 0, 'aaa', 12);
     expect(result).toEqual({
       type: NotificationType.error,
       title: '',
       description: '',
+      requestId: 'aaa',
       duration: 12,
     });
   });

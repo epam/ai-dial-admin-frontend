@@ -37,8 +37,8 @@ export const WrapIfAdditionalTemplate: FC<WrapIfAdditionalTemplateProps> = ({
         {!readonly && (
           <DialRemoveButton
             onClick={onDropPropertyClick(label)}
-            iconClass="text-error"
-            cssClass="border rounded border-primary justify-start p-2"
+            iconClassName="text-error"
+            className="border rounded border-primary justify-start p-2"
           />
         )}
       </div>

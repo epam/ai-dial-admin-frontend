@@ -1,6 +1,6 @@
 import { ApplicationRoute } from '@/src/types/routes';
-import { describe, expect, test } from 'vitest';
-import { getEntityPath, getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { describe, expect, test, beforeEach, vi } from 'vitest';
+import { getEntityPath, getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 
 describe('getUrnForEntity', () => {
@@ -96,5 +96,31 @@ describe('Entity list view :: getEntityPath', () => {
     expect(res1).toEqual('id?entityType=images');
     const res2 = getEntityPath(ApplicationRoute.InterceptorDeployments, { data, id: 'id' }, void 0);
     expect(res2).toEqual('id?entityType=');
+  });
+  test('Should return id field for McpDeploymentsF', () => {
+    const res1 = getEntityPath(ApplicationRoute.McpDeployments, { data, id: 'id' }, void 0, DEPLOYMENT_ENTITY.images);
+    expect(res1).toEqual('id?entityType=images');
+    const res2 = getEntityPath(ApplicationRoute.McpDeployments, { data, id: 'id' }, void 0);
+    expect(res2).toEqual('id?entityType=');
+  });
+});
+
+describe('onOpenInNewTab', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  test('calls window.open with correct url and _blank', () => {
+    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    const route = 'route';
+    const entity = { name: 'entity' };
+    onOpenInNewTab(route as any, entity);
+    expect(windowOpenSpy).toHaveBeenCalledWith(expect.stringContaining('/entity'), '_blank');
+  });
+
+  test('calls window.open with correct url for undefined route', () => {
+    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    onOpenInNewTab(undefined, { name: 'entity' });
+    expect(windowOpenSpy).toHaveBeenCalledWith(expect.stringContaining('/entity'), '_blank');
   });
 });

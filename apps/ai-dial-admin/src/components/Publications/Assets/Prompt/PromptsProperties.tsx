@@ -59,7 +59,7 @@ const PromptsProperties: FC<Props> = ({ prompt, action, collapsed }) => {
           {action === ActionType.DELETE && (
             <DialButton
               variant={ButtonVariant.Secondary}
-              title={t(PublicationsI18nKey.OpenPrompt)}
+              label={t(PublicationsI18nKey.OpenPrompt)}
               iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
               onClick={openPrompt}
             />

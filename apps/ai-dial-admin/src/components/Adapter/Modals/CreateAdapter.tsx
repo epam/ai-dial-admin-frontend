@@ -63,7 +63,7 @@ const CreateAdapter: FC<Props> = ({ isModalOpen, onClose, names }) => {
 
         onClose();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [currentAdapter, showNotification, t, router, onClose]);
@@ -74,12 +74,12 @@ const CreateAdapter: FC<Props> = ({ isModalOpen, onClose, names }) => {
         <AdapterProperties entity={currentAdapter} names={names} onChangeAdapter={onChangeAdapter} />
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} title={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton variant={ButtonVariant.Secondary} label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         <DialButton
           variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Create)}
+          label={t(ButtonsI18nKey.Create)}
           onClick={onCreate}
-          disable={!isValid}
+          disabled={!isValid}
         />
       </div>
     </DialPopup>

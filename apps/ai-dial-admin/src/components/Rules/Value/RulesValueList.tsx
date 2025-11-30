@@ -108,9 +108,9 @@ const RulesValueList: FC<Props> = ({
         <div className={lineHorizontalChildClass}></div>
         <DialButton
           variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Add)}
+          label={t(ButtonsI18nKey.Add)}
           onClick={onAddValue}
-          disable={availableAttributes?.length === rules.length}
+          disabled={availableAttributes?.length === rules.length}
         />
       </div>
     </div>

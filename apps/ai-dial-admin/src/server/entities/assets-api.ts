@@ -182,7 +182,7 @@ export class AssetsApi extends BaseApi {
     );
     return this.sendRequest(url, 'POST', { paths }, token).then(async (res) => {
       return type === ImportFileType.ARCHIVE
-        ? { blob: await (res as Response).blob(), fileName: getFileName(res as Response) || '' }
+        ? { blob: await (res as Response)?.blob?.(), fileName: getFileName(res as Response) || '' }
         : (res as { prompts: DialPrompt[] });
     });
   }

@@ -167,7 +167,7 @@ describe('ConfigurationPreview.utils', () => {
   test('getComponentColDefs returns correct columns for KEY', () => {
     const cols = getComponentColDefs(EntityType.KEY, t, compare);
     expect(cols[0].field).toBe('action');
-    expect(cols[1].field).toBe('name');
+    expect(cols[1].field).toBe('displayName');
   });
 
   test('getComponentColDefs returns ENTITY_BASE_COLUMNS for unknown type', () => {

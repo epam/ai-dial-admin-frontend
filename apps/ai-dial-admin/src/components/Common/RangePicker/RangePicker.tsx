@@ -62,7 +62,7 @@ const RangePicker: FC<Props> = ({ onChange, timeRange }) => {
         endDate={endDate}
         minDate={startDate === null ? void 0 : startDate} // minDate: Date | undefined
       />
-      <DialButton title={t(ButtonsI18nKey.Apply)} onClick={onClick} variant={ButtonVariant.Primary} cssClass="w-max" />
+      <DialButton label={t(ButtonsI18nKey.Apply)} onClick={onClick} variant={ButtonVariant.Primary} className="w-max" />
     </div>
   );
 };

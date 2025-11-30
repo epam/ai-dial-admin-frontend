@@ -77,7 +77,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
         );
         router.refresh();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [selectedTemplate, etag, showNotification, t, router]);
@@ -111,11 +111,10 @@ const View: FC<Props> = ({ etag, template, names }) => {
           removeEntity={deleteInterceptorTemplate}
           hideJsonEditor={true}
           jsonEditorEnabled={false}
-          childrenContainerClass={'flex-row-reverse'}
         >
           <DialButton
             variant={ButtonVariant.Secondary}
-            title={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.Interceptor)}`}
+            label={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.Interceptor)}`}
             iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
             onClick={() => setIsModalOpen(true)}
           />

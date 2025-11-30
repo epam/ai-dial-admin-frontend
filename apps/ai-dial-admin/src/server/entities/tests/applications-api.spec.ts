@@ -1,7 +1,8 @@
-import { DialApplication } from '@/src/models/dial/application';
-import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
+
+import { DialApplication } from '@/src/models/dial/application';
+import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { APPLICATIONS_URL, APPLICATION_URL, ApplicationsApi, CORE_APPLICATION_URL } from '../applications-api';
 
 const fetch = createFetchMock(vi);
@@ -55,15 +56,14 @@ describe('Server :: ApplicationsApi', () => {
     const result = await instance.getCoreApplication(mockApp.name || '', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${CORE_APPLICATION_URL(mockApp.name)}`,
+      `${TEST_URL}${CORE_APPLICATION_URL(mockApp.name || '')}`,
       expect.objectContaining({ method: 'GET' }),
     );
     expect(result.response).toEqual(JSON.stringify(mockApp));
   });
 
   test('Should calls createApplication with correct payload', async () => {
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.createApplication(mockApp, TOKEN_MOCK);
 
@@ -77,8 +77,7 @@ describe('Server :: ApplicationsApi', () => {
   });
 
   test('Should calls updateApplication with correct payload', async () => {
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.updateApplication(mockApp, TOKEN_MOCK, 'etag123');
 
@@ -92,8 +91,7 @@ describe('Server :: ApplicationsApi', () => {
   });
 
   test('Should calls updateApplication with correct payload', async () => {
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.updateApplication({ ...mockApp, name: void 0 }, TOKEN_MOCK, 'etag123');
 
@@ -107,8 +105,7 @@ describe('Server :: ApplicationsApi', () => {
   });
 
   test('Should calls updateCoreApplication with correct payload', async () => {
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.updateCoreApplication(mockApp, 'app', 'etag123', TOKEN_MOCK);
 
@@ -122,8 +119,7 @@ describe('Server :: ApplicationsApi', () => {
   });
 
   test('Should calls removeApplication with DELETE method', async () => {
-    const mockResponse = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(mockResponse));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.removeApplication(TOKEN_MOCK, mockApp.name);
 

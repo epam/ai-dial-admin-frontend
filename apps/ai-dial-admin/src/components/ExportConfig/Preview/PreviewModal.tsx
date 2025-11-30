@@ -58,7 +58,7 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, isModalOpen, onClos
           setTabs(tabs);
           setSelectedTab(tabs[0]?.id);
         } else {
-          showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage));
+          showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       });
   }, [exportRequest, isIncludeSecret, showNotification, t]);

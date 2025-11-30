@@ -63,7 +63,7 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
         );
         onClose();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [folderContext, currentEntity, initialValues, onClose, onCreate, router, showNotification, t, view]);

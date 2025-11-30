@@ -1,4 +1,4 @@
-import { isAssetView, isBuildersView } from '../is-asset-view';
+import { isAssetView, isAssetWithVersion, isBuildersView } from '../is-asset-view';
 import { describe, expect, test } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -47,6 +47,18 @@ describe('Utils :: isBuildersView', () => {
 
   test('Should return false', () => {
     const result = isBuildersView(ApplicationRoute.Models);
+    expect(result).toBeFalsy();
+  });
+});
+
+describe('Utils :: isAssetWithVersion', () => {
+  test('Should return true', () => {
+    expect(isAssetWithVersion(ApplicationRoute.Prompts)).toBeTruthy();
+    expect(isAssetWithVersion(ApplicationRoute.AssetsApplications)).toBeTruthy();
+  });
+
+  test('Should return false', () => {
+    const result = isAssetWithVersion(ApplicationRoute.Models);
     expect(result).toBeFalsy();
   });
 });

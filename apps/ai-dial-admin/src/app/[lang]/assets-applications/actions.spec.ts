@@ -62,6 +62,7 @@ describe('Assets application :: server actions', () => {
         defaults: { key: 'value' },
         path: 'test',
         version: '1.0',
+        displayVersion: '1.0',
       },
 
       ResourceType.APPLICATION,
@@ -87,6 +88,7 @@ describe('Assets application :: server actions', () => {
         defaults: {},
         path: 'test',
         version: '1.0',
+        displayVersion: '1.0',
       },
       ResourceType.APPLICATION,
       'etag',
@@ -110,6 +112,7 @@ describe('Assets application :: server actions', () => {
         nodeType: DialFileNodeType.FOLDER,
         path: 'test',
         version: '1.0',
+        displayVersion: '1.0',
       },
       ResourceType.APPLICATION,
       TOKEN_MOCK,

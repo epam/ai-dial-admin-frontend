@@ -1,5 +1,5 @@
 import { DialKey } from '@/src/models/dial/key';
-import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 import { CORE_KEY_URL, KEY_URL, KEYS_URL, KeysApi } from '../keys-api';
@@ -46,15 +46,14 @@ describe('Server :: KeysApi', () => {
     const result = await instance.getCoreKey(mockKey.name || '', TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${CORE_KEY_URL(mockKey.name)}`,
+      `${TEST_URL}${CORE_KEY_URL(mockKey.name || '')}`,
       expect.objectContaining({ method: 'GET' }),
     );
     expect(result.response).toEqual(JSON.stringify(mockKey));
   });
 
   test('Should create a key', async () => {
-    const response = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(response));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.createKey(mockKey, TOKEN_MOCK);
 
@@ -68,8 +67,7 @@ describe('Server :: KeysApi', () => {
   });
 
   test('Should update a key', async () => {
-    const response = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(response));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.updateKey(mockKey, TOKEN_MOCK, 'etag123');
 
@@ -83,8 +81,7 @@ describe('Server :: KeysApi', () => {
   });
 
   test('Should update a key', async () => {
-    const response = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(response));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.updateKey({ ...mockKey, name: undefined }, TOKEN_MOCK, 'etag123');
 
@@ -98,8 +95,7 @@ describe('Server :: KeysApi', () => {
   });
 
   test('Should update core key', async () => {
-    const response = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(response));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.updateCoreKey(mockKey, 'key', 'etag123', TOKEN_MOCK);
 
@@ -113,8 +109,7 @@ describe('Server :: KeysApi', () => {
   });
 
   test('Should delete a key', async () => {
-    const response = { success: true };
-    fetch.mockResponseOnce(JSON.stringify(response));
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
     await instance.removeKey(TOKEN_MOCK, mockKey.name);
 

@@ -129,7 +129,7 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
           <DialButton
             variant={ButtonVariant.Tertiary}
             iconBefore={<IconReload {...BASE_ICON_PROPS} />}
-            title={t(RolesI18nKey.ResetToDefaultLimits)}
+            label={t(RolesI18nKey.ResetToDefaultLimits)}
             onClick={onResetAllSharingToDefault}
           />
         )}

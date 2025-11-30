@@ -80,7 +80,9 @@ const Templates = <T extends DialModel | DialInterceptor>({
       }
     };
 
-    fetchRunners().catch((error) => showNotification(getErrorNotification(error.errorHeader, error.errorMessage)));
+    fetchRunners().catch((error) =>
+      showNotification(getErrorNotification(error.errorHeader, error.errorMessage, error.requestId)),
+    );
   }, [getRunners, showNotification]);
 
   useEffect(() => {
@@ -97,6 +99,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
                 value: runner.name as string,
                 label: runner.displayName || runner.name || '',
               }))}
+              searchable={true}
               onChange={(value) => onSelect(value as string)}
               elementId={'source-type'}
               value={runners.find((runner) => runner.name === entity.source?.runnerName)?.name}
@@ -129,8 +132,8 @@ const Templates = <T extends DialModel | DialInterceptor>({
               <DialButton
                 variant={ButtonVariant.Secondary}
                 iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
-                cssClass={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
-                title={t(SourceI18nKey.OpenTemplate)}
+                className={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
+                label={t(SourceI18nKey.OpenTemplate)}
                 onClick={() => openTemplate()}
               />
             )}

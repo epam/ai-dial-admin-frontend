@@ -37,7 +37,7 @@ const PublicationView = <T extends Publication>({
       if (res.success) {
         router.push(view);
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [approvePublication, publication.path, router, showNotification, view]);
@@ -48,7 +48,7 @@ const PublicationView = <T extends Publication>({
         if (res.success) {
           router.push(view);
         } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       });
     },

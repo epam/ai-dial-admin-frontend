@@ -60,8 +60,8 @@ const ColumnsPanel: FC<Props> = ({
           {showResetButton && (
             <DialButton
               variant={ButtonVariant.Tertiary}
-              cssClass="mr-4"
-              title={t(ButtonsI18nKey.ResetToDefault)}
+              className="mr-4"
+              label={t(ButtonsI18nKey.ResetToDefault)}
               onClick={resetToDefault}
             />
           )}

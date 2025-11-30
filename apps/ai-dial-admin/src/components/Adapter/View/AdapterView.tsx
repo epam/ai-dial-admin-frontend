@@ -104,7 +104,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
         );
         router.refresh();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [selectedAdapter, etag, showNotification, t, router]);
@@ -126,11 +126,10 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
           removeEntity={removeAdapter}
           jsonEditorEnabled={jsonEditorEnabled}
           toggleJsonEditor={toggleJsonEditor}
-          childrenContainerClass={'flex-row-reverse'}
         >
           <DialButton
             variant={ButtonVariant.Secondary}
-            title={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.Model)}`}
+            label={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.Model)}`}
             iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
             onClick={() => setIsModalOpen(true)}
           />

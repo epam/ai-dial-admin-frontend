@@ -106,7 +106,7 @@ const RolesGrid: FC<Props> = ({
             <DialButton
               variant={ButtonVariant.Tertiary}
               iconBefore={<IconReload {...BASE_ICON_PROPS} />}
-              title={t(RolesI18nKey.ResetToDefaultLimits)}
+              label={t(RolesI18nKey.ResetToDefaultLimits)}
               onClick={onResetAllRolesToDefault}
             />
           )}
@@ -114,7 +114,7 @@ const RolesGrid: FC<Props> = ({
             <DialButton
               variant={ButtonVariant.Primary}
               iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-              title={t(ButtonsI18nKey.Add)}
+              label={t(ButtonsI18nKey.Add)}
               onClick={onOpenAddModal}
             />
           )}
@@ -123,7 +123,7 @@ const RolesGrid: FC<Props> = ({
       {!data.length ? (
         <DialNoDataContent title={t(EntitiesI18nKey.NoRoles)} />
       ) : (
-        <Grid additionalGridOptions={{ onGridReady }} />
+        <Grid additionalGridOptions={{ onGridReady, suppressCellFocus: true, suppressHeaderFocus: true }} />
       )}
     </div>
   );

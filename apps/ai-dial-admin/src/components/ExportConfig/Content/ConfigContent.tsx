@@ -44,7 +44,7 @@ const ConfigContent: FC<Props> = ({
 
   useEffect(() => {
     if (selectedTab) {
-      setSelectedTabTitle(tabs.find((t) => t.id === selectedTab)?.name as string);
+      setSelectedTabTitle(tabs.find((t) => t.id === selectedTab)?.label as string);
 
       if (!tabData[selectedTab]) {
         setIsLoadingData(true);

@@ -52,45 +52,45 @@ export const getActualTabs = (
   const isCoreFormat = selectedFormat === ExportFormat.CORE;
   const tabs: TabModel[] = [];
   if (dependencies.models) {
-    tabs.push({ id: EntityType.MODEL, name: t(MenuI18nKey.Models) });
+    tabs.push({ id: EntityType.MODEL, label: t(MenuI18nKey.Models) });
   }
 
   if (dependencies.applications) {
-    tabs.push({ id: EntityType.APPLICATION, name: t(MenuI18nKey.Applications) });
+    tabs.push({ id: EntityType.APPLICATION, label: t(MenuI18nKey.Applications) });
   }
 
   if (dependencies.toolSets) {
-    tabs.push({ id: EntityType.TOOLSET, name: t(MenuI18nKey.Toolsets) });
+    tabs.push({ id: EntityType.TOOLSET, label: t(MenuI18nKey.Toolsets) });
   }
 
   if (dependencies.interceptors) {
-    tabs.push({ id: EntityType.INTERCEPTOR, name: t(MenuI18nKey.Interceptors) });
+    tabs.push({ id: EntityType.INTERCEPTOR, label: t(MenuI18nKey.Interceptors) });
   }
 
   if (dependencies.routes) {
-    tabs.push({ id: EntityType.ROUTE, name: t(MenuI18nKey.Routes) });
+    tabs.push({ id: EntityType.ROUTE, label: t(MenuI18nKey.Routes) });
   }
 
   if (dependencies.runners) {
-    tabs.push({ id: EntityType.APPLICATION_TYPE_SCHEMA, name: t(MenuI18nKey.ApplicationRunners) });
+    tabs.push({ id: EntityType.APPLICATION_TYPE_SCHEMA, label: t(MenuI18nKey.ApplicationRunners) });
   }
 
   if (!isCoreFormat) {
     if (dependencies.adapters) {
-      tabs.push({ id: EntityType.ADAPTER, name: t(MenuI18nKey.Adapters) });
+      tabs.push({ id: EntityType.ADAPTER, label: t(MenuI18nKey.Adapters) });
     }
 
     if (dependencies.interceptorsTemplates) {
-      tabs.push({ id: EntityType.INTERCEPTOR_RUNNER, name: t(MenuI18nKey.InterceptorTemplates) });
+      tabs.push({ id: EntityType.INTERCEPTOR_RUNNER, label: t(MenuI18nKey.InterceptorTemplates) });
     }
   }
 
   if (dependencies.roles) {
-    tabs.push({ id: EntityType.ROLE, name: t(MenuI18nKey.Roles) });
+    tabs.push({ id: EntityType.ROLE, label: t(MenuI18nKey.Roles) });
   }
 
   if (dependencies.keys) {
-    tabs.push({ id: EntityType.KEY, name: t(MenuI18nKey.Keys) });
+    tabs.push({ id: EntityType.KEY, label: t(MenuI18nKey.Keys) });
   }
 
   return tabs;

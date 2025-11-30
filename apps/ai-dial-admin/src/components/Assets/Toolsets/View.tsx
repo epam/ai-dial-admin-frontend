@@ -143,7 +143,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
           }
           router.refresh();
         } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       });
     },
@@ -174,7 +174,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
       getReqRef.current(signInToolset, selectedToolset, type, apiKeyValue, code).then((res) => {
         isSignInProcessed = false;
         if (!res.success) {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         } else {
           showNotification(
             getSuccessNotification(t(ToolsetI18nKey.SuccessLogin), t(ToolsetI18nKey.SuccessLoginDescription)),
@@ -236,7 +236,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
           getSuccessNotification(t(ToolsetI18nKey.SuccessLogout), t(ToolsetI18nKey.SuccessLogoutDescription)),
         );
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [router, selectedToolset, showNotification, t]);
@@ -270,20 +270,19 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
             assets={toolsets || []}
             etag={etag}
             context={useToolsetFolder as () => AssetsFolderContext<DialFile | AssetToolset>}
-            childrenContainerClass="flex-row-reverse"
           >
             {selectedToolset.authSettings?.authenticationType !== ToolsetAuthType.NONE &&
               (isToolsetSignedIn ? (
                 <DialButton
                   variant={ButtonVariant.Secondary}
-                  title={t(ToolsetI18nKey.LogOut)}
+                  label={t(ToolsetI18nKey.LogOut)}
                   iconBefore={<IconLogout {...BASE_ICON_PROPS} />}
                   onClick={onLogout}
                 />
               ) : (
                 <DialButton
                   variant={ButtonVariant.Secondary}
-                  title={t(ToolsetI18nKey.LogIn)}
+                  label={t(ToolsetI18nKey.LogIn)}
                   iconBefore={<IconLogin {...BASE_ICON_PROPS} />}
                   onClick={() => setIsModalOpen(true)}
                 />

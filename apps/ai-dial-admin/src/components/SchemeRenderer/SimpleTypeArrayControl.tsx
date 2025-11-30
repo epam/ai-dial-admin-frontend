@@ -26,9 +26,9 @@ const SimpleTypeArrayControl: FC<Props> = ({ control, type }) => {
       {!simpleControlTypes.includes(type) && <div>{control.id}</div>}
       <div>
         <DialButton
-          disable={true}
+          disabled={true}
           variant={ButtonVariant.Tertiary}
-          title={t(ButtonsI18nKey.Add)}
+          label={t(ButtonsI18nKey.Add)}
           iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
         />
       </div>

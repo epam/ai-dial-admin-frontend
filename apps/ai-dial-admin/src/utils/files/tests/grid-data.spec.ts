@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { getGridFileData, getGridFileDataFromString } from '../grid-data';
+import { getGridFileData, getGridFileDataFromString, getGridFileColumns } from '../grid-data';
 
 describe('Files list :: getGridFileData', () => {
   test('Should return correct grid data from files', () => {
@@ -27,5 +27,28 @@ describe('Files list :: getGridFileDataFromString', () => {
 
   test('returns empty array for empty input', () => {
     expect(getGridFileDataFromString([])).toEqual([]);
+  });
+});
+
+describe('Files list :: getGridFileColumns', () => {
+  test('modifies first two columns and adds action column', () => {
+    const columns = [
+      { headerName: 'Name', filter: true, floatingFilter: true },
+      { headerName: 'Type', filter: true, floatingFilter: true },
+      { headerName: 'Other' },
+    ];
+    const actions = [{ name: 'Edit' }, { name: 'Delete' }];
+    const result = getGridFileColumns(columns, []);
+    expect(result.length).toBe(3);
+    expect(result[0].filter).toBe(false);
+    expect(result[0].floatingFilter).toBe(false);
+    expect(result[1].maxWidth).toBe(168);
+  });
+
+  test('does not modify columns beyond first two', () => {
+    const columns = [{ headerName: 'Name' }, { headerName: 'Type' }, { headerName: 'Other', filter: true }];
+
+    const result = getGridFileColumns(columns, []);
+    expect(result[2].headerName).toBe(' ');
   });
 });
