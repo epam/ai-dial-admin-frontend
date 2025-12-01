@@ -10,7 +10,7 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ActionType, ApplicationPublication, Publication } from '@/src/models/dial/publications';
 import { removeTrailingSlash } from '@/src/utils/files/path';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import { getActionClass } from '@/src/utils/publications';
+import { getActionClassName } from '@/src/utils/publications';
 import PublicationPermissions from './Permissions';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -23,7 +23,10 @@ interface Props {
 
 const BasePublicationProperties: FC<Props> = ({ view, publication, children, applicationSchemes }) => {
   const t = useI18n() as (str: string) => string;
-  const indicatorClassName = classNames('flex w-2 h-2 mr-1 rounded no-user-select', getActionClass(publication.action));
+  const indicatorClassName = classNames(
+    'flex w-2 h-2 mr-1 rounded no-user-select',
+    getActionClassName(publication.action),
+  );
 
   const application = (publication as ApplicationPublication).applicationResources?.[0];
   const runnerId = application?.applicationTypeSchemaId;

@@ -1,7 +1,7 @@
 import { ErrorType } from '@/src/types/error-type';
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { KeyStatus } from '@/src/types/key';
-import { getErrorForKey, getColorClass } from '../utils';
+import { getErrorForKey, getColorClassName } from '../utils';
 import { describe, expect, test, vi } from 'vitest';
 
 describe('Keys list :: getErrorForKey', () => {
@@ -53,27 +53,27 @@ describe('Keys list :: getErrorForKey', () => {
 
 describe('Keys list :: getColorClass', () => {
   test('returns accent class for VALID status', () => {
-    const result = getColorClass(KeyStatus.VALID, 'light');
+    const result = getColorClassName(KeyStatus.VALID, 'light');
     expect(result).toBe('bg-accent-secondary');
   });
 
   test('returns orange-800 for ALMOST_EXPIRED in light theme', () => {
-    const result = getColorClass(KeyStatus.ALMOST_EXPIRED, 'light');
+    const result = getColorClassName(KeyStatus.ALMOST_EXPIRED, 'light');
     expect(result).toBe('bg-orange-800');
   });
 
   test('returns orange-400 for ALMOST_EXPIRED in dark theme', () => {
-    const result = getColorClass(KeyStatus.ALMOST_EXPIRED, 'dark');
+    const result = getColorClassName(KeyStatus.ALMOST_EXPIRED, 'dark');
     expect(result).toBe('bg-orange-400');
   });
 
   test('returns red-800 for other statuses in light theme', () => {
-    const result = getColorClass('EXPIRED', 'light');
+    const result = getColorClassName('EXPIRED', 'light');
     expect(result).toBe('bg-red-800');
   });
 
   test('returns red-400 for other statuses in dark theme', () => {
-    const result = getColorClass('EXPIRED', 'dark');
+    const result = getColorClassName('EXPIRED', 'dark');
     expect(result).toBe('bg-red-400');
   });
 });

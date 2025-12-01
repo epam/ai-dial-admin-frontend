@@ -70,12 +70,12 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
     );
   }, [originalRules, editableRules, filePath]);
 
-  const containerClass = classNames('w-full h-full bg-layer-3 rounded p-4 flex flex-col gap-4');
+  const containerClassName = classNames('w-full h-full bg-layer-3 rounded p-4 flex flex-col gap-4');
 
   return !currentFolder ? (
     <DialNoDataContent title={t(EntitiesI18nKey.NoFolders)} />
   ) : (
-    <div className={containerClass}>
+    <div className={containerClassName}>
       <FolderInfoHeader
         isChanged={isChanged}
         title={currentFolder?.name as string}

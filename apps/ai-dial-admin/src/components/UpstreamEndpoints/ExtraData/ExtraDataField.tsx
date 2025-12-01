@@ -149,7 +149,7 @@ const ExtraDataField: FC<Props> = ({ endpoint, disabled, fieldTitle, onChangeExt
               : t(BasicI18nKey.None)
         }
         selectedRadioValue={radioFieldId}
-        inputClassNames="max-w-[200px]"
+        inputClassName="max-w-[200px]"
         valueClassName="w-[180px] truncate pr-2 text-left"
         isValid={isValid}
         radioButtons={radioButtons}
