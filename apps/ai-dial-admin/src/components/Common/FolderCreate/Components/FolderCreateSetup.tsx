@@ -174,7 +174,7 @@ const FolderCreateSetup: FC<Props> = ({
               emptyTextFirstLine={t(ImportI18nKey.DropAnyFile)}
               emptyTextSecondLine={t(BasicI18nKey.Or)}
               emptyButtonLabel={t(ButtonsI18nKey.Browse)}
-              iconBeforeInput={<DialFileIcon extension="zip" cssClass="text-secondary" />}
+              iconBeforeInput={<DialFileIcon extension="zip" className="text-secondary" />}
               fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
               fileCountError={t(ImportI18nKey.ArchiveDescription)}
               acceptTypes="application/zip, .zip, application/x-zip-compressed"
@@ -207,7 +207,7 @@ const FolderCreateSetup: FC<Props> = ({
               emptyTextSecondLine={t(BasicI18nKey.Or)}
               emptyButtonLabel={t(ButtonsI18nKey.Browse)}
               files={files}
-              iconBeforeInput={<DialFileIcon extension="json" cssClass="text-secondary" />}
+              iconBeforeInput={<DialFileIcon extension="json" className="text-secondary" />}
               acceptTypes="application/json"
               fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
               onChange={changeFile}

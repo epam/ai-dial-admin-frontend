@@ -34,7 +34,7 @@ const FoldersStorage: FC<Props> = ({ initialPath }) => {
         <DialCollapsibleSidebar
           width={480}
           title={t(MenuI18nKey.FoldersStorage)}
-          containerCssClass="bg-layer-3 border-transparent mr-0"
+          containerClassName="bg-layer-3 border-transparent mr-0"
           iconSize={24}
           additionalButtons={
             <DialTooltip

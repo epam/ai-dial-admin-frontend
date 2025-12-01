@@ -29,7 +29,7 @@ export const URLWidget: FC<WidgetProps> = ({
     <div className="flex flex-col w-full bg-layer-2 py-[18px] pl-[18px]">
       <WidgetHeader label={label} title={schema.title} description={schema.description} />
       <DialTextInputField
-        containerCssClass={'flex w-full max-w-[600px]'}
+        containerClassName={'flex w-full max-w-[600px]'}
         elementId={id}
         disabled={disabled}
         readonly={readonly}

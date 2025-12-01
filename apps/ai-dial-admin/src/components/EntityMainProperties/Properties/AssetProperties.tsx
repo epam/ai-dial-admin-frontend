@@ -84,7 +84,7 @@ const AssetProperties: FC<Props> = ({
       )}
 
       <VersionControl
-        containerCssClass="w-[200px]"
+        containerClassName="w-[200px]"
         version={entity.version}
         onChange={onChangeVersion}
         error={versionError}

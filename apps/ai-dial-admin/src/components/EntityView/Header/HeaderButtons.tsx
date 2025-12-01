@@ -70,12 +70,12 @@ const HeaderButtons = <T extends object>({
   const isSimple = isSimpleEntity(view);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const staticContainerClassnames = 'flex flex-row gap-3 divide-x divide-primary lg:h-[35px]';
+  const staticContainerClassName = 'flex flex-row gap-3 divide-x divide-primary lg:h-[35px]';
 
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
-  const [containerClassNames, setContainerClassNames] = useState(staticContainerClassnames);
-  const [buttonsClassNames, setButtonsClassNames] = useState('');
+  const [containerClassName, setContainerClassName] = useState(staticContainerClassName);
+  const [buttonsClassName, setButtonsClassName] = useState('');
 
   const existingVersions = useMemo(() => {
     return assets?.map((asset) => asset.version) || [];
@@ -94,18 +94,18 @@ const HeaderButtons = <T extends object>({
   }, [setIsModalOpen]);
 
   useEffect(() => {
-    setContainerClassNames(
+    setContainerClassName(
       classNames(
-        staticContainerClassnames,
+        staticContainerClassName,
         isTablet || isMobile ? 'fixed bottom-0 left-0 right-0 h-[62px] bg-layer-3 px-6' : '',
       ),
     );
-    setButtonsClassNames(classNames(isTablet || isMobile ? 'w-1/2 flex justify-center' : ''));
+    setButtonsClassName(classNames(isTablet || isMobile ? 'w-1/2 flex justify-center' : ''));
   }, [isTablet, isMobile]);
 
   return (
     <>
-      <div className={containerClassNames}>
+      <div className={containerClassName}>
         {isChanged ? (
           <ModifiedEntityButtons
             entity={entity}
@@ -118,7 +118,7 @@ const HeaderButtons = <T extends object>({
         ) : (
           <div className="flex flex-row items-center w-full gap-x-4">
             {!jsonEditorEnabled && (
-              <div className={classNames('flex-1 flex flex-row gap-x-4', isSimple ? 'justify-center' : '')}>
+              <div className={classNames('flex-1 flex flex-row gap-x-4', isSimple && 'justify-center')}>
                 {isAssetView && (
                   <AssetVersionControl
                     view={view}
@@ -130,11 +130,11 @@ const HeaderButtons = <T extends object>({
                     etag={etag}
                   />
                 )}
-                <div className={classNames('flex-1 flex flex-row gap-x-4', isSimple ? 'justify-center' : '')}>
+                <div className={classNames('flex-1 flex flex-row gap-x-4', isSimple && 'justify-center')}>
                   <div className="flex flex-row gap-x-4">
                     <DialButton
                       variant={ButtonVariant.Secondary}
-                      className={classNames(buttonsClassNames, isSimple ? 'min-w-[150px] lg:min-w-0' : '')}
+                      className={classNames(buttonsClassName, isSimple && 'min-w-[150px] lg:min-w-0')}
                       label={t(ButtonsI18nKey.Delete)}
                       iconBefore={<IconTrashX {...BASE_ICON_PROPS} />}
                       onClick={onOpenModal}

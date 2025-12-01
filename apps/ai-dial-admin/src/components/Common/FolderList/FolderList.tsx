@@ -154,20 +154,20 @@ const FolderList: FC<Props> = ({
     }
   }, [folderContext, disableAutoFetch, initialPath, isBulkDelete]);
 
-  const getFolderClassNames = (node: DialFile, level: number) => {
+  const getFolderClassName = (node: DialFile, level: number) => {
     const isSelected = folderContext?.filePath === node.path;
-    const baseClass = `flex justify-between pl-${level * 5}`;
-    const selectedClass = isSelected
+    const baseClassName = `flex justify-between pl-${level * 5}`;
+    const selectedClassName = isSelected
       ? 'bg-accent-primary-alpha border-l-2 border-l-accent-primary rounded'
       : 'border-l-2 border-l-transparent';
-    const iconClass =
+    const iconClassName =
       !node.items?.some((c) => isFolder(c.nodeType)) &&
       (isBulkDelete
         ? (folderContext as AssetsFolderContext<DialFile>)?.bulkSelectedData[node.path]
         : folderContext?.fetchedFoldersData[node.path])
         ? 'text-transparent'
         : '';
-    return { baseClass, selectedClass, iconClass };
+    return { baseClassName, selectedClassName, iconClassName };
   };
 
   const renderTree = (nodes: DialFile[], level: number, rootFolderPath?: string) => {
@@ -192,7 +192,7 @@ const FolderList: FC<Props> = ({
 
     return nodes?.map((node) => {
       const { path, nodeType, items, name } = node;
-      const { baseClass, selectedClass, iconClass } = getFolderClassNames(node, level);
+      const { baseClassName, selectedClassName, iconClassName } = getFolderClassName(node, level);
       const isExpanded = folderContext?.expandedFolders.has(path);
       const isMoveError =
         isFolderMove &&
@@ -205,10 +205,16 @@ const FolderList: FC<Props> = ({
           {isFolder(nodeType) && (
             <div className="flex flex-col">
               <div
-                className={`group ${baseClass} ${selectedClass} ${isMovableFolder && 'pointer-events-none'} ${isMoveError ? 'bg-error border-l-error' : ''} py-2`}
+                className={classNames(
+                  'group py-2',
+                  baseClassName,
+                  selectedClassName,
+                  isMovableFolder && 'pointer-events-none',
+                  isMoveError && 'bg-error border-l-error',
+                )}
               >
                 <div className="flex-1 flex flex-row truncate" onClick={() => folderContext?.toggleFolder(node)}>
-                  <div className={classNames(iconClass, 'flex items-center justify-center')}>
+                  <div className={classNames(iconClassName, 'flex items-center justify-center')}>
                     {isExpanded ? (
                       <IconCaretDownFilled {...BASE_ICON_PROPS} widths={10} height={10} className="flex-shrink-0" />
                     ) : (
@@ -219,11 +225,11 @@ const FolderList: FC<Props> = ({
                     {...BASE_ICON_PROPS}
                     className={classNames(
                       'flex-shrink-0 mr-2',
-                      isMoveError ? 'text-error' : '',
+                      isMoveError && 'text-error',
                       isMovableFolder || isFolderDelete ? 'text-accent-primary' : '',
                     )}
                   />
-                  <DialEllipsisTooltip text={name} cssClass="text-primary" />
+                  <DialEllipsisTooltip text={name} className="text-primary" />
                 </div>
 
                 {showFolderActions && (
@@ -237,7 +243,7 @@ const FolderList: FC<Props> = ({
               </div>
 
               {isMoveError && (
-                <div className={`${baseClass} tiny text-error`}>
+                <div className={classNames(baseClassName, 'tiny text-error')}>
                   <span className="pl-11">{t(FoldersI18nKey.MoveFolderError)}</span>
                 </div>
               )}
