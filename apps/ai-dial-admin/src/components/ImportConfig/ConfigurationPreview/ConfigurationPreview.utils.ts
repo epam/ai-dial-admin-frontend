@@ -134,7 +134,7 @@ const getComponentActionColumn = (): ColDef => {
     cellRenderer: StatusCellRenderer,
     cellRendererParams: (params: ICellRendererParams) => {
       return {
-        statusClass: getActionClassName(params.value),
+        statusClassName: getActionClassName(params.value),
       };
     },
   };
