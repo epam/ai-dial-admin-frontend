@@ -117,7 +117,7 @@ export const getConfigurationPreview = (configuration: FileConfiguration, t: (v:
   return { previewData, prevData, tabs: getConfigurationTabs(previewData, t) };
 };
 
-export const getActionClass = (action: string): string => {
+export const getActionClassName = (action: string): string => {
   if (action === ImportConfigurationAction.CREATE) {
     return 'bg-accent-primary';
   }
@@ -134,7 +134,7 @@ const getComponentActionColumn = (): ColDef => {
     cellRenderer: StatusCellRenderer,
     cellRendererParams: (params: ICellRendererParams) => {
       return {
-        statusClass: getActionClass(params.value),
+        statusClassName: getActionClassName(params.value),
       };
     },
   };

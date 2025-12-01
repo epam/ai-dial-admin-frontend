@@ -86,7 +86,7 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
         fieldTitle={t(ModelViewI18nKey.PromptPrice)}
         value={getMultipliedValue(model.pricing?.prompt, isTokenType)}
         onChange={onChangePrompt}
-        controlClassName="w-[120px] lg:w-auto lg:max-w-[120px]"
+        containerClassName="w-[120px] lg:w-auto lg:max-w-[120px]"
         disabled={activeType === BasicI18nKey.None}
       />
 
@@ -95,7 +95,7 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
         fieldTitle={t(ModelViewI18nKey.CompletionPrice)}
         value={getMultipliedValue(model.pricing?.completion, isTokenType)}
         onChange={onChangeCompletion}
-        controlClassName="w-[120px] lg:w-auto lg:max-w-[120px]"
+        containerClassName="w-[120px] lg:w-auto lg:max-w-[120px]"
         disabled={activeType === BasicI18nKey.None}
       />
     </div>

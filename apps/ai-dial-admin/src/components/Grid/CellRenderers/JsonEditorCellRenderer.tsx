@@ -14,7 +14,7 @@ const JsonEditorCellRenderer: FC<JsonCellRendererParams> = ({ value, data, colDe
   };
   return (
     <div className="h-8 w-full">
-      <JsonEditorInput value={value as object} onChangeValue={onChangeValue} inputCss="h-8" />
+      <JsonEditorInput value={value as object} onChangeValue={onChangeValue} inputClassName="h-8" />
     </div>
   );
 };

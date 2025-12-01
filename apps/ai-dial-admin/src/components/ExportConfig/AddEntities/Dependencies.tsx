@@ -52,7 +52,7 @@ const Dependencies: FC<Props> = ({ selectedTab, onChangeSelectedDependencies, se
     <DialCollapsibleSidebar
       width={256}
       title={t(ExportI18nKey.Dependencies)}
-      containerCssClass="border border-primary ml-3"
+      containerClassName="border border-primary ml-3"
     >
       <div className="flex flex-col">
         <h3 className="mb-3">{t(ExportI18nKey.Dependencies)}</h3>

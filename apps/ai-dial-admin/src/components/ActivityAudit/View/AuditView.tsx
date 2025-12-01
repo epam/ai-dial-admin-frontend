@@ -196,7 +196,7 @@ const AuditView: FC<Props> = ({
                 2,
               )}
               original={JSON.stringify(previousRevision || {}, null, 2)}
-              containerCss="mt-8 pt-8"
+              containerClassName="mt-8 pt-8"
             />
           ) : (
             <EntityDiff

@@ -20,7 +20,7 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import FileProperties from './Properties';
-import { getViewHeaderClassNames } from '@/src/utils/entities/view';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 
 interface Props {
   originalFile: DialFile;
@@ -78,7 +78,7 @@ const FileView: FC<Props> = ({ originalFile }) => {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={getViewHeaderClassNames()}>
+      <div className={getViewHeaderClassName()}>
         <div className="flex-1 min-w-0">
           <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
         </div>

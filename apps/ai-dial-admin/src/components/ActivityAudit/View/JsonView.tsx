@@ -11,14 +11,14 @@ import { useI18n } from '@/src/locales/client';
 interface Props {
   modified: string;
   original: string;
-  containerCss?: string;
+  containerClassName?: string;
 }
 
-const JsonView: FC<Props> = ({ modified, original, containerCss }) => {
+const JsonView: FC<Props> = ({ modified, original, containerClassName }) => {
   const t = useI18n() as (t: string) => string;
 
   return (
-    <div className={classNames('flex-1 flex flex-col min-h-0', containerCss)}>
+    <div className={classNames('flex-1 flex flex-col min-h-0', containerClassName)}>
       <div className="flex flex-row">
         <h4 className="mb-2 text-secondary w-[50%]">{t(CompareI18nKey.Before)}</h4>
         <h4 className="mb-2 text-secondary">{t(CompareI18nKey.After)}</h4>

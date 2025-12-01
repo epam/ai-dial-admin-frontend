@@ -40,7 +40,7 @@ const DescriptionControl = <T extends { description?: string }>({ entity, onChan
       errorText={descriptionError?.text}
       invalid={!!descriptionError}
       onChange={onChangeDescription}
-      elementCssClass="w-full"
+      elementClassName="w-full"
       {...props}
     />
   );

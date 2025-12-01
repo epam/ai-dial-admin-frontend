@@ -34,20 +34,20 @@ const GridWithColumnsPanel = <T extends object>({
   toggleColumnsPanel,
   onGridReady,
 }: Props<T>) => {
-  const staticPanelContainerClassNames = classNames(
+  const staticPanelContainerClassName = classNames(
     'left-0 top-0 w-full h-full bg-blackout z-50',
     `${showColumnsPanel ? 'flex' : 'hidden'}`,
   );
 
-  const staticPanelClassNames = classNames(
+  const staticPanelClassName = classNames(
     'flex flex-col absolute right-0 top-0 bottom-0 bg-layer-3 z-10 divide-tertiary divide-y',
   );
   const isMobile = useIsMobileScreen();
   const isTablet = useIsOnlyTabletScreen();
   const [colDefs, setColDefs] = useState<ColDef[]>([]);
   const [showResetButton, setShowResetButton] = useState(false);
-  const [panelContainerClassNames, setPanelContainerClassNames] = useState(staticPanelContainerClassNames);
-  const [panelClassNames, setPanelClassNames] = useState(staticPanelClassNames);
+  const [panelContainerClassName, setPanelContainerClassName] = useState(staticPanelContainerClassName);
+  const [panelClassName, setPanelClassName] = useState(staticPanelClassName);
 
   useEffect(() => {
     if (colDefs == null || colDefs.length === 0) {
@@ -64,18 +64,17 @@ const GridWithColumnsPanel = <T extends object>({
   }, [colDefs, columnDefs, storageKey]);
 
   useEffect(() => {
-    setPanelContainerClassNames(
-      classNames(staticPanelContainerClassNames, `${isMobile || isTablet ? 'fixed' : 'absolute'}`),
-    );
+    setPanelContainerClassName(classNames(staticPanelContainerClassName, isMobile || isTablet ? 'fixed' : 'absolute'));
 
-    setPanelClassNames(
+    setPanelClassName(
       classNames(
-        staticPanelClassNames,
-        `${isMobile ? 'w-full' : 'w-[397px]'}`,
-        `${isTablet ? 'w-[350px]' : 'w-[397px]'}`,
+        staticPanelClassName,
+        isMobile && 'w-full',
+        isTablet && 'w-[350px]',
+        !isMobile && !isTablet && 'w-[397px]',
       ),
     );
-  }, [isMobile, isTablet, staticPanelContainerClassNames, staticPanelClassNames]);
+  }, [isMobile, isTablet, staticPanelContainerClassName, staticPanelClassName]);
 
   const toggleColumnVisibility = useCallback(
     (id?: string) => {
@@ -129,12 +128,12 @@ const GridWithColumnsPanel = <T extends object>({
             onGridReady={onGridReady}
           />
           {showColumnsPanel && (
-            <div className={panelContainerClassNames}>
+            <div className={panelContainerClassName}>
               <DndProvider backend={HTML5Backend}>
                 <ColumnsPanel
                   columns={colDefs}
                   showResetButton={showResetButton}
-                  panelClassNames={panelClassNames}
+                  panelClassName={panelClassName}
                   resetToDefault={resetToDefault}
                   toggleColumnsPanel={toggleColumnsPanel}
                   toggleColumnVisibility={toggleColumnVisibility}

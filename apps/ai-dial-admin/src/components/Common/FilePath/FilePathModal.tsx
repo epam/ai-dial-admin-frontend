@@ -48,7 +48,7 @@ const FilePathModal: FC<Props> = ({
       title={modalTitle}
       portalId="SelectFile"
       open={isModalOpen}
-      cssClass="h-[750px]"
+      className="h-[750px]"
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Apply)}
       onSubmit={() => {

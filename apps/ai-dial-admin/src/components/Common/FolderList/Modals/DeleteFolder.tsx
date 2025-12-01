@@ -87,7 +87,7 @@ const DeleteFolder: FC<Props> = ({ isModalOpen, view, selectedFolder, isBulkDele
       portalId="DeleteFolder"
       open={isModalOpen}
       size={PopupSize.Lg}
-      cssClass="h-[750px]"
+      className="h-[750px]"
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Delete)}
       onSubmit={() => {
@@ -104,7 +104,7 @@ const DeleteFolder: FC<Props> = ({ isModalOpen, view, selectedFolder, isBulkDele
           <DialCollapsibleSidebar
             width={360}
             title={t(FoldersI18nKey.Folders)}
-            containerCssClass="border border-primary"
+            containerClassName="border border-primary"
           >
             <FolderList
               context={context}

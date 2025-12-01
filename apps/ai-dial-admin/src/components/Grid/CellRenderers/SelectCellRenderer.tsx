@@ -27,7 +27,7 @@ const SelectCellRenderer = (params: SelectCellRendererParams) => {
   return (
     <div className="h-8 w-full">
       <DialSelect
-        cssClass="min-h-[32px] px-2 py-1"
+        className="min-h-[32px] px-2 py-1"
         options={items || []}
         value={params.isMulti ? multipleValues : value}
         multiple={params.isMulti}

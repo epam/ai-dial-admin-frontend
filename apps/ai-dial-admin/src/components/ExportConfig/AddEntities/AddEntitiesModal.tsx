@@ -59,7 +59,7 @@ const AddEntitiesModal: FC<Props> = ({ isModalOpen, selectedTab, entities, colum
       portalId="AddExportEntities"
       open={isModalOpen}
       size={PopupSize.Lg}
-      cssClass="h-[800px]"
+      className="h-[800px]"
       onSubmit={() => onApply(selectedEntities, selectedDependencies)}
       onCancel={onClose}
       disableSubmitButton={!selectedEntities.length}

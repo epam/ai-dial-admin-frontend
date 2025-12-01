@@ -33,7 +33,7 @@ const SelectedFilter: FC<Props> = ({ selectedFilters, isDropdownOpen }) => {
   return (
     <div className="bg-layer-4 cursor-pointer h-[22px] px-1 small rounded flex items-center justify-center max-w-[150px]">
       {t(ToolsetI18nKey.View)}:
-      <DialEllipsisTooltip text={title} cssClass="mx-1" />
+      <DialEllipsisTooltip text={title} className="mx-1" />
       {icon}
     </div>
   );

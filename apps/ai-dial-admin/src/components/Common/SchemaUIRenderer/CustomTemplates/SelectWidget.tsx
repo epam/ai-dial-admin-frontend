@@ -35,7 +35,7 @@ export const SelectWidget: FC<WidgetProps> = ({
         options={enumOptions?.map((o) => ({ ...o, value: o.value.toString() })) || []}
         value={selectedIndexes === void 0 ? emptyValue : selectedIndexes}
         onChange={handleChange}
-        cssClass="max-w-[600px]"
+        className="max-w-[600px]"
       />
     </div>
   );

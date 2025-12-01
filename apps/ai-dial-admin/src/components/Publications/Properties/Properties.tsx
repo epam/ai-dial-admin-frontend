@@ -10,7 +10,7 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ActionType, ApplicationPublication, Publication } from '@/src/models/dial/publications';
 import { removeTrailingSlash } from '@/src/utils/files/path';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import { getActionClass } from '@/src/utils/publications';
+import { getActionClassName } from '@/src/utils/publications';
 import PublicationPermissions from './Permissions';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -23,9 +23,9 @@ interface Props {
 
 const BasePublicationProperties: FC<Props> = ({ view, publication, children, applicationSchemes }) => {
   const t = useI18n() as (str: string) => string;
-  const indicatorClassNames = classNames(
+  const indicatorClassName = classNames(
     'flex w-2 h-2 mr-1 rounded no-user-select',
-    getActionClass(publication.action),
+    getActionClassName(publication.action),
   );
 
   const application = (publication as ApplicationPublication).applicationResources?.[0];
@@ -38,7 +38,7 @@ const BasePublicationProperties: FC<Props> = ({ view, publication, children, app
         {(view === ApplicationRoute.Prompts || view === ApplicationRoute.Files) && (
           <LabelledText label={t(EntitiesI18nKey.Action)}>
             <p className="truncate items-center flex">
-              <span className={indicatorClassNames} />
+              <span className={indicatorClassName} />
               {t(ACTION_I18N_KEYS[publication.action])}
             </p>
           </LabelledText>

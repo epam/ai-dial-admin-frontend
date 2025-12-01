@@ -27,8 +27,8 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
   const functionItems = getOperationItems(t);
   const attributeItems = getAttributeItems(t, attributes);
 
-  const lineHorizontalChildClass = classNames('h-[1px] w-[16px] bg-accent-primary', errorText && 'mb-[18px]');
-  const containerClass = classNames('flex-1 flex flex-row gap-x-2 items-center');
+  const lineHorizontalChildClassName = classNames('h-[1px] w-[16px] bg-accent-primary', errorText && 'mb-[18px]');
+  const containerClassName = classNames('flex-1 flex flex-row gap-x-2 items-center');
   const inputClassName = classNames('flex-shrink-0', errorText && 'pb-[18px]');
   const iconClassName = classNames(
     'cursor-pointer',
@@ -99,8 +99,8 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
 
   return (
     <>
-      <div className={classNames(lineHorizontalChildClass, index === 0 && 'mt-[22px]')}></div>
-      <div ref={ref} className={containerClass}>
+      <div className={classNames(lineHorizontalChildClassName, index === 0 && 'mt-[22px]')}></div>
+      <div ref={ref} className={containerClassName}>
         <div className={classNames(inputClassName, 'w-[250px]')}>
           <DialSelectField
             value={rule.source}
@@ -131,7 +131,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
               onChange={onChangeRegex}
               errorText={errorText}
               invalid={!!errorText}
-              elementCssClass="h-[38px]"
+              elementClassName="h-[38px]"
             />
           ) : (
             <DialTagInput

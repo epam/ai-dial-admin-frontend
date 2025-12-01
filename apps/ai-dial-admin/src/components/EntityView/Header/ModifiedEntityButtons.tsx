@@ -45,7 +45,7 @@ const ModifiedEntityButtons = <T extends object>({
 
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
-  const [buttonsClassNames, setButtonsClassNames] = useState('');
+  const [buttonsClassName, setButtonsClassName] = useState('');
 
   const onTryToSave = useCallback(
     (newVersion?: string) => {
@@ -69,7 +69,7 @@ const ModifiedEntityButtons = <T extends object>({
   );
 
   useEffect(() => {
-    setButtonsClassNames(classNames(isTablet || isMobile ? 'w-1/2 flex justify-center' : ''));
+    setButtonsClassName(classNames((isTablet || isMobile) && 'w-1/2 flex justify-center'));
   }, [isTablet, isMobile]);
 
   return (
@@ -77,14 +77,14 @@ const ModifiedEntityButtons = <T extends object>({
       <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
         <DialButton
           variant={ButtonVariant.Secondary}
-          className={buttonsClassNames}
+          className={buttonsClassName}
           label={t(ButtonsI18nKey.Discard)}
           onClick={onDiscard}
         />
         {isAssetWithVersion(view) && (
           <DialButton
             variant={ButtonVariant.Secondary}
-            className={buttonsClassNames}
+            className={buttonsClassName}
             label={t(ButtonsI18nKey.SaveAsNewVersion)}
             onClick={() => setIsModalOpen(true)}
             disabled={jsonEditorEnabled ? false : !isValid}
@@ -92,7 +92,7 @@ const ModifiedEntityButtons = <T extends object>({
         )}
         <DialButton
           variant={ButtonVariant.Primary}
-          className={buttonsClassNames}
+          className={buttonsClassName}
           label={t(ButtonsI18nKey.Save)}
           onClick={() => onTryToSave()}
           disabled={jsonEditorEnabled ? false : !isValid}

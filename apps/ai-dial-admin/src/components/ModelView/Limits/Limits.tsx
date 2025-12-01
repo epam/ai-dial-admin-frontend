@@ -83,7 +83,7 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
       {activeLimitType === LimitType.Total && (
         <DialNumberInputField
           elementId="totalNum"
-          elementCssClass="flex-1"
+          elementClassName="flex-1"
           fieldTitle={t(ModelViewI18nKey.NumberOfTokens)}
           value={model.limits?.maxTotalTokens}
           onChange={onChangeMaxTotalTokens}
@@ -94,14 +94,14 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
         <>
           <DialNumberInputField
             elementId="promptsNum"
-            elementCssClass="flex-1"
+            elementClassName="flex-1"
             fieldTitle={t(ModelViewI18nKey.Prompts)}
             value={model.limits?.maxPromptTokens}
             onChange={onChangeMaxPromptTokens}
           />
           <DialNumberInputField
             elementId="completionsNum"
-            elementCssClass="flex-1"
+            elementClassName="flex-1"
             fieldTitle={t(ModelViewI18nKey.Completions)}
             value={model.limits?.maxCompletionTokens}
             onChange={onChangeMaxCompletionTokens}

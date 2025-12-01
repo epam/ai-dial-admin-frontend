@@ -52,7 +52,7 @@ const CompareVersions: FC<Props> = ({ heading, isModalOpen, onClose, prompts, pr
     <DialPopup
       open={isModalOpen}
       portalId="compareVersionsModal"
-      cssClass="h-[93%]"
+      className="h-[93%]"
       size={PopupSize.Lg}
       title={heading}
       onClose={onClose}
