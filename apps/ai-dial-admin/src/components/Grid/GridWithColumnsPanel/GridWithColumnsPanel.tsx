@@ -64,15 +64,14 @@ const GridWithColumnsPanel = <T extends object>({
   }, [colDefs, columnDefs, storageKey]);
 
   useEffect(() => {
-    setPanelContainerClassName(
-      classNames(staticPanelContainerClassName, `${isMobile || isTablet ? 'fixed' : 'absolute'}`),
-    );
+    setPanelContainerClassName(classNames(staticPanelContainerClassName, isMobile || isTablet ? 'fixed' : 'absolute'));
 
     setPanelClassName(
       classNames(
         staticPanelClassName,
-        `${isMobile ? 'w-full' : 'w-[397px]'}`,
-        `${isTablet ? 'w-[350px]' : 'w-[397px]'}`,
+        isMobile && 'w-full',
+        isTablet && 'w-[350px]',
+        !isMobile && !isTablet && 'w-[397px]',
       ),
     );
   }, [isMobile, isTablet, staticPanelContainerClassName, staticPanelClassName]);
