@@ -4,18 +4,17 @@ import classNames from 'classnames';
 
 import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
-import { DialKey } from '@/src/models/dial/key';
-import { getKeyStatus } from '@/src/utils/keys';
-import { getColorClass } from '../Properties/utils';
+import { ValidityState } from '@/src/models/dial/base-entity';
+import { getColorClass, getValidityStatus } from './utils';
 
 interface Props {
-  data: DialKey;
+  validityState?: ValidityState;
 }
 
-const KeyViewStatus: FC<Props> = ({ data }) => {
+const ValidityStatus: FC<Props> = ({ validityState }) => {
   const t = useI18n() as (t: string) => string;
   const { currentTheme } = useTheme();
-  const { title, status } = getKeyStatus(data, t);
+  const { title, status } = getValidityStatus(validityState, t);
 
   const colorClass = classNames('w-[10px] h-[10px] rounded-full', getColorClass(status, currentTheme));
 
@@ -27,4 +26,4 @@ const KeyViewStatus: FC<Props> = ({ data }) => {
   );
 };
 
-export default KeyViewStatus;
+export default ValidityStatus;

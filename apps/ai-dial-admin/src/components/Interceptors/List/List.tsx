@@ -6,7 +6,7 @@ import {
   AUTHOR_COLUMN,
   SIMPLE_ENTITY_COLUMNS,
   SOURCE_FIELD_COLUMNS,
-  STATUS_COLUMN,
+  INTERCEPTOR_STATUS_COLUMN,
 } from '@/src/constants/grid-columns/grid-columns';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -25,7 +25,7 @@ const InterceptorsList: FC<Props> = ({ data }) => {
     <BaseEntityList
       baseColumns={[
         ...SIMPLE_ENTITY_COLUMNS,
-        STATUS_COLUMN,
+        INTERCEPTOR_STATUS_COLUMN,
         ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Interceptors),
         AUTHOR_COLUMN,
       ]}
