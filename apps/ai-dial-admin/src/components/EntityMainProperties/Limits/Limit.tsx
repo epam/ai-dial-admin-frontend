@@ -31,7 +31,7 @@ const LimitControl: FC<Props> = ({ limits, controlClassName, isCostInputs, onCha
 
   return (
     <DialNumberInputField
-      containerCssClass={controlClassName}
+      containerClassName={controlClassName}
       placeholder={t(RolesI18nKey.NotSpecified)}
       value={
         limits?.[fieldKey] === UNLIMITED_VALUE

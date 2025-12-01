@@ -35,7 +35,7 @@ const MenuItemContent: FC<Props> = ({ menuItem, isActive, isSidebarOpen }) => {
     >
       <Link prefetch={false} aria-label={t(menuItem.key)} className={menuClassNames} href={menuItem.href}>
         <div className={menuCircleClassNames}></div>
-        {isSidebarOpen && <DialEllipsisTooltip cssClass="ml-4" text={t(menuItem.key)} />}
+        {isSidebarOpen && <DialEllipsisTooltip className="ml-4" text={t(menuItem.key)} />}
       </Link>
     </DialTooltip>
   );

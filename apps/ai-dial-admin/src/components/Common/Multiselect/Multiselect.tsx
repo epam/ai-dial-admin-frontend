@@ -48,7 +48,7 @@ const Multiselect: FC<Props> = ({
     <div className="flex flex-col">
       <Field fieldTitle={title} htmlFor={elementId} optional={optional} />
       <DialInputPopup
-        inputCssClasses={errorText ? 'dial-input-error' : ''}
+        inputClassNames={errorText ? 'dial-input-error' : ''}
         open={isModalOpen}
         disabled={disabled}
         selectedValue={selectedItems}

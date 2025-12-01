@@ -69,7 +69,7 @@ const ListView = <T extends object>({
           <DialCollapsibleSidebar
             width={320}
             title={title || ''}
-            containerCssClass="bg-layer-3 border-transparent mr-0"
+            containerClassName="bg-layer-3 border-transparent mr-0"
             iconSize={24}
             additionalButtons={
               <DialTooltip

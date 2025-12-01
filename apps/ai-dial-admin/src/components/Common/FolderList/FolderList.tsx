@@ -223,7 +223,7 @@ const FolderList: FC<Props> = ({
                       isMovableFolder || isFolderDelete ? 'text-accent-primary' : '',
                     )}
                   />
-                  <DialEllipsisTooltip text={name} cssClass="text-primary" />
+                  <DialEllipsisTooltip text={name} className="text-primary" />
                 </div>
 
                 {showFolderActions && (

@@ -23,7 +23,7 @@ const RulesCompare: FC<Props> = ({ rules, compareRules, isOpen, onClose }) => {
       title={t(FoldersI18nKey.ComparePermissions)}
       portalId="RulesCompare"
       open={isOpen}
-      cssClass="min-h-[200px]"
+      className="min-h-[200px]"
       size={PopupSize.Lg}
     >
       <div className="flex flex-1 flex-row px-6 min-h-0 divide-tertiary divide-x">

@@ -47,7 +47,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModa
           disabled={disabled}
           fieldTitle={t(EntityFieldsI18nKey.transport)}
           elementId="transport"
-          containerCssClass="w-[180px]"
+          containerClassName="w-[180px]"
           value={entity.transport || ToolsetTransport.SSE}
           options={transportOptions}
           onChange={(transport) => onChange?.({ ...entity, transport: transport as ToolsetTransport })}

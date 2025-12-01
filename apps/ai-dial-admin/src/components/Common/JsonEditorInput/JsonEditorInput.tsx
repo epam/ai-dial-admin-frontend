@@ -70,7 +70,7 @@ const JsonEditorInput: FC<Props> = ({ value, disabled, fieldTitle, elementId, in
         selectedValue={jsonValue}
         onOpen={onOpenModal}
         emptyValueText={t(BasicI18nKey.NoData)}
-        inputCssClasses={inputCss}
+        inputClassName={inputCss}
       >
         <DialFormPopup
           onClose={onCloseModal}

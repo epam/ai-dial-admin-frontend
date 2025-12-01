@@ -134,7 +134,7 @@ const CreateFilter: FC<Props> = ({
             onChange={(v) => setValue(v || '')}
             placeholder={t(BasicI18nKey.Value)}
             value={value}
-            cssClass={'py-[9px]'}
+            className={'py-[9px]'}
           />
         )}
       </div>

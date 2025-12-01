@@ -57,7 +57,7 @@ const RulesValueReadonly: FC<Props> = ({ rule, ruleDiff, setLastValueHeight }) =
             <DialTag
               key={tag}
               tag={tag}
-              cssClass={
+              className={
                 ruleDiff?.items?.includes(tag)
                   ? isTargetError
                     ? 'border-error'
