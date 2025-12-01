@@ -51,10 +51,10 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
     setContainerClassName(
       classNames(
         staticContainerClassName,
-        isTablet || isMobile ? 'fixed bottom-0 left-0 right-0 h-[62px] bg-layer-3 px-6' : '',
+        (isTablet || isMobile) && 'fixed bottom-0 left-0 right-0 h-[62px] bg-layer-3 px-6',
       ),
     );
-    setButtonsClassName(classNames(isTablet || isMobile ? 'w-1/2 flex justify-center' : ''));
+    setButtonsClassName(classNames((isTablet || isMobile) && 'w-1/2 flex justify-center'));
   }, [isTablet, isMobile]);
 
   const approve = useCallback(() => {

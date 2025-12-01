@@ -91,7 +91,7 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
             <UserInfo session={session} />
             <IconChevronDown
               {...BASE_ICON_PROPS}
-              className={classNames('shrink-0 text-primary transition-all', isOpen ? 'rotate-180' : '')}
+              className={classNames('shrink-0 text-primary transition-all', isOpen && 'rotate-180')}
             />
           </div>
         </DialDropdown>

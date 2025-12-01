@@ -26,7 +26,7 @@ const Icon: FC<IconProps> = ({ url, name, selected, onClick }) => {
     'flex w-[120px] flex-col items-center justify-center border cursor-pointer px-5 py-3 hover:bg-accent-primary-alpha',
     selected ? 'border-accent-primary bg-accent-primary-alpha' : 'border-transparent',
   );
-  const iconBackgroundClassName = classNames('mb-2 text-icon-primary', url ? 'rounded-full bg-model-icon' : '');
+  const iconBackgroundClassName = classNames('mb-2 text-icon-primary', url && 'rounded-full bg-model-icon');
   const iconTitleClassName = classNames('tiny truncate w-full', selected ? 'text-primary' : 'text-secondary');
 
   return (

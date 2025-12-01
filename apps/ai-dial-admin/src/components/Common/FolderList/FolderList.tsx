@@ -225,7 +225,7 @@ const FolderList: FC<Props> = ({
                     {...BASE_ICON_PROPS}
                     className={classNames(
                       'flex-shrink-0 mr-2',
-                      isMoveError ? 'text-error' : '',
+                      isMoveError && 'text-error',
                       isMovableFolder || isFolderDelete ? 'text-accent-primary' : '',
                     )}
                   />

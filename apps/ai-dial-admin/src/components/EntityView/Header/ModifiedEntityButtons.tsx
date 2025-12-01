@@ -69,7 +69,7 @@ const ModifiedEntityButtons = <T extends object>({
   );
 
   useEffect(() => {
-    setButtonsClassName(classNames(isTablet || isMobile ? 'w-1/2 flex justify-center' : ''));
+    setButtonsClassName(classNames((isTablet || isMobile) && 'w-1/2 flex justify-center'));
   }, [isTablet, isMobile]);
 
   return (

@@ -118,7 +118,7 @@ const HeaderButtons = <T extends object>({
         ) : (
           <div className="flex flex-row items-center w-full gap-x-4">
             {!jsonEditorEnabled && (
-              <div className={classNames('flex-1 flex flex-row gap-x-4', isSimple ? 'justify-center' : '')}>
+              <div className={classNames('flex-1 flex flex-row gap-x-4', isSimple && 'justify-center')}>
                 {isAssetView && (
                   <AssetVersionControl
                     view={view}
@@ -130,11 +130,11 @@ const HeaderButtons = <T extends object>({
                     etag={etag}
                   />
                 )}
-                <div className={classNames('flex-1 flex flex-row gap-x-4', isSimple ? 'justify-center' : '')}>
+                <div className={classNames('flex-1 flex flex-row gap-x-4', isSimple && 'justify-center')}>
                   <div className="flex flex-row gap-x-4">
                     <DialButton
                       variant={ButtonVariant.Secondary}
-                      className={classNames(buttonsClassName, isSimple ? 'min-w-[150px] lg:min-w-0' : '')}
+                      className={classNames(buttonsClassName, isSimple && 'min-w-[150px] lg:min-w-0')}
                       label={t(ButtonsI18nKey.Delete)}
                       iconBefore={<IconTrashX {...BASE_ICON_PROPS} />}
                       onClick={onOpenModal}

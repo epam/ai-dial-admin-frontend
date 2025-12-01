@@ -60,7 +60,7 @@ const JsonToggles: FC<Props> = ({
     setEditorClassName(
       classNames(
         staticEditorClassName,
-        isTablet ? 'ml-3 pl-3 border-l-tertiary border-l h-full flex items-center' : isMobile ? 'hidden' : '',
+        isTablet ? 'ml-3 pl-3 border-l-tertiary border-l h-full flex items-center' : isMobile && 'hidden',
       ),
     );
   }, [isTablet, isMobile]);
