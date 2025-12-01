@@ -23,12 +23,12 @@ const ValidityStatus: FC<Props> = ({ validityState, isHideHint }) => {
   const colorClassName = classNames('w-[10px] h-[10px] rounded-full', getColorClassName(status, currentTheme));
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-x-2">
       <div className={colorClassName}></div>
       <div>{title}</div>
       {!isHideHint && !validityState?.valid && (
         <DialTooltip tooltip={validityState?.message || ''}>
-          <IconInfoCircle {...BASE_ICON_PROPS} size={14} />
+          <IconInfoCircle {...BASE_ICON_PROPS} />
         </DialTooltip>
       )}
     </div>
