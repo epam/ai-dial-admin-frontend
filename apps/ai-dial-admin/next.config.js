@@ -69,10 +69,10 @@ const nextConfig = {
             key: 'Cache-Control',
             value: 'no-store, no-cache, must-revalidate, proxy-revalidate', // Adjust as needed
           },
-          {
-            key: 'Content-Security-Policy',
-            value: ContentSecurityPolicy.replace(/\n/g, '').trim(),
-          },
+          // {
+          //   key: 'Content-Security-Policy',
+          //   value: ContentSecurityPolicy.replace(/\n/g, '').trim(),
+          // },
         ],
       },
     ];
