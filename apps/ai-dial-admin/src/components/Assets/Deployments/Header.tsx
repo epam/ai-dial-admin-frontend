@@ -12,7 +12,9 @@ import { AssetToolset, DeploymentAsset } from '@/src/models/dial/deployment-asse
 import { ApplicationRoute } from '@/src/types/routes';
 import { removeTrailingSlash } from '@/src/utils/files/path';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
+import ValidityStatus from '@/src/components/EntityView/Status/ValidityStatus';
 import { isAdminLoggedInToToolset, isUserLoggedInToToolset } from '@/src/utils/toolset/toolset-auth';
+import { EntityValidityState } from '@/src/models/dial/base-entity';
 
 interface Props {
   view: ApplicationRoute;
@@ -22,6 +24,7 @@ interface Props {
 const DeploymentAssetHeader: FC<Props> = ({ view, asset }) => {
   const t = useI18n() as (t: string) => string;
   const currentLocale = useCurrentLocale();
+  const validityState = (asset as EntityValidityState)?.validityState;
 
   const openFolderStorageInNewTab = useCallback(
     (path: string) => {
@@ -74,6 +77,12 @@ const DeploymentAssetHeader: FC<Props> = ({ view, asset }) => {
           />
         </div>
       </LabelledText>
+
+      {validityState && (
+        <LabelledText label={t(EntityFieldsI18nKey.status)}>
+          <ValidityStatus validityState={validityState} />
+        </LabelledText>
+      )}
     </div>
   );
 };
