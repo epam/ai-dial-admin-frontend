@@ -1,7 +1,10 @@
 import { FC } from 'react';
 
+import { DialTooltip } from '@epam/ai-dial-ui-kit';
+import { IconInfoCircle } from '@tabler/icons-react';
 import classNames from 'classnames';
 
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
 import { ValidityState } from '@/src/models/dial/base-entity';
@@ -9,9 +12,10 @@ import { getColorClassName, getValidityStatus } from './utils';
 
 interface Props {
   validityState?: ValidityState;
+  isHideHint?: boolean;
 }
 
-const ValidityStatus: FC<Props> = ({ validityState }) => {
+const ValidityStatus: FC<Props> = ({ validityState, isHideHint }) => {
   const t = useI18n() as (t: string) => string;
   const { currentTheme } = useTheme();
   const { title, status } = getValidityStatus(validityState, t);
@@ -22,6 +26,11 @@ const ValidityStatus: FC<Props> = ({ validityState }) => {
     <div className="flex items-center gap-2">
       <div className={colorClassName}></div>
       <div>{title}</div>
+      {!isHideHint && !validityState?.valid && (
+        <DialTooltip tooltip={validityState?.message || ''}>
+          <IconInfoCircle {...BASE_ICON_PROPS} size={14} />
+        </DialTooltip>
+      )}
     </div>
   );
 };

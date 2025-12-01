@@ -227,7 +227,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
                 {activeTab === EntityViewTab.Properties && (
                   <div className="h-full flex flex-col divide-y divide-primary w-full">
                     <KeyViewHeader selectedKey={selectedKey} />
-                    <div className="lg:w-[35%]">
+                    <div className="lg:w-[35%] pt-8">
                       <KeyProperties
                         entity={selectedKey}
                         names={names}
