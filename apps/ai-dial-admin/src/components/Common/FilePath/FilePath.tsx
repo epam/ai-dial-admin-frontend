@@ -18,12 +18,21 @@ interface Props {
   modalTitle: string;
   disabled?: boolean;
   value?: string;
-  inputCss?: string;
+  inputClassName?: string;
   onChange: (value: string) => void;
   context: () => AssetsFolderContext<DialFile>;
 }
 
-const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, inputCss, onChange, context }) => {
+const FilePath: FC<Props> = ({
+  label,
+  placeholder,
+  disabled,
+  value,
+  modalTitle,
+  inputClassName,
+  onChange,
+  context,
+}) => {
   const t = useI18n();
   const [filePath, setFilePath] = useState(value);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,7 +60,7 @@ const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, 
         {label}
       </label>
       <div className="flex gap-4">
-        <div className={classNames('flex', inputCss || '')}>
+        <div className={classNames('flex', inputClassName || '')}>
           <input
             disabled={disabled}
             type="text"

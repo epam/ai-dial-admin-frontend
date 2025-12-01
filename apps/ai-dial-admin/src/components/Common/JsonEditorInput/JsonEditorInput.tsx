@@ -12,11 +12,11 @@ interface Props {
   fieldTitle?: string;
   elementId?: string;
   disabled?: boolean;
-  inputCss?: string;
+  inputClassName?: string;
   onChangeValue: (json: object) => void;
 }
 
-const JsonEditorInput: FC<Props> = ({ value, disabled, fieldTitle, elementId, inputCss, onChangeValue }) => {
+const JsonEditorInput: FC<Props> = ({ value, disabled, fieldTitle, elementId, inputClassName, onChangeValue }) => {
   const t = useI18n();
   const [isValid, setIsValid] = useState(false);
   const [jsonValue, setJsonValue] = useState<string | undefined>(undefined);
@@ -70,7 +70,7 @@ const JsonEditorInput: FC<Props> = ({ value, disabled, fieldTitle, elementId, in
         selectedValue={jsonValue}
         onOpen={onOpenModal}
         emptyValueText={t(BasicI18nKey.NoData)}
-        inputClassName={inputCss}
+        inputClassName={inputClassName}
       >
         <DialFormPopup
           onClose={onCloseModal}
