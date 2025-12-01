@@ -7,7 +7,7 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
-  cssClass?: string;
+  className?: string;
   size?: number;
   onClose: (e: MouseEvent<HTMLButtonElement>) => void;
 }

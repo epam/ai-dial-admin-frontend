@@ -29,107 +29,107 @@ export enum EntityViewTab {
 
 export const propertiesTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Properties,
-  name: t(TabsI18nKey.Properties),
+  label: t(TabsI18nKey.Properties),
 });
 
 export const featuresTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Features,
-  name: t(TabsI18nKey.Features),
+  label: t(TabsI18nKey.Features),
 });
 
 export const rolesTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Roles,
-  name: t(TabsI18nKey.Roles),
+  label: t(TabsI18nKey.Roles),
 });
 
 export const interceptorsTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Interceptors,
-  name: t(TabsI18nKey.Interceptors),
+  label: t(TabsI18nKey.Interceptors),
 });
 
 export const parametersTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Parameters,
-  name: t(TabsI18nKey.Parameters),
+  label: t(TabsI18nKey.Parameters),
 });
 
 export const auditTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Audit,
-  name: t(TabsI18nKey.Audit),
+  label: t(TabsI18nKey.Audit),
 });
 
 export const modelsTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Models,
-  name: t(TabsI18nKey.Models),
+  label: t(TabsI18nKey.Models),
 });
 
 export const dashboardTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Dashboard,
-  name: t(TabsI18nKey.Dashboard),
+  label: t(TabsI18nKey.Dashboard),
 });
 
 export const activitiesTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Activities,
-  name: t(TabsI18nKey.Activities),
+  label: t(TabsI18nKey.Activities),
 });
 
 export const dependenciesTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Dependencies,
-  name: t(TabsI18nKey.Dependencies),
+  label: t(TabsI18nKey.Dependencies),
 });
 
 export const appRouteTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Routes,
-  name: t(TabsI18nKey.Routes),
+  label: t(TabsI18nKey.Routes),
 });
 
 export const tracesTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Traces,
-  name: t(TabsI18nKey.Traces),
+  label: t(TabsI18nKey.Traces),
 });
 
 export const conversationsTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Conversations,
-  name: t(TabsI18nKey.Conversations),
+  label: t(TabsI18nKey.Conversations),
 });
 
 export const attachmentsTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Attachments,
-  name: t(TabsI18nKey.Attachments),
+  label: t(TabsI18nKey.Attachments),
 });
 
 export const toolsTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Tools,
-  name: t(TabsI18nKey.Tools),
+  label: t(TabsI18nKey.Tools),
 });
 
 export const parameterSchemaTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.ParameterSchema,
-  name: t(TabsI18nKey.ParameterSchema),
+  label: t(TabsI18nKey.ParameterSchema),
 });
 
 export const entitiesTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Entities,
-  name: t(TabsI18nKey.Entities),
+  label: t(TabsI18nKey.Entities),
 });
 
 export const keysTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Keys,
-  name: t(TabsI18nKey.Keys),
+  label: t(TabsI18nKey.Keys),
 });
 
 export const filesTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Files,
-  name: t(TabsI18nKey.Files),
+  label: t(TabsI18nKey.Files),
 });
 
 export const applicationsTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Applications,
-  name: t(TabsI18nKey.Applications),
+  label: t(TabsI18nKey.Applications),
 });
 
 export const applicationRunnersTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.ApplicationRunners,
-  name: t(TabsI18nKey.ApplicationRunners),
+  label: t(TabsI18nKey.ApplicationRunners),
 });
 
 export const getViewTabs = (t: (stringToTranslate: string) => string, view: ApplicationRoute): TabModel[] => {

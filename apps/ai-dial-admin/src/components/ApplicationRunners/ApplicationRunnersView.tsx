@@ -181,7 +181,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
           selectedFormat={selectedFormat}
           setSelectedFormat={setSelectedFormat}
         >
-          <DialButtonDropdown title={t(ButtonsI18nKey.Create)} items={items} variant={ButtonVariant.Secondary} />
+          <DialButtonDropdown label={t(ButtonsI18nKey.Create)} items={items} variant={ButtonVariant.Secondary} />
         </HeaderButtons>
       </div>
       <div className="flex-1 overflow-auto min-h-0">
