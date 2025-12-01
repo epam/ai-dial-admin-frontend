@@ -27,7 +27,7 @@ const ActionColumn = <T extends object>({ items, data, api, node, disabledInstea
         rowIndex={node.rowIndex as number}
         icon={<IconDotsVertical size={16} className="text-secondary" stroke={2} />}
         items={dropdownItems}
-        actionTriggerClass="flex h-[24px] hover:bg-accent-primary-alpha items-center justify-center rounded w-[24px]"
+        actionTriggerClassName="flex h-[24px] hover:bg-accent-primary-alpha items-center justify-center rounded w-[24px]"
       />
     </div>
   ) : null;
