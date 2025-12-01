@@ -30,11 +30,11 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
 
   const [keys, setKeys] = useState<Record<string, string>>({});
 
-  const staticContainerClassnames = 'flex flex-row gap-3 divide-x divide-primary';
-  const approveButtonClassNames = `${action === ActionType.ADD ? '' : 'bg-red-400'}`;
+  const staticContainerClassName = 'flex flex-row gap-3 divide-x divide-primary';
+  const approveButtonClassName = `${action === ActionType.ADD ? '' : 'bg-red-400'}`;
 
-  const [containerClassNames, setContainerClassNames] = useState(staticContainerClassnames);
-  const [buttonsClassNames, setButtonsClassNames] = useState('');
+  const [containerClassName, setContainerClassName] = useState(staticContainerClassName);
+  const [buttonsClassName, setButtonsClassName] = useState('');
   const [isApproveModalOpen, setIsOpenApproveModal] = useState(false);
   const [isDeclineModalOpen, setIsOpenDeclineModal] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
@@ -48,13 +48,13 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
   }, [route, action]);
 
   useEffect(() => {
-    setContainerClassNames(
+    setContainerClassName(
       classNames(
-        staticContainerClassnames,
+        staticContainerClassName,
         isTablet || isMobile ? 'fixed bottom-0 left-0 right-0 h-[62px] bg-layer-3 px-6' : '',
       ),
     );
-    setButtonsClassNames(classNames(isTablet || isMobile ? 'w-1/2 flex justify-center' : ''));
+    setButtonsClassName(classNames(isTablet || isMobile ? 'w-1/2 flex justify-center' : ''));
   }, [isTablet, isMobile]);
 
   const approve = useCallback(() => {
@@ -69,11 +69,11 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
 
   return (
     <>
-      <div className={containerClassNames}>
+      <div className={containerClassName}>
         <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
           <DialButton
             variant={ButtonVariant.Secondary}
-            className={buttonsClassNames}
+            className={buttonsClassName}
             label={t(ButtonsI18nKey.Decline)}
             onClick={() => setIsOpenDeclineModal(true)}
             iconBefore={<IconCircleX {...BASE_ICON_PROPS} />}
@@ -81,7 +81,7 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
           {action === ActionType.ADD ? (
             <DialButton
               variant={ButtonVariant.Primary}
-              className={classNames(buttonsClassNames, approveButtonClassNames)}
+              className={classNames(buttonsClassName, approveButtonClassName)}
               label={t(ButtonsI18nKey.Publish)}
               onClick={() => setIsOpenApproveModal(true)}
               iconBefore={<IconWorldShare {...BASE_ICON_PROPS} />}
@@ -89,7 +89,7 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
           ) : (
             <DialButton
               variant={ButtonVariant.Primary}
-              className={classNames(buttonsClassNames, approveButtonClassNames)}
+              className={classNames(buttonsClassName, approveButtonClassName)}
               label={t(ButtonsI18nKey.Unpublish)}
               onClick={() => setIsOpenApproveModal(true)}
               iconBefore={<IconWorldOff {...BASE_ICON_PROPS} />}
@@ -114,7 +114,7 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
             onClose={() => {
               setIsOpenApproveModal(false);
             }}
-            confirmClassName={approveButtonClassNames}
+            confirmClassName={approveButtonClassName}
             confirmLabel={t(action === ActionType.ADD ? ButtonsI18nKey.Publish : ButtonsI18nKey.Unpublish)}
             description={t(keys.ApproveDescription)}
           />,

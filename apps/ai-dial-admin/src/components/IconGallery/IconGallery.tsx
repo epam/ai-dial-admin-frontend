@@ -22,16 +22,16 @@ interface IconProps extends Icon {
 }
 
 const Icon: FC<IconProps> = ({ url, name, selected, onClick }) => {
-  const iconClassNames = classNames(
+  const iconClassName = classNames(
     'flex w-[120px] flex-col items-center justify-center border cursor-pointer px-5 py-3 hover:bg-accent-primary-alpha',
     selected ? 'border-accent-primary bg-accent-primary-alpha' : 'border-transparent',
   );
-  const iconBackgroundClassNames = classNames('mb-2 text-icon-primary', url ? 'rounded-full bg-model-icon' : '');
-  const iconTitleClassNames = classNames('tiny truncate w-full', selected ? 'text-primary' : 'text-secondary');
+  const iconBackgroundClassName = classNames('mb-2 text-icon-primary', url ? 'rounded-full bg-model-icon' : '');
+  const iconTitleClassName = classNames('tiny truncate w-full', selected ? 'text-primary' : 'text-secondary');
 
   return (
-    <button className={iconClassNames} onClick={onClick} aria-label="Icon">
-      <div className={iconBackgroundClassNames}>
+    <button className={iconClassName} onClick={onClick} aria-label="Icon">
+      <div className={iconBackgroundClassName}>
         {!url ? (
           <i className={selected ? 'text-icon-primary' : 'text-icon-secondary'}>
             <Empty />
@@ -40,7 +40,7 @@ const Icon: FC<IconProps> = ({ url, name, selected, onClick }) => {
           <Image src={url} alt={name} width={80} height={80} />
         )}
       </div>
-      <p className={iconTitleClassNames}>{name}</p>
+      <p className={iconTitleClassName}>{name}</p>
     </button>
   );
 };

@@ -33,7 +33,7 @@ import KeyRotateModal from '../Modals/KeyRotateModal';
 import KeyViewHeader from './Header/Header';
 import KeyProperties from './Properties/Properties';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-import { getViewHeaderClassNames } from '@/src/utils/entities/view';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 
 interface Props {
   originalKey: DialKey;
@@ -187,7 +187,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-        <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
+        <div className={getViewHeaderClassName(jsonEditorEnabled)}>
           {!jsonEditorEnabled && (
             <div className="flex-1 min-w-0">
               <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />

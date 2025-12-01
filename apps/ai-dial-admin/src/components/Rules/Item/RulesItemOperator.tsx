@@ -21,16 +21,15 @@ const RulesItemOperator: FC<Props> = ({ folderName, isEmpty, isReadonly }) => {
     : folderName === ROOT_FOLDER
       ? t(FoldersI18nKey.AllRules)
       : t(FoldersI18nKey.NoRules);
-  const operatorNameClass = classNames(
-    'border border-accent-primary rounded bg-accent-primary-alpha inline-block px-2',
-  );
+
+  const className = classNames('border border-accent-primary rounded bg-accent-primary-alpha inline-block px-2');
 
   return (
     <div>
       {isEmpty && isReadonly ? (
         <span className="small">{message}</span>
       ) : (
-        <span className={operatorNameClass}>{t(BasicI18nKey.Or)}</span>
+        <span className={className}>{t(BasicI18nKey.Or)}</span>
       )}
     </div>
   );

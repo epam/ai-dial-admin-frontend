@@ -154,7 +154,7 @@ const FolderList: FC<Props> = ({
     }
   }, [folderContext, disableAutoFetch, initialPath, isBulkDelete]);
 
-  const getFolderClassNames = (node: DialFile, level: number) => {
+  const getFolderClassName = (node: DialFile, level: number) => {
     const isSelected = folderContext?.filePath === node.path;
     const baseClass = `flex justify-between pl-${level * 5}`;
     const selectedClass = isSelected
@@ -192,7 +192,7 @@ const FolderList: FC<Props> = ({
 
     return nodes?.map((node) => {
       const { path, nodeType, items, name } = node;
-      const { baseClass, selectedClass, iconClass } = getFolderClassNames(node, level);
+      const { baseClass, selectedClass, iconClass } = getFolderClassName(node, level);
       const isExpanded = folderContext?.expandedFolders.has(path);
       const isMoveError =
         isFolderMove &&

@@ -40,10 +40,10 @@ const JsonToggles: FC<Props> = ({
   toggleJsonEditor,
 }) => {
   const t = useI18n() as (value: string, options?: Record<string, string | number>) => string;
-  const staticEditorClassNames = 'flex flex-row gap-x-4';
+  const staticEditorClassName = 'flex flex-row gap-x-4';
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
-  const [editorClassNames, setEditorClassNames] = useState(staticEditorClassNames);
+  const [editorClassName, setEditorClassName] = useState(staticEditorClassName);
 
   const items: SelectOption[] = [
     {
@@ -57,16 +57,16 @@ const JsonToggles: FC<Props> = ({
   ];
 
   useEffect(() => {
-    setEditorClassNames(
+    setEditorClassName(
       classNames(
-        staticEditorClassNames,
+        staticEditorClassName,
         isTablet ? 'ml-3 pl-3 border-l-tertiary border-l h-full flex items-center' : isMobile ? 'hidden' : '',
       ),
     );
   }, [isTablet, isMobile]);
 
   return (
-    <div className={classNames(editorClassNames)}>
+    <div className={classNames(editorClassName)}>
       <div className="w-[1px] h-6 bg-layer-4"></div>
       {jsonEditorEnabled &&
       !ONLY_ADMIN_ENTITIES.includes(view) &&

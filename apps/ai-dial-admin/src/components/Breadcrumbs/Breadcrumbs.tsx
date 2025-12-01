@@ -22,12 +22,12 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
 
   if (!pathname) return null;
 
-  const defaultLinkClassNames = classNames(
+  const defaultLinkClassName = classNames(
     'flex text-secondary relative group-[:last-child]:text-primary group-[:last-child]:pointer-events-none',
     'group-[:not(:last-child)]:hover:text-accent-primary group-[:not(:last-child)]:focus-within:text-accent-primary',
   );
 
-  const containerClassNames = classNames(
+  const containerClassName = classNames(
     'flex-row items-center pr-4 pl-10',
     mobile ? 'lg:hidden flex md:px-0 pb-2 mb-2 overflow-x-auto cursor-move' : 'lg:flex hidden',
   );
@@ -37,15 +37,15 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
   }, [pathname, currentLocale, embeddedApps]);
 
   return (
-    <div className={containerClassNames}>
+    <div className={containerClassName}>
       <ol className="flex tiny whitespace-nowrap">
         {breadcrumbs.map(({ href, key, name }, index) => {
           const label = key ? t(key) : name;
-          const linkClassNames = classNames(defaultLinkClassNames, `${!href.length ? 'pointer-events-none' : ''}`);
+          const linkClassName = classNames(defaultLinkClassName, `${!href.length ? 'pointer-events-none' : ''}`);
 
           return (
             <li key={`${href}_${index}`} className="flex items-center group">
-              <Link prefetch={false} href={href} className={linkClassNames}>
+              <Link prefetch={false} href={href} className={linkClassName}>
                 {decodeURIComponent(label)}
               </Link>
               {breadcrumbs.length !== index + 1 && (

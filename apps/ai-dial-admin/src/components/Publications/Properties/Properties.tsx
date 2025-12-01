@@ -23,10 +23,7 @@ interface Props {
 
 const BasePublicationProperties: FC<Props> = ({ view, publication, children, applicationSchemes }) => {
   const t = useI18n() as (str: string) => string;
-  const indicatorClassNames = classNames(
-    'flex w-2 h-2 mr-1 rounded no-user-select',
-    getActionClass(publication.action),
-  );
+  const indicatorClassName = classNames('flex w-2 h-2 mr-1 rounded no-user-select', getActionClass(publication.action));
 
   const application = (publication as ApplicationPublication).applicationResources?.[0];
   const runnerId = application?.applicationTypeSchemaId;
@@ -38,7 +35,7 @@ const BasePublicationProperties: FC<Props> = ({ view, publication, children, app
         {(view === ApplicationRoute.Prompts || view === ApplicationRoute.Files) && (
           <LabelledText label={t(EntitiesI18nKey.Action)}>
             <p className="truncate items-center flex">
-              <span className={indicatorClassNames} />
+              <span className={indicatorClassName} />
               {t(ACTION_I18N_KEYS[publication.action])}
             </p>
           </LabelledText>

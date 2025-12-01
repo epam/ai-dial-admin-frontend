@@ -14,13 +14,13 @@ interface Props {
 
 const MenuItemContent: FC<Props> = ({ menuItem, isActive, isSidebarOpen }) => {
   const t = useI18n();
-  const menuClassNames = classNames(
+  const menuClassName = classNames(
     'group p-2 text-primary rounded cursor-pointer hover:bg-accent-primary-alpha focus:bg-accent-primary-alpha small-150 md:tiny',
     'flex flex-row items-center border-l-2 h-[40px] md:h-[32px]',
     isActive ? 'bg-accent-primary-alpha border-l-accent-primary' : 'border-l-transparent',
   );
 
-  const menuCircleClassNames = classNames(
+  const menuCircleClassName = classNames(
     'w-[8px] h-[8px] mx-[10px] rounded-full z-50',
     isActive ? 'bg-accent-primary' : 'bg-controls-disable invisible group-focus-within:visible group-hover:visible',
     isSidebarOpen ? '' : 'my-[3px]',
@@ -33,8 +33,8 @@ const MenuItemContent: FC<Props> = ({ menuItem, isActive, isSidebarOpen }) => {
       placement={'right'}
       hideTooltip={isSidebarOpen}
     >
-      <Link prefetch={false} aria-label={t(menuItem.key)} className={menuClassNames} href={menuItem.href}>
-        <div className={menuCircleClassNames}></div>
+      <Link prefetch={false} aria-label={t(menuItem.key)} className={menuClassName} href={menuItem.href}>
+        <div className={menuCircleClassName}></div>
         {isSidebarOpen && <DialEllipsisTooltip className="ml-4" text={t(menuItem.key)} />}
       </Link>
     </DialTooltip>
