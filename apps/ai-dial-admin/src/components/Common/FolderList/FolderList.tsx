@@ -205,7 +205,12 @@ const FolderList: FC<Props> = ({
           {isFolder(nodeType) && (
             <div className="flex flex-col">
               <div
-                className={`group ${baseClassName} ${selectedClassName} ${isMovableFolder && 'pointer-events-none'} ${isMoveError ? 'bg-error border-l-error' : ''} py-2`}
+                className={classNames(
+                  'group',
+                  baseClassName,
+                  selectedClassName,
+                  isMovableFolder && 'pointer-events-none',
+                )}
               >
                 <div className="flex-1 flex flex-row truncate" onClick={() => folderContext?.toggleFolder(node)}>
                   <div className={classNames(iconClassName, 'flex items-center justify-center')}>
@@ -237,7 +242,7 @@ const FolderList: FC<Props> = ({
               </div>
 
               {isMoveError && (
-                <div className={`${baseClassName} tiny text-error`}>
+                <div className={classNames(baseClassName, 'tiny text-error')}>
                   <span className="pl-11">{t(FoldersI18nKey.MoveFolderError)}</span>
                 </div>
               )}

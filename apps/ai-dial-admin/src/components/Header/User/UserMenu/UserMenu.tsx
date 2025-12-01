@@ -1,6 +1,7 @@
 import { IconChevronDown } from '@tabler/icons-react';
 import { DialConfirmationPopup, DialDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useMemo, useState } from 'react';
+import classNames from 'classnames';
 
 import SettingsModal from '@/src/components/SettingsModal/SettingsModal';
 import { AuthI18nKey } from '@/src/constants/i18n';
@@ -90,7 +91,7 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
             <UserInfo session={session} />
             <IconChevronDown
               {...BASE_ICON_PROPS}
-              className={`shrink-0 text-primary transition-all ${isOpen ? 'rotate-180' : ''}`}
+              className={classNames('shrink-0 text-primary transition-all', isOpen ? 'rotate-180' : '')}
             />
           </div>
         </DialDropdown>

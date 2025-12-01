@@ -19,7 +19,7 @@ const DiffLegend: FC<Props> = ({ description, added, removed, changed }) => {
     'flex flex-row small',
     description ? 'gap-8 text-secondary' : 'gap-2 text-primary',
   );
-  const itemClassName = classNames('flex items-center gap-1');
+  const itemClassName = 'flex items-center gap-1';
   const descriptionClassName = classNames(description ? '' : 'hidden');
   const rectangleClassName = classNames(
     'inline-block rounded-sm border',
@@ -28,16 +28,16 @@ const DiffLegend: FC<Props> = ({ description, added, removed, changed }) => {
 
   return (
     <div className={containerClassName}>
-      <div className={`${itemClassName} ${(description ? false : !added) && 'hidden'}`}>
-        <span className={`${rectangleClassName}  bg-success border-accent-secondary`}>{added}</span>
+      <div className={classNames(itemClassName, (description ? false : !added) && 'hidden')}>
+        <span className={classNames(rectangleClassName, 'bg-success border-accent-secondary')}>{added}</span>
         <span className={descriptionClassName}>{t(ButtonsI18nKey.Create)}</span>
       </div>
-      <div className={`${itemClassName} ${(description ? false : !changed) && 'hidden'}`}>
-        <span className={`${rectangleClassName}  bg-info border-accent-primary`}>{changed}</span>
+      <div className={classNames(itemClassName, (description ? false : !changed) && 'hidden')}>
+        <span className={classNames(rectangleClassName, 'bg-info border-accent-primary')}>{changed}</span>
         <span className={descriptionClassName}>{t(ButtonsI18nKey.Update)}</span>
       </div>
-      <div className={`${itemClassName} ${(description ? false : !removed) && 'hidden'}`}>
-        <span className={`${rectangleClassName}  bg-error border-error`}>{removed}</span>
+      <div className={classNames(itemClassName, (description ? false : !removed) && 'hidden')}>
+        <span className={classNames(rectangleClassName, 'bg-error border-error')}>{removed}</span>
         <span className={descriptionClassName}>{t(ButtonsI18nKey.Delete)}</span>
       </div>
     </div>
