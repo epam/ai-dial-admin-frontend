@@ -30,22 +30,24 @@ interface Props<T> {
   view: ApplicationRoute;
   activeTab?: EntityViewTab;
   entity: T;
-  onChangeEntity?: (entity: T) => void;
   isChanged: boolean;
-  jsonEditorEnabled: boolean;
-  hideJsonEditor?: boolean;
+  isJsonEditorEnabled?: boolean;
+  isHideJsonEditor?: boolean;
   addedVersions?: string[];
   setAddedVersions?: Dispatch<SetStateAction<string[]>>;
   selectedFormat?: ExportFormat;
-  setSelectedFormat?: (format: ExportFormat) => void;
   children?: ReactNode;
-  onDiscard: () => void;
-  onSave: (newVersion?: string) => void;
-  removeEntity: (entity: string) => Promise<ServerActionResponse>;
-  toggleJsonEditor?: () => void;
-  context?: () => AssetsFolderContext<DialFile>;
   assets?: Asset[];
   etag?: string;
+
+  onChangeEntity?: (entity: T) => void;
+  onDiscard: () => void;
+  onSave: (newVersion?: string) => void;
+  onChangeSelectedFormat?: (format: ExportFormat) => void;
+  onRemove: (entity: string) => Promise<ServerActionResponse>;
+  onToggleJsonEditor?: () => void;
+  onHideFormatSelector?: () => void;
+  getAssetContext?: () => AssetsFolderContext<DialFile>;
 }
 
 const HeaderButtons = <T extends object>({
@@ -53,17 +55,17 @@ const HeaderButtons = <T extends object>({
   entity,
   onChangeEntity,
   isChanged,
-  onDiscard,
-  onSave,
-  removeEntity,
-  jsonEditorEnabled,
-  hideJsonEditor,
+  isJsonEditorEnabled,
+  isHideJsonEditor,
   children,
   addedVersions,
   setAddedVersions,
-  context,
+  getAssetContext,
   assets,
   etag,
+  onDiscard,
+  onSave,
+  onRemove,
   ...props
 }: Props<T>) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
@@ -112,12 +114,12 @@ const HeaderButtons = <T extends object>({
             onDiscard={onDiscard}
             onSave={onSave}
             view={view}
-            jsonEditorEnabled={jsonEditorEnabled}
+            isJsonEditorEnabled={isJsonEditorEnabled}
             existingVersions={existingVersions}
           />
         ) : (
           <div className="flex flex-row items-center w-full gap-x-4">
-            {!jsonEditorEnabled && (
+            {!isJsonEditorEnabled && (
               <div className={classNames('flex-1 flex flex-row gap-x-4', isSimple && 'justify-center')}>
                 {isAssetView && (
                   <AssetVersionControl
@@ -144,7 +146,7 @@ const HeaderButtons = <T extends object>({
                 </div>
               </div>
             )}
-            {!hideJsonEditor && <JsonToggles view={view} jsonEditorEnabled={jsonEditorEnabled} {...props} />}
+            {!isHideJsonEditor && <JsonToggles view={view} isJsonEditorEnabled={isJsonEditorEnabled} {...props} />}
           </div>
         )}
       </div>
@@ -152,10 +154,10 @@ const HeaderButtons = <T extends object>({
         createPortal(
           <DeleteConfirmationModal
             entity={entity}
-            removeEntity={removeEntity}
+            removeEntity={onRemove}
             view={view}
             onCloseModal={onCloseModal}
-            context={context}
+            context={getAssetContext}
             isSelectedView={true}
           />,
           document.body,

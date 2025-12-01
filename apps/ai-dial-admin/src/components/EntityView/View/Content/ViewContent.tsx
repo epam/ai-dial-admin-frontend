@@ -27,19 +27,19 @@ interface Props {
   models?: DialModel[] | null;
   view: ApplicationRoute;
   selectedEntity: BaseEntity;
-  jsonEditorEnabled: boolean;
+  isJsonEditorEnabled: boolean;
   isSkipRefresh: boolean;
   isChanged?: boolean;
-  onSave?: () => void;
-  onChangeEntity: (entity: BaseEntity, isSkipRefresh?: boolean) => void;
   key?: number;
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
   setSelectedEntity?: Dispatch<SetStateAction<BaseEntity>>;
+  onSave?: () => void;
+  onChangeEntity: (entity: BaseEntity, isSkipRefresh?: boolean) => void;
 }
 
 const ViewContent: FC<Props> = ({
   activeTab,
-  jsonEditorEnabled,
+  isJsonEditorEnabled,
   isSkipRefresh,
   isChanged,
   applicationSchemes,
@@ -89,7 +89,7 @@ const ViewContent: FC<Props> = ({
           view={view}
           entity={selectedEntity}
           applicationSchemes={applicationSchemes}
-          jsonEditorEnabled={jsonEditorEnabled}
+          isJsonEditorEnabled={isJsonEditorEnabled}
           isSkipRefresh={isSkipRefresh}
           onChangeEntity={onChangeEntity}
           key={key}

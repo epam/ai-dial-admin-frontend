@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialConfirmationPopup, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialConfirmationPopup, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 
@@ -49,16 +49,16 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
   const { dispatch } = useSaveValidationContext();
-  const tabs: TabModel[] = getKeyTabs(t);
+  const tabs = getKeyTabs(t);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isOpenConfirmModal, setIsOpenConfirmModal] = useState(false);
   const [isRotateModalOpen, setIsRotateModalOpen] = useState(false);
   const [selectedKey, setSelectedKey] = useState(cloneDeep(originalKey));
   const [isChanged, setIsChanged] = useState(false);
-  const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
+  const [isJsonEditorEnabled, setIsJsonEditorEnabled] = useState(false);
   const [key, setKey] = useState(0);
-  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
+  const [selectedFormat, setSelectedFormat] = useState(ExportFormat.ADMIN);
   const [coreKey, setCoreKey] = useState<DialKey | null>(null);
 
   useEffect(() => {
@@ -90,7 +90,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
   );
 
   const onDiscard = useCallback(() => {
-    if (jsonEditorEnabled) {
+    if (isJsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
       setSelectedFormat(ExportFormat.ADMIN);
@@ -99,7 +99,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
       setKey((prevKey) => prevKey + 1);
     }
     setSelectedKey(originalKey);
-  }, [jsonEditorEnabled, originalKey, dispatch]);
+  }, [isJsonEditorEnabled, originalKey, dispatch]);
 
   const onChangeKey = useCallback(
     (entity: DialKey) => {
@@ -108,11 +108,11 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
     [setSelectedKey],
   );
 
-  const toggleJsonEditor = useCallback(() => {
+  const onToggleJsonEditor = useCallback(() => {
     setSelectedKey(cloneDeep(originalKey));
     setSelectedFormat(ExportFormat.ADMIN);
 
-    setJsonEditorEnabled((prev) => !prev);
+    setIsJsonEditorEnabled((prev) => !prev);
   }, [originalKey]);
 
   const onAddRoles = useCallback(
@@ -187,8 +187,8 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-        <div className={getViewHeaderClassName(jsonEditorEnabled)}>
-          {!jsonEditorEnabled && (
+        <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
+          {!isJsonEditorEnabled && (
             <div className="flex-1 min-w-0">
               <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
             </div>
@@ -198,12 +198,12 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
             entity={selectedKey}
             isChanged={isChanged}
             onDiscard={onDiscard}
-            removeEntity={removeKey}
+            onRemove={removeKey}
             onSave={onTryToSaveKey}
-            jsonEditorEnabled={jsonEditorEnabled}
-            toggleJsonEditor={toggleJsonEditor}
+            isJsonEditorEnabled={isJsonEditorEnabled}
+            onToggleJsonEditor={onToggleJsonEditor}
             selectedFormat={selectedFormat}
-            setSelectedFormat={setSelectedFormat}
+            onChangeSelectedFormat={setSelectedFormat}
           >
             <DialButton
               variant={ButtonVariant.Primary}
@@ -214,7 +214,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
           </HeaderButtons>
         </div>
         <div className="flex-1 overflow-auto min-h-0">
-          {jsonEditorEnabled ? (
+          {isJsonEditorEnabled ? (
             <EntityJsonEditor
               key={key}
               entity={selectedKey}
@@ -227,7 +227,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
                 {activeTab === EntityViewTab.Properties && (
                   <div className="h-full flex flex-col divide-y divide-primary w-full">
                     <KeyViewHeader selectedKey={selectedKey} />
-                    <div className="lg:w-[35%]">
+                    <div className="lg:w-[35%] pt-8">
                       <KeyProperties
                         entity={selectedKey}
                         names={names}

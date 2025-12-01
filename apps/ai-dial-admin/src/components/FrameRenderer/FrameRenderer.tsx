@@ -17,17 +17,18 @@ interface Props {
   name?: string;
   onMessage?: (event: MessageEvent) => void;
   containerClassName?: string;
-  jsonEditorEnabled?: boolean;
+  isJsonEditorEnabled?: boolean;
 }
 
 const FrameRenderer = forwardRef<HTMLDivElement, Props>(
-  ({ iframeUrl, name, onMessage, containerClassName, jsonEditorEnabled }, ref: Ref<HTMLDivElement>) => {
+  ({ iframeUrl, name, onMessage, containerClassName, isJsonEditorEnabled }, ref: Ref<HTMLDivElement>) => {
     const { setVisualizerConnector } = useAppContext();
+
     const containerRef = useRef<HTMLDivElement>(null);
     const visualizerRef = useRef<VisualizerConnector>(null);
 
-    const [loading, setLoading] = useState<boolean>(true);
-    const [isEmptyData, setIsEmptyData] = useState<boolean>(false);
+    const [loading, setLoading] = useState(true);
+    const [isEmptyData, setIsEmptyData] = useState(false);
 
     useImperativeHandle(ref, () => containerRef.current as HTMLDivElement);
 
@@ -49,12 +50,12 @@ const FrameRenderer = forwardRef<HTMLDivElement, Props>(
       [onMessage, name],
     );
 
-    const sendMessage = useCallback(async (visualizer: VisualizerConnector, jsonEditorEnabled?: boolean) => {
+    const sendMessage = useCallback(async (visualizer: VisualizerConnector, isJsonEditorEnabled?: boolean) => {
       const messagePayload: DialAttachmentData = {
         mimeType: APPLICATION_JSON_TYPE,
         visualizerData: {
           layout: { width: 0, height: 0 },
-          jsonEditorEnabled,
+          jsonEditorEnabled: isJsonEditorEnabled,
         },
       };
       await visualizer.ready();
@@ -81,7 +82,7 @@ const FrameRenderer = forwardRef<HTMLDivElement, Props>(
 
     useEffect(() => {
       if (!!visualizerRef.current && containerRef.current) {
-        sendMessage(visualizerRef.current, jsonEditorEnabled);
+        sendMessage(visualizerRef.current, isJsonEditorEnabled);
         const timeoutId = setTimeout(() => {
           if (loading) {
             setLoading(false);
@@ -91,7 +92,7 @@ const FrameRenderer = forwardRef<HTMLDivElement, Props>(
 
         return () => clearTimeout(timeoutId);
       }
-    }, [sendMessage, jsonEditorEnabled, loading]);
+    }, [sendMessage, isJsonEditorEnabled, loading]);
 
     useEffect(() => {
       window.addEventListener('message', handleMessage);
