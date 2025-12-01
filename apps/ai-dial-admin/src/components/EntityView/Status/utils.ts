@@ -9,7 +9,7 @@ import { ValidityStatus } from '@/src/types/key';
  * @param {string} theme - current theme
  * @returns {string} - tailwind background color class
  */
-export const getColorClass = (status: string, theme: string): string => {
+export const getColorClassName = (status: string, theme: string): string => {
   if (status === ValidityStatus.VALID) {
     return 'bg-accent-secondary';
   }
