@@ -11,11 +11,11 @@ try {
 }
 
 console.log('ALLOWED_IFRAME_ORIGINS:', process.env.ALLOWED_IFRAME_ORIGINS);
+// script-src 'self' 'unsafe-inline' 'unsafe-eval' ${process.env.ALLOWED_IFRAME_ORIGINS || ''};
+// frame-src 'self' ${process.env.ALLOWED_IFRAME_ORIGINS || ''};
 
 const ContentSecurityPolicy = `
     default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' ${process.env.ALLOWED_IFRAME_ORIGINS || ''};
-    frame-src 'self' ${process.env.ALLOWED_IFRAME_ORIGINS || ''};  
     style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline';
     img-src 'self' blob: data: https://authjs.dev ${process.env.ALLOWED_IMAGE_ORIGINS || ''};
     font-src 'self' data: https://cdn.jsdelivr.net fonts.gstatic.com;
@@ -69,10 +69,10 @@ const nextConfig = {
             key: 'Cache-Control',
             value: 'no-store, no-cache, must-revalidate, proxy-revalidate', // Adjust as needed
           },
-          {
-            key: 'Content-Security-Policy',
-            value: ContentSecurityPolicy.replace(/\n/g, '').trim(),
-          },
+          // {
+          //   key: 'Content-Security-Policy',
+          //   value: ContentSecurityPolicy.replace(/\n/g, '').trim(),
+          // },
         ],
       },
     ];
