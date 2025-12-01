@@ -24,7 +24,7 @@ const ONLY_ADMIN_ENTITIES = [
 interface Props {
   view: ApplicationRoute;
   selectedFormat?: ExportFormat;
-  isJsonEditorEnabled: boolean;
+  isJsonEditorEnabled?: boolean;
 
   onChangeSelectedFormat?: (format: ExportFormat) => void;
   onToggleJsonEditor?: () => void;
