@@ -23,7 +23,7 @@ const JsonView: FC<Props> = ({ modified, original, containerClassName }) => {
         <h4 className="mb-2 text-secondary w-[50%]">{t(CompareI18nKey.Before)}</h4>
         <h4 className="mb-2 text-secondary">{t(CompareI18nKey.After)}</h4>
       </div>
-      <DiffField fieldTitle={''} modified={modified} original={original} className="overflow-hidden" language="json" />
+      <DiffField fieldTitle="" modified={modified} original={original} className="overflow-hidden" language="json" />
     </div>
   );
 };

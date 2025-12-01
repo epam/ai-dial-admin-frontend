@@ -99,14 +99,14 @@ const FrameRenderer = forwardRef<HTMLDivElement, Props>(
     }, [handleMessage]);
 
     return (
-      <div className={'relative h-full w-full'}>
+      <div className="relative h-full w-full">
         {loading && (
           <div className="absolute inset-0 z-50 bg-layer-2">
             <DialLoader size={40} />
           </div>
         )}
         {isEmptyData ? (
-          <DialNoDataContent title={'Error loading application custom UI'} />
+          <DialNoDataContent title="Error loading application custom UI" />
         ) : (
           <div ref={containerRef} className={className} />
         )}

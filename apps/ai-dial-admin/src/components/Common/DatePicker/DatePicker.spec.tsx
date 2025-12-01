@@ -6,7 +6,7 @@ const setDate = vi.fn();
 
 describe('DatePicker', () => {
   test('should render correctly', () => {
-    render(<DatePicker id={'1'} label={'label'} date={new Date('2017-07-01')} setDate={setDate} />);
+    render(<DatePicker id="1" label="label" date={new Date('2017-07-01')} setDate={setDate} />);
 
     const input = screen.getByRole('textbox');
     expect(input).toBeInTheDocument();
@@ -14,7 +14,7 @@ describe('DatePicker', () => {
   });
 
   test('should handle date change', async () => {
-    render(<DatePicker id={'1'} label={'label'} date={new Date('2017-07-01')} setDate={setDate} />);
+    render(<DatePicker id="1" label="label" date={new Date('2017-07-01')} setDate={setDate} />);
 
     const input = screen.getByRole('textbox');
     fireEvent.click(input);

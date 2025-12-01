@@ -60,7 +60,7 @@ const FilePath: FC<Props> = ({
         {label}
       </label>
       <div className="flex gap-4">
-        <div className={classNames('flex', inputClassName || '')}>
+        <div className={classNames('flex', inputClassName)}>
           <input
             disabled={disabled}
             type="text"

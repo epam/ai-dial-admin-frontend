@@ -11,7 +11,7 @@ vi.mock('@/src/context/AppContext', () => ({
 
 describe('Hint', () => {
   test('should render Hint component', () => {
-    render(<Hint title={'Title'} text={'Text'} />);
+    render(<Hint title="Title" text="Text" />);
 
     expect(screen.getByRole('heading', { name: 'Title' })).toBeInTheDocument();
     expect(screen.getByRole('button')).toBeInTheDocument();

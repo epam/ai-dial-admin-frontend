@@ -66,7 +66,7 @@ const JsonToggles: FC<Props> = ({
   }, [isTablet, isMobile]);
 
   return (
-    <div className={classNames(editorClassName)}>
+    <div className={editorClassName}>
       <div className="w-[1px] h-6 bg-layer-4"></div>
       {jsonEditorEnabled &&
       !ONLY_ADMIN_ENTITIES.includes(view) &&

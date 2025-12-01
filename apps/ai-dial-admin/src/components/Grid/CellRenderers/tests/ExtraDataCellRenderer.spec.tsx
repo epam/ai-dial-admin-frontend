@@ -8,12 +8,12 @@ vi.mock('@/src/utils/validation/is-valid-json', () => ({
 
 describe('ExtraDataCellRenderer', () => {
   test('renders value and json icon if value is JSON', () => {
-    render(<ExtraDataCellRenderer value={'{"a":1}'} />);
+    render(<ExtraDataCellRenderer value='{"a":1}' />);
     expect(screen.getByText('{"a":1}')).toBeInTheDocument();
   });
 
   test('renders value without json icon if value is not JSON', () => {
-    render(<ExtraDataCellRenderer value={'not-json'} />);
+    render(<ExtraDataCellRenderer value="not-json" />);
     expect(screen.getByText('not-json')).toBeInTheDocument();
   });
 });

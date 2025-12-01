@@ -26,25 +26,23 @@ const RulesList: FC<Props> = ({ rulesMap, isReadonly, onChange }) => {
   const rulesLength = (!!rulesMap && Object.keys(rulesMap).length) || 0;
   const isSingle = rulesLength === 1;
 
-  const operatorNameClassName = classNames(
-    'border border-accent-secondary rounded bg-accent-secondary-alpha inline-block px-2',
-  );
-  const containerClassName = classNames('relative flex flex-row');
-  const lineVerticalClassName = classNames('w-[1px] ml-1 bg-accent-secondary', isSingle && 'hidden');
-  const rulesListClassName = classNames('flex-1 flex flex-col gap-4', !isSingle && 'mt-4');
-
   const isEmpty = !!rulesMap && Object.keys(rulesMap).length === 0;
   return (
     <div className="flex flex-col w-full h-full overflow-auto">
       {!isSingle && !isEmpty && (
         <div>
-          <span className={operatorNameClassName}>{t(BasicI18nKey.And)}</span>
+          <span className="border border-accent-secondary rounded bg-accent-secondary-alpha inline-block px-2">
+            {t(BasicI18nKey.And)}
+          </span>
         </div>
       )}
       {!isEmpty && rulesMap && (
-        <div className={containerClassName}>
-          <div style={{ height: `calc(100% - ${lastRuleHeight / 2}px)` }} className={lineVerticalClassName}></div>
-          <div className={rulesListClassName}>
+        <div className="relative flex flex-row">
+          <div
+            style={{ height: `calc(100% - ${lastRuleHeight / 2}px)` }}
+            className={classNames('w-[1px] ml-1 bg-accent-secondary', isSingle && 'hidden')}
+          ></div>
+          <div className={classNames('flex-1 flex flex-col gap-4', !isSingle && 'mt-4')}>
             {isSingle ? (
               <div className="small">{t(FoldersI18nKey.AllRules)}</div>
             ) : (

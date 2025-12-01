@@ -25,7 +25,7 @@ export const WrapIfAdditionalTemplate: FC<WrapIfAdditionalTemplateProps> = ({
       <div className="flex flex-row gap-4">
         <div className="flex">
           <DialInput
-            containerClassName={'flex w-full bg-layer-2'}
+            containerClassName="flex w-full bg-layer-2"
             elementId={id}
             disabled={disabled}
             readonly={readonly}

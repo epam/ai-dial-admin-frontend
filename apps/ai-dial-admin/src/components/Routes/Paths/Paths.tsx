@@ -68,7 +68,7 @@ const Paths: FC<Props> = ({ title, optional, readonly, paths, onChangePaths }) =
       {paths?.map((path, index) => (
         <Path
           readonly={readonly}
-          key={'path ' + index}
+          key={`path-${index}`}
           path={path}
           index={index}
           optional={optional}

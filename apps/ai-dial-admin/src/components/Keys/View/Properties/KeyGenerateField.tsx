@@ -39,7 +39,7 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
     <div className="flex items-end">
       <div className="flex-1">
         <DialPasswordInputField
-          elementId={'key'}
+          elementId="key"
           fieldTitle={t(EntityFieldsI18nKey.keyValue)}
           placeholder={t(EntityPlaceholdersI18nKey.KeyValue)}
           value={selectedKey.key}

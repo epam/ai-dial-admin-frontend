@@ -27,18 +27,18 @@ const MenuItem: FC<Props> = ({ config, activeMenuItem, isOpenByDefault = false, 
     setIsOpen(!isOpen);
   }, [isOpen]);
 
-  const menuBlockClassName = classNames(
-    'flex w-full px-3 py-2 flex-row justify-between rounded items-center hover:bg-accent-primary-alpha cursor-pointer group',
-  );
-
   const iconClassName = isOpenByDefault
     ? 'text-accent-primary'
     : 'text-secondary group-focus-within:text-accent-primary';
 
   return (
     <li className="flex flex-col">
-      <DialTooltip triggerClassName="small-text-semi" tooltip={t(config.key) ?? ''} placement={'right'}>
-        <button className={menuBlockClassName} onClick={onClick} aria-label="button">
+      <DialTooltip triggerClassName="small-text-semi" tooltip={t(config.key) ?? ''} placement="right">
+        <button
+          className="flex w-full px-3 py-2 flex-row justify-between rounded items-center hover:bg-accent-primary-alpha cursor-pointer group"
+          onClick={onClick}
+          aria-label="button"
+        >
           <div className="flex flex-row items-center flex-1 min-w-0">
             <div className={classNames('mr-4', iconClassName)}>{config.icon}</div>
             <span className="text-left truncate text-primary"> {t(config.key) ?? ''}</span>

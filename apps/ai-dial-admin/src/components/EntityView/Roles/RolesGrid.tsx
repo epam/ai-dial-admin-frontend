@@ -96,7 +96,7 @@ const RolesGrid: FC<Props> = ({
           <DialSwitch
             isOn={!entity.isPublic}
             title={t(RolesI18nKey.AvailableSpecificRoles)}
-            switchId="specific_roles"
+            switchId="specificRoles"
             onChange={onSwitchSpecificRoles}
           />
         </div>

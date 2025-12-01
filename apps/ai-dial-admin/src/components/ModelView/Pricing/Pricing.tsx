@@ -35,11 +35,6 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
   const activeType = model.pricing?.unit || BasicI18nKey.None;
   const isTokenType = activeType === PricingType.Token;
 
-  const pricingContainerClasses = classNames(
-    'flex flex-col gap-y-4 justify-center rounded border border-primary p-3 mb-4',
-    'lg:justify-start lg:border-none lg:p-0 lg:flex-row lg:gap-x-2 lg:items-center lg:mb-0',
-  );
-
   const onChangePricingType = useCallback(
     (type: string) => {
       if (type === PricingType.Token || type === PricingType.CharWithoutWhitespace) {
@@ -70,7 +65,12 @@ const Pricing: FC<Props> = ({ model, onChangeModel }) => {
   );
 
   return (
-    <div className={pricingContainerClasses}>
+    <div
+      className={classNames(
+        'flex flex-col gap-y-4 justify-center rounded border border-primary p-3 mb-4',
+        'lg:justify-start lg:border-none lg:p-0 lg:flex-row lg:gap-x-2 lg:items-center lg:mb-0',
+      )}
+    >
       <div className="lg:w-[35%]">
         <DialSelectField
           value={activeType}

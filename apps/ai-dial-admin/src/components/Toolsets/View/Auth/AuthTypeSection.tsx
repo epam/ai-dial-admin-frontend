@@ -71,7 +71,7 @@ const AuthTypeSection: FC<Props> = ({ disabled, config, isSelected, onClick, aut
       >
         {config.icon}
 
-        <span className={classNames('dial-small font-semibold')}>{config.title}</span>
+        <span className="dial-small font-semibold">{config.title}</span>
       </div>
       {isSelected && config.id !== ToolsetAuthType.NONE && (
         <div className="flex flex-col gap-4 border-t border-tertiary p-4">

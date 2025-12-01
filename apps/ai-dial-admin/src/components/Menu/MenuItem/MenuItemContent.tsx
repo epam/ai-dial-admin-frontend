@@ -30,7 +30,7 @@ const MenuItemContent: FC<Props> = ({ menuItem, isActive, isSidebarOpen }) => {
     <DialTooltip
       triggerClassName="small-text-semi"
       tooltip={t(menuItem.key)}
-      placement={'right'}
+      placement="right"
       hideTooltip={isSidebarOpen}
     >
       <Link prefetch={false} aria-label={t(menuItem.key)} className={menuClassName} href={menuItem.href}>
