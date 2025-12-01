@@ -28,15 +28,15 @@ const DiffLegend: FC<Props> = ({ description, added, removed, changed }) => {
 
   return (
     <div className={containerClassName}>
-      <div className={classNames(itemClassName, (description ? false : !added) && 'hidden')}>
+      <div className={classNames(itemClassName, !description && !added && 'hidden')}>
         <span className={classNames(rectangleClassName, 'bg-success border-accent-secondary')}>{added}</span>
         <span className={descriptionClassName}>{t(ButtonsI18nKey.Create)}</span>
       </div>
-      <div className={classNames(itemClassName, (description ? false : !changed) && 'hidden')}>
+      <div className={classNames(itemClassName, !description && !changed && 'hidden')}>
         <span className={classNames(rectangleClassName, 'bg-info border-accent-primary')}>{changed}</span>
         <span className={descriptionClassName}>{t(ButtonsI18nKey.Update)}</span>
       </div>
-      <div className={classNames(itemClassName, (description ? false : !removed) && 'hidden')}>
+      <div className={classNames(itemClassName, !description && !removed && 'hidden')}>
         <span className={classNames(rectangleClassName, 'bg-error border-error')}>{removed}</span>
         <span className={descriptionClassName}>{t(ButtonsI18nKey.Delete)}</span>
       </div>

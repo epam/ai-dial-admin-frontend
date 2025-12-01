@@ -206,10 +206,11 @@ const FolderList: FC<Props> = ({
             <div className="flex flex-col">
               <div
                 className={classNames(
-                  'group',
+                  'group py-2',
                   baseClassName,
                   selectedClassName,
                   isMovableFolder && 'pointer-events-none',
+                  isMoveError && 'bg-error border-l-error',
                 )}
               >
                 <div className="flex-1 flex flex-row truncate" onClick={() => folderContext?.toggleFolder(node)}>
