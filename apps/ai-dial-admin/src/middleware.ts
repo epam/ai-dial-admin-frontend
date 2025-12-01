@@ -17,6 +17,7 @@ export const config = {
 };
 
 async function middlewareFn(req: NextRequest) {
+  console.info(`Middleware invoked for ${req.nextUrl.pathname}`);
   return I18nMiddleware(req);
 }
 
