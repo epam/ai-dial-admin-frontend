@@ -22,10 +22,8 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
 
   if (!pathname) return null;
 
-  const defaultLinkClassName = classNames(
-    'flex text-secondary relative group-[:last-child]:text-primary group-[:last-child]:pointer-events-none',
-    'group-[:not(:last-child)]:hover:text-accent-primary group-[:not(:last-child)]:focus-within:text-accent-primary',
-  );
+  const defaultLinkClassName =
+    'flex text-secondary relative group-[:last-child]:text-primary group-[:last-child]:pointer-events-none group-[:not(:last-child)]:hover:text-accent-primary group-[:not(:last-child)]:focus-within:text-accent-primary';
 
   const containerClassName = classNames(
     'flex-row items-center pr-4 pl-10',
@@ -41,7 +39,7 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
       <ol className="flex tiny whitespace-nowrap">
         {breadcrumbs.map(({ href, key, name }, index) => {
           const label = key ? t(key) : name;
-          const linkClassName = classNames(defaultLinkClassName, `${!href.length ? 'pointer-events-none' : ''}`);
+          const linkClassName = classNames(defaultLinkClassName, !href.length && 'pointer-events-none');
 
           return (
             <li key={`${href}_${index}`} className="flex items-center group">
