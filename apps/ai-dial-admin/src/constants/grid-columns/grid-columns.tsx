@@ -22,7 +22,7 @@ import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
 import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
 import { getValidityStatus } from '@/src/components/EntityView/Status/utils';
-import StatusIndicator from '@/src/components/Common/StatusIndicator/StatusIndicator';
+import DeploymentStatusIndicator from '@/src/components/Common/DeploymentStatusIndicator/DeploymentStatusIndicator';
 import { STATUS_I18N_KEYS, TRANSPORT_TYPES } from '@/src/constants/deployments/images';
 import { CONTAINER_STATUS, KubEventType } from '@/src/types/deployments/containers';
 import { EVENT_TYPES, POD_OBJECT_KIND } from '@/src/constants/deployments/containers';
@@ -534,7 +534,7 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string): ColDef[] => [
     field: 'status',
     headerName: 'Status',
     hide: false,
-    cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data.status} />,
+    cellRenderer: (params: ICellRendererParams) => <DeploymentStatusIndicator status={params.data.status} />,
     tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as CONTAINER_STATUS]),
     filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as CONTAINER_STATUS]),
   },
@@ -564,7 +564,7 @@ export const CONTAINER_EVENTS = (t: (key: string, options?: Record<string, strin
     field: 'eventType',
     headerName: 'Type',
     hide: false,
-    cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data.eventType} />,
+    cellRenderer: (params: ICellRendererParams) => <DeploymentStatusIndicator status={params.data.eventType} />,
     tooltipValueGetter: ({ value }) => t(EVENT_TYPES[value as KubEventType]),
     filterValueGetter: (params) => t(EVENT_TYPES[params.data[params.colDef.field || ''] as KubEventType]),
     maxWidth: 150,
@@ -613,7 +613,7 @@ export const CHANGE_IMAGE_VERSION = (t: (key: string) => string): ColDef[] => [
     field: 'buildStatus',
     headerName: 'Status',
     hide: false,
-    cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data?.status} />,
+    cellRenderer: (params: ICellRendererParams) => <DeploymentStatusIndicator status={params.data?.status} />,
     tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as IMAGE_STATUS]),
     filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as IMAGE_STATUS]),
   },
@@ -670,7 +670,7 @@ export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
     field: 'buildStatus',
     headerName: 'Status',
     hide: false,
-    cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data?.buildStatus} />,
+    cellRenderer: (params: ICellRendererParams) => <DeploymentStatusIndicator status={params.data?.buildStatus} />,
     tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as IMAGE_STATUS]),
     filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as IMAGE_STATUS]),
   },
@@ -718,7 +718,7 @@ export const IMAGE_DEPENDENCIES_COLUMNS = (t: (key: string) => string): ColDef[]
     field: 'status',
     headerName: 'Status',
     hide: false,
-    cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data.status} />,
+    cellRenderer: (params: ICellRendererParams) => <DeploymentStatusIndicator status={params.data.status} />,
     tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as IMAGE_STATUS]),
     filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as IMAGE_STATUS]),
   },

@@ -50,7 +50,7 @@ const ContainerResourcesFields: FC<Props> = ({ container, setContainer, route })
           disabled={container.status === CONTAINER_STATUS.RUNNING}
           errorText={cpuRequestError?.text}
           invalid={!!cpuRequestError}
-          suffix={'m'}
+          suffix="m"
           onChange={(cpuRequest) => {
             setCpuRequestError(validateCpuValue(cpuRequest as number));
             setContainer({
@@ -72,7 +72,7 @@ const ContainerResourcesFields: FC<Props> = ({ container, setContainer, route })
           disabled={container.status === CONTAINER_STATUS.RUNNING}
           errorText={cpuLimitError?.text}
           invalid={!!cpuLimitError}
-          suffix={'m'}
+          suffix="m"
           onChange={(cpuLimit?: number | string) => {
             setCpuLimitError(validateCpuValue(cpuLimit as number));
             setContainer({
@@ -94,7 +94,7 @@ const ContainerResourcesFields: FC<Props> = ({ container, setContainer, route })
           fieldTitle={t(EntityFieldsI18nKey.MemoryRequest)}
           value={convertMemoryToMb(container.resources?.requests?.memory)}
           disabled={container.status === CONTAINER_STATUS.RUNNING}
-          suffix={'Mb'}
+          suffix="Mb"
           onChange={(memoryRequest) => {
             setContainer({
               ...container,
@@ -113,7 +113,7 @@ const ContainerResourcesFields: FC<Props> = ({ container, setContainer, route })
           fieldTitle={t(EntityFieldsI18nKey.MemoryLimit)}
           value={convertMemoryToMb(container.resources?.limits?.memory)}
           disabled={container.status === CONTAINER_STATUS.RUNNING}
-          suffix={'Mb'}
+          suffix="Mb"
           onChange={(memoryLimit) => {
             setContainer({
               ...container,

@@ -97,7 +97,7 @@ const CreateAsset: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, onCre
       <div className="flex flex-1 min-h-0 p-4 gap-4">
         <DialCollapsibleSidebar
           width={320}
-          title={''}
+          title=""
           containerClassName="bg-layer-3 mr-0 border border-primary"
           iconSize={24}
         >
@@ -107,7 +107,7 @@ const CreateAsset: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, onCre
           <h3>{t(EntityFieldsI18nKey.properties)}</h3>
           <DialTextInputField
             textBeforeInput={splitFolderId(entity.folderId).base}
-            elementId={'path'}
+            elementId="path"
             fieldTitle={t(EntityFieldsI18nKey.StorageFolder)}
             value={splitFolderId(entity.folderId).path}
             onChange={(folderPath?: string) => {
@@ -147,7 +147,7 @@ const CreateAsset: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, onCre
           />
           <DialTextInputField
             elementContainerClassName="max-w-[120px]"
-            elementId={'version'}
+            elementId="version"
             fieldTitle={t(EntityFieldsI18nKey.version)}
             onChange={(version?: string) => {
               if (version) {

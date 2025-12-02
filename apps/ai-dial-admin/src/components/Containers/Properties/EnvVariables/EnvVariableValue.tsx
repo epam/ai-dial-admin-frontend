@@ -126,7 +126,7 @@ const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountTy
                 onClick={handleFileDownload}
                 iconBefore={<DialFileIcon extension={getNameExtensionFromFile(value.fileName as string).extension} />}
                 label={value.fileName}
-                textClassName={'truncate flex-1 min-w-0 text-left items-center'}
+                textClassName="truncate flex-1 min-w-0 text-left items-center"
               />
             </DialTooltip>
             <DialButton iconBefore={<IconX {...BASE_ICON_PROPS} />} onClick={onClearFile} />
@@ -138,9 +138,9 @@ const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountTy
         variant={ButtonVariant.Secondary}
         iconBefore={<IconFileArrowRight {...BASE_ICON_PROPS} />}
         onClick={handleFileInputClick}
-        className={'absolute right-0'}
+        className="absolute right-0"
       />
-      <input type={'file'} className={'hidden'} ref={inputRef} onChange={handleFileUpload} />
+      <input type="file" className="hidden" ref={inputRef} onChange={handleFileUpload} />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useMemo } from 'react';
 import classNames from 'classnames';
 import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -21,14 +21,10 @@ interface Props {
 const DeleteModal: FC<Props> = ({ title, description, isModalOpen, onClose, onApply, dependencies, route }) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
 
-  const [containerClassNames, setContainerClassNames] = useState<string>('');
-
-  useEffect(() => {
-    setContainerClassNames(
-      classNames(
-        'flex flex-col',
-        !dependencies?.length ? 'lg:max-w-[400px] md:max-w-[400px]' : 'lg:max-w-[800px] md:max-w-[90%]',
-      ),
+  const containerClassNames = useMemo(() => {
+    return classNames(
+      'flex flex-col',
+      !dependencies?.length ? 'lg:max-w-[400px] md:max-w-[400px]' : 'lg:max-w-[800px] md:max-w-[90%]',
     );
   }, [dependencies]);
 

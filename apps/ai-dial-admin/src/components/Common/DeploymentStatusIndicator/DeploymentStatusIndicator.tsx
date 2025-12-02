@@ -11,7 +11,7 @@ interface Props {
   status: IMAGE_STATUS | CONTAINER_STATUS;
 }
 
-const StatusIndicator: FC<Props> = ({ status }) => {
+const DeploymentStatusIndicator: FC<Props> = ({ status }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const indicatorClassNames = classNames('flex w-2 h-2 mr-1 rounded no-user-select', getActionClass(status));
 
@@ -29,4 +29,4 @@ const StatusIndicator: FC<Props> = ({ status }) => {
   );
 };
 
-export default StatusIndicator;
+export default DeploymentStatusIndicator;

@@ -41,7 +41,7 @@ const NewVersion: FC<Props> = ({ isModalOpen, title, onClose, onApply, image, ve
       <div className="flex flex-col h-full overflow-auto px-6 py-4">
         <DialTextInputField
           elementContainerClassName="max-w-[120px]"
-          elementId={'version'}
+          elementId="version"
           fieldTitle={t(EntityFieldsI18nKey.version)}
           onChange={(version?: string) => {
             setVersionError(

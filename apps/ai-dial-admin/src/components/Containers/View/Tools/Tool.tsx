@@ -29,7 +29,7 @@ const Tool: FC<Props> = ({ tool }) => {
 
   return (
     <div className="flex flex-col border-primary border p-4">
-      <button className={'flex items-center'} onClick={toggleCollapse}>
+      <button className="flex items-center" onClick={toggleCollapse}>
         <i className="text-icon-secondary">
           {isCollapsed ? <IconChevronRight {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
         </i>

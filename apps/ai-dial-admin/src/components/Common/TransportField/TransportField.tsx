@@ -17,7 +17,7 @@ const TransportField: FC<Props> = ({ image, setImage }) => {
   return (
     <DialRadioGroup
       fieldTitle={t(EntityFieldsI18nKey.TransportType)}
-      elementId={'transport'}
+      elementId="transport"
       radioButtons={TRANSPORT_TYPES}
       onChange={(id) =>
         setImage({

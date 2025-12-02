@@ -5,7 +5,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { useI18n } from '@/src/locales/client';
 import { getSourcesTypes } from '@/src/utils/deployments/images';
 import { EntitiesI18nKey, EntityFieldsI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
-import StatusIndicator from '@/src/components/Common/StatusIndicator/StatusIndicator';
+import DeploymentStatusIndicator from '@/src/components/Common/DeploymentStatusIndicator/DeploymentStatusIndicator';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import ImageProperties from '@/src/components/Images/Properties/ImageProperties';
 
@@ -39,7 +39,7 @@ const Properties: FC<Props> = ({ image, setImage, route, originalName }) => {
           text={sourcesList?.find((source) => source.value === image.source.$type)?.label}
         />
         <DialLabelledText label={t(EntityFieldsI18nKey.status)}>
-          <StatusIndicator status={image.buildStatus} />
+          <DeploymentStatusIndicator status={image.buildStatus} />
         </DialLabelledText>
       </div>
       <div className="mt-8 pt-8">

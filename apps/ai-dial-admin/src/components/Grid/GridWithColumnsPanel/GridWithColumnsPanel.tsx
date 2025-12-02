@@ -119,7 +119,7 @@ const GridWithColumnsPanel = <T extends object>({
   return (
     <div className="w-full h-full relative">
       {data?.length === 0 ? (
-        <DialNoDataContent title={emptyDataTitle} description={emptyDataDescription} containerClassName={'small'} />
+        <DialNoDataContent title={emptyDataTitle} description={emptyDataDescription} containerClassName="small" />
       ) : (
         <>
           <Grid

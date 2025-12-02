@@ -85,7 +85,7 @@ const Tools: FC<Props> = ({ containerId }) => {
     <div className="flex flex-col gap-6">
       <div className="lg:max-w-[480px]">
         <DialTextInputField
-          elementId={'search'}
+          elementId="search"
           fieldTitle={t(BasicI18nKey.Search)}
           placeholder={t(EntityPlaceholdersI18nKey.Search)}
           value={search}

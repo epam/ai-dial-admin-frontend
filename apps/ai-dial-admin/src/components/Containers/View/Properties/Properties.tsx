@@ -15,7 +15,7 @@ import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import StatusIndicator from '@/src/components/Common/StatusIndicator/StatusIndicator';
+import DeploymentStatusIndicator from '@/src/components/Common/DeploymentStatusIndicator/DeploymentStatusIndicator';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import ContainerProperties from '@/src/components/Containers/Properties/ContainerProperties';
 import ChangeContainerImage from '@/src/components/Containers/Modals/ChangeContainerImage';
@@ -67,10 +67,10 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
             <DialLabelledText label={t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })}>
               <DialButton
                 label={`${image.name} (${image.version})`}
-                textClassName={'text-primary text-base font-normal'}
-                className={'text-secondary whitespace-nowrap'}
+                textClassName="text-primary text-base font-normal"
+                className="text-secondary whitespace-nowrap"
                 onClick={handleModalOpen}
-                iconAfter={<OpenPopup {...BASE_ICON_PROPS} className={'inline'} />}
+                iconAfter={<OpenPopup {...BASE_ICON_PROPS} className="inline" />}
               />
             </DialLabelledText>
           ) : (
@@ -88,7 +88,7 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
             text={formatDateTimeToLocalString(container?.updatedAt)}
           />
           <DialLabelledText label={t(EntityFieldsI18nKey.status)}>
-            <StatusIndicator status={container.status} />
+            <DeploymentStatusIndicator status={container.status} />
           </DialLabelledText>
           {container.status === CONTAINER_STATUS.RUNNING && container.url && (
             <DialLabelledText label={t(BasicI18nKey.URL)}>
