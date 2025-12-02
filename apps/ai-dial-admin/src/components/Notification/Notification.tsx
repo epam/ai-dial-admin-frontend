@@ -13,25 +13,28 @@ export const NotificationIcons: Record<NotificationType, ReactNode> = {
   dynamic: <IconChevronDown {...BASE_ICON_PROPS} />,
 };
 
-const Notification: FC<NotificationConfig> = ({ type, title, description, onClose }) => {
+const Notification: FC<NotificationConfig> = ({ type, title, description, requestId, onClose }) => {
   const Icon = NotificationIcons[type];
-  const iconClassNames = classNames('inline mr-2', NotificationIconColor[type]);
+  const iconClassName = classNames('inline mr-2', NotificationIconColor[type]);
 
   return (
     <div className="flex flex-col layer-3 px-4 py-2 w-[400px] bg-layer-3 [&:not(:last-child)]:mb-4 rounded shadow">
       <div className="flex flex-row w-full relative pr-5 items-center">
         <div className="flex items-center w-full">
-          <i className={iconClassNames}>{Icon}</i>
+          <i className={iconClassName}>{Icon}</i>
           <p className="small-text-semi truncate">{title}</p>
         </div>
         <DialButton
-          ariaLabel="close"
-          cssClass={'absolute right-0'}
+          aria-label="close"
+          className="absolute right-0"
           onClick={onClose}
           iconBefore={<IconX height={18} width={18} />}
         />
       </div>
       {description ? <p className="tiny text-secondary break-words whitespace-pre-wrap mt-2">{description}</p> : null}
+      {requestId ? (
+        <p className="tiny text-secondary break-words whitespace-pre-wrap mt-2">Request ID: {requestId}</p>
+      ) : null}
     </div>
   );
 };

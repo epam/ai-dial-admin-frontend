@@ -1,8 +1,6 @@
-export enum KeyStatus {
-  NO_ROLES = 'NoRoles',
-  EXPIRED = 'Expired',
-  ALMOST_EXPIRED = 'AlmostExpired',
+export enum ValidityStatus {
   VALID = 'Valid',
+  INVALID = 'Invalid',
 }
 
 export enum ValidityPeriods {

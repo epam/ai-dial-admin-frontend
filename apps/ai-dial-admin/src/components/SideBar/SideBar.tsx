@@ -146,10 +146,10 @@ const Sidebar: FC<Props> = ({ isSidebarOpen, side, itemComponent }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const menuClassNames = 'flex max-w-[95%] border-tertiary md:max-w-[45%] z-[51] absolute lg:relative xl:relative';
+  const menuClassName = 'flex max-w-[95%] border-tertiary md:max-w-[45%] z-[51] absolute lg:relative xl:relative';
 
   return isSidebarOpen ? (
-    <Resizable ref={sideBarElementRef} {...resizeSettings} className={menuClassNames}>
+    <Resizable ref={sideBarElementRef} {...resizeSettings} className={menuClassName}>
       <SidebarContent itemComponent={itemComponent} resizable={true} />
     </Resizable>
   ) : (
@@ -165,12 +165,14 @@ interface SidebarContentProps {
 }
 
 const SidebarContent: FC<SidebarContentProps> = ({ itemComponent, resizable }) => {
-  const contentClass = classNames(
-    'flex flex-none shrink-0 flex-col divide-y divide-tertiary bg-layer-3 transition-all z-20',
-    resizable ? 'size-full shrink-0' : 'max-w-16',
-  );
-
   return (
-    <div className={contentClass}>{<div className={classNames('h-full min-w-[42px] grow')}>{itemComponent}</div>}</div>
+    <div
+      className={classNames(
+        'flex flex-none shrink-0 flex-col divide-y divide-tertiary bg-layer-3 transition-all z-20',
+        resizable ? 'size-full shrink-0' : 'max-w-16',
+      )}
+    >
+      <div className="h-full min-w-[42px] grow">{itemComponent}</div>
+    </div>
   );
 };

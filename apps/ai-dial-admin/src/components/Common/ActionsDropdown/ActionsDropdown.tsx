@@ -5,7 +5,7 @@ import { DialDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 
 interface ActionsProps<T> {
-  actionTriggerClass?: string;
+  actionTriggerClassName?: string;
   items: ActionMenuOperationDeclaration<T>[];
   icon: ReactNode;
   data?: T;
@@ -34,8 +34,8 @@ const ActionsDropdown = <T extends object>({ items, data, rowIndex, ...props }: 
   );
 };
 
-const ActionTrigger: FC<{ icon: ReactNode; actionTriggerClass?: string }> = ({ icon, actionTriggerClass }) => {
-  return <div className={classNames('cursor-pointer', actionTriggerClass)}>{icon}</div>;
+const ActionTrigger: FC<{ icon: ReactNode; actionTriggerClassName?: string }> = ({ icon, actionTriggerClassName }) => {
+  return <div className={classNames('cursor-pointer', actionTriggerClassName)}>{icon}</div>;
 };
 
 const ActionItem = <T extends object>({ item, data, rowIndex }: ActionProps<T>) => {

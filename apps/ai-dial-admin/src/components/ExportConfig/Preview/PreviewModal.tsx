@@ -58,7 +58,7 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, isModalOpen, onClos
           setTabs(tabs);
           setSelectedTab(tabs[0]?.id);
         } else {
-          showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage));
+          showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       });
   }, [exportRequest, isIncludeSecret, showNotification, t]);
@@ -69,7 +69,7 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, isModalOpen, onClos
       title={t(ExportI18nKey.FilePreview)}
       portalId="ExportFilePreview"
       open={isModalOpen}
-      cssClass="h-[754px]"
+      className="h-[754px]"
       size={PopupSize.Lg}
       submitLabel={t(ButtonsI18nKey.Export)}
       onSubmit={() => onPrepare(isIncludeSecret)}

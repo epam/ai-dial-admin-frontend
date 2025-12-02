@@ -1,7 +1,7 @@
 import { DialNumberInputField, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useMemo } from 'react';
 
-import { BasicI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntityPlaceholdersI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialModel } from '@/src/models/dial/model';
 import { LimitType } from './constants';
@@ -34,11 +34,11 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
   const onChangeLimitType = useCallback(
     (type: string) => {
       if (isLimitTypeTotal(type)) {
-        model.limits = { maxTotalTokens: 0 };
+        model.limits = { maxTotalTokens: '' };
       } else if (isLimitTypeSeparateTokenAndCompletions(type)) {
         model.limits = {
-          maxCompletionTokens: 0,
-          maxPromptTokens: 0,
+          maxCompletionTokens: '',
+          maxPromptTokens: '',
         };
       } else {
         model.limits = {};
@@ -83,8 +83,9 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
       {activeLimitType === LimitType.Total && (
         <DialNumberInputField
           elementId="totalNum"
-          elementCssClass="flex-1"
+          elementClassName="flex-1"
           fieldTitle={t(ModelViewI18nKey.NumberOfTokens)}
+          placeholder={t(EntityPlaceholdersI18nKey.Value)}
           value={model.limits?.maxTotalTokens}
           onChange={onChangeMaxTotalTokens}
         />
@@ -94,15 +95,17 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
         <>
           <DialNumberInputField
             elementId="promptsNum"
-            elementCssClass="flex-1"
+            elementClassName="flex-1"
             fieldTitle={t(ModelViewI18nKey.Prompts)}
             value={model.limits?.maxPromptTokens}
+            placeholder={t(EntityPlaceholdersI18nKey.Value)}
             onChange={onChangeMaxPromptTokens}
           />
           <DialNumberInputField
             elementId="completionsNum"
-            elementCssClass="flex-1"
+            elementClassName="flex-1"
             fieldTitle={t(ModelViewI18nKey.Completions)}
+            placeholder={t(EntityPlaceholdersI18nKey.Value)}
             value={model.limits?.maxCompletionTokens}
             onChange={onChangeMaxCompletionTokens}
           />

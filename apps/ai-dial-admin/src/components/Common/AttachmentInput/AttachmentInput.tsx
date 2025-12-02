@@ -25,7 +25,7 @@ interface Props {
   elementId?: string;
   optional?: boolean;
   disable?: boolean;
-  inputClass?: string;
+  inputClassName?: string;
   onChange?: (values: string[]) => void;
 }
 
@@ -40,7 +40,7 @@ const AttachmentInput: FC<Props> = ({
   elementId,
   optional,
   disable,
-  inputClass,
+  inputClassName,
   onChange,
 }) => {
   const t = useI18n();
@@ -172,7 +172,7 @@ const AttachmentInput: FC<Props> = ({
         </div>
       ) : (
         <div className={classNames('flex flex-row gap-2 items-center w-full', disable && 'pointer-events-none')}>
-          <div className={classNames('dial-input min-h-[38px] p-[6px]', inputClass)}>
+          <div className={classNames('dial-input min-h-[38px] p-[6px]', inputClassName)}>
             <div
               ref={containerRef}
               className={classNames('flex flex-wrap items-start gap-2', wraps ? 'flex-col-reverse' : 'flex-row')}
@@ -202,17 +202,17 @@ const AttachmentInput: FC<Props> = ({
           {!allSelected && (
             <DialButton
               variant={ButtonVariant.Secondary}
-              title={t(AttachmentsI18nKey.UseAll)}
+              label={t(AttachmentsI18nKey.UseAll)}
               onClick={handleSelectAll}
-              disable={disable}
+              disabled={disable}
             />
           )}
           {!!selected.length && (
             <DialButton
               variant={ButtonVariant.Secondary}
-              title={t(ButtonsI18nKey.None)}
+              label={t(ButtonsI18nKey.None)}
               onClick={handleSelectNone}
-              disable={disable}
+              disabled={disable}
             />
           )}
         </div>

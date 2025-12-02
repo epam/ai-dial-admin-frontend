@@ -46,7 +46,7 @@ import {
 } from '@/src/utils/toolset/toolset-auth';
 import { addTrailingSlash } from '@/src/utils/url';
 import LoginPopup from './LoginPopup';
-import { getViewHeaderClassNames } from '@/src/utils/entities/view';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 let isSignInProcessed = false;
 interface Props {
   etag: string;
@@ -69,7 +69,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
   const [selectedToolset, setSelectedToolset] = useState(cloneDeep(originalToolset));
   const [isChanged, setIsChanged] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [jsonEditorEnabled, setJsonEditorEnabled] = useState(false);
+  const [isJsonEditorEnabled, setIsJsonEditorEnabled] = useState(false);
 
   const isToolsetSignedIn = useMemo(() => {
     return isLoggedInToToolset(selectedToolset);
@@ -95,7 +95,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
   );
 
   const onDiscard = useCallback(() => {
-    if (jsonEditorEnabled) {
+    if (isJsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
       // TODO: Revisit solution
@@ -104,7 +104,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
       setKey((prevKey) => prevKey + 1);
     }
     setSelectedToolset(cloneDeep(originalToolset));
-  }, [jsonEditorEnabled, originalToolset, dispatch]);
+  }, [isJsonEditorEnabled, originalToolset, dispatch]);
 
   const onSave = useCallback(
     (newVersion?: string) => {
@@ -143,7 +143,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
           }
           router.refresh();
         } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       });
     },
@@ -157,9 +157,9 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
     [setSelectedToolset],
   );
 
-  const toggleJsonEditor = useCallback(() => {
-    setJsonEditorEnabled((prev) => !prev);
-  }, [setJsonEditorEnabled]);
+  const onToggleJsonEditor = useCallback(() => {
+    setIsJsonEditorEnabled((prev) => !prev);
+  }, [setIsJsonEditorEnabled]);
 
   const onRemove = useCallback(
     (entity: string) => {
@@ -174,7 +174,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
       getReqRef.current(signInToolset, selectedToolset, type, apiKeyValue, code).then((res) => {
         isSignInProcessed = false;
         if (!res.success) {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         } else {
           showNotification(
             getSuccessNotification(t(ToolsetI18nKey.SuccessLogin), t(ToolsetI18nKey.SuccessLoginDescription)),
@@ -236,7 +236,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
           getSuccessNotification(t(ToolsetI18nKey.SuccessLogout), t(ToolsetI18nKey.SuccessLogoutDescription)),
         );
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [router, selectedToolset, showNotification, t]);
@@ -251,8 +251,8 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-        <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
-          {!jsonEditorEnabled && (
+        <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
+          {!isJsonEditorEnabled && (
             <div className="flex-1 min-w-0">
               <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
             </div>
@@ -264,26 +264,25 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
             isChanged={isChanged}
             onSave={onSave}
             onDiscard={onDiscard}
-            removeEntity={onRemove}
-            jsonEditorEnabled={jsonEditorEnabled}
-            toggleJsonEditor={toggleJsonEditor}
+            onRemove={onRemove}
+            isJsonEditorEnabled={isJsonEditorEnabled}
+            onToggleJsonEditor={onToggleJsonEditor}
             assets={toolsets || []}
             etag={etag}
-            context={useToolsetFolder as () => AssetsFolderContext<DialFile | AssetToolset>}
-            childrenContainerClass="flex-row-reverse"
+            getAssetContext={useToolsetFolder as () => AssetsFolderContext<DialFile | AssetToolset>}
           >
             {selectedToolset.authSettings?.authenticationType !== ToolsetAuthType.NONE &&
               (isToolsetSignedIn ? (
                 <DialButton
                   variant={ButtonVariant.Secondary}
-                  title={t(ToolsetI18nKey.LogOut)}
+                  label={t(ToolsetI18nKey.LogOut)}
                   iconBefore={<IconLogout {...BASE_ICON_PROPS} />}
                   onClick={onLogout}
                 />
               ) : (
                 <DialButton
                   variant={ButtonVariant.Secondary}
-                  title={t(ToolsetI18nKey.LogIn)}
+                  label={t(ToolsetI18nKey.LogIn)}
                   iconBefore={<IconLogin {...BASE_ICON_PROPS} />}
                   onClick={() => setIsModalOpen(true)}
                 />
@@ -291,7 +290,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
           </HeaderButtons>
         </div>
         <div className="flex-1 overflow-auto min-h-0">
-          {jsonEditorEnabled ? (
+          {isJsonEditorEnabled ? (
             <EntityJsonEditor
               key={key}
               entity={selectedToolset}
@@ -306,7 +305,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
                   names={[]}
                   view={ApplicationRoute.AssetsToolsets}
                   selectedEntity={selectedToolset}
-                  jsonEditorEnabled={jsonEditorEnabled}
+                  isJsonEditorEnabled={isJsonEditorEnabled}
                   isSkipRefresh={false}
                   onChangeEntity={onChangeEntity}
                 />

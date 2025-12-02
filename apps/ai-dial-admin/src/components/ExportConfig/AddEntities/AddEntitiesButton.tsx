@@ -61,7 +61,7 @@ const AddEntitiesButton: FC<Props> = ({ selectedTab, tabData, customExportData, 
   return (
     <>
       <DialButton
-        title={buttonTitle}
+        label={buttonTitle}
         iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
         variant={ButtonVariant.Secondary}
         onClick={() => onClick(selectedTab)}

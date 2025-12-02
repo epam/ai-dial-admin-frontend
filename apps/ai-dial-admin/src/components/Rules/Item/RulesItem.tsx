@@ -58,21 +58,17 @@ const RulesItem: FC<Props> = ({
     return () => observer.disconnect();
   }, [isAlwaysToggled, setLastRuleHeight]);
 
-  const itemClass = classNames('flex flex-1', !folderName && 'border border-primary');
-  const ruleIndentClass = classNames('flex items-center');
-  const lineHorizontalClass = classNames('h-[1px] w-full bg-accent-secondary');
-  const containerClass = classNames(
-    'flex-1 flex flex-col bg-layer-2 py-4 px-6 rounded',
-    isAlwaysToggled && folderName && 'bg-layer-3',
-  );
-  const ruleContainerClass = classNames('flex flex-col h-full', isCollapsed && 'hidden');
-
   return (
-    <div ref={ref} className={itemClass}>
-      <div style={{ width: `${RULE_INDENT * indentIndex}px` }} className={ruleIndentClass}>
-        <div className={lineHorizontalClass}></div>
+    <div ref={ref} className={classNames('flex flex-1', !folderName && 'border border-primary')}>
+      <div style={{ width: `${RULE_INDENT * indentIndex}px` }} className="flex items-center">
+        <div className="h-[1px] w-full bg-accent-secondary"></div>
       </div>
-      <div className={containerClass}>
+      <div
+        className={classNames(
+          'flex-1 flex flex-col bg-layer-2 py-4 px-6 rounded',
+          isAlwaysToggled && folderName && 'bg-layer-3',
+        )}
+      >
         <RulesItemHeader
           folderName={folderName}
           isCollapsed={isCollapsed}
@@ -81,7 +77,7 @@ const RulesItem: FC<Props> = ({
         >
           {children}
         </RulesItemHeader>
-        <div className={ruleContainerClass}>
+        <div className={classNames('flex flex-col h-full', isCollapsed && 'hidden')}>
           <RulesItemBody
             rules={rules}
             rulesToExclude={rulesToExclude}

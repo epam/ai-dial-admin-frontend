@@ -125,7 +125,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, i
         </div>
       )}
       {sourceType?.value === SourceTypes.APP_RUNNER && (
-        <div className={classNames('flex flex-row gap-y-8 items-start')}>
+        <div className="flex flex-row gap-y-8 items-start">
           <AppRunners
             selectedValue={
               view === ApplicationRoute.AssetsApplications

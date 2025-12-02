@@ -2,8 +2,6 @@
 
 import { FC } from 'react';
 
-import classNames from 'classnames';
-
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { BasicI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -21,16 +19,15 @@ const RulesItemOperator: FC<Props> = ({ folderName, isEmpty, isReadonly }) => {
     : folderName === ROOT_FOLDER
       ? t(FoldersI18nKey.AllRules)
       : t(FoldersI18nKey.NoRules);
-  const operatorNameClass = classNames(
-    'border border-accent-primary rounded bg-accent-primary-alpha inline-block px-2',
-  );
 
   return (
     <div>
       {isEmpty && isReadonly ? (
         <span className="small">{message}</span>
       ) : (
-        <span className={operatorNameClass}>{t(BasicI18nKey.Or)}</span>
+        <span className="border border-accent-primary rounded bg-accent-primary-alpha inline-block px-2">
+          {t(BasicI18nKey.Or)}
+        </span>
       )}
     </div>
   );

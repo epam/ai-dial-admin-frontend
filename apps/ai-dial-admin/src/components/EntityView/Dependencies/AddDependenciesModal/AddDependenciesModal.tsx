@@ -31,7 +31,7 @@ const AddDependenciesModal: FC<Props> = ({ isModalOpen, entities, entityType, on
       title={t(entityType === EntityType.MODEL ? EntitiesI18nKey.AddModel : EntitiesI18nKey.AddApplication)}
       portalId="AddDependencyEntities"
       open={isModalOpen}
-      cssClass="h-[800px]"
+      className="h-[800px]"
       size={PopupSize.Lg}
       submitLabel={t(ButtonsI18nKey.Add)}
       onSubmit={() => onApply(selectedEntityName as string)}

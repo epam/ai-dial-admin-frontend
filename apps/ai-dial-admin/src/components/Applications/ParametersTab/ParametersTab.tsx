@@ -39,7 +39,7 @@ interface Props {
   entity?: DialApplication | DialApplicationResource;
   onChangeEntity?: (entity: BaseEntity, isSkipRefresh?: boolean) => void;
   applicationSchemes?: DialApplicationScheme[] | null;
-  jsonEditorEnabled?: boolean;
+  isJsonEditorEnabled?: boolean;
   view?: ApplicationRoute;
   isChanged?: boolean;
   isSkipRefresh?: boolean;
@@ -53,7 +53,7 @@ const ApplicationParametersTab: FC<Props> = ({
   entity,
   onChangeEntity,
   applicationSchemes,
-  jsonEditorEnabled,
+  isJsonEditorEnabled,
   view,
   isChanged,
   isSkipRefresh,
@@ -158,7 +158,7 @@ const ApplicationParametersTab: FC<Props> = ({
 
   return (
     <div className="flex flex-col w-full h-full">
-      {!jsonEditorEnabled && (
+      {!isJsonEditorEnabled && (
         <div className="flex flex-row justify-between mb-2">
           <div className="flex flex-row gap-4 items-center">
             <h1>{t(TabsI18nKey.Parameters)}</h1>
@@ -177,7 +177,7 @@ const ApplicationParametersTab: FC<Props> = ({
               <DialButton
                 variant={ButtonVariant.Primary}
                 iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-                title={t(ButtonsI18nKey.Add)}
+                label={t(ButtonsI18nKey.Add)}
                 onClick={() => setIsAddClicked(true)}
               />
             )}
@@ -185,7 +185,7 @@ const ApplicationParametersTab: FC<Props> = ({
         </div>
       )}
       <div className="flex-1 min-h-0">
-        {paramsView !== ParamsView.UI && jsonEditorEnabled && (
+        {paramsView !== ParamsView.UI && isJsonEditorEnabled && (
           <EntityJsonEditor
             key={key}
             entity={entity as BaseEntity}
@@ -204,7 +204,7 @@ const ApplicationParametersTab: FC<Props> = ({
         )}
         <div
           className={classNames(
-            paramsView === ParamsView.FORM && !jsonEditorEnabled ? 'block w-full h-full overflow-y-auto' : 'hidden',
+            paramsView === ParamsView.FORM && !isJsonEditorEnabled ? 'block w-full h-full overflow-y-auto' : 'hidden',
           )}
         >
           {!scheme || !scheme?.properties || !Object.keys(scheme.properties).length ? (
@@ -225,7 +225,7 @@ const ApplicationParametersTab: FC<Props> = ({
           <FrameRenderer
             iframeUrl={targetUrl?.href ?? ''}
             name={frameConfig?.name}
-            jsonEditorEnabled={jsonEditorEnabled}
+            isJsonEditorEnabled={isJsonEditorEnabled}
           />
         )}
       </div>

@@ -36,12 +36,12 @@ const RulesValueList: FC<Props> = ({
   const { availableAttributes } = useRuleFolder();
   let ruleDiff: RuleDiffModel | undefined = void 0;
 
-  const ruleIndentClass = classNames('flex items-center');
-  const valuesClass = classNames(
+  const ruleIndentClassName = 'flex items-center';
+  const valuesClassName = classNames(
     'flex-1 flex flex-col gap-4',
     (!isReadonly ? !!setLastValueHeight : rules.length) && 'mt-4',
   );
-  const lineHorizontalChildClass = classNames('h-[1px] w-[16px] bg-accent-primary');
+  const lineHorizontalChildClassName = 'h-[1px] w-[16px] bg-accent-primary';
 
   const onAddValue = useCallback(() => {
     const newRules = [...rules];
@@ -68,7 +68,7 @@ const RulesValueList: FC<Props> = ({
   );
 
   return (
-    <div className={valuesClass}>
+    <div className={valuesClassName}>
       {!!rules.length && (
         <div className="flex flex-col gap-2">
           {rules.map((rule, i) => {
@@ -77,10 +77,10 @@ const RulesValueList: FC<Props> = ({
               ruleDiff = generateRuleDiff(rule, rulesToExclude, rulesToInclude);
             }
             return (
-              <div key={'rule' + i} className={classNames(ruleIndentClass)}>
+              <div key={`rule-${i}`} className={ruleIndentClassName}>
                 {isReadonly ? (
                   <>
-                    <div className={lineHorizontalChildClass}></div>
+                    <div className={lineHorizontalChildClassName}></div>
                     <RulesValueReadonly
                       ruleDiff={ruleDiff}
                       rule={rule}
@@ -104,13 +104,13 @@ const RulesValueList: FC<Props> = ({
           })}
         </div>
       )}
-      <div className={classNames(ruleIndentClass, isReadonly && 'hidden')}>
-        <div className={lineHorizontalChildClass}></div>
+      <div className={classNames(ruleIndentClassName, isReadonly && 'hidden')}>
+        <div className={lineHorizontalChildClassName}></div>
         <DialButton
           variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Add)}
+          label={t(ButtonsI18nKey.Add)}
           onClick={onAddValue}
-          disable={availableAttributes?.length === rules.length}
+          disabled={availableAttributes?.length === rules.length}
         />
       </div>
     </div>

@@ -34,7 +34,7 @@ const AdapterModels: FC<Props> = ({ adapter, onChangeAdapter }) => {
       if (res.success) {
         setModels(res.response || []);
       } else {
-        showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [adapter]);

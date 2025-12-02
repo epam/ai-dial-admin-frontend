@@ -346,10 +346,6 @@ export enum KeysI18nKey {
   SaveWithoutRolesDescriptions = 'Keys.SaveWithoutRolesDescriptions',
   AddKeys = 'Keys.AddKeys',
   ValidityPeriod = 'Keys.ValidityPeriod',
-  NoRoles = 'Keys.Status.NoRoles',
-  Expired = 'Keys.Status.Expired',
-  AlmostExpired = 'Keys.Status.AlmostExpired',
-  Valid = 'Keys.Status.Valid',
   PeriodDay = 'Keys.Period.Day',
   PeriodWeek = 'Keys.Period.Week',
   PeriodMonth = 'Keys.Period.Month',
@@ -359,6 +355,11 @@ export enum KeysI18nKey {
   RotateKeyDescription = 'Keys.RotateKeyDescription',
   RotateKeySuccessTitle = 'Keys.RotateKeySuccessTitle',
   RotateKeySuccessDescription = 'Keys.RotateKeySuccessDescription',
+}
+
+export enum ValidityStatusI18nKey {
+  Valid = 'ValidityStatus.Valid',
+  Invalid = 'ValidityStatus.Invalid',
 }
 
 export enum RolesI18nKey {

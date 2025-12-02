@@ -20,7 +20,7 @@ export interface Props extends EndpointControlProps {
   id: string;
   fieldTitle: string;
   placeholder: string;
-  elementCssClass?: string;
+  elementClassName?: string;
   iconAfterInput?: ReactNode;
 }
 

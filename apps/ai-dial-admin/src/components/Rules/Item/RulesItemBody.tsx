@@ -2,8 +2,6 @@
 
 import { FC, useState } from 'react';
 
-import classNames from 'classnames';
-
 import { DialRule } from '@/src/models/dial/rule';
 import RulesItemOperator from '@/src/components/Rules/Item/RulesItemOperator';
 import RulesValueList from '@/src/components/Rules/Value/RulesValueList';
@@ -28,16 +26,14 @@ const RulesItemBody: FC<Props> = ({
   onChange,
 }) => {
   const [lastValueHeight, setLastValueHeight] = useState<number>(0);
-  const ruleClass = classNames('relative flex flex-row');
-  const lineVerticalClass = classNames('w-[1px] ml-1 bg-accent-primary');
 
   return (
     <>
       <RulesItemOperator folderName={folderName} isEmpty={!rules.length} isReadonly={!isLast} />
-      <div className={ruleClass}>
+      <div className="relative flex flex-row">
         <div
           style={{ height: `calc(100% - ${isLast ? 19 : lastValueHeight / 2}px)` }}
-          className={lineVerticalClass}
+          className="w-[1px] ml-1 bg-accent-primary"
         ></div>
         <RulesValueList
           rules={rules}

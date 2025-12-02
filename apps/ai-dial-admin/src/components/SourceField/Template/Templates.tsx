@@ -80,7 +80,9 @@ const Templates = <T extends DialModel | DialInterceptor>({
       }
     };
 
-    fetchRunners().catch((error) => showNotification(getErrorNotification(error.errorHeader, error.errorMessage)));
+    fetchRunners().catch((error) =>
+      showNotification(getErrorNotification(error.errorHeader, error.errorMessage, error.requestId)),
+    );
   }, [getRunners, showNotification]);
 
   useEffect(() => {
@@ -99,7 +101,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
               }))}
               searchable={true}
               onChange={(value) => onSelect(value as string)}
-              elementId={'source-type'}
+              elementId="source-type"
               value={runners.find((runner) => runner.name === entity.source?.runnerName)?.name}
               placeholder={t(CreateI18nKey.SelectInterceptorTemplate)}
               fieldTitle={t(SourceI18nKey.InterceptorTemplate)}
@@ -108,12 +110,12 @@ const Templates = <T extends DialModel | DialInterceptor>({
         ) : (
           <div className="flex gap-2 w-full">
             <div className="w-full lg:w-[45%]">
-              <Field fieldTitle={t(SourceI18nKey.InterceptorTemplate)} htmlFor={'templates'} />
+              <Field fieldTitle={t(SourceI18nKey.InterceptorTemplate)} htmlFor="templates" />
               <DialInputPopup
                 open={isModalOpen}
                 onOpen={onOpenModal}
                 selectedValue={selectedRunner?.name}
-                elementId={'templates'}
+                elementId="templates"
                 errorText={errorText}
                 emptyValueText={t(EntitiesI18nKey.NoTemplates)}
               >
@@ -130,8 +132,8 @@ const Templates = <T extends DialModel | DialInterceptor>({
               <DialButton
                 variant={ButtonVariant.Secondary}
                 iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
-                cssClass={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
-                title={t(SourceI18nKey.OpenTemplate)}
+                className={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}
+                label={t(SourceI18nKey.OpenTemplate)}
                 onClick={() => openTemplate()}
               />
             )}

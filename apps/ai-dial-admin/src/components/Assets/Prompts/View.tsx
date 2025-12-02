@@ -29,7 +29,7 @@ import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
 import PromptProperties from './Properties';
 import { Asset } from '@/src/models/dial/deployment-asset';
-import { getViewHeaderClassNames } from '@/src/utils/entities/view';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 
 interface Props {
   originalPrompt: DialPrompt;
@@ -44,10 +44,11 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
   const { dispatch } = useSaveValidationContext();
+
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedPrompt, setSelectedPrompt] = useState(cloneDeep(originalPrompt));
-  const [isChanged, setIsChanged] = useState<boolean>(false);
-  const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
+  const [isChanged, setIsChanged] = useState(false);
+  const [isJsonEditorEnabled, setIsJsonEditorEnabled] = useState(false);
 
   const [key, setKey] = useState(0);
   const [addedVersions, setAddedVersions] = useState<string[]>([]);
@@ -70,7 +71,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
   );
 
   const onDiscard = useCallback(() => {
-    if (jsonEditorEnabled) {
+    if (isJsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
       // TODO: Revisit solution
@@ -80,7 +81,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
     }
     setSelectedPrompt(cloneDeep(originalPrompt));
     setAddedVersions([]);
-  }, [jsonEditorEnabled, originalPrompt, dispatch]);
+  }, [isJsonEditorEnabled, originalPrompt, dispatch]);
 
   const onSave = useCallback(
     (newVersion?: string) => {
@@ -122,7 +123,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
           }
           router.refresh();
         } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       });
     },
@@ -136,14 +137,14 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
     [setSelectedPrompt],
   );
 
-  const toggleJsonEditor = useCallback(() => {
-    setJsonEditorEnabled((prev) => !prev);
-  }, [setJsonEditorEnabled]);
+  const onToggleJsonEditor = useCallback(() => {
+    setIsJsonEditorEnabled((prev) => !prev);
+  }, [setIsJsonEditorEnabled]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
-        {!jsonEditorEnabled && (
+      <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
+        {!isJsonEditorEnabled && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
           </div>
@@ -155,17 +156,17 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
           isChanged={isChanged}
           onSave={onSave}
           onDiscard={onDiscard}
-          removeEntity={removePrompt}
-          jsonEditorEnabled={jsonEditorEnabled}
-          toggleJsonEditor={toggleJsonEditor}
+          onRemove={removePrompt}
+          isJsonEditorEnabled={isJsonEditorEnabled}
+          onToggleJsonEditor={onToggleJsonEditor}
           assets={prompts as Asset[]}
           addedVersions={addedVersions}
           setAddedVersions={setAddedVersions}
-          context={usePromptFolder as () => AssetsFolderContext<DialFile | DialPrompt>}
+          getAssetContext={usePromptFolder as () => AssetsFolderContext<DialFile | DialPrompt>}
         />
       </div>
       <div className="flex-1 overflow-auto min-h-0">
-        {jsonEditorEnabled ? (
+        {isJsonEditorEnabled ? (
           <EntityJsonEditor
             key={key}
             entity={selectedPrompt}

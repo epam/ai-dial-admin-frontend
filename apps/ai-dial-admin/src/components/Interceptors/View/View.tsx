@@ -43,7 +43,7 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getInterceptorTabs } from '@/src/utils/tabs/utils';
 import InterceptorProperties from './Properties';
-import { getViewHeaderClassNames } from '@/src/utils/entities/view';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 
 interface Props {
   originalInterceptor: DialInterceptor;
@@ -75,9 +75,9 @@ const InterceptorView: FC<Props> = ({
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedInterceptor, setSelectedInterceptor] = useState(cloneDeep(originalInterceptor));
   const [isChanged, setIsChanged] = useState(false);
-  const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
+  const [isJsonEditorEnabled, setIsJsonEditorEnabled] = useState(false);
   const [key, setKey] = useState(0);
-  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
+  const [selectedFormat, setSelectedFormat] = useState(ExportFormat.ADMIN);
   const [coreInterceptor, setCoreInterceptor] = useState<DialInterceptor | null>(null);
 
   const showGlobalError = useMemo(() => {
@@ -117,7 +117,7 @@ const InterceptorView: FC<Props> = ({
   );
 
   const onDiscard = useCallback(() => {
-    if (jsonEditorEnabled) {
+    if (isJsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
       setSelectedFormat(ExportFormat.ADMIN);
@@ -126,7 +126,7 @@ const InterceptorView: FC<Props> = ({
       setKey((prevKey) => prevKey + 1);
     }
     setSelectedInterceptor(originalInterceptor);
-  }, [jsonEditorEnabled, originalInterceptor, dispatch]);
+  }, [isJsonEditorEnabled, originalInterceptor, dispatch]);
 
   const onChangeInterceptor = useCallback(
     (entity: DialInterceptor) => {
@@ -135,10 +135,10 @@ const InterceptorView: FC<Props> = ({
     [setSelectedInterceptor],
   );
 
-  const toggleJsonEditor = useCallback(() => {
+  const onToggleJsonEditor = useCallback(() => {
     setSelectedFormat(ExportFormat.ADMIN);
-    setJsonEditorEnabled((prev) => !prev);
-  }, [setJsonEditorEnabled]);
+    setIsJsonEditorEnabled((prev) => !prev);
+  }, [setIsJsonEditorEnabled]);
 
   const onAddEntities = useCallback(
     (rows: EntitiesGridData[]) => {
@@ -204,7 +204,7 @@ const InterceptorView: FC<Props> = ({
         );
         router.refresh();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [selectedFormat, selectedInterceptor, originalInterceptor.name, etag, showNotification, t, router]);
@@ -227,8 +227,8 @@ const InterceptorView: FC<Props> = ({
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
-        {!jsonEditorEnabled && (
+      <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
+        {!isJsonEditorEnabled && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
           </div>
@@ -239,15 +239,15 @@ const InterceptorView: FC<Props> = ({
           isChanged={isChanged}
           onDiscard={onDiscard}
           onSave={onSave}
-          removeEntity={removeInterceptor}
-          jsonEditorEnabled={jsonEditorEnabled}
-          toggleJsonEditor={toggleJsonEditor}
+          onRemove={removeInterceptor}
+          isJsonEditorEnabled={isJsonEditorEnabled}
+          onToggleJsonEditor={onToggleJsonEditor}
           selectedFormat={selectedFormat}
-          setSelectedFormat={setSelectedFormat}
+          onChangeSelectedFormat={setSelectedFormat}
         />
       </div>
       <div className="flex-1 overflow-auto min-h-0">
-        {jsonEditorEnabled ? (
+        {isJsonEditorEnabled ? (
           <EntityJsonEditor
             key={key}
             entity={selectedInterceptor}

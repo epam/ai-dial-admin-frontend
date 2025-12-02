@@ -6,7 +6,7 @@ export const ACTION_I18N_KEYS: Record<ActionType, string> = {
   [ActionType.DELETE]: ButtonsI18nKey.Unpublish,
 };
 
-export const ACTION_CLASSNAMES: Record<ActionType, string> = {
+export const ACTION_CLASS_NAME: Record<ActionType, string> = {
   [ActionType.ADD]: 'bg-accent-primary',
   [ActionType.DELETE]: 'bg-red-400',
 };

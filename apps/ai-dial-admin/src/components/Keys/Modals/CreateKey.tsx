@@ -61,7 +61,7 @@ const CreateKey: FC<Props> = ({ isModalOpen, names, keys, onClose }) => {
         router.push(getUrnForEntity(ApplicationRoute.Keys, currentKey));
         onClose();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [currentKey, showNotification, t, router, onClose]);

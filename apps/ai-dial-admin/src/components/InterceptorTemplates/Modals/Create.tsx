@@ -48,7 +48,7 @@ const Create: FC<Props> = ({ route, onClose, isModalOpen, names }) => {
         onClose();
         router.push(getUrnForEntity(route, template));
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [template, showNotification, t, onClose, router, route]);

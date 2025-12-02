@@ -48,7 +48,7 @@ const PromptsProperties: FC<Props> = ({ prompt, action, collapsed }) => {
   return (
     <div className="flex flex-col bg-layer-3 p-4">
       <div className="flex flex-row justify-between">
-        <button className={'flex items-center'} onClick={toggleCollapse}>
+        <button className="flex items-center" onClick={toggleCollapse}>
           <i className="text-icon-secondary">
             {isCollapsed ? <IconChevronRight {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
           </i>
@@ -59,7 +59,7 @@ const PromptsProperties: FC<Props> = ({ prompt, action, collapsed }) => {
           {action === ActionType.DELETE && (
             <DialButton
               variant={ButtonVariant.Secondary}
-              title={t(PublicationsI18nKey.OpenPrompt)}
+              label={t(PublicationsI18nKey.OpenPrompt)}
               iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
               onClick={openPrompt}
             />
@@ -78,7 +78,7 @@ const PromptsProperties: FC<Props> = ({ prompt, action, collapsed }) => {
             <DialTooltip
               contentClassName="truncate"
               tooltip={formatPromptText(prompt.content as string)}
-              placement={'bottom-start'}
+              placement="bottom-start"
             >
               <p className="break-words">{formatPromptText(prompt.content as string)}</p>
             </DialTooltip>

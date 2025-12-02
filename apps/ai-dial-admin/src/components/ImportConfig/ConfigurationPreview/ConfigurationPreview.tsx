@@ -58,7 +58,7 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
         setTabs(tabs);
         setSelectedTab(tabs[0]?.id);
       } else {
-        showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [fileType, importBody, t]);
@@ -69,8 +69,8 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
         <h1>{t(ImportI18nKey.Configuration)}</h1>
         <DialButton
           variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Import)}
-          disable={isLoading || !files}
+          label={t(ButtonsI18nKey.Import)}
+          disabled={isLoading || !files}
           iconBefore={<IconDownload {...BASE_ICON_PROPS} />}
           onClick={onImportFile}
         />
@@ -78,7 +78,7 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
       <div className="flex-1 min-h-0">
         {isLoading ? (
           <div className="flex flex-col h-full w-full justify-center items-center">
-            <DialLoader size={45} cssClass="h-auto" />
+            <DialLoader size={45} className="h-auto" />
             <p className="mt-3 text-primary small">{t(ImportI18nKey.ConfigurationParsing)}</p>
           </div>
         ) : (

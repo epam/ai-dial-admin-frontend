@@ -28,7 +28,7 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getInterceptorTemplateTabs } from '@/src/utils/tabs/utils';
-import { getViewHeaderClassNames } from '@/src/utils/entities/view';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 
 interface Props {
   etag: string;
@@ -77,7 +77,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
         );
         router.refresh();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [selectedTemplate, etag, showNotification, t, router]);
@@ -98,7 +98,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={getViewHeaderClassNames()}>
+      <div className={getViewHeaderClassName()}>
         <div className="flex-1 min-w-0">
           <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
         </div>
@@ -108,14 +108,12 @@ const View: FC<Props> = ({ etag, template, names }) => {
           isChanged={isChanged}
           onSave={onSave}
           onDiscard={onDiscard}
-          removeEntity={deleteInterceptorTemplate}
-          hideJsonEditor={true}
-          jsonEditorEnabled={false}
-          childrenContainerClass={'flex-row-reverse'}
+          onRemove={deleteInterceptorTemplate}
+          isHideJsonEditor={true}
         >
           <DialButton
             variant={ButtonVariant.Secondary}
-            title={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.Interceptor)}`}
+            label={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.Interceptor)}`}
             iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
             onClick={() => setIsModalOpen(true)}
           />

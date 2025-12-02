@@ -163,9 +163,9 @@ const MultiselectContentModal: FC<Props> = ({
         <div>
           <DialButton
             variant={ButtonVariant.Secondary}
-            cssClass="mt-2"
+            className="mt-2"
             iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-            title={addTitle}
+            label={addTitle}
             onClick={onAddItem}
           />
         </div>

@@ -92,7 +92,7 @@ const ImportFileTypeSelector: FC<Props> = ({
             emptyButtonLabel={t(ButtonsI18nKey.Browse)}
             maxFilesCount={1}
             multiple={false}
-            iconBeforeInput={<DialFileIcon extension="zip" cssClass="text-secondary" />}
+            iconBeforeInput={<DialFileIcon extension="zip" className="text-secondary" />}
             fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
             fileCountError={t(ImportI18nKey.ArchiveDescription)}
             acceptTypes="application/zip, .zip, application/x-zip-compressed"
@@ -107,7 +107,7 @@ const ImportFileTypeSelector: FC<Props> = ({
             emptyTextSecondLine={t(BasicI18nKey.Or)}
             emptyButtonLabel={t(ButtonsI18nKey.Browse)}
             files={files}
-            iconBeforeInput={<DialFileIcon extension="json" cssClass="text-secondary" />}
+            iconBeforeInput={<DialFileIcon extension="json" className="text-secondary" />}
             acceptTypes="application/json"
             fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
             isInvalid={isInvalid}

@@ -562,12 +562,6 @@ export default {
     RotateKeySuccessTitle: 'Key rotated successfully',
     RotateKeySuccessDescription: 'New key value generated',
     ValidityPeriod: 'Validity period',
-    Status: {
-      NoRoles: 'No roles assigned',
-      Expired: 'Expired',
-      AlmostExpired: 'Valid for {number} days',
-      Valid: 'Valid',
-    },
     Period: {
       Day: 'Day',
       Week: 'Week',
@@ -1011,5 +1005,9 @@ export default {
   Applications: {
     Import: 'Import Applications',
     Export: 'Export Applications',
+  },
+  ValidityStatus: {
+    Invalid: 'Invalid',
+    Valid: 'Valid',
   },
 } as const;

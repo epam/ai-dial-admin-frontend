@@ -34,19 +34,19 @@ const FoldersStorage: FC<Props> = ({ initialPath }) => {
         <DialCollapsibleSidebar
           width={480}
           title={t(MenuI18nKey.FoldersStorage)}
-          containerCssClass="bg-layer-3 border-transparent mr-0"
+          containerClassName="bg-layer-3 border-transparent mr-0"
           iconSize={24}
           additionalButtons={
             <DialTooltip
-              triggerClassName={'flex items-center'}
+              triggerClassName="flex items-center"
               tooltip={isCollapseDisable ? '' : t(FoldersI18nKey.CollapseAll)}
-              placement={'top'}
+              placement="top"
             >
               <DialButton
-                cssClass={isCollapseDisable ? 'text-controls-disable' : 'hover:text-icon-accent-primary'}
+                className={isCollapseDisable ? 'text-controls-disable' : 'hover:text-icon-accent-primary'}
                 onClick={collapseFolders}
                 iconBefore={<FolderCollapse width={24} height={24} />}
-                disable={isCollapseDisable}
+                disabled={isCollapseDisable}
               />
             </DialTooltip>
           }

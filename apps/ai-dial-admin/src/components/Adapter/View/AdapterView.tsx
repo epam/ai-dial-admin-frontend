@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 
@@ -32,7 +32,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { EntityViewTab, getAdapterTabs } from '@/src/utils/tabs/utils';
 import AdapterProperties from './AdapterProperties';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-import { getViewHeaderClassNames } from '@/src/utils/entities/view';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 
 interface Props {
   etag: string;
@@ -47,12 +47,12 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
 
-  const tabs: TabModel[] = getAdapterTabs(t);
+  const tabs = getAdapterTabs(t);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedAdapter, setSelectedAdapter] = useState(cloneDeep(originalAdapter));
   const [isChanged, setIsChanged] = useState(false);
-  const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
+  const [isJsonEditorEnabled, setIsJsonEditorEnabled] = useState(false);
   const [key, setKey] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -72,7 +72,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   );
 
   const onDiscard = useCallback(() => {
-    if (jsonEditorEnabled) {
+    if (isJsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
@@ -80,7 +80,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
       setKey((prevKey) => prevKey + 1);
     }
     setSelectedAdapter(originalAdapter);
-  }, [jsonEditorEnabled, originalAdapter, dispatch]);
+  }, [isJsonEditorEnabled, originalAdapter, dispatch]);
 
   const onChangeAdapter = useCallback(
     (entity: DialAdapter) => {
@@ -89,9 +89,9 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
     [setSelectedAdapter],
   );
 
-  const toggleJsonEditor = useCallback(() => {
-    setJsonEditorEnabled((prev) => !prev);
-  }, [setJsonEditorEnabled]);
+  const onToggleJsonEditor = useCallback(() => {
+    setIsJsonEditorEnabled((prev) => !prev);
+  }, [setIsJsonEditorEnabled]);
 
   const onSave = useCallback(() => {
     getReqRef.current(updateAdapter, selectedAdapter, etag).then((res) => {
@@ -104,15 +104,15 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
         );
         router.refresh();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [selectedAdapter, etag, showNotification, t, router]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
-        {!jsonEditorEnabled && (
+      <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
+        {!isJsonEditorEnabled && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
           </div>
@@ -123,21 +123,20 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
           isChanged={isChanged}
           onDiscard={onDiscard}
           onSave={onSave}
-          removeEntity={removeAdapter}
-          jsonEditorEnabled={jsonEditorEnabled}
-          toggleJsonEditor={toggleJsonEditor}
-          childrenContainerClass={'flex-row-reverse'}
+          onRemove={removeAdapter}
+          isJsonEditorEnabled={isJsonEditorEnabled}
+          onToggleJsonEditor={onToggleJsonEditor}
         >
           <DialButton
             variant={ButtonVariant.Secondary}
-            title={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.Model)}`}
+            label={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.Model)}`}
             iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
             onClick={() => setIsModalOpen(true)}
           />
         </HeaderButtons>
       </div>
       <div className="flex-1 overflow-auto min-h-0">
-        {jsonEditorEnabled ? (
+        {isJsonEditorEnabled ? (
           <EntityJsonEditor
             key={key}
             entity={selectedAdapter}

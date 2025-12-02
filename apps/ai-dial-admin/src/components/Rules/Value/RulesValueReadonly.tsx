@@ -23,12 +23,6 @@ const RulesValueReadonly: FC<Props> = ({ rule, ruleDiff, setLastValueHeight }) =
   const isTargetError = ruleDiff && ruleDiff.status === RuleDiffStatus.EXCLUDE && ruleDiff.items;
   const isRuleNew = ruleDiff && ruleDiff.status === RuleDiffStatus.INCLUDE && !ruleDiff.items;
 
-  const containerClass = classNames(
-    'flex-1 flex flex-row items-center dial-input py-2 px-3',
-    isRuleError && 'border-error',
-    isRuleNew && 'border-accent-secondary',
-  );
-
   useEffect(() => {
     const observer = new ResizeObserver(() => {
       if (ref.current) {
@@ -45,7 +39,14 @@ const RulesValueReadonly: FC<Props> = ({ rule, ruleDiff, setLastValueHeight }) =
   }, [setLastValueHeight]);
 
   return (
-    <div ref={ref} className={containerClass}>
+    <div
+      ref={ref}
+      className={classNames(
+        'flex-1 flex flex-row items-center dial-input py-2 px-3',
+        isRuleError && 'border-error',
+        isRuleNew && 'border-accent-secondary',
+      )}
+    >
       <div>{t(FoldersI18nKey[RuleSource[rule.source as keyof typeof RuleSource]])}</div>
       <div className="flex px-2">
         <span className="inline-block text-secondary mr-2">{getOperationIcon(rule.function)} </span>
@@ -57,7 +58,7 @@ const RulesValueReadonly: FC<Props> = ({ rule, ruleDiff, setLastValueHeight }) =
             <DialTag
               key={tag}
               tag={tag}
-              cssClass={
+              className={
                 ruleDiff?.items?.includes(tag)
                   ? isTargetError
                     ? 'border-error'

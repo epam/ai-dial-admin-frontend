@@ -27,7 +27,7 @@ const HeaderWithHintButton: FC<Props> = ({ displayName, hintText, hintTitle }) =
   return (
     <div className="flex items-center w-full justify-end">
       <DialButton
-        cssClass="flex items-center justify-center mr-2.5"
+        className="flex items-center justify-center mr-2.5"
         iconBefore={<IconInfoCircle size={14} />}
         onClick={onClick}
       />

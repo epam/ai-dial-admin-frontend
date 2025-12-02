@@ -33,7 +33,7 @@ const Path: FC<Props> = ({ index, path, readonly, optional, fieldTitle, allPaths
         : '';
   }, [index, optional, isAllEmptyValues, isEmptyPath, isInvalidPath, t]);
 
-  const removeButtonClass = classNames(
+  const removeButtonClassName = classNames(
     'cursor-pointer ml-[10px]',
     index === 0
       ? (isEmptyPath && isAllEmptyValues) || isInvalidPath
@@ -62,7 +62,7 @@ const Path: FC<Props> = ({ index, path, readonly, optional, fieldTitle, allPaths
     <div className="flex items-center">
       <div className="flex-1">
         <DialTextInputField
-          elementId={'path ' + index}
+          elementId={`path-${index}`}
           value={path}
           disabled={readonly}
           placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}
@@ -72,7 +72,7 @@ const Path: FC<Props> = ({ index, path, readonly, optional, fieldTitle, allPaths
           invalid={!!error}
         />
       </div>
-      {!readonly && <DialRemoveButton onClick={() => onRemove(index)} cssClass={removeButtonClass} />}
+      {!readonly && <DialRemoveButton onClick={() => onRemove(index)} className={removeButtonClassName} />}
     </div>
   );
 };

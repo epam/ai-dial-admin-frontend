@@ -106,7 +106,7 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
       {selectedValue && (
         <DialButton
           variant={ButtonVariant.Secondary}
-          title={t(ButtonsI18nKey.OpenAppRunner)}
+          label={t(ButtonsI18nKey.OpenAppRunner)}
           iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
           onClick={openInNewTab}
         />

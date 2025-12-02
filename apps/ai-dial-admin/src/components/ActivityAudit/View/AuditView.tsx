@@ -4,7 +4,14 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialConfirmationPopup, DialSwitch, DialTooltip } from '@epam/ai-dial-ui-kit';
+import {
+  ButtonVariant,
+  DialButton,
+  DialConfirmationPopup,
+  DialEllipsisTooltip,
+  DialSwitch,
+  DialTooltip,
+} from '@epam/ai-dial-ui-kit';
 import { IconExternalLink, IconRestore } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -99,7 +106,7 @@ const AuditView: FC<Props> = ({
           );
           router.push(ApplicationRoute.ActivityAudit);
         } else {
-          showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage));
+          showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage, res?.requestId));
         }
 
         onCloseModal();
@@ -130,8 +137,8 @@ const AuditView: FC<Props> = ({
         {!isModalView && (
           <div className="flex flex-row flex-wrap justify-between mb-6 gap-3">
             <h1 className="flex flex-row items-center gap-x-3">
-              <DialTooltip tooltip={activity.activityId}>{activity.activityId}</DialTooltip>
-              <CopyButton field={activity.activityId} title={t(EntityFieldsI18nKey.id)} />
+              <DialEllipsisTooltip text={activity.activityId} />
+              <CopyButton field={activity.activityId} label={t(EntityFieldsI18nKey.id)} />
             </h1>
             <div className="flex flex-row items-center gap-4 flex-wrap">
               <CompareControl compareView={compareView} setCompareView={setCompareView} />
@@ -139,7 +146,7 @@ const AuditView: FC<Props> = ({
               <DialButton
                 iconBefore={<IconRestore {...BASE_ICON_PROPS} />}
                 variant={ButtonVariant.Secondary}
-                title={t(RollbackI18nKey.Resource)}
+                label={t(RollbackI18nKey.Resource)}
                 onClick={onOpenModal}
               />
               <div className="w-[1px] h-6 bg-layer-4"></div>
@@ -161,7 +168,7 @@ const AuditView: FC<Props> = ({
                     <DialTooltip tooltip={activity.activityId}>{activity.activityId}</DialTooltip>
                     <DialButton
                       onClick={() => openActivityInNewTab(activity)}
-                      cssClass="text-secondary"
+                      className="text-secondary"
                       iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
                     />
                   </h3>
@@ -189,7 +196,7 @@ const AuditView: FC<Props> = ({
                 2,
               )}
               original={JSON.stringify(previousRevision || {}, null, 2)}
-              containerCss="mt-8 pt-8"
+              containerClassName="mt-8 pt-8"
             />
           ) : (
             <EntityDiff

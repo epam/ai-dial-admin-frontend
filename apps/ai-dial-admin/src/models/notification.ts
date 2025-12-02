@@ -3,6 +3,7 @@ export interface Notification {
   title: string;
   description?: string;
   duration?: number | null;
+  requestId?: string;
   onClose?: () => void;
   downloadDetails?: FileDetails[];
 }

@@ -23,10 +23,10 @@ const FolderInfoHeader: FC<Props> = ({ isChanged, isSaveDisable, title, save, di
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
 
-  const [buttonsClassNames, setButtonsClassNames] = useState('');
+  const [buttonsClassName, setButtonsClassName] = useState('');
 
   useEffect(() => {
-    setButtonsClassNames(classNames(isTablet || isMobile ? 'w-1/2 flex justify-center' : ''));
+    setButtonsClassName(classNames((isTablet || isMobile) && 'w-1/2 flex justify-center'));
   }, [isTablet, isMobile]);
 
   return (
@@ -36,16 +36,16 @@ const FolderInfoHeader: FC<Props> = ({ isChanged, isSaveDisable, title, save, di
         <div className="flex flex-row gap-3 p-3 lg:p-0">
           <DialButton
             variant={ButtonVariant.Secondary}
-            cssClass={buttonsClassNames}
-            title={t(ButtonsI18nKey.Discard)}
+            className={buttonsClassName}
+            label={t(ButtonsI18nKey.Discard)}
             onClick={discard}
           />
           <DialButton
             variant={ButtonVariant.Primary}
-            cssClass={buttonsClassNames}
-            title={t(ButtonsI18nKey.Save)}
+            className={buttonsClassName}
+            label={t(ButtonsI18nKey.Save)}
             onClick={save}
-            disable={isSaveDisable}
+            disabled={isSaveDisable}
           />
         </div>
       )}

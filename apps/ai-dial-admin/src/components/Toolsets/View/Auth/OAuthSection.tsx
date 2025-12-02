@@ -34,7 +34,7 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) => {
     <div className="flex flex-col pl-[26px]">
       <div className="flex flex-row gap-x-4">
         <DialSelectField
-          containerCssClass="w-[192px]"
+          containerClassName="w-[192px]"
           elementId="type"
           disabled={disabled}
           fieldTitle={t(ToolsetI18nKey.ClientRegistrationType)}
@@ -109,7 +109,7 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) => {
         />
 
         <DialSelectField
-          containerCssClass="w-[192px]"
+          containerClassName="w-[192px]"
           elementId="type"
           disabled={disabled}
           fieldTitle={t(EntityFieldsI18nKey.codeChallengeMethod)}

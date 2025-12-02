@@ -50,7 +50,7 @@ const PublicationPermissions: FC<Props> = ({ rules, folderId, showCompare }) => 
           setCompareRules(rule);
           setShowCompareButton(showCompare && !isEqualSkippingUndefined(rule, rules));
         } else {
-          showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage));
+          showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       });
 
@@ -66,7 +66,7 @@ const PublicationPermissions: FC<Props> = ({ rules, folderId, showCompare }) => 
         {showStructureButton && (
           <DialButton
             variant={ButtonVariant.Secondary}
-            title={t(ButtonsI18nKey.ReviewStructure)}
+            label={t(ButtonsI18nKey.ReviewStructure)}
             iconBefore={<IconBrandStackshare {...BASE_ICON_PROPS} />}
             onClick={() => setIsStructureModalOpen(true)}
           />
@@ -74,7 +74,7 @@ const PublicationPermissions: FC<Props> = ({ rules, folderId, showCompare }) => 
         {showCompareButton && (
           <DialButton
             variant={ButtonVariant.Secondary}
-            title={t(CompareI18nKey.CompareChanges)}
+            label={t(CompareI18nKey.CompareChanges)}
             iconBefore={<IconReplace {...BASE_ICON_PROPS} />}
             onClick={() => setIsCompareModalOpen(true)}
           />

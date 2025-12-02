@@ -23,7 +23,7 @@ interface Props<T> {
   view: ApplicationRoute;
   entity: T;
   existingVersions?: string[];
-  jsonEditorEnabled?: boolean;
+  isJsonEditorEnabled?: boolean;
   onDiscard: () => void;
   onSave: (newVersion?: string) => void;
 }
@@ -31,7 +31,7 @@ interface Props<T> {
 const ModifiedEntityButtons = <T extends object>({
   view,
   entity,
-  jsonEditorEnabled,
+  isJsonEditorEnabled,
   onDiscard,
   onSave,
   existingVersions,
@@ -45,7 +45,7 @@ const ModifiedEntityButtons = <T extends object>({
 
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
-  const [buttonsClassNames, setButtonsClassNames] = useState('');
+  const [buttonsClassName, setButtonsClassName] = useState('');
 
   const onTryToSave = useCallback(
     (newVersion?: string) => {
@@ -69,7 +69,7 @@ const ModifiedEntityButtons = <T extends object>({
   );
 
   useEffect(() => {
-    setButtonsClassNames(classNames(isTablet || isMobile ? 'w-1/2 flex justify-center' : ''));
+    setButtonsClassName(classNames((isTablet || isMobile) && 'w-1/2 flex justify-center'));
   }, [isTablet, isMobile]);
 
   return (
@@ -77,25 +77,25 @@ const ModifiedEntityButtons = <T extends object>({
       <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
         <DialButton
           variant={ButtonVariant.Secondary}
-          cssClass={buttonsClassNames}
-          title={t(ButtonsI18nKey.Discard)}
+          className={buttonsClassName}
+          label={t(ButtonsI18nKey.Discard)}
           onClick={onDiscard}
         />
         {isAssetWithVersion(view) && (
           <DialButton
             variant={ButtonVariant.Secondary}
-            cssClass={buttonsClassNames}
-            title={t(ButtonsI18nKey.SaveAsNewVersion)}
+            className={buttonsClassName}
+            label={t(ButtonsI18nKey.SaveAsNewVersion)}
             onClick={() => setIsModalOpen(true)}
-            disable={jsonEditorEnabled ? false : !isValid}
+            disabled={isJsonEditorEnabled ? false : !isValid}
           />
         )}
         <DialButton
           variant={ButtonVariant.Primary}
-          cssClass={buttonsClassNames}
-          title={t(ButtonsI18nKey.Save)}
+          className={buttonsClassName}
+          label={t(ButtonsI18nKey.Save)}
           onClick={() => onTryToSave()}
-          disable={jsonEditorEnabled ? false : !isValid}
+          disabled={isJsonEditorEnabled ? false : !isValid}
         />
       </div>
       {isModalOpen &&

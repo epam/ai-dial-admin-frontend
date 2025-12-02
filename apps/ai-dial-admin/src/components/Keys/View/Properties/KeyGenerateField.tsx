@@ -39,30 +39,30 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
     <div className="flex items-end">
       <div className="flex-1">
         <DialPasswordInputField
-          elementId={'key'}
+          elementId="key"
           fieldTitle={t(EntityFieldsI18nKey.keyValue)}
           placeholder={t(EntityPlaceholdersI18nKey.KeyValue)}
           value={selectedKey.key}
           errorText={keyError?.text}
           invalid={!!keyError}
           onChange={onChangeKeyValue}
-          elementCssClass="w-full"
+          elementClassName="w-full"
         />
       </div>
       {isKeyImmutable ? (
         <DialButton
           variant={ButtonVariant.Secondary}
-          cssClass="ml-2 h-[34px]"
+          className="ml-2 h-[34px]"
           iconBefore={<IconCopy {...BASE_ICON_PROPS} />}
-          title={t(ButtonsI18nKey.Copy)}
+          label={t(ButtonsI18nKey.Copy)}
           onClick={() => navigator.clipboard.writeText(selectedKey.key || '')}
         />
       ) : (
         <DialButton
           variant={ButtonVariant.Tertiary}
-          cssClass="ml-2 h-[34px]"
+          className="ml-2 h-[34px]"
           iconBefore={<IconSparkles />}
-          title={t(ButtonsI18nKey.Generate)}
+          label={t(ButtonsI18nKey.Generate)}
           onClick={onGenerateKey}
         />
       )}

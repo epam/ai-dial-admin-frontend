@@ -5,7 +5,7 @@ import Content from './Content';
 describe('Content', () => {
   test('renders children', () => {
     render(
-      <Content isEnableAuth={true} beVersion={'1.0.0'}>
+      <Content isEnableAuth={true} beVersion="1.0.0">
         <div>Test Content</div>
       </Content>,
     );
@@ -14,7 +14,7 @@ describe('Content', () => {
 
   test('renders with beVersion', () => {
     render(
-      <Content isEnableAuth={false} beVersion={'2.3.4'}>
+      <Content isEnableAuth={false} beVersion="2.3.4">
         <span>Versioned</span>
       </Content>,
     );

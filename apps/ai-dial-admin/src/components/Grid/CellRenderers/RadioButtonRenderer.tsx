@@ -13,7 +13,7 @@ const RadioButtonRenderer: FC<Props> = ({ inputId, isChecked }) => {
       <DialRadioButton
         name={inputId}
         value={inputId}
-        cssClass="w-[18px] h-[18px]"
+        className="w-[18px] h-[18px]"
         inputId={inputId}
         checked={isChecked}
       />

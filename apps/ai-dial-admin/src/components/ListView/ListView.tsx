@@ -59,7 +59,7 @@ const ListView = <T extends object>({
   };
 
   return (
-    <div className={classNames('flex flex-col bg-layer-2 rounded flex-1 min-h-0', title ? 'py-4 px-6' : '')}>
+    <div className={classNames('flex flex-col bg-layer-2 rounded flex-1 min-h-0', title && 'py-4 px-6')}>
       <div className="flex flex-row flex-wrap justify-between mb-4 items-center h-[38px]">
         {title && <h1>{title}</h1>}
         {children}
@@ -69,19 +69,19 @@ const ListView = <T extends object>({
           <DialCollapsibleSidebar
             width={320}
             title={title || ''}
-            containerCssClass="bg-layer-3 border-transparent mr-0"
+            containerClassName="bg-layer-3 border-transparent mr-0"
             iconSize={24}
             additionalButtons={
               <DialTooltip
-                triggerClassName={'flex items-center'}
+                triggerClassName="flex items-center"
                 tooltip={isCollapseDisable ? '' : t(FoldersI18nKey.CollapseAll)}
-                placement={'top'}
+                placement="top"
               >
                 <DialButton
-                  cssClass={isCollapseDisable ? 'text-controls-disable' : 'hover:text-icon-accent-primary'}
+                  className={isCollapseDisable ? 'text-controls-disable' : 'hover:text-icon-accent-primary'}
                   onClick={collapseFolders}
                   iconBefore={<FolderCollapse width={24} height={24} />}
-                  disable={isCollapseDisable}
+                  disabled={isCollapseDisable}
                 />
               </DialTooltip>
             }

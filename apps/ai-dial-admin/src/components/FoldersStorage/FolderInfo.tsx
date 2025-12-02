@@ -2,7 +2,6 @@
 
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import classNames from 'classnames';
 import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import { updateRules } from '@/src/app/[lang]/folders-storage/actions';
@@ -70,12 +69,10 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
     );
   }, [originalRules, editableRules, filePath]);
 
-  const containerClass = classNames('w-full h-full bg-layer-3 rounded p-4 flex flex-col gap-4');
-
   return !currentFolder ? (
     <DialNoDataContent title={t(EntitiesI18nKey.NoFolders)} />
   ) : (
-    <div className={containerClass}>
+    <div className="w-full h-full bg-layer-3 rounded p-4 flex flex-col gap-4">
       <FolderInfoHeader
         isChanged={isChanged}
         title={currentFolder?.name as string}

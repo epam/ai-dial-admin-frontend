@@ -16,22 +16,23 @@ interface Props {
   iframeUrl: string;
   name?: string;
   onMessage?: (event: MessageEvent) => void;
-  containerCss?: string;
-  jsonEditorEnabled?: boolean;
+  containerClassName?: string;
+  isJsonEditorEnabled?: boolean;
 }
 
 const FrameRenderer = forwardRef<HTMLDivElement, Props>(
-  ({ iframeUrl, name, onMessage, containerCss, jsonEditorEnabled }, ref: Ref<HTMLDivElement>) => {
+  ({ iframeUrl, name, onMessage, containerClassName, isJsonEditorEnabled }, ref: Ref<HTMLDivElement>) => {
     const { setVisualizerConnector } = useAppContext();
+
     const containerRef = useRef<HTMLDivElement>(null);
     const visualizerRef = useRef<VisualizerConnector>(null);
 
-    const [loading, setLoading] = useState<boolean>(true);
-    const [isEmptyData, setIsEmptyData] = useState<boolean>(false);
+    const [loading, setLoading] = useState(true);
+    const [isEmptyData, setIsEmptyData] = useState(false);
 
     useImperativeHandle(ref, () => containerRef.current as HTMLDivElement);
 
-    const containerClassNames = classNames(containerCss, 'relative h-full w-full');
+    const className = classNames(containerClassName, 'relative h-full w-full');
 
     const handleMessage = useCallback(
       (event: MessageEvent<VisualizerConnectorRequest>) => {
@@ -49,12 +50,12 @@ const FrameRenderer = forwardRef<HTMLDivElement, Props>(
       [onMessage, name],
     );
 
-    const sendMessage = useCallback(async (visualizer: VisualizerConnector, jsonEditorEnabled?: boolean) => {
+    const sendMessage = useCallback(async (visualizer: VisualizerConnector, isJsonEditorEnabled?: boolean) => {
       const messagePayload: DialAttachmentData = {
         mimeType: APPLICATION_JSON_TYPE,
         visualizerData: {
           layout: { width: 0, height: 0 },
-          jsonEditorEnabled,
+          jsonEditorEnabled: isJsonEditorEnabled,
         },
       };
       await visualizer.ready();
@@ -70,9 +71,6 @@ const FrameRenderer = forwardRef<HTMLDivElement, Props>(
           visualizerName: name || '',
         });
 
-        const iframe = (visualizerRef.current as unknown as { iframe: HTMLIFrameElement }).iframe;
-        iframe.sandbox.add('clipboard-write');
-
         setVisualizerConnector?.(visualizerRef.current);
 
         return () => {
@@ -84,7 +82,7 @@ const FrameRenderer = forwardRef<HTMLDivElement, Props>(
 
     useEffect(() => {
       if (!!visualizerRef.current && containerRef.current) {
-        sendMessage(visualizerRef.current, jsonEditorEnabled);
+        sendMessage(visualizerRef.current, isJsonEditorEnabled);
         const timeoutId = setTimeout(() => {
           if (loading) {
             setLoading(false);
@@ -94,7 +92,7 @@ const FrameRenderer = forwardRef<HTMLDivElement, Props>(
 
         return () => clearTimeout(timeoutId);
       }
-    }, [sendMessage, jsonEditorEnabled, loading]);
+    }, [sendMessage, isJsonEditorEnabled, loading]);
 
     useEffect(() => {
       window.addEventListener('message', handleMessage);
@@ -102,16 +100,16 @@ const FrameRenderer = forwardRef<HTMLDivElement, Props>(
     }, [handleMessage]);
 
     return (
-      <div className={'relative h-full w-full'}>
+      <div className="relative h-full w-full">
         {loading && (
           <div className="absolute inset-0 z-50 bg-layer-2">
             <DialLoader size={40} />
           </div>
         )}
         {isEmptyData ? (
-          <DialNoDataContent title={'Error loading application custom UI'} />
+          <DialNoDataContent title="Error loading application custom UI" />
         ) : (
-          <div ref={containerRef} className={containerClassNames} />
+          <div ref={containerRef} className={className} />
         )}
       </div>
     );

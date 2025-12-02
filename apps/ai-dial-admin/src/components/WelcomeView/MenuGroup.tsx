@@ -20,15 +20,18 @@ const iconColors: Record<string, string> = {
 
 const MenuGroup: FC<{ menuGroup: MenuGroupConfiguration }> = ({ menuGroup }) => {
   const t = useI18n();
-  const iconClasses = classNames(
-    'h-[64px] w-[64px] bg-layer-2 rounded-full flex items-center justify-center',
-    iconColors[menuGroup.key],
-  );
 
   return (
     <div className="p-4 flex flex-col bg-layer-3 flex-1 rounded h-[324px] md:min-w-[400px] lg:min-w-[520px] w-full">
       <div className="mb-3 flex flex-row gap-x-3 items-center">
-        <div className={iconClasses}>{menuGroup.icon}</div>
+        <div
+          className={classNames(
+            'h-[64px] w-[64px] bg-layer-2 rounded-full flex items-center justify-center',
+            iconColors[menuGroup.key],
+          )}
+        >
+          {menuGroup.icon}
+        </div>
         <h2>{t(menuGroup.key)}</h2>
       </div>
       <p className="small mb-3">{t(menuGroup.descriptionKey)}</p>

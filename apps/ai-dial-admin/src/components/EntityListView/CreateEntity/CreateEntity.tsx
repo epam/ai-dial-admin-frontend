@@ -103,7 +103,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
         router.push(`${initialValues ? '/' : ''}${originalRoute}/${getEntityPath(route, res.response || entity)}`);
         onClose();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [currentEntity, route, createEntity, folderContext, showNotification, t, router, initialValues, onClose]);

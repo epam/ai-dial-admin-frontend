@@ -80,8 +80,8 @@ const Files: FC<Props> = ({
         <h1>{t(ImportI18nKey.Files)}</h1>
         <DialButton
           variant={ButtonVariant.Primary}
-          title={t(ButtonsI18nKey.Next)}
-          disable={!isFilesValid}
+          label={t(ButtonsI18nKey.Next)}
+          disabled={!isFilesValid}
           iconAfter={<IconArrowNarrowRight {...BASE_ICON_PROPS} />}
           onClick={onNextStep}
         />
@@ -118,7 +118,7 @@ const Files: FC<Props> = ({
               multiple={false}
               fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
               fileCountError={t(ImportI18nKey.ArchiveDescription)}
-              iconBeforeInput={<DialFileIcon extension="zip" cssClass="text-secondary" />}
+              iconBeforeInput={<DialFileIcon extension="zip" className="text-secondary" />}
               acceptTypes=".zip, application/x-zip-compressed, application/zip"
               onChange={onChangeFile}
             />
@@ -130,7 +130,7 @@ const Files: FC<Props> = ({
               emptyTextSecondLine={t(BasicI18nKey.Or)}
               emptyButtonLabel={t(ButtonsI18nKey.Browse)}
               files={files}
-              iconBeforeInput={<DialFileIcon extension="json" cssClass="text-secondary" />}
+              iconBeforeInput={<DialFileIcon extension="json" className="text-secondary" />}
               acceptTypes="application/JSON"
               fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
               isInvalid={isLargeFile}

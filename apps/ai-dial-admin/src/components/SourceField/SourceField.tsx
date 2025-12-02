@@ -118,7 +118,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset>({
     <div className="flex flex-col gap-y-8">
       <DialSelectField
         elementId={elementId}
-        containerCssClass="w-[180px]"
+        containerClassName="w-[180px]"
         fieldTitle={fieldTitle}
         optional={optional}
         options={sourceItems}

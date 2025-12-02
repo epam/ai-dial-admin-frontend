@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButtonDropdown, DialTabs, DropdownItem, TabModel } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButtonDropdown, DialTabs, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
 
 import {
@@ -45,7 +45,7 @@ import { EntityViewTab, getAppRunnerTabs } from '@/src/utils/tabs/utils';
 import AppRunnerApplications from './ConfigurationView/Applications';
 import SchemeProperties from './ConfigurationView/Properties';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-import { getViewHeaderClassNames } from '@/src/utils/entities/view';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 
 interface Props {
   etag: string;
@@ -62,7 +62,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
 
-  const tabs: TabModel[] = getAppRunnerTabs(t);
+  const tabs = getAppRunnerTabs(t);
 
   const items: DropdownItem[] = [
     { key: 'Application', label: t(CreateI18nKey.Application), onClick: () => setIsCreateAppModalOpen(true) },
@@ -76,9 +76,9 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedRunner, setSelectedRunner] = useState(cloneDeep(originalScheme));
   const [isChanged, setIsChanged] = useState(false);
-  const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
+  const [isJsonEditorEnabled, setIsJsonEditorEnabled] = useState(false);
   const [key, setKey] = useState(0);
-  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
+  const [selectedFormat, setSelectedFormat] = useState(ExportFormat.ADMIN);
   const [coreRunner, setCoreRunner] = useState<DialApplicationScheme | null>(null);
   const [isCreateAppModalOpen, setIsCreateAppModalOpen] = useState(false);
   const [isCreateAssetAppModalOpen, setIsCreateAssetAppModalOpen] = useState(false);
@@ -114,7 +114,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
   );
 
   const onDiscard = useCallback(() => {
-    if (jsonEditorEnabled) {
+    if (isJsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
       setSelectedFormat(ExportFormat.ADMIN);
@@ -123,7 +123,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
       setKey((prevKey) => prevKey + 1);
     }
     setSelectedRunner(cloneDeep(originalScheme));
-  }, [jsonEditorEnabled, originalScheme, dispatch]);
+  }, [isJsonEditorEnabled, originalScheme, dispatch]);
 
   const onChangeScheme = useCallback(
     (entity: DialApplicationScheme) => {
@@ -132,11 +132,11 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
     [setSelectedRunner],
   );
 
-  const toggleJsonEditor = useCallback(() => {
+  const onToggleJsonEditor = useCallback(() => {
     setSelectedRunner(cloneDeep(originalScheme));
     setSelectedFormat(ExportFormat.ADMIN);
 
-    setJsonEditorEnabled((prev) => !prev);
+    setIsJsonEditorEnabled((prev) => !prev);
   }, [originalScheme]);
 
   const onSave = useCallback(() => {
@@ -156,15 +156,15 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
         );
         router.refresh();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [selectedFormat, selectedRunner, originalScheme.$id, etag, showNotification, t, router]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
-        {!jsonEditorEnabled && (
+      <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
+        {!isJsonEditorEnabled && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
           </div>
@@ -175,18 +175,17 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
           isChanged={isChanged}
           onDiscard={onDiscard}
           onSave={onSave}
-          removeEntity={removeApplicationScheme}
-          jsonEditorEnabled={jsonEditorEnabled}
-          toggleJsonEditor={toggleJsonEditor}
+          onRemove={removeApplicationScheme}
+          isJsonEditorEnabled={isJsonEditorEnabled}
+          onToggleJsonEditor={onToggleJsonEditor}
           selectedFormat={selectedFormat}
-          setSelectedFormat={setSelectedFormat}
-          childrenContainerClass={'flex-row-reverse'}
+          onChangeSelectedFormat={setSelectedFormat}
         >
-          <DialButtonDropdown title={t(ButtonsI18nKey.Create)} items={items} variant={ButtonVariant.Secondary} />
+          <DialButtonDropdown label={t(ButtonsI18nKey.Create)} items={items} variant={ButtonVariant.Secondary} />
         </HeaderButtons>
       </div>
       <div className="flex-1 overflow-auto min-h-0">
-        {jsonEditorEnabled ? (
+        {isJsonEditorEnabled ? (
           <EntityJsonEditor
             key={key}
             entity={selectedRunner}

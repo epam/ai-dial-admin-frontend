@@ -33,7 +33,7 @@ const TokenizedModelsGrid: FC<Props> = ({ onSelectModelId, selectedModel }) => {
         setData(res.response || []);
         setIsLoading(false);
       } else {
-        showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         setIsLoading(false);
       }
     });

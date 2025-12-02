@@ -21,7 +21,7 @@ function calculateOverallProgress(downloadDetails: FileDetails[]) {
 
 const DynamicNotification: FC<NotificationConfig> = ({ type, title, onClose, downloadDetails }) => {
   const Icon = NotificationIcons[type];
-  const iconClassNames = classNames('inline mx-2', NotificationIconColor[type]);
+  const iconClassName = classNames('inline mx-2', NotificationIconColor[type]);
 
   const [files, setFiles] = useState<FileDetails[] | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
@@ -48,8 +48,8 @@ const DynamicNotification: FC<NotificationConfig> = ({ type, title, onClose, dow
       <div className="flex flex-row w-full items-center [&:not(:only-child)]:mb-2 px-4">
         <div className="flex items-center relative w-full pr-5">
           <p className="small-text-semi truncate w-full">{title}</p>
-          <DialButton cssClass={iconClassNames} onClick={showDetails} iconBefore={Icon} />
-          <DialButton cssClass={'absolute right-0'} onClick={onClose} iconBefore={<IconX height={18} width={18} />} />
+          <DialButton className={iconClassName} onClick={showDetails} iconBefore={Icon} />
+          <DialButton className="absolute right-0" onClick={onClose} iconBefore={<IconX height={18} width={18} />} />
         </div>
       </div>
       {progress !== null && (

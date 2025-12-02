@@ -38,7 +38,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { EntityViewTab, getRoleTabs } from '@/src/utils/tabs/utils';
 import RoleProperties from './Properties';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-import { getViewHeaderClassNames } from '@/src/utils/entities/view';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 
 interface Props {
   originalRole: DialRole;
@@ -61,9 +61,9 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedRole, setSelectedRole] = useState(cloneDeep(originalRole));
   const [isChanged, setIsChanged] = useState(false);
-  const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
+  const [isJsonEditorEnabled, setIsJsonEditorEnabled] = useState(false);
   const [key, setKey] = useState(0);
-  const [isSkipRefresh, setIsSkipRefresh] = useState<boolean>(true);
+  const [isSkipRefresh, setIsSkipRefresh] = useState(true);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
   const [coreRole, setCoreRole] = useState<DialKey | null>(null);
   const entityRef = useRef(selectedRole);
@@ -101,7 +101,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
   );
 
   const onDiscard = useCallback(() => {
-    if (jsonEditorEnabled) {
+    if (isJsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
       setSelectedFormat(ExportFormat.ADMIN);
@@ -111,7 +111,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
     }
     setIsSkipRefresh(false);
     setSelectedRole(originalRole);
-  }, [jsonEditorEnabled, originalRole, dispatch]);
+  }, [isJsonEditorEnabled, originalRole, dispatch]);
 
   const onChangeRole = useCallback(
     (entity: DialRole, skipRefresh?: boolean) => {
@@ -121,10 +121,10 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
     [setSelectedRole],
   );
 
-  const toggleJsonEditor = useCallback(() => {
+  const onToggleJsonEditor = useCallback(() => {
     setSelectedFormat(ExportFormat.ADMIN);
-    setJsonEditorEnabled((prev) => !prev);
-  }, [setJsonEditorEnabled]);
+    setIsJsonEditorEnabled((prev) => !prev);
+  }, [setIsJsonEditorEnabled]);
 
   const onAddEntities = useCallback(
     (rows: EntitiesGridData[]) => {
@@ -198,7 +198,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
         );
         router.refresh();
       } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
   }, [selectedFormat, selectedRole, originalRole.name, etag, showNotification, t, router]);
@@ -252,8 +252,8 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
-        {!jsonEditorEnabled && (
+      <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
+        {!isJsonEditorEnabled && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
           </div>
@@ -264,15 +264,15 @@ const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications,
           isChanged={isChanged}
           onDiscard={onDiscard}
           onSave={onSave}
-          removeEntity={removeRole}
-          jsonEditorEnabled={jsonEditorEnabled}
-          toggleJsonEditor={toggleJsonEditor}
+          onRemove={removeRole}
+          isJsonEditorEnabled={isJsonEditorEnabled}
+          onToggleJsonEditor={onToggleJsonEditor}
           selectedFormat={selectedFormat}
-          setSelectedFormat={setSelectedFormat}
+          onChangeSelectedFormat={setSelectedFormat}
         />
       </div>
       <div className="flex-1 overflow-auto min-h-0">
-        {jsonEditorEnabled ? (
+        {isJsonEditorEnabled ? (
           <EntityJsonEditor
             key={key}
             entity={selectedRole}

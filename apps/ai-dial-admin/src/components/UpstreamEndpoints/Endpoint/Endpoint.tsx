@@ -100,7 +100,7 @@ const Endpoint: FC<Props> = ({
         {isTablet && (
           <div className="flex flex-col justify-center cursor-pointer" onClick={toggleCollapse}>
             <h3 className="small flex items-center">
-              <i className="text-icon-primary mr-2 ">
+              <i className="text-icon-primary mr-2">
                 {isCollapsed ? <IconChevronRight {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
               </i>
               {t(UpstreamEndpointsI18nKey.Upstream)} {index + 1}
@@ -120,9 +120,9 @@ const Endpoint: FC<Props> = ({
           <div className="lg:w-[560px]">
             <EndpointControl
               disabled={readonly}
-              id={'upstreamEndpoints ' + index}
+              id={`upstreamEndpoints-${index}`}
               endpoint={endpoint.endpoint}
-              elementCssClass="h-[38px]"
+              elementClassName="h-[38px]"
               placeholder={t(EntityPlaceholdersI18nKey.UpstreamEndpoint)}
               fieldTitle={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.Endpoints) : ''}
               onChange={onChangeEndPointUrl}
@@ -133,7 +133,7 @@ const Endpoint: FC<Props> = ({
 
           <DialPasswordInputField
             disabled={readonly}
-            elementId={'key ' + index}
+            elementId={`key-${index}`}
             value={endpoint.key}
             placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
             fieldTitle={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.Keys) : ''}
@@ -142,23 +142,23 @@ const Endpoint: FC<Props> = ({
           />
 
           <DialNumberInputField
-            elementId={'weight ' + index}
+            elementId={`weight-${index}`}
             disabled={readonly}
             value={endpoint.weight}
             fieldTitle={isFirstLine || isTablet ? t(EntityFieldsI18nKey.weight) : ''}
-            containerCssClass="w-[120px]"
-            elementCssClass="h-[38px]"
+            containerClassName="w-[120px]"
+            elementClassName="h-[38px]"
             placeholder={t(EntityPlaceholdersI18nKey.Weight)}
             onChange={onChangeWeight}
           />
 
           <DialNumberInputField
-            elementId={'tier ' + index}
+            elementId={`tier-${index}`}
             disabled={readonly}
             value={endpoint.tier}
             fieldTitle={isFirstLine || isTablet ? t(EntityFieldsI18nKey.tier) : ''}
-            containerCssClass="w-[120px]"
-            elementCssClass="h-[38px]"
+            containerClassName="w-[120px]"
+            elementClassName="h-[38px]"
             placeholder={t(EntityPlaceholdersI18nKey.Tier)}
             onChange={onChangeTier}
           />

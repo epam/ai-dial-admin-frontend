@@ -1,9 +1,9 @@
-import { ChatEntity, ModifiedEntity } from './base-entity';
+import { ChatEntity, EntityValidityState, ModifiedEntity } from './base-entity';
 import { DefaultsValue } from './defaults';
 import { DialRoute } from './route';
 import { DialScheme } from './scheme';
 
-export interface DialApplication extends ChatEntity {
+export interface DialApplication extends ChatEntity, EntityValidityState {
   customAppSchemaId?: string;
   viewerUrl?: string;
   editorUrl?: string;

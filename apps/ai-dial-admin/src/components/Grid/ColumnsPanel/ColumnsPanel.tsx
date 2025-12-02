@@ -2,7 +2,6 @@
 
 import { ButtonVariant, DialButton, DialCheckbox } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
-import classNames from 'classnames';
 import { FC, useCallback, useRef } from 'react';
 import { useDrop } from 'react-dnd';
 
@@ -14,7 +13,7 @@ import { useI18n } from '@/src/locales/client';
 interface Props {
   columns: ColDef[];
   showResetButton: boolean;
-  panelClassNames: string;
+  panelClassName: string;
   resetToDefault: () => void;
   toggleColumnsPanel?: () => void;
   toggleColumnVisibility: (id?: string) => void;
@@ -25,7 +24,7 @@ interface Props {
 const ColumnsPanel: FC<Props> = ({
   columns,
   showResetButton,
-  panelClassNames,
+  panelClassName,
   resetToDefault,
   toggleColumnsPanel,
   toggleColumnVisibility,
@@ -40,35 +39,32 @@ const ColumnsPanel: FC<Props> = ({
     [toggleColumnVisibility],
   );
 
-  const headerClassNames = classNames('flex flex-row justify-between py-4 px-6 items-center h-[70px]');
-  const bodyClassNames = classNames('flex-1 flex flex-col p-6 overflow-y-auto');
-
   const [, drop] = useDrop(() => ({ accept: 'column' }));
 
   drop(ref);
 
   return (
     <div
-      className={panelClassNames}
+      className={panelClassName}
       onClick={(e) => e.stopPropagation()}
-      role={'toolbar'}
+      role="toolbar"
       aria-label={t(ButtonsI18nKey.Columns)}
     >
-      <div className={headerClassNames}>
+      <div className="flex flex-row justify-between py-4 px-6 items-center h-[70px]">
         <h3 className="flex-1 min-w-0 mr-3">{t(ButtonsI18nKey.Columns)}</h3>
         <div className="flex">
           {showResetButton && (
             <DialButton
               variant={ButtonVariant.Tertiary}
-              cssClass="mr-4"
-              title={t(ButtonsI18nKey.ResetToDefault)}
+              className="mr-4"
+              label={t(ButtonsI18nKey.ResetToDefault)}
               onClick={resetToDefault}
             />
           )}
           {toggleColumnsPanel && <CloseButton onClose={toggleColumnsPanel} />}
         </div>
       </div>
-      <div ref={ref} className={bodyClassNames}>
+      <div ref={ref} className="flex-1 flex flex-col p-6 overflow-y-auto">
         <ul className="flex flex-col gap-4">
           {columns
             .filter((col) => !col.suppressColumnsToolPanel)

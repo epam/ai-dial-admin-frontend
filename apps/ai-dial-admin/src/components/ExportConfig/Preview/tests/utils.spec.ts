@@ -33,14 +33,14 @@ describe('Export Config Utils :: getPreviewTabs', () => {
     const { tabs, convertedData } = getPreviewTabs(data, true, ExportFormat.CORE, t);
 
     expect(tabs).toEqual([
-      { id: 'ROLE', name: 'translated(Menu.Roles): 1' },
-      { id: 'KEY', name: 'translated(Menu.Keys): 2' },
-      { id: 'MODEL', name: 'translated(Menu.Models): 1' },
-      { id: 'APPLICATION_TYPE_SCHEMA', name: 'translated(Menu.ApplicationRunners): 1' },
-      { id: 'APPLICATION', name: 'translated(Menu.Applications): 1' },
-      { id: 'PROMPT', name: 'translated(Menu.Prompts): 1' },
-      { id: 'ROUTE', name: 'translated(Menu.Routes): 1' },
-      { id: 'TOOL_SET', name: 'translated(Menu.Toolsets): 1' },
+      { id: 'ROLE', label: 'translated(Menu.Roles): 1' },
+      { id: 'KEY', label: 'translated(Menu.Keys): 2' },
+      { id: 'MODEL', label: 'translated(Menu.Models): 1' },
+      { id: 'APPLICATION_TYPE_SCHEMA', label: 'translated(Menu.ApplicationRunners): 1' },
+      { id: 'APPLICATION', label: 'translated(Menu.Applications): 1' },
+      { id: 'PROMPT', label: 'translated(Menu.Prompts): 1' },
+      { id: 'ROUTE', label: 'translated(Menu.Routes): 1' },
+      { id: 'TOOL_SET', label: 'translated(Menu.Toolsets): 1' },
     ]);
 
     expect(convertedData.ROLE).toHaveLength(1);
@@ -77,8 +77,8 @@ describe('Export Config Utils :: getPreviewTabs', () => {
     const { tabs, convertedData } = getPreviewTabs(data, false, ExportFormat.ADMIN, t);
 
     expect(tabs).toEqual([
-      { id: 'INTERCEPTOR', name: 'translated(Menu.Interceptors): 1' },
-      { id: 'FILE', name: 'translated(Menu.Files): 1' },
+      { id: 'INTERCEPTOR', label: 'translated(Menu.Interceptors): 1' },
+      { id: 'FILE', label: 'translated(Menu.Files): 1' },
     ]);
 
     expect(convertedData.INTERCEPTOR).toHaveLength(1);
@@ -92,7 +92,7 @@ describe('Export Config Utils :: getPreviewTabs', () => {
 
     const { tabs, convertedData } = getPreviewTabs(data, false, ExportFormat.ADMIN, t);
 
-    expect(tabs).toEqual([{ id: 'ADAPTER', name: 'translated(Menu.Adapters): 1' }]);
+    expect(tabs).toEqual([{ id: 'ADAPTER', label: 'translated(Menu.Adapters): 1' }]);
 
     expect(convertedData.ADAPTER).toEqual([{ id: 'adapter1' }]);
   });
@@ -113,8 +113,8 @@ describe('Export Config Utils :: getPreviewTabs', () => {
     const { tabs, convertedData } = getPreviewTabs(data, false, ExportFormat.ADMIN, t);
 
     expect(tabs).toEqual([
-      { id: 'APPLICATION', name: 'translated(Menu.Applications): 1' },
-      { id: 'ROUTE', name: 'translated(Menu.Routes): 1' },
+      { id: 'APPLICATION', label: 'translated(Menu.Applications): 1' },
+      { id: 'ROUTE', label: 'translated(Menu.Routes): 1' },
     ]);
   });
 });

@@ -25,7 +25,7 @@ export const WrapIfAdditionalTemplate: FC<WrapIfAdditionalTemplateProps> = ({
       <div className="flex flex-row gap-4">
         <div className="flex">
           <DialInput
-            containerCssClass={'flex w-full bg-layer-2'}
+            containerClassName="flex w-full bg-layer-2"
             elementId={id}
             disabled={disabled}
             readonly={readonly}
@@ -37,8 +37,8 @@ export const WrapIfAdditionalTemplate: FC<WrapIfAdditionalTemplateProps> = ({
         {!readonly && (
           <DialRemoveButton
             onClick={onDropPropertyClick(label)}
-            iconClass="text-error"
-            cssClass="border rounded border-primary justify-start p-2"
+            iconClassName="text-error"
+            className="border rounded border-primary justify-start p-2"
           />
         )}
       </div>

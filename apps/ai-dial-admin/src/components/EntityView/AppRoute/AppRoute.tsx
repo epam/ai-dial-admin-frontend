@@ -93,7 +93,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
   return (
     <>
       <div className="flex flex-row gap-4 h-full w-full">
-        <DialCollapsibleSidebar width={296} title={t(TabsI18nKey.Routes)} containerCssClass="bg-layer-3 mr-4">
+        <DialCollapsibleSidebar width={296} title={t(TabsI18nKey.Routes)} containerClassName="bg-layer-3 mr-4">
           <div className="h-full relative flex flex-col">
             <div className="flex flex-row flex-wrap justify-between items-center mb-6">
               <h1>{t(TabsI18nKey.Routes)}</h1>
@@ -101,7 +101,7 @@ const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunner
                 <DialButton
                   variant={ButtonVariant.Primary}
                   iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-                  title={t(ButtonsI18nKey.Add)}
+                  label={t(ButtonsI18nKey.Add)}
                   onClick={handleModalOpen}
                 />
               )}
