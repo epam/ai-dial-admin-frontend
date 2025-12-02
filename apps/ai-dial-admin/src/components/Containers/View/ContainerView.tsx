@@ -1,0 +1,266 @@
+'use client';
+
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
+import classNames from 'classnames';
+import { cloneDeep, isEqual } from 'lodash';
+import { useRouter } from 'next/navigation';
+import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
+import { Container, KubEvent } from '@/src/models/deployments/containers';
+import { Image } from '@/src/models/deployments/images';
+import { ApplicationRoute } from '@/src/types/routes';
+import { DialModel } from '@/src/models/dial/model';
+import { Toolset } from '@/src/models/dial/toolset';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { AssetToolset } from '@/src/models/dial/deployment-asset';
+import { useI18n } from '@/src/locales/client';
+import { useNotification } from '@/src/context/NotificationContext';
+import { useAppContext } from '@/src/context/AppContext';
+import { EntityViewTab, getDeploymentsViewTabs } from '@/src/utils/tabs/utils';
+import { JSONEditorError } from '@/src/types/editor';
+import { getContainer, updateContainer } from '@/src/app/actions/deployments';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { CONTAINER_STATUS, KubEventType } from '@/src/types/deployments/containers';
+import { ContainersI18nKey } from '@/src/constants/i18n';
+import { getTranslatedType } from '@/src/utils/deployments/entity';
+import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
+import HeaderButtons from '@/src/components/Containers/View/HeaderButtons';
+import Properties from '@/src/components/Containers/View/Properties/Properties';
+import Tools from '@/src/components/Containers/View/Tools/Tools';
+import Resources from '@/src/components/Containers/View/Resources/Resources';
+import Prompts from '@/src/components/Containers/View/Prompts/Prompts';
+import Metrics from '@/src/components/Containers/View/Metrics/Metrics';
+import ExecutionLog from '@/src/components/Containers/View/ExecutionLog/ExecutionLog';
+import Events from '@/src/components/Containers/View/Events/Events';
+import { BaseEntity } from '@/src/models/dial/base-entity';
+import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+
+interface Props {
+  container: Container;
+  image: Image;
+  route: ApplicationRoute;
+  names: string[];
+  createEntity: (entity: DialModel | Toolset | DialInterceptor) => Promise<ServerActionResponse>;
+  createEntityAsAsset?: (entity: AssetToolset) => Promise<ServerActionResponse>;
+  entityNames: string[];
+}
+
+const ContainerView: FC<Props> = ({
+  container,
+  route,
+  image,
+  names,
+  createEntity,
+  createEntityAsAsset,
+  entityNames,
+}) => {
+  const t = useI18n() as (key: string, param?: unknown) => string;
+  const router = useRouter();
+  const { showNotification } = useNotification();
+  const { disableDeploymentsJSONEditor } = useAppContext();
+
+  const [tabs, setTabs] = useState<TabModel[]>(
+    getDeploymentsViewTabs({ route, t, status: container.status, entityType: DEPLOYMENT_ENTITY.containers }),
+  );
+  const [selectedContainer, setSelectedContainer] = useState(cloneDeep(container));
+  const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
+  const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
+  const [isChanged, setIsChanged] = useState<boolean>(false);
+  const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
+  const [key, setKey] = useState(0);
+  const [events, setEvents] = useState<KubEvent[]>([]);
+
+  useEffect(() => {
+    setTabs(getDeploymentsViewTabs({ route, t, status: container.status, entityType: DEPLOYMENT_ENTITY.containers }));
+  }, [container.status, route, t]);
+
+  const headerClassName = classNames(
+    'flex flex-row min-h-[34px]',
+    jsonEditorEnabled ? 'justify-end' : 'justify-between',
+  );
+
+  const onChangeActiveTab = useCallback(
+    (tab: string) => {
+      if (tab !== activeTab) {
+        setActiveTab(tab as EntityViewTab);
+      }
+    },
+    [activeTab],
+  );
+
+  const toggleJsonEditor = useCallback(() => {
+    setJsonEditorEnabled((prev) => !prev);
+  }, [setJsonEditorEnabled]);
+
+  const onDiscard = useCallback(() => {
+    if (jsonEditorEnabled) {
+      setJsonErrors([]);
+      setIsChanged(false);
+      // TODO: Revisit solution
+      // Due to we can't set invalid JSON as variable, we can't update entity in error state.
+      // Force JSON Editor re-render to show originalEntity on discard.
+      setKey((prevKey) => prevKey + 1);
+    }
+    setSelectedContainer(cloneDeep(container));
+  }, [container, jsonEditorEnabled]);
+
+  const onSave = useCallback(() => {
+    updateContainer(selectedContainer).then((res) => {
+      if (res.success) {
+        router.refresh();
+      } else {
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+      }
+    });
+  }, [router, selectedContainer, showNotification]);
+
+  useEffect(() => {
+    setSelectedContainer(cloneDeep(container));
+  }, [container]);
+
+  useEffect(() => {
+    const { status: __status, url: __URL, ...compareContainer } = container;
+    const { status: __selectedStatus, url: __selectedURL, ...compareSelectedContainer } = selectedContainer;
+    setIsChanged(!isEqual(compareContainer, compareSelectedContainer));
+  }, [container, selectedContainer]);
+
+  useEffect(() => {
+    if (selectedContainer.id) {
+      const eventSource = new EventSource(`/api/events?id=${selectedContainer.id}`);
+
+      eventSource.addEventListener('event', (event) => {
+        const data = JSON.parse(event.data) as KubEvent;
+        if (data.eventType === KubEventType.WARNING) {
+          setTabs((prev) => {
+            return prev.map((tab) => {
+              if (tab.id === EntityViewTab.Events) {
+                return { ...tab, invalid: true };
+              }
+              return tab;
+            });
+          });
+        }
+        setEvents((prev) => [...prev, data]);
+      });
+
+      return () => {
+        eventSource.close();
+      };
+    }
+  }, [selectedContainer.id]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+
+    if (selectedContainer.status === CONTAINER_STATUS.PENDING) {
+      interval = setInterval(async () => {
+        const { response, success, requestId } = await getContainer(selectedContainer.id as string);
+        if (success && response) {
+          const updatedContainer = response as Container;
+          setSelectedContainer((prev) => ({
+            ...prev,
+            status: updatedContainer.status,
+          }));
+          if (updatedContainer.status !== CONTAINER_STATUS.PENDING && interval) {
+            clearInterval(interval);
+
+            if (updatedContainer.status === CONTAINER_STATUS.RUNNING) {
+              showNotification(
+                getSuccessNotification(
+                  t(ContainersI18nKey.ContainerRunSuccess, { type: getTranslatedType(route, t) }),
+                  t(ContainersI18nKey.ContainerSuccessDescription),
+                  5000,
+                ),
+              );
+            }
+            if (updatedContainer.status === CONTAINER_STATUS.FAILED) {
+              showNotification(
+                getErrorNotification(
+                  t(ContainersI18nKey.ContainerRunFailed, { type: getTranslatedType(route, t) }),
+                  '',
+                  requestId,
+                  5000,
+                ),
+              );
+            }
+            router.refresh();
+          }
+        }
+      }, IMAGE_BUILD_POLL_INTERVAL);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [selectedContainer, route, t, showNotification, router]);
+
+  useEffect(() => {
+    if (tabs.find((tab) => tab.id === activeTab)?.disabled) {
+      setActiveTab(tabs[0].id as EntityViewTab);
+    }
+  }, [activeTab, tabs]);
+
+  return (
+    <>
+      <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
+        <div className={headerClassName}>
+          {!jsonEditorEnabled && (
+            <div className="flex-1 min-h-0 relative">
+              <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+            </div>
+          )}
+          <HeaderButtons
+            route={route}
+            container={selectedContainer}
+            isChanged={isChanged}
+            onSave={onSave}
+            onDiscard={onDiscard}
+            jsonEditorEnabled={jsonEditorEnabled}
+            toggleJsonEditor={toggleJsonEditor}
+            jsonErrors={jsonErrors}
+            hideJsonEditor={disableDeploymentsJSONEditor}
+            names={names}
+            createEntity={createEntity}
+            createEntityAsAsset={createEntityAsAsset}
+            entityNames={entityNames}
+            transport={container.transport}
+          />
+        </div>
+        <div className="flex-1 overflow-auto my-3 min-h-0 py-4">
+          {jsonEditorEnabled ? (
+            <>
+              <EntityJsonEditor
+                key={key}
+                entity={selectedContainer as BaseEntity}
+                setSelectedEntity={setSelectedContainer as Dispatch<SetStateAction<BaseEntity>>}
+                setIsChanged={setIsChanged}
+              />
+            </>
+          ) : (
+            <>
+              {activeTab === EntityViewTab.Properties && (
+                <Properties
+                  container={selectedContainer}
+                  setContainer={setSelectedContainer}
+                  image={image}
+                  route={route}
+                  names={names}
+                  originalName={container.name}
+                />
+              )}
+              {activeTab === EntityViewTab.Tools && <Tools containerId={selectedContainer.id} />}
+              {activeTab === EntityViewTab.Resources && <Resources containerId={selectedContainer.id} />}
+              {activeTab === EntityViewTab.Prompts && <Prompts containerId={selectedContainer.id} />}
+              {activeTab === EntityViewTab.Metrics && <Metrics />}
+              {activeTab === EntityViewTab.ExecutionLog && <ExecutionLog containerId={selectedContainer.id} />}
+              {activeTab === EntityViewTab.Events && <Events route={route} events={events} />}
+            </>
+          )}
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default ContainerView;

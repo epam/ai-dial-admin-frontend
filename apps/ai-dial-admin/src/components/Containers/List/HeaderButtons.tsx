@@ -1,0 +1,103 @@
+'use client';
+
+import { FC, MouseEvent, useCallback, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { IconColumns2, IconPlus } from '@tabler/icons-react';
+import { GridApi } from 'ag-grid-community';
+import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ApplicationRoute } from '@/src/types/routes';
+import { useI18n } from '@/src/locales/client';
+import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
+import { useNotification } from '@/src/context/NotificationContext';
+import { Container } from '@/src/models/deployments/containers';
+import { createContainer } from '@/src/app/actions/deployments';
+import { getErrorNotification } from '@/src/utils/notification';
+import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/ResetFiltersButton';
+import { ButtonsI18nKey, ContainersI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import CreateContainer from '@/src/components/Containers/Modals/CreateContainer';
+import { getTranslatedType } from '@/src/utils/deployments/entity';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { useRouter } from 'next/navigation';
+
+interface Props {
+  toggleColumnsPanel: () => void;
+  route: ApplicationRoute;
+  names: string[];
+  gridApi?: GridApi | null;
+}
+
+const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, names, gridApi }) => {
+  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const router = useRouter();
+  const isTabletScreen = useIsTabletScreen();
+  const { showNotification } = useNotification();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleModalClose = useCallback(() => {
+    setIsModalOpen(false);
+  }, []);
+
+  const handleModalOpen = useCallback(() => {
+    setIsModalOpen(true);
+  }, []);
+
+  const onCreateContainer = useCallback(
+    (container: Container) => {
+      createContainer(container).then((res) => {
+        if (res.success) {
+          router.push(getUrnForEntity(route, res.response, DEPLOYMENT_ENTITY.containers));
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        }
+      });
+    },
+    [route, router, showNotification],
+  );
+
+  const onToggleColumnsPanel = useCallback(
+    (e: MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+
+      toggleColumnsPanel();
+    },
+    [toggleColumnsPanel],
+  );
+
+  return (
+    <>
+      <div className="flex gap-4">
+        <ResetFiltersButton gridApi={gridApi} />
+        <DialButton
+          variant={ButtonVariant.Tertiary}
+          label={t(ButtonsI18nKey.Columns)}
+          iconBefore={<IconColumns2 {...BASE_ICON_PROPS} />}
+          onClick={onToggleColumnsPanel}
+        />
+        <DialButton
+          variant={ButtonVariant.Primary}
+          label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}
+          iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+          onClick={() => handleModalOpen()}
+        />
+      </div>
+
+      {isModalOpen &&
+        createPortal(
+          <CreateContainer
+            isModalOpen={isModalOpen}
+            modalTitle={t(ContainersI18nKey.CreateModalTitle, { type: getTranslatedType(route, t) })}
+            onClose={handleModalClose}
+            onApply={onCreateContainer}
+            route={route}
+            names={names}
+          />,
+          document.body,
+        )}
+    </>
+  );
+};
+
+export default HeaderButtons;

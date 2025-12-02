@@ -20,6 +20,7 @@ import { isAssetView } from '@/src/utils/is-asset-view';
 interface Props<T> {
   emptyDataTitle: string;
   title?: string;
+  emptyDataDescription?: string;
   children?: ReactNode;
   data?: T[];
   columnDefs: ColDef[];
@@ -35,6 +36,7 @@ interface Props<T> {
 
 const ListView = <T extends object>({
   emptyDataTitle,
+  emptyDataDescription,
   title,
   data,
   columnDefs,
@@ -97,6 +99,7 @@ const ListView = <T extends object>({
             data={data}
             additionalGridOptions={{ ...additionalGridOptions }}
             emptyDataTitle={emptyDataTitle}
+            emptyDataDescription={emptyDataDescription}
             showColumnsPanel={showColumnsPanel}
             toggleColumnsPanel={toggleColumnsPanel}
             storageKey={storageKey || view}

@@ -16,6 +16,9 @@ import { ToolsetsApi } from '@/src/server/entities/toolsets-api';
 import { TelemetryApi } from '@/src/server/telemetry-api';
 import { ThemesApi } from '@/src/server/themes-api';
 import { UtilityApi } from '@/src/server/utility-api';
+import { ImagesApi } from '@/src/server/deployments/images';
+import { ContainersApi } from '@/src/server/deployments/containers';
+import { TopicApi } from '@/src/server/deployments/topics';
 
 export const modelsApi = new ModelsApi({
   host: process.env.DIAL_ADMIN_API_URL,
@@ -85,4 +88,16 @@ export const toolSetsApi = new ToolsetsApi({
 
 export const assetsApi = new AssetsApi({
   host: process.env.DIAL_ADMIN_API_URL,
+});
+
+export const containersApi = new ContainersApi({
+  host: process.env.DIAL_DEPLOYMENTS_API_URL,
+});
+
+export const imagesApi = new ImagesApi({
+  host: process.env.DIAL_DEPLOYMENTS_API_URL,
+});
+
+export const topicApi = new TopicApi({
+  host: process.env.DIAL_DEPLOYMENTS_API_URL,
 });

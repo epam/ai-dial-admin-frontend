@@ -23,6 +23,7 @@ import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getMenuItems } from '@/src/utils/env/get-menu-items';
 import { PromptFolderProvider } from '@/src/context/assets/PromptFolderContext';
+import { ResourcesDefaults } from '@/src/models/deployments/containers';
 
 export default async function Layout({ children, params }: { children: ReactNode; params: Promise<{ lang: string }> }) {
   const { lang } = await params;
@@ -50,6 +51,8 @@ export default async function Layout({ children, params }: { children: ReactNode
         themeUrl={process.env.THEMES_CONFIG_URL}
         featureFlags={featureFlags}
         embeddedApps={embeddedApps}
+        disableDeploymentsJSONEditor={process.env.DEPLOYMENTS_DISABLE_JSON_EDITOR === 'true'}
+        resourcesDefaults={JSON.parse(process.env.DEPLOYMENTS_RESOURCES_DEFAULTS || '{}') as ResourcesDefaults}
       >
         <ThemeProvider themesConfiguration={themesConfiguration} themeImages={themesImages}>
           <RuleFolderProvider attributes={process.env.PUBLICATION_FILTERS || 'title,role,dial_roles'}>

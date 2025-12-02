@@ -6,6 +6,13 @@ import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { getModelContainers, getModelImages } from '@/src/app/actions/deployments';
+import Page403 from '@/src/components/Page403/Page403';
+import { Image } from '@/src/models/deployments/images';
+import { Container } from '@/src/models/deployments/containers';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import DeploymentsEntityListView from '@/src/components/Common/DeploymentsEntityListView/DeploymentsEntityListView';
+import { ApplicationRoute } from '@/src/types/routes';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +23,27 @@ export default async function Page() {
 
   if (isInvalidSession) {
     return redirect(SIGN_IN_LINK);
+  }
+
+  if (process.env.DEPLOYMENTS_PLUGIN_ENABLED !== 'true') {
+    const imagesResponse = await getModelImages();
+    const containersResponse = await getModelContainers();
+
+    if (!imagesResponse.success || !containersResponse.success) {
+      if (imagesResponse.status === 403 || containersResponse.status === 403) {
+        return <Page403 />;
+      }
+      return null;
+    }
+
+    const images = imagesResponse.response as Image[];
+    const containers = containersResponse.response as Container[];
+
+    return (
+      <SaveValidationContextProvider>
+        <DeploymentsEntityListView route={ApplicationRoute.ModelDeployments} images={images} containers={containers} />
+      </SaveValidationContextProvider>
+    );
   }
 
   return <PluginView slug={'model-deployments'} />;

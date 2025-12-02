@@ -5,6 +5,8 @@ import {
   IconEye,
   IconFolderShare,
   IconInfinity,
+  IconPlayerPause,
+  IconPlayerPlay,
   IconRefresh,
   IconReload,
   IconReplace,
@@ -17,6 +19,7 @@ import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 import { ActionMenuOperation } from '@/src/types/action-menu-operations';
+import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 
 export function getResourceRollbackOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
   return {
@@ -137,3 +140,61 @@ export function getCompareChangesOperation<T>(onClick: (entity?: T) => void): Ac
     onClick,
   };
 }
+/*
+export function getDeleteOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
+  return {
+    icon: <IconTrashX {...BASE_ICON_PROPS} />,
+    id: ActionMenuOperation.Delete,
+    onClick,
+  };
+}*/
+
+export function getDeployOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
+  return {
+    icon: <IconPlayerPlay {...BASE_ICON_PROPS} />,
+    id: ActionMenuOperation.Run,
+    onClick,
+    hidden: (_: GridApi, node: IRowNode) => {
+      return (
+        node.data.status === CONTAINER_STATUS.RUNNING ||
+        node.data.status === CONTAINER_STATUS.PENDING ||
+        node.data.status === CONTAINER_STATUS.FAILED
+      );
+    },
+  };
+}
+
+export function getStopOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
+  return {
+    icon: <IconPlayerPause {...BASE_ICON_PROPS} />,
+    id: ActionMenuOperation.Stop,
+    onClick,
+    hidden: (_: GridApi, node: IRowNode) => {
+      return (
+        node.data.status !== CONTAINER_STATUS.RUNNING &&
+        node.data.status !== CONTAINER_STATUS.PENDING &&
+        node.data.status !== CONTAINER_STATUS.FAILED
+      );
+    },
+  };
+}
+
+/*export function getDuplicateOperation<T>(onClick: (entity: T) => void): ActionMenuOperationDeclaration<T> {
+  return {
+    icon: <IconCopy {...BASE_ICON_PROPS} />,
+    id: ActionMenuOperation.Duplicate,
+    onClick,
+  };
+}
+
+export function getOpenInNewTabOperation<T>(
+  onClick: (entity: T) => void,
+  hidden?: (api: GridApi, node: IRowNode) => boolean,
+): ActionMenuOperationDeclaration<T> {
+  return {
+    icon: <IconExternalLink {...BASE_ICON_PROPS} />,
+    id: ActionMenuOperation.Open_in_new_tab,
+    onClick,
+    hidden,
+  };
+}*/

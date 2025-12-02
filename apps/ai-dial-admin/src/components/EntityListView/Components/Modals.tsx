@@ -28,6 +28,12 @@ export enum ModalType {
   move = 'move',
   addVersion = 'add-version',
   compareVersions = 'compare-versions',
+  createAsset = 'createAsset',
+  createEntity = 'createEntity',
+  build = 'build',
+  saveNewVersion = 'saveNewVersion',
+  createNewVersion = 'createNewVersion',
+  install = 'install',
 }
 
 interface Props {

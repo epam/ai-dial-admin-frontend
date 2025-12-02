@@ -83,6 +83,28 @@ export enum BasicI18nKey {
   Disabled = 'Basic.Disabled',
   Yes = 'Basic.Yes',
   No = 'Basic.No',
+  ID = 'Basic.ID',
+  Name = 'Basic.Name',
+  Description = 'Basic.Description',
+  Settings = 'Basic.Settings',
+  Theme = 'Basic.Theme',
+  Browse = 'Basic.Browse',
+  Move = 'Basic.Move',
+  SaveChangesTitle = 'Basic.SaveChangesTitle',
+  SaveChangesDescription = 'Basic.SaveChangesDescription',
+  SaveParametersTitle = 'Basic.SaveParametersTitle',
+  SaveParametersDescription = 'Basic.SaveParametersDescription',
+  Source = 'Basic.Source',
+  DuplicateCopy = 'Basic.DuplicateCopy',
+  Arguments = 'Basic.Arguments',
+  URL = 'Basic.URL',
+  CreateTime = 'Basic.CreateTime',
+  UpdatedTime = 'Basic.UpdatedTime',
+  Type = 'Basic.Type',
+  Status = 'Basic.Status',
+  Maintainer = 'Basic.Maintainer',
+  Version = 'Basic.Version',
+  NewVersion = 'Basic.NewVersion',
 }
 
 export enum EntitiesI18nKey {
@@ -148,6 +170,19 @@ export enum EntitiesI18nKey {
   NewEntity = 'Entities.NewEntity',
   DuplicationType = 'Entities.DuplicationType',
   ToolsetEndpoint = 'Entities.ToolsetEndpoint',
+  Interceptor = 'Entities.Interceptor',
+  MCP = 'Entities.MCP',
+  Model = 'Entities.Model',
+  Toolset = 'Entities.Toolset',
+  AssetToolset = 'Entities.AssetToolset',
+  CreatedSuccessfully = 'Entities.CreatedSuccessfully',
+  NoImages = 'NoData.NoImages',
+  NoContainersType = 'NoData.NoContainers',
+  NoRelatedContainers = 'NoData.NoRelatedContainers',
+  NoRelatedContainersDescription = 'NoData.NoRelatedContainersDescription',
+  NoContainerLogs = 'NoData.NoContainerLogs',
+  NoResources = 'NoData.NoResources',
+  NoEvents = 'NoData.NoEvents',
 }
 
 export enum DeleteI18nKey {
@@ -255,6 +290,15 @@ export enum ButtonsI18nKey {
   None = 'Buttons.None',
   BulkActions = 'Buttons.BulkActions',
   AddAdditionalProperties = 'Buttons.AddAdditionalProperties',
+  Build = 'Buttons.Build',
+  Deploy = 'Buttons.Deploy',
+  Stop = 'Buttons.Stop',
+  Install = 'Buttons.Install',
+  Run = 'Buttons.Run',
+  CreateContainer = 'Buttons.CreateContainer',
+  CreateEntity = 'Buttons.CreateEntity',
+  CreateEntityAsAsset = 'Buttons.CreateEntityAsAsset',
+  AddPort = 'Buttons.AddPort',
 }
 
 export enum UpdateI18nKey {
@@ -414,6 +458,8 @@ export enum FeaturesI18nKey {
 
 export enum TopicsI18nKey {
   AddTopic = 'Topics.AddTopic',
+  Topics = 'Topics.Topics',
+  AddTopicPlaceholder = 'Topics.AddTopicPlaceholder',
 }
 
 export enum TabsI18nKey {
@@ -438,6 +484,16 @@ export enum TabsI18nKey {
   Tools = 'Tabs.Tools',
   ParameterSchema = 'Tabs.ParameterSchema',
   ApplicationRunners = 'Tabs.ApplicationRunners',
+  BuildLog = 'Tabs.BuildLog',
+  Instances = 'Tabs.Instances',
+  Resources = 'Tabs.Resources',
+  Prompts = 'Tabs.Prompts',
+  Metrics = 'Tabs.Metrics',
+  ExecutionLog = 'Tabs.ExecutionLog',
+  Images = 'Tabs.Images',
+  Containers = 'Tabs.Containers',
+  RelatedContainers = 'Tabs.RelatedContainers',
+  Events = 'Tabs.Events',
 }
 
 export enum InterceptorsI18nKey {
@@ -746,6 +802,14 @@ export enum ErrorI18nKey {
   EditorErrorLine = 'Error.EditorErrorLine',
   MaxNumberError = 'Error.MaxNumberError',
   CommentError = 'Error.CommentError',
+  NotSemanticVersion = 'Error.NotSemanticVersion',
+  NameError = 'Error.Name',
+  URLError = 'Error.URL',
+  CpuError = 'Error.CpuError',
+  ImageSourceURI = 'Error.ImageSourceURI',
+  PathError = 'Error.PathError',
+  VariableError = 'Error.VariableError',
+  VariableStartError = 'Error.VariableStartError',
 }
 
 export enum SourceI18nKey {
@@ -823,6 +887,15 @@ export enum EntityPlaceholdersI18nKey {
   Hour = 'EntityPlaceholders.Hour',
   Object = 'EntityPlaceholders.Object',
   Header = 'EntityPlaceholders.Header',
+  Name = 'EntityPlaceholders.Name',
+  URL = 'EntityPlaceholders.URL',
+  URI = 'EntityPlaceholders.URI',
+  Branch = 'EntityPlaceholders.Branch',
+  SHA = 'EntityPlaceholders.SHA',
+  Search = 'EntityPlaceholders.Search',
+  BaseDirectory = 'EntityPlaceholders.BaseDirectory',
+  ContainerPort = 'EntityPlaceholders.ContainerPort',
+  ContainerEndpointPath = 'EntityPlaceholders.ContainerEndpointPath',
 }
 
 export enum EntityFieldsI18nKey {
@@ -952,6 +1025,28 @@ export enum EntityFieldsI18nKey {
   new_key = 'EntityFields.new_key',
   applicationProperties = 'EntityFields.applicationProperties',
   applicationTypeSchemas = 'EntityFields.applicationTypeSchemas',
+  SourceURL = 'EntityFields.SourceURL',
+  ImageURI = 'EntityFields.ImageURI',
+  BranchName = 'EntityFields.BranchName',
+  SHA = 'EntityFields.SHA',
+  BaseDirectory = 'EntityFields.BaseDirectory',
+  CPURequest = 'EntityFields.CPURequest',
+  CPULimit = 'EntityFields.CPULimit',
+  MemoryRequest = 'EntityFields.MemoryRequest',
+  MemoryLimit = 'EntityFields.MemoryLimit',
+  GPURequest = 'EntityFields.GPURequest',
+  GPULimit = 'EntityFields.GPULimit',
+  Id = 'EntityFields.Id',
+  Description = 'EntityFields.Description',
+  Version = 'EntityFields.Version',
+  DisplayName = 'EntityFields.DisplayName',
+  ContainerPorts = 'EntityFields.ContainerPorts',
+  ContainerEndpointPath = 'EntityFields.ContainerEndpointPath',
+  StorageFolder = 'EntityFields.StorageFolder',
+  TransportType = 'EntityFields.TransportType',
+  Transport = 'EntityFields.Transport',
+  Port = 'EntityFields.Port',
+  GRPCPort = 'EntityFields.GRPCPort',
 }
 
 export enum ToolsetI18nKey {
@@ -984,4 +1079,77 @@ export enum ToolsetI18nKey {
   SuccessLoginDescription = 'Toolset.SuccessLoginDescription',
   SuccessLogout = 'Toolset.SuccessLogout',
   SuccessLogoutDescription = 'Toolset.SuccessLogoutDescription',
+}
+
+export enum ImagesI18nKey {
+  ImagesListTitle = 'Images.ImagesListTitle',
+  AddModalTitle = 'Images.AddModalTitle',
+  DuplicateModalTitle = 'Images.DuplicateModalTitle',
+  DeleteModalTitle = 'Images.DeleteModalTitle',
+  DeleteModalDescription = 'Images.DeleteModalDescription',
+  DeleteModalDependency = 'Images.DeleteModalDependency',
+  InstallModalTitle = 'Images.InstallModalTitle',
+  InstallModalDescription = 'Images.InstallModalDescription',
+  SaveNewVersionModalTitle = 'Images.SaveNewVersionModalTitle',
+  CreateNewVersionModalTitle = 'Images.CreateNewVersionModalTitle',
+  ModalRelatedContainers = 'Images.ModalRelatedContainers',
+  Installed = 'Images.Installed',
+  Installing = 'Images.Installing',
+  NotInstalled = 'Images.NotInstalled',
+  InstallationFailed = 'Images.InstallationFailed',
+  SourceCode = 'Images.SourceCode',
+  SourceDocker = 'Images.SourceDocker',
+  Image = 'Images.Image',
+  ImagesInstalling = 'Images.ImagesInstalling',
+  ImagesInstallingSuccess = 'Images.ImagesInstallingSuccess',
+  ImagesInstallingSuccessDescription = 'Images.ImagesInstallingSuccessDescription',
+  ImagesInstallingFailed = 'Images.ImagesInstallingFailed',
+  NewImage = 'Images.NewImage',
+  ImagesUpdateSuccess = 'Images.ImagesUpdateSuccess',
+  ImagesUpdateSuccessDescription = 'Images.ImagesUpdateSuccessDescription',
+  ImagesSaveSuccess = 'Images.ImagesSaveSuccess',
+  ImagesSaveSuccessDescription = 'Images.ImagesSaveSuccessDescription',
+}
+
+export enum ContainersI18nKey {
+  ContainersListTitle = 'Containers.ContainersListTitle',
+  RelatedContainersListTitle = 'Containers.RelatedContainersListTitle',
+  CreateModalTitle = 'Containers.CreateModalTitle',
+  AddModalTitle = 'Containers.AddModalTitle',
+  DuplicateModalTitle = 'Containers.DuplicateModalTitle',
+  DeleteModalTitle = 'Containers.DeleteModalTitle',
+  DeleteModalDescription = 'Containers.DeleteModalDescription',
+  Container = 'Containers.Container',
+  InputSchema = 'Containers.InputSchema',
+  Annotations = 'Containers.Annotations',
+  ContainerImage = 'Containers.ContainerImage',
+  ContainerProperties = 'Containers.ContainerProperties',
+  Running = 'Containers.Running',
+  NotRunning = 'Containers.NotRunning',
+  Preparing = 'Containers.Preparing',
+  Failed = 'Containers.Failed',
+  Stopped = 'Containers.Stopped',
+  ContainerRunSuccess = 'Containers.ContainerRunSuccess',
+  ContainerRunFailed = 'Containers.ContainerRunFailed',
+  ContainerStopSuccess = 'Containers.ContainerStopSuccess',
+  ContainerSuccessDescription = 'Containers.ContainerSuccessDescription',
+  Pod = 'Containers.Pod',
+}
+
+export enum KubEventsI18nKey {
+  Normal = 'KubEvents.Normal',
+  Warning = 'KubEvents.Warning',
+}
+
+export enum EnvVariablesI18nKey {
+  EnvVariable = 'EnvVariables.EnvVariable',
+  Name = 'EnvVariables.Name',
+  Description = 'EnvVariables.Description',
+  Value = 'EnvVariables.Value',
+  MountType = 'EnvVariables.MountType',
+  Required = 'EnvVariables.Required',
+  AddVariable = 'EnvVariables.AddVariable',
+  MountTypeContent = 'EnvVariables.MountTypeContent',
+  MountTypeSecureFile = 'EnvVariables.MountTypeSecureFile',
+  MountTypeSecureContent = 'EnvVariables.MountTypeSecureContent',
 }

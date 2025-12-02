@@ -1,0 +1,50 @@
+import { FC } from 'react';
+import classNames from 'classnames';
+import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
+import { BasicI18nKey, ButtonsI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
+import { Image } from '@/src/models/deployments/images';
+import { useI18n } from '@/src/locales/client';
+
+interface Props {
+  isModalOpen: boolean;
+  title: string;
+  onClose: () => void;
+  onApply: (image: Image) => void;
+  image: Image;
+}
+
+const Install: FC<Props> = ({ isModalOpen, title, onClose, onApply, image }) => {
+  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+
+  const containerClassName = classNames('flex flex-col w-full md:max-w-[400px] lg:max-w-[400pxs]');
+
+  return (
+    <DialPopup
+      onClose={onClose}
+      title={title}
+      portalId="BuildImageModal"
+      open={isModalOpen}
+      cssClass={containerClassName}
+    >
+      <div className="flex flex-col h-full overflow-auto px-6 py-4 gap-2">
+        <p className="text-secondary small-150">{t(ImagesI18nKey.InstallModalDescription)}</p>
+        <p className="text-secondary small-150">
+          {t(BasicI18nKey.Version)}:<span className="text-primary ml-1">{image.version}</span>
+        </p>
+      </div>
+      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
+        <DialButton variant={ButtonVariant.Secondary} label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
+        <DialButton
+          variant={ButtonVariant.Primary}
+          label={t(ButtonsI18nKey.Install)}
+          onClick={() => {
+            onApply(image);
+            onClose();
+          }}
+        />
+      </div>
+    </DialPopup>
+  );
+};
+
+export default Install;
