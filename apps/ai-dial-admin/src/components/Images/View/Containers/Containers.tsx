@@ -81,7 +81,7 @@ const Containers: FC<Props> = ({ image, route, versions }) => {
   }, [image, showNotification]);
 
   return (
-    <>
+    <div className="flex h-full">
       <ListView
         data={containers}
         view={route}
@@ -117,7 +117,7 @@ const Containers: FC<Props> = ({ image, route, versions }) => {
           />,
           document.body,
         )}
-    </>
+    </div>
   );
 };
 

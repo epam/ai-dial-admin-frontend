@@ -38,7 +38,7 @@ describe('entity utils', () => {
       expect(getTranslatedEntity(ApplicationRoute.McpDeployments, t)).toBe(EntitiesI18nKey.Toolset);
     });
     test('returns Interceptor for Interceptors', () => {
-      expect(getTranslatedEntity(ApplicationRoute.Interceptors, t)).toBe(EntitiesI18nKey.Interceptor);
+      expect(getTranslatedEntity(ApplicationRoute.InterceptorDeployments, t)).toBe(EntitiesI18nKey.Interceptor);
     });
     test('returns Model for other routes', () => {
       expect(getTranslatedEntity(ApplicationRoute.ModelDeployments, t)).toBe(EntitiesI18nKey.Model);
@@ -70,7 +70,7 @@ describe('entity utils', () => {
   describe('getEntityTemplate', () => {
     test('returns basic template', () => {
       const container = { name: 'MyContainer', id: '123' } as any;
-      const template = getEntityTemplate(ApplicationRoute.Interceptors, container, t);
+      const template = getEntityTemplate(ApplicationRoute.InterceptorDeployments, container, t);
       expect(template.name).toBe('mycontainer_entities.interceptor');
       expect(template.source?.containerId).toBe('123');
     });

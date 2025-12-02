@@ -41,7 +41,11 @@ export default async function Page() {
 
     return (
       <SaveValidationContextProvider>
-        <DeploymentsEntityListView route={ApplicationRoute.Interceptors} images={images} containers={containers} />
+        <DeploymentsEntityListView
+          route={ApplicationRoute.InterceptorDeployments}
+          images={images}
+          containers={containers}
+        />
       </SaveValidationContextProvider>
     );
   }

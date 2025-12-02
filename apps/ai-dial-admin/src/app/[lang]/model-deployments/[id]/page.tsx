@@ -122,7 +122,7 @@ export default async function Page(params: Params) {
           if (imageResponse.status === 403) {
             return <Page403 />;
           }
-          redirect(ApplicationRoute.McpDeployments);
+          redirect(ApplicationRoute.ModelDeployments);
         }
         image = imageResponse.response as Image;
         models = await getModelsList();

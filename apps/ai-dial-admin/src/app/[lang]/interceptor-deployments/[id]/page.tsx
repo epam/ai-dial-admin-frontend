@@ -47,7 +47,9 @@ export default async function Page(params: Params) {
     const entityType = (await params.searchParams).entityType;
 
     if (isInvalidSession) {
-      return redirect(`/?route=${ApplicationRoute.Interceptors}/${(await params.params).id}?type=${entityType}`);
+      return redirect(
+        `/?route=${ApplicationRoute.InterceptorDeployments}/${(await params.params).id}?type=${entityType}`,
+      );
     }
 
     if (entityType === DEPLOYMENT_ENTITY.images) {
@@ -64,7 +66,7 @@ export default async function Page(params: Params) {
           if (imageResponse.status === 403 || imagesResponse.status === 403) {
             return <Page403 />;
           }
-          redirect(ApplicationRoute.Interceptors);
+          redirect(ApplicationRoute.InterceptorDeployments);
         }
         image = imageResponse.response as Image;
         images = imagesResponse.response as Image[];
@@ -76,7 +78,7 @@ export default async function Page(params: Params) {
           if (containersResponse.status === 403 || versionsResponse.status === 403) {
             return <Page403 />;
           }
-          redirect(ApplicationRoute.McpDeployments);
+          redirect(ApplicationRoute.InterceptorDeployments);
         }
         versions = versionsResponse.response as ImageVersion[];
         containers = containersResponse.response as Container[];
@@ -85,13 +87,13 @@ export default async function Page(params: Params) {
       }
 
       if (!image) {
-        redirect(ApplicationRoute.Interceptors);
+        redirect(ApplicationRoute.InterceptorDeployments);
       }
 
       return (
         <ImageView
           image={image}
-          route={ApplicationRoute.Interceptors}
+          route={ApplicationRoute.InterceptorDeployments}
           imagesNames={images?.map((image) => image.name).filter((name) => name !== image.name) || []}
           containerNames={containers?.map((container) => container.name) || []}
           versions={versions || []}
@@ -113,7 +115,7 @@ export default async function Page(params: Params) {
           if (containerResponse.status === 403 || containersResponse.status === 403) {
             return <Page403 />;
           }
-          redirect(ApplicationRoute.Interceptors);
+          redirect(ApplicationRoute.InterceptorDeployments);
         }
         container = containerResponse.response as Container;
         containers = containersResponse.response as Container[];
@@ -123,7 +125,7 @@ export default async function Page(params: Params) {
           if (imageResponse.status === 403) {
             return <Page403 />;
           }
-          redirect(ApplicationRoute.Interceptors);
+          redirect(ApplicationRoute.InterceptorDeployments);
         }
         image = imageResponse.response as Image;
         interceptors = await getInterceptorsList();
@@ -132,7 +134,7 @@ export default async function Page(params: Params) {
       }
 
       if (!container || !image) {
-        redirect(ApplicationRoute.Interceptors);
+        redirect(ApplicationRoute.InterceptorDeployments);
       }
 
       return (
@@ -140,7 +142,7 @@ export default async function Page(params: Params) {
           <ContainerView
             container={container}
             image={image}
-            route={ApplicationRoute.Interceptors}
+            route={ApplicationRoute.InterceptorDeployments}
             names={containers?.map((container) => container.name).filter((name) => name !== container.name) || []}
             createEntity={createInterceptor}
             entityNames={interceptors?.map((interceptor) => interceptor.name as string) || []}
@@ -149,7 +151,7 @@ export default async function Page(params: Params) {
       );
     }
 
-    return redirect(ApplicationRoute.Interceptors);
+    return redirect(ApplicationRoute.InterceptorDeployments);
   }
 
   return <PluginView slug="interceptor-deployments" />;

@@ -87,7 +87,7 @@ describe('containers utils', () => {
     });
 
     test('returns template for Interceptors', () => {
-      const template = getContainerTemplate(ApplicationRoute.Interceptors);
+      const template = getContainerTemplate(ApplicationRoute.InterceptorDeployments);
       expect(template?.$type).toBe(CONTAINER_TYPE.INTERCEPTOR);
     });
 

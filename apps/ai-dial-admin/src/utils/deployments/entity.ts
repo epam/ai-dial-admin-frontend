@@ -24,7 +24,7 @@ export const getTranslatedType = (route: ApplicationRoute, t: (key: string) => s
 export const getTranslatedEntity = (route: ApplicationRoute, t: (key: string) => string) => {
   if (route === ApplicationRoute.McpDeployments) {
     return t(EntitiesI18nKey.Toolset);
-  } else if (route === ApplicationRoute.Interceptors) {
+  } else if (route === ApplicationRoute.InterceptorDeployments) {
     return t(EntitiesI18nKey.Interceptor);
   } else {
     return t(EntitiesI18nKey.Model);
