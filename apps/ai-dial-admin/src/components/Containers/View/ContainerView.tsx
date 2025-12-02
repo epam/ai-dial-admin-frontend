@@ -61,7 +61,7 @@ const ContainerView: FC<Props> = ({
   const { disableDeploymentsJSONEditor } = useAppContext();
 
   const [tabs, setTabs] = useState<TabModel[]>(
-    getDeploymentsViewTabs({ route, t, status: container.status, entityType: DEPLOYMENT_ENTITY.containers }),
+    getDeploymentsViewTabs(route, t, DEPLOYMENT_ENTITY.containers, container.status),
   );
   const [selectedContainer, setSelectedContainer] = useState(cloneDeep(container));
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -72,7 +72,7 @@ const ContainerView: FC<Props> = ({
   const [events, setEvents] = useState<KubEvent[]>([]);
 
   useEffect(() => {
-    setTabs(getDeploymentsViewTabs({ route, t, status: container.status, entityType: DEPLOYMENT_ENTITY.containers }));
+    setTabs(getDeploymentsViewTabs(route, t, DEPLOYMENT_ENTITY.containers, container.status));
   }, [container.status, route, t]);
 
   const headerClassName = classNames(

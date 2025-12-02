@@ -19,7 +19,7 @@ interface Props {
 
 const DeploymentsEntityListView: FC<Props> = ({ route, images, containers }) => {
   const t = useI18n() as (key: string) => string;
-  const tabs = getDeploymentsViewTabs({ route, t });
+  const tabs = getDeploymentsViewTabs(route, t);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Containers);
 

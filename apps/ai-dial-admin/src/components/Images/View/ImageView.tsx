@@ -48,12 +48,7 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
   const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [key, setKey] = useState(0);
 
-  const tabs = getDeploymentsViewTabs({
-    route,
-    t,
-    entityType: DEPLOYMENT_ENTITY.images,
-    status: selectedImage.buildStatus,
-  });
+  const tabs = getDeploymentsViewTabs(route, t, selectedImage.buildStatus, DEPLOYMENT_ENTITY.images);
 
   const headerClassName = classNames(
     'flex flex-row min-h-[34px]',

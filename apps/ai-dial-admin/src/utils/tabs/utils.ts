@@ -290,17 +290,12 @@ export const getAuditTabs = (
   return tabs;
 };
 
-export const getDeploymentsViewTabs = ({
-  route,
-  t,
-  status,
-  entityType,
-}: {
-  route: ApplicationRoute;
-  t: (stringToTranslate: string) => string;
-  status?: CONTAINER_STATUS | IMAGE_STATUS;
-  entityType?: DEPLOYMENT_ENTITY;
-}): TabModel[] => {
+export const getDeploymentsViewTabs = (
+  route: ApplicationRoute,
+  t: (stringToTranslate: string) => string,
+  entityType?: DEPLOYMENT_ENTITY,
+  status?: CONTAINER_STATUS | IMAGE_STATUS,
+): TabModel[] => {
   if (!entityType) {
     return [containersTab(t), imagesTab(t)];
   }

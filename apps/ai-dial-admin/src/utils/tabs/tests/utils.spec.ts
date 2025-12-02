@@ -2,39 +2,54 @@ import { TabsI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test, vi } from 'vitest';
 import {
+  applicationRunnersTab,
+  applicationsTab,
   appRouteTab,
+  attachmentsTab,
   auditTab,
+  buildLogTabs,
+  containersTab,
+  conversationsTab,
   dependenciesTab,
+  entitiesTab,
+  eventsTab,
+  executionLogTabs,
   featuresTab,
+  filesTab,
+  getAdapterTabs,
+  getAppRunnerTabs,
   getAuditTabs,
+  getDeploymentsViewTabs,
+  getInterceptorTabs,
+  getInterceptorTemplateTabs,
+  getKeyTabs,
+  getPublicationTabs,
+  getRoleTabs,
+  getRouteTabs,
   getTabsForAsset,
   getToolsetTabs,
+  getUsageLogTabs,
   getViewTabs,
+  imagesTab,
   interceptorsTab,
+  keysTab,
+  modelsTab,
+  parameterSchemaTab,
   parametersTab,
+  promptsTabs,
   propertiesTab,
-  getKeyTabs,
+  propertiesTabs,
+  relatedContainersTab,
+  resourcesTabs,
   rolesTab,
   toolsTab,
-  getPublicationTabs,
-  getUsageLogTabs,
-  getInterceptorTemplateTabs,
-  getInterceptorTabs,
-  parameterSchemaTab,
-  entitiesTab,
-  applicationRunnersTab,
-  filesTab,
-  conversationsTab,
+  toolsTabs,
   tracesTab,
-  getRoleTabs,
-  keysTab,
-  getRouteTabs,
-  attachmentsTab,
-  getAppRunnerTabs,
-  applicationsTab,
-  getAdapterTabs,
-  modelsTab,
 } from '../utils';
+
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { IMAGE_STATUS } from '@/src/types/deployments/images';
+import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 
 const t = vi.fn((id) => id);
 
@@ -175,6 +190,45 @@ describe('Entities :: tabs', () => {
       entitiesTab(t),
       applicationRunnersTab(t),
       auditTab(t),
+    ]);
+  });
+
+  test('returns correct tabs for deployments listings', () => {
+    expect(getDeploymentsViewTabs(ApplicationRoute.McpDeployments, t)).toEqual([containersTab(t), imagesTab(t)]);
+  });
+
+  test('returns correct tabs for deployment images', () => {
+    const entityType = DEPLOYMENT_ENTITY.images;
+    const status = IMAGE_STATUS.BUILT;
+
+    expect(getDeploymentsViewTabs(ApplicationRoute.McpDeployments, t, entityType, status)).toEqual([
+      propertiesTabs(t),
+      buildLogTabs(t, status),
+      relatedContainersTab(t, status),
+    ]);
+  });
+  test('returns correct tabs for deployment mcp containers', () => {
+    const entityType = DEPLOYMENT_ENTITY.containers;
+    const status = CONTAINER_STATUS.RUNNING;
+
+    expect(getDeploymentsViewTabs(ApplicationRoute.McpDeployments, t, entityType, status)).toEqual([
+      propertiesTabs(t),
+      toolsTabs(t, status),
+      resourcesTabs(t, status),
+      promptsTabs(t, status),
+      executionLogTabs(t),
+      eventsTab(t),
+    ]);
+  });
+
+  test('returns correct tabs for deployment mcp containers', () => {
+    const entityType = DEPLOYMENT_ENTITY.containers;
+    const status = CONTAINER_STATUS.RUNNING;
+
+    expect(getDeploymentsViewTabs(ApplicationRoute.ModelDeployments, t, entityType, status)).toEqual([
+      propertiesTabs(t),
+      executionLogTabs(t),
+      eventsTab(t),
     ]);
   });
 });
