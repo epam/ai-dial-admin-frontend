@@ -37,7 +37,7 @@ import {
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 import ViewContent from './Content/ViewContent';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
-import { getAppRunner } from '../../Applications/ParametersTab/utils';
+import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 
 interface Props {
   view: ApplicationRoute;
