@@ -4,7 +4,7 @@ import { useI18n } from '@/src/locales/client';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { Prompt as PromptType } from '@/src/models/deployments/containers';
-import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import Grid from '@/src/components/Grid/Grid';
 import classNames from 'classnames';
 
@@ -38,7 +38,7 @@ const Prompt: FC<Props> = ({ prompt }) => {
       <div className={classNames('flex flex-col mt-4 gap-4', isCollapsed && 'hidden')}>
         {prompt.description && (
           <div>
-            <p className="small text-secondary">{t(BasicI18nKey.Description)}</p>
+            <p className="small text-secondary">{t(EntityFieldsI18nKey.description)}</p>
             <p className="body">{prompt.description}</p>
           </div>
         )}

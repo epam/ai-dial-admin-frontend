@@ -5,7 +5,6 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { useI18n } from '@/src/locales/client';
 import { useNotification } from '@/src/context/NotificationContext';
-import { CHANGE_IMAGE_VERSION } from '@/src/constants/deployments/images';
 import { ACTION_COLUMN, RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
 import { getImageVersions } from '@/src/app/actions/deployments';
 import { getErrorNotification } from '@/src/utils/notification';
@@ -16,6 +15,7 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { CHANGE_IMAGE_VERSION } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
   isModalOpen: boolean;

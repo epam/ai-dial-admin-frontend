@@ -14,13 +14,13 @@ import { CreateSteps } from '@/src/types/deployments/containers';
 import { getImagesWithVersions } from '@/src/app/actions/deployments';
 import { getImageType, isValidVersion, updateSelectedVersion } from '@/src/utils/deployments/images';
 import { getErrorNotification } from '@/src/utils/notification';
-import { IMAGES_LIST_FOR_CONTAINER_COLUMNS } from '@/src/constants/deployments/images';
 import Grid from '@/src/components/Grid/Grid';
 import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import ContainerProperties from '@/src/components/Containers/Properties/ContainerProperties';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { IMAGES_LIST_FOR_CONTAINER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
   isModalOpen: boolean;

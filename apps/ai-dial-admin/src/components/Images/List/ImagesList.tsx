@@ -16,7 +16,6 @@ import {
   getDuplicateOperation,
   getOpenInNewTabOperation,
 } from '@/src/constants/grid-columns/actions';
-import { IMAGES_LIST_COLUMNS, MCP_IMAGES_LIST_COLUMNS } from '@/src/constants/deployments/images';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import Page403 from '@/src/components/Page403/Page403';
 import ListView from '@/src/components/ListView/ListView';
@@ -27,6 +26,7 @@ import DuplicateImage from '@/src/components/Images/Modals/DuplicateImage';
 import Delete from '@/src/components/Common/DeploymentsModals/Delete';
 import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { IMAGES_LIST_COLUMNS, MCP_IMAGES_LIST_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
   route: ApplicationRoute;

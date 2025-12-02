@@ -7,7 +7,6 @@ import { useI18n } from '@/src/locales/client';
 import { useNotification } from '@/src/context/NotificationContext';
 import { GridApi, GridOptions, SelectionChangedEvent } from 'ag-grid-community';
 import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
-import { IMAGE_DEPENDENCIES_COLUMNS } from '@/src/constants/deployments/images';
 import { getContainers } from '@/src/app/actions/deployments';
 import { getImageType } from '@/src/utils/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
@@ -15,6 +14,7 @@ import { getErrorNotification } from '@/src/utils/notification';
 import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
 import Grid from '@/src/components/Grid/Grid';
+import { IMAGE_DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
   title: string;

@@ -65,7 +65,7 @@ const CreateEntityModal: FC<Props> = ({
       <div className="flex flex-col h-full overflow-auto px-6 py-4 gap-6">
         <DialTextInputField
           elementId="id"
-          fieldTitle={t(EntityFieldsI18nKey.Id)}
+          fieldTitle={t(EntityFieldsI18nKey.id)}
           placeholder={t(EntityPlaceholdersI18nKey.Id)}
           value={entity.name}
           errorText={nameError?.text}

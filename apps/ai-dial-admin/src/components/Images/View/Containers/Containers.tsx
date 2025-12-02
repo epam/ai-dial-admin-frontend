@@ -9,7 +9,6 @@ import { Container } from '@/src/models/deployments/containers';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { getImageContainers, updateContainersImageId } from '@/src/app/actions/deployments';
 import { getErrorNotification } from '@/src/utils/notification';
-import { IMAGE_DEPENDENCIES_COLUMNS } from '@/src/constants/deployments/images';
 import { ACTION_COLUMN, ACTION_COLUMN_COMPONENTS } from '@/src/constants/ag-grid';
 import ListView from '@/src/components/ListView/ListView';
 import { ButtonsI18nKey, ContainersI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
@@ -19,6 +18,7 @@ import { getTranslatedType } from '@/src/utils/deployments/entity';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { IMAGE_DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
   image: Image;

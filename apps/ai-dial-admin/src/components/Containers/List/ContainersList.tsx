@@ -19,7 +19,6 @@ import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { CONTAINERS_COLUMNS } from '@/src/constants/deployments/containers';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { Notification } from '@/src/models/notification';
 import { ContainersI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
@@ -38,6 +37,7 @@ import {
 } from '@/src/constants/grid-columns/actions';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { CONTAINERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
   route: ApplicationRoute;
