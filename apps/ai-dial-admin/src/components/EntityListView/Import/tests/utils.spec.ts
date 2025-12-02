@@ -222,38 +222,29 @@ describe('Import :: isErrorFileNode', () => {
 });
 
 describe('Import :: isInvalidJson', () => {
-  test('should return true if prompts is undefined', () => {
-    const parsedData = { prompts: undefined };
-    const result = isInvalidJson(parsedData);
-    expect(result).toBe(true);
+  test('returns true if prompts is missing or empty', () => {
+    expect(isInvalidJson({})).toBe(true);
+    expect(isInvalidJson({ prompts: [] })).toBe(true);
   });
 
-  test('should return true if prompts is null', () => {
-    const parsedData = { prompts: null };
-    const result = isInvalidJson(parsedData);
-    expect(result).toBe(true);
+  test('returns true if applications is missing or empty for non-prompts view', () => {
+    expect(isInvalidJson({}, ApplicationRoute.Files)).toBe(true);
+    expect(isInvalidJson({ applications: [] }, ApplicationRoute.Files)).toBe(true);
   });
 
-  test('should return true if prompts is an empty array', () => {
-    const parsedData = { prompts: [] };
-    const result = isInvalidJson(parsedData);
-    expect(result).toBe(true);
+  test('returns true if first prompt id does not match regex', () => {
+    const parsedData = { prompts: [{ id: 'invalid_id' }] };
+    expect(isInvalidJson(parsedData, ApplicationRoute.Prompts)).toBe(true);
   });
 
-  test('should return true if the id of the first prompt does not match the regex', () => {
-    const parsedData = {
-      prompts: [{ id: 'invalid_id' }],
-    };
-    const result = isInvalidJson(parsedData);
-    expect(result).toBe(true);
+  test('returns false if first prompt id matches regex', () => {
+    const parsedData = { prompts: [{ id: 'prompts/public/folder/subfolder/myPrompt__v1' }] };
+    expect(isInvalidJson(parsedData, ApplicationRoute.Prompts)).toBe(false);
   });
 
-  test('should return false if the id of the first prompt matches the regex', () => {
-    const parsedData = {
-      prompts: [{ id: 'prompts/public/folder/subfolder/myPrompt__v1' }],
-    };
-    const result = isInvalidJson(parsedData);
-    expect(result).toBe(false);
+  test('returns false for valid applications in non-prompts view', () => {
+    const parsedData = { applications: [{ id: 'anything' }] };
+    expect(isInvalidJson(parsedData, ApplicationRoute.Files)).toBe(false);
   });
 });
 
