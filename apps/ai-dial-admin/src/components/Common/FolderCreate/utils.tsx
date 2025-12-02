@@ -8,7 +8,7 @@ import {
 } from '@/src/components/EntityListView/Import/utils';
 import { DialFile } from '@/src/models/dial/file';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
-import { ParsedAssets, PromptImportGridData } from '@/src/models/prompts';
+import { ParsedAssets, PromptImportGridData } from '@/src/models/import-asset';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderNameAndPath } from '@/src/utils/files/path';

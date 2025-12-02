@@ -323,7 +323,7 @@ export const isInvalidJson = (parsedData: ParsedAssets, view?: ApplicationRoute)
 
   return view === ApplicationRoute.Prompts
     ? !/^prompts\/public\/([^/]+\/)*[^/]+__[^/]+$/.test(values[0].id as string)
-    : !/^applications\/public\/([^/]+\/)*[^/]+__[^/]+$/.test(values[0].id as string);
+    : false;
 };
 
 /**
