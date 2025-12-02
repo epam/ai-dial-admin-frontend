@@ -231,13 +231,13 @@ const Actions = <T extends object>({
           isModalOpen={isModalOpen}
           modalType={modalType}
           duplicateModal={duplicateModalContent}
-          handleExport={onExport}
-          handleClose={handleModalClose}
-          removeEntity={removeEntity}
-          handleDeleteBulk={onDeleteBulk}
-          handleMove={onMove}
+          onExport={onExport}
+          onClose={handleModalClose}
+          onRemove={removeEntity}
+          onDeleteBulk={onDeleteBulk}
+          onMove={onMove}
           context={context}
-          resetCurrentEntity={() => setCurrentEntity(void 0)}
+          onResetCurrentEntity={() => setCurrentEntity(void 0)}
         />
       ) : null}
       {isBulkView && (

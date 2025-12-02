@@ -971,6 +971,8 @@ export enum ToolsetI18nKey {
   ApiKey = 'Toolset.ApiKey',
   OAuth = 'Toolset.OAuth',
   NoneAuth = 'Toolset.NoneAuth',
+  Import = 'Toolset.Import',
+  Export = 'Toolset.Export',
   WithLogin = 'Toolset.WithLogin',
   WithLoginAndConfig = 'Toolset.WithLoginAndConfig',
   WithoutLogin = 'Toolset.WithoutLogin',
@@ -985,4 +987,9 @@ export enum ToolsetI18nKey {
   SuccessLoginDescription = 'Toolset.SuccessLoginDescription',
   SuccessLogout = 'Toolset.SuccessLogout',
   SuccessLogoutDescription = 'Toolset.SuccessLogoutDescription',
+}
+
+export enum ApplicationsI18nKey {
+  Import = 'Applications.Import',
+  Export = 'Applications.Export',
 }
