@@ -34,7 +34,7 @@ const FileView: FC<Props> = ({ originalFile }) => {
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedFile, setSelectedFile] = useState(cloneDeep(originalFile));
-  const [isChanged, setIsChanged] = useState<boolean>(false);
+  const [isChanged, setIsChanged] = useState(false);
 
   useEffect(() => {
     setSelectedFile(cloneDeep(originalFile));
@@ -88,9 +88,8 @@ const FileView: FC<Props> = ({ originalFile }) => {
           isChanged={isChanged}
           onSave={onSave}
           onDiscard={onDiscard}
-          removeEntity={removeFile}
-          hideJsonEditor={true}
-          jsonEditorEnabled={false}
+          onRemove={removeFile}
+          isHideJsonEditor={true}
         />
       </div>
       <div className="flex-1 overflow-auto min-h-0">

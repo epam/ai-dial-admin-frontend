@@ -45,5 +45,5 @@ export default async function Page() {
     );
   }
 
-  return <PluginView slug={'mcp-deployments'} />;
+  return <PluginView slug="mcp-deployments" />;
 }

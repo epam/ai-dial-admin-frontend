@@ -1,5 +1,5 @@
 'use client';
-import classNames from 'classnames';
+
 import { FC, ReactNode, useEffect, useState } from 'react';
 import { DialButton } from '@epam/ai-dial-ui-kit';
 
@@ -25,7 +25,7 @@ const Header: FC<Props> = ({ isEnableAuth }) => {
   }, [sidebarOpen]);
 
   return (
-    <header className={classNames('z-40 flex w-full border-b border-tertiary bg-layer-3 relative justify-between')}>
+    <header className="z-40 flex w-full border-b border-tertiary bg-layer-3 relative justify-between">
       <div className="flex">
         <DialButton
           aria-label="menu"

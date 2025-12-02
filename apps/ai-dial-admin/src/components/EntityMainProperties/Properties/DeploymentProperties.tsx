@@ -177,7 +177,7 @@ const DeploymentProperties: FC<Props> = ({
         <SourceField
           view={view}
           entity={entity}
-          elementId={'sourceType'}
+          elementId="sourceType"
           onChange={onChangeEntity}
           getContainers={view === ApplicationRoute.Models ? getModelContainers : getToolsetContainers}
           fieldTitle={t(EntitiesI18nKey.SourceType)}

@@ -153,5 +153,5 @@ export default async function Page(params: Params) {
     return redirect(ApplicationRoute.McpDeployments);
   }
 
-  return <PluginView slug={'mcp-deployments'} />;
+  return <PluginView slug="mcp-deployments" />;
 }

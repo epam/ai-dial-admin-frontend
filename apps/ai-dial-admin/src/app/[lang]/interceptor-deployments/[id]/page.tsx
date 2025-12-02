@@ -152,5 +152,5 @@ export default async function Page(params: Params) {
     return redirect(ApplicationRoute.Interceptors);
   }
 
-  return <PluginView slug={'interceptor-deployments'} />;
+  return <PluginView slug="interceptor-deployments" />;
 }

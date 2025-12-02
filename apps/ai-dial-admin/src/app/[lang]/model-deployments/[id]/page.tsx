@@ -151,5 +151,5 @@ export default async function Page(params: Params) {
     return redirect(ApplicationRoute.ModelDeployments);
   }
 
-  return <PluginView slug={'model-deployments'} />;
+  return <PluginView slug="model-deployments" />;
 }

@@ -46,5 +46,5 @@ export default async function Page() {
     );
   }
 
-  return <PluginView slug={'interceptor-deployments'} />;
+  return <PluginView slug="interceptor-deployments" />;
 }

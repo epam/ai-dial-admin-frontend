@@ -106,7 +106,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
                 label: adapter.displayName || adapter.name || '',
               }))}
               onChange={(adapter) => onSelect(adapter as string)}
-              elementId={'source-type'}
+              elementId="source-type"
               value={adapters.find((adapter) => adapter.name === entity.source?.adapterName)?.name}
               placeholder={t(CreateI18nKey.SelectAdapter)}
               fieldTitle={t(EntityFieldsI18nKey.adapter)}
@@ -115,12 +115,12 @@ const Adapters = <T extends DialModel | DialInterceptor>({
         ) : (
           <div className="flex w-full gap-2">
             <div className="w-full lg:w-[45%]">
-              <Field fieldTitle={t(SourceI18nKey.Adapter)} htmlFor={'adapters'} />
+              <Field fieldTitle={t(SourceI18nKey.Adapter)} htmlFor="adapters" />
               <DialInputPopup
                 open={isModalOpen}
                 onOpen={onOpenModal}
                 selectedValue={selectedAdapter?.displayName || selectedAdapter?.name || ''}
-                elementId={'adapters'}
+                elementId="adapters"
                 errorText={errorText}
                 emptyValueText={t(EntitiesI18nKey.NoAdapters)}
               >

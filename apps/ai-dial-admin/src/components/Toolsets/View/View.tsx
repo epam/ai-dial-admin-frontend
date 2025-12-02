@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
+import { DialTabs } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
 
 import { getCoreToolset, removeToolset, updateCoreToolset, updateToolset } from '@/src/app/[lang]/toolsets/actions';
@@ -33,7 +33,7 @@ import { getViewHeaderClassName } from '@/src/utils/entities/view';
 interface Props {
   etag: string;
   names: string[];
-  roles: DialRole[] | null | undefined;
+  roles?: DialRole[] | null;
   originalToolset: Toolset;
 }
 
@@ -44,14 +44,14 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
 
-  const tabs: TabModel[] = getToolsetTabs(t);
+  const tabs = getToolsetTabs(t);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedToolset, setSelectedToolset] = useState(cloneDeep(originalToolset));
   const [isChanged, setIsChanged] = useState(false);
-  const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
-  const [isSkipRefresh, setIsSkipRefresh] = useState<boolean>(true);
+  const [isJsonEditorEnabled, setIsJsonEditorEnabled] = useState(false);
+  const [isSkipRefresh, setIsSkipRefresh] = useState(true);
   const [key, setKey] = useState(0);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
   const [coreToolset, setCoreToolset] = useState<Toolset | null>(null);
@@ -86,7 +86,7 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
   );
 
   const onDiscard = useCallback(() => {
-    if (jsonEditorEnabled) {
+    if (isJsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
       setSelectedFormat(ExportFormat.ADMIN);
@@ -96,7 +96,7 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
     }
     setSelectedToolset(originalToolset);
     setIsSkipRefresh(false);
-  }, [jsonEditorEnabled, originalToolset, dispatch]);
+  }, [isJsonEditorEnabled, originalToolset, dispatch]);
 
   const onChangeToolset = useCallback(
     (entity: Toolset, skipRefresh?: boolean) => {
@@ -106,10 +106,10 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
     [setSelectedToolset],
   );
 
-  const toggleJsonEditor = useCallback(() => {
+  const onToggleJsonEditor = useCallback(() => {
     setSelectedFormat(ExportFormat.ADMIN);
-    setJsonEditorEnabled((prev) => !prev);
-  }, [setJsonEditorEnabled]);
+    setIsJsonEditorEnabled((prev) => !prev);
+  }, [setIsJsonEditorEnabled]);
 
   const onSave = useCallback(() => {
     const req =
@@ -143,18 +143,18 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
     if (
       selectedFormat !== ExportFormat.CORE &&
       isDisableRole(selectedToolset as EntityRoleLimits) &&
-      !jsonEditorEnabled
+      !isJsonEditorEnabled
     ) {
       setIsModalOpen(true);
     } else {
       onSave();
     }
-  }, [jsonEditorEnabled, onSave, selectedFormat, selectedToolset]);
+  }, [isJsonEditorEnabled, onSave, selectedFormat, selectedToolset]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={getViewHeaderClassName(jsonEditorEnabled)}>
-        {!jsonEditorEnabled && (
+      <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
+        {!isJsonEditorEnabled && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
           </div>
@@ -165,15 +165,15 @@ const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
           isChanged={isChanged}
           onDiscard={onDiscard}
           onSave={onTryToSave}
-          removeEntity={removeToolset}
-          jsonEditorEnabled={jsonEditorEnabled}
-          toggleJsonEditor={toggleJsonEditor}
+          onRemove={removeToolset}
+          isJsonEditorEnabled={isJsonEditorEnabled}
+          onToggleJsonEditor={onToggleJsonEditor}
           selectedFormat={selectedFormat}
-          setSelectedFormat={setSelectedFormat}
+          onChangeSelectedFormat={setSelectedFormat}
         />
       </div>
       <div className="flex-1 overflow-auto min-h-0">
-        {jsonEditorEnabled ? (
+        {isJsonEditorEnabled ? (
           <EntityJsonEditor
             key={key}
             entity={selectedToolset}

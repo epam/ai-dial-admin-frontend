@@ -39,7 +39,7 @@ const AddVersionModal: FC<Props> = ({
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Create)}
     >
-      <div className=" flex flex-col gap-4 text-primary small px-6 py-4">
+      <div className="flex flex-col gap-4 text-primary small px-6 py-4">
         {prefilledVersion && <div className="text-secondary">{t(PromptsI18nKey.NewVersionSaveDescription)}</div>}
         <VersionControl version={version} onChange={(v) => setVersion(v || '')} />
       </div>

@@ -38,9 +38,9 @@ const FoldersStorage: FC<Props> = ({ initialPath }) => {
           iconSize={24}
           additionalButtons={
             <DialTooltip
-              triggerClassName={'flex items-center'}
+              triggerClassName="flex items-center"
               tooltip={isCollapseDisable ? '' : t(FoldersI18nKey.CollapseAll)}
-              placement={'top'}
+              placement="top"
             >
               <DialButton
                 className={isCollapseDisable ? 'text-controls-disable' : 'hover:text-icon-accent-primary'}

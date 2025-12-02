@@ -60,7 +60,7 @@ const DuplicateAdapter: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
       onCancel={onClose}
       disableSubmitButton={!isValid}
     >
-      <div className="flex flex-col gap-3 px-6 py-4 ">
+      <div className="flex flex-col gap-3 px-6 py-4">
         <IdControl entity={entity} onChangeEntity={setEntity} names={names} />
 
         <DisplayNameControl displayName={entity.displayName} onChange={onChangeDisplayName} required={true} />

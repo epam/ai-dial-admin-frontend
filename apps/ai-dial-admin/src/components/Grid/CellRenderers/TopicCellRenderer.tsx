@@ -64,23 +64,22 @@ const TopicsCellRenderer: FC<Props> = ({ topics }) => {
   }, [recalculateVisibleTopics]);
 
   const topicClassName = 'tiny bg-layer-3 rounded p-1 border border-primary whitespace-nowrap max-w-[200px]';
-  const hiddenClassName = 'absolute left-0 top-0 invisible h-0 overflow-hidden whitespace-nowrap';
 
   return (
     <div ref={containerRef} className="flex gap-2 overflow-hidden w-full">
       {topics.slice(0, visibleCount).map((topic, index) => (
-        <div key={`shown-${topic}-${index}`} ref={setTopicRef(index)} className={classNames(topicClassName)}>
+        <div key={`shown-${topic}-${index}`} ref={setTopicRef(index)} className={topicClassName}>
           {topic}
         </div>
       ))}
 
       {visibleCount < topics.length && (
-        <div ref={hiddenCountRef} className={classNames(topicClassName)}>
+        <div ref={hiddenCountRef} className={topicClassName}>
           +{topics.length - visibleCount}
         </div>
       )}
 
-      <div className={hiddenClassName}>
+      <div className="absolute left-0 top-0 invisible h-0 overflow-hidden whitespace-nowrap">
         {topics.map((topic, index) => (
           <div
             key={`hidden-${topic}-${index}`}

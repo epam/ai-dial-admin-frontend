@@ -139,7 +139,7 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
                 placeholder={t(PublicationsI18nKey.DeclineReasonPlaceholder)}
                 value={declineReason}
                 onChange={setDeclineReason}
-                elementClassName={'min-h-[120px]'}
+                elementClassName="min-h-[120px]"
                 invalid={isDeclineInvalid}
                 errorText={isDeclineInvalid ? t(ErrorI18nKey.CommentError) : ''}
               />

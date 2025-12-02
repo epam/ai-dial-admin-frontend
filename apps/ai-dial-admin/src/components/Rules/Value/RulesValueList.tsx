@@ -36,12 +36,12 @@ const RulesValueList: FC<Props> = ({
   const { availableAttributes } = useRuleFolder();
   let ruleDiff: RuleDiffModel | undefined = void 0;
 
-  const ruleIndentClassName = classNames('flex items-center');
+  const ruleIndentClassName = 'flex items-center';
   const valuesClassName = classNames(
     'flex-1 flex flex-col gap-4',
     (!isReadonly ? !!setLastValueHeight : rules.length) && 'mt-4',
   );
-  const lineHorizontalChildClassName = classNames('h-[1px] w-[16px] bg-accent-primary');
+  const lineHorizontalChildClassName = 'h-[1px] w-[16px] bg-accent-primary';
 
   const onAddValue = useCallback(() => {
     const newRules = [...rules];
@@ -77,7 +77,7 @@ const RulesValueList: FC<Props> = ({
               ruleDiff = generateRuleDiff(rule, rulesToExclude, rulesToInclude);
             }
             return (
-              <div key={'rule' + i} className={classNames(ruleIndentClassName)}>
+              <div key={`rule-${i}`} className={ruleIndentClassName}>
                 {isReadonly ? (
                   <>
                     <div className={lineHorizontalChildClassName}></div>

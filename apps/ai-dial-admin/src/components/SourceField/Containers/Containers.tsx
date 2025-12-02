@@ -119,7 +119,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
               searchable={true}
               options={containers.map((container) => ({ value: container.id, label: container.name }))}
               onChange={(container) => onSelect(container as string)}
-              elementId={'source-type'}
+              elementId="source-type"
               value={containers.find((container) => container.id === entity.source?.containerId)?.id}
               placeholder={t(CreateI18nKey.SelectContainer)}
               fieldTitle={t(EntityFieldsI18nKey.container)}
@@ -129,12 +129,12 @@ const Containers = <T extends DialInterceptor | DialModel>({
         ) : (
           <div className="flex w-full gap-2">
             <div className="w-full lg:w-[45%]">
-              <Field fieldTitle={t(SourceI18nKey.Container)} htmlFor={'containers'} />
+              <Field fieldTitle={t(SourceI18nKey.Container)} htmlFor="containers" />
               <DialInputPopup
                 open={isModalOpen}
                 onOpen={onOpenModal}
                 selectedValue={selectedContainer?.name}
-                elementId={'containers'}
+                elementId="containers"
                 emptyValueText={t(EntitiesI18nKey.NoContainers)}
                 disabled={!deploymentsEnabled}
                 errorText={errorText}

@@ -46,5 +46,5 @@ export default async function Page() {
     );
   }
 
-  return <PluginView slug={'model-deployments'} />;
+  return <PluginView slug="model-deployments" />;
 }
