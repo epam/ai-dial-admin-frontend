@@ -30,7 +30,7 @@ const SelectContainerModal: FC<Props> = ({ selectedId, interceptorContainers, is
       portalId="SelectContainer"
       open={isModalOpen}
       size={PopupSize.Lg}
-      cssClass="h-[750px]"
+      className="h-[750px]"
       onSubmit={() => onApply(selectedContainer)}
       disableSubmitButton={!selectedContainer}
       submitLabel={t(ButtonsI18nKey.Apply)}

@@ -53,7 +53,7 @@ const DeploymentProperties: FC<Props> = ({ asset, view, runners, onChange }) => 
         </div>
 
         <FilePath
-          inputCss="lg:w-[35%] lg:flex-0"
+          inputClassName="lg:w-[35%] lg:flex-0"
           value={asset.folderId}
           label={t(EntitiesI18nKey.FolderStorage)}
           modalTitle={t(BasicI18nKey.MoveToFolder)}

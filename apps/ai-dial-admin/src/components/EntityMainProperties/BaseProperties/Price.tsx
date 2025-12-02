@@ -9,17 +9,16 @@ interface Props {
   fieldTitle?: string;
   placeholder?: string;
   value?: number | string;
-  controlClassName?: string;
+  containerClassName?: string;
   disabled?: boolean;
   onChange?: (value?: number | string) => void;
 }
 
-const PriceControl: FC<Props> = ({ elementId, fieldTitle, controlClassName, ...props }) => {
+const PriceControl: FC<Props> = ({ elementId, fieldTitle, ...props }) => {
   return (
     <DialNumberInputField
       elementId={elementId}
       fieldTitle={fieldTitle}
-      containerCssClass={controlClassName}
       iconBefore={<IconCurrencyDollar className="text-secondary" {...BASE_ICON_PROPS} />}
       {...props}
     />

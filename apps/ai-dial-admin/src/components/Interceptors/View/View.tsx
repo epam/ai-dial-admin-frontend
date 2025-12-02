@@ -43,7 +43,7 @@ import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getInterceptorTabs } from '@/src/utils/tabs/utils';
 import InterceptorProperties from './Properties';
-import { getViewHeaderClassNames } from '@/src/utils/entities/view';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 
 interface Props {
   originalInterceptor: DialInterceptor;
@@ -227,7 +227,7 @@ const InterceptorView: FC<Props> = ({
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
+      <div className={getViewHeaderClassName(jsonEditorEnabled)}>
         {!jsonEditorEnabled && (
           <div className="flex-1 min-w-0">
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />

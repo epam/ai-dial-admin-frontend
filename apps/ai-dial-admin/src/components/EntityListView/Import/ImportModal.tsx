@@ -211,7 +211,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply 
       onClose={onClose}
       title={route === ApplicationRoute.Prompts ? t(PromptsI18nKey.Import) : t(FoldersI18nKey.Import)}
       portalId="ImportModal"
-      cssClass="h-[660px]"
+      className="h-[660px]"
       open={isModalOpen}
       footer={
         <ImportModalButtons

@@ -78,13 +78,13 @@ const CreateFilter: FC<Props> = ({
     [entities, projects, setType, condition, type, setValue],
   );
 
-  const containerClassNames = classNames(
+  const containerClassName = classNames(
     'flex',
     isMobile ? 'flex-col w-full' : 'items-center bg-layer-0 rounded p-2 z-50',
   );
 
   return (
-    <div className={containerClassNames}>
+    <div className={containerClassName}>
       <>
         {route === ApplicationRoute.Dashboard ? (
           <div className="md:mr-4 md:mb-0 mb-4 min-w-[120px]">
@@ -134,7 +134,7 @@ const CreateFilter: FC<Props> = ({
             onChange={(v) => setValue(v || '')}
             placeholder={t(BasicI18nKey.Value)}
             value={value}
-            cssClass={'py-[9px]'}
+            className={'py-[9px]'}
           />
         )}
       </div>

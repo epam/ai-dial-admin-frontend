@@ -63,34 +63,34 @@ const TopicsCellRenderer: FC<Props> = ({ topics }) => {
     return () => observer.disconnect();
   }, [recalculateVisibleTopics]);
 
-  const topicClass = 'tiny bg-layer-3 rounded p-1 border border-primary whitespace-nowrap max-w-[200px]';
-  const hiddenClass = 'absolute left-0 top-0 invisible h-0 overflow-hidden whitespace-nowrap';
+  const topicClassName = 'tiny bg-layer-3 rounded p-1 border border-primary whitespace-nowrap max-w-[200px]';
+  const hiddenClassName = 'absolute left-0 top-0 invisible h-0 overflow-hidden whitespace-nowrap';
 
   return (
     <div ref={containerRef} className="flex gap-2 overflow-hidden w-full">
       {topics.slice(0, visibleCount).map((topic, index) => (
-        <div key={`shown-${topic}-${index}`} ref={setTopicRef(index)} className={classNames(topicClass)}>
+        <div key={`shown-${topic}-${index}`} ref={setTopicRef(index)} className={classNames(topicClassName)}>
           {topic}
         </div>
       ))}
 
       {visibleCount < topics.length && (
-        <div ref={hiddenCountRef} className={classNames(topicClass)}>
+        <div ref={hiddenCountRef} className={classNames(topicClassName)}>
           +{topics.length - visibleCount}
         </div>
       )}
 
-      <div className={hiddenClass}>
+      <div className={hiddenClassName}>
         {topics.map((topic, index) => (
           <div
             key={`hidden-${topic}-${index}`}
             ref={setTopicRef(index)}
-            className={classNames(topicClass, 'inline-block')}
+            className={classNames(topicClassName, 'inline-block')}
           >
             {topic}
           </div>
         ))}
-        <div ref={hiddenCountRef} className={classNames(topicClass, 'inline-block')}>
+        <div ref={hiddenCountRef} className={classNames(topicClassName, 'inline-block')}>
           +{topics.length}
         </div>
       </div>

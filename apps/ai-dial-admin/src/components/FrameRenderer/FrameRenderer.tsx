@@ -16,12 +16,12 @@ interface Props {
   iframeUrl: string;
   name?: string;
   onMessage?: (event: MessageEvent) => void;
-  containerCss?: string;
+  containerClassName?: string;
   jsonEditorEnabled?: boolean;
 }
 
 const FrameRenderer = forwardRef<HTMLDivElement, Props>(
-  ({ iframeUrl, name, onMessage, containerCss, jsonEditorEnabled }, ref: Ref<HTMLDivElement>) => {
+  ({ iframeUrl, name, onMessage, containerClassName, jsonEditorEnabled }, ref: Ref<HTMLDivElement>) => {
     const { setVisualizerConnector } = useAppContext();
     const containerRef = useRef<HTMLDivElement>(null);
     const visualizerRef = useRef<VisualizerConnector>(null);
@@ -31,7 +31,7 @@ const FrameRenderer = forwardRef<HTMLDivElement, Props>(
 
     useImperativeHandle(ref, () => containerRef.current as HTMLDivElement);
 
-    const containerClassNames = classNames(containerCss, 'relative h-full w-full');
+    const className = classNames(containerClassName, 'relative h-full w-full');
 
     const handleMessage = useCallback(
       (event: MessageEvent<VisualizerConnectorRequest>) => {
@@ -108,7 +108,7 @@ const FrameRenderer = forwardRef<HTMLDivElement, Props>(
         {isEmptyData ? (
           <DialNoDataContent title={'Error loading application custom UI'} />
         ) : (
-          <div ref={containerRef} className={containerClassNames} />
+          <div ref={containerRef} className={className} />
         )}
       </div>
     );

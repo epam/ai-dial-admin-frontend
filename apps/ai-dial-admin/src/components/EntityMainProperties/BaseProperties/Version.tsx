@@ -13,7 +13,7 @@ interface Props {
   readonly?: boolean;
   optional?: boolean;
   disabled?: boolean;
-  containerCssClass?: string;
+  containerClassName?: string;
   error?: string;
   onChange?: (version?: string) => void;
   hideError?: boolean;

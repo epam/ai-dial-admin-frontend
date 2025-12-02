@@ -62,7 +62,7 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   );
 
   const MenuActionsBar = () => (
-    <div className={classNames(actionsClassNames, 'justify-start')}>
+    <div className={classNames(actionsClassName, 'justify-start')}>
       <MenuAction
         tooltip={t(MenuI18nKey.ImportConfig)}
         icon={<IconDownload {...BASE_ICON_PROPS} widths={24} height={24} />}
@@ -76,12 +76,12 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
     </div>
   );
 
-  const actionsClassNames = 'px-3 py-2 text-secondary flex flex-row gap-3 items-center';
-  const menuClassNames = 'flex flex-col divide-tertiary divide-y';
+  const actionsClassName = 'px-3 py-2 text-secondary flex flex-row gap-3 items-center';
+  const menuClassName = 'flex flex-col divide-tertiary divide-y';
 
   return (
     <div
-      className={classNames(menuClassNames, 'h-full')}
+      className={classNames(menuClassName, 'h-full')}
       onMouseEnter={() => !isSidebarOpen && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -91,7 +91,7 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
         <MenuActionsBar />
       ) : hovered ? (
         <div
-          className={classNames(menuClassNames, 'absolute left-0 top-0 bottom-0 w-72 bg-layer-3')}
+          className={classNames(menuClassName, 'absolute left-0 top-0 bottom-0 w-72 bg-layer-3')}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
         >
@@ -99,7 +99,7 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
           <MenuActionsBar />
         </div>
       ) : (
-        <div className={classNames(actionsClassNames, 'justify-center')}>
+        <div className={classNames(actionsClassName, 'justify-center')}>
           <MenuActions onExport={handleExport} onImport={handleImport} />
         </div>
       )}

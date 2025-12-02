@@ -1,7 +1,7 @@
 import { EntityType } from '@/src/types/entity-type';
 import { ImportConfigurationAction } from '@/src/types/import';
 import { describe, expect, test } from 'vitest';
-import { getActionClass, getComponentColDefs, getConfigurationPreview } from './ConfigurationPreview.utils';
+import { getActionClassName, getComponentColDefs, getConfigurationPreview } from './ConfigurationPreview.utils';
 
 describe('ConfigurationPreview.utils', () => {
   const t = (v: string) => v;
@@ -132,10 +132,10 @@ describe('ConfigurationPreview.utils', () => {
     expect(prevData[EntityType.ROUTE]).toBeUndefined();
   });
 
-  test('getActionClass returns correct class', () => {
-    expect(getActionClass(ImportConfigurationAction.CREATE)).toBe('bg-accent-primary');
-    expect(getActionClass(ImportConfigurationAction.UPDATE)).toBe('bg-orange-400');
-    expect(getActionClass(ImportConfigurationAction.OTHER)).toBe('bg-controls-disable');
+  test('getActionClassName returns correct class', () => {
+    expect(getActionClassName(ImportConfigurationAction.CREATE)).toBe('bg-accent-primary');
+    expect(getActionClassName(ImportConfigurationAction.UPDATE)).toBe('bg-orange-400');
+    expect(getActionClassName(ImportConfigurationAction.OTHER)).toBe('bg-controls-disable');
   });
 
   test('getComponentColDefs returns correct columns for MODEL', () => {

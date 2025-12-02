@@ -22,7 +22,7 @@ interface Props {
 const AppRouteList: FC<Props> = ({ readonly, routes, activeRoute, onRemove, onClick }) => {
   const t = useI18n() as (str: string) => string;
 
-  const routeClassNames = classNames(
+  const routeClassName = classNames(
     'rounded group pl-3 py-2 flex flex-row gap-2 h-[32px] w-full',
     'cursor-pointer small hover:text-accent-primary',
   );
@@ -45,7 +45,7 @@ const AppRouteList: FC<Props> = ({ readonly, routes, activeRoute, onRemove, onCl
                 key={route.name}
                 role="tab"
                 className={classNames(
-                  routeClassNames,
+                  routeClassName,
                   activeRoute === route.name
                     ? 'bg-accent-primary-alpha border-l-2 border-l-accent-primary'
                     : 'text-primary',

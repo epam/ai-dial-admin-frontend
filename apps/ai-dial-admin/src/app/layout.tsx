@@ -5,6 +5,7 @@ import { Metadata } from 'next';
 import { getIconPath } from '@/src/utils/themes/icon-path';
 import { themesApi } from './api/api';
 import '@/src/app/[lang]/global.scss';
+import classNames from 'classnames';
 export const metadata: Metadata = {
   title: process.env.APP_NAME || 'AI Dial Admin',
 };
@@ -33,7 +34,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           type="image/png"
         />
       </head>
-      <body className={`${inter.variable} font min-w-[360px]`}>{children}</body>
+      <body className={classNames(inter.variable, 'font min-w-[360px]')}>{children}</body>
     </html>
   );
 }

@@ -36,7 +36,7 @@ import {
 } from '@epam/ai-dial-shared';
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 import ViewContent from './Content/ViewContent';
-import { getViewHeaderClassNames } from '@/src/utils/entities/view';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 
 interface Props {
   view: ApplicationRoute;
@@ -291,7 +291,7 @@ const EntityView: FC<Props> = ({
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-        <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
+        <div className={getViewHeaderClassName(jsonEditorEnabled)}>
           {!jsonEditorEnabled && (
             <div className="flex-1 min-w-0 mr-3">
               <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />

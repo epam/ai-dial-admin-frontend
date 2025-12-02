@@ -1,10 +1,10 @@
 import { ActionType } from '@/src/models/dial/publications';
-import { ACTION_CLASSNAMES } from '@/src/constants/publications';
+import { ACTION_CLASS_NAME } from '@/src/constants/publications';
 import { ApplicationRoute } from '@/src/types/routes';
 import { PublicationsI18nKey } from '@/src/constants/i18n';
 
-export function getActionClass(action: ActionType): string {
-  return ACTION_CLASSNAMES[action];
+export function getActionClassName(action: ActionType): string {
+  return ACTION_CLASS_NAME[action];
 }
 
 export function getModalsTranslations(route: ApplicationRoute, action: ActionType) {

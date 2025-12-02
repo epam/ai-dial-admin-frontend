@@ -46,7 +46,7 @@ import {
 } from '@/src/utils/toolset/toolset-auth';
 import { addTrailingSlash } from '@/src/utils/url';
 import LoginPopup from './LoginPopup';
-import { getViewHeaderClassNames } from '@/src/utils/entities/view';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 let isSignInProcessed = false;
 interface Props {
   etag: string;
@@ -251,7 +251,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, is
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-        <div className={getViewHeaderClassNames(jsonEditorEnabled)}>
+        <div className={getViewHeaderClassName(jsonEditorEnabled)}>
           {!jsonEditorEnabled && (
             <div className="flex-1 min-w-0">
               <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
