@@ -108,9 +108,8 @@ const View: FC<Props> = ({ etag, template, names }) => {
           isChanged={isChanged}
           onSave={onSave}
           onDiscard={onDiscard}
-          removeEntity={deleteInterceptorTemplate}
-          hideJsonEditor={true}
-          jsonEditorEnabled={false}
+          onRemove={deleteInterceptorTemplate}
+          isHideJsonEditor={true}
         >
           <DialButton
             variant={ButtonVariant.Secondary}

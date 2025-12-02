@@ -23,7 +23,7 @@ interface Props<T> {
   view: ApplicationRoute;
   entity: T;
   existingVersions?: string[];
-  jsonEditorEnabled?: boolean;
+  isJsonEditorEnabled?: boolean;
   onDiscard: () => void;
   onSave: (newVersion?: string) => void;
 }
@@ -31,7 +31,7 @@ interface Props<T> {
 const ModifiedEntityButtons = <T extends object>({
   view,
   entity,
-  jsonEditorEnabled,
+  isJsonEditorEnabled,
   onDiscard,
   onSave,
   existingVersions,
@@ -87,7 +87,7 @@ const ModifiedEntityButtons = <T extends object>({
             className={buttonsClassName}
             label={t(ButtonsI18nKey.SaveAsNewVersion)}
             onClick={() => setIsModalOpen(true)}
-            disabled={jsonEditorEnabled ? false : !isValid}
+            disabled={isJsonEditorEnabled ? false : !isValid}
           />
         )}
         <DialButton
@@ -95,7 +95,7 @@ const ModifiedEntityButtons = <T extends object>({
           className={buttonsClassName}
           label={t(ButtonsI18nKey.Save)}
           onClick={() => onTryToSave()}
-          disabled={jsonEditorEnabled ? false : !isValid}
+          disabled={isJsonEditorEnabled ? false : !isValid}
         />
       </div>
       {isModalOpen &&

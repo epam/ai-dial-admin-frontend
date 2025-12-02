@@ -11,7 +11,6 @@ import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
-import { EntityViewTab } from '@/src/utils/tabs/utils';
 
 const ONLY_ADMIN_ENTITIES = [
   ApplicationRoute.Adapters,
@@ -24,20 +23,21 @@ const ONLY_ADMIN_ENTITIES = [
 
 interface Props {
   view: ApplicationRoute;
-  activeTab?: EntityViewTab;
   selectedFormat?: ExportFormat;
-  setSelectedFormat?: (format: ExportFormat) => void;
-  jsonEditorEnabled: boolean;
-  toggleJsonEditor?: () => void;
+  isJsonEditorEnabled?: boolean;
+
+  onChangeSelectedFormat?: (format: ExportFormat) => void;
+  onToggleJsonEditor?: () => void;
+  onHideFormatSelector?: () => void;
 }
 
 const JsonToggles: FC<Props> = ({
   view,
-  activeTab,
-  jsonEditorEnabled,
+  isJsonEditorEnabled,
   selectedFormat,
-  setSelectedFormat,
-  toggleJsonEditor,
+  onChangeSelectedFormat,
+  onToggleJsonEditor,
+  onHideFormatSelector,
 }) => {
   const t = useI18n() as (value: string, options?: Record<string, string | number>) => string;
   const staticEditorClassName = 'flex flex-row gap-x-4';
@@ -68,25 +68,21 @@ const JsonToggles: FC<Props> = ({
   return (
     <div className={editorClassName}>
       <div className="w-[1px] h-6 bg-layer-4"></div>
-      {jsonEditorEnabled &&
-      !ONLY_ADMIN_ENTITIES.includes(view) &&
-      !(
-        (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications) &&
-        activeTab === EntityViewTab.Parameters
-      ) ? (
+      {isJsonEditorEnabled && !ONLY_ADMIN_ENTITIES.includes(view) && !onHideFormatSelector?.() ? (
         <DialSelect
           size={SelectSize.Sm}
           variant={SelectVariant.Secondary}
           options={items}
           value={selectedFormat}
-          onChange={(id) => setSelectedFormat?.(id as ExportFormat)}
+          onChange={(id) => onChangeSelectedFormat?.(id as ExportFormat)}
         />
       ) : null}
+
       <DialSwitch
-        isOn={jsonEditorEnabled}
+        isOn={isJsonEditorEnabled}
         title={t(EntitiesI18nKey.JSONEditor)}
         switchId="jsonEditor"
-        onChange={toggleJsonEditor}
+        onChange={onToggleJsonEditor}
       />
     </div>
   );

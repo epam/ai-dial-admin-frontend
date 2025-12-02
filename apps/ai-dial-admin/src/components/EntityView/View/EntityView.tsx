@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DialTabs } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
@@ -37,6 +37,7 @@ import {
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 import ViewContent from './Content/ViewContent';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
+import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 
 interface Props {
   view: ApplicationRoute;
@@ -79,15 +80,24 @@ const EntityView: FC<Props> = ({
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [nextTab, setNextTab] = useState<string>();
   const [selectedEntity, setSelectedEntity] = useState(cloneDeep(originalEntity));
-  const [isChanged, setIsChanged] = useState<boolean>(false);
-  const [isIframeChanged, setIsIframeChanged] = useState<boolean>(false);
-  const [isSkipRefresh, setIsSkipRefresh] = useState<boolean>(true);
-  const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
+  const [isChanged, setIsChanged] = useState(false);
+  const [isIframeChanged, setIsIframeChanged] = useState(false);
+  const [isSkipRefresh, setIsSkipRefresh] = useState(true);
+  const [isJsonEditorEnabled, setIsJsonEditorEnabled] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
   const [coreEntity, setCoreEntity] = useState<BaseEntity | null>(null);
   const [key, setKey] = useState(0);
 
   const { visualizerConnector } = useAppContext();
+  const isHideJsonSelector = useMemo(() => {
+    const scheme = getAppRunner(selectedEntity as DialApplication, applicationSchemes);
+
+    return (
+      activeTab === EntityViewTab.Parameters &&
+      view === ApplicationRoute.Applications &&
+      (scheme?.['dial:applicationTypeEditorUrl'] || (selectedEntity as DialApplication).editorUrl)
+    );
+  }, [activeTab, applicationSchemes, selectedEntity, view]);
 
   useEffect(() => {
     const name = (originalEntity as { name: string })?.name;
@@ -168,7 +178,7 @@ const EntityView: FC<Props> = ({
   );
 
   const onDiscard = useCallback(() => {
-    if (jsonEditorEnabled) {
+    if (isJsonEditorEnabled) {
       dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
       setIsChanged(false);
       setSelectedFormat(ExportFormat.ADMIN);
@@ -180,7 +190,7 @@ const EntityView: FC<Props> = ({
     dispatch({ type: ValidationActionType.Reset });
     setSelectedEntity(cloneDeep(originalEntity));
     setIsSkipRefresh(false);
-  }, [jsonEditorEnabled, originalEntity, dispatch]);
+  }, [isJsonEditorEnabled, originalEntity, dispatch]);
 
   const onSave = useCallback(() => {
     const req =
@@ -235,11 +245,11 @@ const EntityView: FC<Props> = ({
     [setSelectedEntity],
   );
 
-  const toggleJsonEditor = useCallback(() => {
+  const onToggleJsonEditor = useCallback(() => {
     setSelectedEntity(cloneDeep(originalEntity));
     setSelectedFormat(ExportFormat.ADMIN);
 
-    setJsonEditorEnabled((prev) => !prev);
+    setIsJsonEditorEnabled((prev) => !prev);
   }, [originalEntity]);
 
   const changeTab = useCallback(() => {
@@ -291,8 +301,8 @@ const EntityView: FC<Props> = ({
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-        <div className={getViewHeaderClassName(jsonEditorEnabled)}>
-          {!jsonEditorEnabled && (
+        <div className={getViewHeaderClassName(isJsonEditorEnabled)}>
+          {!isJsonEditorEnabled && (
             <div className="flex-1 min-w-0 mr-3">
               <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
             </div>
@@ -304,18 +314,19 @@ const EntityView: FC<Props> = ({
             isChanged={isChanged}
             onSave={onTryToSave}
             onDiscard={onDiscard}
-            removeEntity={removeEntity}
-            jsonEditorEnabled={jsonEditorEnabled}
-            toggleJsonEditor={toggleJsonEditor}
+            onRemove={removeEntity}
+            isJsonEditorEnabled={isJsonEditorEnabled}
+            onToggleJsonEditor={onToggleJsonEditor}
             selectedFormat={selectedFormat}
-            setSelectedFormat={setSelectedFormat}
+            onChangeSelectedFormat={setSelectedFormat}
             etag={etag}
             onChangeEntity={onChangeEntity}
+            onHideFormatSelector={() => isHideJsonSelector}
           />
         </div>
 
         <div className="flex-1 overflow-auto min-h-0">
-          {jsonEditorEnabled && !(ApplicationRoute.Applications && activeTab === EntityViewTab.Parameters) ? (
+          {isJsonEditorEnabled && !(ApplicationRoute.Applications && activeTab === EntityViewTab.Parameters) ? (
             <EntityJsonEditor
               key={key}
               entity={selectedEntity}
@@ -329,7 +340,7 @@ const EntityView: FC<Props> = ({
                 applicationSchemes={applicationSchemes}
                 activeTab={activeTab}
                 selectedEntity={selectedEntity}
-                jsonEditorEnabled={jsonEditorEnabled}
+                isJsonEditorEnabled={isJsonEditorEnabled}
                 isSkipRefresh={isSkipRefresh}
                 onChangeEntity={onChangeEntity}
                 isChanged={isChanged}
