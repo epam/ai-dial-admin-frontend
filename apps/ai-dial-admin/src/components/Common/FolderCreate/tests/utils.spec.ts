@@ -2,7 +2,7 @@ import {
   generateFileColumnsForImportGrid,
   generatePromptColumnsForImportGrid,
   isLargeFile,
-} from '@/src/components/EntityListView/Import/import';
+} from '@/src/components/EntityListView/Import/utils';
 import { FileImportGridData } from '@/src/models/file';
 import { PromptImportGridData } from '@/src/models/prompts';
 import { ImportFileType } from '@/src/types/import';
@@ -19,7 +19,7 @@ import {
 } from '../utils';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
 
-vi.mock('@/src/components/EntityListView/Import/import', () => ({
+vi.mock('@/src/components/EntityListView/Import/utils', () => ({
   generatePromptColumnsForImportGrid: vi.fn(),
   generateFileColumnsForImportGrid: vi.fn(),
   isLargeFile: vi.fn(),

@@ -6,11 +6,14 @@ import {
   changeFilesMap,
   generatePromptRowDataForImportGrid,
   getImportResults,
+  getModalTitle,
   getMultipleImportStatus,
   isErrorFileNode,
   isErrorPromptNode,
   isInvalidJson,
-} from './import';
+} from '../utils';
+import { ApplicationRoute } from '@/src/types/routes';
+import { PromptsI18nKey, FoldersI18nKey, ApplicationsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 
 describe('Import :: getImportResults', () => {
   const folderName = 'testFolder';
@@ -297,5 +300,29 @@ describe('Import :: changeFilesMap', () => {
 
     expect(newMap).not.toBe(prevMap);
     expect(newMap.get('key1').files[0].id).toBe('123__v2');
+  });
+});
+
+describe('getModalTitle', () => {
+  const t = (key: string) => key;
+
+  test('returns Prompts import title', () => {
+    expect(getModalTitle(ApplicationRoute.Prompts, t)).toBe(PromptsI18nKey.Import);
+  });
+
+  test('returns Files import title', () => {
+    expect(getModalTitle(ApplicationRoute.Files, t)).toBe(FoldersI18nKey.Import);
+  });
+
+  test('returns Applications import title', () => {
+    expect(getModalTitle(ApplicationRoute.AssetsApplications, t)).toBe(ApplicationsI18nKey.Import);
+  });
+
+  test('returns Toolsets import title', () => {
+    expect(getModalTitle(ApplicationRoute.AssetsToolsets, t)).toBe(ToolsetI18nKey.Import);
+  });
+
+  test('returns empty string for unknown route', () => {
+    expect(getModalTitle(undefined, t)).toBe('');
   });
 });

@@ -1,9 +1,8 @@
-import { describe, expect, test } from 'vitest';
-import { IMPORT_RESOLUTIONS, IMPORT_STEPS, IMPORT_CONFIG_STEPS, IMPORT_FILE_TYPES } from '../import';
 import { ImportI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { ConflictResolutionPolicy, ImportFileType, ImportSteps } from '@/src/types/import';
-import { StepStatus } from '@epam/ai-dial-ui-kit';
 import { ApplicationRoute } from '@/src/types/routes';
+import { describe, expect, test } from 'vitest';
+import { IMPORT_CONFIG_STEPS, IMPORT_FILE_TYPES, IMPORT_RESOLUTIONS, IMPORT_STEPS } from '../import';
 
 const t = (s: string) => s;
 

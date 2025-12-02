@@ -975,6 +975,8 @@ export default {
     UseAllTools: 'Use all available tools',
     AddedManually: 'Added manually',
     View: 'View',
+    Import: 'Import Toolsets',
+    Export: 'Export Toolsets',
     AllTools: 'All tools',
     Warning: 'List of tools from external endpoint may not display some tools. Add the missing tools manually.',
     AutoDetected: 'Auto-detected',
@@ -999,6 +1001,10 @@ export default {
     SuccessLoginDescription: 'List of available tools is in the Tools Overview tab',
     SuccessLogout: 'Toolset logged out successfully',
     SuccessLogoutDescription: 'Access to the list of available tools has been revoked. Log in to restore it.',
+  },
+  Applications: {
+    Import: 'Import Applications',
+    Export: 'Export Applications',
   },
   ValidityStatus: {
     Invalid: 'Invalid',

@@ -169,21 +169,23 @@ export class AssetsApi extends BaseApi {
     return this.postFiles(url, body, token);
   }
 
-  // Prompt specific
-
-  exportPrompts(
+  exportAssets(
     token: JWT | null,
+    type: ResourceType,
     paths?: string[],
-    type?: ImportFileType,
+    fileType?: ImportFileType,
   ): Promise<{ blob: Blob; fileName: string } | { prompts: DialPrompt[] }> {
     const url = this.buildUrl(
-      ResourceType.PROMPT,
-      type === ImportFileType.ARCHIVE ? ResourceOperation.EXPORT : ResourceOperation.EXPORT_JSON,
+      type,
+      fileType === ImportFileType.ARCHIVE ? ResourceOperation.EXPORT : ResourceOperation.EXPORT_JSON,
     );
+    // eslint-disable-next-line no-console
+    console.log('exportAssets called with url', { url });
     return this.sendRequest(url, 'POST', { paths }, token).then(async (res) => {
-      return type === ImportFileType.ARCHIVE
+      return fileType === ImportFileType.ARCHIVE
         ? { blob: await (res as Response)?.blob?.(), fileName: getFileName(res as Response) || '' }
-        : (res as { prompts: DialPrompt[] });
+        : // TODO: check after supporting API
+          (res as { prompts: DialPrompt[] });
     });
   }
 
