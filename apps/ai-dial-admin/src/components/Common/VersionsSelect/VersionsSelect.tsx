@@ -28,7 +28,7 @@ const VersionsSelect: FC<Props> = ({ onChange, versions, selected, variant = Sel
       variant={variant}
       size={SelectSize.Sm}
       value={selected}
-      cssClass="px-2"
+      className="px-2"
       onChange={(id) => {
         onChange?.(id as string);
       }}

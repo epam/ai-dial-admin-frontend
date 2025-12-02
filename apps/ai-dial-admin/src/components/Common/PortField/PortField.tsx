@@ -17,7 +17,7 @@ const PortField: FC<Props> = ({ route, container, setContainer }) => {
   return (
     <div className="flex gap-4">
       <DialNumberInputField
-        containerCssClass={'max-w-[125px]'}
+        containerClassName={'max-w-[125px]'}
         elementId={'containerPort'}
         fieldTitle={t(EntityFieldsI18nKey.Port)}
         placeholder={t(EntityPlaceholdersI18nKey.ContainerPort)}
@@ -39,7 +39,7 @@ const PortField: FC<Props> = ({ route, container, setContainer }) => {
       />
       {route === ApplicationRoute.ModelDeployments && (
         <DialNumberInputField
-          containerCssClass={'max-w-[125px]'}
+          containerClassName={'max-w-[125px]'}
           elementId={'containerGrpcPort'}
           fieldTitle={t(EntityFieldsI18nKey.GRPCPort)}
           placeholder={t(EntityPlaceholdersI18nKey.ContainerPort)}

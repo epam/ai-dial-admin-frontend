@@ -92,13 +92,13 @@ const CreateAsset: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, onCre
       title={modalTitle}
       portalId="CreateEntityModal"
       open={isModalOpen}
-      cssClass="flex flex-col lg:max-w-[75%] md:max-w-[75%] lg:max-h-[80%] md:max-h-[80%] h-full"
+      className="flex flex-col lg:max-w-[75%] md:max-w-[75%] lg:max-h-[80%] md:max-h-[80%] h-full"
     >
       <div className="flex flex-1 min-h-0 p-4 gap-4">
         <DialCollapsibleSidebar
           width={320}
           title={''}
-          containerCssClass="bg-layer-3 mr-0 border border-primary"
+          containerClassName="bg-layer-3 mr-0 border border-primary"
           iconSize={24}
         >
           <FolderList context={useToolsetFolder as () => AssetsFolderContext<AssetToolset | DialFile>} view={route} />
@@ -108,7 +108,6 @@ const CreateAsset: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, onCre
           <DialTextInputField
             textBeforeInput={splitFolderId(entity.folderId).base}
             elementId={'path'}
-            containerCssClass="reset"
             fieldTitle={t(EntityFieldsI18nKey.StorageFolder)}
             value={splitFolderId(entity.folderId).path}
             onChange={(folderPath?: string) => {
@@ -147,7 +146,7 @@ const CreateAsset: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, onCre
             }}
           />
           <DialTextInputField
-            elementContainerCssClass="max-w-[120px] reset"
+            elementContainerClassName="max-w-[120px]"
             elementId={'version'}
             fieldTitle={t(EntityFieldsI18nKey.Version)}
             onChange={(version?: string) => {
@@ -163,7 +162,7 @@ const CreateAsset: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, onCre
             errorText={versionError?.text}
           />
           <DialTextAreaField
-            elementCssClass="min-h-[118px]"
+            elementClassName="min-h-[118px]"
             elementId="description"
             fieldTitle={t(EntityFieldsI18nKey.Description)}
             placeholder={t(EntityPlaceholdersI18nKey.Description)}

@@ -54,7 +54,6 @@ const BaseProperties: FC<Props> = ({ image, setImage, isModal, setVersionError: 
   return (
     <>
       <DialTextInputField
-        elementContainerCssClass="reset"
         fieldTitle={t(BasicI18nKey.Name)}
         elementId="name"
         placeholder={t(EntityPlaceholdersI18nKey.Name)}
@@ -71,7 +70,7 @@ const BaseProperties: FC<Props> = ({ image, setImage, isModal, setVersionError: 
         elementId="description"
         fieldTitle={t(BasicI18nKey.Description)}
         placeholder={t(EntityPlaceholdersI18nKey.Description)}
-        elementCssClass="min-h-[118px]"
+        elementClassName="min-h-[118px]"
         optional={true}
         value={image.description}
         errorText={descriptionError?.text}
@@ -86,7 +85,7 @@ const BaseProperties: FC<Props> = ({ image, setImage, isModal, setVersionError: 
       />
       {isModal && (
         <DialTextInputField
-          elementContainerCssClass="max-w-[120px] reset"
+          elementContainerClassName="max-w-[120px]"
           fieldTitle={t(BasicI18nKey.Version)}
           elementId="version"
           placeholder={t(EntityPlaceholdersI18nKey.Version)}
@@ -109,7 +108,6 @@ const BaseProperties: FC<Props> = ({ image, setImage, isModal, setVersionError: 
           elementId="author"
           fieldTitle={t(BasicI18nKey.Maintainer)}
           placeholder={t(EntityPlaceholdersI18nKey.Maintainer)}
-          elementContainerCssClass="reset"
           value={image.author}
           disabled={false}
           optional={true}

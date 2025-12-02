@@ -85,7 +85,7 @@ const AddContainerToImage: FC<Props> = ({ title, isModalOpen, onClose, onApply, 
       title={title}
       portalId="AddEntity"
       open={isModalOpen}
-      cssClass="h-[800px]"
+      className="h-[800px]"
       size={PopupSize.Lg}
       submitLabel={t(ButtonsI18nKey.Apply)}
       onSubmit={() => onApply(selectedEntities)}

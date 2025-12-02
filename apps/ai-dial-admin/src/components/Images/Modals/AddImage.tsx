@@ -40,7 +40,7 @@ const AddImageModal: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply, r
       title={modalTitle}
       portalId="AddImageModal"
       open={isModalOpen}
-      cssClass={containerClassName}
+      className={containerClassName}
     >
       <div className="flex h-full overflow-auto">
         <ImageProperties

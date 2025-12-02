@@ -49,7 +49,7 @@ const CreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, route, n
       title={modalTitle}
       portalId="createContainerModal"
       open={isModalOpen}
-      cssClass={containerClassName}
+      className={containerClassName}
     >
       <div className="flex flex-col py-4 px-6 overflow-auto max-h-[400px]">
         <ContainerProperties container={container} setContainer={onChange} isModal={true} route={route} names={names} />

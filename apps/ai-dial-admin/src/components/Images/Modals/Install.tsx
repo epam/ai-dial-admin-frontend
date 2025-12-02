@@ -24,7 +24,7 @@ const Install: FC<Props> = ({ isModalOpen, title, onClose, onApply, image }) => 
       title={title}
       portalId="BuildImageModal"
       open={isModalOpen}
-      cssClass={containerClassName}
+      className={containerClassName}
     >
       <div className="flex flex-col h-full overflow-auto px-6 py-4 gap-2">
         <p className="text-secondary small-150">{t(ImagesI18nKey.InstallModalDescription)}</p>

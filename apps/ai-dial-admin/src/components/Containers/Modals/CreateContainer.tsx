@@ -127,7 +127,7 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
       title={modalTitle}
       portalId="AddContainerModal"
       open={isModalOpen}
-      cssClass={containerClassName}
+      className={containerClassName}
     >
       <div className="flex flex-col py-4 px-6 overflow-auto max-h-[400px]">
         <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStep} />

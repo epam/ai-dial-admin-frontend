@@ -69,7 +69,7 @@ const ChangeContainerImage: FC<Props> = ({ onClose, isModalOpen, modalTitle, rou
       title={modalTitle}
       portalId="ChangeContainerImageModal"
       open={isModalOpen}
-      cssClass={containerClassName}
+      className={containerClassName}
     >
       <div className="flex flex-col py-4 px-6 overflow-auto max-h-[400px]">
         <>

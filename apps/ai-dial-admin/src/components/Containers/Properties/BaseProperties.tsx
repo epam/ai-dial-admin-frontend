@@ -25,7 +25,6 @@ const BaseProperties: FC<Props> = ({ container, setContainer, names, isModal }) 
   return (
     <>
       <DialTextInputField
-        elementContainerCssClass="reset"
         fieldTitle={t(BasicI18nKey.Name)}
         elementId="name"
         placeholder={t(EntityPlaceholdersI18nKey.Name)}
@@ -44,7 +43,7 @@ const BaseProperties: FC<Props> = ({ container, setContainer, names, isModal }) 
         elementId="description"
         fieldTitle={t(BasicI18nKey.Description)}
         placeholder={t(EntityPlaceholdersI18nKey.Description)}
-        elementCssClass="min-h-[118px]"
+        elementClassName="min-h-[118px]"
         optional={true}
         value={container.description}
         errorText={descriptionError?.text}
@@ -59,7 +58,6 @@ const BaseProperties: FC<Props> = ({ container, setContainer, names, isModal }) 
       />
       {!isModal && (
         <DialTextInputField
-          elementContainerCssClass="reset"
           fieldTitle={t(BasicI18nKey.Maintainer)}
           elementId="author"
           placeholder={t(EntityPlaceholdersI18nKey.Maintainer)}

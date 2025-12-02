@@ -36,11 +36,11 @@ const NewVersion: FC<Props> = ({ isModalOpen, title, onClose, onApply, image, ve
       title={title}
       portalId="BuildImageModal"
       open={isModalOpen}
-      cssClass={containerClassName}
+      className={containerClassName}
     >
       <div className="flex flex-col h-full overflow-auto px-6 py-4">
         <DialTextInputField
-          elementContainerCssClass="max-w-[120px] reset"
+          elementContainerClassName="max-w-[120px]"
           elementId={'version'}
           fieldTitle={t(EntityFieldsI18nKey.Version)}
           onChange={(version?: string) => {

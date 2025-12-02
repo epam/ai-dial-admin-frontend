@@ -29,7 +29,7 @@ const DuplicateModal: FC<Props> = ({ title, isModalOpen, currentName, onClose, o
       title={title}
       portalId="DuplicateImageModal"
       open={isModalOpen}
-      cssClass="flex flex-col lg:max-w-[55%] md:max-w-[75%]"
+      className="flex flex-col lg:max-w-[55%] md:max-w-[75%]"
     >
       <div className="flex flex-col h-full overflow-auto px-6 py-4">
         <DialTextInputField

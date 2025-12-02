@@ -38,7 +38,7 @@ const DeleteModal: FC<Props> = ({ title, description, isModalOpen, onClose, onAp
       title={title}
       portalId="DeleteImageModal"
       open={isModalOpen}
-      cssClass={containerClassNames}
+      className={containerClassNames}
     >
       <div className="flex flex-col h-full overflow-auto px-6 py-4">
         <p className="text-secondary small-150">{description}</p>

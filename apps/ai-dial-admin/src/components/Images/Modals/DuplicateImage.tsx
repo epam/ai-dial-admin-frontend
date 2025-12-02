@@ -106,7 +106,7 @@ const DuplicateImageModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
       title={title}
       portalId="DuplicateImageModal"
       open={isModalOpen}
-      cssClass={containerClassName}
+      className={containerClassName}
     >
       <div className="flex flex-col h-full overflow-auto px-6 py-4 gap-4">
         <DialRadioGroup
@@ -128,7 +128,7 @@ const DuplicateImageModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
           }}
         />
         <DialTextInputField
-          elementContainerCssClass="max-w-[120px] reset"
+          elementContainerClassName="max-w-[120px]"
           fieldTitle={t(BasicI18nKey.Version)}
           elementId="version"
           placeholder={t(EntityPlaceholdersI18nKey.Version)}

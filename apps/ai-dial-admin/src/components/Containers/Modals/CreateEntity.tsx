@@ -60,7 +60,7 @@ const CreateEntityModal: FC<Props> = ({
       title={modalTitle}
       portalId="CreateEntityModal"
       open={isModalOpen}
-      cssClass="flex flex-col lg:max-w-[55%] md:max-w-[75%]"
+      className="flex flex-col lg:max-w-[55%] md:max-w-[75%]"
     >
       <div className="flex flex-col h-full overflow-auto px-6 py-4 gap-6">
         <DialTextInputField
@@ -109,7 +109,7 @@ const CreateEntityModal: FC<Props> = ({
           />
         )}
         <DialTextAreaField
-          elementCssClass="min-h-[118px]"
+          elementClassName="min-h-[118px]"
           elementId="description"
           fieldTitle={t(EntityFieldsI18nKey.Description)}
           placeholder={t(EntityPlaceholdersI18nKey.Description)}
