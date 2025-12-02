@@ -8,7 +8,7 @@ import BaseProperties from '@/src/components/Images/Properties/BaseProperties';
 import ImageSourceFields from '@/src/components/Images/Properties/ImageSourceFields';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import { getTopics } from '@/src/app/actions/deployments';
-import { TopicsI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
 import TransportField from '@/src/components/Common/TransportField/TransportField';
 
 interface Props {
@@ -45,9 +45,9 @@ const ImageProperties: FC<Props> = ({ image, setImage, isModal, route, setVersio
           getItems={getTopics}
           allItems={image.topics}
           onChangeItems={onChangeTopics}
-          heading={t(TopicsI18nKey.Topics)}
-          title={t(TopicsI18nKey.Topics)}
-          addPlaceholder={t(TopicsI18nKey.AddTopicPlaceholder)}
+          heading={t(EntityFieldsI18nKey.topics)}
+          title={t(EntityFieldsI18nKey.topics)}
+          addPlaceholder={t(EntityPlaceholdersI18nKey.Topic)}
           addTitle={t(TopicsI18nKey.AddTopic)}
           optional={true}
         />

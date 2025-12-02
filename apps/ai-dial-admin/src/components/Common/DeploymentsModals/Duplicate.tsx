@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from 'react';
 import { ButtonVariant, DialButton, DialPopup, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { useI18n } from '@/src/locales/client';
-import { BasicI18nKey, ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { FieldError } from '@/src/models/error';
 import { getErrorForName } from '@/src/utils/validation/name-error';
 
@@ -16,7 +16,7 @@ interface Props {
 
 const DuplicateModal: FC<Props> = ({ title, isModalOpen, currentName, onClose, onApply, names }) => {
   const t = useI18n() as (key: string) => string;
-  const [name, setName] = useState(`${currentName} ${t(BasicI18nKey.DuplicateCopy)}`);
+  const [name, setName] = useState(`${currentName} ${t(BasicI18nKey.DuplicateCopyPostfix)}`);
   const [nameError, setNameError] = useState<FieldError | null>(null);
 
   useEffect(() => {
@@ -34,7 +34,7 @@ const DuplicateModal: FC<Props> = ({ title, isModalOpen, currentName, onClose, o
       <div className="flex flex-col h-full overflow-auto px-6 py-4">
         <DialTextInputField
           elementId="name"
-          fieldTitle={t(BasicI18nKey.Name)}
+          fieldTitle={t(EntityFieldsI18nKey.name)}
           placeholder={t(EntityPlaceholdersI18nKey.Name)}
           value={name}
           errorText={nameError?.text}

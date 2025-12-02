@@ -79,7 +79,7 @@ const CreateEntityModal: FC<Props> = ({
         />
         <DialTextInputField
           elementId="displayName"
-          fieldTitle={t(EntityFieldsI18nKey.DisplayName)}
+          fieldTitle={t(EntityFieldsI18nKey.displayName)}
           placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
           value={entity.displayName}
           errorText={displayNameError?.text}
@@ -94,7 +94,7 @@ const CreateEntityModal: FC<Props> = ({
         {route === ApplicationRoute.ModelDeployments && (
           <DialTextInputField
             elementId="version"
-            fieldTitle={t(EntityFieldsI18nKey.Version)}
+            fieldTitle={t(EntityFieldsI18nKey.version)}
             placeholder={t(EntityPlaceholdersI18nKey.Version)}
             value={(entity as DialModel).displayVersion} //TODO: DEPLOYMENTS
             errorText={versionError?.text}
@@ -111,7 +111,7 @@ const CreateEntityModal: FC<Props> = ({
         <DialTextAreaField
           elementClassName="min-h-[118px]"
           elementId="description"
-          fieldTitle={t(EntityFieldsI18nKey.Description)}
+          fieldTitle={t(EntityFieldsI18nKey.description)}
           placeholder={t(EntityPlaceholdersI18nKey.Description)}
           value={entity.description}
           errorText={descriptionError?.text}

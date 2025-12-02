@@ -42,7 +42,7 @@ const NewVersion: FC<Props> = ({ isModalOpen, title, onClose, onApply, image, ve
         <DialTextInputField
           elementContainerClassName="max-w-[120px]"
           elementId={'version'}
-          fieldTitle={t(EntityFieldsI18nKey.Version)}
+          fieldTitle={t(EntityFieldsI18nKey.version)}
           onChange={(version?: string) => {
             setVersionError(
               getSemanticVersionError(getVersionsPerName(versions), image as { name: string }, t, version),

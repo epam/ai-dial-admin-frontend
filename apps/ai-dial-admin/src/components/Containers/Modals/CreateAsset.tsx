@@ -119,7 +119,7 @@ const CreateAsset: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, onCre
           />
           <DialTextInputField
             elementId="id"
-            fieldTitle={t(EntityFieldsI18nKey.Id)}
+            fieldTitle={t(EntityFieldsI18nKey.id)}
             placeholder={t(EntityPlaceholdersI18nKey.Id)}
             value={entity.name}
             errorText={nameError?.text}
@@ -133,7 +133,7 @@ const CreateAsset: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, onCre
           />
           <DialTextInputField
             elementId="displayName"
-            fieldTitle={t(EntityFieldsI18nKey.DisplayName)}
+            fieldTitle={t(EntityFieldsI18nKey.displayName)}
             placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
             value={entity.displayName}
             errorText={displayNameError?.text}
@@ -148,7 +148,7 @@ const CreateAsset: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, onCre
           <DialTextInputField
             elementContainerClassName="max-w-[120px]"
             elementId={'version'}
-            fieldTitle={t(EntityFieldsI18nKey.Version)}
+            fieldTitle={t(EntityFieldsI18nKey.version)}
             onChange={(version?: string) => {
               if (version) {
                 setEntity({
@@ -164,7 +164,7 @@ const CreateAsset: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, onCre
           <DialTextAreaField
             elementClassName="min-h-[118px]"
             elementId="description"
-            fieldTitle={t(EntityFieldsI18nKey.Description)}
+            fieldTitle={t(EntityFieldsI18nKey.description)}
             placeholder={t(EntityPlaceholdersI18nKey.Description)}
             value={entity.description}
             errorText={descriptionError?.text}

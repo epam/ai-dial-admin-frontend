@@ -19,6 +19,7 @@ import {
   BasicI18nKey,
   ButtonsI18nKey,
   EntitiesI18nKey,
+  EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
   ImagesI18nKey,
 } from '@/src/constants/i18n';
@@ -50,7 +51,7 @@ const DuplicateImageModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
   const [duplicationType, setDuplicationType] = useState<string>(DUPLICATION_TYPE.VERSION);
 
   const duplicationTypes: RadioButtonWithContent[] = [
-    { id: DUPLICATION_TYPE.VERSION, name: t(BasicI18nKey.NewVersion) },
+    { id: DUPLICATION_TYPE.VERSION, name: t(EntitiesI18nKey.NewVersion) },
     { id: DUPLICATION_TYPE.ENTITY, name: t(ImagesI18nKey.NewImage) },
   ];
 
@@ -62,7 +63,10 @@ const DuplicateImageModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
       } else {
         setCopyImage({
           ...copyImage,
-          name: copyImage.name === initialName ? `${copyImage.name} ${t(BasicI18nKey.DuplicateCopy)}` : copyImage.name,
+          name:
+            copyImage.name === initialName
+              ? `${copyImage.name} ${t(BasicI18nKey.DuplicateCopyPostfix)}`
+              : copyImage.name,
           version: originalVersion,
         });
       }
@@ -119,7 +123,7 @@ const DuplicateImageModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
         />
         <DialTextInputField
           elementId="name"
-          fieldTitle={t(BasicI18nKey.Name)}
+          fieldTitle={t(EntityFieldsI18nKey.name)}
           placeholder={t(EntityPlaceholdersI18nKey.Name)}
           value={copyImage.name}
           onChange={(name?: string) => {
@@ -129,7 +133,7 @@ const DuplicateImageModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
         />
         <DialTextInputField
           elementContainerClassName="max-w-[120px]"
-          fieldTitle={t(BasicI18nKey.Version)}
+          fieldTitle={t(EntityFieldsI18nKey.version)}
           elementId="version"
           placeholder={t(EntityPlaceholdersI18nKey.Version)}
           value={copyImage.version}

@@ -4,7 +4,7 @@ import { Image } from '@/src/models/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 import { useI18n } from '@/src/locales/client';
 import { getSourcesTypes } from '@/src/utils/deployments/images';
-import { BasicI18nKey, EntitiesI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, EntityFieldsI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import StatusIndicator from '@/src/components/Common/StatusIndicator/StatusIndicator';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import ImageProperties from '@/src/components/Images/Properties/ImageProperties';
@@ -24,15 +24,21 @@ const Properties: FC<Props> = ({ image, setImage, route, originalName }) => {
   return (
     <div className="flex flex-col pt-3 w-full">
       <div className="flex gap-10 overflow-y-scroll">
-        <DialLabelledText label={t(BasicI18nKey.ID)} text={originalName} />
-        <DialLabelledText label={t(BasicI18nKey.Type)} text={t(ImagesI18nKey.Image)} />
-        <DialLabelledText label={t(BasicI18nKey.CreateTime)} text={formatDateTimeToLocalString(image?.createdAt)} />
-        <DialLabelledText label={t(BasicI18nKey.UpdatedTime)} text={formatDateTimeToLocalString(image?.updatedAt)} />
+        <DialLabelledText label={t(EntityFieldsI18nKey.id)} text={originalName} />
+        <DialLabelledText label={t(EntityFieldsI18nKey.type)} text={t(ImagesI18nKey.Image)} />
+        <DialLabelledText
+          label={t(EntityFieldsI18nKey.createdAt)}
+          text={formatDateTimeToLocalString(image?.createdAt)}
+        />
+        <DialLabelledText
+          label={t(EntityFieldsI18nKey.updatedAt)}
+          text={formatDateTimeToLocalString(image?.updatedAt)}
+        />
         <DialLabelledText
           label={t(EntitiesI18nKey.SourceType)}
           text={sourcesList?.find((source) => source.value === image.source.$type)?.label}
         />
-        <DialLabelledText label={t(BasicI18nKey.Status)}>
+        <DialLabelledText label={t(EntityFieldsI18nKey.status)}>
           <StatusIndicator status={image.buildStatus} />
         </DialLabelledText>
       </div>

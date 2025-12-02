@@ -3,7 +3,7 @@ import { DialTextAreaField, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { Container } from '@/src/models/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
-import { BasicI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { getErrorForName } from '@/src/utils/validation/name-error';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
 import { getMaintainerError } from '@/src/utils/deployments/validation';
@@ -25,7 +25,7 @@ const BaseProperties: FC<Props> = ({ container, setContainer, names, isModal }) 
   return (
     <>
       <DialTextInputField
-        fieldTitle={t(BasicI18nKey.Name)}
+        fieldTitle={t(EntityFieldsI18nKey.name)}
         elementId="name"
         placeholder={t(EntityPlaceholdersI18nKey.Name)}
         value={container.name}
@@ -41,7 +41,7 @@ const BaseProperties: FC<Props> = ({ container, setContainer, names, isModal }) 
       />
       <DialTextAreaField
         elementId="description"
-        fieldTitle={t(BasicI18nKey.Description)}
+        fieldTitle={t(EntityFieldsI18nKey.description)}
         placeholder={t(EntityPlaceholdersI18nKey.Description)}
         elementClassName="min-h-[118px]"
         optional={true}
@@ -58,7 +58,7 @@ const BaseProperties: FC<Props> = ({ container, setContainer, names, isModal }) 
       />
       {!isModal && (
         <DialTextInputField
-          fieldTitle={t(BasicI18nKey.Maintainer)}
+          fieldTitle={t(EntityFieldsI18nKey.author)}
           elementId="author"
           placeholder={t(EntityPlaceholdersI18nKey.Maintainer)}
           value={container.author}

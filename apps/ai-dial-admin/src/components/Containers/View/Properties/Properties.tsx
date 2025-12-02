@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { useNotification } from '@/src/context/NotificationContext';
 import { updateContainer } from '@/src/app/actions/deployments';
 import { getErrorNotification } from '@/src/utils/notification';
-import { BasicI18nKey, ContainersI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ContainersI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -61,8 +61,8 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
     <>
       <div className="flex flex-col pt-3 divide-y divide-primary w-full">
         <div className="flex gap-10 overflow-y-scroll">
-          <DialLabelledText label={t(BasicI18nKey.ID)} text={originalName} />
-          <DialLabelledText label={t(BasicI18nKey.Type)} text={t(ContainersI18nKey.Container)} />
+          <DialLabelledText label={t(EntityFieldsI18nKey.id)} text={originalName} />
+          <DialLabelledText label={t(EntityFieldsI18nKey.type)} text={t(ContainersI18nKey.Container)} />
           {container.status !== CONTAINER_STATUS.RUNNING && container.status !== CONTAINER_STATUS.PENDING ? (
             <DialLabelledText label={t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })}>
               <DialButton
@@ -80,14 +80,14 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
             />
           )}
           <DialLabelledText
-            label={t(BasicI18nKey.CreateTime)}
+            label={t(EntityFieldsI18nKey.createdAt)}
             text={formatDateTimeToLocalString(container?.createdAt)}
           />
           <DialLabelledText
-            label={t(BasicI18nKey.UpdatedTime)}
+            label={t(EntityFieldsI18nKey.updatedAt)}
             text={formatDateTimeToLocalString(container?.updatedAt)}
           />
-          <DialLabelledText label={t(BasicI18nKey.Status)}>
+          <DialLabelledText label={t(EntityFieldsI18nKey.status)}>
             <StatusIndicator status={container.status} />
           </DialLabelledText>
           {container.status === CONTAINER_STATUS.RUNNING && container.url && (

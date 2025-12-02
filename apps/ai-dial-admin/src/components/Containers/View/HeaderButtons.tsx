@@ -18,7 +18,7 @@ import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { deleteContainer, runContainer, stopContainer } from '@/src/app/actions/deployments';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { ButtonsI18nKey, ContainersI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { getTranslatedEntity, getTranslatedType } from '@/src/utils/deployments/entity';
 import { validateContainer } from '@/src/utils/deployments/containers';
 import { getAdminAssetPath, getAdminEntityPath } from '@/src/utils/deployments/grid';
@@ -163,7 +163,7 @@ const HeaderButtons = <T extends Container>({
       createEntity(entity).then((res) => {
         if (res.success) {
           showNotification(
-            getSuccessNotification(t(EntitiesI18nKey.CreatedSuccessfully, { entity: getTranslatedEntity(route, t) })),
+            getSuccessNotification(t(CreateI18nKey.NotificationTitle, { entity: getTranslatedEntity(route, t) })),
           );
           router.push(getAdminEntityPath(route, entity));
         } else {
@@ -180,7 +180,7 @@ const HeaderButtons = <T extends Container>({
       createEntityAsAsset?.(asset).then((res) => {
         if (res.success) {
           showNotification(
-            getSuccessNotification(t(EntitiesI18nKey.CreatedSuccessfully, { entity: getTranslatedEntity(route, t) })),
+            getSuccessNotification(t(CreateI18nKey.NotificationTitle, { entity: getTranslatedEntity(route, t) })),
           );
 
           router.push(getAdminAssetPath(route, asset));
@@ -280,7 +280,7 @@ const HeaderButtons = <T extends Container>({
                     <DialButton
                       variant={ButtonVariant.Secondary}
                       className={buttonsClassNames}
-                      label={t(ButtonsI18nKey.CreateEntity, { entity: getTranslatedEntity(route, t) })}
+                      label={t(CreateI18nKey.CreateEntity, { entity: getTranslatedEntity(route, t) })}
                       iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
                       onClick={onOpenCreateModal}
                     />
@@ -350,7 +350,7 @@ const HeaderButtons = <T extends Container>({
           <CreateEntityModal
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
-            modalTitle={t(ButtonsI18nKey.CreateEntity, { entity: getTranslatedEntity(route, t) })}
+            modalTitle={t(CreateI18nKey.CreateEntity, { entity: getTranslatedEntity(route, t) })}
             route={route}
             container={container}
             onCreate={onCreateEntity}
@@ -365,7 +365,7 @@ const HeaderButtons = <T extends Container>({
           <CreateAssetModal
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
-            modalTitle={t(ButtonsI18nKey.CreateEntityAsAsset, { entity: getTranslatedEntity(route, t) })}
+            modalTitle={t(CreateI18nKey.CreateEntityAsAsset, { entity: getTranslatedEntity(route, t) })}
             route={route}
             container={container}
             onCreate={onCreateEntityAsAsset}

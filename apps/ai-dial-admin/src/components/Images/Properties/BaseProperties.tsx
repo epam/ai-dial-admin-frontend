@@ -1,7 +1,7 @@
 import { FC, useMemo, useState } from 'react';
 import { debounce } from 'lodash';
 import { DialTextAreaField, DialTextInputField } from '@epam/ai-dial-ui-kit';
-import { BasicI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { FieldError } from '@/src/models/error';
 import { useI18n } from '@/src/locales/client';
@@ -54,7 +54,7 @@ const BaseProperties: FC<Props> = ({ image, setImage, isModal, setVersionError: 
   return (
     <>
       <DialTextInputField
-        fieldTitle={t(BasicI18nKey.Name)}
+        fieldTitle={t(EntityFieldsI18nKey.name)}
         elementId="name"
         placeholder={t(EntityPlaceholdersI18nKey.Name)}
         value={image.name}
@@ -68,7 +68,7 @@ const BaseProperties: FC<Props> = ({ image, setImage, isModal, setVersionError: 
       />
       <DialTextAreaField
         elementId="description"
-        fieldTitle={t(BasicI18nKey.Description)}
+        fieldTitle={t(EntityFieldsI18nKey.description)}
         placeholder={t(EntityPlaceholdersI18nKey.Description)}
         elementClassName="min-h-[118px]"
         optional={true}
@@ -86,7 +86,7 @@ const BaseProperties: FC<Props> = ({ image, setImage, isModal, setVersionError: 
       {isModal && (
         <DialTextInputField
           elementContainerClassName="max-w-[120px]"
-          fieldTitle={t(BasicI18nKey.Version)}
+          fieldTitle={t(EntityFieldsI18nKey.version)}
           elementId="version"
           placeholder={t(EntityPlaceholdersI18nKey.Version)}
           value={image.version}
@@ -106,7 +106,7 @@ const BaseProperties: FC<Props> = ({ image, setImage, isModal, setVersionError: 
       {!isModal && (
         <DialTextInputField
           elementId="author"
-          fieldTitle={t(BasicI18nKey.Maintainer)}
+          fieldTitle={t(EntityFieldsI18nKey.author)}
           placeholder={t(EntityPlaceholdersI18nKey.Maintainer)}
           value={image.author}
           disabled={false}

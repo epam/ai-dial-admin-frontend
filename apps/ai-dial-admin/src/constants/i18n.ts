@@ -83,28 +83,8 @@ export enum BasicI18nKey {
   Disabled = 'Basic.Disabled',
   Yes = 'Basic.Yes',
   No = 'Basic.No',
-  ID = 'Basic.ID',
-  Name = 'Basic.Name',
-  Description = 'Basic.Description',
-  Settings = 'Basic.Settings',
-  Theme = 'Basic.Theme',
-  Browse = 'Basic.Browse',
-  Move = 'Basic.Move',
-  SaveChangesTitle = 'Basic.SaveChangesTitle',
-  SaveChangesDescription = 'Basic.SaveChangesDescription',
-  SaveParametersTitle = 'Basic.SaveParametersTitle',
-  SaveParametersDescription = 'Basic.SaveParametersDescription',
-  Source = 'Basic.Source',
-  DuplicateCopy = 'Basic.DuplicateCopy',
-  Arguments = 'Basic.Arguments',
+  DuplicateCopyPostfix = 'Basic.DuplicateCopyPostfix',
   URL = 'Basic.URL',
-  CreateTime = 'Basic.CreateTime',
-  UpdatedTime = 'Basic.UpdatedTime',
-  Type = 'Basic.Type',
-  Status = 'Basic.Status',
-  Maintainer = 'Basic.Maintainer',
-  Version = 'Basic.Version',
-  NewVersion = 'Basic.NewVersion',
 }
 
 export enum EntitiesI18nKey {
@@ -175,7 +155,6 @@ export enum EntitiesI18nKey {
   Model = 'Entities.Model',
   Toolset = 'Entities.Toolset',
   AssetToolset = 'Entities.AssetToolset',
-  CreatedSuccessfully = 'Entities.CreatedSuccessfully',
   NoImages = 'Entities.NoImages',
   NoContainersType = 'Entities.NoContainersType',
   NoRelatedContainers = 'Entities.NoRelatedContainers',
@@ -295,9 +274,6 @@ export enum ButtonsI18nKey {
   Stop = 'Buttons.Stop',
   Install = 'Buttons.Install',
   Run = 'Buttons.Run',
-  CreateContainer = 'Buttons.CreateContainer',
-  CreateEntity = 'Buttons.CreateEntity',
-  CreateEntityAsAsset = 'Buttons.CreateEntityAsAsset',
   AddPort = 'Buttons.AddPort',
 }
 
@@ -323,6 +299,10 @@ export enum UpdateI18nKey {
 
 export enum CreateI18nKey {
   Title = 'CreateEntity.Title',
+
+  CreateContainer = 'CreateEntity.Deployments.Container',
+  CreateEntity = 'CreateEntity.Deployments.Entity',
+  CreateEntityAsAsset = 'CreateEntity.Deployments.EntityAsAsset',
 
   SelectInterceptorTemplate = 'CreateEntity.SelectInterceptorTemplate',
   SelectAdapter = 'CreateEntity.SelectAdapter',
@@ -459,8 +439,6 @@ export enum FeaturesI18nKey {
 
 export enum TopicsI18nKey {
   AddTopic = 'Topics.AddTopic',
-  Topics = 'Topics.Topics',
-  AddTopicPlaceholder = 'Topics.AddTopicPlaceholder',
 }
 
 export enum TabsI18nKey {
@@ -1037,10 +1015,6 @@ export enum EntityFieldsI18nKey {
   MemoryLimit = 'EntityFields.MemoryLimit',
   GPURequest = 'EntityFields.GPURequest',
   GPULimit = 'EntityFields.GPULimit',
-  Id = 'EntityFields.Id',
-  Description = 'EntityFields.Description',
-  Version = 'EntityFields.Version',
-  DisplayName = 'EntityFields.DisplayName',
   ContainerPorts = 'EntityFields.ContainerPorts',
   ContainerEndpointPath = 'EntityFields.ContainerEndpointPath',
   StorageFolder = 'EntityFields.StorageFolder',
@@ -1048,6 +1022,7 @@ export enum EntityFieldsI18nKey {
   Transport = 'EntityFields.Transport',
   Port = 'EntityFields.Port',
   GRPCPort = 'EntityFields.GRPCPort',
+  Arguments = 'EntityFields.Arguments',
 }
 
 export enum ToolsetI18nKey {

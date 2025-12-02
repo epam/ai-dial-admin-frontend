@@ -25,7 +25,7 @@ import { getTranslatedType } from '@/src/utils/deployments/entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { validateImage } from '@/src/utils/deployments/images';
 import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
-import { ButtonsI18nKey, ContainersI18nKey, EntitiesI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, EntitiesI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import Page403 from '@/src/components/Page403/Page403';
 import VersionsSelect from '@/src/components/Common/VersionsSelect/VersionsSelect';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -296,7 +296,7 @@ const HeaderButtons: FC<Props> = ({
                 <DialButton
                   variant={ButtonVariant.Secondary}
                   className={buttonsClassNames}
-                  label={t(ButtonsI18nKey.CreateContainer, { type: getTranslatedType(route, t) })}
+                  label={t(CreateI18nKey.CreateContainer, { type: getTranslatedType(route, t) })}
                   iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
                   onClick={onOpenCreateModal}
                 />

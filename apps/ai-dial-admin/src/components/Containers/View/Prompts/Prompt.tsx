@@ -4,7 +4,7 @@ import { useI18n } from '@/src/locales/client';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { Prompt as PromptType } from '@/src/models/deployments/containers';
-import { BasicI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import Grid from '@/src/components/Grid/Grid';
 import classNames from 'classnames';
 
@@ -44,7 +44,7 @@ const Prompt: FC<Props> = ({ prompt }) => {
         )}
         {!!prompt.arguments?.length && (
           <div>
-            <p className="small text-secondary">{t(BasicI18nKey.Arguments)}</p>
+            <p className="small text-secondary">{t(EntityFieldsI18nKey.Arguments)}</p>
             <Grid
               columnDefs={PROMPT_ARGUMENT_COLUMNS}
               rowData={prompt.arguments.map((argument) => {
