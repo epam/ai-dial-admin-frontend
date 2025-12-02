@@ -33,6 +33,6 @@ describe('ContainersList', () => {
   test('renders with empty list', () => {
     render(<ContainersList route={ApplicationRoute.ModelDeployments} containersList={[]} />);
 
-    expect(screen.getByText(EntitiesI18nKey.NoContainers)).toBeInTheDocument();
+    expect(screen.getByText(EntitiesI18nKey.NoContainersType)).toBeInTheDocument();
   });
 });

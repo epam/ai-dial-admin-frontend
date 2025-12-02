@@ -45,26 +45,32 @@ const Events: FC<Props> = ({ route, events }) => {
   );
 
   return (
-    <ListView
-      view={route}
-      data={events}
-      columnDefs={CONTAINER_EVENTS(t)}
-      title={t(TabsI18nKey.Events)}
-      emptyDataTitle={t(EntitiesI18nKey.NoEvents)}
-      showColumnsPanel={showColumnsPanel}
-      toggleColumnsPanel={toggleColumnsPanel}
-      onGridReady={onGridReady}
-    >
-      <div className="flex gap-4">
-        <ResetFiltersButton gridApi={gridApi} />
-        <DialButton
-          variant={ButtonVariant.Tertiary}
-          label={t(ButtonsI18nKey.Columns)}
-          iconBefore={<IconColumns2 {...BASE_ICON_PROPS} />}
-          onClick={onToggleColumnsPanel}
-        />
-      </div>
-    </ListView>
+    <div className="flex h-full">
+      <ListView
+        view={route}
+        data={events}
+        columnDefs={CONTAINER_EVENTS(t)}
+        title={t(TabsI18nKey.Events)}
+        emptyDataTitle={t(EntitiesI18nKey.NoEvents)}
+        showColumnsPanel={showColumnsPanel}
+        toggleColumnsPanel={toggleColumnsPanel}
+        onGridReady={onGridReady}
+      >
+        <div className="flex gap-4">
+          {!!events.length && (
+            <>
+              <ResetFiltersButton gridApi={gridApi} />
+              <DialButton
+                variant={ButtonVariant.Tertiary}
+                label={t(ButtonsI18nKey.Columns)}
+                iconBefore={<IconColumns2 {...BASE_ICON_PROPS} />}
+                onClick={onToggleColumnsPanel}
+              />
+            </>
+          )}
+        </div>
+      </ListView>
+    </div>
   );
 };
 

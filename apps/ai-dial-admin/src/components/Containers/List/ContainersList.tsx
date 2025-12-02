@@ -250,7 +250,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
           count: containersList.length,
           type: getTranslatedType(route, t),
         })}
-        emptyDataTitle={t(EntitiesI18nKey.NoContainers, { type: getTranslatedType(route, t) })}
+        emptyDataTitle={t(EntitiesI18nKey.NoContainersType, { type: getTranslatedType(route, t) })}
         showColumnsPanel={showColumnsPanel}
         toggleColumnsPanel={toggleColumnsPanel}
         storageKey={`${route}/${DEPLOYMENT_ENTITY.containers}`}

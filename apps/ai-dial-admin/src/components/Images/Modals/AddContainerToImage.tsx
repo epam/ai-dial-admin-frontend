@@ -95,7 +95,7 @@ const AddContainerToImage: FC<Props> = ({ title, isModalOpen, onClose, onApply, 
     >
       <div className="flex h-full flex-col px-6 py-4 min-h-0">
         {!dependencies.length ? (
-          <DialNoDataContent title={t(EntitiesI18nKey.NoContainers, { type: getTranslatedType(route, t) })} />
+          <DialNoDataContent title={t(EntitiesI18nKey.NoContainersType, { type: getTranslatedType(route, t) })} />
         ) : (
           <Grid additionalGridOptions={additionalGridOptions} onGridReady={onGridReady} />
         )}

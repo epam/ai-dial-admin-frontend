@@ -176,13 +176,13 @@ export enum EntitiesI18nKey {
   Toolset = 'Entities.Toolset',
   AssetToolset = 'Entities.AssetToolset',
   CreatedSuccessfully = 'Entities.CreatedSuccessfully',
-  NoImages = 'NoData.NoImages',
-  NoContainersType = 'NoData.NoContainers',
-  NoRelatedContainers = 'NoData.NoRelatedContainers',
-  NoRelatedContainersDescription = 'NoData.NoRelatedContainersDescription',
-  NoContainerLogs = 'NoData.NoContainerLogs',
-  NoResources = 'NoData.NoResources',
-  NoEvents = 'NoData.NoEvents',
+  NoImages = 'Entities.NoImages',
+  NoContainersType = 'Entities.NoContainersType',
+  NoRelatedContainers = 'Entities.NoRelatedContainers',
+  NoRelatedContainersDescription = 'Entities.NoRelatedContainersDescription',
+  NoContainerLogs = 'Entities.NoContainerLogs',
+  NoResources = 'Entities.NoResources',
+  NoEvents = 'Entities.NoEvents',
 }
 
 export enum DeleteI18nKey {
