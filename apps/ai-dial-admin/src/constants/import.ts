@@ -3,6 +3,7 @@ import { RadioButtonWithContent, Step } from '@epam/ai-dial-ui-kit';
 import { ImportI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { ConflictResolutionPolicy, ImportFileType, ImportSteps } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 
 export const IMPORT_RESOLUTIONS = (
   t: (stringToTranslate: string) => string,
@@ -39,7 +40,8 @@ export const IMPORT_FILE_TYPES = (
       description: t(ImportI18nKey.ArchiveDescription),
     },
   ];
-  if (route === ApplicationRoute.Prompts) {
+
+  if (isAssetWithVersion(route)) {
     return [
       ...buttons,
       {

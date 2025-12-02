@@ -96,12 +96,12 @@ describe('PromptsApi', () => {
     );
   });
 
-  test('Should calls exportPrompts', async () => {
+  test('Should calls exportAssets', async () => {
     fetchMock.mockResponseOnce({});
-    await instance.exportPrompts(TOKEN_MOCK, ['test'], ImportFileType.FILES);
+    await instance.exportAssets(TOKEN_MOCK, ResourceType.APPLICATION, ['test'], ImportFileType.FILES);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      `${TEST_URL}${ResourceBasePaths[ResourceType.PROMPT]}/export/json`,
+      `${TEST_URL}${ResourceBasePaths[ResourceType.APPLICATION]}/export/json`,
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({ paths: ['test'] }),
@@ -109,12 +109,12 @@ describe('PromptsApi', () => {
     );
   });
 
-  test('Should calls exportPrompts', async () => {
+  test('Should calls exportAssets', async () => {
     fetchMock.mockResponseOnce({});
-    await instance.exportPrompts(TOKEN_MOCK, ['test'], ImportFileType.ARCHIVE);
+    await instance.exportAssets(TOKEN_MOCK, ResourceType.APPLICATION, ['test'], ImportFileType.ARCHIVE);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      `${TEST_URL}${ResourceBasePaths[ResourceType.PROMPT]}/export`,
+      `${TEST_URL}${ResourceBasePaths[ResourceType.APPLICATION]}/export`,
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({ paths: ['test'] }),

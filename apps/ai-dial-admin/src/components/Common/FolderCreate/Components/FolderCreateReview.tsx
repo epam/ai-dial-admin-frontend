@@ -23,7 +23,7 @@ import {
   changeFilesMap,
   generateFileRowDataForImportGrid,
   generatePromptRowDataForImportGrid,
-} from '@/src/components/EntityListView/Import/import';
+} from '@/src/components/EntityListView/Import/utils';
 import Grid from '@/src/components/Grid/Grid';
 import { FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';

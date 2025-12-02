@@ -44,19 +44,19 @@ interface Props {
   modalType?: ModalType;
   createModal?: ReactNode;
   duplicateModal?: ReactNode;
-  resetCurrentEntity?: () => void;
-  removeEntity?: (entity: string) => Promise<ServerActionResponse>;
-  handleExport?: (fileType?: ImportFileType) => void;
-  handleImport?: (
+  onResetCurrentEntity?: () => void;
+  onRemove?: (entity: string) => Promise<ServerActionResponse>;
+  onExport?: (fileType?: ImportFileType) => void;
+  onImport?: (
     fileType: ImportFileType,
     file: File | File[] | ParsedPrompts,
     resolution: string,
     path: string,
     ignorePaths?: boolean,
   ) => void;
-  handleMove?: (path: string) => void;
-  handleDeleteBulk?: () => void;
-  handleClose: () => void;
+  onMove?: (path: string) => void;
+  onDeleteBulk?: () => void;
+  onClose: () => void;
   context?: () => AssetsFolderContext<Asset | DialFile>;
 }
 
@@ -68,13 +68,13 @@ const Modals: FC<Props> = ({
   modalType,
   createModal,
   duplicateModal,
-  handleExport,
-  handleImport,
-  handleMove,
-  handleDeleteBulk,
-  handleClose,
+  onExport,
+  onImport,
+  onMove,
+  onDeleteBulk,
+  onClose,
   context,
-  removeEntity,
+  onRemove,
 }) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
 
@@ -88,8 +88,8 @@ const Modals: FC<Props> = ({
             route={route}
             context={context}
             isModalOpen={isModalOpen}
-            onClose={handleClose}
-            onApply={handleImport}
+            onClose={onClose}
+            onApply={onImport}
           />,
           document.body,
         )}
@@ -100,9 +100,9 @@ const Modals: FC<Props> = ({
           <DeleteConfirmationModal
             entity={entity as object}
             view={route}
-            onCloseModal={handleClose}
+            onCloseModal={onClose}
             context={context}
-            removeEntity={removeEntity as (entity: string) => Promise<ServerActionResponse>}
+            removeEntity={onRemove as (entity: string) => Promise<ServerActionResponse>}
           />,
           document.body,
         )}
@@ -113,8 +113,8 @@ const Modals: FC<Props> = ({
           <FilePathModal
             modalTitle={t(BasicI18nKey.MoveToFolder)}
             isModalOpen={isModalOpen}
-            onClose={handleClose}
-            onApply={handleMove as () => void}
+            onClose={onClose}
+            onApply={onMove as () => void}
             initialPath={initialPath}
             context={context}
           />,
@@ -126,8 +126,8 @@ const Modals: FC<Props> = ({
           <DeleteFolder
             view={route}
             isModalOpen={isModalOpen}
-            onClose={handleClose}
-            onApply={handleDeleteBulk}
+            onClose={onClose}
+            onApply={onDeleteBulk}
             context={context}
             isBulkDelete={true}
           />,
@@ -136,7 +136,7 @@ const Modals: FC<Props> = ({
       {isModalOpen &&
         modalType === ModalType.export &&
         createPortal(
-          <ExportModal route={route} isModalOpen={isModalOpen} onClose={handleClose} onApply={handleExport} />,
+          <ExportModal route={route} isModalOpen={isModalOpen} onClose={onClose} onApply={onExport} />,
           document.body,
         )}
     </>

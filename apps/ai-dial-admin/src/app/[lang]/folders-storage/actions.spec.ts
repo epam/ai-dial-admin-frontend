@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import createFetchMock from 'vitest-fetch-mock';
 
+import { foldersApi } from '@/src/app/api/api';
+import { ResourceType } from '@/src/types/resource-type';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getUserToken } from '@/src/utils/auth/auth-request';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   changeFolder,
   createFolderWithFiles,
@@ -10,12 +15,6 @@ import {
   removeFolder,
   updateRules,
 } from './actions';
-import { ResourceType } from '@/src/types/resource-type';
-import { foldersApi, interceptorTemplatesApi } from '@/src/app/api/api';
-import { getUserToken } from '@/src/utils/auth/auth-request';
-import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { ApplicationRoute } from '../../../types/routes';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');

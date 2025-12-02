@@ -1047,6 +1047,8 @@ export default {
     UseAllTools: 'Use all available tools',
     AddedManually: 'Added manually',
     View: 'View',
+    Import: 'Import Toolsets',
+    Export: 'Export Toolsets',
     AllTools: 'All tools',
     Warning: 'List of tools from external endpoint may not display some tools. Add the missing tools manually.',
     AutoDetected: 'Auto-detected',
@@ -1144,6 +1146,10 @@ export default {
     MountTypeContent: 'Content',
     MountTypeSecureFile: 'Secure file',
     MountTypeSecureContent: 'Secure content',
+  },
+  Applications: {
+    Import: 'Import Applications',
+    Export: 'Export Applications',
   },
   ValidityStatus: {
     Invalid: 'Invalid',

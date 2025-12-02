@@ -1041,6 +1041,8 @@ export enum ToolsetI18nKey {
   ApiKey = 'Toolset.ApiKey',
   OAuth = 'Toolset.OAuth',
   NoneAuth = 'Toolset.NoneAuth',
+  Import = 'Toolset.Import',
+  Export = 'Toolset.Export',
   WithLogin = 'Toolset.WithLogin',
   WithLoginAndConfig = 'Toolset.WithLoginAndConfig',
   WithoutLogin = 'Toolset.WithoutLogin',
@@ -1128,4 +1130,9 @@ export enum EnvVariablesI18nKey {
   MountTypeContent = 'EnvVariables.MountTypeContent',
   MountTypeSecureFile = 'EnvVariables.MountTypeSecureFile',
   MountTypeSecureContent = 'EnvVariables.MountTypeSecureContent',
+}
+
+export enum ApplicationsI18nKey {
+  Import = 'Applications.Import',
+  Export = 'Applications.Export',
 }

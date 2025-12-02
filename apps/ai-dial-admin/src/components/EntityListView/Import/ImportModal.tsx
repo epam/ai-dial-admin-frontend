@@ -3,8 +3,12 @@
 import { DialPopup, DialSteps, StepStatus } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { getMultipleImportStatus, isInvalidJson, isLargeFile } from '@/src/components/EntityListView/Import/import';
-import { FoldersI18nKey, PromptsI18nKey } from '@/src/constants/i18n';
+import {
+  getModalTitle,
+  getMultipleImportStatus,
+  isInvalidJson,
+  isLargeFile,
+} from '@/src/components/EntityListView/Import/utils';
 import { IMPORT_FILE_TYPES, IMPORT_RESOLUTIONS, IMPORT_STEPS } from '@/src/constants/import';
 import { APPLICATION_ZIP_TYPE } from '@/src/constants/request-headers';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
@@ -209,7 +213,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply 
   return (
     <DialPopup
       onClose={onClose}
-      title={route === ApplicationRoute.Prompts ? t(PromptsI18nKey.Import) : t(FoldersI18nKey.Import)}
+      title={getModalTitle(route, t)}
       portalId="ImportModal"
       className="h-[660px]"
       open={isModalOpen}
