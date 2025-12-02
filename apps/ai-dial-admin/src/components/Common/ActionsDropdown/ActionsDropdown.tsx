@@ -5,7 +5,7 @@ import { DialDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 
 interface ActionsProps<T> {
-  actionTriggerClass?: string;
+  actionTriggerClassName?: string;
   items: ActionMenuOperationDeclaration<T>[];
   icon: ReactNode;
   data?: T;
