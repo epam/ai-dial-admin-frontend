@@ -45,8 +45,14 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
     router.push(ApplicationRoute.ExportConfig);
   };
 
-  const MenuNavigation = ({ showExpanded }: { showExpanded?: boolean }) => (
-    <nav className={classNames('p-2', showExpanded ? 'flex-1' : 'overflow-auto flex-1 min-h-0')}>
+  const MenuNavigation = ({ showExpanded, hovered }: { showExpanded?: boolean; hovered?: boolean }) => (
+    <nav
+      className={classNames(
+        'p-2',
+        showExpanded ? 'flex-1' : 'overflow-auto flex-1 min-h-0',
+        !hovered ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none',
+      )}
+    >
       <ul className="divide-primary divide-y">
         {actualConfig.map((config, i) => (
           <MenuItem
@@ -77,27 +83,29 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   );
 
   const actionsClassName = 'px-3 py-2 text-secondary flex flex-row gap-3 items-center';
-  const menuClassName = 'flex flex-col divide-tertiary divide-y';
+  const menuClassName = 'flex flex-col divide-tertiary';
 
   return (
     <div
-      className={classNames(menuClassName, 'h-full')}
+      className={classNames(menuClassName, 'h-full', !hovered && 'divide-y')}
       onMouseEnter={() => !isSidebarOpen && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <MenuNavigation />
-
-      {isSidebarOpen ? (
-        <MenuActionsBar />
-      ) : hovered ? (
+      {hovered && (
         <div
-          className={classNames(menuClassName, 'absolute left-0 top-0 bottom-0 w-72 bg-layer-3')}
+          className={classNames(menuClassName, 'absolute left-0 top-0 bottom-0 w-72 bg-layer-3 divide-y')}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
         >
           <MenuNavigation showExpanded />
           <MenuActionsBar />
         </div>
+      )}
+
+      <MenuNavigation hovered={hovered} />
+
+      {isSidebarOpen ? (
+        <MenuActionsBar />
       ) : (
         <div className={classNames(actionsClassName, 'justify-center')}>
           <MenuActions onExport={handleExport} onImport={handleImport} />
