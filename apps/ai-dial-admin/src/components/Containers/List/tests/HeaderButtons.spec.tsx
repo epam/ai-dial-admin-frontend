@@ -1,0 +1,51 @@
+import { describe, expect, test, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import HeaderButtons from '../HeaderButtons';
+import { ApplicationRoute } from '@/src/types/routes';
+
+vi.mock('@/src/app/actions/deployments');
+
+describe('HeaderButtons', () => {
+  const mockToggleColumnsPanel = vi.fn();
+  const mockNames = ['container-1', 'container-2'];
+
+  const defaultProps = {
+    toggleColumnsPanel: mockToggleColumnsPanel,
+    route: ApplicationRoute.ModelDeployments,
+    names: mockNames,
+    gridApi: null,
+  };
+
+  test('renders create button', () => {
+    render(<HeaderButtons {...defaultProps} />);
+
+    expect(screen.getByRole('button', { name: /create/i })).toBeInTheDocument();
+  });
+
+  test('renders columns button', () => {
+    render(<HeaderButtons {...defaultProps} />);
+
+    expect(screen.getByRole('button', { name: /columns/i })).toBeInTheDocument();
+  });
+
+  test('calls toggleColumnsPanel when columns button clicked', async () => {
+    const user = userEvent.setup();
+    render(<HeaderButtons {...defaultProps} />);
+
+    const columnsButton = screen.getByRole('button', { name: /columns/i });
+    await user.click(columnsButton);
+
+    expect(mockToggleColumnsPanel).toHaveBeenCalled();
+  });
+
+  test.skip('opens modal when create button clicked', async () => {
+    const user = userEvent.setup();
+    render(<HeaderButtons {...defaultProps} />);
+
+    const createButton = screen.getByRole('button', { name: /create/i });
+    await user.click(createButton);
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+});

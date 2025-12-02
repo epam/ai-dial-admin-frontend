@@ -49,17 +49,6 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string): ColDef[] => [
   },
 ];
 
-export const CREATE_CONTAINER_STEPS = (
-  route: ApplicationRoute,
-  t: (key: string, options?: Record<string, string | number>) => string,
-): Step[] => [
-  {
-    id: CreateSteps.IMAGE,
-    name: t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) }),
-  },
-  { id: CreateSteps.PROPERTIES, name: t(ContainersI18nKey.ContainerProperties) },
-];
-
 export const CONTAINER_EVENTS = (t: (key: string, options?: Record<string, string | number>) => string): ColDef[] => [
   {
     field: 'eventType',
@@ -99,4 +88,15 @@ const EVENT_TYPES: Record<KubEventType, string> = {
 export const TRANSPORTS: SelectOption[] = [
   { label: 'HTTP', value: CONTAINER_TRANSPORT.HTTP },
   { label: 'SSE', value: CONTAINER_TRANSPORT.SSE },
+];
+
+export const CREATE_CONTAINER_STEPS = (
+  route: ApplicationRoute,
+  t: (key: string, options?: Record<string, string | number>) => string,
+): Step[] => [
+  {
+    id: CreateSteps.IMAGE,
+    name: t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) }),
+  },
+  { id: CreateSteps.PROPERTIES, name: t(ContainersI18nKey.ContainerProperties) },
 ];

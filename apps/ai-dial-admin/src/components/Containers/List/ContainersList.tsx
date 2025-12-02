@@ -31,7 +31,7 @@ import Duplicate from '@/src/components/Common/DeploymentsModals/Duplicate';
 import Delete from '@/src/components/Common/DeploymentsModals/Delete';
 import {
   getDeleteOperation,
-  getDeployOperation,
+  getRunOperation,
   getDuplicateOperation,
   getOpenInNewTabOperation,
   getStopOperation,
@@ -174,7 +174,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
     ACTION_COLUMN([
       getOpenInNewTabOperation(onOpenInNewTabAction),
       getDuplicateOperation(onOpenDuplicateModal),
-      getDeployOperation(onContainerStatusChange),
+      getRunOperation(onContainerStatusChange),
       getStopOperation(onContainerStatusChange),
       getDeleteOperation(onOpenDeleteModal),
     ]),

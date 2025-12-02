@@ -1,4 +1,3 @@
-import { DeploymentsApi } from '@/src/server/deployments-api';
 import { ActivityAuditApi } from '@/src/server/entities/activity-audit-api';
 import { AdaptersApi } from '@/src/server/entities/adapters-api';
 import { ApplicationRunnersApi } from '@/src/server/entities/application-runners-api';
@@ -76,10 +75,6 @@ export const activityAuditApi = new ActivityAuditApi({
 
 export const interceptorTemplatesApi = new InterceptorTemplatesApi({
   host: process.env.DIAL_ADMIN_API_URL,
-});
-
-export const deploymentsApi = new DeploymentsApi({
-  host: process.env.DIAL_DEPLOYMENTS_API_URL,
 });
 
 export const toolSetsApi = new ToolsetsApi({
