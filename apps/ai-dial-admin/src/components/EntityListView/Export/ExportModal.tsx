@@ -4,18 +4,19 @@ import { FC, useState } from 'react';
 
 import {
   ButtonVariant,
-  RadioButtonWithContent,
   DialButton,
-  DialRadioGroup,
-  RadioGroupOrientation,
   DialPopup,
+  DialRadioGroup,
   PopupSize,
+  RadioButtonWithContent,
+  RadioGroupOrientation,
 } from '@epam/ai-dial-ui-kit';
 
-import { ButtonsI18nKey, ExportI18nKey, FoldersI18nKey, PromptsI18nKey, TypeI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ExportI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ImportFileType as FileType, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getModalTitle } from './utils';
 
 interface Props {
   isModalOpen: boolean;
@@ -37,7 +38,7 @@ const ExportModal: FC<Props> = ({ isModalOpen, route, onClose, onApply }) => {
   return (
     <DialPopup
       onClose={onClose}
-      title={route === ApplicationRoute.Prompts ? t(PromptsI18nKey.Export) : t(FoldersI18nKey.Export)}
+      title={getModalTitle(route, t)}
       portalId="ExportModal"
       open={isModalOpen}
       size={PopupSize.Sm}

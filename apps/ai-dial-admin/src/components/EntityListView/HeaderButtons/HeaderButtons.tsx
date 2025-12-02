@@ -235,8 +235,8 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
         isModalOpen={isModalOpen}
         modalType={modalType}
         createModal={<SaveValidationContextProvider>{getCreateModal()}</SaveValidationContextProvider>}
-        handleImport={onImport}
-        handleClose={handleModalClose}
+        onImport={onImport}
+        onClose={handleModalClose}
         context={context}
       />
     </div>

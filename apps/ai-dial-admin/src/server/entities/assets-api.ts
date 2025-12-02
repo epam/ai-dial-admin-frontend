@@ -179,6 +179,8 @@ export class AssetsApi extends BaseApi {
       type,
       fileType === ImportFileType.ARCHIVE ? ResourceOperation.EXPORT : ResourceOperation.EXPORT_JSON,
     );
+    // eslint-disable-next-line no-console
+    console.log('exportAssets called with url', { url });
     return this.sendRequest(url, 'POST', { paths }, token).then(async (res) => {
       return fileType === ImportFileType.ARCHIVE
         ? { blob: await (res as Response)?.blob?.(), fileName: getFileName(res as Response) || '' }
