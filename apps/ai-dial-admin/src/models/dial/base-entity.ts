@@ -41,3 +41,12 @@ export interface ChatEntity extends BaseEntity, ModifiedEntity, EntityAttachment
   interceptors?: string[];
   endpoint?: string | null;
 }
+
+export interface EntityValidityState {
+  validityState?: ValidityState;
+}
+
+export interface ValidityState {
+  message: string;
+  valid: boolean;
+}

@@ -562,12 +562,6 @@ export default {
     RotateKeySuccessTitle: 'Key rotated successfully',
     RotateKeySuccessDescription: 'New key value generated',
     ValidityPeriod: 'Validity period',
-    Status: {
-      NoRoles: 'No roles assigned',
-      Expired: 'Expired',
-      AlmostExpired: 'Valid for {number} days',
-      Valid: 'Valid',
-    },
     Period: {
       Day: 'Day',
       Week: 'Week',
@@ -1005,5 +999,9 @@ export default {
     SuccessLoginDescription: 'List of available tools is in the Tools Overview tab',
     SuccessLogout: 'Toolset logged out successfully',
     SuccessLogoutDescription: 'Access to the list of available tools has been revoked. Log in to restore it.',
+  },
+  ValidityStatus: {
+    Invalid: 'Invalid',
+    Valid: 'Valid',
   },
 } as const;

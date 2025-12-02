@@ -3,7 +3,7 @@ import { FC } from 'react';
 import { DialKey } from '@/src/models/dial/key';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
-import KeyViewStatus from './KeyStatus';
+import ValidityStatus from '@/src/components/EntityView/Status/ValidityStatus';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -29,7 +29,7 @@ const KeyViewHeader: FC<Props> = ({ selectedKey }) => {
         text={formatDateTimeToLocalString(selectedKey.expiresAt)}
       />
       <LabelledText label={t(EntityFieldsI18nKey.status)}>
-        <KeyViewStatus data={selectedKey} />
+        <ValidityStatus validityState={selectedKey.validityState} />
       </LabelledText>
     </div>
   );

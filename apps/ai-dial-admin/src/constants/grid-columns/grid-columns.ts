@@ -1,6 +1,6 @@
 import { ColDef, ITextFilterParams } from 'ag-grid-community';
 
-import KeyStatusCellRenderer from '@/src/components/Grid/CellRenderers/KeyStatusCellRenderer';
+import ValidityStatusCellRenderer from '@/src/components/Grid/CellRenderers/ValidityStatusCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import TopicsCellRenderer from '@/src/components/Grid/CellRenderers/TopicCellRenderer';
 import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
@@ -21,7 +21,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
 import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
-import { getKeyStatus } from '../../utils/keys';
+import { getValidityStatus } from '@/src/components/EntityView/Status/utils';
 
 const stringFilter: Partial<ColDef> = {
   filterParams: {
@@ -109,10 +109,19 @@ export const TOPICS_COLUMN: ColDef = {
   filterValueGetter: (params) => getTopics(params.data),
 };
 
-export const STATUS_COLUMN: ColDef = {
+export const INTERCEPTOR_STATUS_COLUMN: ColDef = {
   field: 'status',
   headerName: 'Status',
   hide: false,
+};
+
+export const VALIDITY_STATUS_COLUMN = (t: (str: string) => string): ColDef => {
+  return {
+    headerName: 'Status',
+    field: 'status',
+    cellRenderer: ValidityStatusCellRenderer,
+    filterValueGetter: ({ data }) => getValidityStatus(data?.validityState, t).title,
+  };
 };
 
 const ATTACHMENT_COLUMN = (t: (str: string) => string): ColDef => {
@@ -202,6 +211,7 @@ export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   { field: 'endpoint', headerName: 'Endpoint', hide: false },
   TOPICS_COLUMN,
   AUTHOR_COLUMN,
+  VALIDITY_STATUS_COLUMN(t),
   ATTACHMENT_COLUMN(t),
   { field: 'maxInputAttachments', headerName: 'Max attachment number', hide: true },
   { field: 'forwardAuthToken', headerName: 'Forward auth token', hide: true },
@@ -256,12 +266,7 @@ export const KEYS_COLUMNS = (t: (str: string) => string): ColDef[] => [
     headerName: 'Expiration time',
     ...dateTimeColumn,
   },
-  {
-    headerName: 'Status',
-    field: 'status',
-    cellRenderer: KeyStatusCellRenderer,
-    filterValueGetter: ({ data }) => getKeyStatus(data, t).title,
-  },
+  VALIDITY_STATUS_COLUMN(t),
   {
     headerName: 'Project',
     field: 'project',
