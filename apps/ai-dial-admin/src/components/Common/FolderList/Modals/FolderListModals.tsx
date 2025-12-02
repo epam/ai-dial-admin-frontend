@@ -15,7 +15,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialFolder } from '@/src/models/dial/folder';
 import { DialRule } from '@/src/models/dial/rule';
-import { ParsedPrompts } from '@/src/models/prompts';
+import { ParsedAssets } from '@/src/models/prompts';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { findFolderSiblings, getFolderName } from '@/src/utils/files/folder';
@@ -50,7 +50,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
   const createFolder = useCallback(
     (
       fileType: ImportFileType,
-      file: File | File[] | ParsedPrompts,
+      file: File | File[] | ParsedAssets,
       rules: DialRule[],
       path: string,
       ignorePaths?: boolean,

@@ -12,7 +12,7 @@ import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialFile } from '@/src/models/dial/file';
-import { ParsedPrompts } from '@/src/models/prompts';
+import { ParsedAssets } from '@/src/models/prompts';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -43,7 +43,7 @@ interface Props {
   onExport?: (fileType?: ImportFileType) => void;
   onImport?: (
     fileType: ImportFileType,
-    file: File | File[] | ParsedPrompts,
+    file: File | File[] | ParsedAssets,
     resolution: string,
     path: string,
     ignorePaths?: boolean,

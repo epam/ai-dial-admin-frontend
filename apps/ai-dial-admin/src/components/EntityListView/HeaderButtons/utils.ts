@@ -5,13 +5,13 @@ import { importToolsets } from '@/src/app/[lang]/assets-toolsets/actions';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { DialRule } from '@/src/models/dial/rule';
-import { ParsedPrompts } from '@/src/models/prompts';
+import { ParsedAssets } from '@/src/models/prompts';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export const getFormDataForImport = (
   path: string,
-  file: File | File[] | ParsedPrompts,
+  file: File | File[] | ParsedAssets,
   fileType: ImportFileType,
   resolutionStrategy: string,
   rules?: DialRule[],

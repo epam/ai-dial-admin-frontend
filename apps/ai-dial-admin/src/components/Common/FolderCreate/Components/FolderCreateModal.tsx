@@ -12,7 +12,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { DialRule } from '@/src/models/dial/rule';
 import { FileImportMap } from '@/src/models/file';
-import { ParsedPrompts } from '@/src/models/prompts';
+import { ParsedAssets } from '@/src/models/prompts';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import FolderCreateModalButtons from './FolderCreateModalButtons';
@@ -27,7 +27,7 @@ interface Props {
   onClose: () => void;
   onApply?: (
     fileType: ImportFileType,
-    file: File | File[] | ParsedPrompts,
+    file: File | File[] | ParsedAssets,
     rules: DialRule[],
     path: string,
     ignorePaths?: boolean,

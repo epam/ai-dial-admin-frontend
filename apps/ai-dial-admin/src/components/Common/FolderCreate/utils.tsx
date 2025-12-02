@@ -8,7 +8,7 @@ import {
 } from '@/src/components/EntityListView/Import/utils';
 import { DialFile } from '@/src/models/dial/file';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
-import { ParsedPrompts, PromptImportGridData } from '@/src/models/prompts';
+import { ParsedAssets, PromptImportGridData } from '@/src/models/prompts';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
@@ -50,7 +50,7 @@ export const readJsonFiles = async (files: File[]): Promise<Map<string, FileImpo
 
       reader.onload = () => {
         try {
-          const parsedData: ParsedPrompts = JSON.parse(reader.result as string);
+          const parsedData: ParsedAssets = JSON.parse(reader.result as string);
           const isInvalid = isInvalidJson(parsedData);
           results.set(file.name, { files: parsedData?.prompts, isInvalid });
         } catch (error) {

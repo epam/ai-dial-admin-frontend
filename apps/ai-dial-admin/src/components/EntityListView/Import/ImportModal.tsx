@@ -16,7 +16,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportMap } from '@/src/models/file';
-import { ParsedPrompts } from '@/src/models/prompts';
+import { ParsedAssets } from '@/src/models/prompts';
 import { ConflictResolutionPolicy, ImportFileType as FileType, ImportSteps } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import ImportConflicts from './ImportConflicts';
@@ -32,7 +32,7 @@ interface Props {
   onClose: () => void;
   onApply?: (
     fileType: FileType,
-    file: File | File[] | ParsedPrompts,
+    file: File | File[] | ParsedAssets,
     resolution: string,
     path: string,
     ignorePaths?: boolean,
@@ -68,11 +68,11 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply 
 
       reader.onload = () => {
         try {
-          const parsedData: ParsedPrompts = JSON.parse(reader.result as string);
-          const isInvalid = isInvalidJson(parsedData);
+          const parsedData: ParsedAssets = JSON.parse(reader.result as string);
+          const isInvalid = isInvalidJson(parsedData, route);
           setJsonFileMap((prev) => {
             const newMap = new Map(prev);
-            newMap.set(file.name, { files: parsedData?.prompts, isInvalid });
+            newMap.set(file.name, { files: parsedData?.prompts || parsedData.applications, isInvalid });
             return newMap;
           });
         } catch (error) {
