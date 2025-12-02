@@ -25,7 +25,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import FileNameCellRenderer from '@/src/components/Grid/CellRenderers/FileNameCellRenderer';
 import { StepStatus } from '@epam/ai-dial-ui-kit';
-import { ApplicationRoute } from '../../../types/routes';
+import { ApplicationRoute } from '@/src/types/routes';
 
 /**
  * Generate notifications with results of JSON prompt results
