@@ -124,7 +124,7 @@ const FolderCreateReview: FC<Props> = ({
           setEditedFileMap(preview);
         });
       } else {
-        readJsonFiles(files).then((result) => {
+        readJsonFiles(files, view).then((result) => {
           setEditedFileMap(result);
         });
       }

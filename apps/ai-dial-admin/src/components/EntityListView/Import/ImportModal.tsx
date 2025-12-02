@@ -62,44 +62,47 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply 
 
   const [separateFileMap, setSeparateFileMap] = useState(new Map<string, FileImportMap>());
 
-  const readJsonFile = useCallback((file: File | null, urlToRemove?: string) => {
-    if (file) {
-      const reader = new FileReader();
+  const readJsonFile = useCallback(
+    (file: File | null, urlToRemove?: string) => {
+      if (file) {
+        const reader = new FileReader();
 
-      reader.onload = () => {
-        try {
-          const parsedData: ParsedAssets = JSON.parse(reader.result as string);
-          const isInvalid = isInvalidJson(parsedData, route);
-          setJsonFileMap((prev) => {
-            const newMap = new Map(prev);
-            newMap.set(file.name, { files: parsedData?.prompts || parsedData.applications, isInvalid });
-            return newMap;
-          });
-        } catch (error) {
-          setJsonFileMap((prev) => {
-            const newMap = new Map(prev);
-            newMap.set(file.name, { files: [], isInvalid: true });
-            return newMap;
-          });
-          console.error('Error parsing JSON:', error);
-        }
-      };
+        reader.onload = () => {
+          try {
+            const parsedData: ParsedAssets = JSON.parse(reader.result as string);
+            const isInvalid = isInvalidJson(parsedData, route);
+            setJsonFileMap((prev) => {
+              const newMap = new Map(prev);
+              newMap.set(file.name, { files: parsedData?.prompts || parsedData.applications || [], isInvalid });
+              return newMap;
+            });
+          } catch (error) {
+            setJsonFileMap((prev) => {
+              const newMap = new Map(prev);
+              newMap.set(file.name, { files: [], isInvalid: true });
+              return newMap;
+            });
+            console.error('Error parsing JSON:', error);
+          }
+        };
 
-      reader.onerror = () => {
-        console.error('Error reading file');
-      };
+        reader.onerror = () => {
+          console.error('Error reading file');
+        };
 
-      reader.readAsText(file);
-    } else {
-      setJsonFileMap((prev) => {
-        const newMap = new Map(prev);
-        if (urlToRemove) {
-          newMap.delete(urlToRemove);
-        }
-        return newMap;
-      });
-    }
-  }, []);
+        reader.readAsText(file);
+      } else {
+        setJsonFileMap((prev) => {
+          const newMap = new Map(prev);
+          if (urlToRemove) {
+            newMap.delete(urlToRemove);
+          }
+          return newMap;
+        });
+      }
+    },
+    [route],
+  );
 
   const changeFileType = useCallback(
     (type: string) => {
