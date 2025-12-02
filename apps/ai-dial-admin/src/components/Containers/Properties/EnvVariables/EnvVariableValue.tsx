@@ -119,14 +119,14 @@ const EnvVariableValueField: FC<Props> = ({ value, index, onValueChange, mountTy
       {value.$type === VALUE_TYPE.FILE && (
         <div className="flex flex-col flex-1 max-w-full">
           <Field fieldTitle={fieldName} />
-          <div className="flex border border-primary px-3 py-[9px] rounded justify-between">
+          <div className="flex border border-primary px-3 py-1 rounded justify-between">
             <DialTooltip tooltip={value.fileName}>
               <DialButton
-                className="flex text-accent-primary w-full"
+                className="flex text-accent-primary w-full items-center"
                 onClick={handleFileDownload}
                 iconBefore={<DialFileIcon extension={getNameExtensionFromFile(value.fileName as string).extension} />}
                 label={value.fileName}
-                textClassName={'truncate flex-1 min-w-0 text-left'}
+                textClassName={'truncate flex-1 min-w-0 text-left items-center'}
               />
             </DialTooltip>
             <DialButton iconBefore={<IconX {...BASE_ICON_PROPS} />} onClick={onClearFile} />
