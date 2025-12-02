@@ -15,6 +15,9 @@ import { FilterOperatorDto } from '@/src/types/request';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
+const DATE_PLACEHOLDER = 'MM.DD.YYYY hh:mm';
+const DATE_FORMAT = 'MM.dd.YYYY hh:mm aa';
+
 interface Props {
   initialRevisions: ActivityAuditRevision[];
   rollBackRevision: ActivityAuditRevision;
@@ -100,8 +103,8 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, isMo
           <DatePicker
             onCalendarClose={fetchNewData}
             id="start-date"
-            placeholder={'MM.DD.YYYY hh:mm'}
-            dateFormat={'MM.dd.YYYY hh:mm aa'}
+            placeholder={DATE_PLACEHOLDER}
+            dateFormat={DATE_FORMAT}
             showTimeInput={true}
             label={t(BasicI18nKey.From)}
             date={startDate}
@@ -112,8 +115,8 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, isMo
           <DatePicker
             onCalendarClose={fetchNewData}
             id="end-date"
-            placeholder={'MM.DD.YYYY hh:mm'}
-            dateFormat={'MM.dd.YYYY hh:mm aa'}
+            placeholder={DATE_PLACEHOLDER}
+            dateFormat={DATE_FORMAT}
             showTimeInput={true}
             label={t(BasicI18nKey.To)}
             date={endDate}

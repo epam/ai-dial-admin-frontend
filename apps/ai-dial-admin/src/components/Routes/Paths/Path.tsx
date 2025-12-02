@@ -62,7 +62,7 @@ const Path: FC<Props> = ({ index, path, readonly, optional, fieldTitle, allPaths
     <div className="flex items-center">
       <div className="flex-1">
         <DialTextInputField
-          elementId={'path ' + index}
+          elementId={`path-${index}`}
           value={path}
           disabled={readonly}
           placeholder={t(EntityPlaceholdersI18nKey.PathUrl)}

@@ -32,7 +32,7 @@ const NewItemInput: FC<Props> = ({
       <div className="flex flex-row gap-x-2 items-center w-full">
         <div className="flex-1">
           <DialInput
-            elementId={'item ' + index}
+            elementId={`item-${index}`}
             value={value}
             placeholder={placeholder}
             onChange={(v) => onChangeItem(v, index)}

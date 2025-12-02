@@ -15,7 +15,7 @@ const WarningIcon: FC<Props> = ({ endpointWarning }) => {
   return (
     <DialTooltip
       tooltip={endpointWarning}
-      placement={'bottom'}
+      placement="bottom"
       triggerClassName={endpointWarning ? 'w-[20px]' : 'hidden'}
     >
       <IconAlertTriangleFilled fill="#F4CE46" {...BASE_ICON_PROPS} className={endpointWarning ? '' : 'hidden'} />

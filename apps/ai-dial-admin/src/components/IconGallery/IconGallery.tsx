@@ -22,16 +22,16 @@ interface IconProps extends Icon {
 }
 
 const Icon: FC<IconProps> = ({ url, name, selected, onClick }) => {
-  const iconClassName = classNames(
-    'flex w-[120px] flex-col items-center justify-center border cursor-pointer px-5 py-3 hover:bg-accent-primary-alpha',
-    selected ? 'border-accent-primary bg-accent-primary-alpha' : 'border-transparent',
-  );
-  const iconBackgroundClassName = classNames('mb-2 text-icon-primary', url && 'rounded-full bg-model-icon');
-  const iconTitleClassName = classNames('tiny truncate w-full', selected ? 'text-primary' : 'text-secondary');
-
   return (
-    <button className={iconClassName} onClick={onClick} aria-label="Icon">
-      <div className={iconBackgroundClassName}>
+    <button
+      className={classNames(
+        'flex w-[120px] flex-col items-center justify-center border cursor-pointer px-5 py-3 hover:bg-accent-primary-alpha',
+        selected ? 'border-accent-primary bg-accent-primary-alpha' : 'border-transparent',
+      )}
+      onClick={onClick}
+      aria-label="Icon"
+    >
+      <div className={classNames('mb-2 text-icon-primary', url && 'rounded-full bg-model-icon')}>
         {!url ? (
           <i className={selected ? 'text-icon-primary' : 'text-icon-secondary'}>
             <Empty />
@@ -40,7 +40,7 @@ const Icon: FC<IconProps> = ({ url, name, selected, onClick }) => {
           <Image src={url} alt={name} width={80} height={80} />
         )}
       </div>
-      <p className={iconTitleClassName}>{name}</p>
+      <p className={classNames('tiny truncate w-full', selected ? 'text-primary' : 'text-secondary')}>{name}</p>
     </button>
   );
 };
@@ -51,7 +51,7 @@ const IconGallery: FC<Props> = ({ selectedIcon, setSelectedIcon }) => {
   return (
     <>
       <div className="flex flex-row flex-wrap gap-10 pb-8 border-b border-primary mb-8">
-        <Icon url={''} name={'None'} onClick={() => setSelectedIcon('')} selected={!selectedIcon} />
+        <Icon url="" name="None" onClick={() => setSelectedIcon('')} selected={!selectedIcon} />
       </div>
       <div className="flex flex-row flex-wrap gap-10">
         {images?.map((icon, index) => (

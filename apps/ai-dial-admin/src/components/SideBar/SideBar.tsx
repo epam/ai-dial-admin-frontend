@@ -165,12 +165,14 @@ interface SidebarContentProps {
 }
 
 const SidebarContent: FC<SidebarContentProps> = ({ itemComponent, resizable }) => {
-  const className = classNames(
-    'flex flex-none shrink-0 flex-col divide-y divide-tertiary bg-layer-3 transition-all z-20',
-    resizable ? 'size-full shrink-0' : 'max-w-16',
-  );
-
   return (
-    <div className={className}>{<div className={classNames('h-full min-w-[42px] grow')}>{itemComponent}</div>}</div>
+    <div
+      className={classNames(
+        'flex flex-none shrink-0 flex-col divide-y divide-tertiary bg-layer-3 transition-all z-20',
+        resizable ? 'size-full shrink-0' : 'max-w-16',
+      )}
+    >
+      <div className="h-full min-w-[42px] grow">{itemComponent}</div>
+    </div>
   );
 };

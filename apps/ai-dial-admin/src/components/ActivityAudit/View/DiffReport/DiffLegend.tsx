@@ -15,10 +15,6 @@ interface Props {
 const DiffLegend: FC<Props> = ({ description, added, removed, changed }) => {
   const t = useI18n();
 
-  const containerClassName = classNames(
-    'flex flex-row small',
-    description ? 'gap-8 text-secondary' : 'gap-2 text-primary',
-  );
   const itemClassName = 'flex items-center gap-1';
   const descriptionClassName = classNames(!description && 'hidden');
   const rectangleClassName = classNames(
@@ -27,7 +23,7 @@ const DiffLegend: FC<Props> = ({ description, added, removed, changed }) => {
   );
 
   return (
-    <div className={containerClassName}>
+    <div className={classNames('flex flex-row small', description ? 'gap-8 text-secondary' : 'gap-2 text-primary')}>
       <div className={classNames(itemClassName, !description && !added && 'hidden')}>
         <span className={classNames(rectangleClassName, 'bg-success border-accent-secondary')}>{added}</span>
         <span className={descriptionClassName}>{t(ButtonsI18nKey.Create)}</span>

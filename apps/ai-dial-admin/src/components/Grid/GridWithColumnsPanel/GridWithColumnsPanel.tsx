@@ -36,7 +36,7 @@ const GridWithColumnsPanel = <T extends object>({
 }: Props<T>) => {
   const staticPanelContainerClassName = classNames(
     'left-0 top-0 w-full h-full bg-blackout z-50',
-    `${showColumnsPanel ? 'flex' : 'hidden'}`,
+    showColumnsPanel ? 'flex' : 'hidden',
   );
 
   const staticPanelClassName = classNames(

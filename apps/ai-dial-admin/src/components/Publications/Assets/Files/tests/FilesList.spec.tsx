@@ -9,7 +9,7 @@ describe('FilesList', () => {
       { name: 'file2.pdf', path: '/path/file2.pdf', extension: 'pdf' },
     ];
 
-    render(<FilesList files={files} action={'download'} />);
+    render(<FilesList files={files} action="download" />);
     expect(screen.getByRole('table')).toBeInTheDocument();
   });
 });

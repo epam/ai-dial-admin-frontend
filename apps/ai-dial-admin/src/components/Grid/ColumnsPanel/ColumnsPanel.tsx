@@ -2,7 +2,6 @@
 
 import { ButtonVariant, DialButton, DialCheckbox } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
-import classNames from 'classnames';
 import { FC, useCallback, useRef } from 'react';
 import { useDrop } from 'react-dnd';
 
@@ -40,9 +39,6 @@ const ColumnsPanel: FC<Props> = ({
     [toggleColumnVisibility],
   );
 
-  const headerClassName = classNames('flex flex-row justify-between py-4 px-6 items-center h-[70px]');
-  const bodyClassName = classNames('flex-1 flex flex-col p-6 overflow-y-auto');
-
   const [, drop] = useDrop(() => ({ accept: 'column' }));
 
   drop(ref);
@@ -51,10 +47,10 @@ const ColumnsPanel: FC<Props> = ({
     <div
       className={panelClassName}
       onClick={(e) => e.stopPropagation()}
-      role={'toolbar'}
+      role="toolbar"
       aria-label={t(ButtonsI18nKey.Columns)}
     >
-      <div className={headerClassName}>
+      <div className="flex flex-row justify-between py-4 px-6 items-center h-[70px]">
         <h3 className="flex-1 min-w-0 mr-3">{t(ButtonsI18nKey.Columns)}</h3>
         <div className="flex">
           {showResetButton && (
@@ -68,7 +64,7 @@ const ColumnsPanel: FC<Props> = ({
           {toggleColumnsPanel && <CloseButton onClose={toggleColumnsPanel} />}
         </div>
       </div>
-      <div ref={ref} className={bodyClassName}>
+      <div ref={ref} className="flex-1 flex flex-col p-6 overflow-y-auto">
         <ul className="flex flex-col gap-4">
           {columns
             .filter((col) => !col.suppressColumnsToolPanel)

@@ -49,7 +49,7 @@ const DynamicNotification: FC<NotificationConfig> = ({ type, title, onClose, dow
         <div className="flex items-center relative w-full pr-5">
           <p className="small-text-semi truncate w-full">{title}</p>
           <DialButton className={iconClassName} onClick={showDetails} iconBefore={Icon} />
-          <DialButton className={'absolute right-0'} onClick={onClose} iconBefore={<IconX height={18} width={18} />} />
+          <DialButton className="absolute right-0" onClick={onClose} iconBefore={<IconX height={18} width={18} />} />
         </div>
       </div>
       {progress !== null && (

@@ -28,7 +28,7 @@ export const TextWidget: FC<WidgetProps> = ({
 
   return schema.__additional_property ? (
     <DialTextInputField
-      containerClassName={'flex w-full max-w-[600px]'}
+      containerClassName="flex w-full max-w-[600px]"
       elementId={id}
       disabled={disabled}
       readonly={readonly}
@@ -44,7 +44,7 @@ export const TextWidget: FC<WidgetProps> = ({
       <WidgetHeader label={label} title={schema.title} description={schema.description} />
       {schema.type === 'string' && (
         <DialTextInputField
-          containerClassName={'flex w-full max-w-[600px]'}
+          containerClassName="flex w-full max-w-[600px]"
           elementId={id}
           disabled={disabled}
           readonly={readonly}
@@ -59,7 +59,7 @@ export const TextWidget: FC<WidgetProps> = ({
       )}
       {(schema.type === 'number' || schema.type === 'integer') && (
         <DialNumberInputField
-          containerClassName={'flex w-full max-w-[600px]'}
+          containerClassName="flex w-full max-w-[600px]"
           elementId={id}
           value={value}
           placeholder={placeholder}

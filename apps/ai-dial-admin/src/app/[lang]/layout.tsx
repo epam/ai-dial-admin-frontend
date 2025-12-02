@@ -1,4 +1,3 @@
-import classNames from 'classnames';
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { ReactNode } from 'react';
@@ -56,7 +55,7 @@ export default async function Layout({ children, params }: { children: ReactNode
             <PromptFolderProvider>
               <I18nProvider locale={lang}>
                 <NotificationProvider>
-                  <div className={classNames('flex flex-col h-full w-full')}>
+                  <div className="flex flex-col h-full w-full">
                     <Header isEnableAuth={isEnableAuth} />
                     <div className="flex-1 min-h-0">
                       <div className="flex flex-row h-full relative">

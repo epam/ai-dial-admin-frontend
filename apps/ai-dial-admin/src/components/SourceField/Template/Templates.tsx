@@ -101,7 +101,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
               }))}
               searchable={true}
               onChange={(value) => onSelect(value as string)}
-              elementId={'source-type'}
+              elementId="source-type"
               value={runners.find((runner) => runner.name === entity.source?.runnerName)?.name}
               placeholder={t(CreateI18nKey.SelectInterceptorTemplate)}
               fieldTitle={t(SourceI18nKey.InterceptorTemplate)}
@@ -110,12 +110,12 @@ const Templates = <T extends DialModel | DialInterceptor>({
         ) : (
           <div className="flex gap-2 w-full">
             <div className="w-full lg:w-[45%]">
-              <Field fieldTitle={t(SourceI18nKey.InterceptorTemplate)} htmlFor={'templates'} />
+              <Field fieldTitle={t(SourceI18nKey.InterceptorTemplate)} htmlFor="templates" />
               <DialInputPopup
                 open={isModalOpen}
                 onOpen={onOpenModal}
                 selectedValue={selectedRunner?.name}
-                elementId={'templates'}
+                elementId="templates"
                 errorText={errorText}
                 emptyValueText={t(EntitiesI18nKey.NoTemplates)}
               >
