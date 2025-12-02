@@ -16,7 +16,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportMap } from '@/src/models/file';
-import { ParsedAssets } from '@/src/models/prompts';
+import { ImportData, ParsedAssets } from '@/src/models/import-asset';
 import { ConflictResolutionPolicy, ImportFileType as FileType, ImportSteps } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import ImportConflicts from './ImportConflicts';
@@ -30,13 +30,7 @@ interface Props {
   route?: ApplicationRoute;
   context?: () => AssetsFolderContext<DialFile>;
   onClose: () => void;
-  onApply?: (
-    fileType: FileType,
-    file: File | File[] | ParsedAssets,
-    resolution: string,
-    path: string,
-    ignorePaths?: boolean,
-  ) => void;
+  onApply?: (fileType: FileType, file: ImportData, resolution: string, path: string, ignorePaths?: boolean) => void;
 }
 
 const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply }) => {

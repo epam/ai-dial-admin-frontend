@@ -18,7 +18,7 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { ImportResult } from '@/src/models/import';
 import { Notification } from '@/src/models/notification';
-import { ParsedAssets, PromptImportGridData } from '@/src/models/prompts';
+import { ParsedAssets, PromptImportGridData } from '@/src/models/import-asset';
 import { ImportStatus } from '@/src/types/import';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';

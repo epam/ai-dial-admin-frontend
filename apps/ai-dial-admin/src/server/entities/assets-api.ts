@@ -2,7 +2,7 @@ import { JWT } from 'next-auth/jwt';
 
 import { DEFAULT_ETAG, IF_MATCH, IF_NONE_MATCH } from '@/src/constants/api-headers';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { Asset, AssetApp, AssetToolset } from '@/src/models/dial/deployment-asset';
+import { Asset, AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -174,7 +174,7 @@ export class AssetsApi extends BaseApi {
     type: ResourceType,
     paths?: string[],
     fileType?: ImportFileType,
-  ): Promise<{ blob: Blob; fileName: string } | { prompts: DialPrompt[] } | { applications: AssetApp[] }> {
+  ): Promise<{ blob: Blob; fileName: string } | unknown> {
     const url = this.buildUrl(
       type,
       fileType === ImportFileType.ARCHIVE ? ResourceOperation.EXPORT : ResourceOperation.EXPORT_JSON,
@@ -184,11 +184,7 @@ export class AssetsApi extends BaseApi {
       if (fileType === ImportFileType.ARCHIVE) {
         return { blob: await (res as Response)?.blob?.(), fileName: getFileName(res as Response) || '' };
       }
-
-      if (type === ResourceType.PROMPT) {
-        return res as { prompts: DialPrompt[] };
-      }
-      return res as { applications: AssetApp[] };
+      return res;
     });
   }
 

@@ -24,7 +24,7 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialFile } from '@/src/models/dial/file';
 import { ImportResult } from '@/src/models/import';
-import { ParsedAssets } from '@/src/models/prompts';
+import { ImportData } from '@/src/models/import-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -87,7 +87,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
   const onImport = useCallback(
     (
       fileType: ImportFileType,
-      file: File | File[] | ParsedAssets,
+      file: ImportData,
       conflictResolutionStrategy: string,
       path: string,
       ignorePaths?: boolean,
