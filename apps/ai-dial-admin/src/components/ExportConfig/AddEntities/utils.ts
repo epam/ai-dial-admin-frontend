@@ -52,15 +52,24 @@ export const getAvailableData = (
   tabData: Record<string, EntitiesGridData[]>,
   customExportData: Record<string, EntitiesGridData[]>,
   currentTab: string,
+  selectedTopics: string[],
 ) => {
   let entityData = tabData[currentTab] || [];
   let existingData = customExportData[currentTab] || [];
   if (id === EntityType.MODEL) {
-    entityData = entityData.filter((data) => data.type === MenuI18nKey.Models);
+    entityData = entityData.filter(
+      (data) =>
+        data.type === MenuI18nKey.Models &&
+        (selectedTopics.length ? selectedTopics.some((topic) => data?.topics?.includes(topic)) : true),
+    );
     existingData = existingData.filter((data) => data.type === MenuI18nKey.Models);
   }
   if (id === EntityType.APPLICATION) {
-    entityData = entityData.filter((data) => data.type === MenuI18nKey.Applications);
+    entityData = entityData.filter(
+      (data) =>
+        data.type === MenuI18nKey.Applications &&
+        (selectedTopics.length ? selectedTopics.some((topic) => data?.topics?.includes(topic)) : true),
+    );
     existingData = existingData.filter((data) => data.type === MenuI18nKey.Applications);
   }
   if (id === EntityType.ROUTE) {
@@ -69,8 +78,19 @@ export const getAvailableData = (
   }
 
   if (id === EntityType.TOOLSET) {
-    entityData = entityData.filter((data) => data.type === MenuI18nKey.Toolsets);
+    entityData = entityData.filter(
+      (data) =>
+        data.type === MenuI18nKey.Toolsets &&
+        (selectedTopics.length ? selectedTopics.some((topic) => data?.topics?.includes(topic)) : true),
+    );
     existingData = existingData.filter((data) => data.type === MenuI18nKey.Toolsets);
+  }
+
+  if (id === EntityType.APPLICATION_TYPE_SCHEMA) {
+    entityData =
+      entityData.filter((data) =>
+        selectedTopics.length ? selectedTopics.some((topic) => data?.topics?.includes(topic)) : true,
+      ) || [];
   }
   return getAvailableEntities(existingData, entityData);
 };

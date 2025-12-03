@@ -7,7 +7,7 @@ import { ColDef } from 'ag-grid-community';
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import AddEntitiesModal from '@/src/components/ExportConfig/AddEntities/AddEntitiesModal';
-import { getActualColDefs, isEntityWithDependency } from '@/src/components/ExportConfig/utils';
+import { getActualColDefs, isEntityWithDependency, isEntityWithTopics } from '@/src/components/ExportConfig/utils';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
@@ -19,9 +19,16 @@ interface Props {
   tabData: Record<string, EntitiesGridData[]>;
   customExportData: Record<string, EntitiesGridData[]>;
   setCustomExportData: Dispatch<SetStateAction<Record<string, EntitiesGridData[]>>>;
+  selectedTopics: string[];
 }
 
-const AddEntitiesButton: FC<Props> = ({ selectedTab, tabData, customExportData, setCustomExportData }) => {
+const AddEntitiesButton: FC<Props> = ({
+  selectedTab,
+  tabData,
+  customExportData,
+  setCustomExportData,
+  selectedTopics,
+}) => {
   const t = useI18n() as (v: string) => string;
 
   const [buttonTitle, setButtonTitle] = useState('');
@@ -32,7 +39,7 @@ const AddEntitiesButton: FC<Props> = ({ selectedTab, tabData, customExportData, 
 
   const onClick = (id: EntityType) => {
     setEntityTitle(id);
-    setAvailableEntities(getAvailableData(id, tabData, customExportData, selectedTab));
+    setAvailableEntities(getAvailableData(id, tabData, customExportData, selectedTab, selectedTopics));
     setIsModalOpen(true);
   };
 
@@ -50,6 +57,22 @@ const AddEntitiesButton: FC<Props> = ({ selectedTab, tabData, customExportData, 
     });
     setIsModalOpen(false);
   };
+
+  useEffect(() => {
+    if (isEntityWithTopics(selectedTab)) {
+      setCustomExportData((prev) => {
+        const existingItems = prev[selectedTab] ?? [];
+        const updatedItems =
+          existingItems.filter((entity) =>
+            selectedTopics.length ? selectedTopics.some((topic) => entity?.topics?.includes(topic)) : true,
+          ) || [];
+        return {
+          ...prev,
+          [selectedTab]: updatedItems,
+        };
+      });
+    }
+  }, [selectedTab, selectedTopics, setCustomExportData]);
 
   useEffect(() => {
     if (selectedTab) {
