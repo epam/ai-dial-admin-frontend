@@ -6,6 +6,7 @@ import {
   IMAGE_VERSIONS_URL,
   IMAGES_WITH_VERSIONS,
   INSTALL_IMAGES_URL,
+  IMAGE_LOGS_URL,
 } from '../images';
 import createFetchMock from 'vitest-fetch-mock';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -71,6 +72,13 @@ describe('ImagesApi', () => {
     );
 
     fetch.mockResponseOnce(JSON.stringify({}));
+    await instance.updateImage({ name: 'n' } as any, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(IMAGE_URL()),
+      expect.objectContaining({ method: 'PUT' }),
+    );
+
+    fetch.mockResponseOnce(JSON.stringify({}));
     await instance.deleteImage('i1', TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(IMAGE_URL('i1')),
@@ -82,6 +90,13 @@ describe('ImagesApi', () => {
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(INSTALL_IMAGES_URL),
       expect.objectContaining({ method: 'POST' }),
+    );
+
+    fetch.mockResponseOnce(JSON.stringify({}));
+    await instance.getImageLogs('i1', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(IMAGE_LOGS_URL('i1')),
+      expect.objectContaining({ method: 'GET' }),
     );
   });
 
