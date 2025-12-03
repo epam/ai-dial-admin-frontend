@@ -12,6 +12,8 @@ import {
   IconReplace,
   IconTrash,
   IconTrashX,
+  IconPlayerPlay,
+  IconPlayerPause,
 } from '@tabler/icons-react';
 
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -30,7 +32,11 @@ import {
   getViewDetailsOperation,
   getDownloadOperation,
   getPreviewOperation,
+  getRunOperation,
+  getStopOperation,
 } from '../actions';
+
+import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 
 const CLICK = vi.fn();
 
@@ -117,5 +123,47 @@ describe('Actions :: getResourceRollbackOperation', () => {
     expect(res.id).toBe(ActionMenuOperation.Compare_changes);
     expect(res.icon).toEqual(<IconReplace {...BASE_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
+  });
+
+  test('Should set RUN_OPERATION and hidden behaviour', () => {
+    const res = getRunOperation(CLICK as any);
+    expect(res.id).toBe(ActionMenuOperation.Run);
+    expect(res.icon).toEqual(<IconPlayerPlay {...BASE_ICON_PROPS} />);
+    expect(res.onClick).toEqual(CLICK);
+
+    expect(typeof res.hidden).toBe('function');
+    const hidden = res.hidden as any;
+
+    const nodeRunning = { data: { status: CONTAINER_STATUS.RUNNING } } as any;
+    const nodePending = { data: { status: CONTAINER_STATUS.PENDING } } as any;
+    const nodeFailed = { data: { status: CONTAINER_STATUS.FAILED } } as any;
+    const nodeOther = { data: { status: 'OTHER' } } as any;
+
+    expect(hidden({} as any, nodeRunning)).toBe(true);
+    expect(hidden({} as any, nodePending)).toBe(true);
+    expect(hidden({} as any, nodeFailed)).toBe(true);
+    expect(hidden({} as any, nodeOther)).toBe(false);
+  });
+
+  test('Should set STOP_OPERATION and hidden behaviour', () => {
+    const res = getStopOperation(CLICK as any);
+    expect(res.id).toBe(ActionMenuOperation.Stop);
+    expect(res.icon).toEqual(<IconPlayerPause {...BASE_ICON_PROPS} />);
+    expect(res.onClick).toEqual(CLICK);
+
+    expect(typeof res.hidden).toBe('function');
+    const hidden = res.hidden as any;
+
+    const nodeRunning = { data: { status: CONTAINER_STATUS.RUNNING } } as any;
+    const nodePending = { data: { status: CONTAINER_STATUS.PENDING } } as any;
+    const nodeFailed = { data: { status: CONTAINER_STATUS.FAILED } } as any;
+    const nodeOther = { data: { status: 'OTHER' } } as any;
+
+    // stop hidden should be false (visible) for RUNNING/PENDING/FAILED
+    expect(hidden({} as any, nodeRunning)).toBe(false);
+    expect(hidden({} as any, nodePending)).toBe(false);
+    expect(hidden({} as any, nodeFailed)).toBe(false);
+    // and true for other statuses
+    expect(hidden({} as any, nodeOther)).toBe(true);
   });
 });

@@ -1,0 +1,132 @@
+import classNames from 'classnames';
+import { isEqual } from 'lodash';
+import { SelectOption } from '@epam/ai-dial-ui-kit';
+import {
+  INTERCEPTOR_IMAGE_TEMPLATE,
+  MCP_IMAGE_TEMPLATE,
+  MODEL_IMAGE_TEMPLATE,
+  SOURCES,
+  STATUS_CLASSNAMES,
+} from '@/src/constants/deployments/images';
+import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TYPE } from '@/src/types/deployments/images';
+import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { ApplicationRoute } from '@/src/types/routes';
+import { Image, ImageGroup, ImageVersion } from '@/src/models/deployments/images';
+import { getDeploymentsURIError, getDeploymentsURLError } from '@/src/utils/deployments/validation';
+
+export const getSourcesTypes = (t: (key: string) => string) => {
+  return SOURCES.map((source) => {
+    return {
+      ...source,
+      label: t(source.label),
+    };
+  });
+};
+
+export function getActionClass(action: IMAGE_STATUS | CONTAINER_STATUS): string {
+  return STATUS_CLASSNAMES[action];
+}
+
+export function getImageTemplate(route: ApplicationRoute): Image | null {
+  switch (route) {
+    case ApplicationRoute.InterceptorDeployments:
+      return INTERCEPTOR_IMAGE_TEMPLATE;
+    case ApplicationRoute.McpDeployments:
+      return MCP_IMAGE_TEMPLATE;
+    case ApplicationRoute.ModelDeployments:
+      return MODEL_IMAGE_TEMPLATE;
+    default:
+      return null;
+  }
+}
+
+export function getImageType(route: ApplicationRoute): string {
+  switch (route) {
+    case ApplicationRoute.InterceptorDeployments:
+      return 'INTERCEPTOR';
+    case ApplicationRoute.McpDeployments:
+      return 'MCP';
+    case ApplicationRoute.ModelDeployments:
+      return 'NIM';
+    default:
+      return '';
+  }
+}
+
+export const isValidVersion = (imageData: ImageGroup): boolean => {
+  return (
+    !!imageData.selectedId &&
+    imageData.availableVersions.find((v) => v.id === imageData.selectedId)?.status === IMAGE_STATUS.BUILT
+  );
+};
+
+export function validateImageChanged(originalImage: Image, updatedImage: Image) {
+  const { updatedAt: __originalUpdatedAt, buildStatus: __originalBuiltStatus, ...original } = originalImage;
+  const { updatedAt: __updatedUpdatedAt, buildStatus: __updatedBuiltStatus, ...updated } = updatedImage;
+  return !isEqual(original, updated);
+}
+
+export function validateImage(image: Image): boolean {
+  if (!image.name?.trim()) {
+    return false;
+  }
+
+  if (!image.version.trim()) {
+    return false;
+  }
+
+  if (!image.transportType && image.$type === IMAGE_TYPE.MCP) {
+    return false;
+  }
+
+  if (!image.source?.$type) {
+    return false;
+  }
+
+  if (image.source.$type === IMAGE_SOURCE_TYPE.CODE) {
+    if (!image.source.url?.trim() || getDeploymentsURLError(image.source.url)) {
+      return false;
+    }
+  } else if (image.source.$type === IMAGE_SOURCE_TYPE.DOCKER) {
+    if (!image.source.imageUri?.trim() || getDeploymentsURIError(image.source.imageUri)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+export const getVersionsList = (versions: ImageVersion[]): SelectOption[] => {
+  return versions.map(({ id, version, status }) => {
+    return {
+      value: id,
+      label: version,
+      icon: <span className={classNames('flex w-2 h-2 mr-1 rounded no-user-select', getActionClass(status))} />,
+    };
+  });
+};
+
+export function getUniqueLatestImages(images: Image[]): Image[] {
+  const map = new Map();
+
+  for (const img of images) {
+    const existing = map.get(img.name);
+    if (!existing || existing.version < img.version) {
+      map.set(img.name, img);
+    }
+  }
+
+  return Array.from(map.values());
+}
+
+export const updateSelectedVersion = (images: ImageGroup[], id: string) => {
+  return images.map((image) => {
+    if (image?.availableVersions) {
+      const selected = image?.availableVersions.find((i) => i.id === id);
+      if (selected) {
+        image.selectedId = id;
+      }
+    }
+    return image;
+  });
+};

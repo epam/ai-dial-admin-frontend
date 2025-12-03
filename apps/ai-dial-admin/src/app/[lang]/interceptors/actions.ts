@@ -1,7 +1,7 @@
 'use server';
 import { cookies, headers } from 'next/headers';
 
-import { interceptorsApi, deploymentsApi } from '@/src/app/api/api';
+import { interceptorsApi, containersApi } from '@/src/app/api/api';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -52,5 +52,5 @@ export async function getConfigurationSchema(name: string) {
 
 export async function getInterceptorContainers() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return deploymentsApi.getInterceptorContainers(token);
+  return containersApi.getInterceptorContainers(token);
 }
