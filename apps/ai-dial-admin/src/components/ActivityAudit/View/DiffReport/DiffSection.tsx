@@ -47,9 +47,12 @@ const DiffSection: FC<Props> = ({ sections, name, type, diffView, compareView })
     <div className="flex flex-col rounded border border-primary bg-layer-3 p-4">
       <button className="flex items-center justify-between" onClick={toggleCollapse}>
         <div className="flex flex-row">
-          <i className="text-icon-secondary">
-            {isCollapsed ? <IconChevronRight {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
-          </i>
+          {isCollapsed ? (
+            <IconChevronRight className="text-secondary" {...BASE_ICON_PROPS} />
+          ) : (
+            <IconChevronDown className="text-secondary" {...BASE_ICON_PROPS} />
+          )}
+
           <h3 className="mx-2">{title}</h3>
         </div>
         <DiffLegend added={added} changed={changed} removed={removed} />
