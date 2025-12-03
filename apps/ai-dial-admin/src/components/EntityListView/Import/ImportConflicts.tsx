@@ -8,8 +8,8 @@ import {
   changeFilesMap,
   generateFileColumnsForImportGrid,
   generateFileRowDataForImportGrid,
-  generatePromptColumnsForImportGrid,
-  generatePromptRowDataForImportGrid,
+  generateAssetColumnsForImportGrid,
+  generateAssetRowDataForImportGrid,
   isErrorFileNode,
   isErrorPromptNode,
 } from '@/src/components/EntityListView/Import/utils';
@@ -57,11 +57,11 @@ const ImportConflicts: FC<Props> = ({
   );
 
   const rowData = isAssetWithVersionImport
-    ? generatePromptRowDataForImportGrid(filesMap, existing as DialPrompt[])
+    ? generateAssetRowDataForImportGrid(filesMap, existing as DialPrompt[])
     : generateFileRowDataForImportGrid(filesMap, existing as DialFile[]);
 
   const columnDefs: ColDef[] = isAssetWithVersionImport
-    ? generatePromptColumnsForImportGrid(changeFile)
+    ? generateAssetColumnsForImportGrid(changeFile)
     : generateFileColumnsForImportGrid(changeFile);
 
   const rowClassRules: RowClassRules = {

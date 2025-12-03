@@ -2,13 +2,13 @@ import { ColDef } from 'ag-grid-community';
 
 import {
   generateFileColumnsForImportGrid,
-  generatePromptColumnsForImportGrid,
+  generateAssetColumnsForImportGrid,
   isInvalidJson,
   isLargeFile,
 } from '@/src/components/EntityListView/Import/utils';
 import { DialFile } from '@/src/models/dial/file';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
-import { ParsedAssets, PromptImportGridData } from '@/src/models/import-asset';
+import { ParsedAssets, AssetImportGridData } from '@/src/models/import-asset';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
@@ -16,13 +16,13 @@ import { ZipFilePreview } from './models';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 
 /**
- * Check is import prompt preview has errors
+ * Check is import data preview has errors
  *
- * @param {PromptImportGridData} data - prompts
+ * @param {AssetImportGridData} data - import data
  * @returns {boolean} - return true if has errors
  */
-export const isErrorPromptReview = (data: PromptImportGridData): boolean => {
-  return !data.version || !data.promptName || !!data.invalid;
+export const isErrorAssetReview = (data: AssetImportGridData): boolean => {
+  return !data.version || !data.assetName || !!data.invalid;
 };
 
 /**
@@ -128,7 +128,7 @@ export const generateColumnsForImportGrid = (
   route?: ApplicationRoute,
 ): ColDef[] => {
   if (isAssetWithVersion(route)) {
-    return generatePromptColumnsForImportGrid(changeFileFunc, true, fileType === ImportFileType.ARCHIVE);
+    return generateAssetColumnsForImportGrid(changeFileFunc, true, fileType === ImportFileType.ARCHIVE);
   }
   if (route === ApplicationRoute.Files) {
     return generateFileColumnsForImportGrid(changeFileFunc, true, fileType === ImportFileType.ARCHIVE);
@@ -139,16 +139,16 @@ export const generateColumnsForImportGrid = (
 /**
  * Check if import data has errors
  *
- * @param {(PromptImportGridData | FileImportGridData)} data - import data
+ * @param {(AssetImportGridData | FileImportGridData)} data - import data
  * @param {?ApplicationRoute} [route] - route
  * @returns {boolean} - return true if errors exist
  */
 export const isErrorRowForImport = (
-  data: PromptImportGridData | FileImportGridData,
+  data: AssetImportGridData | FileImportGridData,
   route?: ApplicationRoute,
 ): boolean => {
-  if (route === ApplicationRoute.Prompts) {
-    return isErrorPromptReview(data as PromptImportGridData);
+  if (isAssetWithVersion(route)) {
+    return isErrorAssetReview(data as AssetImportGridData);
   }
   if (route === ApplicationRoute.Files) {
     return isErrorFileReview(data as FileImportGridData);

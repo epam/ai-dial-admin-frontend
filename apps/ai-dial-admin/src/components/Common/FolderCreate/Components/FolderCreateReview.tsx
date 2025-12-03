@@ -13,7 +13,7 @@ import {
   generateColumnsForImportGrid,
   generatePreviewData,
   isErrorFileReview,
-  isErrorPromptReview,
+  isErrorAssetReview,
   isErrorRowForImport,
   readAllFiles,
   readJsonFiles,
@@ -22,13 +22,13 @@ import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButt
 import {
   changeFilesMap,
   generateFileRowDataForImportGrid,
-  generatePromptRowDataForImportGrid,
+  generateAssetRowDataForImportGrid,
 } from '@/src/components/EntityListView/Import/utils';
 import Grid from '@/src/components/Grid/Grid';
 import { FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
-import { PromptImportGridData } from '@/src/models/import-asset';
+import { AssetImportGridData } from '@/src/models/import-asset';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -148,12 +148,12 @@ const FolderCreateReview: FC<Props> = ({
 
   useEffect(() => {
     if (currentStepId !== CreateFolderSteps.FILE_REVIEW && editedFileMap.size !== 0) {
-      let rowData: (PromptImportGridData | FileImportGridData)[] = [];
+      let rowData: (AssetImportGridData | FileImportGridData)[] = [];
       let isError;
 
-      if (view === ApplicationRoute.Prompts) {
-        rowData = generatePromptRowDataForImportGrid(editedFileMap, [], t);
-        isError = (rowData as PromptImportGridData[]).some((r) => isErrorPromptReview(r));
+      if (isAssetWithVersion(view)) {
+        rowData = generateAssetRowDataForImportGrid(editedFileMap, [], t);
+        isError = (rowData as AssetImportGridData[]).some((r) => isErrorAssetReview(r));
       } else if (view === ApplicationRoute.Files) {
         rowData = generateFileRowDataForImportGrid(editedFileMap, [], t);
         isError = (rowData as FileImportGridData[]).some((r) => isErrorFileReview(r));

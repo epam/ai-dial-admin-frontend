@@ -4,7 +4,7 @@ import { StepStatus } from '@epam/ai-dial-ui-kit';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   changeFilesMap,
-  generatePromptRowDataForImportGrid,
+  generateAssetRowDataForImportGrid,
   getImportResults,
   getModalTitle,
   getMultipleImportStatus,
@@ -110,14 +110,14 @@ describe('Import :: generatePromptRowDataForImportGrid', () => {
       isInvalid: false,
     });
 
-    const result = generatePromptRowDataForImportGrid(map as Map<string, FileImportMap>);
+    const result = generateAssetRowDataForImportGrid(map as Map<string, FileImportMap>);
 
     expect(result).toEqual([
       {
         index: 0,
         name: 'item1',
         version: '1.0.0',
-        promptName: 'id_for_prompt',
+        assetName: 'id_for_prompt',
         extension: '',
       },
     ]);
@@ -134,14 +134,14 @@ describe('Import :: generatePromptRowDataForImportGrid', () => {
       isInvalid: false,
     });
 
-    const result = generatePromptRowDataForImportGrid(map as Map<string, FileImportMap>, [{ path: 'somePath/folder' }]);
+    const result = generateAssetRowDataForImportGrid(map as Map<string, FileImportMap>, [{ path: 'somePath/folder' }]);
 
     expect(result).toEqual([
       {
         index: 0,
         name: 'item1',
         version: '1.0.0',
-        promptName: 'id_for_prompt',
+        assetName: 'id_for_prompt',
         existingNames: ['folder'],
         extension: '',
       },
@@ -158,14 +158,14 @@ describe('Import :: generatePromptRowDataForImportGrid', () => {
       isInvalid: true,
     });
 
-    const result = generatePromptRowDataForImportGrid(map as Map<string, FileImportMap>, [{ path: 'somePath/folder' }]);
+    const result = generateAssetRowDataForImportGrid(map as Map<string, FileImportMap>, [{ path: 'somePath/folder' }]);
 
     expect(result).toEqual([
       {
         index: 0,
         name: 'item1.svg',
         version: '',
-        promptName: '',
+        assetName: '',
         extension: '.svg',
         invalid: true,
       },
@@ -177,7 +177,7 @@ describe('Import :: isErrorPromptNode', () => {
   test('should return true', () => {
     const data = {
       version: '1.0.0',
-      promptName: 'name',
+      assetName: 'name',
       existingNames: ['name__1.0.0'],
     };
     const result = isErrorPromptNode(data);
@@ -188,7 +188,7 @@ describe('Import :: isErrorPromptNode', () => {
   test('should return false', () => {
     const data = {
       version: '2.0.0',
-      promptName: 'name',
+      assetName: 'name',
       existingNames: ['name__1.0.0'],
     };
     const result = isErrorPromptNode(data);
@@ -272,11 +272,11 @@ describe('Import :: changeFilesMap', () => {
     expect(result.get('key1').files[0].id).toBe('123__v2');
   });
 
-  test('should update promptName and file name when field is "promptName"', () => {
-    const result = changeFilesMap(prevMap, { name: 'key1', index: 1 }, 'promptName', 'newPromptName');
+  test('should update assetName and file name when field is "assetName"', () => {
+    const result = changeFilesMap(prevMap, { name: 'key1', index: 1 }, 'assetName', 'newassetName');
 
-    expect(result.get('key1').files[1].id).toBe('newPromptName');
-    expect(result.get('key1').files[1].name).toBe('newPromptName');
+    expect(result.get('key1').files[1].id).toBe('newassetName');
+    expect(result.get('key1').files[1].name).toBe('newassetName');
   });
 
   test('should update file content when field is "fileName"', () => {

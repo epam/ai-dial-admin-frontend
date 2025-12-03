@@ -8,10 +8,10 @@ export interface ParsedAssets {
   applications?: AssetApp[];
 }
 
-export interface PromptImportGridData {
+export interface AssetImportGridData {
   name: string;
   version: string;
-  promptName: string;
+  assetName: string;
   existingNames?: string[];
   index: number;
   invalid?: boolean;

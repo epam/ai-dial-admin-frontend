@@ -18,7 +18,7 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { ImportResult } from '@/src/models/import';
 import { Notification } from '@/src/models/notification';
-import { ParsedAssets, PromptImportGridData } from '@/src/models/import-asset';
+import { ParsedAssets, AssetImportGridData } from '@/src/models/import-asset';
 import { ImportStatus } from '@/src/types/import';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -26,6 +26,7 @@ import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import FileNameCellRenderer from '@/src/components/Grid/CellRenderers/FileNameCellRenderer';
 import { StepStatus } from '@epam/ai-dial-ui-kit';
 import { ApplicationRoute } from '@/src/types/routes';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
 
 /**
  * Generate notifications with results of JSON prompt results
@@ -101,32 +102,33 @@ export const getMultipleImportStatus = (map: Map<string, FileImportMap>): StepSt
 };
 
 /**
- * Convert selected for import DialPrompt data into grid data with errors
+ * Convert selected for import data into grid data with errors
  *
- * @param {Map<string, FileImportMap>} editedFileMap - DialPrompt map for import
- * @param {?DialPrompt[]} [existingPrompts] - array of already existing in current folder Prompts
- * @returns {PromptImportGridData[]} - array of PromptImportGridData
+ * @param {Map<string, FileImportMap>} editedFileMap - data map for import
+ * @param {?DialPrompt[]} [existingData] - array of already existing in current folder data
+ * @returns {AssetImportGridData[]} - array of AssetImportGridData
  */
-export const generatePromptRowDataForImportGrid = (
+export const generateAssetRowDataForImportGrid = (
   editedFileMap: Map<string, FileImportMap>,
-  existingPrompts?: DialPrompt[],
+  existingData?: (DialPrompt | AssetApp)[],
   t?: (t: string) => string,
-): PromptImportGridData[] => {
-  const data: PromptImportGridData[] = [];
+): AssetImportGridData[] => {
+  const data: AssetImportGridData[] = [];
 
   editedFileMap.forEach((value, key) => {
     const { extension } = getNameExtensionFromFile(key);
     if (!value.isInvalid) {
       value.files.forEach((file, index) => {
-        const fullName = getFolderNameAndPath(file.id as string).name;
-        const { name: promptName, version } = getNameVersionFromPrompt(fullName);
+        const nameData = file.id
+          ? getNameVersionFromPrompt(getFolderNameAndPath(file.id as string).name)
+          : { name: file.name as string, version: (file as AssetApp).version as string };
 
         data.push({
           index,
           name: key,
-          version,
-          promptName,
-          existingNames: existingPrompts?.map((p) => getFolderNameAndPath(p.path).name),
+          version: nameData.version,
+          assetName: nameData.name,
+          existingNames: existingData?.map((p) => getFolderNameAndPath(p.path).name),
           extension,
         });
       });
@@ -135,7 +137,7 @@ export const generatePromptRowDataForImportGrid = (
         index: 0,
         name: key,
         version: '',
-        promptName: t?.(ImportI18nKey.PromptError) || '',
+        assetName: t?.(ImportI18nKey.PromptError) || '',
         invalid: true,
         extension,
       });
@@ -186,12 +188,12 @@ export const generateFileRowDataForImportGrid = (
 };
 
 /**
- * Generate columns for DialPrompt export grid
+ * Generate columns for export grid
  *
  * @param {(value: string, key: string, field: string) => void} onChange - function for changing grid data
  * @returns {ColDef[]} - column definitions
  */
-export const generatePromptColumnsForImportGrid = (
+export const generateAssetColumnsForImportGrid = (
   onChange: (value: string, data: unknown, field: string) => void,
   withIcon?: boolean,
   readonly?: boolean,
@@ -199,7 +201,7 @@ export const generatePromptColumnsForImportGrid = (
   return [
     {
       headerName: 'Name',
-      field: 'promptName',
+      field: 'assetName',
       cellClass: NO_BORDER_CLASS,
       cellRendererSelector: (params: ICellRendererParams) => {
         if (!params.data.invalid && !readonly) {
@@ -285,12 +287,12 @@ export const generateFileColumnsForImportGrid = (
 /**
  * Check row data for errors
  *
- * @param {PromptImportGridData} data - row data
+ * @param {AssetImportGridData} data - row data
  * @returns {boolean} - true if DialPrompt with same name and version from row already exists
  */
-export const isErrorPromptNode = (data: PromptImportGridData): boolean => {
+export const isErrorPromptNode = (data: AssetImportGridData): boolean => {
   const version = data.version;
-  const name = data.promptName;
+  const name = data.assetName;
   const existingPrompts = data.existingNames as string[];
   return existingPrompts.some((p) => p === generateNameVersionForPrompt(name, version));
 };
@@ -341,14 +343,14 @@ export const isLargeFile = (file: File) => {
  * Function for modifying export files map, to apply name, version changes
  *
  * @param {Map<string, FileImportMap>} prev - files or prompts map
- * @param {PromptImportGridData | FileImportGridData} data - row data
+ * @param {AssetImportGridData | FileImportGridData} data - row data
  * @param {string} field - field key for update
  * @param {string} value - new value
  * @returns {Map<string, FileImportMap>} - modified DialPrompt or DialFile map
  */
 export const changeFilesMap = (
   prev: Map<string, FileImportMap>,
-  data: PromptImportGridData | FileImportGridData,
+  data: AssetImportGridData | FileImportGridData,
   field: string,
   value: string,
 ): Map<string, FileImportMap> => {
@@ -365,7 +367,7 @@ export const changeFilesMap = (
     if (targetFile) {
       if (field === 'version') {
         targetFile.id = modifyNameVersionInPrompt(targetFile.id as string, void 0, value);
-      } else if (field === 'promptName') {
+      } else if (field === 'assetName') {
         targetFile.id = modifyNameVersionInPrompt(targetFile.id as string, value);
         targetFile.name = value;
       } else if (field === 'fileName') {
