@@ -60,4 +60,3 @@ describe('getExportFunction', () => {
     expect(resultWithUnknownRoute).toBeNull();
   });
 });
-

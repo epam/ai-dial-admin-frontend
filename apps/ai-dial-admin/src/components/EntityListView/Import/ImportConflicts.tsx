@@ -69,7 +69,6 @@ const ImportConflicts: FC<Props> = ({
       return isAssetWithVersionImport ? isErrorPromptNode(params.data) : isErrorFileNode(params.data);
     },
   };
-vcvcv
   const setErrorState = (event: GridReadyEvent | CellValueChangedEvent) => {
     let isError = false;
 
