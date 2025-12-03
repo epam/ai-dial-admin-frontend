@@ -1,6 +1,12 @@
 import { EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { ExportFormat, ExportType } from '@/src/types/export';
-import { getComponents, getComponentTypes, isEntityWithDependency } from '../utils';
+import {
+  getComponents,
+  getComponentTypes,
+  getFilteredData,
+  isEntityWithDependency,
+  isEntityWithTopics,
+} from '../utils';
 import { EntityType } from '@/src/types/entity-type';
 import { describe, expect, test } from 'vitest';
 
@@ -150,6 +156,54 @@ describe('Export Config Utils :: getComponents', () => {
   });
 });
 
+describe('Export Config Utils :: getFilteredData', () => {
+  const mockData = {
+    [EntityType.MODEL]: [
+      { id: 1, topics: ['topic1', 'topic2'] },
+      { id: 2, topics: ['topic3'] },
+      { id: 3, topics: ['topic1', 'topic3'] },
+    ],
+    [EntityType.APPLICATION]: [
+      { id: 4, topics: ['topic1'] },
+      { id: 5, topics: ['topic2'] },
+    ],
+    [EntityType.ROLE]: [{ id: 6, topics: ['topic2', 'topic4'] }],
+  };
+
+  test('Should return all data if selectedTopics is empty', () => {
+    const res = getFilteredData(mockData, EntityType.MODEL, []);
+    expect(res).toEqual(mockData[EntityType.MODEL]);
+  });
+
+  test('Should return all data for entity if the entity is not associated with topics', () => {
+    const res = getFilteredData(mockData, EntityType.ROLE, ['topic1']);
+    expect(res).toEqual(mockData[EntityType.ROLE]);
+  });
+
+  test('Should filter data based on selected topics', () => {
+    const res = getFilteredData(mockData, EntityType.MODEL, ['topic1']);
+    expect(res).toEqual([
+      { id: 1, topics: ['topic1', 'topic2'] },
+      { id: 3, topics: ['topic1', 'topic3'] },
+    ]);
+  });
+
+  test('Should return empty array if no data matches selected topics', () => {
+    const res = getFilteredData(mockData, EntityType.MODEL, ['topic4']);
+    expect(res).toEqual([]);
+  });
+
+  test('Should return empty array if no entity data is available', () => {
+    const res = getFilteredData(undefined, EntityType.MODEL, ['topic1']);
+    expect(res).toEqual([]);
+  });
+
+  test('Should return all data if entity is not in the data object', () => {
+    const res = getFilteredData(mockData, 'UNKNOWN_ENTITY', ['topic1']);
+    expect(res).toEqual([]);
+  });
+});
+
 describe('Export Config Utils :: isEntityWithDependency', () => {
   test('Should return true for roles', () => {
     const res = isEntityWithDependency(EntityType.ROLE);
@@ -163,6 +217,50 @@ describe('Export Config Utils :: isEntityWithDependency', () => {
   });
   test('Should return false for adapter', () => {
     const res = isEntityWithDependency(EntityType.ADAPTER);
+
+    expect(res).toEqual(false);
+  });
+});
+
+describe('Export Config Utils :: isEntityWithTopics', () => {
+  test('Should return true for model', () => {
+    const res = isEntityWithTopics(EntityType.MODEL);
+
+    expect(res).toEqual(true);
+  });
+
+  test('Should return true for application', () => {
+    const res = isEntityWithTopics(EntityType.APPLICATION);
+
+    expect(res).toEqual(true);
+  });
+
+  test('Should return true for app runner', () => {
+    const res = isEntityWithTopics(EntityType.APPLICATION_TYPE_SCHEMA);
+
+    expect(res).toEqual(true);
+  });
+
+  test('Should return true for toolset', () => {
+    const res = isEntityWithTopics(EntityType.TOOLSET);
+
+    expect(res).toEqual(true);
+  });
+
+  test('Should return false for role', () => {
+    const res = isEntityWithTopics(EntityType.ROLE);
+
+    expect(res).toEqual(false);
+  });
+
+  test('Should return false for adapter', () => {
+    const res = isEntityWithTopics(EntityType.ADAPTER);
+
+    expect(res).toEqual(false);
+  });
+
+  test('Should return false for key', () => {
+    const res = isEntityWithTopics(EntityType.KEY);
 
     expect(res).toEqual(false);
   });
