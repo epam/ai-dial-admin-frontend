@@ -4,6 +4,7 @@ export enum CONTAINER_STATUS {
   NOT_DEPLOYED = 'not_deployed',
   FAILED = 'crashed',
   STOPPED = 'stopped',
+  STOPPING = 'stopping',
 }
 
 export enum KubEventType {
