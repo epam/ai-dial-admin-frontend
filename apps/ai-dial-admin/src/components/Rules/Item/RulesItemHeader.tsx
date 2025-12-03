@@ -30,11 +30,12 @@ const RulesItemHeader: FC<Props> = ({ children, folderName, isCollapsed, isAlway
       )}
       onClick={isAlwaysToggled ? void 0 : toggleCollapse}
     >
-      {!isAlwaysToggled && (
-        <i className="text-icon-secondary">
-          {isCollapsed ? <IconChevronRight {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
-        </i>
-      )}
+      {!isAlwaysToggled &&
+        (isCollapsed ? (
+          <IconChevronRight className="text-secondary" {...BASE_ICON_PROPS} />
+        ) : (
+          <IconChevronDown className="text-secondary" {...BASE_ICON_PROPS} />
+        ))}
       <h3 className={classNames(!isAlwaysToggled && 'mx-2')}>{folderName || t(FoldersI18nKey.Permissions)}</h3>
       {children}
     </div>
