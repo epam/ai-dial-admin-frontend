@@ -145,42 +145,37 @@ export const applicationRunnersTab = (t: (stringToTranslate: string) => string) 
   label: t(TabsI18nKey.ApplicationRunners),
 });
 
-export const propertiesTabs = (t: (stringToTranslate: string) => string) => ({
-  id: EntityViewTab.Properties,
-  label: t(TabsI18nKey.Properties),
-});
-
-export const buildLogTabs = (t: (stringToTranslate: string) => string, status?: IMAGE_STATUS) => ({
+export const buildLogTab = (t: (stringToTranslate: string) => string, status?: IMAGE_STATUS) => ({
   id: EntityViewTab.BuildLog,
   label: t(TabsI18nKey.BuildLog),
   disabled: status === IMAGE_STATUS.NOT_BUILT,
 });
 
-export const toolsTabs = (t: (stringToTranslate: string) => string, status?: CONTAINER_STATUS) => ({
+export const deploymentsToolsTab = (t: (stringToTranslate: string) => string, status?: CONTAINER_STATUS) => ({
   id: EntityViewTab.Tools,
   label: t(TabsI18nKey.Tools),
   disabled: status !== CONTAINER_STATUS.RUNNING,
 });
 
-export const resourcesTabs = (t: (stringToTranslate: string) => string, status?: CONTAINER_STATUS) => ({
+export const resourcesTab = (t: (stringToTranslate: string) => string, status?: CONTAINER_STATUS) => ({
   id: EntityViewTab.Resources,
   label: t(TabsI18nKey.Resources),
   disabled: status !== CONTAINER_STATUS.RUNNING,
 });
 
-export const promptsTabs = (t: (stringToTranslate: string) => string, status?: CONTAINER_STATUS) => ({
+export const promptsTab = (t: (stringToTranslate: string) => string, status?: CONTAINER_STATUS) => ({
   id: EntityViewTab.Prompts,
   label: t(TabsI18nKey.Prompts),
   disabled: status !== CONTAINER_STATUS.RUNNING,
 });
 
-export const metricsTabs = (t: (stringToTranslate: string) => string, status?: CONTAINER_STATUS) => ({
+export const metricsTab = (t: (stringToTranslate: string) => string, status?: CONTAINER_STATUS) => ({
   id: EntityViewTab.Metrics,
   label: t(TabsI18nKey.Metrics),
   disabled: status !== CONTAINER_STATUS.RUNNING,
 });
 
-export const executionLogTabs = (t: (stringToTranslate: string) => string) => ({
+export const executionLogTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.ExecutionLog,
   label: t(TabsI18nKey.ExecutionLog),
 });
@@ -301,24 +296,20 @@ export const getDeploymentsViewTabs = (
   }
 
   if (entityType === DEPLOYMENT_ENTITY.images) {
-    return [
-      propertiesTabs(t),
-      buildLogTabs(t, status as IMAGE_STATUS),
-      relatedContainersTab(t, status as IMAGE_STATUS),
-    ];
+    return [propertiesTab(t), buildLogTab(t, status as IMAGE_STATUS), relatedContainersTab(t, status as IMAGE_STATUS)];
   }
 
   if (entityType === DEPLOYMENT_ENTITY.containers) {
     if (route === ApplicationRoute.InterceptorDeployments || route === ApplicationRoute.ModelDeployments) {
-      return [propertiesTabs(t), /* metricsTabs(t, status as CONTAINER_STATUS),*/ executionLogTabs(t), eventsTab(t)];
+      return [propertiesTab(t), /* metricsTab(t, status as CONTAINER_STATUS),*/ executionLogTab(t), eventsTab(t)];
     } else {
       return [
-        propertiesTabs(t),
-        toolsTabs(t, status as CONTAINER_STATUS),
-        resourcesTabs(t, status as CONTAINER_STATUS),
-        promptsTabs(t, status as CONTAINER_STATUS),
-        //metricsTabs(t, status as CONTAINER_STATUS),
-        executionLogTabs(t),
+        propertiesTab(t),
+        deploymentsToolsTab(t, status as CONTAINER_STATUS),
+        resourcesTab(t, status as CONTAINER_STATUS),
+        promptsTab(t, status as CONTAINER_STATUS),
+        //metricsTab(t, status as CONTAINER_STATUS),
+        executionLogTab(t),
         eventsTab(t),
       ];
     }

@@ -3,19 +3,20 @@ import { cookies, headers } from 'next/headers';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { CONTAINER_EVENTS_URL } from '@/src/server/deployments/containers';
+import { getAuthorizationHeader } from '@/src/utils/auth/api-headers';
+import { APPLICATION_JSON_TYPE, SSE_STREAM_TYPE } from '@/src/constants/request-headers';
 
 export async function GET(req: NextRequest) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const id = req.nextUrl.searchParams.get('id') ?? '';
 
   const backendUrl = `${process.env.DIAL_DEPLOYMENTS_API_URL}${CONTAINER_EVENTS_URL(id)}`;
-
   const backendRes = await fetch(backendUrl, {
     method: 'GET',
     headers: {
-      ['authorization']: 'Bearer ' + token?.access_token,
-      Accept: 'text/event-stream',
-      'Content-Type': 'application/json',
+      ...getAuthorizationHeader(token),
+      Accept: SSE_STREAM_TYPE,
+      'Content-Type': APPLICATION_JSON_TYPE,
     },
   });
 

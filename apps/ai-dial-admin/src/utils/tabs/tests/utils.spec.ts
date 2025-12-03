@@ -7,13 +7,13 @@ import {
   appRouteTab,
   attachmentsTab,
   auditTab,
-  buildLogTabs,
+  buildLogTab,
   containersTab,
   conversationsTab,
   dependenciesTab,
   entitiesTab,
   eventsTab,
-  executionLogTabs,
+  executionLogTab,
   featuresTab,
   filesTab,
   getAdapterTabs,
@@ -36,14 +36,14 @@ import {
   modelsTab,
   parameterSchemaTab,
   parametersTab,
-  promptsTabs,
+  promptsTab,
   propertiesTab,
-  propertiesTabs,
+  propertiesTab,
   relatedContainersTab,
-  resourcesTabs,
+  resourcesTab,
   rolesTab,
   toolsTab,
-  toolsTabs,
+  deploymentsToolsTab,
   tracesTab,
 } from '../utils';
 
@@ -202,8 +202,8 @@ describe('Entities :: tabs', () => {
     const status = IMAGE_STATUS.BUILT;
 
     expect(getDeploymentsViewTabs(ApplicationRoute.McpDeployments, t, entityType, status)).toEqual([
-      propertiesTabs(t),
-      buildLogTabs(t, status),
+      propertiesTab(t),
+      buildLogTab(t, status),
       relatedContainersTab(t, status),
     ]);
   });
@@ -212,11 +212,11 @@ describe('Entities :: tabs', () => {
     const status = CONTAINER_STATUS.RUNNING;
 
     expect(getDeploymentsViewTabs(ApplicationRoute.McpDeployments, t, entityType, status)).toEqual([
-      propertiesTabs(t),
-      toolsTabs(t, status),
-      resourcesTabs(t, status),
-      promptsTabs(t, status),
-      executionLogTabs(t),
+      propertiesTab(t),
+      deploymentsToolsTab(t, status),
+      resourcesTab(t, status),
+      promptsTab(t, status),
+      executionLogTab(t),
       eventsTab(t),
     ]);
   });
@@ -226,8 +226,8 @@ describe('Entities :: tabs', () => {
     const status = CONTAINER_STATUS.RUNNING;
 
     expect(getDeploymentsViewTabs(ApplicationRoute.ModelDeployments, t, entityType, status)).toEqual([
-      propertiesTabs(t),
-      executionLogTabs(t),
+      propertiesTab(t),
+      executionLogTab(t),
       eventsTab(t),
     ]);
   });

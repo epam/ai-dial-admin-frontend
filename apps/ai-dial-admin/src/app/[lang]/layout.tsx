@@ -23,6 +23,7 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getMenuItems } from '@/src/utils/env/get-menu-items';
 import { PromptFolderProvider } from '@/src/context/assets/PromptFolderContext';
 import { ResourcesDefaults } from '@/src/models/deployments/containers';
+import { isValueTruthy } from '@/src/utils/types';
 
 export default async function Layout({ children, params }: { children: ReactNode; params: Promise<{ lang: string }> }) {
   const { lang } = await params;
@@ -50,7 +51,7 @@ export default async function Layout({ children, params }: { children: ReactNode
         themeUrl={process.env.THEMES_CONFIG_URL}
         featureFlags={featureFlags}
         embeddedApps={embeddedApps}
-        disableDeploymentsJSONEditor={process.env.DEPLOYMENTS_DISABLE_JSON_EDITOR === 'true'}
+        disableDeploymentsJSONEditor={isValueTruthy(process.env.DEPLOYMENTS_DISABLE_JSON_EDITOR)}
         resourcesDefaults={JSON.parse(process.env.DEPLOYMENTS_RESOURCES_DEFAULTS || '{}') as ResourcesDefaults}
       >
         <ThemeProvider themesConfiguration={themesConfiguration} themeImages={themesImages}>

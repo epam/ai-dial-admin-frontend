@@ -25,6 +25,7 @@ import { SaveValidationContextProvider } from '@/src/context/SaveValidationConte
 import ContainerView from '@/src/components/Containers/View/ContainerView';
 import { DialModel } from '@/src/models/dial/model';
 import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { isValueTruthy } from '@/src/utils/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,7 +43,7 @@ export default async function Page(params: Params) {
     return redirect(SIGN_IN_LINK);
   }
 
-  if (process.env.DEPLOYMENTS_PLUGIN_ENABLED !== 'true') {
+  if (!isValueTruthy(process.env.DEPLOYMENTS_PLUGIN_ENABLED)) {
     const entityType = (await params.searchParams).entityType;
 
     if (isInvalidSession) {

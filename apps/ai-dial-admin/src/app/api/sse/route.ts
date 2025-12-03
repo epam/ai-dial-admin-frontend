@@ -4,6 +4,9 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { IMAGE_LOGS_URL } from '@/src/server/deployments/images';
 import { CONTAINER_LOGS_URL } from '@/src/server/deployments/containers';
+import { getAuthorizationHeader } from '@/src/utils/auth/api-headers';
+import { APPLICATION_JSON_TYPE, SSE_STREAM_TYPE } from '@/src/constants/request-headers';
+import { isValueTruthy } from '@/src/utils/types';
 
 export async function GET(req: NextRequest) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -19,11 +22,12 @@ export async function GET(req: NextRequest) {
   const backendRes = await fetch(backendUrl, {
     method: 'GET',
     headers: {
-      ['authorization']: 'Bearer ' + token?.access_token,
-      Accept: 'text/event-stream',
-      'Content-Type': 'application/json',
+      ...getAuthorizationHeader(token),
+      Accept: SSE_STREAM_TYPE,
+      'Content-Type': APPLICATION_JSON_TYPE,
     },
   });
+  isValueTruthy();
 
   if (!backendRes.ok || !backendRes.body) {
     return new Response('Failed to connect to backend SSE', { status: 502 });

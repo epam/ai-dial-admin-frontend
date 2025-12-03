@@ -13,6 +13,7 @@ import { Container } from '@/src/models/deployments/containers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import DeploymentsEntityListView from '@/src/components/Common/DeploymentsEntityListView/DeploymentsEntityListView';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isValueTruthy } from '@/src/utils/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +26,7 @@ export default async function Page() {
     return redirect(SIGN_IN_LINK);
   }
 
-  if (process.env.DEPLOYMENTS_PLUGIN_ENABLED !== 'true') {
+  if (!isValueTruthy(process.env.DEPLOYMENTS_PLUGIN_ENABLED)) {
     const imagesResponse = await getModelImages();
     const containersResponse = await getModelContainers();
 
