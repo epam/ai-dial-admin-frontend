@@ -33,9 +33,7 @@ const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntit
           isEntityImmutable={true}
         />
         <IconControl iconUrl={entity.iconUrl} onChange={(icon) => updateEntity({ ...entity, iconUrl: icon })} />
-        <div className="lg:w-[35%]">
-          <TopicsControl entity={entity} onChange={updateEntity} />
-        </div>
+        <TopicsControl entity={entity} onChange={updateEntity} />
         {view === ApplicationRoute.Applications && (
           <ApplicationSource entity={entity} onChangeEntity={updateEntity} runners={runners} isEntityImmutable={true} />
         )}
@@ -43,9 +41,8 @@ const EntityProperties: FC<Props> = ({ entity, runners, names, view, updateEntit
 
         {view === ApplicationRoute.Applications && <Defaults entity={entity} onChangeEntity={updateEntity} />}
       </div>
+      <ForwardAuthTokenField view={view} entity={entity} onChangeEntity={updateEntity} />
       <div className="flex flex-col gap-y-8 lg:w-[35%]">
-        <ForwardAuthTokenField view={view} entity={entity} onChangeEntity={updateEntity} />
-
         {view === ApplicationRoute.Applications && (
           <MaxRetryAttempts entity={entity as DialApplication} onChangeEntity={updateEntity} />
         )}

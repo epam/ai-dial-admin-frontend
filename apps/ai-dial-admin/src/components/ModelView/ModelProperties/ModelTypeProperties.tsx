@@ -10,6 +10,7 @@ import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
 import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
+import { STANDARD_CONTROL_WIDTH } from '../../../constants/main-layout';
 
 interface Props {
   model: DialModel;
@@ -27,23 +28,22 @@ const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
   );
   return (
     <div className="w-full flex flex-col gap-y-8">
-      <div className="w-full flex flex-col gap-y-8 lg:w-[35%]">
-        <DialTextInputField
-          elementId="overrideName"
-          fieldTitle={t(EntityFieldsI18nKey.overrideName)}
-          placeholder={t(EntityPlaceholdersI18nKey.OverrideName)}
-          value={model.overrideName}
-          onChange={onChangeOverrideName}
-          optional={true}
-        />
-        {model.type === DialModelType.Chat && (
-          <>
-            <IconControl iconUrl={model.iconUrl} onChange={(icon) => onChangeModel({ ...model, iconUrl: icon })} />
-            <TopicsControl entity={model} onChange={onChangeModel} />
-          </>
-        )}
-      </div>
-      {model.type === DialModelType.Chat && <EntityAttachments entity={model} onChangeEntity={onChangeModel} />}
+      <DialTextInputField
+        containerClassName={STANDARD_CONTROL_WIDTH}
+        elementId="overrideName"
+        fieldTitle={t(EntityFieldsI18nKey.overrideName)}
+        placeholder={t(EntityPlaceholdersI18nKey.OverrideName)}
+        value={model.overrideName}
+        onChange={onChangeOverrideName}
+        optional={true}
+      />
+      {model.type === DialModelType.Chat && (
+        <>
+          <IconControl iconUrl={model.iconUrl} onChange={(icon) => onChangeModel({ ...model, iconUrl: icon })} />
+          <TopicsControl entity={model} onChange={onChangeModel} />
+          <EntityAttachments entity={model} onChangeEntity={onChangeModel} />
+        </>
+      )}
     </div>
   );
 };

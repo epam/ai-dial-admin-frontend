@@ -37,9 +37,7 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, updateModel }) => {
       <Defaults entity={model} onChangeEntity={updateModel} />
       <UpstreamEndpoints entity={model} onChangeEntity={updateModel} isKeyOptional={true} />
       <TokenizerModelSwitch model={model} onChangeModel={updateModel} />
-      <div className="w-full lg:w-[35%]">
-        <ForwardAuthTokenField view={ApplicationRoute.Models} entity={model} onChangeEntity={updateModel} />
-      </div>
+      <ForwardAuthTokenField view={ApplicationRoute.Models} entity={model} onChangeEntity={updateModel} />
       <Limits model={model} onChangeModel={updateModel} />
       <MaxRetryAttempts entity={model} onChangeEntity={updateModel} />
       <Pricing model={model} onChangeModel={updateModel} />

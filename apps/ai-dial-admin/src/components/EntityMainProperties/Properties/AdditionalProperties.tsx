@@ -39,8 +39,8 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
   }
 
   return (
-    <div className="w-full flex flex-col">
-      <div className="flex flex-col lg:w-[35%] gap-y-8">
+    <div className="w-full flex flex-col gap-y-8">
+      <div className="flex flex-col gap-y-8">
         {isEntityImmutable && isShowMaintainer ? (
           <MaintainerControl entity={entity} onChangeEntity={onChangeEntity} />
         ) : null}
@@ -51,18 +51,18 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
             title={t(EntityFieldsI18nKey.completionEndpoint)}
           />
         ) : null}
-        {view == ApplicationRoute.Toolsets && isEntityImmutable && (
-          <>
-            <IconControl iconUrl={entity.iconUrl} onChange={(icon) => onChangeEntity({ ...entity, iconUrl: icon })} />
-            <TopicsControl
-              entity={{ topics: (entity as Toolset)?.descriptionKeywords }}
-              onChange={({ topics }) => {
-                onChangeEntity({ ...entity, descriptionKeywords: topics } as Toolset);
-              }}
-            />
-          </>
-        )}
       </div>
+      {view == ApplicationRoute.Toolsets && isEntityImmutable && (
+        <>
+          <IconControl iconUrl={entity.iconUrl} onChange={(icon) => onChangeEntity({ ...entity, iconUrl: icon })} />
+          <TopicsControl
+            entity={{ topics: (entity as Toolset)?.descriptionKeywords }}
+            onChange={({ topics }) => {
+              onChangeEntity({ ...entity, descriptionKeywords: topics } as Toolset);
+            }}
+          />
+        </>
+      )}
     </div>
   );
 };
