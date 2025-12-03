@@ -84,6 +84,26 @@ export const getActualColDefs = (
 };
 
 /**
+ * Filter export grid data by topics
+ *
+ * @param {(Record<string, EntitiesGridData[]> | undefined)} data - initial data
+ * @param {string} entity - entity type
+ * @param {string[]} selectedTopics - list of selected topics
+ * @returns {EntitiesGridData[]} - filtered data
+ */
+export const getFilteredData = (
+  data: Record<string, EntitiesGridData[]> | undefined,
+  entity: string,
+  selectedTopics?: string[],
+): EntitiesGridData[] => {
+  if (!selectedTopics || selectedTopics?.length === 0 || !isEntityWithTopics(entity)) {
+    return data?.[entity] || [];
+  } else {
+    return data?.[entity]?.filter((entity) => selectedTopics.some((topic) => entity?.topics?.includes(topic))) || [];
+  }
+};
+
+/**
  * Open in new tab action for grid
  *
  * @param {EntitiesGridData} row - row related to selected entity
@@ -224,5 +244,20 @@ export const isEntityWithDependency = (entity: string): boolean => {
     entity === EntityType.ROLE ||
     entity === EntityType.KEY ||
     entity === EntityType.APPLICATION_TYPE_SCHEMA
+  );
+};
+
+/**
+ * Check if entity have topics
+ *
+ * @param {string} entity - EntityType
+ * @returns {boolean} - true if EntityType have topics
+ */
+export const isEntityWithTopics = (entity: string): boolean => {
+  return (
+    entity === EntityType.MODEL ||
+    entity === EntityType.APPLICATION ||
+    entity === EntityType.APPLICATION_TYPE_SCHEMA ||
+    entity === EntityType.TOOLSET
   );
 };

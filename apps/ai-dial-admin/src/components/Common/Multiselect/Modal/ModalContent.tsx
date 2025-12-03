@@ -127,7 +127,11 @@ const MultiselectContentModal: FC<Props> = ({
   return (
     <>
       <div className="flex flex-col gap-y-2 overflow-auto max-h-[464px]">
-        {items.length > 10 ? <Search onChange={onFilterItems} /> : null}
+        {items.length > 10 ? (
+          <div>
+            <Search onChange={onFilterItems} />
+          </div>
+        ) : null}
         <div className="flex flex-col gap-y-2 overflow-auto flex-1 min-h-0" ref={newItemsContainer}>
           {filteredItems.map((item, index) => {
             return (

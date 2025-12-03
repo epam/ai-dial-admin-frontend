@@ -31,6 +31,7 @@ import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import VersionsSelect from '@/src/components/Common/VersionsSelect/VersionsSelect';
 import { SelectVariant } from '@epam/ai-dial-ui-kit';
 import { ImageVersion } from '@/src/models/deployments/images';
+import { formatDeploymentImageName } from '@/src/utils/formatting/deployments';
 
 const stringFilter: Partial<ColDef> = {
   filterParams: {
@@ -527,10 +528,17 @@ export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
   { field: 'image', headerName: 'Image' },
 ];
 
-export const CONTAINERS_COLUMNS = (t: (key: string) => string): ColDef[] => [
+export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string): ColDef[] => [
   { field: 'name', headerName: 'Name', hide: false },
   { field: 'description', headerName: 'Description', hide: false },
-  { field: 'imageDefinitionId', headerName: 'Container Image', hide: false },
+  {
+    field: 'imageDefinitionId',
+    headerName: `${type} Image`,
+    hide: false,
+    cellRenderer: (params: ICellRendererParams) => formatDeploymentImageName(params.data) ?? params.value,
+    tooltipValueGetter: (params) => formatDeploymentImageName(params.data) ?? params.value,
+    filterValueGetter: (params) => formatDeploymentImageName(params.data) ?? params.data[params.colDef.field || ''],
+  },
   {
     field: 'status',
     headerName: 'Status',

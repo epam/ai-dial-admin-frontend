@@ -170,7 +170,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
   }, [currentContainer, router, showNotification]);
 
   const columnDefs = [
-    ...CONTAINERS_COLUMNS(t),
+    ...CONTAINERS_COLUMNS(t, getTranslatedType(route, t)),
     ACTION_COLUMN([
       getOpenInNewTabOperation(onOpenInNewTabAction),
       getDuplicateOperation(onOpenDuplicateModal),

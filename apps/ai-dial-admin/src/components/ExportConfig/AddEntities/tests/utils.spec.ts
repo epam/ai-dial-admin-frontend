@@ -112,96 +112,189 @@ describe('Export Config Utils :: getAvailableData', () => {
     vi.clearAllMocks();
   });
 
-  const entity = (id: string, type: string): EntitiesGridData => ({ id, type }) as EntitiesGridData;
+  const entity = (id: string, type: string, topics: string[] = []): EntitiesGridData =>
+    ({
+      id,
+      type,
+      topics,
+    }) as EntitiesGridData;
 
-  test('should filter and return available MODEL entities', () => {
+  test('should filter and return available MODEL entities based on selected topics', () => {
     const tabData = {
-      MODEL: [entity('m1', MenuI18nKey.Models), entity('m2', 'OTHER')],
+      MODEL: [entity('m1', MenuI18nKey.Models, ['topic1', 'topic2']), entity('m2', 'OTHER', ['topic3'])],
     };
     const customExportData = {
-      MODEL: [entity('m3', MenuI18nKey.Models)],
+      MODEL: [entity('m3', MenuI18nKey.Models, ['topic1'])],
     };
+
+    const selectedTopics = ['topic1'];
 
     mockGetAvailableEntities.mockReturnValue(['filtered']);
 
-    const result = getAvailableData(EntityType.MODEL, tabData, customExportData, 'MODEL');
+    const result = getAvailableData(EntityType.MODEL, tabData, customExportData, 'MODEL', selectedTopics);
 
     expect(mockGetAvailableEntities).toHaveBeenCalledWith(
-      [entity('m3', MenuI18nKey.Models)],
-      [entity('m1', MenuI18nKey.Models)],
+      [entity('m3', MenuI18nKey.Models, ['topic1'])],
+      [entity('m1', MenuI18nKey.Models, ['topic1', 'topic2'])],
     );
     expect(result).toEqual(['filtered']);
   });
 
-  test('should filter and return available APPLICATION entities', () => {
+  test('should return all available MODEL entities when selectedTopics is empty', () => {
     const tabData = {
-      APPLICATION: [entity('a1', MenuI18nKey.Applications), entity('a2', 'OTHER')],
+      MODEL: [entity('m1', MenuI18nKey.Models, ['topic1', 'topic2']), entity('m2', 'OTHER', ['topic3'])],
     };
     const customExportData = {
-      APPLICATION: [entity('a3', MenuI18nKey.Applications)],
+      MODEL: [entity('m3', MenuI18nKey.Models, ['topic1'])],
     };
+
+    const selectedTopics = [];
+
+    mockGetAvailableEntities.mockReturnValue(['filtered']);
+
+    const result = getAvailableData(EntityType.MODEL, tabData, customExportData, 'MODEL', selectedTopics);
+
+    expect(mockGetAvailableEntities).toHaveBeenCalledWith(
+      [entity('m3', MenuI18nKey.Models, ['topic1'])],
+      [entity('m1', MenuI18nKey.Models, ['topic1', 'topic2'])],
+    );
+    expect(result).toEqual(['filtered']);
+  });
+
+  test('should filter and return available APPLICATION entities based on selected topics', () => {
+    const tabData = {
+      APPLICATION: [entity('a1', MenuI18nKey.Applications, ['topic1']), entity('a2', 'OTHER', ['topic2'])],
+    };
+    const customExportData = {
+      APPLICATION: [entity('a3', MenuI18nKey.Applications, ['topic1'])],
+    };
+
+    const selectedTopics = ['topic1'];
 
     mockGetAvailableEntities.mockReturnValue(['filtered-apps']);
 
-    const result = getAvailableData(EntityType.APPLICATION, tabData, customExportData, 'APPLICATION');
+    const result = getAvailableData(EntityType.APPLICATION, tabData, customExportData, 'APPLICATION', selectedTopics);
 
     expect(mockGetAvailableEntities).toHaveBeenCalledWith(
-      [entity('a3', MenuI18nKey.Applications)],
-      [entity('a1', MenuI18nKey.Applications)],
+      [entity('a3', MenuI18nKey.Applications, ['topic1'])],
+      [entity('a1', MenuI18nKey.Applications, ['topic1'])],
     );
     expect(result).toEqual(['filtered-apps']);
   });
 
-  test('should filter and return available ROUTE entities', () => {
+  test('should return all available APPLICATION entities when selectedTopics is empty', () => {
     const tabData = {
-      ROUTE: [entity('r1', MenuI18nKey.Routes)],
+      APPLICATION: [entity('a1', MenuI18nKey.Applications, ['topic1']), entity('a2', 'OTHER', ['topic2'])],
     };
     const customExportData = {
-      ROUTE: [entity('r2', MenuI18nKey.Routes)],
+      APPLICATION: [entity('a3', MenuI18nKey.Applications, ['topic1'])],
     };
 
-    mockGetAvailableEntities.mockReturnValue(['filtered-routes']);
+    const selectedTopics = [];
 
-    const result = getAvailableData(EntityType.ROUTE, tabData, customExportData, 'ROUTE');
+    mockGetAvailableEntities.mockReturnValue(['filtered-apps']);
 
-    expect(result).toEqual(['filtered-routes']);
+    const result = getAvailableData(EntityType.APPLICATION, tabData, customExportData, 'APPLICATION', selectedTopics);
+
+    expect(mockGetAvailableEntities).toHaveBeenCalledWith(
+      [entity('a3', MenuI18nKey.Applications, ['topic1'])],
+      [entity('a1', MenuI18nKey.Applications, ['topic1'])],
+    );
+    expect(result).toEqual(['filtered-apps']);
   });
 
-  test('should filter and return available TOOLSET entities', () => {
+  test('should filter and return available TOOLSET entities based on selected topics', () => {
     const tabData = {
-      TOOLSET: [entity('r1', MenuI18nKey.Toolsets)],
+      TOOLSET: [entity('t1', MenuI18nKey.Toolsets, ['topic1']), entity('t2', 'OTHER', ['topic2'])],
     };
     const customExportData = {
-      TOOLSET: [entity('r2', MenuI18nKey.Toolsets)],
+      TOOLSET: [entity('t3', MenuI18nKey.Toolsets, ['topic1'])],
     };
+
+    const selectedTopics = ['topic1'];
 
     mockGetAvailableEntities.mockReturnValue(['filtered-toolsets']);
 
-    const result = getAvailableData(EntityType.TOOLSET, tabData, customExportData, 'TOOLSET');
+    const result = getAvailableData(EntityType.TOOLSET, tabData, customExportData, 'TOOLSET', selectedTopics);
 
+    expect(mockGetAvailableEntities).toHaveBeenCalledWith(
+      [entity('t3', MenuI18nKey.Toolsets, ['topic1'])],
+      [entity('t1', MenuI18nKey.Toolsets, ['topic1'])],
+    );
     expect(result).toEqual(['filtered-toolsets']);
   });
 
-  test('should return unfiltered data for non-MODEL/APPLICATION/ROUTE types', () => {
+  test('should return all available TOOLSET entities when selectedTopics is empty', () => {
     const tabData = {
-      ROLE: [entity('x1', 'some')],
+      TOOLSET: [entity('t1', MenuI18nKey.Toolsets, ['topic1']), entity('t2', 'OTHER', ['topic2'])],
     };
     const customExportData = {
-      ROLE: [entity('x2', 'some')],
+      TOOLSET: [entity('t3', MenuI18nKey.Toolsets, ['topic1'])],
     };
 
-    mockGetAvailableEntities.mockReturnValue(['default']);
+    const selectedTopics = [];
 
-    const result = getAvailableData(EntityType.ROLE, tabData, customExportData, 'ROLE');
+    mockGetAvailableEntities.mockReturnValue(['filtered-toolsets']);
 
-    expect(mockGetAvailableEntities).toHaveBeenCalledWith(customExportData.ROLE, tabData.ROLE);
-    expect(result).toEqual(['default']);
+    const result = getAvailableData(EntityType.TOOLSET, tabData, customExportData, 'TOOLSET', selectedTopics);
+
+    expect(mockGetAvailableEntities).toHaveBeenCalledWith(
+      [entity('t3', MenuI18nKey.Toolsets, ['topic1'])],
+      [entity('t1', MenuI18nKey.Toolsets, ['topic1'])],
+    );
+    expect(result).toEqual(['filtered-toolsets']);
+  });
+
+  test('should handle APPLICATION_TYPE_SCHEMA entities with selected topics', () => {
+    const tabData = {
+      APPLICATION_TYPE_SCHEMA: [entity('schema1', MenuI18nKey.Applications, ['topic1'])],
+    };
+    const customExportData = {
+      APPLICATION_TYPE_SCHEMA: [entity('schema2', MenuI18nKey.Applications, ['topic2'])],
+    };
+
+    const selectedTopics = ['topic1'];
+
+    mockGetAvailableEntities.mockReturnValue(['filtered-schemas']);
+
+    const result = getAvailableData(
+      EntityType.APPLICATION_TYPE_SCHEMA,
+      tabData,
+      customExportData,
+      'APPLICATION_TYPE_SCHEMA',
+      selectedTopics,
+    );
+
+    expect(result).toEqual(['filtered-schemas']);
+  });
+
+  test('should return empty array when no data is available for APPLICATION_TYPE_SCHEMA', () => {
+    const tabData = {
+      APPLICATION_TYPE_SCHEMA: [],
+    };
+    const customExportData = {
+      APPLICATION_TYPE_SCHEMA: [],
+    };
+
+    const selectedTopics = ['topic1'];
+
+    mockGetAvailableEntities.mockReturnValue([]);
+
+    const result = getAvailableData(
+      EntityType.APPLICATION_TYPE_SCHEMA,
+      tabData,
+      customExportData,
+      'APPLICATION_TYPE_SCHEMA',
+      selectedTopics,
+    );
+
+    expect(result).toEqual([]);
   });
 
   test('should fallback to empty arrays when no tab data is provided', () => {
     mockGetAvailableEntities.mockReturnValue([]);
 
-    const result = getAvailableData(EntityType.MODEL, {}, {}, 'MODEL');
+    const result = getAvailableData(EntityType.MODEL, {}, {}, 'MODEL', ['topic1']);
 
     expect(result).toEqual([]);
   });
