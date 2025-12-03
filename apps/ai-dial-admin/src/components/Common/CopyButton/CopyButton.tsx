@@ -17,7 +17,7 @@ interface Props {
 
 const CopyButton: FC<Props> = ({ label, field, className, isFullButton = false }) => {
   const { showNotification } = useNotification();
-  const t = useI18n()
+  const t = useI18n();
 
   const onClick = useCallback(() => {
     if (field) {

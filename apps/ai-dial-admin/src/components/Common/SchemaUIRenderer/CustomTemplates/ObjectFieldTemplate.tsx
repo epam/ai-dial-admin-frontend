@@ -13,7 +13,7 @@ import { WidgetToggler } from '@/src/components/Common/SchemaUIRenderer/Componen
 
 export const ObjectFieldTemplate: FC<ObjectFieldTemplateProps> = (props) => {
   const { title, properties, schema, uiSchema, formData, onAddClick, readonly } = props;
-  const t = useI18n()
+  const t = useI18n();
   const isRoot = schema['dial:applicationTypeDisplayName'];
 
   return (schema?.additionalProperties as any)?.oneOf ? null : (

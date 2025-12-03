@@ -38,7 +38,7 @@ interface Props {
 }
 
 const ToolsetView: FC<Props> = ({ names, etag, roles, originalToolset }) => {
-  const t = useI18n()
+  const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();

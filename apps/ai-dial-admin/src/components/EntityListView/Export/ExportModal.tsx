@@ -26,7 +26,7 @@ interface Props {
 }
 
 const ExportModal: FC<Props> = ({ isModalOpen, route, onClose, onApply }) => {
-  const t = useI18n()
+  const t = useI18n();
 
   const exportTypeRadio: RadioButtonWithContent[] = [
     { id: ImportFileType.ARCHIVE, name: t(TypeI18nKey.Archive) },

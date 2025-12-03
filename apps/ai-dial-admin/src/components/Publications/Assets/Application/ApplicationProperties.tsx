@@ -18,7 +18,7 @@ interface Props {
 }
 
 const ApplicationProperties: FC<Props> = ({ publication, applicationSchemes }) => {
-  const t = useI18n()
+  const t = useI18n();
   const tabs = getPublicationTabs(t);
   const application = publication.applicationResources?.[0];
   const [selectedTab, setSelectedTab] = useState(tabs[0].id);

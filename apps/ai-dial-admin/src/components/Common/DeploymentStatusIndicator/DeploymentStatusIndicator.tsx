@@ -12,7 +12,7 @@ interface Props {
 }
 
 const DeploymentStatusIndicator: FC<Props> = ({ status }) => {
-  const t = useI18n()
+  const t = useI18n();
   const indicatorClassNames = classNames('flex w-2 h-2 mr-1 rounded no-user-select', getActionClass(status));
 
   return (

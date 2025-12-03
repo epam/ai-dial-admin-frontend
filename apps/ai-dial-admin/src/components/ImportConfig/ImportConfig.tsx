@@ -16,7 +16,7 @@ import ConfigurationPreview from './ConfigurationPreview/ConfigurationPreview';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 const ImportConfig: FC = () => {
-  const t = useI18n()
+  const t = useI18n();
   const { showNotification } = useNotification();
 
   const [importBody, setImportBody] = useState<FormData>(new FormData());

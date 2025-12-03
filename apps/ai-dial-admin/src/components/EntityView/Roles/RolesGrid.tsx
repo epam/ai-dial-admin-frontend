@@ -46,7 +46,7 @@ const RolesGrid: FC<Props> = ({
   isSetNoLimitsHidden,
   isSkipRefresh,
 }) => {
-  const t = useI18n()
+  const t = useI18n();
   const [gridApi, setGridApi] = useState<GridApi>();
   const data = getRolesGridData(entity, roles);
 

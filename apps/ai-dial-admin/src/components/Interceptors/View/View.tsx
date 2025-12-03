@@ -64,7 +64,7 @@ const InterceptorView: FC<Props> = ({
   interceptorTemplate,
   appRunners,
 }) => {
-  const t = useI18n()
+  const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();

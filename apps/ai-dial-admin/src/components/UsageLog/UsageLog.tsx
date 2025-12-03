@@ -31,7 +31,7 @@ interface Props {
 }
 
 const UsageLog: FC<Props> = ({ route, entity, entityView }) => {
-  const t = useI18n()
+  const t = useI18n();
   const tabs = getUsageLogTabs(t);
   const getReqRef = useRef(useProtectedRequest());
 
