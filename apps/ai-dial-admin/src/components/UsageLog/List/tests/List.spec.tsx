@@ -12,7 +12,7 @@ import { USAGE_LOG_TRACES_COLUMNS } from '@/src/constants/grid-columns/grid-colu
 describe('List', () => {
   const user = userEvent.setup();
 
-  test('should render List component correctly', async () => {
+  test('should render List component correctly', () => {
     const getData = vi.fn().mockReturnValue({
       success: true,
       response: { data: [['2025-08-11T00:10:05.654Z']], headers: ['completion_time'] },
@@ -29,7 +29,7 @@ describe('List', () => {
       />,
     );
 
-    await waitFor(() => {
+    waitFor(() => {
       expect(screen.getByRole('heading', { name: TelemetryI18nKey.TracesTitle })).toBeInTheDocument();
       expect(screen.getByRole('table')).toBeInTheDocument();
       //expect(screen.getByRole('button', { name: ButtonsI18nKey.Export })).toBeInTheDocument();
@@ -37,7 +37,7 @@ describe('List', () => {
     });
   });
 
-  test('should show ColumnPanel when Columns button is clicked', async () => {
+  test('should show ColumnPanel when Columns button is clicked', () => {
     const getData = vi.fn().mockReturnValue({
       success: true,
       response: { data: [['2025-08-11T00:10:05.654Z']], headers: ['completion_time'] },
@@ -54,7 +54,7 @@ describe('List', () => {
       />,
     );
 
-    await waitFor(() => {
+    waitFor(() => {
       user.click(screen.getByRole('button', { name: ButtonsI18nKey.Columns }));
 
       expect(screen.getByRole('toolbar', { name: ButtonsI18nKey.Columns })).toBeInTheDocument();

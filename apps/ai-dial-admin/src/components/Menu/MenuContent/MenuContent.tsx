@@ -3,7 +3,7 @@
 import { IconDownload, IconUpload } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { usePathname, useRouter } from 'next/navigation';
-import { FC, useState } from 'react';
+import { FC } from 'react';
 
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -35,8 +35,6 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
 
   const activeMenuGroup = actualConfig.find((config) => config.items.some((item) => item.href === pathname));
 
-  const [hovered, setHovered] = useState(false);
-
   const handleImport = () => {
     router.push(ApplicationRoute.ImportConfig);
   };
@@ -45,14 +43,8 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
     router.push(ApplicationRoute.ExportConfig);
   };
 
-  const MenuNavigation = ({ showExpanded, hovered }: { showExpanded?: boolean; hovered?: boolean }) => (
-    <nav
-      className={classNames(
-        'p-2',
-        showExpanded ? 'flex-1' : 'overflow-auto flex-1 min-h-0',
-        !hovered ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none',
-      )}
-    >
+  const MenuNavigation = ({ showExpanded }: { showExpanded?: boolean }) => (
+    <nav className={classNames('p-2', showExpanded ? 'flex-1' : 'overflow-auto flex-1 min-h-0 mt-[-1px]')}>
       <ul className="divide-primary divide-y">
         {actualConfig.map((config, i) => (
           <MenuItem
@@ -86,23 +78,20 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   const menuClassName = 'flex flex-col divide-tertiary';
 
   return (
-    <div
-      className={classNames(menuClassName, 'h-full', !hovered && 'divide-y')}
-      onMouseEnter={() => !isSidebarOpen && setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {hovered && (
-        <div
-          className={classNames(menuClassName, 'absolute left-0 top-0 bottom-0 w-72 bg-layer-3 divide-y')}
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
-        >
-          <MenuNavigation showExpanded />
-          <MenuActionsBar />
-        </div>
-      )}
+    <div className={classNames(menuClassName, 'h-full relative divide-y group/menu')}>
+      <div
+        className={classNames(
+          menuClassName,
+          'absolute left-0 top-0 bottom-0 w-72 bg-layer-3 divide-y z-[51]',
+          'opacity-0 invisible',
+          !isSidebarOpen && 'group-hover/menu:opacity-100 group-hover/menu:visible hover:opacity-100 hover:visible',
+        )}
+      >
+        <MenuNavigation showExpanded />
+        <MenuActionsBar />
+      </div>
 
-      <MenuNavigation hovered={hovered} />
+      <MenuNavigation />
 
       {isSidebarOpen ? (
         <MenuActionsBar />
