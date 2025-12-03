@@ -97,7 +97,7 @@ module.exports = {
     stroke: borderColors,
     divideColor: borderColors,
     placeholderColor: placeholderColor,
-    textColor: { ...textColors, ...buttonsTextColors, ...iconColors },
+    textColor: { ...textColors, ...buttonsTextColors, },
     gradientColorStops: backgroundsColors,
     extend: {
       animation: {

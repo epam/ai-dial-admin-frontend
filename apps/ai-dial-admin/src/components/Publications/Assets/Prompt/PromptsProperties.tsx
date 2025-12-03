@@ -49,9 +49,11 @@ const PromptsProperties: FC<Props> = ({ prompt, action, collapsed }) => {
     <div className="flex flex-col bg-layer-3 p-4">
       <div className="flex flex-row justify-between">
         <button className="flex items-center" onClick={toggleCollapse}>
-          <i className="text-icon-secondary">
-            {isCollapsed ? <IconChevronRight {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
-          </i>
+          {isCollapsed ? (
+            <IconChevronRight className="text-secondary" {...BASE_ICON_PROPS} />
+          ) : (
+            <IconChevronDown className="text-secondary" {...BASE_ICON_PROPS} />
+          )}
           <h3 className="mx-2">{prompt.name}</h3>
         </button>
 

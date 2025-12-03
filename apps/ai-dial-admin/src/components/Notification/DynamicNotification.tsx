@@ -87,16 +87,10 @@ const File: FC<FileDetails> = ({ name, progress, failed, complete, onCancel }) =
         {failed && (
           <span className="flex flex-row items-center">
             <p className="tiny text-error mx-1">{t(BasicI18nKey.Failed)}</p>
-            <i className="text-icon-error">
-              <IconExclamationCircle {...BASE_ICON_PROPS} />
-            </i>
+            <IconExclamationCircle className="text-error" {...BASE_ICON_PROPS} />
           </span>
         )}
-        {complete && (
-          <i className="tiny text-icon-accent-secondary">
-            <IconCircleCheck {...BASE_ICON_PROPS} />
-          </i>
-        )}
+        {complete && <IconCircleCheck className="dial-tiny text-accent-secondary" {...BASE_ICON_PROPS} />}
       </div>
     </div>
   );
