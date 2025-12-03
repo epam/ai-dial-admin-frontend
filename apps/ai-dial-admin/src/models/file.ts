@@ -1,7 +1,8 @@
+import { AssetApp } from './dial/deployment-asset';
 import { DialFile } from './dial/file';
 
 export interface FileImportMap {
-  files: DialFile[];
+  files: (DialFile | AssetApp)[];
   isInvalid: boolean;
 }
 

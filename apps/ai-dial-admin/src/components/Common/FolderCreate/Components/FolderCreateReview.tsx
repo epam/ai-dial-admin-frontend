@@ -28,7 +28,7 @@ import Grid from '@/src/components/Grid/Grid';
 import { FoldersI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
-import { PromptImportGridData } from '@/src/models/prompts';
+import { PromptImportGridData } from '@/src/models/import-asset';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -124,7 +124,7 @@ const FolderCreateReview: FC<Props> = ({
           setEditedFileMap(preview);
         });
       } else {
-        readJsonFiles(files).then((result) => {
+        readJsonFiles(files, view).then((result) => {
           setEditedFileMap(result);
         });
       }
