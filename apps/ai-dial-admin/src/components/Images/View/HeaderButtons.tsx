@@ -278,7 +278,7 @@ const HeaderButtons: FC<Props> = ({
           </div>
         ) : (
           <div className="flex flex-row items-center w-full">
-            <div className={`flex-1 flex flex-row gap-3`}>
+            <div className="flex-1 flex flex-row gap-3">
               <VersionsSelect
                 selected={image.id}
                 versions={versions}

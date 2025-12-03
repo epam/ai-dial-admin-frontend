@@ -1,5 +1,4 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import classNames from 'classnames';
 import {
   ButtonVariant,
   DialButton,
@@ -38,7 +37,7 @@ interface Props {
 const DuplicateImageModal: FC<Props> = ({ title, isModalOpen, image, onClose, onApply }) => {
   const t = useI18n() as (key: string) => string;
 
-  const containerClassName = classNames('flex flex-col lg:max-w-[55%] md:max-w-[75%]');
+  const containerClassName = 'flex flex-col lg:max-w-[55%] md:max-w-[75%]';
   const initialName = image.name;
   const originalVersion = image.version;
 

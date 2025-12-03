@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from 'react';
-import classNames from 'classnames';
 import semver from 'semver';
 import { ButtonVariant, DialButton, DialPopup, DialTextInputField } from '@epam/ai-dial-ui-kit';
+
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
@@ -22,7 +22,6 @@ interface Props {
 const NewVersion: FC<Props> = ({ isModalOpen, title, onClose, onApply, image, versions, okLabel }) => {
   const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
 
-  const containerClassName = classNames('flex flex-col w-full md:max-w-[330px] lg:max-w-[330px]');
   const [version, setVersion] = useState<string>(semver.inc(image.version, 'patch') || '0.0.1');
   const [versionError, setVersionError] = useState<FieldError | null>(null);
 
@@ -36,7 +35,7 @@ const NewVersion: FC<Props> = ({ isModalOpen, title, onClose, onApply, image, ve
       title={title}
       portalId="BuildImageModal"
       open={isModalOpen}
-      className={containerClassName}
+      className="md:max-w-[330px] lg:max-w-[330px]"
     >
       <div className="flex flex-col h-full overflow-auto px-6 py-4">
         <DialTextInputField

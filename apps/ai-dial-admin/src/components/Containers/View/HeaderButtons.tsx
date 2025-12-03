@@ -267,7 +267,7 @@ const HeaderButtons = <T extends Container>({
           </div>
         ) : (
           <div className="flex flex-row items-center w-full">
-            <div className={`flex flex-row gap-3`}>
+            <div className="flex flex-row gap-3">
               {container.status === CONTAINER_STATUS.RUNNING && (
                 <>
                   {route === ApplicationRoute.McpDeployments ? (

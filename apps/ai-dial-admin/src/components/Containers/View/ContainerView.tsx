@@ -35,6 +35,7 @@ import Events from '@/src/components/Containers/View/Events/Events';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 
 interface Props {
   container: Container;
@@ -74,11 +75,6 @@ const ContainerView: FC<Props> = ({
   useEffect(() => {
     setTabs(getDeploymentsViewTabs(route, t, DEPLOYMENT_ENTITY.containers, container.status));
   }, [container.status, route, t]);
-
-  const headerClassName = classNames(
-    'flex flex-row min-h-[34px]',
-    jsonEditorEnabled ? 'justify-end' : 'justify-between',
-  );
 
   const onChangeActiveTab = useCallback(
     (tab: string) => {
@@ -204,7 +200,7 @@ const ContainerView: FC<Props> = ({
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-        <div className={headerClassName}>
+        <div className={getViewHeaderClassName(jsonEditorEnabled)}>
           {!jsonEditorEnabled && (
             <div className="flex-1 min-h-0 relative">
               <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
