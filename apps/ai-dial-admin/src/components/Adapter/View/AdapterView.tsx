@@ -41,7 +41,7 @@ interface Props {
 }
 
 const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
-  const t = useI18n()
+  const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();

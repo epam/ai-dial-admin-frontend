@@ -16,7 +16,7 @@ interface Props {
 
 const ApplicationsList: FC<Props> = ({ data, runners }) => {
   const names = filterDisplayNames(data);
-  const t = useI18n()
+  const t = useI18n();
 
   return (
     <BaseEntityList
