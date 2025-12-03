@@ -56,7 +56,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply 
 
   const [separateFileMap, setSeparateFileMap] = useState(new Map<string, FileImportMap>());
 
-  const readJsonFile = useCallback(
+  const onReadJsonFile = useCallback(
     (file: File | null, urlToRemove?: string) => {
       if (file) {
         const reader = new FileReader();
@@ -98,7 +98,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply 
     [route],
   );
 
-  const changeFileType = useCallback(
+  const onChangeFileType = useCallback(
     (type: string) => {
       setSteps((prev) => {
         const index = prev.findIndex((step) => step.id === ImportSteps.PROPERTIES);
@@ -118,7 +118,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply 
     [setFileType, t],
   );
 
-  const changeFile = useCallback(
+  const onChangeFile = useCallback(
     (files: File[]) => {
       if (fileType === FileType.ARCHIVE) {
         if (files.length === 0 || files[0].type === APPLICATION_ZIP_TYPE) {
@@ -126,7 +126,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply 
         }
       } else if (fileType === FileType.JSON) {
         const sliced = files.slice(0, MAX_FILES_COUNT);
-        sliced.forEach((file) => readJsonFile(file));
+        sliced.forEach((file) => onReadJsonFile(file));
         setJsonFiles(sliced);
         if (sliced.length === 0) {
           setJsonFileMap(new Map());
@@ -147,10 +147,10 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply 
         setSeparateFiles(sliced);
       }
     },
-    [fileType, readJsonFile],
+    [fileType, onReadJsonFile],
   );
 
-  const setStepsState = useCallback(
+  const onChangeSteps = useCallback(
     (status?: StepStatus) => {
       setSteps((prev) => {
         const index = prev.findIndex((step) => step.id === currentStepId);
@@ -189,23 +189,23 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply 
   };
 
   useEffect(() => {
-    setStepsState();
-  }, [fileType, setStepsState]);
+    onChangeSteps();
+  }, [fileType, onChangeSteps]);
 
   useEffect(() => {
     if (resolution) {
-      setStepsState(StepStatus.VALID);
+      onChangeSteps(StepStatus.VALID);
     }
-  }, [resolution, setStepsState]);
+  }, [resolution, onChangeSteps]);
 
   useEffect(() => {
     if (currentStepId === ImportSteps.FILES) {
       const zipStatus = zipFile ? StepStatus.VALID : void 0;
       const filesStatus = getMultipleImportStatus(fileType === FileType.JSON ? jsonFileMap : separateFileMap);
       const status = fileType === FileType.ARCHIVE ? zipStatus : filesStatus;
-      setStepsState(status);
+      onChangeSteps(status);
     }
-  }, [zipFile, fileType, setStepsState, jsonFileMap, currentStepId, separateFileMap]);
+  }, [zipFile, fileType, onChangeSteps, jsonFileMap, currentStepId, separateFileMap]);
 
   return (
     <DialPopup
@@ -238,8 +238,8 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply 
             }
             fileType={fileType}
             fileTypes={fileTypes}
-            changeFileType={changeFileType}
-            changeFile={changeFile}
+            onChangeFileType={onChangeFileType}
+            onChangeFile={onChangeFile}
             isInvalid={isInvalidFile}
             maxFilesCount={MAX_FILES_COUNT}
             ignorePaths={ignorePaths}
@@ -256,7 +256,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply 
             resolutions={resolutions}
             resolution={resolution}
             setResolution={setResolution}
-            setStepsState={setStepsState}
+            setStepsState={onChangeSteps}
           />
         )}
       </div>

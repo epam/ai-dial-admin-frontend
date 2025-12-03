@@ -26,24 +26,24 @@ interface Props {
   maxFilesCount?: number;
   ignorePaths?: boolean;
   setIgnorePaths?: Dispatch<SetStateAction<boolean>>;
-  changeFile: (files: File[]) => void;
-  changeFileType: (type: string) => void;
+  onChangeFile: (files: File[]) => void;
+  onChangeFileType: (type: string) => void;
   isInvalid?: (file: File) => boolean;
 }
 
 const ImportFileTypeSelector: FC<Props> = ({
   files,
-  changeFile,
+  onChangeFile,
   fileTypes,
   fileType,
-  changeFileType,
+  onChangeFileType,
   isInvalid,
   maxFilesCount,
   ignorePaths,
   setIgnorePaths,
   route,
 }) => {
-  const t = useI18n();
+  const t = useI18n() as (key: string) => string;
 
   const ignorePathsTitle = useMemo(() => {
     return route ? getIgnorePathTitles(route, t) : '';
@@ -62,7 +62,7 @@ const ImportFileTypeSelector: FC<Props> = ({
           radioButtons={fileTypes}
           activeRadioButton={fileType}
           elementId="file-type"
-          onChange={changeFileType}
+          onChange={onChangeFileType}
         />
 
         {isAssetWithVersion(route) && (
@@ -92,7 +92,7 @@ const ImportFileTypeSelector: FC<Props> = ({
             fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
             fileCountError={t(ImportI18nKey.ArchiveDescription)}
             acceptTypes="application/zip, .zip, application/x-zip-compressed"
-            onChange={changeFile}
+            onChange={onChangeFile}
           />
         )}
         {fileType === ImportFileType.JSON && (
@@ -108,7 +108,7 @@ const ImportFileTypeSelector: FC<Props> = ({
             fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
             isInvalid={isInvalid}
             errorText={t(ImportI18nKey.PromptError)}
-            onChange={changeFile}
+            onChange={onChangeFile}
             maxFilesCount={maxFilesCount}
           />
         )}
@@ -122,7 +122,7 @@ const ImportFileTypeSelector: FC<Props> = ({
             files={files}
             acceptTypes="/"
             fileFormatError={t(ImportI18nKey.FileErrorType)}
-            onChange={changeFile}
+            onChange={onChangeFile}
             isInvalid={isInvalid}
             dynamicIcon={getFileIcon}
             errorText={t(ImportI18nKey.FileError)}

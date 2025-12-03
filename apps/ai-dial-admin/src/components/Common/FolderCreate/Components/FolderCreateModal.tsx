@@ -19,7 +19,7 @@ import FolderCreatePermissions from './FolderCreatePermissions';
 import FolderCreateReview from './FolderCreateReview';
 import FolderCreateSetup from './FolderCreateSetup';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
-import { getJsonFileName } from '@/src/components/EntityListView/utils';
+import { getJsonFileName } from '@/src/utils/import/get-json-name';
 
 interface Props {
   isModalOpen: boolean;

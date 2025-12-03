@@ -13,7 +13,7 @@ import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
 import { ZipFilePreview } from './models';
-import { isAssetWithVersion } from '../../../utils/is-asset-view';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 
 /**
  * Check is import prompt preview has errors

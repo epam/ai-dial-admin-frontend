@@ -8,7 +8,7 @@ import { DialRule } from '@/src/models/dial/rule';
 import { ImportData } from '@/src/models/import-asset';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getJsonFileName } from '../utils';
+import { getJsonFileName } from '@/src/utils/import/get-json-name';
 
 export const getFormDataForImport = (
   path: string,

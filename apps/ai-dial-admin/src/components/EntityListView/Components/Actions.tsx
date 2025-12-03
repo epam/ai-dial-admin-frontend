@@ -4,12 +4,8 @@ import { useRouter } from 'next/navigation';
 import { Dispatch, ReactNode, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { generateExportList } from '@/src/components/Assets/ExportAssets/export';
-import {
-  getDuplicateModal,
-  getExportFunction,
-  getJsonFileName,
-  getNotificationType,
-} from '@/src/components/EntityListView/utils';
+import { getDuplicateModal, getExportFunction, getNotificationType } from '@/src/components/EntityListView/utils';
+import { getJsonFileName } from '@/src/utils/import/get-json-name';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { DeleteI18nKey, ExportI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
