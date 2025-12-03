@@ -99,16 +99,16 @@ module.exports = {
     textColor: { ...textColors, ...buttonsTextColors },
     gradientColorStops: backgroundsColors,
     screens: {
-      mobile: { min: '360px', max: '767px' },
-      small_tablet: { min: '768px', max: '1023px' },
-      large_tablet: { min: '1024px', max: '1279px' },
-      desktop: { min: '1280px', max: '2559px' },
-      large_desktop: { min: '2560px' },
       sm: '640px',
       md: '768px',
       lg: '1024px',
       xl: '1280px',
       '2xl': '1536px',
+      mobile: '767px',
+      small_tablet: '1023px',
+      large_tablet: '1279px',
+      desktop: '2559px',
+      large_desktop: '2560px',
     },
     extend: {
       animation: {
