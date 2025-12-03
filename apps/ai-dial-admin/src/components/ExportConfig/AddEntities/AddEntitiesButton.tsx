@@ -59,20 +59,20 @@ const AddEntitiesButton: FC<Props> = ({
   };
 
   useEffect(() => {
-    if (isEntityWithTopics(selectedTab)) {
-      setCustomExportData((prev) => {
-        const existingItems = prev[selectedTab] ?? [];
-        const updatedItems =
-          existingItems.filter((entity) =>
+    setCustomExportData((prev) => {
+      const updatedData = { ...prev };
+
+      Object.entries(prev).forEach(([entityType, entities]) => {
+        if (isEntityWithTopics(entityType)) {
+          updatedData[entityType] = entities.filter((entity) =>
             selectedTopics.length ? selectedTopics.some((topic) => entity?.topics?.includes(topic)) : true,
-          ) || [];
-        return {
-          ...prev,
-          [selectedTab]: updatedItems,
-        };
+          );
+        }
       });
-    }
-  }, [selectedTab, selectedTopics, setCustomExportData]);
+
+      return updatedData;
+    });
+  }, [selectedTopics, setCustomExportData]);
 
   useEffect(() => {
     if (selectedTab) {
