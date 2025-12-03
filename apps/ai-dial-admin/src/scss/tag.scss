@@ -2,7 +2,7 @@
   .important-text-part {
     @apply text-primary;
     @apply inline-block break-words;
-    @apply rounded border border-solid border-icon-secondary;
+    @apply rounded border border-solid border-primary;
     @apply px-1 py-0.5;
   }
 }
