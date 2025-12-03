@@ -204,11 +204,7 @@ export const generateAssetColumnsForImportGrid = (
       field: 'assetName',
       cellClass: NO_BORDER_CLASS,
       cellRendererSelector: (params: ICellRendererParams) => {
-        if (!params.data.invalid && !readonly) {
-          return { component: EditableCellRenderer };
-        } else {
-          return void 0;
-        }
+        return !params.data.invalid && !readonly ? { component: EditableCellRenderer } : void 0;
       },
       cellRendererParams: {
         onChange,
@@ -219,25 +215,15 @@ export const generateAssetColumnsForImportGrid = (
       field: 'version',
       cellClass: NO_BORDER_CLASS,
       cellRendererSelector: (params: ICellRendererParams) => {
-        if (!params.data.invalid && !readonly) {
-          return { component: EditableCellRenderer };
-        } else {
-          return void 0;
-        }
+        return !params.data.invalid && !readonly ? { component: EditableCellRenderer } : void 0;
       },
-      cellRendererParams: {
-        onChange,
-      },
+      cellRendererParams: { onChange },
     },
     {
       headerName: 'File',
       field: 'name',
       cellRendererSelector: () => {
-        if (withIcon) {
-          return { component: FileNameCellRenderer };
-        } else {
-          return void 0;
-        }
+        return withIcon ? { component: FileNameCellRenderer } : void 0;
       },
     },
   ];
