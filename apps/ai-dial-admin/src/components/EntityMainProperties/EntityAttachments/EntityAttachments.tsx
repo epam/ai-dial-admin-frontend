@@ -17,7 +17,7 @@ interface Props {
 }
 
 const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
-  const t = useI18n() as (str: string, param?: Record<string, number>) => string;
+  const t = useI18n();
 
   const { dispatch } = useSaveValidationContext();
   const error = useMemo(() => {

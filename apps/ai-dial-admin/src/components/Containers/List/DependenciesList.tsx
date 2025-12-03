@@ -15,7 +15,7 @@ interface Props {
 }
 
 const DependenciesList: FC<Props> = ({ containerList, route }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const [containers, setContainers] = useState<Container[]>([]);
 
   useEffect(() => {

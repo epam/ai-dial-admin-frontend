@@ -16,7 +16,7 @@ interface Props {
 }
 
 const ValidityStatus: FC<Props> = ({ validityState, isHideHint }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const { currentTheme } = useTheme();
   const { title, status } = getValidityStatus(validityState, t);
 

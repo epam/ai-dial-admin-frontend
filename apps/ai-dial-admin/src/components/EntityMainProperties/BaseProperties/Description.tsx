@@ -15,7 +15,7 @@ interface Props<T> {
 }
 
 const DescriptionControl = <T extends { description?: string }>({ entity, onChangeEntity, ...props }: Props<T>) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const { dispatch } = useSaveValidationContext();
 
   const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);

@@ -13,7 +13,7 @@ interface Props {
 }
 
 const RouteAttachments: FC<Props> = ({ route, readonly, onChangeRoute }) => {
-  const t = useI18n() as (str: string) => string;
+  const t = useI18n();
 
   const onChangeRequest = useCallback(
     (paths: string[]) => {

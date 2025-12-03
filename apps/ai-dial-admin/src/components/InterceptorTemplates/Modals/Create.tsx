@@ -24,7 +24,7 @@ interface Props {
 }
 
 const Create: FC<Props> = ({ route, onClose, isModalOpen, names }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { isValid, dispatch } = useSaveValidationContext();

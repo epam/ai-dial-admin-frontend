@@ -37,7 +37,7 @@ interface Props {
 }
 
 const View: FC<Props> = ({ etag, template, names }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n()
   const router = useRouter();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());

@@ -19,7 +19,7 @@ export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({
   readonly,
   schema,
 }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n()
 
   return (
     <WidgetToggler title={title}>

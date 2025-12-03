@@ -17,7 +17,7 @@ interface Props {
 }
 
 const Properties: FC<Props> = ({ image, setImage, route, originalName }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n()
 
   const sourcesList = getSourcesTypes(t);
 

@@ -16,7 +16,7 @@ interface Props {
 
 const ApplicationsList: FC<Props> = ({ data, runners }) => {
   const names = filterDisplayNames(data);
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n()
 
   return (
     <BaseEntityList

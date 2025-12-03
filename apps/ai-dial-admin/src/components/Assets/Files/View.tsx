@@ -27,7 +27,7 @@ interface Props {
 }
 
 const FileView: FC<Props> = ({ originalFile }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n()
   const tabs = getTabsForAsset(t, ApplicationRoute.Files);
   const router = useRouter();
   const { fetchFiles } = useFileFolder();

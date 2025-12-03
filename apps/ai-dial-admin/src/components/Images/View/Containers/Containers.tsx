@@ -27,7 +27,7 @@ interface Props {
 }
 
 const Containers: FC<Props> = ({ image, route, versions }) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
   const { showNotification } = useNotification();
   const router = useRouter();
 

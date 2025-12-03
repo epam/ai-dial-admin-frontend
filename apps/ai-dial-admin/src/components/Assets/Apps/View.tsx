@@ -46,7 +46,7 @@ interface Props {
 }
 
 const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, schemes, interceptors }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n()
   const tabs = getTabsForAsset(t, ApplicationRoute.AssetsApplications);
   const router = useRouter();
   const { fetchFiles } = useAppsFolder();

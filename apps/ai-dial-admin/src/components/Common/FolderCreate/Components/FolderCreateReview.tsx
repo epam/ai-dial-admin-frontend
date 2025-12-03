@@ -53,7 +53,7 @@ const FolderCreateReview: FC<Props> = ({
   setEditedFileMap,
   setSteps,
 }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n()
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [count, setCount] = useState<number>(0);
   const getReqRef = useRef(useProtectedRequest());

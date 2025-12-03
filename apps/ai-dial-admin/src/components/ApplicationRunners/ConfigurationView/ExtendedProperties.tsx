@@ -25,7 +25,7 @@ interface Props {
 }
 
 const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const types: SelectOption[] = [
     { value: BasicI18nKey.None, label: t(BasicI18nKey.None) },
     { value: TypeEntity.OBJECT, label: t(TypeI18nKey.Object) },

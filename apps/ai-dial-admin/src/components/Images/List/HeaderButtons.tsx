@@ -28,7 +28,7 @@ interface Props {
 }
 
 const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi }) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
   const isTabletScreen = useIsTabletScreen();
   const { showNotification } = useNotification();
   const router = useRouter();

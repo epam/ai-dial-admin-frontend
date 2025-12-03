@@ -53,7 +53,7 @@ const FolderCreateSetup: FC<Props> = ({
   ignorePaths,
   setIgnorePaths,
 }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n()
 
   const ignorePathsTitle = useMemo(() => {
     if (view === ApplicationRoute.Prompts) {

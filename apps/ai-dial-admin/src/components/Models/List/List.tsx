@@ -17,7 +17,7 @@ interface Props {
 const ModelsList: FC<Props> = ({ data }) => {
   const names = filterDisplayNamesWithVersions(data);
 
-  const t = useI18n() as (str: string) => string;
+  const t = useI18n();
 
   return (
     <BaseEntityList

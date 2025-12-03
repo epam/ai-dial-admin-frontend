@@ -55,7 +55,7 @@ const ContainerView: FC<Props> = ({
   createEntityAsAsset,
   entityNames,
 }) => {
-  const t = useI18n() as (key: string, param?: unknown) => string;
+  const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { disableDeploymentsJSONEditor } = useAppContext();

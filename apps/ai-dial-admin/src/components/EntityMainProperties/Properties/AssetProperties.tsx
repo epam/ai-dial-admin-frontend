@@ -37,7 +37,7 @@ const AssetProperties: FC<Props> = ({
   runners,
   initialValues,
 }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const { dispatch } = useSaveValidationContext();
 
   const [versionError, setVersionError] = useState<string | undefined>(void 0);

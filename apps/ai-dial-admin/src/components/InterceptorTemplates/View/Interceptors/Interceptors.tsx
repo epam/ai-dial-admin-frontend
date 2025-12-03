@@ -20,7 +20,7 @@ interface Props {
 }
 
 const Interceptors: FC<Props> = ({ interceptorList }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
   const [interceptors, setInterceptors] = useState<DialInterceptor[]>([]);

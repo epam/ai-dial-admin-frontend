@@ -15,7 +15,7 @@ interface Props {
 }
 
 const DuplicateModal: FC<Props> = ({ title, isModalOpen, currentName, onClose, onApply, names }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const [name, setName] = useState(`${currentName} ${t(BasicI18nKey.DuplicateCopyPostfix)}`);
   const [nameError, setNameError] = useState<FieldError | null>(null);
 

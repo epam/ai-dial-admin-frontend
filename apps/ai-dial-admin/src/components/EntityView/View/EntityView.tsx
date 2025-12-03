@@ -67,7 +67,7 @@ const EntityView: FC<Props> = ({
   updateCoreEntity,
   ...props
 }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n()
   const { dispatch } = useSaveValidationContext();
 
   const tabs = getViewTabs(t, view);

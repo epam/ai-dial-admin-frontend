@@ -16,7 +16,7 @@ interface Props {
 }
 
 const FoldersStorage: FC<Props> = ({ initialPath }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const folderContext = useRuleFolder();
   const isCollapseDisable =
     folderContext?.expandedFolders.size === 0 ||

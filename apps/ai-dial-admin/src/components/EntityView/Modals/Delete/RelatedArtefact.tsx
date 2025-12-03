@@ -14,7 +14,7 @@ interface Props {
 }
 
 const RelatedArtefacts: FC<Props> = ({ entity, view }) => {
-  const t = useI18n() as (str: string) => string;
+  const t = useI18n();
 
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<BaseEntity[]>([]);

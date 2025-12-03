@@ -24,7 +24,7 @@ interface Props {
 }
 
 const ApplicationSource: FC<Props> = ({ entity, runners, view, onChangeEntity, isEntityImmutable }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const sources: SelectOption[] = useMemo(
     () => [
       {
