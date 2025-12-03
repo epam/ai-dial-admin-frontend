@@ -15,6 +15,7 @@ import { useI18n } from '@/src/locales/client';
 import { ImportFileType } from '@/src/types/import';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 
 interface Props {
   files: File[];
@@ -45,10 +46,10 @@ const ImportFileTypeSelector: FC<Props> = ({
 
   const ignorePathsTitle = useMemo(() => {
     if (route === ApplicationRoute.Prompts) {
-      return t(ImportI18nKey.PathsPrompt);
+      return t(ImportI18nKey.PromptPaths);
     }
     if (route === ApplicationRoute.Files) {
-      return t(ImportI18nKey.PathsFile);
+      return t(ImportI18nKey.FilePaths);
     }
     return '';
   }, [t, route]);
@@ -69,7 +70,7 @@ const ImportFileTypeSelector: FC<Props> = ({
           onChange={changeFileType}
         />
 
-        {route === ApplicationRoute.Prompts && (
+        {isAssetWithVersion(route) && (
           <div className="flex flex-col">
             <Field fieldTitle={ignorePathsTitle} />
             <DialSwitch

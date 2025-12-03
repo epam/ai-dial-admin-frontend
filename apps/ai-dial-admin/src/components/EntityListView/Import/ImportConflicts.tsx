@@ -21,6 +21,7 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { ConflictResolutionPolicy } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isAssetWithVersion } from '@/Fsrc/utils/is-asset-view';
 
 interface Props {
   route?: ApplicationRoute;
@@ -45,7 +46,7 @@ const ImportConflicts: FC<Props> = ({
 }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
 
-  const isPromptImport = route === ApplicationRoute.Prompts;
+  const isAssetWithVersionImport = isAssetWithVersion(route);
   const fileCount = [...filesMap.values()].reduce((total, value) => total + value.files.length, 0);
 
   const changeFile = useCallback(
@@ -55,17 +56,17 @@ const ImportConflicts: FC<Props> = ({
     [setEditedFileMap],
   );
 
-  const rowData = isPromptImport
+  const rowData = isAssetWithVersionImport
     ? generatePromptRowDataForImportGrid(filesMap, existing as DialPrompt[])
     : generateFileRowDataForImportGrid(filesMap, existing as DialFile[]);
 
-  const columnDefs: ColDef[] = isPromptImport
+  const columnDefs: ColDef[] = isAssetWithVersionImport
     ? generatePromptColumnsForImportGrid(changeFile)
     : generateFileColumnsForImportGrid(changeFile);
 
   const rowClassRules: RowClassRules = {
     'ag-error-row': (params) => {
-      return isPromptImport ? isErrorPromptNode(params.data) : isErrorFileNode(params.data);
+      return isAssetWithVersionImport ? isErrorPromptNode(params.data) : isErrorFileNode(params.data);
     },
   };
 
@@ -73,7 +74,7 @@ const ImportConflicts: FC<Props> = ({
     let isError = false;
 
     event.api?.forEachNode((node) => {
-      if (isPromptImport ? isErrorPromptNode(node.data) : isErrorFileNode(node.data)) {
+      if (isAssetWithVersionImport ? isErrorPromptNode(node.data) : isErrorFileNode(node.data)) {
         isError = true;
       }
     });

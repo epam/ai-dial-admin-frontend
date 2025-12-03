@@ -33,6 +33,7 @@ import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 
 interface Props {
   view?: ApplicationRoute;
@@ -40,8 +41,8 @@ interface Props {
   fileType: string;
   currentStepId: string;
   editedFileMap: Map<string, FileImportMap>;
-  setEditedFileMap: Dispatch<SetStateAction<Map<string, FileImportMap>>>;
-  setSteps: Dispatch<SetStateAction<Step[]>>;
+  onChangeFileMap: Dispatch<SetStateAction<Map<string, FileImportMap>>>;
+  onChangeSteps: (steps: Step[]) => void;
 }
 
 const FolderCreateReview: FC<Props> = ({
@@ -50,8 +51,8 @@ const FolderCreateReview: FC<Props> = ({
   fileType,
   currentStepId,
   editedFileMap,
-  setEditedFileMap,
-  setSteps,
+  onChangeFileMap: setEditedFileMap,
+  onChangeSteps,
 }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
@@ -60,14 +61,14 @@ const FolderCreateReview: FC<Props> = ({
 
   const prevFilesRef = useRef<File[]>([]);
 
-  const changeFile = useCallback(
+  const onChangeFile = useCallback(
     (value: string, data: unknown, field: string) => {
       setEditedFileMap((prev) => changeFilesMap(prev, data as FileImportGridData, field, value));
     },
     [setEditedFileMap],
   );
 
-  const columnDefs: ColDef[] = generateColumnsForImportGrid(changeFile, fileType, view);
+  const columnDefs: ColDef[] = generateColumnsForImportGrid(onChangeFile, fileType, view);
 
   const rowClassRules: RowClassRules = {
     'ag-error-row': (params) => isErrorRowForImport(params.data),
@@ -86,12 +87,12 @@ const FolderCreateReview: FC<Props> = ({
 
   const setCurrentSteps = useCallback(
     (status?: StepStatus) => {
-      setSteps((prev) => {
+      onChangeSteps((prev) => {
         const index = prev.findIndex((step) => step.id === CreateFolderSteps.FILE_REVIEW);
         return prev.map((item, i) => (i === index ? { ...item, status } : item));
       });
     },
-    [setSteps],
+    [onChangeSteps],
   );
 
   const onGridReady = (event: GridReadyEvent) => {
@@ -114,13 +115,14 @@ const FolderCreateReview: FC<Props> = ({
     if (isEqualSkippingUndefined(prevFiles, files)) return;
     prevFilesRef.current = files;
 
-    if (view === ApplicationRoute.Prompts && files.length) {
+    if (isAssetWithVersion(view) && files.length) {
       if (fileType === ImportFileType.ARCHIVE) {
         const body = getFormDataForImport(
           'public/',
           files[0],
           fileType,
           ConflictResolutionPolicy.SKIP,
+          void 0,
           void 0,
           view,
         ).body;

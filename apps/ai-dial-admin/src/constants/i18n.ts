@@ -586,8 +586,8 @@ export enum ImportI18nKey {
   Update = 'Import.Update',
   Create = 'Import.Create',
   PathsIgnore = 'Import.PathsIgnore',
-  PathsPrompt = 'Import.PathsPrompt',
-  PathsFile = 'Import.PathsFile',
+  PromptPaths = 'Import.PromptPaths',
+  FilePaths = 'Import.FilePaths',
   Changes = 'Import.Changes',
   FileSizeErrorHeader = 'Import.FileSizeErrorHeader',
   FileSizeErrorDescription = 'Import.FileSizeErrorDescription',
@@ -963,6 +963,7 @@ export enum ToolsetI18nKey {
   Warning = 'Toolset.Warning',
   View = 'Toolset.View',
   AllTools = 'Toolset.AllTools',
+  ToolsetPath = 'Toolset.ToolsetPath',
   AutoDetected = 'Toolset.AutoDetected',
   ToolsWarning = 'Toolset.ToolsWarning',
   ClientRegistrationType = 'Toolset.ClientRegistrationType',
@@ -992,4 +993,5 @@ export enum ToolsetI18nKey {
 export enum ApplicationsI18nKey {
   Import = 'Applications.Import',
   Export = 'Applications.Export',
+  ApplicationPaths = 'Applications.ApplicationPaths',
 }

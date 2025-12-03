@@ -610,8 +610,8 @@ export default {
     Update: 'Update',
     Create: 'Create',
     PathsIgnore: 'Ignore paths',
-    PathsPrompt: 'Prompt paths',
-    PathsFile: 'File paths',
+    PromptPaths: 'Prompt paths',
+    FilePaths: 'File paths',
     Changes: 'Changes',
     FileSizeErrorHeader: 'File size limit error',
     FileSizeErrorDescription: 'Size of files is more than {size}',
@@ -977,6 +977,7 @@ export default {
     View: 'View',
     Import: 'Import Toolsets',
     Export: 'Export Toolsets',
+    ToolsetPaths: 'Toolset paths',
     AllTools: 'All tools',
     Warning: 'List of tools from external endpoint may not display some tools. Add the missing tools manually.',
     AutoDetected: 'Auto-detected',
@@ -1005,6 +1006,7 @@ export default {
   Applications: {
     Import: 'Import Applications',
     Export: 'Export Applications',
+    ApplicationPaths: 'Application paths',
   },
   ValidityStatus: {
     Invalid: 'Invalid',

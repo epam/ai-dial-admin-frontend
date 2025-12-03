@@ -158,7 +158,7 @@ export const getExportFunction = (
  * @param {?ApplicationRoute} [route] - application route
  * @returns {string} - file name
  */
-export const getJsonFileName = (route?: ApplicationRoute): string => {
+export const getJsonFileName = (route?: ApplicationRoute): string => {//move?
   if (route === ApplicationRoute.Prompts) {
     return 'prompts';
   }
