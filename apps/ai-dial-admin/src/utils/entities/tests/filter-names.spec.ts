@@ -44,6 +44,19 @@ describe('filterDisplayNamesWithVersions', () => {
       'Entity1___1.0.0',
       'Entity3___',
     ]);
+
+    expect(
+      filterDisplayNamesWithVersions(
+        [
+          { displayName: 'Entity1', displayVersion: '1.0.0' },
+          { displayName: 'Entity2', displayVersion: '2.0.0' },
+          { displayName: 'Entity3' },
+          { displayName: null },
+          {},
+        ],
+        { displayName: 'Entity2', displayVersion: '2.0.0' },
+      ),
+    ).toEqual(['Entity1___1.0.0', 'Entity3___']);
   });
 
   test('returns empty array if entities is undefined', () => {
