@@ -1,7 +1,6 @@
 'use client';
 
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
-import classNames from 'classnames';
 import { cloneDeep, isEqual } from 'lodash';
 import { useRouter } from 'next/navigation';
 import { DialTabs, TabModel } from '@epam/ai-dial-ui-kit';

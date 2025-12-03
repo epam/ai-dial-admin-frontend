@@ -1,7 +1,6 @@
 'use client';
 
 import React, { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
-import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
 import { cloneDeep } from 'lodash';
 import { DialTabs } from '@epam/ai-dial-ui-kit';
@@ -37,7 +36,7 @@ interface Props {
 }
 
 const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versions }) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { disableDeploymentsJSONEditor } = useAppContext();
