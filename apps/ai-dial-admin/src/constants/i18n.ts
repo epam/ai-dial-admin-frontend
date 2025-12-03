@@ -1033,7 +1033,7 @@ export enum ToolsetI18nKey {
   Warning = 'Toolset.Warning',
   View = 'Toolset.View',
   AllTools = 'Toolset.AllTools',
-  ToolsetPath = 'Toolset.ToolsetPath',
+  ToolsetPath = 'Toolset.ToolsetPaths',
   AutoDetected = 'Toolset.AutoDetected',
   ToolsWarning = 'Toolset.ToolsWarning',
   ClientRegistrationType = 'Toolset.ClientRegistrationType',
