@@ -20,7 +20,7 @@ import {
 import { getFolderNameAndPath } from '@/src/utils/files/path';
 
 vi.mock('@/src/components/EntityListView/Import/utils', () => ({
-  generatePromptColumnsForImportGrid: vi.fn(),
+  generateAssetColumnsForImportGrid: vi.fn(),
   generateFileColumnsForImportGrid: vi.fn(),
   isLargeFile: vi.fn(),
 }));
