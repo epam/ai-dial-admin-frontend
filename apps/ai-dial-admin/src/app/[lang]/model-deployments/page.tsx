@@ -11,7 +11,7 @@ import Page403 from '@/src/components/Page403/Page403';
 import { Image } from '@/src/models/deployments/images';
 import { Container } from '@/src/models/deployments/containers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
-import DeploymentsEntityListView from '@/src/components/Common/DeploymentsEntityListView/DeploymentsEntityListView';
+import DeploymentsEntityListView from '@/src/components/DeploymentsEntityListView/DeploymentsEntityListView';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isValueTruthy } from '@/src/utils/types';
 

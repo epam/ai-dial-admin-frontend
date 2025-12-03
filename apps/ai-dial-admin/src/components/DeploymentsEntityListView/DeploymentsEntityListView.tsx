@@ -34,11 +34,11 @@ const DeploymentsEntityListView: FC<Props> = ({ route, images, containers }) => 
 
   return (
     <>
-      <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded pb-[62px] lg:pb-4 relative">
+      <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded relative">
         <div className="flex flex-row min-h-[34px] pt-4 px-6">
           <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />
         </div>
-        <div className="flex-1 overflow-auto my-3 min-h-0">
+        <div className="flex flex-col overflow-auto my-3 min-h-0 h-full">
           <>
             {activeTab === EntityViewTab.Images && (
               <ImagesList route={route} imagesList={getUniqueLatestImages(images)} />
