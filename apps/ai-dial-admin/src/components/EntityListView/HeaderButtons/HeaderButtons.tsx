@@ -99,6 +99,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
         conflictResolutionStrategy,
         void 0,
         ignorePaths,
+        route,
       );
       const folderName = getFolderName(path) || '';
       const prepareNotificationId = showNotification(

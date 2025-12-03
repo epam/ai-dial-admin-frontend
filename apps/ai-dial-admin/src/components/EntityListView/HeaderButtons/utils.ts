@@ -8,6 +8,7 @@ import { DialRule } from '@/src/models/dial/rule';
 import { ImportData } from '@/src/models/import-asset';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getJsonFileName } from '../utils';
 
 export const getFormDataForImport = (
   path: string,
@@ -16,6 +17,7 @@ export const getFormDataForImport = (
   resolutionStrategy: string,
   rules?: DialRule[],
   flatImport?: boolean,
+  route?: ApplicationRoute,
 ): { body: FormData; fileSize: number } => {
   const config: { path: string; conflictResolutionStrategy: string; rules?: DialRule[]; flatImport?: boolean } = {
     flatImport,
@@ -39,7 +41,7 @@ export const getFormDataForImport = (
     const fileBlob = new Blob([JSON.stringify(file)], {
       type: APPLICATION_JSON_TYPE,
     });
-    body.append('file', fileBlob, 'prompts.json');
+    body.append('file', fileBlob, `${getJsonFileName(route)}.json`);
   } else {
     (file as File[]).forEach((f) => {
       body.append('files', f);
