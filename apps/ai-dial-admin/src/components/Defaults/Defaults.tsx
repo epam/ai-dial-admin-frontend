@@ -72,9 +72,12 @@ const Defaults: FC<Props> = ({ entity, onChangeEntity }) => {
     <div className="flex flex-col p-4 rounded border border-primary">
       <button className="flex items-center justify-between" onClick={toggleCollapse}>
         <div className="flex flex-row">
-          <i className="text-icon-secondary">
-            {isCollapsed ? <IconChevronRight {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
-          </i>
+          {isCollapsed ? (
+            <IconChevronRight className="text-secondary" {...BASE_ICON_PROPS} />
+          ) : (
+            <IconChevronDown className="text-secondary" {...BASE_ICON_PROPS} />
+          )}
+
           <h3 className="mx-2">
             {t(EntityFieldsI18nKey.defaults)}: {count}
           </h3>

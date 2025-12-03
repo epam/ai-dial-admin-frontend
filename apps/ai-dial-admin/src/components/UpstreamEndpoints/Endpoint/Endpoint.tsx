@@ -100,9 +100,11 @@ const Endpoint: FC<Props> = ({
         {isTablet && (
           <div className="flex flex-col justify-center cursor-pointer" onClick={toggleCollapse}>
             <h3 className="small flex items-center">
-              <i className="text-icon-primary mr-2">
-                {isCollapsed ? <IconChevronRight {...BASE_ICON_PROPS} /> : <IconChevronDown {...BASE_ICON_PROPS} />}
-              </i>
+              {isCollapsed ? (
+                <IconChevronRight className="text-primary" {...BASE_ICON_PROPS} />
+              ) : (
+                <IconChevronDown className="text-primary" {...BASE_ICON_PROPS} />
+              )}
               {t(UpstreamEndpointsI18nKey.Upstream)} {index + 1}
             </h3>
             {isCollapsed && (
