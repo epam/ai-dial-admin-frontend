@@ -1,4 +1,4 @@
-import { ColDef, GridOptions } from 'ag-grid-community';
+import { ColDef } from 'ag-grid-community';
 
 import ActionColumn from '@/src/components/Grid/ActionColumn/ActionColumn';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';

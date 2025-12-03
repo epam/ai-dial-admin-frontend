@@ -50,7 +50,6 @@ describe('getDeleteAction', () => {
     expect(getDeleteAction(ActivityAuditResourceType.TOOLSET)?.name).toBe('removeToolset');
     expect(getDeleteAction(ActivityAuditResourceType.INTERCEPTOR_TEMPLATE)?.name).toBe('deleteInterceptorTemplate');
     expect(getDeleteAction(ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA)?.name).toBe('removeApplicationScheme');
- 
   });
   test('returns null for unknown type', () => {
     expect(getDeleteAction('Unknown')).toBeNull();
