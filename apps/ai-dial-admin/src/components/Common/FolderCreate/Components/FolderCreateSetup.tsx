@@ -148,7 +148,7 @@ const FolderCreateSetup: FC<Props> = ({
             elementId="conflict-resolution"
             onChange={setFileType}
           />
-          {(view === ApplicationRoute.Prompts || view === ApplicationRoute.AssetsApplications) && (
+          {isAssetWithVersion(view) && (
             <div className="flex flex-col">
               <Field fieldTitle={ignorePathsTitle} />
               <DialSwitch

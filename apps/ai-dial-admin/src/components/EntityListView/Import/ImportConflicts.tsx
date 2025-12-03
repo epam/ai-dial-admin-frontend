@@ -21,7 +21,7 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { ConflictResolutionPolicy } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isAssetWithVersion } from '@/Fsrc/utils/is-asset-view';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 
 interface Props {
   route?: ApplicationRoute;
@@ -69,7 +69,7 @@ const ImportConflicts: FC<Props> = ({
       return isAssetWithVersionImport ? isErrorPromptNode(params.data) : isErrorFileNode(params.data);
     },
   };
-
+vcvcv
   const setErrorState = (event: GridReadyEvent | CellValueChangedEvent) => {
     let isError = false;
 
