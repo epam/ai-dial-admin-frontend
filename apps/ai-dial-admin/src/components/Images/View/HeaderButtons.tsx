@@ -176,13 +176,13 @@ const HeaderButtons: FC<Props> = ({
     (container: Container) => {
       createContainer(container).then((res) => {
         if (res.success) {
-          //navigateToEntity(res, route, visualizerConnectorRef, ENTITY_TYPE.containers);
+          router.push(getUrnForEntity(route, res.response, DEPLOYMENT_ENTITY.containers));
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
         }
       });
     },
-    [showNotification],
+    [route, router, showNotification],
   );
 
   const onSaveAsNewVersion = useCallback(
@@ -196,13 +196,13 @@ const HeaderButtons: FC<Props> = ({
               t(ImagesI18nKey.ImagesSaveSuccessDescription, { type, version: image.version }),
             ),
           );
-          //navigateToEntity(res, route, visualizerConnectorRef, ENTITY_TYPE.images);
+          router.push(getUrnForEntity(route, res.response, DEPLOYMENT_ENTITY.images));
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
         }
       });
     },
-    [route, showNotification, t],
+    [route, router, showNotification, t],
   );
 
   const onVersionChange = useCallback(
