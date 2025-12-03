@@ -20,6 +20,7 @@ export interface ExportRequest {
   addSecrets?: boolean;
   componentTypes: EntityType[];
   components: ExportRequestComponent[];
+  topics?: string[];
 }
 
 export interface ExportRequestComponent {

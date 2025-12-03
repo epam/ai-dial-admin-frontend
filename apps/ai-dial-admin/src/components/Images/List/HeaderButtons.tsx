@@ -47,7 +47,7 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi }) => {
     (image: Image) => {
       createImage(image).then((res) => {
         if (res.success) {
-          router.push(getUrnForEntity(route, res.response, DEPLOYMENT_ENTITY.containers));
+          router.push(getUrnForEntity(route, res.response, DEPLOYMENT_ENTITY.images));
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
         }

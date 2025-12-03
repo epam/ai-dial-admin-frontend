@@ -25,6 +25,7 @@ import { ExportDependenciesConfig, ExportRequest } from '@/src/models/export';
 import { ExportFormat, ExportType } from '@/src/types/export';
 import { downloadFile } from '@/src/utils/download';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import ExportTopics from './Structure/Topics';
 
 interface Props {
   enableExportConfigMap?: boolean;
@@ -40,6 +41,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
   const [dependencies, setDependencies] = useState<ExportDependenciesConfig>({ ...fulDependenciesConfig });
   const [customExportData, setCustomExportData] = useState<Record<string, EntitiesGridData[]>>({});
   const [isExportDisable, setIsExportDisable] = useState(false);
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
 
   const exportTypes: RadioButtonWithContent[] = [
     {
@@ -79,8 +81,9 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
       exportFormat: selectedExportFormat,
       componentTypes: getComponentTypes(dependencies, selectedExportFormat, selectedExportType),
       components: getComponents(selectedExportType, customExportData),
+      topics: selectedTopics,
     } as ExportRequest;
-  }, [selectedExportType, customExportData, selectedExportFormat, dependencies]);
+  }, [selectedExportType, selectedExportFormat, dependencies, customExportData, selectedTopics]);
 
   const onChangeExportType = useCallback((key: string) => {
     setSelectedExportType(key as ExportType);
@@ -183,14 +186,13 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
                   />
 
                   {selectedExportType === ExportType.Full && (
-                    <div className="flex-1 min-h-0">
-                      <ExportDependencies
-                        selectedExportFormat={selectedExportFormat}
-                        dependencies={dependencies}
-                        onChangeConfig={(deps) => setDependencies(deps)}
-                      />
-                    </div>
+                    <ExportDependencies
+                      selectedExportFormat={selectedExportFormat}
+                      dependencies={dependencies}
+                      onChangeConfig={(deps) => setDependencies(deps)}
+                    />
                   )}
+                  <ExportTopics selectedTopics={selectedTopics} setSelectedTopics={setSelectedTopics} />
                 </>
               )}
             </div>
@@ -204,6 +206,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
               selectedExportType={selectedExportType}
               customExportData={customExportData}
               setCustomExportData={setCustomExportData}
+              selectedTopics={selectedTopics}
             />
           )}
         </div>
