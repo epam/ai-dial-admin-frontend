@@ -24,7 +24,7 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialFile } from '@/src/models/dial/file';
 import { ImportResult } from '@/src/models/import';
-import { ParsedPrompts } from '@/src/models/prompts';
+import { ImportData } from '@/src/models/import-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -87,7 +87,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
   const onImport = useCallback(
     (
       fileType: ImportFileType,
-      file: File | File[] | ParsedPrompts,
+      file: ImportData,
       conflictResolutionStrategy: string,
       path: string,
       ignorePaths?: boolean,
@@ -212,7 +212,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
               {route !== ApplicationRoute.AssetsToolsets && (
                 <DialButton
                   variant={ButtonVariant.Secondary}
-                  title={isTabletScreen ? '' : t(ButtonsI18nKey.Import)}
+                  label={isTabletScreen ? '' : t(ButtonsI18nKey.Import)}
                   iconBefore={<IconFileArrowLeft {...BASE_ICON_PROPS} />}
                   onClick={() => handleModalOpen(ModalType.import)}
                 />

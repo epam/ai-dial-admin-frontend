@@ -8,7 +8,7 @@ import {
 } from '@/src/components/EntityListView/Import/utils';
 import { DialFile } from '@/src/models/dial/file';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
-import { ParsedPrompts, PromptImportGridData } from '@/src/models/prompts';
+import { ParsedAssets, PromptImportGridData } from '@/src/models/import-asset';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
@@ -39,9 +39,11 @@ export const isErrorFileReview = (data: FileImportGridData): boolean => {
  *
  * @async
  * @param {File[]} files - prompts
+ * @param {?ApplicationRoute} [route] - route
  * @returns {Promise<Map<string, FileImportMap>>} - mapping file name and all prompts related to this file, tagged with validity flag
  */
-export const readJsonFiles = async (files: File[]): Promise<Map<string, FileImportMap>> => {
+
+export const readJsonFiles = async (files: File[], route?: ApplicationRoute): Promise<Map<string, FileImportMap>> => {
   const results = new Map<string, FileImportMap>();
 
   const readFile = (file: File): Promise<void> => {
@@ -50,9 +52,9 @@ export const readJsonFiles = async (files: File[]): Promise<Map<string, FileImpo
 
       reader.onload = () => {
         try {
-          const parsedData: ParsedPrompts = JSON.parse(reader.result as string);
-          const isInvalid = isInvalidJson(parsedData);
-          results.set(file.name, { files: parsedData?.prompts, isInvalid });
+          const parsedData: ParsedAssets = JSON.parse(reader.result as string);
+          const isInvalid = isInvalidJson(parsedData, route);
+          results.set(file.name, { files: parsedData?.prompts || parsedData?.applications || [], isInvalid });
         } catch (error) {
           console.error('Error parsing JSON:', error);
           results.set(file.name, { files: [], isInvalid: true });

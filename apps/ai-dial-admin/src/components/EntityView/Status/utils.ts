@@ -14,11 +14,6 @@ export const getColorClassName = (status: string, theme: string): string => {
     return 'bg-accent-secondary';
   }
 
-  // // TODO: check after supporting API
-  // if (status === ValidityStatus.ALMOST_EXPIRED) {
-  //   return theme === 'dark' ? 'bg-orange-400' : 'bg-orange-800';
-  // }
-
   return theme === 'dark' ? 'bg-red-400' : 'bg-red-800';
 };
 

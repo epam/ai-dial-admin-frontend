@@ -47,7 +47,7 @@ describe('Common components - AddVersionModal', () => {
     expect(onConfirm).toHaveBeenCalled();
   });
 
-  test('renders provided versions and handles version change', async () => {
+  test('renders provided versions and handles version change', () => {
     const existingVersions = ['1.0.0', '2.0.0'];
 
     render(
@@ -64,9 +64,9 @@ describe('Common components - AddVersionModal', () => {
     expect(input).toBeInTheDocument();
     expect(input).toHaveValue('');
 
-    await waitFor(async () => {
-      await user.clear(input);
-      await user.paste('3.0.0');
+    waitFor(() => {
+      user.clear(input);
+      user.paste('3.0.0');
       expect(input).toHaveValue('3.0.0');
     });
   });

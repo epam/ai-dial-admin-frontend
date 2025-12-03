@@ -1007,7 +1007,7 @@ export default {
     UrlField: 'This field must be a valid URL starting with  http:// or https://',
     WarningEndpoint: 'The endpoint uses HTTP instead of HTTPS. This may expose data to security risks.',
     DescriptionLength: 'User can add any characters, but not more than 2048.',
-    NameExists: 'This name already exists.',
+    NameExists: 'This ID already exists.',
     DisplayNameExists: 'This display name already exists.',
     Unique: 'This field must be unique.',
     Version: 'For a model with this Display name, specifying a version is mandatory.',
