@@ -16,18 +16,19 @@ import { ImportFileType } from '@/src/types/import';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { getIgnorePathTitles } from '@/src/utils/import/get-ignore-path-title';
 
 interface Props {
   files: File[];
-  changeFile: (files: File[]) => void;
+  route?: ApplicationRoute;
   fileType: string;
   fileTypes: RadioButtonWithContent[];
-  changeFileType: (type: string) => void;
-  isInvalid?: (file: File) => boolean;
   maxFilesCount?: number;
   ignorePaths?: boolean;
   setIgnorePaths?: Dispatch<SetStateAction<boolean>>;
-  route?: ApplicationRoute;
+  changeFile: (files: File[]) => void;
+  changeFileType: (type: string) => void;
+  isInvalid?: (file: File) => boolean;
 }
 
 const ImportFileTypeSelector: FC<Props> = ({
@@ -45,13 +46,7 @@ const ImportFileTypeSelector: FC<Props> = ({
   const t = useI18n();
 
   const ignorePathsTitle = useMemo(() => {
-    if (route === ApplicationRoute.Prompts) {
-      return t(ImportI18nKey.PromptPaths);
-    }
-    if (route === ApplicationRoute.Files) {
-      return t(ImportI18nKey.FilePaths);
-    }
-    return '';
+    return route ? getIgnorePathTitles(route, t) : '';
   }, [t, route]);
 
   const getFileIcon = (name: string) => {

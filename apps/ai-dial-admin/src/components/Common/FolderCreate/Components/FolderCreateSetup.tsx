@@ -16,14 +16,7 @@ import {
 
 import Field from '@/src/components/Common/Field/Field';
 import { CreateFolderSteps } from '@/src/components/Common/FolderCreate/constants';
-import {
-  ApplicationsI18nKey,
-  BasicI18nKey,
-  ButtonsI18nKey,
-  FoldersI18nKey,
-  ImportI18nKey,
-  ToolsetI18nKey,
-} from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, FoldersI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_ZIP_TYPE } from '@/src/constants/request-headers';
 import { useI18n } from '@/src/locales/client';
 import { ImportFileType } from '@/src/types/import';
@@ -31,6 +24,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { getErrorForFolderName } from '@/src/utils/validation/folder-error';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { getIgnorePathTitles } from '@/src/utils/import/get-ignore-path-title';
 
 interface Props {
   view?: ApplicationRoute;
@@ -64,20 +58,7 @@ const FolderCreateSetup: FC<Props> = ({
   const t = useI18n() as (stringToTranslate: string) => string;
 
   const ignorePathsTitle = useMemo(() => {
-    if (view === ApplicationRoute.Prompts) {
-      return t(ImportI18nKey.PromptPaths);
-    }
-    if (view === ApplicationRoute.Files) {
-      return t(ImportI18nKey.FilePaths);
-    }
-    if (view === ApplicationRoute.AssetsToolsets) {
-      return t(ToolsetI18nKey.ToolsetPath);
-    }
-
-    if (view === ApplicationRoute.AssetsApplications) {
-      return t(ApplicationsI18nKey.ApplicationPaths);
-    }
-    return '';
+    return view ? getIgnorePathTitles(view, t) : '';
   }, [t, view]);
 
   const acceptTypes = useMemo(() => {

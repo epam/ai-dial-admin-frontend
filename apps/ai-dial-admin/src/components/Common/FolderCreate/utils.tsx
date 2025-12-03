@@ -13,6 +13,7 @@ import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
 import { ZipFilePreview } from './models';
+import { isAssetWithVersion } from '../../../utils/is-asset-view';
 
 /**
  * Check is import prompt preview has errors
@@ -126,7 +127,7 @@ export const generateColumnsForImportGrid = (
   fileType: string,
   route?: ApplicationRoute,
 ): ColDef[] => {
-  if (route === ApplicationRoute.Prompts) {
+  if (isAssetWithVersion(route)) {
     return generatePromptColumnsForImportGrid(changeFileFunc, true, fileType === ImportFileType.ARCHIVE);
   }
   if (route === ApplicationRoute.Files) {

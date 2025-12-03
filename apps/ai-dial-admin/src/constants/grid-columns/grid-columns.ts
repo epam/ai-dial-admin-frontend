@@ -22,6 +22,7 @@ import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
 import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
 import { getValidityStatus } from '@/src/components/EntityView/Status/utils';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 
 const stringFilter: Partial<ColDef> = {
   filterParams: {
@@ -316,7 +317,7 @@ export const EXPORT_COLUMNS = (
 ): ColDef[] => {
   const columns: ColDef[] = [NAME_COLUMN_WITH_SORT, AUTHOR_COLUMN, UPDATED_AT_COLUMN];
 
-  if (route === ApplicationRoute.Prompts) {
+  if (isAssetWithVersion(route)) {
     columns.splice(1, 0, {
       headerName: 'Version',
       field: 'version',

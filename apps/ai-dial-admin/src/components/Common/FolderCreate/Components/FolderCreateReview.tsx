@@ -41,7 +41,7 @@ interface Props {
   fileType: string;
   currentStepId: string;
   editedFileMap: Map<string, FileImportMap>;
-  onChangeFileMap: Dispatch<SetStateAction<Map<string, FileImportMap>>>;
+  onChangeFileMap: (fileMap: Map<string, FileImportMap>) => void;
   onChangeSteps: (steps: Step[]) => void;
 }
 
@@ -51,7 +51,7 @@ const FolderCreateReview: FC<Props> = ({
   fileType,
   currentStepId,
   editedFileMap,
-  onChangeFileMap: setEditedFileMap,
+  onChangeFileMap,
   onChangeSteps,
 }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
@@ -61,20 +61,20 @@ const FolderCreateReview: FC<Props> = ({
 
   const prevFilesRef = useRef<File[]>([]);
 
-  const onChangeFile = useCallback(
-    (value: string, data: unknown, field: string) => {
-      setEditedFileMap((prev) => changeFilesMap(prev, data as FileImportGridData, field, value));
-    },
-    [setEditedFileMap],
-  );
-
   const columnDefs: ColDef[] = generateColumnsForImportGrid(onChangeFile, fileType, view);
 
   const rowClassRules: RowClassRules = {
     'ag-error-row': (params) => isErrorRowForImport(params.data),
   };
 
-  const setErrorState = (event: GridReadyEvent | CellValueChangedEvent) => {
+  const onChangeFile = useCallback(
+    (value: string, data: unknown, field: string) => {
+      onChangeFileMap((prev) => changeFilesMap(prev, data as FileImportGridData, field, value));
+    },
+    [onChangeFileMap],
+  );
+
+  const onChangeErrorState = (event: GridReadyEvent | CellValueChangedEvent) => {
     let isError = false;
 
     event.api?.forEachNode((node) => {
@@ -82,10 +82,10 @@ const FolderCreateReview: FC<Props> = ({
         isError = true;
       }
     });
-    setCurrentSteps(isError ? StepStatus.ERROR : StepStatus.VALID);
+    onChangeCurrentSteps(isError ? StepStatus.ERROR : StepStatus.VALID);
   };
 
-  const setCurrentSteps = useCallback(
+  const onChangeCurrentSteps = useCallback(
     (status?: StepStatus) => {
       onChangeSteps((prev) => {
         const index = prev.findIndex((step) => step.id === CreateFolderSteps.FILE_REVIEW);
@@ -104,7 +104,7 @@ const FolderCreateReview: FC<Props> = ({
   };
 
   const onCellValueChanged = (event: CellValueChangedEvent) => {
-    setErrorState(event);
+    onChangeErrorState(event);
     event.api?.updateGridOptions({
       rowClassRules,
     });
@@ -130,21 +130,21 @@ const FolderCreateReview: FC<Props> = ({
           const preview = generatePreviewData(
             (data.response as { resourcePreviews: ZipFilePreview[] }).resourcePreviews,
           );
-          setEditedFileMap(preview);
+          onChangeFileMap(preview);
         });
       } else {
         readJsonFiles(files, view).then((result) => {
-          setEditedFileMap(result);
+          onChangeFileMap(result);
         });
       }
     } else if (view === ApplicationRoute.Files && files.length) {
       if (fileType !== ImportFileType.ARCHIVE) {
-        setEditedFileMap(readAllFiles(files));
+        onChangeFileMap(readAllFiles(files));
       }
     } else if (!files.length) {
-      setEditedFileMap(new Map());
+      onChangeFileMap(new Map());
     }
-  }, [files, setEditedFileMap, fileType, view]);
+  }, [files, onChangeFileMap, fileType, view]);
 
   useEffect(() => {
     if (currentStepId !== CreateFolderSteps.FILE_REVIEW && editedFileMap.size !== 0) {
@@ -162,7 +162,7 @@ const FolderCreateReview: FC<Props> = ({
         rowData,
         columnDefs,
       });
-      setCurrentSteps(isError ? StepStatus.ERROR : StepStatus.VALID);
+      onChangeCurrentSteps(isError ? StepStatus.ERROR : StepStatus.VALID);
       setCount(rowData?.length || 0);
     } else if (currentStepId !== CreateFolderSteps.FILE_REVIEW && editedFileMap.size === 0) {
       gridApi?.updateGridOptions({
@@ -170,7 +170,7 @@ const FolderCreateReview: FC<Props> = ({
         columnDefs,
       });
       setCount(0);
-      setCurrentSteps(view === ApplicationRoute.Prompts ? void 0 : StepStatus.VALID);
+      onChangeCurrentSteps(view === ApplicationRoute.Prompts ? void 0 : StepStatus.VALID);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStepId, editedFileMap]);
