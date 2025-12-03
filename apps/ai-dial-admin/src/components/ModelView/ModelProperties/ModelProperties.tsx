@@ -18,10 +18,10 @@ import ModelTypeProperties from './ModelTypeProperties';
 interface Props {
   model: DialModel;
   modelsNames: string[];
-  updateModel: (model: DialModel) => void;
+  onChangeModel: (model: DialModel) => void;
 }
 
-const ModelProperties: FC<Props> = ({ model, modelsNames, updateModel }) => {
+const ModelProperties: FC<Props> = ({ model, modelsNames, onChangeModel }) => {
   const t = useI18n();
 
   return (
@@ -29,18 +29,27 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, updateModel }) => {
       <DeploymentProperties
         view={ApplicationRoute.Models}
         entity={model}
-        onChangeEntity={updateModel}
+        onChangeEntity={onChangeModel}
         names={modelsNames}
         isEntityImmutable={true}
       />
-      <ModelTypeProperties model={model} onChangeModel={updateModel} />
-      <Defaults entity={model} onChangeEntity={updateModel} />
-      <UpstreamEndpoints entity={model} onChangeEntity={updateModel} isKeyOptional={true} />
-      <TokenizerModelSwitch model={model} onChangeModel={updateModel} />
-      <ForwardAuthTokenField view={ApplicationRoute.Models} entity={model} onChangeEntity={updateModel} />
-      <Limits model={model} onChangeModel={updateModel} />
-      <MaxRetryAttempts entity={model} onChangeEntity={updateModel} />
-      <Pricing model={model} onChangeModel={updateModel} />
+
+      <ModelTypeProperties model={model} onChangeModel={onChangeModel} />
+
+      <Defaults entity={model} onChangeEntity={onChangeModel} />
+
+      <UpstreamEndpoints entity={model} onChangeEntity={onChangeModel} isKeyOptional={true} />
+
+      <TokenizerModelSwitch model={model} onChangeModel={onChangeModel} />
+
+      <ForwardAuthTokenField view={ApplicationRoute.Models} entity={model} onChangeEntity={onChangeModel} />
+
+      <Limits model={model} onChangeModel={onChangeModel} />
+
+      <MaxRetryAttempts entity={model} onChangeEntity={onChangeModel} />
+
+      <Pricing model={model} onChangeModel={onChangeModel} />
+
       <div className="w-full lg:w-[35%]">
         <Multiselect
           elementId="order"
@@ -48,7 +57,7 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, updateModel }) => {
           selectedItems={model.fieldsHashingOrder || []}
           allItems={model.fieldsHashingOrder || []}
           onChangeItems={(fieldsHashingOrder) => {
-            updateModel({ ...model, fieldsHashingOrder });
+            onChangeModel({ ...model, fieldsHashingOrder });
           }}
           heading={t(EntityFieldsI18nKey.fieldsHashingOrder)}
           title={t(EntityFieldsI18nKey.fieldsHashingOrder)}

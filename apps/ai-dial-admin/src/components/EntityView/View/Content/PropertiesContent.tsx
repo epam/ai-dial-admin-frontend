@@ -25,7 +25,7 @@ interface Props {
 const PropertiesContent: FC<Props> = ({ applicationSchemes, names, view, selectedEntity, onChangeEntity }) => {
   const getPropertiesView = useCallback(() => {
     if (view === ApplicationRoute.Models) {
-      return <ModelProperties model={selectedEntity} modelsNames={names} updateModel={onChangeEntity} />;
+      return <ModelProperties model={selectedEntity} modelsNames={names} onChangeModel={onChangeEntity} />;
     }
 
     if (view === ApplicationRoute.Routes) {
@@ -49,7 +49,7 @@ const PropertiesContent: FC<Props> = ({ applicationSchemes, names, view, selecte
         runners={applicationSchemes || []}
         names={names}
         view={view}
-        updateEntity={onChangeEntity}
+        onChangeEntity={onChangeEntity}
       />
     );
   }, [view, selectedEntity, applicationSchemes, names, onChangeEntity]);
