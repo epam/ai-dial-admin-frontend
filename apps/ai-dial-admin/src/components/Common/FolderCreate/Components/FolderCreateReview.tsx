@@ -41,8 +41,8 @@ interface Props {
   fileType: string;
   currentStepId: string;
   editedFileMap: Map<string, FileImportMap>;
-  onChangeFileMap: (fileMap: Map<string, FileImportMap>) => void;
-  onChangeSteps: (steps: Step[]) => void;
+  onChangeFileMap: Dispatch<SetStateAction<Map<string, FileImportMap>>>;
+  onChangeSteps: Dispatch<SetStateAction<Step[]>>;
 }
 
 const FolderCreateReview: FC<Props> = ({
@@ -61,8 +61,6 @@ const FolderCreateReview: FC<Props> = ({
 
   const prevFilesRef = useRef<File[]>([]);
 
-  const columnDefs: ColDef[] = generateColumnsForImportGrid(onChangeFile, fileType, view);
-
   const rowClassRules: RowClassRules = {
     'ag-error-row': (params) => isErrorRowForImport(params.data),
   };
@@ -73,6 +71,8 @@ const FolderCreateReview: FC<Props> = ({
     },
     [onChangeFileMap],
   );
+
+  const columnDefs: ColDef[] = generateColumnsForImportGrid(onChangeFile, fileType, view);
 
   const onChangeErrorState = (event: GridReadyEvent | CellValueChangedEvent) => {
     let isError = false;
