@@ -670,6 +670,8 @@ export default {
     ErrorDescription: 'Error occurred while exporting, please try again',
     Included: 'Included',
     NoPreview: 'Preview is not available for Active Config format',
+    TopicsCaption: 'Select one or more topics',
+    TopicsPlaceholder: 'Select topics',
   },
   Folder: {
     Export: 'Export files',

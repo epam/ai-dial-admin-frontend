@@ -1,6 +1,6 @@
 'use client';
 import { DialLoader, DialTabs } from '@epam/ai-dial-ui-kit';
-import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getEntities } from '@/src/app/[lang]/export-config/actions';
 import AddEntitiesButton from '@/src/components/ExportConfig/AddEntities/AddEntitiesButton';
@@ -13,8 +13,9 @@ import { EntityType } from '@/src/types/entity-type';
 import { ExportFormat, ExportType } from '@/src/types/export';
 
 interface Props {
-  selectedExportFormat: ExportFormat;
   dependencies: ExportDependenciesConfig;
+  selectedTopics: string[];
+  selectedExportFormat: ExportFormat;
   selectedExportType: ExportType;
   customExportData: Record<string, EntitiesGridData[]>;
   setCustomExportData: Dispatch<SetStateAction<Record<string, EntitiesGridData[]>>>;
@@ -26,6 +27,7 @@ const ConfigContent: FC<Props> = ({
   dependencies,
   selectedExportFormat,
   selectedExportType,
+  selectedTopics,
 }) => {
   const t = useI18n() as (v: string) => string;
 
@@ -33,6 +35,7 @@ const ConfigContent: FC<Props> = ({
   const [selectedTabTitle, setSelectedTabTitle] = useState('');
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [tabData, setTabData] = useState<Record<string, EntitiesGridData[]>>({});
+  const [itemsCount, setItemsCount] = useState(0);
 
   const tabs = useMemo(() => {
     return getActualTabs(selectedExportType, selectedExportFormat, dependencies, t);
@@ -57,6 +60,8 @@ const ConfigContent: FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTab]);
 
+  const onChangeItemsCount = useCallback((count: number) => setItemsCount(count), []);
+
   return (
     <div className="flex-1 min-w-0 bg-layer-3 rounded p-4 flex flex-col h-full">
       {selectedTab && <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />}
@@ -66,9 +71,7 @@ const ConfigContent: FC<Props> = ({
             <div className="flex flex-row justify-between items-center h-[38px] mb-4">
               <h3>
                 {`${selectedTabTitle}: `}
-                {(selectedExportType === ExportType.Full
-                  ? tabData[selectedTab]?.length
-                  : customExportData[selectedTab]?.length) || 0}
+                {itemsCount}
               </h3>
               {selectedExportType === ExportType.Custom && (
                 <AddEntitiesButton
@@ -76,6 +79,7 @@ const ConfigContent: FC<Props> = ({
                   tabData={tabData}
                   customExportData={customExportData}
                   setCustomExportData={setCustomExportData}
+                  selectedTopics={selectedTopics}
                 />
               )}
             </div>
@@ -90,6 +94,8 @@ const ConfigContent: FC<Props> = ({
                 isFull={selectedExportType === ExportType.Full}
                 customExportData={customExportData}
                 setCustomExportData={setCustomExportData}
+                selectedTopics={selectedTopics}
+                onChangeItemsCount={onChangeItemsCount}
               />
             )}
           </div>
