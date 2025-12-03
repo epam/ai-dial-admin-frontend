@@ -17,6 +17,7 @@ interface Props<T> {
   data?: T[];
   columnDefs: ColDef[];
   emptyDataTitle: string;
+  emptyDataDescription?: string;
   additionalGridOptions?: GridOptions;
   showColumnsPanel?: boolean;
   storageKey?: string;
@@ -28,6 +29,7 @@ const GridWithColumnsPanel = <T extends object>({
   data,
   columnDefs,
   emptyDataTitle,
+  emptyDataDescription,
   additionalGridOptions,
   showColumnsPanel,
   storageKey,
@@ -117,7 +119,7 @@ const GridWithColumnsPanel = <T extends object>({
   return (
     <div className="w-full h-full relative">
       {data?.length === 0 ? (
-        <DialNoDataContent title={emptyDataTitle} />
+        <DialNoDataContent title={emptyDataTitle} description={emptyDataDescription} containerClassName="small" />
       ) : (
         <>
           <Grid

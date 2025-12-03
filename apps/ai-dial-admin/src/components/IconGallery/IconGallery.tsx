@@ -31,9 +31,9 @@ const Icon: FC<IconProps> = ({ url, name, selected, onClick }) => {
       onClick={onClick}
       aria-label="Icon"
     >
-      <div className={classNames('mb-2 text-icon-primary', url && 'rounded-full bg-model-icon')}>
+      <div className={classNames('mb-2 text-primary', url && 'rounded-full bg-model-icon')}>
         {!url ? (
-          <i className={selected ? 'text-icon-primary' : 'text-icon-secondary'}>
+          <i className={selected ? 'text-primary' : 'text-secondary'}>
             <Empty />
           </i>
         ) : (

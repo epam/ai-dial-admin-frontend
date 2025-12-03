@@ -19,4 +19,8 @@ export enum ActionMenuOperation {
   Rename = 'Rename',
   Move_to = 'Move to',
   Compare_changes = 'Compare changes',
+  Install = 'Install',
+  Run = 'Run',
+  Stop = 'Stop',
+  CreateNewVersion = 'Create new version',
 }

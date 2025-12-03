@@ -20,6 +20,7 @@ import { isAssetView } from '@/src/utils/is-asset-view';
 interface Props<T> {
   emptyDataTitle: string;
   title?: string;
+  emptyDataDescription?: string;
   children?: ReactNode;
   data?: T[];
   columnDefs: ColDef[];
@@ -35,6 +36,7 @@ interface Props<T> {
 
 const ListView = <T extends object>({
   emptyDataTitle,
+  emptyDataDescription,
   title,
   data,
   columnDefs,
@@ -78,7 +80,7 @@ const ListView = <T extends object>({
                 placement="top"
               >
                 <DialButton
-                  className={isCollapseDisable ? 'text-controls-disable' : 'hover:text-icon-accent-primary'}
+                  className={isCollapseDisable ? 'text-controls-disable' : 'hover:text-accent-primary'}
                   onClick={collapseFolders}
                   iconBefore={<FolderCollapse width={24} height={24} />}
                   disabled={isCollapseDisable}
@@ -97,6 +99,7 @@ const ListView = <T extends object>({
             data={data}
             additionalGridOptions={{ ...additionalGridOptions }}
             emptyDataTitle={emptyDataTitle}
+            emptyDataDescription={emptyDataDescription}
             showColumnsPanel={showColumnsPanel}
             toggleColumnsPanel={toggleColumnsPanel}
             storageKey={storageKey || view}

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { deploymentsApi, toolSetsApi } from '@/src/app/api/api';
+import { containersApi, toolSetsApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -35,11 +35,11 @@ describe('Toolsets :: server actions', () => {
   });
 
   test('Should call getToolsetContainers action', async () => {
-    (deploymentsApi.getMcpContainers as any).mockResolvedValue(RESPONSE_MOCK);
+    (containersApi.getMCPContainers as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await getToolsetContainers();
     expect(getUserToken).toHaveBeenCalled();
-    expect(deploymentsApi.getMcpContainers).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(containersApi.getMCPContainers).toHaveBeenCalledWith(TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 

@@ -1,0 +1,104 @@
+import { JWT } from 'next-auth/jwt';
+import { BaseApi } from '@/src/server/base-api';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { Container, Pod, Prompt, Resource } from '@/src/models/deployments/containers';
+import { API } from '@/src/server/api';
+
+export const BASE_CONTAINERS_URL = `${API}/deployments`;
+export const SERVER_CONTAINERS_URL = (id?: string) => `${BASE_CONTAINERS_URL}?imageDefinitionId=${id || ''}`;
+export const CONTAINER_URL = (id?: string) => `${BASE_CONTAINERS_URL}/${id || ''}`;
+export const DUPLICATE_CONTAINER_URL = `${BASE_CONTAINERS_URL}/duplicate`;
+export const RUN_CONTAINER_URL = (id?: string) => `${BASE_CONTAINERS_URL}/${id || ''}/deploy`;
+export const STOP_CONTAINER_URL = (id?: string) => `${BASE_CONTAINERS_URL}/${id || ''}/undeploy`;
+export const CONTAINER_DETAILS_URL = `${BASE_CONTAINERS_URL}/mcp`;
+export const CONTAINER_TOOLS_URL = (id?: string) => `${CONTAINER_DETAILS_URL}/${id || ''}/tools`;
+export const CONTAINER_RESOURCES_URL = (id?: string) => `${CONTAINER_DETAILS_URL}/${id || ''}/resources`;
+export const CONTAINER_PROMPTS_URL = (id?: string) => `${CONTAINER_DETAILS_URL}/${id || ''}/prompts`;
+export const CONTAINER_PODS_URL = (id?: string) => `${BASE_CONTAINERS_URL}/${id || ''}/pods`;
+export const CONTAINER_LOGS_URL = (containerId?: string, podId?: string) =>
+  `${BASE_CONTAINERS_URL}/${containerId || ''}/pods/${podId || ''}/logs`;
+export const CONTAINER_EVENTS_URL = (containerId?: string) =>
+  `${BASE_CONTAINERS_URL}/${containerId || ''}/events/stream`;
+export const CHANGE_IMAGE_ID = `${BASE_CONTAINERS_URL}/change-image`;
+
+export class ContainersApi extends BaseApi {
+  getContainers(type: string, token: JWT | null): Promise<ServerActionResponse> {
+    return this.getAction(`${BASE_CONTAINERS_URL}?type=${type}`, token);
+  }
+
+  getMCPContainers(token: JWT | null): Promise<ServerActionResponse> {
+    return this.getAction(`${BASE_CONTAINERS_URL}?type=MCP`, token);
+  }
+
+  getInterceptorContainers(token: JWT | null): Promise<ServerActionResponse> {
+    return this.getAction(`${BASE_CONTAINERS_URL}?type=INTERCEPTOR`, token);
+  }
+
+  getModelContainers(token: JWT | null): Promise<ServerActionResponse> {
+    return this.getAction(`${BASE_CONTAINERS_URL}?type=NIM`, token);
+  }
+
+  getImageContainers(imageId: string, token: JWT | null): Promise<ServerActionResponse> {
+    return this.getAction(SERVER_CONTAINERS_URL(imageId), token);
+  }
+
+  getContainer(id: string, token: JWT | null): Promise<ServerActionResponse> {
+    return this.getAction(CONTAINER_URL(id), token);
+  }
+
+  createContainer(container: Container, token: JWT | null): Promise<ServerActionResponse> {
+    return this.postAction(BASE_CONTAINERS_URL, container, token);
+  }
+
+  duplicateContainer(
+    sourceDeploymentId: string,
+    newDeploymentName: string,
+    token: JWT | null,
+  ): Promise<ServerActionResponse> {
+    return this.postAction(DUPLICATE_CONTAINER_URL, { sourceDeploymentId, newDeploymentName }, token);
+  }
+
+  updateContainer(container: Container, token: JWT | null): Promise<ServerActionResponse> {
+    return this.putAction(CONTAINER_URL(container.id), container, token);
+  }
+
+  updateContainersImageId(
+    deployments: string[],
+    imageDefinitionId: string,
+    token: JWT | null,
+  ): Promise<ServerActionResponse> {
+    return this.postAction(CHANGE_IMAGE_ID, { deployments, imageDefinitionId }, token);
+  }
+
+  deleteContainer(containerId: string, token: JWT | null): Promise<ServerActionResponse> {
+    return this.deleteAction(CONTAINER_URL(containerId), token);
+  }
+
+  runContainer(containerId: string, token: JWT | null): Promise<ServerActionResponse> {
+    return this.postAction(RUN_CONTAINER_URL(containerId), {}, token);
+  }
+
+  stopContainer(containerId: string, token: JWT | null): Promise<ServerActionResponse> {
+    return this.postAction(STOP_CONTAINER_URL(containerId), {}, token);
+  }
+
+  getContainerTools(containerId: string, token: JWT | null): Promise<ServerActionResponse> {
+    return this.getAction(CONTAINER_TOOLS_URL(containerId), token);
+  }
+
+  getContainerResources(containerId: string, token: JWT | null): Promise<{ resources: Resource[] } | null> {
+    return this.get(CONTAINER_RESOURCES_URL(containerId), token);
+  }
+
+  getContainerPrompts(containerId: string, token: JWT | null): Promise<{ prompts: Prompt[] } | null> {
+    return this.get(CONTAINER_PROMPTS_URL(containerId), token);
+  }
+
+  getContainerPods(containerId: string, token: JWT | null): Promise<Pod[] | null> {
+    return this.get(CONTAINER_PODS_URL(containerId), token);
+  }
+
+  getContainerLogs(containerId: string, podId: string, token: JWT | null): Promise<string[] | null> {
+    return this.get(CONTAINER_LOGS_URL(containerId, podId), token);
+  }
+}

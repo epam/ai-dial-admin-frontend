@@ -1,0 +1,95 @@
+import {
+  CONTAINER_STATUS,
+  CONTAINER_TRANSPORT,
+  CONTAINER_TYPE,
+  KubEventType,
+} from '@/src/types/deployments/containers';
+import { EnvironmentVariable } from '@/src/models/deployments/variables';
+
+export interface Container {
+  $type: CONTAINER_TYPE;
+  name: string;
+  id?: string;
+  imageDefinitionId: string;
+  description?: string;
+  containerPorts?: number[];
+  containerPort?: number;
+  containerGrpcPort?: number;
+  resources?: {
+    limits?: Record<string, string>;
+    requests?: Record<string, string>;
+  };
+  status: CONTAINER_STATUS;
+  url?: string;
+  createdAt?: number;
+  updatedAt?: number;
+  author?: string;
+  mcpEndpointPath?: string | null;
+  transport?: CONTAINER_TRANSPORT;
+  metadata: {
+    envs?: EnvironmentVariable[];
+  };
+}
+
+export interface Tool {
+  name: string;
+  description?: string;
+  inputSchema: {
+    type: string;
+    properties: Record<string, unknown>;
+  };
+  annotations?: {
+    title?: string;
+    readOnlyHint?: boolean;
+    destructiveHint?: boolean;
+    idempotentHint?: boolean;
+    openWorldHint?: boolean;
+  };
+}
+
+export interface Resource {
+  uri: string;
+  name: string;
+  description?: string;
+  mimeType?: string;
+}
+
+export interface Prompt {
+  name: string;
+  description?: string;
+  arguments?: Argument[];
+}
+
+export interface Argument {
+  name: string;
+  description?: string;
+  required?: boolean;
+}
+
+export interface Pod {
+  name: string;
+  createdAt: number;
+}
+
+export interface ResourcesDefaults {
+  CPU_REQUEST?: string;
+  CPU_LIMIT?: string;
+  MEMORY_REQUEST?: string;
+  MEMORY_LIMIT?: string;
+  GPU_REQUEST?: string;
+  GPU_LIMIT?: string;
+}
+
+export interface KubEvent {
+  count: number;
+  id: string;
+  deploymentId: string;
+  eventType: KubEventType;
+  firstTimestamp: number;
+  message: string;
+  reason: string;
+  source: string;
+  involvedObjectKind: string;
+  involvedObjectName: string;
+  involvedObjectNamespace: string;
+}
