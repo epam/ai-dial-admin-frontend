@@ -865,6 +865,7 @@ export default {
     applicationTypeTruncatePromptEndpoint: 'Truncate prompt endpoint',
     appendApplicationPropertiesHeader: 'Application properties header',
     applicationTypePlaybackSupport: 'Playback support',
+    applicationTypeAssistantAttachmentsInRequestSupported: 'Assistant attachments in request',
     applicationTypeBucketCopy: 'Bucket copy',
     createdAt: 'Creation Time',
     updatedAt: 'Updated Time',

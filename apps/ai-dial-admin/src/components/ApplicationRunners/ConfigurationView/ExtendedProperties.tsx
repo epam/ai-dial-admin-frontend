@@ -195,6 +195,15 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
           onChange(value, 'dial:applicationTypePlaybackSupport');
         }}
       />
+
+      <DialSwitch
+        isOn={runner['dial:applicationTypeAssistantAttachmentsInRequestSupported']}
+        title={t(EntityFieldsI18nKey['dial:applicationTypeAssistantAttachmentsInRequestSupported'])}
+        switchId="applicationTypeAssistantAttachmentsInRequestSupported"
+        onChange={(value: boolean) => {
+          onChange(value, 'dial:applicationTypeAssistantAttachmentsInRequestSupported');
+        }}
+      />
     </div>
   );
 };
