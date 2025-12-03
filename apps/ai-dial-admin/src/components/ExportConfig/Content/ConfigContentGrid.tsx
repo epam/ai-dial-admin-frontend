@@ -19,7 +19,7 @@ interface Props {
   customExportData?: Record<string, EntitiesGridData[]>;
   setCustomExportData?: Dispatch<SetStateAction<Record<string, EntitiesGridData[]>>>;
   selectedTopics?: string[];
-  setItemsCount?: Dispatch<SetStateAction<number>>;
+  onChangeItemsCount?: (count: number) => void;
 }
 
 const ConfigContentGrid: FC<Props> = ({
@@ -28,8 +28,8 @@ const ConfigContentGrid: FC<Props> = ({
   isFull,
   customExportData,
   setCustomExportData,
-  setItemsCount,
   selectedTopics,
+  onChangeItemsCount,
 }) => {
   const t = useI18n() as (v: string) => string;
 
@@ -71,7 +71,7 @@ const ConfigContentGrid: FC<Props> = ({
       const rowData = isFull
         ? getFilteredData(tabData, selectedTab, selectedTopics)
         : getFilteredData(customExportData, selectedTab, selectedTopics);
-      setItemsCount?.(rowData.length || 0);
+      onChangeItemsCount?.(rowData.length || 0);
       if (isFull) {
         setFullColDefs(columnDefs);
         setFullData(rowData);

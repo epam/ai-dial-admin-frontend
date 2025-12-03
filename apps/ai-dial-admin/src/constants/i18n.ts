@@ -612,6 +612,8 @@ export enum ExportI18nKey {
   Included = 'Export.Included',
   ActiveConfig = 'Export.ActiveConfig',
   NoPreview = 'Export.NoPreview',
+  TopicsCaption = 'Export.TopicsCaption',
+  TopicsPlaceholder = 'Export.TopicsPlaceholder',
 }
 
 export enum FoldersI18nKey {

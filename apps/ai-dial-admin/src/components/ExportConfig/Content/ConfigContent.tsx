@@ -1,6 +1,6 @@
 'use client';
 import { DialLoader, DialTabs } from '@epam/ai-dial-ui-kit';
-import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getEntities } from '@/src/app/[lang]/export-config/actions';
 import AddEntitiesButton from '@/src/components/ExportConfig/AddEntities/AddEntitiesButton';
@@ -60,6 +60,8 @@ const ConfigContent: FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTab]);
 
+  const onChangeItemsCount = useCallback((count: number) => setItemsCount(count), []);
+
   return (
     <div className="flex-1 min-w-0 bg-layer-3 rounded p-4 flex flex-col h-full">
       {selectedTab && <DialTabs tabs={tabs} activeTab={selectedTab} onClick={(tab) => setSelectedTab(tab)} />}
@@ -93,7 +95,7 @@ const ConfigContent: FC<Props> = ({
                 customExportData={customExportData}
                 setCustomExportData={setCustomExportData}
                 selectedTopics={selectedTopics}
-                setItemsCount={setItemsCount}
+                onChangeItemsCount={onChangeItemsCount}
               />
             )}
           </div>

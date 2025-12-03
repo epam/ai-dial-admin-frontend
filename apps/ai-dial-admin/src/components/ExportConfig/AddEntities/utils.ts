@@ -58,17 +58,13 @@ export const getAvailableData = (
   let existingData = customExportData[currentTab] || [];
   if (id === EntityType.MODEL) {
     entityData = entityData.filter(
-      (data) =>
-        data.type === MenuI18nKey.Models &&
-        (selectedTopics.length ? selectedTopics.some((topic) => data?.topics?.includes(topic)) : true),
+      (data) => data.type === MenuI18nKey.Models && isEntityWithTopicsMatches(selectedTopics, data?.topics),
     );
     existingData = existingData.filter((data) => data.type === MenuI18nKey.Models);
   }
   if (id === EntityType.APPLICATION) {
     entityData = entityData.filter(
-      (data) =>
-        data.type === MenuI18nKey.Applications &&
-        (selectedTopics.length ? selectedTopics.some((topic) => data?.topics?.includes(topic)) : true),
+      (data) => data.type === MenuI18nKey.Applications && isEntityWithTopicsMatches(selectedTopics, data?.topics),
     );
     existingData = existingData.filter((data) => data.type === MenuI18nKey.Applications);
   }
@@ -79,18 +75,16 @@ export const getAvailableData = (
 
   if (id === EntityType.TOOLSET) {
     entityData = entityData.filter(
-      (data) =>
-        data.type === MenuI18nKey.Toolsets &&
-        (selectedTopics.length ? selectedTopics.some((topic) => data?.topics?.includes(topic)) : true),
+      (data) => data.type === MenuI18nKey.Toolsets && isEntityWithTopicsMatches(selectedTopics, data?.topics),
     );
     existingData = existingData.filter((data) => data.type === MenuI18nKey.Toolsets);
   }
 
   if (id === EntityType.APPLICATION_TYPE_SCHEMA) {
-    entityData =
-      entityData.filter((data) =>
-        selectedTopics.length ? selectedTopics.some((topic) => data?.topics?.includes(topic)) : true,
-      ) || [];
+    entityData = entityData.filter((data) => isEntityWithTopicsMatches(selectedTopics, data?.topics)) || [];
   }
   return getAvailableEntities(existingData, entityData);
 };
+
+const isEntityWithTopicsMatches = (selectedTopics?: string[], entityTopics?: string[]) =>
+  selectedTopics?.length ? selectedTopics?.some((topic) => entityTopics?.includes(topic)) : true;

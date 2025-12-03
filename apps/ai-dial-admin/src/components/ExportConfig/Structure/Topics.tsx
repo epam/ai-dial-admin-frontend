@@ -3,7 +3,7 @@ import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react';
 
 import { DialLoader, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
-import { EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, ExportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { getModelsTopics } from '@/src/app/[lang]/models/actions';
 
@@ -36,7 +36,7 @@ const ExportTopics: FC<Props> = ({ selectedTopics, setSelectedTopics }) => {
     <DialLoader />
   ) : (
     <DialSelectField
-      captionDescription="Select one or more topics."
+      captionDescription={t(ExportI18nKey.TopicsCaption)}
       elementId="topics"
       fieldTitle={t(EntityFieldsI18nKey.topics)}
       multiple
@@ -44,7 +44,7 @@ const ExportTopics: FC<Props> = ({ selectedTopics, setSelectedTopics }) => {
         setSelectedTopics(topics as string[]);
       }}
       options={items || []}
-      placeholder="Select topics"
+      placeholder={t(ExportI18nKey.TopicsPlaceholder)}
       searchable
       value={selectedTopics}
     />
