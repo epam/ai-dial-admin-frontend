@@ -40,18 +40,19 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
 
   return (
     <div className="w-full flex flex-col gap-y-8">
-      <div className="flex flex-col gap-y-8">
-        {isEntityImmutable && isShowMaintainer ? (
-          <MaintainerControl entity={entity} onChangeEntity={onChangeEntity} />
-        ) : null}
+      {isEntityImmutable && isShowMaintainer ? (
+        <MaintainerControl entity={entity} onChangeEntity={onChangeEntity} />
+      ) : null}
 
-        {isShowCompletionEndpoint && isEntityImmutable ? (
-          <ReadonlyField
-            value={applicationRunner['dial:applicationTypeCompletionEndpoint']}
-            title={t(EntityFieldsI18nKey.completionEndpoint)}
-          />
-        ) : null}
-      </div>
+
+      {/* // TODO: AAAA */}
+
+      {isShowCompletionEndpoint && isEntityImmutable ? (
+        <ReadonlyField
+          value={applicationRunner['dial:applicationTypeCompletionEndpoint']}
+          title={t(EntityFieldsI18nKey.completionEndpoint)}
+        />
+      ) : null}
       {view == ApplicationRoute.Toolsets && isEntityImmutable && (
         <>
           <IconControl iconUrl={entity.iconUrl} onChange={(icon) => onChangeEntity({ ...entity, iconUrl: icon })} />

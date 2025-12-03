@@ -33,7 +33,7 @@ const IconControl: FC<Props> = ({ iconUrl, disabled = false, onChange }) => {
   }, [setIsModalOpen]);
 
   return (
-    <div className="flex flex-col md:max-w-[180px]">
+    <div className="flex flex-col">
       <Field fieldTitle={t(EntityFieldsI18nKey.iconUrl)} htmlFor="icon" />
       {value.length === 0 ? (
         <DialInputPopup

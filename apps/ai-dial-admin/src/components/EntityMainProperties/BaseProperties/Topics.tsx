@@ -39,21 +39,20 @@ const TopicsControl = <T extends { topics?: string[]; descriptionKeywords?: stri
   );
 
   return (
-    <div className={STANDARD_CONTROL_WIDTH}>
-      <Multiselect
-        elementId="topics"
-        selectedItems={selectedItems}
-        getItems={getModelsTopics}
-        allItems={allItems}
-        optional={true}
-        onChangeItems={onChangeTopics}
-        heading={t(EntityFieldsI18nKey.topics)}
-        title={t(EntityFieldsI18nKey.topics)}
-        addPlaceholder={t(EntityPlaceholdersI18nKey.Topic)}
-        addTitle={t(TopicsI18nKey.AddTopic)}
-        {...props}
-      />
-    </div>
+    <Multiselect
+      elementId="topics"
+      className={STANDARD_CONTROL_WIDTH}
+      selectedItems={selectedItems}
+      getItems={getModelsTopics}
+      allItems={allItems}
+      optional={true}
+      onChangeItems={onChangeTopics}
+      heading={t(EntityFieldsI18nKey.topics)}
+      title={t(EntityFieldsI18nKey.topics)}
+      addPlaceholder={t(EntityPlaceholdersI18nKey.Topic)}
+      addTitle={t(TopicsI18nKey.AddTopic)}
+      {...props}
+    />
   );
 };
 
