@@ -24,7 +24,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { downloadFile, downloadJson } from '@/src/utils/download';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { getListOfPathsToBulkDelete, getListOfPathsToMove } from '@/src/utils/files/path';
-import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { isAssetWithVersion, isDeploymentAsset } from '@/src/utils/is-asset-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getBulkNotificationTitle } from '@/src/components/EntityView/Modals/Delete/utils';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
@@ -172,7 +172,7 @@ const Actions = <T extends object>({
           );
           if (
             route === ApplicationRoute.Files ||
-            (route === ApplicationRoute.Prompts && exportType === ImportFileType.ARCHIVE)
+            ((route === ApplicationRoute.Prompts || isDeploymentAsset(route)) && exportType === ImportFileType.ARCHIVE)
           ) {
             const { blob, fileName } = res as { blob: Blob; fileName: string };
             downloadFile(blob, fileName);

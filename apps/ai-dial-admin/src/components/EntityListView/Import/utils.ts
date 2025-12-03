@@ -18,7 +18,7 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { ImportResult } from '@/src/models/import';
 import { Notification } from '@/src/models/notification';
-import { ParsedPrompts, PromptImportGridData } from '@/src/models/prompts';
+import { ParsedAssets, PromptImportGridData } from '@/src/models/import-asset';
 import { ImportStatus } from '@/src/types/import';
 import { getFolderNameAndPath } from '@/src/utils/files/path';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -311,15 +311,19 @@ export const isErrorFileNode = (data: FileImportGridData): boolean => {
 /**
  * Check importing prompts with given regexp
  *
- * @param {ParsedPrompts} parsedData - parsed DialPrompt
+ * @param {ParsedAssets} parsedData - parsed Assets
  * @returns {boolean} - return true if prompts id is not valid
  */
-export const isInvalidJson = (parsedData: ParsedPrompts) => {
-  return (
-    !parsedData?.prompts ||
-    parsedData?.prompts.length === 0 ||
-    !/^prompts\/public\/([^/]+\/)*[^/]+__[^/]+$/.test(parsedData?.prompts[0].id as string)
-  );
+export const isInvalidJson = (parsedData: ParsedAssets, view?: ApplicationRoute) => {
+  const values = view === ApplicationRoute.Prompts ? parsedData?.prompts : parsedData?.applications;
+
+  if (!values || values.length === 0) {
+    return true;
+  }
+
+  return view === ApplicationRoute.Prompts
+    ? !/^prompts\/public\/([^/]+\/)*[^/]+__[^/]+$/.test(values[0].id as string)
+    : false;
 };
 
 /**
