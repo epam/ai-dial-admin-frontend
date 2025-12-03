@@ -1,6 +1,7 @@
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { compareVersions, modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
+import { ImageVersion } from '@/src/models/deployments/images';
 
 export const filterLatestVersions = (data: Asset[]) => {
   const latestVersions: Record<string, DialPrompt> = {};
@@ -15,7 +16,7 @@ export const filterLatestVersions = (data: Asset[]) => {
   return Object.values(latestVersions);
 };
 
-export const getVersionsPerName = (data: Asset[]) => {
+export const getVersionsPerName = (data: Asset[] | ImageVersion[]) => {
   const versionsPerName: Record<string, string[]> = {};
 
   data.forEach((item) => {

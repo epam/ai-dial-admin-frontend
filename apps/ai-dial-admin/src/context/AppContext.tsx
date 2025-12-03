@@ -3,6 +3,7 @@ import { createContext, useContext, useState, ReactNode, MouseEvent, SetStateAct
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
 import { LOCAL_STORAGE_SIDEBAR_OPEN_KEY } from '@/src/constants/main-layout';
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
+import { ResourcesDefaults } from '@/src/models/deployments/containers';
 
 export interface AppContextType {
   themeUrl?: string;
@@ -20,6 +21,8 @@ export interface AppContextType {
     showHintSidebar: (c: ReactNode) => void;
     closeHintSidebar: () => void;
   };
+  disableDeploymentsJSONEditor?: boolean;
+  resourcesDefaults?: ResourcesDefaults;
 }
 
 export interface EmbeddedApp {
@@ -36,11 +39,15 @@ export const AppContextProvider = ({
   themeUrl,
   featureFlags,
   embeddedApps,
+  disableDeploymentsJSONEditor,
+  resourcesDefaults,
 }: {
   children: ReactNode;
   themeUrl?: string;
   featureFlags: Record<string, boolean>;
   embeddedApps: EmbeddedApp[];
+  disableDeploymentsJSONEditor?: boolean;
+  resourcesDefaults?: ResourcesDefaults;
 }) => {
   const isSidebarOpenState = getFromLocalStorage(LOCAL_STORAGE_SIDEBAR_OPEN_KEY) !== 'false';
 
@@ -81,6 +88,8 @@ export const AppContextProvider = ({
     featureFlags,
     embeddedApps,
     hintSidebar: { show, content, showHintSidebar, closeHintSidebar },
+    disableDeploymentsJSONEditor,
+    resourcesDefaults,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

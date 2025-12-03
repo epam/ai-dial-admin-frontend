@@ -1,0 +1,37 @@
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import { describe, test, vi, expect } from 'vitest';
+import PortField from './PortField';
+import { ApplicationRoute } from '@/src/types/routes';
+import { CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/containers';
+import { Container } from '@/src/models/deployments/containers';
+
+describe('Common components :: PortField', () => {
+  const mockContainer = {
+    $type: CONTAINER_TYPE.MCP,
+    id: '1',
+    name: 'test-container',
+    status: CONTAINER_STATUS.RUNNING,
+    imageDefinitionId: 'img-1',
+    metadata: { envs: [] },
+    containerPort: 8000,
+  } as Container;
+
+  test('updates containerPort on change', async () => {
+    render(<PortField route={ApplicationRoute.McpDeployments} container={mockContainer} setContainer={vi.fn()} />);
+
+    expect(screen.getByRole('spinbutton')).toBeInTheDocument();
+  });
+
+  test('renders grpc port for ModelDeployments and updates it', async () => {
+    render(
+      <PortField
+        route={ApplicationRoute.ModelDeployments}
+        container={{ ...mockContainer, $type: CONTAINER_TYPE.MODEL, containerGrpcPort: 1234 }}
+        setContainer={vi.fn()}
+      />,
+    );
+
+    expect(screen.getAllByRole('spinbutton')).toHaveLength(2);
+  });
+});

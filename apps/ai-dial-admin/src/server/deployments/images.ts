@@ -1,0 +1,60 @@
+import { JWT } from 'next-auth/jwt';
+import { API } from '@/src/server/api';
+import { BaseApi } from '@/src/server/base-api';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { Image } from '@/src/models/deployments/images';
+
+export const BASE_IMAGES_URL = `${API}/images`;
+export const IMAGES_URL = `${BASE_IMAGES_URL}/definitions`;
+export const INSTALL_IMAGES_URL = `${BASE_IMAGES_URL}/builds`;
+export const IMAGE_URL = (id?: string) => `${IMAGES_URL}/${id || ''}`;
+export const IMAGE_VERSIONS_URL = (id?: string) => `${IMAGES_URL}/${id || ''}/versions`;
+export const IMAGE_LOGS_URL = (id?: string) => `${INSTALL_IMAGES_URL}/${id || ''}/logs`;
+export const IMAGES_WITH_VERSIONS = (type: string) => `${IMAGES_URL}/grouped?type=${type}`;
+
+export class ImagesApi extends BaseApi {
+  getMCPImages(token: JWT | null): Promise<ServerActionResponse> {
+    return this.getAction(`${IMAGES_URL}?type=MCP`, token);
+  }
+
+  getInterceptorImages(token: JWT | null): Promise<ServerActionResponse> {
+    return this.getAction(`${IMAGES_URL}?type=INTERCEPTOR`, token);
+  }
+
+  getModelImages(token: JWT | null): Promise<ServerActionResponse> {
+    return this.getAction(`${IMAGES_URL}?type=NIM`, token);
+  }
+
+  getImage(id: string, token: JWT | null): Promise<ServerActionResponse> {
+    return this.getAction(IMAGE_URL(id), token);
+  }
+
+  getImageVersions(name: string, token: JWT | null): Promise<ServerActionResponse> {
+    return this.getAction(IMAGE_VERSIONS_URL(name), token);
+  }
+
+  getImagesWithVersions(type: string, token: JWT | null): Promise<ServerActionResponse> {
+    return this.getAction(IMAGES_WITH_VERSIONS(type), token);
+  }
+
+  createImage(server: Partial<Image>, token: JWT | null): Promise<ServerActionResponse> {
+    return this.postAction(IMAGES_URL, server, token);
+  }
+
+  deleteImage(id: string, token: JWT | null): Promise<ServerActionResponse> {
+    return this.deleteAction(IMAGE_URL(id), token);
+  }
+
+  updateImage(server: Partial<Image>, token: JWT | null): Promise<ServerActionResponse> {
+    const { id, ...rest } = server;
+    return this.putAction(IMAGE_URL(id), rest, token);
+  }
+
+  installImage(id: string, token: JWT | null): Promise<ServerActionResponse> {
+    return this.postAction(INSTALL_IMAGES_URL, { imageDefinitionId: id }, token);
+  }
+
+  getImageLogs(id: string, token: JWT | null): Promise<Image | null> {
+    return this.get(IMAGE_LOGS_URL(id), token);
+  }
+}

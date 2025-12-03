@@ -1,4 +1,4 @@
-import { ColDef, ITextFilterParams } from 'ag-grid-community';
+import { ColDef, ICellRendererParams, ITextFilterParams } from 'ag-grid-community';
 
 import ValidityStatusCellRenderer from '@/src/components/Grid/CellRenderers/ValidityStatusCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
@@ -22,6 +22,14 @@ import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
 import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
 import { getValidityStatus } from '@/src/components/EntityView/Status/utils';
+import DeploymentStatusIndicator from '@/src/components/Common/DeploymentStatusIndicator/DeploymentStatusIndicator';
+import { STATUS_I18N_KEYS, TRANSPORT_TYPES } from '@/src/constants/deployments/images';
+import { CONTAINER_STATUS, KubEventType } from '@/src/types/deployments/containers';
+import { EVENT_TYPES, POD_OBJECT_KIND } from '@/src/constants/deployments/containers';
+import { IMAGE_STATUS } from '@/src/types/deployments/images';
+import VersionsSelect from '@/src/components/Common/VersionsSelect/VersionsSelect';
+import { SelectVariant } from '@epam/ai-dial-ui-kit';
+import { ImageVersion } from '@/src/models/deployments/images';
 
 const stringFilter: Partial<ColDef> = {
   filterParams: {
@@ -353,7 +361,7 @@ export const getPublicationColumns = (open: (publication?: Publication) => void)
   return [...PUBLICATION_COLUMNS, ACTION_COLUMN(actions)];
 };
 
-export const ENTITIES_COLUMNS = <T>(
+export const ENTITIES_COLUMNS = <T extends object>(
   columns: ColDef[],
   remove?: (entity?: T) => void,
   duplicate?: (entity?: T) => void,
@@ -518,8 +526,200 @@ export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
   { field: 'image', headerName: 'Image' },
 ];
 
-export const MCP_CONTAINERS_COLUMNS: ColDef[] = [
-  NAME_COLUMN_WITH_SORT,
-  DESCRIPTION_COLUMN,
-  { field: 'image', headerName: 'MCP Image' },
+export const CONTAINERS_COLUMNS = (t: (key: string) => string): ColDef[] => [
+  { field: 'name', headerName: 'Name', hide: false },
+  { field: 'description', headerName: 'Description', hide: false },
+  { field: 'imageDefinitionId', headerName: 'Container Image', hide: false },
+  {
+    field: 'status',
+    headerName: 'Status',
+    hide: false,
+    cellRenderer: (params: ICellRendererParams) => <DeploymentStatusIndicator status={params.data.status} />,
+    tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as CONTAINER_STATUS]),
+    filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as CONTAINER_STATUS]),
+  },
+  { field: 'id', headerName: 'ID', hide: true },
+  { field: 'url', headerName: 'Container URL', hide: true },
+  { field: 'author', headerName: 'Author', hide: true },
+  {
+    field: 'createdAt',
+    headerName: 'Create time',
+    hide: true,
+    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
+    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
+    filterValueGetter: (params) => formatDateTimeToLocalString(params.data[params.colDef.field || '']),
+  },
+  {
+    field: 'updatedAt',
+    headerName: 'Update time',
+    hide: false,
+    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
+    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
+    filterValueGetter: (params) => formatDateTimeToLocalString(params.data[params.colDef.field || '']),
+  },
+];
+
+export const CONTAINER_EVENTS = (t: (key: string, options?: Record<string, string | number>) => string): ColDef[] => [
+  {
+    field: 'eventType',
+    headerName: 'Type',
+    hide: false,
+    cellRenderer: (params: ICellRendererParams) => <DeploymentStatusIndicator status={params.data.eventType} />,
+    tooltipValueGetter: ({ value }) => t(EVENT_TYPES[value as KubEventType]),
+    filterValueGetter: (params) => t(EVENT_TYPES[params.data[params.colDef.field || ''] as KubEventType]),
+    maxWidth: 150,
+  },
+  { field: 'message', headerName: 'Message', hide: false },
+  {
+    field: 'firstTimestamp',
+    headerName: 'Time',
+    hide: false,
+    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
+    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
+    filterValueGetter: (params) => formatDateTimeToLocalString(params.data[params.colDef.field || '']),
+    maxWidth: 200,
+  },
+  {
+    field: 'involvedObjectName',
+    headerName: 'Pod',
+    hide: true,
+    valueFormatter: (params) => (params.data.involvedObjectKind === POD_OBJECT_KIND ? params.value : ''),
+    filterValueGetter: (params) =>
+      params.data.involvedObjectKind === POD_OBJECT_KIND ? params.data[params.colDef.field || ''] : '',
+    tooltipValueGetter: (params) => (params.data.involvedObjectKind === POD_OBJECT_KIND ? params.value : ''),
+  },
+];
+
+export const BASE_IMAGE_LIST_COLUMNS: ColDef[] = [
+  { field: 'name', headerName: 'Name', hide: false },
+  { field: 'version', headerName: 'Version', hide: false },
+  { field: 'description', headerName: 'Description', hide: false },
+  {
+    field: 'topics',
+    headerName: 'Topics',
+    hide: false,
+    cellRenderer: (params: ICellRendererParams) => <TopicsCellRenderer topics={params.data?.topics || []} />,
+    tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
+    filterValueGetter: (params) =>
+      params.data[params.colDef.field || ''].length ? params.data[params.colDef.field || ''].join(' ') : '',
+  },
+];
+
+export const CHANGE_IMAGE_VERSION = (t: (key: string) => string): ColDef[] => [
+  { field: 'name', headerName: 'Name', hide: false },
+  { field: 'version', headerName: 'Version', hide: false },
+  { field: 'id', headerName: 'ID', hide: false },
+  {
+    field: 'buildStatus',
+    headerName: 'Status',
+    hide: false,
+    cellRenderer: (params: ICellRendererParams) => <DeploymentStatusIndicator status={params.data?.status} />,
+    tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as IMAGE_STATUS]),
+    filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as IMAGE_STATUS]),
+  },
+];
+
+export const IMAGES_LIST_FOR_CONTAINER_COLUMNS = (onChange: (id: string) => void): ColDef[] => {
+  return [
+    { field: 'name', headerName: 'Name', hide: false },
+    {
+      field: 'versions',
+      headerName: 'Versions',
+      hide: false,
+      maxWidth: 150,
+      minWidth: 150,
+      cellRenderer: (params: ICellRendererParams) => {
+        return (
+          <div className="w-full">
+            <VersionsSelect
+              selected={params.data.selectedId}
+              versions={params.data.availableVersions}
+              onChange={onChange}
+              variant={SelectVariant.Primary}
+            />
+          </div>
+        );
+      },
+    },
+    {
+      field: 'description',
+      headerName: 'Description',
+      hide: false,
+      valueGetter: (params) =>
+        params.data.availableVersions.find((v: ImageVersion) => v.id === params.data.selectedId).description,
+    },
+    {
+      field: 'topics',
+      headerName: 'Topics',
+      hide: false,
+      cellRenderer: (params: ICellRendererParams) => (
+        <TopicsCellRenderer
+          topics={params.data.availableVersions.find((v: ImageVersion) => v.id === params.data.selectedId).topics || []}
+        />
+      ),
+      tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
+      filterValueGetter: (params) =>
+        params.data[params.colDef.field || ''].length ? params.data[params.colDef.field || ''].join(' ') : '',
+    },
+  ];
+};
+
+export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
+  ...BASE_IMAGE_LIST_COLUMNS,
+  {
+    field: 'buildStatus',
+    headerName: 'Status',
+    hide: false,
+    cellRenderer: (params: ICellRendererParams) => <DeploymentStatusIndicator status={params.data?.buildStatus} />,
+    tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as IMAGE_STATUS]),
+    filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as IMAGE_STATUS]),
+  },
+  {
+    field: 'createdAt',
+    headerName: 'Create time',
+    hide: true,
+    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
+    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
+    filterValueGetter: (params) => formatDateTimeToLocalString(params.data[params.colDef.field || '']),
+  },
+  {
+    field: 'updatedAt',
+    headerName: 'Update time',
+    hide: false,
+    valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
+    tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
+    filterValueGetter: (params) => formatDateTimeToLocalString(params.data[params.colDef.field || '']),
+  },
+  { field: 'source.$type', headerName: 'Source', hide: true },
+  { field: 'license', headerName: 'License', hide: true },
+];
+
+export const MCP_IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => {
+  return [
+    ...IMAGES_LIST_COLUMNS(t),
+    {
+      field: 'transportType',
+      headerName: 'Transport type',
+      hide: true,
+      valueFormatter: ({ value }) => TRANSPORT_TYPES.find((transport) => transport.id === value)?.name || value,
+      tooltipValueGetter: ({ value }) => TRANSPORT_TYPES.find((transport) => transport.id === value)?.name || value,
+      filterValueGetter: (params) =>
+        TRANSPORT_TYPES.find((transport) => transport.id === params.data[params.colDef.field || ''])?.name ||
+        params.data[params.colDef.field || ''],
+    },
+  ];
+};
+
+export const IMAGE_DEPENDENCIES_COLUMNS = (t: (key: string) => string): ColDef[] => [
+  { field: 'name', headerName: 'Name', hide: false },
+  { field: 'description', headerName: 'Description', hide: false },
+  { field: 'id', headerName: 'ID', hide: false },
+  {
+    field: 'status',
+    headerName: 'Status',
+    hide: false,
+    cellRenderer: (params: ICellRendererParams) => <DeploymentStatusIndicator status={params.data.status} />,
+    tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as IMAGE_STATUS]),
+    filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as IMAGE_STATUS]),
+  },
 ];

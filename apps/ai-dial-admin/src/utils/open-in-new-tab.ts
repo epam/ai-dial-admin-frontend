@@ -4,7 +4,7 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
-import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 
 export const onOpenInNewTab = (route?: ApplicationRoute, entity?: unknown, entityType?: DEPLOYMENT_ENTITY) => {
   const url = getUrnForEntity(route, entity, entityType);
@@ -51,7 +51,7 @@ export const getEntityPath = (
     case ApplicationRoute.McpDeployments:
     case ApplicationRoute.InterceptorDeployments:
     case ApplicationRoute.ModelDeployments:
-      return `${encodeURIComponent((data as Container).id)}?entityType=${entityType || ''}`;
+      return `${encodeURIComponent((data as { id: string }).id)}?entityType=${entityType || ''}`;
 
     default:
       return encodeURIComponent((data as BaseEntity).name || '');
