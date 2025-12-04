@@ -3,7 +3,7 @@ import { AdaptersApi } from '@/src/server/entities/adapters-api';
 import { ApplicationRunnersApi } from '@/src/server/entities/application-runners-api';
 import { ApplicationsApi } from '@/src/server/entities/applications-api';
 import { AssetsApi } from '@/src/server/entities/assets-api';
-import { FoldersApi } from '@/src/server/entities/folders-api';
+import { FoldersApi } from '@/src/server/entities/assets/folders-api';
 import { InterceptorTemplatesApi } from '@/src/server/entities/interceptor-templates-api';
 import { InterceptorsApi } from '@/src/server/entities/interceptors-api';
 import { KeysApi } from '@/src/server/entities/keys-api';
