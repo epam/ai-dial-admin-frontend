@@ -1116,6 +1116,8 @@ export enum ContainersI18nKey {
   ContainerStopSuccess = 'Containers.ContainerStopSuccess',
   ContainerSuccessDescription = 'Containers.ContainerSuccessDescription',
   Pod = 'Containers.Pod',
+  ContainerRestartWarning = 'Containers.ContainerRestartWarning',
+  ContainersRestartWarning = 'Containers.ContainersRestartWarning',
 }
 
 export enum KubEventsI18nKey {
