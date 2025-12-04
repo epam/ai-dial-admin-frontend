@@ -15,42 +15,38 @@ import { useI18n } from '@/src/locales/client';
 import { ImportFileType } from '@/src/types/import';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { ApplicationRoute } from '@/src/types/routes';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { getIgnorePathTitles } from '@/src/utils/import/get-ignore-path-title';
 
 interface Props {
   files: File[];
-  changeFile: (files: File[]) => void;
+  route?: ApplicationRoute;
   fileType: string;
   fileTypes: RadioButtonWithContent[];
-  changeFileType: (type: string) => void;
-  isInvalid?: (file: File) => boolean;
   maxFilesCount?: number;
   ignorePaths?: boolean;
   setIgnorePaths?: Dispatch<SetStateAction<boolean>>;
-  route?: ApplicationRoute;
+  onChangeFile: (files: File[]) => void;
+  onChangeFileType: (type: string) => void;
+  isInvalid?: (file: File) => boolean;
 }
 
 const ImportFileTypeSelector: FC<Props> = ({
   files,
-  changeFile,
+  onChangeFile,
   fileTypes,
   fileType,
-  changeFileType,
+  onChangeFileType,
   isInvalid,
   maxFilesCount,
   ignorePaths,
   setIgnorePaths,
   route,
 }) => {
-  const t = useI18n();
+  const t = useI18n() as (key: string) => string;
 
   const ignorePathsTitle = useMemo(() => {
-    if (route === ApplicationRoute.Prompts) {
-      return t(ImportI18nKey.PathsPrompt);
-    }
-    if (route === ApplicationRoute.Files) {
-      return t(ImportI18nKey.PathsFile);
-    }
-    return '';
+    return route ? getIgnorePathTitles(route, t) : '';
   }, [t, route]);
 
   const getFileIcon = (name: string) => {
@@ -66,10 +62,10 @@ const ImportFileTypeSelector: FC<Props> = ({
           radioButtons={fileTypes}
           activeRadioButton={fileType}
           elementId="file-type"
-          onChange={changeFileType}
+          onChange={onChangeFileType}
         />
 
-        {route === ApplicationRoute.Prompts && (
+        {isAssetWithVersion(route) && (
           <div className="flex flex-col">
             <Field fieldTitle={ignorePathsTitle} />
             <DialSwitch
@@ -96,7 +92,7 @@ const ImportFileTypeSelector: FC<Props> = ({
             fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
             fileCountError={t(ImportI18nKey.ArchiveDescription)}
             acceptTypes="application/zip, .zip, application/x-zip-compressed"
-            onChange={changeFile}
+            onChange={onChangeFile}
           />
         )}
         {fileType === ImportFileType.JSON && (
@@ -112,7 +108,7 @@ const ImportFileTypeSelector: FC<Props> = ({
             fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
             isInvalid={isInvalid}
             errorText={t(ImportI18nKey.PromptError)}
-            onChange={changeFile}
+            onChange={onChangeFile}
             maxFilesCount={maxFilesCount}
           />
         )}
@@ -126,7 +122,7 @@ const ImportFileTypeSelector: FC<Props> = ({
             files={files}
             acceptTypes="/"
             fileFormatError={t(ImportI18nKey.FileErrorType)}
-            onChange={changeFile}
+            onChange={onChangeFile}
             isInvalid={isInvalid}
             dynamicIcon={getFileIcon}
             errorText={t(ImportI18nKey.FileError)}

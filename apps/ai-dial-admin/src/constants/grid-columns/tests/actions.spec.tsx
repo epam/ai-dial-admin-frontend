@@ -7,13 +7,13 @@ import {
   IconEye,
   IconFolderShare,
   IconInfinity,
-  IconRefresh,
   IconReload,
   IconReplace,
   IconTrash,
   IconTrashX,
   IconPlayerPlay,
   IconPlayerPause,
+  IconRefreshDot,
 } from '@tabler/icons-react';
 
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
@@ -44,7 +44,7 @@ describe('Actions :: getResourceRollbackOperation', () => {
   test('Should set Rollback operation', () => {
     const res = getResourceRollbackOperation(CLICK);
     expect(res.id).toBe(ActionMenuOperation.Resource_rollback);
-    expect(res.icon).toEqual(<IconRefresh {...BASE_ICON_PROPS} />);
+    expect(res.icon).toEqual(<IconRefreshDot {...BASE_ICON_PROPS} />);
     expect(res.onClick).toEqual(CLICK);
   });
 

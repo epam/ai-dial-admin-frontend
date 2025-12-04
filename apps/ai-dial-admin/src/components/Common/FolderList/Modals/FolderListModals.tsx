@@ -49,7 +49,15 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
 
   const createFolder = useCallback(
     (fileType: ImportFileType, file: ImportData, rules: DialRule[], path: string, ignorePaths?: boolean) => {
-      const body = getFormDataForImport(path, file, fileType, ConflictResolutionPolicy.SKIP, rules, ignorePaths).body;
+      const body = getFormDataForImport(
+        path,
+        file,
+        fileType,
+        ConflictResolutionPolicy.SKIP,
+        rules,
+        ignorePaths,
+        view,
+      ).body;
 
       getReqRef.current(createFolderWithFiles, body, fileType, view).then((res) => {
         if (res.success) {
