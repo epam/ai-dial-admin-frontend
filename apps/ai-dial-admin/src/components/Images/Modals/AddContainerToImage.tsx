@@ -93,7 +93,7 @@ const AddContainerToImage: FC<Props> = ({ title, isModalOpen, onClose, onApply, 
         {!dependencies.length ? (
           <DialNoDataContent title={t(EntitiesI18nKey.NoContainersType, { type: getTranslatedType(route, t) })} />
         ) : (
-          <div className="flex flex-col gap-4 h-full min-h-0  ">
+          <div className="flex flex-col gap-4 h-full min-h-0">
             <Grid additionalGridOptions={additionalGridOptions} onGridReady={onGridReady} />
             {selectedEntities.some((conainer) => conainer.status === CONTAINER_STATUS.RUNNING) && (
               <DialAlert message={t(ContainersI18nKey.ContainersRestartWarning)} variant={AlertVariant.Warning} />
