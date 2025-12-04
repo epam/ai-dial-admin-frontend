@@ -1,4 +1,4 @@
-import { ColDef, GridOptions } from 'ag-grid-community';
+import { ColDef } from 'ag-grid-community';
 
 import ActionColumn from '@/src/components/Grid/ActionColumn/ActionColumn';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
@@ -9,7 +9,6 @@ export const CACHE_LIMIT = 1000;
 export const NO_BORDER_CLASS = 'ag-grid-no-border';
 export const NO_CHECKBOX_CLASS = 'ag-grid-no-checkbox';
 
-export const ACTIONS_COLUMN_CELL_RENDERER_KEY = 'actionsColumn';
 export const ACTIONS_COLUMN_CEL_ID = 'actionsColumn';
 export const CHECKBOX_COLUMN_CEL_ID = 'checkboxColumn';
 export const DRAGGABLE_COLUMN_CEL_ID = 'draggableColumn';
@@ -70,8 +69,4 @@ export const DRAGGABLE_COL_DEF: ColDef = {
   colId: DRAGGABLE_COLUMN_CEL_ID,
   cellClass: NO_BORDER_CLASS,
   rowDrag: true,
-};
-
-export const ACTION_COLUMN_COMPONENTS: Partial<GridOptions> = {
-  components: { [ACTIONS_COLUMN_CELL_RENDERER_KEY]: ActionColumn },
 };
