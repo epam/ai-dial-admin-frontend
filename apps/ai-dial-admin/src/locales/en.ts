@@ -1134,6 +1134,8 @@ export default {
     Stopped: 'Stopped',
     Stopping: 'Stopping...',
     Pod: 'Pod',
+    ContainerRestartWarning: 'Container will be restarted after changing image version.',
+    ContainersRestartWarning: 'Containers with "Running" status will be restarted.',
   },
   KubEvents: {
     Normal: 'Normal',
