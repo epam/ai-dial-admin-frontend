@@ -1109,6 +1109,7 @@ export enum ContainersI18nKey {
   Preparing = 'Containers.Preparing',
   Failed = 'Containers.Failed',
   Stopped = 'Containers.Stopped',
+  Stopping = 'Containers.Stopping',
   ContainerRunSuccess = 'Containers.ContainerRunSuccess',
   ContainerRunFailed = 'Containers.ContainerRunFailed',
   ContainerStopSuccess = 'Containers.ContainerStopSuccess',

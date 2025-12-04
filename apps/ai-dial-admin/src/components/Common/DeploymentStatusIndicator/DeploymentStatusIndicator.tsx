@@ -17,7 +17,9 @@ const DeploymentStatusIndicator: FC<Props> = ({ status }) => {
 
   return (
     <div className="flex items-center">
-      {status === IMAGE_STATUS.BUILDING || status === CONTAINER_STATUS.PENDING ? (
+      {status === IMAGE_STATUS.BUILDING ||
+      status === CONTAINER_STATUS.PENDING ||
+      status === CONTAINER_STATUS.STOPPING ? (
         <div className="mr-2">
           <DialLoader size={16} className="w-2 h-2" />
         </div>
