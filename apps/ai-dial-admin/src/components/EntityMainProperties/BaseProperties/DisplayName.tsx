@@ -16,7 +16,7 @@ interface Props {
 }
 
 const DisplayNameControl: FC<Props> = ({ displayName, onChange, required, ...props }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const { dispatch } = useSaveValidationContext();
 
   const [displayNameError, setDisplayNameError] = useState<FieldError | null>(null);

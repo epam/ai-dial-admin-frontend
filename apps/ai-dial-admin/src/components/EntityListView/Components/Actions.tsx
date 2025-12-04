@@ -68,7 +68,7 @@ const Actions = <T extends object>({
   setCurrentEntity,
   setIsBulkView,
 }: Props<T>) => {
-  const t = useI18n() as (s: string, params?: Record<string, string>) => string;
+  const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const folderContext = context?.();

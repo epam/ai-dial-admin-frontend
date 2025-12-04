@@ -22,7 +22,7 @@ interface Props {
 }
 
 const DuplicateKey: FC<Props> = ({ onDuplicate, isModalOpen, onClose, entity, names, keys }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
 
   const { isValid, dispatch } = useSaveValidationContext();
 

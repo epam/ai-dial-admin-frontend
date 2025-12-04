@@ -19,7 +19,7 @@ interface Props {
 }
 
 const DeleteModal: FC<Props> = ({ title, description, isModalOpen, onClose, onApply, dependencies, route }) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
 
   const containerClassNames = useMemo(() => {
     return classNames(

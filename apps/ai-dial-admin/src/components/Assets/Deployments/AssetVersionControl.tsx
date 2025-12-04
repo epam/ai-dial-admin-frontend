@@ -42,7 +42,7 @@ const AssetVersionControl: FC<Props> = ({
   addedVersions,
   setAddedVersions,
 }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
 
   const router = useRouter();
   const { showNotification } = useNotification();

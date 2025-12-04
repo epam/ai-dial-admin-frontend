@@ -55,7 +55,7 @@ const FolderCreateSetup: FC<Props> = ({
   ignorePaths,
   setIgnorePaths,
 }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
 
   const ignorePathsTitle = useMemo(() => {
     return view ? getIgnorePathTitles(view, t) : '';

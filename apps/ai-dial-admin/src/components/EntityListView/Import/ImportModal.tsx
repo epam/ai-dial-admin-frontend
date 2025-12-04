@@ -35,7 +35,7 @@ interface Props {
 
 const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply }) => {
   const folderContext = context?.();
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
 
   const fileTypes = IMPORT_FILE_TYPES(t, route);
   const [resolutions, setResolutions] = useState(IMPORT_RESOLUTIONS(t));

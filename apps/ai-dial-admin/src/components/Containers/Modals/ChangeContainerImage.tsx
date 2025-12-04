@@ -27,7 +27,7 @@ interface Props {
 }
 
 const ChangeContainerImage: FC<Props> = ({ onClose, isModalOpen, modalTitle, route, onApply, image }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const { showNotification } = useNotification();
 
   const [id, setId] = useState(image.id);

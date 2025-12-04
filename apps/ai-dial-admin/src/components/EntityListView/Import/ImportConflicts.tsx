@@ -44,7 +44,7 @@ const ImportConflicts: FC<Props> = ({
   setEditedFileMap,
   setStepsState,
 }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
 
   const isAssetWithVersionImport = isAssetWithVersion(route);
   const fileCount = [...filesMap.values()].reduce((total, value) => total + value.files.length, 0);

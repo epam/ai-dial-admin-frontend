@@ -35,7 +35,7 @@ const CreateEntityModal: FC<Props> = ({
   route,
   transport,
 }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
 
   const [entity, setEntity] = useState<DialModel | Toolset | DialInterceptor>(
     getEntityTemplate(route, container, t, transport),

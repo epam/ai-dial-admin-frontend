@@ -18,7 +18,7 @@ interface Props {
   names?: string[];
 }
 const DuplicateTemplate: FC<Props> = ({ onDuplicate, isModalOpen, onClose, template, names }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const { isValid, dispatch } = useSaveValidationContext();
 
   const [clonedTemplate, setTemplate] = useState<InterceptorTemplate>({

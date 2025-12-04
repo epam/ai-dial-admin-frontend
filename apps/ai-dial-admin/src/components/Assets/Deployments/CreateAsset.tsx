@@ -34,7 +34,7 @@ interface Props {
 }
 
 const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onCreate, onClose }) => {
-  const t = useI18n() as (t: string, props?: Record<string, string>) => string;
+  const t = useI18n();
   const { isValid, dispatch } = useSaveValidationContext();
   const { showNotification } = useNotification();
   const router = useRouter();

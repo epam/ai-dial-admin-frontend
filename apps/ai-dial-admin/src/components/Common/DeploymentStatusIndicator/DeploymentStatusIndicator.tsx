@@ -12,12 +12,14 @@ interface Props {
 }
 
 const DeploymentStatusIndicator: FC<Props> = ({ status }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
   const indicatorClassNames = classNames('flex w-2 h-2 mr-1 rounded no-user-select', getActionClass(status));
 
   return (
     <div className="flex items-center">
-      {status === IMAGE_STATUS.BUILDING || status === CONTAINER_STATUS.PENDING ? (
+      {status === IMAGE_STATUS.BUILDING ||
+      status === CONTAINER_STATUS.PENDING ||
+      status === CONTAINER_STATUS.STOPPING ? (
         <div className="mr-2">
           <DialLoader size={16} className="w-2 h-2" />
         </div>

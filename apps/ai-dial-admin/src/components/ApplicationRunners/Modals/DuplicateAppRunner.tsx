@@ -19,7 +19,7 @@ interface Props {
 }
 
 const DuplicateScheme: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose, entity }) => {
-  const t = useI18n() as (t: string, props?: Record<string, string>) => string;
+  const t = useI18n();
 
   const [clonedEntity, setEntity] = useState<DialApplicationScheme>({
     ...entity,

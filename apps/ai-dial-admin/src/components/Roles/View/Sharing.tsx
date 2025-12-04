@@ -29,7 +29,7 @@ interface Props {
 }
 
 const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const [gridApi, setGridApi] = useState<GridApi>();
 
   const onChangeTypeSharing = useCallback(

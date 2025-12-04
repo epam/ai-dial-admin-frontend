@@ -24,7 +24,7 @@ interface Props {
 }
 
 const EntityDependencies: FC<Props> = ({ entity, applications, models, onChangeEntity }) => {
-  const t = useI18n() as (str: string) => string;
+  const t = useI18n();
   const [rowData, setRowData] = useState<EntitiesGridData[]>([]);
   const [availableModels, setAvailableModels] = useState<DialModel[]>([]);
   const [availableApplications, setAvailableApplications] = useState<DialApplication[]>([]);

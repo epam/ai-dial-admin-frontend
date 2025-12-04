@@ -36,7 +36,7 @@ interface Props {
 }
 
 const FolderCreateModal: FC<Props> = ({ isModalOpen, folderPath, view, onClose, onApply }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
 
   const fileTypes = IMPORT_FILE_TYPES(t, view);
 

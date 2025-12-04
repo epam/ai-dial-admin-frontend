@@ -70,7 +70,7 @@ const HeaderButtons: FC<Props> = ({
   containerNames,
   versions,
 }) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
   const { showNotification } = useNotification();
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();

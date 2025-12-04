@@ -31,7 +31,7 @@ const ConfigContentGrid: FC<Props> = ({
   selectedTopics,
   onChangeItemsCount,
 }) => {
-  const t = useI18n() as (v: string) => string;
+  const t = useI18n();
 
   const [gridApi, setGridApi] = useState<GridApi>();
 

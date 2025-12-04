@@ -1132,6 +1132,7 @@ export default {
     Preparing: 'Preparing...',
     Failed: 'Failed',
     Stopped: 'Stopped',
+    Stopping: 'Stopping...',
     Pod: 'Pod',
   },
   KubEvents: {

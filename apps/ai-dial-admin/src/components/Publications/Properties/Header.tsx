@@ -24,7 +24,7 @@ interface Props {
 }
 
 const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJsonView, setIsJsonView }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
 
