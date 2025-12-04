@@ -22,6 +22,7 @@ import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
 import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
 import { getValidityStatus } from '@/src/components/EntityView/Status/utils';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import DeploymentStatusIndicator from '@/src/components/Common/DeploymentStatusIndicator/DeploymentStatusIndicator';
 import { STATUS_I18N_KEYS, TRANSPORT_TYPES } from '@/src/constants/deployments/images';
 import { CONTAINER_STATUS, KubEventType } from '@/src/types/deployments/containers';
@@ -325,7 +326,7 @@ export const EXPORT_COLUMNS = (
 ): ColDef[] => {
   const columns: ColDef[] = [NAME_COLUMN_WITH_SORT, AUTHOR_COLUMN, UPDATED_AT_COLUMN];
 
-  if (route === ApplicationRoute.Prompts) {
+  if (isAssetWithVersion(route)) {
     columns.splice(1, 0, {
       headerName: 'Version',
       field: 'version',

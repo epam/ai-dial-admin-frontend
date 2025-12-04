@@ -4,12 +4,8 @@ import { useRouter } from 'next/navigation';
 import { Dispatch, ReactNode, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { generateExportList } from '@/src/components/Assets/ExportAssets/export';
-import {
-  getDuplicateModal,
-  getExportFunction,
-  getJsonFileName,
-  getNotificationType,
-} from '@/src/components/EntityListView/utils';
+import { getDuplicateModal, getExportFunction, getNotificationType } from '@/src/components/EntityListView/utils';
+import { getJsonFileName } from '@/src/utils/import/get-json-name';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { DeleteI18nKey, ExportI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
@@ -24,7 +20,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { downloadFile, downloadJson } from '@/src/utils/download';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { getListOfPathsToBulkDelete, getListOfPathsToMove } from '@/src/utils/files/path';
-import { isAssetWithVersion, isDeploymentAsset } from '@/src/utils/is-asset-view';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getBulkNotificationTitle } from '@/src/components/EntityView/Modals/Delete/utils';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
@@ -172,7 +168,7 @@ const Actions = <T extends object>({
           );
           if (
             route === ApplicationRoute.Files ||
-            ((route === ApplicationRoute.Prompts || isDeploymentAsset(route)) && exportType === ImportFileType.ARCHIVE)
+            (isAssetWithVersion(route) && exportType === ImportFileType.ARCHIVE)
           ) {
             const { blob, fileName } = res as { blob: Blob; fileName: string };
             downloadFile(blob, fileName);
