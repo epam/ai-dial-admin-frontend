@@ -24,7 +24,7 @@ interface Props {
 }
 
 const TableView: FC<Props> = ({ properties, isSkipRefresh, onChangeProperties, isAddClicked, setIsAddClicked }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
   const [gridApi, setGridApi] = useState<GridApi>();
   const data = useMemo(() => properties, [properties]);
   const propRef = useRef(properties || []);

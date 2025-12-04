@@ -8,8 +8,8 @@ export const BASE_IMAGES_URL = `${API}/images`;
 export const IMAGES_URL = `${BASE_IMAGES_URL}/definitions`;
 export const INSTALL_IMAGES_URL = `${BASE_IMAGES_URL}/builds`;
 export const IMAGE_URL = (id?: string) => `${IMAGES_URL}/${id || ''}`;
-export const IMAGE_VERSIONS_URL = (id?: string) => `${IMAGES_URL}/${id || ''}/versions`;
-export const IMAGE_LOGS_URL = (id?: string) => `${INSTALL_IMAGES_URL}/${id || ''}/logs`;
+export const IMAGE_VERSIONS_URL = (id: string) => `${IMAGES_URL}/${id}/versions`;
+export const IMAGE_LOGS_URL = (id: string) => `${INSTALL_IMAGES_URL}/${id}/logs`;
 export const IMAGES_WITH_VERSIONS = (type: string) => `${IMAGES_URL}/grouped?type=${type}`;
 
 export class ImagesApi extends BaseApi {

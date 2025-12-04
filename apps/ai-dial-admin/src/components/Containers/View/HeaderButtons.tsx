@@ -70,7 +70,7 @@ const HeaderButtons = <T extends Container>({
   entityNames,
   transport,
 }: Props<T>) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { visualizerConnector } = useAppContext();

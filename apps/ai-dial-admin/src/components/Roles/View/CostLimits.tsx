@@ -15,7 +15,7 @@ interface Props {
 }
 
 const RoleCostLimit: FC<Props> = ({ selectedRole, onChangeRole }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const [costLimitExist, setCostLimitExist] = useState<boolean>(false);
 
   useEffect(() => {

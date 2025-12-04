@@ -29,7 +29,7 @@ interface Props {
 }
 
 const ConfigurationGrid: FC<Props> = ({ selectedTab, tabData, currentState, prevState }) => {
-  const t = useI18n() as (v: string) => string;
+  const t = useI18n();
 
   const [rowData, setRowData] = useState<BaseEntity[]>([]);
   const [colDefs, setColDefs] = useState<ColDef[]>([]);

@@ -18,7 +18,7 @@ interface Props {
   children?: ReactNode;
 }
 const ViewHeader: FC<Props> = ({ activity, children }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const currentLocale = useCurrentLocale();
 
   const openResourceInNewTab = (activity: DialActivity) => {

@@ -120,5 +120,12 @@ describe('entity utils', () => {
         path: '',
       });
     });
+
+    test('handles root folder', () => {
+      expect(splitFolderId('bucket')).toEqual({
+        base: 'bucket/',
+        path: '',
+      });
+    });
   });
 });

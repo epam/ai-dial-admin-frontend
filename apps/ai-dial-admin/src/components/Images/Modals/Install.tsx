@@ -14,7 +14,7 @@ interface Props {
 }
 
 const Install: FC<Props> = ({ isModalOpen, title, onClose, onApply, image }) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
 
   const containerClassName = classNames('flex flex-col w-full md:max-w-[400px] lg:max-w-[400pxs]');
 

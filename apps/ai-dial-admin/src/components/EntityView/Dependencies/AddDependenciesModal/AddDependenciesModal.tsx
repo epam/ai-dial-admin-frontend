@@ -21,7 +21,7 @@ interface Props {
 }
 
 const AddDependenciesModal: FC<Props> = ({ isModalOpen, entities, entityType, onClose, onApply }) => {
-  const t = useI18n() as (v: string) => string;
+  const t = useI18n();
 
   const [selectedEntityName, setSelectedEntityName] = useState<string | undefined>();
 

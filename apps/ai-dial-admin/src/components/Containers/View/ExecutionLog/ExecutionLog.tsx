@@ -20,7 +20,7 @@ function getPodsTabs(pods: Pod[], t: (key: string) => string): TabModel[] {
 }
 
 const ExecutionLog: FC<Props> = ({ containerId }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const [pods, setPods] = useState<Pod[]>([]);
   const [activeTab, setActiveTab] = useState<string>('');
   const [tabs, setTabs] = useState<TabModel[]>([]);

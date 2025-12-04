@@ -17,7 +17,7 @@ interface Props {
 }
 
 const EnvVariables: FC<Props> = ({ variables, onChangeVariables }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
 
   const onAddVariable = useCallback(() => {
     const variableDraft: EnvironmentVariable = {
