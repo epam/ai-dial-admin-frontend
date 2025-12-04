@@ -47,7 +47,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
 
-  const createFolder = useCallback(
+  const onCreateFolder = useCallback(
     (fileType: ImportFileType, file: ImportData, rules: DialRule[], path: string, ignorePaths?: boolean) => {
       const body = getFormDataForImport(
         path,
@@ -120,7 +120,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
             folderPath={selectedFolder}
             isModalOpen={isModalOpen}
             onClose={handleClose}
-            onApply={createFolder}
+            onApply={onCreateFolder}
           />,
           document.body,
         )}
