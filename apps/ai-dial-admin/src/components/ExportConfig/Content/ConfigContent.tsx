@@ -29,7 +29,7 @@ const ConfigContent: FC<Props> = ({
   selectedExportType,
   selectedTopics,
 }) => {
-  const t = useI18n() as (v: string) => string;
+  const t = useI18n();
 
   const [selectedTab, setSelectedTab] = useState('');
   const [selectedTabTitle, setSelectedTabTitle] = useState('');

@@ -44,7 +44,7 @@ interface Props {
 }
 
 const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
-  const t = useI18n() as (str: string) => string;
+  const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());

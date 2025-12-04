@@ -22,7 +22,7 @@ interface Props {
 }
 
 const CreateAppRunner: FC<Props> = ({ isModalOpen, names, onClose }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const router = useRouter();
   const getReqRef = useRef(useProtectedRequest());
   const { showNotification } = useNotification();

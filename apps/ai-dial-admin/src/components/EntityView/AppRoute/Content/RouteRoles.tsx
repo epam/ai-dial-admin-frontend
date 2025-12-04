@@ -28,7 +28,7 @@ interface Props {
 }
 
 const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, onChangeRoute, roles }) => {
-  const t = useI18n() as (str: string) => string;
+  const t = useI18n();
 
   const data = useMemo(() => {
     const userRoles = Object.keys(route.roleLimits || {});

@@ -40,7 +40,7 @@ interface Props {
 }
 
 const CreateAsset: FC<Props> = ({ onClose, isModalOpen, modalTitle, names, onCreate, container, route, transport }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const folderContext = useToolsetFolder();
   const [entity, setEntity] = useState<AssetToolset>(getAssetTemplate(route, container, t, transport) as AssetToolset);
   const [versionsMap, setVersionsMap] = useState<Record<string, string[]>>({});

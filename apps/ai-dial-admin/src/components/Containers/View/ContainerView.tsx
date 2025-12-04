@@ -55,7 +55,7 @@ const ContainerView: FC<Props> = ({
   createEntityAsAsset,
   entityNames,
 }) => {
-  const t = useI18n() as (key: string, param?: unknown) => string;
+  const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { disableDeploymentsJSONEditor } = useAppContext();
@@ -148,7 +148,10 @@ const ContainerView: FC<Props> = ({
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
 
-    if (selectedContainer.status === CONTAINER_STATUS.PENDING) {
+    if (
+      selectedContainer.status === CONTAINER_STATUS.PENDING ||
+      selectedContainer.status === CONTAINER_STATUS.STOPPING
+    ) {
       interval = setInterval(async () => {
         const { response, success, requestId } = await getContainer(selectedContainer.id as string);
         if (success && response) {
@@ -157,24 +160,41 @@ const ContainerView: FC<Props> = ({
             ...prev,
             status: updatedContainer.status,
           }));
-          if (updatedContainer.status !== CONTAINER_STATUS.PENDING && interval) {
+          if (
+            updatedContainer.status !== CONTAINER_STATUS.PENDING &&
+            updatedContainer.status !== CONTAINER_STATUS.STOPPING &&
+            interval
+          ) {
             clearInterval(interval);
-
-            if (updatedContainer.status === CONTAINER_STATUS.RUNNING) {
+            if (selectedContainer.status === CONTAINER_STATUS.PENDING) {
+              if (updatedContainer.status === CONTAINER_STATUS.RUNNING) {
+                showNotification(
+                  getSuccessNotification(
+                    t(ContainersI18nKey.ContainerRunSuccess, { type: getTranslatedType(route, t) }),
+                    t(ContainersI18nKey.ContainerSuccessDescription),
+                    5000,
+                  ),
+                );
+              }
+              if (updatedContainer.status === CONTAINER_STATUS.FAILED) {
+                showNotification(
+                  getErrorNotification(
+                    t(ContainersI18nKey.ContainerRunFailed, { type: getTranslatedType(route, t) }),
+                    '',
+                    requestId,
+                    5000,
+                  ),
+                );
+              }
+            }
+            if (
+              selectedContainer.status === CONTAINER_STATUS.STOPPING &&
+              updatedContainer.status === CONTAINER_STATUS.STOPPED
+            ) {
               showNotification(
                 getSuccessNotification(
-                  t(ContainersI18nKey.ContainerRunSuccess, { type: getTranslatedType(route, t) }),
-                  t(ContainersI18nKey.ContainerSuccessDescription),
-                  5000,
-                ),
-              );
-            }
-            if (updatedContainer.status === CONTAINER_STATUS.FAILED) {
-              showNotification(
-                getErrorNotification(
-                  t(ContainersI18nKey.ContainerRunFailed, { type: getTranslatedType(route, t) }),
+                  t(ContainersI18nKey.ContainerStopSuccess, { type: getTranslatedType(route, t) }),
                   '',
-                  requestId,
                   5000,
                 ),
               );

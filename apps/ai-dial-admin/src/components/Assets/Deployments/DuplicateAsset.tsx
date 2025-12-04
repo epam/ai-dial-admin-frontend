@@ -29,7 +29,7 @@ interface Props {
 }
 
 const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, context, onDuplicate, onClose }) => {
-  const t = useI18n() as (t: string, props?: Record<string, string>) => string;
+  const t = useI18n();
   const initialName = entity.name;
   const initialFolder = entity.folderId;
   const [duplicationType, setDuplicationType] = useState<string>(DuplicationTypes.VERSION);

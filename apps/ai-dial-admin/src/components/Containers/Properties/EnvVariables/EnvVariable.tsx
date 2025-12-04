@@ -35,7 +35,7 @@ const EnvVariable: FC<Props> = ({
   findColumn,
   moveColumn,
 }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const isTablet = useIsTabletScreen();
 
   const mountTypeItems = mountTypeDropdownItems(t);

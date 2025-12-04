@@ -19,7 +19,7 @@ interface Props {
 }
 
 const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, changeKey }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
 
   const [keyError, setKeyError] = useState<FieldError | null>(null);
 

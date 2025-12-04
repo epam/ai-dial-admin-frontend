@@ -20,7 +20,7 @@ interface Props {
 }
 
 const EntityAudit: FC<Props> = ({ entity, view }) => {
-  const t = useI18n() as (str: string) => string;
+  const t = useI18n();
 
   const { featureFlags } = useAppContext();
   const tabs = getAuditTabs(t, featureFlags, view);

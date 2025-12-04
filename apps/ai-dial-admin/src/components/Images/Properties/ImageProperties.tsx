@@ -20,7 +20,7 @@ interface Props {
 }
 
 const ImageProperties: FC<Props> = ({ image, setImage, isModal, route, setVersionError }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
 
   const containerClassNames = classNames(
     'flex flex-1 flex-col min-h-0 h-full gap-4',

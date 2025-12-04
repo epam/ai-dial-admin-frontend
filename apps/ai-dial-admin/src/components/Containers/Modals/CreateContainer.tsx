@@ -32,7 +32,7 @@ interface Props {
 }
 
 const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply, route, names }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const { showNotification } = useNotification();
   const { resourcesDefaults } = useAppContext();
 

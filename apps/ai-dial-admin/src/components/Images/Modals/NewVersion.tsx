@@ -20,7 +20,7 @@ interface Props {
 }
 
 const NewVersion: FC<Props> = ({ isModalOpen, title, onClose, onApply, image, versions, okLabel }) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
 
   const [version, setVersion] = useState<string>(semver.inc(image.version, 'patch') || '0.0.1');
   const [versionError, setVersionError] = useState<FieldError | null>(null);

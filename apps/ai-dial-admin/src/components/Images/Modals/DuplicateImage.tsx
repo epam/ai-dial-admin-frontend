@@ -35,7 +35,7 @@ interface Props {
 }
 
 const DuplicateImageModal: FC<Props> = ({ title, isModalOpen, image, onClose, onApply }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
 
   const containerClassName = 'flex flex-col lg:max-w-[55%] md:max-w-[75%]';
   const initialName = image.name;

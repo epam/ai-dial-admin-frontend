@@ -16,6 +16,7 @@ import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContext';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
+import { isValueTruthy } from '@/src/utils/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,7 +42,7 @@ export default async function Page(params: {
   try {
     const searchParams = await params.searchParams;
     oAuthCode = searchParams.code;
-    isUser = searchParams.isUser === 'true';
+    isUser = isValueTruthy(searchParams.isUser);
     const path = decodeURIComponent(searchParams.path);
     const name = decodeURIComponent((await params.params).id);
 

@@ -13,7 +13,7 @@ interface Props {
 }
 
 const Install: FC<Props> = ({ isModalOpen, title, onClose, onApply, image }) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
 
   return (
     <DialPopup

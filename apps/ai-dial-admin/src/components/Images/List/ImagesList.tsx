@@ -34,7 +34,7 @@ interface Props {
 }
 
 const ImagesList: FC<Props> = ({ route, imagesList }) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
 

@@ -68,7 +68,7 @@ const HeaderButtons = <T extends object>({
   onRemove,
   ...props
 }: Props<T>) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
   const isSimple = isSimpleEntity(view);
 
   const [isModalOpen, setIsModalOpen] = useState(false);

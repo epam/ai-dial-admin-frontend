@@ -42,7 +42,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
   isModal,
   errorText,
 }: Props<T>) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const { showNotification } = useNotification();
   const { embeddedApps } = useAppContext();
   const getReqRef = useRef(useProtectedRequest());

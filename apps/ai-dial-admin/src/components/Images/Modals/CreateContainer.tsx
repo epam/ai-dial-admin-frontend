@@ -20,7 +20,7 @@ interface Props {
 }
 
 const CreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, route, names, onCreate, image }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const { resourcesDefaults } = useAppContext();
   const [container, setContainer] = useState<Container>(getContainerTemplate(route, resourcesDefaults) as Container);
   const [isValid, setIsValid] = useState(false);
