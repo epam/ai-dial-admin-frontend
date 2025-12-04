@@ -18,6 +18,7 @@ const backgroundsColors = {
   'accent-primary': 'var(--bg-accent-primary, #5C8DEA)',
   'accent-secondary': 'var(--bg-accent-secondary, #37BABC)',
   'accent-tertiary': 'var(--bg-accent-tertiary, #A972FF)',
+
   'accent-primary-alpha': 'var(--bg-accent-primary-alpha, #5C8DEA2B)',
   'accent-secondary-alpha': 'var(--bg-accent-secondary-alpha, #37BABC26)',
   'accent-tertiary-alpha': 'var(--bg-accent-tertiary-alpha, #A972FF2B)',
@@ -98,21 +99,19 @@ module.exports = {
     placeholderColor: placeholderColor,
     textColor: { ...textColors, ...buttonsTextColors },
     gradientColorStops: backgroundsColors,
-    screens: {
-      sm: '640px',
-      md: '768px',
-      lg: '1024px',
-      xl: '1280px',
-      '2xl': '1536px',
-      mobile: '767px',
-      small_tablet: '1023px',
-      large_tablet: '1279px',
-      desktop: '2559px',
-      large_desktop: '2560px',
-    },
+
     extend: {
-      animation: {
-        'spin-steps': 'spin 0.75s steps(8, end) infinite',
+      screens: {
+        sm: '640px',
+        md: '768px',
+        lg: '1024px',
+        xl: '1280px',
+        '2xl': '1536px',
+        mobile: '767px',
+        small_tablet: '1023px',
+        large_tablet: '1279px',
+        desktop: '2559px',
+        large_desktop: '2560px',
       },
       boxShadow: {
         DEFAULT: '0 0 4px 0 var(--bg-blackout, #090D13B2)',
