@@ -8,18 +8,21 @@ describe('grid utils', () => {
       const data = { name: 'my-interceptor' };
       const result = getAdminEntityPath(ApplicationRoute.InterceptorDeployments, data);
       expect(result).toBe(`${ApplicationRoute.Interceptors}/my-interceptor`);
+      expect(getAdminEntityPath(ApplicationRoute.InterceptorDeployments, {})).toBe(`${ApplicationRoute.Interceptors}/`);
     });
 
     test('returns correct path for McpDeployments', () => {
       const data = { name: 'my-mcp' };
       const result = getAdminEntityPath(ApplicationRoute.McpDeployments, data);
       expect(result).toBe(`${ApplicationRoute.Toolsets}/my-mcp`);
+      expect(getAdminEntityPath(ApplicationRoute.McpDeployments, {})).toBe(`${ApplicationRoute.Toolsets}/`);
     });
 
     test('returns correct path for ModelDeployments', () => {
       const data = { name: 'my-model' };
       const result = getAdminEntityPath(ApplicationRoute.ModelDeployments, data);
       expect(result).toBe(`${ApplicationRoute.Models}/my-model`);
+      expect(getAdminEntityPath(ApplicationRoute.ModelDeployments, {})).toBe(`${ApplicationRoute.Models}/`);
     });
 
     test('encodes name in path', () => {

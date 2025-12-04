@@ -34,7 +34,7 @@ import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
 const SystemRollback: FC = () => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
 
   const tabs = SYSTEM_ROLLBACK_ENTITIES.map((e) => ({
     id: e,

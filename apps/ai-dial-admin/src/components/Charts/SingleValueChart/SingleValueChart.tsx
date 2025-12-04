@@ -18,7 +18,7 @@ interface Props {
 }
 
 const SingleValueChart: FC<Props> = ({ title, getData, unit, query, refreshTime }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
   const [data, setData] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 

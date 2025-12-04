@@ -1,7 +1,6 @@
 'use client';
 
 import React, { Dispatch, FC, SetStateAction, useCallback, useEffect, useState } from 'react';
-import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
 import { cloneDeep } from 'lodash';
 import { DialTabs } from '@epam/ai-dial-ui-kit';
@@ -26,6 +25,7 @@ import BuildLog from '@/src/components/Images/View/BuildLog/BuildLog';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 
 interface Props {
   image: Image;
@@ -36,7 +36,7 @@ interface Props {
 }
 
 const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versions }) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { disableDeploymentsJSONEditor } = useAppContext();
@@ -49,11 +49,6 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
   const [key, setKey] = useState(0);
 
   const tabs = getDeploymentsViewTabs(route, t, DEPLOYMENT_ENTITY.images, selectedImage.buildStatus);
-
-  const headerClassName = classNames(
-    'flex flex-row min-h-[34px]',
-    jsonEditorEnabled ? 'justify-end' : 'justify-between',
-  );
 
   const onChangeActiveTab = useCallback(
     (tab: string) => {
@@ -143,7 +138,7 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-        <div className={headerClassName}>
+        <div className={getViewHeaderClassName(jsonEditorEnabled)}>
           {!jsonEditorEnabled && (
             <div className="flex-1 min-h-0 relative">
               <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />

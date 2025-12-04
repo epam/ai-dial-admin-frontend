@@ -31,7 +31,7 @@ interface Props {
 }
 
 const DeploymentProperties: FC<Props> = ({ asset, view, runners, onChange }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
 
   return (
     <div className="h-full flex flex-col w-full gap-y-8">

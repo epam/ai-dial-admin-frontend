@@ -29,7 +29,7 @@ interface Props {
 }
 
 const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const titleKey = getAlertTitlePerView(view);
   const displayNameKey = getDisplayNamePerView(view);
   const [isValid, setIsValid] = useState(false);

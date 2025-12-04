@@ -36,7 +36,7 @@ const EntityProperties: FC<Props> = ({
   isEntityImmutable = false,
   initialValues,
 }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const { embeddedApps } = useAppContext();
   const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);

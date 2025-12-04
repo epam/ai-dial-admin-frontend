@@ -70,7 +70,7 @@ const HeaderButtons = <T extends Container>({
   entityNames,
   transport,
 }: Props<T>) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { visualizerConnector } = useAppContext();
@@ -116,7 +116,7 @@ const HeaderButtons = <T extends Container>({
         if (res.success) {
           router.refresh();
         } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       });
     }
@@ -127,19 +127,12 @@ const HeaderButtons = <T extends Container>({
       stopContainer(container.id).then((res) => {
         if (res.success) {
           router.refresh();
-          showNotification(
-            getSuccessNotification(
-              t(ContainersI18nKey.ContainerStopSuccess, { type: getTranslatedType(route, t) }),
-              t(ContainersI18nKey.ContainerSuccessDescription),
-              5000,
-            ),
-          );
         } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       });
     }
-  }, [container, route, router, showNotification, t]);
+  }, [container, router, showNotification]);
 
   const isValidEntity = () => {
     return validateContainer(container, route, names);
@@ -152,7 +145,7 @@ const HeaderButtons = <T extends Container>({
           onCloseModal();
           router.push(route);
         } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
       });
     }
@@ -267,7 +260,7 @@ const HeaderButtons = <T extends Container>({
           </div>
         ) : (
           <div className="flex flex-row items-center w-full">
-            <div className={`flex flex-row gap-3`}>
+            <div className="flex flex-row gap-3">
               {container.status === CONTAINER_STATUS.RUNNING && (
                 <>
                   {route === ApplicationRoute.McpDeployments ? (
@@ -304,6 +297,7 @@ const HeaderButtons = <T extends Container>({
                     className={buttonsClassNames}
                     label={t(ButtonsI18nKey.Stop)}
                     iconBefore={<IconPlayerPause {...BASE_ICON_PROPS} />}
+                    disabled={container.status === CONTAINER_STATUS.PENDING}
                     onClick={handleStopContainer}
                   />
                 ) : (
@@ -312,6 +306,7 @@ const HeaderButtons = <T extends Container>({
                     className={buttonsClassNames}
                     label={t(ButtonsI18nKey.Run)}
                     iconBefore={<IconPlayerPlay {...BASE_ICON_PROPS} />}
+                    disabled={container.status === CONTAINER_STATUS.STOPPING}
                     onClick={handleRunContainer}
                   />
                 )}

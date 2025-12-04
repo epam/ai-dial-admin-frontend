@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import classNames from 'classnames';
 import { ButtonVariant, DialButton, DialLoader, DialPopup } from '@epam/ai-dial-ui-kit';
+
 import { ApplicationRoute } from '@/src/types/routes';
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { useI18n } from '@/src/locales/client';
@@ -27,7 +27,7 @@ interface Props {
 }
 
 const ChangeContainerImage: FC<Props> = ({ onClose, isModalOpen, modalTitle, route, onApply, image }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const { showNotification } = useNotification();
 
   const [id, setId] = useState(image.id);
@@ -42,7 +42,6 @@ const ChangeContainerImage: FC<Props> = ({ onClose, isModalOpen, modalTitle, rou
     [route],
   );
 
-  const containerClassName = classNames('flex flex-col w-full lg:max-w-[55%] md:max-w-[75%]');
   const columnDefs = [...CHANGE_IMAGE_VERSION(t), ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTabAction)])];
 
   useEffect(() => {
@@ -69,7 +68,7 @@ const ChangeContainerImage: FC<Props> = ({ onClose, isModalOpen, modalTitle, rou
       title={modalTitle}
       portalId="ChangeContainerImageModal"
       open={isModalOpen}
-      className={containerClassName}
+      className="lg:max-w-[55%] md:max-w-[75%]"
     >
       <div className="flex flex-col py-4 px-6 overflow-auto max-h-[400px]">
         <>

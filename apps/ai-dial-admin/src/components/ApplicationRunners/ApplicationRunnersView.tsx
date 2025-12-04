@@ -56,7 +56,7 @@ interface Props {
 }
 
 const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names, interceptors }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();

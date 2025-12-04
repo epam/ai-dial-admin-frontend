@@ -58,7 +58,7 @@ const AuditView: FC<Props> = ({
   hideComparator,
   entity,
 }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const router = useRouter();
 
   const { showNotification } = useNotification();

@@ -46,7 +46,7 @@ const Files: FC<Props> = ({
   onChangeImportBody,
   onChangeFileType,
 }) => {
-  const t = useI18n() as (str: string) => string;
+  const t = useI18n();
 
   const [activeResolution, setActiveResolution] = useState(ConflictResolutionPolicy.OVERRIDE);
 

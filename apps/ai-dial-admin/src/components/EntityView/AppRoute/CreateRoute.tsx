@@ -13,7 +13,7 @@ interface Props {
 }
 
 const CreateRoute: FC<Props> = ({ isModalOpen, onClose, onCreate }) => {
-  const t = useI18n() as (str: string) => string;
+  const t = useI18n();
 
   const [name, setName] = useState('');
 

@@ -16,7 +16,7 @@ interface Props {
 }
 
 const ImageSourceFields: FC<Props> = ({ image, setImage, route }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
 
   const [sourceError, setSourceError] = useState<FieldError | null>(null);
 

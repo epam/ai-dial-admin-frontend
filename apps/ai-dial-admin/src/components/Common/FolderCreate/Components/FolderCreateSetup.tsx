@@ -23,6 +23,8 @@ import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { getErrorForFolderName } from '@/src/utils/validation/folder-error';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { getIgnorePathTitles } from '@/src/utils/import/get-ignore-path-title';
 
 interface Props {
   view?: ApplicationRoute;
@@ -53,20 +55,14 @@ const FolderCreateSetup: FC<Props> = ({
   ignorePaths,
   setIgnorePaths,
 }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
 
   const ignorePathsTitle = useMemo(() => {
-    if (view === ApplicationRoute.Prompts) {
-      return t(ImportI18nKey.PathsPrompt);
-    }
-    if (view === ApplicationRoute.Files) {
-      return t(ImportI18nKey.PathsFile);
-    }
-    return '';
+    return view ? getIgnorePathTitles(view, t) : '';
   }, [t, view]);
 
   const acceptTypes = useMemo(() => {
-    if (view === ApplicationRoute.Prompts) {
+    if (isAssetWithVersion(view)) {
       return 'application/json';
     }
     if (view === ApplicationRoute.Files) {
@@ -81,7 +77,7 @@ const FolderCreateSetup: FC<Props> = ({
     return <DialFileIcon extension={getNameExtensionFromFile(name).extension} />;
   };
 
-  const setCurrentSteps = useCallback(
+  const onChangeCurrentSteps = useCallback(
     (allFiles: File[], name: string, errorText?: string) => {
       const status = allFiles.length && name && !errorText ? StepStatus.VALID : void 0;
       setSteps((prev) => {
@@ -92,26 +88,25 @@ const FolderCreateSetup: FC<Props> = ({
               ...item,
               status,
             };
-          } else {
-            return item;
           }
+          return item;
         });
       });
     },
     [setSteps],
   );
 
-  const changeName = useCallback(
+  const onChangeName = useCallback(
     (name?: string) => {
       const error = getErrorForFolderName(name, void 0, t, true);
       setNameErrorText(error?.text || '');
       setFolderName(name || '');
-      setCurrentSteps(files, name || '', error?.text);
+      onChangeCurrentSteps(files, name || '', error?.text);
     },
-    [t, setFolderName, setCurrentSteps, files],
+    [t, setFolderName, onChangeCurrentSteps, files],
   );
 
-  const changeFile = useCallback(
+  const onChangeFile = useCallback(
     (files: File[]) => {
       if (fileType === ImportFileType.ARCHIVE) {
         if (files.length === 0 || files[0].type === APPLICATION_ZIP_TYPE) {
@@ -120,13 +115,13 @@ const FolderCreateSetup: FC<Props> = ({
       } else {
         setSeparateFiles(files.slice(0, 30));
       }
-      setCurrentSteps(files, folderName);
+      onChangeCurrentSteps(files, folderName);
     },
-    [fileType, setCurrentSteps, folderName, setZipFile, setSeparateFiles],
+    [fileType, onChangeCurrentSteps, folderName, setZipFile, setSeparateFiles],
   );
 
   useEffect(() => {
-    setCurrentSteps(files, folderName);
+    onChangeCurrentSteps(files, folderName);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fileType]);
 
@@ -138,7 +133,7 @@ const FolderCreateSetup: FC<Props> = ({
           elementId="name"
           placeholder={t(FoldersI18nKey.FolderCreatePlaceholder)}
           value={folderName}
-          onChange={changeName}
+          onChange={onChangeName}
           invalid={!!nameErrorText}
           errorText={nameErrorText}
         />
@@ -153,7 +148,7 @@ const FolderCreateSetup: FC<Props> = ({
             elementId="conflict-resolution"
             onChange={setFileType}
           />
-          {view === ApplicationRoute.Prompts && (
+          {isAssetWithVersion(view) && (
             <div className="flex flex-col">
               <Field fieldTitle={ignorePathsTitle} />
               <DialSwitch
@@ -178,7 +173,7 @@ const FolderCreateSetup: FC<Props> = ({
               fileFormatError={t(ImportI18nKey.ArchiveFileFormatError)}
               fileCountError={t(ImportI18nKey.ArchiveDescription)}
               acceptTypes="application/zip, .zip, application/x-zip-compressed"
-              onChange={changeFile}
+              onChange={onChangeFile}
               multiple={false}
             />
           )}
@@ -192,7 +187,7 @@ const FolderCreateSetup: FC<Props> = ({
               emptyButtonLabel={t(ButtonsI18nKey.Browse)}
               files={files}
               acceptTypes={acceptTypes}
-              onChange={changeFile}
+              onChange={onChangeFile}
               dynamicIcon={getFileIcon}
               errorText={t(ImportI18nKey.FileError)}
               maxFilesCount={30}
@@ -210,7 +205,7 @@ const FolderCreateSetup: FC<Props> = ({
               iconBeforeInput={<DialFileIcon extension="json" className="text-secondary" />}
               acceptTypes="application/json"
               fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
-              onChange={changeFile}
+              onChange={onChangeFile}
               maxFilesCount={30}
             />
           )}

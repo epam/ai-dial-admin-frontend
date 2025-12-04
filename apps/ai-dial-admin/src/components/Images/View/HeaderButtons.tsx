@@ -70,7 +70,7 @@ const HeaderButtons: FC<Props> = ({
   containerNames,
   versions,
 }) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
   const { showNotification } = useNotification();
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
@@ -176,13 +176,13 @@ const HeaderButtons: FC<Props> = ({
     (container: Container) => {
       createContainer(container).then((res) => {
         if (res.success) {
-          //navigateToEntity(res, route, visualizerConnectorRef, ENTITY_TYPE.containers);
+          router.push(getUrnForEntity(route, res.response, DEPLOYMENT_ENTITY.containers));
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
         }
       });
     },
-    [showNotification],
+    [route, router, showNotification],
   );
 
   const onSaveAsNewVersion = useCallback(
@@ -196,13 +196,13 @@ const HeaderButtons: FC<Props> = ({
               t(ImagesI18nKey.ImagesSaveSuccessDescription, { type, version: image.version }),
             ),
           );
-          //navigateToEntity(res, route, visualizerConnectorRef, ENTITY_TYPE.images);
+          router.push(getUrnForEntity(route, res.response, DEPLOYMENT_ENTITY.images));
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
         }
       });
     },
-    [route, showNotification, t],
+    [route, router, showNotification, t],
   );
 
   const onVersionChange = useCallback(
@@ -278,7 +278,7 @@ const HeaderButtons: FC<Props> = ({
           </div>
         ) : (
           <div className="flex flex-row items-center w-full">
-            <div className={`flex-1 flex flex-row gap-3`}>
+            <div className="flex-1 flex flex-row gap-3">
               <VersionsSelect
                 selected={image.id}
                 versions={versions}

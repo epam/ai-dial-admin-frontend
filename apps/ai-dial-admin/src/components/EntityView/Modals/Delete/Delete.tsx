@@ -51,7 +51,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
   );
   const id = useMemo(() => (isAssetView(view) ? void 0 : entity.name || entity.$id), [entity.$id, entity.name, view]);
 
-  const t = useI18n() as (key: string, options?: Record<string, string>) => string;
+  const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const folderContext = context?.();

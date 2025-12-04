@@ -48,7 +48,7 @@ interface Props {
 }
 
 const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const router = useRouter();
 
   const { showNotification } = useNotification();
@@ -68,6 +68,20 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
     setIsDetailsModalOpen(false);
     setSelectedActivity(void 0);
   }, [setIsRollbackModalOpen]);
+
+  const openInNewTab = useCallback((activity?: DialActivity) => {
+    onOpenInNewTab(ApplicationRoute.ActivityAudit, activity);
+  }, []);
+
+  const onOpenConfirmationModal = useCallback((activity?: DialActivity) => {
+    setIsRollbackModalOpen(true);
+    setSelectedActivity(activity);
+  }, []);
+
+  const onOpenDetailsModal = useCallback((activity?: DialActivity) => {
+    setIsDetailsModalOpen(true);
+    setSelectedActivity(activity);
+  }, []);
 
   const gridDataSource: IDatasource = useMemo(
     () => ({
@@ -131,22 +145,8 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
             router.push(getUrnForEntity(ApplicationRoute.ActivityAudit, e.data));
           }
         }
-      : void 0,
+      : (e) => onOpenDetailsModal(e.data),
   };
-
-  const openInNewTab = useCallback((activity?: DialActivity) => {
-    onOpenInNewTab(ApplicationRoute.ActivityAudit, activity);
-  }, []);
-
-  const onOpenConfirmationModal = useCallback((activity?: DialActivity) => {
-    setIsRollbackModalOpen(true);
-    setSelectedActivity(activity);
-  }, []);
-
-  const onOpenDetailsModal = useCallback((activity?: DialActivity) => {
-    setIsDetailsModalOpen(true);
-    setSelectedActivity(activity);
-  }, []);
 
   const columnDefs = entity
     ? getActivityAuditColumns(t, void 0, onOpenConfirmationModal, onOpenDetailsModal, true)

@@ -39,7 +39,7 @@ const JsonToggles: FC<Props> = ({
   onToggleJsonEditor,
   onHideFormatSelector,
 }) => {
-  const t = useI18n() as (value: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
   const staticEditorClassName = 'flex flex-row gap-x-4';
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();

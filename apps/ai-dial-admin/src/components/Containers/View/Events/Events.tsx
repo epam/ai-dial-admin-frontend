@@ -17,7 +17,7 @@ interface Props {
 }
 
 const Events: FC<Props> = ({ route, events }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
 
   const [showColumnsPanel, setShowColumnsPanel] = useState(false);
 

@@ -23,7 +23,7 @@ interface Props {
 }
 
 const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity, isEntityImmutable = false }) => {
-  const t = useI18n() as (str: string, param?: Record<string, number>) => string;
+  const t = useI18n();
 
   const applicationRunner = runners?.find((runner) => runner.$id === (entity as DialApplication).customAppSchemaId);
 

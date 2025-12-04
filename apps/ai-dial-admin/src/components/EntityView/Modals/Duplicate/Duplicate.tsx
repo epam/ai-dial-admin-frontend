@@ -32,7 +32,7 @@ interface Props {
 }
 
 const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onClose, entity }) => {
-  const t = useI18n() as (t: string, props?: Record<string, string | number>) => string;
+  const t = useI18n();
   const isSimple = isSimpleEntity(view);
   const { isValid, dispatch } = useSaveValidationContext();
 

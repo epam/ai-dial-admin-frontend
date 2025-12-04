@@ -22,6 +22,7 @@ import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
 import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
 import { getValidityStatus } from '@/src/components/EntityView/Status/utils';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import DeploymentStatusIndicator from '@/src/components/Common/DeploymentStatusIndicator/DeploymentStatusIndicator';
 import { STATUS_I18N_KEYS, TRANSPORT_TYPES } from '@/src/constants/deployments/images';
 import { CONTAINER_STATUS, KubEventType } from '@/src/types/deployments/containers';
@@ -30,6 +31,7 @@ import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import VersionsSelect from '@/src/components/Common/VersionsSelect/VersionsSelect';
 import { SelectVariant } from '@epam/ai-dial-ui-kit';
 import { ImageVersion } from '@/src/models/deployments/images';
+import { formatDeploymentImageName } from '@/src/utils/formatting/deployments';
 
 const stringFilter: Partial<ColDef> = {
   filterParams: {
@@ -324,7 +326,7 @@ export const EXPORT_COLUMNS = (
 ): ColDef[] => {
   const columns: ColDef[] = [NAME_COLUMN_WITH_SORT, AUTHOR_COLUMN, UPDATED_AT_COLUMN];
 
-  if (route === ApplicationRoute.Prompts) {
+  if (isAssetWithVersion(route)) {
     columns.splice(1, 0, {
       headerName: 'Version',
       field: 'version',
@@ -526,10 +528,17 @@ export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
   { field: 'image', headerName: 'Image' },
 ];
 
-export const CONTAINERS_COLUMNS = (t: (key: string) => string): ColDef[] => [
+export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string): ColDef[] => [
   { field: 'name', headerName: 'Name', hide: false },
   { field: 'description', headerName: 'Description', hide: false },
-  { field: 'imageDefinitionId', headerName: 'Container Image', hide: false },
+  {
+    field: 'imageDefinitionId',
+    headerName: `${type} Image`,
+    hide: false,
+    cellRenderer: (params: ICellRendererParams) => formatDeploymentImageName(params.data) ?? params.value,
+    tooltipValueGetter: (params) => formatDeploymentImageName(params.data) ?? params.value,
+    filterValueGetter: (params) => formatDeploymentImageName(params.data) ?? params.data[params.colDef.field || ''],
+  },
   {
     field: 'status',
     headerName: 'Status',

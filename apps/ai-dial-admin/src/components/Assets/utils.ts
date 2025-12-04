@@ -1,4 +1,4 @@
-import { Asset } from '@/src/models/dial/deployment-asset';
+import { Asset, AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { compareVersions, modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 import { ImageVersion } from '@/src/models/deployments/images';
@@ -48,6 +48,7 @@ export const getEntityForUpdate = (entity: Asset, initialEntity?: Asset) => {
 
 export const addNewVersion = (entity: Asset, version: string) => {
   const path = modifyNameVersionInPrompt(entity.path, void 0, version);
+  delete (entity as AssetApp).reference;
   return {
     ...entity,
     path,

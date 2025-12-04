@@ -645,8 +645,8 @@ export default {
     Update: 'Update',
     Create: 'Create',
     PathsIgnore: 'Ignore paths',
-    PathsPrompt: 'Prompt paths',
-    PathsFile: 'File paths',
+    PromptPaths: 'Prompt paths',
+    FilePaths: 'File paths',
     Changes: 'Changes',
     FileSizeErrorHeader: 'File size limit error',
     FileSizeErrorDescription: 'Size of files is more than {size}',
@@ -670,6 +670,8 @@ export default {
     ErrorDescription: 'Error occurred while exporting, please try again',
     Included: 'Included',
     NoPreview: 'Preview is not available for Active Config format',
+    TopicsCaption: 'Select one or more topics',
+    TopicsPlaceholder: 'Select topics',
   },
   Folder: {
     Export: 'Export files',
@@ -1049,6 +1051,7 @@ export default {
     View: 'View',
     Import: 'Import Toolsets',
     Export: 'Export Toolsets',
+    ToolsetPaths: 'Toolset paths',
     AllTools: 'All tools',
     Warning: 'List of tools from external endpoint may not display some tools. Add the missing tools manually.',
     AutoDetected: 'Auto-detected',
@@ -1129,6 +1132,7 @@ export default {
     Preparing: 'Preparing...',
     Failed: 'Failed',
     Stopped: 'Stopped',
+    Stopping: 'Stopping...',
     Pod: 'Pod',
   },
   KubEvents: {
@@ -1150,6 +1154,7 @@ export default {
   Applications: {
     Import: 'Import Applications',
     Export: 'Export Applications',
+    ApplicationPaths: 'Application paths',
   },
   ValidityStatus: {
     Invalid: 'Invalid',

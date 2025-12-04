@@ -25,7 +25,7 @@ export interface Props extends EndpointControlProps {
 }
 
 const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, onChange, ...props }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
   const [endpointError, setEndpointError] = useState<FieldError | null>(null);
 

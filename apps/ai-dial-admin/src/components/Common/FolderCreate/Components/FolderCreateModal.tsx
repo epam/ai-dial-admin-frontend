@@ -9,7 +9,6 @@ import { CREATE_FOLDER_STEPS, CreateFolderSteps } from '@/src/components/Common/
 import { FoldersI18nKey } from '@/src/constants/i18n';
 import { IMPORT_FILE_TYPES } from '@/src/constants/import';
 import { useI18n } from '@/src/locales/client';
-import { DialPrompt } from '@/src/models/dial/prompt';
 import { DialRule } from '@/src/models/dial/rule';
 import { FileImportMap } from '@/src/models/file';
 import { ImportData } from '@/src/models/import-asset';
@@ -19,6 +18,8 @@ import FolderCreateModalButtons from './FolderCreateModalButtons';
 import FolderCreatePermissions from './FolderCreatePermissions';
 import FolderCreateReview from './FolderCreateReview';
 import FolderCreateSetup from './FolderCreateSetup';
+import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { getJsonFileName } from '@/src/utils/import/get-json-name';
 
 interface Props {
   isModalOpen: boolean;
@@ -35,7 +36,7 @@ interface Props {
 }
 
 const FolderCreateModal: FC<Props> = ({ isModalOpen, folderPath, view, onClose, onApply }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
 
   const fileTypes = IMPORT_FILE_TYPES(t, view);
 
@@ -53,13 +54,13 @@ const FolderCreateModal: FC<Props> = ({ isModalOpen, folderPath, view, onClose, 
   const [folderName, setFolderName] = useState('');
 
   const onFinishClick = () => {
-    if (view === ApplicationRoute.Prompts) {
+    if (isAssetWithVersion(view)) {
       const type = fileType === ImportFileType.FILES ? ImportFileType.JSON : fileType;
       if (type === ImportFileType.ARCHIVE) {
         onApply?.(type, zipFile as File, rules, `${folderPath}${folderName}`, ignorePaths);
       } else {
         const jsonFile = {
-          prompts: Array.from(editedFileMap.values()).flatMap((value) => value.files as DialPrompt[]),
+          [getJsonFileName(view)]: Array.from(editedFileMap.values()).flatMap((value) => value.files),
         };
         onApply?.(type as ImportFileType, jsonFile, rules, `${folderPath}${folderName}`, ignorePaths);
       }
@@ -129,8 +130,8 @@ const FolderCreateModal: FC<Props> = ({ isModalOpen, folderPath, view, onClose, 
             fileType={fileType}
             currentStepId={currentStepId}
             editedFileMap={editedFileMap}
-            setEditedFileMap={setEditedFileMap}
-            setSteps={setSteps}
+            onChangeFileMap={setEditedFileMap}
+            onChangeSteps={setSteps}
           />
         </div>
         <div

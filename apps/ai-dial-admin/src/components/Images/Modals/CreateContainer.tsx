@@ -1,5 +1,4 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import classNames from 'classnames';
 import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 import { Container } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
@@ -21,12 +20,10 @@ interface Props {
 }
 
 const CreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, route, names, onCreate, image }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const { resourcesDefaults } = useAppContext();
   const [container, setContainer] = useState<Container>(getContainerTemplate(route, resourcesDefaults) as Container);
   const [isValid, setIsValid] = useState(false);
-
-  const containerClassName = classNames('flex flex-col w-full lg:max-w-[55%] md:max-w-[75%]');
 
   const onChange = useCallback((container: Container) => {
     setContainer(container);
@@ -49,7 +46,7 @@ const CreateContainer: FC<Props> = ({ onClose, isModalOpen, modalTitle, route, n
       title={modalTitle}
       portalId="createContainerModal"
       open={isModalOpen}
-      className={containerClassName}
+      className="lg:max-w-[55%] md:max-w-[75%]"
     >
       <div className="flex flex-col py-4 px-6 overflow-auto max-h-[400px]">
         <ContainerProperties container={container} setContainer={onChange} isModal={true} route={route} names={names} />
