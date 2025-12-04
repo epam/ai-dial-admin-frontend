@@ -29,7 +29,7 @@ const AddEntitiesButton: FC<Props> = ({
   setCustomExportData,
   selectedTopics,
 }) => {
-  const t = useI18n() as (v: string) => string;
+  const t = useI18n();
 
   const [buttonTitle, setButtonTitle] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);

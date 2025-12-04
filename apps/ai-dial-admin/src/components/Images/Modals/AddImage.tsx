@@ -18,7 +18,7 @@ interface Props {
 }
 
 const AddImageModal: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply, route }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
 
   const [image, setImage] = useState<Image>(getImageTemplate(route) as Image);
   const [isValid, setIsValid] = useState<boolean>(false);

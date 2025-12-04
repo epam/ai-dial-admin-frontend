@@ -24,6 +24,7 @@ export const STATUS_I18N_KEYS: Record<IMAGE_STATUS | CONTAINER_STATUS | KubEvent
   [CONTAINER_STATUS.NOT_DEPLOYED]: ContainersI18nKey.NotRunning,
   [CONTAINER_STATUS.FAILED]: ContainersI18nKey.Failed,
   [CONTAINER_STATUS.STOPPED]: ContainersI18nKey.Stopped,
+  [CONTAINER_STATUS.STOPPING]: ContainersI18nKey.Stopping,
   [KubEventType.NORMAL]: KubEventsI18nKey.Normal,
   [KubEventType.WARNING]: KubEventsI18nKey.Warning,
 };
@@ -35,6 +36,7 @@ export const STATUS_CLASSNAMES: Record<IMAGE_STATUS | CONTAINER_STATUS | KubEven
   [IMAGE_STATUS.BUILD_FAILED]: 'bg-red-400',
   [CONTAINER_STATUS.RUNNING]: 'bg-accent-secondary',
   [CONTAINER_STATUS.PENDING]: '',
+  [CONTAINER_STATUS.STOPPING]: '',
   [CONTAINER_STATUS.NOT_DEPLOYED]: 'bg-red-400',
   [CONTAINER_STATUS.FAILED]: 'bg-red-400',
   [CONTAINER_STATUS.STOPPED]: 'bg-orange-400',

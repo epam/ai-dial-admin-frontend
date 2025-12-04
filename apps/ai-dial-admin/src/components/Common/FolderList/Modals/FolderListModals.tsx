@@ -42,14 +42,22 @@ interface Props {
 }
 
 const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFolder = '', handleClose, context }) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
   const folderContext = context?.();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
 
   const createFolder = useCallback(
     (fileType: ImportFileType, file: ImportData, rules: DialRule[], path: string, ignorePaths?: boolean) => {
-      const body = getFormDataForImport(path, file, fileType, ConflictResolutionPolicy.SKIP, rules, ignorePaths).body;
+      const body = getFormDataForImport(
+        path,
+        file,
+        fileType,
+        ConflictResolutionPolicy.SKIP,
+        rules,
+        ignorePaths,
+        view,
+      ).body;
 
       getReqRef.current(createFolderWithFiles, body, fileType, view).then((res) => {
         if (res.success) {

@@ -234,7 +234,9 @@ const FolderList: FC<Props> = ({
 
                 {showFolderActions && (
                   <div className="invisible group-hover:visible text-primary mx-2 flex flex-row gap-2">
-                    {(view === ApplicationRoute.Prompts || view === ApplicationRoute.Files) && (
+                    {(view === ApplicationRoute.Prompts ||
+                      view === ApplicationRoute.AssetsApplications ||
+                      view === ApplicationRoute.Files) && (
                       <ActionsDropdown items={folderCreateItems(node)} icon={<IconPlus {...BASE_ICON_PROPS} />} />
                     )}
                     <ActionsDropdown items={folderManageItems(node)} icon={<IconDotsVertical {...BASE_ICON_PROPS} />} />

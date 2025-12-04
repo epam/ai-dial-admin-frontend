@@ -5,7 +5,7 @@ import { useI18n } from '@/src/locales/client';
 import EndpointControl, { EndpointControlProps } from './Endpoint';
 
 const EditorUrlControl: FC<EndpointControlProps> = ({ ...props }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
 
   return (
     <EndpointControl

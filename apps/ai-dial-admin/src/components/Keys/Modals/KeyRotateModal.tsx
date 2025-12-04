@@ -16,7 +16,7 @@ interface Props {
 }
 
 export const KeyRotateModal: FC<Props> = ({ isModalOpen, selectedKey, keys, onConfirm, onClose }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const [newKey, setNewKey] = useState({ ...selectedKey, key: '' } as DialKey);
 
   const onChangeExpiresAt = useCallback(

@@ -22,7 +22,7 @@ interface Props {
 }
 
 const DeploymentAssetHeader: FC<Props> = ({ view, asset }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const currentLocale = useCurrentLocale();
   const validityState = (asset as EntityValidityState)?.validityState;
 

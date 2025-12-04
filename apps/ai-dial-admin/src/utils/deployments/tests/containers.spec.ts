@@ -26,6 +26,12 @@ describe('containers utils', () => {
       },
     } as any;
 
+    beforeEach(() => {
+      (getErrorForName as any).mockReturnValue(null);
+      (getVariableNameError as any).mockReturnValue(null);
+      (getPathError as any).mockReturnValue(null);
+    });
+
     test('returns false if name is empty', () => {
       expect(validateContainer({ ...validContainer, name: '' }, ApplicationRoute.ModelDeployments, [])).toBe(false);
     });

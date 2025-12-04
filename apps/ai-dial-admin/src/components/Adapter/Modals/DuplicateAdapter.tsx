@@ -20,7 +20,7 @@ interface Props {
 }
 
 const DuplicateAdapter: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose, adapter }) => {
-  const t = useI18n() as (t: string, props?: Record<string, string>) => string;
+  const t = useI18n();
 
   const [entity, setEntity] = useState<DialAdapter>({ ...adapter, name: getClonedEntityName(adapter.name) });
   const { isValid, dispatch } = useSaveValidationContext();

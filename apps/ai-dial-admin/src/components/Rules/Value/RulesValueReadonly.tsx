@@ -17,7 +17,7 @@ interface Props {
 }
 
 const RulesValueReadonly: FC<Props> = ({ rule, ruleDiff, setLastValueHeight }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const ref = useRef<HTMLDivElement>(null);
   const isRuleError = ruleDiff && ruleDiff.status === RuleDiffStatus.EXCLUDE && !ruleDiff.items;
   const isTargetError = ruleDiff && ruleDiff.status === RuleDiffStatus.EXCLUDE && ruleDiff.items;

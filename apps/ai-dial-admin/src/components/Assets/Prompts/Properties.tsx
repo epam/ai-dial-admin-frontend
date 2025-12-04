@@ -27,7 +27,7 @@ interface Props {
 }
 
 const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isImmutable, publication }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const { dispatch } = useSaveValidationContext();
 
   const [isJSONContentMode, setIsJSONContentMode] = useState(false);

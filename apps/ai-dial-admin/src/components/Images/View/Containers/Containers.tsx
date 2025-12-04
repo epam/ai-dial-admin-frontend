@@ -9,7 +9,7 @@ import { Container } from '@/src/models/deployments/containers';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { getImageContainers, updateContainersImageId } from '@/src/app/actions/deployments';
 import { getErrorNotification } from '@/src/utils/notification';
-import { ACTION_COLUMN, ACTION_COLUMN_COMPONENTS } from '@/src/constants/ag-grid';
+import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import ListView from '@/src/components/ListView/ListView';
 import { ButtonsI18nKey, ContainersI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { createPortal } from 'react-dom';
@@ -27,7 +27,7 @@ interface Props {
 }
 
 const Containers: FC<Props> = ({ image, route, versions }) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
   const { showNotification } = useNotification();
   const router = useRouter();
 
@@ -86,9 +86,6 @@ const Containers: FC<Props> = ({ image, route, versions }) => {
         data={containers}
         view={route}
         columnDefs={columnDefs}
-        additionalGridOptions={{
-          ...ACTION_COLUMN_COMPONENTS,
-        }}
         title={
           installed
             ? t(ContainersI18nKey.RelatedContainersListTitle, {

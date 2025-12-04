@@ -24,7 +24,7 @@ interface Props {
 }
 
 const TelemetryGrid: FC<Props> = ({ columnDefs, title, getData, query, refreshTime }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
   const [data, setData] = useState<Record<string, string>[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 

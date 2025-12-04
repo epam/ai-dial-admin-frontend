@@ -20,7 +20,7 @@ interface Props {
 }
 
 const ToolsetsList: FC<Props> = ({ data }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const names = filterDisplayNames(data);
 
   return (

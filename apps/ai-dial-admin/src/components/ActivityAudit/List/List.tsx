@@ -48,7 +48,7 @@ interface Props {
 }
 
 const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const router = useRouter();
 
   const { showNotification } = useNotification();

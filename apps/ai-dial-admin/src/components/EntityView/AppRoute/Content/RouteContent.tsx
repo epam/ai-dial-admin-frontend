@@ -21,7 +21,7 @@ interface Props {
 }
 
 const RouteContent: FC<Props> = ({ route, readonly, onChangeRoute, ...props }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
 
   const tabs = getRouteTabs(t);
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);

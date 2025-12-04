@@ -66,7 +66,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
   setIsBulkView,
   isBulkView,
 }: Props<T>) => {
-  const t = useI18n() as (t: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
   const { showNotification, removeNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
 
@@ -99,6 +99,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
         conflictResolutionStrategy,
         void 0,
         ignorePaths,
+        route,
       );
       const folderName = getFolderName(path) || '';
       const prepareNotificationId = showNotification(

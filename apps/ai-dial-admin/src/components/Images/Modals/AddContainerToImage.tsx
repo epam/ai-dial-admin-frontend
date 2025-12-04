@@ -27,7 +27,7 @@ interface Props {
 }
 
 const AddContainerToImage: FC<Props> = ({ title, isModalOpen, onClose, onApply, imageId, route, versions }) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
   const { showNotification } = useNotification();
 
   const [dependencies, setDependencies] = useState<Container[]>([]);

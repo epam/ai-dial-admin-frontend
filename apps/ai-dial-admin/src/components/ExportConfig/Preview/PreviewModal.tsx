@@ -22,7 +22,7 @@ interface Props {
 }
 
 const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, isModalOpen, onClose }) => {
-  const t = useI18n() as (v: string) => string;
+  const t = useI18n();
 
   const { showNotification } = useNotification();
   const showNotificationRef = useRef(showNotification);
