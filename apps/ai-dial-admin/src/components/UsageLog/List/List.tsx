@@ -25,7 +25,7 @@ interface Props {
 }
 
 const List: FC<Props> = ({ route, getData, query, columnDefs, title, emptyDataTitle }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
 
   const [data, setData] = useState<Record<string, string>[] | undefined>(void 0);
   const [loading, setLoading] = useState<boolean>(true);

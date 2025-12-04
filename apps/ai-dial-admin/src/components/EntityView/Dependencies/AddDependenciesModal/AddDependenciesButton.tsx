@@ -18,7 +18,7 @@ interface Props {
 }
 
 const AddDependenciesButton: FC<Props> = ({ availableModels, availableApplications, addDependency }) => {
-  const t = useI18n() as (v: string) => string;
+  const t = useI18n();
   const dropdownItems: DropdownItem[] = [
     { key: EntityType.MODEL, label: t(MenuI18nKey.Models), onClick: () => onClick(EntityType.MODEL) },
     {

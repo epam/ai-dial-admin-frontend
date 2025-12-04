@@ -21,7 +21,7 @@ interface Props {
 }
 
 const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
 
   const modelTypeRadio: RadioButtonWithContent[] = [
     { id: DialModelType.Chat, name: t(ModelViewI18nKey.Chat) },

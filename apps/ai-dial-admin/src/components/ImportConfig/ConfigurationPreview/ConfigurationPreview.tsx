@@ -28,7 +28,7 @@ interface Props {
 }
 
 const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImportFile }) => {
-  const t = useI18n() as (v: string) => string;
+  const t = useI18n();
   const { showNotification } = useNotification();
   const showNotificationRef = useRef(showNotification);
   const getReqRef = useRef(useProtectedRequest());

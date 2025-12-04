@@ -16,7 +16,7 @@ interface Props {
 }
 
 const BaseProperties: FC<Props> = ({ container, setContainer, names, isModal }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
 
   const [nameError, setNameError] = useState<FieldError | null>(null);
   const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);

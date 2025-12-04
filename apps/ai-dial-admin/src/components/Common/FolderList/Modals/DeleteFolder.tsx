@@ -26,7 +26,7 @@ interface Props {
 }
 
 const DeleteFolder: FC<Props> = ({ isModalOpen, view, selectedFolder, isBulkDelete, context, onClose, onApply }) => {
-  const t = useI18n() as (s: string, params?: Record<string, string>) => string;
+  const t = useI18n();
 
   const folderContext = context?.();
   const filePath = folderContext?.filePath as string;

@@ -53,7 +53,7 @@ const BaseEntityList = <T extends object>({
   showColumnsButton,
   context,
 }: Props<T>) => {
-  const t = useI18n() as (s: string) => string;
+  const t = useI18n();
   const router = useRouter();
   const gridOptions: GridOptions = {
     onCellClicked: (e) => {

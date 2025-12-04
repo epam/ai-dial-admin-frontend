@@ -16,7 +16,7 @@ interface Props {
 }
 
 const Dependencies: FC<Props> = ({ selectedTab, onChangeSelectedDependencies, selectedDependencies }) => {
-  const t = useI18n() as (v: string) => string;
+  const t = useI18n();
   const [allDependencies, setAllDependencies] = useState<EntityType[]>([]);
 
   const isAllSelected = useMemo(() => {

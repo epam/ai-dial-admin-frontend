@@ -24,7 +24,7 @@ interface Props {
 }
 
 const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChangeKey }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const { dispatch } = useSaveValidationContext();
 
   const isValidKey = useMemo(() => {

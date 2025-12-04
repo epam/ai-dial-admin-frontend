@@ -18,7 +18,7 @@ export const TextWidget: FC<WidgetProps> = ({
   schema,
   label,
 }) => {
-  const t = useI18n() as (str: string) => string;
+  const t = useI18n();
   const invalid = useMemo(() => {
     return required ? !value : false;
   }, [required, value]);

@@ -18,7 +18,7 @@ interface Props {
 }
 
 const BaseProperties: FC<Props> = ({ image, setImage, isModal, setVersionError: setError }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
 
   const [versionsMap, setVersionsMap] = useState<Record<string, string[]>>({});
   const [versionError, setVersionError] = useState<FieldError | null>(null);

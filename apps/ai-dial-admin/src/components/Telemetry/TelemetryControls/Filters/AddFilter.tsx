@@ -20,7 +20,7 @@ interface Props {
 
 const AddFilter: FC<Props> = ({ addFilter, dropdownData, children, filterData, route }) => {
   const isMobile = useIsMobileScreen();
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const filterTypeConfig = getFilterTypeConfig(t);
   const filterConditionConfig = getFilterConditionConfig(t);
   const typeValue =

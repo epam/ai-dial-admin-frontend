@@ -42,7 +42,7 @@ interface Props {
 }
 
 const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFolder = '', handleClose, context }) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
   const folderContext = context?.();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());

@@ -36,7 +36,7 @@ const AuditEntityGrid: FC<Props> = ({
   currentRows,
   activity,
 }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
   const [gridApi, setGridApi] = useState<GridApi>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [resourceId, setResourceId] = useState('');

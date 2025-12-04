@@ -57,7 +57,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
   initialValues,
   context,
 }: Props<T>) => {
-  const t = useI18n() as (str: string, props?: Record<string, string>) => string;
+  const t = useI18n();
   const router = useRouter();
   const folderContext = context?.();
   const { isValid, dispatch } = useSaveValidationContext();

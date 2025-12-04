@@ -37,7 +37,7 @@ interface Props {
 }
 
 const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
   const tabs = getTabsForAsset(t, ApplicationRoute.Prompts);
   const router = useRouter();
   const { fetchFiles } = usePromptFolder();

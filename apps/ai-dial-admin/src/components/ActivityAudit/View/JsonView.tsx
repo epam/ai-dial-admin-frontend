@@ -15,7 +15,7 @@ interface Props {
 }
 
 const JsonView: FC<Props> = ({ modified, original, containerClassName }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
 
   return (
     <div className={classNames('flex-1 flex flex-col min-h-0', containerClassName)}>

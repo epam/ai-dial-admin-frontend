@@ -20,7 +20,7 @@ interface Props {
 }
 
 const AppRouteList: FC<Props> = ({ readonly, routes, activeRoute, onRemove, onClick }) => {
-  const t = useI18n() as (str: string) => string;
+  const t = useI18n();
 
   const getOperation = (onClick: () => void): ActionMenuOperationDeclaration<DialAppRoute> => {
     return {
