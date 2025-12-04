@@ -7,7 +7,7 @@ import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
 import { API } from '../../api';
 import { BaseApi } from '../../base-api';
-import { buildAssetUrl, buildCreateFolderUrl } from './utils';
+import { buildCreateFolderUrl } from './utils';
 
 export const FOLDERS_URL = `${API}/folders`;
 export const FOLDERS_MOVE_URL = `${FOLDERS_URL}/move`;
