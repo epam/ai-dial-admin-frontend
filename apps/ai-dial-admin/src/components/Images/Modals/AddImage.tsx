@@ -1,5 +1,4 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import classNames from 'classnames';
 import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 import { Image } from '@/src/models/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -24,8 +23,6 @@ const AddImageModal: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply, r
   const [isValid, setIsValid] = useState<boolean>(false);
   const [versionError, setVersionError] = useState<FieldError | null>(null);
 
-  const containerClassName = classNames('flex flex-col w-full lg:max-w-[75%] md:max-w-[90%]');
-
   const onChange = useCallback((image: Image) => {
     setImage(image);
   }, []);
@@ -40,7 +37,7 @@ const AddImageModal: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply, r
       title={modalTitle}
       portalId="AddImageModal"
       open={isModalOpen}
-      className={containerClassName}
+      className="lg:max-w-[75%] md:max-w-[90%]"
     >
       <div className="flex h-full overflow-auto">
         <ImageProperties
