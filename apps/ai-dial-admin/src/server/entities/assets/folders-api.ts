@@ -7,7 +7,7 @@ import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
 import { API } from '../../api';
 import { BaseApi } from '../../base-api';
-import { buildAssetUrl } from './utils';
+import { buildAssetUrl, buildCreateFolderUrl } from './utils';
 
 export const FOLDERS_URL = `${API}/folders`;
 export const FOLDERS_MOVE_URL = `${FOLDERS_URL}/move`;
@@ -36,7 +36,7 @@ export class FoldersApi extends BaseApi {
     type?: string,
     view?: ApplicationRoute,
   ): Promise<ServerActionResponse> {
-    const url = buildAssetUrl(type, view);
+    const url = buildCreateFolderUrl(type, view);
     return this.postFiles(url, body, token, 'POST');
   }
 

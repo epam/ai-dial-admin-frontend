@@ -41,10 +41,10 @@ export const getFormDataForImport = (
     const fileBlob = new Blob([JSON.stringify(file)], {
       type: APPLICATION_JSON_TYPE,
     });
-    body.append('applications', fileBlob, `${getJsonFileName(route)}.json`);
+    body.append('file', fileBlob, `${getJsonFileName(route)}.json`);
   } else {
     (file as File[]).forEach((f) => {
-      body.append('applications', f);
+      body.append('files', f);
       fileSize += f.size;
     });
   }
