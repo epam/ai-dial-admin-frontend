@@ -43,7 +43,7 @@ const IdControl = <T extends { name?: string }>({
 
   const onChangeName = useCallback(
     (name?: string) => {
-      onChangeEntity?.({ ...entity, name });
+      onChangeEntity?.({ ...entity, name: name?.trimStart() });
       validateName(name);
     },
     [entity, onChangeEntity, validateName],
