@@ -1,13 +1,12 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { adaptersApi, containersApi, modelsApi } from '@/src/app/api/api';
+import { adaptersApi, modelsApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   createModel,
   getCoreModel,
-  getModelContainers,
   getModels,
   getModelsAdapters,
   getModelsTokenizers,
@@ -61,15 +60,6 @@ describe('Models :: server actions', () => {
     const result = await getModels();
     expect(getUserToken).toHaveBeenCalled();
     expect(modelsApi.getModelsListAction).toHaveBeenCalledWith(TOKEN_MOCK);
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
-  test('Should call getModelContainers action', async () => {
-    (containersApi.getModelContainers as any).mockResolvedValue(RESPONSE_MOCK);
-
-    const result = await getModelContainers();
-    expect(getUserToken).toHaveBeenCalled();
-    expect(containersApi.getModelContainers).toHaveBeenCalledWith(TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 

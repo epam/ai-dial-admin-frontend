@@ -7,7 +7,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { AssetToolset } from '@/src/models/dial/deployment-asset';
+import { Asset } from '@/src/models/dial/deployment-asset';
 import { CONTAINER_STATUS, CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
 import { Container } from '@/src/models/deployments/containers';
 import { useI18n } from '@/src/locales/client';
@@ -17,21 +17,25 @@ import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { deleteContainer, runContainer, stopContainer } from '@/src/app/actions/deployments';
-import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getErrorNotification } from '@/src/utils/notification';
 import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
-import { getTranslatedEntity, getTranslatedType } from '@/src/utils/deployments/entity';
+import {
+  getAssetTemplate,
+  getEntityRoute,
+  getEntityTemplate,
+  getTranslatedEntity,
+  getTranslatedType,
+} from '@/src/utils/deployments/entity';
 import { validateContainer } from '@/src/utils/deployments/containers';
-import { getAdminAssetPath, getAdminEntityPath } from '@/src/utils/deployments/grid';
-import { addTrailingSlash } from '@/src/utils/url';
-import { DialModel } from '@/src/models/dial/model';
-import { Toolset } from '@/src/models/dial/toolset';
-import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { createPortal } from 'react-dom';
 import DeleteModal from '@/src/components/Common/DeploymentsModals/Delete';
-import CreateEntityModal from '@/src/components/Containers/Modals/CreateEntity';
-import CreateAssetModal from '@/src/components/Containers/Modals/CreateAsset';
+import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
+import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { DialFile } from '@/src/models/dial/file';
+import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 
 interface Props<T> {
   route: ApplicationRoute;
@@ -47,7 +51,7 @@ interface Props<T> {
   setErrorNotifications?: (notification: JSONEditorErrorNotification[]) => void;
   names: string[];
   createEntity: (entity: BaseEntity) => Promise<ServerActionResponse>;
-  createEntityAsAsset?: (entity: AssetToolset) => Promise<ServerActionResponse>;
+  createEntityAsAsset?: (entity: Asset) => Promise<ServerActionResponse>;
   entityNames: string[];
   transport?: CONTAINER_TRANSPORT;
 }
@@ -151,41 +155,6 @@ const HeaderButtons = <T extends Container>({
     }
   }, [container.id, onCloseModal, route, router, showNotification]);
 
-  const onCreateEntity = useCallback(
-    (entity: DialModel | Toolset | DialInterceptor) => {
-      createEntity(entity).then((res) => {
-        if (res.success) {
-          showNotification(
-            getSuccessNotification(t(CreateI18nKey.NotificationTitle, { entity: getTranslatedEntity(route, t) })),
-          );
-          router.push(getAdminEntityPath(route, entity));
-        } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
-        }
-      });
-      onCloseModal();
-    },
-    [createEntity, onCloseModal, route, router, showNotification, t],
-  );
-  const onCreateEntityAsAsset = useCallback(
-    (entity: AssetToolset) => {
-      const asset = { ...entity, folderId: addTrailingSlash(entity.folderId) };
-      createEntityAsAsset?.(asset).then((res) => {
-        if (res.success) {
-          showNotification(
-            getSuccessNotification(t(CreateI18nKey.NotificationTitle, { entity: getTranslatedEntity(route, t) })),
-          );
-
-          router.push(getAdminAssetPath(route, asset));
-        } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
-        }
-      });
-      onCloseModal();
-    },
-    [createEntityAsAsset, onCloseModal, route, router, showNotification, t],
-  );
-
   const onTryToSave = useCallback(() => {
     if (jsonErrors?.length) {
       setIsValidJSON(false);
@@ -261,7 +230,7 @@ const HeaderButtons = <T extends Container>({
         ) : (
           <div className="flex flex-row items-center w-full">
             <div className="flex flex-row gap-3">
-              {container.status === CONTAINER_STATUS.RUNNING && (
+              {container.status && (
                 <>
                   {route === ApplicationRoute.McpDeployments ? (
                     <DialButtonDropdown
@@ -342,30 +311,27 @@ const HeaderButtons = <T extends Container>({
       {isModalOpen &&
         modalType === ModalType.createEntity &&
         createPortal(
-          <CreateEntityModal
+          <CreateEntity
+            route={getEntityRoute(route)}
             isModalOpen={isModalOpen}
-            onClose={onCloseModal}
-            modalTitle={t(CreateI18nKey.CreateEntity, { entity: getTranslatedEntity(route, t) })}
-            route={route}
-            container={container}
-            onCreate={onCreateEntity}
             names={entityNames}
-            transport={transport}
+            onClose={onCloseModal}
+            createEntity={createEntity}
+            initialValues={getEntityTemplate(route, container, t, transport)}
           />,
           document.body,
         )}
       {isModalOpen &&
         modalType === ModalType.createAsset &&
+        createEntityAsAsset &&
         createPortal(
-          <CreateAssetModal
+          <CreateAsset
+            view={ApplicationRoute.AssetsToolsets}
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
-            modalTitle={t(CreateI18nKey.CreateEntityAsAsset, { entity: getTranslatedEntity(route, t) })}
-            route={route}
-            container={container}
-            onCreate={onCreateEntityAsAsset}
-            names={entityNames}
-            transport={transport}
+            initialValues={getAssetTemplate(route, container, t, transport as CONTAINER_TRANSPORT)}
+            onCreate={createEntityAsAsset}
+            context={useToolsetFolder as () => AssetsFolderContext<DialFile | Asset>}
           />,
           document.body,
         )}
