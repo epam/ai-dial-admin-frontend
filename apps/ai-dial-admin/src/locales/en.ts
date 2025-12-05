@@ -1004,7 +1004,8 @@ export default {
     SystemUnavailable: 'The system is temporarily unavailable due to a technical update.',
     TryAgainLater: 'Please try again later.',
     RequiredProperty: 'This property is required',
-    InvalidPath: 'Path must start with / and use only letters, digits, - , and _',
+    InvalidPath:
+      'Invalid route path. Path must be a valid plain path (starting with /) or a valid regular expression pattern (starting with / or ^/)',
     InvalidStatus: 'Status must be a number from 100 to 999',
     UrlField: 'This field must be a valid URL starting with  http:// or https://',
     WarningEndpoint: 'The endpoint uses HTTP instead of HTTPS. This may expose data to security risks.',
