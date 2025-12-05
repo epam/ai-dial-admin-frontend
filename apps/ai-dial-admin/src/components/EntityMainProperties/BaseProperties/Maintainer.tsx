@@ -11,7 +11,7 @@ interface Props<T> {
 }
 
 const MaintainerControl = <T extends { author?: string }>({ entity, onChangeEntity, ...props }: Props<T>) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
 
   return (
     <DialTextInputField

@@ -24,7 +24,7 @@ interface Props {
 }
 
 const AddEntitiesModal: FC<Props> = ({ isModalOpen, selectedTab, entities, columnDefs, onClose, onApply }) => {
-  const t = useI18n() as (v: string) => string;
+  const t = useI18n();
   const [selectedEntities, setSelectedEntities] = useState<EntitiesGridData[]>([]);
   const [selectedDependencies, setSelectedDependencies] = useState<EntityType[]>([]);
 

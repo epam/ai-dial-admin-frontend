@@ -231,4 +231,11 @@ describe('Entities :: tabs', () => {
       eventsTab(t),
     ]);
   });
+
+  test('returns empty tabs for ApplicationPublications', () => {
+    const entityType = DEPLOYMENT_ENTITY.containers;
+    const status = CONTAINER_STATUS.RUNNING;
+
+    expect(getDeploymentsViewTabs('unknown', t, 'unknown', status)).toEqual([]);
+  });
 });

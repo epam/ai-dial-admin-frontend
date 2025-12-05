@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
-import classNames from 'classnames';
-import { ButtonVariant, DialButton, DialLoader, DialPopup } from '@epam/ai-dial-ui-kit';
+import { AlertVariant, ButtonVariant, DialAlert, DialButton, DialLoader, DialPopup } from '@epam/ai-dial-ui-kit';
+
 import { ApplicationRoute } from '@/src/types/routes';
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { useI18n } from '@/src/locales/client';
@@ -11,11 +11,12 @@ import { getErrorNotification } from '@/src/utils/notification';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import Grid from '@/src/components/Grid/Grid';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ContainersI18nKey } from '@/src/constants/i18n';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 import { CHANGE_IMAGE_VERSION } from '@/src/constants/grid-columns/grid-columns';
+import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 
 interface Props {
   isModalOpen: boolean;
@@ -24,10 +25,19 @@ interface Props {
   onApply: (id: string) => void;
   route: ApplicationRoute;
   image: Image;
+  containerStatus?: CONTAINER_STATUS;
 }
 
-const ChangeContainerImage: FC<Props> = ({ onClose, isModalOpen, modalTitle, route, onApply, image }) => {
-  const t = useI18n() as (key: string) => string;
+const ChangeContainerImage: FC<Props> = ({
+  onClose,
+  isModalOpen,
+  modalTitle,
+  route,
+  onApply,
+  image,
+  containerStatus,
+}) => {
+  const t = useI18n();
   const { showNotification } = useNotification();
 
   const [id, setId] = useState(image.id);
@@ -42,7 +52,6 @@ const ChangeContainerImage: FC<Props> = ({ onClose, isModalOpen, modalTitle, rou
     [route],
   );
 
-  const containerClassName = classNames('flex flex-col w-full lg:max-w-[55%] md:max-w-[75%]');
   const columnDefs = [...CHANGE_IMAGE_VERSION(t), ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTabAction)])];
 
   useEffect(() => {
@@ -69,44 +78,49 @@ const ChangeContainerImage: FC<Props> = ({ onClose, isModalOpen, modalTitle, rou
       title={modalTitle}
       portalId="ChangeContainerImageModal"
       open={isModalOpen}
-      className={containerClassName}
+      className="lg:max-w-[55%] md:max-w-[75%]"
     >
-      <div className="flex flex-col py-4 px-6 overflow-auto max-h-[400px]">
-        <>
-          {loading && <DialLoader size={24} />}
+      <>
+        {loading && <DialLoader size={24} />}
+        <div className="flex flex-col py-4 px-6">
           {!loading && !!images.length && (
-            <Grid
-              rowData={images}
-              columnDefs={columnDefs}
-              additionalGridOptions={{
-                rowSelection: { mode: 'singleRow', enableClickSelection: true },
-                selectionColumnDef: {
-                  ...RADIO_BUTTON_COL_DEF,
-                  cellRenderer: (data: { data?: { id: string; name: string }; name: string }) => (
-                    <RadioButtonRenderer inputId={data.data?.name || data.name} isChecked={data.data?.id === id} />
-                  ),
-                },
-                onRowSelected: (event) => {
-                  if (event.node.isSelected()) {
-                    setId(event.data?.id);
-                  }
-                },
-                onGridReady: (event) => {
-                  event.api?.updateGridOptions({
-                    rowData: images,
-                    columnDefs: columnDefs,
-                  });
-                  event.api.forEachNode((node) => {
-                    if (node.data.id === image.id) {
-                      node.setSelected(true);
+            <div className="flex flex-col gap-4 overflow-auto max-h-[400px]">
+              <Grid
+                rowData={images}
+                columnDefs={columnDefs}
+                additionalGridOptions={{
+                  rowSelection: { mode: 'singleRow', enableClickSelection: true },
+                  selectionColumnDef: {
+                    ...RADIO_BUTTON_COL_DEF,
+                    cellRenderer: (data: { data?: { id: string; name: string }; name: string }) => (
+                      <RadioButtonRenderer inputId={data.data?.name || data.name} isChecked={data.data?.id === id} />
+                    ),
+                  },
+                  onRowSelected: (event) => {
+                    if (event.node.isSelected()) {
+                      setId(event.data?.id);
                     }
-                  });
-                },
-              }}
-            />
+                  },
+                  onGridReady: (event) => {
+                    event.api?.updateGridOptions({
+                      rowData: images,
+                      columnDefs: columnDefs,
+                    });
+                    event.api.forEachNode((node) => {
+                      if (node.data.id === image.id) {
+                        node.setSelected(true);
+                      }
+                    });
+                  },
+                }}
+              />
+              {containerStatus === CONTAINER_STATUS.RUNNING && (
+                <DialAlert message={t(ContainersI18nKey.ContainerRestartWarning)} variant={AlertVariant.Warning} />
+              )}
+            </div>
           )}
-        </>
-      </div>
+        </div>
+      </>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
         <DialButton variant={ButtonVariant.Secondary} label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         <DialButton

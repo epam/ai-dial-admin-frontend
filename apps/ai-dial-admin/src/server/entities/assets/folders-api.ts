@@ -1,13 +1,13 @@
 import { JWT } from 'next-auth/jwt';
-import { API } from '../api';
-import { BaseApi } from '../base-api';
 
 import { DialFolder } from '@/src/models/dial/folder';
 import { DialRule } from '@/src/models/dial/rule';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
+import { API } from '../../api';
+import { BaseApi } from '../../base-api';
+import { buildCreateFolderUrl } from './utils';
 
 export const FOLDERS_URL = `${API}/folders`;
 export const FOLDERS_MOVE_URL = `${FOLDERS_URL}/move`;
@@ -15,25 +15,7 @@ export const RULES_UPDATE_URL = `${FOLDERS_URL}/updateRules`;
 export const FOLDER_CREATE_URL = `${FOLDERS_URL}/upload`;
 export const PREVIEW_PROMPT_ZIP = `${API}/prompts/import/zip/preview`;
 
-export const PROMPTS_URL = `${API}/prompts`;
-export const PROMPT_IMPORT_ZIP_URL = `${PROMPTS_URL}/import/zip`;
-export const PROMPT_IMPORT_JSON_URL = `${PROMPTS_URL}/import/json`;
-
-export const FILES_URL = `${API}/files`;
-export const FILE_IMPORT_ZIP_URL = `${FILES_URL}/import/zip`;
-export const FILE_IMPORT_URL = `${FILES_URL}/import`;
-
 export class FoldersApi extends BaseApi {
-  getUrlForCreate(filetype?: string, view?: ApplicationRoute): string {
-    if (view === ApplicationRoute.Prompts) {
-      return filetype === ImportFileType.ARCHIVE ? PROMPT_IMPORT_ZIP_URL : PROMPT_IMPORT_JSON_URL;
-    }
-    if (view === ApplicationRoute.Files) {
-      return filetype === ImportFileType.ARCHIVE ? FILE_IMPORT_ZIP_URL : FILE_IMPORT_URL;
-    }
-    return '';
-  }
-
   getFolders(token: JWT | null, path: string): Promise<DialFolder[] | null | undefined> {
     return this.post(FOLDERS_URL, { path }, token).then((response) =>
       response === void 0 ? void 0 : (response as { items: DialFolder[] })?.items || [],
@@ -54,7 +36,7 @@ export class FoldersApi extends BaseApi {
     type?: string,
     view?: ApplicationRoute,
   ): Promise<ServerActionResponse> {
-    const url = this.getUrlForCreate(type, view);
+    const url = buildCreateFolderUrl(type, view);
     return this.postFiles(url, body, token, 'POST');
   }
 

@@ -32,7 +32,7 @@ interface Props {
 }
 
 const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply, route, names }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const { showNotification } = useNotification();
   const { resourcesDefaults } = useAppContext();
 
@@ -42,8 +42,6 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
   const [images, setImages] = useState<ImageGroup[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [isValid, setIsValid] = useState(false);
-
-  const containerClassName = classNames('flex flex-col w-full lg:max-w-[75%] md:max-w-[90%]');
 
   const setStepsState = useCallback(
     (status?: StepStatus) => {
@@ -127,7 +125,7 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
       title={modalTitle}
       portalId="AddContainerModal"
       open={isModalOpen}
-      className={containerClassName}
+      className="lg:max-w-[75%] md:max-w-[90%]"
     >
       <div className="flex flex-col py-4 px-6 overflow-auto max-h-[400px]">
         <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={setCurrentStep} />

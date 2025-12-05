@@ -22,7 +22,7 @@ interface Props {
 }
 
 const LoginPopup: FC<Props> = ({ type, isModalOpen, onClose, onLogin }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
 
   const radioButtons: RadioButtonWithContent[] = [
     { id: ToolsetAuthCredentialLevel.GLOBAL, name: t(ToolsetI18nKey.Organization) },

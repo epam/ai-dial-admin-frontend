@@ -32,7 +32,7 @@ const EditableCellRenderer = ({
   data,
   node,
 }: EditableCellRendererParams) => {
-  const t = useI18n() as (s: string) => string;
+  const t = useI18n();
   const initialPlaceholder = placeholder ? t(placeholder) : '';
   const translatedPlaceholder = getDefaultPlaceholder?.(node, colDef) || initialPlaceholder;
   const initialValue = valueFormatter ? valueFormatter(value) : value || translatedPlaceholder;

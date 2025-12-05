@@ -22,7 +22,7 @@ interface Props {
 }
 
 const BasePublicationProperties: FC<Props> = ({ view, publication, children, applicationSchemes }) => {
-  const t = useI18n() as (str: string) => string;
+  const t = useI18n();
   const indicatorClassName = classNames(
     'flex w-2 h-2 mr-1 rounded no-user-select',
     getActionClassName(publication.action),

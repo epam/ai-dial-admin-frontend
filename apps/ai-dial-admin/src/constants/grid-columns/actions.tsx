@@ -7,7 +7,7 @@ import {
   IconInfinity,
   IconPlayerPause,
   IconPlayerPlay,
-  IconRefresh,
+  IconRefreshDot,
   IconReload,
   IconReplace,
   IconTrash,
@@ -23,7 +23,7 @@ import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 
 export function getResourceRollbackOperation<T>(onClick: (entity?: T) => void): ActionMenuOperationDeclaration<T> {
   return {
-    icon: <IconRefresh {...BASE_ICON_PROPS} />,
+    icon: <IconRefreshDot {...BASE_ICON_PROPS} />,
     id: ActionMenuOperation.Resource_rollback,
     onClick,
   };

@@ -70,7 +70,7 @@ const HeaderButtons: FC<Props> = ({
   containerNames,
   versions,
 }) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
   const { showNotification } = useNotification();
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
@@ -278,7 +278,7 @@ const HeaderButtons: FC<Props> = ({
           </div>
         ) : (
           <div className="flex flex-row items-center w-full">
-            <div className={`flex-1 flex flex-row gap-3`}>
+            <div className="flex-1 flex flex-row gap-3">
               <VersionsSelect
                 selected={image.id}
                 versions={versions}

@@ -19,7 +19,7 @@ interface Props {
 
 const Filter: FC<Props> = ({ id, onClose, onEdit, dropdownData, filterData, route }) => {
   const { type, condition, value } = filterData;
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const filterTypeConfig = getFilterTypeConfig(t);
   const filterConditionConfig = getFilterConditionConfig(t);
   const typeText = filterTypeConfig.find((item) => item.value === type)?.value;

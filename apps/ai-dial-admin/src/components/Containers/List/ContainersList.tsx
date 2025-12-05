@@ -45,7 +45,7 @@ interface Props {
 }
 
 const ContainersList: FC<Props> = ({ route, containersList }) => {
-  const t = useI18n() as (key: string, param?: unknown) => string;
+  const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { visualizerConnector } = useAppContext();
@@ -191,7 +191,9 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
 
-    const pendingContainers = containersList.filter((c) => c.status === CONTAINER_STATUS.PENDING);
+    const pendingContainers = containersList.filter(
+      (c) => c.status === CONTAINER_STATUS.PENDING || c.status === CONTAINER_STATUS.STOPPING,
+    );
 
     if (pendingContainers.length) {
       interval = setInterval(async () => {
@@ -200,7 +202,7 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
         results.forEach((res) => {
           if (res.status === 'fulfilled') {
             const container = res.value.response as Container;
-            if (container?.status !== CONTAINER_STATUS.PENDING) {
+            if (container?.status !== CONTAINER_STATUS.PENDING && container?.status !== CONTAINER_STATUS.STOPPING) {
               if (container?.status === CONTAINER_STATUS.RUNNING) {
                 showNotification(
                   getSuccessNotification(
@@ -215,7 +217,16 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
                   getErrorNotification(
                     t(ContainersI18nKey.ContainerRunFailed, { type: getTranslatedType(route, t) }),
                     '',
-                    '5000', //TODO: DEPLOYMENTS
+                    res.value.requestId,
+                    5000,
+                  ),
+                );
+              }
+              if (container.status === CONTAINER_STATUS.STOPPED) {
+                showNotification(
+                  getSuccessNotification(
+                    t(ContainersI18nKey.ContainerStopSuccess, { type: getTranslatedType(route, t) }),
+                    '',
                     5000,
                   ),
                 );

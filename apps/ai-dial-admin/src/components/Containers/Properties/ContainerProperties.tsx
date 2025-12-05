@@ -24,7 +24,7 @@ interface Props {
 }
 
 const ContainerProperties: FC<Props> = ({ container, setContainer, isModal, route, names }) => {
-  const t = useI18n() as (str: string) => string;
+  const t = useI18n();
 
   const [pathError, setPathError] = useState<FieldError | null>(null);
 

@@ -20,7 +20,7 @@ interface Props {
 }
 
 const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, onRemoveValue, onChangeValue }) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const ref = useRef<HTMLDivElement>(null);
   const isFirstLine = index === 0;
   const [errorText, setErrorText] = useState('');

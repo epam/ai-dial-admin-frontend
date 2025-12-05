@@ -22,7 +22,7 @@ interface Props {
 }
 
 const VersionControl: FC<Props> = ({ version, error, optional, hideError, onChange, title, view, ...props }) => {
-  const t = useI18n() as (str: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
   const { dispatch } = useSaveValidationContext();
 
   const [versionError, setVersionError] = useState<FieldError | null>(null);

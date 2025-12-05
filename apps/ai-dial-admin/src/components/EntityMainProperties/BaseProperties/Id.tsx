@@ -28,7 +28,7 @@ const IdControl = <T extends { name?: string }>({
   disabled,
   onChangeEntity,
 }: Props<T>) => {
-  const t = useI18n() as (t: string) => string;
+  const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const [nameError, setNameError] = useState<FieldError | null>(null);
 
@@ -43,7 +43,7 @@ const IdControl = <T extends { name?: string }>({
 
   const onChangeName = useCallback(
     (name?: string) => {
-      onChangeEntity?.({ ...entity, name });
+      onChangeEntity?.({ ...entity, name: name?.trimStart() });
       validateName(name);
     },
     [entity, onChangeEntity, validateName],

@@ -50,7 +50,7 @@ interface Props {
 }
 
 const RolesView: FC<Props> = ({ originalRole, etag, names, models, applications, keys }) => {
-  const t = useI18n() as (str: string) => string;
+  const t = useI18n();
   const router = useRouter();
   const getReqRef = useRef(useProtectedRequest());
   const { showNotification } = useNotification();

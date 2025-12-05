@@ -645,8 +645,8 @@ export default {
     Update: 'Update',
     Create: 'Create',
     PathsIgnore: 'Ignore paths',
-    PathsPrompt: 'Prompt paths',
-    PathsFile: 'File paths',
+    PromptPaths: 'Prompt paths',
+    FilePaths: 'File paths',
     Changes: 'Changes',
     FileSizeErrorHeader: 'File size limit error',
     FileSizeErrorDescription: 'Size of files is more than {size}',
@@ -1005,7 +1005,8 @@ export default {
     SystemUnavailable: 'The system is temporarily unavailable due to a technical update.',
     TryAgainLater: 'Please try again later.',
     RequiredProperty: 'This property is required',
-    InvalidPath: 'Path must start with / and use only letters, digits, - , and _',
+    InvalidPath:
+      'Invalid route path. Path must be a valid plain path (starting with /) or a valid regular expression pattern (starting with / or ^/)',
     InvalidStatus: 'Status must be a number from 100 to 999',
     UrlField: 'This field must be a valid URL starting with  http:// or https://',
     WarningEndpoint: 'The endpoint uses HTTP instead of HTTPS. This may expose data to security risks.',
@@ -1052,6 +1053,7 @@ export default {
     View: 'View',
     Import: 'Import Toolsets',
     Export: 'Export Toolsets',
+    ToolsetPaths: 'Toolset paths',
     AllTools: 'All tools',
     Warning: 'List of tools from external endpoint may not display some tools. Add the missing tools manually.',
     AutoDetected: 'Auto-detected',
@@ -1132,7 +1134,10 @@ export default {
     Preparing: 'Preparing...',
     Failed: 'Failed',
     Stopped: 'Stopped',
+    Stopping: 'Stopping...',
     Pod: 'Pod',
+    ContainerRestartWarning: 'Container will be restarted after changing image version.',
+    ContainersRestartWarning: 'Containers with "Running" status will be restarted.',
   },
   KubEvents: {
     Normal: 'Normal',
@@ -1153,6 +1158,7 @@ export default {
   Applications: {
     Import: 'Import Applications',
     Export: 'Export Applications',
+    ApplicationPaths: 'Application paths',
   },
   ValidityStatus: {
     Invalid: 'Invalid',

@@ -1,5 +1,4 @@
 import { FC } from 'react';
-import classNames from 'classnames';
 import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
 import { ButtonsI18nKey, EntityFieldsI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import { Image } from '@/src/models/deployments/images';
@@ -14,9 +13,7 @@ interface Props {
 }
 
 const Install: FC<Props> = ({ isModalOpen, title, onClose, onApply, image }) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
-
-  const containerClassName = classNames('flex flex-col w-full md:max-w-[400px] lg:max-w-[400pxs]');
+  const t = useI18n();
 
   return (
     <DialPopup
@@ -24,7 +21,7 @@ const Install: FC<Props> = ({ isModalOpen, title, onClose, onApply, image }) => 
       title={title}
       portalId="BuildImageModal"
       open={isModalOpen}
-      className={containerClassName}
+      className="md:max-w-[400px] lg:max-w-[400px]"
     >
       <div className="flex flex-col h-full overflow-auto px-6 py-4 gap-2">
         <p className="text-secondary small-150">{t(ImagesI18nKey.InstallModalDescription)}</p>

@@ -35,7 +35,7 @@ const EnvVariable: FC<Props> = ({
   findColumn,
   moveColumn,
 }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
   const isTablet = useIsTabletScreen();
 
   const mountTypeItems = mountTypeDropdownItems(t);
@@ -101,7 +101,7 @@ const EnvVariable: FC<Props> = ({
             className={classNames('flex flex-col mt-4 gap-y-4 lg:flex-row lg:gap-x-4 lg:mt-0', isCollapsed && 'hidden')}
           >
             <DialTextInputField
-              elementId={'name ' + index}
+              elementId={`name ${index}`}
               value={variable.name}
               placeholder={t(EntityPlaceholdersI18nKey.Name)}
               fieldTitle={t(EnvVariablesI18nKey.Name)}
@@ -111,7 +111,7 @@ const EnvVariable: FC<Props> = ({
               onChange={onChangeName}
             />
             <DialTextInputField
-              elementId={'description ' + index}
+              elementId={`description ${index}`}
               value={variable.description}
               placeholder={t(EntityPlaceholdersI18nKey.Description)}
               fieldTitle={t(EnvVariablesI18nKey.Description)}

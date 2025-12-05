@@ -23,7 +23,7 @@ interface Props {
 }
 
 const EntityRoutes: FC<Props> = ({ roles, parentRoleLimits, readonly, iAppRunnerView, routes, onChangeRoutes }) => {
-  const t = useI18n() as (str: string) => string;
+  const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
 

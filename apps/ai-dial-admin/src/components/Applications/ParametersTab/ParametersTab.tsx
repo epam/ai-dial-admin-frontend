@@ -62,7 +62,7 @@ const ApplicationParametersTab: FC<Props> = ({
   setIsChanged,
   setSelectedEntity,
 }) => {
-  const t = useI18n() as (s: string) => string;
+  const t = useI18n();
   const { data: session } = useSession();
   const { currentTheme } = useTheme();
   const { dispatch } = useSaveValidationContext();

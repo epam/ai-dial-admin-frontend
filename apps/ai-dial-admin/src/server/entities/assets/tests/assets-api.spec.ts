@@ -7,8 +7,9 @@ import { DialPrompt } from '@/src/models/dial/prompt';
 import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { AssetsApi, ResourceBasePaths, ResourceOperation } from '../assets-api';
-import { ToolsetAuthCredentialLevel } from '../../../models/dial/toolset';
+import { AssetsApi } from '../assets-api';
+import { ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
+import { ResourceBasePaths } from '../constants';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -18,14 +19,6 @@ describe('PromptsApi', () => {
 
   beforeEach(() => {
     fetch.resetMocks();
-  });
-
-  test('Should buildUrl', async () => {
-    expect(instance.buildUrl(ResourceType.APPLICATION, ResourceOperation.CREATE)).toBe(
-      `${ResourceBasePaths[ResourceType.APPLICATION]}/create`,
-    );
-
-    expect(instance.buildUrl(ResourceType.APPLICATION)).toBe(`${ResourceBasePaths[ResourceType.APPLICATION]}`);
   });
 
   test('Should calls getPromptsList', async () => {

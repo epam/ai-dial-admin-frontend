@@ -36,7 +36,7 @@ const ModifiedEntityButtons = <T extends object>({
   onSave,
   existingVersions,
 }: Props<T>) => {
-  const t = useI18n() as (key: string, options?: Record<string, string | number>) => string;
+  const t = useI18n();
   const { showNotification } = useNotification();
 
   const { isValid, jsonErrors, dispatch } = useSaveValidationContext();

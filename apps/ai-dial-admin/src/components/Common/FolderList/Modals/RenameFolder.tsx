@@ -16,7 +16,7 @@ interface Props {
 }
 
 const RenameFolder: FC<Props> = ({ currentPath, siblings = [], isModalOpen, onClose, onApply }) => {
-  const t = useI18n() as (str: string) => string;
+  const t = useI18n();
   const [newName, setNewName] = useState(getFolderName(currentPath) || '');
   const [isDisabled, setIsDisabled] = useState(true);
   const [errorText, setErrorText] = useState('');

@@ -29,7 +29,7 @@ const RESOURCES_COLUMNS: ColDef[] = [
 ];
 
 const Resources: FC<Props> = ({ containerId }) => {
-  const t = useI18n() as (key: string) => string;
+  const t = useI18n();
 
   const [resources, setResources] = useState<Resource[] | null>(null);
   const [loading, setLoading] = useState<boolean>(false);

@@ -20,7 +20,7 @@ interface Props {
 }
 
 const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntityImmutable }) => {
-  const t = useI18n() as (t: string, props?: Record<string, number>) => string;
+  const t = useI18n();
   const { dispatch } = useSaveValidationContext();
 
   const validateDisplayName = useCallback(

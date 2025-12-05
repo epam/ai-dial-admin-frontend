@@ -57,7 +57,7 @@ interface Props {
 }
 
 const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets, isUserLevel }) => {
-  const t = useI18n() as (stringToTranslate: string) => string;
+  const t = useI18n();
   const tabs = getTabsForAsset(t, ApplicationRoute.AssetsToolsets);
   const router = useRouter();
   const { fetchFiles } = useToolsetFolder();

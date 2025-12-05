@@ -34,6 +34,11 @@ describe('validation utils', () => {
         type: ErrorType.EMPTY,
         text: ErrorI18nKey.RequiredField,
       });
+
+      expect(getVariableNameError('')).toEqual({
+        type: ErrorType.EMPTY,
+        text: '',
+      });
     });
 
     test('returns error for invalid start character', () => {
@@ -41,12 +46,22 @@ describe('validation utils', () => {
         type: ErrorType.INVALID,
         text: ErrorI18nKey.VariableStartError,
       });
+
+      expect(getVariableNameError('1variable')).toEqual({
+        type: ErrorType.INVALID,
+        text: '',
+      });
     });
 
     test('returns error for invalid characters', () => {
       expect(getVariableNameError('var-iable', t)).toEqual({
         type: ErrorType.INVALID,
         text: ErrorI18nKey.VariableError,
+      });
+
+      expect(getVariableNameError('var-iable')).toEqual({
+        type: ErrorType.INVALID,
+        text: '',
       });
     });
 
@@ -113,6 +128,11 @@ describe('validation utils', () => {
         type: ErrorType.INVALID,
         text: ErrorI18nKey.URLError,
       });
+
+      expect(getDeploymentsURLError('invalid-url')).toEqual({
+        type: ErrorType.INVALID,
+        text: '',
+      });
     });
 
     test('delegates to getURLError if valid format', () => {
@@ -126,6 +146,11 @@ describe('validation utils', () => {
       expect(getDeploymentsURIError('invalid uri', t)).toEqual({
         type: ErrorType.INVALID,
         text: ErrorI18nKey.ImageSourceURI,
+      });
+
+      expect(getDeploymentsURIError('invalid uri')).toEqual({
+        type: ErrorType.INVALID,
+        text: '',
       });
     });
 
@@ -142,6 +167,11 @@ describe('validation utils', () => {
         type: ErrorType.LENGTH,
         text: ErrorI18nKey.Length, // The mock t function just returns the key, arguments are ignored in simple mock
       });
+
+      expect(getMaintainerError(longName)).toEqual({
+        type: ErrorType.LENGTH,
+        text: '',
+      });
     });
 
     test('returns null if valid', () => {
@@ -155,12 +185,22 @@ describe('validation utils', () => {
         type: ErrorType.EMPTY,
         text: ErrorI18nKey.RequiredField,
       });
+
+      expect(getPathError('', void 0, true)).toEqual({
+        type: ErrorType.EMPTY,
+        text: '',
+      });
     });
 
     test('returns error if not starting with /', () => {
       expect(getPathError('invalid/path', t, false)).toEqual({
         type: ErrorType.INVALID,
         text: ErrorI18nKey.PathError,
+      });
+
+      expect(getPathError('invalid/path', void 0, false)).toEqual({
+        type: ErrorType.INVALID,
+        text: '',
       });
     });
 
@@ -175,6 +215,11 @@ describe('validation utils', () => {
         type: ErrorType.EMPTY,
         text: ErrorI18nKey.RequiredField,
       });
+
+      expect(getURLError('')).toEqual({
+        type: ErrorType.EMPTY,
+        text: '',
+      });
     });
 
     test('returns null if not empty', () => {
@@ -187,6 +232,11 @@ describe('validation utils', () => {
       expect(getURIError('', t)).toEqual({
         type: ErrorType.EMPTY,
         text: ErrorI18nKey.RequiredField,
+      });
+
+      expect(getURIError('')).toEqual({
+        type: ErrorType.EMPTY,
+        text: '',
       });
     });
 

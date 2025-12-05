@@ -5,52 +5,24 @@ import { ROOT_FOLDER } from '@/src/constants/file';
 import { Asset, AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
+import { Tool, ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { ResourceType } from '@/src/types/resource-type';
 import { ImportFileType } from '@/src/types/import';
+import { ResourceType } from '@/src/types/resource-type';
 import { getFileName } from '@/src/utils/api/get-file-name';
 import { changePath, getFolderNameAndPath } from '@/src/utils/files/path';
-import { API } from '../api';
-import { BaseApi } from '../base-api';
-import { Tool, ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
-import { getToolsetSignInBody, getToolsetBasicBody } from '@/src/utils/toolset/toolset-auth';
-
-export enum ResourceOperation {
-  LIST = 'list',
-  GET = 'get',
-  CREATE = 'create',
-  DELETE = 'delete',
-  DELETE_BULK = 'delete/bulk',
-  MOVE = 'move',
-  EXPORT = 'export',
-  EXPORT_JSON = 'export/json',
-  IMPORT = 'import',
-  IMPORT_ZIP = 'import/zip',
-  IMPORT_JSON = 'import/json',
-  DOWNLOAD = 'download',
-  UPDATE = 'update',
-}
-
-export const ResourceBasePaths: Record<ResourceType, string> = {
-  [ResourceType.PROMPT]: `${API}/prompts`,
-  [ResourceType.FILE]: `${API}/files`,
-  [ResourceType.APPLICATION]: `${API}/application-resources`,
-  [ResourceType.TOOLSET]: `${API}/toolset-resources`,
-  [ResourceType.CONVERSATION]: `${API}/conversations`,
-};
+import { getToolsetBasicBody, getToolsetSignInBody } from '@/src/utils/toolset/toolset-auth';
+import { BaseApi } from '../../base-api';
+import { ResourceBasePaths, ResourceOperation } from './constants';
+import { buildAssetUrl } from './utils';
 
 export class AssetsApi extends BaseApi {
-  buildUrl(resource: ResourceType, operation?: ResourceOperation): string {
-    const basePath = ResourceBasePaths[resource];
-    return operation ? `${basePath}/${operation}` : basePath;
-  }
-
   async getAssetList(
     token: JWT | null,
     path: string,
     type: ResourceType,
   ): Promise<(Asset | DialFile)[] | null | undefined> {
-    const url = this.buildUrl(type, ResourceOperation.LIST);
+    const url = buildAssetUrl(type, ResourceOperation.LIST);
     if (type === ResourceType.FILE) {
       return this.post(ResourceBasePaths[type], { path }, token).then((response) =>
         response === void 0 ? void 0 : (response as { items: DialFile[] })?.items || [],
@@ -83,13 +55,13 @@ export class AssetsApi extends BaseApi {
   }
 
   getAssetWithEtag(token: JWT | null, path: string, type: ResourceType, etag: string) {
-    const url = this.buildUrl(type, ResourceOperation.GET);
+    const url = buildAssetUrl(type, ResourceOperation.GET);
 
     return this.postAction(url, { path }, token, { [IF_NONE_MATCH]: etag });
   }
 
   getAsset(token: JWT | null, path: string, type: ResourceType): Promise<DialPrompt | null> {
-    const url = this.buildUrl(type, ResourceOperation.GET);
+    const url = buildAssetUrl(type, ResourceOperation.GET);
 
     return this.post(url, { path }, token);
   }
@@ -100,17 +72,17 @@ export class AssetsApi extends BaseApi {
     type: ResourceType,
     etag: string,
   ): Promise<ServerActionResponse> {
-    const url = this.buildUrl(type, ResourceOperation.UPDATE);
+    const url = buildAssetUrl(type, ResourceOperation.UPDATE);
     return this.postAction(url, { ...asset }, token, { [IF_MATCH]: etag });
   }
 
   updateAsset(token: JWT | null, asset: Asset, type: ResourceType): Promise<ServerActionResponse> {
-    const url = this.buildUrl(type, ResourceOperation.UPDATE);
+    const url = buildAssetUrl(type, ResourceOperation.UPDATE);
     return this.postAction(url, { ...asset }, token);
   }
 
   createAsset(asset: Asset, type: ResourceType, token: JWT | null): Promise<ServerActionResponse> {
-    const url = this.buildUrl(type, ResourceOperation.CREATE);
+    const url = buildAssetUrl(type, ResourceOperation.CREATE);
     return this.postAction(url, { ...asset, folderId: asset.folderId || ROOT_FOLDER }, token);
   }
 
@@ -120,7 +92,7 @@ export class AssetsApi extends BaseApi {
     type: ResourceType,
     etag?: string,
   ): Promise<ServerActionResponse> {
-    const url = this.buildUrl(type, ResourceOperation.DELETE);
+    const url = buildAssetUrl(type, ResourceOperation.DELETE);
     return this.postAction(url, { path }, token, { [IF_MATCH]: etag || DEFAULT_ETAG });
   }
 
@@ -128,18 +100,18 @@ export class AssetsApi extends BaseApi {
     if (type === ResourceType.FILE) {
       return this.deleteAction(`${ResourceBasePaths[type]}?path=${path}`, token);
     } else {
-      const url = this.buildUrl(type, ResourceOperation.DELETE);
+      const url = buildAssetUrl(type, ResourceOperation.DELETE);
       return this.postAction(url, { path }, token);
     }
   }
 
   bulkDeleteAssets(token: JWT | null, paths: { path: string }[], type: ResourceType): Promise<ServerActionResponse> {
-    const url = this.buildUrl(type, ResourceOperation.DELETE_BULK);
+    const url = buildAssetUrl(type, ResourceOperation.DELETE_BULK);
     return this.postAction(url, { paths }, token);
   }
 
   moveAssets(token: JWT | null, paths: string[], newPath: string, type: ResourceType): Promise<ServerActionResponse[]> {
-    const url = this.buildUrl(type, ResourceOperation.MOVE);
+    const url = buildAssetUrl(type, ResourceOperation.MOVE);
     const requests = paths.map((path) => {
       const body = {
         sourceUrl: path,
@@ -158,7 +130,7 @@ export class AssetsApi extends BaseApi {
     fileType: ImportFileType,
     type: ResourceType,
   ): Promise<ServerActionResponse> {
-    const url = this.buildUrl(
+    const url = buildAssetUrl(
       type,
       fileType === ImportFileType.ARCHIVE
         ? ResourceOperation.IMPORT_ZIP
@@ -175,7 +147,7 @@ export class AssetsApi extends BaseApi {
     paths?: string[],
     fileType?: ImportFileType,
   ): Promise<{ blob: Blob; fileName: string } | unknown> {
-    const url = this.buildUrl(
+    const url = buildAssetUrl(
       type,
       fileType === ImportFileType.ARCHIVE ? ResourceOperation.EXPORT : ResourceOperation.EXPORT_JSON,
     );
@@ -191,19 +163,19 @@ export class AssetsApi extends BaseApi {
   // File specific
 
   downloadFile(token: JWT | null, path: string): Promise<Response> {
-    const url = this.buildUrl(ResourceType.FILE, ResourceOperation.DOWNLOAD);
+    const url = buildAssetUrl(ResourceType.FILE, ResourceOperation.DOWNLOAD);
     const filename = getFolderNameAndPath(path).name;
     return this.streamRequest(`${url}?path=${path}`, filename, token);
   }
 
   previewFile(token: JWT | null, path: string): Promise<Response> {
-    const url = this.buildUrl(ResourceType.FILE, ResourceOperation.DOWNLOAD);
+    const url = buildAssetUrl(ResourceType.FILE, ResourceOperation.DOWNLOAD);
     const filename = getFolderNameAndPath(path).name;
     return this.streamRequest(`${url}?path=${path}`, filename, token, true);
   }
 
   exportFiles(token: JWT | null, paths?: string[]): Promise<{ blob: Blob; fileName: string }> {
-    const url = this.buildUrl(ResourceType.FILE, ResourceOperation.EXPORT);
+    const url = buildAssetUrl(ResourceType.FILE, ResourceOperation.EXPORT);
     return this.sendRequest(url, 'POST', { paths }, token).then(async (res) => {
       if ((res as Response).blob) {
         return { blob: await (res as Response).blob(), fileName: getFileName(res as Response) || '' };
