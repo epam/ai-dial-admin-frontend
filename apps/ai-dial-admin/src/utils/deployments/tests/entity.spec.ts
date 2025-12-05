@@ -3,6 +3,7 @@ import {
   getAssetTemplate,
   getEntityId,
   getEntityName,
+  getEntityRoute,
   getEntityTemplate,
   getIdFormat,
   getTranslatedEntity,
@@ -20,6 +21,18 @@ vi.mock('@/src/utils/models/model-endpoint');
 
 describe('entity utils', () => {
   const t = (key: string) => key;
+
+  describe('getEntityRoute', () => {
+    test('returns Toolsets for McpDeployments', () => {
+      expect(getEntityRoute(ApplicationRoute.McpDeployments)).toBe(ApplicationRoute.Toolsets);
+    });
+    test('returns Interceptors for InterceptorDeployments', () => {
+      expect(getEntityRoute(ApplicationRoute.InterceptorDeployments)).toBe(ApplicationRoute.Interceptors);
+    });
+    test('returns Models for other routes', () => {
+      expect(getEntityRoute(ApplicationRoute.ModelDeployments)).toBe(ApplicationRoute.Models);
+    });
+  });
 
   describe('getTranslatedType', () => {
     test('returns MCP for McpDeployments', () => {
