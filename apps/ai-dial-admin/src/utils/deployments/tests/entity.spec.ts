@@ -93,10 +93,11 @@ describe('entity utils', () => {
   describe('getAssetTemplate', () => {
     test('returns asset template', () => {
       const container = { name: 'MyContainer', url: 'http://url' } as any;
-      const template = getAssetTemplate(ApplicationRoute.McpDeployments, container, t);
+      const template = getAssetTemplate(ApplicationRoute.McpDeployments, container, t, CONTAINER_TRANSPORT.SSE);
       expect(template.name).toBe('mycontainer_entities.toolset');
       expect(template.endpoint).toBe('http://url');
       expect(template.version).toBe('1.0.0');
+      expect(template.transport).toBe(CONTAINER_TRANSPORT.SSE);
     });
 
     test('configures transport for McpDeployments', () => {

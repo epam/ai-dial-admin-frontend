@@ -11,6 +11,16 @@ import { ENTITY_TRANSPORT } from '@/src/constants/deployments/containers';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialFileNodeType } from '@/src/models/dial/file';
 
+export const getEntityRoute = (route: ApplicationRoute) => {
+  if (route === ApplicationRoute.McpDeployments) {
+    return ApplicationRoute.Toolsets;
+  } else if (route === ApplicationRoute.InterceptorDeployments) {
+    return ApplicationRoute.Interceptors;
+  } else {
+    return ApplicationRoute.Models;
+  }
+};
+
 export const getTranslatedType = (route: ApplicationRoute, t: (key: string) => string) => {
   if (route === ApplicationRoute.McpDeployments) {
     return t(EntitiesI18nKey.MCP);
@@ -78,26 +88,20 @@ export const getAssetTemplate = (
   route: ApplicationRoute,
   container: Container,
   t: (key: string, options?: Record<string, string | number>) => string,
-  transport?: CONTAINER_TRANSPORT,
+  transport: CONTAINER_TRANSPORT,
 ): AssetToolset => {
-  const template: AssetToolset = {
+  return {
     name: getEntityId(container, route, t),
     displayName: getEntityName(container, route, t),
     description: '',
     endpoint: container.url,
     version: '1.0.0',
+    displayVersion: '1.0.0',
     folderId: '',
     nodeType: DialFileNodeType.ITEM,
     path: '',
+    transport: ENTITY_TRANSPORT[transport],
   };
-
-  if (route === ApplicationRoute.McpDeployments) {
-    if (transport) {
-      (template as Toolset).transport = ENTITY_TRANSPORT[transport];
-    }
-  }
-
-  return template;
 };
 
 export const splitFolderId = (folderId: string) => {

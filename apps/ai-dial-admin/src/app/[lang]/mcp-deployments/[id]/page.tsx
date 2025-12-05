@@ -27,6 +27,7 @@ import { SaveValidationContextProvider } from '@/src/context/SaveValidationConte
 import ContainerView from '@/src/components/Containers/View/ContainerView';
 import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 import { isValueTruthy } from '@/src/utils/types';
+import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContext';
 
 export const dynamic = 'force-dynamic';
 
@@ -138,15 +139,17 @@ export default async function Page(params: Params) {
 
       return (
         <SaveValidationContextProvider>
-          <ContainerView
-            container={container}
-            image={image}
-            route={ApplicationRoute.McpDeployments}
-            names={containers?.map((container) => container.name).filter((name) => name !== container.name) || []}
-            createEntity={createToolset}
-            createEntityAsAsset={createAssetToolset}
-            entityNames={toolsets?.map((toolset) => toolset.name as string) || []}
-          />
+          <ToolsetFolderProvider>
+            <ContainerView
+              container={container}
+              image={image}
+              route={ApplicationRoute.McpDeployments}
+              names={containers?.map((container) => container.name).filter((name) => name !== container.name) || []}
+              createEntity={createToolset}
+              createEntityAsAsset={createAssetToolset}
+              entityNames={toolsets?.map((toolset) => toolset.name as string) || []}
+            />
+          </ToolsetFolderProvider>
         </SaveValidationContextProvider>
       );
     }
