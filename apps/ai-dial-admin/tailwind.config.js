@@ -15,13 +15,14 @@ const backgroundsColors = {
   info: 'var(--bg-info, #1C2C47)',
   success: 'var(--bg-success, #1D3841)',
   'model-icon': 'var(--bg-model-icon, #FFFFFF)',
+
   'accent-primary': 'var(--bg-accent-primary, #5C8DEA)',
   'accent-secondary': 'var(--bg-accent-secondary, #37BABC)',
   'accent-tertiary': 'var(--bg-accent-tertiary, #A972FF)',
 
-  'accent-primary-alpha': 'var(--bg-accent-primary-alpha, #5C8DEA2B)',
+  'accent-primary-alpha': 'var(--bg-accent-primary-alpha, #74A4FF26)',
   'accent-secondary-alpha': 'var(--bg-accent-secondary-alpha, #37BABC26)',
-  'accent-tertiary-alpha': 'var(--bg-accent-tertiary-alpha, #A972FF2B)',
+  'accent-tertiary-alpha': 'var(--bg-accent-tertiary-alpha, #A972FF26)',
 
   'red-400': 'var(--bg-red-400, #F76464)',
   'red-800': 'var(--bg-red-800, #AE2F2F)',
@@ -92,26 +93,21 @@ module.exports = {
     './../../node_modules/@epam/ai-dial-ui-kit/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
-    backgroundColor: { ...backgroundsColors, ...buttonsBgColors },
-    borderColor: borderColors,
-    stroke: borderColors,
-    divideColor: borderColors,
-    placeholderColor: placeholderColor,
-    textColor: { ...textColors, ...buttonsTextColors },
-    gradientColorStops: backgroundsColors,
-
     extend: {
+      backgroundColor: { ...backgroundsColors, ...buttonsBgColors },
+      borderColor: borderColors,
+      stroke: borderColors,
+      divideColor: borderColors,
+      placeholderColor: placeholderColor,
+      textColor: { ...textColors, ...buttonsTextColors },
+      gradientColorStops: backgroundsColors,
+
       screens: {
-        sm: '640px',
-        md: '768px',
-        lg: '1024px',
-        xl: '1280px',
-        '2xl': '1536px',
         mobile: '767px',
         small_tablet: '1023px',
         large_tablet: '1279px',
-        desktop: '2559px',
-        large_desktop: '2560px',
+        desktop: '1440px', // нормальное значение
+        large_desktop: '1920px', // нормальное значение
       },
       boxShadow: {
         DEFAULT: '0 0 4px 0 var(--bg-blackout, #090D13B2)',
