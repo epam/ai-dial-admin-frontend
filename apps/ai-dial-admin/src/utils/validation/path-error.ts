@@ -101,11 +101,6 @@ export const isValidRoutePath = (path: string): boolean => {
   return validatePlainPath(path);
 };
 
-export const isValidPaths = (paths: string[]): boolean => {
-  const validPaths = paths.filter((path) => !!getErrorForPath(path));
-  return !(validPaths.length === 0);
-};
-
 export const getErrorForPath = (path?: string, t?: (str: string) => string) => {
   const isEmptyPath = !path || path === '';
   const isInvalid = path && !isValidRoutePath(path);

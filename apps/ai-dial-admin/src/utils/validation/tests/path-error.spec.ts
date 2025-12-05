@@ -2,7 +2,6 @@ import { describe, expect, test, vi } from 'vitest';
 import { ErrorType } from '@/src/types/error-type';
 import {
   getErrorForPath,
-  isValidPaths,
   isContainRegexSymbols,
   isValidRoutePath,
   areBracketsBalanced,
@@ -169,37 +168,37 @@ describe('validatePlainPath', () => {
 });
 
 describe('isValidRoutePath', () => {
- test('should return true for an empty path', () => {
+  test('should return true for an empty path', () => {
     expect(isValidRoutePath('')).toBe(true);
   });
 
- test('should return false for paths exceeding the maximum length', () => {
+  test('should return false for paths exceeding the maximum length', () => {
     const longPath = 'a'.repeat(MAX_LENGTH + 1);
-    expect(isValidRoutePath(longPath)).toBe(false); 
+    expect(isValidRoutePath(longPath)).toBe(false);
   });
 
- test('should return true for valid regex paths', () => {
+  test('should return true for valid regex paths', () => {
     expect(isValidRoutePath('/abc/*')).toBe(true);
     expect(isValidRoutePath('/user/\\d+/profile')).toBe(true);
   });
 
- test('should return false for invalid regex patterns', () => {
+  test('should return false for invalid regex patterns', () => {
     expect(isValidRoutePath('/abc[')).toBe(false);
     expect(isValidRoutePath('/^+*/')).toBe(false);
   });
 
- test('should return true for valid plain paths', () => {
+  test('should return true for valid plain paths', () => {
     expect(isValidRoutePath('/user/profile')).toBe(true);
-    expect(isValidRoutePath('/abc/def-ghi/xyz.123')).toBe(true); 
+    expect(isValidRoutePath('/abc/def-ghi/xyz.123')).toBe(true);
   });
 
- test('should return false for invalid plain paths', () => {
+  test('should return false for invalid plain paths', () => {
     expect(isValidRoutePath('/user>profile')).toBe(false);
-    expect(isValidRoutePath('/user@profile')).toBe(false); 
+    expect(isValidRoutePath('/user@profile')).toBe(false);
     expect(isValidRoutePath('/user profile')).toBe(false);
   });
 
- test('should return true for valid plain paths with letters, digits, hyphens, and slashes', () => {
+  test('should return true for valid plain paths with letters, digits, hyphens, and slashes', () => {
     expect(isValidRoutePath('/user/123-profile')).toBe(true);
     expect(isValidRoutePath('/home/abc/xyz')).toBe(true);
   });
@@ -260,20 +259,5 @@ describe('getErrorForPath', () => {
     const validPath = '/valid-path_123';
     const res = getErrorForPath(validPath);
     expect(res).toBeNull();
-  });
-});
-
-describe('isValidPaths', () => {
-  test('should return false for empty array', () => {
-    expect(isValidPaths([])).toBe(false);
-  });
-
-  test('should return false if all paths are valid', () => {
-    expect(isValidPaths(['validPath'])).toBe(false);
-  });
-
-  test('should return true if any path is invalid', () => {
-    expect(isValidPaths([''])).toBe(true);
-    expect(isValidPaths(['validPath', ''])).toBe(true);
   });
 });
