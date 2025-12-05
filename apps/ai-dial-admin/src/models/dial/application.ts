@@ -30,6 +30,7 @@ export interface DialApplicationScheme extends ModifiedEntity, DialScheme {
   'dial:appendApplicationPropertiesHeader'?: boolean;
   'dial:applicationTypeRoutes'?: DialRoute[];
   'dial:applicationTypePlaybackSupport'?: boolean;
+  'dial:applicationTypeAssistantAttachmentsInRequestSupported'?: boolean;
   'dial:applicationTypeIconUrl'?: string;
   'dial:applicationTypeBucketCopy'?: TypeBucketCopy;
   'dial:applicationTypeInterceptors'?: string[];
