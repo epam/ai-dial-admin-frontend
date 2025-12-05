@@ -961,6 +961,7 @@ export enum EntityFieldsI18nKey {
   'dial:applicationTypeTruncatePromptEndpoint' = 'EntityFields.applicationTypeTruncatePromptEndpoint',
   'dial:appendApplicationPropertiesHeader' = 'EntityFields.appendApplicationPropertiesHeader',
   'dial:applicationTypePlaybackSupport' = 'EntityFields.applicationTypePlaybackSupport',
+  'dial:applicationTypeAssistantAttachmentsInRequestSupported' = 'EntityFields.applicationTypeAssistantAttachmentsInRequestSupported',
   'dial:applicationTypeIconUrl' = 'EntityFields.applicationTypeIconUrl',
   'dial:applicationTypeBucketCopy' = 'EntityFields.applicationTypeBucketCopy',
   grantedKeys = 'EntityFields.grantedKeys',
