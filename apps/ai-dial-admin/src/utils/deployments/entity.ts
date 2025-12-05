@@ -9,7 +9,6 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { ENTITY_TRANSPORT } from '@/src/constants/deployments/containers';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
-import { DialFileNodeType } from '@/src/models/dial/file';
 
 export const getEntityRoute = (route: ApplicationRoute) => {
   if (route === ApplicationRoute.McpDeployments) {
@@ -89,17 +88,11 @@ export const getAssetTemplate = (
   container: Container,
   t: (key: string, options?: Record<string, string | number>) => string,
   transport: CONTAINER_TRANSPORT,
-): AssetToolset => {
+): Partial<AssetToolset> => {
   return {
     name: getEntityId(container, route, t),
     displayName: getEntityName(container, route, t),
-    description: '',
     endpoint: container.url,
-    version: '1.0.0',
-    displayVersion: '1.0.0',
-    folderId: '',
-    nodeType: DialFileNodeType.ITEM,
-    path: '',
     transport: ENTITY_TRANSPORT[transport],
   };
 };

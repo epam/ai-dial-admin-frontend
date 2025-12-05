@@ -3,7 +3,6 @@
 import { FC } from 'react';
 
 import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
-import { getInterceptorContainers } from '@/src/app/[lang]/interceptors/actions';
 import { getSourceItems } from '@/src/components/SourceField/constants';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
@@ -17,6 +16,7 @@ import MaintainerControl from '@/src/components/EntityMainProperties/BasePropert
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import EntityProperties from '@/src/components/EntityMainProperties/Properties/EntityProperties';
 import SourceField from '@/src/components/SourceField/SourceField';
+import { getInterceptorContainers } from '@/src/app/actions/deployments';
 
 interface Props {
   selectedInterceptor: DialInterceptor;

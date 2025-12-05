@@ -10,13 +10,11 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { Container } from '@/src/models/deployments/containers';
 import {
-  createModel,
   getContainer,
   getImage,
   getImageVersions,
   getModelContainers,
   getModelImages,
-  getModelsList,
 } from '@/src/app/actions/deployments';
 import Page403 from '@/src/components/Page403/Page403';
 import { logger } from '@/src/server/logger';
@@ -26,6 +24,8 @@ import ContainerView from '@/src/components/Containers/View/ContainerView';
 import { DialModel } from '@/src/models/dial/model';
 import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 import { isValueTruthy } from '@/src/utils/types';
+import { createModel } from '@/src/app/[lang]/models/actions';
+import { modelsApi } from '@/src/app/api/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -126,7 +126,7 @@ export default async function Page(params: Params) {
           redirect(ApplicationRoute.ModelDeployments);
         }
         image = imageResponse.response as Image;
-        models = await getModelsList();
+        models = await modelsApi.getModelsList(token);
       } catch (e) {
         logger.error(`Getting interceptor container error ${e}`);
       }

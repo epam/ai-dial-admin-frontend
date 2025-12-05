@@ -2,7 +2,7 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { containersApi, toolSetsApi } from '@/src/app/api/api';
+import { toolSetsApi } from '@/src/app/api/api';
 import { Toolset } from '@/src/models/dial/toolset';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getAllowTools, getTransport } from '@/src/utils/toolset/toolset-transport';
@@ -40,9 +40,4 @@ export async function createToolset(toolSet: Toolset) {
     { ...toolSet, allowedTools: getAllowTools(toolSet), transport: getTransport(toolSet) },
     token,
   );
-}
-
-export async function getToolsetContainers() {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return containersApi.getMCPContainers(token);
 }

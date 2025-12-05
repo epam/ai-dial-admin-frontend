@@ -10,13 +10,11 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { Container } from '@/src/models/deployments/containers';
 import {
-  createInterceptor,
   getContainer,
   getImage,
   getImageVersions,
   getInterceptorContainers,
   getInterceptorImages,
-  getInterceptorsList,
   getMCPContainers,
 } from '@/src/app/actions/deployments';
 import Page403 from '@/src/components/Page403/Page403';
@@ -27,6 +25,8 @@ import ContainerView from '@/src/components/Containers/View/ContainerView';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 import { isValueTruthy } from '@/src/utils/types';
+import { createInterceptor } from '@/src/app/[lang]/interceptors/actions';
+import { interceptorsApi } from '@/src/app/api/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -129,7 +129,7 @@ export default async function Page(params: Params) {
           redirect(ApplicationRoute.InterceptorDeployments);
         }
         image = imageResponse.response as Image;
-        interceptors = await getInterceptorsList();
+        interceptors = await interceptorsApi.getInterceptorsList(token);
       } catch (e) {
         logger.error(`Getting interceptor container error: ${e}`);
       }

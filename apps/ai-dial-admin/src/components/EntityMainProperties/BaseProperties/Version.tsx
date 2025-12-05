@@ -14,6 +14,7 @@ interface Props {
   optional?: boolean;
   disabled?: boolean;
   containerClassName?: string;
+  elementContainerClassName?: string;
   error?: string;
   onChange?: (version?: string) => void;
   hideError?: boolean;

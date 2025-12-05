@@ -96,7 +96,6 @@ describe('entity utils', () => {
       const template = getAssetTemplate(ApplicationRoute.McpDeployments, container, t, CONTAINER_TRANSPORT.SSE);
       expect(template.name).toBe('mycontainer_entities.toolset');
       expect(template.endpoint).toBe('http://url');
-      expect(template.version).toBe('1.0.0');
       expect(template.transport).toBe(CONTAINER_TRANSPORT.SSE);
     });
 
