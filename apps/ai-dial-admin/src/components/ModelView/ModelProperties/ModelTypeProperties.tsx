@@ -1,16 +1,15 @@
 'use client';
 
+import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback } from 'react';
 
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { DialModel, DialModelType } from '@/src/models/dial/model';
-import { useI18n } from '@/src/locales/client';
-import { DialTextInputField } from '@epam/ai-dial-ui-kit';
-
+import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
-import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
-import { STANDARD_CONTROL_WIDTH } from '../../../constants/main-layout';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { useI18n } from '@/src/locales/client';
+import { DialModel, DialModelType } from '@/src/models/dial/model';
 
 interface Props {
   model: DialModel;

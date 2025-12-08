@@ -125,7 +125,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
       <DialSelectField
         value={runner.type || BasicI18nKey.None}
         elementId="type"
-        className="w-[150px]"
+        className="w-[180px]"
         options={types}
         fieldTitle={t(EntityFieldsI18nKey.type)}
         placeholder={t(EntityPlaceholdersI18nKey.Type)}
@@ -137,7 +137,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
       <DialSelectField
         value={runner['dial:applicationTypeBucketCopy'] || TypeBucketCopy.DISABLED}
         elementId="typeCopy"
-        className="w-[150px]"
+        className="w-[180px]"
         options={typeBucketCopy}
         fieldTitle={t(EntityFieldsI18nKey['dial:applicationTypeBucketCopy'])}
         placeholder={t(EntityPlaceholdersI18nKey.TypeBucketCopy)}

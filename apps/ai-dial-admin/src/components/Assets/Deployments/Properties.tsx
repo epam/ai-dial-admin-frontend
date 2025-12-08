@@ -36,16 +36,13 @@ const DeploymentProperties: FC<Props> = ({ asset, view, runners, onChange }) => 
   return (
     <div className="h-full flex flex-col w-full gap-y-8">
       <div className="flex flex-col gap-y-8">
-        <div className="lg:w-[35%]">
-          <DisplayNameControl
-            displayName={asset.displayName}
-            required={true}
-            onChange={(displayName) => onChange({ ...asset, displayName })}
-          />
-        </div>
-        <div className="lg:w-[35%]">
-          <DescriptionControl entity={asset} onChangeEntity={onChange} />
-        </div>
+        <DisplayNameControl
+          displayName={asset.displayName}
+          required={true}
+          isFullWidth={false}
+          onChange={(displayName) => onChange({ ...asset, displayName })}
+        />
+        <DescriptionControl entity={asset} onChangeEntity={onChange} isFullWidth={false} />
 
         <IconControl iconUrl={asset.iconUrl} onChange={(icon) => onChange({ ...asset, iconUrl: icon })} />
         <TopicsControl entity={asset} onChange={onChange} view={view} />

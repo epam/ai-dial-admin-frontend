@@ -14,6 +14,8 @@ import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import KeyGenerateField from '@/src/components/Keys/View/Properties/KeyGenerateField';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
+import { CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
+import { getControlClassName } from '@/src/utils/entities/view';
 
 interface Props {
   entity: DialKey;
@@ -26,6 +28,7 @@ interface Props {
 const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChangeKey }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
+  const containerClassName = getControlClassName(!isKeyImmutable);
 
   const isValidKey = useMemo(() => {
     return !!entity.key && !(entity.key.length > MAX_NAME_SYMBOLS);
@@ -37,7 +40,7 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
     dispatch({ type: ValidationActionType.SetField, field: 'key', isValid: isValidKey });
   }, [isValidKey, dispatch]);
 
-  const validateProject = useCallback(
+  const onValidateProject = useCallback(
     (project?: string) => {
       const error = project ? void 0 : t(ErrorI18nKey.RequiredField);
       setProjectError(error);
@@ -49,9 +52,9 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
   const onChangeProject = useCallback(
     (project?: string) => {
       onChangeKey({ ...entity, project: project || '' });
-      validateProject(project);
+      onValidateProject(project);
     },
-    [entity, onChangeKey, validateProject],
+    [entity, onChangeKey, onValidateProject],
   );
 
   const onChangeProjectContactPoint = useCallback(
@@ -75,7 +78,7 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
     [entity, onChangeKey],
   );
 
-  const changeKey = useCallback(
+  const onChange = useCallback(
     (key: DialKey) => {
       onChangeKey(key);
       dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: true });
@@ -84,7 +87,7 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
   );
 
   const onGenerateKeyId = () => {
-    changeKey({ ...entity, name: uuidv4() });
+    onChange({ ...entity, name: uuidv4() });
   };
 
   return (
@@ -107,10 +110,11 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
       <DisplayNameControl
         displayName={entity.displayName}
         required={true}
+        isFullWidth={!isKeyImmutable}
         onChange={(displayName) => onChangeKey({ ...entity, displayName })}
       />
 
-      <DescriptionControl entity={entity} onChangeEntity={onChangeKey} />
+      <DescriptionControl entity={entity} onChangeEntity={onChangeKey} isFullWidth={!isKeyImmutable} />
 
       <DialTextInputField
         elementId="project"
@@ -120,6 +124,7 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
         errorText={projectError}
         onChange={onChangeProject}
         invalid={!!projectError}
+        containerClassName={containerClassName}
       />
 
       {isKeyImmutable && (
@@ -130,9 +135,10 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
           placeholder={t(EntityPlaceholdersI18nKey.ContactPoint)}
           value={entity.projectContactPoint}
           onChange={onChangeProjectContactPoint}
+          containerClassName={CONTROL_WITH_BUTTON_WIDTH}
         />
       )}
-      <KeyGenerateField isKeyImmutable={isKeyImmutable} keys={keys} selectedKey={entity} changeKey={changeKey} />
+      <KeyGenerateField isKeyImmutable={isKeyImmutable} keys={keys} selectedKey={entity} changeKey={onChange} />
 
       {isKeyImmutable && (
         <DialSwitch
@@ -142,6 +148,7 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
           onChange={onChangeSecured}
         />
       )}
+
       {!isKeyImmutable && <ValidityPeriod onChange={onChangeExpiresAt} />}
     </div>
   );

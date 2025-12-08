@@ -8,6 +8,7 @@ import IconGalleryModal from '@/src/components/IconGallery/IconGalleryModal';
 import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 interface Props {
   iconUrl?: string;
@@ -42,6 +43,7 @@ const IconControl: FC<Props> = ({ iconUrl, disabled = false, onChange }) => {
           selectedValue={value}
           onOpen={onOpenModal}
           disabled={disabled}
+          inputClassName={STANDARD_CONTROL_WIDTH}
         >
           <IconGalleryModal
             isModalOpen={isModalOpen}

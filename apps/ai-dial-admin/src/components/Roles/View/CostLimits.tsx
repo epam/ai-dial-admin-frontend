@@ -50,9 +50,8 @@ const RoleCostLimit: FC<Props> = ({ selectedRole, onChangeRole }) => {
         onChange={toggleCostLimit}
       />
       {costLimitExist && (
-        <div className="flex flex-row gap-x-6 mt-3 pl-[46px]">
+        <div className="mt-3 pl-[46px]">
           <LimitsControl
-            controlClassName="lg:w-[240px] w-full"
             limits={selectedRole.costLimit}
             isCostInputs={true}
             onChangeLimits={(costLimit) => onChangeRole({ ...selectedRole, costLimit })}

@@ -116,9 +116,13 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isImmutable, publ
               <VersionControl version={prompt.version} disabled={isImmutable} />
             </div>
           )}
-          <div className="lg:w-[35%]">
-            <DescriptionControl entity={prompt} onChangeEntity={onChangePrompt} disabled={isImmutable} />
-          </div>
+
+          <DescriptionControl
+            isFullWidth={!isImmutable}
+            entity={prompt}
+            onChangeEntity={onChangePrompt}
+            disabled={isImmutable}
+          />
           <div>
             <div className="flex justify-between mb-2">
               <div className="tiny mb-2 text-secondary">{t(EntityFieldsI18nKey.content)}</div>

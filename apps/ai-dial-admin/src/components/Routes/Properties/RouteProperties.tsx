@@ -160,109 +160,107 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
 
   return (
     <div className="h-full flex flex-col w-full gap-y-8">
-      <div className="flex flex-col gap-y-8 lg:w-[35%]">
-        <DisplayNameControl
-          displayName={route.displayName || route.name}
-          required={true}
-          onChange={onChangeDisplayName}
-          disabled={readonly}
-        />
-        {!isAppRoute && <DescriptionControl entity={route} onChangeEntity={updateRoute} />}
-        <Paths
-          title={t(EntityFieldsI18nKey.paths)}
-          paths={route.paths}
-          onChangePaths={onChangePaths}
-          readonly={readonly}
-        />
+      <DisplayNameControl
+        displayName={route.displayName || route.name}
+        required={true}
+        isFullWidth={false}
+        onChange={onChangeDisplayName}
+        disabled={readonly}
+      />
+      {!isAppRoute && <DescriptionControl entity={route} onChangeEntity={updateRoute} isFullWidth={false} />}
+      <Paths
+        title={t(EntityFieldsI18nKey.paths)}
+        paths={route.paths}
+        onChangePaths={onChangePaths}
+        readonly={readonly}
+      />
 
-        <DialSwitch
-          isOn={route.rewritePath}
-          title={t(EntityFieldsI18nKey.rewritePath)}
-          switchId="RewritePath"
-          disabled={readonly}
-          onChange={onChangeRewritePath}
-        />
+      <DialSwitch
+        isOn={route.rewritePath}
+        title={t(EntityFieldsI18nKey.rewritePath)}
+        switchId="RewritePath"
+        disabled={readonly}
+        onChange={onChangeRewritePath}
+      />
 
-        <Multiselect
-          elementId="methods"
-          disabled={readonly}
-          selectedItems={route.methods}
-          onChangeItems={onChangeMethods}
-          heading={t(EntityFieldsI18nKey.methods)}
-          title={t(EntityFieldsI18nKey.methods)}
-          allItems={methods}
-          errorText={route.methods?.length ? '' : t(ErrorI18nKey.EmptyField)}
-        />
+      <Multiselect
+        elementId="methods"
+        disabled={readonly}
+        selectedItems={route.methods}
+        onChangeItems={onChangeMethods}
+        heading={t(EntityFieldsI18nKey.methods)}
+        title={t(EntityFieldsI18nKey.methods)}
+        allItems={methods}
+        errorText={route.methods?.length ? '' : t(ErrorI18nKey.EmptyField)}
+      />
 
-        <DialRadioGroup
-          radioButtons={outputRadio}
-          activeRadioButton={route.response ? outputRadio[1].id : outputRadio[0].id}
-          elementId="output"
-          disabled={readonly}
-          fieldTitle={t(RoutesI18nKey.Output)}
-          orientation={RadioGroupOrientation.Row}
-          onChange={onChangeOutput}
-        />
-      </div>
-      <div className="flex flex-col gap-y-8">
-        {route.response ? (
-          <div className="flex lg:w-[60%]">
-            <div className="mr-2">
-              <DialNumberInputField
-                disabled={readonly}
-                elementId="status"
-                fieldTitle={t(EntityFieldsI18nKey.status)}
-                placeholder={t(EntityPlaceholdersI18nKey.Status)}
-                value={route.response.status}
-                onChange={onChangeStatus}
-                errorText={statusError}
-                invalid={!!statusError}
-              />
-            </div>
-            <div className="flex-1">
-              <DialTextInputField
-                disabled={readonly}
-                elementId="body"
-                fieldTitle={t(EntityFieldsI18nKey.body)}
-                placeholder={t(EntityPlaceholdersI18nKey.Body)}
-                value={route.response.body}
-                onChange={onChangeBody}
-                errorText={bodyError}
-                invalid={!!bodyError}
-              />
-            </div>
-          </div>
-        ) : (
-          <UpstreamEndpoints readonly={readonly} entity={route} onChangeEntity={updateRoute} required={true} />
-        )}
+      <DialRadioGroup
+        radioButtons={outputRadio}
+        activeRadioButton={route.response ? outputRadio[1].id : outputRadio[0].id}
+        elementId="output"
+        disabled={readonly}
+        fieldTitle={t(RoutesI18nKey.Output)}
+        orientation={RadioGroupOrientation.Row}
+        onChange={onChangeOutput}
+      />
 
-        <MaxRetryAttempts readonly={readonly} entity={route} onChangeEntity={updateRoute} />
-
-        <div className="lg:w-[25%] flex flex-col gap-y-8">
-          {isAppRoute && (
-            <DialSelectField
+      {route.response ? (
+        <div className="flex lg:w-[60%]">
+          <div className="mr-2">
+            <DialNumberInputField
               disabled={readonly}
-              placeholder={t(EntityPlaceholdersI18nKey.SelectPermission)}
-              elementId="permissions"
-              multiple={true}
-              options={permissionsItems}
-              value={selectedPermissions}
-              fieldTitle={t(EntityFieldsI18nKey.permissions)}
-              onChange={(values) => onChangePermissions(values as string[])}
+              elementId="status"
+              fieldTitle={t(EntityFieldsI18nKey.status)}
+              placeholder={t(EntityPlaceholdersI18nKey.Status)}
+              value={route.response.status}
+              onChange={onChangeStatus}
+              errorText={statusError}
+              invalid={!!statusError}
             />
-          )}
-          <DialNumberInputField
-            elementId="order"
-            disabled={readonly}
-            fieldTitle={t(EntityFieldsI18nKey.order)}
-            placeholder={t(EntityPlaceholdersI18nKey.Order)}
-            value={route.order}
-            min={0}
-            onChange={(order) => {
-              updateRoute({ ...route, order: order ? +order : undefined });
-            }}
-          />
+          </div>
+          <div className="flex-1">
+            <DialTextInputField
+              disabled={readonly}
+              elementId="body"
+              fieldTitle={t(EntityFieldsI18nKey.body)}
+              placeholder={t(EntityPlaceholdersI18nKey.Body)}
+              value={route.response.body}
+              onChange={onChangeBody}
+              errorText={bodyError}
+              invalid={!!bodyError}
+            />
+          </div>
         </div>
+      ) : (
+        <UpstreamEndpoints readonly={readonly} entity={route} onChangeEntity={updateRoute} required={true} />
+      )}
+
+      <MaxRetryAttempts readonly={readonly} entity={route} onChangeEntity={updateRoute} />
+
+      <div className="lg:w-[25%] flex flex-col gap-y-8">
+        {isAppRoute && (
+          <DialSelectField
+            disabled={readonly}
+            placeholder={t(EntityPlaceholdersI18nKey.SelectPermission)}
+            elementId="permissions"
+            multiple={true}
+            options={permissionsItems}
+            value={selectedPermissions}
+            fieldTitle={t(EntityFieldsI18nKey.permissions)}
+            onChange={(values) => onChangePermissions(values as string[])}
+          />
+        )}
+        <DialNumberInputField
+          elementId="order"
+          disabled={readonly}
+          fieldTitle={t(EntityFieldsI18nKey.order)}
+          placeholder={t(EntityPlaceholdersI18nKey.Order)}
+          value={route.order}
+          min={0}
+          onChange={(order) => {
+            updateRoute({ ...route, order: order ? +order : undefined });
+          }}
+        />
       </div>
     </div>
   );

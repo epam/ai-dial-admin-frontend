@@ -79,6 +79,7 @@ const AssetProperties: FC<Props> = ({
         <DisplayNameControl
           displayName={entity.displayName}
           required={true}
+          isFullWidth={!isEntityImmutable}
           onChange={(displayName) => onChangeEntity({ ...entity, displayName })}
         />
       )}
