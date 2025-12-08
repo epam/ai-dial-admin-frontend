@@ -7,6 +7,7 @@ import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { addTrailingSlash, removeSlash } from '@/src/utils/url';
 import { getUrlError } from '@/src/utils/validation/url-error';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 export interface EndpointControlProps {
   endpoint?: string | null;
@@ -21,10 +22,19 @@ export interface Props extends EndpointControlProps {
   fieldTitle: string;
   placeholder: string;
   elementClassName?: string;
+  isFullWidth?: boolean;
   iconAfterInput?: ReactNode;
 }
 
-const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, onChange, ...props }) => {
+const EndpointControl: FC<Props> = ({
+  textBeforeInput,
+  required,
+  endpoint,
+  id,
+  onChange,
+  isFullWidth = true,
+  ...props
+}) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
   const [endpointError, setEndpointError] = useState<FieldError | null>(null);
@@ -90,6 +100,7 @@ const EndpointControl: FC<Props> = ({ textBeforeInput, required, endpoint, id, o
       errorText={endpointError?.text}
       invalid={!!endpointError}
       onChange={onChangeEndpoint}
+      containerClassName={isFullWidth ? 'w-full' : STANDARD_CONTROL_WIDTH}
       {...props}
     />
   );

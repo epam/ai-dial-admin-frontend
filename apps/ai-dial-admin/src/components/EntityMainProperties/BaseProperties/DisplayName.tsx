@@ -6,16 +6,18 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { getErrorForDisplayName } from '@/src/utils/validation/name-error';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 interface Props {
   displayName?: string;
   required?: boolean;
   readonly?: boolean;
   disabled?: boolean;
+  isFullWidth?: boolean;
   onChange?: (displayName?: string) => void;
 }
 
-const DisplayNameControl: FC<Props> = ({ displayName, onChange, required, ...props }) => {
+const DisplayNameControl: FC<Props> = ({ displayName, isFullWidth = true, onChange, required, ...props }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
 
@@ -48,6 +50,7 @@ const DisplayNameControl: FC<Props> = ({ displayName, onChange, required, ...pro
       onChange={onChangeDisplayName}
       errorText={displayNameError?.text}
       invalid={!!displayNameError}
+      containerClassName={isFullWidth ? 'w-full' : STANDARD_CONTROL_WIDTH}
       {...props}
     />
   );

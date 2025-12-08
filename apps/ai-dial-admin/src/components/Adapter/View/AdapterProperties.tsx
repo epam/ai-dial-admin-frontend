@@ -23,7 +23,7 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
 
-  const validateDisplayName = useCallback(
+  const onValidateDisplayName = useCallback(
     (displayName?: string) => {
       const error = getErrorForDisplayName(displayName, true, t);
       dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
@@ -33,9 +33,9 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
 
   useEffect(() => {
     if (isEntityImmutable) {
-      validateDisplayName(entity.displayName);
+      onValidateDisplayName(entity.displayName);
     }
-  }, [entity.displayName, isEntityImmutable, validateDisplayName]);
+  }, [entity.displayName, isEntityImmutable, onValidateDisplayName]);
 
   const onChangeDisplayName = useCallback(
     (displayName?: string) => {
@@ -55,9 +55,14 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
     <div className="h-full flex flex-col gap-y-8">
       {!isEntityImmutable && <IdControl entity={entity} names={names} onChangeEntity={onChangeAdapter} />}
 
-      <DisplayNameControl displayName={entity.displayName} required={true} onChange={onChangeDisplayName} />
+      <DisplayNameControl
+        displayName={entity.displayName}
+        required={true}
+        onChange={onChangeDisplayName}
+        isFullWidth={!isEntityImmutable}
+      />
 
-      <DescriptionControl entity={entity} onChangeEntity={onChangeAdapter} />
+      <DescriptionControl entity={entity} onChangeEntity={onChangeAdapter} isFullWidth={!isEntityImmutable} />
 
       <EndpointControl
         id="baseEndpoint"
@@ -65,6 +70,7 @@ const AdapterProperties: FC<Props> = ({ entity, names, onChangeAdapter, isEntity
         placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
         fieldTitle={t(EntityFieldsI18nKey.baseEndpoint)}
         endpoint={entity.baseEndpoint}
+        isFullWidth={!isEntityImmutable}
         onChange={onChangeEndpoint}
       />
     </div>

@@ -146,23 +146,19 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
         ) : (
           <>
             {activeTab === EntityViewTab.Properties && (
-              <>
+              <div className="flex flex-col">
                 <EntityHeader entity={selectedAdapter} />
-                <div className="lg:w-[35%] flex flex-col pt-8">
-                  <div className="flex-1 min-h-0">
-                    <AdapterProperties
-                      entity={selectedAdapter}
-                      onChangeAdapter={onChangeAdapter}
-                      isEntityImmutable={true}
-                    />
-                  </div>
+                <div className="flex-1 min-h-0 pt-8">
+                  <AdapterProperties
+                    entity={selectedAdapter}
+                    onChangeAdapter={onChangeAdapter}
+                    isEntityImmutable={true}
+                  />
                 </div>
-              </>
+              </div>
             )}
             {activeTab === EntityViewTab.Models && (
-              <div className="w-full h-full">
-                <AdapterModels adapter={selectedAdapter} onChangeAdapter={onChangeAdapter} />
-              </div>
+              <AdapterModels adapter={selectedAdapter} onChangeAdapter={onChangeAdapter} />
             )}
             {activeTab === EntityViewTab.Audit && (
               <EntityAudit entity={selectedAdapter} view={ApplicationRoute.Adapters} />
