@@ -10,14 +10,11 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { Container } from '@/src/models/deployments/containers';
 import {
-  createAssetToolset,
-  createToolset,
   getContainer,
   getImage,
   getImageVersions,
   getMCPContainers,
   getMCPImages,
-  getToolsetList,
 } from '@/src/app/actions/deployments';
 import Page403 from '@/src/components/Page403/Page403';
 import { logger } from '@/src/server/logger';
@@ -27,6 +24,10 @@ import { SaveValidationContextProvider } from '@/src/context/SaveValidationConte
 import ContainerView from '@/src/components/Containers/View/ContainerView';
 import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 import { isValueTruthy } from '@/src/utils/types';
+import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContext';
+import { createToolset as createAssetToolset } from '@/src/app/[lang]/assets-toolsets/actions';
+import { createToolset } from '@/src/app/[lang]/toolsets/actions';
+import { toolSetsApi } from '@/src/app/api/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -127,7 +128,7 @@ export default async function Page(params: Params) {
           redirect(ApplicationRoute.McpDeployments);
         }
         image = imageResponse.response as Image;
-        toolsets = await getToolsetList();
+        toolsets = await toolSetsApi.getToolsetList(token);
       } catch (e) {
         logger.error(`Getting interceptor container error ${e}`);
       }
@@ -138,15 +139,17 @@ export default async function Page(params: Params) {
 
       return (
         <SaveValidationContextProvider>
-          <ContainerView
-            container={container}
-            image={image}
-            route={ApplicationRoute.McpDeployments}
-            names={containers?.map((container) => container.name).filter((name) => name !== container.name) || []}
-            createEntity={createToolset}
-            createEntityAsAsset={createAssetToolset}
-            entityNames={toolsets?.map((toolset) => toolset.name as string) || []}
-          />
+          <ToolsetFolderProvider>
+            <ContainerView
+              container={container}
+              image={image}
+              route={ApplicationRoute.McpDeployments}
+              names={containers?.map((container) => container.name).filter((name) => name !== container.name) || []}
+              createEntity={createToolset}
+              createEntityAsAsset={createAssetToolset}
+              entityNames={toolsets?.map((toolset) => toolset.name as string) || []}
+            />
+          </ToolsetFolderProvider>
         </SaveValidationContextProvider>
       );
     }

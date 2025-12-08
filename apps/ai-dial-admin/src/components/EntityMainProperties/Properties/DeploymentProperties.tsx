@@ -22,10 +22,9 @@ import { getSourceItems } from '@/src/components/SourceField/constants';
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import { isDeploymentsEnabled } from '@/src/utils/plugins';
 import { useAppContext } from '@/src/context/AppContext';
-import { getModelContainers } from '@/src/app/[lang]/models/actions';
-import { getToolsetContainers } from '@/src/app/[lang]/toolsets/actions';
 import { getNamesConfigurations } from '@/src/utils/entities/filter-names';
 import { DialSelectField } from '@epam/ai-dial-ui-kit';
+import { getMCPContainers, getModelContainers } from '@/src/app/actions/deployments';
 
 interface Props {
   view: ApplicationRoute;
@@ -179,7 +178,7 @@ const DeploymentProperties: FC<Props> = ({
           entity={entity}
           elementId="sourceType"
           onChange={onChangeEntity}
-          getContainers={view === ApplicationRoute.Models ? getModelContainers : getToolsetContainers}
+          getContainers={view === ApplicationRoute.Models ? getModelContainers : getMCPContainers}
           fieldTitle={t(EntitiesI18nKey.SourceType)}
           sourceItems={getSourceItems(view, deploymentsEnabled)}
           getAdapters={getModelsAdapters}

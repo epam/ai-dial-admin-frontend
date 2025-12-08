@@ -10,7 +10,7 @@ import { ActivityAuditI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/activity-audit';
-import { ActivityAuditType } from '@/src/types/activity-audit';
+import { ActivityAuditResourceType, ActivityAuditType } from '@/src/types/activity-audit';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 
 interface Props {
@@ -41,7 +41,7 @@ const ViewHeader: FC<Props> = ({ activity, children }) => {
             text={getFormattedResourceType(activity.resourceType, t)}
           />
         )}
-        {activity.resourceId && (
+        {activity.resourceId && activity.resourceType !== ActivityAuditResourceType.SYSTEM_PROPERTIES && (
           <LabelledText label={t(ActivityAuditI18nKey.ResourceId)}>
             <div className="flex flex-row gap-1 items-center">
               <DialTooltip tooltip={activity.resourceId}>{activity.resourceId}</DialTooltip>

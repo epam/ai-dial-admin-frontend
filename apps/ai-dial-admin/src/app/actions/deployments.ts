@@ -5,21 +5,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { Image } from '@/src/models/deployments/images';
 import { Container } from '@/src/models/deployments/containers';
-import {
-  assetsApi,
-  containersApi,
-  foldersApi,
-  imagesApi,
-  interceptorsApi,
-  modelsApi,
-  toolSetsApi,
-  topicApi,
-} from '@/src/app/api/api';
-import { ResourceType } from '@/src/types/resource-type';
-import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { Toolset } from '@/src/models/dial/toolset';
-import { DialModel } from '@/src/models/dial/model';
-import { AssetToolset } from '@/src/models/dial/deployment-asset';
+import { containersApi, imagesApi, topicApi } from '@/src/app/api/api';
 
 export async function getMCPImages() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -164,59 +150,4 @@ export async function getContainerPrompts(containerId: string) {
 export async function getContainerPods(containerId: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return containersApi.getContainerPods(containerId, token);
-}
-
-export async function createInterceptor(interceptor: DialInterceptor) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return interceptorsApi.createInterceptor(interceptor, token);
-}
-
-export async function createToolset(toolset: Toolset) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return toolSetsApi.createToolset(toolset, token);
-}
-
-export async function createModel(model: DialModel) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return modelsApi.createModel(model, token);
-}
-
-export async function getInterceptorsList() {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return interceptorsApi.getInterceptorsList(token);
-}
-
-export async function getModelsList() {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return modelsApi.getModelsList(token);
-}
-
-export async function getToolsetList() {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return toolSetsApi.getToolsetList(token);
-}
-
-export async function getFolders(path: string) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return foldersApi.getFolders(token, path);
-}
-
-export async function getRules(path: string) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return foldersApi.getRules(token, path);
-}
-
-export async function getFiles(path: string) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.getAssetList(token, path, ResourceType.FILE);
-}
-
-export async function getToolsets(path: string) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.getAssetList(token, path, ResourceType.TOOLSET);
-}
-
-export async function createAssetToolset(toolset: AssetToolset) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.createAsset(toolset, ResourceType.TOOLSET, token);
 }

@@ -22,6 +22,7 @@ const fields: (keyof DialApplicationScheme)[] = [
   'dial:applicationTypeTruncatePromptEndpoint',
   'dial:appendApplicationPropertiesHeader',
   'dial:applicationTypePlaybackSupport',
+  'dial:applicationTypeAssistantAttachmentsInRequestSupported',
   'dial:applicationTypeIconUrl',
   'dial:applicationTypeBucketCopy',
 ];

@@ -259,7 +259,11 @@ export const compareSeparateObjects = (
   val2: object,
   isCurrent?: boolean,
 ): void => {
-  if (key === EntityParameterKeys.INTERCEPTORS || key === EntityParameterKeys.APP_RUNNER_INTERCEPTORS) {
+  if (
+    key === EntityParameterKeys.INTERCEPTORS ||
+    key === EntityParameterKeys.GLOBAL_INTERCEPTORS ||
+    key === EntityParameterKeys.APP_RUNNER_INTERCEPTORS
+  ) {
     compareInterceptors(diffs, val1 as string[], val2 as string[], isCurrent);
   }
   if (key === EntityParameterKeys.ROLE_LIMITS || key === EntityParameterKeys.LIMITS) {
@@ -299,7 +303,11 @@ export const compareSeparateObjects = (
  * @param {object} value - value to fill
  */
 export const fillSeparateObjects = (diffs: ActivityAuditDiff[], key: string, value: object) => {
-  if (key === EntityParameterKeys.INTERCEPTORS || key === EntityParameterKeys.APP_RUNNER_INTERCEPTORS) {
+  if (
+    key === EntityParameterKeys.INTERCEPTORS ||
+    key === EntityParameterKeys.GLOBAL_INTERCEPTORS ||
+    key === EntityParameterKeys.APP_RUNNER_INTERCEPTORS
+  ) {
     fillInterceptors(diffs, value as string[]);
   }
   if (key === EntityParameterKeys.ROLE_LIMITS || key === EntityParameterKeys.LIMITS) {
@@ -361,6 +369,7 @@ export const createSectionFromDiffs = (
     EntityParameterKeys.SHARE,
     EntityParameterKeys.APP_RUNNER_INTERCEPTORS,
     EntityParameterKeys.APP_RUNNERS,
+    EntityParameterKeys.GLOBAL_INTERCEPTORS,
   ];
   const sections: ActivityAuditSection = {};
 
