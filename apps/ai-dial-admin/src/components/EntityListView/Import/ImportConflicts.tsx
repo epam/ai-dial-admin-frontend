@@ -14,7 +14,7 @@ import {
   isErrorPromptNode,
 } from '@/src/components/EntityListView/Import/utils';
 import Grid from '@/src/components/Grid/Grid';
-import { ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { ImportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
@@ -22,6 +22,7 @@ import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { ConflictResolutionPolicy } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { getImportTitle } from '../HeaderButtons/utils';
 
 interface Props {
   route?: ApplicationRoute;
@@ -108,9 +109,9 @@ const ImportConflicts: FC<Props> = ({
         onChange={setResolution}
       />
       {resolution === ConflictResolutionPolicy.MANUAL && (
-        <div className="flex flex-col flex-1 min-h-0">
+        <div className="flex flex-col flex-1 min-h-0 mt-4">
           <div>
-            {t(MenuI18nKey.Prompts)}: {fileCount}
+            {t(getImportTitle(route))}: {fileCount}
           </div>
           <div className="min-h-0">
             <Grid additionalGridOptions={{ onGridReady, onCellValueChanged }} />

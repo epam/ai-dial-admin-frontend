@@ -352,9 +352,9 @@ export const changeFilesMap = (
 
     if (targetFile) {
       if (field === 'version') {
-        targetFile.id = modifyNameVersionInPrompt(targetFile.id as string, void 0, value);
+        targetFile.id = modifyNameVersionInPrompt((targetFile.id || targetFile.name) as string, void 0, value);
       } else if (field === 'assetName') {
-        targetFile.id = modifyNameVersionInPrompt(targetFile.id as string, value);
+        targetFile.id = modifyNameVersionInPrompt((targetFile.id || targetFile.name) as string, value);
         targetFile.name = value;
       } else if (field === 'fileName') {
         const { extension } = getNameExtensionFromFile(key);
