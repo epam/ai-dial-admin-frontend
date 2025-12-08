@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { getInterceptorTemplate } from '@/src/app/[lang]/interceptor-templates/actions';
-import { applicationRunnersApi, applicationsApi, interceptorsApi, modelsApi } from '@/src/app/api/api';
+import { applicationRunnersApi, applicationsApi, interceptorsApi, modelsApi, utilityApi } from '@/src/app/api/api';
 import InterceptorView from '@/src/components/Interceptors/View/View';
 import Page403 from '@/src/components/Page403/Page403';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
@@ -43,8 +43,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as DialModel | null;
     });
-    // todo fill when api ready
-    globalInterceptors = [];
+    globalInterceptors = (await utilityApi.getSystemProperties(token, DEFAULT_ETAG)).response?.globalInterceptors || [];
 
     interceptor = {
       ...interceptor,

@@ -1,6 +1,6 @@
 'use client';
 
-import { IconDownload, IconFileDescription, IconExternalLink, IconUpload } from '@tabler/icons-react';
+import { IconDownload, IconFileDescription, IconExternalLink, IconUpload, IconWorldCog } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { FC } from 'react';
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
@@ -73,6 +73,15 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
             label={isTabletScreen ? '' : t(MenuI18nKey.ExportConfig)}
             onClick={() => {
               router.push(ApplicationRoute.ExportConfig);
+            }}
+          />
+          <DialButton
+            iconBefore={<IconWorldCog {...BASE_ICON_PROPS} widths={24} height={24} />}
+            variant={ButtonVariant.Secondary}
+            className="p-4 lg:px-3 lg:py-2 h-[56px] w-[56px] lg:h-[42px] lg:w-auto"
+            label={isTabletScreen ? '' : t(MenuI18nKey.SystemProperties)}
+            onClick={() => {
+              router.push(ApplicationRoute.SystemProperties);
             }}
           />
           {dialLink && (
