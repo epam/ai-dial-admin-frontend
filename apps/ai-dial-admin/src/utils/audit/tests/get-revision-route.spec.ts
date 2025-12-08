@@ -53,6 +53,12 @@ describe('Audit :: getRevisionRouteForEntityType', () => {
     );
   });
 
+  test('returns correct route for SYSTEM_PROPERTIES', () => {
+    expect(getRevisionRouteForEntityType(ActivityAuditResourceType.SYSTEM_PROPERTIES, id)).toBe(
+      `/global-settings/revision/`,
+    );
+  });
+
   test('returns null for unknown type', () => {
     expect(getRevisionRouteForEntityType('UNKNOWN' as any, id)).toBeNull();
   });
@@ -106,6 +112,12 @@ describe('Audit :: getRevisionRouteForAllEntities', () => {
   test('returns correct route for INTERCEPTOR_TEMPLATE', () => {
     expect(getRevisionRouteForAllEntities(ActivityAuditResourceType.INTERCEPTOR_TEMPLATE)).toBe(
       `/interceptor-runners/revision/`,
+    );
+  });
+
+  test('returns correct route for SYSTEM_PROPERTIES', () => {
+    expect(getRevisionRouteForAllEntities(ActivityAuditResourceType.SYSTEM_PROPERTIES)).toBe(
+      `/global-settings/revision/`,
     );
   });
 

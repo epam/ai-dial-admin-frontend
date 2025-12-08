@@ -86,6 +86,7 @@ export default {
     FilePublications: 'File Publications',
     ImportConfig: 'Import Config',
     ExportConfig: 'Export Config',
+    SystemProperties: 'System Properties',
 
     MLOps: 'Deployments',
     MCPDeployments: 'MCP Deployments',
@@ -294,6 +295,7 @@ export default {
       Adapter: 'Adapter',
       InterceptorTemplate: 'Interceptor Template',
       ApplicationRunner: 'Application Runner',
+      SystemProperties: 'System Properties',
     },
   },
   Type: {
@@ -426,6 +428,8 @@ export default {
     Features: 'Features',
     Roles: 'Roles',
     Interceptors: 'Interceptors',
+    GlobalInterceptors: 'Global Interceptors',
+    ErrorCodes: 'Error Codes',
     Keys: 'Keys',
     Entities: 'Entities',
     Parameters: 'Parameters',
@@ -867,6 +871,7 @@ export default {
     applicationTypeTruncatePromptEndpoint: 'Truncate prompt endpoint',
     appendApplicationPropertiesHeader: 'Application properties header',
     applicationTypePlaybackSupport: 'Playback support',
+    applicationTypeAssistantAttachmentsInRequestSupported: 'Assistant attachments in request',
     applicationTypeBucketCopy: 'Bucket copy',
     createdAt: 'Creation Time',
     updatedAt: 'Updated Time',
@@ -930,6 +935,7 @@ export default {
     Port: 'Port',
     GRPCPort: 'gRPC Port',
     Arguments: 'Arguments',
+    globalInterceptors: 'Global Interceptors',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
@@ -1004,7 +1010,8 @@ export default {
     SystemUnavailable: 'The system is temporarily unavailable due to a technical update.',
     TryAgainLater: 'Please try again later.',
     RequiredProperty: 'This property is required',
-    InvalidPath: 'Path must start with / and use only letters, digits, - , and _',
+    InvalidPath:
+      'Invalid route path. Path must be a valid plain path (starting with /) or a valid regular expression pattern (starting with / or ^/)',
     InvalidStatus: 'Status must be a number from 100 to 999',
     UrlField: 'This field must be a valid URL starting with  http:// or https://',
     WarningEndpoint: 'The endpoint uses HTTP instead of HTTPS. This may expose data to security risks.',

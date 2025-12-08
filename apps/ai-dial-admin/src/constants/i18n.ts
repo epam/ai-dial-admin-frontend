@@ -39,6 +39,7 @@ export enum MenuI18nKey {
   FilePublications = 'Menu.FilePublications',
   ImportConfig = 'Menu.ImportConfig',
   ExportConfig = 'Menu.ExportConfig',
+  SystemProperties = 'Menu.SystemProperties',
   Home = 'Menu.Home',
   Homepage = 'Menu.Homepage',
   FoldersStorage = 'Menu.FoldersStorage',
@@ -295,6 +296,7 @@ export enum UpdateI18nKey {
   Adapter = 'UpdateEntity.Entities.Adapter',
   InterceptorTemplate = 'UpdateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'UpdateEntity.Entities.ApplicationRunner',
+  SystemProperties = 'UpdateEntity.Entities.SystemProperties',
 }
 
 export enum CreateI18nKey {
@@ -446,6 +448,8 @@ export enum TabsI18nKey {
   Features = 'Tabs.Features',
   Roles = 'Tabs.Roles',
   Interceptors = 'Tabs.Interceptors',
+  GlobalInterceptors = 'Tabs.GlobalInterceptors',
+  ErrorCodes = 'Tabs.ErrorCodes',
   Keys = 'Tabs.Keys',
   Entities = 'Tabs.Entities',
   Parameters = 'Tabs.Parameters',
@@ -961,6 +965,7 @@ export enum EntityFieldsI18nKey {
   'dial:applicationTypeTruncatePromptEndpoint' = 'EntityFields.applicationTypeTruncatePromptEndpoint',
   'dial:appendApplicationPropertiesHeader' = 'EntityFields.appendApplicationPropertiesHeader',
   'dial:applicationTypePlaybackSupport' = 'EntityFields.applicationTypePlaybackSupport',
+  'dial:applicationTypeAssistantAttachmentsInRequestSupported' = 'EntityFields.applicationTypeAssistantAttachmentsInRequestSupported',
   'dial:applicationTypeIconUrl' = 'EntityFields.applicationTypeIconUrl',
   'dial:applicationTypeBucketCopy' = 'EntityFields.applicationTypeBucketCopy',
   grantedKeys = 'EntityFields.grantedKeys',
@@ -1025,6 +1030,7 @@ export enum EntityFieldsI18nKey {
   Port = 'EntityFields.Port',
   GRPCPort = 'EntityFields.GRPCPort',
   Arguments = 'EntityFields.Arguments',
+  globalInterceptors = 'EntityFields.globalInterceptors',
 }
 
 export enum ToolsetI18nKey {

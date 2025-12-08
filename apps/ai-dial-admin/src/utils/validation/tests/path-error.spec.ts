@@ -1,6 +1,14 @@
 import { describe, expect, test, vi } from 'vitest';
 import { ErrorType } from '@/src/types/error-type';
-import { getErrorForPath, isValidPaths, isContainRegexSymbols, isValidUrlPath, isValidRoutePath } from '../path-error';
+import {
+  getErrorForPath,
+  isContainRegexSymbols,
+  isValidRoutePath,
+  areBracketsBalanced,
+  validateRegexPattern,
+  validatePlainPath,
+  MAX_LENGTH,
+} from '../path-error';
 
 describe('isContainRegexSymbols', () => {
   test('should return true for string with regex metacharacters', () => {
@@ -41,83 +49,158 @@ describe('isContainRegexSymbols', () => {
   });
 });
 
-describe('isValidUrlPath', () => {
-  test('should return false for an empty string', () => {
-    expect(isValidUrlPath('')).toBe(false);
+describe('areBracketsBalanced', () => {
+  test('should return true for an empty string', () => {
+    expect(areBracketsBalanced('')).toBe(true);
   });
 
-  test('should return true for valid URL paths', () => {
-    expect(isValidUrlPath('/valid/path')).toBe(true);
-    expect(isValidUrlPath('valid/path')).toBe(true);
-    expect(isValidUrlPath('/my-resource')).toBe(true);
-    expect(isValidUrlPath('/folder/1')).toBe(true);
+  test('should return true for balanced brackets', () => {
+    expect(areBracketsBalanced('()')).toBe(true);
+    expect(areBracketsBalanced('{}[]()')).toBe(true);
+    expect(areBracketsBalanced('({[]})')).toBe(true);
   });
 
-  test('should return false for invalid URL paths', () => {
-    expect(isValidUrlPath('invalid|path')).toBe(false);
-    expect(isValidUrlPath('/invalid$path')).toBe(false);
-    expect(isValidUrlPath('/path/with space')).toBe(false);
-    expect(isValidUrlPath('/path//double-slash')).toBe(false);
+  test('should return false for unbalanced brackets', () => {
+    expect(areBracketsBalanced('(')).toBe(false);
+    expect(areBracketsBalanced('([)]')).toBe(false);
+    expect(areBracketsBalanced('({[})')).toBe(false);
+    expect(areBracketsBalanced(')(')).toBe(false);
+    expect(areBracketsBalanced('[](')).toBe(false);
   });
 
-  test('should add a leading slash to paths without one', () => {
-    expect(isValidUrlPath('validPathWithoutSlash')).toBe(true);
-    expect(isValidUrlPath('my-resource')).toBe(true);
+  test('should ignore escaped characters and return true for balanced brackets', () => {
+    expect(areBracketsBalanced('\\(')).toBe(true);
+    expect(areBracketsBalanced('()\\(')).toBe(true);
+    expect(areBracketsBalanced('({\\[})')).toBe(true);
   });
 
-  test('should return false for paths with special characters that are invalid', () => {
-    expect(isValidUrlPath('/foo@bar')).toBe(false);
-    expect(isValidUrlPath('/foo&bar')).toBe(false);
+  test('should return false for unbalanced brackets with escaped characters', () => {
+    expect(areBracketsBalanced('([\\])')).toBe(false);
   });
 
-  test('should return true for valid paths with common characters', () => {
-    expect(isValidUrlPath('/user/profile')).toBe(true);
-    expect(isValidUrlPath('/file-name')).toBe(true);
-    expect(isValidUrlPath('/folder1/subfolder2')).toBe(true);
+  test('should return true for balanced brackets with mixed types', () => {
+    expect(areBracketsBalanced('{[()]}')).toBe(true);
+    expect(areBracketsBalanced('({[()()]})')).toBe(true);
+  });
+
+  test('should return false when there are extra closing brackets', () => {
+    expect(areBracketsBalanced('([{}))')).toBe(false);
+    expect(areBracketsBalanced('{[}')).toBe(false);
+  });
+
+  test('should return false when there are extra opening brackets', () => {
+    expect(areBracketsBalanced('(((')).toBe(false);
+    expect(areBracketsBalanced('[{')).toBe(false);
+  });
+});
+
+describe('validateRegexPattern', () => {
+  test('should return true for valid patterns starting with / or ^/', () => {
+    expect(validateRegexPattern('/abc/')).toBe(true);
+    expect(validateRegexPattern('^/path/to/resource')).toBe(true);
+    expect(validateRegexPattern('^/user/\\d+/profile')).toBe(true);
+  });
+
+  test('should return false for patterns that don’t start with / or ^/', () => {
+    expect(validateRegexPattern('abc/')).toBe(false);
+    expect(validateRegexPattern('user/profile')).toBe(false);
+    expect(validateRegexPattern('^user/profile')).toBe(false);
+  });
+
+  test('should return false for unbalanced brackets', () => {
+    expect(validateRegexPattern('/[abc/')).toBe(false);
+    expect(validateRegexPattern('/(abc')).toBe(false);
+    expect(validateRegexPattern('/{abc')).toBe(false);
+  });
+
+  test('should return false for invalid regex patterns', () => {
+    expect(validateRegexPattern('/abc[')).toBe(false);
+    expect(validateRegexPattern('/^+*/')).toBe(false);
+    expect(validateRegexPattern('/\\d+[')).toBe(false);
+  });
+
+  test('should return false for empty pattern', () => {
+    expect(validateRegexPattern('')).toBe(false);
+  });
+});
+
+describe('validatePlainPath', () => {
+  test('should return true for a root path', () => {
+    expect(validatePlainPath('/')).toBe(true);
+  });
+
+  test('should return true for valid paths with allowed characters', () => {
+    expect(validatePlainPath('/user/profile')).toBe(true);
+    expect(validatePlainPath('/user_profile/123')).toBe(true);
+    expect(validatePlainPath('/abc/def-ghi/xyz.123')).toBe(true);
+  });
+
+  test('should return false for paths that don’t start with /', () => {
+    expect(validatePlainPath('user/profile')).toBe(false);
+  });
+
+  test('should return false for paths with consecutive slashes', () => {
+    expect(validatePlainPath('/user//profile')).toBe(false);
+  });
+
+  test('should return false for paths with invalid characters', () => {
+    expect(validatePlainPath('/user|profile')).toBe(false);
+    expect(validatePlainPath('/user@profile')).toBe(false);
+    expect(validatePlainPath('/user#profile')).toBe(false);
+    expect(validatePlainPath('/user profile')).toBe(false);
+  });
+
+  test('should return false for empty path', () => {
+    expect(validatePlainPath('')).toBe(false);
+  });
+
+  test('should return false for paths with only slashes', () => {
+    expect(validatePlainPath('///')).toBe(false);
+  });
+
+  test('should return true for a path with a dot', () => {
+    expect(validatePlainPath('/file.txt')).toBe(true);
+  });
+
+  test('should return false for a path with spaces', () => {
+    expect(validatePlainPath('/user name/profile')).toBe(false);
   });
 });
 
 describe('isValidRoutePath', () => {
-  test('should return true for an empty string', () => {
-    expect(isValidRoutePath('')).toBe(true);
-  });
-
-  test('should return true for a valid regex pattern', () => {
-    expect(isValidRoutePath('[a-z]+')).toBe(true);
-    expect(isValidRoutePath('foo*bar')).toBe(true);
-  });
-
-  test('should return false for an invalid regex pattern', () => {
-    expect(isValidRoutePath('(foo|bar')).toBe(false);
-  });
-
-  test('should return false for a string with regex symbols that is not a valid regex', () => {
-    expect(isValidRoutePath('[a-z')).toBe(false);
-  });
-
-  test('should return true for valid URL paths', () => {
-    expect(isValidRoutePath('/valid/path')).toBe(true);
-    expect(isValidRoutePath('valid/path')).toBe(true);
-    expect(isValidRoutePath('/my-resource')).toBe(true);
-    expect(isValidRoutePath('/folder/1')).toBe(true);
-  });
-
-  test('should return true for valid non-regex, non-URL paths', () => {
-    expect(isValidRoutePath('/home')).toBe(true);
-    expect(isValidRoutePath('/about-us')).toBe(true);
-    expect(isValidRoutePath('my-resource')).toBe(true);
-  });
-
   test('should return true for an empty path', () => {
     expect(isValidRoutePath('')).toBe(true);
   });
 
-  test('should return true for a valid path with a leading slash', () => {
-    expect(isValidRoutePath('/path/to/resource')).toBe(true);
+  test('should return false for paths exceeding the maximum length', () => {
+    const longPath = 'a'.repeat(MAX_LENGTH + 1);
+    expect(isValidRoutePath(longPath)).toBe(false);
   });
 
-  test('should return true for valid paths without a leading slash', () => {
-    expect(isValidRoutePath('path/to/resource')).toBe(true);
+  test('should return true for valid regex paths', () => {
+    expect(isValidRoutePath('/abc/*')).toBe(true);
+    expect(isValidRoutePath('/user/\\d+/profile')).toBe(true);
+  });
+
+  test('should return false for invalid regex patterns', () => {
+    expect(isValidRoutePath('/abc[')).toBe(false);
+    expect(isValidRoutePath('/^+*/')).toBe(false);
+  });
+
+  test('should return true for valid plain paths', () => {
+    expect(isValidRoutePath('/user/profile')).toBe(true);
+    expect(isValidRoutePath('/abc/def-ghi/xyz.123')).toBe(true);
+  });
+
+  test('should return false for invalid plain paths', () => {
+    expect(isValidRoutePath('/user>profile')).toBe(false);
+    expect(isValidRoutePath('/user@profile')).toBe(false);
+    expect(isValidRoutePath('/user profile')).toBe(false);
+  });
+
+  test('should return true for valid plain paths with letters, digits, hyphens, and slashes', () => {
+    expect(isValidRoutePath('/user/123-profile')).toBe(true);
+    expect(isValidRoutePath('/home/abc/xyz')).toBe(true);
   });
 });
 
@@ -176,20 +259,5 @@ describe('getErrorForPath', () => {
     const validPath = '/valid-path_123';
     const res = getErrorForPath(validPath);
     expect(res).toBeNull();
-  });
-});
-
-describe('isValidPaths', () => {
-  test('should return false for empty array', () => {
-    expect(isValidPaths([])).toBe(false);
-  });
-
-  test('should return false if all paths are valid', () => {
-    expect(isValidPaths(['validPath'])).toBe(false);
-  });
-
-  test('should return true if any path is invalid', () => {
-    expect(isValidPaths([''])).toBe(true);
-    expect(isValidPaths(['validPath', ''])).toBe(true);
   });
 });

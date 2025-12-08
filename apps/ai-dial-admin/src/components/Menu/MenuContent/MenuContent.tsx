@@ -1,6 +1,6 @@
 'use client';
 
-import { IconDownload, IconUpload } from '@tabler/icons-react';
+import { IconDownload, IconUpload, IconWorldCog } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { usePathname, useRouter } from 'next/navigation';
 import { FC } from 'react';
@@ -43,6 +43,10 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
     router.push(ApplicationRoute.ExportConfig);
   };
 
+  const openProperties = () => {
+    router.push(ApplicationRoute.SystemProperties);
+  };
+
   const MenuNavigation = ({ showExpanded }: { showExpanded?: boolean }) => (
     <nav className={classNames('p-2 overflow-auto flex-1 min-h-0', !showExpanded && 'mt-[-1px]')}>
       <ul className="divide-primary divide-y">
@@ -71,6 +75,11 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
         icon={<IconUpload {...BASE_ICON_PROPS} widths={24} height={24} />}
         onClick={handleExport}
       />
+      <MenuAction
+        tooltip={t(MenuI18nKey.SystemProperties)}
+        icon={<IconWorldCog {...BASE_ICON_PROPS} widths={24} height={24} />}
+        onClick={openProperties}
+      />
     </div>
   );
 
@@ -97,7 +106,7 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
         <MenuActionsBar />
       ) : (
         <div className={classNames(actionsClassName, 'justify-center')}>
-          <MenuActions onExport={handleExport} onImport={handleImport} />
+          <MenuActions onExport={handleExport} onImport={handleImport} onOpenProperties={openProperties} />
         </div>
       )}
     </div>
