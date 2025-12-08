@@ -935,6 +935,7 @@ export default {
     Port: 'Port',
     GRPCPort: 'gRPC Port',
     Arguments: 'Arguments',
+    globalInterceptors: 'Global Interceptors',
   },
   EntityPlaceholders: {
     Project: 'Enter project',

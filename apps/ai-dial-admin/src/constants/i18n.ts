@@ -1030,6 +1030,7 @@ export enum EntityFieldsI18nKey {
   Port = 'EntityFields.Port',
   GRPCPort = 'EntityFields.GRPCPort',
   Arguments = 'EntityFields.Arguments',
+  globalInterceptors = 'EntityFields.globalInterceptors',
 }
 
 export enum ToolsetI18nKey {
