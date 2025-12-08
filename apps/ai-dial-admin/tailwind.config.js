@@ -86,12 +86,7 @@ const buttonsTextColors = {
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   important: true,
-  content: [
-    './src/app/**/*.{js,ts,jsx,tsx}',
-    './src/components/**/*.{js,ts,jsx,tsx}',
-    './src/features/**/*.{js,ts,jsx,tsx}',
-    './../../node_modules/@epam/ai-dial-ui-kit/**/*.{js,ts,jsx,tsx}',
-  ],
+  content: ['./src/**/*.{html,js,ts,tsx,yaml}'],
   theme: {
     extend: {
       backgroundColor: { ...backgroundsColors, ...buttonsBgColors },
@@ -103,11 +98,11 @@ module.exports = {
       gradientColorStops: backgroundsColors,
 
       screens: {
-        mobile: '767px',
-        small_tablet: '1023px',
-        large_tablet: '1279px',
-        desktop: '1440px', // нормальное значение
-        large_desktop: '1920px', // нормальное значение
+        mobile: { min: '360px', max: '767px' },
+        small_tablet: { min: '768px', max: '1023px' },
+        large_tablet: { min: '1024px', max: '1279px' },
+        desktop: { min: '1280px', max: '2559px' },
+        large_desktop: { min: '2560px' },
       },
       boxShadow: {
         DEFAULT: '0 0 4px 0 var(--bg-blackout, #090D13B2)',
@@ -127,7 +122,6 @@ module.exports = {
       fontSize: {
         xxs: '10px',
       },
-
       typography: {
         DEFAULT: {
           css: {
