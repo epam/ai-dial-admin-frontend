@@ -34,4 +34,5 @@ export enum ActivityAuditResourceType {
   APPLICATION_TYPE_SCHEMA = 'ApplicationTypeSchema',
   INTERCEPTOR_TEMPLATE = 'InterceptorRunner',
   TOOLSET = 'ToolSet',
+  SYSTEM_PROPERTIES = 'GlobalSettings',
 }

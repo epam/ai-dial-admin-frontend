@@ -15,6 +15,7 @@ const createEntityMap: Record<string, UpdateI18nKey> = {
   [ApplicationRoute.Toolsets]: UpdateI18nKey.Toolsets,
   [ApplicationRoute.AssetsToolsets]: UpdateI18nKey.Toolsets,
   [ApplicationRoute.InterceptorTemplates]: UpdateI18nKey.InterceptorTemplate,
+  [ApplicationRoute.SystemProperties]: UpdateI18nKey.SystemProperties,
 };
 
 export const getUpdateNotificationTitle = (
