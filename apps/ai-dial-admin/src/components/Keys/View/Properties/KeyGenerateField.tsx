@@ -10,7 +10,6 @@ import { DialKey } from '@/src/models/dial/key';
 import { FieldError } from '@/src/models/error';
 import { getErrorForKey } from './utils';
 
-
 interface Props {
   isKeyImmutable?: boolean;
   keys: string[];

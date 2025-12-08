@@ -44,7 +44,6 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
         <MaintainerControl entity={entity} onChangeEntity={onChangeEntity} />
       ) : null}
 
-
       {/* // TODO: AAAA */}
 
       {isShowCompletionEndpoint && isEntityImmutable ? (

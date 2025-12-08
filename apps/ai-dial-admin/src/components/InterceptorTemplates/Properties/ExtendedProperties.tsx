@@ -29,7 +29,7 @@ const ExtendedProperties: FC<Props> = ({ template, onChange }) => {
   return (
     <div className="flex flex-col gap-y-8">
       <BaseProperties template={template} onChangeTemplate={onChange} isImmutable={true} />
-      <CompletionEndpointControl endpoint={template?.completionEndpoint} onChange={onChangeCompletionEndpoint}F />
+      <CompletionEndpointControl endpoint={template?.completionEndpoint} onChange={onChangeCompletionEndpoint} />
       <ConfigurationEndpointControl
         endpoint={template?.configurationEndpoint}
         onChange={onChangeConfigurationEndpoint}
