@@ -39,6 +39,7 @@ export enum MenuI18nKey {
   FilePublications = 'Menu.FilePublications',
   ImportConfig = 'Menu.ImportConfig',
   ExportConfig = 'Menu.ExportConfig',
+  SystemProperties = 'Menu.SystemProperties',
   Home = 'Menu.Home',
   Homepage = 'Menu.Homepage',
   FoldersStorage = 'Menu.FoldersStorage',
@@ -295,6 +296,7 @@ export enum UpdateI18nKey {
   Adapter = 'UpdateEntity.Entities.Adapter',
   InterceptorTemplate = 'UpdateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'UpdateEntity.Entities.ApplicationRunner',
+  SystemProperties = 'UpdateEntity.Entities.SystemProperties',
 }
 
 export enum CreateI18nKey {
@@ -446,6 +448,8 @@ export enum TabsI18nKey {
   Features = 'Tabs.Features',
   Roles = 'Tabs.Roles',
   Interceptors = 'Tabs.Interceptors',
+  GlobalInterceptors = 'Tabs.GlobalInterceptors',
+  ErrorCodes = 'Tabs.ErrorCodes',
   Keys = 'Tabs.Keys',
   Entities = 'Tabs.Entities',
   Parameters = 'Tabs.Parameters',

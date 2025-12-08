@@ -12,6 +12,8 @@ export enum EntityViewTab {
   Parameters = 'Parameters',
   Roles = 'Roles',
   Interceptors = 'Interceptors',
+  GlobalInterceptors = 'GlobalInterceptors',
+  ErrorCodes = 'ErrorCodes',
   Keys = 'Keys',
   Entities = 'Entities',
   Applications = 'Applications',
@@ -58,6 +60,16 @@ export const rolesTab = (t: (stringToTranslate: string) => string) => ({
 export const interceptorsTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Interceptors,
   label: t(TabsI18nKey.Interceptors),
+});
+
+export const globalInterceptorsTab = (t: (stringToTranslate: string) => string) => ({
+  id: EntityViewTab.GlobalInterceptors,
+  label: t(TabsI18nKey.GlobalInterceptors),
+});
+
+export const errorCodesTab = (t: (stringToTranslate: string) => string) => ({
+  id: EntityViewTab.ErrorCodes,
+  label: t(TabsI18nKey.ErrorCodes),
 });
 
 export const parametersTab = (t: (stringToTranslate: string) => string) => ({
@@ -316,4 +328,8 @@ export const getDeploymentsViewTabs = (
   }
 
   return [];
+};
+
+export const getSystemPropertiesTabs = (t: (stringToTranslate: string) => string): TabModel[] => {
+  return [globalInterceptorsTab(t), errorCodesTab(t)];
 };

@@ -6,6 +6,7 @@ import { IconPlus } from '@tabler/icons-react';
 import { RowDragEvent } from 'ag-grid-community';
 
 import { getApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
+import { getProperties } from '@/src/app/[lang]/system-properties/actions';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import Grid from '@/src/components/Grid/Grid';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
@@ -38,6 +39,7 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   const [availableInterceptors, setAvailableInterceptors] = useState<DialInterceptor[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [runnerInterceptors, setRunnerInterceptors] = useState<string[]>();
+  const [globalInterceptors, setGlobalInterceptors] = useState<string[] | null>(null);
 
   const isCollapsableView = useMemo(() => {
     return view === ApplicationRoute.Models || view === ApplicationRoute.Applications;
@@ -61,7 +63,14 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   }, [entity, runnerInterceptors]);
 
   useEffect(() => {
-    //todo recheck
+    if (!globalInterceptors) {
+      getProperties(DEFAULT_ETAG).then((res) => {
+        setGlobalInterceptors(res.response?.globalInterceptors || []);
+      });
+    }
+  }, [entity, globalInterceptors, runnerInterceptors]);
+
+  useEffect(() => {
     setAvailableInterceptors(interceptors);
   }, [entity, interceptors]);
 
@@ -133,11 +142,17 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
 
   const rowData = getInterceptorsGridData(interceptors, entityInterceptors);
 
-  const runnerColumns = getInterceptorsColumnDefs(onOpen);
+  const globalColumns = getInterceptorsColumnDefs(onOpen);
+
+  const runnerColumns = getInterceptorsColumnDefs(onOpen, void 0, globalInterceptors?.length);
 
   const localColumns = useMemo(() => {
-    return getInterceptorsColumnDefs(onOpen, onRemoveInterceptor, runnerInterceptors?.length);
-  }, [onRemoveInterceptor, runnerInterceptors?.length]);
+    return getInterceptorsColumnDefs(
+      onOpen,
+      onRemoveInterceptor,
+      (globalInterceptors?.length || 0) + (runnerInterceptors?.length || 0),
+    );
+  }, [onRemoveInterceptor, globalInterceptors?.length, runnerInterceptors?.length]);
 
   const additionalGridOptions = useMemo(() => {
     return { rowDragManaged: true, onRowDragEnd };
@@ -166,9 +181,11 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
         <CollapsableInterceptors
           entity={entity}
           interceptors={interceptors}
+          globalColumns={globalColumns}
           runnerColumns={runnerColumns}
           runnerInterceptors={runnerInterceptors}
           localInterceptors={localInterceptors}
+          globalInterceptors={globalInterceptors}
           headerButton={button}
         />
       ) : (
