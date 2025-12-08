@@ -139,13 +139,15 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
     cacheBlockSize: PAGE_SIZE,
     blockLoadDebounceMillis: 200,
     maxBlocksInCache: Math.floor(CACHE_LIMIT / PAGE_SIZE),
-    onCellClicked: !entity
-      ? (e) => {
-          if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
-            router.push(getUrnForEntity(ApplicationRoute.ActivityAudit, e.data));
-          }
+    onCellClicked: (e) => {
+      if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
+        if (entity) {
+          onOpenDetailsModal(e.data);
+        } else {
+          router.push(getUrnForEntity(ApplicationRoute.ActivityAudit, e.data));
         }
-      : (e) => onOpenDetailsModal(e.data),
+      }
+    },
   };
 
   const columnDefs = entity

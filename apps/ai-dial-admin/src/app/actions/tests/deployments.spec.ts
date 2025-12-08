@@ -13,12 +13,8 @@ import {
 } from '@/src/app/api/api';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
-  createAssetToolset,
   createContainer,
   createImage,
-  createInterceptor,
-  createModel,
-  createToolset,
   deleteContainer,
   deleteImage,
   duplicateContainer,
@@ -28,8 +24,6 @@ import {
   getContainerResources,
   getContainerTools,
   getContainers,
-  getFiles,
-  getFolders,
   getImage,
   getImageContainers,
   getImageLogs,
@@ -37,15 +31,10 @@ import {
   getImagesWithVersions,
   getInterceptorContainers,
   getInterceptorImages,
-  getInterceptorsList,
   getMCPContainers,
   getMCPImages,
   getModelContainers,
   getModelImages,
-  getModelsList,
-  getRules,
-  getToolsetList,
-  getToolsets,
   getTopics,
   installImage,
   runContainer,
@@ -383,135 +372,6 @@ describe('Deployments actions', () => {
 
       expect(getUserToken).toHaveBeenCalled();
       expect(containersApi.getContainerPods).toHaveBeenCalledWith('container-1', TOKEN_MOCK);
-      expect(result).toBe(mockResponse);
-    });
-  });
-
-  describe('Entity actions', () => {
-    test('createInterceptor calls interceptorsApi.createInterceptor with interceptor and token', async () => {
-      const mockInterceptor = { name: 'interceptor' } as any;
-      const mockResponse = { ...mockInterceptor };
-      (interceptorsApi.createInterceptor as any).mockResolvedValue(mockResponse);
-
-      const result = await createInterceptor(mockInterceptor);
-
-      expect(getUserToken).toHaveBeenCalled();
-      expect(interceptorsApi.createInterceptor).toHaveBeenCalledWith(mockInterceptor, TOKEN_MOCK);
-      expect(result).toBe(mockResponse);
-    });
-
-    test('createToolset calls toolSetsApi.createToolset with toolset and token', async () => {
-      const mockToolset = { name: 'toolset' } as any;
-      const mockResponse = { ...mockToolset };
-      (toolSetsApi.createToolset as any).mockResolvedValue(mockResponse);
-
-      const result = await createToolset(mockToolset);
-
-      expect(getUserToken).toHaveBeenCalled();
-      expect(toolSetsApi.createToolset).toHaveBeenCalledWith(mockToolset, TOKEN_MOCK);
-      expect(result).toBe(mockResponse);
-    });
-
-    test('createModel calls modelsApi.createModel with model and token', async () => {
-      const mockModel = { name: 'model' } as any;
-      const mockResponse = { ...mockModel };
-      (modelsApi.createModel as any).mockResolvedValue(mockResponse);
-
-      const result = await createModel(mockModel);
-
-      expect(getUserToken).toHaveBeenCalled();
-      expect(modelsApi.createModel).toHaveBeenCalledWith(mockModel, TOKEN_MOCK);
-      expect(result).toBe(mockResponse);
-    });
-
-    test('getInterceptorsList calls interceptorsApi.getInterceptorsList with token', async () => {
-      const mockResponse = [{ name: 'interceptor1' }];
-      (interceptorsApi.getInterceptorsList as any).mockResolvedValue(mockResponse);
-
-      const result = await getInterceptorsList();
-
-      expect(getUserToken).toHaveBeenCalled();
-      expect(interceptorsApi.getInterceptorsList).toHaveBeenCalledWith(TOKEN_MOCK);
-      expect(result).toBe(mockResponse);
-    });
-
-    test('getModelsList calls modelsApi.getModelsList with token', async () => {
-      const mockResponse = [{ name: 'model1' }];
-      (modelsApi.getModelsList as any).mockResolvedValue(mockResponse);
-
-      const result = await getModelsList();
-
-      expect(getUserToken).toHaveBeenCalled();
-      expect(modelsApi.getModelsList).toHaveBeenCalledWith(TOKEN_MOCK);
-      expect(result).toBe(mockResponse);
-    });
-
-    test('getToolsetList calls toolSetsApi.getToolsetList with token', async () => {
-      const mockResponse = [{ name: 'toolset1' }];
-      (toolSetsApi.getToolsetList as any).mockResolvedValue(mockResponse);
-
-      const result = await getToolsetList();
-
-      expect(getUserToken).toHaveBeenCalled();
-      expect(toolSetsApi.getToolsetList).toHaveBeenCalledWith(TOKEN_MOCK);
-      expect(result).toBe(mockResponse);
-    });
-  });
-
-  describe('Folder and Asset actions', () => {
-    test('getFolders calls foldersApi.getFolders with token and path', async () => {
-      const mockResponse = [{ name: 'folder1' }];
-      (foldersApi.getFolders as any).mockResolvedValue(mockResponse);
-
-      const result = await getFolders('/path');
-
-      expect(getUserToken).toHaveBeenCalled();
-      expect(foldersApi.getFolders).toHaveBeenCalledWith(TOKEN_MOCK, '/path');
-      expect(result).toBe(mockResponse);
-    });
-
-    test('getRules calls foldersApi.getRules with token and path', async () => {
-      const mockResponse = [{ rule: 'rule1' }];
-      (foldersApi.getRules as any).mockResolvedValue(mockResponse);
-
-      const result = await getRules('/path');
-
-      expect(getUserToken).toHaveBeenCalled();
-      expect(foldersApi.getRules).toHaveBeenCalledWith(TOKEN_MOCK, '/path');
-      expect(result).toBe(mockResponse);
-    });
-
-    test('getFiles calls assetsApi.getAssetList with token, path and FILE type', async () => {
-      const mockResponse = [{ name: 'file1' }];
-      (assetsApi.getAssetList as any).mockResolvedValue(mockResponse);
-
-      const result = await getFiles('/path');
-
-      expect(getUserToken).toHaveBeenCalled();
-      expect(assetsApi.getAssetList).toHaveBeenCalledWith(TOKEN_MOCK, '/path', ResourceType.FILE);
-      expect(result).toBe(mockResponse);
-    });
-
-    test('getToolsets calls assetsApi.getAssetList with token, path and TOOLSET type', async () => {
-      const mockResponse = [{ name: 'toolset1' }];
-      (assetsApi.getAssetList as any).mockResolvedValue(mockResponse);
-
-      const result = await getToolsets('/path');
-
-      expect(getUserToken).toHaveBeenCalled();
-      expect(assetsApi.getAssetList).toHaveBeenCalledWith(TOKEN_MOCK, '/path', ResourceType.TOOLSET);
-      expect(result).toBe(mockResponse);
-    });
-
-    test('createAssetToolset calls assetsApi.createAsset with toolset, TOOLSET type and token', async () => {
-      const mockToolset = { name: 'asset-toolset' } as any;
-      const mockResponse = { ...mockToolset };
-      (assetsApi.createAsset as any).mockResolvedValue(mockResponse);
-
-      const result = await createAssetToolset(mockToolset);
-
-      expect(getUserToken).toHaveBeenCalled();
-      expect(assetsApi.createAsset).toHaveBeenCalledWith(mockToolset, ResourceType.TOOLSET, TOKEN_MOCK);
       expect(result).toBe(mockResponse);
     });
   });

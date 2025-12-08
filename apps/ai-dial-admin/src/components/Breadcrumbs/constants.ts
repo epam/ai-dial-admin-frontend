@@ -162,6 +162,9 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
   [ApplicationRoute.ExportConfig]: {
     segments: [{ name: 'Export Config', i18nKey: MenuI18nKey.ExportConfig }],
   },
+  [ApplicationRoute.SystemProperties]: {
+    segments: [{ name: 'System Properties', i18nKey: MenuI18nKey.SystemProperties }],
+  },
   [ApplicationRoute.UsageLog]: {
     segments: [{ name: 'Usage Log', i18nKey: MenuI18nKey.UsageLog }],
   },

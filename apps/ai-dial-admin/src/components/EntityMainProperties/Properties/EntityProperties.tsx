@@ -2,7 +2,6 @@ import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
 
 import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
-import { getInterceptorContainers } from '@/src/app/[lang]/interceptors/actions';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import DisplayNameControl from '@/src/components/EntityMainProperties/BaseProperties/DisplayName';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
@@ -17,6 +16,7 @@ import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isDeploymentsEnabled } from '@/src/utils/plugins';
 import { getErrorForPath } from '@/src/utils/validation/path-error';
+import { getInterceptorContainers } from '@/src/app/actions/deployments';
 
 interface Props {
   view?: ApplicationRoute;

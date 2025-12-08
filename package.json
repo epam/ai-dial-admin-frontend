@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@epam/ai-dial-shared": "^0.39.1",
-    "@epam/ai-dial-ui-kit": "0.5.0-rc.45",
+    "@epam/ai-dial-ui-kit": "0.5.0-rc.74",
     "@epam/ai-dial-visualizer-connector": "^0.39.1",
     "@floating-ui/react": "^0.27.16",
     "@monaco-editor/react": "^4.7.0",
@@ -59,11 +59,11 @@
     "pino": "^10.1.0",
     "pino-pretty": "^13.1.2",
     "re-resizable": "^6.11.2",
-    "react": "19.1.1",
+    "react": "19.1.2",
     "react-datepicker": "^8.4.0",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
-    "react-dom": "19.1.1",
+    "react-dom": "19.1.2",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
@@ -126,8 +126,8 @@
     "esbuild": "0.25.10",
     "koa": "3.0.3",
     "glob": "10.5.0",
-    "react": "19.1.1",
-    "react-dom": "19.1.1"
+    "react": "19.1.2",
+    "react-dom": "19.1.2"
   },
   "engines": {
     "node": ">=22.2.0",

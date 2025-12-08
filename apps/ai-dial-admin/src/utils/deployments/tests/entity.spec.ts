@@ -3,6 +3,7 @@ import {
   getAssetTemplate,
   getEntityId,
   getEntityName,
+  getEntityRoute,
   getEntityTemplate,
   getIdFormat,
   getTranslatedEntity,
@@ -20,6 +21,18 @@ vi.mock('@/src/utils/models/model-endpoint');
 
 describe('entity utils', () => {
   const t = (key: string) => key;
+
+  describe('getEntityRoute', () => {
+    test('returns Toolsets for McpDeployments', () => {
+      expect(getEntityRoute(ApplicationRoute.McpDeployments)).toBe(ApplicationRoute.Toolsets);
+    });
+    test('returns Interceptors for InterceptorDeployments', () => {
+      expect(getEntityRoute(ApplicationRoute.InterceptorDeployments)).toBe(ApplicationRoute.Interceptors);
+    });
+    test('returns Models for other routes', () => {
+      expect(getEntityRoute(ApplicationRoute.ModelDeployments)).toBe(ApplicationRoute.Models);
+    });
+  });
 
   describe('getTranslatedType', () => {
     test('returns MCP for McpDeployments', () => {
@@ -93,10 +106,10 @@ describe('entity utils', () => {
   describe('getAssetTemplate', () => {
     test('returns asset template', () => {
       const container = { name: 'MyContainer', url: 'http://url' } as any;
-      const template = getAssetTemplate(ApplicationRoute.McpDeployments, container, t);
+      const template = getAssetTemplate(ApplicationRoute.McpDeployments, container, t, CONTAINER_TRANSPORT.SSE);
       expect(template.name).toBe('mycontainer_entities.toolset');
       expect(template.endpoint).toBe('http://url');
-      expect(template.version).toBe('1.0.0');
+      expect(template.transport).toBe(CONTAINER_TRANSPORT.SSE);
     });
 
     test('configures transport for McpDeployments', () => {

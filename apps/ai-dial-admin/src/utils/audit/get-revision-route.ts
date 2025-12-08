@@ -22,6 +22,8 @@ export const getRevisionRouteForEntityType = (type?: string, id?: string): strin
       return `/applicationTypeSchemas/snapshot?id=${id}&revision=`;
     case ActivityAuditResourceType.INTERCEPTOR_TEMPLATE:
       return `/interceptor-runners/${id}/revision/`;
+    case ActivityAuditResourceType.SYSTEM_PROPERTIES:
+      return `/global-settings/revision/`;
     default:
       return null;
   }
@@ -49,6 +51,8 @@ export const getRevisionRouteForAllEntities = (type?: string): string | null => 
       return `/applicationTypeSchemas/revision/`;
     case ActivityAuditResourceType.INTERCEPTOR_TEMPLATE:
       return `/interceptor-runners/revision/`;
+    case ActivityAuditResourceType.SYSTEM_PROPERTIES:
+      return `/global-settings/revision/`;
     default:
       return null;
   }

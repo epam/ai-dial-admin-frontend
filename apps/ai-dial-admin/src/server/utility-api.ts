@@ -6,6 +6,7 @@ import { getFileName } from '@/src/utils/api/get-file-name';
 import { API } from './api';
 import { BaseApi } from './base-api';
 import { AppProcessStatus } from '@/src/models/app-process-status';
+import { GlobalSettings } from '@/src/models/system-properties';
 
 export const VERSION_URL = `${API}/version`;
 const CONFIG_URL = `${API}/configs`;
@@ -18,6 +19,7 @@ export const EXPORT_CONFIG_MAP_URL = `${EXPORT_CONFIG_URL}/raw/core`;
 export const EXPORT_PREVIEW_CONFIG_URL = `${EXPORT_CONFIG_URL}/preview`;
 export const RELOAD_CONFIG_URL = `${CONFIG_URL}/sync/status`;
 export const DEPLOYMENT_URL = (name: string) => `${API}/deployments/${name}`;
+export const SYSTEM_PROPERTIES_URL = `${API}/global-settings`;
 
 export class UtilityApi extends BaseApi {
   getBeVersion(token: JWT | null): Promise<string | null> {
@@ -54,5 +56,13 @@ export class UtilityApi extends BaseApi {
 
   getAppProcessStatus(token: JWT | null): Promise<ServerActionResponse<AppProcessStatus>> {
     return this.getAction(RELOAD_CONFIG_URL, token);
+  }
+
+  getSystemProperties(token: JWT | null, etag: string): Promise<ServerActionResponse<GlobalSettings>> {
+    return this.getActionWithEtag(SYSTEM_PROPERTIES_URL, etag, token);
+  }
+
+  updateSystemProperties(properties: GlobalSettings, token: JWT | null, etag: string): Promise<ServerActionResponse> {
+    return this.putActionWithEtag(SYSTEM_PROPERTIES_URL, properties, token, etag);
   }
 }
