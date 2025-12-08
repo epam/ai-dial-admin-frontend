@@ -68,14 +68,20 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, etag }) => 
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
-      <Header isChanged={isChanged} onSave={onSave} onDiscard={onDiscard} activeTab={activeTab} changeTab={changeTab} />
+      <Header
+        isChanged={isChanged}
+        onSave={onSave}
+        onDiscard={onDiscard}
+        activeTab={activeTab}
+        onChangeTab={changeTab}
+      />
 
       <div className="flex-1 overflow-auto mt-3 min-h-0">
         {activeTab === EntityViewTab.GlobalInterceptors && (
           <GlobalInterceptors
             interceptors={interceptors}
             currentInterceptors={currentSettings?.globalInterceptors || []}
-            changeInterceptors={changeInterceptors}
+            onChangeInterceptors={changeInterceptors}
           />
         )}
       </div>

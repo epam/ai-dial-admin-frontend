@@ -16,10 +16,10 @@ interface Props {
   onSave?: () => void;
   onDiscard?: () => void;
   activeTab: EntityViewTab;
-  changeTab: (tab: string) => void;
+  onChangeTab: (tab: string) => void;
 }
 
-const SystemProperties: FC<Props> = ({ isChanged, onSave, onDiscard, activeTab, changeTab }) => {
+const Header: FC<Props> = ({ isChanged, onSave, onDiscard, activeTab, onChangeTab }) => {
   const t = useI18n() as (stringToTranslate: string) => string;
   const tabs = getSystemPropertiesTabs(t);
 
@@ -34,7 +34,7 @@ const SystemProperties: FC<Props> = ({ isChanged, onSave, onDiscard, activeTab, 
   return (
     <div className="flex flex-row justify-between min-h-[34px]">
       <div className="min-w-0 mr-3">
-        <DialTabs tabs={tabs} activeTab={activeTab} onClick={changeTab} />
+        <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeTab} />
       </div>
       {isChanged && (
         <div className="flex flex-row gap-3 p-3 lg:p-0">
@@ -56,4 +56,4 @@ const SystemProperties: FC<Props> = ({ isChanged, onSave, onDiscard, activeTab, 
   );
 };
 
-export default SystemProperties;
+export default Header;

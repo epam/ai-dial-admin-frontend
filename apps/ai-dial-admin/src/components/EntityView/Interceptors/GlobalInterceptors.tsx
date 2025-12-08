@@ -19,10 +19,10 @@ import { getInterceptorsColumnDefs } from './utils';
 interface Props {
   interceptors: DialInterceptor[];
   currentInterceptors: string[];
-  changeInterceptors: (interceptors: string[]) => void;
+  onChangeInterceptors: (interceptors: string[]) => void;
 }
 
-const GlobalInterceptors = ({ interceptors, currentInterceptors, changeInterceptors }: Props) => {
+const GlobalInterceptors = ({ interceptors, currentInterceptors, onChangeInterceptors }: Props) => {
   const t = useI18n();
 
   const [availableInterceptors, setAvailableInterceptors] = useState<DialInterceptor[]>([]);
@@ -44,33 +44,33 @@ const GlobalInterceptors = ({ interceptors, currentInterceptors, changeIntercept
 
   const onAddInterceptors = useCallback(
     (newInterceptors: DialInterceptor[]) => {
-      changeInterceptors([
+      onChangeInterceptors([
         ...currentInterceptors,
         ...(newInterceptors.map((interceptor) => interceptor.name as string) || []),
       ]);
 
       setIsModalOpen(false);
     },
-    [changeInterceptors, currentInterceptors],
+    [onChangeInterceptors, currentInterceptors],
   );
 
   const onRemoveInterceptor = useCallback(
     (_?: DialInterceptor, index?: number) => {
       if (index != null) {
         globalInterceptors?.splice(index, 1);
-        changeInterceptors(globalInterceptors.map((interceptor) => interceptor?.name as string));
+        onChangeInterceptors(globalInterceptors.map((interceptor) => interceptor?.name as string));
       }
     },
-    [changeInterceptors, globalInterceptors],
+    [onChangeInterceptors, globalInterceptors],
   );
 
   const onRowDragEnd = useCallback(
     (event: RowDragEvent) => {
       const newRowData: string[] = [];
       event.api.forEachNode((node) => newRowData.push(node.data.name));
-      changeInterceptors(newRowData);
+      onChangeInterceptors(newRowData);
     },
-    [changeInterceptors],
+    [onChangeInterceptors],
   );
 
   const onOpen = (interceptor?: DialInterceptor) => {
@@ -80,7 +80,6 @@ const GlobalInterceptors = ({ interceptors, currentInterceptors, changeIntercept
   const rowData = globalInterceptors;
 
   const columns = useMemo(() => {
-    // change remove
     return getInterceptorsColumnDefs(onOpen, onRemoveInterceptor);
   }, [onRemoveInterceptor]);
 

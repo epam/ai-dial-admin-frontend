@@ -69,4 +69,11 @@ describe('Server :: UtilityApi', () => {
     const result = await instance.getSystemProperties(TOKEN_MOCK, 'etag');
     expect(result.response).toEqual(JSON.stringify({ globalInterceptors: ['global'] }));
   });
+
+  test('should update system properties', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ globalInterceptors: ['global'] }));
+
+    const result = await instance.updateSystemProperties({ globalInterceptors: ['global'] }, TOKEN_MOCK, 'etag');
+    expect(result.response).toEqual(JSON.stringify({ globalInterceptors: ['global'] }));
+  });
 });
