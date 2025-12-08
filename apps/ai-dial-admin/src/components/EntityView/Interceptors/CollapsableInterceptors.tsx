@@ -14,26 +14,34 @@ import { getInterceptorsGridData } from './utils';
 interface Props<T> {
   entity: T;
   interceptors: DialInterceptor[];
+  globalColumns: ColDef[];
   runnerColumns: ColDef[];
   headerButton?: ReactNode;
   localInterceptors?: ReactNode;
   runnerInterceptors?: string[];
+  globalInterceptors: string[] | null;
 }
 
 const CollapsableInterceptors = <T extends { interceptors?: string[] }>({
   entity,
   interceptors,
+  globalColumns,
   runnerColumns,
   headerButton,
   localInterceptors,
   runnerInterceptors,
+  globalInterceptors,
 }: Props<T>) => {
   const t = useI18n();
 
   return (
     <div className="h-full flex flex-col gap-5">
-      <CollapsableSection title={t(InterceptorsI18nKey.Global)}>
-        <DialNoDataContent title={t(EntitiesI18nKey.NoGlobalInterceptors)} />
+      <CollapsableSection title={`${t(InterceptorsI18nKey.Global)}: ${globalInterceptors?.length || 0}`}>
+        {!globalInterceptors?.length ? (
+          <DialNoDataContent title={t(EntitiesI18nKey.NoGlobalInterceptors)} />
+        ) : (
+          <Grid columnDefs={globalColumns} rowData={getInterceptorsGridData(interceptors, globalInterceptors)} />
+        )}
       </CollapsableSection>
       {(entity as DialApplication).customAppSchemaId && (
         <CollapsableSection title={`${t(InterceptorsI18nKey.Runner)}: ${runnerInterceptors?.length || 0}`}>

@@ -1,7 +1,7 @@
 import Big from 'big.js';
 
 import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
-import { AttachmentsI18nKey, EntitiesI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { AttachmentsI18nKey, EntitiesI18nKey, MenuI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { formatNumberByDelimiter } from '@/src/utils/formatting/number-formatting';
 import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
@@ -13,6 +13,10 @@ export const getFormattedResourceType = (value: string, t: (key: string) => stri
   }
   if (value === ActivityAuditResourceType.INTERCEPTOR_TEMPLATE) {
     return t(EntitiesI18nKey.InterceptorTemplate);
+  }
+
+  if (value === ActivityAuditResourceType.SYSTEM_PROPERTIES) {
+    return t(MenuI18nKey.SystemProperties);
   }
   return value;
 };

@@ -86,6 +86,7 @@ export default {
     FilePublications: 'File Publications',
     ImportConfig: 'Import Config',
     ExportConfig: 'Export Config',
+    SystemProperties: 'System Properties',
 
     MLOps: 'Deployments',
     MCPDeployments: 'MCP Deployments',
@@ -294,6 +295,7 @@ export default {
       Adapter: 'Adapter',
       InterceptorTemplate: 'Interceptor Template',
       ApplicationRunner: 'Application Runner',
+      SystemProperties: 'System Properties',
     },
   },
   Type: {
@@ -426,6 +428,8 @@ export default {
     Features: 'Features',
     Roles: 'Roles',
     Interceptors: 'Interceptors',
+    GlobalInterceptors: 'Global Interceptors',
+    ErrorCodes: 'Error Codes',
     Keys: 'Keys',
     Entities: 'Entities',
     Parameters: 'Parameters',
@@ -931,6 +935,7 @@ export default {
     Port: 'Port',
     GRPCPort: 'gRPC Port',
     Arguments: 'Arguments',
+    globalInterceptors: 'Global Interceptors',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
