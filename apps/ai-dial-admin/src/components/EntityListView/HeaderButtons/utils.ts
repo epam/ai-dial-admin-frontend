@@ -71,7 +71,7 @@ export const getImportFunction = (view: ApplicationRoute) => {
   }
 };
 
-export const getImportTitle = (view: ApplicationRoute) => {
+export const getImportTitle = (view?: ApplicationRoute) => {
   switch (view) {
     case ApplicationRoute.Prompts:
       return MenuI18nKey.Prompts;
