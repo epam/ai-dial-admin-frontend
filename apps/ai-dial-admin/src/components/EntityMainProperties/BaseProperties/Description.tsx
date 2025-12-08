@@ -7,7 +7,7 @@ import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { getControlClassName } from '@/src/utils/entities/view';
 
 interface Props<T> {
   entity: T;
@@ -24,6 +24,7 @@ const DescriptionControl = <T extends { description?: string }>({
 }: Props<T>) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
+  const containerClassName = getControlClassName(isFullWidth);
 
   const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
 
@@ -47,7 +48,7 @@ const DescriptionControl = <T extends { description?: string }>({
       errorText={descriptionError?.text}
       invalid={!!descriptionError}
       onChange={onChangeDescription}
-      containerClassName={isFullWidth ? 'w-full' : STANDARD_CONTROL_WIDTH}
+      containerClassName={containerClassName}
       {...props}
     />
   );

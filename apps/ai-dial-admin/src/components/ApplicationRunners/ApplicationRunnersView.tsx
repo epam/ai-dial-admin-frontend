@@ -198,7 +198,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
               {activeTab === EntityViewTab.Properties && (
                 <div className="w-full flex flex-col">
                   <EntityHeader entity={selectedRunner} />
-                  <div className="flex-1 min-h-0 pt-8 lg:w-[35%]">
+                  <div className="flex-1 min-h-0 pt-8">
                     <SchemeProperties
                       names={names}
                       runner={selectedRunner}

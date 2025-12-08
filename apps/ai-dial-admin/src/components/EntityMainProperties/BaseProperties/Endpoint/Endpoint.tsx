@@ -14,6 +14,7 @@ export interface EndpointControlProps {
   required?: boolean;
   textBeforeInput?: string;
   disabled?: boolean;
+  isFullWidth?: boolean;
   onChange?: (endpoint?: string) => void;
 }
 
@@ -22,7 +23,6 @@ export interface Props extends EndpointControlProps {
   fieldTitle: string;
   placeholder: string;
   elementClassName?: string;
-  isFullWidth?: boolean;
   iconAfterInput?: ReactNode;
 }
 
@@ -32,7 +32,7 @@ const EndpointControl: FC<Props> = ({
   endpoint,
   id,
   onChange,
-  isFullWidth = true,
+  isFullWidth = false,
   ...props
 }) => {
   const t = useI18n();

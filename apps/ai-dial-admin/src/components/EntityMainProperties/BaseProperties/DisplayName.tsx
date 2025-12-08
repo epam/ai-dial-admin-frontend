@@ -1,12 +1,12 @@
-import { FC, useCallback, useState } from 'react';
 import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useState } from 'react';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
+import { getControlClassName } from '@/src/utils/entities/view';
 import { getErrorForDisplayName } from '@/src/utils/validation/name-error';
-import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 interface Props {
   displayName?: string;
@@ -20,6 +20,7 @@ interface Props {
 const DisplayNameControl: FC<Props> = ({ displayName, isFullWidth = true, onChange, required, ...props }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
+  const containerClassName = getControlClassName(isFullWidth);
 
   const [displayNameError, setDisplayNameError] = useState<FieldError | null>(null);
 
@@ -50,7 +51,7 @@ const DisplayNameControl: FC<Props> = ({ displayName, isFullWidth = true, onChan
       onChange={onChangeDisplayName}
       errorText={displayNameError?.text}
       invalid={!!displayNameError}
-      containerClassName={isFullWidth ? 'w-full' : STANDARD_CONTROL_WIDTH}
+      containerClassName={containerClassName}
       {...props}
     />
   );
