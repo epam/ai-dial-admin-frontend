@@ -29,6 +29,7 @@ import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ChatEntity } from '@/src/models/dial/base-entity';
@@ -39,13 +40,13 @@ import { DialRole } from '@/src/models/dial/role';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getAppRunnerTabs } from '@/src/utils/tabs/utils';
 import AppRunnerApplications from './ConfigurationView/Applications';
+import AppRunnerFeatures from './ConfigurationView/Features';
 import SchemeProperties from './ConfigurationView/Properties';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-import { getViewHeaderClassName } from '@/src/utils/entities/view';
 
 interface Props {
   etag: string;
@@ -211,6 +212,10 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, roles, names,
 
               {activeTab === EntityViewTab.Parameters && (
                 <ApplicationParametersTab view={ApplicationRoute.ApplicationRunners} entity={selectedRunner} />
+              )}
+
+              {activeTab === EntityViewTab.Features && (
+                <AppRunnerFeatures runner={selectedRunner} onChangeRunner={onChangeScheme} />
               )}
 
               {activeTab === EntityViewTab.Interceptors && (
