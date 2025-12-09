@@ -55,8 +55,9 @@ const EndpointControl: FC<Props> = ({
 
   const onChangeEndpoint = useCallback(
     (value?: string) => {
-      validateEndpoint(value);
-      onChange?.(value);
+      const trimmedValue = value?.trimStart();
+      validateEndpoint(trimmedValue);
+      onChange?.(trimmedValue);
     },
     [onChange, validateEndpoint],
   );

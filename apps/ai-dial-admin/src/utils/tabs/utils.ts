@@ -236,7 +236,15 @@ export const getAdapterTabs = (t: (stringToTranslate: string) => string): TabMod
 };
 
 export const getAppRunnerTabs = (t: (stringToTranslate: string) => string): TabModel[] => {
-  return [propertiesTab(t), parametersTab(t), interceptorsTab(t), applicationsTab(t), appRouteTab(t), auditTab(t)];
+  return [
+    propertiesTab(t),
+    featuresTab(t),
+    parametersTab(t),
+    interceptorsTab(t),
+    applicationsTab(t),
+    appRouteTab(t),
+    auditTab(t),
+  ];
 };
 
 export const getRouteTabs = (t: (stringToTranslate: string) => string): TabModel[] => {

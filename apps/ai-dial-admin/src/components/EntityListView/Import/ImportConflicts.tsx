@@ -22,7 +22,7 @@ import { FileImportGridData, FileImportMap } from '@/src/models/file';
 import { ConflictResolutionPolicy } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
-import { getImportTitle } from '../HeaderButtons/utils';
+import { getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
 
 interface Props {
   route?: ApplicationRoute;
