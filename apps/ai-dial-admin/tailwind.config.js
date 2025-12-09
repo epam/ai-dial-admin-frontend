@@ -1,15 +1,12 @@
 // Default color palette is black when no themes presented
 
-// blue/green/violet alpha - need add
-
 const backgroundsColors = {
   transparent: 'transparent',
-  'layer-0': 'var(--bg-layer-0, #000000)',
-  'layer-1': 'var(--bg-layer-1, #141A23)',
-  'layer-2': 'var(--bg-layer-2, #222932)',
-  'layer-3': 'var(--bg-layer-3, #333942)',
-  'layer-4': 'var(--bg-layer-4, #69727C)',
-  blackout: 'var(--bg-blackout, #090D13B2)',
+  'layer-1': 'var(--bg-layer-1, #090D13)',
+  'layer-2': 'var(--bg-layer-2, #141A23)',
+  'layer-3': 'var(--bg-layer-3, #222932)',
+  'layer-4': 'var(--bg-layer-4, #333942)',
+  blackout: 'var(--bg-blackout, #090D13B3)',
   error: 'var(--bg-error, #402027)',
   warning: 'var(--bg-warning, #3F3D25)',
   info: 'var(--bg-info, #1C2C47)',
@@ -22,7 +19,7 @@ const backgroundsColors = {
 
   'accent-primary-alpha': 'var(--bg-accent-primary-alpha, #74A4FF26)',
   'accent-secondary-alpha': 'var(--bg-accent-secondary-alpha, #37BABC26)',
-  'accent-tertiary-alpha': 'var(--bg-accent-tertiary-alpha, #A972FF26)',
+  'accent-tertiary-alpha': 'var(--bg-accent-tertiary-alpha, #A972FF2B)',
 
   'red-400': 'var(--bg-red-400, #F76464)',
   'red-800': 'var(--bg-red-800, #AE2F2F)',
@@ -30,7 +27,6 @@ const backgroundsColors = {
   'orange-800': 'var(--bg-orange-800, #B25500)',
 };
 
-// review button colors
 const buttonsBgColors = {
   'controls-accent': 'var(--controls-bg-accent, #5C8DEA)',
   'controls-accent-hover': 'var(--controls-bg-accent-hover, #4878D2)',
@@ -43,7 +39,7 @@ const buttonsBgColors = {
 
 const borderColors = {
   transparent: 'transparent',
-  primary: 'var(--stroke-primary, #69727C)',
+  primary: 'var(--stroke-primary, #333942)',
   secondary: 'var(--stroke-secondary, #222932)',
   tertiary: 'var(--stroke-tertiary, #090D13)',
   error: 'var(--stroke-error, #F76464)',
@@ -51,7 +47,7 @@ const borderColors = {
   hover: 'var(--stroke-hover, #F3F4F6)',
   info: 'var(--stroke-info, #74A4FF)',
   success: 'var(--stroke-success, #37BABC)',
-  'accent-primary': 'var(--stroke-accent-primary, #74A4FF)',
+  'accent-primary': 'var(--stroke-accent-primary, #5C8DEA)',
   'accent-primary-hover': 'var(--stroke-accent-primary-hover, #4878d2)',
   'accent-secondary': 'var(--stroke-accent-secondary, #37BABC)',
   'accent-tertiary': 'var(--stroke-accent-tertiary, #A972FF)',
@@ -62,15 +58,15 @@ const borderColors = {
 const textColors = {
   transparent: 'transparent',
   primary: 'var(--text-primary, #F3F4F6)',
-  secondary: 'var(--text-secondary, #9AA2AD)',
+  secondary: 'var(--text-secondary, #7F8792)',
   error: 'var(--text-error, #F76464)',
   warning: 'var(--text-warning, #EEC840)',
   'warning-icon': 'var(--text-warning-icon, #EEC840)',
   info: 'var(--text-info, #74A4FF)',
-  'accent-primary': 'var(--text-accent-primary, #74A4FF)',
+  'accent-primary': 'var(--text-accent-primary, #5C8DEA)',
   'accent-secondary': 'var(--text-accent-secondary, #37BABC)',
   'accent-tertiary': 'var(--text-accent-tertiary, #A972FF)',
-  'controls-disable': 'var(--controls-text-disable, #090D13)',
+  'controls-disable': 'var(--controls-text-disable, #333942)',
 };
 
 const placeholderColor = {
@@ -88,15 +84,15 @@ module.exports = {
   important: true,
   content: ['./src/**/*.{html,js,ts,tsx,yaml}'],
   theme: {
-    extend: {
-      backgroundColor: { ...backgroundsColors, ...buttonsBgColors },
-      borderColor: borderColors,
-      stroke: borderColors,
-      divideColor: borderColors,
-      placeholderColor: placeholderColor,
-      textColor: { ...textColors, ...buttonsTextColors },
-      gradientColorStops: backgroundsColors,
+    backgroundColor: { ...backgroundsColors, ...buttonsBgColors },
+    borderColor: borderColors,
+    stroke: borderColors,
+    divideColor: borderColors,
+    placeholderColor: placeholderColor,
+    textColor: { ...textColors, ...buttonsTextColors },
+    gradientColorStops: backgroundsColors,
 
+    extend: {
       screens: {
         mobile: { min: '360px', max: '767px' },
         small_tablet: { min: '768px', max: '1023px' },
@@ -105,7 +101,7 @@ module.exports = {
         large_desktop: { min: '2560px' },
       },
       boxShadow: {
-        DEFAULT: '0 0 4px 0 var(--bg-blackout, #090D13B2)',
+        DEFAULT: '0 0 4px 0 var(--bg-blackout, #090D13B3)',
       },
       borderRadius: {
         DEFAULT: '3px',
