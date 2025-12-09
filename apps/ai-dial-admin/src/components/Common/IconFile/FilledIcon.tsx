@@ -67,7 +67,7 @@ const FilledIcon: FC<Props> = ({ disabled, fileUrl, onChange }) => {
     getImageSrc()
   ) : (
     <>
-      <DialDropdown menu={menu} listClassName="w-[180px]">
+      <DialDropdown menu={menu} className="w-[180px]">
         {getImageSrc()}
       </DialDropdown>
 

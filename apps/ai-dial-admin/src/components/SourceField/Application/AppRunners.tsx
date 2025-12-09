@@ -3,10 +3,11 @@
 import { ButtonVariant, DialButton, DialInputPopup, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import classNames from 'classnames';
 
 import Field from '@/src/components/Common/Field/Field';
 import { ButtonsI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
@@ -71,37 +72,34 @@ const AppRunners: FC<Props> = ({ selectedValue, runners, onChangeValue, isEntity
   }, [selectedValue, dropdownItems]);
 
   return !isEntityImmutable ? (
-    <div className="w-full">
-      <DialSelectField
-        value={selectedValue}
-        searchable={true}
-        elementId="sourceEntity"
-        options={dropdownItems}
-        fieldTitle={t(EntitiesI18nKey.AppRunner)}
-        placeholder={t(EntityPlaceholdersI18nKey.SelectAppRunner)}
-        onChange={(runner) => onChange(runner as string)}
-      />
-    </div>
+    <DialSelectField
+      value={selectedValue}
+      searchable={true}
+      elementId="sourceEntity"
+      className="w-full"
+      options={dropdownItems}
+      fieldTitle={t(EntitiesI18nKey.AppRunner)}
+      placeholder={t(EntityPlaceholdersI18nKey.SelectAppRunner)}
+      onChange={(runner) => onChange(runner as string)}
+    />
   ) : (
-    <div className="flex flex-row gap-2 items-end w-full lg:w-[50%]">
-      <div className="flex-1 min-w-0">
-        <div className="w-full">
-          <Field fieldTitle={t(EntitiesI18nKey.AppRunner)} htmlFor="sourceEntity" />
-          <DialInputPopup
-            emptyValueText={t(EntitiesI18nKey.NoApplicationRunners)}
-            open={isModalOpen}
-            onOpen={onOpenModal}
-            selectedValue={valueTitle}
-          >
-            <SelectAppRunnerModal
-              selectedId={selectedValue}
-              onApply={onChange}
-              isModalOpen={isModalOpen}
-              onClose={onCloseModal}
-              sourceEntities={runners}
-            />
-          </DialInputPopup>
-        </div>
+    <div className={classNames('flex flex-row gap-2 items-end', STANDARD_CONTROL_WIDTH)}>
+      <div className={CONTROL_WITH_BUTTON_WIDTH}>
+        <Field fieldTitle={t(EntitiesI18nKey.AppRunner)} htmlFor="sourceEntity" />
+        <DialInputPopup
+          emptyValueText={t(EntitiesI18nKey.NoApplicationRunners)}
+          open={isModalOpen}
+          onOpen={onOpenModal}
+          selectedValue={valueTitle}
+        >
+          <SelectAppRunnerModal
+            selectedId={selectedValue}
+            onApply={onChange}
+            isModalOpen={isModalOpen}
+            onClose={onCloseModal}
+            sourceEntities={runners}
+          />
+        </DialInputPopup>
       </div>
       {selectedValue && (
         <DialButton

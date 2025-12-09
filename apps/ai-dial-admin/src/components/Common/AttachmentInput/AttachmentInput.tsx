@@ -10,6 +10,7 @@ import Field from '@/src/components/Common/Field/Field';
 import { AttachmentsI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
+import { CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 export interface AttachmentOption {
   label: string;
@@ -25,7 +26,6 @@ interface Props {
   elementId?: string;
   optional?: boolean;
   disable?: boolean;
-  inputClassName?: string;
   onChange?: (values: string[]) => void;
 }
 
@@ -40,7 +40,6 @@ const AttachmentInput: FC<Props> = ({
   elementId,
   optional,
   disable,
-  inputClassName,
   onChange,
 }) => {
   const t = useI18n();
@@ -171,8 +170,14 @@ const AttachmentInput: FC<Props> = ({
           <DialTag key="all-values" tag={allValueLabel || ''} remove={() => removeAttachment(0)} />
         </div>
       ) : (
-        <div className={classNames('flex flex-row gap-2 items-center w-full', disable && 'pointer-events-none')}>
-          <div className={classNames('dial-input min-h-[38px] p-[6px]', inputClassName)}>
+        <div
+          className={classNames(
+            'flex flex-row gap-2 items-center',
+            STANDARD_CONTROL_WIDTH,
+            disable && 'pointer-events-none',
+          )}
+        >
+          <div className={classNames('dial-input min-h-[38px] p-[6px]', CONTROL_WITH_BUTTON_WIDTH)}>
             <div
               ref={containerRef}
               className={classNames('flex flex-wrap items-start gap-2', wraps ? 'flex-col-reverse' : 'flex-row')}
