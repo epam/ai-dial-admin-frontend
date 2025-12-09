@@ -18,7 +18,7 @@ const backgroundsColors = {
   'accent-secondary': 'var(--bg-accent-secondary, #37BABC)',
   'accent-tertiary': 'var(--bg-accent-tertiary, #A972FF)',
 
-  'accent-primary-alpha': 'var(--bg-accent-primary-alpha, #74A4FF26)',
+  'accent-primary-alpha': 'var(--bg-accent-primary-alpha, #5C8DEA2B)',
   'accent-secondary-alpha': 'var(--bg-accent-secondary-alpha, #37BABC26)',
   'accent-tertiary-alpha': 'var(--bg-accent-tertiary-alpha, #A972FF2B)',
 
@@ -83,7 +83,7 @@ const buttonsTextColors = {
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   important: true,
-  content: ['./src/**/*.{html,js,ts,tsx,yaml}'],
+  content: ['./src/**/*.{html,js,ts,tsx,yaml}', './../../node_modules/@epam/ai-dial-ui-kit/**/*.{js,ts,jsx,tsx}'],
   theme: {
     backgroundColor: { ...backgroundsColors, ...buttonsBgColors },
     borderColor: borderColors,
