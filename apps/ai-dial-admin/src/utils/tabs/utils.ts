@@ -67,11 +67,6 @@ export const globalInterceptorsTab = (t: (stringToTranslate: string) => string) 
   label: t(TabsI18nKey.GlobalInterceptors),
 });
 
-export const errorCodesTab = (t: (stringToTranslate: string) => string) => ({
-  id: EntityViewTab.ErrorCodes,
-  label: t(TabsI18nKey.ErrorCodes),
-});
-
 export const parametersTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Parameters,
   label: t(TabsI18nKey.Parameters),
@@ -339,5 +334,5 @@ export const getDeploymentsViewTabs = (
 };
 
 export const getSystemPropertiesTabs = (t: (stringToTranslate: string) => string): TabModel[] => {
-  return [globalInterceptorsTab(t), errorCodesTab(t)];
+  return [globalInterceptorsTab(t)];
 };
