@@ -175,6 +175,7 @@ describe('Entities :: tabs', () => {
   test('returns correct tabs for app runner', () => {
     expect(getAppRunnerTabs(t)).toEqual([
       propertiesTab(t),
+      featuresTab(t),
       parametersTab(t),
       interceptorsTab(t),
       applicationsTab(t),

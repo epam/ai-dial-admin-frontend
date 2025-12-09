@@ -1,23 +1,15 @@
 import { FC, useCallback } from 'react';
 
-import { DialSelectField, DialSwitch, DialTextInputField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialSelectField, DialTextInputField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import CompletionEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/CompletionEndpoint';
-import ConfigurationEndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ConfigurationEndpointControl';
 import EditorUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/EditorUrl';
-import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
 import ViewerUrlControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/ViewerUrl';
 import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
-import {
-  BasicI18nKey,
-  EntityFieldsI18nKey,
-  EntityPlaceholdersI18nKey,
-  FeaturesI18nKey,
-  TypeI18nKey,
-} from '@/src/constants/i18n';
+import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme, TypeBucketCopy, TypeEntity } from '@/src/models/dial/application';
-import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 
 interface Props {
   runner: DialApplicationScheme;
@@ -54,34 +46,6 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
   const onChangeCompletionEndPoint = useCallback(
     (endpoint?: string) => {
       onChange(endpoint, 'dial:applicationTypeCompletionEndpoint');
-    },
-    [onChange],
-  );
-
-  const onChangeConfigurationEndpoint = useCallback(
-    (url?: string) => {
-      onChange(url, 'dial:applicationTypeConfigurationEndpoint');
-    },
-    [onChange],
-  );
-
-  const onChangeRateEndpoint = useCallback(
-    (url?: string) => {
-      onChange(url, 'dial:applicationTypeRateEndpoint');
-    },
-    [onChange],
-  );
-
-  const onChangePromptEndpoint = useCallback(
-    (url?: string) => {
-      onChange(url, 'dial:applicationTypeTruncatePromptEndpoint');
-    },
-    [onChange],
-  );
-
-  const onChangeTokenizeEndpoint = useCallback(
-    (url?: string) => {
-      onChange(url, 'dial:applicationTypeTokenizeEndpoint');
     },
     [onChange],
   );
@@ -147,63 +111,9 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
         onChange={onChangeCompletionEndPoint}
         required={true}
       />
-      <ConfigurationEndpointControl
-        endpoint={runner['dial:applicationTypeConfigurationEndpoint']}
-        onChange={onChangeConfigurationEndpoint}
-      />
-
-      <EndpointControl
-        id="rateEndpoint"
-        fieldTitle={t(FeaturesI18nKey.rateEndpoint)}
-        placeholder={t(EntityPlaceholdersI18nKey.RateEndpoint)}
-        endpoint={runner['dial:applicationTypeRateEndpoint']}
-        onChange={onChangeRateEndpoint}
-      />
-
-      <EndpointControl
-        id="promptEndpoint"
-        fieldTitle={t(FeaturesI18nKey.truncatePromptEndpoint)}
-        placeholder={t(EntityPlaceholdersI18nKey.TruncatePromptEndpoint)}
-        endpoint={runner['dial:applicationTypeTruncatePromptEndpoint']}
-        onChange={onChangePromptEndpoint}
-      />
-
-      <EndpointControl
-        id="tokenizeEndpoint"
-        fieldTitle={t(FeaturesI18nKey.tokenizeEndpoint)}
-        placeholder={t(EntityPlaceholdersI18nKey.TokenizeEndpoint)}
-        endpoint={runner['dial:applicationTypeTokenizeEndpoint']}
-        onChange={onChangeTokenizeEndpoint}
-      />
 
       <ViewerUrlControl endpoint={runner['dial:applicationTypeViewerUrl']} onChange={onChangeViewerUrl} />
       <EditorUrlControl endpoint={runner['dial:applicationTypeEditorUrl']} onChange={onChangeEditorUrl} />
-
-      <DialSwitch
-        isOn={runner['dial:appendApplicationPropertiesHeader']}
-        title={t(EntityFieldsI18nKey['dial:appendApplicationPropertiesHeader'])}
-        switchId="appendApplicationPropertiesHeader"
-        onChange={(value: boolean) => {
-          onChange(value, 'dial:appendApplicationPropertiesHeader');
-        }}
-      />
-      <DialSwitch
-        isOn={runner['dial:applicationTypePlaybackSupport']}
-        title={t(EntityFieldsI18nKey['dial:applicationTypePlaybackSupport'])}
-        switchId="applicationTypePlaybackSupport"
-        onChange={(value: boolean) => {
-          onChange(value, 'dial:applicationTypePlaybackSupport');
-        }}
-      />
-
-      <DialSwitch
-        isOn={runner['dial:applicationTypeAssistantAttachmentsInRequestSupported']}
-        title={t(EntityFieldsI18nKey['dial:applicationTypeAssistantAttachmentsInRequestSupported'])}
-        switchId="applicationTypeAssistantAttachmentsInRequestSupported"
-        onChange={(value: boolean) => {
-          onChange(value, 'dial:applicationTypeAssistantAttachmentsInRequestSupported');
-        }}
-      />
     </div>
   );
 };
