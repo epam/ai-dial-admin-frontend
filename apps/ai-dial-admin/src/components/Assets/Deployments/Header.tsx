@@ -5,23 +5,24 @@ import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
+import ValidityStatus from '@/src/components/EntityView/Status/ValidityStatus';
 import { EntitiesI18nKey, EntityFieldsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
-import { AssetToolset, DeploymentAsset } from '@/src/models/dial/deployment-asset';
+import { EntityValidityState } from '@/src/models/dial/base-entity';
+import { Asset, AssetToolset } from '@/src/models/dial/deployment-asset';
+import { DialFile } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';
 import { removeTrailingSlash } from '@/src/utils/files/path';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import ValidityStatus from '@/src/components/EntityView/Status/ValidityStatus';
 import { isAdminLoggedInToToolset, isUserLoggedInToToolset } from '@/src/utils/toolset/toolset-auth';
-import { EntityValidityState } from '@/src/models/dial/base-entity';
 
 interface Props {
   view: ApplicationRoute;
-  asset: DeploymentAsset;
+  asset: Asset | DialFile;
 }
 
-const DeploymentAssetHeader: FC<Props> = ({ view, asset }) => {
+const AssetHeader: FC<Props> = ({ view, asset }) => {
   const t = useI18n();
   const currentLocale = useCurrentLocale();
   const validityState = (asset as EntityValidityState)?.validityState;
@@ -63,7 +64,9 @@ const DeploymentAssetHeader: FC<Props> = ({ view, asset }) => {
     <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
       <LabelledText label={t(EntityFieldsI18nKey.id)} text={asset.name} copyable={true} />
       {asset.author && <LabelledText label={t(EntitiesI18nKey.Author)} text={asset.author} />}
-      <LabelledText label={t(EntityFieldsI18nKey.createdAt)} text={formatDateTimeToLocalString(asset.createdAt)} />
+      {asset.createdAt && (
+        <LabelledText label={t(EntityFieldsI18nKey.createdAt)} text={formatDateTimeToLocalString(asset.createdAt)} />
+      )}
       <LabelledText label={t(EntityFieldsI18nKey.updatedAt)} text={formatDateTimeToLocalString(asset.updatedAt)} />
       {view === ApplicationRoute.AssetsToolsets && toolsetAuthInfo}
 
@@ -87,4 +90,4 @@ const DeploymentAssetHeader: FC<Props> = ({ view, asset }) => {
   );
 };
 
-export default DeploymentAssetHeader;
+export default AssetHeader;

@@ -4,16 +4,17 @@ import { GridApi, IRowNode } from 'ag-grid-community';
 
 import Field from '@/src/components/Common/Field/Field';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
-import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import Grid from '@/src/components/Grid/Grid';
 import { FILE_DOWNLOAD, FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
 import { getDownloadOperation, getPreviewOperation } from '@/src/constants/grid-columns/actions';
 import { FILES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getGridFileColumns, getGridFileData } from '@/src/utils/files/grid-data';
+import AssetHeader from '../Deployments/Header';
 
 interface Props {
   file: DialFile;
@@ -50,10 +51,7 @@ const FileProperties: FC<Props> = ({ file, onChangeFile }) => {
 
   return (
     <div className="h-full flex flex-col w-full">
-      <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
-        <LabelledText label={t(EntityFieldsI18nKey.displayName)} text={file.name} />
-        {file.author && <LabelledText label={t(EntitiesI18nKey.Author)} text={file.author} />}
-      </div>
+      <AssetHeader asset={file} view={ApplicationRoute.Files} />
 
       <div className="flex flex-col gap-y-8 mt-8">
         <div className="flex flex-col">

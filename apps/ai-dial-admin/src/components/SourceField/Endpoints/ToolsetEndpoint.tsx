@@ -1,7 +1,6 @@
 'use client';
 
 import { FC } from 'react';
-import classNames from 'classnames';
 import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -28,7 +27,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModa
   ];
 
   return (
-    <div className={classNames('w-full flex flex-col gap-y-8', !isModal && 'lg:w-[45%]')}>
+    <div className="w-full flex flex-col gap-y-8">
       {prefix ? (
         <ReadonlyField elementId="endpoint" title={t(EntitiesI18nKey.ToolsetEndpoint)} value={prefix} />
       ) : (
@@ -40,6 +39,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModa
           endpoint={entity.endpoint}
           onChange={(endpoint) => onChange?.({ ...entity, endpoint })}
           required={true}
+          isFullWidth={isModal}
         />
       )}
       {!isModal && (

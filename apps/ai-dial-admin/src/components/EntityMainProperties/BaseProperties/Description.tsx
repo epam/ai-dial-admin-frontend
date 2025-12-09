@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { DialTextAreaField } from '@epam/ai-dial-ui-kit';
 
@@ -24,7 +24,7 @@ const DescriptionControl = <T extends { description?: string }>({
 }: Props<T>) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
-  const containerClassName = getControlClassName(isFullWidth);
+  const containerClassName = useMemo(() => getControlClassName(isFullWidth), [isFullWidth]);
 
   const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
 

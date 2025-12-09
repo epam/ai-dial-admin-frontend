@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useState, useMemo } from 'react';
 import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -36,7 +36,7 @@ const VersionControl: FC<Props> = ({
 }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
-  const containerClassName = getControlClassName(isFullWidth);
+  const containerClassName = useMemo(() => getControlClassName(isFullWidth), [isFullWidth]);
 
   const [versionError, setVersionError] = useState<FieldError | null>(null);
 

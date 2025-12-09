@@ -1,29 +1,28 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import classNames from 'classnames';
 import { ButtonVariant, DialButton, DialInputPopup, DialSelectField } from '@epam/ai-dial-ui-kit';
-
-import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
-import { ApplicationRoute } from '@/src/types/routes';
-import { DialModel } from '@/src/models/dial/model';
-import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
-import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
-import { useNotification } from '@/src/context/NotificationContext';
-import { getErrorNotification } from '@/src/utils/notification';
-import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { useAppContext } from '@/src/context/AppContext';
-import { isDeploymentsEnabled } from '@/src/utils/plugins';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { useI18n } from '@/src/locales/client';
 import { IconExternalLink } from '@tabler/icons-react';
+import classNames from 'classnames';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import Field from '@/src/components/Common/Field/Field';
 import SelectContainerModal from '@/src/components/SourceField/Containers/SelectContainerModal';
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
-import { addTrailingSlash } from '@/src/utils/url';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { BASE_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
+import { useAppContext } from '@/src/context/AppContext';
+import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { useI18n } from '@/src/locales/client';
+import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { DialModel } from '@/src/models/dial/model';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
+import { getErrorNotification } from '@/src/utils/notification';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { isDeploymentsEnabled } from '@/src/utils/plugins';
+import { addTrailingSlash } from '@/src/utils/url';
 
 interface Props<T> {
   entity: T;
@@ -128,7 +127,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
           </div>
         ) : (
           <div className="flex w-full gap-2">
-            <div className="w-full lg:w-[45%]">
+            <div className={CONTROL_WITH_BUTTON_WIDTH}>
               <Field fieldTitle={t(SourceI18nKey.Container)} htmlFor="containers" />
               <DialInputPopup
                 open={isModalOpen}

@@ -85,7 +85,7 @@ const AssetProperties: FC<Props> = ({
       )}
 
       <VersionControl
-        elementContainerClassName="w-[200px]"
+        isFullWidth={!isEntityImmutable}
         version={entity.version}
         onChange={onChangeVersion}
         error={versionError}

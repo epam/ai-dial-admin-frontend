@@ -1,5 +1,5 @@
 import { DialTextInputField } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useState, useMemo } from 'react';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -20,7 +20,7 @@ interface Props {
 const DisplayNameControl: FC<Props> = ({ displayName, isFullWidth = true, onChange, required, ...props }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
-  const containerClassName = getControlClassName(isFullWidth);
+  const containerClassName = useMemo(() => getControlClassName(isFullWidth), [isFullWidth]);
 
   const [displayNameError, setDisplayNameError] = useState<FieldError | null>(null);
 
