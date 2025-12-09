@@ -13,7 +13,6 @@ interface Props {
   disabled?: boolean;
   onChange?: (value?: number | string) => void;
 }
-
 const PriceControl: FC<Props> = ({ elementId, fieldTitle, ...props }) => {
   return (
     <DialNumberInputField
