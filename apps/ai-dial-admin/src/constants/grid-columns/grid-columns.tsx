@@ -342,10 +342,7 @@ export const EXPORT_COLUMNS = (
     });
   }
   if (route === ApplicationRoute.Files) {
-    columns.splice(1, 0, {
-      headerName: 'Extension',
-      field: 'extension',
-    });
+    return FILES_COLUMNS;
   }
 
   return columns;
