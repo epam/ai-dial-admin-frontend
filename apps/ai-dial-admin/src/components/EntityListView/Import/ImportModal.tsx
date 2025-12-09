@@ -22,6 +22,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import ImportConflicts from './ImportConflicts';
 import ImportFileTypeSelector from './ImportFileType';
 import ImportModalButtons from './ImportModalButtons';
+import { getJsonFileName } from '@/src/utils/import/get-json-name';
 
 const MAX_FILES_COUNT = 30;
 
@@ -173,7 +174,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply 
     } else if (fileType === FileType.JSON) {
       const map = resolution === ConflictResolutionPolicy.MANUAL ? editedFileMap : jsonFileMap;
       const jsonFile = {
-        prompts: Array.from(map.values()).flatMap((value) => value.files as DialPrompt[]),
+        [getJsonFileName(route)]: Array.from(map.values()).flatMap((value) => value.files as DialPrompt[]),
       };
       onApply?.(fileType, jsonFile, resolution, folderContext?.filePath as string, ignorePaths);
     } else if (fileType === FileType.FILES) {
