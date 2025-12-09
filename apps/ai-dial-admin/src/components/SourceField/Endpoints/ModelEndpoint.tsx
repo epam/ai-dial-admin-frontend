@@ -10,7 +10,6 @@ import { getUrlError } from '@/src/utils/validation/url-error';
 import { useI18n } from '@/src/locales/client';
 import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
-import classNames from 'classnames';
 import { addTrailingSlash, removeSlash } from '@/src/utils/url';
 
 interface Props {
@@ -93,7 +92,7 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal }) => {
   }, [isModal, entity, prefix]);
 
   return (
-    <div className={classNames('flex flex-col gap-y-8', isModal ? 'w-full' : 'w-full lg:w-[45%]')}>
+    <div className="flex flex-col gap-y-8">
       {!isModal && (
         <DialRadioGroup
           radioButtons={modelTypeRadio}

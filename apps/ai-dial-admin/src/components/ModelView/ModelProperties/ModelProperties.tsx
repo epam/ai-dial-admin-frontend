@@ -14,6 +14,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import ModelTypeProperties from './ModelTypeProperties';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 interface Props {
   model: DialModel;
@@ -49,23 +50,21 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, onChangeModel }) => {
       <MaxRetryAttempts entity={model} onChangeEntity={onChangeModel} />
 
       <Pricing model={model} onChangeModel={onChangeModel} />
-
-      <div className="w-full lg:w-[35%]">
-        <Multiselect
-          elementId="order"
-          draggable={true}
-          selectedItems={model.fieldsHashingOrder || []}
-          allItems={model.fieldsHashingOrder || []}
-          onChangeItems={(fieldsHashingOrder) => {
-            onChangeModel({ ...model, fieldsHashingOrder });
-          }}
-          heading={t(EntityFieldsI18nKey.fieldsHashingOrder)}
-          title={t(EntityFieldsI18nKey.fieldsHashingOrder)}
-          addPlaceholder={t(EntityPlaceholdersI18nKey.Value)}
-          addTitle={t(BasicI18nKey.AddField)}
-          optional={true}
-        />
-      </div>
+      <Multiselect
+        elementId="order"
+        className={STANDARD_CONTROL_WIDTH}
+        draggable={true}
+        selectedItems={model.fieldsHashingOrder || []}
+        allItems={model.fieldsHashingOrder || []}
+        onChangeItems={(fieldsHashingOrder) => {
+          onChangeModel({ ...model, fieldsHashingOrder });
+        }}
+        heading={t(EntityFieldsI18nKey.fieldsHashingOrder)}
+        title={t(EntityFieldsI18nKey.fieldsHashingOrder)}
+        addPlaceholder={t(EntityPlaceholdersI18nKey.Value)}
+        addTitle={t(BasicI18nKey.AddField)}
+        optional={true}
+      />
     </div>
   );
 };
