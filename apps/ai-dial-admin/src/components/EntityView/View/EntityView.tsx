@@ -334,23 +334,21 @@ const EntityView: FC<Props> = ({
               setIsChanged={setIsChanged}
             />
           ) : (
-            selectedFormat === ExportFormat.ADMIN && (
-              <ViewContent
-                view={view}
-                applicationSchemes={applicationSchemes}
-                activeTab={activeTab}
-                selectedEntity={selectedEntity}
-                isJsonEditorEnabled={isJsonEditorEnabled}
-                isSkipRefresh={isSkipRefresh}
-                onChangeEntity={onChangeEntity}
-                isChanged={isChanged}
-                onSave={onSave}
-                key={key}
-                setIsChanged={setIsChanged}
-                setSelectedEntity={setSelectedEntity}
-                {...props}
-              />
-            )
+            <ViewContent
+              view={view}
+              applicationSchemes={applicationSchemes}
+              activeTab={activeTab}
+              selectedEntity={selectedEntity}
+              isJsonEditorEnabled={isJsonEditorEnabled}
+              isSkipRefresh={isSkipRefresh}
+              onChangeEntity={onChangeEntity}
+              isChanged={isChanged}
+              onSave={onSave}
+              key={key}
+              setIsChanged={setIsChanged}
+              setSelectedEntity={setSelectedEntity}
+              {...props}
+            />
           )}
         </div>
       </div>
