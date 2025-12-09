@@ -13,6 +13,7 @@ import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
 import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
 import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 interface Props {
   view: ApplicationRoute;
@@ -44,12 +45,11 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
         <MaintainerControl entity={entity} onChangeEntity={onChangeEntity} />
       ) : null}
 
-      {/* // TODO: AAAA */}
-
       {isShowCompletionEndpoint && isEntityImmutable ? (
         <ReadonlyField
           value={applicationRunner['dial:applicationTypeCompletionEndpoint']}
           title={t(EntityFieldsI18nKey.completionEndpoint)}
+          containerClassName={STANDARD_CONTROL_WIDTH}
         />
       ) : null}
       {view == ApplicationRoute.Toolsets && isEntityImmutable && (

@@ -8,7 +8,7 @@ import SelectContainerModal from '@/src/components/SourceField/Containers/Select
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { CreateI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, SourceI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
+import { BASE_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -126,7 +126,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
             />
           </div>
         ) : (
-          <div className="flex w-full gap-2">
+          <div className={classNames('flex gap-2', STANDARD_CONTROL_WIDTH)}>
             <div className={CONTROL_WITH_BUTTON_WIDTH}>
               <Field fieldTitle={t(SourceI18nKey.Container)} htmlFor="containers" />
               <DialInputPopup
