@@ -14,7 +14,7 @@ import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import KeyGenerateField from '@/src/components/Keys/View/Properties/KeyGenerateField';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { MAX_NAME_SYMBOLS } from '@/src/constants/validation';
-import { CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { getControlClassName } from '@/src/utils/entities/view';
 
 interface Props {
@@ -135,7 +135,7 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
           placeholder={t(EntityPlaceholdersI18nKey.ContactPoint)}
           value={entity.projectContactPoint}
           onChange={onChangeProjectContactPoint}
-          containerClassName={CONTROL_WITH_BUTTON_WIDTH}
+          containerClassName={STANDARD_CONTROL_WIDTH}
         />
       )}
       <KeyGenerateField isKeyImmutable={isKeyImmutable} keys={keys} selectedKey={entity} changeKey={onChange} />

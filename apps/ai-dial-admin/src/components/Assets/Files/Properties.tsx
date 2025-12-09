@@ -60,16 +60,14 @@ const FileProperties: FC<Props> = ({ file, onChangeFile }) => {
           <Field fieldTitle={t(EntitiesI18nKey.Source)} />
           <Grid columnDefs={columnDefs} rowData={rowData} />
         </div>
-        <div className="lg:w-[35%]">
-          <FilePath
-            value={file.folderId}
-            label={t(EntitiesI18nKey.FolderStorage)}
-            modalTitle={t(BasicI18nKey.MoveToFolder)}
-            placeholder={t(EntityPlaceholdersI18nKey.Path)}
-            onChange={onChangePath}
-            context={useFileFolder}
-          />
-        </div>
+        <FilePath
+          value={file.folderId}
+          label={t(EntitiesI18nKey.FolderStorage)}
+          modalTitle={t(BasicI18nKey.MoveToFolder)}
+          placeholder={t(EntityPlaceholdersI18nKey.Path)}
+          onChange={onChangePath}
+          context={useFileFolder}
+        />
       </div>
     </div>
   );

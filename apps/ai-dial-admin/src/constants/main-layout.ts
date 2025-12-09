@@ -11,4 +11,4 @@ export const BASE_ICON_PROPS = { size: BASE_ICON_SIZE, stroke: 2 };
 // controls
 export const CONTROL_WIDTH = 'large_tablet:w-[640px] desktop:w-[640px] large_desktop:w-[40%]';
 export const STANDARD_CONTROL_WIDTH = `w-full ${CONTROL_WIDTH}`;
-export const CONTROL_WITH_BUTTON_WIDTH = `flex-1 min-w-0 ${CONTROL_WIDTH}`;
+export const CONTROL_WITH_BUTTON_WIDTH = `flex-1 ${CONTROL_WIDTH}`;

@@ -4,7 +4,7 @@ import { FC, useCallback, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { BASE_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { FieldError } from '@/src/models/error';
@@ -36,7 +36,7 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
 
   return (
     <div className="flex items-end">
-      <div className={STANDARD_CONTROL_WIDTH}>
+      <div className={CONTROL_WITH_BUTTON_WIDTH}>
         <DialPasswordInputField
           elementId="key"
           fieldTitle={t(EntityFieldsI18nKey.keyValue)}

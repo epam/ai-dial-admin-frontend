@@ -141,25 +141,23 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isImmutable, publ
               <MdEditor content={prompt.content} onChangeContent={onChangeContent} />
             )}
           </div>
-          <div className="lg:w-[35%]">
-            {isImmutable ? (
-              <DialTextInputField
-                elementId="version"
-                fieldTitle={t(EntitiesI18nKey.FolderStorage)}
-                value={prompt.path}
-                disabled={isImmutable}
-              />
-            ) : (
-              <FilePath
-                value={prompt.folderId}
-                label={t(EntitiesI18nKey.FolderStorage)}
-                modalTitle={t(BasicI18nKey.MoveToFolder)}
-                placeholder={t(EntityPlaceholdersI18nKey.Path)}
-                onChange={onChangePath}
-                context={usePromptFolder as () => AssetsFolderContext<DialPrompt | DialFile>}
-              />
-            )}
-          </div>
+          {isImmutable ? (
+            <DialTextInputField
+              elementId="version"
+              fieldTitle={t(EntitiesI18nKey.FolderStorage)}
+              value={prompt.path}
+              disabled={isImmutable}
+            />
+          ) : (
+            <FilePath
+              value={prompt.folderId}
+              label={t(EntitiesI18nKey.FolderStorage)}
+              modalTitle={t(BasicI18nKey.MoveToFolder)}
+              placeholder={t(EntityPlaceholdersI18nKey.Path)}
+              onChange={onChangePath}
+              context={usePromptFolder as () => AssetsFolderContext<DialPrompt | DialFile>}
+            />
+          )}
         </div>
       </div>
     </div>
