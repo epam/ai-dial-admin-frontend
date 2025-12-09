@@ -2,6 +2,7 @@
 
 const backgroundsColors = {
   transparent: 'transparent',
+  'layer-0': 'var(--bg-layer-0, #000000)',
   'layer-1': 'var(--bg-layer-1, #090D13)',
   'layer-2': 'var(--bg-layer-2, #141A23)',
   'layer-3': 'var(--bg-layer-3, #222932)',
