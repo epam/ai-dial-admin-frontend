@@ -14,7 +14,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getGridFileColumns, getGridFileData } from '@/src/utils/files/grid-data';
-import AssetHeader from '../Deployments/Header';
+import AssetHeader from '@/src/components/Assets/Deployments/Header';
 
 interface Props {
   file: DialFile;

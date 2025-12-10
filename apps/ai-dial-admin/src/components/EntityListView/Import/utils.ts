@@ -303,7 +303,8 @@ export const isErrorFileNode = (data: FileImportGridData): boolean => {
  * @returns {boolean} - return true if prompts id is not valid
  */
 export const isInvalidJson = (parsedData: ParsedAssets, view?: ApplicationRoute) => {
-  const values = view === ApplicationRoute.Prompts ? parsedData?.prompts : parsedData?.applications;
+  const values =
+    view === ApplicationRoute.Prompts ? parsedData?.prompts : parsedData?.applications || parsedData?.toolSets;
 
   if (!values || values.length === 0 || !(values instanceof Array)) {
     return true;

@@ -232,7 +232,7 @@ const Actions = <T extends object>({
           onRemove={removeEntity}
           onDeleteBulk={onDeleteBulk}
           onMove={onMove}
-          context={context}
+          getAssetContext={context}
           onResetCurrentEntity={() => setCurrentEntity(void 0)}
         />
       ) : null}
