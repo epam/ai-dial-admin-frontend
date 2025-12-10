@@ -41,7 +41,11 @@ export const getColumnsByParameter = (
     return ROLE_LIMITS_DIFF_COLUMNS;
   }
 
-  if (parameter === EntityParameterKeys.INTERCEPTORS) {
+  if (
+    parameter === EntityParameterKeys.INTERCEPTORS ||
+    parameter === EntityParameterKeys.GLOBAL_INTERCEPTORS ||
+    parameter === EntityParameterKeys.APP_RUNNER_INTERCEPTORS
+  ) {
     return INTERCEPTORS_DIFF_COLUMNS;
   }
 
