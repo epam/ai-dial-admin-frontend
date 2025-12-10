@@ -57,7 +57,7 @@ interface Props {
   onMove?: (path: string) => void;
   onDeleteBulk?: () => void;
   onClose: () => void;
-  context?: () => AssetsFolderContext<Asset | DialFile>;
+  getAssetContext?: () => AssetsFolderContext<Asset | DialFile>;
 }
 
 const Modals: FC<Props> = ({
@@ -73,7 +73,7 @@ const Modals: FC<Props> = ({
   onMove,
   onDeleteBulk,
   onClose,
-  context,
+  getAssetContext,
   onRemove,
 }) => {
   const t = useI18n();
@@ -86,7 +86,7 @@ const Modals: FC<Props> = ({
         createPortal(
           <ImportModal
             route={route}
-            context={context}
+            getAssetContext={getAssetContext}
             isModalOpen={isModalOpen}
             onClose={onClose}
             onApply={onImport}
@@ -101,7 +101,7 @@ const Modals: FC<Props> = ({
             entity={entity as object}
             view={route}
             onCloseModal={onClose}
-            context={context}
+            context={getAssetContext}
             removeEntity={onRemove as (entity: string) => Promise<ServerActionResponse>}
           />,
           document.body,
@@ -116,7 +116,7 @@ const Modals: FC<Props> = ({
             onClose={onClose}
             onApply={onMove as () => void}
             initialPath={initialPath}
-            context={context}
+            context={getAssetContext}
           />,
           document.body,
         )}
@@ -128,7 +128,7 @@ const Modals: FC<Props> = ({
             isModalOpen={isModalOpen}
             onClose={onClose}
             onApply={onDeleteBulk}
-            context={context}
+            context={getAssetContext}
             isBulkDelete={true}
           />,
           document.body,

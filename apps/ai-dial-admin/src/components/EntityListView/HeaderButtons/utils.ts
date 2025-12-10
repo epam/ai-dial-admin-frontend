@@ -53,6 +53,7 @@ export const getFormDataForImport = (
     fileSize,
   };
 };
+
 export const getImportFunction = (view: ApplicationRoute) => {
   switch (view) {
     case ApplicationRoute.Prompts:
