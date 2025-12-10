@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { ButtonVariant, DialButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
@@ -22,7 +22,7 @@ interface Props {
   onChangeInterceptors: (interceptors: string[]) => void;
 }
 
-const GlobalInterceptors = ({ interceptors, currentInterceptors, onChangeInterceptors }: Props) => {
+const GlobalInterceptors: FC<Props> = ({ interceptors, currentInterceptors, onChangeInterceptors }) => {
   const t = useI18n();
 
   const [availableInterceptors, setAvailableInterceptors] = useState<DialInterceptor[]>([]);

@@ -18,6 +18,7 @@ import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { prepareEntityForDuplicate } from './Components/utils';
 import { RefObject } from 'react';
 import { exportApps } from '@/src/app/[lang]/assets-applications/actions';
+import { exportToolsets } from '@/src/app/[lang]/assets-toolsets/actions';
 
 export const getDuplicateModal = async <T extends object>(
   currentEntity: T | undefined,
@@ -148,6 +149,10 @@ export const getExportFunction = (
   }
   if (route === ApplicationRoute.AssetsApplications) {
     return exportApps;
+  }
+
+  if (route === ApplicationRoute.AssetsToolsets) {
+    return exportToolsets;
   }
   return null;
 };

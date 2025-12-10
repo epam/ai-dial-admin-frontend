@@ -1,6 +1,6 @@
 'use client';
 
-import { Dispatch, SetStateAction } from 'react';
+import { FC } from 'react';
 
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 import { IconFileArrowRight, IconTrashX } from '@tabler/icons-react';
@@ -19,31 +19,31 @@ import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 interface Props {
   route: ApplicationRoute;
   itemsCount: number;
-  context?: () => AssetsFolderContext<DialFile>;
-  setIsModalOpen: Dispatch<SetStateAction<boolean>>;
-  setModalType: Dispatch<SetStateAction<ModalType | undefined>>;
-  setIsBulkView: Dispatch<SetStateAction<boolean>>;
-  handleExport?: (fileType?: ImportFileType) => void;
+  onChangeIsModalOpen: (value: boolean) => void;
+  onChangeModalType: (value?: ModalType) => void;
+  onChangeIsBulkView: (value: boolean) => void;
+  getAssetContext?: () => AssetsFolderContext<DialFile>;
+  onExport?: (fileType?: ImportFileType) => void;
 }
 
-const BulkButtons = ({
+const BulkButtons: FC<Props> = ({
   route,
   itemsCount,
-  context,
-  setIsModalOpen,
-  setModalType,
-  setIsBulkView,
-  handleExport,
-}: Props) => {
+  getAssetContext,
+  onChangeIsModalOpen,
+  onChangeModalType,
+  onChangeIsBulkView,
+  onExport,
+}) => {
   const t = useI18n();
-  const folderContext = context?.();
+  const folderContext = getAssetContext?.();
 
-  const bulkExport = () => {
+  const onBulkExport = () => {
     if (isAssetWithVersion(route)) {
-      setModalType(ModalType.export);
-      setIsModalOpen(true);
+      onChangeModalType(ModalType.export);
+      onChangeIsModalOpen(true);
     } else {
-      handleExport?.();
+      onExport?.();
     }
   };
 
@@ -53,15 +53,13 @@ const BulkButtons = ({
         {itemsCount} {t(BasicI18nKey.Selected)}
       </div>
       <div className="bg-layer-4 h-5 w-[1px]"></div>
-      {route !== ApplicationRoute.AssetsToolsets && (
-        <DialButton
-          variant={ButtonVariant.Secondary}
-          label={t(ButtonsI18nKey.Export)}
-          iconBefore={<IconFileArrowRight {...BASE_ICON_PROPS} />}
-          disabled={!itemsCount}
-          onClick={bulkExport}
-        />
-      )}
+      <DialButton
+        variant={ButtonVariant.Secondary}
+        label={t(ButtonsI18nKey.Export)}
+        iconBefore={<IconFileArrowRight {...BASE_ICON_PROPS} />}
+        disabled={!itemsCount}
+        onClick={onBulkExport}
+      />
       {isAssetWithVersion(route) && (
         <DialButton
           variant={ButtonVariant.Secondary}
@@ -69,14 +67,14 @@ const BulkButtons = ({
           iconBefore={<IconTrashX {...BASE_ICON_PROPS} />}
           disabled={!itemsCount}
           onClick={() => {
-            setModalType(ModalType.deleteBulk);
-            setIsModalOpen(true);
+            onChangeModalType(ModalType.deleteBulk);
+            onChangeIsModalOpen(true);
           }}
         />
       )}
       <CloseButton
         onClose={() => {
-          setIsBulkView(false);
+          onChangeIsBulkView(false);
           folderContext?.setBulkSelectedData({});
         }}
       />
