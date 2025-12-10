@@ -1,5 +1,7 @@
 'use client';
 
+import { FC } from 'react';
+
 import { ButtonsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import MultiselectModal from '@/src/components/Common/Multiselect/Modal/MultiselectModal';
@@ -10,7 +12,7 @@ interface Props {
   onClose: () => void;
 }
 
-const AddToolsModal = ({ ...props }: Props) => {
+const AddToolsModal: FC<Props> = ({ ...props }) => {
   const t = useI18n();
 
   return (

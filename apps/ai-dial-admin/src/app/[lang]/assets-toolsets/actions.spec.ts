@@ -16,6 +16,7 @@ import {
   createToolset,
   signOutToolset,
   importToolsets,
+  exportToolsets,
 } from './actions';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { ResourceType } from '@/src/types/resource-type';
@@ -139,6 +140,15 @@ describe('Assets Toolset :: server actions', () => {
     const result = await getAssetTools('test');
     expect(getUserToken).toHaveBeenCalled();
     expect(assetsApi.getTools).toHaveBeenCalledWith('test', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call exportToolsets action', async () => {
+    (assetsApi.exportAssets as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await exportToolsets(['test']);
+    expect(getUserToken).toHaveBeenCalled();
+    expect(assetsApi.exportAssets).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.TOOLSET, ['test'], void 0);
     expect(result).toBe(RESPONSE_MOCK);
   });
 

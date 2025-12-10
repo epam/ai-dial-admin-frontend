@@ -1,3 +1,5 @@
+import { FC } from 'react';
+
 import { PromptPublication } from '@/src/models/dial/publications';
 import PromptsProperties from '@/src/components/Publications/Assets/Prompt/PromptsProperties';
 
@@ -5,7 +7,7 @@ interface Props {
   publication: PromptPublication;
 }
 
-const PromptsPropertiesList = ({ publication }: Props) => {
+const PromptsPropertiesList: FC<Props> = ({ publication }) => {
   return (
     <>
       {publication?.prompts?.map((prompt, index) => (

@@ -88,3 +88,8 @@ export async function signOutToolset(toolset: AssetToolset, type: ToolsetAuthCre
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return assetsApi.signOutToolset(toolset, type, token);
 }
+
+export async function exportToolsets(paths: string[], type?: ImportFileType) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return await assetsApi.exportAssets(token, ResourceType.TOOLSET, paths, type);
+}

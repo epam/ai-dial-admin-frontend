@@ -5,6 +5,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
 import { getExportFunction, getNotificationType } from '../utils';
 import { exportApps } from '@/src/app/[lang]/assets-applications/actions';
+import { exportToolsets } from '@/src/app/[lang]/assets-toolsets/actions';
 
 describe('getNotificationType', () => {
   test('should return MenuI18nKey.Prompts when route is Prompts', () => {
@@ -50,6 +51,11 @@ describe('getExportFunction', () => {
   test('should return exportApps when route is AssetsApplications', () => {
     const result = getExportFunction(ApplicationRoute.AssetsApplications);
     expect(result).toBe(exportApps);
+  });
+
+  test('should return exportToolsets when route is AssetsApplications', () => {
+    const result = getExportFunction(ApplicationRoute.AssetsToolsets);
+    expect(result).toBe(exportToolsets);
   });
 
   test('should return null when route is undefined or does not match any known route', () => {
