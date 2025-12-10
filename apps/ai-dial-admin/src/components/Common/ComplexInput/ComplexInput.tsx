@@ -14,12 +14,13 @@ interface Props extends DialInputProps {
   fullValue?: string;
   copyable?: boolean;
   optional?: boolean;
+  isFullWidth?: boolean;
 }
 
-const ComplexInput: FC<Props> = ({ fullValue, fieldTitle, copyable = true, ...props }) => {
+const ComplexInput: FC<Props> = ({ fullValue, fieldTitle, isFullWidth, copyable = true, ...props }) => {
   return (
-    <div className={classNames('flex items-end gap-2', copyable ? STANDARD_CONTROL_WIDTH : 'w-full')}>
-      <div className={copyable ? CONTROL_WITH_BUTTON_WIDTH : STANDARD_CONTROL_WIDTH}>
+    <div className={classNames('flex items-end gap-2', copyable && !isFullWidth ? STANDARD_CONTROL_WIDTH : 'w-full')}>
+      <div className={isFullWidth ? 'w-full' : copyable ? CONTROL_WITH_BUTTON_WIDTH : STANDARD_CONTROL_WIDTH}>
         <DialTextInputField containerClassName="w-full" fieldTitle={fieldTitle} elementClassName="w-full" {...props} />
       </div>
       {copyable && <CopyButton label={fieldTitle} field={fullValue} isFullButton={true} />}

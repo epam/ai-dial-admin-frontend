@@ -36,7 +36,7 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
   };
 
   return (
-    <div className={classNames('flex items-end', STANDARD_CONTROL_WIDTH)}>
+    <div className={classNames('flex items-end', !isKeyImmutable ? 'w-full' : STANDARD_CONTROL_WIDTH)}>
       <div className={CONTROL_WITH_BUTTON_WIDTH}>
         <DialPasswordInputField
           elementId="key"
