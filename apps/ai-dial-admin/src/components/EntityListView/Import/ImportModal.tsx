@@ -68,7 +68,10 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
             const isInvalid = isInvalidJson(parsedData, route);
             setJsonFileMap((prev) => {
               const newMap = new Map(prev);
-              newMap.set(file.name, { files: parsedData?.prompts || parsedData.applications || [], isInvalid });
+              newMap.set(file.name, {
+                files: parsedData?.prompts || parsedData.applications || parsedData.toolSets || [],
+                isInvalid,
+              });
               return newMap;
             });
           } catch (error) {
