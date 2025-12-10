@@ -161,8 +161,8 @@ describe('Activity audit :: compareInterceptors', () => {
     const diffs = [];
     compareInterceptors(diffs, ['a', 'b'], ['a', null as unknown as string]);
     expect(diffs).toEqual([
-      { parameter: '0', value: 'a' },
-      { parameter: '1', value: '', diffStatus: DiffStatus.REMOVED },
+      { parameter: '1', value: 'a' },
+      { parameter: '2', value: '', diffStatus: DiffStatus.REMOVED },
     ]);
   });
 
@@ -170,8 +170,8 @@ describe('Activity audit :: compareInterceptors', () => {
     const diffs = [];
     compareInterceptors(diffs, ['a', null as unknown as string], ['a', 'b']);
     expect(diffs).toEqual([
-      { parameter: '0', value: 'a' },
-      { parameter: '1', value: 'b', diffStatus: DiffStatus.ADDED },
+      { parameter: '1', value: 'a' },
+      { parameter: '2', value: 'b', diffStatus: DiffStatus.ADDED },
     ]);
   });
 
@@ -179,8 +179,8 @@ describe('Activity audit :: compareInterceptors', () => {
     const diffs = [];
     compareInterceptors(diffs, ['old', 'same'], ['new', 'same']);
     expect(diffs).toEqual([
-      { parameter: '0', value: 'new', diffStatus: DiffStatus.CHANGED },
-      { parameter: '1', value: 'same' },
+      { parameter: '1', value: 'new', diffStatus: DiffStatus.CHANGED },
+      { parameter: '2', value: 'same' },
     ]);
   });
 
@@ -188,8 +188,8 @@ describe('Activity audit :: compareInterceptors', () => {
     const diffs = [];
     compareInterceptors(diffs, ['same', 'same'], ['same', 'same']);
     expect(diffs).toEqual([
-      { parameter: '0', value: 'same' },
       { parameter: '1', value: 'same' },
+      { parameter: '2', value: 'same' },
     ]);
   });
 
@@ -197,9 +197,9 @@ describe('Activity audit :: compareInterceptors', () => {
     const diffs = [];
     compareInterceptors(diffs, ['one', 'two', 'three'], ['one']);
     expect(diffs).toEqual([
-      { parameter: '0', value: 'one' },
-      { parameter: '1', value: '', diffStatus: DiffStatus.REMOVED },
+      { parameter: '1', value: 'one' },
       { parameter: '2', value: '', diffStatus: DiffStatus.REMOVED },
+      { parameter: '3', value: '', diffStatus: DiffStatus.REMOVED },
     ]);
   });
 
@@ -207,9 +207,9 @@ describe('Activity audit :: compareInterceptors', () => {
     const diffs = [];
     compareInterceptors(diffs, ['one'], ['one', 'two', 'three']);
     expect(diffs).toEqual([
-      { parameter: '0', value: 'one' },
-      { parameter: '1', value: 'two', diffStatus: DiffStatus.ADDED },
-      { parameter: '2', value: 'three', diffStatus: DiffStatus.ADDED },
+      { parameter: '1', value: 'one' },
+      { parameter: '2', value: 'two', diffStatus: DiffStatus.ADDED },
+      { parameter: '3', value: 'three', diffStatus: DiffStatus.ADDED },
     ]);
   });
 
@@ -225,8 +225,8 @@ describe('Activity audit :: fillInterceptors', () => {
     const diffs = [];
     fillInterceptors(diffs, ['one', 'two']);
     expect(diffs).toEqual([
-      { parameter: '0', value: 'one' },
-      { parameter: '1', value: 'two' },
+      { parameter: '1', value: 'one' },
+      { parameter: '2', value: 'two' },
     ]);
   });
 
@@ -234,8 +234,8 @@ describe('Activity audit :: fillInterceptors', () => {
     const diffs = [];
     fillInterceptors(diffs, ['value', '']);
     expect(diffs).toEqual([
-      { parameter: '0', value: 'value' },
-      { parameter: '1', value: '' },
+      { parameter: '1', value: 'value' },
+      { parameter: '2', value: '' },
     ]);
   });
 
@@ -243,9 +243,9 @@ describe('Activity audit :: fillInterceptors', () => {
     const diffs = [];
     fillInterceptors(diffs, ['a', null as unknown as string, undefined as unknown as string]);
     expect(diffs).toEqual([
-      { parameter: '0', value: 'a' },
-      { parameter: '1', value: '' },
+      { parameter: '1', value: 'a' },
       { parameter: '2', value: '' },
+      { parameter: '3', value: '' },
     ]);
   });
 
@@ -264,7 +264,7 @@ describe('Activity audit :: fillInterceptors', () => {
   test('should work with single-element array', () => {
     const diffs = [];
     fillInterceptors(diffs, ['only']);
-    expect(diffs).toEqual([{ parameter: '0', value: 'only' }]);
+    expect(diffs).toEqual([{ parameter: '1', value: 'only' }]);
   });
 });
 

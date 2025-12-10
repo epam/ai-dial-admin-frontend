@@ -20,6 +20,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import CollapsableInterceptors from './CollapsableInterceptors';
 import { getInterceptorsColumnDefs, getInterceptorsGridData } from './utils';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
 
 interface Props<T> {
   entity: T;
@@ -42,7 +43,12 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   const [globalInterceptors, setGlobalInterceptors] = useState<string[] | null>(null);
 
   const isCollapsableView = useMemo(() => {
-    return view === ApplicationRoute.Models || view === ApplicationRoute.Applications;
+    return (
+      view === ApplicationRoute.Models ||
+      view === ApplicationRoute.Applications ||
+      view === ApplicationRoute.ApplicationRunners ||
+      view === ApplicationRoute.AssetsApplications
+    );
   }, [view]);
 
   const isAppRunnerView = useMemo(() => {
@@ -54,7 +60,8 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   }, [entity, isAppRunnerView]);
 
   useEffect(() => {
-    const name = (entity as DialApplication).customAppSchemaId;
+    const name =
+      (entity as DialApplication).customAppSchemaId || (entity as unknown as AssetApp).applicationTypeSchemaId;
     if (name && !runnerInterceptors) {
       getApplicationScheme(name, DEFAULT_ETAG).then((res) => {
         setRunnerInterceptors(res.response?.['dial:applicationTypeInterceptors']);
