@@ -1,30 +1,30 @@
 'use client';
 
+import { DialSelectField } from '@epam/ai-dial-ui-kit';
 import { uniq } from 'lodash';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
+import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
+import { getMCPContainers, getModelContainers } from '@/src/app/actions/deployments';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
 import IdControl from '@/src/components/EntityMainProperties/BaseProperties/Id';
 import VersionControl from '@/src/components/EntityMainProperties/BaseProperties/Version';
+import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
+import SourceField from '@/src/components/SourceField/SourceField';
+import { getSourceItems } from '@/src/components/SourceField/constants';
 import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { useAppContext } from '@/src/context/AppContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ChatEntity } from '@/src/models/dial/base-entity';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
-import classNames from 'classnames';
+import { getNamesConfigurations } from '@/src/utils/entities/filter-names';
+import { isDeploymentsEnabled } from '@/src/utils/plugins';
 import AdditionalProperties from './AdditionalProperties';
 import { getDisplayNameError, getVersionError } from './utils';
-import SourceField from '@/src/components/SourceField/SourceField';
-import { getSourceItems } from '@/src/components/SourceField/constants';
-import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
-import { isDeploymentsEnabled } from '@/src/utils/plugins';
-import { useAppContext } from '@/src/context/AppContext';
-import { getNamesConfigurations } from '@/src/utils/entities/filter-names';
-import { DialSelectField } from '@epam/ai-dial-ui-kit';
-import { getMCPContainers, getModelContainers } from '@/src/app/actions/deployments';
 
 interface Props {
   view: ApplicationRoute;
@@ -121,48 +121,46 @@ const DeploymentProperties: FC<Props> = ({
 
   return (
     <div className="w-full flex flex-col gap-y-8">
-      <div className={classNames('flex flex-col gap-y-8', isEntityImmutable ? 'lg:w-[35%]' : 'w-full')}>
-        {!isEntityImmutable && (
-          <IdControl entity={entity} onChangeEntity={onChangeEntity} isUniqueNameError={isUniqueNameError} />
-        )}
+      {!isEntityImmutable && (
+        <IdControl entity={entity} onChangeEntity={onChangeEntity} isUniqueNameError={isUniqueNameError} />
+      )}
 
-        <DialSelectField
-          elementId="displayName"
-          fieldTitle={t(EntityFieldsI18nKey.displayName)}
-          placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
-          inlineSearch={true}
-          value={entity.displayName}
-          customSelectedValue={entity.displayName}
-          onChange={(value) => onChangeDisplayName(value as string)}
-          error={displayNameError}
-          options={uniq(namesConfiguration.names)
-            .sort()
-            .map((name) => ({ value: name, label: name }))}
+      <DialSelectField
+        elementId="displayName"
+        fieldTitle={t(EntityFieldsI18nKey.displayName)}
+        placeholder={t(EntityPlaceholdersI18nKey.DisplayName)}
+        inlineSearch={true}
+        value={entity.displayName}
+        customSelectedValue={entity.displayName}
+        onChange={(value) => onChangeDisplayName(value as string)}
+        error={displayNameError}
+        options={uniq(namesConfiguration.names)
+          .sort()
+          .map((name) => ({ value: name, label: name }))}
+        containerClassName={!isEntityImmutable ? 'w-full' : STANDARD_CONTROL_WIDTH}
+      />
+      {view === ApplicationRoute.Models && (
+        <VersionControl
+          view={view}
+          title={t(EntityFieldsI18nKey.displayVersion)}
+          version={(entity as DialModel).displayVersion}
+          onChange={onChangeVersion}
+          error={versionError}
+          optional={isVersionOptional}
+          isFullWidth={!isEntityImmutable}
+          hideError={!!displayNameError}
         />
+      )}
 
-        {view === ApplicationRoute.Models && (
-          <VersionControl
-            view={view}
-            title={t(EntityFieldsI18nKey.displayVersion)}
-            version={(entity as DialModel).displayVersion}
-            onChange={onChangeVersion}
-            error={versionError}
-            optional={isVersionOptional}
-            hideError={!!displayNameError}
-          />
-        )}
-
-        <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
-
-        {view === ApplicationRoute.Applications && !isEntityImmutable && !initialValues && (
-          <ApplicationSource
-            entity={entity}
-            runners={runners}
-            isEntityImmutable={isEntityImmutable}
-            onChangeEntity={onChangeEntity}
-          />
-        )}
-      </div>
+      <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} isFullWidth={!isEntityImmutable} />
+      {view === ApplicationRoute.Applications && !isEntityImmutable && !initialValues && (
+        <ApplicationSource
+          entity={entity}
+          runners={runners}
+          isEntityImmutable={isEntityImmutable}
+          onChangeEntity={onChangeEntity}
+        />
+      )}
 
       <AdditionalProperties
         entity={entity}

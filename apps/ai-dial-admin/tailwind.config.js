@@ -13,12 +13,15 @@ const backgroundsColors = {
   info: 'var(--bg-info, #1C2C47)',
   success: 'var(--bg-success, #1D3841)',
   'model-icon': 'var(--bg-model-icon, #FFFFFF)',
+
   'accent-primary': 'var(--bg-accent-primary, #5C8DEA)',
   'accent-secondary': 'var(--bg-accent-secondary, #37BABC)',
   'accent-tertiary': 'var(--bg-accent-tertiary, #A972FF)',
+
   'accent-primary-alpha': 'var(--bg-accent-primary-alpha, #5C8DEA2B)',
   'accent-secondary-alpha': 'var(--bg-accent-secondary-alpha, #37BABC26)',
   'accent-tertiary-alpha': 'var(--bg-accent-tertiary-alpha, #A972FF2B)',
+
   'red-400': 'var(--bg-red-400, #F76464)',
   'red-800': 'var(--bg-red-800, #AE2F2F)',
   'orange-400': 'var(--bg-orange-400, #D97C27)',
@@ -41,25 +44,29 @@ const borderColors = {
   secondary: 'var(--stroke-secondary, #222932)',
   tertiary: 'var(--stroke-tertiary, #090D13)',
   error: 'var(--stroke-error, #F76464)',
+  warning: 'var(--stroke-warning, #EEC840)',
   hover: 'var(--stroke-hover, #F3F4F6)',
+  info: 'var(--stroke-info, #74A4FF)',
+  success: 'var(--stroke-success, #37BABC)',
   'accent-primary': 'var(--stroke-accent-primary, #5C8DEA)',
   'accent-primary-hover': 'var(--stroke-accent-primary-hover, #4878d2)',
   'accent-secondary': 'var(--stroke-accent-secondary, #37BABC)',
   'accent-tertiary': 'var(--stroke-accent-tertiary, #A972FF)',
+
   'red-900': 'var(--red-900, #402027)',
-  'icon-secondary': 'var(--icon-secondary, #7F8792)',
 };
 
 const textColors = {
   transparent: 'transparent',
-  white: 'var(--text-white, #FFFFFF)',
   primary: 'var(--text-primary, #F3F4F6)',
   secondary: 'var(--text-secondary, #7F8792)',
   error: 'var(--text-error, #F76464)',
+  warning: 'var(--text-warning, #EEC840)',
+  'warning-icon': 'var(--text-warning-icon, #EEC840)',
+  info: 'var(--text-info, #74A4FF)',
   'accent-primary': 'var(--text-accent-primary, #5C8DEA)',
   'accent-secondary': 'var(--text-accent-secondary, #37BABC)',
   'accent-tertiary': 'var(--text-accent-tertiary, #A972FF)',
-  'controls-permanent': 'var(--controls-text-permanent, #FCFCFC)',
   'controls-disable': 'var(--controls-text-disable, #333942)',
 };
 
@@ -73,24 +80,10 @@ const buttonsTextColors = {
   'controls-disable': 'var(--controls-disable, #333942)',
 };
 
-const iconColors = {
-  'icon-error': 'var(--icon-error, #F76464)',
-  'icon-accent-secondary': 'var(--icon-accent-secondary, #37BABC)',
-  'icon-accent-tertiary': 'var(--icon-accent-tertiary, #A972FF)',
-  'icon-accent-primary': 'var(--icon-accent-primary, #5C8DEA)',
-  'icon-secondary': 'var(--icon-secondary, #7F8792)',
-  'icon-primary': 'var(--icon-primary, #F3F4F6)',
-};
-
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   important: true,
-  content: [
-    './src/app/**/*.{js,ts,jsx,tsx}',
-    './src/components/**/*.{js,ts,jsx,tsx}',
-    './src/features/**/*.{js,ts,jsx,tsx}',
-    './../../node_modules/@epam/ai-dial-ui-kit/**/*.{js,ts,jsx,tsx}',
-  ],
+  content: ['./src/**/*.{html,js,ts,tsx,yaml}', './../../node_modules/@epam/ai-dial-ui-kit/**/*.{js,ts,jsx,tsx}'],
   theme: {
     backgroundColor: { ...backgroundsColors, ...buttonsBgColors },
     borderColor: borderColors,
@@ -99,9 +92,14 @@ module.exports = {
     placeholderColor: placeholderColor,
     textColor: { ...textColors, ...buttonsTextColors },
     gradientColorStops: backgroundsColors,
+
     extend: {
-      animation: {
-        'spin-steps': 'spin 0.75s steps(8, end) infinite',
+      screens: {
+        mobile: { min: '360px', max: '767px' },
+        small_tablet: { min: '768px', max: '1023px' },
+        large_tablet: { min: '1024px', max: '1279px' },
+        desktop: { min: '1280px', max: '2559px' },
+        large_desktop: { min: '2560px' },
       },
       boxShadow: {
         DEFAULT: '0 0 4px 0 var(--bg-blackout, #090D13B3)',

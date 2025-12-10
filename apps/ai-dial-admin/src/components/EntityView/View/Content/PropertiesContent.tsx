@@ -1,7 +1,7 @@
 'use client';
 import { FC, useCallback } from 'react';
 
-import DeploymentAssetHeader from '@/src/components/Assets/Deployments/Header';
+import AssetHeader from '@/src/components/Assets/Deployments/Header';
 import DeploymentProperties from '@/src/components/Assets/Deployments/Properties';
 import EntityHeader from '@/src/components/EntityView/Header/Header';
 import EntityProperties from '@/src/components/EntityView/View/Content/Properties';
@@ -25,7 +25,7 @@ interface Props {
 const PropertiesContent: FC<Props> = ({ applicationSchemes, names, view, selectedEntity, onChangeEntity }) => {
   const getPropertiesView = useCallback(() => {
     if (view === ApplicationRoute.Models) {
-      return <ModelProperties model={selectedEntity} modelsNames={names} updateModel={onChangeEntity} />;
+      return <ModelProperties model={selectedEntity} modelsNames={names} onChangeModel={onChangeEntity} />;
     }
 
     if (view === ApplicationRoute.Routes) {
@@ -49,7 +49,7 @@ const PropertiesContent: FC<Props> = ({ applicationSchemes, names, view, selecte
         runners={applicationSchemes || []}
         names={names}
         view={view}
-        updateEntity={onChangeEntity}
+        onChangeEntity={onChangeEntity}
       />
     );
   }, [view, selectedEntity, applicationSchemes, names, onChangeEntity]);
@@ -57,7 +57,7 @@ const PropertiesContent: FC<Props> = ({ applicationSchemes, names, view, selecte
   return (
     <div className="flex flex-col h-full w-full">
       {isDeploymentAsset(view) ? (
-        <DeploymentAssetHeader asset={selectedEntity as DeploymentAsset} view={view} />
+        <AssetHeader asset={selectedEntity as DeploymentAsset} view={view} />
       ) : (
         <EntityHeader entity={selectedEntity} />
       )}

@@ -1,10 +1,11 @@
-import { FC, useCallback, useState } from 'react';
 import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useState, useMemo } from 'react';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
+import { getControlClassName } from '@/src/utils/entities/view';
 import { getErrorForDisplayName } from '@/src/utils/validation/name-error';
 
 interface Props {
@@ -12,12 +13,14 @@ interface Props {
   required?: boolean;
   readonly?: boolean;
   disabled?: boolean;
+  isFullWidth?: boolean;
   onChange?: (displayName?: string) => void;
 }
 
-const DisplayNameControl: FC<Props> = ({ displayName, onChange, required, ...props }) => {
+const DisplayNameControl: FC<Props> = ({ displayName, isFullWidth = true, onChange, required, ...props }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
+  const containerClassName = useMemo(() => getControlClassName(isFullWidth), [isFullWidth]);
 
   const [displayNameError, setDisplayNameError] = useState<FieldError | null>(null);
 
@@ -48,6 +51,7 @@ const DisplayNameControl: FC<Props> = ({ displayName, onChange, required, ...pro
       onChange={onChangeDisplayName}
       errorText={displayNameError?.text}
       invalid={!!displayNameError}
+      containerClassName={containerClassName}
       {...props}
     />
   );

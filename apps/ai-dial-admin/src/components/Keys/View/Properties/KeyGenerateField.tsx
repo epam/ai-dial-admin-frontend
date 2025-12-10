@@ -1,11 +1,11 @@
-import { FC, useCallback, useState } from 'react';
-
 import { ButtonVariant, DialButton, DialPasswordInputField } from '@epam/ai-dial-ui-kit';
 import { IconCopy, IconSparkles } from '@tabler/icons-react';
+import { FC, useCallback, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import classNames from 'classnames';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { FieldError } from '@/src/models/error';
@@ -36,8 +36,8 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
   };
 
   return (
-    <div className="flex items-end">
-      <div className="flex-1">
+    <div className={classNames('flex items-end', STANDARD_CONTROL_WIDTH)}>
+      <div className={CONTROL_WITH_BUTTON_WIDTH}>
         <DialPasswordInputField
           elementId="key"
           fieldTitle={t(EntityFieldsI18nKey.keyValue)}

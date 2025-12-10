@@ -7,6 +7,7 @@ import {
   RadioButtonWithContent,
   DialTextInputField,
 } from '@epam/ai-dial-ui-kit';
+import classNames from 'classnames';
 
 import {
   BasicI18nKey,
@@ -19,6 +20,7 @@ import { useI18n } from '@/src/locales/client';
 import { ChatEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getAlertTitlePerView, getDisplayNamePerView, NONE_ID, USE_ID } from './utils';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 interface Props {
   view: ApplicationRoute;
@@ -84,7 +86,7 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity }) => {
   ];
 
   return (
-    <div className="flex flex-col">
+    <div className={classNames('flex flex-col', STANDARD_CONTROL_WIDTH)}>
       <DialRadioGroupPopupField
         htmlFor="forwardAuthToken"
         id="forwardAuthToken"

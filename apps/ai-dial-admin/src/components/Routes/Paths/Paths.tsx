@@ -2,9 +2,10 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
+import classNames from 'classnames';
 
 import { ErrorI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import Path from './Path';
@@ -64,7 +65,7 @@ const Paths: FC<Props> = ({ title, optional, readonly, paths, onChangePaths }) =
   );
 
   return (
-    <div className="flex flex-col gap-y-3">
+    <div className={classNames('flex flex-col gap-y-3', STANDARD_CONTROL_WIDTH)}>
       {paths?.map((path, index) => (
         <Path
           readonly={readonly}

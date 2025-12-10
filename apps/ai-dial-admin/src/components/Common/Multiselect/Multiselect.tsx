@@ -6,6 +6,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import MultiselectModal from './Modal/MultiselectModal';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import classNames from 'classnames';
 
 interface Props {
   elementId: string;
@@ -19,6 +20,7 @@ interface Props {
   allItems?: string[];
   draggable?: boolean;
   errorText?: string;
+  className?: string;
   onChangeItems?: (items: string[]) => void;
   getItems?: () => Promise<ServerActionResponse>;
 }
@@ -31,6 +33,7 @@ const Multiselect: FC<Props> = ({
   disabled,
   optional,
   errorText,
+  className,
   ...props
 }) => {
   const t = useI18n();
@@ -45,7 +48,7 @@ const Multiselect: FC<Props> = ({
   }, [setIsModalState]);
 
   return (
-    <div className="flex flex-col">
+    <div className={classNames('flex flex-col', className)}>
       <Field fieldTitle={title} htmlFor={elementId} optional={optional} />
       <DialInputPopup
         inputClassName={errorText && 'dial-input-error'}

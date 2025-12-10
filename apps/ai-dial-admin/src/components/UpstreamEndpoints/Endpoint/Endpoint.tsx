@@ -95,7 +95,7 @@ const Endpoint: FC<Props> = ({
   }, []);
 
   return (
-    <div className="flex gap-4 items-start lg:gap-2">
+    <div className="flex gap-4 items-start lg:gap-2 w-full">
       <div className="flex flex-1 flex-col rounded border border-primary p-3 lg:border-none lg:p-0 lg:flex-initial">
         {isTablet && (
           <div className="flex flex-col justify-center cursor-pointer" onClick={toggleCollapse}>
@@ -119,19 +119,17 @@ const Endpoint: FC<Props> = ({
         <div
           className={classNames('flex flex-col mt-4 gap-y-4 lg:flex-row lg:gap-x-2 lg:mt-0', isCollapsed && 'hidden')}
         >
-          <div className="lg:w-[560px]">
-            <EndpointControl
-              disabled={readonly}
-              id={`upstreamEndpoints-${index}`}
-              endpoint={endpoint.endpoint}
-              elementClassName="h-[38px]"
-              placeholder={t(EntityPlaceholdersI18nKey.UpstreamEndpoint)}
-              fieldTitle={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.Endpoints) : ''}
-              onChange={onChangeEndPointUrl}
-              iconAfterInput={<WarningIcon endpointWarning={endpointWarning} />}
-              required={required}
-            />
-          </div>
+          <EndpointControl
+            disabled={readonly}
+            id={`upstreamEndpoints-${index}`}
+            endpoint={endpoint.endpoint}
+            elementClassName="h-[38px]"
+            placeholder={t(EntityPlaceholdersI18nKey.UpstreamEndpoint)}
+            fieldTitle={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.Endpoints) : ''}
+            onChange={onChangeEndPointUrl}
+            iconAfterInput={<WarningIcon endpointWarning={endpointWarning} />}
+            required={required}
+          />
 
           <DialPasswordInputField
             disabled={readonly}

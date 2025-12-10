@@ -12,10 +12,9 @@ interface Props {
 
 const ApplicationInfo: FC<Props> = ({ application }) => {
   return application ? (
-    <div className="flex flex-col gap-y-8 w-full lg:w-[35%]">
-      <DisplayNameControl disabled={true} displayName={application?.displayName} />
-      <DescriptionControl entity={application} disabled={true} />
-
+    <div className="flex flex-col gap-y-8 w-full">
+      <DisplayNameControl disabled={true} displayName={application?.displayName} isFullWidth={false} />
+      <DescriptionControl entity={application} disabled={true} isFullWidth={false} />
       <IconControl disabled={true} iconUrl={application.iconUrl} />
       <TopicsControl disabled={true} entity={{ topics: application?.descriptionKeywords }} />
     </div>

@@ -242,7 +242,7 @@ const ContainerView: FC<Props> = ({
             transport={container.transport}
           />
         </div>
-        <div className="flex-1 overflow-auto my-3 min-h-0 py-4">
+        <div className="flex-1 overflow-auto min-h-0">
           {jsonEditorEnabled ? (
             <>
               <EntityJsonEditor

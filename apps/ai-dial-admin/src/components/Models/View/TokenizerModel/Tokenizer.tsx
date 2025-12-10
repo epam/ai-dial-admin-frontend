@@ -53,7 +53,7 @@ const TokenizerModelSwitch: FC<Props> = ({ model, onChangeModel }) => {
         onChange={onSwitchTokenizerModel}
       />
       {model.tokenizerModel != null && (
-        <div className="pl-[42px] lg:w-[35%]">
+        <div className="pl-[42px] w-[300px]">
           <DialInputPopup
             open={isModalOpen}
             selectedValue={model.tokenizerModel}

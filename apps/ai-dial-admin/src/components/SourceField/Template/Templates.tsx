@@ -2,12 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ButtonVariant, DialButton, DialInputPopup, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
+import classNames from 'classnames';
 
 import Field from '@/src/components/Common/Field/Field';
 import SelectRunnerModal from '@/src/components/SourceField/Template/SelectRunnerModal';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { CreateI18nKey, EntitiesI18nKey, SourceI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -16,7 +17,6 @@ import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import classNames from 'classnames';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 
@@ -108,8 +108,8 @@ const Templates = <T extends DialModel | DialInterceptor>({
             />
           </div>
         ) : (
-          <div className="flex gap-2 w-full">
-            <div className="w-full lg:w-[45%]">
+          <div className={classNames('flex gap-2', STANDARD_CONTROL_WIDTH)}>
+            <div className={CONTROL_WITH_BUTTON_WIDTH}>
               <Field fieldTitle={t(SourceI18nKey.InterceptorTemplate)} htmlFor="templates" />
               <DialInputPopup
                 open={isModalOpen}

@@ -7,15 +7,16 @@ interface Props {
   title: string;
   value?: string;
   elementId?: string;
+  containerClassName?: string;
 }
-const ReadonlyField: FC<Props> = ({ value, title, elementId }) => {
+const ReadonlyField: FC<Props> = ({ title, elementId, ...props }) => {
   return (
     <DialTextInputField
       fieldTitle={title}
       elementId={elementId || 'readonlyField'}
       disabled={true}
-      value={value}
-      iconAfter={<CopyButton field={value || ''} label={title} className="ml-2" />}
+      iconAfter={<CopyButton field={props.value || ''} label={title} className="ml-2" />}
+      {...props}
     />
   );
 };

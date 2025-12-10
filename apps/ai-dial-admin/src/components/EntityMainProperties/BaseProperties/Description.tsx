@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { DialTextAreaField } from '@epam/ai-dial-ui-kit';
 
@@ -7,16 +7,24 @@ import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { getControlClassName } from '@/src/utils/entities/view';
 
 interface Props<T> {
   entity: T;
   disabled?: boolean;
+  isFullWidth?: boolean;
   onChangeEntity?: (entity: T) => void;
 }
 
-const DescriptionControl = <T extends { description?: string }>({ entity, onChangeEntity, ...props }: Props<T>) => {
+const DescriptionControl = <T extends { description?: string }>({
+  entity,
+  onChangeEntity,
+  isFullWidth = true,
+  ...props
+}: Props<T>) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
+  const containerClassName = useMemo(() => getControlClassName(isFullWidth), [isFullWidth]);
 
   const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
 
@@ -40,7 +48,7 @@ const DescriptionControl = <T extends { description?: string }>({ entity, onChan
       errorText={descriptionError?.text}
       invalid={!!descriptionError}
       onChange={onChangeDescription}
-      elementClassName="w-full"
+      containerClassName={containerClassName}
       {...props}
     />
   );

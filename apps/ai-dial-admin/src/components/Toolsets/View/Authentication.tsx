@@ -1,10 +1,11 @@
 import { FC, ReactNode, useCallback, useMemo } from 'react';
 import { IconBrandOauth, IconKey, IconLockOff } from '@tabler/icons-react';
+import classNames from 'classnames';
 
 import { EntityFieldsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import AuthTypeSection from './Auth/AuthTypeSection';
 import Field from '@/src/components/Common/Field/Field';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -48,7 +49,7 @@ const Authentication: FC<Props> = ({ disabled, toolset, onChange, ...props }) =>
   );
 
   return (
-    <div className="flex flex-col gap-y-2 w-full lg:w-[45%]">
+    <div className={classNames('flex flex-col gap-y-2', STANDARD_CONTROL_WIDTH)}>
       <Field fieldTitle={t(EntityFieldsI18nKey.authSettings)} />
       <div className="flex flex-col gap-y-3">
         {disabled ? (

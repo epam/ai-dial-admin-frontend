@@ -36,24 +36,18 @@ const DeploymentProperties: FC<Props> = ({ asset, view, runners, onChange }) => 
   return (
     <div className="h-full flex flex-col w-full gap-y-8">
       <div className="flex flex-col gap-y-8">
-        <div className="lg:w-[35%]">
-          <DisplayNameControl
-            displayName={asset.displayName}
-            required={true}
-            onChange={(displayName) => onChange({ ...asset, displayName })}
-          />
-        </div>
-        <div className="lg:w-[35%]">
-          <DescriptionControl entity={asset} onChangeEntity={onChange} />
-        </div>
+        <DisplayNameControl
+          displayName={asset.displayName}
+          required={true}
+          isFullWidth={false}
+          onChange={(displayName) => onChange({ ...asset, displayName })}
+        />
+        <DescriptionControl entity={asset} onChangeEntity={onChange} isFullWidth={false} />
 
         <IconControl iconUrl={asset.iconUrl} onChange={(icon) => onChange({ ...asset, iconUrl: icon })} />
-        <div className="lg:w-[35%] flex flex-col gap-y-8">
-          <TopicsControl entity={asset} onChange={onChange} view={view} />
-        </div>
+        <TopicsControl entity={asset} onChange={onChange} view={view} />
 
         <FilePath
-          inputClassName="lg:w-[35%] lg:flex-0"
           value={asset.folderId}
           label={t(EntitiesI18nKey.FolderStorage)}
           modalTitle={t(BasicI18nKey.MoveToFolder)}
@@ -88,13 +82,11 @@ const DeploymentProperties: FC<Props> = ({ asset, view, runners, onChange }) => 
               entity={asset as DialApplication}
               onChangeEntity={onChange as (entity: DialApplication) => void}
             />
-            <div className="flex flex-col gap-y-8 lg:w-[35%]">
-              <ForwardAuthTokenField
-                view={view}
-                entity={asset}
-                onChangeEntity={onChange as (entity: DialApplication) => void}
-              />
-            </div>
+            <ForwardAuthTokenField
+              view={view}
+              entity={asset}
+              onChangeEntity={onChange as (entity: DialApplication) => void}
+            />
           </>
         )}
         <MaxRetryAttempts entity={asset} onChangeEntity={onChange} />
