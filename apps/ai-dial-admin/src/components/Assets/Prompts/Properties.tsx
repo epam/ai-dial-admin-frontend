@@ -15,7 +15,7 @@ import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { JSONEditorError } from '@/src/types/editor';
 import { ApplicationRoute } from '@/src/types/routes';
-import AssetHeader from '../Deployments/Header';
+import AssetHeader from '@/src/components/Assets/Deployments/Header';
 
 interface Props {
   prompt: DialPrompt;
