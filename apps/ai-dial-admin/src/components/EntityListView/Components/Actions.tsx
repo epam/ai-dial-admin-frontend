@@ -240,11 +240,11 @@ const Actions = <T extends object>({
         <BulkButtons
           itemsCount={exportData.length}
           route={route}
-          context={context}
-          setIsModalOpen={setIsModalOpen}
-          setModalType={setModalType}
-          setIsBulkView={setIsBulkView}
-          handleExport={onExport}
+          getAssetContext={context}
+          onChangeIsModalOpen={setIsModalOpen}
+          onChangeModalType={setModalType}
+          onChangeIsBulkView={setIsBulkView}
+          onExport={onExport}
         />
       )}
     </>
