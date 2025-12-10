@@ -38,7 +38,6 @@ import {
   parametersTab,
   promptsTab,
   propertiesTab,
-  propertiesTab,
   relatedContainersTab,
   resourcesTab,
   rolesTab,

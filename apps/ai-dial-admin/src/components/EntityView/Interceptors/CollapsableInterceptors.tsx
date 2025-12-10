@@ -7,6 +7,7 @@ import Grid from '@/src/components/Grid/Grid';
 import { EntitiesI18nKey, InterceptorsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import CollapsableSection from './CollapsableSection';
 import { getInterceptorsGridData } from './utils';
@@ -43,7 +44,7 @@ const CollapsableInterceptors = <T extends { interceptors?: string[] }>({
           <Grid columnDefs={globalColumns} rowData={getInterceptorsGridData(interceptors, globalInterceptors)} />
         )}
       </CollapsableSection>
-      {(entity as DialApplication).customAppSchemaId && (
+      {((entity as DialApplication).customAppSchemaId || (entity as unknown as AssetApp).applicationTypeSchemaId) && (
         <CollapsableSection title={`${t(InterceptorsI18nKey.Runner)}: ${runnerInterceptors?.length || 0}`}>
           {!runnerInterceptors?.length ? (
             <DialNoDataContent title={t(EntitiesI18nKey.NoRunnerInterceptors)} />
