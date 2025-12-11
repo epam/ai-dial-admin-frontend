@@ -321,7 +321,7 @@ export const FILES_COLUMNS: ColDef[] = [
 ];
 
 export const EXPORT_COLUMNS = (
-  onChange: (value: string, data: unknown) => void,
+  onChange: (value: string[], data: unknown, field: string, index: number, isSelected: boolean) => void,
   route?: ApplicationRoute,
 ): ColDef[] => {
   const columns: ColDef[] = [NAME_COLUMN_WITH_SORT, AUTHOR_COLUMN, UPDATED_AT_COLUMN];
