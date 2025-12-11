@@ -21,8 +21,8 @@ const RoutesList: FC<Props> = ({ data }) => {
       names={names}
       data={data}
       route={ApplicationRoute.Routes}
-      createEntity={createRoute}
-      removeEntity={removeRoute}
+      onCreateEntity={createRoute}
+      onRemoveEntity={removeRoute}
     />
   );
 };

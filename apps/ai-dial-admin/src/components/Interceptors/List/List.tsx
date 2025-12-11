@@ -32,8 +32,8 @@ const InterceptorsList: FC<Props> = ({ data }) => {
       names={names}
       data={data}
       route={ApplicationRoute.Interceptors}
-      createEntity={createInterceptor}
-      removeEntity={removeInterceptor}
+      onCreateEntity={createInterceptor}
+      onRemoveEntity={removeInterceptor}
       showColumnsButton={true}
     />
   );
