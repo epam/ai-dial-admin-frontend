@@ -42,7 +42,7 @@ describe('Assets Prompt :: server actions', () => {
     (assetsApi.getAsset as any).mockResolvedValue(RESPONSE_MOCK);
     (assetsApi.getAssetList as any).mockResolvedValue([{ name: 'test', version: '1.0.0', path: 'path' }]);
 
-    const result = await getPrompt('path', 'test', '1.0.0');
+    const result = await getPrompt('path', 'test', '1.0.0', 'etag');
     expect(getUserToken).toHaveBeenCalled();
     expect(assetsApi.getAsset).toHaveBeenCalledWith(TOKEN_MOCK, 'path', ResourceType.PROMPT);
     expect(result).toBe(RESPONSE_MOCK);

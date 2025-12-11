@@ -6,7 +6,7 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { DialTabs } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
 
-import { createPrompt, getPrompts, movePrompts, removePrompt } from '@/src/app/[lang]/prompts/actions';
+import { getPrompts, movePrompts, removePrompt, updatePrompt } from '@/src/app/[lang]/prompts/actions';
 import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
@@ -33,10 +33,11 @@ import { getViewHeaderClassName } from '@/src/utils/entities/view';
 
 interface Props {
   originalPrompt: DialPrompt;
+  etag?: string;
   prompts?: DialPrompt[] | null;
 }
 
-const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
+const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
   const t = useI18n();
   const tabs = getTabsForAsset(t, ApplicationRoute.Prompts);
   const router = useRouter();
@@ -91,7 +92,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
       if (newVersion) {
         updatedEntity = addNewVersion(updatedEntity as DialPrompt, newVersion);
       }
-      getReqRef.current(createPrompt, updatedEntity as DialPrompt).then((res) => {
+      getReqRef.current(updatePrompt, updatedEntity as DialPrompt, etag).then((res) => {
         if (res.success) {
           showNotification(
             getSuccessNotification(
@@ -127,7 +128,7 @@ const PromptView: FC<Props> = ({ originalPrompt, prompts }) => {
         }
       });
     },
-    [selectedPrompt, originalPrompt, showNotification, t, router, fetchFiles],
+    [selectedPrompt, originalPrompt, etag, showNotification, t, router, fetchFiles],
   );
 
   const onChangeEntity = useCallback(
