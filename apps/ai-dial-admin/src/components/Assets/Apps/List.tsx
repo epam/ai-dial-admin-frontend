@@ -37,11 +37,11 @@ const AppsList: FC<Props> = ({ runners }) => {
       versionsMap={versionsMap}
       data={filteredData}
       route={ApplicationRoute.AssetsApplications}
-      removeEntity={removeApp}
-      createEntity={createApp}
-      moveFiles={moveApps}
-      bulkDelete={bulkDeleteApps}
-      context={useAppsFolder as () => AssetsFolderContext<AssetApp | DialFile>}
+      onRemoveEntity={removeApp}
+      onCreateEntity={createApp}
+      onMoveFiles={moveApps}
+      onBulkDelete={bulkDeleteApps}
+      getAssetContext={useAppsFolder as () => AssetsFolderContext<AssetApp | DialFile>}
     />
   );
 };
