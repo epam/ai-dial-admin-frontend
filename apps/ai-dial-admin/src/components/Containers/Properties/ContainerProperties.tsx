@@ -79,11 +79,18 @@ const ContainerProperties: FC<Props> = ({ container, setContainer, isModal, rout
                   invalid={!!pathError}
                   optional={true}
                   onChange={(mcpEndpointPath?: string) => {
-                    setPathError(getPathError(mcpEndpointPath as string, t));
-                    setContainer({
-                      ...container,
-                      mcpEndpointPath: mcpEndpointPath || null,
-                    });
+                    if (!mcpEndpointPath) {
+                      setPathError(null);
+                      const newContainer = { ...container };
+                      delete newContainer.mcpEndpointPath;
+                      setContainer(newContainer);
+                    } else {
+                      setPathError(getPathError(mcpEndpointPath as string, t));
+                      setContainer({
+                        ...container,
+                        mcpEndpointPath: mcpEndpointPath,
+                      });
+                    }
                   }}
                 />
               </div>
