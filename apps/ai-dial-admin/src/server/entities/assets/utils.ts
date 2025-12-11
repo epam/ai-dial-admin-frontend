@@ -29,8 +29,8 @@ export const buildCreateFolderUrl = (filetype?: string, view?: ApplicationRoute)
 
   if (view === ApplicationRoute.AssetsToolsets) {
     return filetype === ImportFileType.ARCHIVE
-      ? buildAssetUrl(ResourceType.APPLICATION, ResourceOperation.IMPORT_ZIP)
-      : buildAssetUrl(ResourceType.APPLICATION, ResourceOperation.IMPORT_JSON);
+      ? buildAssetUrl(ResourceType.TOOLSET, ResourceOperation.IMPORT_ZIP)
+      : buildAssetUrl(ResourceType.TOOLSET, ResourceOperation.IMPORT_JSON);
   }
   return '';
 };
