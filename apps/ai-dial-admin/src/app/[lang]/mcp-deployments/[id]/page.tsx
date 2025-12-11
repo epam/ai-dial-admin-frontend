@@ -91,13 +91,15 @@ export default async function Page(params: Params) {
       }
 
       return (
-        <ImageView
-          image={image}
-          route={ApplicationRoute.McpDeployments}
-          imagesNames={images?.map((image) => image.name).filter((name) => name !== image.name) || []}
-          containerNames={containers?.map((container) => container.name) || []}
-          versions={versions || []}
-        />
+        <SaveValidationContextProvider>
+          <ImageView
+            image={image}
+            route={ApplicationRoute.McpDeployments}
+            imagesNames={images?.map((image) => image.name).filter((name) => name !== image.name) || []}
+            containerNames={containers?.map((container) => container.name) || []}
+            versions={versions || []}
+          />
+        </SaveValidationContextProvider>
       );
     }
 
