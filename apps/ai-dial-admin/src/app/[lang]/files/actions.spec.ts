@@ -6,7 +6,7 @@ import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { exportFiles, getFiles, importFiles, moveFiles, removeFile } from './actions';
+import { bulkDeleteFiles, exportFiles, getFiles, importFiles, moveFiles, removeFile } from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -66,6 +66,15 @@ describe('Files :: server actions', () => {
     const result = await exportFiles(['test']);
     expect(getUserToken).toHaveBeenCalled();
     expect(assetsApi.exportFiles).toHaveBeenCalledWith(TOKEN_MOCK, ['test']);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call bulkDeleteFiles action', async () => {
+    (assetsApi.bulkDeleteAssets as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await bulkDeleteFiles([{ path: 'path' }]);
+    expect(getUserToken).toHaveBeenCalled();
+    expect(assetsApi.bulkDeleteAssets).toHaveBeenCalledWith(TOKEN_MOCK, [{ path: 'path' }], ResourceType.FILE);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

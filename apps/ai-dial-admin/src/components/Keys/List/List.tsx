@@ -25,8 +25,8 @@ const KeysList: FC<Props> = ({ data }) => {
       keys={keys}
       data={data}
       route={ApplicationRoute.Keys}
-      createEntity={createKey}
-      removeEntity={removeKey}
+      onCreateEntity={createKey}
+      onRemoveEntity={removeKey}
       showColumnsButton={true}
     />
   );

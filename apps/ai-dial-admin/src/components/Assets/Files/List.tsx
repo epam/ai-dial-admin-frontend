@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { moveFiles, removeFile } from '@/src/app/[lang]/files/actions';
+import { bulkDeleteFiles, moveFiles, removeFile } from '@/src/app/[lang]/files/actions';
 import { FILES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
 import Page403 from '@/src/components/Page403/Page403';
@@ -22,9 +22,10 @@ const FilesList: FC = () => {
       baseColumns={FILES_COLUMNS}
       data={gridFileData}
       route={ApplicationRoute.Files}
-      removeEntity={removeFile}
-      moveFiles={moveFiles}
-      context={useFileFolder}
+      onRemoveEntity={removeFile}
+      onMoveFiles={moveFiles}
+      getAssetContext={useFileFolder}
+      onBulkDelete={bulkDeleteFiles}
     />
   );
 };

@@ -31,11 +31,11 @@ const PromptsList: FC = () => {
       versionsMap={versionsMap}
       data={filteredData}
       route={ApplicationRoute.Prompts}
-      createEntity={createPrompt}
-      removeEntity={removePrompt}
-      moveFiles={movePrompts}
-      bulkDelete={bulkDeletePrompts}
-      context={usePromptFolder as () => AssetsFolderContext<DialFile | DialPrompt>}
+      onCreateEntity={createPrompt}
+      onRemoveEntity={removePrompt}
+      onMoveFiles={movePrompts}
+      onBulkDelete={bulkDeletePrompts}
+      getAssetContext={usePromptFolder as () => AssetsFolderContext<DialFile | DialPrompt>}
     />
   );
 };

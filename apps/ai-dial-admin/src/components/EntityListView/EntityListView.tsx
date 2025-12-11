@@ -30,12 +30,12 @@ interface Props<T> {
   baseColumns: ColDef[];
   runners?: DialApplicationScheme[];
   route: ApplicationRoute;
-  createEntity?: (entity: T) => Promise<ServerActionResponse>;
-  removeEntity: (entity: string) => Promise<ServerActionResponse>;
-  moveFiles?: (paths: string[], newPath: string) => Promise<ServerActionResponse[]>;
-  bulkDelete?: (paths: { path: string }[]) => Promise<ServerActionResponse>;
   showColumnsButton?: boolean;
-  context?: () => AssetsFolderContext<DialFile | Asset>;
+  onCreateEntity?: (entity: T) => Promise<ServerActionResponse>;
+  onRemoveEntity: (entity: string) => Promise<ServerActionResponse>;
+  onMoveFiles?: (paths: string[], newPath: string) => Promise<ServerActionResponse[]>;
+  onBulkDelete?: (paths: { path: string }[]) => Promise<ServerActionResponse>;
+  getAssetContext?: () => AssetsFolderContext<DialFile | Asset>;
 }
 
 const BaseEntityList = <T extends object>({
@@ -46,12 +46,12 @@ const BaseEntityList = <T extends object>({
   route,
   runners,
   versionsMap,
-  createEntity,
-  removeEntity,
-  moveFiles,
-  bulkDelete,
+  onCreateEntity,
+  onRemoveEntity,
+  onMoveFiles,
+  onBulkDelete,
   showColumnsButton,
-  context,
+  getAssetContext,
 }: Props<T>) => {
   const t = useI18n();
   const router = useRouter();
@@ -144,7 +144,7 @@ const BaseEntityList = <T extends object>({
         showColumnsPanel={showColumnsPanel}
         toggleColumnsPanel={toggleColumnsPanel}
         view={route}
-        context={context}
+        context={getAssetContext}
         onGridReady={onGridReady}
         isBulkView={isBulkView}
       >
@@ -156,8 +156,8 @@ const BaseEntityList = <T extends object>({
           route={route}
           showColumnsButton={showColumnsButton && data.length > 0}
           toggleColumnsPanel={toggleColumnsPanel}
-          createEntity={createEntity}
-          context={context}
+          createEntity={onCreateEntity}
+          context={getAssetContext}
           setIsBulkView={setIsBulkView}
           isBulkView={isBulkView}
           gridApi={gridApi}
@@ -168,19 +168,19 @@ const BaseEntityList = <T extends object>({
         keys={keys}
         route={route}
         versionsMap={versionsMap}
-        createEntity={createEntity}
-        removeEntity={removeEntity}
-        moveFiles={moveFiles}
-        bulkDelete={bulkDelete}
-        context={context}
+        onCreateEntity={onCreateEntity}
+        onRemoveEntity={onRemoveEntity}
+        onMoveFiles={onMoveFiles}
+        onBulkDelete={onBulkDelete}
+        getAssetContext={getAssetContext}
         isModalOpen={isModalOpen}
-        setIsModalOpen={setIsModalOpen}
+        onChangeIsModalOpen={setIsModalOpen}
         modalType={modalType}
-        setModalType={setModalType}
+        onChangeModalType={setModalType}
         currentEntity={currentEntity}
-        setCurrentEntity={setCurrentEntity}
+        onChangeCurrentEntity={setCurrentEntity}
         isBulkView={isBulkView}
-        setIsBulkView={setIsBulkView}
+        onChangeIsBulkView={setIsBulkView}
       />
     </>
   );

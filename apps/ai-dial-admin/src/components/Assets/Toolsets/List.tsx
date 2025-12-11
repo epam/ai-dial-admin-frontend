@@ -36,11 +36,11 @@ const ToolsetsList: FC = () => {
       versionsMap={versionsMap}
       data={filteredData}
       route={ApplicationRoute.AssetsToolsets}
-      removeEntity={removeToolset}
-      createEntity={createToolset}
-      moveFiles={moveToolsets}
-      bulkDelete={bulkDeleteToolsets}
-      context={useToolsetFolder as () => AssetsFolderContext<AssetToolset | DialFile>}
+      onRemoveEntity={removeToolset}
+      onCreateEntity={createToolset}
+      onMoveFiles={moveToolsets}
+      onBulkDelete={bulkDeleteToolsets}
+      getAssetContext={useToolsetFolder as () => AssetsFolderContext<AssetToolset | DialFile>}
     />
   );
 };
