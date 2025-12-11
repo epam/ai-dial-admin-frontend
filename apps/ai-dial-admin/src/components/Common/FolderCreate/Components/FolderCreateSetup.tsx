@@ -23,7 +23,7 @@ import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { getErrorForFolderName } from '@/src/utils/validation/folder-error';
-import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { isAssetView, isAssetWithVersion } from '@/src/utils/is-asset-view';
 import { getIgnorePathTitles } from '@/src/utils/import/get-ignore-path-title';
 
 interface Props {
@@ -148,7 +148,7 @@ const FolderCreateSetup: FC<Props> = ({
             elementId="conflict-resolution"
             onChange={setFileType}
           />
-          {isAssetWithVersion(view) && (
+          {isAssetView(view) && (
             <div className="flex flex-col">
               <Field fieldTitle={ignorePathsTitle} />
               <DialSwitch
