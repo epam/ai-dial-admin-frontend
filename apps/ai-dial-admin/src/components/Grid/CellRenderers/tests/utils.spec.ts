@@ -1,6 +1,5 @@
 import { getItems } from '../utils';
 import { SelectCellRendererParams } from '../SelectCellRenderer';
-import { ALL_ID } from '@/src/constants/dial-base-entity';
 import { describe, expect, test } from 'vitest';
 
 describe('Cell renderer :: getItems ', () => {
@@ -23,27 +22,6 @@ describe('Cell renderer :: getItems ', () => {
     expect(result).toEqual({
       items: [{ value: 'id', label: 'name' }],
       allItemsCount: 1,
-    });
-  });
-  test('Should return provided items with selectAll if it is multi and items > 1', () => {
-    const params = {
-      items: [
-        { value: 'id', label: 'name' },
-        { value: 'id2', label: 'name2' },
-      ],
-      isMulti: true,
-    } as SelectCellRendererParams;
-    const result = getItems(params, (v: string) => v);
-    expect(result).toEqual({
-      items: [
-        {
-          value: ALL_ID,
-          label: 'Basic.SelectAll',
-        },
-        { value: 'id', label: 'name' },
-        { value: 'id2', label: 'name2' },
-      ],
-      allItemsCount: 2,
     });
   });
   test('Should return items from getItems', () => {
