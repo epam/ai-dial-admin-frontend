@@ -68,10 +68,11 @@ const EntityProperties: FC<Props> = ({
       <DisplayNameControl
         displayName={entity.displayName}
         required={true}
+        isFullWidth={!isEntityImmutable}
         onChange={(name) => onChangeEntity({ ...entity, displayName: name })}
       />
 
-      <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
+      <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} isFullWidth={!isEntityImmutable} />
 
       {view === ApplicationRoute.Interceptors && !isEntityImmutable && !initialValues && (
         <SourceField

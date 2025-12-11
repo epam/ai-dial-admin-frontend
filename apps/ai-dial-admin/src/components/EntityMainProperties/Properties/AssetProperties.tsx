@@ -79,12 +79,13 @@ const AssetProperties: FC<Props> = ({
         <DisplayNameControl
           displayName={entity.displayName}
           required={true}
+          isFullWidth={!isEntityImmutable}
           onChange={(displayName) => onChangeEntity({ ...entity, displayName })}
         />
       )}
 
       <VersionControl
-        elementContainerClassName="w-[200px]"
+        isFullWidth={!isEntityImmutable}
         version={entity.version}
         onChange={onChangeVersion}
         error={versionError}

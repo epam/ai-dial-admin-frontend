@@ -51,19 +51,18 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
   );
 
   return (
-    <div className="flex flex-col gap-y-8 w-full">
+    <div className="flex flex-col gap-y-8">
       <AttachmentInput
         initialValues={entity.inputAttachmentTypes}
         fieldTitle={t(AttachmentsI18nKey.Attachments)}
         placeholder={t(EntityPlaceholdersI18nKey.AttachmentsTypes)}
         allValueLabel={t(AttachmentsI18nKey.UseAllAttachment)}
         availableItems={mimeMapping}
-        inputClassName="lg:w-[35%] lg:flex-0"
         onChange={(values) => onChangeAttachmentTypes(values)}
       />
       {!!entity.inputAttachmentTypes?.length && (
         <DialNumberInputField
-          containerClassName="w-[148px]"
+          containerClassName="w-[180px]"
           elementId="maxAttachment"
           fieldTitle={t(AttachmentsI18nKey.MaxNumber)}
           placeholder={t(EntityPlaceholdersI18nKey.Number)}

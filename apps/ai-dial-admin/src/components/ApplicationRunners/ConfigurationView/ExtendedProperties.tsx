@@ -9,6 +9,7 @@ import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Ic
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { DialApplicationScheme, TypeBucketCopy, TypeEntity } from '@/src/models/dial/application';
 
 interface Props {
@@ -72,38 +73,40 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
           onChange(icon, 'dial:applicationTypeIconUrl');
         }}
       />
+
       <DialTextInputField
         elementId="title"
         fieldTitle={t(EntityFieldsI18nKey.title)}
         placeholder={t(EntityPlaceholdersI18nKey.Title)}
         value={runner.title}
         optional={true}
+        containerClassName={STANDARD_CONTROL_WIDTH}
         onChange={(title?: string) => {
           onChangeRunner({ ...runner, title });
         }}
       />
 
-      <div className="lg:w-[35%] flex flex-col gap-y-8">
-        <DialSelectField
-          value={runner.type || BasicI18nKey.None}
-          elementId="type"
-          options={types}
-          fieldTitle={t(EntityFieldsI18nKey.type)}
-          placeholder={t(EntityPlaceholdersI18nKey.Type)}
-          onChange={(type) => {
-            onChangeRunner({ ...runner, type: type === BasicI18nKey.None ? void 0 : (type as TypeEntity) });
-          }}
-        />
+      <DialSelectField
+        value={runner.type || BasicI18nKey.None}
+        elementId="type"
+        className="w-[180px]"
+        options={types}
+        fieldTitle={t(EntityFieldsI18nKey.type)}
+        placeholder={t(EntityPlaceholdersI18nKey.Type)}
+        onChange={(type) => {
+          onChangeRunner({ ...runner, type: type === BasicI18nKey.None ? void 0 : (type as TypeEntity) });
+        }}
+      />
 
-        <DialSelectField
-          value={runner['dial:applicationTypeBucketCopy'] || TypeBucketCopy.DISABLED}
-          elementId="typeCopy"
-          options={typeBucketCopy}
-          fieldTitle={t(EntityFieldsI18nKey['dial:applicationTypeBucketCopy'])}
-          placeholder={t(EntityPlaceholdersI18nKey.TypeBucketCopy)}
-          onChange={(type) => onChangeTypeCopyBucket(type as string)}
-        />
-      </div>
+      <DialSelectField
+        value={runner['dial:applicationTypeBucketCopy'] || TypeBucketCopy.DISABLED}
+        elementId="typeCopy"
+        className="w-[180px]"
+        options={typeBucketCopy}
+        fieldTitle={t(EntityFieldsI18nKey['dial:applicationTypeBucketCopy'])}
+        placeholder={t(EntityPlaceholdersI18nKey.TypeBucketCopy)}
+        onChange={(type) => onChangeTypeCopyBucket(type as string)}
+      />
       <TopicsControl entity={runner} onChange={onChangeRunner} />
 
       <CompletionEndpointControl

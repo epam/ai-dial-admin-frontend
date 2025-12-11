@@ -73,7 +73,7 @@ const Create: FC<Props> = ({ route, onClose, isModalOpen, names }) => {
       disableSubmitButton={!isValid}
     >
       <div className="flex flex-col px-6 py-4">
-        <BaseProperties template={template} setTemplate={setTemplate} names={names} />
+        <BaseProperties template={template} onChangeTemplate={setTemplate} names={names} />
       </div>
     </DialFormPopup>
   );

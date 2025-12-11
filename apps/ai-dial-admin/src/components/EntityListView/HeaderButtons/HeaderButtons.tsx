@@ -210,14 +210,12 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
                 iconBefore={<IconSquareCheck {...BASE_ICON_PROPS} />}
                 onClick={() => setIsBulkView?.(true)}
               />
-              {route !== ApplicationRoute.AssetsToolsets && (
-                <DialButton
-                  variant={ButtonVariant.Secondary}
-                  label={isTabletScreen ? '' : t(ButtonsI18nKey.Import)}
-                  iconBefore={<IconFileArrowLeft {...BASE_ICON_PROPS} />}
-                  onClick={() => handleModalOpen(ModalType.import)}
-                />
-              )}
+              <DialButton
+                variant={ButtonVariant.Secondary}
+                label={isTabletScreen ? '' : t(ButtonsI18nKey.Import)}
+                iconBefore={<IconFileArrowLeft {...BASE_ICON_PROPS} />}
+                onClick={() => handleModalOpen(ModalType.import)}
+              />
             </>
           )}
           {!!createEntity && (
@@ -238,7 +236,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
         createModal={<SaveValidationContextProvider>{getCreateModal()}</SaveValidationContextProvider>}
         onImport={onImport}
         onClose={handleModalClose}
-        context={context}
+        getAssetContext={context}
       />
     </div>
   );

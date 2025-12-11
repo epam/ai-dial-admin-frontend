@@ -20,7 +20,7 @@ describe('getJsonFileName', () => {
 
   test('should return "toolsets" when route is AssetsToolsets', () => {
     const result = getJsonFileName(ApplicationRoute.AssetsToolsets);
-    expect(result).toBe('toolsets');
+    expect(result).toBe('toolSets');
   });
 
   test('should return an empty string when route is undefined or does not match any known route', () => {

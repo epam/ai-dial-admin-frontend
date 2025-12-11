@@ -15,13 +15,11 @@ interface Props {
 const ToolsetInfo: FC<Props> = ({ toolset }) => {
   return toolset ? (
     <div className="flex flex-col gap-y-8 w-full">
-      <div className="flex flex-col gap-y-8 w-full lg:w-[35%]">
-        <DisplayNameControl disabled={true} displayName={toolset?.displayName} />
-        <DescriptionControl entity={toolset} disabled={true} />
-        <IconControl disabled={true} iconUrl={toolset.iconUrl} />
-        <TopicsControl disabled={true} entity={{ topics: toolset?.descriptionKeywords }} />
-        <ToolsetEndpoint disabled={true} entity={toolset} />
-      </div>
+      <DisplayNameControl disabled={true} displayName={toolset?.displayName} isFullWidth={false} />
+      <DescriptionControl entity={toolset} disabled={true} isFullWidth={false} />
+      <IconControl disabled={true} iconUrl={toolset.iconUrl} />
+      <TopicsControl disabled={true} entity={{ topics: toolset?.descriptionKeywords }} />
+      <ToolsetEndpoint disabled={true} entity={toolset} />
       <Authentication disabled={true} toolset={toolset} />
     </div>
   ) : null;

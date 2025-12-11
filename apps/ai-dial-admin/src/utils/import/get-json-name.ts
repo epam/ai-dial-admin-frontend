@@ -19,7 +19,7 @@ export const getJsonFileName = (route?: ApplicationRoute): string => {
   }
 
   if (route === ApplicationRoute.AssetsToolsets) {
-    return 'toolsets';
+    return 'toolSets';
   }
 
   return '';

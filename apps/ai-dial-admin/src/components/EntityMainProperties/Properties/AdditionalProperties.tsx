@@ -13,6 +13,7 @@ import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
 import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
 import IconControl from '@/src/components/EntityMainProperties/BaseProperties/Icon';
 import TopicsControl from '@/src/components/EntityMainProperties/BaseProperties/Topics';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 interface Props {
   view: ApplicationRoute;
@@ -39,30 +40,29 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
   }
 
   return (
-    <div className="w-full flex flex-col">
-      <div className="flex flex-col lg:w-[35%] gap-y-8">
-        {isEntityImmutable && isShowMaintainer ? (
-          <MaintainerControl entity={entity} onChangeEntity={onChangeEntity} />
-        ) : null}
+    <div className="w-full flex flex-col gap-y-8">
+      {isEntityImmutable && isShowMaintainer ? (
+        <MaintainerControl entity={entity} onChangeEntity={onChangeEntity} />
+      ) : null}
 
-        {isShowCompletionEndpoint && isEntityImmutable ? (
-          <ReadonlyField
-            value={applicationRunner['dial:applicationTypeCompletionEndpoint']}
-            title={t(EntityFieldsI18nKey.completionEndpoint)}
+      {isShowCompletionEndpoint && isEntityImmutable ? (
+        <ReadonlyField
+          value={applicationRunner['dial:applicationTypeCompletionEndpoint']}
+          title={t(EntityFieldsI18nKey.completionEndpoint)}
+          containerClassName={STANDARD_CONTROL_WIDTH}
+        />
+      ) : null}
+      {view == ApplicationRoute.Toolsets && isEntityImmutable && (
+        <>
+          <IconControl iconUrl={entity.iconUrl} onChange={(icon) => onChangeEntity({ ...entity, iconUrl: icon })} />
+          <TopicsControl
+            entity={{ topics: (entity as Toolset)?.descriptionKeywords }}
+            onChange={({ topics }) => {
+              onChangeEntity({ ...entity, descriptionKeywords: topics } as Toolset);
+            }}
           />
-        ) : null}
-        {view == ApplicationRoute.Toolsets && isEntityImmutable && (
-          <>
-            <IconControl iconUrl={entity.iconUrl} onChange={(icon) => onChangeEntity({ ...entity, iconUrl: icon })} />
-            <TopicsControl
-              entity={{ topics: (entity as Toolset)?.descriptionKeywords }}
-              onChange={({ topics }) => {
-                onChangeEntity({ ...entity, descriptionKeywords: topics } as Toolset);
-              }}
-            />
-          </>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 };

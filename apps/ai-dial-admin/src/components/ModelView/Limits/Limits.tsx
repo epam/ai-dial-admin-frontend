@@ -71,11 +71,13 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
   );
 
   return (
-    <div className="flex flex-row gap-x-2 items-center lg:w-[35%]">
+    <div className="flex flex-row gap-x-2 items-center">
       <DialSelectField
         value={activeLimitType}
         elementId="limits"
         options={items}
+        className="w-[220px]"
+        containerClassName="w-[220px]"
         fieldTitle={t(ModelViewI18nKey.InteractionLimit)}
         onChange={(type) => onChangeLimitType(type as string)}
       />
@@ -88,6 +90,7 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
           placeholder={t(EntityPlaceholdersI18nKey.Value)}
           value={model.limits?.maxTotalTokens}
           onChange={onChangeMaxTotalTokens}
+          containerClassName="w-[150px]"
         />
       )}
 
@@ -100,6 +103,7 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
             value={model.limits?.maxPromptTokens}
             placeholder={t(EntityPlaceholdersI18nKey.Value)}
             onChange={onChangeMaxPromptTokens}
+            containerClassName="w-[150px]"
           />
           <DialNumberInputField
             elementId="completionsNum"
@@ -108,6 +112,7 @@ const Limits: FC<Props> = ({ model, onChangeModel }) => {
             placeholder={t(EntityPlaceholdersI18nKey.Value)}
             value={model.limits?.maxCompletionTokens}
             onChange={onChangeMaxCompletionTokens}
+            containerClassName="w-[150px]"
           />
         </>
       )}

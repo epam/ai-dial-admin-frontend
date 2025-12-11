@@ -16,7 +16,7 @@ interface Props {
 
 const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset }) => {
   return (
-    <div className="w-full">
+    <div className="w-full flex flex-col">
       <EntityHeader entity={selectedToolset} />
       <div className="flex-1 min-h-0 pt-8 gap-y-8 flex flex-col">
         <DeploymentProperties
@@ -26,9 +26,7 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
           isEntityImmutable={true}
           view={ApplicationRoute.Toolsets}
         />
-        <div className="flex flex-col gap-y-8 lg:w-[35%]">
-          <MaxRetryAttempts entity={selectedToolset} onChangeEntity={onChangeToolset} />
-        </div>
+        <MaxRetryAttempts entity={selectedToolset} onChangeEntity={onChangeToolset} />
       </div>
     </div>
   );

@@ -31,36 +31,31 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
 
   return (
     <div className="h-full flex flex-col gap-y-8 w-full">
-      <div className="flex flex-col gap-y-8">
-        <div className="lg:w-[35%] flex flex-col gap-y-8">
-          <EntityProperties
-            entity={selectedInterceptor}
-            onChangeEntity={onChangeInterceptor}
-            names={names}
-            isEntityImmutable={true}
-            view={ApplicationRoute.Interceptors}
-          />
-          <MaintainerControl entity={selectedInterceptor} onChangeEntity={onChangeInterceptor} />
-          <ForwardAuthTokenField
-            view={ApplicationRoute.Interceptors}
-            entity={selectedInterceptor}
-            onChangeEntity={onChangeInterceptor}
-          />
-        </div>
-      </div>
-      <div className="flex flex-col gap-y-8 w-full">
-        <SourceField
-          view={ApplicationRoute.Interceptors}
-          entity={selectedInterceptor}
-          onChange={onChangeInterceptor}
-          getContainers={getInterceptorContainers}
-          getRunners={getInterceptorTemplatesList}
-          elementId="sourceType"
-          fieldTitle={t(EntitiesI18nKey.SourceType)}
-          sourceItems={getSourceItems(ApplicationRoute.Interceptors, deploymentsEnabled)}
-        />
-        <Defaults entity={selectedInterceptor} onChangeEntity={onChangeInterceptor} />
-      </div>
+      <EntityProperties
+        entity={selectedInterceptor}
+        onChangeEntity={onChangeInterceptor}
+        names={names}
+        isEntityImmutable={true}
+        view={ApplicationRoute.Interceptors}
+      />
+      <MaintainerControl entity={selectedInterceptor} onChangeEntity={onChangeInterceptor} />
+      <ForwardAuthTokenField
+        view={ApplicationRoute.Interceptors}
+        entity={selectedInterceptor}
+        onChangeEntity={onChangeInterceptor}
+      />
+
+      <SourceField
+        view={ApplicationRoute.Interceptors}
+        entity={selectedInterceptor}
+        onChange={onChangeInterceptor}
+        getContainers={getInterceptorContainers}
+        getRunners={getInterceptorTemplatesList}
+        elementId="sourceType"
+        fieldTitle={t(EntitiesI18nKey.SourceType)}
+        sourceItems={getSourceItems(ApplicationRoute.Interceptors, deploymentsEnabled)}
+      />
+      <Defaults entity={selectedInterceptor} onChangeEntity={onChangeInterceptor} />
     </div>
   );
 };

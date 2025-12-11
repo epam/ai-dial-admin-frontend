@@ -1,4 +1,4 @@
-import { AssetApp } from './dial/deployment-asset';
+import { AssetApp, AssetToolset } from './dial/deployment-asset';
 import { DialPrompt } from './dial/prompt';
 
 export type ImportData = File | File[] | ParsedAssets;
@@ -6,6 +6,7 @@ export type ImportData = File | File[] | ParsedAssets;
 export interface ParsedAssets {
   prompts?: DialPrompt[];
   applications?: AssetApp[];
+  toolSets?: AssetToolset[];
 }
 
 export interface AssetImportGridData {

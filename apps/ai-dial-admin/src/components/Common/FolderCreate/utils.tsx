@@ -55,7 +55,10 @@ export const readJsonFiles = async (files: File[], route?: ApplicationRoute): Pr
         try {
           const parsedData: ParsedAssets = JSON.parse(reader.result as string);
           const isInvalid = isInvalidJson(parsedData, route);
-          results.set(file.name, { files: parsedData?.prompts || parsedData?.applications || [], isInvalid });
+          results.set(file.name, {
+            files: parsedData?.prompts || parsedData?.applications || parsedData?.toolSets || [],
+            isInvalid,
+          });
         } catch (error) {
           console.error('Error parsing JSON:', error);
           results.set(file.name, { files: [], isInvalid: true });

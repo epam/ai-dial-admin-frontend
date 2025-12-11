@@ -19,7 +19,7 @@ describe('ModelProperties', () => {
       <ModelProperties
         model={baseModel as any}
         modelsNames={['Test Model', 'Other Model']}
-        updateModel={mockUpdateModel}
+        onChangeModel={mockUpdateModel}
       />,
     );
     // EntityMainProperties

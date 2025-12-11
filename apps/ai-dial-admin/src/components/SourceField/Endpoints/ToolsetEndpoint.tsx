@@ -1,7 +1,6 @@
 'use client';
 
 import { FC } from 'react';
-import classNames from 'classnames';
 import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -11,6 +10,7 @@ import { useI18n } from '@/src/locales/client';
 
 import ReadonlyField from '@/src/components/Common/ReadonlyField/ReadonlyField';
 import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 interface Props {
   entity: Toolset;
@@ -28,9 +28,14 @@ const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModa
   ];
 
   return (
-    <div className={classNames('w-full flex flex-col gap-y-8', !isModal && 'lg:w-[45%]')}>
+    <div className="w-full flex flex-col gap-y-8">
       {prefix ? (
-        <ReadonlyField elementId="endpoint" title={t(EntitiesI18nKey.ToolsetEndpoint)} value={prefix} />
+        <ReadonlyField
+          containerClassName={STANDARD_CONTROL_WIDTH}
+          elementId="endpoint"
+          title={t(EntitiesI18nKey.ToolsetEndpoint)}
+          value={prefix}
+        />
       ) : (
         <EndpointControl
           id="endpoint"
@@ -40,6 +45,7 @@ const ToolsetEndpoint: FC<Props> = ({ entity, disabled, onChange, prefix, isModa
           endpoint={entity.endpoint}
           onChange={(endpoint) => onChange?.({ ...entity, endpoint })}
           required={true}
+          isFullWidth={isModal}
         />
       )}
       {!isModal && (

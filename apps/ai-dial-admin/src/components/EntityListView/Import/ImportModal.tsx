@@ -29,13 +29,13 @@ const MAX_FILES_COUNT = 30;
 interface Props {
   isModalOpen: boolean;
   route?: ApplicationRoute;
-  context?: () => AssetsFolderContext<DialFile>;
+  getAssetContext?: () => AssetsFolderContext<DialFile>;
   onClose: () => void;
   onApply?: (fileType: FileType, file: ImportData, resolution: string, path: string, ignorePaths?: boolean) => void;
 }
 
-const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply }) => {
-  const folderContext = context?.();
+const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, onApply }) => {
+  const folderContext = getAssetContext?.();
   const t = useI18n();
 
   const fileTypes = IMPORT_FILE_TYPES(t, route);
@@ -68,7 +68,10 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, context, onClose, onApply 
             const isInvalid = isInvalidJson(parsedData, route);
             setJsonFileMap((prev) => {
               const newMap = new Map(prev);
-              newMap.set(file.name, { files: parsedData?.prompts || parsedData.applications || [], isInvalid });
+              newMap.set(file.name, {
+                files: parsedData?.prompts || parsedData.applications || parsedData.toolSets || [],
+                isInvalid,
+              });
               return newMap;
             });
           } catch (error) {

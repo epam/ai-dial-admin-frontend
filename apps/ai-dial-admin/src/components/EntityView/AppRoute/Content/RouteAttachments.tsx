@@ -37,24 +37,20 @@ const RouteAttachments: FC<Props> = ({ route, readonly, onChangeRoute }) => {
 
   return (
     <div className="h-full w-full flex flex-col divide-y gap-y-9 divide-primary mt-3">
-      <div className="w-full lg:w-[50%]">
-        <Paths
-          title={t(RoutesI18nKey.RequestAttachmentPaths)}
-          paths={route.attachmentPaths?.requestBody}
-          readonly={readonly}
-          optional={true}
-          onChangePaths={onChangeRequest}
-        />
-      </div>
-      <div className="w-full lg:w-[50%] pt-9">
-        <Paths
-          title={t(RoutesI18nKey.ResponseAttachmentPaths)}
-          readonly={readonly}
-          optional={true}
-          paths={route.attachmentPaths?.responseBody}
-          onChangePaths={onChangeResponse}
-        />
-      </div>
+      <Paths
+        title={t(RoutesI18nKey.RequestAttachmentPaths)}
+        paths={route.attachmentPaths?.requestBody}
+        readonly={readonly}
+        optional={true}
+        onChangePaths={onChangeRequest}
+      />
+      <Paths
+        title={t(RoutesI18nKey.ResponseAttachmentPaths)}
+        readonly={readonly}
+        optional={true}
+        paths={route.attachmentPaths?.responseBody}
+        onChangePaths={onChangeResponse}
+      />
     </div>
   );
 };

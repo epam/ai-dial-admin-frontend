@@ -8,12 +8,13 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, TopicsI18nKey } from '@
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isDeploymentAsset } from '@/src/utils/is-asset-view';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 interface Props<T> {
   entity: T;
   disabled?: boolean;
-  onChange?: (entity: T) => void;
   view?: ApplicationRoute;
+  onChange?: (entity: T) => void;
 }
 
 const TopicsControl = <T extends { topics?: string[]; descriptionKeywords?: string[] }>({
@@ -26,7 +27,7 @@ const TopicsControl = <T extends { topics?: string[]; descriptionKeywords?: stri
   const selectedItems = isDeploymentAsset(view) ? entity.descriptionKeywords : entity.topics;
   const allItems = isDeploymentAsset(view) ? entity.descriptionKeywords : entity.topics;
 
-  const changeTopics = useCallback(
+  const onChangeTopics = useCallback(
     (items: string[]) => {
       if (isDeploymentAsset(view)) {
         onChange?.({ ...entity, descriptionKeywords: items });
@@ -40,11 +41,12 @@ const TopicsControl = <T extends { topics?: string[]; descriptionKeywords?: stri
   return (
     <Multiselect
       elementId="topics"
+      className={STANDARD_CONTROL_WIDTH}
       selectedItems={selectedItems}
       getItems={getModelsTopics}
       allItems={allItems}
       optional={true}
-      onChangeItems={changeTopics}
+      onChangeItems={onChangeTopics}
       heading={t(EntityFieldsI18nKey.topics)}
       title={t(EntityFieldsI18nKey.topics)}
       addPlaceholder={t(EntityPlaceholdersI18nKey.Topic)}

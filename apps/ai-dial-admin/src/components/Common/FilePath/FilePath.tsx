@@ -6,7 +6,7 @@ import { IconFolderShare } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
@@ -18,21 +18,11 @@ interface Props {
   modalTitle: string;
   disabled?: boolean;
   value?: string;
-  inputClassName?: string;
   onChange: (value: string) => void;
   context: () => AssetsFolderContext<DialFile>;
 }
 
-const FilePath: FC<Props> = ({
-  label,
-  placeholder,
-  disabled,
-  value,
-  modalTitle,
-  inputClassName,
-  onChange,
-  context,
-}) => {
+const FilePath: FC<Props> = ({ label, placeholder, disabled, value, modalTitle, onChange, context }) => {
   const t = useI18n();
   const [filePath, setFilePath] = useState(value);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -55,19 +45,19 @@ const FilePath: FC<Props> = ({
   }, [setIsModalOpen]);
 
   return (
-    <div className="flex flex-col">
+    <div className={classNames('flex flex-col', STANDARD_CONTROL_WIDTH)}>
       <label className="tiny mb-2 text-secondary" htmlFor="pathSelectButton">
         {label}
       </label>
-      <div className="flex gap-4">
-        <div className={classNames('flex', inputClassName)}>
+      <div className="flex gap-2">
+        <div className={CONTROL_WITH_BUTTON_WIDTH}>
           <input
             disabled={disabled}
             type="text"
             value={filePath}
             onChange={onInputChange}
             placeholder={placeholder}
-            className="dial-input py-2 px-3"
+            className="dial-input dial-input-field py-2 px-3"
           />
         </div>
         <DialButton

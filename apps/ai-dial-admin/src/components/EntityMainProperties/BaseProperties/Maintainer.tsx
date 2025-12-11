@@ -2,6 +2,7 @@ import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 interface Props<T> {
   entity: T;
@@ -15,6 +16,7 @@ const MaintainerControl = <T extends { author?: string }>({ entity, onChangeEnti
 
   return (
     <DialTextInputField
+      containerClassName={STANDARD_CONTROL_WIDTH}
       elementId="author"
       fieldTitle={t(EntityFieldsI18nKey.author)}
       placeholder={t(EntityPlaceholdersI18nKey.Maintainer)}

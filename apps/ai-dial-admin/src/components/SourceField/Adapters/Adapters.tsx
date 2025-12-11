@@ -15,7 +15,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import { useI18n } from '@/src/locales/client';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 import SelectAdapterModal from '@/src/components/SourceField/Adapters/SelectAdapterModal';
 import Field from '@/src/components/Common/Field/Field';
@@ -113,8 +113,8 @@ const Adapters = <T extends DialModel | DialInterceptor>({
             />
           </div>
         ) : (
-          <div className="flex w-full gap-2">
-            <div className="w-full lg:w-[45%]">
+          <div className={classNames('flex gap-2', STANDARD_CONTROL_WIDTH)}>
+            <div className={CONTROL_WITH_BUTTON_WIDTH}>
               <Field fieldTitle={t(SourceI18nKey.Adapter)} htmlFor="adapters" />
               <DialInputPopup
                 open={isModalOpen}
