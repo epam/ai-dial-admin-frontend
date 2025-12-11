@@ -6,7 +6,7 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { DialTabs } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
 
-import { getPrompts, movePrompts, removePrompt, updatePrompt } from '@/src/app/[lang]/prompts/actions';
+import { createPrompt, getPrompts, movePrompts, removePrompt } from '@/src/app/[lang]/prompts/actions';
 import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
 import HeaderButtons from '@/src/components/EntityView/Header/HeaderButtons';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
@@ -92,7 +92,7 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
       if (newVersion) {
         updatedEntity = addNewVersion(updatedEntity as DialPrompt, newVersion);
       }
-      getReqRef.current(updatePrompt, updatedEntity as DialPrompt, etag).then((res) => {
+      getReqRef.current(createPrompt, updatedEntity as DialPrompt, etag).then((res) => {
         if (res.success) {
           showNotification(
             getSuccessNotification(
