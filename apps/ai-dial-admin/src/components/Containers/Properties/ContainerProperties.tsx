@@ -80,6 +80,7 @@ const ContainerProperties: FC<Props> = ({ container, setContainer, isModal, rout
                   optional={true}
                   onChange={(mcpEndpointPath?: string) => {
                     if (!mcpEndpointPath) {
+                      setPathError(null);
                       const newContainer = { ...container };
                       delete newContainer.mcpEndpointPath;
                       setContainer(newContainer);
