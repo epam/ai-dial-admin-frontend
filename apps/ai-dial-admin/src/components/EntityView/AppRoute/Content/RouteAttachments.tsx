@@ -1,6 +1,7 @@
 'use client';
 import { FC, useCallback } from 'react';
 
+import Divider from '@/src/components/Common/Divider/Divider';
 import Paths from '@/src/components/Routes/Paths/Paths';
 import { RoutesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -36,20 +37,23 @@ const RouteAttachments: FC<Props> = ({ route, readonly, onChangeRoute }) => {
   );
 
   return (
-    <div className="h-full w-full flex flex-col divide-y gap-y-9 divide-primary mt-3">
+    <div className="h-full w-full flex flex-col gap-y-9 mt-3">
       <Paths
         title={t(RoutesI18nKey.RequestAttachmentPaths)}
         paths={route.attachmentPaths?.requestBody}
         readonly={readonly}
         optional={true}
         onChangePaths={onChangeRequest}
+        disableValidation={true}
       />
+      <Divider />
       <Paths
         title={t(RoutesI18nKey.ResponseAttachmentPaths)}
         readonly={readonly}
         optional={true}
         paths={route.attachmentPaths?.responseBody}
         onChangePaths={onChangeResponse}
+        disableValidation={true}
       />
     </div>
   );

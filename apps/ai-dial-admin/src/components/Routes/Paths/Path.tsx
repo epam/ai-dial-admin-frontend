@@ -15,33 +15,40 @@ interface Props {
   optional?: boolean;
   readonly?: boolean;
   allPaths?: string[];
+  disableValidation?: boolean;
   onRemove: (index: number) => void;
   onChangePath: (index: number, value?: string) => void;
 }
 
-const Path: FC<Props> = ({ index, path, readonly, optional, fieldTitle, allPaths, onRemove, onChangePath }) => {
+const Path: FC<Props> = ({
+  index,
+  path,
+  readonly,
+  optional,
+  fieldTitle,
+  allPaths,
+  disableValidation,
+  onRemove,
+  onChangePath,
+}) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const [isEmptyPath, setIsEmptyPath] = useState(true);
   const [isInvalidPath, setIsInvalidPath] = useState(false);
   const isAllEmptyValues = !allPaths?.some((v) => v !== '');
   const error = useMemo(() => {
-    return isEmptyPath && index === 0 && isAllEmptyValues && !optional
-      ? t(ErrorI18nKey.RequiredProperty)
-      : isInvalidPath
-        ? t(ErrorI18nKey.InvalidPath)
-        : '';
-  }, [index, optional, isAllEmptyValues, isEmptyPath, isInvalidPath, t]);
+    return disableValidation
+      ? ''
+      : isEmptyPath && index === 0 && isAllEmptyValues && !optional
+        ? t(ErrorI18nKey.RequiredProperty)
+        : isInvalidPath
+          ? t(ErrorI18nKey.InvalidPath)
+          : '';
+  }, [disableValidation, isEmptyPath, index, isAllEmptyValues, optional, t, isInvalidPath]);
 
   const removeButtonClassName = classNames(
-    'cursor-pointer ml-[10px]',
-    index === 0
-      ? (isEmptyPath && isAllEmptyValues) || isInvalidPath
-        ? ''
-        : 'mt-[18px]'
-      : isInvalidPath
-        ? 'mb-[16px]'
-        : '',
+    'cursor-pointer flex-shrink-0 ml-2',
+    index === 0 ? 'mt-8' : 'mt-2',
     index === 0 && allPaths?.length === 1 ? 'text-secondary' : 'text-error',
   );
 
@@ -59,7 +66,7 @@ const Path: FC<Props> = ({ index, path, readonly, optional, fieldTitle, allPaths
   }, [error]);
 
   return (
-    <div className="flex items-center">
+    <div className="flex flex-row items-start">
       <div className="flex-1">
         <DialTextInputField
           elementId={`path-${index}`}

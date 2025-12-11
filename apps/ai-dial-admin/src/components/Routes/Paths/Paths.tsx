@@ -15,10 +15,11 @@ interface Props {
   readonly?: boolean;
   optional?: boolean;
   paths?: string[];
+  disableValidation?: boolean;
   onChangePaths: (path: string[]) => void;
 }
 
-const Paths: FC<Props> = ({ title, optional, readonly, paths, onChangePaths }) => {
+const Paths: FC<Props> = ({ title, optional, readonly, paths, disableValidation, onChangePaths }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
 
@@ -77,6 +78,7 @@ const Paths: FC<Props> = ({ title, optional, readonly, paths, onChangePaths }) =
           allPaths={paths}
           onRemove={onRemove}
           onChangePath={onChangePath}
+          disableValidation={disableValidation}
         />
       ))}
       {!readonly && (
