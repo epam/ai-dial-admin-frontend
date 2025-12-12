@@ -27,7 +27,7 @@ const CompareVersions: FC<Props> = ({ heading, isModalOpen, onClose, prompts, pr
 
   const fetchPrompt = useCallback(async (prompt: DialPrompt) => {
     const { version, folderId, name } = prompt;
-    return (await getPrompt(folderId, name as string, version, DEFAULT_ETAG)).response;
+    return (await getPrompt(folderId, name as string, version, DEFAULT_ETAG))?.response;
   }, []);
 
   const onChange = useCallback(
