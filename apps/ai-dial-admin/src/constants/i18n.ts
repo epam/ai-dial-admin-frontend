@@ -918,6 +918,7 @@ export enum EntityFieldsI18nKey {
   tokenizerModel = 'EntityFields.tokenizerModel',
   limits = 'EntityFields.limits',
   maxTotalTokens = 'EntityFields.maxTotalTokens',
+  forwardPerRequestKey = 'EntityFields.forwardPerRequestKey',
   pricing = 'EntityFields.pricing',
   unit = 'EntityFields.unit',
   prompt = 'EntityFields.prompt',
