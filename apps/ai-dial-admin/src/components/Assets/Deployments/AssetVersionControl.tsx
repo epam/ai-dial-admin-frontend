@@ -84,22 +84,22 @@ const AssetVersionControl: FC<Props> = ({
   const onChangeVersion = useCallback(
     async (version: string) => {
       if (version === asset.version) return;
-      if (isDeployment) {
-        const getAsset = view === ApplicationRoute.AssetsApplications ? getApp : getToolset;
-        getReqRef.current(getAsset, asset.folderId, asset.name as string, version, etag).then((res) => {
-          if (res.success) {
-            const newVersionAsset = res.response as DeploymentAsset;
-            changeAssetForNewVersion(version, newVersionAsset);
-          } else {
-            showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
-          }
-        });
-      } else {
-        const newVersionAsset = await getPrompt?.(asset.folderId, asset.name as string, version);
-        changeAssetForNewVersion(version, newVersionAsset);
-      }
+      const getAsset =
+        view === ApplicationRoute.AssetsApplications
+          ? getApp
+          : view === ApplicationRoute.AssetsToolsets
+            ? getToolset
+            : getPrompt;
+      getReqRef.current(getAsset, asset.folderId, asset.name as string, version, etag).then((res) => {
+        if (res.success) {
+          const newVersionAsset = res.response as DeploymentAsset;
+          changeAssetForNewVersion(version, newVersionAsset);
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+        }
+      });
     },
-    [asset, isDeployment, view, etag, changeAssetForNewVersion, showNotification],
+    [asset, view, etag, changeAssetForNewVersion, showNotification],
   );
 
   const handleModalClose = useCallback(() => {
