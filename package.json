@@ -125,7 +125,8 @@
     "esbuild": "0.25.10",
     "koa": "3.0.3",
     "react": "19.1.1",
-    "react-dom": "19.1.1"
+    "react-dom": "19.1.1",
+    "@modern-js/utils": "2.69.4"
   },
   "engines": {
     "node": ">=22.2.0",
