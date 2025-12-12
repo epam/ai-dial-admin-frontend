@@ -41,6 +41,7 @@ interface Props<T> {
   route: ApplicationRoute;
   container: T;
   isChanged: boolean;
+  isRedeployRequired: boolean;
   jsonEditorEnabled: boolean;
   jsonErrors: JSONEditorError[] | null;
   hideJsonEditor?: boolean;
@@ -60,6 +61,7 @@ const HeaderButtons = <T extends Container>({
   route,
   container,
   isChanged,
+  isRedeployRequired,
   onDiscard,
   onSave,
   jsonEditorEnabled,
@@ -222,7 +224,7 @@ const HeaderButtons = <T extends Container>({
             <DialButton
               variant={ButtonVariant.Primary}
               className={buttonsClassNames}
-              label={t(ButtonsI18nKey.Save)}
+              label={t(isRedeployRequired ? ButtonsI18nKey.SaveAndRedeploy : ButtonsI18nKey.Save)}
               onClick={onTryToSave}
               disabled={(jsonEditorEnabled && !isValidJSON) || !isValidEntity()}
             />
