@@ -28,6 +28,7 @@ const Endpoints = <T extends object>({ entity, onChange, view, isModal, prefix }
       {view === ApplicationRoute.Toolsets && (
         <ToolsetEndpoint
           entity={entity as Toolset}
+          disabled={true}
           onChange={onChange as (entity: Toolset) => void}
           isModal={isModal}
           prefix={prefix}
