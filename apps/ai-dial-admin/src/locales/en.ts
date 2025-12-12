@@ -319,7 +319,7 @@ export default {
     Create: 'Create',
     Update: 'Update',
     Save: 'Save',
-    SaveAndRedeploy: 'Save and Redeploy',
+    SaveAndRedeploy: 'Save & redeploy',
     Move: 'Move',
     Remove: 'Remove',
     SaveAsNewVersion: 'Save as new version',
