@@ -15,7 +15,7 @@ import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 export const getData = async <T>(route: ApplicationRoute, ref: RefObject<T | undefined>) => {
   if (route === ApplicationRoute.Prompts) {
     const { folderId, name, version } = ref.current as DialPrompt;
-    return await getPrompt(folderId, name as string, version);
+    return await getPrompt(folderId, name as string, version, DEFAULT_ETAG);
   }
 
   if (route === ApplicationRoute.AssetsApplications) {

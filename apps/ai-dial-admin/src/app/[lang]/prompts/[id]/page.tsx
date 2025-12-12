@@ -12,6 +12,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { assetsApi } from '@/src/app/api/api';
 import { ResourceType } from '@/src/types/resource-type';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,6 +22,8 @@ export default async function Page(params: {
 }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
+  let etag = DEFAULT_ETAG;
+
   let prompts: DialPrompt[] = [];
   let prompt: DialPrompt | null = null;
 
@@ -28,7 +31,11 @@ export default async function Page(params: {
     const path = decodeURIComponent((await params.searchParams).path);
     const name = decodeURIComponent((await params.params).id);
 
-    prompt = await assetsApi.getAsset(token, path, ResourceType.PROMPT);
+    prompt = await assetsApi.getAssetWithEtag(token, path, ResourceType.PROMPT, etag).then((res) => {
+      etag = res?.etag || DEFAULT_ETAG;
+      return res?.response as DialPrompt | null;
+    });
+
     if (prompt === void 0) {
       return <Page403 />;
     }
@@ -44,7 +51,7 @@ export default async function Page(params: {
 
   return (
     <SaveValidationContextProvider>
-      <PromptView originalPrompt={prompt} prompts={prompts} />
+      <PromptView originalPrompt={prompt} prompts={prompts} etag={etag} />
     </SaveValidationContextProvider>
   );
 }

@@ -8,6 +8,7 @@ import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import VersionsControl from './VersionsControl';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 interface Props {
   heading: string;
@@ -26,7 +27,7 @@ const CompareVersions: FC<Props> = ({ heading, isModalOpen, onClose, prompts, pr
 
   const fetchPrompt = useCallback(async (prompt: DialPrompt) => {
     const { version, folderId, name } = prompt;
-    return await getPrompt(folderId, name as string, version);
+    return (await getPrompt(folderId, name as string, version, DEFAULT_ETAG))?.response;
   }, []);
 
   const onChange = useCallback(

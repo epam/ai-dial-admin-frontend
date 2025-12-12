@@ -8,7 +8,10 @@ import CompareVersions from '../CompareVersions';
 import * as actions from '@/src/app/[lang]/prompts/actions';
 
 vi.mock('@/src/app/[lang]/prompts/actions', () => ({
-  getPrompt: vi.fn(),
+  getPrompt: vi.fn(() => {
+    response: {
+    }
+  }),
 }));
 
 describe('Common components - CompareVersions', () => {
