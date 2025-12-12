@@ -110,8 +110,8 @@ const ExportGrid: FC<Props> = ({ route, context }) => {
   useEffect(() => {
     const rowData: (DialPrompt | DialFile)[] = getExportGridData(
       route,
-      folderContext?.fetchedFoldersData[filePath],
-      folderContext?.bulkSelectedData[filePath],
+      folderContext?.fetchedFoldersData[filePath] || [],
+      folderContext?.bulkSelectedData[filePath] || [],
     );
     setRowData(rowData);
   }, [filePath, folderContext?.fetchedFoldersData, folderContext?.bulkSelectedData, route]);
