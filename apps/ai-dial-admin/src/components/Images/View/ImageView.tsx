@@ -12,7 +12,7 @@ import { useAppContext } from '@/src/context/AppContext';
 import { EntityViewTab, getDeploymentsViewTabs } from '@/src/utils/tabs/utils';
 import { JSONEditorError } from '@/src/types/editor';
 import { validateImageChanged } from '@/src/utils/deployments/images';
-import { getImage, updateImage } from '@/src/app/actions/deployments';
+import { getImage, getImageVersions, updateImage } from '@/src/app/actions/deployments';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { ImagesI18nKey } from '@/src/constants/i18n';
@@ -47,6 +47,20 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [key, setKey] = useState(0);
+  const [imageVersions, setImageVersions] = useState<ImageVersion[]>(versions);
+
+  useEffect(() => {
+    if (selectedImage.name) {
+      getImageVersions(selectedImage.name).then(({ response, success, requestId, errorHeader, errorMessage }) => {
+        if (success) {
+          setImageVersions(response as ImageVersion[]);
+        } else {
+          showNotification(getErrorNotification(errorHeader, errorMessage, requestId));
+        }
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedImage.name]);
 
   const tabs = getDeploymentsViewTabs(route, t, DEPLOYMENT_ENTITY.images, selectedImage.buildStatus);
 
@@ -154,10 +168,9 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
             toggleJsonEditor={toggleJsonEditor}
             jsonErrors={jsonErrors}
             hideJsonEditor={disableDeploymentsJSONEditor}
-            status={selectedImage.buildStatus}
             imagesNames={imagesNames}
             containerNames={containerNames}
-            versions={versions}
+            versions={imageVersions}
           />
         </div>
         <div className="flex-1 overflow-auto mt-3 min-h-0">
@@ -176,7 +189,7 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
                 <Properties image={selectedImage} setImage={onChangeImage} route={route} originalName={image.name} />
               )}
               {activeTab === EntityViewTab.RelatedContainers && (
-                <Containers image={selectedImage} route={route} versions={versions} />
+                <Containers image={selectedImage} route={route} versions={imageVersions} />
               )}
               {activeTab === EntityViewTab.BuildLog && <BuildLog imageBuildId={selectedImage.id} />}
             </>
