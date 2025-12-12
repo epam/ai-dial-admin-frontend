@@ -93,3 +93,11 @@ export interface KubEvent {
   involvedObjectName: string;
   involvedObjectNamespace: string;
 }
+
+export interface ContainerRedeploySnapshot {
+  imageDefinitionId: string;
+  containerPorts: number[];
+  containerPort?: number;
+  containerGrpcPort?: number;
+  envs: EnvironmentVariable[];
+}

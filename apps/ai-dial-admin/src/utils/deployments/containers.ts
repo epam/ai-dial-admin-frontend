@@ -1,6 +1,6 @@
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
 import { getPathError, getVariableNameError } from '@/src/utils/deployments/validation';
-import { Container, ResourcesDefaults } from '@/src/models/deployments/containers';
+import { Container, ContainerRedeploySnapshot, ResourcesDefaults } from '@/src/models/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorForName } from '@/src/utils/validation/name-error';
 import { CONTAINER_STATUS, CONTAINER_TRANSPORT, CONTAINER_TYPE } from '@/src/types/deployments/containers';
@@ -10,21 +10,12 @@ export const normalizeContainerPorts = (ports?: number[]): number[] => {
 };
 
 export const normalizeEnvironmentVariables = (envs?: EnvironmentVariable[]): EnvironmentVariable[] => {
-  // eslint-disable-next-line prettier/prettier
   return [...(envs ?? [])].slice().sort((a, b) => {
     const nameCmp = a.name.localeCompare(b.name);
     if (nameCmp !== 0) return nameCmp;
     return String(a.mountType).localeCompare(String(b.mountType));
   });
 };
-
-export interface ContainerRedeploySnapshot {
-  imageDefinitionId: string;
-  containerPorts: number[];
-  containerPort?: number;
-  containerGrpcPort?: number;
-  envs: EnvironmentVariable[];
-}
 
 export const getContainerRedeploySnapshot = (container: Container): ContainerRedeploySnapshot => {
   return {
