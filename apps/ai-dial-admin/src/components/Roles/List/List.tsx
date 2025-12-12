@@ -21,8 +21,8 @@ const RolesList: FC<Props> = ({ data }) => {
       names={names}
       data={data}
       route={ApplicationRoute.Roles}
-      createEntity={createRole}
-      removeEntity={removeRole}
+      onCreateEntity={createRole}
+      onRemoveEntity={removeRole}
     />
   );
 };

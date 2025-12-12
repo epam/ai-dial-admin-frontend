@@ -34,8 +34,8 @@ const ToolsetsList: FC<Props> = ({ data }) => {
       names={names}
       data={data}
       route={ApplicationRoute.Toolsets}
-      createEntity={createToolset}
-      removeEntity={removeToolset}
+      onCreateEntity={createToolset}
+      onRemoveEntity={removeToolset}
       showColumnsButton={true}
     />
   );

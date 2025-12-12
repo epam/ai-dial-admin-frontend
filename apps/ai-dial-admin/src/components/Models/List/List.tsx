@@ -25,8 +25,8 @@ const ModelsList: FC<Props> = ({ data }) => {
       baseColumns={MODELS_COLUMNS(t, ApplicationRoute.Models)}
       data={data}
       route={ApplicationRoute.Models}
-      createEntity={createModel}
-      removeEntity={removeModel}
+      onCreateEntity={createModel}
+      onRemoveEntity={removeModel}
       showColumnsButton={true}
     />
   );

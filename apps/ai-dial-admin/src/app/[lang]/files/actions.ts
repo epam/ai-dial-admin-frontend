@@ -13,6 +13,11 @@ export async function getFiles(path: string) {
   return assetsApi.getAssetList(token, path, ResourceType.FILE);
 }
 
+export async function bulkDeleteFiles(paths: { path: string }[]) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetsApi.bulkDeleteAssets(token, paths, ResourceType.FILE);
+}
+
 export async function removeFile(path: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return assetsApi.removeAsset(token, path, ResourceType.FILE);
