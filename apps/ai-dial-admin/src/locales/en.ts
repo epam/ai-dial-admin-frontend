@@ -281,6 +281,7 @@ export default {
     Notification: {
       Title: '{entity} updated successfully',
       Description: '{entity} {entityId} has been updated. Changes can be reverted using Rollback.',
+      DescriptionAssets: '{entity} {entityId} has been updated.',
     },
     Entities: {
       Model: 'Model',
