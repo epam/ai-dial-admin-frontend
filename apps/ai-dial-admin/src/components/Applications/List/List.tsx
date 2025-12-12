@@ -25,8 +25,8 @@ const ApplicationsList: FC<Props> = ({ data, runners }) => {
       names={names}
       baseColumns={APPLICATIONS_COLUMNS(t)}
       route={ApplicationRoute.Applications}
-      createEntity={createApplication}
-      removeEntity={removeApplication}
+      onCreateEntity={createApplication}
+      onRemoveEntity={removeApplication}
       showColumnsButton={true}
     />
   );

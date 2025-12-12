@@ -20,8 +20,8 @@ const AdaptersList: FC<Props> = ({ data }) => {
       baseColumns={SIMPLE_ENTITY_COLUMNS}
       data={data}
       route={ApplicationRoute.Adapters}
-      createEntity={createAdapter}
-      removeEntity={removeAdapter}
+      onCreateEntity={createAdapter}
+      onRemoveEntity={removeAdapter}
     />
   );
 };

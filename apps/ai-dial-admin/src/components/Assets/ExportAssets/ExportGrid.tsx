@@ -5,7 +5,6 @@ import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import Grid from '@/src/components/Grid/Grid';
 import { CHECKBOX_COL_DEF } from '@/src/constants/ag-grid';
-import { ALL_ID } from '@/src/constants/dial-base-entity';
 import { EXPORT_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { STRINGS_DELIMITER } from '@/src/constants/prompt';
@@ -37,61 +36,36 @@ const ExportGrid: FC<Props> = ({ route, context }) => {
     exportRef.current = folderContext?.bulkSelectedData as Record<string, (DialFile | DialPrompt)[]>;
   }, [folderContext?.fetchedFoldersData, folderContext?.bulkSelectedData]);
 
-  const onChangeVersions = (value: string, data: unknown) => {
-    const name = (data as { name: string }).name;
+  const onChangeVersions = (value: string[], data: unknown, _field: string, _index: number, isSelected: boolean) => {
     setIsSkipRefresh(true);
+
+    const name = (data as { name: string }).name;
     const newData = [...rowData];
     const prompt = newData.find((prompt) => prompt.name === name) as DialPrompt;
-    // handle SelectAll click
-    if (value === ALL_ID) {
-      prompt.version = prompt.versions?.join(STRINGS_DELIMITER) as string;
-      setRowData(newData);
-      const exportedIndex = exportRef.current[filePath]?.findIndex((prompt) => prompt.name === name);
-      if (exportedIndex != null && exportedIndex > -1) {
-        const fetched = fetchedRef.current[filePath].filter((prompt) => prompt.name === name);
-        const exported = exportRef.current[filePath].filter((p) => p.name !== name);
-        folderContext?.setBulkSelectedData({
-          ...exportRef.current,
-          [filePath]: [...exported, ...fetched],
-        } as Record<string, DialPrompt[]>);
-      }
-    } else {
-      // handle add/remove version when row not selected
-      const versions = prompt?.version.split(STRINGS_DELIMITER);
-      const newVersions = versions?.filter((v) => v !== value);
-      if (versions?.length === newVersions?.length) {
-        newVersions?.push(value);
-      }
-      prompt.version = newVersions?.join(STRINGS_DELIMITER);
-      setRowData(newData);
-      const exportedIndex = exportRef.current?.[filePath]?.findIndex(
-        (prompt) => prompt.name === name && (prompt as DialPrompt).version === value,
-      );
-      // additionally handle remove for selected row
-      if (exportedIndex != null && exportedIndex > -1) {
-        const newExportData = exportRef.current?.[filePath];
-        newExportData.splice(exportedIndex, 1);
-        folderContext?.setBulkSelectedData({
-          ...exportRef.current,
-          [filePath]: newExportData,
-        } as Record<string, DialPrompt[]>);
-      } else {
-        // additionally handle add for selected row
-        const exist = exportRef.current[filePath]?.findIndex((prompt) => prompt.name === name);
-        const fetched = (fetchedRef.current[filePath] as DialPrompt[]).find(
-          (prompt) => prompt.name === name && prompt.version === value,
-        ) as DialPrompt;
-        if (exist != null && exist > -1 && fetched) {
-          const newExportData = exportRef.current[filePath];
-          newExportData.push(fetched);
-          folderContext?.setBulkSelectedData({
-            ...exportRef.current,
-            [filePath]: newExportData,
-          } as Record<string, DialPrompt[]>);
-        }
-      }
+    prompt.version = value?.join(STRINGS_DELIMITER);
+    setRowData(newData);
+
+    const exportedIndex = exportRef.current?.[filePath]?.findIndex((prompt) => prompt.name === name);
+
+    if ((exportedIndex != null && exportedIndex > -1) || isSelected) {
+      const newExportData = exportRef.current?.[filePath].filter((prompt) => prompt.name !== name) as DialPrompt[];
+      fillExportData(value, name, newExportData);
     }
   };
+
+  const fillExportData = (versions: string[], promptName: string, newExportData: (DialFile | DialPrompt)[]) => {
+    versions.forEach((version) => {
+      const fetched = (fetchedRef.current[filePath] as DialPrompt[]).find(
+        (prompt) => prompt.name === promptName && prompt.version === version,
+      ) as DialPrompt;
+      newExportData.push(fetched);
+    });
+    folderContext?.setBulkSelectedData({
+      ...exportRef.current,
+      [filePath]: newExportData,
+    } as Record<string, DialPrompt[]>);
+  };
+
   const columnDefs = EXPORT_COLUMNS(onChangeVersions, route);
 
   const onGridReady = (event: GridReadyEvent) => {

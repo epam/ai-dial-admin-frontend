@@ -26,8 +26,8 @@ const ApplicationRunnersList: FC<Props> = ({ data }) => {
       names={names}
       baseColumns={LIST_RUNNER_COLUMNS}
       route={ApplicationRoute.ApplicationRunners}
-      createEntity={createApplicationScheme}
-      removeEntity={removeApplicationScheme}
+      onCreateEntity={createApplicationScheme}
+      onRemoveEntity={removeApplicationScheme}
     />
   );
 };

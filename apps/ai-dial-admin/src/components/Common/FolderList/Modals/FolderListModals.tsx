@@ -70,7 +70,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
     [folderContext, handleClose, showNotification, t, view],
   );
 
-  const renameFolder = useCallback(
+  const onRenameFolder = useCallback(
     (newName: string) => {
       handleClose();
       getReqRef.current(changeFolder, selectedFolder, newName, getResourceTypeByView(view)).then((result) => {
@@ -82,7 +82,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
     [folderContext, handleClose, selectedFolder, view],
   );
 
-  const deleteFolder = useCallback(() => {
+  const onDeleteFolder = useCallback(() => {
     handleClose();
     getReqRef.current(removeFolder, encodeURIComponent(selectedFolder)).then((result) => {
       if (result.success) {
@@ -91,7 +91,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
     });
   }, [folderContext, handleClose, selectedFolder]);
 
-  const moveFolder = useCallback(
+  const onMoveFolder = useCallback(
     (newName: string) => {
       handleClose();
       getReqRef
@@ -132,7 +132,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
             siblings={findFolderSiblings(selectedFolder, folderContext?.files[0] as DialFolder)}
             isModalOpen={isModalOpen}
             onClose={handleClose}
-            onApply={renameFolder}
+            onApply={onRenameFolder}
           />,
           document.body,
         )}
@@ -144,7 +144,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
             view={view}
             isModalOpen={isModalOpen}
             onClose={handleClose}
-            onApply={deleteFolder}
+            onApply={onDeleteFolder}
             context={context}
             selectedFolder={selectedFolder}
           />,
@@ -157,7 +157,7 @@ const FolderListModals: FC<Props> = ({ isModalOpen, modalType, view, selectedFol
             modalTitle={t(BasicI18nKey.MoveToFolder)}
             isModalOpen={isModalOpen}
             onClose={handleClose}
-            onApply={moveFolder}
+            onApply={onMoveFolder}
             initialPath={selectedFolder}
             context={context}
             isFolderMove={true}

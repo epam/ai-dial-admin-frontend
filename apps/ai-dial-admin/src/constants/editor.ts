@@ -6,7 +6,7 @@ const DEFAULT_COLORS = {
   'editorCursor.foreground': '#F3F4F6',
   'editor.selectionBackground': '#5C8DEA2B',
   'editorLineNumber.foreground': '#333942',
-  'scrollbarSlider.background': '#222932',
+  'scrollbarSlider.background': '#333942',
   'scrollbarSlider.hoverBackground': '#333942',
   'scrollbarSlider.activeBackground': '#333942',
   'diffEditor.insertedTextBackground': '#1D3841',
@@ -101,8 +101,8 @@ const defaultOptions: EditorOptions = {
   overviewRulerLanes: 0,
   scrollbar: {
     horizontal: 'hidden',
-    verticalScrollbarSize: 4,
-    verticalSliderSize: 4,
+    verticalScrollbarSize: 6,
+    verticalSliderSize: 6,
   },
 };
 

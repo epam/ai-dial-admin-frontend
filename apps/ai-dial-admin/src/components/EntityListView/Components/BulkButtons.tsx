@@ -14,7 +14,7 @@ import { DialFile } from '@/src/models/dial/file';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ModalType } from './Modals';
-import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { isAssetView, isAssetWithVersion } from '@/src/utils/is-asset-view';
 
 interface Props {
   route: ApplicationRoute;
@@ -60,7 +60,7 @@ const BulkButtons: FC<Props> = ({
         disabled={!itemsCount}
         onClick={onBulkExport}
       />
-      {isAssetWithVersion(route) && (
+      {isAssetView(route) && (
         <DialButton
           variant={ButtonVariant.Secondary}
           label={t(ButtonsI18nKey.Delete)}
