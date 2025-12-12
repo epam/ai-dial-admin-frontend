@@ -44,7 +44,7 @@ describe('Assets Prompt :: server actions', () => {
 
     const result = await getPrompt('path', 'test', '1.0.0', 'etag');
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.getAssetWithEtag).toHaveBeenCalledWith(TOKEN_MOCK, 'path', ResourceType.PROMPT);
+    expect(assetsApi.getAssetWithEtag).toHaveBeenCalledWith(TOKEN_MOCK, 'path', ResourceType.PROMPT,'etag');
     expect(result).toBe(RESPONSE_MOCK);
   });
 
