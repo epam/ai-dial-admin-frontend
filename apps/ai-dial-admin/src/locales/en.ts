@@ -819,6 +819,7 @@ export default {
     tokenizerModel: 'Tokenizer model',
     limits: 'Limits',
     maxTotalTokens: 'Max total tokens',
+    forwardPerRequestKey: 'Forward per request key',
     pricing: 'Cost',
     unit: 'Unit',
     scheme: 'Scheme',

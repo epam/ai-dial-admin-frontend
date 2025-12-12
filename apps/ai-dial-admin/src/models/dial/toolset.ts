@@ -12,6 +12,7 @@ export interface Toolset extends BaseEntity, EntityRoleLimits {
   maxRetryAttempts?: number;
   source?: SOURCE_FIELD;
   authSettings?: ToolsetAuthSettings;
+  forwardPerRequestKey?: boolean;
 }
 
 export interface ToolsetAuthSettings {
