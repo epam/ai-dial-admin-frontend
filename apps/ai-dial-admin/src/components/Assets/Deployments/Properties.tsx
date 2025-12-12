@@ -1,5 +1,7 @@
 import { FC } from 'react';
 
+import { DialSwitch } from '@epam/ai-dial-ui-kit';
+
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import Defaults from '@/src/components/Defaults/Defaults';
 import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
@@ -12,7 +14,7 @@ import ForwardAuthTokenField from '@/src/components/EntityMainProperties/Forward
 import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
 import Authentication from '@/src/components/Toolsets/View/Authentication';
-import { BasicI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
@@ -20,7 +22,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetApp, AssetToolset, DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
-import { Toolset } from '@/src/models/dial/toolset';
+import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
@@ -63,6 +65,15 @@ const DeploymentProperties: FC<Props> = ({ asset, view, runners, onChange }) => 
           <>
             <ToolsetEndpoint entity={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} />
             <Authentication toolset={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} />
+            <DialSwitch
+              isOn={(asset as AssetToolset).forwardPerRequestKey}
+              title={t(EntityFieldsI18nKey.forwardPerRequestKey)}
+              switchId="forwardPerRequestKey"
+              disabled={(asset as AssetToolset).authSettings?.authenticationType === ToolsetAuthType.API_KEY}
+              onChange={(value: boolean) => {
+                onChange({ ...asset, forwardPerRequestKey: value });
+              }}
+            />
           </>
         )}
         {view === ApplicationRoute.AssetsApplications && (

@@ -36,6 +36,7 @@ const Authentication: FC<Props> = ({ disabled, toolset, onChange, ...props }) =>
     (authenticationType: ToolsetAuthType) => {
       onChange?.({
         ...toolset,
+        forwardPerRequestKey: authenticationType === ToolsetAuthType.API_KEY ? false : toolset.forwardPerRequestKey,
         authSettings: {
           authenticationType,
           redirectUri:
