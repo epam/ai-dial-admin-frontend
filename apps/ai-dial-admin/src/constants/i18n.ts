@@ -283,6 +283,7 @@ export enum UpdateI18nKey {
   // Notification
   NotificationTitle = 'UpdateEntity.Notification.Title',
   NotificationDescription = 'UpdateEntity.Notification.Description',
+  NotificationDescriptionAssets = 'UpdateEntity.Notification.DescriptionAssets',
 
   // Entities
   Model = 'UpdateEntity.Entities.Model',
