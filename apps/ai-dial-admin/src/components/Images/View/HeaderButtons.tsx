@@ -86,12 +86,12 @@ const HeaderButtons: FC<Props> = ({
   const [forbidden, setForbidden] = useState(false);
 
   const allowEditing = useMemo(() => {
-    return (
-      image.buildStatus !== IMAGE_STATUS.BUILT &&
-      image.buildStatus !== IMAGE_STATUS.BUILDING &&
-      !versions.some((v: ImageVersion) => v.version === image.version)
-    );
-  }, [image.version, image.buildStatus, versions]);
+    return image.buildStatus !== IMAGE_STATUS.BUILT && image.buildStatus !== IMAGE_STATUS.BUILDING;
+  }, [image.buildStatus]);
+
+  const forceNewVersion = useMemo(() => {
+    return !versions.some((v: ImageVersion) => v.version === image.version);
+  }, [image.version, versions]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -263,12 +263,12 @@ const HeaderButtons: FC<Props> = ({
               onClick={onDiscard}
             />
             <DialButton
-              variant={allowEditing ? ButtonVariant.Secondary : ButtonVariant.Primary}
+              variant={allowEditing && forceNewVersion ? ButtonVariant.Secondary : ButtonVariant.Primary}
               className={buttonsClassNames}
               label={t(ButtonsI18nKey.SaveAsNewVersion)}
               onClick={onOpenSaveNewVersionModal}
             />
-            {allowEditing && (
+            {allowEditing && forceNewVersion && (
               <DialButton
                 variant={ButtonVariant.Primary}
                 className={buttonsClassNames}
