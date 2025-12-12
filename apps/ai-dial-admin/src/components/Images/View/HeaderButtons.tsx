@@ -48,7 +48,6 @@ interface Props {
   onSave: () => void;
   toggleJsonEditor?: () => void;
   setErrorNotifications?: (notification: JSONEditorErrorNotification[]) => void;
-  status?: IMAGE_STATUS;
   imagesNames: string[];
   containerNames: string[];
   versions: ImageVersion[];
@@ -66,7 +65,6 @@ const HeaderButtons: FC<Props> = ({
   setErrorNotifications,
   hideJsonEditor,
   children,
-  status,
   containerNames,
   versions,
 }) => {
@@ -88,8 +86,12 @@ const HeaderButtons: FC<Props> = ({
   const [forbidden, setForbidden] = useState(false);
 
   const allowEditing = useMemo(() => {
-    return status !== IMAGE_STATUS.BUILT && status !== IMAGE_STATUS.BUILDING;
-  }, [status]);
+    return (
+      image.buildStatus !== IMAGE_STATUS.BUILT &&
+      image.buildStatus !== IMAGE_STATUS.BUILDING &&
+      !versions.some((v: ImageVersion) => v.version === image.version)
+    );
+  }, [image.version, image.buildStatus, versions]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -308,7 +310,7 @@ const HeaderButtons: FC<Props> = ({
                   label={t(ButtonsI18nKey.Install)}
                   iconBefore={<IconBlocks {...BASE_ICON_PROPS} />}
                   onClick={onOpenInstallModal}
-                  disabled={status === IMAGE_STATUS.BUILDING}
+                  disabled={image.buildStatus === IMAGE_STATUS.BUILDING}
                 />
               )}
               {children}
