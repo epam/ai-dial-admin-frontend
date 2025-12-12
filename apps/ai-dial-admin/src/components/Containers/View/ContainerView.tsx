@@ -121,7 +121,8 @@ const ContainerView: FC<Props> = ({
     const { status: __selectedStatus, url: __selectedURL, ...compareSelectedContainer } = selectedContainer;
     setIsChanged(!isEqual(compareContainer, compareSelectedContainer));
     setIsRedeployRequired(
-      !isEqual(getContainerRedeploySnapshot(container), getContainerRedeploySnapshot(selectedContainer)),
+      container.status === CONTAINER_STATUS.RUNNING &&
+        !isEqual(getContainerRedeploySnapshot(container), getContainerRedeploySnapshot(selectedContainer)),
     );
   }, [container, selectedContainer]);
 
