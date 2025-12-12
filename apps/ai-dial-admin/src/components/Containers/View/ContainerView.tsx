@@ -35,6 +35,7 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
+import { getContainerRedeploySnapshot } from '@/src/utils/deployments/containers';
 
 interface Props {
   container: Container;
@@ -67,6 +68,7 @@ const ContainerView: FC<Props> = ({
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
   const [isChanged, setIsChanged] = useState<boolean>(false);
+  const [isRedeployRequired, setIsRedeployRequired] = useState<boolean>(false);
   const [jsonErrors, setJsonErrors] = useState<JSONEditorError[]>([]);
   const [key, setKey] = useState(0);
   const [events, setEvents] = useState<KubEvent[]>([]);
@@ -118,6 +120,9 @@ const ContainerView: FC<Props> = ({
     const { status: __status, url: __URL, ...compareContainer } = container;
     const { status: __selectedStatus, url: __selectedURL, ...compareSelectedContainer } = selectedContainer;
     setIsChanged(!isEqual(compareContainer, compareSelectedContainer));
+    setIsRedeployRequired(
+      !isEqual(getContainerRedeploySnapshot(container), getContainerRedeploySnapshot(selectedContainer)),
+    );
   }, [container, selectedContainer]);
 
   useEffect(() => {
@@ -229,6 +234,7 @@ const ContainerView: FC<Props> = ({
             route={route}
             container={selectedContainer}
             isChanged={isChanged}
+            isRedeployRequired={isRedeployRequired}
             onSave={onSave}
             onDiscard={onDiscard}
             jsonEditorEnabled={jsonEditorEnabled}
