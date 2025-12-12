@@ -234,6 +234,7 @@ export enum ButtonsI18nKey {
   DeleteAll = 'Buttons.DeleteAll',
   Duplicate = 'Buttons.Duplicate',
   Save = 'Buttons.Save',
+  SaveAndRedeploy = 'Buttons.SaveAndRedeploy',
   Move = 'Buttons.Move',
   SaveAsNewVersion = 'Buttons.SaveAsNewVersion',
   Apply = 'Buttons.Apply',

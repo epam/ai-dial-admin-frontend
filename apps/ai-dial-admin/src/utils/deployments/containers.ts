@@ -1,9 +1,31 @@
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
 import { getPathError, getVariableNameError } from '@/src/utils/deployments/validation';
-import { Container, ResourcesDefaults } from '@/src/models/deployments/containers';
+import { Container, ContainerRedeploySnapshot, ResourcesDefaults } from '@/src/models/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorForName } from '@/src/utils/validation/name-error';
 import { CONTAINER_STATUS, CONTAINER_TRANSPORT, CONTAINER_TYPE } from '@/src/types/deployments/containers';
+
+export const normalizeContainerPorts = (ports?: number[]): number[] => {
+  return [...(ports ?? [])].slice().sort((a, b) => a - b);
+};
+
+export const normalizeEnvironmentVariables = (envs?: EnvironmentVariable[]): EnvironmentVariable[] => {
+  return [...(envs ?? [])].slice().sort((a, b) => {
+    const nameCmp = a.name.localeCompare(b.name);
+    if (nameCmp !== 0) return nameCmp;
+    return String(a.mountType).localeCompare(String(b.mountType));
+  });
+};
+
+export const getContainerRedeploySnapshot = (container: Container): ContainerRedeploySnapshot => {
+  return {
+    imageDefinitionId: container.imageDefinitionId,
+    containerPorts: normalizeContainerPorts(container.containerPorts),
+    containerPort: container.containerPort,
+    containerGrpcPort: container.containerGrpcPort,
+    envs: normalizeEnvironmentVariables(container.metadata?.envs),
+  };
+};
 
 const isValidVariables = (variables: EnvironmentVariable[]) => {
   return variables.every((env) => !getVariableNameError(env.name));

@@ -1,10 +1,11 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
-import { getContainerTemplate, validateContainer } from '../containers';
+import { getContainerRedeploySnapshot, getContainerTemplate, validateContainer } from '../containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getPathError, getVariableNameError } from '@/src/utils/deployments/validation';
 import { getErrorForName } from '@/src/utils/validation/name-error';
-import { CONTAINER_TRANSPORT, CONTAINER_TYPE } from '@/src/types/deployments/containers';
+import { CONTAINER_STATUS, CONTAINER_TRANSPORT, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { Container } from '@/src/models/deployments/containers';
+import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
 
 vi.mock('@/src/utils/deployments/validation');
 vi.mock('@/src/utils/validation/name-error');
@@ -113,6 +114,70 @@ describe('containers utils', () => {
       const template = getContainerTemplate(ApplicationRoute.ModelDeployments, defaults);
       expect(template?.resources?.requests?.cpu).toBe('2');
       expect(template?.resources?.requests?.memory).toBe(`${4096 * 1024 * 1024}`);
+    });
+  });
+
+  describe('getContainerRedeploySnapshot', () => {
+    const baseContainer: Container = {
+      $type: CONTAINER_TYPE.MODEL,
+      name: 'c1',
+      imageDefinitionId: 'img-1',
+      status: CONTAINER_STATUS.NOT_DEPLOYED,
+      metadata: {},
+    };
+
+    test('normalizes ports ordering', () => {
+      const a: Container = { ...baseContainer, containerPorts: [8080, 80] };
+      const b: Container = { ...baseContainer, containerPorts: [80, 8080] };
+      expect(getContainerRedeploySnapshot(a)).toEqual(getContainerRedeploySnapshot(b));
+    });
+
+    test('treats missing envs and empty envs as equivalent', () => {
+      const a: Container = { ...baseContainer, metadata: {} };
+      const b: Container = { ...baseContainer, metadata: { envs: [] } };
+      expect(getContainerRedeploySnapshot(a)).toEqual(getContainerRedeploySnapshot(b));
+    });
+
+    test('normalizes env ordering by name/mountType', () => {
+      const envA = {
+        name: 'B_VAR',
+        description: 'b',
+        mountType: MOUNT_TYPE.CONTENT,
+        value: { $type: VALUE_TYPE.STRING, value: '1' },
+      };
+      const envB = {
+        name: 'A_VAR',
+        description: 'a',
+        mountType: MOUNT_TYPE.CONTENT,
+        value: { $type: VALUE_TYPE.STRING, value: '2' },
+      };
+      const a: Container = { ...baseContainer, metadata: { envs: [envA as any, envB as any] } };
+      const b: Container = { ...baseContainer, metadata: { envs: [envB as any, envA as any] } };
+      expect(getContainerRedeploySnapshot(a)).toEqual(getContainerRedeploySnapshot(b));
+    });
+
+    test('detects imageDefinitionId change via snapshot inequality', () => {
+      const a: Container = { ...baseContainer, imageDefinitionId: 'img-1' };
+      const b: Container = { ...baseContainer, imageDefinitionId: 'img-2' };
+      expect(getContainerRedeploySnapshot(a)).not.toEqual(getContainerRedeploySnapshot(b));
+    });
+
+    test('detects env value change via snapshot inequality', () => {
+      const env1 = {
+        name: 'A_VAR',
+        description: 'a',
+        mountType: MOUNT_TYPE.CONTENT,
+        value: { $type: VALUE_TYPE.STRING, value: '1' },
+      };
+      const env2 = {
+        name: 'A_VAR',
+        description: 'a',
+        mountType: MOUNT_TYPE.CONTENT,
+        value: { $type: VALUE_TYPE.STRING, value: '2' },
+      };
+      const a: Container = { ...baseContainer, metadata: { envs: [env1 as any] } };
+      const b: Container = { ...baseContainer, metadata: { envs: [env2 as any] } };
+      expect(getContainerRedeploySnapshot(a)).not.toEqual(getContainerRedeploySnapshot(b));
     });
   });
 });
