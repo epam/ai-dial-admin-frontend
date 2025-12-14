@@ -76,4 +76,43 @@ describe('Server :: UtilityApi', () => {
     const result = await instance.updateSystemProperties({ globalInterceptors: ['global'] }, TOKEN_MOCK, 'etag');
     expect(result.response).toEqual(JSON.stringify({ globalInterceptors: ['global'] }));
   });
+
+  test('should get core versions', async () => {
+    fetch.mockResponseOnce(
+      JSON.stringify({
+        defaultVersion: '0.36.6',
+        autoDetectedVersion: '0.33.55',
+        manuallySetVersion: '0.23.6',
+      }),
+    );
+
+    const result = await instance.getCoreVersion(TOKEN_MOCK);
+    expect(result.response).toEqual(
+      JSON.stringify({
+        defaultVersion: '0.36.6',
+        autoDetectedVersion: '0.33.55',
+        manuallySetVersion: '0.23.6',
+      }),
+    );
+  });
+
+  test('should set core versions', async () => {
+    fetch.mockResponseOnce(
+      JSON.stringify({
+        coreConfigVersion: '0.36.6',
+      }),
+    );
+
+    const result = await instance.setCoreVersion(
+      {
+        coreConfigVersion: '0.36.6',
+      },
+      TOKEN_MOCK,
+    );
+    expect(result.response).toEqual(
+      JSON.stringify({
+        coreConfigVersion: '0.36.6',
+      }),
+    );
+  });
 });

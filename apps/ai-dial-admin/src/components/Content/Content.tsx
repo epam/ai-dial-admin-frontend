@@ -1,7 +1,7 @@
 'use client';
-import { FC, ReactNode, useCallback, useEffect, useRef } from 'react';
+import { FC, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
-import { getAppProcessStatus } from '@/src/app/actions';
+import { getAppProcessStatus, getCoreVersions } from '@/src/app/actions';
 import Breadcrumbs from '@/src/components/Breadcrumbs/Breadcrumbs';
 import Blackout from '@/src/components/Common/Blackout/Blackout';
 import HintSidebar from '@/src/components/Common/HintSIdebar/HintSidebar';
@@ -13,6 +13,7 @@ import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { AppProcessStatus } from '@/src/models/app-process-status';
+import { CoreVersions } from '@/src/models/core-version';
 import { getErrorNotification } from '@/src/utils/notification';
 
 interface Props {
@@ -21,6 +22,7 @@ interface Props {
   isEnableAuth: boolean;
 }
 
+const CHECK_CORE_VERSION_INTERVAL = 60 * 1000;
 const CHECK_STATUS_INTERVAL = 2 * 60 * 1000;
 
 const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
@@ -30,6 +32,8 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const t = useI18n();
 
+  const [coreVersions, setCoreVersions] = useState<CoreVersions | undefined>();
+
   const checkAppStatus = useCallback((): void => {
     getReqRef.current(getAppProcessStatus).then((response) => {
       const state = response.response as AppProcessStatus;
@@ -38,6 +42,12 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
       }
     });
   }, [t]);
+
+  const checkCoreVersion = useCallback((): void => {
+    getReqRef.current(getCoreVersions).then((response) => {
+      setCoreVersions(response.response);
+    });
+  }, []);
 
   useEffect(() => {
     checkAppStatus();
@@ -52,6 +62,19 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
     };
   }, [checkAppStatus]);
 
+  useEffect(() => {
+    checkCoreVersion();
+    intervalRef.current = setInterval(() => {
+      checkCoreVersion();
+    }, CHECK_CORE_VERSION_INTERVAL);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [checkCoreVersion]);
+
   return (
     <div className="flex-1 min-h-0 min-w-0 relative">
       <Blackout />
@@ -63,7 +86,7 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
         </div>
         <HintSidebar />
       </div>
-      <Footer beVersion={beVersion} />
+      <Footer beVersion={beVersion} coreVersions={coreVersions} onChangeCoreVersion={setCoreVersions} />
     </div>
   );
 };
