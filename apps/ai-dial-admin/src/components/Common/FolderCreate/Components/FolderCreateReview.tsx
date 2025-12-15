@@ -67,9 +67,9 @@ const FolderCreateReview: FC<Props> = ({
 
   const onChangeFile = useCallback(
     (value: string, data: unknown, field: string) => {
-      onChangeFileMap((prev) => changeFilesMap(prev, data as FileImportGridData, field, value));
+      onChangeFileMap((prev) => changeFilesMap(prev, data as FileImportGridData, field, value, view));
     },
-    [onChangeFileMap],
+    [onChangeFileMap, view],
   );
 
   const columnDefs: ColDef[] = generateColumnsForImportGrid(onChangeFile, fileType, view);
