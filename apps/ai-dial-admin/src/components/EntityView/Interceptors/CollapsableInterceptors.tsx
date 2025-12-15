@@ -23,7 +23,7 @@ interface Props<T> {
   globalInterceptors: string[] | null;
 }
 
-const CollapsableInterceptors = <T extends { interceptors?: string[] }>({
+const CollapsableInterceptors = <T extends { interceptors?: string[]; 'dial:applicationTypeInterceptors'?: string[] }>({
   entity,
   interceptors,
   globalColumns,
@@ -34,7 +34,6 @@ const CollapsableInterceptors = <T extends { interceptors?: string[] }>({
   globalInterceptors,
 }: Props<T>) => {
   const t = useI18n();
-
   return (
     <div className="h-full flex flex-col gap-5">
       <CollapsableSection title={`${t(InterceptorsI18nKey.Global)}: ${globalInterceptors?.length || 0}`}>
@@ -54,7 +53,7 @@ const CollapsableInterceptors = <T extends { interceptors?: string[] }>({
         </CollapsableSection>
       )}
       <CollapsableSection
-        title={`${t(InterceptorsI18nKey.Local)}: ${entity.interceptors?.length || 0}`}
+        title={`${t(InterceptorsI18nKey.Local)}: ${entity.interceptors?.length || entity['dial:applicationTypeInterceptors']?.length || 0}`}
         headerButton={headerButton}
       >
         {localInterceptors}
