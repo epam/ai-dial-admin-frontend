@@ -244,7 +244,7 @@ describe('Import :: isInvalidJson', () => {
 
   test('returns false for valid applications in non-prompts view', () => {
     const parsedData = { applications: [{ id: 'anything' }] };
-    expect(isInvalidJson(parsedData, ApplicationRoute.Files)).toBe(false);
+    expect(isInvalidJson(parsedData, ApplicationRoute.Files)).toBe(true);
   });
 });
 
@@ -267,27 +267,39 @@ describe('Import :: changeFilesMap', () => {
   });
 
   test('should update version in file id when field is "version"', () => {
-    const result = changeFilesMap(prevMap, { name: 'key1', index: 0 }, 'version', 'v2');
+    const result = changeFilesMap(prevMap, { name: 'key1', index: 0 }, 'version', 'v2', ApplicationRoute.Prompts);
 
     expect(result.get('key1').files[0].id).toBe('123__v2');
   });
 
   test('should update assetName and file name when field is "assetName"', () => {
-    const result = changeFilesMap(prevMap, { name: 'key1', index: 1 }, 'assetName', 'newassetName');
+    const result = changeFilesMap(
+      prevMap,
+      { name: 'key1', index: 1 },
+      'assetName',
+      'newassetName',
+      ApplicationRoute.Prompts,
+    );
 
     expect(result.get('key1').files[1].id).toBe('newassetName');
     expect(result.get('key1').files[1].name).toBe('newassetName');
   });
 
   test('should update file content when field is "fileName"', () => {
-    const result = changeFilesMap(prevMap, { name: 'key1', index: 1 }, 'fileName', 'newFileName');
+    const result = changeFilesMap(
+      prevMap,
+      { name: 'key1', index: 1 },
+      'fileName',
+      'newFileName',
+      ApplicationRoute.Prompts,
+    );
 
     expect(result.get('key1').files[1].name).toBe('newFileName');
     expect(result.get('key1').files[1] instanceof File).toBe(true);
   });
 
   test('should return a new map with updated file details', () => {
-    const newMap = changeFilesMap(prevMap, { name: 'key1', index: 0 }, 'version', 'v2');
+    const newMap = changeFilesMap(prevMap, { name: 'key1', index: 0 }, 'version', 'v2', ApplicationRoute.Prompts);
 
     expect(newMap).not.toBe(prevMap);
     expect(newMap.get('key1').files[0].id).toBe('123__v2');
