@@ -11,9 +11,13 @@ export const normalizeContainerPorts = (ports?: number[]): number[] => {
 
 export const normalizeEnvironmentVariables = (envs?: EnvironmentVariable[]): EnvironmentVariable[] => {
   return [...(envs ?? [])].slice().sort((a, b) => {
-    const nameCmp = a.name.localeCompare(b.name);
+    const aName = a?.name ?? '';
+    const bName = b?.name ?? '';
+    const nameCmp = aName.localeCompare(bName);
     if (nameCmp !== 0) return nameCmp;
-    return String(a.mountType).localeCompare(String(b.mountType));
+    const aMountType = String(a?.mountType ?? '');
+    const bMountType = String(b?.mountType ?? '');
+    return aMountType.localeCompare(bMountType);
   });
 };
 
