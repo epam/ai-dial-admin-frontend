@@ -15,6 +15,7 @@ import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { useI18n } from '@/src/locales/client';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useAppContext } from '@/src/context/AppContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { EntityViewTab, getDeploymentsViewTabs } from '@/src/utils/tabs/utils';
 import { JSONEditorError } from '@/src/types/editor';
 import { getContainer, updateContainer } from '@/src/app/actions/deployments';
@@ -60,6 +61,7 @@ const ContainerView: FC<Props> = ({
   const router = useRouter();
   const { showNotification } = useNotification();
   const { disableDeploymentsJSONEditor } = useAppContext();
+  const { dispatch } = useSaveValidationContext();
 
   const [tabs, setTabs] = useState<TabModel[]>(
     getDeploymentsViewTabs(route, t, DEPLOYMENT_ENTITY.containers, container.status),
@@ -99,8 +101,9 @@ const ContainerView: FC<Props> = ({
       // Force JSON Editor re-render to show originalEntity on discard.
       setKey((prevKey) => prevKey + 1);
     }
+    dispatch({ type: ValidationActionType.Reset });
     setSelectedContainer(cloneDeep(container));
-  }, [container, jsonEditorEnabled]);
+  }, [container, dispatch, jsonEditorEnabled]);
 
   const onSave = useCallback(() => {
     updateContainer(selectedContainer).then((res) => {

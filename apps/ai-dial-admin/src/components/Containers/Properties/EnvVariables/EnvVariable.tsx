@@ -1,7 +1,7 @@
 'use client';
 
 import classNames from 'classnames';
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 import { IconChevronDown, IconChevronRight, IconTrash } from '@tabler/icons-react';
 import { DialButton, DialSelectField, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { EnvironmentVariable, EnvVariableValue } from '@/src/models/deployments/variables';
@@ -15,6 +15,7 @@ import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { EntityPlaceholdersI18nKey, EnvVariablesI18nKey } from '@/src/constants/i18n';
 import EnvVariableValueField from '@/src/components/Containers/Properties/EnvVariables/EnvVariableValue';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props {
   index: number;
@@ -37,11 +38,16 @@ const EnvVariable: FC<Props> = ({
 }) => {
   const t = useI18n();
   const isTablet = useIsTabletScreen();
+  const { resetCounter } = useSaveValidationContext();
 
   const mountTypeItems = mountTypeDropdownItems(t);
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [variableNameError, setVariableNameError] = useState<FieldError | null>(null);
+
+  useEffect(() => {
+    setVariableNameError(getVariableNameError(variable.name as string, t));
+  }, [resetCounter, t, variable.name]);
 
   const onRemove = useCallback(() => {
     removeVariable(index);
