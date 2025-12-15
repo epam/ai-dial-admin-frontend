@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useState } from 'react';
+import React, { FC, useCallback, useEffect, useState } from 'react';
 import classNames from 'classnames';
 import { DialSelectField, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { Container } from '@/src/models/deployments/containers';
@@ -14,6 +14,7 @@ import { CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
 import PortField from '@/src/components/Common/PortField/PortField';
 import EnvVariables from '@/src/components/Containers/Properties/EnvVariables/EnvVariables';
 import { getPathError } from '@/src/utils/deployments/validation';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props {
   container: Container;
@@ -25,6 +26,7 @@ interface Props {
 
 const ContainerProperties: FC<Props> = ({ container, setContainer, isModal, route, names }) => {
   const t = useI18n();
+  const { resetCounter } = useSaveValidationContext();
 
   const [pathError, setPathError] = useState<FieldError | null>(null);
 
@@ -42,6 +44,19 @@ const ContainerProperties: FC<Props> = ({ container, setContainer, isModal, rout
     },
     [container, setContainer],
   );
+
+  useEffect(() => {
+    if (route !== ApplicationRoute.McpDeployments) {
+      return;
+    }
+
+    if (!container.mcpEndpointPath) {
+      setPathError(null);
+      return;
+    }
+
+    setPathError(getPathError(container.mcpEndpointPath, t));
+  }, [resetCounter, container.mcpEndpointPath, route, t]);
 
   return (
     <div className={classNames('flex flex-col gap-4', !isModal && 'divide-y divide-primary')}>
