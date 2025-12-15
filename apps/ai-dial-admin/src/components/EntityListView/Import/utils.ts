@@ -303,8 +303,19 @@ export const isErrorFileNode = (data: FileImportGridData): boolean => {
  * @returns {boolean} - return true if prompts id is not valid
  */
 export const isInvalidJson = (parsedData: ParsedAssets, view?: ApplicationRoute) => {
-  const values =
-    view === ApplicationRoute.Prompts ? parsedData?.prompts : parsedData?.applications || parsedData?.toolSets;
+  let values;
+
+  if (view === ApplicationRoute.Prompts) {
+    values = parsedData.prompts;
+  }
+
+  if (view === ApplicationRoute.AssetsApplications) {
+    values = parsedData.applications;
+  }
+
+  if (view === ApplicationRoute.AssetsToolsets) {
+    values = parsedData?.toolSets;
+  }
 
   if (!values || values.length === 0 || !(values instanceof Array)) {
     return true;
@@ -340,6 +351,7 @@ export const changeFilesMap = (
   data: AssetImportGridData | FileImportGridData,
   field: string,
   value: string,
+  view?: ApplicationRoute,
 ): Map<string, FileImportMap> => {
   const newMap = new Map(prev);
   const fileIndex = data.index;
@@ -351,20 +363,29 @@ export const changeFilesMap = (
 
     const targetFile = updatedValue.files[fileIndex];
 
-    if (targetFile) {
+    if (view === ApplicationRoute.Prompts || view === ApplicationRoute.Files) {
+      if (targetFile) {
+        if (field === 'version') {
+          targetFile.id = modifyNameVersionInPrompt((targetFile.id || targetFile.name) as string, void 0, value);
+        } else if (field === 'assetName') {
+          targetFile.id = modifyNameVersionInPrompt((targetFile.id || targetFile.name) as string, value);
+          targetFile.name = value;
+        } else if (field === 'fileName') {
+          const { extension } = getNameExtensionFromFile(key);
+
+          const newFile = new File([targetFile as unknown as BlobPart], `${value}${extension}`, {
+            type: (targetFile as unknown as File).type,
+          });
+
+          updatedValue.files[fileIndex] = newFile as unknown as DialFile;
+        }
+      }
+    } else {
       if (field === 'version') {
-        targetFile.id = modifyNameVersionInPrompt((targetFile.id || targetFile.name) as string, void 0, value);
-      } else if (field === 'assetName') {
-        targetFile.id = modifyNameVersionInPrompt((targetFile.id || targetFile.name) as string, value);
+        (targetFile as AssetApp).version = value;
+        (targetFile as AssetApp).displayVersion = value;
+      } else if (field === 'name') {
         targetFile.name = value;
-      } else if (field === 'fileName') {
-        const { extension } = getNameExtensionFromFile(key);
-
-        const newFile = new File([targetFile as unknown as BlobPart], `${value}${extension}`, {
-          type: (targetFile as unknown as File).type,
-        });
-
-        updatedValue.files[fileIndex] = newFile as unknown as DialFile;
       }
     }
 
