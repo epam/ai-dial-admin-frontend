@@ -154,7 +154,10 @@ describe('getDefinitionTypes', () => {
       t,
     );
 
-    expect(result).toEqual([{ label: CoreVersionModalI18nKey.SetManually, value: DefinitionType.MANUAL }]);
+    expect(result).toEqual([
+      { label: CoreVersionModalI18nKey.Default, value: DefinitionType.DEFAULT },
+      { label: CoreVersionModalI18nKey.SetManually, value: DefinitionType.MANUAL },
+    ]);
   });
 
   test('returns MANUAL only when no versions exist', () => {
