@@ -11,7 +11,7 @@ export const normalizeContainerPorts = (ports?: number[]): number[] => {
 
 export const normalizeEnvironmentVariables = (envs?: EnvironmentVariable[]): EnvironmentVariable[] => {
   return [...(envs ?? [])].slice().sort((a, b) => {
-    const nameCmp = a.name.localeCompare(b.name);
+    const nameCmp = (a?.name ?? '').localeCompare(b?.name ?? '');
     if (nameCmp !== 0) return nameCmp;
     return String(a.mountType).localeCompare(String(b.mountType));
   });

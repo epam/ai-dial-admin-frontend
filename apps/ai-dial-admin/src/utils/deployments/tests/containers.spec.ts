@@ -1,5 +1,10 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
-import { getContainerRedeploySnapshot, getContainerTemplate, validateContainer } from '../containers';
+import {
+  getContainerRedeploySnapshot,
+  getContainerTemplate,
+  normalizeEnvironmentVariables,
+  validateContainer,
+} from '../containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getPathError, getVariableNameError } from '@/src/utils/deployments/validation';
 import { getErrorForName } from '@/src/utils/validation/name-error';
@@ -143,13 +148,13 @@ describe('containers utils', () => {
         name: 'B_VAR',
         description: 'b',
         mountType: MOUNT_TYPE.CONTENT,
-        value: { $type: VALUE_TYPE.STRING, value: '1' },
+        value: { $type: VALUE_TYPE.SIMPLE, value: '1' },
       };
       const envB = {
         name: 'A_VAR',
         description: 'a',
         mountType: MOUNT_TYPE.CONTENT,
-        value: { $type: VALUE_TYPE.STRING, value: '2' },
+        value: { $type: VALUE_TYPE.SIMPLE, value: '2' },
       };
       const a: Container = { ...baseContainer, metadata: { envs: [envA as any, envB as any] } };
       const b: Container = { ...baseContainer, metadata: { envs: [envB as any, envA as any] } };
@@ -167,17 +172,33 @@ describe('containers utils', () => {
         name: 'A_VAR',
         description: 'a',
         mountType: MOUNT_TYPE.CONTENT,
-        value: { $type: VALUE_TYPE.STRING, value: '1' },
+        value: { $type: VALUE_TYPE.SIMPLE, value: '1' },
       };
       const env2 = {
         name: 'A_VAR',
         description: 'a',
         mountType: MOUNT_TYPE.CONTENT,
-        value: { $type: VALUE_TYPE.STRING, value: '2' },
+        value: { $type: VALUE_TYPE.SIMPLE, value: '2' },
       };
       const a: Container = { ...baseContainer, metadata: { envs: [env1 as any] } };
       const b: Container = { ...baseContainer, metadata: { envs: [env2 as any] } };
       expect(getContainerRedeploySnapshot(a)).not.toEqual(getContainerRedeploySnapshot(b));
+    });
+  });
+
+  describe('normalizeEnvironmentVariables', () => {
+    test('does not throw when env name is undefined', () => {
+      const envUndefinedName = { name: undefined, mountType: undefined } as any;
+      const envA = { name: 'A_VAR', mountType: MOUNT_TYPE.CONTENT } as any;
+      const envB = { name: 'B_VAR', mountType: MOUNT_TYPE.CONTENT } as any;
+
+      expect(() => normalizeEnvironmentVariables([envB, envUndefinedName, envA])).not.toThrow();
+
+      const normalized = normalizeEnvironmentVariables([envB, envUndefinedName, envA]);
+      expect(normalized).toHaveLength(3);
+      expect(normalized[0]).toBe(envUndefinedName);
+      expect(normalized[1]).toBe(envA);
+      expect(normalized[2]).toBe(envB);
     });
   });
 });
