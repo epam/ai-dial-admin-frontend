@@ -29,7 +29,8 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
   const isTabletScreen = useIsTabletScreen();
   const showNotificationRef = useRef(useNotification().showNotification);
   const getReqRef = useRef(useProtectedRequest());
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const statusIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const versionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const t = useI18n();
 
   const [coreVersions, setCoreVersions] = useState<CoreVersions | undefined>();
@@ -51,26 +52,26 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
 
   useEffect(() => {
     checkAppStatus();
-    intervalRef.current = setInterval(() => {
+    statusIntervalRef.current = setInterval(() => {
       checkAppStatus();
     }, CHECK_STATUS_INTERVAL);
 
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+      if (statusIntervalRef.current) {
+        clearInterval(statusIntervalRef.current);
       }
     };
   }, [checkAppStatus]);
 
   useEffect(() => {
     checkCoreVersion();
-    intervalRef.current = setInterval(() => {
+    versionIntervalRef.current = setInterval(() => {
       checkCoreVersion();
     }, CHECK_CORE_VERSION_INTERVAL);
 
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+      if (versionIntervalRef.current) {
+        clearInterval(versionIntervalRef.current);
       }
     };
   }, [checkCoreVersion]);
