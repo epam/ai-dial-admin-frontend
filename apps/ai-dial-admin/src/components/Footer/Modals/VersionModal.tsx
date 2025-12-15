@@ -38,24 +38,26 @@ const VersionModal: FC<Props> = ({ coreVersions, isModalOpen, onClose, onApply }
   }, [coreVersions, definition, t, version]);
 
   const captionDescription = useMemo(() => {
-    return definition === DefinitionType.AUTO && version === coreVersions?.defaultVersion
+    return definition === DefinitionType.AUTO &&
+      version === coreVersions?.defaultVersion &&
+      coreVersions.autoDetectedVersion === '-1'
       ? t(CoreVersionModalI18nKey.DefaultCaption)
       : '';
-  }, [coreVersions?.defaultVersion, definition, t, version]);
+  }, [coreVersions, definition, t, version]);
 
   useEffect(() => {
     if (coreVersions?.manuallySetVersion) {
       setVersion(coreVersions?.manuallySetVersion);
-      setDefinition(definitionTypes[1].value);
+      setDefinition(DefinitionType.MANUAL);
     } else if (coreVersions?.autoDetectedVersion) {
-      setDefinition(definitionTypes[0].value);
+      setDefinition(DefinitionType.AUTO);
       if (coreVersions?.autoDetectedVersion === '-1') {
         setVersion(coreVersions?.defaultVersion ? coreVersions?.defaultVersion : DefinitionValues.NOT_DETECTED);
       } else {
         setVersion(coreVersions?.autoDetectedVersion);
       }
     } else if (coreVersions?.defaultVersion) {
-      setDefinition(definitionTypes[0].value);
+      setDefinition(DefinitionType.DEFAULT);
       setVersion(coreVersions?.defaultVersion);
     } else {
       setDefinition(DefinitionType.MANUAL);
@@ -83,12 +85,12 @@ const VersionModal: FC<Props> = ({ coreVersions, isModalOpen, onClose, onApply }
   }, [definition]);
 
   const setNewVersion = useCallback(() => {
-    if (definition === DefinitionType.DEFAULT) {
-      onApply(coreVersions?.defaultVersion || '', true);
+    if (definition === DefinitionType.DEFAULT || definition === DefinitionType.AUTO) {
+      onApply('', true);
     } else {
       onApply(version, false);
     }
-  }, [coreVersions, definition, onApply, version]);
+  }, [definition, onApply, version]);
 
   return (
     <DialFormPopup
@@ -103,7 +105,7 @@ const VersionModal: FC<Props> = ({ coreVersions, isModalOpen, onClose, onApply }
       onSubmit={setNewVersion}
       onCancel={onClose}
       onClose={onClose}
-      disableSubmitButton={definition === DefinitionType.AUTO || !version}
+      disableSubmitButton={!version}
     >
       <div className="px-6 py-4">
         <div className="flex flex-row gap-x-4">

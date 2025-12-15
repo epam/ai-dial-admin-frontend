@@ -71,6 +71,7 @@ export enum CoreVersionModalI18nKey {
   Detected = 'CoreVersionModal.Detected',
   NotDetected = 'CoreVersionModal.NotDetected',
   Default = 'CoreVersionModal.Default',
+  Undefined = 'CoreVersionModal.Undefined',
   DetectedTooltip = 'CoreVersionModal.DetectedTooltip',
   NotDetectedTooltip = 'CoreVersionModal.NotDetectedTooltip',
   DefaultTooltip = 'CoreVersionModal.DefaultTooltip',
