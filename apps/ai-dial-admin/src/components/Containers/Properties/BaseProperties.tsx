@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { DialTextAreaField, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { Container } from '@/src/models/deployments/containers';
 import { useI18n } from '@/src/locales/client';
@@ -7,6 +7,7 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/
 import { getErrorForName } from '@/src/utils/validation/name-error';
 import { getErrorForDescription } from '@/src/utils/validation/description-error';
 import { getMaintainerError } from '@/src/utils/deployments/validation';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props {
   container: Container;
@@ -17,10 +18,15 @@ interface Props {
 
 const BaseProperties: FC<Props> = ({ container, setContainer, names, isModal }) => {
   const t = useI18n();
+  const { resetCounter } = useSaveValidationContext();
 
   const [nameError, setNameError] = useState<FieldError | null>(null);
   const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
   const [maintainerError, setMaintainerError] = useState<FieldError | null>(null);
+
+  useEffect(() => {
+    setNameError(getErrorForName(container.name, names, t));
+  }, [resetCounter, container.name, names, t]);
 
   return (
     <>
