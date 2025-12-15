@@ -28,6 +28,7 @@ export default {
     Detected: 'Detected',
     NotDetected: 'Version is not detected',
     Default: 'Default version',
+    Undefined: 'Version is undefined',
     DetectedTooltip: 'Core version is detected as {version}',
     NotDetectedTooltip: 'Core version is not detected',
     DefaultTooltip:

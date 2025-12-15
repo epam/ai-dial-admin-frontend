@@ -75,6 +75,14 @@ export const getCoreVersionElement = (
     if (!manuallySetVersion && defaultVersion) {
       return <span className="ml-1">{`[${t(CoreVersionModalI18nKey.Default)}]${defaultVersion}`}</span>;
     }
+    if (!manuallySetVersion && !defaultVersion) {
+      return (
+        <span className="flex flex-row items-center">
+          <span className="bg-red-400 rounded-full w-[10px] h-[10px] mx-1"></span>
+          <span>{`${t(CoreVersionModalI18nKey.Undefined)}`}</span>
+        </span>
+      );
+    }
   }
 };
 
@@ -98,7 +106,7 @@ export const getDefinitionTypes = (
 
   if (autoDetectedVersion) {
     return [autoDefinition, manualDefinition];
-  } else if (manuallySetVersion || defaultVersion) {
+  } else if (manuallySetVersion && defaultVersion) {
     return [defaultDefinition, manualDefinition];
   }
   return [manualDefinition];
@@ -107,7 +115,6 @@ export const getDefinitionTypes = (
 export const getIconBefore = (coreVersions: CoreVersions, definition?: string): ReactElement | null => {
   if (
     coreVersions?.autoDetectedVersion === '-1' &&
-    !coreVersions?.manuallySetVersion &&
     !coreVersions?.defaultVersion &&
     definition === DefinitionType.AUTO
   ) {
@@ -115,7 +122,6 @@ export const getIconBefore = (coreVersions: CoreVersions, definition?: string): 
   }
   if (
     coreVersions?.autoDetectedVersion === '-1' &&
-    !coreVersions?.manuallySetVersion &&
     coreVersions?.defaultVersion &&
     definition === DefinitionType.AUTO
   ) {
@@ -132,7 +138,6 @@ export const getIconAfter = (
 ): ReactElement | null => {
   if (
     coreVersions?.autoDetectedVersion === '-1' &&
-    !coreVersions?.manuallySetVersion &&
     coreVersions?.defaultVersion &&
     definition === DefinitionType.AUTO
   ) {
@@ -143,7 +148,9 @@ export const getIconAfter = (
       <span className="text-secondary">detected</span>
     ) : (
       <DialTooltip
-        tooltip={t(CoreVersionModalI18nKey.ManuallySetDiffTooltip, { version: coreVersions?.autoDetectedVersion })}
+        tooltip={t(CoreVersionModalI18nKey.ManuallySetDiffTooltip, {
+          version: coreVersions?.autoDetectedVersion === '-1' ? '' : coreVersions?.autoDetectedVersion,
+        })}
         triggerClassName="flex-1 cursor-pointer"
       >
         <IconAlertTriangleFilled fill="#F4CE46" {...BASE_ICON_PROPS} className="mx-1" />
