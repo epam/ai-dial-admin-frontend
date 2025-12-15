@@ -111,7 +111,7 @@ describe('getCoreVersionElement', () => {
 
     renderResult(el);
 
-    expect(screen.getByText('CoreVersionModal.NotDetected')).toBeInTheDocument();
+    expect(screen.getByText('CoreVersionModal.Undefined')).toBeInTheDocument();
   });
 });
 
