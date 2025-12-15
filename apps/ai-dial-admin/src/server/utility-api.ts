@@ -1,14 +1,20 @@
 import { JWT } from 'next-auth/jwt';
 
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { AppProcessStatus } from '@/src/models/app-process-status';
+import { CoreConfigVersion, CoreVersions } from '@/src/models/core-version';
 import { ExportRequest } from '@/src/models/export';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { GlobalSettings } from '@/src/models/system-properties';
 import { getFileName } from '@/src/utils/api/get-file-name';
 import { API } from './api';
 import { BaseApi } from './base-api';
-import { AppProcessStatus } from '@/src/models/app-process-status';
-import { GlobalSettings } from '@/src/models/system-properties';
 
+export const SYSTEM_PROPERTIES_URL = `${API}/global-settings`;
+export const ADMIN_SETTINGS_URL = `${API}/admin-settings`;
 export const VERSION_URL = `${API}/version`;
+export const CORE_VERSION_URL = `${VERSION_URL}/core`;
+export const CORE_CONFIG_VERSION_URL = `${ADMIN_SETTINGS_URL}/core-config-version`;
 const CONFIG_URL = `${API}/configs`;
 export const IMPORT_CONFIG_URL = `${CONFIG_URL}/import`;
 export const PREVIEW_IMPORT_CONFIG_URL = `${IMPORT_CONFIG_URL}/preview`;
@@ -19,7 +25,6 @@ export const EXPORT_CONFIG_MAP_URL = `${EXPORT_CONFIG_URL}/raw/core`;
 export const EXPORT_PREVIEW_CONFIG_URL = `${EXPORT_CONFIG_URL}/preview`;
 export const RELOAD_CONFIG_URL = `${CONFIG_URL}/sync/status`;
 export const DEPLOYMENT_URL = (name: string) => `${API}/deployments/${name}`;
-export const SYSTEM_PROPERTIES_URL = `${API}/global-settings`;
 
 export class UtilityApi extends BaseApi {
   getBeVersion(token: JWT | null): Promise<string | null> {
@@ -56,6 +61,14 @@ export class UtilityApi extends BaseApi {
 
   getAppProcessStatus(token: JWT | null): Promise<ServerActionResponse<AppProcessStatus>> {
     return this.getAction(RELOAD_CONFIG_URL, token);
+  }
+
+  getCoreVersion(token: JWT | null): Promise<ServerActionResponse<CoreVersions>> {
+    return this.getAction(CORE_VERSION_URL, token);
+  }
+
+  setCoreVersion(version: CoreConfigVersion, token: JWT | null): Promise<ServerActionResponse<AppProcessStatus>> {
+    return this.putActionWithEtag(CORE_CONFIG_VERSION_URL, version, token, DEFAULT_ETAG);
   }
 
   getSystemProperties(token: JWT | null, etag: string): Promise<ServerActionResponse<GlobalSettings>> {

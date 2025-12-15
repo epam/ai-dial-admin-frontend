@@ -20,6 +20,23 @@ export default {
     Settings: 'Settings',
     Theme: 'Theme',
   },
+  CoreVersionModal: {
+    Title: 'Target Core Version',
+    DefinitionType: 'Definition type',
+    AutoDetection: 'Auto detection',
+    SetManually: 'Set manually',
+    Detected: 'Detected',
+    NotDetected: 'Version is not detected',
+    Default: 'Default version',
+    DetectedTooltip: 'Core version is detected as {version}',
+    NotDetectedTooltip: 'Core version is not detected',
+    DefaultTooltip:
+      'Core version is not detected. Сonfig is produced for the default version {version}.Version will be updated after detection.',
+    ManuallySameTooltip: 'Core version is defined manually and matches detected version.',
+    ManuallyDiffTooltip: 'Core version is defined manually and does not matches detected version.',
+    ManuallySetDiffTooltip: 'Specified version does not match the detected version {version}',
+    DefaultCaption: 'Applied until new version is detected',
+  },
   Basic: {
     None: '- None -',
     Optional: '(Optional)',

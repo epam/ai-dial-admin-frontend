@@ -63,6 +63,23 @@ export enum SettingsModalI18nKey {
   Theme = 'SettingsModal.Theme',
 }
 
+export enum CoreVersionModalI18nKey {
+  Title = 'CoreVersionModal.Title',
+  DefinitionType = 'CoreVersionModal.DefinitionType',
+  AutoDetection = 'CoreVersionModal.AutoDetection',
+  SetManually = 'CoreVersionModal.SetManually',
+  Detected = 'CoreVersionModal.Detected',
+  NotDetected = 'CoreVersionModal.NotDetected',
+  Default = 'CoreVersionModal.Default',
+  DetectedTooltip = 'CoreVersionModal.DetectedTooltip',
+  NotDetectedTooltip = 'CoreVersionModal.NotDetectedTooltip',
+  DefaultTooltip = 'CoreVersionModal.DefaultTooltip',
+  ManuallySameTooltip = 'CoreVersionModal.ManuallySameTooltip',
+  ManuallyDiffTooltip = 'CoreVersionModal.ManuallyDiffTooltip',
+  ManuallySetDiffTooltip = 'CoreVersionModal.ManuallySetDiffTooltip',
+  DefaultCaption = 'CoreVersionModal.DefaultCaption',
+}
+
 export enum BasicI18nKey {
   None = 'Basic.None',
   Optional = 'Basic.Optional',
