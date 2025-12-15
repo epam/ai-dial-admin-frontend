@@ -90,7 +90,7 @@ export const getDefinitionTypes = (
   coreVersions: CoreVersions,
   t: (s: string, options?: Record<string, string>) => string,
 ): SelectOption[] => {
-  const { autoDetectedVersion, manuallySetVersion, defaultVersion } = coreVersions;
+  const { autoDetectedVersion, defaultVersion } = coreVersions;
   const manualDefinition = {
     label: t(CoreVersionModalI18nKey.SetManually),
     value: DefinitionType.MANUAL,
@@ -106,7 +106,7 @@ export const getDefinitionTypes = (
 
   if (autoDetectedVersion) {
     return [autoDefinition, manualDefinition];
-  } else if (manuallySetVersion && defaultVersion) {
+  } else if (defaultVersion) {
     return [defaultDefinition, manualDefinition];
   }
   return [manualDefinition];
