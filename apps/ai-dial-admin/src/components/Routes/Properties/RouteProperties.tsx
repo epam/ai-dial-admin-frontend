@@ -53,6 +53,8 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
   const [statusError, setStatusError] = useState('');
   const [bodyError, setBodyError] = useState('');
 
+  const [isUpstreamsRequired, setIsUpstreamsRequired] = useState(!route.response);
+
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'status', isValid: !statusError });
   }, [dispatch, statusError]);
@@ -99,6 +101,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
     (output: string) => {
       const newRoute = handleRouteOutputChange(route, output);
       updateRoute(newRoute);
+      setIsUpstreamsRequired(output !== RouteOutput.RESPONSE);
       if (output === RouteOutput.RESPONSE) {
         setStatusError(t(ErrorI18nKey.RequiredField));
 
@@ -170,14 +173,12 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
         disabled={readonly}
       />
       {!isAppRoute && <DescriptionControl entity={route} onChangeEntity={updateRoute} isFullWidth={false} />}
-
       <Paths
         title={t(EntityFieldsI18nKey.paths)}
         paths={route.paths}
         onChangePaths={onChangePaths}
         readonly={readonly}
       />
-
       <DialSwitch
         isOn={route.rewritePath}
         title={t(EntityFieldsI18nKey.rewritePath)}
@@ -185,7 +186,6 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
         disabled={readonly}
         onChange={onChangeRewritePath}
       />
-
       <Multiselect
         elementId="methods"
         disabled={readonly}
@@ -197,7 +197,6 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
         className={STANDARD_CONTROL_WIDTH}
         errorText={route.methods?.length ? '' : t(ErrorI18nKey.EmptyField)}
       />
-
       <DialRadioGroup
         radioButtons={outputRadio}
         activeRadioButton={route.response ? outputRadio[1].id : outputRadio[0].id}
@@ -207,38 +206,40 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
         orientation={RadioGroupOrientation.Row}
         onChange={onChangeOutput}
       />
+      <div className={classNames('flex gap-x-2 flex-row', STANDARD_CONTROL_WIDTH, !route.response && 'hidden')}>
+        <DialNumberInputField
+          disabled={readonly}
+          elementId="status"
+          containerClassName="w-[150px]"
+          fieldTitle={t(EntityFieldsI18nKey.status)}
+          placeholder={t(EntityPlaceholdersI18nKey.Status)}
+          value={route.response?.status}
+          onChange={onChangeStatus}
+          errorText={statusError}
+          invalid={!!statusError}
+        />
+        <DialTextInputField
+          disabled={readonly}
+          elementId="body"
+          containerClassName="flex-1"
+          fieldTitle={t(EntityFieldsI18nKey.body)}
+          placeholder={t(EntityPlaceholdersI18nKey.Body)}
+          value={route.response?.body}
+          onChange={onChangeBody}
+          errorText={bodyError}
+          invalid={!!bodyError}
+        />
+      </div>
 
-      {route.response ? (
-        <div className={classNames('flex gap-x-2 flex-row', STANDARD_CONTROL_WIDTH)}>
-          <DialNumberInputField
-            disabled={readonly}
-            elementId="status"
-            containerClassName="w-[150px]"
-            fieldTitle={t(EntityFieldsI18nKey.status)}
-            placeholder={t(EntityPlaceholdersI18nKey.Status)}
-            value={route.response.status}
-            onChange={onChangeStatus}
-            errorText={statusError}
-            invalid={!!statusError}
-          />
-          <DialTextInputField
-            disabled={readonly}
-            elementId="body"
-            containerClassName="flex-1"
-            fieldTitle={t(EntityFieldsI18nKey.body)}
-            placeholder={t(EntityPlaceholdersI18nKey.Body)}
-            value={route.response.body}
-            onChange={onChangeBody}
-            errorText={bodyError}
-            invalid={!!bodyError}
-          />
-        </div>
-      ) : (
-        <UpstreamEndpoints readonly={readonly} entity={route} onChangeEntity={updateRoute} required={true} />
-      )}
-
+      <div className={classNames(route.response && 'hidden')}>
+        <UpstreamEndpoints
+          readonly={readonly}
+          entity={route}
+          onChangeEntity={updateRoute}
+          required={isUpstreamsRequired}
+        />
+      </div>
       <MaxRetryAttempts readonly={readonly} entity={route} onChangeEntity={updateRoute} />
-
       {isAppRoute && (
         <DialSelectField
           disabled={readonly}
