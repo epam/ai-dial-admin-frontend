@@ -7,7 +7,6 @@ import { FC } from 'react';
 
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getActualMenuItems } from '@/src/utils/env/get-menu-items';
@@ -15,6 +14,7 @@ import { MENU_CONFIGURATION } from '../menu-configuration';
 import MenuItem from '../MenuItem/MenuItem';
 import MenuAction from './MenuAction';
 import MenuActions from './MenuActions';
+import { useAppContext } from '@/src/context/AppContext';
 
 interface Props {
   disableMenuItems: string[];
@@ -23,7 +23,7 @@ interface Props {
 const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   const t = useI18n();
   const router = useRouter();
-  const { embeddedApps } = useAppContext();
+  const { featureFlags } = useAppContext();
 
   // pathname - /en/models/[id]
   // 0 - empty ''
@@ -31,7 +31,7 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
   // 2 - models
   const splittedPathname = usePathname().split('/');
   const pathname = `/${splittedPathname[2]}`;
-  const actualConfig = getActualMenuItems(MENU_CONFIGURATION(24), disableMenuItems, embeddedApps);
+  const actualConfig = getActualMenuItems(MENU_CONFIGURATION(24, featureFlags), disableMenuItems);
 
   const activeMenuGroup = actualConfig.find((config) => config.items.some((item) => item.href === pathname));
 

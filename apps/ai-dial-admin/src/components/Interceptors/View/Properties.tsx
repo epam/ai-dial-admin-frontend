@@ -9,7 +9,6 @@ import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isDeploymentsEnabled } from '@/src/utils/plugins';
 
 import Defaults from '@/src/components/Defaults/Defaults';
 import MaintainerControl from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
@@ -26,8 +25,7 @@ interface Props {
 const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChangeInterceptor }) => {
   const t = useI18n();
 
-  const { embeddedApps } = useAppContext();
-  const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
+  const { featureFlags } = useAppContext();
 
   return (
     <div className="h-full flex flex-col gap-y-8 w-full">
@@ -53,7 +51,7 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
         getRunners={getInterceptorTemplatesList}
         elementId="sourceType"
         fieldTitle={t(EntitiesI18nKey.SourceType)}
-        sourceItems={getSourceItems(ApplicationRoute.Interceptors, deploymentsEnabled)}
+        sourceItems={getSourceItems(ApplicationRoute.Interceptors, featureFlags.deploymentsEnabled)}
       />
       <Defaults entity={selectedInterceptor} onChangeEntity={onChangeInterceptor} />
     </div>
