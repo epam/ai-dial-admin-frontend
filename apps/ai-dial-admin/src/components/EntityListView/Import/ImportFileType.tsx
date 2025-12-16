@@ -15,7 +15,7 @@ import { useI18n } from '@/src/locales/client';
 import { ImportFileType } from '@/src/types/import';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isAssetWithVersion } from '@/src/utils/is-asset-view';
+import { isAssetView } from '@/src/utils/is-asset-view';
 import { getIgnorePathTitles } from '@/src/utils/import/get-ignore-path-title';
 
 interface Props {
@@ -65,7 +65,7 @@ const ImportFileTypeSelector: FC<Props> = ({
           onChange={onChangeFileType}
         />
 
-        {isAssetWithVersion(route) && (
+        {isAssetView(route) && (
           <div className="flex flex-col">
             <Field fieldTitle={ignorePathsTitle} />
             <DialSwitch
