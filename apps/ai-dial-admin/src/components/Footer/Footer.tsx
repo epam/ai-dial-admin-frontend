@@ -44,12 +44,19 @@ const Footer: FC<Props> = ({ beVersion, coreVersions, onChangeCoreVersion }) => 
       <span className="mr-1">Admin: [FE]{process.env.NEXT_PUBLIC_APP_VERSION}</span>
       <span>[BE]{beVersion}</span>
       <span className="inline-block w-[1px] h-[14px] mx-1 bg-controls-disable"></span>
-      <span className="flex">Core:{coreVersion}</span>
-      <DialButton
-        disabled={!coreVersions}
-        onClick={() => setIsModalOpen(true)}
-        iconAfter={<IconPencilMinus size={14} className="text-primary ml-2" />}
-      />
+      <span className="flex">
+        Core:
+        <span className="flex flex-row hover:text-accent-primary group/version" onClick={() => setIsModalOpen(true)}>
+          {coreVersion}
+          <DialButton
+            disabled={!coreVersions}
+            iconAfter={
+              <IconPencilMinus size={14} className="text-primary ml-2 group-hover/version:text-accent-primary" />
+            }
+          />
+        </span>
+      </span>
+
       {isModalOpen &&
         createPortal(
           <VersionModal

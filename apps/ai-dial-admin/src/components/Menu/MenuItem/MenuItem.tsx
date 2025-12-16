@@ -27,9 +27,7 @@ const MenuItem: FC<Props> = ({ config, activeMenuItem, isOpenByDefault = false, 
     setIsOpen(!isOpen);
   }, [isOpen]);
 
-  const iconClassName = isOpenByDefault
-    ? 'text-accent-primary'
-    : 'text-secondary group-focus-within:text-accent-primary';
+  const iconClassName = isOpenByDefault ? 'text-accent-primary' : 'text-secondary';
 
   return (
     <li className="flex flex-col">

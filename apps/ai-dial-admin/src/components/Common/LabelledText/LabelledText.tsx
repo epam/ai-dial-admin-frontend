@@ -6,15 +6,17 @@ import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 interface Props {
   label: string;
   text?: string;
+  tooltip?: string;
   copyable?: boolean;
   children?: ReactNode;
 }
 
-const LabelledText: FC<Props> = ({ label, text, children, copyable }) => {
+const LabelledText: FC<Props> = ({ label, text, children, tooltip, copyable }) => {
   return (
     <DialLabelledText
       label={label}
       text={text}
+      tooltip={tooltip}
       postfix={
         copyable ? (
           <div className="ml-2 flex items-center justify-center">

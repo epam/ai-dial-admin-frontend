@@ -1,21 +1,30 @@
 import { useCallback } from 'react';
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
+import { DialSwitch, DialTooltip } from '@epam/ai-dial-ui-kit';
+
+import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import EndpointControl from '@/src/components/EntityMainProperties/BaseProperties/Endpoint/Endpoint';
 import { FeaturesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialFeatures } from '@/src/models/dial/features';
 import { ApplicationRoute } from '@/src/types/routes';
 import { placeholdersMap } from './constants';
-import { getSwitchControls, getTextControls } from './utils';
+import { getReadOnlyValues, getSwitchControls, getTextControls } from './utils';
 
 interface Props<T> {
   view: ApplicationRoute;
   entity: T;
+  appRunner?: DialApplicationScheme;
   onChangeEntity: (entity: T) => void;
 }
 
-const EntityFeatures = <T extends { features?: DialFeatures }>({ view, entity, onChangeEntity }: Props<T>) => {
+const EntityFeatures = <T extends { features?: DialFeatures }>({
+  view,
+  entity,
+  appRunner,
+  onChangeEntity,
+}: Props<T>) => {
   const t = useI18n();
   const switchKeys = getSwitchControls(view);
   const textKeys = getTextControls(view);
@@ -47,8 +56,18 @@ const EntityFeatures = <T extends { features?: DialFeatures }>({ view, entity, o
   );
 
   return (
-    <div className="h-full flex flex-col gap-y-8">
+    <div className="flex flex-col gap-y-8">
       {textKeys.map((key) => {
+        const { value, isReadonly } = getReadOnlyValues(key, appRunner);
+        if (isReadonly && value != null) {
+          return (
+            <LabelledText
+              label={t(FeaturesI18nKey[key as keyof typeof FeaturesI18nKey])}
+              text={value}
+              tooltip={t(FeaturesI18nKey.AppRunnerInherited)}
+            />
+          );
+        }
         return (
           <EndpointControl
             key={key}
@@ -62,14 +81,18 @@ const EntityFeatures = <T extends { features?: DialFeatures }>({ view, entity, o
       })}
 
       {switchKeys.map((key) => {
+        const { value, isReadonly } = getReadOnlyValues(key, appRunner);
         return (
-          <DialSwitch
-            key={key}
-            isOn={entity?.features?.[key] as boolean}
-            title={t(FeaturesI18nKey[key as keyof typeof FeaturesI18nKey])}
-            switchId={key}
-            onChange={(value) => onSwitch(value, key)}
-          />
+          <DialTooltip tooltip={isReadonly ? t(FeaturesI18nKey.AppRunnerInherited) : ''} placement="bottom-start">
+            <DialSwitch
+              disabled={isReadonly}
+              key={key}
+              isOn={(isReadonly ? value : entity?.features?.[key]) as boolean}
+              title={t(FeaturesI18nKey[key as keyof typeof FeaturesI18nKey])}
+              switchId={key}
+              onChange={(value) => onSwitch(value, key)}
+            />
+          </DialTooltip>
         );
       })}
     </div>

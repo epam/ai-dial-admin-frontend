@@ -6,7 +6,8 @@ import {
   modelsSwitchFeatures,
   modelsTextFeatures,
 } from '../constants';
-import { getSwitchControls, getTextControls } from '../utils';
+import { getReadOnlyValues, getSwitchControls, getTextControls } from '../utils';
+import { DialApplicationScheme } from '@/src/models/dial/application';
 
 describe('getSwitchControls', () => {
   test('returns modelsSwitchFeatures for Models route', () => {
@@ -41,5 +42,54 @@ describe('getTextControls', () => {
 
   test('returns empty array for unknown route', () => {
     expect(getTextControls(ApplicationRoute.Keys)).toEqual([]);
+  });
+});
+
+describe('getReadOnlyValues', () => {
+  test('should return the correct value and readonly flag when appRunner is provided and key exists in runnerApplicationMap', () => {
+    const mockAppRunner: DialApplicationScheme = {
+      'dial:applicationTypeRateEndpoint': 'Some value for rate endpoint',
+    };
+
+    const result = getReadOnlyValues('rateEndpoint', mockAppRunner);
+
+    expect(result.value).toBe('Some value for rate endpoint');
+    expect(result.isReadonly).toBe(true);
+  });
+
+  test('should return empty value and readonly flag false when appRunner is undefined', () => {
+    const result = getReadOnlyValues('rateEndpoint');
+
+    expect(result.value).toBeUndefined();
+    expect(result.isReadonly).toBe(false);
+  });
+
+  test('should return empty value and readonly flag false when the key does not exist in runnerApplicationMap', () => {
+    const mockAppRunner: DialApplicationScheme = {
+      'dial:applicationTypeRateEndpoint': 'Some value for rate endpoint',
+    };
+
+    const result = getReadOnlyValues('nonExistingKey', mockAppRunner);
+
+    expect(result.value).toBeUndefined();
+    expect(result.isReadonly).toBe(false);
+  });
+
+  test('should return empty value and readonly flag false if appRunner does not contain the value for the key', () => {
+    const mockAppRunner: DialApplicationScheme = {
+      'dial:applicationTypeRateEndpoint': undefined,
+    };
+
+    const result = getReadOnlyValues('rateEndpoint', mockAppRunner);
+
+    expect(result.value).toBeUndefined();
+    expect(result.isReadonly).toBe(true);
+  });
+
+  test('should handle an empty appRunner object gracefully', () => {
+    const result = getReadOnlyValues('rateEndpoint', {});
+
+    expect(result.value).toBeUndefined();
+    expect(result.isReadonly).toBe(true);
   });
 });

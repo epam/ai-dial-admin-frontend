@@ -106,9 +106,12 @@ describe('getCoreVersionElement', () => {
     expect(screen.getByText('[CoreVersionModal.Default]1.0.0')).toBeInTheDocument();
   });
 
-  test('returns undefined when no conditions are met', () => {
+  test('returns not configured when no conditions are met', () => {
     const el = getCoreVersionElement({}, t);
-    expect(el).toBeUndefined();
+
+    renderResult(el);
+
+    expect(screen.getByText('CoreVersionModal.Undefined')).toBeInTheDocument();
   });
 });
 
@@ -128,10 +131,11 @@ describe('getDefinitionTypes', () => {
     ]);
   });
 
-  test('returns DEFAULT + MANUAL when auto detection is off and manuallySetVersion exists', () => {
+  test('returns DEFAULT + MANUAL when auto detection is off and manuallySetVersion and defaultVersion exists', () => {
     const result = getDefinitionTypes(
       {
         manuallySetVersion: '2.0.0',
+        defaultVersion: '1.1.1',
       },
       t,
     );
@@ -142,7 +146,7 @@ describe('getDefinitionTypes', () => {
     ]);
   });
 
-  test('returns DEFAULT + MANUAL when auto detection is off and defaultVersion exists', () => {
+  test('returns MANUAL when auto detection is off and defaultVersion not exists', () => {
     const result = getDefinitionTypes(
       {
         defaultVersion: '3.0.0',
@@ -229,7 +233,7 @@ describe('getIconBefore', () => {
     expect(el).toBeNull();
   });
 
-  test('returns null when manuallySetVersion exists', () => {
+  test('returns red icon when when manuallySetVersion exists and autoDetectedVersion = -1', () => {
     const el = getIconBefore(
       {
         autoDetectedVersion: '-1',
@@ -238,7 +242,9 @@ describe('getIconBefore', () => {
       DefinitionType.AUTO,
     );
 
-    expect(el).toBeNull();
+    renderResult(el);
+
+    expect(document.querySelector('.bg-red-400')).toBeInTheDocument();
   });
 
   test('returns null when coreVersions is undefined', () => {
