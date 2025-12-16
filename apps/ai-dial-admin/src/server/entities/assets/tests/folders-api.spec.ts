@@ -6,7 +6,9 @@ import {
   FOLDERS_MOVE_URL,
   FOLDERS_URL,
   FoldersApi,
+  PREVIEW_APP_ZIP,
   PREVIEW_PROMPT_ZIP,
+  PREVIEW_TOOLSET_ZIP,
   RULES_UPDATE_URL,
 } from '@/src/server/entities/assets/folders-api';
 import { ImportFileType } from '@/src/types/import';
@@ -158,6 +160,36 @@ describe('Server :: FoldersApi', () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       `${TEST_URL}${PREVIEW_PROMPT_ZIP}`,
+      expect.objectContaining({
+        method: 'POST',
+        body: {},
+      }),
+    );
+  });
+
+  test('Should calls previewAppZipFiles and posts body and returns response', async () => {
+    const mockResponse: ServerActionResponse = { success: true };
+    fetchMock.mockResponseOnce(JSON.stringify(mockResponse));
+
+    await instance.previewAppZipFiles(TOKEN_MOCK, {});
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${TEST_URL}${PREVIEW_APP_ZIP}`,
+      expect.objectContaining({
+        method: 'POST',
+        body: {},
+      }),
+    );
+  });
+
+  test('Should calls previewToolsetZipFiles and posts body and returns response', async () => {
+    const mockResponse: ServerActionResponse = { success: true };
+    fetchMock.mockResponseOnce(JSON.stringify(mockResponse));
+
+    await instance.previewToolsetZipFiles(TOKEN_MOCK, {});
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${TEST_URL}${PREVIEW_TOOLSET_ZIP}`,
       expect.objectContaining({
         method: 'POST',
         body: {},
