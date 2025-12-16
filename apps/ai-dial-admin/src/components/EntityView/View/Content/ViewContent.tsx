@@ -1,5 +1,5 @@
 'use client';
-import { Dispatch, FC, SetStateAction } from 'react';
+import { Dispatch, FC, SetStateAction, useMemo } from 'react';
 
 import ApplicationParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import ApplicationAppRoutes from '@/src/components/EntityView/AppRoute/ApplicationAppRoutes';
@@ -16,6 +16,7 @@ import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import PropertiesContent from './PropertiesContent';
+import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 
 interface Props {
   activeTab: EntityViewTab;
@@ -56,6 +57,12 @@ const ViewContent: FC<Props> = ({
   setSelectedEntity,
   names,
 }) => {
+  const appRunner = useMemo(() => {
+    if (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications) {
+      return getAppRunner(selectedEntity as DialApplication, applicationSchemes);
+    }
+  }, [applicationSchemes, selectedEntity, view]);
+
   return (
     <>
       {activeTab === EntityViewTab.Properties && (
@@ -69,6 +76,7 @@ const ViewContent: FC<Props> = ({
       )}
       {activeTab === EntityViewTab.Features && (
         <EntityFeatures
+          appRunner={appRunner}
           entity={selectedEntity as DialModel | DialApplication}
           onChangeEntity={onChangeEntity}
           view={view}

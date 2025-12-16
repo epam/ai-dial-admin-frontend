@@ -507,6 +507,7 @@ export default {
     tokenizeEndpoint: 'Tokenize endpoint',
     supportCommentInRateResponse: 'Support comment in rate response',
     truncatePromptEndpoint: 'Truncate prompt endpoint',
+    AppRunnerInherited: 'This value is inherited from Application Runner features',
   },
   Topics: {
     AddTopic: 'Add Topic',
