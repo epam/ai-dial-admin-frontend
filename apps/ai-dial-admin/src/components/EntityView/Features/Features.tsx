@@ -9,9 +9,8 @@ import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialFeatures } from '@/src/models/dial/features';
 import { ApplicationRoute } from '@/src/types/routes';
-import { runnerApplicationMap } from './constant';
 import { placeholdersMap } from './constants';
-import { getSwitchControls, getTextControls } from './utils';
+import { getReadOnlyValues, getSwitchControls, getTextControls } from './utils';
 
 interface Props<T> {
   view: ApplicationRoute;
@@ -57,15 +56,14 @@ const EntityFeatures = <T extends { features?: DialFeatures }>({
   );
 
   return (
-    <div className="h-full flex flex-col gap-y-8">
+    <div className="flex flex-col gap-y-8">
       {textKeys.map((key) => {
-        const appRunnerKey = runnerApplicationMap[key];
-        const appRunnerValue = appRunner?.[appRunnerKey as keyof DialApplicationScheme];
-        if (appRunnerKey && appRunnerValue !== null) {
+        const { value, isReadonly } = getReadOnlyValues(key, appRunner);
+        if (isReadonly && value != null) {
           return (
             <LabelledText
               label={t(FeaturesI18nKey[key as keyof typeof FeaturesI18nKey])}
-              text={appRunnerValue as string}
+              text={value}
               tooltip={t(FeaturesI18nKey.AppRunnerInherited)}
             />
           );
@@ -83,14 +81,13 @@ const EntityFeatures = <T extends { features?: DialFeatures }>({
       })}
 
       {switchKeys.map((key) => {
-        const appRunnerKey = runnerApplicationMap[key];
-        const appRunnerValue = appRunner?.[appRunnerKey as keyof DialApplicationScheme];
+        const { value, isReadonly } = getReadOnlyValues(key, appRunner);
         return (
-          <DialTooltip tooltip={appRunnerKey ? t(FeaturesI18nKey.AppRunnerInherited) : ''} placement="bottom-start">
+          <DialTooltip tooltip={isReadonly ? t(FeaturesI18nKey.AppRunnerInherited) : ''} placement="bottom-start">
             <DialSwitch
-              disabled={!!appRunnerKey}
+              disabled={isReadonly}
               key={key}
-              isOn={(appRunnerKey ? appRunnerValue : entity?.features?.[key]) as boolean}
+              isOn={(isReadonly ? value : entity?.features?.[key]) as boolean}
               title={t(FeaturesI18nKey[key as keyof typeof FeaturesI18nKey])}
               switchId={key}
               onChange={(value) => onSwitch(value, key)}
