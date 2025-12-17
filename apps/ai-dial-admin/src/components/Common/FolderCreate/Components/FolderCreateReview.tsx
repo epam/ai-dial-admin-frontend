@@ -6,7 +6,7 @@ import { DialNoDataContent, Step, StepStatus } from '@epam/ai-dial-ui-kit';
 import { IconEyeOff } from '@tabler/icons-react';
 import { CellValueChangedEvent, ColDef, GridApi, GridReadyEvent, RowClassRules } from 'ag-grid-community';
 
-import { previewPromptZip } from '@/src/app/[lang]/folders-storage/actions';
+import { previewAppZip, previewPromptZip, previewToolsetZip } from '@/src/app/[lang]/folders-storage/actions';
 import { CreateFolderSteps } from '@/src/components/Common/FolderCreate/constants';
 import { ZipFilePreview } from '@/src/components/Common/FolderCreate/models';
 import {
@@ -110,6 +110,18 @@ const FolderCreateReview: FC<Props> = ({
     });
   };
 
+  const getCorrectPreview = (view?: ApplicationRoute) => {
+    if (view === ApplicationRoute.Prompts) {
+      return previewPromptZip;
+    }
+    if (view === ApplicationRoute.AssetsApplications) {
+      return previewAppZip;
+    }
+    if (view === ApplicationRoute.AssetsToolsets) {
+      return previewToolsetZip;
+    }
+  };
+
   useEffect(() => {
     const prevFiles = prevFilesRef.current;
     if (isEqualSkippingUndefined(prevFiles, files)) return;
@@ -126,7 +138,7 @@ const FolderCreateReview: FC<Props> = ({
           void 0,
           view,
         ).body;
-        getReqRef.current(previewPromptZip, body).then((data) => {
+        getReqRef.current(getCorrectPreview(view), body).then((data) => {
           const preview = generatePreviewData(
             (data.response as { resourcePreviews: ZipFilePreview[] }).resourcePreviews,
           );
@@ -170,12 +182,12 @@ const FolderCreateReview: FC<Props> = ({
         columnDefs,
       });
       setCount(0);
-      onChangeCurrentSteps(view === ApplicationRoute.Prompts ? void 0 : StepStatus.VALID);
+      onChangeCurrentSteps(isAssetWithVersion(view) ? void 0 : StepStatus.VALID);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStepId, editedFileMap]);
 
-  return fileType === ImportFileType.ARCHIVE ? (
+  return fileType === ImportFileType.ARCHIVE && view === ApplicationRoute.Files ? (
     <DialNoDataContent title={t(FoldersI18nKey.NoPreviewArchive)} icon={<IconEyeOff width={50} height={50} />} />
   ) : (
     <div className="flex flex-col flex-1 min-h-0">

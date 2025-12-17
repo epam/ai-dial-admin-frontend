@@ -457,6 +457,7 @@ export enum FeaturesI18nKey {
   supportCommentInRateResponse = 'Features.supportCommentInRateResponse',
   tokenizeEndpoint = 'Features.tokenizeEndpoint',
   truncatePromptEndpoint = 'Features.truncatePromptEndpoint',
+  AppRunnerInherited = 'Features.AppRunnerInherited',
 }
 
 export enum TopicsI18nKey {

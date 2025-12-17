@@ -1,5 +1,7 @@
-import { ApplicationRoute } from '@/src/types/routes';
+import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialFeatures } from '@/src/models/dial/features';
+import { ApplicationRoute } from '@/src/types/routes';
+import { runnerApplicationMap } from './constant';
 import {
   applicationSwitchFeatures,
   applicationTextFeatures,
@@ -29,4 +31,17 @@ export const getTextControls = (view: ApplicationRoute): (keyof DialFeatures)[] 
   }
 
   return [];
+};
+
+export const getReadOnlyValues = (
+  key: string,
+  appRunner?: DialApplicationScheme,
+): { value: string; isReadonly: boolean } => {
+  const appRunnerKey = runnerApplicationMap[key];
+  const appRunnerValue = appRunner?.[appRunnerKey as keyof DialApplicationScheme];
+  const isReadonly = !!appRunner && !!appRunnerKey;
+  return {
+    value: appRunnerValue as string,
+    isReadonly,
+  };
 };

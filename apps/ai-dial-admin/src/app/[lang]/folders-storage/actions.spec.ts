@@ -11,7 +11,9 @@ import {
   createFolderWithFiles,
   getFolders,
   getRules,
+  previewAppZip,
   previewPromptZip,
+  previewToolsetZip,
   removeFolder,
   updateRules,
 } from './actions';
@@ -56,6 +58,22 @@ describe('Folders storage :: server actions', () => {
     const result = await previewPromptZip({} as FormData);
     expect(getUserToken).toHaveBeenCalled();
     expect(foldersApi.previewPromptZipFiles).toHaveBeenCalledWith(TOKEN_MOCK, {} as FormData);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call previewAppZip action', async () => {
+    (foldersApi.previewAppZipFiles as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await previewAppZip({} as FormData);
+    expect(getUserToken).toHaveBeenCalled();
+    expect(foldersApi.previewAppZipFiles).toHaveBeenCalledWith(TOKEN_MOCK, {} as FormData);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call previewToolsetZip action', async () => {
+    (foldersApi.previewToolsetZipFiles as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await previewToolsetZip({} as FormData);
+    expect(getUserToken).toHaveBeenCalled();
+    expect(foldersApi.previewToolsetZipFiles).toHaveBeenCalledWith(TOKEN_MOCK, {} as FormData);
     expect(result).toBe(RESPONSE_MOCK);
   });
 

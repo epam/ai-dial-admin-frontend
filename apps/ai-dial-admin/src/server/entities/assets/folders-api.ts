@@ -14,6 +14,8 @@ export const FOLDERS_MOVE_URL = `${FOLDERS_URL}/move`;
 export const RULES_UPDATE_URL = `${FOLDERS_URL}/updateRules`;
 export const FOLDER_CREATE_URL = `${FOLDERS_URL}/upload`;
 export const PREVIEW_PROMPT_ZIP = `${API}/prompts/import/zip/preview`;
+export const PREVIEW_APP_ZIP = `${API}/application-resources/import/zip/preview`;
+export const PREVIEW_TOOLSET_ZIP = `${API}/toolset-resources/import/zip/preview`;
 
 export class FoldersApi extends BaseApi {
   getFolders(token: JWT | null, path: string): Promise<DialFolder[] | null | undefined> {
@@ -42,6 +44,14 @@ export class FoldersApi extends BaseApi {
 
   previewPromptZipFiles(token: JWT | null, body: FormData): Promise<ServerActionResponse> {
     return this.postFiles(`${PREVIEW_PROMPT_ZIP}`, body, token, 'POST');
+  }
+
+  previewAppZipFiles(token: JWT | null, body: FormData): Promise<ServerActionResponse> {
+    return this.postFiles(`${PREVIEW_APP_ZIP}`, body, token, 'POST');
+  }
+
+  previewToolsetZipFiles(token: JWT | null, body: FormData): Promise<ServerActionResponse> {
+    return this.postFiles(`${PREVIEW_TOOLSET_ZIP}`, body, token, 'POST');
   }
 
   deleteFolder(token: JWT | null, path: string): Promise<ServerActionResponse> {
