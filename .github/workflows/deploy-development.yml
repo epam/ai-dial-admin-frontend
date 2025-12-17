@@ -13,8 +13,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          #- environment-name: "development"
-          #  gitlab-project-id: "2630"
+          - environment-name: "development"
+            gitlab-project-id: "2630"
           - environment-name: "tst"
             gitlab-project-id: "2617"
     name: Deploy to ${{ matrix.environment-name }}
