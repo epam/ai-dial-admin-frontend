@@ -64,7 +64,7 @@ const AppRunnerFeatures: FC<Props> = ({ runner, onChangeRunner }) => {
 
       <DialSwitch
         isOn={runner['dial:appendApplicationPropertiesHeader']}
-        title={t(EntityFieldsI18nKey['dial:appendApplicationPropertiesHeader'])}
+        label={t(EntityFieldsI18nKey['dial:appendApplicationPropertiesHeader'])}
         switchId="appendApplicationPropertiesHeader"
         onChange={(value: boolean) => {
           onChange(value, 'dial:appendApplicationPropertiesHeader');
@@ -72,7 +72,7 @@ const AppRunnerFeatures: FC<Props> = ({ runner, onChangeRunner }) => {
       />
       <DialSwitch
         isOn={runner['dial:applicationTypePlaybackSupport']}
-        title={t(EntityFieldsI18nKey['dial:applicationTypePlaybackSupport'])}
+        label={t(EntityFieldsI18nKey['dial:applicationTypePlaybackSupport'])}
         switchId="applicationTypePlaybackSupport"
         onChange={(value: boolean) => {
           onChange(value, 'dial:applicationTypePlaybackSupport');
@@ -81,7 +81,7 @@ const AppRunnerFeatures: FC<Props> = ({ runner, onChangeRunner }) => {
 
       <DialSwitch
         isOn={runner['dial:applicationTypeAssistantAttachmentsInRequestSupported']}
-        title={t(EntityFieldsI18nKey['dial:applicationTypeAssistantAttachmentsInRequestSupported'])}
+        label={t(EntityFieldsI18nKey['dial:applicationTypeAssistantAttachmentsInRequestSupported'])}
         switchId="applicationTypeAssistantAttachmentsInRequestSupported"
         onChange={(value: boolean) => {
           onChange(value, 'dial:applicationTypeAssistantAttachmentsInRequestSupported');

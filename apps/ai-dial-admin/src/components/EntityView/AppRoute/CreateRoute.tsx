@@ -20,7 +20,7 @@ const CreateRoute: FC<Props> = ({ isModalOpen, onClose, onCreate }) => {
   return (
     <DialFormPopup
       onClose={onClose}
-      title={getCreateEntityTitle(ApplicationRoute.Routes, t)}
+      header={getCreateEntityTitle(ApplicationRoute.Routes, t)}
       submitLabel={t(ButtonsI18nKey.Create)}
       size={PopupSize.Sm}
       onSubmit={() => {

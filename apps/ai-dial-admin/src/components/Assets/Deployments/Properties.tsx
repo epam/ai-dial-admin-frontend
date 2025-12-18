@@ -67,7 +67,7 @@ const DeploymentProperties: FC<Props> = ({ asset, view, runners, onChange }) => 
             <Authentication toolset={asset as AssetToolset} onChange={onChange as (entity: Toolset) => void} />
             <DialSwitch
               isOn={(asset as AssetToolset).forwardPerRequestKey}
-              title={t(EntityFieldsI18nKey.forwardPerRequestKey)}
+              label={t(EntityFieldsI18nKey.forwardPerRequestKey)}
               switchId="forwardPerRequestKey"
               disabled={(asset as AssetToolset).authSettings?.authenticationType === ToolsetAuthType.API_KEY}
               onChange={(value: boolean) => {

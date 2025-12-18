@@ -214,7 +214,7 @@ const AuditView: FC<Props> = ({
           <DialConfirmationPopup
             open={isOpenModal}
             isLoading={isLoading}
-            title={t(RollbackI18nKey.ConfirmResourceRollbackTitle)}
+            header={t(RollbackI18nKey.ConfirmResourceRollbackTitle)}
             onConfirm={resourceRollback}
             confirmLabel={t(ButtonsI18nKey.Rollback)}
             onClose={onCloseModal}

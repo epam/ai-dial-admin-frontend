@@ -106,7 +106,7 @@ const DuplicateImageModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
   return (
     <DialPopup
       onClose={onClose}
-      title={title}
+      header={title}
       portalId="DuplicateImageModal"
       open={isModalOpen}
       className={containerClassName}

@@ -75,7 +75,7 @@ const ChangeContainerImage: FC<Props> = ({
   return (
     <DialPopup
       onClose={onClose}
-      title={modalTitle}
+      header={modalTitle}
       portalId="ChangeContainerImageModal"
       open={isModalOpen}
       className="lg:max-w-[55%] md:max-w-[75%]"
