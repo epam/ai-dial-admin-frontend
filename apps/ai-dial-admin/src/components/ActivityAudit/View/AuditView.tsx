@@ -154,7 +154,7 @@ const AuditView: FC<Props> = ({
                 switchId="jsonView"
                 isOn={isJsonView}
                 onChange={() => setIsJsonView(!isJsonView)}
-                title="JSON"
+                label="JSON"
               />
             </div>
           </div>
@@ -180,7 +180,7 @@ const AuditView: FC<Props> = ({
                       switchId="jsonView"
                       isOn={isJsonView}
                       onChange={() => setIsJsonView(!isJsonView)}
-                      title="JSON"
+                      label="JSON"
                     />
                   </div>
                 </>
