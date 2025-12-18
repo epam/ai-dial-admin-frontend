@@ -26,7 +26,7 @@ const SelectContainerModal: FC<Props> = ({ selectedId, interceptorContainers, is
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(CreateI18nKey.SelectContainer)}
+      header={t(CreateI18nKey.SelectContainer)}
       portalId="SelectContainer"
       open={isModalOpen}
       size={PopupSize.Lg}

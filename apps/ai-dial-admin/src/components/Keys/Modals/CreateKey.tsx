@@ -78,7 +78,7 @@ const CreateKey: FC<Props> = ({ isModalOpen, names, keys, onClose }) => {
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(CreateI18nKey.Key)}
+      header={t(CreateI18nKey.Key)}
       portalId="CreateKey"
       open={isModalOpen}
       onSubmit={onCreate}

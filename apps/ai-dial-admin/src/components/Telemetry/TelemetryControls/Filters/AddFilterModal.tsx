@@ -56,7 +56,7 @@ const AddFilterModal: FC<Props> = ({
         createPortal(
           <DialFormPopup
             onClose={onClose}
-            title={t(TelemetryI18nKey.AddFilter)}
+            header={t(TelemetryI18nKey.AddFilter)}
             portalId="AddFilter"
             onSubmit={addFilter}
             onCancel={onClose}

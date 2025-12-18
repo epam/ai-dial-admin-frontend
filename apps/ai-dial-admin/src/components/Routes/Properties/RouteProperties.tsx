@@ -181,7 +181,7 @@ const RouteProperties: FC<Props> = ({ route, readonly, isAppRoute, updateRoute }
       />
       <DialSwitch
         isOn={route.rewritePath}
-        title={t(EntityFieldsI18nKey.rewritePath)}
+        label={t(EntityFieldsI18nKey.rewritePath)}
         switchId="RewritePath"
         disabled={readonly}
         onChange={onChangeRewritePath}

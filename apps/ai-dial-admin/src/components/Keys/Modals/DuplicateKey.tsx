@@ -61,7 +61,7 @@ const DuplicateKey: FC<Props> = ({ onDuplicate, isModalOpen, onClose, entity, na
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(getCloneTitle(ApplicationRoute.Keys, t))}
+      header={t(getCloneTitle(ApplicationRoute.Keys, t))}
       portalId="DuplicateKey"
       open={isModalOpen}
       onSubmit={() => onDuplicate(clonedEntity)}

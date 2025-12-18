@@ -20,7 +20,7 @@ const RulesStructure: FC<Props> = ({ isLoading, isOpen, onClose }) => {
   return (
     <DialPopup
       onClose={onClose}
-      title={t(FoldersI18nKey.ReviewStructure)}
+      header={t(FoldersI18nKey.ReviewStructure)}
       portalId="RulesStructure"
       open={isOpen}
       className="min-h-[200px]"

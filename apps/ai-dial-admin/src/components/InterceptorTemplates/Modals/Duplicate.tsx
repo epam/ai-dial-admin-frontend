@@ -35,7 +35,7 @@ const DuplicateTemplate: FC<Props> = ({ onDuplicate, isModalOpen, onClose, templ
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(getCloneTitle(ApplicationRoute.InterceptorTemplates, t))}
+      header={t(getCloneTitle(ApplicationRoute.InterceptorTemplates, t))}
       portalId="DuplicateTemplate"
       open={isModalOpen}
       onSubmit={() => onDuplicate(clonedTemplate)}

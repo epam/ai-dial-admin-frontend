@@ -40,7 +40,7 @@ const TokenizedModelsModal: FC<Props> = ({ model, isModalOpen, onClose, onSelect
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(EntityFieldsI18nKey.tokenizerModel)}
+      header={t(EntityFieldsI18nKey.tokenizerModel)}
       portalId="Model"
       open={isModalOpen}
       onSubmit={onApply}
