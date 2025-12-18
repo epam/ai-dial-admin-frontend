@@ -49,7 +49,7 @@ const ExportDependencies: FC<Props> = ({ selectedExportFormat, dependencies, onC
           <DialSwitch
             key={key}
             isOn={dependencies[key as keyof typeof dependencies]}
-            title={t(label)}
+            label={t(label)}
             switchId={key}
             onChange={(value) =>
               onChangeConfig({
