@@ -30,7 +30,7 @@ const EntityProperties: FC<Props> = ({ runners, names, view, ...props }) => {
         onChange={(icon) => props.onChangeEntity({ ...props.entity, iconUrl: icon })}
       />
 
-      <TopicsControl {...props} />
+      <TopicsControl {...props} onChange={props.onChangeEntity} />
 
       {view === ApplicationRoute.Applications && (
         <ApplicationSource {...props} runners={runners} isEntityImmutable={true} />
