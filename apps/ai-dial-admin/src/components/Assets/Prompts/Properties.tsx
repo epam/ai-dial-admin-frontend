@@ -92,7 +92,7 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt }) => {
             <div className="tiny mb-2 text-secondary">{t(EntityFieldsI18nKey.content)}</div>
             <DialSwitch
               isOn={isJSONContentMode}
-              title="JSON"
+              label="JSON"
               switchId="content_json_mode"
               onChange={onChangeContentMode}
             />
