@@ -126,7 +126,7 @@
     "glob": "10.5.0",
     "react": "19.1.1",
     "react-dom": "19.1.1",
-    "@modern-js/utils": "2.69.4"
+    "@modern-js/utils": "2.69.5"
   },
   "engines": {
     "node": ">=22.2.0",
