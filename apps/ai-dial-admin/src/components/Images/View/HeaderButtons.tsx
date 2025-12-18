@@ -319,7 +319,7 @@ const HeaderButtons: FC<Props> = ({
               <div className={editorClassNames}>
                 <DialSwitch
                   isOn={jsonEditorEnabled}
-                  title={t(EntitiesI18nKey.JSONEditor)}
+                  label={t(EntitiesI18nKey.JSONEditor)}
                   switchId="jsonEditor"
                   onChange={toggleJsonEditor}
                 />
