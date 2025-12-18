@@ -22,7 +22,6 @@ import { ChatEntity } from '@/src/models/dial/base-entity';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getNamesConfigurations } from '@/src/utils/entities/filter-names';
-import { isDeploymentsEnabled } from '@/src/utils/plugins';
 import AdditionalProperties from './AdditionalProperties';
 import { getDisplayNameError, getVersionError } from './utils';
 
@@ -49,8 +48,7 @@ const DeploymentProperties: FC<Props> = ({
 }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
-  const { embeddedApps } = useAppContext();
-  const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
+  const { featureFlags } = useAppContext();
   const [displayNameError, setDisplayNameError] = useState<string | undefined>(void 0);
 
   const namesConfiguration = useMemo(() => {
@@ -178,7 +176,7 @@ const DeploymentProperties: FC<Props> = ({
           onChange={onChangeEntity}
           getContainers={view === ApplicationRoute.Models ? getModelContainers : getMCPContainers}
           fieldTitle={t(EntitiesI18nKey.SourceType)}
-          sourceItems={getSourceItems(view, deploymentsEnabled)}
+          sourceItems={getSourceItems(view, featureFlags.deploymentsEnabled)}
           getAdapters={getModelsAdapters}
           isModal={!isEntityImmutable}
         />

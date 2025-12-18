@@ -27,9 +27,9 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
   const router = useRouter();
   const t = useI18n();
   const isTabletScreen = useIsTabletScreen();
-  const { embeddedApps } = useAppContext();
+  const { featureFlags } = useAppContext();
 
-  const actualConfig = getActualMenuItems(MENU_CONFIGURATION(40), disableMenuItems, embeddedApps);
+  const actualConfig = getActualMenuItems(MENU_CONFIGURATION(40, featureFlags), disableMenuItems);
 
   return (
     <div className="flex flex-col w-full h-full overflow-auto sm:px-2">

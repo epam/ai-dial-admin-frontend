@@ -1,7 +1,6 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import PluginView from '@/src/components/PluginView/PluginView';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
@@ -23,7 +22,6 @@ import { Toolset } from '@/src/models/dial/toolset';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import ContainerView from '@/src/components/Containers/View/ContainerView';
 import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
-import { isValueTruthy } from '@/src/utils/types';
 import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContext';
 import { createToolset as createAssetToolset } from '@/src/app/[lang]/assets-toolsets/actions';
 import { createToolset } from '@/src/app/[lang]/toolsets/actions';
@@ -45,119 +43,115 @@ export default async function Page(params: Params) {
     return redirect(SIGN_IN_LINK);
   }
 
-  if (!isValueTruthy(process.env.DEPLOYMENTS_PLUGIN_ENABLED)) {
-    const entityType = (await params.searchParams).entityType;
+  const entityType = (await params.searchParams).entityType;
 
-    if (isInvalidSession) {
-      return redirect(`/?route=${ApplicationRoute.McpDeployments}/${(await params.params).id}?type=${entityType}`);
-    }
-
-    if (entityType === DEPLOYMENT_ENTITY.images) {
-      let image: Image | null = null;
-      let images: Image[] | null = null;
-      let containers: Container[] | null = null;
-      let versions: ImageVersion[] | null = null;
-
-      try {
-        const imageResponse = await getImage((await params.params).id);
-        const imagesResponse = await getMCPImages();
-
-        if (!imageResponse.success || !imagesResponse.success) {
-          if (imageResponse.status === 403 || imagesResponse.status === 403) {
-            return <Page403 />;
-          }
-          redirect(ApplicationRoute.McpDeployments);
-        }
-        image = imageResponse.response as Image;
-        images = imagesResponse.response as Image[];
-
-        const versionsResponse = await getImageVersions(image.name);
-        const containersResponse = await getMCPContainers();
-
-        if (!containersResponse.success || !versionsResponse.success) {
-          if (containersResponse.status === 403 || versionsResponse.status === 403) {
-            return <Page403 />;
-          }
-          redirect(ApplicationRoute.McpDeployments);
-        }
-        versions = versionsResponse.response as ImageVersion[];
-        containers = containersResponse.response as Container[];
-      } catch (e) {
-        logger.error(`Getting interceptor image error: ${e}`);
-      }
-
-      if (!image) {
-        redirect(ApplicationRoute.McpDeployments);
-      }
-
-      return (
-        <SaveValidationContextProvider>
-          <ImageView
-            image={image}
-            route={ApplicationRoute.McpDeployments}
-            imagesNames={images?.map((image) => image.name).filter((name) => name !== image.name) || []}
-            containerNames={containers?.map((container) => container.name) || []}
-            versions={versions || []}
-          />
-        </SaveValidationContextProvider>
-      );
-    }
-
-    if (entityType === DEPLOYMENT_ENTITY.containers) {
-      let container: Container | null = null;
-      let containers: Container[] | null = null;
-      let image: Image | null = null;
-      let toolsets: Toolset[] | null = null;
-
-      try {
-        const containerResponse = await getContainer((await params.params).id);
-        const containersResponse = await getMCPContainers();
-
-        if (!containerResponse.success || !containersResponse.success) {
-          if (containerResponse.status === 403 || containersResponse.status === 403) {
-            return <Page403 />;
-          }
-          redirect(ApplicationRoute.McpDeployments);
-        }
-        container = containerResponse.response as Container;
-        containers = containersResponse.response as Container[];
-
-        const imageResponse = await getImage(container?.imageDefinitionId as string);
-        if (!imageResponse.success) {
-          if (imageResponse.status === 403) {
-            return <Page403 />;
-          }
-          redirect(ApplicationRoute.McpDeployments);
-        }
-        image = imageResponse.response as Image;
-        toolsets = await toolSetsApi.getToolsetList(token);
-      } catch (e) {
-        logger.error(`Getting interceptor container error ${e}`);
-      }
-
-      if (!container || !image) {
-        redirect(ApplicationRoute.McpDeployments);
-      }
-
-      return (
-        <SaveValidationContextProvider>
-          <ToolsetFolderProvider>
-            <ContainerView
-              container={container}
-              image={image}
-              route={ApplicationRoute.McpDeployments}
-              names={containers?.map((container) => container.name).filter((name) => name !== container.name) || []}
-              createEntity={createToolset}
-              createEntityAsAsset={createAssetToolset}
-              entityNames={toolsets?.map((toolset) => toolset.name as string) || []}
-            />
-          </ToolsetFolderProvider>
-        </SaveValidationContextProvider>
-      );
-    }
-
-    return redirect(ApplicationRoute.McpDeployments);
+  if (isInvalidSession) {
+    return redirect(`/?route=${ApplicationRoute.McpDeployments}/${(await params.params).id}?type=${entityType}`);
   }
 
-  return <PluginView slug="mcp-deployments" />;
+  if (entityType === DEPLOYMENT_ENTITY.images) {
+    let image: Image | null = null;
+    let images: Image[] | null = null;
+    let containers: Container[] | null = null;
+    let versions: ImageVersion[] | null = null;
+
+    try {
+      const imageResponse = await getImage((await params.params).id);
+      const imagesResponse = await getMCPImages();
+
+      if (!imageResponse.success || !imagesResponse.success) {
+        if (imageResponse.status === 403 || imagesResponse.status === 403) {
+          return <Page403 />;
+        }
+        redirect(ApplicationRoute.McpDeployments);
+      }
+      image = imageResponse.response as Image;
+      images = imagesResponse.response as Image[];
+
+      const versionsResponse = await getImageVersions(image.name);
+      const containersResponse = await getMCPContainers();
+
+      if (!containersResponse.success || !versionsResponse.success) {
+        if (containersResponse.status === 403 || versionsResponse.status === 403) {
+          return <Page403 />;
+        }
+        redirect(ApplicationRoute.McpDeployments);
+      }
+      versions = versionsResponse.response as ImageVersion[];
+      containers = containersResponse.response as Container[];
+    } catch (e) {
+      logger.error(`Getting interceptor image error: ${e}`);
+    }
+
+    if (!image) {
+      redirect(ApplicationRoute.McpDeployments);
+    }
+
+    return (
+      <SaveValidationContextProvider>
+        <ImageView
+          image={image}
+          route={ApplicationRoute.McpDeployments}
+          imagesNames={images?.map((image) => image.name).filter((name) => name !== image.name) || []}
+          containerNames={containers?.map((container) => container.name) || []}
+          versions={versions || []}
+        />
+      </SaveValidationContextProvider>
+    );
+  }
+
+  if (entityType === DEPLOYMENT_ENTITY.containers) {
+    let container: Container | null = null;
+    let containers: Container[] | null = null;
+    let image: Image | null = null;
+    let toolsets: Toolset[] | null = null;
+
+    try {
+      const containerResponse = await getContainer((await params.params).id);
+      const containersResponse = await getMCPContainers();
+
+      if (!containerResponse.success || !containersResponse.success) {
+        if (containerResponse.status === 403 || containersResponse.status === 403) {
+          return <Page403 />;
+        }
+        redirect(ApplicationRoute.McpDeployments);
+      }
+      container = containerResponse.response as Container;
+      containers = containersResponse.response as Container[];
+
+      const imageResponse = await getImage(container?.imageDefinitionId as string);
+      if (!imageResponse.success) {
+        if (imageResponse.status === 403) {
+          return <Page403 />;
+        }
+        redirect(ApplicationRoute.McpDeployments);
+      }
+      image = imageResponse.response as Image;
+      toolsets = await toolSetsApi.getToolsetList(token);
+    } catch (e) {
+      logger.error(`Getting interceptor container error ${e}`);
+    }
+
+    if (!container || !image) {
+      redirect(ApplicationRoute.McpDeployments);
+    }
+
+    return (
+      <SaveValidationContextProvider>
+        <ToolsetFolderProvider>
+          <ContainerView
+            container={container}
+            image={image}
+            route={ApplicationRoute.McpDeployments}
+            names={containers?.map((container) => container.name).filter((name) => name !== container.name) || []}
+            createEntity={createToolset}
+            createEntityAsAsset={createAssetToolset}
+            entityNames={toolsets?.map((toolset) => toolset.name as string) || []}
+          />
+        </ToolsetFolderProvider>
+      </SaveValidationContextProvider>
+    );
+  }
+
+  return redirect(ApplicationRoute.McpDeployments);
 }

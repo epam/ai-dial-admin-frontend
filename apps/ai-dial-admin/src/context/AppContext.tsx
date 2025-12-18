@@ -14,7 +14,6 @@ export interface AppContextType {
   visualizerConnector?: VisualizerConnector | null;
   setVisualizerConnector?: Dispatch<SetStateAction<VisualizerConnector | null>>;
   featureFlags: Record<string, boolean>;
-  embeddedApps: EmbeddedApp[];
   hintSidebar: {
     show: boolean;
     content: ReactNode | null;
@@ -25,27 +24,18 @@ export interface AppContextType {
   resourcesDefaults?: ResourcesDefaults;
 }
 
-export interface EmbeddedApp {
-  slug: string;
-  url: string;
-  name: string;
-  key: string;
-}
-
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppContextProvider = ({
   children,
   themeUrl,
   featureFlags,
-  embeddedApps,
   disableDeploymentsJSONEditor,
   resourcesDefaults,
 }: {
   children: ReactNode;
   themeUrl?: string;
   featureFlags: Record<string, boolean>;
-  embeddedApps: EmbeddedApp[];
   disableDeploymentsJSONEditor?: boolean;
   resourcesDefaults?: ResourcesDefaults;
 }) => {
@@ -86,7 +76,6 @@ export const AppContextProvider = ({
     visualizerConnector,
     setVisualizerConnector,
     featureFlags,
-    embeddedApps,
     hintSidebar: { show, content, showHintSidebar, closeHintSidebar },
     disableDeploymentsJSONEditor,
     resourcesDefaults,

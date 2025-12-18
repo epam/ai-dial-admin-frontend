@@ -14,7 +14,6 @@ import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isDeploymentsEnabled } from '@/src/utils/plugins';
 import { getErrorForPath } from '@/src/utils/validation/path-error';
 import { getInterceptorContainers } from '@/src/app/actions/deployments';
 
@@ -38,8 +37,7 @@ const EntityProperties: FC<Props> = ({
 }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
-  const { embeddedApps } = useAppContext();
-  const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
+  const { featureFlags } = useAppContext();
 
   const [pathError, setPathError] = useState<string | undefined>(void 0);
 
@@ -83,7 +81,7 @@ const EntityProperties: FC<Props> = ({
           getRunners={getInterceptorTemplatesList}
           elementId="sourceType"
           fieldTitle={t(EntitiesI18nKey.SourceType)}
-          sourceItems={getSourceItems(ApplicationRoute.Interceptors, deploymentsEnabled)}
+          sourceItems={getSourceItems(ApplicationRoute.Interceptors, featureFlags.deploymentsEnabled)}
           isModal={!isEntityImmutable}
         />
       )}
