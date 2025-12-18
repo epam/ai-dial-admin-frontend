@@ -31,7 +31,7 @@ const DeleteModal: FC<Props> = ({ title, description, isModalOpen, onClose, onAp
   return (
     <DialPopup
       onClose={onClose}
-      title={title}
+      header={title}
       portalId="DeleteImageModal"
       open={isModalOpen}
       className={containerClassNames}

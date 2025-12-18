@@ -99,7 +99,7 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
       {isLogoutConfirmationOpen && (
         <DialConfirmationPopup
           open={isLogoutConfirmationOpen}
-          title={t(AuthI18nKey.ModalTitle)}
+          header={t(AuthI18nKey.ModalTitle)}
           description={t(AuthI18nKey.ModalDescription)}
           confirmLabel={t(AuthI18nKey.Logout)}
           onClose={() => setIsLogoutConfirmationOpen(false)}

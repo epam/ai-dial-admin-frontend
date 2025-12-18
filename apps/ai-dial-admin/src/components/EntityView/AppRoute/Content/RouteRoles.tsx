@@ -99,7 +99,7 @@ const RouteRoles: FC<Props> = ({ route, iAppRunnerView, parentRoles, readonly, o
         {!readonly && (
           <DialSwitch
             switchId="inheritedAppRoles"
-            title={t(RoutesI18nKey.InheritApplicationRoles)}
+            label={t(RoutesI18nKey.InheritApplicationRoles)}
             isOn={route.isPublic}
             onChange={() => {
               onChangeRoute({

@@ -20,7 +20,7 @@ const RulesCompare: FC<Props> = ({ rules, compareRules, isOpen, onClose }) => {
   return (
     <DialPopup
       onClose={onClose}
-      title={t(FoldersI18nKey.ComparePermissions)}
+      header={t(FoldersI18nKey.ComparePermissions)}
       portalId="RulesCompare"
       open={isOpen}
       className="min-h-[200px]"

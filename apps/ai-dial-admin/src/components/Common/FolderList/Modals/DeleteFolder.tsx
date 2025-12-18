@@ -83,7 +83,7 @@ const DeleteFolder: FC<Props> = ({ isModalOpen, view, selectedFolder, isBulkDele
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(FoldersI18nKey.DeleteFolder)}
+      header={t(FoldersI18nKey.DeleteFolder)}
       portalId="DeleteFolder"
       open={isModalOpen}
       size={PopupSize.Lg}

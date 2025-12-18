@@ -74,7 +74,7 @@ const JsonEditorInput: FC<Props> = ({ value, disabled, fieldTitle, elementId, in
       >
         <DialFormPopup
           onClose={onCloseModal}
-          title={t(EntityPlaceholdersI18nKey.Object)}
+          header={t(EntityPlaceholdersI18nKey.Object)}
           portalId="jsonInputModal"
           open={isModalOpen}
           submitLabel={t(ButtonsI18nKey.Apply)}

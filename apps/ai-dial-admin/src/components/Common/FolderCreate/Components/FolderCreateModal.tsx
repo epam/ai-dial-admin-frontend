@@ -82,7 +82,7 @@ const FolderCreateModal: FC<Props> = ({ isModalOpen, folderPath, view, onClose, 
   return (
     <DialPopup
       onClose={onClose}
-      title={t(FoldersI18nKey.FolderCreate)}
+      header={t(FoldersI18nKey.FolderCreate)}
       portalId="CreateFolder"
       open={isModalOpen}
       className="h-[660px]"

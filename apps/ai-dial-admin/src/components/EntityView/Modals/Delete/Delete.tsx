@@ -103,7 +103,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
     <DialConfirmationPopup
       open={true}
       variant={ConfirmationPopupVariant.Danger}
-      title={getTitle(view, t)}
+      header={getTitle(view, t)}
       onConfirm={onConfirmRemoving}
       onClose={onCloseModal}
       size={modalSize}

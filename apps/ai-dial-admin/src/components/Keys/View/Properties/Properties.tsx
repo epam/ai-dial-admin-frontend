@@ -143,7 +143,7 @@ const KeyProperties: FC<Props> = ({ entity, names, keys, isKeyImmutable, onChang
       {isKeyImmutable && (
         <DialSwitch
           isOn={entity.secured}
-          title={t(EntityFieldsI18nKey.secured)}
+          label={t(EntityFieldsI18nKey.secured)}
           switchId="secured"
           onChange={onChangeSecured}
         />

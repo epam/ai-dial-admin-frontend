@@ -78,7 +78,7 @@ const AddContainerToImage: FC<Props> = ({ title, isModalOpen, onClose, onApply, 
   return (
     <DialFormPopup
       onClose={onClose}
-      title={title}
+      header={title}
       portalId="AddEntity"
       open={isModalOpen}
       className="h-[800px]"

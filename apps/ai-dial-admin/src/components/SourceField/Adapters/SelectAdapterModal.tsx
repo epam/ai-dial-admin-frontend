@@ -26,7 +26,7 @@ const SelectAdapterModal: FC<Props> = ({ selected, adapters, isModalOpen, onClos
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(CreateI18nKey.SelectAdapter)}
+      header={t(CreateI18nKey.SelectAdapter)}
       portalId="SelectAdapterModal"
       open={isModalOpen}
       size={PopupSize.Lg}

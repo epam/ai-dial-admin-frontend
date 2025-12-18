@@ -33,7 +33,7 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
         />
         <DialSwitch
           isOn={selectedToolset.forwardPerRequestKey}
-          title={t(EntityFieldsI18nKey.forwardPerRequestKey)}
+          label={t(EntityFieldsI18nKey.forwardPerRequestKey)}
           switchId="forwardPerRequestKey"
           onChange={(value: boolean) => {
             onChangeToolset({ ...selectedToolset, forwardPerRequestKey: value });

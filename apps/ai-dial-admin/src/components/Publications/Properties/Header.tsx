@@ -100,7 +100,7 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
               switchId="jsonView"
               isOn={isJsonView}
               onChange={() => setIsJsonView(!isJsonView)}
-              title={t(EntitiesI18nKey.JSONViewer)}
+              label={t(EntitiesI18nKey.JSONViewer)}
             />
           )}
         </div>
@@ -109,7 +109,7 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
         createPortal(
           <DialConfirmationPopup
             open={isApproveModalOpen}
-            title={t(keys.ApproveModalTitle)}
+            header={t(keys.ApproveModalTitle)}
             onConfirm={approve}
             onClose={() => {
               setIsOpenApproveModal(false);
@@ -124,7 +124,7 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
         createPortal(
           <DialConfirmationPopup
             open={isDeclineModalOpen}
-            title={t(keys.DeclineModalTitle)}
+            header={t(keys.DeclineModalTitle)}
             onConfirm={decline}
             disableConfirmButton={isDeclineInvalid}
             onClose={() => {

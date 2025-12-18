@@ -29,7 +29,7 @@ const SettingsModal: FC<Props> = ({ onConfirm, isModalOpen, onClose }) => {
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(SettingsModalI18nKey.Settings)}
+      header={t(SettingsModalI18nKey.Settings)}
       portalId="SettingsModal"
       open={isModalOpen}
       size={PopupSize.Sm}

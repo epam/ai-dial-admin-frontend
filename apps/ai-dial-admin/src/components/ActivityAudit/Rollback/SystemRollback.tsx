@@ -174,7 +174,7 @@ const SystemRollback: FC = () => {
             onClick={() => setIsRollBackModalOpen(true)}
           />
           <div className="w-[1px] h-6 bg-layer-4"></div>
-          <DialSwitch switchId="jsonView" isOn={isJsonView} onChange={() => setIsJsonView(!isJsonView)} title="JSON" />
+          <DialSwitch switchId="jsonView" isOn={isJsonView} onChange={() => setIsJsonView(!isJsonView)} label="JSON" />
         </div>
       </div>
       <div className="flex flex-col min-h-0 flex-1 relative">

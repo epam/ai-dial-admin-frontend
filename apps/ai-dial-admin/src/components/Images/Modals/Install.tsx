@@ -18,7 +18,7 @@ const Install: FC<Props> = ({ isModalOpen, title, onClose, onApply, image }) => 
   return (
     <DialPopup
       onClose={onClose}
-      title={title}
+      header={title}
       portalId="BuildImageModal"
       open={isModalOpen}
       className="md:max-w-[400px] lg:max-w-[400px]"

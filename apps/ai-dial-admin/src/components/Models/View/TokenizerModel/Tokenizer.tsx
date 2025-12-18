@@ -48,7 +48,7 @@ const TokenizerModelSwitch: FC<Props> = ({ model, onChangeModel }) => {
     <div className="flex flex-col gap-3">
       <DialSwitch
         isOn={model.tokenizerModel != null}
-        title={t(EntityFieldsI18nKey.tokenizerModel)}
+        label={t(EntityFieldsI18nKey.tokenizerModel)}
         switchId="tokenizerModel"
         onChange={onSwitchTokenizerModel}
       />

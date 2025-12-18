@@ -28,7 +28,7 @@ const EntityViewModals: FC<Props> = ({ isModalOpen, modalType, handleConfirm, ha
         createPortal(
           <DialConfirmationPopup
             open={isModalOpen}
-            title={t(EntitiesI18nKey.SaveChangesTitle)}
+            header={t(EntitiesI18nKey.SaveChangesTitle)}
             description={t(EntitiesI18nKey.SaveChangesDescription)}
             confirmLabel={t(ButtonsI18nKey.Save)}
             cancelLabel={t(ButtonsI18nKey.OpenWithoutSave)}
@@ -44,7 +44,7 @@ const EntityViewModals: FC<Props> = ({ isModalOpen, modalType, handleConfirm, ha
         createPortal(
           <DialConfirmationPopup
             open={isModalOpen}
-            title={t(EntitiesI18nKey.SaveParametersTitle)}
+            header={t(EntitiesI18nKey.SaveParametersTitle)}
             description={t(EntitiesI18nKey.SaveParametersDescription)}
             confirmLabel={t(ButtonsI18nKey.Save)}
             cancelLabel={t(ButtonsI18nKey.LeaveWithoutSave)}

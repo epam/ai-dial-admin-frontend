@@ -139,7 +139,7 @@ const ExtraDataField: FC<Props> = ({ endpoint, disabled, fieldTitle, onChangeExt
         id="extraDataInput"
         emptyValueText={t(BasicI18nKey.None)}
         fieldTitle={fieldTitle ?? ''}
-        title={t(EntityFieldsI18nKey.extraData)}
+        header={t(EntityFieldsI18nKey.extraData)}
         portalId="extraDataPortal"
         customInputValue={
           typeof endpoint.extraData === 'object'

@@ -72,7 +72,7 @@ const CreateAppRunner: FC<Props> = ({ isModalOpen, names, onClose }) => {
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(CreateI18nKey.ApplicationRunner)}
+      header={t(CreateI18nKey.ApplicationRunner)}
       portalId="CreateRunner"
       open={isModalOpen}
       onSubmit={onCreate}
