@@ -38,7 +38,7 @@ const ExportModal: FC<Props> = ({ isModalOpen, route, onClose, onApply }) => {
   return (
     <DialPopup
       onClose={onClose}
-      title={getModalTitle(route, t)}
+      header={getModalTitle(route, t)}
       portalId="ExportModal"
       open={isModalOpen}
       size={PopupSize.Sm}

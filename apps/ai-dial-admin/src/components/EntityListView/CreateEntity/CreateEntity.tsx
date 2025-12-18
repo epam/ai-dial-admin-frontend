@@ -148,7 +148,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
   return (
     <DialFormPopup
       onClose={onClose}
-      title={getCreateEntityTitle(route, t)}
+      header={getCreateEntityTitle(route, t)}
       portalId="CreateEntity"
       open={isModalOpen}
       onSubmit={onCreate}

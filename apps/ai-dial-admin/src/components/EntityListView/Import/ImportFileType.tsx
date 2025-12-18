@@ -70,7 +70,7 @@ const ImportFileTypeSelector: FC<Props> = ({
             <Field fieldTitle={ignorePathsTitle} />
             <DialSwitch
               isOn={ignorePaths}
-              title={t(ImportI18nKey.PathsIgnore)}
+              label={t(ImportI18nKey.PathsIgnore)}
               switchId="ignorePaths"
               onChange={setIgnorePaths}
             />
