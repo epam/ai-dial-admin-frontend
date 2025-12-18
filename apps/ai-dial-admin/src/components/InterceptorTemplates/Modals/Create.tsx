@@ -63,7 +63,7 @@ const Create: FC<Props> = ({ route, onClose, isModalOpen, names }) => {
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(CreateI18nKey.InterceptorTemplate)}
+      header={t(CreateI18nKey.InterceptorTemplate)}
       portalId="CreateInterceptorTemplate"
       open={isModalOpen}
       onSubmit={onCreate}

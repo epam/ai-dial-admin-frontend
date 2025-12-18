@@ -24,7 +24,7 @@ const IconGalleryModal: FC<Props> = ({ isModalOpen, selectedValue, onClose, onCh
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(EntityFieldsI18nKey.iconUrl)}
+      header={t(EntityFieldsI18nKey.iconUrl)}
       portalId="IconSelector"
       open={isModalOpen}
       onSubmit={onApply}

@@ -122,7 +122,7 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
   return (
     <DialPopup
       onClose={onClose}
-      title={modalTitle}
+      header={modalTitle}
       portalId="AddContainerModal"
       open={isModalOpen}
       className="lg:max-w-[75%] md:max-w-[90%]"

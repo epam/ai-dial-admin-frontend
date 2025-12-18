@@ -91,7 +91,7 @@ const ActivityDetails: FC<Props> = ({
   return (
     <DialPopup
       onClose={onClose}
-      title={heading || t(ActivityAuditI18nKey.ActivityDetails)}
+      header={heading || t(ActivityAuditI18nKey.ActivityDetails)}
       portalId="ActivityDetailsModal"
       open={isModalOpen}
       size={PopupSize.Lg}

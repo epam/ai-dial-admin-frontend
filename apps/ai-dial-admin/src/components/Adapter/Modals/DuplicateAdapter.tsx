@@ -51,7 +51,7 @@ const DuplicateAdapter: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(getCloneTitle(ApplicationRoute.Adapters, t))}
+      header={t(getCloneTitle(ApplicationRoute.Adapters, t))}
       portalId="DuplicateAdapter"
       open={isModalOpen}
       cancelLabel={t(ButtonsI18nKey.Cancel)}

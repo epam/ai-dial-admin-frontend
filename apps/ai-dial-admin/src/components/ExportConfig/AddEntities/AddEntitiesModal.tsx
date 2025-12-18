@@ -55,7 +55,7 @@ const AddEntitiesModal: FC<Props> = ({ isModalOpen, selectedTab, entities, colum
   return (
     <DialFormPopup
       onClose={onClose}
-      title={modalTitle}
+      header={modalTitle}
       portalId="AddExportEntities"
       open={isModalOpen}
       size={PopupSize.Lg}

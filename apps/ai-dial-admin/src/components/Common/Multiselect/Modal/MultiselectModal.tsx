@@ -85,7 +85,7 @@ const MultiselectModal: FC<Props> = ({
   return (
     <DialFormPopup
       onClose={onClose}
-      title={heading}
+      header={heading}
       portalId="itemsMultiSelect"
       open={isModalOpen}
       onSubmit={onApply}

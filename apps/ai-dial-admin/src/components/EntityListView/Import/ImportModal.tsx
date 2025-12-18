@@ -214,7 +214,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
   return (
     <DialPopup
       onClose={onClose}
-      title={getModalTitle(route, t)}
+      header={getModalTitle(route, t)}
       portalId="ImportModal"
       className="h-[660px]"
       open={isModalOpen}

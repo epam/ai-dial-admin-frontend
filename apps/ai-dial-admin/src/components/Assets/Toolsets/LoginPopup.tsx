@@ -35,7 +35,7 @@ const LoginPopup: FC<Props> = ({ type, isModalOpen, onClose, onLogin }) => {
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(ToolsetI18nKey.LogIn)}
+      header={t(ToolsetI18nKey.LogIn)}
       portalId="LogInPopup"
       open={isModalOpen}
       onSubmit={() => onLogin(authType as ToolsetAuthCredentialLevel, apiKeyValue)}

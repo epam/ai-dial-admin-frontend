@@ -50,7 +50,7 @@ const DuplicateScheme: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose, 
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(getCloneTitle(ApplicationRoute.ApplicationRunners, t))}
+      header={t(getCloneTitle(ApplicationRoute.ApplicationRunners, t))}
       portalId="DuplicateScheme"
       open={isModalOpen}
       onSubmit={() => onDuplicate(clonedEntity)}

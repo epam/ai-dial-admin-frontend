@@ -30,7 +30,7 @@ const AddVersionModal: FC<Props> = ({
   return (
     <DialFormPopup
       onClose={onClose}
-      title={heading}
+      header={heading}
       portalId="newVersionModal"
       open={isModalOpen}
       onCancel={onClose}

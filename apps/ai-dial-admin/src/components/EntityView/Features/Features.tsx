@@ -88,7 +88,7 @@ const EntityFeatures = <T extends { features?: DialFeatures }>({
               disabled={isReadonly}
               key={key}
               isOn={(isReadonly ? value : entity?.features?.[key]) as boolean}
-              title={t(FeaturesI18nKey[key as keyof typeof FeaturesI18nKey])}
+              label={t(FeaturesI18nKey[key as keyof typeof FeaturesI18nKey])}
               switchId={key}
               onChange={(value) => onSwitch(value, key)}
             />

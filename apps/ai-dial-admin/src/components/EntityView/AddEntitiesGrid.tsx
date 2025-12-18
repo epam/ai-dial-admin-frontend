@@ -48,7 +48,7 @@ const AddEntitiesGrid = <T extends object>({
   return (
     <DialFormPopup
       onClose={onClose}
-      title={modalTitle}
+      header={modalTitle}
       portalId="AddEntity"
       open={isModalOpen}
       className="h-[800px]"

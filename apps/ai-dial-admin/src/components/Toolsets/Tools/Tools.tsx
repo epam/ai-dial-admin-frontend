@@ -166,7 +166,7 @@ const ToolsView: FC<Props> = ({ selectedToolset, isAssetToolset, readonly, origi
             {!readonly && (
               <DialSwitch
                 switchId="useAllTools"
-                title={t(ToolsetI18nKey.UseAllTools)}
+                label={t(ToolsetI18nKey.UseAllTools)}
                 isOn={useAllTools}
                 onChange={(value) =>
                   onChangeToolset?.({

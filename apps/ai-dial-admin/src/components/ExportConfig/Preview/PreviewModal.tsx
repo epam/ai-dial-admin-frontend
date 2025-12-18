@@ -66,7 +66,7 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, isModalOpen, onClos
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(ExportI18nKey.FilePreview)}
+      header={t(ExportI18nKey.FilePreview)}
       portalId="ExportFilePreview"
       open={isModalOpen}
       className="h-[754px]"
@@ -93,7 +93,7 @@ const PreviewModal: FC<Props> = ({ exportRequest, onPrepare, isModalOpen, onClos
         </div>
         <DialSwitch
           isOn={isIncludeSecret}
-          title={t(ExportI18nKey.IncludeSecrets)}
+          label={t(ExportI18nKey.IncludeSecrets)}
           switchId="includeSecret"
           onChange={toggleIncludeSecret}
         />
