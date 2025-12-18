@@ -39,6 +39,7 @@ import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 interface Props {
   route: ApplicationRoute;
   image: Image;
+  originalImageName: string;
   isChanged: boolean;
   jsonEditorEnabled: boolean;
   jsonErrors: JSONEditorError[] | null;
@@ -56,6 +57,7 @@ interface Props {
 const HeaderButtons: FC<Props> = ({
   route,
   image,
+  originalImageName,
   isChanged,
   onDiscard,
   onSave,
@@ -90,8 +92,10 @@ const HeaderButtons: FC<Props> = ({
   }, [image.buildStatus]);
 
   const forceNewVersion = useMemo(() => {
-    return !versions.some((v: ImageVersion) => v.version === image.version);
-  }, [image.version, versions]);
+    const isNameChanged = (image.name ?? '').trim() !== (originalImageName ?? '').trim();
+
+    return isNameChanged && versions.some((v: ImageVersion) => v.version === image.version);
+  }, [image.name, image.version, originalImageName, versions]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -263,12 +267,12 @@ const HeaderButtons: FC<Props> = ({
               onClick={onDiscard}
             />
             <DialButton
-              variant={allowEditing && forceNewVersion ? ButtonVariant.Secondary : ButtonVariant.Primary}
+              variant={allowEditing && !forceNewVersion ? ButtonVariant.Secondary : ButtonVariant.Primary}
               className={buttonsClassNames}
               label={t(ButtonsI18nKey.SaveAsNewVersion)}
               onClick={onOpenSaveNewVersionModal}
             />
-            {allowEditing && forceNewVersion && (
+            {allowEditing && !forceNewVersion && (
               <DialButton
                 variant={ButtonVariant.Primary}
                 className={buttonsClassNames}
