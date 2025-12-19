@@ -16,7 +16,7 @@ interface Props {
 const ServingProperties: FC<Props> = ({ container, setContainer }) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
-  const [modelNameError, setModelNameError] = useState<FieldError | null>(null);
+  const [imageRefError, setImageRefError] = useState<FieldError | null>(null);
 
   const SERVING_TYPES = [
     { value: MODEL_SOURCE_TYPE.HF, label: t(ContainersI18nKey.ModelTypeHF) },
@@ -35,7 +35,7 @@ const ServingProperties: FC<Props> = ({ container, setContainer }) => {
   const onChangeModelName = useCallback(
     (modelName?: string) => {
       const error = getModelNameError(modelName, container.source?.$type as MODEL_SOURCE_TYPE);
-      setModelNameError(error);
+      setImageRefError(error);
       setContainer({ ...container, source: { ...container.source, modelName } as SERVING_SOURCE });
       dispatch({
         type: ValidationActionType.SetField,
@@ -62,9 +62,9 @@ const ServingProperties: FC<Props> = ({ container, setContainer }) => {
         delete updated.modelFormat;
       }
 
-      if (container.source?.modelName) {
-        const error = getModelNameError(container.source?.modelName, $type);
-        setModelNameError(error);
+      if (container.source?.imageRef) {
+        const error = getModelNameError(container.source?.imageRef, $type);
+        setImageRefError(error);
       }
       setContainer(updated);
     },
@@ -75,16 +75,16 @@ const ServingProperties: FC<Props> = ({ container, setContainer }) => {
     dispatch({
       type: ValidationActionType.SetField,
       field: 'modelName',
-      isValid: !getModelNameError(container.source?.modelName, container.source?.$type),
+      isValid: !getModelNameError(container.source?.imageRef, container.source?.$type),
     });
   }, [container.source, dispatch, getModelNameError, t]);
 
   useEffect(() => {
-    if (resetCounter || (container.source?.modelName != null && container.source.modelName.length > 0)) {
-      const error = getModelNameError(container.source?.modelName, container.source?.$type);
-      setModelNameError(error);
+    if (resetCounter || (container.source?.imageRef != null && container.source.imageRef.length > 0)) {
+      const error = getModelNameError(container.source?.imageRef, container.source?.$type);
+      setImageRefError(error);
     } else {
-      setModelNameError(null);
+      setImageRefError(null);
     }
   }, [container.source, resetCounter, getModelNameError]);
 
@@ -104,9 +104,9 @@ const ServingProperties: FC<Props> = ({ container, setContainer }) => {
             ? t(EntityFieldsI18nKey.HFModelName)
             : t(EntityFieldsI18nKey.ImageURI)
         }
-        value={container.source?.modelName}
-        errorText={modelNameError?.text}
-        invalid={!!modelNameError}
+        value={container.source?.imageRef}
+        errorText={imageRefError?.text}
+        invalid={!!imageRefError}
         onChange={onChangeModelName}
       />
     </div>
