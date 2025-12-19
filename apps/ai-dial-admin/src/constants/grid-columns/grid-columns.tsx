@@ -26,12 +26,13 @@ import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import DeploymentStatusIndicator from '@/src/components/Common/DeploymentStatusIndicator/DeploymentStatusIndicator';
 import { STATUS_I18N_KEYS, TRANSPORT_TYPES } from '@/src/constants/deployments/images';
 import { CONTAINER_STATUS, KubEventType } from '@/src/types/deployments/containers';
-import { EVENT_TYPES, POD_OBJECT_KIND } from '@/src/constants/deployments/containers';
+import { EVENT_TYPES, MODELS_SOURCE_TYPES, POD_OBJECT_KIND } from '@/src/constants/deployments/containers';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import VersionsSelect from '@/src/components/Common/VersionsSelect/VersionsSelect';
 import { SelectVariant } from '@epam/ai-dial-ui-kit';
 import { ImageVersion } from '@/src/models/deployments/images';
 import { formatDeploymentImageName } from '@/src/utils/formatting/deployments';
+import { MODEL_SOURCE_TYPE } from '@/src/types/deployments/containers';
 
 const stringFilter: Partial<ColDef> = {
   filterParams: {
@@ -525,7 +526,7 @@ export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
   { field: 'image', headerName: 'Image' },
 ];
 
-export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string): ColDef[] => [
+export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, route: ApplicationRoute): ColDef[] => [
   { field: 'name', headerName: 'Name', hide: false },
   { field: 'description', headerName: 'Description', hide: false },
   {
@@ -536,6 +537,20 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string): Co
     tooltipValueGetter: (params) => formatDeploymentImageName(params.data) ?? params.value,
     filterValueGetter: (params) => formatDeploymentImageName(params.data) ?? params.data[params.colDef.field || ''],
   },
+  ...(route === ApplicationRoute.ModelDeployments
+    ? [
+        {
+          field: 'source.$type',
+          headerName: 'Source type',
+          hide: false,
+          valueFormatter: ({ value }) => t(MODELS_SOURCE_TYPES[value as MODEL_SOURCE_TYPE]),
+          tooltipValueGetter: ({ value }) => t(MODELS_SOURCE_TYPES[value as MODEL_SOURCE_TYPE]),
+          filterValueGetter: (params) =>
+            t(MODELS_SOURCE_TYPES[params.data[params.colDef.field || ''] as MODEL_SOURCE_TYPE]),
+        } as ColDef,
+      ]
+    : []),
+
   {
     field: 'status',
     headerName: 'Status',

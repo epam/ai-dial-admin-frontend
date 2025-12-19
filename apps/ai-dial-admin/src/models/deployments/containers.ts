@@ -3,6 +3,7 @@ import {
   CONTAINER_TRANSPORT,
   CONTAINER_TYPE,
   KubEventType,
+  SERVING_SOURCE,
 } from '@/src/types/deployments/containers';
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
 
@@ -29,6 +30,8 @@ export interface Container {
   metadata: {
     envs?: EnvironmentVariable[];
   };
+  source?: SERVING_SOURCE;
+  modelFormat?: string;
 }
 
 export interface Tool {

@@ -325,6 +325,7 @@ export enum CreateI18nKey {
   CreateContainer = 'CreateEntity.Deployments.Container',
   CreateEntity = 'CreateEntity.Deployments.Entity',
   CreateEntityAsAsset = 'CreateEntity.Deployments.EntityAsAsset',
+  CreateServing = 'CreateEntity.Deployments.Serving',
 
   SelectInterceptorTemplate = 'CreateEntity.SelectInterceptorTemplate',
   SelectAdapter = 'CreateEntity.SelectAdapter',
@@ -816,6 +817,7 @@ export enum ErrorI18nKey {
   PathError = 'Error.PathError',
   VariableError = 'Error.VariableError',
   VariableStartError = 'Error.VariableStartError',
+  HFModelName = 'Error.HFModelName',
 }
 
 export enum SourceI18nKey {
@@ -1053,6 +1055,7 @@ export enum EntityFieldsI18nKey {
   GRPCPort = 'EntityFields.GRPCPort',
   Arguments = 'EntityFields.Arguments',
   globalInterceptors = 'EntityFields.globalInterceptors',
+  HFModelName = 'EntityFields.HFModelName',
 }
 
 export enum ToolsetI18nKey {
@@ -1133,6 +1136,8 @@ export enum ContainersI18nKey {
   Annotations = 'Containers.Annotations',
   ContainerImage = 'Containers.ContainerImage',
   ContainerProperties = 'Containers.ContainerProperties',
+  ModelTypeNIM = 'Containers.ModelTypeNIM',
+  ModelTypeHF = 'Containers.ModelTypeHF',
   Running = 'Containers.Running',
   NotRunning = 'Containers.NotRunning',
   Preparing = 'Containers.Preparing',

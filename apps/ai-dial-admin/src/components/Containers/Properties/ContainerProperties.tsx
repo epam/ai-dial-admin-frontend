@@ -15,6 +15,7 @@ import PortField from '@/src/components/Common/PortField/PortField';
 import EnvVariables from '@/src/components/Containers/Properties/EnvVariables/EnvVariables';
 import { getPathError } from '@/src/utils/deployments/validation';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import ServingProperties from './ServingProperties';
 
 interface Props {
   container: Container;
@@ -64,6 +65,9 @@ const ContainerProperties: FC<Props> = ({ container, setContainer, isModal, rout
         <BaseProperties container={container} setContainer={setContainer} names={names} isModal={isModal} />
         {!isModal && (
           <>
+            {route === ApplicationRoute.ModelDeployments && (
+              <ServingProperties container={container} setContainer={setContainer} />
+            )}
             <ContainerResourcesFields container={container} setContainer={setContainer} route={route} />
             {route === ApplicationRoute.McpDeployments && (
               <div className="flex gap-4">
