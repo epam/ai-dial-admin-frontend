@@ -63,11 +63,11 @@ const DeploymentProperties: FC<Props> = ({
     return getVersionError(isVersionOptional, entity as DialModel, namesConfiguration.versionsMap, t);
   }, [entity, isVersionOptional, namesConfiguration.versionsMap, t]);
 
-  const onChangeDisplayName = useCallback(
-    (displayName: string) => {
+  const onValidationDisplayName = useCallback(
+    (displayName?: string) => {
       const error = getDisplayNameError(
         view,
-        displayName as string,
+        displayName || '',
         namesConfiguration.names,
         t,
         (entity as DialModel).displayVersion,
@@ -79,16 +79,33 @@ const DeploymentProperties: FC<Props> = ({
         field: 'displayName',
         isValid: !error,
       });
-
-      onChangeEntity({ ...entity, displayName });
     },
-    [namesConfiguration.names, dispatch, view, t, onChangeEntity, entity],
+    [dispatch, entity, namesConfiguration.names, t, view],
+  );
+
+  const onChangeDisplayName = useCallback(
+    (displayName: string) => {
+      onChangeEntity({ ...entity, displayName });
+      onValidationDisplayName(displayName);
+    },
+    [entity, onChangeEntity, onValidationDisplayName],
+  );
+
+  const onChangeVersion = useCallback(
+    (displayVersion?: string) => {
+      onChangeEntity({ ...entity, displayVersion } as DialModel);
+      onValidationDisplayName(entity?.displayName);
+    },
+    [entity, onChangeEntity, onValidationDisplayName],
   );
 
   useEffect(() => {
-    dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!entity.displayName });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (entity.displayName) {
+      onValidationDisplayName(entity.displayName);
+    } else {
+      dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: false });
+    }
+  }, [dispatch, entity.displayName, onValidationDisplayName]);
 
   useEffect(() => {
     if (view === ApplicationRoute.Models) {
@@ -96,26 +113,6 @@ const DeploymentProperties: FC<Props> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [versionError, (entity as DialModel).displayVersion, t, view, dispatch]);
-
-  const onChangeVersion = useCallback(
-    (displayVersion?: string) => {
-      onChangeEntity({ ...entity, displayVersion } as DialModel);
-      const error = getDisplayNameError(
-        view,
-        entity.displayName as string,
-        namesConfiguration.names,
-        t,
-        displayVersion,
-      );
-      setDisplayNameError(error);
-      dispatch({
-        type: ValidationActionType.SetField,
-        field: 'displayName',
-        isValid: !error,
-      });
-    },
-    [onChangeEntity, entity, view, namesConfiguration.names, t, dispatch],
-  );
 
   return (
     <div className="w-full flex flex-col gap-y-8">
