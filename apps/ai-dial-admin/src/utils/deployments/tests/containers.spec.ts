@@ -88,7 +88,6 @@ describe('containers utils', () => {
   describe('getContainerTemplate', () => {
     test('returns template for ModelDeployments', () => {
       const template = getContainerTemplate(ApplicationRoute.ModelDeployments);
-      // Model deployments default to HuggingFace inference container
       expect(template?.$type).toBe(CONTAINER_TYPE.HF);
       expect(template?.resources?.requests?.['nvidia.com/gpu']).toBe('1');
     });

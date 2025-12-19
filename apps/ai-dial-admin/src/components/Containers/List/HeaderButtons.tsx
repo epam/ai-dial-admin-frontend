@@ -20,7 +20,7 @@ import { getTranslatedType } from '@/src/utils/deployments/entity';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 import { useRouter } from 'next/navigation';
-import CreateServing from '../Modals/CreateServing';
+import CreateServing from '@/src/components/Containers/Modals/CreateServing';
 
 interface Props {
   toggleColumnsPanel: () => void;
