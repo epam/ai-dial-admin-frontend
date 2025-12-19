@@ -48,17 +48,10 @@ export const getErrorForName = (
 ) => {
   const isIncludesName = name && names?.includes(name);
   if (isIncludesName || isUniqueNameError) {
-    if (isDisplayName) {
-      return {
-        type: ErrorType.EXISTING,
-        text: t ? t(ErrorI18nKey.DisplayNameExists) : '',
-      };
-    } else {
-      return {
-        type: ErrorType.EXISTING,
-        text: t ? t(ErrorI18nKey.NameExists) : '',
-      };
-    }
+    return {
+      type: ErrorType.EXISTING,
+      text: t ? t(isDisplayName ? ErrorI18nKey.DisplayNameExists : ErrorI18nKey.NameExists) : '',
+    };
   }
 
   const tWithArgs = t as (str: string, args?: Record<string, string | number>) => string;
