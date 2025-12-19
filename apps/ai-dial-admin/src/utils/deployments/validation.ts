@@ -14,6 +14,11 @@ const DOCKER_IMAGE_REGEX =
 const SSH_REPO_REGEX =
   /^(?:ssh:\/\/)?[A-Za-z0-9._-]+@[A-Za-z0-9._-]+(?::\d+)?[:/][A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)*(?:\.git)?$/;
 
+const HF_USERNAME_MAX_LENGTH = 42;
+const HF_MODEL_MAX_LENGTH = 96;
+const HF_USERNAME_ALLOWED_REGEX = /^[A-Za-z0-9-]+$/;
+const HF_MODEL_ALLOWED_REGEX = /^[A-Za-z0-9_.-]+$/;
+
 export const getVariableNameError = (name: string, t?: (str: string) => string) => {
   if (!name) {
     return {
@@ -62,6 +67,13 @@ export const isValidSSHRepo = (value: string) => {
 };
 
 export const getDeploymentsURLError = (url: string, t?: (str: string) => string): FieldError | null => {
+  if (!url) {
+    return {
+      type: ErrorType.EMPTY,
+      text: t ? t(ErrorI18nKey.RequiredField) : '',
+    };
+  }
+
   if (!isValidSSHRepo(url) && !isValidHttpUrl(url)) {
     return {
       type: ErrorType.INVALID,
@@ -69,18 +81,25 @@ export const getDeploymentsURLError = (url: string, t?: (str: string) => string)
     };
   }
 
-  return getURLError(url, t);
+  return null;
 };
 
-export const getDeploymentsURIError = (uri: string, t?: (str: string) => string) => {
-  if (!isValidDockerUri(uri)) {
+export const getDeploymentsURIError = (uri?: string, t?: (str: string) => string) => {
+  if (!uri) {
+    return {
+      type: ErrorType.EMPTY,
+      text: t ? t(ErrorI18nKey.RequiredField) : '',
+    };
+  }
+
+  if (!isValidDockerUri(uri as string)) {
     return {
       type: ErrorType.INVALID,
       text: t ? t(ErrorI18nKey.ImageSourceURI) : '',
     };
   }
 
-  return getURIError(uri, t);
+  return null;
 };
 
 export const getMaintainerError = (
@@ -115,21 +134,70 @@ export const getPathError = (path: string, t?: (str: string) => string, required
   return null;
 };
 
-export const getURLError = (url: string, t?: (str: string) => string): FieldError | null => {
-  if (!url) {
-    return {
-      type: ErrorType.EMPTY,
-      text: t ? t(ErrorI18nKey.RequiredField) : '',
-    };
-  }
-  return null;
+const endsWithAny = (value: string, suffixes: string[]): boolean => {
+  const lower = value.toLowerCase();
+  return suffixes.some((s) => lower.endsWith(s.toLowerCase()));
 };
 
-export const getURIError = (uri: string, t?: (str: string) => string) => {
-  if (!uri) {
+const isValidHfUsername = (username: string): boolean => {
+  if (username.length === 0 || username.length > HF_USERNAME_MAX_LENGTH) return false;
+  if (!HF_USERNAME_ALLOWED_REGEX.test(username)) return false;
+  if (username.startsWith('-') || username.endsWith('-')) return false;
+  if (username.includes('--')) return false;
+  return true;
+};
+
+const isValidHfModelName = (modelName: string): boolean => {
+  if (modelName.length === 0 || modelName.length > HF_MODEL_MAX_LENGTH) return false;
+  if (!HF_MODEL_ALLOWED_REGEX.test(modelName)) return false;
+  if (modelName.startsWith('-') || modelName.endsWith('-')) return false;
+  if (modelName.startsWith('.') || modelName.endsWith('.')) return false;
+  if (modelName.includes('--')) return false;
+  if (modelName.includes('..')) return false;
+  if (endsWithAny(modelName, ['.git', '.ipynb'])) return false;
+  return true;
+};
+
+/**
+ * Validates Hugging Face model identifier in form: <user_name>/<model_name>
+ *
+ * Rules:
+ * - user_name: letters/digits and '-', no '--', '-' cannot start/end, max 42
+ * - model_name: letters/digits and '-', '_', '.', no '--'/'..', '-' and '.' cannot start/end,
+ *   cannot end with ".git" or ".ipynb", max 96
+ */
+export const getErrorForHfModelName = (
+  value?: string,
+  t?: (key: string, options?: Record<string, string | number>) => string,
+): FieldError | null => {
+  const trimmed = value?.trim() ?? '';
+  if (!trimmed) {
     return {
       type: ErrorType.EMPTY,
-      text: t ? t(ErrorI18nKey.RequiredField) : '',
+      text: t ? t(ErrorI18nKey.RequiredProperty) : '',
+    };
+  }
+
+  const parts = trimmed.split('/');
+  if (parts.length !== 2) {
+    return {
+      type: ErrorType.INVALID,
+      text: t ? t(ErrorI18nKey.HFModelName) : '',
+    };
+  }
+
+  const [username, modelName] = parts;
+  if (!username || !modelName) {
+    return {
+      type: ErrorType.INVALID,
+      text: t ? t(ErrorI18nKey.HFModelName) : '',
+    };
+  }
+
+  if (!isValidHfUsername(username) || !isValidHfModelName(modelName)) {
+    return {
+      type: ErrorType.INVALID,
+      text: t ? t(ErrorI18nKey.HFModelName) : '',
     };
   }
 

@@ -20,6 +20,7 @@ import { getTranslatedType } from '@/src/utils/deployments/entity';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
 import { useRouter } from 'next/navigation';
+import CreateServing from '@/src/components/Containers/Modals/CreateServing';
 
 interface Props {
   toggleColumnsPanel: () => void;
@@ -86,14 +87,24 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, names, gridApi })
 
       {isModalOpen &&
         createPortal(
-          <CreateContainer
-            isModalOpen={isModalOpen}
-            modalTitle={t(ContainersI18nKey.CreateModalTitle, { type: getTranslatedType(route, t) })}
-            onClose={handleModalClose}
-            onApply={onCreateContainer}
-            route={route}
-            names={names}
-          />,
+          route === ApplicationRoute.ModelDeployments ? (
+            <CreateServing
+              isModalOpen={isModalOpen}
+              onClose={handleModalClose}
+              onApply={onCreateContainer}
+              route={route}
+              names={names}
+            />
+          ) : (
+            <CreateContainer
+              isModalOpen={isModalOpen}
+              modalTitle={t(ContainersI18nKey.CreateModalTitle, { type: getTranslatedType(route, t) })}
+              onClose={handleModalClose}
+              onApply={onCreateContainer}
+              route={route}
+              names={names}
+            />
+          ),
           document.body,
         )}
     </>

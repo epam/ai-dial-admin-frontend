@@ -101,7 +101,6 @@ export default async function Page(params: Params) {
   if (entityType === DEPLOYMENT_ENTITY.containers) {
     let container: Container | null = null;
     let containers: Container[] | null = null;
-    let image: Image | null = null;
     let models: DialModel[] | null = null;
 
     try {
@@ -117,20 +116,12 @@ export default async function Page(params: Params) {
       container = containerResponse.response as Container;
       containers = containersResponse.response as Container[];
 
-      const imageResponse = await getImage(container?.imageDefinitionId as string);
-      if (!imageResponse.success) {
-        if (imageResponse.status === 403) {
-          return <Page403 />;
-        }
-        redirect(ApplicationRoute.ModelDeployments);
-      }
-      image = imageResponse.response as Image;
       models = await modelsApi.getModelsList(token);
     } catch (e) {
       logger.error(`Getting interceptor container error ${e}`);
     }
 
-    if (!container || !image) {
+    if (!container) {
       redirect(ApplicationRoute.ModelDeployments);
     }
 
@@ -138,7 +129,6 @@ export default async function Page(params: Params) {
       <SaveValidationContextProvider>
         <ContainerView
           container={container}
-          image={image}
           route={ApplicationRoute.ModelDeployments}
           names={containers?.map((container) => container.name).filter((name) => name !== container.name) || []}
           createEntity={createModel}

@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, test, vi, expect } from 'vitest';
 import PortField from './PortField';
 import { ApplicationRoute } from '@/src/types/routes';
-import { CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/containers';
+import { CONTAINER_STATUS, CONTAINER_TYPE, MODEL_SOURCE_TYPE } from '@/src/types/deployments/containers';
 import { Container } from '@/src/models/deployments/containers';
 
 describe('Common components :: PortField', () => {
@@ -27,7 +27,12 @@ describe('Common components :: PortField', () => {
     render(
       <PortField
         route={ApplicationRoute.ModelDeployments}
-        container={{ ...mockContainer, $type: CONTAINER_TYPE.MODEL, containerGrpcPort: 1234 }}
+        container={{
+          ...mockContainer,
+          $type: CONTAINER_TYPE.NIM,
+          source: { $type: MODEL_SOURCE_TYPE.NIM },
+          containerGrpcPort: 1234,
+        }}
         setContainer={vi.fn()}
       />,
     );

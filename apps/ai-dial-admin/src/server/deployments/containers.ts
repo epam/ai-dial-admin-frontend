@@ -35,7 +35,7 @@ export class ContainersApi extends BaseApi {
   }
 
   getModelContainers(token: JWT | null): Promise<ServerActionResponse> {
-    return this.getAction(`${BASE_CONTAINERS_URL}?type=NIM`, token);
+    return this.getAction(`${BASE_CONTAINERS_URL}?type=NIM,INFERENCE`, token);
   }
 
   getImageContainers(imageId: string, token: JWT | null): Promise<ServerActionResponse> {

@@ -4,6 +4,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { Container } from '@/src/models/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { MODEL_SOURCE_TYPE } from '@/src/types/deployments/containers';
 
 interface Props {
   route: ApplicationRoute;
@@ -37,7 +38,7 @@ const PortField: FC<Props> = ({ route, container, setContainer }) => {
         min={1}
         max={65535}
       />
-      {route === ApplicationRoute.ModelDeployments && (
+      {route === ApplicationRoute.ModelDeployments && container.source?.$type === MODEL_SOURCE_TYPE.NIM && (
         <DialNumberInputField
           containerClassName="max-w-[125px]"
           elementId="containerGrpcPort"

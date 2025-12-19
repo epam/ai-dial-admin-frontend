@@ -3,7 +3,12 @@ import { getPathError, getVariableNameError } from '@/src/utils/deployments/vali
 import { Container, ContainerRedeploySnapshot, ResourcesDefaults } from '@/src/models/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorForName } from '@/src/utils/validation/name-error';
-import { CONTAINER_STATUS, CONTAINER_TRANSPORT, CONTAINER_TYPE } from '@/src/types/deployments/containers';
+import {
+  CONTAINER_STATUS,
+  CONTAINER_TRANSPORT,
+  CONTAINER_TYPE,
+  MODEL_SOURCE_TYPE,
+} from '@/src/types/deployments/containers';
 
 export const normalizeContainerPorts = (ports?: number[]): number[] => {
   return [...(ports ?? [])].slice().sort((a, b) => a - b);
@@ -67,7 +72,7 @@ export function validateContainer(container: Container, route: ApplicationRoute,
 export const getContainerTemplate = (route: ApplicationRoute, defaults?: ResourcesDefaults): Container | null => {
   switch (route) {
     case ApplicationRoute.ModelDeployments:
-      return getTemplate(CONTAINER_TYPE.MODEL, defaults);
+      return getTemplate(CONTAINER_TYPE.HF, defaults);
     case ApplicationRoute.McpDeployments:
       return getTemplate(CONTAINER_TYPE.MCP, defaults);
     case ApplicationRoute.InterceptorDeployments:
@@ -105,9 +110,13 @@ const getTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesDefaults): Contai
     };
   }
 
-  if (type === CONTAINER_TYPE.MODEL) {
+  if (type === CONTAINER_TYPE.NIM || type === CONTAINER_TYPE.HF) {
     return {
       ...template,
+      source: {
+        $type: MODEL_SOURCE_TYPE.HF,
+      },
+      modelFormat: 'huggingface',
       resources: {
         requests: {
           ...template.resources?.requests,

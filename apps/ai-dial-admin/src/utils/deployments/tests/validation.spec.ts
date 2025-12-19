@@ -2,11 +2,10 @@ import { describe, expect, test, vi, beforeEach } from 'vitest';
 import {
   getDeploymentsURIError,
   getDeploymentsURLError,
+  getErrorForHfModelName,
   getMaintainerError,
   getPathError,
   getSemanticVersionError,
-  getURIError,
-  getURLError,
   isValidDockerUri,
   isValidSSHRepo,
   getVariableNameError,
@@ -118,12 +117,20 @@ describe('validation utils', () => {
   });
 
   describe('getDeploymentsURLError', () => {
+    test('returns empty error when url is empty', () => {
+      expect(getDeploymentsURLError('', t)).toEqual({
+        type: ErrorType.EMPTY,
+        text: ErrorI18nKey.RequiredField,
+      });
+
+      expect(getDeploymentsURLError('')).toEqual({
+        type: ErrorType.EMPTY,
+        text: '',
+      });
+    });
+
     test('returns error if neither SSH nor HTTP', () => {
       (isValidHttpUrl as any).mockReturnValue(false);
-      // isValidSSHRepo is tested above, but here we rely on the implementation in validation.ts which uses the regex.
-      // Since we didn't mock isValidSSHRepo (it's exported from the same file), we rely on its logic.
-      // But wait, isValidSSHRepo is exported from the file we are testing. We can't mock it easily if it's used internally unless we do some tricks.
-      // However, we can just pass a value that fails both.
       expect(getDeploymentsURLError('invalid-url', t)).toEqual({
         type: ErrorType.INVALID,
         text: ErrorI18nKey.URLError,
@@ -135,13 +142,30 @@ describe('validation utils', () => {
       });
     });
 
-    test('delegates to getURLError if valid format', () => {
+    test('returns null when url is valid (HTTP or SSH)', () => {
       (isValidHttpUrl as any).mockReturnValue(true);
       expect(getDeploymentsURLError('http://valid.com', t)).toBeNull();
     });
   });
 
   describe('getDeploymentsURIError', () => {
+    test('returns empty error when uri is empty', () => {
+      expect(getDeploymentsURIError(undefined, t)).toEqual({
+        type: ErrorType.EMPTY,
+        text: ErrorI18nKey.RequiredField,
+      });
+
+      expect(getDeploymentsURIError('', t)).toEqual({
+        type: ErrorType.EMPTY,
+        text: ErrorI18nKey.RequiredField,
+      });
+
+      expect(getDeploymentsURIError()).toEqual({
+        type: ErrorType.EMPTY,
+        text: '',
+      });
+    });
+
     test('returns error for invalid docker uri', () => {
       expect(getDeploymentsURIError('invalid uri', t)).toEqual({
         type: ErrorType.INVALID,
@@ -154,7 +178,7 @@ describe('validation utils', () => {
       });
     });
 
-    test('delegates to getURIError if valid', () => {
+    test('returns null for valid docker uri', () => {
       expect(getDeploymentsURIError('nginx:latest', t)).toBeNull();
     });
   });
@@ -209,39 +233,98 @@ describe('validation utils', () => {
     });
   });
 
-  describe('getURLError', () => {
-    test('returns error if empty', () => {
-      expect(getURLError('', t)).toEqual({
+  describe('getErrorForHfModelName', () => {
+    test('returns empty error when value is undefined/empty', () => {
+      expect(getErrorForHfModelName(undefined, t)).toEqual({
         type: ErrorType.EMPTY,
-        text: ErrorI18nKey.RequiredField,
+        text: ErrorI18nKey.RequiredProperty,
       });
-
-      expect(getURLError('')).toEqual({
+      expect(getErrorForHfModelName('', t)).toEqual({
         type: ErrorType.EMPTY,
-        text: '',
+        text: ErrorI18nKey.RequiredProperty,
       });
-    });
-
-    test('returns null if not empty', () => {
-      expect(getURLError('http://example.com', t)).toBeNull();
-    });
-  });
-
-  describe('getURIError', () => {
-    test('returns error if empty', () => {
-      expect(getURIError('', t)).toEqual({
+      expect(getErrorForHfModelName('   ', t)).toEqual({
         type: ErrorType.EMPTY,
-        text: ErrorI18nKey.RequiredField,
-      });
-
-      expect(getURIError('')).toEqual({
-        type: ErrorType.EMPTY,
-        text: '',
+        text: ErrorI18nKey.RequiredProperty,
       });
     });
 
-    test('returns null if not empty', () => {
-      expect(getURIError('nginx', t)).toBeNull();
+    test('returns invalid error when format is not <user>/<model>', () => {
+      expect(getErrorForHfModelName('user', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.HFModelName,
+      });
+      expect(getErrorForHfModelName('user/model/extra', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.HFModelName,
+      });
+      expect(getErrorForHfModelName('/model', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.HFModelName,
+      });
+      expect(getErrorForHfModelName('user/', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.HFModelName,
+      });
+    });
+
+    test('accepts valid model name', () => {
+      expect(getErrorForHfModelName('user/model', t)).toBeNull();
+      expect(getErrorForHfModelName('user-name/model_name.v1', t)).toBeNull();
+    });
+
+    test('rejects invalid username', () => {
+      expect(getErrorForHfModelName('-user/model', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.HFModelName,
+      });
+      expect(getErrorForHfModelName('user-/model', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.HFModelName,
+      });
+      expect(getErrorForHfModelName('us--er/model', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.HFModelName,
+      });
+      expect(getErrorForHfModelName('us_er/model', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.HFModelName,
+      });
+    });
+
+    test('rejects invalid model name', () => {
+      expect(getErrorForHfModelName('user/-model', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.HFModelName,
+      });
+      expect(getErrorForHfModelName('user/model-', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.HFModelName,
+      });
+      expect(getErrorForHfModelName('user/.model', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.HFModelName,
+      });
+      expect(getErrorForHfModelName('user/model.', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.HFModelName,
+      });
+      expect(getErrorForHfModelName('user/mo..del', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.HFModelName,
+      });
+      expect(getErrorForHfModelName('user/mo--del', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.HFModelName,
+      });
+      expect(getErrorForHfModelName('user/model.git', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.HFModelName,
+      });
+      expect(getErrorForHfModelName('user/model.ipynb', t)).toEqual({
+        type: ErrorType.INVALID,
+        text: ErrorI18nKey.HFModelName,
+      });
     });
   });
 });
