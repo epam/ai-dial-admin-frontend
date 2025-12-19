@@ -1,4 +1,4 @@
-import { ColDef, ICellRendererParams, ITextFilterParams } from 'ag-grid-community';
+import { ColDef, ICellRendererParams, ITextFilterParams, ValueGetterParams, ITooltipParams } from 'ag-grid-community';
 
 import ValidityStatusCellRenderer from '@/src/components/Grid/CellRenderers/ValidityStatusCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
@@ -25,14 +25,13 @@ import { getValidityStatus } from '@/src/components/EntityView/Status/utils';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
 import DeploymentStatusIndicator from '@/src/components/Common/DeploymentStatusIndicator/DeploymentStatusIndicator';
 import { STATUS_I18N_KEYS, TRANSPORT_TYPES } from '@/src/constants/deployments/images';
-import { CONTAINER_STATUS, KubEventType } from '@/src/types/deployments/containers';
-import { EVENT_TYPES, MODELS_SOURCE_TYPES, POD_OBJECT_KIND } from '@/src/constants/deployments/containers';
+import { CONTAINER_STATUS, KubEventType, MODEL_TYPE } from '@/src/types/deployments/containers';
+import { EVENT_TYPES, MODEL_TYPES, POD_OBJECT_KIND } from '@/src/constants/deployments/containers';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import VersionsSelect from '@/src/components/Common/VersionsSelect/VersionsSelect';
 import { SelectVariant } from '@epam/ai-dial-ui-kit';
 import { ImageVersion } from '@/src/models/deployments/images';
 import { formatDeploymentImageName } from '@/src/utils/formatting/deployments';
-import { MODEL_SOURCE_TYPE } from '@/src/types/deployments/containers';
 
 const stringFilter: Partial<ColDef> = {
   filterParams: {
@@ -529,28 +528,28 @@ export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
 export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, route: ApplicationRoute): ColDef[] => [
   { field: 'name', headerName: 'Name', hide: false },
   { field: 'description', headerName: 'Description', hide: false },
-  {
-    field: 'imageDefinitionId',
-    headerName: `${type} Image`,
-    hide: false,
-    cellRenderer: (params: ICellRendererParams) => formatDeploymentImageName(params.data) ?? params.value,
-    tooltipValueGetter: (params) => formatDeploymentImageName(params.data) ?? params.value,
-    filterValueGetter: (params) => formatDeploymentImageName(params.data) ?? params.data[params.colDef.field || ''],
-  },
   ...(route === ApplicationRoute.ModelDeployments
     ? [
         {
-          field: 'source.$type',
+          field: 'type',
           headerName: 'Source type',
           hide: false,
-          valueFormatter: ({ value }) => t(MODELS_SOURCE_TYPES[value as MODEL_SOURCE_TYPE]),
-          tooltipValueGetter: ({ value }) => t(MODELS_SOURCE_TYPES[value as MODEL_SOURCE_TYPE]),
-          filterValueGetter: (params) =>
-            t(MODELS_SOURCE_TYPES[params.data[params.colDef.field || ''] as MODEL_SOURCE_TYPE]),
+          valueFormatter: ({ value }) => t(MODEL_TYPES[value as MODEL_TYPE]),
+          tooltipValueGetter: ({ value }) => t(MODEL_TYPES[value as MODEL_TYPE]),
+          filterValueGetter: (params) => t(MODEL_TYPES[params.data[params.colDef.field || ''] as MODEL_TYPE]),
         } as ColDef,
       ]
-    : []),
-
+    : [
+        {
+          field: 'imageDefinitionId',
+          headerName: `${type} Image`,
+          hide: false,
+          cellRenderer: (params: ICellRendererParams) => formatDeploymentImageName(params.data) ?? params.value,
+          tooltipValueGetter: (params: ITooltipParams) => formatDeploymentImageName(params.data) ?? params.value,
+          filterValueGetter: (params: ValueGetterParams) =>
+            formatDeploymentImageName(params.data) ?? params.data[params.colDef.field || ''],
+        },
+      ]),
   {
     field: 'status',
     headerName: 'Status',
@@ -561,7 +560,7 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
   },
   { field: 'id', headerName: 'ID', hide: true },
   { field: 'url', headerName: 'Container URL', hide: true },
-  { field: 'author', headerName: 'Author', hide: true },
+  { field: 'author', headerName: 'Maintainer', hide: true },
   {
     field: 'createdAt',
     headerName: 'Create time',

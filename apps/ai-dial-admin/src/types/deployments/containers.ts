@@ -34,6 +34,11 @@ export enum MODEL_SOURCE_TYPE {
   HF = 'huggingface',
 }
 
+export enum MODEL_TYPE {
+  NIM = 'nim',
+  HF = 'inference',
+}
+
 export type SERVING_SOURCE = {
   $type: MODEL_SOURCE_TYPE;
   modelName?: string;

@@ -23,29 +23,18 @@ const ServingProperties: FC<Props> = ({ container, setContainer }) => {
     { value: MODEL_SOURCE_TYPE.NIM, label: t(ContainersI18nKey.ModelTypeNIM) },
   ];
 
-  useEffect(() => {
-    dispatch({
-      type: ValidationActionType.SetField,
-      field: 'modelName',
-      isValid:
-        container.source?.$type === MODEL_SOURCE_TYPE.HF
-          ? !getErrorForHfModelName(container.source?.modelName, t)
-          : !getDeploymentsURIError(container.source?.modelName, t),
-    });
-  }, [container.source, dispatch, t]);
-
-  useEffect(() => {
-    if (resetCounter || (container.source?.modelName != null && container.source.modelName.length > 0)) {
-      setModelNameError(getErrorForHfModelName(container.source?.modelName, t));
-    }
-  }, [container.source?.modelName, resetCounter, t]);
+  const getModelNameError = useCallback(
+    (modelName?: string, $type?: MODEL_SOURCE_TYPE) => {
+      return $type === MODEL_SOURCE_TYPE.HF
+        ? getErrorForHfModelName(modelName, t)
+        : getDeploymentsURIError(modelName, t);
+    },
+    [t],
+  );
 
   const onChangeModelName = useCallback(
     (modelName?: string) => {
-      const error =
-        container.source?.$type === MODEL_SOURCE_TYPE.HF
-          ? getErrorForHfModelName(modelName, t)
-          : getDeploymentsURIError(container.source?.modelName, t);
+      const error = getModelNameError(modelName, container.source?.$type as MODEL_SOURCE_TYPE);
       setModelNameError(error);
       setContainer({ ...container, source: { ...container.source, modelName } as SERVING_SOURCE });
       dispatch({
@@ -54,8 +43,50 @@ const ServingProperties: FC<Props> = ({ container, setContainer }) => {
         isValid: !error,
       });
     },
-    [container, setContainer, dispatch, t],
+    [container, setContainer, dispatch, getModelNameError],
   );
+
+  const onChangeModelSourceType = useCallback(
+    ($type?: MODEL_SOURCE_TYPE) => {
+      const updated = {
+        ...container,
+        source: {
+          ...container.source,
+          $type: $type as MODEL_SOURCE_TYPE,
+        },
+      };
+
+      if ($type === MODEL_SOURCE_TYPE.HF) {
+        updated.modelFormat = 'huggingface';
+      } else {
+        delete updated.modelFormat;
+      }
+
+      if (container.source?.modelName) {
+        const error = getModelNameError(container.source?.modelName, $type);
+        setModelNameError(error);
+      }
+      setContainer(updated);
+    },
+    [container, setContainer, getModelNameError],
+  );
+
+  useEffect(() => {
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: 'modelName',
+      isValid: !getModelNameError(container.source?.modelName, container.source?.$type),
+    });
+  }, [container.source, dispatch, getModelNameError, t]);
+
+  useEffect(() => {
+    if (resetCounter || (container.source?.modelName != null && container.source.modelName.length > 0)) {
+      const error = getModelNameError(container.source?.modelName, container.source?.$type);
+      setModelNameError(error);
+    } else {
+      setModelNameError(null);
+    }
+  }, [container.source, resetCounter, getModelNameError]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -64,27 +95,15 @@ const ServingProperties: FC<Props> = ({ container, setContainer }) => {
         fieldTitle={t(EntitiesI18nKey.SourceType)}
         options={SERVING_TYPES}
         value={container.source?.$type}
-        onChange={($type) => {
-          const updated = {
-            ...container,
-            source: {
-              ...container.source,
-              $type: $type as MODEL_SOURCE_TYPE,
-            },
-          };
-
-          if ($type === MODEL_SOURCE_TYPE.HF) {
-            updated.modelFormat = 'huggingface';
-          } else {
-            delete updated.modelFormat;
-          }
-
-          setContainer(updated);
-        }}
+        onChange={($type) => onChangeModelSourceType($type as MODEL_SOURCE_TYPE)}
       />
       <DialTextInputField
         elementId="modelName"
-        fieldTitle={t(EntityFieldsI18nKey.HFModelName)}
+        fieldTitle={
+          container.source?.$type === MODEL_SOURCE_TYPE.HF
+            ? t(EntityFieldsI18nKey.HFModelName)
+            : t(EntityFieldsI18nKey.ImageURI)
+        }
         value={container.source?.modelName}
         errorText={modelNameError?.text}
         invalid={!!modelNameError}
