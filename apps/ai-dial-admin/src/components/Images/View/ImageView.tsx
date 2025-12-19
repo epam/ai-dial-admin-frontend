@@ -161,6 +161,7 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
           <HeaderButtons
             route={route}
             image={selectedImage}
+            originalImageName={image.name}
             isChanged={isChanged}
             onSave={onSave}
             onDiscard={onDiscard}

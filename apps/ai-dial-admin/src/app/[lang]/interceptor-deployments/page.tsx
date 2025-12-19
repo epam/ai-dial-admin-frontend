@@ -1,7 +1,6 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import PluginView from '@/src/components/PluginView/PluginView';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
@@ -13,7 +12,6 @@ import Page403 from '@/src/components/Page403/Page403';
 import { Image } from '@/src/models/deployments/images';
 import DeploymentsEntityListView from '@/src/components/DeploymentsEntityListView/DeploymentsEntityListView';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isValueTruthy } from '@/src/utils/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,30 +24,26 @@ export default async function Page() {
     return redirect(SIGN_IN_LINK);
   }
 
-  if (!isValueTruthy(process.env.DEPLOYMENTS_PLUGIN_ENABLED)) {
-    const imagesResponse = await getInterceptorImages();
-    const containersResponse = await getInterceptorContainers();
+  const imagesResponse = await getInterceptorImages();
+  const containersResponse = await getInterceptorContainers();
 
-    if (!imagesResponse.success || !containersResponse.success) {
-      if (imagesResponse.status === 403 || containersResponse.status === 403) {
-        return <Page403 />;
-      }
-      return null;
+  if (!imagesResponse.success || !containersResponse.success) {
+    if (imagesResponse.status === 403 || containersResponse.status === 403) {
+      return <Page403 />;
     }
-
-    const images = imagesResponse.response as Image[];
-    const containers = containersResponse.response as Container[];
-
-    return (
-      <SaveValidationContextProvider>
-        <DeploymentsEntityListView
-          route={ApplicationRoute.InterceptorDeployments}
-          images={images}
-          containers={containers}
-        />
-      </SaveValidationContextProvider>
-    );
+    return null;
   }
 
-  return <PluginView slug="interceptor-deployments" />;
+  const images = imagesResponse.response as Image[];
+  const containers = containersResponse.response as Container[];
+
+  return (
+    <SaveValidationContextProvider>
+      <DeploymentsEntityListView
+        route={ApplicationRoute.InterceptorDeployments}
+        images={images}
+        containers={containers}
+      />
+    </SaveValidationContextProvider>
+  );
 }

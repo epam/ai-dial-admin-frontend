@@ -34,7 +34,7 @@ const AddImageModal: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply, r
   return (
     <DialPopup
       onClose={onClose}
-      title={modalTitle}
+      header={modalTitle}
       portalId="AddImageModal"
       open={isModalOpen}
       className="lg:max-w-[75%] md:max-w-[90%]"

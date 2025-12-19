@@ -32,7 +32,7 @@ const NewVersion: FC<Props> = ({ isModalOpen, title, onClose, onApply, image, ve
   return (
     <DialPopup
       onClose={onClose}
-      title={title}
+      header={title}
       portalId="BuildImageModal"
       open={isModalOpen}
       className="md:max-w-[330px] lg:max-w-[330px]"

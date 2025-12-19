@@ -95,7 +95,7 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(getCloneTitle(view, t))}
+      header={t(getCloneTitle(view, t))}
       portalId="DuplicateAsset"
       open={isModalOpen}
       onSubmit={() => onDuplicate({ ...clonedAsset, folderId: addTrailingSlash(clonedAsset.folderId) })}

@@ -21,7 +21,6 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { isDeploymentsEnabled } from '@/src/utils/plugins';
 import { addTrailingSlash } from '@/src/utils/url';
 
 interface Props<T> {
@@ -43,9 +42,8 @@ const Containers = <T extends DialInterceptor | DialModel>({
 }: Props<T>) => {
   const t = useI18n();
   const { showNotification } = useNotification();
-  const { embeddedApps } = useAppContext();
+  const { featureFlags } = useAppContext();
   const getReqRef = useRef(useProtectedRequest());
-  const deploymentsEnabled = isDeploymentsEnabled(embeddedApps);
   const showNotificationRef = useRef(showNotification);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -122,7 +120,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
               value={containers.find((container) => container.id === entity.source?.containerId)?.id}
               placeholder={t(CreateI18nKey.SelectContainer)}
               fieldTitle={t(EntityFieldsI18nKey.container)}
-              readonly={!deploymentsEnabled}
+              readonly={!featureFlags.deploymentsEnabled}
             />
           </div>
         ) : (
@@ -135,7 +133,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
                 selectedValue={selectedContainer?.name}
                 elementId="containers"
                 emptyValueText={t(EntitiesI18nKey.NoContainers)}
-                disabled={!deploymentsEnabled}
+                disabled={!featureFlags.deploymentsEnabled}
                 errorText={errorText}
               >
                 <SelectContainerModal
@@ -147,7 +145,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
                 />
               </DialInputPopup>
             </div>
-            {entity.source?.containerId && deploymentsEnabled && (
+            {entity.source?.containerId && featureFlags.deploymentsEnabled && (
               <DialButton
                 iconBefore={<IconExternalLink {...BASE_ICON_PROPS} />}
                 className={classNames(errorText ? 'self-center mt-[3px]' : 'self-end', 'shrink-0')}

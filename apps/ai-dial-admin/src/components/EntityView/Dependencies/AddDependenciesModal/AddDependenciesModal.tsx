@@ -28,7 +28,7 @@ const AddDependenciesModal: FC<Props> = ({ isModalOpen, entities, entityType, on
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(entityType === EntityType.MODEL ? EntitiesI18nKey.AddModel : EntitiesI18nKey.AddApplication)}
+      header={t(entityType === EntityType.MODEL ? EntitiesI18nKey.AddModel : EntitiesI18nKey.AddApplication)}
       portalId="AddDependencyEntities"
       open={isModalOpen}
       className="h-[800px]"

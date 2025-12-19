@@ -33,7 +33,7 @@ const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOp
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(EntitiesI18nKey.AppRunner)}
+      header={t(EntitiesI18nKey.AppRunner)}
       portalId="SelectAppRunnerModal"
       open={isModalOpen}
       size={PopupSize.Lg}

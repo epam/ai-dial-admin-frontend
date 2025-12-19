@@ -11,7 +11,7 @@ import Content from '@/src/components/Content/Content';
 import Header from '@/src/components/Header/Header';
 import Menu from '@/src/components/Menu/Menu';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
-import { AppContextProvider, EmbeddedApp } from '@/src/context/AppContext';
+import { AppContextProvider } from '@/src/context/AppContext';
 import { I18nProvider } from '@/src/context/I18nProvider';
 import { NextAuthProvider } from '@/src/context/NextAuthProvider';
 import { NotificationProvider } from '@/src/context/NotificationContext';
@@ -37,20 +37,19 @@ export default async function Layout({ children, params }: { children: ReactNode
 
   const featureFlags = {
     dashboardEnabled: !process.env.DISABLE_MENU_ITEMS?.toLowerCase().includes('dashboard'),
+    deploymentsEnabled: isValueTruthy(process.env.DEPLOYMENTS_ENABLED),
   };
 
   const themesConfiguration = await themesApi.getThemesConfiguration();
   const themesImages = await themesApi.getImages();
 
   const beVersion = await utilityApi.getBeVersion(token);
-  const embeddedApps: EmbeddedApp[] = JSON.parse(process.env.EMBEDDED_APPS || '[]');
 
   return (
     <NextAuthProvider>
       <AppContextProvider
         themeUrl={process.env.THEMES_CONFIG_URL}
         featureFlags={featureFlags}
-        embeddedApps={embeddedApps}
         disableDeploymentsJSONEditor={isValueTruthy(process.env.DEPLOYMENTS_DISABLE_JSON_EDITOR)}
         resourcesDefaults={JSON.parse(process.env.DEPLOYMENTS_RESOURCES_DEFAULTS || '{}') as ResourcesDefaults}
       >

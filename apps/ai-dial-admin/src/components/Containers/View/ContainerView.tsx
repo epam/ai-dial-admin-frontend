@@ -40,7 +40,7 @@ import { getContainerRedeploySnapshot } from '@/src/utils/deployments/containers
 
 interface Props {
   container: Container;
-  image: Image;
+  image?: Image;
   route: ApplicationRoute;
   names: string[];
   createEntity: (entity: DialModel | Toolset | DialInterceptor) => Promise<ServerActionResponse>;

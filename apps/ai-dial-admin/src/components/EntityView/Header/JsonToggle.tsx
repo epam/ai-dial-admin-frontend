@@ -80,7 +80,7 @@ const JsonToggles: FC<Props> = ({
 
       <DialSwitch
         isOn={isJsonEditorEnabled}
-        title={t(EntitiesI18nKey.JSONEditor)}
+        label={t(EntitiesI18nKey.JSONEditor)}
         switchId="jsonEditor"
         onChange={onToggleJsonEditor}
       />

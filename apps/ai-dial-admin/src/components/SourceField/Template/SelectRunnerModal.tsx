@@ -26,7 +26,7 @@ const SelectRunnerModal: FC<Props> = ({ selected, runners, isModalOpen, onClose,
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(CreateI18nKey.SelectInterceptorTemplate)}
+      header={t(CreateI18nKey.SelectInterceptorTemplate)}
       portalId="SelectRunnerModal"
       open={isModalOpen}
       size={PopupSize.Lg}

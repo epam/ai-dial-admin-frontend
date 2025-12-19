@@ -35,7 +35,7 @@ export const KeyRotateModal: FC<Props> = ({ isModalOpen, selectedKey, keys, onCo
 
   return (
     <DialFormPopup
-      title={t(EntityFieldsI18nKey.keyValue)}
+      header={t(EntityFieldsI18nKey.keyValue)}
       portalId="KeyRotateModal"
       open={isModalOpen}
       dividers={true}

@@ -40,7 +40,7 @@ const RenameFolder: FC<Props> = ({ currentPath, siblings = [], isModalOpen, onCl
   return (
     <DialFormPopup
       onClose={onClose}
-      title={t(FoldersI18nKey.Rename)}
+      header={t(FoldersI18nKey.Rename)}
       portalId="FolderRename"
       open={isModalOpen}
       dividers={true}

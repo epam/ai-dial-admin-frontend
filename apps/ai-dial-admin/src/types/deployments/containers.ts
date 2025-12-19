@@ -20,10 +20,21 @@ export enum CONTAINER_TRANSPORT {
 export enum CONTAINER_TYPE {
   MCP = 'mcp',
   INTERCEPTOR = 'interceptor',
-  MODEL = 'nim',
+  NIM = 'nim',
+  HF = 'inference',
 }
 
 export enum CreateSteps {
   IMAGE = 'image',
   PROPERTIES = 'properties',
 }
+
+export enum MODEL_SOURCE_TYPE {
+  NIM = 'ngc_registry',
+  HF = 'huggingface',
+}
+
+export type SERVING_SOURCE = {
+  $type: MODEL_SOURCE_TYPE;
+  modelName?: string;
+};

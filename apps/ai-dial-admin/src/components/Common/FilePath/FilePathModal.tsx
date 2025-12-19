@@ -45,7 +45,7 @@ const FilePathModal: FC<Props> = ({
   return (
     <DialFormPopup
       onClose={onClose}
-      title={modalTitle}
+      header={modalTitle}
       portalId="SelectFile"
       open={isModalOpen}
       className="h-[750px]"

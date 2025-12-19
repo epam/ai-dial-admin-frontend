@@ -1,6 +1,6 @@
 {
   "name": "@dial/source",
-  "version": "0.12.0-rc",
+  "version": "0.13.0-rc",
   "license": "Apache-2.0",
   "scripts": {
     "start": "nx serve ai-dial-admin",
@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@epam/ai-dial-shared": "^0.39.1",
-    "@epam/ai-dial-ui-kit": "0.5.0-rc.107",
+    "@epam/ai-dial-ui-kit": "0.6.0-rc.3",
     "@epam/ai-dial-visualizer-connector": "^0.39.1",
     "@floating-ui/react": "^0.27.16",
     "@monaco-editor/react": "^4.7.0",
@@ -128,7 +128,7 @@
     "glob": "11.1.0",
     "react": "19.1.2",
     "react-dom": "19.1.2",
-    "@modern-js/utils": "2.69.4"
+    "@modern-js/utils": "2.69.5"
   },
   "engines": {
     "node": ">=22.2.0",

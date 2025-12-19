@@ -1,13 +1,13 @@
 import { FC, useEffect, useState } from 'react';
-import { DialTextAreaField, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { Container } from '@/src/models/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { getErrorForName } from '@/src/utils/validation/name-error';
-import { getErrorForDescription } from '@/src/utils/validation/description-error';
-import { getMaintainerError } from '@/src/utils/deployments/validation';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import DescriptionControl from '@/src/components/EntityMainProperties/BaseProperties/Description';
+import Maintainer from '@/src/components/EntityMainProperties/BaseProperties/Maintainer';
 
 interface Props {
   container: Container;
@@ -18,18 +18,26 @@ interface Props {
 
 const BaseProperties: FC<Props> = ({ container, setContainer, names, isModal }) => {
   const t = useI18n();
-  const { resetCounter } = useSaveValidationContext();
+  const { dispatch, resetCounter } = useSaveValidationContext();
 
   const [nameError, setNameError] = useState<FieldError | null>(null);
-  const [descriptionError, setDescriptionError] = useState<FieldError | null>(null);
-  const [maintainerError, setMaintainerError] = useState<FieldError | null>(null);
 
   useEffect(() => {
-    setNameError(getErrorForName(container.name, names, t));
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: 'name',
+      isValid: !getErrorForName(container.name, names, t),
+    });
+  }, [container.name, container.description, container.author, dispatch, isModal, names, t]);
+
+  useEffect(() => {
+    if (resetCounter || (container.name != null && container.name.length > 0)) {
+      setNameError(getErrorForName(container.name, names, t));
+    }
   }, [resetCounter, container.name, names, t]);
 
   return (
-    <>
+    <div className="flex flex-col gap-4">
       <DialTextInputField
         fieldTitle={t(EntityFieldsI18nKey.name)}
         elementId="name"
@@ -38,50 +46,18 @@ const BaseProperties: FC<Props> = ({ container, setContainer, names, isModal }) 
         errorText={nameError?.text}
         invalid={!!nameError}
         onChange={(name?: string) => {
-          setNameError(getErrorForName(name, names, t));
+          const error = getErrorForName(name, names, t);
+          dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
+          setNameError(error);
           setContainer({
             ...container,
             name: name || '',
           });
         }}
       />
-      <DialTextAreaField
-        elementId="description"
-        fieldTitle={t(EntityFieldsI18nKey.description)}
-        placeholder={t(EntityPlaceholdersI18nKey.Description)}
-        elementClassName="min-h-[118px]"
-        optional={true}
-        value={container.description}
-        errorText={descriptionError?.text}
-        invalid={!!descriptionError}
-        onChange={(description: string) => {
-          setDescriptionError(getErrorForDescription(description, t));
-          setContainer({
-            ...container,
-            description,
-          });
-        }}
-      />
-      {!isModal && (
-        <DialTextInputField
-          fieldTitle={t(EntityFieldsI18nKey.author)}
-          elementId="author"
-          placeholder={t(EntityPlaceholdersI18nKey.Maintainer)}
-          value={container.author}
-          disabled={false}
-          optional={true}
-          errorText={maintainerError?.text}
-          invalid={!!maintainerError}
-          onChange={(author?: string) => {
-            setMaintainerError(getMaintainerError(author, t));
-            setContainer({
-              ...container,
-              author,
-            });
-          }}
-        />
-      )}
-    </>
+      <DescriptionControl entity={container} onChangeEntity={setContainer} isFullWidth={isModal} />
+      {!isModal && <Maintainer entity={container} onChangeEntity={setContainer} />}
+    </div>
   );
 };
 

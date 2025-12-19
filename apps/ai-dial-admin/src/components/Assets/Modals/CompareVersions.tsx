@@ -55,11 +55,11 @@ const CompareVersions: FC<Props> = ({ heading, isModalOpen, onClose, prompts, pr
       portalId="compareVersionsModal"
       className="h-[93%]"
       size={PopupSize.Lg}
-      title={heading}
+      header={heading}
       onClose={onClose}
     >
-      <div className="flex flex-col gap-4 px-6 py-4 h-full">
-        <div className="flex flex-row">
+      <div className="flex flex-col gap-4 px-6 py-4 h-full relative">
+        <div className="flex flex-row gap-x-6">
           <div className="flex-1">
             <VersionsControl
               versions={versions}
