@@ -274,6 +274,7 @@ export default {
       Container: 'Create {type} Container',
       Entity: 'Create {entity}',
       EntityAsAsset: 'Create Assets {entity}',
+      Serving: 'Create Modal Serving',
     },
     Notification: {
       Title: '{entity} created successfully',
@@ -958,6 +959,7 @@ export default {
     GRPCPort: 'gRPC Port',
     Arguments: 'Arguments',
     globalInterceptors: 'Global Interceptors',
+    HFModelName: 'Hugging Face model name',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
@@ -1059,6 +1061,7 @@ export default {
     PathError: 'Path should start with /',
     VariableError: 'User can add only characters, numbers or underscore',
     VariableStartError: 'Name must start with a letter or underscore',
+    HFModelName: 'Invalid Hugging Face model name.',
   },
   Source: {
     OpenTemplate: 'Open template',
@@ -1152,6 +1155,8 @@ export default {
     Annotations: 'Annotations',
     ContainerImage: '{type} Image',
     ContainerProperties: 'Properties',
+    ModelTypeNIM: 'NIM',
+    ModelTypeHF: 'Hugging Face',
     ContainerRunSuccess: '{type} Container run successfully',
     ContainerStopSuccess: '{type} Container stopped successfully',
     ContainerSuccessDescription: 'Latest config updates applied',

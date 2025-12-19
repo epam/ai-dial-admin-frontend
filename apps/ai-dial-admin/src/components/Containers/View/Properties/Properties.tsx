@@ -22,7 +22,7 @@ import ChangeContainerImage from '@/src/components/Containers/Modals/ChangeConta
 
 interface Props {
   container: Container;
-  image: Image;
+  image?: Image;
   setContainer: (container: Container) => void;
   route: ApplicationRoute;
   names: string[];
@@ -63,15 +63,17 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
         <div className="flex gap-10 overflow-y-scroll">
           <DialLabelledText label={t(EntityFieldsI18nKey.id)} text={originalName} />
           <DialLabelledText label={t(EntityFieldsI18nKey.type)} text={t(ContainersI18nKey.Container)} />
-          <DialLabelledText label={t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })}>
-            <DialButton
-              label={`${image.name} (${image.version})`}
-              textClassName="text-primary text-base font-normal"
-              className="text-secondary whitespace-nowrap"
-              onClick={handleModalOpen}
-              iconAfter={<OpenPopup {...BASE_ICON_PROPS} className="inline" />}
-            />
-          </DialLabelledText>
+          {image && (
+            <DialLabelledText label={t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })}>
+              <DialButton
+                label={`${image.name} (${image.version})`}
+                textClassName="text-primary text-base font-normal"
+                className="text-secondary whitespace-nowrap"
+                onClick={handleModalOpen}
+                iconAfter={<OpenPopup {...BASE_ICON_PROPS} className="inline" />}
+              />
+            </DialLabelledText>
+          )}
           <DialLabelledText
             label={t(EntityFieldsI18nKey.createdAt)}
             text={formatDateTimeToLocalString(container?.createdAt)}
@@ -99,6 +101,7 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
         </div>
       </div>
       {isModalOpen &&
+        image &&
         createPortal(
           <ChangeContainerImage
             modalTitle={t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })}

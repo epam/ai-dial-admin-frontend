@@ -88,7 +88,7 @@ describe('containers utils', () => {
   describe('getContainerTemplate', () => {
     test('returns template for ModelDeployments', () => {
       const template = getContainerTemplate(ApplicationRoute.ModelDeployments);
-      expect(template?.$type).toBe(CONTAINER_TYPE.MODEL);
+      expect(template?.$type).toBe(CONTAINER_TYPE.HF);
       expect(template?.resources?.requests?.['nvidia.com/gpu']).toBe('1');
     });
 
@@ -124,7 +124,7 @@ describe('containers utils', () => {
 
   describe('getContainerRedeploySnapshot', () => {
     const baseContainer: Container = {
-      $type: CONTAINER_TYPE.MODEL,
+      $type: CONTAINER_TYPE.NIM,
       name: 'c1',
       imageDefinitionId: 'img-1',
       status: CONTAINER_STATUS.NOT_DEPLOYED,
