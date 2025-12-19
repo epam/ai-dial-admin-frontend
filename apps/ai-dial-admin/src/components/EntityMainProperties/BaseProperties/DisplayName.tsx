@@ -37,7 +37,8 @@ const DisplayNameControl: FC<Props> = ({ displayName, isFullWidth = true, onChan
   // initial validation
   useEffect(() => {
     validateDisplayName(displayName);
-  }, [validateDisplayName, displayName]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onChangeDisplayName = useCallback(
     (value?: string) => {
