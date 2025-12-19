@@ -6,7 +6,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
 import { getControlClassName } from '@/src/utils/entities/view';
-import { getErrorForUniqueDisplayName } from '@/src/utils/validation/name-error';
+import { getErrorForName } from '@/src/utils/validation/name-error';
 
 interface Props {
   displayName?: string;
@@ -14,20 +14,11 @@ interface Props {
   readonly?: boolean;
   disabled?: boolean;
   isFullWidth?: boolean;
-  isUniqueName?: boolean;
   names?: string[];
   onChange?: (displayName?: string) => void;
 }
 
-const DisplayNameControl: FC<Props> = ({
-  displayName,
-  isFullWidth = true,
-  onChange,
-  required,
-  isUniqueName = false,
-  names,
-  ...props
-}) => {
+const DisplayNameControl: FC<Props> = ({ displayName, isFullWidth = true, onChange, required, names, ...props }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const containerClassName = useMemo(() => getControlClassName(isFullWidth), [isFullWidth]);
@@ -36,11 +27,11 @@ const DisplayNameControl: FC<Props> = ({
 
   const validateDisplayName = useCallback(
     (displayName?: string) => {
-      const error = getErrorForUniqueDisplayName(displayName, required, t, isUniqueName, names);
+      const error = getErrorForName(displayName, names, t, false, true, true);
       setDisplayNameError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
     },
-    [dispatch, required, t, isUniqueName, names],
+    [dispatch, t, names],
   );
 
   // initial validation

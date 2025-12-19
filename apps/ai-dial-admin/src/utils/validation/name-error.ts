@@ -44,13 +44,21 @@ export const getErrorForName = (
   t?: (str: string) => string,
   isUniqueNameError?: boolean,
   checkForbiddenChars = true,
+  isDisplayName = false,
 ) => {
   const isIncludesName = name && names?.includes(name);
   if (isIncludesName || isUniqueNameError) {
-    return {
-      type: ErrorType.EXISTING,
-      text: t ? t(ErrorI18nKey.NameExists) : '',
-    };
+    if (isDisplayName) {
+      return {
+        type: ErrorType.EXISTING,
+        text: t ? t(ErrorI18nKey.DisplayNameExists) : '',
+      };
+    } else {
+      return {
+        type: ErrorType.EXISTING,
+        text: t ? t(ErrorI18nKey.NameExists) : '',
+      };
+    }
   }
 
   const tWithArgs = t as (str: string, args?: Record<string, string | number>) => string;
@@ -96,24 +104,4 @@ export const hasInvalidCharacters = (value?: string): boolean => {
   if (!value) return false;
 
   return FORBIDDEN_NAME_SYMBOLS.some((symbol) => value.includes(symbol));
-};
-
-export const getErrorForUniqueDisplayName = (
-  name?: string,
-  required?: boolean,
-  t?: (str: string) => string,
-  isUniqueName?: boolean,
-  names?: string[],
-) => {
-  if (isUniqueName) {
-    const isIncludesName = name && names?.includes(name);
-    if (isIncludesName) {
-      return {
-        type: ErrorType.EXISTING,
-        text: t ? t(ErrorI18nKey.DisplayNameExists) : '',
-      };
-    }
-  }
-
-  return getErrorForDisplayName(name, required, t);
 };
