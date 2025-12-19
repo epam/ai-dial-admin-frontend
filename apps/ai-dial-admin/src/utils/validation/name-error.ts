@@ -97,3 +97,23 @@ export const hasInvalidCharacters = (value?: string): boolean => {
 
   return FORBIDDEN_NAME_SYMBOLS.some((symbol) => value.includes(symbol));
 };
+
+export const getErrorForUniqueDisplayName = (
+  name?: string,
+  required?: boolean,
+  t?: (str: string) => string,
+  isUniqueName?: boolean,
+  names?: string[],
+) => {
+  if (isUniqueName) {
+    const isIncludesName = name && names?.includes(name);
+    if (isIncludesName) {
+      return {
+        type: ErrorType.EXISTING,
+        text: t ? t(ErrorI18nKey.DisplayNameExists) : '',
+      };
+    }
+  }
+
+  return getErrorForDisplayName(name, required, t);
+};

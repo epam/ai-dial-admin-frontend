@@ -3,7 +3,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { ErrorType } from '@/src/types/error-type';
-import { getErrorForDisplayName, getErrorForName, getErrorForUrlId, hasInvalidCharacters } from '../name-error';
+import { getErrorForDisplayName, getErrorForUniqueDisplayName, getErrorForName, getErrorForUrlId, hasInvalidCharacters } from '../name-error';
 
 const mockT = vi.fn().mockReturnValue('Translated Text');
 
@@ -213,5 +213,73 @@ describe('getErrorForDisplayName', () => {
 describe('hasInvalidCharacters', () => {
   test('returns false if value is n void 0', () => {
     expect(hasInvalidCharacters()).toBe(false);
+  });
+});
+
+describe('getErrorForUniqueDisplayName', () => {
+  test('returns error if name is undefined', () => {
+    const result = getErrorForUniqueDisplayName(undefined);
+
+    expect(result).toBeNull();
+  });
+
+  test('returns error if name is too short', () => {
+    const result1 = getErrorForUniqueDisplayName('a', false, mockT);
+    const result2 = getErrorForDisplayName('a', false, void 0);
+
+    expect(result1).toEqual({
+      type: ErrorType.LENGTH,
+      text: 'Translated Text',
+    });
+    expect(result2).toEqual({
+      type: ErrorType.LENGTH,
+      text: '',
+    });
+  });
+
+  test('returns error if name is too long', () => {
+    const longName = 'a'.repeat(300);
+    const result = getErrorForUniqueDisplayName(longName, false, mockT);
+    expect(result).toEqual({
+      type: ErrorType.LENGTH,
+      text: 'Translated Text',
+    });
+  });
+
+  test('returns error if required and name is empty', () => {
+    const result = getErrorForUniqueDisplayName('', true, mockT);
+    expect(result).toMatchObject({
+      type: ErrorType.LENGTH,
+      text: 'Translated Text',
+    });
+  });
+
+  test('returns null if name is valid and required', () => {
+    expect(getErrorForUniqueDisplayName('abc', true, mockT)).toBeNull();
+    expect(getErrorForDisplayName('abcdef', true, mockT)).toBeNull();
+  });
+
+  test('returns null if name is valid and not required', () => {
+    const validName = 'validName';
+    const result = getErrorForUniqueDisplayName(validName, false, mockT);
+    expect(result).toBeNull();
+  });
+
+  test('returns error if name is not unique', () => {
+    const result = getErrorForUniqueDisplayName('unique', true, mockT, true, ['unique']);
+    expect(result).toMatchObject({
+      type: ErrorType.EXISTING,
+      text: 'Translated Text',
+    });
+  });
+
+  test('returns null if name is unique', () => {
+    const result = getErrorForUniqueDisplayName('unique', true, mockT, true, ['not-unique']);
+    expect(result).toBeNull();
+  });
+
+  test('returns null if name should be not unique', () => {
+    const result = getErrorForUniqueDisplayName('unique', true, mockT, false, ['unique']);
+    expect(result).toBeNull();
   });
 });
