@@ -63,7 +63,7 @@ const DeploymentProperties: FC<Props> = ({
     return getVersionError(isVersionOptional, entity as DialModel, namesConfiguration.versionsMap, t);
   }, [entity, isVersionOptional, namesConfiguration.versionsMap, t]);
 
-  const validateDisplayName = useCallback(
+  const onValidationDisplayName = useCallback(
     (displayName?: string) => {
       const error = getDisplayNameError(
         view,
@@ -86,26 +86,26 @@ const DeploymentProperties: FC<Props> = ({
   const onChangeDisplayName = useCallback(
     (displayName: string) => {
       onChangeEntity({ ...entity, displayName });
-      validateDisplayName(displayName);
+      onValidationDisplayName(displayName);
     },
-    [entity, onChangeEntity, validateDisplayName],
+    [entity, onChangeEntity, onValidationDisplayName],
   );
 
   const onChangeVersion = useCallback(
     (displayVersion?: string) => {
       onChangeEntity({ ...entity, displayVersion } as DialModel);
-      validateDisplayName(entity?.displayName);
+      onValidationDisplayName(entity?.displayName);
     },
-    [entity, onChangeEntity, validateDisplayName],
+    [entity, onChangeEntity, onValidationDisplayName],
   );
 
   useEffect(() => {
     if (entity.displayName) {
-      validateDisplayName(entity.displayName);
+      onValidationDisplayName(entity.displayName);
     } else {
       dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: false });
     }
-  }, [dispatch, entity.displayName, validateDisplayName]);
+  }, [dispatch, entity.displayName, onValidationDisplayName]);
 
   useEffect(() => {
     if (view === ApplicationRoute.Models) {
