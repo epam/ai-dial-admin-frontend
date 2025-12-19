@@ -98,7 +98,7 @@ const ServingProperties: FC<Props> = ({ container, setContainer }) => {
         onChange={($type) => onChangeModelSourceType($type as MODEL_SOURCE_TYPE)}
       />
       <DialTextInputField
-        elementId="modelName"
+        elementId="imageRef"
         fieldTitle={
           container.source?.$type === MODEL_SOURCE_TYPE.HF
             ? t(EntityFieldsI18nKey.HFModelName)
