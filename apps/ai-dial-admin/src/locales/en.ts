@@ -109,7 +109,7 @@ export default {
     MLOps: 'Deployments',
     MCPDeployments: 'MCP Deployments',
     InterceptorDeployments: 'Interceptor Deployments',
-    ModelDeployments: 'Model Deployments',
+    ModelDeployments: 'Model Servings',
     InterceptorTemplates: 'Interceptor Templates',
 
     EntitiesDescription: 'Centralized space to configure and oversee key components of your AI ecosystem.',
