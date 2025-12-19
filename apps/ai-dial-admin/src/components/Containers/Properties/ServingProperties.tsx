@@ -3,7 +3,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
 import { FieldError } from '@/src/models/error';
-import { MODEL_SOURCE_TYPE, SERVING_SOURCE } from '@/src/types/deployments/containers';
+import { CONTAINER_TYPE, MODEL_SOURCE_TYPE, SERVING_SOURCE } from '@/src/types/deployments/containers';
 import { getDeploymentsURIError, getErrorForHfModelName } from '@/src/utils/deployments/validation';
 import { DialSelectField, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useState } from 'react';
@@ -23,7 +23,7 @@ const ServingProperties: FC<Props> = ({ container, setContainer }) => {
     { value: MODEL_SOURCE_TYPE.NIM, label: t(ContainersI18nKey.ModelTypeNIM) },
   ];
 
-  const getModelNameError = useCallback(
+  const getSourceError = useCallback(
     (modelName?: string, $type?: MODEL_SOURCE_TYPE) => {
       return $type === MODEL_SOURCE_TYPE.HF
         ? getErrorForHfModelName(modelName, t)
@@ -32,24 +32,29 @@ const ServingProperties: FC<Props> = ({ container, setContainer }) => {
     [t],
   );
 
-  const onChangeModelName = useCallback(
-    (modelName?: string) => {
-      const error = getModelNameError(modelName, container.source?.$type as MODEL_SOURCE_TYPE);
+  const onChangeImageRef = useCallback(
+    (value?: string) => {
+      const error = getSourceError(value, container.source?.$type as MODEL_SOURCE_TYPE);
       setImageRefError(error);
-      setContainer({ ...container, source: { ...container.source, modelName } as SERVING_SOURCE });
+      if (container.source?.$type === MODEL_SOURCE_TYPE.HF) {
+        setContainer({ ...container, source: { ...container.source, modelName: value } as SERVING_SOURCE });
+      } else {
+        setContainer({ ...container, source: { ...container.source, imageRef: value } as SERVING_SOURCE });
+      }
       dispatch({
         type: ValidationActionType.SetField,
-        field: 'modelName',
+        field: container.source?.$type === MODEL_SOURCE_TYPE.HF ? 'modelName' : 'imageRef',
         isValid: !error,
       });
     },
-    [container, setContainer, dispatch, getModelNameError],
+    [container, setContainer, dispatch, getSourceError],
   );
 
   const onChangeModelSourceType = useCallback(
     ($type?: MODEL_SOURCE_TYPE) => {
       const updated = {
         ...container,
+        $type: $type === MODEL_SOURCE_TYPE.HF ? CONTAINER_TYPE.HF : CONTAINER_TYPE.NIM,
         source: {
           ...container.source,
           $type: $type as MODEL_SOURCE_TYPE,
@@ -63,30 +68,36 @@ const ServingProperties: FC<Props> = ({ container, setContainer }) => {
       }
 
       if (container.source?.imageRef) {
-        const error = getModelNameError(container.source?.imageRef, $type);
+        const error = getSourceError(container.source?.imageRef, $type);
         setImageRefError(error);
       }
       setContainer(updated);
     },
-    [container, setContainer, getModelNameError],
+    [container, setContainer, getSourceError],
   );
 
   useEffect(() => {
+    const source = container.source;
+    const value = source?.$type === MODEL_SOURCE_TYPE.HF ? source?.modelName : source?.imageRef;
+
     dispatch({
       type: ValidationActionType.SetField,
-      field: 'modelName',
-      isValid: !getModelNameError(container.source?.imageRef, container.source?.$type),
+      field: source?.$type ? 'modelName' : 'imageRef',
+      isValid: !getSourceError(value, container.source?.$type),
     });
-  }, [container.source, dispatch, getModelNameError, t]);
+  }, [container.source, dispatch, getSourceError, t]);
 
   useEffect(() => {
-    if (resetCounter || (container.source?.imageRef != null && container.source.imageRef.length > 0)) {
-      const error = getModelNameError(container.source?.imageRef, container.source?.$type);
+    const source = container.source;
+    const value = source?.$type === MODEL_SOURCE_TYPE.HF ? source?.modelName : source?.imageRef;
+
+    if (resetCounter || (value && value.length > 0)) {
+      const error = getSourceError(value, container.source?.$type);
       setImageRefError(error);
     } else {
       setImageRefError(null);
     }
-  }, [container.source, resetCounter, getModelNameError]);
+  }, [container.source, resetCounter, getSourceError]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -97,18 +108,25 @@ const ServingProperties: FC<Props> = ({ container, setContainer }) => {
         value={container.source?.$type}
         onChange={($type) => onChangeModelSourceType($type as MODEL_SOURCE_TYPE)}
       />
-      <DialTextInputField
-        elementId="imageRef"
-        fieldTitle={
-          container.source?.$type === MODEL_SOURCE_TYPE.HF
-            ? t(EntityFieldsI18nKey.HFModelName)
-            : t(EntityFieldsI18nKey.ImageURI)
-        }
-        value={container.source?.imageRef}
-        errorText={imageRefError?.text}
-        invalid={!!imageRefError}
-        onChange={onChangeModelName}
-      />
+      {container.source?.$type === MODEL_SOURCE_TYPE.NIM ? (
+        <DialTextInputField
+          elementId="imageRef"
+          fieldTitle={t(EntityFieldsI18nKey.ImageURI)}
+          value={container.source?.imageRef}
+          errorText={imageRefError?.text}
+          invalid={!!imageRefError}
+          onChange={onChangeImageRef}
+        />
+      ) : (
+        <DialTextInputField
+          elementId="modelName"
+          fieldTitle={t(EntityFieldsI18nKey.HFModelName)}
+          value={container.source?.modelName}
+          errorText={imageRefError?.text}
+          invalid={!!imageRefError}
+          onChange={onChangeImageRef}
+        />
+      )}
     </div>
   );
 };

@@ -42,4 +42,5 @@ export enum MODEL_TYPE {
 export type SERVING_SOURCE = {
   $type: MODEL_SOURCE_TYPE;
   imageRef?: string;
+  modelName?: string;
 };
