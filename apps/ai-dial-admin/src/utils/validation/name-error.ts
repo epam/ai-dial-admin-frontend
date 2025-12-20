@@ -44,12 +44,13 @@ export const getErrorForName = (
   t?: (str: string) => string,
   isUniqueNameError?: boolean,
   checkForbiddenChars = true,
+  isDisplayName = false,
 ) => {
   const isIncludesName = name && names?.includes(name);
   if (isIncludesName || isUniqueNameError) {
     return {
       type: ErrorType.EXISTING,
-      text: t ? t(ErrorI18nKey.NameExists) : '',
+      text: t ? t(isDisplayName ? ErrorI18nKey.DisplayNameExists : ErrorI18nKey.NameExists) : '',
     };
   }
 

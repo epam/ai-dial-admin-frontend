@@ -135,7 +135,12 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
             onChangeEntity={setEntity}
             names={names}
           />
-          <DisplayNameControl displayName={clonedEntity.displayName} onChange={onChangeDisplayName} required={true} />
+          <DisplayNameControl
+            displayName={clonedEntity.displayName}
+            onChange={onChangeDisplayName}
+            required={true}
+            names={names}
+          />
 
           {view === ApplicationRoute.Models && (
             <VersionControl
