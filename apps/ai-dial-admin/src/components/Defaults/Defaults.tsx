@@ -1,7 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { IconChevronDown, IconChevronRight, IconPlus } from '@tabler/icons-react';
-import classNames from 'classnames';
+import { IconPlus } from '@tabler/icons-react';
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
@@ -9,8 +8,10 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { EntityDefaults } from '@/src/models/dial/base-entity';
 import { DefaultTemp } from '@/src/models/dial/defaults';
-import DefaultItem from './DefaultItem';
 import { convertDefaultsToArray } from './utils';
+
+import DefaultItem from './DefaultItem';
+import Accordion from '@/src/components/Common/Accordion/Accordion';
 
 interface Props {
   entity: EntityDefaults;
@@ -21,12 +22,7 @@ const Defaults: FC<Props> = ({ entity, onChangeEntity }) => {
   const t = useI18n();
 
   const [defaultItems, setDefaultItems] = useState<DefaultTemp[]>([]);
-  const [isCollapsed, setIsCollapsed] = useState(true);
   const [count, setCount] = useState(0);
-
-  const toggleCollapse = useCallback(() => {
-    setIsCollapsed((prev) => !prev);
-  }, []);
 
   const onAddItem = useCallback(() => {
     const defaultsTemp = [...defaultItems, { key: '', value: '', type: 'string' }];
@@ -69,34 +65,19 @@ const Defaults: FC<Props> = ({ entity, onChangeEntity }) => {
   }, [defaultItems]);
 
   return (
-    <div className="flex flex-col p-4 rounded border border-primary">
-      <button className="flex items-center justify-between" onClick={toggleCollapse}>
-        <div className="flex flex-row">
-          {isCollapsed ? (
-            <IconChevronRight className="text-secondary" {...BASE_ICON_PROPS} />
-          ) : (
-            <IconChevronDown className="text-secondary" {...BASE_ICON_PROPS} />
-          )}
-
-          <h3 className="mx-2">
-            {t(EntityFieldsI18nKey.defaults)}: {count}
-          </h3>
-        </div>
-      </button>
-      <div className={classNames('flex flex-col gap-2 px-6 pt-4', isCollapsed && 'hidden')}>
-        {defaultItems.map((item, index) => (
-          <DefaultItem key={index} item={item} index={index} changeItem={onChangeDefaultItem} onRemove={onRemoveItem} />
-        ))}
-        <div>
-          <DialButton
-            variant={ButtonVariant.Tertiary}
-            label={t(ButtonsI18nKey.AddDefault)}
-            iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-            onClick={onAddItem}
-          />
-        </div>
+    <Accordion title={`${t(EntityFieldsI18nKey.defaults)}: ${count}`} contentClassName="gap-2">
+      {defaultItems.map((item, index) => (
+        <DefaultItem key={index} item={item} index={index} changeItem={onChangeDefaultItem} onRemove={onRemoveItem} />
+      ))}
+      <div>
+        <DialButton
+          variant={ButtonVariant.Tertiary}
+          label={t(ButtonsI18nKey.AddDefault)}
+          iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+          onClick={onAddItem}
+        />
       </div>
-    </div>
+    </Accordion>
   );
 };
 
