@@ -21,7 +21,7 @@ import {
   getImageContainers,
   installImage,
 } from '@/src/app/actions/deployments';
-import { getTranslatedType } from '@/src/utils/deployments/entity';
+import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { validateImage } from '@/src/utils/deployments/images';
 import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
@@ -34,7 +34,7 @@ import CreateContainer from '@/src/components/Images/Modals/CreateContainer';
 import NewVersion from '@/src/components/Images/Modals/NewVersion';
 import Install from '@/src/components/Images/Modals/Install';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 
 interface Props {
   route: ApplicationRoute;
@@ -352,7 +352,10 @@ const HeaderButtons: FC<Props> = ({
           <CreateContainer
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
-            modalTitle={t(ContainersI18nKey.CreateModalTitle, { type: getTranslatedType(route, t) })}
+            modalTitle={t(ContainersI18nKey.CreateModalTitle, {
+              type: getTranslatedType(route, t),
+              entityType: getTranslatedDeploymentType(route, t),
+            })}
             route={route}
             image={image}
             onCreate={onCreateContainer}

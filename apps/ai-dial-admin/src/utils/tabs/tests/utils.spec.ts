@@ -46,7 +46,7 @@ import {
   tracesTab,
 } from '../utils';
 
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 

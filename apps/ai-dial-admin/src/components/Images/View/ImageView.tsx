@@ -24,7 +24,7 @@ import Containers from '@/src/components/Images/View/Containers/Containers';
 import BuildLog from '@/src/components/Images/View/BuildLog/BuildLog';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
 
 interface Props {

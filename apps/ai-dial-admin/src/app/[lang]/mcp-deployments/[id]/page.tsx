@@ -21,7 +21,7 @@ import ImageView from '@/src/components/Images/View/ImageView';
 import { Toolset } from '@/src/models/dial/toolset';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import ContainerView from '@/src/components/Containers/View/ContainerView';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContext';
 import { createToolset as createAssetToolset } from '@/src/app/[lang]/assets-toolsets/actions';
 import { createToolset } from '@/src/app/[lang]/toolsets/actions';

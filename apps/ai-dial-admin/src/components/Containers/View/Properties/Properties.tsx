@@ -17,7 +17,7 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import DeploymentStatusIndicator from '@/src/components/Common/DeploymentStatusIndicator/DeploymentStatusIndicator';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
-import ContainerProperties from '@/src/components/Containers/Properties/ContainerProperties';
+import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
 import ChangeContainerImage from '@/src/components/Containers/Modals/ChangeContainerImage';
 
 interface Props {

@@ -14,7 +14,7 @@ import { MOUNT_TYPE } from '@/src/types/deployments/variables';
 import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { EntityPlaceholdersI18nKey, EnvVariablesI18nKey } from '@/src/constants/i18n';
-import EnvVariableValueField from '@/src/components/Containers/Properties/EnvVariables/EnvVariableValue';
+import EnvVariableValueField from '@/src/components/Containers/Fields/EnvVariables/EnvVariableValue';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props {

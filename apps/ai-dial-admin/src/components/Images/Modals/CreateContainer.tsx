@@ -6,7 +6,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { useI18n } from '@/src/locales/client';
 import { useAppContext } from '@/src/context/AppContext';
 import { getContainerTemplate, validateContainer } from '@/src/utils/deployments/containers';
-import ContainerProperties from '@/src/components/Containers/Properties/ContainerProperties';
+import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 
 interface Props {

@@ -11,7 +11,7 @@ import { getContainers } from '@/src/app/actions/deployments';
 import { getImageType } from '@/src/utils/deployments/images';
 import { getErrorNotification } from '@/src/utils/notification';
 import { ButtonsI18nKey, ContainersI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
-import { getTranslatedType } from '@/src/utils/deployments/entity';
+import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
 import Grid from '@/src/components/Grid/Grid';
 import { IMAGE_DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
@@ -91,12 +91,22 @@ const AddContainerToImage: FC<Props> = ({ title, isModalOpen, onClose, onApply, 
     >
       <div className="flex h-full flex-col px-6 py-4 min-h-0">
         {!dependencies.length ? (
-          <DialNoDataContent title={t(EntitiesI18nKey.NoContainersType, { type: getTranslatedType(route, t) })} />
+          <DialNoDataContent
+            title={t(EntitiesI18nKey.NoContainersType, {
+              type: getTranslatedType(route, t),
+              entityType: getTranslatedDeploymentType(route, t),
+            })}
+          />
         ) : (
           <div className="flex flex-col gap-4 h-full min-h-0">
             <Grid additionalGridOptions={additionalGridOptions} onGridReady={onGridReady} />
             {selectedEntities.some((conainer) => conainer.status === CONTAINER_STATUS.RUNNING) && (
-              <DialAlert message={t(ContainersI18nKey.ContainersRestartWarning)} variant={AlertVariant.Warning} />
+              <DialAlert
+                message={t(ContainersI18nKey.ContainersRestartWarning, {
+                  entityType: getTranslatedDeploymentType(route, t),
+                })}
+                variant={AlertVariant.Warning}
+              />
             )}
           </div>
         )}

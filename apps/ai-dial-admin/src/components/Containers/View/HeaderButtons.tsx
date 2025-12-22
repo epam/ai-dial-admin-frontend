@@ -23,6 +23,7 @@ import {
   getAssetTemplate,
   getEntityRoute,
   getEntityTemplate,
+  getTranslatedDeploymentType,
   getTranslatedEntity,
   getTranslatedType,
 } from '@/src/utils/deployments/entity';
@@ -301,8 +302,13 @@ const HeaderButtons = <T extends Container>({
         modalType === ModalType.delete &&
         createPortal(
           <DeleteModal
-            title={t(ContainersI18nKey.DeleteModalTitle, { type: getTranslatedType(route, t) })}
-            description={t(ContainersI18nKey.DeleteModalDescription, { type: getTranslatedType(route, t) })}
+            title={t(ContainersI18nKey.DeleteModalTitle, {
+              type: getTranslatedType(route, t),
+              entityType: getTranslatedDeploymentType(route, t),
+            })}
+            description={t(ContainersI18nKey.DeleteModalDescription, {
+              entityType: getTranslatedDeploymentType(route, t),
+            })}
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             onApply={onDelete}
