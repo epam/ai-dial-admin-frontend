@@ -14,7 +14,7 @@ interface Props {
   route: ApplicationRoute;
 }
 
-const ContainerResourcesFields: FC<Props> = ({ container, setContainer, route }) => {
+const ResourcesFields: FC<Props> = ({ container, setContainer, route }) => {
   const t = useI18n();
 
   const [cpuRequestError, setCpuRequestError] = useState<FieldError | null>(null);
@@ -176,4 +176,4 @@ const ContainerResourcesFields: FC<Props> = ({ container, setContainer, route })
   );
 };
 
-export default ContainerResourcesFields;
+export default ResourcesFields;

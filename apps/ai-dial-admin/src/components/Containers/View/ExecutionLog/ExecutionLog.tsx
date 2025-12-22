@@ -7,9 +7,12 @@ import { EntityViewTab } from '@/src/utils/tabs/utils';
 import { getContainerPods } from '@/src/app/actions/deployments';
 import Page403 from '@/src/components/Page403/Page403';
 import LogViewer from '@/src/components/Common/LogViewer/LogViewer';
+import { getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
+import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
   containerId?: string;
+  route: ApplicationRoute;
 }
 
 function getPodsTabs(pods: Pod[], t: (key: string) => string): TabModel[] {
@@ -19,7 +22,7 @@ function getPodsTabs(pods: Pod[], t: (key: string) => string): TabModel[] {
   }));
 }
 
-const ExecutionLog: FC<Props> = ({ containerId }) => {
+const ExecutionLog: FC<Props> = ({ containerId, route }) => {
   const t = useI18n();
   const [pods, setPods] = useState<Pod[]>([]);
   const [activeTab, setActiveTab] = useState<string>('');
@@ -74,7 +77,9 @@ const ExecutionLog: FC<Props> = ({ containerId }) => {
   return (
     <div className="flex h-full">
       {!tabs.length ? (
-        <DialNoDataContent title={t(EntitiesI18nKey.NoContainerLogs)} />
+        <DialNoDataContent
+          title={t(EntitiesI18nKey.NoContainerLogs, { entityType: getTranslatedDeploymentType(route, t) })}
+        />
       ) : (
         <div className="flex-1 overflow-auto mt-3 min-h-0">
           {tabs.length > 1 && <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeActiveTab} />}

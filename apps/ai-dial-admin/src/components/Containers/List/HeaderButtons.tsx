@@ -16,9 +16,9 @@ import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/Re
 import { ButtonsI18nKey, ContainersI18nKey } from '@/src/constants/i18n';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import CreateContainer from '@/src/components/Containers/Modals/CreateContainer';
-import { getTranslatedType } from '@/src/utils/deployments/entity';
+import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { useRouter } from 'next/navigation';
 import CreateServing from '@/src/components/Containers/Modals/CreateServing';
 
@@ -98,7 +98,10 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, names, gridApi })
           ) : (
             <CreateContainer
               isModalOpen={isModalOpen}
-              modalTitle={t(ContainersI18nKey.CreateModalTitle, { type: getTranslatedType(route, t) })}
+              modalTitle={t(ContainersI18nKey.CreateModalTitle, {
+                type: getTranslatedType(route, t),
+                entityType: getTranslatedDeploymentType(route, t),
+              })}
               onClose={handleModalClose}
               onApply={onCreateContainer}
               route={route}

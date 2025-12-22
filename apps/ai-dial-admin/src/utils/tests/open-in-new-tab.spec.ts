@@ -1,7 +1,7 @@
 import { ApplicationRoute } from '@/src/types/routes';
-import { describe, expect, test, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { getEntityPath, getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 
 describe('getUrnForEntity', () => {
   test('returns correct URN for Prompts', () => {
@@ -21,9 +21,9 @@ describe('getUrnForEntity', () => {
 
   test('returns correct URN for ModelDeployments with entityType', () => {
     const entity = { id: 'modelId' };
-    const urn = getUrnForEntity(ApplicationRoute.ModelDeployments, entity, 'MODEL');
+    const urn = getUrnForEntity(ApplicationRoute.ModelDeployments, entity, DEPLOYMENT_ENTITY.images);
     const originalRoute = ApplicationRoute.ModelDeployments.split('/')?.[1];
-    expect(urn).toBe(`/${originalRoute}/${encodeURIComponent('modelId')}?entityType=MODEL`);
+    expect(urn).toBe(`/${originalRoute}/${encodeURIComponent('modelId')}?entityType=${DEPLOYMENT_ENTITY.images}`);
   });
 
   test('returns correct URN for default case', () => {

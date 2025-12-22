@@ -181,6 +181,8 @@ export enum EntitiesI18nKey {
   NoContainerLogs = 'Entities.NoContainerLogs',
   NoResources = 'Entities.NoResources',
   NoEvents = 'Entities.NoEvents',
+  Serving = 'Entities.Serving',
+  Container = 'Entities.Container',
 }
 
 export enum DeleteI18nKey {
@@ -1125,6 +1127,7 @@ export enum ImagesI18nKey {
 
 export enum ContainersI18nKey {
   ContainersListTitle = 'Containers.ContainersListTitle',
+  ServingsListTitle = 'Containers.ServingsListTitle',
   RelatedContainersListTitle = 'Containers.RelatedContainersListTitle',
   CreateModalTitle = 'Containers.CreateModalTitle',
   AddModalTitle = 'Containers.AddModalTitle',

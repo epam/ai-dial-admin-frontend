@@ -13,7 +13,8 @@ import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
-import { Container, DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
+import { Container } from '@/src/models/deployments/containers';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -114,7 +115,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
           <div className="flex flex-col w-full">
             <DialSelectField
               searchable={true}
-              options={containers.map((container) => ({ value: container.id, label: container.name }))}
+              options={containers.map((container) => ({ value: container.id as string, label: container.name }))}
               onChange={(container) => onSelect(container as string)}
               elementId="source-type"
               value={containers.find((container) => container.id === entity.source?.containerId)?.id}

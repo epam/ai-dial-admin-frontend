@@ -14,9 +14,10 @@ import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButton
 import { ButtonsI18nKey, ContainersI18nKey } from '@/src/constants/i18n';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { CHANGE_IMAGE_VERSION } from '@/src/constants/grid-columns/grid-columns';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
 
 interface Props {
   isModalOpen: boolean;
@@ -115,7 +116,12 @@ const ChangeContainerImage: FC<Props> = ({
                 }}
               />
               {containerStatus === CONTAINER_STATUS.RUNNING && (
-                <DialAlert message={t(ContainersI18nKey.ContainerRestartWarning)} variant={AlertVariant.Warning} />
+                <DialAlert
+                  message={t(ContainersI18nKey.ContainerRestartWarning, {
+                    entityType: getTranslatedDeploymentType(route, t),
+                  })}
+                  variant={AlertVariant.Warning}
+                />
               )}
             </div>
           )}

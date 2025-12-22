@@ -21,7 +21,7 @@ import ImageView from '@/src/components/Images/View/ImageView';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import ContainerView from '@/src/components/Containers/View/ContainerView';
 import { DialModel } from '@/src/models/dial/model';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { createModel } from '@/src/app/[lang]/models/actions';
 import { modelsApi } from '@/src/app/api/api';
 

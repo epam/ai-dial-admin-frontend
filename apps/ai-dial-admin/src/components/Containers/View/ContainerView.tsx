@@ -22,7 +22,7 @@ import { getContainer, updateContainer } from '@/src/app/actions/deployments';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { CONTAINER_STATUS, KubEventType } from '@/src/types/deployments/containers';
 import { ContainersI18nKey } from '@/src/constants/i18n';
-import { getTranslatedType } from '@/src/utils/deployments/entity';
+import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
 import HeaderButtons from '@/src/components/Containers/View/HeaderButtons';
 import Properties from '@/src/components/Containers/View/Properties/Properties';
@@ -34,7 +34,7 @@ import ExecutionLog from '@/src/components/Containers/View/ExecutionLog/Executio
 import Events from '@/src/components/Containers/View/Events/Events';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { getContainerRedeploySnapshot } from '@/src/utils/deployments/containers';
 
@@ -179,7 +179,10 @@ const ContainerView: FC<Props> = ({
               if (updatedContainer.status === CONTAINER_STATUS.RUNNING) {
                 showNotification(
                   getSuccessNotification(
-                    t(ContainersI18nKey.ContainerRunSuccess, { type: getTranslatedType(route, t) }),
+                    t(ContainersI18nKey.ContainerRunSuccess, {
+                      type: getTranslatedType(route, t),
+                      entityType: getTranslatedDeploymentType(route, t),
+                    }),
                     t(ContainersI18nKey.ContainerSuccessDescription),
                     5000,
                   ),
@@ -202,7 +205,10 @@ const ContainerView: FC<Props> = ({
             ) {
               showNotification(
                 getSuccessNotification(
-                  t(ContainersI18nKey.ContainerStopSuccess, { type: getTranslatedType(route, t) }),
+                  t(ContainersI18nKey.ContainerStopSuccess, {
+                    type: getTranslatedType(route, t),
+                    entityType: getTranslatedDeploymentType(route, t),
+                  }),
                   '',
                   5000,
                 ),

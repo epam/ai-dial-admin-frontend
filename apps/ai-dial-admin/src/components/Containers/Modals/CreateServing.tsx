@@ -9,8 +9,8 @@ import { getContainerTemplate } from '@/src/utils/deployments/containers';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
-import BaseProperties from '@/src/components/Containers/Properties/BaseProperties';
-import ServingProperties from '../Properties/ServingProperties';
+import BaseProperties from '@/src/components/Containers/Fields/BaseProperties';
+import ServingProperties from '@/src/components/Containers/Fields/ServingProperties';
 
 interface Props {
   isModalOpen: boolean;
