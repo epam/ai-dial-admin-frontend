@@ -1,18 +1,25 @@
 import React, { FC, useCallback, useEffect } from 'react';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { getPathError } from '@/src/utils/deployments/validation';
 import { DialTextInputField } from '@epam/ai-dial-ui-kit';
+
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
-import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
+import { ApplicationRoute } from '@/src/types/routes';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { getPathError } from '@/src/utils/deployments/validation';
+import { useI18n } from '@/src/locales/client';
+
+import Transport from '@/src/components/Containers/Fields/Transport/Transport';
+import PortField from '@/src/components/Common/PortField/PortField';
+import Accordion from '@/src/components/Common/Accordion/Accordion';
 
 interface Props {
   container: Container;
   setContainer: (container: Container) => void;
+  route: ApplicationRoute;
 }
 
-const McpEndpointPath: FC<Props> = ({ container, setContainer }) => {
+const EndpointConfiguration: FC<Props> = ({ container, setContainer, route }) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
 
@@ -51,17 +58,27 @@ const McpEndpointPath: FC<Props> = ({ container, setContainer }) => {
   );
 
   return (
-    <DialTextInputField
-      fieldTitle={t(EntityFieldsI18nKey.ContainerEndpointPath)}
-      elementId="mcpEndpointPath"
-      placeholder={t(EntityPlaceholdersI18nKey.ContainerEndpointPath)}
-      value={container.mcpEndpointPath || ''}
-      errorText={pathError?.text}
-      invalid={!!pathError}
-      optional={true}
-      onChange={onPathChange}
-    />
+    <Accordion title={t(EntityFieldsI18nKey.EndpointConfiguration)}>
+      <div className="flex flex-col gap-y-6 lg:w-[35%]">
+        {route === ApplicationRoute.McpDeployments && (
+          <div className="flex gap-4">
+            <Transport container={container} setContainer={setContainer} />
+            <DialTextInputField
+              fieldTitle={t(EntityFieldsI18nKey.ContainerEndpointPath)}
+              elementId="mcpEndpointPath"
+              placeholder={t(EntityPlaceholdersI18nKey.ContainerEndpointPath)}
+              value={container.mcpEndpointPath || ''}
+              errorText={pathError?.text}
+              invalid={!!pathError}
+              optional={true}
+              onChange={onPathChange}
+            />
+          </div>
+        )}
+        <PortField route={route} container={container} setContainer={setContainer} />
+      </div>
+    </Accordion>
   );
 };
 
-export default McpEndpointPath;
+export default EndpointConfiguration;

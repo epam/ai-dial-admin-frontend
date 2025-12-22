@@ -1,0 +1,135 @@
+import { FC, useCallback, useEffect, useState } from 'react';
+import { DialSelectField, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { ContainersI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { CONTAINER_TYPE, MODEL_SOURCE_TYPE, SERVING_SOURCE } from '@/src/types/deployments/containers';
+import { useI18n } from '@/src/locales/client';
+import { Container } from '@/src/models/deployments/containers';
+import { FieldError } from '@/src/models/error';
+import { getDeploymentsURIError, getErrorForHfModelName } from '@/src/utils/deployments/validation';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+
+interface Props {
+  container: Container;
+  setContainer: (container: Container) => void;
+}
+
+const ModelSourceFields: FC<Props> = ({ container, setContainer }) => {
+  const t = useI18n();
+  const { dispatch, resetCounter } = useSaveValidationContext();
+
+  const [imageRefError, setImageRefError] = useState<FieldError | null>(null);
+
+  const SERVING_TYPES = [
+    { value: MODEL_SOURCE_TYPE.HF, label: t(ContainersI18nKey.ModelTypeHF) },
+    { value: MODEL_SOURCE_TYPE.NIM, label: t(ContainersI18nKey.ModelTypeNIM) },
+  ];
+
+  const getSourceError = useCallback(
+    (modelName?: string, $type?: MODEL_SOURCE_TYPE) => {
+      return $type === MODEL_SOURCE_TYPE.HF
+        ? getErrorForHfModelName(modelName, t)
+        : getDeploymentsURIError(modelName, t);
+    },
+    [t],
+  );
+
+  const onChangeImageRef = useCallback(
+    (value?: string) => {
+      const error = getSourceError(value, container.source?.$type as MODEL_SOURCE_TYPE);
+      setImageRefError(error);
+      if (container.source?.$type === MODEL_SOURCE_TYPE.HF) {
+        setContainer({ ...container, source: { ...container.source, modelName: value } as SERVING_SOURCE });
+      } else {
+        setContainer({ ...container, source: { ...container.source, imageRef: value } as SERVING_SOURCE });
+      }
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: container.source?.$type === MODEL_SOURCE_TYPE.HF ? 'modelName' : 'imageRef',
+        isValid: !error,
+      });
+    },
+    [container, setContainer, dispatch, getSourceError],
+  );
+
+  const onChangeModelSourceType = useCallback(
+    ($type?: MODEL_SOURCE_TYPE) => {
+      const updated = {
+        ...container,
+        $type: $type === MODEL_SOURCE_TYPE.HF ? CONTAINER_TYPE.HF : CONTAINER_TYPE.NIM,
+        source: {
+          ...container.source,
+          $type: $type as MODEL_SOURCE_TYPE,
+        },
+      };
+
+      if ($type === MODEL_SOURCE_TYPE.HF) {
+        updated.modelFormat = 'huggingface';
+      } else {
+        delete updated.modelFormat;
+      }
+
+      if (container.source?.imageRef) {
+        const error = getSourceError(container.source?.imageRef, $type);
+        setImageRefError(error);
+      }
+      setContainer(updated);
+    },
+    [container, setContainer, getSourceError],
+  );
+
+  useEffect(() => {
+    const source = container.source;
+    const value = source?.$type === MODEL_SOURCE_TYPE.HF ? source?.modelName : source?.imageRef;
+
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: source?.$type ? 'modelName' : 'imageRef',
+      isValid: !getSourceError(value, container.source?.$type),
+    });
+  }, [container.source, dispatch, getSourceError, t]);
+
+  useEffect(() => {
+    const source = container.source;
+    const value = source?.$type === MODEL_SOURCE_TYPE.HF ? source?.modelName : source?.imageRef;
+
+    if (resetCounter || (value && value.length > 0)) {
+      const error = getSourceError(value, container.source?.$type);
+      setImageRefError(error);
+    } else {
+      setImageRefError(null);
+    }
+  }, [container.source, resetCounter, getSourceError]);
+
+  return (
+    <div className="flex flex-col gap-8">
+      <DialSelectField
+        elementId="modelSourceType"
+        fieldTitle={t(EntitiesI18nKey.SourceType)}
+        options={SERVING_TYPES}
+        value={container.source?.$type}
+        onChange={($type) => onChangeModelSourceType($type as MODEL_SOURCE_TYPE)}
+      />
+      {container.source?.$type === MODEL_SOURCE_TYPE.NIM ? (
+        <DialTextInputField
+          elementId="imageRef"
+          fieldTitle={t(EntityFieldsI18nKey.ImageURI)}
+          value={container.source?.imageRef}
+          errorText={imageRefError?.text}
+          invalid={!!imageRefError}
+          onChange={onChangeImageRef}
+        />
+      ) : (
+        <DialTextInputField
+          elementId="modelName"
+          fieldTitle={t(EntityFieldsI18nKey.HFModelName)}
+          value={container.source?.modelName}
+          errorText={imageRefError?.text}
+          invalid={!!imageRefError}
+          onChange={onChangeImageRef}
+        />
+      )}
+    </div>
+  );
+};
+
+export default ModelSourceFields;

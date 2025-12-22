@@ -1,23 +1,40 @@
-import { FC, useCallback } from 'react';
+import React, { FC, useCallback, useMemo } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { IconPlus } from '@tabler/icons-react';
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
-import EnvVariable from './EnvVariable';
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
-import { useI18n } from '@/src/locales/client';
 import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
-import { EnvVariablesI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EnvVariablesI18nKey } from '@/src/constants/i18n';
+import { Container } from '@/src/models/deployments/containers';
+import { useI18n } from '@/src/locales/client';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 
+import Accordion from '@/src/components/Common/Accordion/Accordion';
+import EnvVariable from './EnvVariable';
+
 interface Props {
-  variables: EnvironmentVariable[];
-  onChangeVariables: (variables: EnvironmentVariable[]) => void;
+  container: Container;
+  setContainer: (container: Container) => void;
 }
 
-const EnvVariables: FC<Props> = ({ variables, onChangeVariables }) => {
+const EnvVariables: FC<Props> = ({ container, setContainer }) => {
   const t = useI18n();
+
+  const variables = useMemo(() => container.metadata?.envs || [], [container]);
+
+  const onChangeVariables = useCallback(
+    (variables: EnvironmentVariable[]) => {
+      setContainer({
+        ...container,
+        metadata: {
+          envs: variables,
+        },
+      });
+    },
+    [container, setContainer],
+  );
 
   const onAddVariable = useCallback(() => {
     const variableDraft: EnvironmentVariable = {
@@ -67,38 +84,40 @@ const EnvVariables: FC<Props> = ({ variables, onChangeVariables }) => {
   );
 
   return (
-    <div className="flex flex-col gap-y-2">
-      <DndProvider backend={HTML5Backend}>
-        <div className="flex flex-col gap-2 lg:pr-2">
-          {variables?.map((variable, index) => {
-            const handleUpdateVariable = (updatedVariable: EnvironmentVariable) =>
-              onUpdateVariable(updatedVariable, index);
+    <Accordion title={t(EntityFieldsI18nKey.EnvironmentVariables)}>
+      <div className="flex flex-col gap-y-2">
+        <DndProvider backend={HTML5Backend}>
+          <div className="flex flex-col gap-2 lg:pr-2">
+            {variables?.map((variable, index) => {
+              const handleUpdateVariable = (updatedVariable: EnvironmentVariable) =>
+                onUpdateVariable(updatedVariable, index);
 
-            return (
-              <EnvVariable
-                key={`variable${index}`}
-                variable={variable}
-                index={index}
-                numVariables={variables?.length || 0}
-                updateVariable={handleUpdateVariable}
-                removeVariable={onRemoveVariable}
-                findColumn={findColumn}
-                moveColumn={moveColumn}
-              />
-            );
-          })}
+              return (
+                <EnvVariable
+                  key={`variable${index}`}
+                  variable={variable}
+                  index={index}
+                  numVariables={variables?.length || 0}
+                  updateVariable={handleUpdateVariable}
+                  removeVariable={onRemoveVariable}
+                  findColumn={findColumn}
+                  moveColumn={moveColumn}
+                />
+              );
+            })}
+          </div>
+        </DndProvider>
+        <div>
+          <DialButton
+            variant={ButtonVariant.Secondary}
+            className="mb-2"
+            label={t(EnvVariablesI18nKey.AddVariable)}
+            iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
+            onClick={onAddVariable}
+          />
         </div>
-      </DndProvider>
-      <div>
-        <DialButton
-          variant={ButtonVariant.Secondary}
-          className="mb-2"
-          label={t(EnvVariablesI18nKey.AddVariable)}
-          iconBefore={<IconPlus {...BASE_ICON_PROPS} />}
-          onClick={onAddVariable}
-        />
       </div>
-    </div>
+    </Accordion>
   );
 };
 
