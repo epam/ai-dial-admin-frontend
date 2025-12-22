@@ -284,7 +284,9 @@ const ContainerView: FC<Props> = ({
               {activeTab === EntityViewTab.Resources && <Resources containerId={selectedContainer.id} />}
               {activeTab === EntityViewTab.Prompts && <Prompts containerId={selectedContainer.id} />}
               {activeTab === EntityViewTab.Metrics && <Metrics />}
-              {activeTab === EntityViewTab.ExecutionLog && <ExecutionLog containerId={selectedContainer.id} />}
+              {activeTab === EntityViewTab.ExecutionLog && (
+                <ExecutionLog containerId={selectedContainer.id} route={route} />
+              )}
               {activeTab === EntityViewTab.Events && <Events route={route} events={events} />}
             </>
           )}
