@@ -827,6 +827,7 @@ export default {
     description: 'Description',
     author: 'Maintainer',
     displayVersion: 'Display version',
+    allVersionsOption: 'All versions',
     version: 'Version',
     iconUrl: 'Icon',
     forwardAuthToken: 'Forward auth token',

@@ -159,6 +159,7 @@ const HeaderButtons = <T extends object>({
             onCloseModal={onCloseModal}
             context={getAssetContext}
             isSelectedView={true}
+            existingVersions={existingVersions}
           />,
           document.body,
         )}

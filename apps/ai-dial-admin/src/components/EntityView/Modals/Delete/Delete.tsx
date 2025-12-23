@@ -1,9 +1,17 @@
 'use client';
 
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
-import { ConfirmationPopupVariant, DialConfirmationPopup, DialEllipsisTooltip, PopupSize } from '@epam/ai-dial-ui-kit';
+import {
+  ConfirmationPopupVariant,
+  DialConfirmationPopup,
+  DialEllipsisTooltip,
+  DialSelect,
+  PopupSize,
+  SelectSize,
+  SelectVariant,
+} from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
@@ -18,6 +26,7 @@ import { getConfirmation, getNotificationDescription, getNotificationTitle, getT
 import { isAssetView, isBuildersView } from '@/src/utils/is-asset-view';
 import RelatedArtefacts from './RelatedArtefact';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
+import { AllVersionValue } from './constants';
 
 interface Artefact {
   name?: string;
@@ -29,6 +38,7 @@ interface Artefact {
 interface Props<T> {
   view: ApplicationRoute;
   entity: T;
+  existingVersions?: string[];
   isSelectedView?: boolean;
   resetCurrentEntity?: () => void;
   removeEntity: (entity: string) => Promise<ServerActionResponse>;
@@ -44,7 +54,11 @@ const DeleteConfirmationModal = <T extends Artefact>({
   context,
   isSelectedView,
   resetCurrentEntity,
+  existingVersions,
 }: Props<T>) => {
+  const [selectedVersion, setSelectedVersion] = useState<string | undefined>(
+    entity?.displayVersion || existingVersions?.[existingVersions?.length - 1],
+  );
   const name = useMemo(
     () => (isAssetView(view) ? entity.name : entity.displayName || entity['dial:applicationTypeDisplayName']),
     [entity, view],
@@ -67,24 +81,50 @@ const DeleteConfirmationModal = <T extends Artefact>({
     [showNotification, t, view],
   );
 
-  const onConfirmRemoving = useCallback(() => {
-    const entityKey = getEntityPath(view, entity, true);
+  const existingVersionOptions = useMemo(() => {
+    if (!existingVersions) {
+      return [];
+    }
 
-    getReqRef.current(removeEntity, entityKey).then((res) => {
-      if (res.success) {
-        onCloseModal();
-        resetCurrentEntity?.();
-        if (isAssetView(view)) {
-          folderContext?.fetchFiles(folderContext?.filePath);
+    return [
+      {
+        label: t(EntityFieldsI18nKey.allVersionsOption),
+        value: AllVersionValue,
+      },
+      ...existingVersions.map((version) => ({ value: version, label: version })),
+    ];
+  }, [existingVersions, t]);
+
+  const onConfirmRemoving = useCallback(() => {
+    let entityKeys: string[];
+    if (!selectedVersion) {
+      entityKeys = [getEntityPath(view, entity, true)];
+    } else {
+      entityKeys =
+        selectedVersion !== AllVersionValue
+          ? [getEntityPath(view, entity, true, undefined, selectedVersion)]
+          : existingVersions?.map((version) => getEntityPath(view, entity, true, undefined, version)) || [];
+    }
+
+    const requestPromises = entityKeys.map((entityKey) => getReqRef.current(removeEntity, entityKey));
+
+    Promise.all(requestPromises).then((resArr) => {
+      resArr.forEach((res, index) => {
+        if (res.success) {
+          onCloseModal();
+          resetCurrentEntity?.();
+          if (isAssetView(view)) {
+            folderContext?.fetchFiles(folderContext?.filePath);
+          }
+          showSuccessNotification(entityKeys[index]);
+          if (isSelectedView) {
+            router.push(view);
+          }
+          router.refresh();
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
-        showSuccessNotification(entityKey);
-        if (isSelectedView) {
-          router.push(view);
-        }
-        router.refresh();
-      } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
-      }
+      });
     });
   }, [
     view,
@@ -97,7 +137,13 @@ const DeleteConfirmationModal = <T extends Artefact>({
     router,
     folderContext,
     showNotification,
+    selectedVersion,
+    existingVersions,
   ]);
+
+  const onVersionChange = useCallback((value: string) => {
+    setSelectedVersion(value);
+  }, []);
 
   return (
     <DialConfirmationPopup
@@ -124,9 +170,16 @@ const DeleteConfirmationModal = <T extends Artefact>({
               <DialEllipsisTooltip text={name} />
             </div>
           )}
-          {entity.displayVersion && (
-            <div className="text-primary dial-small">
-              <span className="text-secondary">{t(EntityFieldsI18nKey.displayVersion)}:</span> {entity.displayVersion}
+          {existingVersions && existingVersions.length > 0 && (
+            <div className="text-primary dial-small flex flex-row items-center gap-x-1">
+              <span className="text-secondary">{t(EntityFieldsI18nKey.displayVersion)}:</span>
+              <DialSelect
+                size={SelectSize.Sm}
+                variant={SelectVariant.Secondary}
+                options={existingVersionOptions}
+                onChange={(value) => onVersionChange(value as string)}
+                value={selectedVersion}
+              />
             </div>
           )}
         </div>
