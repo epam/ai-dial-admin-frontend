@@ -1,131 +1,38 @@
-import { ContainersI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { useI18n } from '@/src/locales/client';
+import React, { FC } from 'react';
+import classNames from 'classnames';
+
+import { ApplicationRoute } from '@/src/types/routes';
 import { Container } from '@/src/models/deployments/containers';
-import { FieldError } from '@/src/models/error';
-import { CONTAINER_TYPE, MODEL_SOURCE_TYPE, SERVING_SOURCE } from '@/src/types/deployments/containers';
-import { getDeploymentsURIError, getErrorForHfModelName } from '@/src/utils/deployments/validation';
-import { DialSelectField, DialTextInputField } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useEffect, useState } from 'react';
+
+import BaseFields from '@/src/components/Containers/Fields/BaseFields/BaseFields';
+import ModelSourceFields from '@/src/components/Containers/Fields/ModelSourceFields/ModelSourceFields';
+import EnvVariables from '@/src/components/Containers/Fields/EnvVariables/EnvVariables';
+import ResourcesFields from '@/src/components/Containers/Fields/Resources/ResourcesFields';
+import EndpointConfiguration from '@/src/components/Containers/Fields/EndpointConfiguration/EndpointConfiguration';
 
 interface Props {
   container: Container;
   setContainer: (container: Container) => void;
+  route: ApplicationRoute;
+  names?: string[];
+  isModal?: boolean;
 }
 
-const ServingProperties: FC<Props> = ({ container, setContainer }) => {
-  const t = useI18n();
-  const { dispatch, resetCounter } = useSaveValidationContext();
-  const [imageRefError, setImageRefError] = useState<FieldError | null>(null);
-
-  const SERVING_TYPES = [
-    { value: MODEL_SOURCE_TYPE.HF, label: t(ContainersI18nKey.ModelTypeHF) },
-    { value: MODEL_SOURCE_TYPE.NIM, label: t(ContainersI18nKey.ModelTypeNIM) },
-  ];
-
-  const getSourceError = useCallback(
-    (modelName?: string, $type?: MODEL_SOURCE_TYPE) => {
-      return $type === MODEL_SOURCE_TYPE.HF
-        ? getErrorForHfModelName(modelName, t)
-        : getDeploymentsURIError(modelName, t);
-    },
-    [t],
-  );
-
-  const onChangeImageRef = useCallback(
-    (value?: string) => {
-      const error = getSourceError(value, container.source?.$type as MODEL_SOURCE_TYPE);
-      setImageRefError(error);
-      if (container.source?.$type === MODEL_SOURCE_TYPE.HF) {
-        setContainer({ ...container, source: { ...container.source, modelName: value } as SERVING_SOURCE });
-      } else {
-        setContainer({ ...container, source: { ...container.source, imageRef: value } as SERVING_SOURCE });
-      }
-      dispatch({
-        type: ValidationActionType.SetField,
-        field: container.source?.$type === MODEL_SOURCE_TYPE.HF ? 'modelName' : 'imageRef',
-        isValid: !error,
-      });
-    },
-    [container, setContainer, dispatch, getSourceError],
-  );
-
-  const onChangeModelSourceType = useCallback(
-    ($type?: MODEL_SOURCE_TYPE) => {
-      const updated = {
-        ...container,
-        $type: $type === MODEL_SOURCE_TYPE.HF ? CONTAINER_TYPE.HF : CONTAINER_TYPE.NIM,
-        source: {
-          ...container.source,
-          $type: $type as MODEL_SOURCE_TYPE,
-        },
-      };
-
-      if ($type === MODEL_SOURCE_TYPE.HF) {
-        updated.modelFormat = 'huggingface';
-      } else {
-        delete updated.modelFormat;
-      }
-
-      if (container.source?.imageRef) {
-        const error = getSourceError(container.source?.imageRef, $type);
-        setImageRefError(error);
-      }
-      setContainer(updated);
-    },
-    [container, setContainer, getSourceError],
-  );
-
-  useEffect(() => {
-    const source = container.source;
-    const value = source?.$type === MODEL_SOURCE_TYPE.HF ? source?.modelName : source?.imageRef;
-
-    dispatch({
-      type: ValidationActionType.SetField,
-      field: source?.$type ? 'modelName' : 'imageRef',
-      isValid: !getSourceError(value, container.source?.$type),
-    });
-  }, [container.source, dispatch, getSourceError, t]);
-
-  useEffect(() => {
-    const source = container.source;
-    const value = source?.$type === MODEL_SOURCE_TYPE.HF ? source?.modelName : source?.imageRef;
-
-    if (resetCounter || (value && value.length > 0)) {
-      const error = getSourceError(value, container.source?.$type);
-      setImageRefError(error);
-    } else {
-      setImageRefError(null);
-    }
-  }, [container.source, resetCounter, getSourceError]);
+const ServingProperties: FC<Props> = ({ container, setContainer, names, isModal, route }) => {
+  const containerClassNames = classNames('flex flex-1 flex-col gap-8', !isModal && 'lg:w-[35%]');
 
   return (
-    <div className="flex flex-col gap-4">
-      <DialSelectField
-        elementId="modelSourceType"
-        fieldTitle={t(EntitiesI18nKey.SourceType)}
-        options={SERVING_TYPES}
-        value={container.source?.$type}
-        onChange={($type) => onChangeModelSourceType($type as MODEL_SOURCE_TYPE)}
-      />
-      {container.source?.$type === MODEL_SOURCE_TYPE.NIM ? (
-        <DialTextInputField
-          elementId="imageRef"
-          fieldTitle={t(EntityFieldsI18nKey.ImageURI)}
-          value={container.source?.imageRef}
-          errorText={imageRefError?.text}
-          invalid={!!imageRefError}
-          onChange={onChangeImageRef}
-        />
-      ) : (
-        <DialTextInputField
-          elementId="modelName"
-          fieldTitle={t(EntityFieldsI18nKey.HFModelName)}
-          value={container.source?.modelName}
-          errorText={imageRefError?.text}
-          invalid={!!imageRefError}
-          onChange={onChangeImageRef}
-        />
+    <div className="flex flex-col gap-8">
+      <div className={containerClassNames}>
+        <BaseFields container={container} setContainer={setContainer} names={names} isModal={isModal} />
+        <ModelSourceFields container={container} setContainer={setContainer} />
+      </div>
+      {!isModal && (
+        <div className="flex flex-col gap-y-8">
+          <EndpointConfiguration container={container} setContainer={setContainer} route={route} />
+          <EnvVariables container={container} setContainer={setContainer} />
+          <ResourcesFields container={container} setContainer={setContainer} route={route} />
+        </div>
       )}
     </div>
   );

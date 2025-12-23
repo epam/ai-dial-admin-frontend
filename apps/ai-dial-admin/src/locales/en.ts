@@ -962,6 +962,9 @@ export default {
     Arguments: 'Arguments',
     globalInterceptors: 'Global Interceptors',
     HFModelName: 'Hugging Face model name',
+    Resources: 'Resources',
+    EnvironmentVariables: 'Environment Variables',
+    EndpointConfiguration: 'Endpoint Configuration',
   },
   EntityPlaceholders: {
     Project: 'Enter project',

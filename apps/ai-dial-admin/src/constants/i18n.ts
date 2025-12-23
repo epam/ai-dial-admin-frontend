@@ -1058,6 +1058,9 @@ export enum EntityFieldsI18nKey {
   Arguments = 'EntityFields.Arguments',
   globalInterceptors = 'EntityFields.globalInterceptors',
   HFModelName = 'EntityFields.HFModelName',
+  Resources = 'EntityFields.Resources',
+  EnvironmentVariables = 'EntityFields.EnvironmentVariables',
+  EndpointConfiguration = 'EntityFields.EndpointConfiguration',
 }
 
 export enum ToolsetI18nKey {

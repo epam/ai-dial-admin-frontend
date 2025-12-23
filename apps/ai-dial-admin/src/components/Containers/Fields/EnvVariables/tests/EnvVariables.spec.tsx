@@ -3,15 +3,13 @@ import { render, screen } from '@testing-library/react';
 import EnvVariables from '../EnvVariables';
 import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
 import { EnvVariablesI18nKey } from '@/src/constants/i18n';
+import { Container } from '@/src/models/deployments/containers';
 
 describe('EnvVariables', () => {
-  const defaultProps = {
-    variables: [],
-    updateVariables: vi.fn(),
-  };
+  const container = { metadata: {} } as Container;
 
   test('renders component', () => {
-    render(<EnvVariables variables={[]} onChangeVariables={vi.fn()} />);
+    render(<EnvVariables container={container} setContainer={vi.fn()} />);
 
     expect(screen.getByRole('button', { name: EnvVariablesI18nKey.AddVariable })).toBeInTheDocument();
   });
@@ -25,7 +23,8 @@ describe('EnvVariables', () => {
         mountType: MOUNT_TYPE.CONTENT,
       },
     ];
-    render(<EnvVariables onChangeVariables={vi.fn()} variables={variables} />);
+    const container = { metadata: { envs: variables } } as Container;
+    render(<EnvVariables setContainer={vi.fn()} container={container} />);
 
     expect(screen.getByDisplayValue('VAR1')).toBeInTheDocument();
   });
