@@ -83,6 +83,10 @@ export class BaseApi {
     return this.sendActionRequest(url, 'GET', token, void 0, { [IF_NONE_MATCH]: etag });
   }
 
+  protected getActionWithMatchEtag(url: string, etag: string, token?: JWT | null): Promise<ServerActionResponse> {
+    return this.sendActionRequest(url, 'GET', token, void 0, { [IF_MATCH]: etag });
+  }
+
   protected getAction(url: string, token?: JWT | null): Promise<ServerActionResponse> {
     return this.sendActionRequest(url, 'GET', token);
   }

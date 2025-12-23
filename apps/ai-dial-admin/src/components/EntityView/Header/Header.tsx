@@ -2,18 +2,20 @@ import { ChatEntity, EntityValidityState } from '@/src/models/dial/base-entity';
 import { FC } from 'react';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
+import CoreSyncEntityStatus from '@/src/components/Common/SyncCoreStatus/SyncCoreStatus';
+import ValidityStatus from '@/src/components/EntityView/Status/ValidityStatus';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
+import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import ValidityStatus from '@/src/components/EntityView/Status/ValidityStatus';
-
 interface Props {
   entity?: ChatEntity | DialApplicationScheme | null;
+  view?: ApplicationRoute;
 }
 
-const EntityHeader: FC<Props> = ({ entity }) => {
+const EntityHeader: FC<Props> = ({ entity, view }) => {
   const t = useI18n();
 
   const id = (entity as ChatEntity)?.name || (entity as DialApplicationScheme)?.$id;
@@ -31,6 +33,7 @@ const EntityHeader: FC<Props> = ({ entity }) => {
           <ValidityStatus validityState={validityState} />
         </LabelledText>
       )}
+      <CoreSyncEntityStatus view={view} name={id} />
     </div>
   );
 };

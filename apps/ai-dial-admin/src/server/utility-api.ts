@@ -2,6 +2,7 @@ import { JWT } from 'next-auth/jwt';
 
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { AppProcessStatus } from '@/src/models/app-process-status';
+import { CoreSyncStatus } from '@/src/models/core-sync-status';
 import { CoreConfigVersion, CoreVersions } from '@/src/models/core-version';
 import { ExportRequest } from '@/src/models/export';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -77,5 +78,9 @@ export class UtilityApi extends BaseApi {
 
   updateSystemProperties(properties: GlobalSettings, token: JWT | null, etag: string): Promise<ServerActionResponse> {
     return this.putActionWithEtag(SYSTEM_PROPERTIES_URL, properties, token, etag);
+  }
+
+  getEntitySyncStatus(url: string, token: JWT | null, etag: string): Promise<ServerActionResponse<CoreSyncStatus>> {
+    return this.getActionWithMatchEtag(`${API}${url}`, etag, token);
   }
 }
