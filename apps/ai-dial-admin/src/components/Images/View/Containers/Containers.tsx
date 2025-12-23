@@ -16,7 +16,7 @@ import { createPortal } from 'react-dom';
 import AddContainerToImage from '@/src/components/Images/Modals/AddContainerToImage';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { IMAGE_DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 

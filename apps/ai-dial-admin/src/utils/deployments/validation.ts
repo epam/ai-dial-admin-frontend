@@ -116,7 +116,7 @@ export const getMaintainerError = (
   return null;
 };
 
-export const getPathError = (path: string, t?: (str: string) => string, required?: boolean) => {
+export const getPathError = (path?: string, t?: (str: string) => string, required?: boolean) => {
   if (!path && required) {
     return {
       type: ErrorType.EMPTY,
@@ -124,7 +124,7 @@ export const getPathError = (path: string, t?: (str: string) => string, required
     };
   }
 
-  if (!required && path.trim() && !path.startsWith('/')) {
+  if (!required && path?.trim() && !path.startsWith('/')) {
     return {
       type: ErrorType.INVALID,
       text: t ? t(ErrorI18nKey.PathError) : '',

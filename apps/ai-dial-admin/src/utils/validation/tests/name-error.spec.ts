@@ -158,6 +158,15 @@ describe('getErrorForName', () => {
       text: '',
     });
   });
+
+  test('Should return translated error for not unique display name', () => {
+    const res = getErrorForName('displayName', ['displayName'], mockT, true, true, true);
+
+    expect(res).toEqual({
+      type: ErrorType.EXISTING,
+      text: 'Translated Text',
+    });
+  });
 });
 
 describe('getErrorForDisplayName', () => {

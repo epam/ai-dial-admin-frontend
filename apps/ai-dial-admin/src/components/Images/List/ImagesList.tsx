@@ -24,7 +24,7 @@ import { getTranslatedType } from '@/src/utils/deployments/entity';
 import HeaderButtons from '@/src/components/Images/List/HeaderButtons';
 import DuplicateImage from '@/src/components/Images/Modals/DuplicateImage';
 import Delete from '@/src/components/Common/DeploymentsModals/Delete';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { IMAGES_LIST_COLUMNS, MCP_IMAGES_LIST_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 

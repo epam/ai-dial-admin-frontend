@@ -1,21 +1,28 @@
+import { FC, useCallback, useEffect, useState } from 'react';
+import { DialSelectField, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { ContainersI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import {
+  CONTAINER_TYPE,
+  MODEL_FORMAT,
+  MODEL_SOURCE_FIELD,
+  MODEL_SOURCE_TYPE,
+  SERVING_SOURCE,
+} from '@/src/types/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
 import { FieldError } from '@/src/models/error';
-import { CONTAINER_TYPE, MODEL_SOURCE_TYPE, SERVING_SOURCE } from '@/src/types/deployments/containers';
 import { getDeploymentsURIError, getErrorForHfModelName } from '@/src/utils/deployments/validation';
-import { DialSelectField, DialTextInputField } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   container: Container;
   setContainer: (container: Container) => void;
 }
 
-const ServingProperties: FC<Props> = ({ container, setContainer }) => {
+const ModelSourceFields: FC<Props> = ({ container, setContainer }) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
+
   const [imageRefError, setImageRefError] = useState<FieldError | null>(null);
 
   const SERVING_TYPES = [
@@ -62,7 +69,7 @@ const ServingProperties: FC<Props> = ({ container, setContainer }) => {
       };
 
       if ($type === MODEL_SOURCE_TYPE.HF) {
-        updated.modelFormat = 'huggingface';
+        updated.modelFormat = MODEL_FORMAT.HF;
       } else {
         delete updated.modelFormat;
       }
@@ -82,7 +89,7 @@ const ServingProperties: FC<Props> = ({ container, setContainer }) => {
 
     dispatch({
       type: ValidationActionType.SetField,
-      field: source?.$type ? 'modelName' : 'imageRef',
+      field: source?.$type === MODEL_SOURCE_TYPE.HF ? MODEL_SOURCE_FIELD.HF : MODEL_SOURCE_FIELD.NIM,
       isValid: !getSourceError(value, container.source?.$type),
     });
   }, [container.source, dispatch, getSourceError, t]);
@@ -100,7 +107,7 @@ const ServingProperties: FC<Props> = ({ container, setContainer }) => {
   }, [container.source, resetCounter, getSourceError]);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-8">
       <DialSelectField
         elementId="modelSourceType"
         fieldTitle={t(EntitiesI18nKey.SourceType)}
@@ -131,4 +138,4 @@ const ServingProperties: FC<Props> = ({ container, setContainer }) => {
   );
 };
 
-export default ServingProperties;
+export default ModelSourceFields;

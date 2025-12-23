@@ -22,7 +22,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { Notification } from '@/src/models/notification';
 import { ContainersI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
-import { getTranslatedType } from '@/src/utils/deployments/entity';
+import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
 import ListView from '@/src/components/ListView/ListView';
 import HeaderButtons from '@/src/components/Containers/List/HeaderButtons';
@@ -30,13 +30,13 @@ import Duplicate from '@/src/components/Common/DeploymentsModals/Duplicate';
 import Delete from '@/src/components/Common/DeploymentsModals/Delete';
 import {
   getDeleteOperation,
-  getRunOperation,
   getDuplicateOperation,
   getOpenInNewTabOperation,
+  getRunOperation,
   getStopOperation,
 } from '@/src/constants/grid-columns/actions';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { CONTAINERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
@@ -206,7 +206,10 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
               if (container?.status === CONTAINER_STATUS.RUNNING) {
                 showNotification(
                   getSuccessNotification(
-                    t(ContainersI18nKey.ContainerRunSuccess, { type: getTranslatedType(route, t) }),
+                    t(ContainersI18nKey.ContainerRunSuccess, {
+                      type: getTranslatedType(route, t),
+                      entityType: getTranslatedDeploymentType(route, t),
+                    }),
                     t(ContainersI18nKey.ContainerSuccessDescription),
                     5000,
                   ),
@@ -225,7 +228,10 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
               if (container.status === CONTAINER_STATUS.STOPPED) {
                 showNotification(
                   getSuccessNotification(
-                    t(ContainersI18nKey.ContainerStopSuccess, { type: getTranslatedType(route, t) }),
+                    t(ContainersI18nKey.ContainerStopSuccess, {
+                      type: getTranslatedType(route, t),
+                      entityType: getTranslatedDeploymentType(route, t),
+                    }),
                     '',
                     5000,
                   ),
@@ -260,8 +266,12 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
         title={t(ContainersI18nKey.ContainersListTitle, {
           count: containersList.length,
           type: getTranslatedType(route, t),
+          entityType: getTranslatedDeploymentType(route, t),
         })}
-        emptyDataTitle={t(EntitiesI18nKey.NoContainersType, { type: getTranslatedType(route, t) })}
+        emptyDataTitle={t(EntitiesI18nKey.NoContainersType, {
+          type: getTranslatedType(route, t),
+          entityType: getTranslatedDeploymentType(route, t),
+        })}
         showColumnsPanel={showColumnsPanel}
         toggleColumnsPanel={toggleColumnsPanel}
         storageKey={`${route}/${DEPLOYMENT_ENTITY.containers}`}
@@ -279,7 +289,10 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
         currentContainer &&
         createPortal(
           <Duplicate
-            title={t(ContainersI18nKey.DuplicateModalTitle, { type: getTranslatedType(route, t) })}
+            title={t(ContainersI18nKey.DuplicateModalTitle, {
+              type: getTranslatedType(route, t),
+              entityType: getTranslatedDeploymentType(route, t),
+            })}
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             onApply={onDuplicate}
@@ -293,8 +306,13 @@ const ContainersList: FC<Props> = ({ route, containersList }) => {
         currentContainer &&
         createPortal(
           <Delete
-            title={t(ContainersI18nKey.DeleteModalTitle, { type: getTranslatedType(route, t) })}
-            description={t(ContainersI18nKey.DeleteModalDescription)}
+            title={t(ContainersI18nKey.DeleteModalTitle, {
+              type: getTranslatedType(route, t),
+              entityType: getTranslatedDeploymentType(route, t),
+            })}
+            description={t(ContainersI18nKey.DeleteModalDescription, {
+              entityType: getTranslatedDeploymentType(route, t),
+            })}
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             onApply={onDelete}

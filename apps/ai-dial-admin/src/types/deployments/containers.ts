@@ -44,3 +44,12 @@ export type SERVING_SOURCE = {
   imageRef?: string;
   modelName?: string;
 };
+
+export enum MODEL_FORMAT {
+  HF = 'huggingface',
+}
+
+export enum MODEL_SOURCE_FIELD {
+  HF = 'modelName',
+  NIM = 'imageRef',
+}

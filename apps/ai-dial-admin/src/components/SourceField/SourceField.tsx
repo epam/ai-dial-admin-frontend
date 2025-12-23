@@ -4,7 +4,7 @@ import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
-import { Container } from '@/src/models/deployments';
+import { Container } from '@/src/models/deployments/containers';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { ApplicationRoute } from '@/src/types/routes';

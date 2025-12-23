@@ -5,7 +5,7 @@ import { RADIO_BUTTON_COL_DEF } from '@/src/constants/ag-grid';
 import { SOURCE_CONTAINERS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { Container } from '@/src/models/deployments';
+import { Container } from '@/src/models/deployments/containers';
 
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import Grid from '@/src/components/Grid/Grid';
