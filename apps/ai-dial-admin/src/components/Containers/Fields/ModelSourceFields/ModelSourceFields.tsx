@@ -1,7 +1,13 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { DialSelectField, DialTextInputField } from '@epam/ai-dial-ui-kit';
 import { ContainersI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
-import { CONTAINER_TYPE, MODEL_SOURCE_TYPE, SERVING_SOURCE } from '@/src/types/deployments/containers';
+import {
+  CONTAINER_TYPE,
+  MODEL_FORMAT,
+  MODEL_SOURCE_FIELD,
+  MODEL_SOURCE_TYPE,
+  SERVING_SOURCE,
+} from '@/src/types/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
 import { FieldError } from '@/src/models/error';
@@ -63,7 +69,7 @@ const ModelSourceFields: FC<Props> = ({ container, setContainer }) => {
       };
 
       if ($type === MODEL_SOURCE_TYPE.HF) {
-        updated.modelFormat = 'huggingface';
+        updated.modelFormat = MODEL_FORMAT.HF;
       } else {
         delete updated.modelFormat;
       }
@@ -83,7 +89,7 @@ const ModelSourceFields: FC<Props> = ({ container, setContainer }) => {
 
     dispatch({
       type: ValidationActionType.SetField,
-      field: source?.$type ? 'modelName' : 'imageRef',
+      field: source?.$type === MODEL_SOURCE_TYPE.HF ? MODEL_SOURCE_FIELD.HF : MODEL_SOURCE_FIELD.NIM,
       isValid: !getSourceError(value, container.source?.$type),
     });
   }, [container.source, dispatch, getSourceError, t]);

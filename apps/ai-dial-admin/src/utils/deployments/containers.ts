@@ -7,6 +7,7 @@ import {
   CONTAINER_STATUS,
   CONTAINER_TRANSPORT,
   CONTAINER_TYPE,
+  MODEL_FORMAT,
   MODEL_SOURCE_TYPE,
 } from '@/src/types/deployments/containers';
 
@@ -110,13 +111,13 @@ const getTemplate = (type: CONTAINER_TYPE, defaults?: ResourcesDefaults): Contai
     };
   }
 
-  if (type === CONTAINER_TYPE.NIM || type === CONTAINER_TYPE.HF) {
+  if (type === CONTAINER_TYPE.HF) {
     return {
       ...template,
       source: {
         $type: MODEL_SOURCE_TYPE.HF,
       },
-      modelFormat: 'huggingface',
+      modelFormat: MODEL_FORMAT.HF,
       resources: {
         requests: {
           ...template.resources?.requests,
