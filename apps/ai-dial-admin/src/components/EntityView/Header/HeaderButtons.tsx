@@ -160,6 +160,7 @@ const HeaderButtons = <T extends object>({
             context={getAssetContext}
             isSelectedView={true}
             existingVersions={existingVersions}
+            etag={etag}
           />,
           document.body,
         )}

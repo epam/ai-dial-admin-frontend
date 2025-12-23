@@ -32,6 +32,7 @@ interface Artefact {
   name?: string;
   displayName?: string;
   displayVersion?: string;
+  version?: string;
   $id?: string;
   'dial:applicationTypeDisplayName'?: string;
 }
@@ -44,6 +45,7 @@ interface Props<T> {
   removeEntity: (entity: string) => Promise<ServerActionResponse>;
   onCloseModal: () => void;
   context?: () => AssetsFolderContext<DialFile>;
+  etag?: string;
 }
 
 const DeleteConfirmationModal = <T extends Artefact>({
@@ -55,10 +57,9 @@ const DeleteConfirmationModal = <T extends Artefact>({
   isSelectedView,
   resetCurrentEntity,
   existingVersions,
+  etag,
 }: Props<T>) => {
-  const [selectedVersion, setSelectedVersion] = useState<string | undefined>(
-    entity?.displayVersion || existingVersions?.[existingVersions?.length - 1],
-  );
+  const [selectedVersion, setSelectedVersion] = useState<string | undefined>(entity?.version);
   const name = useMemo(
     () => (isAssetView(view) ? entity.name : entity.displayName || entity['dial:applicationTypeDisplayName']),
     [entity, view],
@@ -106,26 +107,37 @@ const DeleteConfirmationModal = <T extends Artefact>({
           : existingVersions?.map((version) => getEntityPath(view, entity, true, undefined, version)) || [];
     }
 
-    const requestPromises = entityKeys.map((entityKey) => getReqRef.current(removeEntity, entityKey));
+    const promises = entityKeys.map((entityKey) => getReqRef.current(removeEntity, entityKey, etag));
 
-    Promise.all(requestPromises).then((resArr) => {
-      resArr.forEach((res, index) => {
-        if (res.success) {
+    Promise.all(promises)
+      .then((resArr) => {
+        let isAllSuccess = true;
+
+        resArr.forEach((res, index) => {
+          if (res.success) {
+            showSuccessNotification(entityKeys[index]);
+          } else {
+            isAllSuccess = false;
+            showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+          }
+        });
+
+        if (isAllSuccess) {
           onCloseModal();
           resetCurrentEntity?.();
           if (isAssetView(view)) {
             folderContext?.fetchFiles(folderContext?.filePath);
           }
-          showSuccessNotification(entityKeys[index]);
+
           if (isSelectedView) {
             router.push(view);
           }
           router.refresh();
-        } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
         }
+      })
+      .catch((error) => {
+        showNotification(getErrorNotification(error.message));
       });
-    });
   }, [
     view,
     entity,
@@ -139,6 +151,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
     showNotification,
     selectedVersion,
     existingVersions,
+    etag,
   ]);
 
   const onVersionChange = useCallback((value: string) => {
