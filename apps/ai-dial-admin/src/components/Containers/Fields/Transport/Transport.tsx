@@ -16,23 +16,22 @@ const Transport: FC<Props> = ({ container, setContainer }) => {
   const t = useI18n();
 
   return (
-    <div className="max-w-[160px]">
-      <DialSelectField
-        elementId="transport"
-        value={container.transport || TRANSPORTS[0].value}
-        options={TRANSPORTS}
-        fieldTitle={t(EntityFieldsI18nKey.Transport)}
-        onChange={(transportId) => {
-          const selectedTransport = TRANSPORTS.find((source) => source.value === transportId) || TRANSPORTS[0];
+    <DialSelectField
+      elementId="transport"
+      value={container.transport || TRANSPORTS[0].value}
+      options={TRANSPORTS}
+      containerClassName="max-w-[160px]"
+      fieldTitle={t(EntityFieldsI18nKey.Transport)}
+      onChange={(transportId) => {
+        const selectedTransport = TRANSPORTS.find((source) => source.value === transportId) || TRANSPORTS[0];
 
-          setContainer({
-            ...container,
-            transport: selectedTransport.value as CONTAINER_TRANSPORT,
-          });
-        }}
-        optional={false}
-      />
-    </div>
+        setContainer({
+          ...container,
+          transport: selectedTransport.value as CONTAINER_TRANSPORT,
+        });
+      }}
+      optional={false}
+    />
   );
 };
 

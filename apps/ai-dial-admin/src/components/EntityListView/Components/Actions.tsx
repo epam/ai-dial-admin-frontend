@@ -82,6 +82,12 @@ const Actions = <T extends object>({
     return generateExportList(folderContext?.bulkSelectedData);
   }, [folderContext?.bulkSelectedData]);
 
+  const existingVersions = useMemo(() => {
+    if (!versionsMap || !currentEntity) return [];
+    const entityName = (currentEntity as BaseEntity)?.name;
+    return entityName ? versionsMap[entityName] : [];
+  }, [versionsMap, currentEntity]);
+
   const [duplicateModalContent, setDuplicateModalContent] = useState<ReactNode | null>(null);
 
   useEffect(() => {
@@ -235,6 +241,7 @@ const Actions = <T extends object>({
           onMove={onMove}
           getAssetContext={getAssetContext}
           onResetCurrentEntity={() => onChangeCurrentEntity(void 0)}
+          existingVersions={existingVersions}
         />
       ) : null}
       {isBulkView && (

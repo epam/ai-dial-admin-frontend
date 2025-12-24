@@ -7,6 +7,7 @@ import { FieldError } from '@/src/models/error';
 import { ErrorType } from '@/src/types/error-type';
 import { EntityFieldsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import Accordion from '@/src/components/Common/Accordion/Accordion';
 
 interface Props {
   container: Container;
@@ -41,118 +42,119 @@ const ResourcesFields: FC<Props> = ({ container, setContainer, route }) => {
   }
 
   return (
-    <div className="flex flex-col gap-x-2 gap-y-4">
-      <div className="flex flex-col lg:flex-row gap-2">
-        <DialNumberInputField
-          elementId="cpuRequest"
-          fieldTitle={t(EntityFieldsI18nKey.CPURequest)}
-          value={convertCoresToMilliCores(container.resources?.requests?.cpu)}
-          disabled={container.status === CONTAINER_STATUS.RUNNING}
-          errorText={cpuRequestError?.text}
-          invalid={!!cpuRequestError}
-          suffix="m"
-          onChange={(cpuRequest) => {
-            setCpuRequestError(validateCpuValue(cpuRequest as number));
-            setContainer({
-              ...container,
-              resources: {
-                ...container.resources,
-                requests: {
-                  ...container.resources?.requests,
-                  cpu: `${convertMilliCoresToCores(cpuRequest as number)}`,
-                },
-              },
-            });
-          }}
-        />
-        <DialNumberInputField
-          elementId="cpuLimit"
-          fieldTitle={t(EntityFieldsI18nKey.CPULimit)}
-          value={convertCoresToMilliCores(container.resources?.limits?.cpu)}
-          disabled={container.status === CONTAINER_STATUS.RUNNING}
-          errorText={cpuLimitError?.text}
-          invalid={!!cpuLimitError}
-          suffix="m"
-          onChange={(cpuLimit?: number | string) => {
-            setCpuLimitError(validateCpuValue(cpuLimit as number));
-            setContainer({
-              ...container,
-              resources: {
-                ...container.resources,
-                limits: {
-                  ...container.resources?.limits,
-                  cpu: `${convertMilliCoresToCores(cpuLimit as number)}`,
-                },
-              },
-            });
-          }}
-        />
-      </div>
-      <div className="flex gap-2 flex-col lg:flex-row">
-        <DialNumberInputField
-          elementId="memoryRequest"
-          fieldTitle={t(EntityFieldsI18nKey.MemoryRequest)}
-          value={convertMemoryToMb(container.resources?.requests?.memory)}
-          disabled={container.status === CONTAINER_STATUS.RUNNING}
-          suffix="Mb"
-          onChange={(memoryRequest) => {
-            setContainer({
-              ...container,
-              resources: {
-                ...container.resources,
-                requests: {
-                  ...container.resources?.requests,
-                  memory: `${(memoryRequest as number) * 1024 * 1024}`,
-                },
-              },
-            });
-          }}
-        />
-        <DialNumberInputField
-          elementId="memoryLimit"
-          fieldTitle={t(EntityFieldsI18nKey.MemoryLimit)}
-          value={convertMemoryToMb(container.resources?.limits?.memory)}
-          disabled={container.status === CONTAINER_STATUS.RUNNING}
-          suffix="Mb"
-          onChange={(memoryLimit) => {
-            setContainer({
-              ...container,
-              resources: {
-                ...container.resources,
-                limits: {
-                  ...container.resources?.limits,
-                  memory: `${(memoryLimit as number) * 1024 * 1024}`,
-                },
-              },
-            });
-          }}
-        />
-      </div>
-      {route === ApplicationRoute.ModelDeployments && (
-        <div className="flex gap-2 flex-col lg:flex-row">
+    <Accordion title={t(EntityFieldsI18nKey.Resources)}>
+      <div className="flex flex-col gap-x-2 gap-y-4 lg:max-w-[35%]">
+        <div className="flex flex-col lg:flex-row gap-2">
           <DialNumberInputField
-            elementId="gpuRequest"
-            fieldTitle={t(EntityFieldsI18nKey.GPURequest)}
-            value={container.resources?.requests?.['nvidia.com/gpu']}
+            elementId="cpuRequest"
+            fieldTitle={t(EntityFieldsI18nKey.CPURequest)}
+            value={convertCoresToMilliCores(container.resources?.requests?.cpu)}
             disabled={container.status === CONTAINER_STATUS.RUNNING}
-            onChange={(gpuRequest) => {
+            errorText={cpuRequestError?.text}
+            invalid={!!cpuRequestError}
+            suffix="m"
+            onChange={(cpuRequest) => {
+              setCpuRequestError(validateCpuValue(cpuRequest as number));
               setContainer({
                 ...container,
                 resources: {
                   ...container.resources,
                   requests: {
                     ...container.resources?.requests,
-                    ['nvidia.com/gpu']: `${gpuRequest}`,
-                  },
-                  limits: {
-                    ...container.resources?.limits,
-                    ['nvidia.com/gpu']: `${gpuRequest}`,
+                    cpu: `${convertMilliCoresToCores(cpuRequest as number)}`,
                   },
                 },
               });
             }}
           />
-          {/*<DialNumberInputField
+          <DialNumberInputField
+            elementId="cpuLimit"
+            fieldTitle={t(EntityFieldsI18nKey.CPULimit)}
+            value={convertCoresToMilliCores(container.resources?.limits?.cpu)}
+            disabled={container.status === CONTAINER_STATUS.RUNNING}
+            errorText={cpuLimitError?.text}
+            invalid={!!cpuLimitError}
+            suffix="m"
+            onChange={(cpuLimit?: number | string) => {
+              setCpuLimitError(validateCpuValue(cpuLimit as number));
+              setContainer({
+                ...container,
+                resources: {
+                  ...container.resources,
+                  limits: {
+                    ...container.resources?.limits,
+                    cpu: `${convertMilliCoresToCores(cpuLimit as number)}`,
+                  },
+                },
+              });
+            }}
+          />
+        </div>
+        <div className="flex gap-2 flex-col lg:flex-row">
+          <DialNumberInputField
+            elementId="memoryRequest"
+            fieldTitle={t(EntityFieldsI18nKey.MemoryRequest)}
+            value={convertMemoryToMb(container.resources?.requests?.memory)}
+            disabled={container.status === CONTAINER_STATUS.RUNNING}
+            suffix="Mb"
+            onChange={(memoryRequest) => {
+              setContainer({
+                ...container,
+                resources: {
+                  ...container.resources,
+                  requests: {
+                    ...container.resources?.requests,
+                    memory: `${(memoryRequest as number) * 1024 * 1024}`,
+                  },
+                },
+              });
+            }}
+          />
+          <DialNumberInputField
+            elementId="memoryLimit"
+            fieldTitle={t(EntityFieldsI18nKey.MemoryLimit)}
+            value={convertMemoryToMb(container.resources?.limits?.memory)}
+            disabled={container.status === CONTAINER_STATUS.RUNNING}
+            suffix="Mb"
+            onChange={(memoryLimit) => {
+              setContainer({
+                ...container,
+                resources: {
+                  ...container.resources,
+                  limits: {
+                    ...container.resources?.limits,
+                    memory: `${(memoryLimit as number) * 1024 * 1024}`,
+                  },
+                },
+              });
+            }}
+          />
+        </div>
+        {route === ApplicationRoute.ModelDeployments && (
+          <div className="flex gap-2 flex-col lg:flex-row">
+            <DialNumberInputField
+              elementId="gpuRequest"
+              fieldTitle={t(EntityFieldsI18nKey.GPURequest)}
+              value={container.resources?.requests?.['nvidia.com/gpu']}
+              disabled={container.status === CONTAINER_STATUS.RUNNING}
+              onChange={(gpuRequest) => {
+                setContainer({
+                  ...container,
+                  resources: {
+                    ...container.resources,
+                    requests: {
+                      ...container.resources?.requests,
+                      ['nvidia.com/gpu']: `${gpuRequest}`,
+                    },
+                    limits: {
+                      ...container.resources?.limits,
+                      ['nvidia.com/gpu']: `${gpuRequest}`,
+                    },
+                  },
+                });
+              }}
+            />
+            {/*<DialNumberInputField
           elementId="gpuLimit"
           fieldTitle={t(FieldsI18nKey.GPULimit)}
           value={container.resources?.limits?.['nvidia.com/gpu']}
@@ -170,9 +172,10 @@ const ResourcesFields: FC<Props> = ({ container, setContainer, route }) => {
             });
           }}
         />*/}
-        </div>
-      )}
-    </div>
+          </div>
+        )}
+      </div>
+    </Accordion>
   );
 };
 

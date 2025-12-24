@@ -19,6 +19,7 @@ import DeploymentStatusIndicator from '@/src/components/Common/DeploymentStatusI
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
 import ChangeContainerImage from '@/src/components/Containers/Modals/ChangeContainerImage';
+import ServingProperties from '@/src/components/Containers/Fields/ServingProperties';
 
 interface Props {
   container: Container;
@@ -97,7 +98,11 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
           )}
         </div>
         <div className="mt-8 pt-8">
-          <ContainerProperties container={container} setContainer={setContainer} route={route} names={names} />
+          {route === ApplicationRoute.ModelDeployments ? (
+            <ServingProperties container={container} setContainer={setContainer} names={names} route={route} />
+          ) : (
+            <ContainerProperties container={container} setContainer={setContainer} route={route} names={names} />
+          )}
         </div>
       </div>
       {isModalOpen &&

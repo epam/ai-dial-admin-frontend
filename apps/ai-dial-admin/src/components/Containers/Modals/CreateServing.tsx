@@ -9,7 +9,6 @@ import { getContainerTemplate } from '@/src/utils/deployments/containers';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
-import BaseProperties from '@/src/components/Containers/Fields/BaseProperties';
 import ServingProperties from '@/src/components/Containers/Fields/ServingProperties';
 
 interface Props {
@@ -39,8 +38,13 @@ const CreateServing: FC<Props> = ({ isModalOpen, onClose, onApply, route, names 
       disableSubmitButton={!isValid}
     >
       <div className="flex flex-col px-6 py-4 gap-4 h-full">
-        <BaseProperties container={container} setContainer={setContainer} names={names} isModal={true} />
-        <ServingProperties container={container} setContainer={setContainer} />
+        <ServingProperties
+          container={container}
+          setContainer={setContainer}
+          route={route}
+          names={names}
+          isModal={true}
+        />
       </div>
     </DialFormPopup>
   );
