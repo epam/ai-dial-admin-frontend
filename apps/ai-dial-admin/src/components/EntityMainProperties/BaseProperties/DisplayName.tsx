@@ -36,7 +36,11 @@ const DisplayNameControl: FC<Props> = ({ displayName, isFullWidth = true, onChan
 
   // initial validation
   useEffect(() => {
-    validateDisplayName(displayName);
+    if (displayName) {
+      validateDisplayName(displayName);
+    } else {
+      dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!displayName });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
