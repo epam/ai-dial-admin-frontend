@@ -6,7 +6,7 @@ import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import FolderList from '@/src/components/Common/FolderList/FolderList';
 import { generatePromptRowDataForDelete } from '@/src/components/Common/FolderList/utils';
 import { listViewTitleMap } from '@/src/components/EntityListView/constants';
-import TopicsCellRenderer from '@/src/components/Grid/CellRenderers/TopicCellRenderer';
+import TilesCellRenderer from '@/src/components/Grid/CellRenderers/TilesCellRenderer';
 import Grid from '@/src/components/Grid/Grid';
 import { BasicI18nKey, ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
@@ -41,9 +41,9 @@ const DeleteFolder: FC<Props> = ({ isModalOpen, view, selectedFolder, isBulkDele
         headerName: 'Version',
         field: 'version',
         filter: true,
-        cellRenderer: TopicsCellRenderer,
+        cellRenderer: TilesCellRenderer,
         cellRendererParams: (params: { data?: { versions?: string[] } }) => ({
-          topics: params.data?.versions || [],
+          items: params.data?.versions || [],
         }),
       });
     }

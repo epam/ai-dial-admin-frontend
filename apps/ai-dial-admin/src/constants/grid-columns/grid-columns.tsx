@@ -2,7 +2,6 @@ import { ColDef, ICellRendererParams, ITextFilterParams, ValueGetterParams, IToo
 
 import ValidityStatusCellRenderer from '@/src/components/Grid/CellRenderers/ValidityStatusCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
-import TopicsCellRenderer from '@/src/components/Grid/CellRenderers/TopicCellRenderer';
 import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
 import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import {
@@ -32,6 +31,7 @@ import VersionsSelect from '@/src/components/Common/VersionsSelect/VersionsSelec
 import { SelectVariant } from '@epam/ai-dial-ui-kit';
 import { ImageVersion } from '@/src/models/deployments/images';
 import { formatDeploymentImageName } from '@/src/utils/formatting/deployments';
+import TilesCellRenderer from '@/src/components/Grid/CellRenderers/TilesCellRenderer';
 
 const stringFilter: Partial<ColDef> = {
   filterParams: {
@@ -112,9 +112,9 @@ export const TOPICS_COLUMN: ColDef = {
   field: 'topics',
   colId: 'topics',
   headerName: 'Topics',
-  cellRenderer: TopicsCellRenderer,
+  cellRenderer: TilesCellRenderer,
   cellRendererParams: (params: { data?: { topics?: string[]; descriptionKeywords?: string[] } }) => ({
-    topics: getTopics(params.data),
+    items: getTopics(params.data),
   }),
   filterValueGetter: (params) => getTopics(params.data),
 };
@@ -179,10 +179,36 @@ export const TYPE_COLUMN = (t: (str: string) => string): ColDef => {
   };
 };
 
+export const ORDER_COLUMN: ColDef = {
+  field: 'order',
+  colId: 'order',
+  headerName: 'Order',
+  hide: false,
+};
+
+export const PATHS_COLUMN: ColDef = {
+  field: 'paths',
+  colId: 'paths',
+  headerName: 'Paths',
+  cellRenderer: TilesCellRenderer,
+  cellRendererParams: (params: { data?: { paths?: string[] } }) => ({
+    items: params.data?.paths,
+  }),
+};
+
 export const SIMPLE_ENTITY_COLUMNS: ColDef[] = [
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
   NAME_COLUMN_WITH_SORT,
+  UPDATED_AT_COLUMN,
+];
+
+export const ROUTES_COLUMNS: ColDef[] = [
+  DISPLAY_NAME_COLUMN,
+  DESCRIPTION_COLUMN,
+  NAME_COLUMN_WITH_SORT,
+  PATHS_COLUMN,
+  ORDER_COLUMN,
   UPDATED_AT_COLUMN,
 ];
 
@@ -618,7 +644,7 @@ export const BASE_IMAGE_LIST_COLUMNS: ColDef[] = [
     field: 'topics',
     headerName: 'Topics',
     hide: false,
-    cellRenderer: (params: ICellRendererParams) => <TopicsCellRenderer topics={params.data?.topics || []} />,
+    cellRenderer: (params: ICellRendererParams) => <TilesCellRenderer items={params.data?.topics || []} />,
     tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
     filterValueGetter: (params) =>
       params.data[params.colDef.field || ''].length ? params.data[params.colDef.field || ''].join(' ') : '',
@@ -673,8 +699,8 @@ export const IMAGES_LIST_FOR_CONTAINER_COLUMNS = (onChange: (id: string) => void
       headerName: 'Topics',
       hide: false,
       cellRenderer: (params: ICellRendererParams) => (
-        <TopicsCellRenderer
-          topics={params.data.availableVersions.find((v: ImageVersion) => v.id === params.data.selectedId).topics || []}
+        <TilesCellRenderer
+          items={params.data.availableVersions.find((v: ImageVersion) => v.id === params.data.selectedId).topics || []}
         />
       ),
       tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
