@@ -1,17 +1,19 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { Container } from '@/src/models/deployments/containers';
+import { Image } from '@/src/models/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { getModelContainers } from '@/src/app/actions/deployments';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { getImages } from '@/src/app/actions/deployments';
+import { getUniqueLatestImages } from '@/src/utils/deployments/images';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 
 import Page403 from '@/src/components/Page403/Page403';
-import ContainersList from '@/src/components/Containers/List/ContainersList';
+import ImagesList from '@/src/components/Images/List/ImagesList';
+import Page404 from '@/src/components/Page404/Page404';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,20 +26,20 @@ export default async function Page() {
     return redirect(SIGN_IN_LINK);
   }
 
-  const containersResponse = await getModelContainers();
+  const imagesResponse = await getImages();
 
-  if (!containersResponse.success) {
-    if (containersResponse.status === 403) {
+  if (!imagesResponse.success) {
+    if (imagesResponse.status === 403) {
       return <Page403 />;
     }
-    return null;
+    return <Page404 />;
   }
 
-  const containers = containersResponse.response as Container[];
+  const images = imagesResponse.response as Image[];
 
   return (
     <SaveValidationContextProvider>
-      <ContainersList route={ApplicationRoute.ModelDeployments} containersList={containers} />
+      <ImagesList route={ApplicationRoute.Images} imagesList={getUniqueLatestImages(images)} />
     </SaveValidationContextProvider>
   );
 }

@@ -1,7 +1,6 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { getEntityPath, getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 
 describe('getUrnForEntity', () => {
   test('returns correct URN for Prompts', () => {
@@ -19,11 +18,11 @@ describe('getUrnForEntity', () => {
     expect(urn).toBe(`/${originalRoute}/act123`);
   });
 
-  test('returns correct URN for ModelDeployments with entityType', () => {
+  test('returns correct URN for Images', () => {
     const entity = { id: 'modelId' };
-    const urn = getUrnForEntity(ApplicationRoute.ModelDeployments, entity, DEPLOYMENT_ENTITY.images);
-    const originalRoute = ApplicationRoute.ModelDeployments.split('/')?.[1];
-    expect(urn).toBe(`/${originalRoute}/${encodeURIComponent('modelId')}?entityType=${DEPLOYMENT_ENTITY.images}`);
+    const urn = getUrnForEntity(ApplicationRoute.Images, entity);
+    const originalRoute = ApplicationRoute.Images.split('/')?.[1];
+    expect(urn).toBe(`/${originalRoute}/${encodeURIComponent('modelId')}`);
   });
 
   test('returns correct URN for default case', () => {
@@ -87,21 +86,12 @@ describe('Entity list view :: getEntityPath', () => {
   });
 
   test('Should return id field for InterceptorDeployments', () => {
-    const res1 = getEntityPath(
-      ApplicationRoute.InterceptorDeployments,
-      { data, id: 'id' },
-      void 0,
-      DEPLOYMENT_ENTITY.images,
-    );
-    expect(res1).toEqual('id?entityType=images');
-    const res2 = getEntityPath(ApplicationRoute.InterceptorDeployments, { data, id: 'id' }, void 0);
-    expect(res2).toEqual('id?entityType=');
+    const res1 = getEntityPath(ApplicationRoute.InterceptorDeployments, { data, id: 'id' }, void 0);
+    expect(res1).toEqual('id');
   });
-  test('Should return id field for McpDeploymentsF', () => {
-    const res1 = getEntityPath(ApplicationRoute.McpDeployments, { data, id: 'id' }, void 0, DEPLOYMENT_ENTITY.images);
-    expect(res1).toEqual('id?entityType=images');
-    const res2 = getEntityPath(ApplicationRoute.McpDeployments, { data, id: 'id' }, void 0);
-    expect(res2).toEqual('id?entityType=');
+  test('Should return id field for Images', () => {
+    const res1 = getEntityPath(ApplicationRoute.Images, { data, id: 'id' }, void 0);
+    expect(res1).toEqual('id');
   });
 });
 

@@ -1,17 +1,17 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { SIGN_IN_LINK } from '@/src/constants/auth';
+import { Container } from '@/src/models/deployments/containers';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { getMCPContainers, getMCPImages } from '@/src/app/actions/deployments';
-import Page403 from '@/src/components/Page403/Page403';
-import { Image } from '@/src/models/deployments/images';
-import { Container } from '@/src/models/deployments/containers';
+import { getMCPContainers } from '@/src/app/actions/deployments';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
-import DeploymentsEntityListView from '@/src/components/DeploymentsEntityListView/DeploymentsEntityListView';
-import { ApplicationRoute } from '@/src/types/routes';
+import { SIGN_IN_LINK } from '@/src/constants/auth';
+
+import Page403 from '@/src/components/Page403/Page403';
+import ContainersList from '@/src/components/Containers/List/ContainersList';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,22 +24,20 @@ export default async function Page() {
     return redirect(SIGN_IN_LINK);
   }
 
-  const imagesResponse = await getMCPImages();
   const containersResponse = await getMCPContainers();
 
-  if (!imagesResponse.success || !containersResponse.success) {
-    if (imagesResponse.status === 403 || containersResponse.status === 403) {
+  if (!containersResponse.success) {
+    if (containersResponse.status === 403) {
       return <Page403 />;
     }
     return null;
   }
 
-  const images = imagesResponse.response as Image[];
   const containers = containersResponse.response as Container[];
 
   return (
     <SaveValidationContextProvider>
-      <DeploymentsEntityListView route={ApplicationRoute.McpDeployments} images={images} containers={containers} />
+      <ContainersList route={ApplicationRoute.McpDeployments} containersList={containers} />
     </SaveValidationContextProvider>
   );
 }

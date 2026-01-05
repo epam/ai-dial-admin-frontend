@@ -5,7 +5,6 @@ import { useI18n } from '@/src/locales/client';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import Grid from '@/src/components/Grid/Grid';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { IMAGE_DEPENDENCIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
@@ -24,7 +23,7 @@ const DependenciesList: FC<Props> = ({ containerList, route }) => {
 
   const onOpenInNewTabAction = useCallback(
     (container?: Container) => {
-      onOpenInNewTab(route, container, DEPLOYMENT_ENTITY.containers);
+      onOpenInNewTab(route, container);
     },
     [route],
   );

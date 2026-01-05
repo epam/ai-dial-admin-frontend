@@ -1,3 +1,4 @@
+'use client';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { GridOptions, GridApi, CellClickedEvent } from 'ag-grid-community';
@@ -20,13 +21,13 @@ import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import Page403 from '@/src/components/Page403/Page403';
 import ListView from '@/src/components/ListView/ListView';
 import { EntitiesI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
-import { getTranslatedType } from '@/src/utils/deployments/entity';
+import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entity';
 import HeaderButtons from '@/src/components/Images/List/HeaderButtons';
 import DuplicateImage from '@/src/components/Images/Modals/DuplicateImage';
-import Delete from '@/src/components/Common/DeploymentsModals/Delete';
+import Delete from '@/src/components/Deployments/Modals/Delete';
 import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { IMAGES_LIST_COLUMNS, MCP_IMAGES_LIST_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { IMAGES_LIST_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
   route: ApplicationRoute;
@@ -76,7 +77,7 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
   const gridOptions: GridOptions = {
     onCellClicked: (e: CellClickedEvent) => {
       if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
-        router.push(getUrnForEntity(route, e.data, DEPLOYMENT_ENTITY.images));
+        router.push(getUrnForEntity(route, e.data));
       }
     },
   };
@@ -97,12 +98,11 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
     [onOpenModal],
   );
 
-  const onOpenInNewTabAction = useCallback(
-    (image?: Image) => {
-      onOpenInNewTab(route, image, DEPLOYMENT_ENTITY.images);
-    },
-    [route],
-  );
+  const onOpenInNewTabAction = useCallback((image?: Image) => {
+    if (image?.$type) {
+      onOpenInNewTab(getRouteByType(image.$type), image);
+    }
+  }, []);
 
   useEffect(() => {
     if (currentImage) {
@@ -153,10 +153,7 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
     getDeleteOperation(onDeleteAction),
   ]);
 
-  const columnDefs =
-    route === ApplicationRoute.McpDeployments
-      ? [...MCP_IMAGES_LIST_COLUMNS(t), actionColumn]
-      : [...IMAGES_LIST_COLUMNS(t), actionColumn];
+  const columnDefs = [...IMAGES_LIST_COLUMNS(t), actionColumn];
 
   const toggleColumnsPanel = () => setShowColumnsPanel(!showColumnsPanel);
 
@@ -164,11 +161,7 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
 
   useEffect(() => {
     if (imagesList?.length) {
-      imagesList
-        .filter((image) => image.buildStatus === IMAGE_STATUS.BUILDING)
-        .forEach((__image) => {
-          //showImageInstallingNotification(image, getTranslatedType(route, t));
-        });
+      imagesList.filter((image) => image.buildStatus === IMAGE_STATUS.BUILDING);
     }
   }, [imagesList, route, showNotification, t]);
 
@@ -188,7 +181,7 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
         view={route}
         columnDefs={columnDefs}
         additionalGridOptions={gridOptions}
-        title={t(ImagesI18nKey.ImagesListTitle, { count: imagesList.length, type: getTranslatedType(route, t) })}
+        title={t(ImagesI18nKey.ImagesListTitle, { count: imagesList.length })}
         emptyDataTitle={t(EntitiesI18nKey.NoImages, { type: getTranslatedType(route, t) })}
         showColumnsPanel={showColumnsPanel}
         toggleColumnsPanel={toggleColumnsPanel}

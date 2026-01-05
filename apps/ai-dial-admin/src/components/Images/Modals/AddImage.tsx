@@ -1,68 +1,42 @@
-import { FC, useCallback, useEffect, useState } from 'react';
-import { ButtonVariant, DialButton, DialPopup } from '@epam/ai-dial-ui-kit';
+import { FC, useState } from 'react';
+import { DialFormPopup } from '@epam/ai-dial-ui-kit';
+
 import { Image } from '@/src/models/deployments/images';
-import { ApplicationRoute } from '@/src/types/routes';
-import { useI18n } from '@/src/locales/client';
-import { getImageTemplate, validateImage } from '@/src/utils/deployments/images';
-import { FieldError } from '@/src/models/error';
-import ImageProperties from '@/src/components/Images/Properties/ImageProperties';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { IMAGE_TEMPLATE } from '@/src/constants/deployments/images';
+import { useI18n } from '@/src/locales/client';
+
+import ImageFields from '@/src/components/Images/Fields/ImageFields';
 
 interface Props {
   isModalOpen: boolean;
   modalTitle: string;
   onClose: () => void;
   onApply: (image: Image) => void;
-  route: ApplicationRoute;
 }
 
-const AddImageModal: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply, route }) => {
+const AddImageModal: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply }) => {
   const t = useI18n();
+  const { isValid } = useSaveValidationContext();
 
-  const [image, setImage] = useState<Image>(getImageTemplate(route) as Image);
-  const [isValid, setIsValid] = useState<boolean>(false);
-  const [versionError, setVersionError] = useState<FieldError | null>(null);
-
-  const onChange = useCallback((image: Image) => {
-    setImage(image);
-  }, []);
-
-  useEffect(() => {
-    setIsValid(validateImage(image) && !versionError);
-  }, [image, versionError]);
+  const [image, setImage] = useState<Image>(IMAGE_TEMPLATE as Image);
 
   return (
-    <DialPopup
-      onClose={onClose}
-      header={modalTitle}
+    <DialFormPopup
       portalId="AddImageModal"
+      header={modalTitle}
       open={isModalOpen}
-      className="lg:max-w-[75%] md:max-w-[90%]"
+      onClose={onClose}
+      submitLabel={t(ButtonsI18nKey.Add)}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
+      onSubmit={() => onApply(image)}
+      disableSubmitButton={!isValid}
     >
-      <div className="flex h-full overflow-auto">
-        <ImageProperties
-          image={image}
-          setImage={onChange}
-          isModal={true}
-          route={route}
-          setVersionError={setVersionError}
-        />
+      <div className="flex px-6 py-4">
+        <ImageFields image={image} setImage={setImage} isModal={true} />
       </div>
-      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-        <DialButton variant={ButtonVariant.Secondary} label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
-          label={t(ButtonsI18nKey.Add)}
-          disabled={!isValid}
-          onClick={() => {
-            if (image) {
-              onApply(image);
-            }
-            onClose();
-          }}
-        />
-      </div>
-    </DialPopup>
+    </DialFormPopup>
   );
 };
 

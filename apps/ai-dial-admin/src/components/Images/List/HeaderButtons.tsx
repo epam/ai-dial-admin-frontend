@@ -2,24 +2,24 @@
 
 import { MouseEvent, FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useRouter } from 'next/navigation';
 import { IconPlus, IconColumns2 } from '@tabler/icons-react';
 import { GridApi } from 'ag-grid-community';
 import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+
 import { ApplicationRoute } from '@/src/types/routes';
-import { useI18n } from '@/src/locales/client';
+import { Image } from '@/src/models/deployments/images';
+import { ButtonsI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useNotification } from '@/src/context/NotificationContext';
-import { Image } from '@/src/models/deployments/images';
 import { createImage } from '@/src/app/actions/deployments';
 import { getErrorNotification } from '@/src/utils/notification';
-import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/ResetFiltersButton';
-import { ButtonsI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
-import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
-import AddImageModal from '@/src/components/Images/Modals/AddImage';
-import { getTranslatedType } from '@/src/utils/deployments/entity';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
-import { useRouter } from 'next/navigation';
+import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
+import { useI18n } from '@/src/locales/client';
+
+import ResetFiltersButton from '@/src/components/EntityListView/HeaderButtons/ResetFiltersButton';
+import AddImageModal from '@/src/components/Images/Modals/AddImage';
 
 interface Props {
   toggleColumnsPanel: () => void;
@@ -47,7 +47,7 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi }) => {
     (image: Image) => {
       createImage(image).then((res) => {
         if (res.success) {
-          router.push(getUrnForEntity(route, res.response, DEPLOYMENT_ENTITY.images));
+          router.push(getUrnForEntity(route, res.response));
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
         }
@@ -88,10 +88,9 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi }) => {
         createPortal(
           <AddImageModal
             isModalOpen={isModalOpen}
-            modalTitle={t(ImagesI18nKey.AddModalTitle, { type: getTranslatedType(route, t) })}
+            modalTitle={t(ImagesI18nKey.AddModalTitle)}
             onClose={handleModalClose}
             onApply={onCreateImage}
-            route={route}
           />,
           document.body,
         )}

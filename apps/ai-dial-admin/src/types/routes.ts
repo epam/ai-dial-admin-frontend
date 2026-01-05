@@ -29,4 +29,5 @@ export enum ApplicationRoute {
   ModelDeployments = '/model-deployments',
   McpDeployments = '/mcp-deployments',
   SystemProperties = '/system-properties',
+  Images = '/deployment-images',
 }

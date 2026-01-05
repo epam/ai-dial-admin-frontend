@@ -14,7 +14,6 @@ import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButton
 import { ButtonsI18nKey, ContainersI18nKey } from '@/src/constants/i18n';
 import { getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { CHANGE_IMAGE_VERSION } from '@/src/constants/grid-columns/grid-columns';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { getTranslatedDeploymentType } from '@/src/utils/deployments/entity';
@@ -46,12 +45,9 @@ const ChangeContainerImage: FC<Props> = ({
   const [loading, setLoading] = useState(false);
   const [isValid, setIsValid] = useState(false);
 
-  const onOpenInNewTabAction = useCallback(
-    (image?: Image) => {
-      onOpenInNewTab(route, image, DEPLOYMENT_ENTITY.images);
-    },
-    [route],
-  );
+  const onOpenInNewTabAction = useCallback((image?: Image) => {
+    onOpenInNewTab(ApplicationRoute.Images, image);
+  }, []);
 
   const columnDefs = [...CHANGE_IMAGE_VERSION(t), ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTabAction)])];
 

@@ -31,7 +31,7 @@ import { validateContainer } from '@/src/utils/deployments/containers';
 import { showEditorErrorNotifications } from '@/src/components/EntityView/JsonEditor/utils';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { createPortal } from 'react-dom';
-import DeleteModal from '@/src/components/Common/DeploymentsModals/Delete';
+import DeleteModal from '@/src/components/Deployments/Modals/Delete';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';

@@ -4,15 +4,14 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 
-export const onOpenInNewTab = (route?: ApplicationRoute, entity?: unknown, entityType?: DEPLOYMENT_ENTITY) => {
-  const url = getUrnForEntity(route, entity, entityType);
+export const onOpenInNewTab = (route?: ApplicationRoute, entity?: unknown) => {
+  const url = getUrnForEntity(route, entity);
   window.open(url, '_blank');
 };
 
-export const getUrnForEntity = (route?: ApplicationRoute, entity?: unknown, entityType?: DEPLOYMENT_ENTITY) => {
-  const path = getEntityPath(route, entity, false, entityType);
+export const getUrnForEntity = (route?: ApplicationRoute, entity?: unknown) => {
+  const path = getEntityPath(route, entity, false);
   const originalRoute = route?.split('/')?.[1];
   return `/${originalRoute}/${path}`;
 };
@@ -21,7 +20,6 @@ export const getEntityPath = (
   route: ApplicationRoute | undefined,
   data: unknown,
   forRemove?: boolean,
-  entityType?: DEPLOYMENT_ENTITY,
   version?: string,
 ) => {
   switch (route) {
@@ -54,7 +52,8 @@ export const getEntityPath = (
     case ApplicationRoute.McpDeployments:
     case ApplicationRoute.InterceptorDeployments:
     case ApplicationRoute.ModelDeployments:
-      return `${encodeURIComponent((data as { id: string }).id)}?entityType=${entityType || ''}`;
+    case ApplicationRoute.Images:
+      return `${encodeURIComponent((data as { id: string }).id)}`;
 
     default:
       return encodeURIComponent((data as BaseEntity).name || '');

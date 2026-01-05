@@ -44,7 +44,7 @@ const EntityAudit: FC<Props> = ({ entity, view }) => {
         {activeTab === EntityViewTab.Traces && <UsageLog entity={entity} route={view} entityView={activeTab} />}
         {activeTab === EntityViewTab.Conversations && <UsageLog entity={entity} route={view} entityView={activeTab} />}
         {activeTab === EntityViewTab.Activities && (
-          <ActivityAuditList entity={entity} entityType={routeAuditResource[view]} />
+          <ActivityAuditList entity={entity} entityType={routeAuditResource[view]} refresh={true} />
         )}
       </div>
     </div>

@@ -7,19 +7,9 @@ import { Image } from '@/src/models/deployments/images';
 import { Container } from '@/src/models/deployments/containers';
 import { containersApi, imagesApi, topicApi } from '@/src/app/api/api';
 
-export async function getMCPImages() {
+export async function getImages() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return imagesApi.getMCPImages(token);
-}
-
-export async function getInterceptorImages() {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return imagesApi.getInterceptorImages(token);
-}
-
-export async function getModelImages() {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return imagesApi.getModelImages(token);
+  return imagesApi.getImages(token);
 }
 
 export async function getImage(id: string) {
