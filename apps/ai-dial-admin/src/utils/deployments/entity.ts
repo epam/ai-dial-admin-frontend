@@ -9,6 +9,7 @@ import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { ENTITY_TRANSPORT } from '@/src/constants/deployments/containers';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
+import { IMAGE_TYPE } from '@/src/types/deployments/images';
 
 export const getEntityRoute = (route: ApplicationRoute) => {
   if (route === ApplicationRoute.McpDeployments) {
@@ -17,6 +18,16 @@ export const getEntityRoute = (route: ApplicationRoute) => {
     return ApplicationRoute.Interceptors;
   } else {
     return ApplicationRoute.Models;
+  }
+};
+
+export const getRouteByType = (type: IMAGE_TYPE): ApplicationRoute => {
+  if (type === IMAGE_TYPE.MCP) {
+    return ApplicationRoute.McpDeployments;
+  } else if (type === IMAGE_TYPE.INTERCEPTOR) {
+    return ApplicationRoute.InterceptorDeployments;
+  } else {
+    return ApplicationRoute.ModelDeployments;
   }
 };
 

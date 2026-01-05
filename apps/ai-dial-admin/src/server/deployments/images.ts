@@ -13,16 +13,8 @@ export const IMAGE_LOGS_URL = (id: string) => `${INSTALL_IMAGES_URL}/${id}/logs`
 export const IMAGES_WITH_VERSIONS = (type: string) => `${IMAGES_URL}/grouped?type=${type}`;
 
 export class ImagesApi extends BaseApi {
-  getMCPImages(token: JWT | null): Promise<ServerActionResponse> {
-    return this.getAction(`${IMAGES_URL}?type=MCP`, token);
-  }
-
-  getInterceptorImages(token: JWT | null): Promise<ServerActionResponse> {
-    return this.getAction(`${IMAGES_URL}?type=INTERCEPTOR`, token);
-  }
-
-  getModelImages(token: JWT | null): Promise<ServerActionResponse> {
-    return this.getAction(`${IMAGES_URL}?type=NIM`, token);
+  getImages(token: JWT | null): Promise<ServerActionResponse> {
+    return this.getAction(`${IMAGES_URL}`, token);
   }
 
   getImage(id: string, token: JWT | null): Promise<ServerActionResponse> {

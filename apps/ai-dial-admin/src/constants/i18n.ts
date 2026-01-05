@@ -49,6 +49,7 @@ export enum MenuI18nKey {
   ModelDeployments = 'Menu.ModelDeployments',
   InterceptorTemplates = 'Menu.InterceptorTemplates',
   ActivityAudit = 'Menu.ActivityAudit',
+  Images = 'Menu.Images',
 }
 
 export enum AuthI18nKey {
@@ -1126,6 +1127,10 @@ export enum ImagesI18nKey {
   ImagesUpdateSuccessDescription = 'Images.ImagesUpdateSuccessDescription',
   ImagesSaveSuccess = 'Images.ImagesSaveSuccess',
   ImagesSaveSuccessDescription = 'Images.ImagesSaveSuccessDescription',
+  ImageTransportLocal = 'Images.ImageTransportLocal',
+  ImageTransportRemote = 'Images.ImageTransportRemote',
+  ImageTypeMCP = 'Images.ImageTypeMCP',
+  ImageTypeInterceptor = 'Images.ImageTypeInterceptor',
 }
 
 export enum ContainersI18nKey {

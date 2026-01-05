@@ -13,7 +13,6 @@ import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { Container } from '@/src/models/deployments/containers';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
@@ -88,7 +87,7 @@ const Containers = <T extends DialInterceptor | DialModel>({
         : view === ApplicationRoute.Interceptors
           ? ApplicationRoute.InterceptorDeployments
           : ApplicationRoute.McpDeployments;
-    onOpenInNewTab(route, selectedContainer, DEPLOYMENT_ENTITY.containers);
+    onOpenInNewTab(route, selectedContainer);
   }, [selectedContainer, view]);
 
   useEffect(() => {
