@@ -102,7 +102,7 @@ describe('Assets Prompt :: server actions', () => {
 
     await removePrompt('test');
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.removeAsset).toHaveBeenCalledWith(TOKEN_MOCK, 'test', ResourceType.PROMPT);
+    expect(assetsApi.removeAssetWithEtag).toHaveBeenCalledWith(TOKEN_MOCK, 'test', ResourceType.PROMPT, undefined);
   });
 
   test('Should call importPrompts action', async () => {

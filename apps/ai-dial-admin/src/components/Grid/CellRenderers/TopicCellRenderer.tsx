@@ -63,7 +63,8 @@ const TopicsCellRenderer: FC<Props> = ({ topics }) => {
     return () => observer.disconnect();
   }, [recalculateVisibleTopics]);
 
-  const topicClassName = 'tiny bg-layer-3 rounded p-1 border border-primary whitespace-nowrap max-w-[200px]';
+  const topicClassName =
+    'tiny bg-layer-3 rounded p-1 border border-primary whitespace-nowrap max-w-[200px] overflow-hidden';
 
   return (
     <div ref={containerRef} className="flex gap-2 overflow-hidden w-full">

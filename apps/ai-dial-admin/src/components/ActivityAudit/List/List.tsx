@@ -45,9 +45,10 @@ import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 interface Props {
   entity?: BaseEntity | DialApplicationScheme;
   entityType?: string;
+  refresh?: boolean;
 }
 
-const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
+const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh }) => {
   const t = useI18n();
   const router = useRouter();
 
@@ -194,6 +195,9 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
               ),
             );
             onRefresh();
+            if (refresh) {
+              router.refresh();
+            }
           } else {
             showNotification(
               getErrorNotification(
@@ -213,7 +217,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType }) => {
           );
         });
     }
-  }, [selectedActivity, showNotification, t, onCloseModal, onRefresh]);
+  }, [selectedActivity, onCloseModal, showNotification, t, onRefresh, refresh, router]);
 
   const systemRollback = useCallback(() => {
     router.push(`${ApplicationRoute.ActivityAudit}/${SYSTEM_ROLLBACK_ID}`);

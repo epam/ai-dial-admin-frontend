@@ -44,6 +44,7 @@ interface Props {
   modalType?: ModalType;
   createModal?: ReactNode;
   duplicateModal?: ReactNode;
+  existingVersions?: string[];
   onResetCurrentEntity?: () => void;
   onRemove?: (entity: string) => Promise<ServerActionResponse>;
   onExport?: (fileType?: ImportFileType) => void;
@@ -68,6 +69,7 @@ const Modals: FC<Props> = ({
   modalType,
   createModal,
   duplicateModal,
+  existingVersions,
   onExport,
   onImport,
   onMove,
@@ -102,6 +104,7 @@ const Modals: FC<Props> = ({
             view={route}
             onCloseModal={onClose}
             context={getAssetContext}
+            existingVersions={existingVersions}
             removeEntity={onRemove as (entity: string) => Promise<ServerActionResponse>}
           />,
           document.body,

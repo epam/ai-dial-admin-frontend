@@ -16,7 +16,12 @@ export const getUrnForEntity = (route?: ApplicationRoute, entity?: unknown) => {
   return `/${originalRoute}/${path}`;
 };
 
-export const getEntityPath = (route: ApplicationRoute | undefined, data: unknown, forRemove?: boolean) => {
+export const getEntityPath = (
+  route: ApplicationRoute | undefined,
+  data: unknown,
+  forRemove?: boolean,
+  version?: string,
+) => {
   switch (route) {
     case ApplicationRoute.ApplicationRunners:
       return encodeURIComponent(`${(data as DialApplicationScheme).$id}`);
@@ -25,11 +30,13 @@ export const getEntityPath = (route: ApplicationRoute | undefined, data: unknown
     case ApplicationRoute.Files:
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets: {
-      const path =
-        (data as DialPrompt).path ||
-        `${(data as DialPrompt).folderId}${(data as DialPrompt).name}__${(data as DialPrompt).version}`;
+      const path = version
+        ? `${(data as DialPrompt).folderId}${(data as DialPrompt).name}__${version}`
+        : (data as DialPrompt).path ||
+          `${(data as DialPrompt).folderId}${(data as DialPrompt).name}__${(data as DialPrompt).version}`;
+
       return forRemove
-        ? decodeURIComponent((data as DialPrompt).path)
+        ? decodeURIComponent(path)
         : `${encodeURIComponent((data as DialPrompt).name as string)}?path=${encodeURIComponent(path)}`;
     }
 
