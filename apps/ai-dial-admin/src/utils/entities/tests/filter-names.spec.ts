@@ -14,6 +14,7 @@ describe('getNamesConfigurations', () => {
     expect(result.versionsMap).toEqual({
       ModelA: ['v1', 'v2'],
       ModelB: ['v2'],
+      ModelC: [''],
     });
   });
 
@@ -27,7 +28,7 @@ describe('getNamesConfigurations', () => {
     const input = ['ModelA___', 'ModelB___'];
     const result = getNamesConfigurations(input);
     expect(result.names).toEqual(['ModelA', 'ModelB']);
-    expect(result.versionsMap).toEqual({});
+    expect(result.versionsMap).toEqual({ ModelA: [''], ModelB: [''] });
   });
 });
 

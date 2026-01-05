@@ -15,11 +15,12 @@ import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
-import DeploymentStatusIndicator from '@/src/components/Common/DeploymentStatusIndicator/DeploymentStatusIndicator';
+
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import ContainerProperties from '@/src/components/Containers/Fields/ContainerProperties';
 import ChangeContainerImage from '@/src/components/Containers/Modals/ChangeContainerImage';
 import ServingProperties from '@/src/components/Containers/Fields/ServingProperties';
+import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
 
 interface Props {
   container: Container;
@@ -84,7 +85,7 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
             text={formatDateTimeToLocalString(container?.updatedAt)}
           />
           <DialLabelledText label={t(EntityFieldsI18nKey.status)}>
-            <DeploymentStatusIndicator status={container.status} />
+            <StatusIndicator status={container.status} />
           </DialLabelledText>
           {container.status === CONTAINER_STATUS.RUNNING && container.url && (
             <DialLabelledText label={t(BasicI18nKey.URL)}>

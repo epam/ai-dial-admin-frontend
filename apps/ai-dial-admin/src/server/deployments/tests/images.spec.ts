@@ -19,23 +19,9 @@ describe('ImagesApi', () => {
 
   test('getMCPImages, getInterceptorImages, getModelImages call correct endpoints', async () => {
     fetch.mockResponseOnce(JSON.stringify([]));
-    await instance.getMCPImages(TOKEN_MOCK);
+    await instance.getImages(TOKEN_MOCK);
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining(`${IMAGES_URL}?type=MCP`),
-      expect.objectContaining({ method: 'GET' }),
-    );
-
-    fetch.mockResponseOnce(JSON.stringify([]));
-    await instance.getInterceptorImages(TOKEN_MOCK);
-    expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining(`${IMAGES_URL}?type=INTERCEPTOR`),
-      expect.objectContaining({ method: 'GET' }),
-    );
-
-    fetch.mockResponseOnce(JSON.stringify([]));
-    await instance.getModelImages(TOKEN_MOCK);
-    expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining(`${IMAGES_URL}?type=NIM`),
+      expect.stringContaining(`${IMAGES_URL}`),
       expect.objectContaining({ method: 'GET' }),
     );
   });

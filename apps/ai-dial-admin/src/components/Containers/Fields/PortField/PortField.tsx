@@ -1,18 +1,17 @@
 import React, { FC } from 'react';
 import { DialNumberInputField } from '@epam/ai-dial-ui-kit';
-import { ApplicationRoute } from '@/src/types/routes';
+
 import { Container } from '@/src/models/deployments/containers';
-import { useI18n } from '@/src/locales/client';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { MODEL_SOURCE_TYPE } from '@/src/types/deployments/containers';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
-  route: ApplicationRoute;
   container: Container;
   setContainer: (container: Container) => void;
 }
 
-const PortField: FC<Props> = ({ route, container, setContainer }) => {
+const PortField: FC<Props> = ({ container, setContainer }) => {
   const t = useI18n();
 
   return (
@@ -38,7 +37,7 @@ const PortField: FC<Props> = ({ route, container, setContainer }) => {
         min={1}
         max={65535}
       />
-      {route === ApplicationRoute.ModelDeployments && container.source?.$type === MODEL_SOURCE_TYPE.NIM && (
+      {container.source?.$type === MODEL_SOURCE_TYPE.NIM && (
         <DialNumberInputField
           containerClassName="max-w-[125px]"
           elementId="containerGrpcPort"

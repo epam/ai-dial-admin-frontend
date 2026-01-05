@@ -34,7 +34,6 @@ import ExecutionLog from '@/src/components/Containers/View/ExecutionLog/Executio
 import Events from '@/src/components/Containers/View/Events/Events';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import EntityJsonEditor from '@/src/components/EntityView/JsonEditor/JsonEditor';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { getContainerRedeploySnapshot } from '@/src/utils/deployments/containers';
 
@@ -63,9 +62,7 @@ const ContainerView: FC<Props> = ({
   const { disableDeploymentsJSONEditor } = useAppContext();
   const { dispatch } = useSaveValidationContext();
 
-  const [tabs, setTabs] = useState<TabModel[]>(
-    getDeploymentsViewTabs(route, t, DEPLOYMENT_ENTITY.containers, container.status),
-  );
+  const [tabs, setTabs] = useState<TabModel[]>(getDeploymentsViewTabs(route, t, container.status));
   const [selectedContainer, setSelectedContainer] = useState(cloneDeep(container));
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [jsonEditorEnabled, setJsonEditorEnabled] = useState<boolean>(false);
@@ -76,7 +73,7 @@ const ContainerView: FC<Props> = ({
   const [events, setEvents] = useState<KubEvent[]>([]);
 
   useEffect(() => {
-    setTabs(getDeploymentsViewTabs(route, t, DEPLOYMENT_ENTITY.containers, container.status));
+    setTabs(getDeploymentsViewTabs(route, t, container.status));
   }, [container.status, route, t]);
 
   const onChangeActiveTab = useCallback(

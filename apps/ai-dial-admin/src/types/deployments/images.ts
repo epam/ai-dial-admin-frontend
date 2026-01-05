@@ -13,7 +13,6 @@ export enum IMAGE_SOURCE_TYPE {
 export enum IMAGE_TYPE {
   MCP = 'mcp',
   INTERCEPTOR = 'interceptor',
-  MODEL = 'nim',
 }
 
 export enum IMAGE_TRANSPORT_TYPE {
