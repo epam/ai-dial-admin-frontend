@@ -18,7 +18,7 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import AddImageModal from '@/src/components/Images/Modals/AddImage';
 import { getTranslatedType } from '@/src/utils/deployments/entity';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { useRouter } from 'next/navigation';
 
 interface Props {

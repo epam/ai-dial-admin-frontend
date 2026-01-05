@@ -16,7 +16,7 @@ interface Props {
   names?: string[];
 }
 
-const BaseProperties: FC<Props> = ({ container, setContainer, names, isModal }) => {
+const BaseFields: FC<Props> = ({ container, setContainer, names, isModal }) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
 
@@ -37,7 +37,7 @@ const BaseProperties: FC<Props> = ({ container, setContainer, names, isModal }) 
   }, [resetCounter, container.name, names, t]);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-8">
       <DialTextInputField
         fieldTitle={t(EntityFieldsI18nKey.name)}
         elementId="name"
@@ -61,4 +61,4 @@ const BaseProperties: FC<Props> = ({ container, setContainer, names, isModal }) 
   );
 };
 
-export default BaseProperties;
+export default BaseFields;

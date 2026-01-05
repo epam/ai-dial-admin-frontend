@@ -181,6 +181,8 @@ export enum EntitiesI18nKey {
   NoContainerLogs = 'Entities.NoContainerLogs',
   NoResources = 'Entities.NoResources',
   NoEvents = 'Entities.NoEvents',
+  Serving = 'Entities.Serving',
+  Container = 'Entities.Container',
 }
 
 export enum DeleteI18nKey {
@@ -924,6 +926,7 @@ export enum EntityFieldsI18nKey {
   allowedTools = 'EntityFields.allowedTools',
   displayName = 'EntityFields.displayName',
   displayVersion = 'EntityFields.displayVersion',
+  allVersionsOption = 'EntityFields.allVersionsOption',
   version = 'EntityFields.version',
   adapter = 'EntityFields.adapter',
   iconUrl = 'EntityFields.iconUrl',
@@ -1056,6 +1059,9 @@ export enum EntityFieldsI18nKey {
   Arguments = 'EntityFields.Arguments',
   globalInterceptors = 'EntityFields.globalInterceptors',
   HFModelName = 'EntityFields.HFModelName',
+  Resources = 'EntityFields.Resources',
+  EnvironmentVariables = 'EntityFields.EnvironmentVariables',
+  EndpointConfiguration = 'EntityFields.EndpointConfiguration',
 }
 
 export enum ToolsetI18nKey {
@@ -1125,6 +1131,7 @@ export enum ImagesI18nKey {
 
 export enum ContainersI18nKey {
   ContainersListTitle = 'Containers.ContainersListTitle',
+  ServingsListTitle = 'Containers.ServingsListTitle',
   RelatedContainersListTitle = 'Containers.RelatedContainersListTitle',
   CreateModalTitle = 'Containers.CreateModalTitle',
   AddModalTitle = 'Containers.AddModalTitle',

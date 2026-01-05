@@ -1,9 +1,9 @@
 import { describe, expect, test, vi } from 'vitest';
 import { render } from '@testing-library/react';
-import ContainerResourcesFields from '../ContainerResourcesFields';
 import { Container } from '@/src/models/deployments/containers';
 import { CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
+import ResourcesFields from './ResourcesFields';
 
 describe('ContainerResourcesFields', () => {
   const mockContainer: Container = {
@@ -21,11 +21,7 @@ describe('ContainerResourcesFields', () => {
 
   test('renders component', () => {
     const { container } = render(
-      <ContainerResourcesFields
-        container={mockContainer}
-        setContainer={vi.fn()}
-        route={ApplicationRoute.McpDeployments}
-      />,
+      <ResourcesFields container={mockContainer} setContainer={vi.fn()} route={ApplicationRoute.McpDeployments} />,
     );
 
     expect(container).toBeTruthy();

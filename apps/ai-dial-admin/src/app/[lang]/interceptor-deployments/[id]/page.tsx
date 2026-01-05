@@ -22,7 +22,7 @@ import ImageView from '@/src/components/Images/View/ImageView';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import ContainerView from '@/src/components/Containers/View/ContainerView';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { createInterceptor } from '@/src/app/[lang]/interceptors/actions';
 import { interceptorsApi } from '@/src/app/api/api';
 

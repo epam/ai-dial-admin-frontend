@@ -36,9 +36,9 @@ export async function getPrompt(folderId: string, name: string, version: string,
   return assetsApi.getAssetWithEtag(token, path, ResourceType.PROMPT, etag);
 }
 
-export async function removePrompt(path: string) {
+export async function removePrompt(path: string, etag?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.removeAsset(token, path, ResourceType.PROMPT);
+  return assetsApi.removeAssetWithEtag(token, path, ResourceType.PROMPT, etag);
 }
 
 export async function bulkDeletePrompts(paths: { path: string }[]) {

@@ -4,7 +4,7 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments';
+import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 
 export const onOpenInNewTab = (route?: ApplicationRoute, entity?: unknown, entityType?: DEPLOYMENT_ENTITY) => {
   const url = getUrnForEntity(route, entity, entityType);
@@ -22,6 +22,7 @@ export const getEntityPath = (
   data: unknown,
   forRemove?: boolean,
   entityType?: DEPLOYMENT_ENTITY,
+  version?: string,
 ) => {
   switch (route) {
     case ApplicationRoute.ApplicationRunners:
@@ -31,11 +32,13 @@ export const getEntityPath = (
     case ApplicationRoute.Files:
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets: {
-      const path =
-        (data as DialPrompt).path ||
-        `${(data as DialPrompt).folderId}${(data as DialPrompt).name}__${(data as DialPrompt).version}`;
+      const path = version
+        ? `${(data as DialPrompt).folderId}${(data as DialPrompt).name}__${version}`
+        : (data as DialPrompt).path ||
+          `${(data as DialPrompt).folderId}${(data as DialPrompt).name}__${(data as DialPrompt).version}`;
+
       return forRemove
-        ? decodeURIComponent((data as DialPrompt).path)
+        ? decodeURIComponent(path)
         : `${encodeURIComponent((data as DialPrompt).name as string)}?path=${encodeURIComponent(path)}`;
     }
 
