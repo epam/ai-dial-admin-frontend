@@ -1,10 +1,13 @@
 import { ColDef, ICellRendererParams, ITextFilterParams, ValueGetterParams, ITooltipParams } from 'ag-grid-community';
 
-import ValidityStatusCellRenderer from '@/src/components/Grid/CellRenderers/ValidityStatusCellRenderer';
-import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
-import TopicsCellRenderer from '@/src/components/Grid/CellRenderers/TopicCellRenderer';
-import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
-import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
+import { DialPrompt } from '@/src/models/dial/prompt';
+import { Publication } from '@/src/models/dial/publications';
+import { GridFilterType } from '@/src/types/grid-filter';
+import { ApplicationRoute } from '@/src/types/routes';
+import { CONTAINER_STATUS, KubEventType, MODEL_TYPE } from '@/src/types/deployments/containers';
+import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
+import { SelectVariant } from '@epam/ai-dial-ui-kit';
+import { ImageVersion } from '@/src/models/deployments/images';
 import {
   formatAttachment,
   getFormattedResourceType,
@@ -14,24 +17,27 @@ import {
   sourceTypeFormatter,
   sourceValueFormatter,
 } from '@/src/constants/grid-columns/formatters';
-import { DialPrompt } from '@/src/models/dial/prompt';
-import { Publication } from '@/src/models/dial/publications';
-import { GridFilterType } from '@/src/types/grid-filter';
-import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getDeleteOperation, getDuplicateOperation, getMoveOperation, getOpenInNewTabOperation } from './actions';
-import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
 import { getValidityStatus } from '@/src/components/EntityView/Status/utils';
 import { isAssetWithVersion } from '@/src/utils/is-asset-view';
-import DeploymentStatusIndicator from '@/src/components/Common/DeploymentStatusIndicator/DeploymentStatusIndicator';
-import { STATUS_I18N_KEYS, TRANSPORT_TYPES } from '@/src/constants/deployments/images';
-import { CONTAINER_STATUS, KubEventType, MODEL_TYPE } from '@/src/types/deployments/containers';
-import { EVENT_TYPES, MODEL_TYPES, POD_OBJECT_KIND } from '@/src/constants/deployments/containers';
-import { IMAGE_STATUS } from '@/src/types/deployments/images';
-import VersionsSelect from '@/src/components/Common/VersionsSelect/VersionsSelect';
-import { SelectVariant } from '@epam/ai-dial-ui-kit';
-import { ImageVersion } from '@/src/models/deployments/images';
 import { formatDeploymentImageName } from '@/src/utils/formatting/deployments';
+import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
+import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
+import {
+  IMAGE_SOURCE_TYPE_I18N_KEYS,
+  IMAGE_TRANSPORT_I18N_KEYS,
+  IMAGE_TYPE_I18N_KEYS,
+  STATUS_I18N_KEYS,
+} from '@/src/constants/deployments/images';
+import { EVENT_TYPES, MODEL_TYPES, POD_OBJECT_KIND } from '@/src/constants/deployments/containers';
+
+import ValidityStatusCellRenderer from '@/src/components/Grid/CellRenderers/ValidityStatusCellRenderer';
+import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
+import TopicsCellRenderer from '@/src/components/Grid/CellRenderers/TopicCellRenderer';
+import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
+import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
+import VersionsSelect from '@/src/components/Deployments/Common/VersionsSelect/VersionsSelect';
 
 const stringFilter: Partial<ColDef> = {
   filterParams: {
@@ -554,7 +560,7 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
     field: 'status',
     headerName: 'Status',
     hide: false,
-    cellRenderer: (params: ICellRendererParams) => <DeploymentStatusIndicator status={params.data.status} />,
+    cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data.status} />,
     tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as CONTAINER_STATUS]),
     filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as CONTAINER_STATUS]),
   },
@@ -584,7 +590,7 @@ export const CONTAINER_EVENTS = (t: (key: string, options?: Record<string, strin
     field: 'eventType',
     headerName: 'Type',
     hide: false,
-    cellRenderer: (params: ICellRendererParams) => <DeploymentStatusIndicator status={params.data.eventType} />,
+    cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data.eventType} />,
     tooltipValueGetter: ({ value }) => t(EVENT_TYPES[value as KubEventType]),
     filterValueGetter: (params) => t(EVENT_TYPES[params.data[params.colDef.field || ''] as KubEventType]),
     maxWidth: 150,
@@ -610,21 +616,6 @@ export const CONTAINER_EVENTS = (t: (key: string, options?: Record<string, strin
   },
 ];
 
-export const BASE_IMAGE_LIST_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Name', hide: false },
-  { field: 'version', headerName: 'Version', hide: false },
-  { field: 'description', headerName: 'Description', hide: false },
-  {
-    field: 'topics',
-    headerName: 'Topics',
-    hide: false,
-    cellRenderer: (params: ICellRendererParams) => <TopicsCellRenderer topics={params.data?.topics || []} />,
-    tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
-    filterValueGetter: (params) =>
-      params.data[params.colDef.field || ''].length ? params.data[params.colDef.field || ''].join(' ') : '',
-  },
-];
-
 export const CHANGE_IMAGE_VERSION = (t: (key: string) => string): ColDef[] => [
   { field: 'name', headerName: 'Name', hide: false },
   { field: 'version', headerName: 'Version', hide: false },
@@ -633,7 +624,7 @@ export const CHANGE_IMAGE_VERSION = (t: (key: string) => string): ColDef[] => [
     field: 'buildStatus',
     headerName: 'Status',
     hide: false,
-    cellRenderer: (params: ICellRendererParams) => <DeploymentStatusIndicator status={params.data?.status} />,
+    cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data?.status} />,
     tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as IMAGE_STATUS]),
     filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as IMAGE_STATUS]),
   },
@@ -685,12 +676,24 @@ export const IMAGES_LIST_FOR_CONTAINER_COLUMNS = (onChange: (id: string) => void
 };
 
 export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
-  ...BASE_IMAGE_LIST_COLUMNS,
+  { field: 'name', headerName: 'Name', hide: false },
+  { field: 'version', headerName: 'Version', hide: false },
+  {
+    field: '$type',
+    headerName: 'Type',
+    valueFormatter: ({ value }) => t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value,
+    tooltipValueGetter: ({ value }) => t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value,
+    filterValueGetter: (params) => {
+      const value = params.data[params.colDef.field || ''];
+      return t(IMAGE_TYPE_I18N_KEYS[value as IMAGE_TYPE]) || value;
+    },
+  },
+  { field: 'description', headerName: 'Description', hide: false },
   {
     field: 'buildStatus',
     headerName: 'Status',
     hide: false,
-    cellRenderer: (params: ICellRendererParams) => <DeploymentStatusIndicator status={params.data?.buildStatus} />,
+    cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data?.buildStatus} />,
     tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as IMAGE_STATUS]),
     filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as IMAGE_STATUS]),
   },
@@ -710,25 +713,38 @@ export const IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => [
     tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
     filterValueGetter: (params) => formatDateTimeToLocalString(params.data[params.colDef.field || '']),
   },
-  { field: 'source.$type', headerName: 'Source', hide: true },
-  { field: 'license', headerName: 'License', hide: true },
-];
-
-export const MCP_IMAGES_LIST_COLUMNS = (t: (key: string) => string): ColDef[] => {
-  return [
-    ...IMAGES_LIST_COLUMNS(t),
-    {
-      field: 'transportType',
-      headerName: 'Transport type',
-      hide: true,
-      valueFormatter: ({ value }) => TRANSPORT_TYPES.find((transport) => transport.id === value)?.name || value,
-      tooltipValueGetter: ({ value }) => TRANSPORT_TYPES.find((transport) => transport.id === value)?.name || value,
-      filterValueGetter: (params) =>
-        TRANSPORT_TYPES.find((transport) => transport.id === params.data[params.colDef.field || ''])?.name ||
-        params.data[params.colDef.field || ''],
+  {
+    field: 'topics',
+    headerName: 'Topics',
+    hide: false,
+    cellRenderer: (params: ICellRendererParams) => <TopicsCellRenderer topics={params.data?.topics || []} />,
+    tooltipValueGetter: ({ value }) => (value?.length ? value.join(', ') : null),
+    filterValueGetter: (params) =>
+      params.data[params.colDef.field || ''].length ? params.data[params.colDef.field || ''].join(' ') : '',
+  },
+  {
+    field: 'source.$type',
+    headerName: 'Source',
+    hide: true,
+    valueFormatter: ({ value }) => t(IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE]) || value,
+    tooltipValueGetter: ({ value }) => t(IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE]) || value,
+    filterValueGetter: (params) => {
+      const value = params.data[params.colDef.field || ''];
+      return t(IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE]) || value;
     },
-  ];
-};
+  },
+  {
+    field: 'transportType',
+    headerName: 'Transport type',
+    hide: true,
+    valueFormatter: ({ value }) => t(IMAGE_TRANSPORT_I18N_KEYS[value as IMAGE_TRANSPORT_TYPE]) || value,
+    tooltipValueGetter: ({ value }) => t(IMAGE_TRANSPORT_I18N_KEYS[value as IMAGE_TRANSPORT_TYPE]) || value,
+    filterValueGetter: (params) => {
+      const value = params.data[params.colDef.field || ''];
+      return t(IMAGE_TRANSPORT_I18N_KEYS[value as IMAGE_TRANSPORT_TYPE]) || value;
+    },
+  },
+];
 
 export const IMAGE_DEPENDENCIES_COLUMNS = (t: (key: string) => string): ColDef[] => [
   { field: 'name', headerName: 'Name', hide: false },
@@ -738,7 +754,7 @@ export const IMAGE_DEPENDENCIES_COLUMNS = (t: (key: string) => string): ColDef[]
     field: 'status',
     headerName: 'Status',
     hide: false,
-    cellRenderer: (params: ICellRendererParams) => <DeploymentStatusIndicator status={params.data.status} />,
+    cellRenderer: (params: ICellRendererParams) => <StatusIndicator status={params.data.status} />,
     tooltipValueGetter: ({ value }) => t(STATUS_I18N_KEYS[value as IMAGE_STATUS]),
     filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as IMAGE_STATUS]),
   },

@@ -4,7 +4,6 @@ import { TabsI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 
 export enum EntityViewTab {
   Properties = 'Properties',
@@ -187,16 +186,6 @@ export const executionLogTab = (t: (stringToTranslate: string) => string) => ({
   label: t(TabsI18nKey.ExecutionLog),
 });
 
-export const imagesTab = (t: (stringToTranslate: string) => string) => ({
-  id: EntityViewTab.Images,
-  label: t(TabsI18nKey.Images),
-});
-
-export const containersTab = (t: (stringToTranslate: string) => string) => ({
-  id: EntityViewTab.Containers,
-  label: t(TabsI18nKey.Containers),
-});
-
 export const eventsTab = (t: (stringToTranslate: string) => string) => ({
   id: EntityViewTab.Events,
   label: t(TabsI18nKey.Events),
@@ -303,18 +292,11 @@ export const getAuditTabs = (
 export const getDeploymentsViewTabs = (
   route: ApplicationRoute,
   t: (stringToTranslate: string) => string,
-  entityType?: DEPLOYMENT_ENTITY,
   status?: CONTAINER_STATUS | IMAGE_STATUS,
 ): TabModel[] => {
-  if (!entityType) {
-    return [containersTab(t), imagesTab(t)];
-  }
-
-  if (entityType === DEPLOYMENT_ENTITY.images) {
+  if (route === ApplicationRoute.Images) {
     return [propertiesTab(t), buildLogTab(t, status as IMAGE_STATUS), relatedContainersTab(t, status as IMAGE_STATUS)];
-  }
-
-  if (entityType === DEPLOYMENT_ENTITY.containers) {
+  } else {
     if (route === ApplicationRoute.InterceptorDeployments || route === ApplicationRoute.ModelDeployments) {
       return [propertiesTab(t), /* metricsTab(t, status as CONTAINER_STATUS),*/ executionLogTab(t), eventsTab(t)];
     } else {
@@ -329,8 +311,6 @@ export const getDeploymentsViewTabs = (
       ];
     }
   }
-
-  return [];
 };
 
 export const getSystemPropertiesTabs = (t: (stringToTranslate: string) => string): TabModel[] => {

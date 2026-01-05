@@ -18,7 +18,6 @@ import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import CreateContainer from '@/src/components/Containers/Modals/CreateContainer';
 import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { DEPLOYMENT_ENTITY } from '@/src/models/deployments/deployments';
 import { useRouter } from 'next/navigation';
 import CreateServing from '@/src/components/Containers/Modals/CreateServing';
 
@@ -49,7 +48,7 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, names, gridApi })
     (container: Container) => {
       createContainer(container).then((res) => {
         if (res.success) {
-          router.push(getUrnForEntity(route, res.response, DEPLOYMENT_ENTITY.containers));
+          router.push(getUrnForEntity(route, res.response));
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
         }

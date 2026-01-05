@@ -1,16 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import {
-  assetsApi,
-  containersApi,
-  foldersApi,
-  imagesApi,
-  interceptorsApi,
-  modelsApi,
-  toolSetsApi,
-  topicApi,
-} from '@/src/app/api/api';
+import { containersApi, imagesApi, topicApi } from '@/src/app/api/api';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   createContainer,
@@ -30,11 +21,9 @@ import {
   getImageVersions,
   getImagesWithVersions,
   getInterceptorContainers,
-  getInterceptorImages,
   getMCPContainers,
-  getMCPImages,
+  getImages,
   getModelContainers,
-  getModelImages,
   getTopics,
   installImage,
   runContainer,
@@ -63,34 +52,12 @@ describe('Deployments actions', () => {
   describe('Image actions', () => {
     test('getMCPImages calls imagesApi.getMCPImages with token', async () => {
       const mockResponse = [{ id: '1', name: 'mcp-image' }];
-      (imagesApi.getMCPImages as any).mockResolvedValue(mockResponse);
+      (imagesApi.getImages as any).mockResolvedValue(mockResponse);
 
-      const result = await getMCPImages();
-
-      expect(getUserToken).toHaveBeenCalled();
-      expect(imagesApi.getMCPImages).toHaveBeenCalledWith(TOKEN_MOCK);
-      expect(result).toBe(mockResponse);
-    });
-
-    test('getInterceptorImages calls imagesApi.getInterceptorImages with token', async () => {
-      const mockResponse = [{ id: '1', name: 'interceptor-image' }];
-      (imagesApi.getInterceptorImages as any).mockResolvedValue(mockResponse);
-
-      const result = await getInterceptorImages();
+      const result = await getImages();
 
       expect(getUserToken).toHaveBeenCalled();
-      expect(imagesApi.getInterceptorImages).toHaveBeenCalledWith(TOKEN_MOCK);
-      expect(result).toBe(mockResponse);
-    });
-
-    test('getModelImages calls imagesApi.getModelImages with token', async () => {
-      const mockResponse = [{ id: '1', name: 'model-image' }];
-      (imagesApi.getModelImages as any).mockResolvedValue(mockResponse);
-
-      const result = await getModelImages();
-
-      expect(getUserToken).toHaveBeenCalled();
-      expect(imagesApi.getModelImages).toHaveBeenCalledWith(TOKEN_MOCK);
+      expect(imagesApi.getImages).toHaveBeenCalledWith(TOKEN_MOCK);
       expect(result).toBe(mockResponse);
     });
 
