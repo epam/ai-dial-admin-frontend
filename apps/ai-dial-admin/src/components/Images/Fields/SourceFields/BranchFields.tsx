@@ -13,13 +13,26 @@ interface Props {
 const BranchFields: FC<Props> = ({ image, setImage }) => {
   const t = useI18n();
 
-  const onChange = useCallback(
+  const onBranchChange = useCallback(
     (branchName?: string) => {
       setImage({
         ...image,
         source: {
           ...image.source,
           branchName,
+        },
+      });
+    },
+    [image, setImage],
+  );
+
+  const onSHAChange = useCallback(
+    (sha?: string) => {
+      setImage({
+        ...image,
+        source: {
+          ...image.source,
+          sha,
         },
       });
     },
@@ -35,7 +48,7 @@ const BranchFields: FC<Props> = ({ image, setImage }) => {
         value={image.source.branchName}
         disabled={false}
         optional={true}
-        onChange={onChange}
+        onChange={onBranchChange}
       />
       <DialTextInputField
         fieldTitle={t(EntityFieldsI18nKey.SHA)}
@@ -44,15 +57,7 @@ const BranchFields: FC<Props> = ({ image, setImage }) => {
         value={image.source.sha}
         disabled={false}
         optional={true}
-        onChange={(sha?: string) => {
-          setImage({
-            ...image,
-            source: {
-              ...image.source,
-              sha,
-            },
-          });
-        }}
+        onChange={onSHAChange}
       />
     </div>
   );

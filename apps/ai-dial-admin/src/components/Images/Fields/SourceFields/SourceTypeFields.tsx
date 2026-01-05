@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useCallback } from 'react';
 import { DialSelectField } from '@epam/ai-dial-ui-kit';
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { IMAGE_SOURCE_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
@@ -17,22 +17,28 @@ const SourceTypeFields: FC<Props> = ({ image, setImage, isModal }) => {
   const sourcesList = SOURCE_TYPES(t);
   const imageTypesList = IMAGE_TYPES(t);
 
-  const onImageTypeChange = ($type: IMAGE_TYPE) => {
-    setImage({
-      ...image,
-      $type,
-      source: DEFAULT_IMAGE_SOURCE,
-    });
-  };
+  const onImageTypeChange = useCallback(
+    ($type: string | string[]) => {
+      setImage({
+        ...image,
+        $type: $type as IMAGE_TYPE,
+        source: DEFAULT_IMAGE_SOURCE,
+      });
+    },
+    [image, setImage],
+  );
 
-  const onSourceTypeChange = ($type: IMAGE_SOURCE_TYPE) => {
-    setImage({
-      ...image,
-      source: {
-        $type,
-      },
-    });
-  };
+  const onSourceTypeChange = useCallback(
+    ($type: string | string[]) => {
+      setImage({
+        ...image,
+        source: {
+          $type: $type as IMAGE_SOURCE_TYPE,
+        },
+      });
+    },
+    [image, setImage],
+  );
 
   return (
     <div className="flex gap-4">
@@ -43,7 +49,7 @@ const SourceTypeFields: FC<Props> = ({ image, setImage, isModal }) => {
           value={image.$type}
           options={imageTypesList}
           fieldTitle={t(EntityFieldsI18nKey.type)}
-          onChange={(type) => onImageTypeChange(type as IMAGE_TYPE)}
+          onChange={onImageTypeChange}
         />
       )}
       {image.$type === IMAGE_TYPE.MCP && (
@@ -53,7 +59,7 @@ const SourceTypeFields: FC<Props> = ({ image, setImage, isModal }) => {
           value={image.source.$type}
           options={sourcesList}
           fieldTitle={t(EntitiesI18nKey.SourceType)}
-          onChange={(type) => onSourceTypeChange(type as IMAGE_SOURCE_TYPE)}
+          onChange={onSourceTypeChange}
         />
       )}
     </div>
