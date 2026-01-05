@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { isEqual } from 'lodash';
-import { SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialLoader, SelectOption } from '@epam/ai-dial-ui-kit';
 import { STATUS_CLASSNAMES } from '@/src/constants/deployments/images';
 import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TYPE } from '@/src/types/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
@@ -73,7 +73,12 @@ export const getVersionsList = (versions: ImageVersion[]): SelectOption[] => {
     return {
       value: id,
       label: version,
-      icon: <span className={classNames('flex w-2 h-2 mr-1 rounded no-user-select', getActionClass(status))} />,
+      icon:
+        status === IMAGE_STATUS.BUILDING ? (
+          <DialLoader size={12} className="w-2 h-2" />
+        ) : (
+          <span className={classNames('flex w-2 h-2 mr-1 rounded no-user-select', getActionClass(status))} />
+        ),
     };
   });
 };
