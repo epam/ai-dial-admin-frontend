@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import classNames from 'classnames';
 
-import { IMAGE_SOURCE_TYPE } from '@/src/types/deployments/images';
+import { IMAGE_SOURCE_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
 import { Image } from '@/src/models/deployments/images';
 
 import BaseDirectoryField from '@/src/components/Images/Fields/SourceFields/BaseDirectoryField';
@@ -19,7 +19,9 @@ const SourceFields: FC<Props> = ({ image, setImage, isModal }) => {
   return (
     <div className={classNames('flex flex-col', isModal ? 'gap-4' : 'lg:w-[35%] gap-8')}>
       <div className={classNames('flex gap-4', isModal ? 'flex-col' : 'flex-row')}>
-        <SourceTypeFields image={image} setImage={setImage} isModal={isModal} />
+        {(isModal || image.$type === IMAGE_TYPE.MCP) && (
+          <SourceTypeFields image={image} setImage={setImage} isModal={isModal} />
+        )}
         <SourceAddressField image={image} setImage={setImage} />
       </div>
       {image.source?.$type === IMAGE_SOURCE_TYPE.CODE && (
