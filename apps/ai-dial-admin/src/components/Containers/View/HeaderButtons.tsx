@@ -37,6 +37,7 @@ import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { DialFile } from '@/src/models/dial/file';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 
 interface Props<T> {
   route: ApplicationRoute;
@@ -80,6 +81,7 @@ const HeaderButtons = <T extends Container>({
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
+  const { isValid } = useSaveValidationContext();
   const { visualizerConnector } = useAppContext();
   const visualizerConnectorRef = useRef(visualizerConnector);
 
@@ -227,13 +229,13 @@ const HeaderButtons = <T extends Container>({
               className={buttonsClassNames}
               label={t(isRedeployRequired ? ButtonsI18nKey.SaveAndRedeploy : ButtonsI18nKey.Save)}
               onClick={onTryToSave}
-              disabled={(jsonEditorEnabled && !isValidJSON) || !isValidEntity()}
+              disabled={(jsonEditorEnabled && !isValidJSON) || !isValidEntity() || !isValid}
             />
           </div>
         ) : (
           <div className="flex flex-row items-center w-full">
             <div className="flex flex-row gap-3">
-              {container.status && (
+              {container.status === CONTAINER_STATUS.RUNNING && (
                 <>
                   {route === ApplicationRoute.McpDeployments ? (
                     <DialButtonDropdown
@@ -269,7 +271,6 @@ const HeaderButtons = <T extends Container>({
                     className={buttonsClassNames}
                     label={t(ButtonsI18nKey.Stop)}
                     iconBefore={<IconPlayerPause {...BASE_ICON_PROPS} />}
-                    disabled={container.status === CONTAINER_STATUS.PENDING}
                     onClick={handleStopContainer}
                   />
                 ) : (
@@ -278,7 +279,6 @@ const HeaderButtons = <T extends Container>({
                     className={buttonsClassNames}
                     label={t(ButtonsI18nKey.Run)}
                     iconBefore={<IconPlayerPlay {...BASE_ICON_PROPS} />}
-                    disabled={container.status === CONTAINER_STATUS.STOPPING}
                     onClick={handleRunContainer}
                   />
                 )}
