@@ -105,11 +105,12 @@ export const updateSelectedVersion = (images: ImageGroup[], id: string) => {
 };
 
 export const setTransport = (image: Image) => {
-  if (image.$type === IMAGE_TYPE.INTERCEPTOR) {
-    delete image.transportType;
+  const updatedImage = { ...image };
+  if (updatedImage.$type === IMAGE_TYPE.INTERCEPTOR) {
+    delete updatedImage.transportType;
   } else {
-    image.transportType = IMAGE_TRANSPORT_TYPE.LOCAL;
+    updatedImage.transportType = IMAGE_TRANSPORT_TYPE.LOCAL;
   }
 
-  return image;
+  return updatedImage;
 };
