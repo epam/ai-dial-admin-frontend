@@ -1,10 +1,12 @@
 import { FC, useCallback } from 'react';
 import { DialSelectField } from '@epam/ai-dial-ui-kit';
+
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { IMAGE_SOURCE_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
 import { Image } from '@/src/models/deployments/images';
-import { useI18n } from '@/src/locales/client';
+import { setTransport } from '@/src/utils/deployments/images';
 import { DEFAULT_IMAGE_SOURCE, IMAGE_TYPES, SOURCE_TYPES } from '@/src/constants/deployments/images';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
   image: Image;
@@ -20,7 +22,7 @@ const SourceTypeFields: FC<Props> = ({ image, setImage, isModal }) => {
   const onImageTypeChange = useCallback(
     ($type: string | string[]) => {
       setImage({
-        ...image,
+        ...setTransport(image),
         $type: $type as IMAGE_TYPE,
         source: DEFAULT_IMAGE_SOURCE,
       });

@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import { isEqual } from 'lodash';
 import { DialLoader, SelectOption } from '@epam/ai-dial-ui-kit';
 import { STATUS_CLASSNAMES } from '@/src/constants/deployments/images';
-import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TYPE } from '@/src/types/deployments/images';
+import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { Image, ImageGroup, ImageVersion } from '@/src/models/deployments/images';
@@ -106,4 +106,14 @@ export const updateSelectedVersion = (images: ImageGroup[], id: string) => {
     }
     return image;
   });
+};
+
+export const setTransport = (image: Image) => {
+  if (image.$type === IMAGE_TYPE.INTERCEPTOR) {
+    delete image.transportType;
+  } else {
+    image.transportType = IMAGE_TRANSPORT_TYPE.LOCAL;
+  }
+
+  return image;
 };
