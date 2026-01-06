@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 import classNames from 'classnames';
 import { debounce } from 'lodash';
 import { DialTextInputField } from '@epam/ai-dial-ui-kit';
@@ -28,6 +28,10 @@ const BaseFields: FC<Props> = ({ image, setImage, isModal }) => {
 
   const [versionsMap, setVersionsMap] = useState<Record<string, string[]>>({});
   const [versionError, setVersionError] = useState<FieldError | null>(null);
+
+  useEffect(() => {
+    dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!image.name });
+  }, [dispatch, image, t, versionsMap]);
 
   const verifyVersion = useMemo(
     () =>
