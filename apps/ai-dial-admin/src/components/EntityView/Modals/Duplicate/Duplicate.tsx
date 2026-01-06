@@ -82,6 +82,20 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
     [dispatch, entity, namesConfiguration.names, t, view],
   );
 
+  const handleValidateEntityDisplayName = useCallback(
+    (displayName?: string, initial?: boolean) => {
+      const isVersionOptional = !namesConfiguration.names.includes(displayName || '');
+      onValidateDisplayName(displayName || '');
+
+      if (view === ApplicationRoute.Models) {
+        onValidateVersion({ displayName }, isVersionOptional, initial);
+      }
+
+      setIsVersionOptional(isVersionOptional);
+    },
+    [namesConfiguration.names, onValidateDisplayName, onValidateVersion, view],
+  );
+
   const onChangeVersion = useCallback(
     (displayVersion?: string) => {
       onValidateVersion({ displayVersion }, isVersionOptional);
@@ -92,34 +106,36 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
 
   const onChangeDisplayName = useCallback(
     (displayName?: string, initial?: boolean) => {
-      const isVersionOptional = !namesConfiguration.names.includes(displayName || '');
-      onValidateDisplayName(displayName || '');
-      if (view === ApplicationRoute.Models) {
-        onValidateVersion({ displayName }, isVersionOptional, initial);
-      }
-      setIsVersionOptional(isVersionOptional);
+      handleValidateEntityDisplayName(displayName, initial);
+
       setEntity({ ...clonedEntity, displayName });
     },
-    [clonedEntity, namesConfiguration.names, onValidateDisplayName, onValidateVersion, view],
+    [clonedEntity, handleValidateEntityDisplayName],
   );
 
   // initial validation (disable save when no values entered yet)
   useEffect(() => {
-    onChangeDisplayName(clonedEntity.displayName, true);
+    handleValidateEntityDisplayName(clonedEntity.displayName, true);
+
     dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !!clonedEntity.name });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [clonedEntity.displayName, clonedEntity.name, dispatch, handleValidateEntityDisplayName]);
 
   const onDuplicateClick = useCallback(async () => {
     const isUnique = RoutesForCheckingUniqueName.includes(view)
       ? await checkIsUniqueDeploymentName(clonedEntity.name as string)
       : true;
+
     setIsUniqueNameError(!isUnique);
 
     if (!isUnique) return;
 
     onDuplicate(clonedEntity);
   }, [view, clonedEntity, onDuplicate]);
+
+  const onIdChange = useCallback(async (entity: ClonedEntity) => {
+    setEntity(entity);
+    setIsUniqueNameError(false);
+  }, []);
 
   return (
     <DialFormPopup
@@ -141,7 +157,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
           <IdControl
             entity={clonedEntity}
             isUniqueNameError={isUniqueNameError}
-            onChangeEntity={setEntity}
+            onChangeEntity={onIdChange}
             names={names}
           />
           <DisplayNameControl
