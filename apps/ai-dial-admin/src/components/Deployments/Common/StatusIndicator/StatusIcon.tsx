@@ -6,6 +6,7 @@ import { DialLoader } from '@epam/ai-dial-ui-kit';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { getActionClass } from '@/src/utils/deployments/images';
+import { LOADING_STATUSES } from '@/src/constants/deployments/images';
 
 interface Props {
   status: IMAGE_STATUS | CONTAINER_STATUS;
@@ -16,9 +17,7 @@ const StatusIcon: FC<Props> = ({ status }) => {
 
   return (
     <div>
-      {status === IMAGE_STATUS.BUILDING ||
-      status === CONTAINER_STATUS.PENDING ||
-      status === CONTAINER_STATUS.STOPPING ? (
+      {LOADING_STATUSES.includes(status) ? (
         <DialLoader size={12} className="w-2 h-2" />
       ) : (
         <span className={indicatorClassNames} />
