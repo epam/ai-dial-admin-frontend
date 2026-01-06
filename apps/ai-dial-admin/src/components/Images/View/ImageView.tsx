@@ -61,7 +61,7 @@ const ImageView: FC<Props> = ({ image, route, imagesNames, containerNames, versi
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedImage.name]);
+  }, [selectedImage.name, selectedImage.buildStatus]);
 
   const tabs = getDeploymentsViewTabs(route, t, selectedImage.buildStatus);
 

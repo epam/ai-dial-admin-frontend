@@ -1,4 +1,3 @@
-import classNames from 'classnames';
 import { isEqual } from 'lodash';
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 import { STATUS_CLASSNAMES } from '@/src/constants/deployments/images';
@@ -7,6 +6,8 @@ import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { Image, ImageGroup, ImageVersion } from '@/src/models/deployments/images';
 import { getDeploymentsURIError, getDeploymentsURLError } from '@/src/utils/deployments/validation';
+
+import StatusIcon from '@/src/components/Deployments/Common/StatusIndicator/StatusIcon';
 
 export function getActionClass(action: IMAGE_STATUS | CONTAINER_STATUS): string {
   return STATUS_CLASSNAMES[action];
@@ -73,7 +74,7 @@ export const getVersionsList = (versions: ImageVersion[]): SelectOption[] => {
     return {
       value: id,
       label: version,
-      icon: <span className={classNames('flex w-2 h-2 mr-1 rounded no-user-select', getActionClass(status))} />,
+      icon: <StatusIcon status={status} />,
     };
   });
 };
