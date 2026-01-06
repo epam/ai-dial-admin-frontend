@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { Suggestions } from './Suggestions';
+import Suggestions from './Suggestions';
 
 const onSelectSuggestionSpy = vi.fn();
 const onHightLightSuggestionSpy = vi.fn();

@@ -12,7 +12,7 @@ import { useI18n } from '@/src/locales/client';
 import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
 import { CONTROL_WITH_BUTTON_WIDTH, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
-import { Suggestions } from './Suggestions';
+import Suggestions from './Suggestions';
 
 export interface AttachmentOption {
   label: string;

@@ -1,18 +1,18 @@
 import classNames from 'classnames';
-import React, { useCallback } from 'react';
+import React, { FC, MouseEventHandler, useCallback } from 'react';
 
 import { AttachmentOption } from './AttachmentInput';
 
-type Props = {
+interface Props {
   suggestions: AttachmentOption[];
   highlightIndex: number;
   onSelectSuggestion: (suggestion: AttachmentOption) => void;
   onHightLightSuggestion: (idx: number) => void;
-};
+}
 
-export function Suggestions({ suggestions, highlightIndex, onSelectSuggestion, onHightLightSuggestion }: Props) {
+const Suggestions: FC<Props> = ({ suggestions, highlightIndex, onSelectSuggestion, onHightLightSuggestion }) => {
   const handleSelectSuggestion = useCallback(
-    (opt: AttachmentOption): React.MouseEventHandler<HTMLLIElement> =>
+    (opt: AttachmentOption): MouseEventHandler<HTMLLIElement> =>
       (e) => {
         e.preventDefault();
         onSelectSuggestion(opt);
@@ -21,9 +21,10 @@ export function Suggestions({ suggestions, highlightIndex, onSelectSuggestion, o
   );
 
   const handleHightLightSuggestion = useCallback(
-    (idx: number) => () => {
-      onHightLightSuggestion(idx);
-    },
+    (idx: number): MouseEventHandler<HTMLLIElement> =>
+      () => {
+        onHightLightSuggestion(idx);
+      },
     [onHightLightSuggestion],
   );
 
@@ -45,4 +46,6 @@ export function Suggestions({ suggestions, highlightIndex, onSelectSuggestion, o
       ))}
     </ul>
   );
-}
+};
+
+export default Suggestions;
