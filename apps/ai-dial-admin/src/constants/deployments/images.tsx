@@ -85,6 +85,7 @@ export const IMAGE_TEMPLATE: Image = {
     $type: IMAGE_SOURCE_TYPE.DOCKER,
     imageUri: '',
   },
+  transportType: IMAGE_TRANSPORT_TYPE.LOCAL,
   topics: [],
   buildStatus: IMAGE_STATUS.NOT_BUILT,
 };
