@@ -55,6 +55,7 @@ const Events: FC<Props> = ({ route, events }) => {
         showColumnsPanel={showColumnsPanel}
         toggleColumnsPanel={toggleColumnsPanel}
         onGridReady={onGridReady}
+        storageKey={`${route}/events`}
       >
         <div className="flex gap-4">
           {!!events.length && (
