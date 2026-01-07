@@ -1,8 +1,7 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import classNames from 'classnames';
 import {
-  ButtonVariant,
-  DialButton,
+  DialGhostButton,
   DialLoader,
   DialNeutralButton,
   DialPopup,
@@ -206,8 +205,7 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
         )}
       >
         {currentStepId !== steps[0]?.id && (
-          <DialButton
-            variant={ButtonVariant.Tertiary}
+          <DialGhostButton
             label={t(ButtonsI18nKey.Back)}
             onClick={onPrevStep}
             iconBefore={<IconArrowNarrowLeft {...BASE_BUTTON_ICON_PROPS} />}

@@ -1,8 +1,8 @@
 import { FC, useEffect, useState } from 'react';
 
+import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 import { IconRestore } from '@tabler/icons-react';
 import { GridApi } from 'ag-grid-community';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -44,9 +44,8 @@ const ResetFiltersButton: FC<Props> = ({ gridApi }) => {
   if (!filtersActive) return null;
 
   return (
-    <DialButton
+    <DialGhostButton
       label={t(ButtonsI18nKey.ResetFilters)}
-      variant={ButtonVariant.Tertiary}
       iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
       onClick={resetFilters}
     />

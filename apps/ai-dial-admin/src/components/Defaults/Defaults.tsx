@@ -1,7 +1,7 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import { IconPlus } from '@tabler/icons-react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -70,8 +70,7 @@ const Defaults: FC<Props> = ({ entity, onChangeEntity }) => {
         <DefaultItem key={index} item={item} index={index} changeItem={onChangeDefaultItem} onRemove={onRemoveItem} />
       ))}
       <div>
-        <DialButton
-          variant={ButtonVariant.Tertiary}
+        <DialGhostButton
           label={t(ButtonsI18nKey.AddDefault)}
           iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onAddItem}

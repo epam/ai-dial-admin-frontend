@@ -20,7 +20,7 @@ import { RolesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialRole } from '@/src/models/dial/role';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   isSkipRefresh: boolean;
@@ -126,8 +126,7 @@ const RoleSharing: FC<Props> = ({ isSkipRefresh, selectedRole, onChangeRole }) =
       <div className="flex justify-between items-center mb-3 h-[38px]">
         <h1>{t(RolesI18nKey.Sharing)}</h1>
         {isResetAvailable && (
-          <DialButton
-            variant={ButtonVariant.Tertiary}
+          <DialGhostButton
             iconBefore={<IconReload {...BASE_BUTTON_ICON_PROPS} />}
             label={t(RolesI18nKey.ResetToDefaultLimits)}
             onClick={onResetAllSharingToDefault}

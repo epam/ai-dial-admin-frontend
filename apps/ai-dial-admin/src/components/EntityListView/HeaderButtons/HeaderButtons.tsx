@@ -4,7 +4,7 @@ import { Dispatch, MouseEvent, SetStateAction, useCallback, useRef, useState } f
 
 import { IconColumns2, IconFileArrowLeft, IconPlus, IconSquareCheck } from '@tabler/icons-react';
 import { GridApi } from 'ag-grid-community';
-import { ButtonVariant, DialButton, DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 
 import CreateAdapter from '@/src/components/Adapter/Modals/CreateAdapter';
 import CreateAppRunner from '@/src/components/ApplicationRunners/Modals/CreateAppRunner';
@@ -193,8 +193,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
     <div className="flex gap-4">
       <ResetFiltersButton gridApi={gridApi} />
       {showColumnsButton && (
-        <DialButton
-          variant={ButtonVariant.Tertiary}
+        <DialGhostButton
           label={t(ButtonsI18nKey.Columns)}
           iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onToggleColumnsPanel}

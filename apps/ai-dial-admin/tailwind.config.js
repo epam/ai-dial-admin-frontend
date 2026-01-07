@@ -23,15 +23,11 @@ const backgroundsColors = {
   'accent-secondary': 'var(--bg-accent-secondary, #37BABC)',
   'accent-tertiary': 'var(--bg-accent-tertiary, #A972FF)',
 
-  'accent-primary-alpha': 'var(--bg-accent-primary-alpha, #5C8DEA2B)',
-  'accent-secondary-alpha': 'var(--bg-accent-secondary-alpha, #37BABC26)',
-  'accent-tertiary-alpha': 'var(--bg-accent-tertiary-alpha, #A972FF2B)',
-
   // TODO: need review and change names
   'red-400': 'var(--bg-red-400, #F76464)',
   'red-800': 'var(--bg-red-800, #AE2F2F)',
   'orange-400': 'var(--bg-orange-400, #D97C27)',
-  'yellow-400': 'var(--bg-yellow-400, #F4CE46)',
+  'yellow-400': 'var(--bg-yellow-400, #EEC840)',
 };
 
 const buttonsBgColors = {

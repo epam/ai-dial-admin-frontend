@@ -1,4 +1,4 @@
-import { ButtonVariant, DialButton, DialLoader } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialLoader } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { FC, MouseEvent, useCallback, useEffect, useState } from 'react';
 
@@ -99,8 +99,7 @@ const List: FC<Props> = ({ route, getData, query, columnDefs, title, emptyDataTi
       <div className="flex gap-4">
         <ResetFiltersButton gridApi={gridApi} />
         {!!data?.length && (
-          <DialButton
-            variant={ButtonVariant.Tertiary}
+          <DialGhostButton
             label={t(ButtonsI18nKey.Columns)}
             iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onToggleColumnsPanel}

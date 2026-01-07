@@ -1,4 +1,4 @@
-import { ButtonVariant, DialButton, DialNeutralButton, DialPasswordInputField } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialNeutralButton, DialPasswordInputField } from '@epam/ai-dial-ui-kit';
 import { IconCopy, IconSparkles } from '@tabler/icons-react';
 import { FC, useCallback, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
@@ -57,8 +57,7 @@ const KeyGenerateField: FC<Props> = ({ isKeyImmutable, keys, selectedKey, change
           onClick={() => navigator.clipboard.writeText(selectedKey.key || '')}
         />
       ) : (
-        <DialButton
-          variant={ButtonVariant.Tertiary}
+        <DialGhostButton
           className="ml-2 h-[34px]"
           iconBefore={<IconSparkles />}
           label={t(ButtonsI18nKey.Generate)}

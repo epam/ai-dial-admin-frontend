@@ -2,14 +2,7 @@ import { useRouter } from 'next/navigation';
 import { Dispatch, FC, SetStateAction, useCallback, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import {
-  ButtonVariant,
-  DialButton,
-  DialNeutralButton,
-  DialSelect,
-  SelectSize,
-  SelectVariant,
-} from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialNeutralButton, DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconReplace } from '@tabler/icons-react';
 
 import { getApp } from '@/src/app/[lang]/assets-applications/actions';
@@ -140,9 +133,8 @@ const AssetVersionControl: FC<Props> = ({
           onChange={(v) => onChangeVersion(v as string)}
           footer={
             !isDeployment && (
-              <DialButton
+              <DialGhostButton
                 className="w-full min-h-[34px] h-[34px]"
-                variant={ButtonVariant.Tertiary}
                 iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                 label={t(ButtonsI18nKey.Create)}
               />

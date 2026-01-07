@@ -1,6 +1,6 @@
 'use client';
 
-import { ButtonVariant, DialButton, DialCheckbox } from '@epam/ai-dial-ui-kit';
+import { DialCheckbox, DialGhostButton } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 import { FC, useCallback, useRef } from 'react';
 import { useDrop } from 'react-dnd';
@@ -54,12 +54,7 @@ const ColumnsPanel: FC<Props> = ({
         <h3 className="flex-1 min-w-0 mr-3">{t(ButtonsI18nKey.Columns)}</h3>
         <div className="flex">
           {showResetButton && (
-            <DialButton
-              variant={ButtonVariant.Tertiary}
-              className="mr-4"
-              label={t(ButtonsI18nKey.ResetToDefault)}
-              onClick={resetToDefault}
-            />
+            <DialGhostButton className="mr-4" label={t(ButtonsI18nKey.ResetToDefault)} onClick={resetToDefault} />
           )}
           {toggleColumnsPanel && <CloseButton onClose={toggleColumnsPanel} />}
         </div>

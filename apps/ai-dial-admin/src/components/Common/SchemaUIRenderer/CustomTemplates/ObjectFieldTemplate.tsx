@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 import { canExpand, ObjectFieldTemplateProps } from '@rjsf/utils';
 import { IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
@@ -27,8 +27,7 @@ export const ObjectFieldTemplate: FC<ObjectFieldTemplateProps> = (props) => {
         </div>
 
         {canExpand(schema, uiSchema, formData) && !readonly && (
-          <DialButton
-            variant={ButtonVariant.Tertiary}
+          <DialGhostButton
             onClick={onAddClick(schema)}
             label={t(ButtonsI18nKey.AddAdditionalProperties)}
             className="w-fit mt-2"

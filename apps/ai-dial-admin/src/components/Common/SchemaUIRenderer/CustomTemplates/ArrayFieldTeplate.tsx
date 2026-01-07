@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { ButtonVariant, DialButton, DialRemoveButton } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialRemoveButton } from '@epam/ai-dial-ui-kit';
 import type { ArrayFieldTemplateProps } from '@rjsf/utils';
 import { IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
@@ -46,8 +46,7 @@ export const ArrayFieldTemplate: FC<ArrayFieldTemplateProps> = ({
         </ul>
 
         {canAdd && !readonly && (
-          <DialButton
-            variant={ButtonVariant.Tertiary}
+          <DialGhostButton
             onClick={onAddClick}
             label={`${t(ButtonsI18nKey.Add)} ${title}`}
             className="w-fit"

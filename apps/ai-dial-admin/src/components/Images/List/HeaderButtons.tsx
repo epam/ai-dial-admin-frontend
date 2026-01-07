@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { IconPlus, IconColumns2 } from '@tabler/icons-react';
 import { GridApi } from 'ag-grid-community';
-import { ButtonVariant, DialButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 
 import { ApplicationRoute } from '@/src/types/routes';
 import { Image } from '@/src/models/deployments/images';
@@ -69,8 +69,7 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi }) => {
     <>
       <div className="flex gap-4">
         <ResetFiltersButton gridApi={gridApi} />
-        <DialButton
-          variant={ButtonVariant.Tertiary}
+        <DialGhostButton
           label={t(ButtonsI18nKey.Columns)}
           iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onToggleColumnsPanel}

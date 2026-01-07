@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { ButtonVariant, DialButton, DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { ImageVersion } from '@/src/models/deployments/images';
 import { useI18n } from '@/src/locales/client';
@@ -34,9 +34,8 @@ const VersionsSelect: FC<Props> = ({ onChange, versions, selected, variant = Sel
       }}
       footer={
         onClick && (
-          <DialButton
+          <DialGhostButton
             className="rounded-none"
-            variant={ButtonVariant.Tertiary}
             label={t(ButtonsI18nKey.Create)}
             onClick={onClick}
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}

@@ -1,7 +1,7 @@
 import { FC, MouseEvent, useCallback, useEffect, useState } from 'react';
 import { GridApi } from 'ag-grid-community';
 import { IconColumns2 } from '@tabler/icons-react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 import { ApplicationRoute } from '@/src/types/routes';
 import { KubEvent } from '@/src/models/deployments/containers';
 import { useI18n } from '@/src/locales/client';
@@ -60,8 +60,7 @@ const Events: FC<Props> = ({ route, events }) => {
           {!!events.length && (
             <>
               <ResetFiltersButton gridApi={gridApi} />
-              <DialButton
-                variant={ButtonVariant.Tertiary}
+              <DialGhostButton
                 label={t(ButtonsI18nKey.Columns)}
                 iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
                 onClick={onToggleColumnsPanel}

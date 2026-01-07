@@ -4,7 +4,7 @@ import { FC, MouseEvent, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { IconColumns2, IconPlus } from '@tabler/icons-react';
 import { GridApi } from 'ag-grid-community';
-import { ButtonVariant, DialButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { ApplicationRoute } from '@/src/types/routes';
 import { useI18n } from '@/src/locales/client';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
@@ -70,8 +70,7 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, names, gridApi })
     <>
       <div className="flex gap-4">
         <ResetFiltersButton gridApi={gridApi} />
-        <DialButton
-          variant={ButtonVariant.Tertiary}
+        <DialGhostButton
           label={t(ButtonsI18nKey.Columns)}
           iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onToggleColumnsPanel}

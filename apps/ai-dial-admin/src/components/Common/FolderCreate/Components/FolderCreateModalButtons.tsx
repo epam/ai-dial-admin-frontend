@@ -2,14 +2,7 @@
 
 import { FC } from 'react';
 
-import {
-  ButtonVariant,
-  DialButton,
-  DialNeutralButton,
-  DialPrimaryButton,
-  Step,
-  StepStatus,
-} from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialNeutralButton, DialPrimaryButton, Step, StepStatus } from '@epam/ai-dial-ui-kit';
 import { IconArrowNarrowLeft } from '@tabler/icons-react';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
@@ -41,8 +34,7 @@ const FolderCreateModalButtons: FC<Props> = ({ steps, currentStep, setCurrentSte
     <div className="flex flex-row items-center justify-between gap-2 px-6 py-4">
       <div>
         {currentStep?.id !== steps[0]?.id && (
-          <DialButton
-            variant={ButtonVariant.Tertiary}
+          <DialGhostButton
             label={t(ButtonsI18nKey.Back)}
             onClick={onPrevStep}
             iconBefore={<IconArrowNarrowLeft {...BASE_BUTTON_ICON_PROPS} />}

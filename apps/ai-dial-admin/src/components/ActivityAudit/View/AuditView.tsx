@@ -10,7 +10,6 @@ import {
   DialEllipsisTooltip,
   DialNeutralButton,
   DialSwitch,
-  DialTooltip,
 } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink, IconRestore } from '@tabler/icons-react';
 import classNames from 'classnames';
@@ -164,7 +163,7 @@ const AuditView: FC<Props> = ({
               {isModalView && (
                 <>
                   <h3 className="flex flex-row items-center gap-x-3">
-                    <DialTooltip tooltip={activity.activityId}>{activity.activityId}</DialTooltip>s
+                    <DialEllipsisTooltip text={activity.activityId} />
                     <DialButton
                       onClick={() => openActivityInNewTab(activity)}
                       className="text-secondary"
