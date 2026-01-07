@@ -10,12 +10,12 @@ import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { mountTypeDropdownItems } from '@/src/constants/deployments/variables';
 import { FieldError } from '@/src/models/error';
 import { getVariableNameError } from '@/src/utils/deployments/validation';
-import { MOUNT_TYPE } from '@/src/types/deployments/variables';
+import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';
 import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
 import { BASE_ICON_PROPS } from '@/src/constants/main-layout';
 import { EntityPlaceholdersI18nKey, EnvVariablesI18nKey } from '@/src/constants/i18n';
 import EnvVariableValueField from '@/src/components/Containers/Fields/EnvVariables/EnvVariableValue';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   index: number;
@@ -38,7 +38,7 @@ const EnvVariable: FC<Props> = ({
 }) => {
   const t = useI18n();
   const isTablet = useIsTabletScreen();
-  const { resetCounter } = useSaveValidationContext();
+  const { dispatch, resetCounter } = useSaveValidationContext();
 
   const mountTypeItems = mountTypeDropdownItems(t);
 
@@ -46,8 +46,15 @@ const EnvVariable: FC<Props> = ({
   const [variableNameError, setVariableNameError] = useState<FieldError | null>(null);
 
   useEffect(() => {
-    setVariableNameError(getVariableNameError(variable.name as string, t));
-  }, [resetCounter, t, variable.name]);
+    if (resetCounter || (variable.name !== null && variable.name?.length > 0)) {
+      const error = getVariableNameError(variable.name as string, t);
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: `variable_${index}`,
+        isValid: !error,
+      });
+    }
+  }, [dispatch, index, resetCounter, t, variable.name]);
 
   const onRemove = useCallback(() => {
     removeVariable(index);
@@ -55,10 +62,16 @@ const EnvVariable: FC<Props> = ({
 
   const onChangeName = useCallback(
     (name?: string) => {
-      setVariableNameError(getVariableNameError(name as string, t));
+      const error = getVariableNameError(name as string, t);
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: `variable_${index}`,
+        isValid: !error,
+      });
+      setVariableNameError(error);
       updateVariable({ ...variable, name: name as string });
     },
-    [t, updateVariable, variable],
+    [dispatch, index, t, updateVariable, variable],
   );
 
   const onChangeDescription = useCallback(
@@ -68,11 +81,20 @@ const EnvVariable: FC<Props> = ({
     [variable, updateVariable],
   );
 
-  const onChangeSensitive = useCallback(
+  const onChangeMountType = useCallback(
     (mountType: string | string[]) => {
-      updateVariable({ ...variable, mountType: mountType as MOUNT_TYPE });
+      dispatch({
+        type: ValidationActionType.SetField,
+        field: `variable_${index}`,
+        isValid: mountType === MOUNT_TYPE.SECURE_FILE ? !!variable.value.value : !!variable.value.fileContent,
+      });
+      updateVariable({
+        ...variable,
+        mountType: mountType as MOUNT_TYPE,
+        value: { ...variable.value, $type: mountType === MOUNT_TYPE.SECURE_FILE ? VALUE_TYPE.FILE : VALUE_TYPE.SIMPLE },
+      });
     },
-    [updateVariable, variable],
+    [dispatch, index, updateVariable, variable],
   );
 
   const onValueChange = useCallback(
@@ -138,7 +160,7 @@ const EnvVariable: FC<Props> = ({
                 elementId="mountType"
                 options={mountTypeItems}
                 fieldTitle={t(EnvVariablesI18nKey.MountType)}
-                onChange={onChangeSensitive}
+                onChange={onChangeMountType}
               />
             </div>
           </div>
