@@ -63,7 +63,14 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
     <>
       <div className="flex flex-col pt-3 divide-y divide-primary w-full">
         <div className="flex gap-10 overflow-y-scroll">
-          <DialLabelledText label={t(EntityFieldsI18nKey.id)} text={originalName} />
+          <DialLabelledText label={t(EntityFieldsI18nKey.id)}>
+            <p className="flex items-center gap-2 max-w-[360px]">
+              <DialTooltip tooltip={originalName}>
+                <span className="truncate">{originalName}</span>
+              </DialTooltip>
+              <CopyButton field={originalName} label={t(EntityFieldsI18nKey.id)} />
+            </p>
+          </DialLabelledText>
           <DialLabelledText label={t(EntityFieldsI18nKey.type)} text={t(ContainersI18nKey.Container)} />
           {image && (
             <DialLabelledText label={t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })}>

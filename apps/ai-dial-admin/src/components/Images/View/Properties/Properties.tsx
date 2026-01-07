@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { DialLabelledText } from '@epam/ai-dial-ui-kit';
+import { DialLabelledText, DialTooltip } from '@epam/ai-dial-ui-kit';
 
 import { Image } from '@/src/models/deployments/images';
 import { EntitiesI18nKey, EntityFieldsI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
@@ -9,6 +9,7 @@ import { useI18n } from '@/src/locales/client';
 
 import ImageFields from '@/src/components/Images/Fields/ImageFields';
 import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
+import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 
 interface Props {
   image: Image;
@@ -24,7 +25,14 @@ const Properties: FC<Props> = ({ image, setImage, originalName }) => {
   return (
     <div className="flex flex-col pt-3 w-full divide-y divide-primary min-h-0 flex-1">
       <div className="flex gap-10 overflow-y-scroll">
-        <DialLabelledText label={t(EntityFieldsI18nKey.id)} text={originalName} />
+        <DialLabelledText label={t(EntityFieldsI18nKey.id)}>
+          <p className="flex items-center gap-2 max-w-[360px]">
+            <DialTooltip tooltip={originalName}>
+              <span className="truncate">{originalName}</span>
+            </DialTooltip>
+            <CopyButton field={originalName} label={t(EntityFieldsI18nKey.id)} />
+          </p>
+        </DialLabelledText>
         <DialLabelledText label={t(EntityFieldsI18nKey.type)} text={t(ImagesI18nKey.Image)} />
         <DialLabelledText
           label={t(EntityFieldsI18nKey.createdAt)}
