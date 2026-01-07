@@ -21,6 +21,7 @@ import ContainerProperties from '@/src/components/Containers/Fields/ContainerPro
 import ChangeContainerImage from '@/src/components/Containers/Modals/ChangeContainerImage';
 import ServingProperties from '@/src/components/Containers/Fields/ServingProperties';
 import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
+import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 
 interface Props {
   container: Container;
@@ -63,7 +64,7 @@ const Properties: FC<Props> = ({ container, setContainer, image, route, names, o
     <>
       <div className="flex flex-col pt-3 divide-y divide-primary w-full">
         <div className="flex gap-10 overflow-y-scroll">
-          <DialLabelledText label={t(EntityFieldsI18nKey.id)} text={originalName} />
+          <LabelledText label={t(EntityFieldsI18nKey.id)} text={originalName} tooltip={originalName} copyable={true} />
           <DialLabelledText label={t(EntityFieldsI18nKey.type)} text={t(ContainersI18nKey.Container)} />
           {image && (
             <DialLabelledText label={t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })}>
