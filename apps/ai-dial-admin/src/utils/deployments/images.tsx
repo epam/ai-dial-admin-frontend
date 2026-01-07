@@ -1,7 +1,7 @@
 import { isEqual } from 'lodash';
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 import { STATUS_CLASSNAMES } from '@/src/constants/deployments/images';
-import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TYPE } from '@/src/types/deployments/images';
+import { IMAGE_SOURCE_TYPE, IMAGE_STATUS, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { Image, ImageGroup, ImageVersion } from '@/src/models/deployments/images';
@@ -102,4 +102,15 @@ export const updateSelectedVersion = (images: ImageGroup[], id: string) => {
     }
     return image;
   });
+};
+
+export const setTransport = (image: Image) => {
+  const updatedImage = { ...image };
+  if (updatedImage.$type === IMAGE_TYPE.INTERCEPTOR) {
+    delete updatedImage.transportType;
+  } else {
+    updatedImage.transportType = IMAGE_TRANSPORT_TYPE.LOCAL;
+  }
+
+  return updatedImage;
 };

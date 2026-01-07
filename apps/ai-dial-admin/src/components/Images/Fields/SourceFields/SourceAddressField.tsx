@@ -1,4 +1,4 @@
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 import { DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 import { IMAGE_SOURCE_TYPE } from '@/src/types/deployments/images';
@@ -20,6 +20,14 @@ const SourceAddressField: FC<Props> = ({ image, setImage }) => {
 
   const [sourceError, setSourceError] = useState<FieldError | null>(null);
 
+  useEffect(() => {
+    const error =
+      image.source?.$type === IMAGE_SOURCE_TYPE.CODE
+        ? getDeploymentsURLError(image.source?.url as string, t)
+        : getDeploymentsURIError(image.source?.imageUri as string, t);
+    dispatch({ type: ValidationActionType.SetField, field: 'sourceAddress', isValid: !error });
+  }, [dispatch, image.$type, image.source, t]);
+
   const onURLChange = useCallback(
     (url?: string) => {
       const error = getDeploymentsURLError(url as string, t);
@@ -27,9 +35,10 @@ const SourceAddressField: FC<Props> = ({ image, setImage }) => {
 
       dispatch({
         type: ValidationActionType.SetField,
-        field: 'sourceURL',
+        field: 'sourceAddress',
         isValid: !error,
       });
+
       setImage({
         ...image,
         source: {
@@ -47,7 +56,7 @@ const SourceAddressField: FC<Props> = ({ image, setImage }) => {
       setSourceError(error);
       dispatch({
         type: ValidationActionType.SetField,
-        field: 'sourceURI',
+        field: 'sourceAddress',
         isValid: !error,
       });
       setImage({
