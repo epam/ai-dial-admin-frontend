@@ -2,7 +2,6 @@ import { IconPlus } from '@tabler/icons-react';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 import { useDrop } from 'react-dnd';
 import { DialCheckbox, DialNeutralButton } from '@epam/ai-dial-ui-kit';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
 
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import NewItemInput from './NewItemInput';

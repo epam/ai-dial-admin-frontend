@@ -1,7 +1,7 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { RowDragEvent } from 'ag-grid-community';
 
@@ -88,8 +88,7 @@ const GlobalInterceptors: FC<Props> = ({ interceptors, currentInterceptors, onCh
   }, [onRowDragEnd]);
 
   const button = (
-    <DialButton
-      variant={ButtonVariant.Primary}
+    <DialPrimaryButton
       iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
       label={t(ButtonsI18nKey.Add)}
       onClick={() => setIsModalOpen(true)}

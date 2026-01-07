@@ -2,7 +2,7 @@ import React, { FC, useCallback, useMemo } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { IconPlus } from '@tabler/icons-react';
-import { ButtonVariant, DialButton, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
 import { MOUNT_TYPE, VALUE_TYPE } from '@/src/types/deployments/variables';

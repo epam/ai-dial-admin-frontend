@@ -4,7 +4,7 @@ import { Dispatch, MouseEvent, SetStateAction, useCallback, useRef, useState } f
 
 import { IconColumns2, IconFileArrowLeft, IconPlus, IconSquareCheck } from '@tabler/icons-react';
 import { GridApi } from 'ag-grid-community';
-import { ButtonVariant, DialButton, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 
 import CreateAdapter from '@/src/components/Adapter/Modals/CreateAdapter';
 import CreateAppRunner from '@/src/components/ApplicationRunners/Modals/CreateAppRunner';
@@ -217,8 +217,7 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
             </>
           )}
           {!!createEntity && (
-            <DialButton
-              variant={ButtonVariant.Primary}
+            <DialPrimaryButton
               label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               onClick={() => handleModalOpen(ModalType.create)}

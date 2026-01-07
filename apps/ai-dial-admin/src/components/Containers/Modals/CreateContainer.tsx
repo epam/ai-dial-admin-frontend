@@ -6,6 +6,7 @@ import {
   DialLoader,
   DialNeutralButton,
   DialPopup,
+  DialPrimaryButton,
   DialSteps,
   Step,
   StepStatus,
@@ -215,15 +216,13 @@ const CreateContainer: FC<Props> = ({ isModalOpen, modalTitle, onClose, onApply,
         <div className="flex flex-row gap-2">
           <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
           {currentStepId === steps.at(-1)?.id ? (
-            <DialButton
-              variant={ButtonVariant.Primary}
+            <DialPrimaryButton
               label={t(ButtonsI18nKey.Finish)}
               disabled={steps.some((s) => s.status !== StepStatus.VALID) || !isValid}
               onClick={onFinishClick}
             />
           ) : (
-            <DialButton
-              variant={ButtonVariant.Primary}
+            <DialPrimaryButton
               label={t(ButtonsI18nKey.Next)}
               onClick={onNextStep}
               disabled={(steps?.find((s) => s.id === currentStepId) as Step).status !== StepStatus.VALID}

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialNeutralButton, DialTabs } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 
@@ -25,10 +25,10 @@ import { useI18n } from '@/src/locales/client';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
+import { getViewHeaderClassName } from '@/src/utils/entities/view';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getInterceptorTemplateTabs } from '@/src/utils/tabs/utils';
-import { getViewHeaderClassName } from '@/src/utils/entities/view';
 
 interface Props {
   etag: string;

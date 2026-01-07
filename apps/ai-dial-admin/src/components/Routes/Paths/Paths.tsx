@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { ButtonVariant, DialButton, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 

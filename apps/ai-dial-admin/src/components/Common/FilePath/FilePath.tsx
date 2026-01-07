@@ -1,7 +1,7 @@
 import { ChangeEvent, FC, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconFolderShare } from '@tabler/icons-react';
 import classNames from 'classnames';
 

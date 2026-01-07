@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialConfirmationPopup, DialTabs } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton, DialConfirmationPopup, DialTabs } from '@epam/ai-dial-ui-kit';
 import { IconRefresh } from '@tabler/icons-react';
 import { cloneDeep } from 'lodash';
 
@@ -205,8 +205,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, names, keys, roles }) => {
             selectedFormat={selectedFormat}
             onChangeSelectedFormat={setSelectedFormat}
           >
-            <DialButton
-              variant={ButtonVariant.Primary}
+            <DialPrimaryButton
               label={t(ButtonsI18nKey.Rotate)}
               iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
               onClick={() => setIsRotateModalOpen(true)}

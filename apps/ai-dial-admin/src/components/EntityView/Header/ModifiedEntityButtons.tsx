@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialButton, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton, DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import AddVersionModal from '@/src/components/Assets/Modals/AddVersionModal';
@@ -84,8 +84,7 @@ const ModifiedEntityButtons = <T extends object>({
             disabled={isJsonEditorEnabled ? false : !isValid}
           />
         )}
-        <DialButton
-          variant={ButtonVariant.Primary}
+        <DialPrimaryButton
           className={buttonsClassName}
           label={t(ButtonsI18nKey.Save)}
           onClick={() => onTryToSave()}

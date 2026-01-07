@@ -1,6 +1,6 @@
 import { FC, useEffect, useState } from 'react';
 import semver from 'semver';
-import { ButtonVariant, DialButton, DialNeutralButton, DialPopup, DialTextInputField } from '@epam/ai-dial-ui-kit';
+import { DialNeutralButton, DialPopup, DialPrimaryButton, DialTextInputField } from '@epam/ai-dial-ui-kit';
 
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { useI18n } from '@/src/locales/client';
@@ -55,8 +55,7 @@ const NewVersion: FC<Props> = ({ isModalOpen, title, onClose, onApply, image, ve
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
         <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
+        <DialPrimaryButton
           label={okLabel}
           disabled={!!versionError}
           onClick={() => {

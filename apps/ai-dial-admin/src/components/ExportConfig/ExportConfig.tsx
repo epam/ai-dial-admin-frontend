@@ -2,8 +2,7 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
-  ButtonVariant,
-  DialButton,
+  DialPrimaryButton,
   DialNoDataContent,
   DialRadioGroup,
   RadioButtonWithContent,
@@ -154,8 +153,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap }) => {
       <div className="flex flex-col w-full h-full rounded p-4 bg-layer-2">
         <div className="mb-4 flex flex-row items-center justify-between">
           <h1>{t(MenuI18nKey.ExportConfig)}</h1>
-          <DialButton
-            variant={ButtonVariant.Primary}
+          <DialPrimaryButton
             iconBefore={<IconUpload {...BASE_BUTTON_ICON_PROPS} />}
             label={t(ButtonsI18nKey.Export)}
             disabled={isExportDisable}

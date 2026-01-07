@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { ButtonVariant, DialButton, DialNeutralButton, DialPopup } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton, DialNeutralButton, DialPopup } from '@epam/ai-dial-ui-kit';
 import { ButtonsI18nKey, EntityFieldsI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import { Image } from '@/src/models/deployments/images';
 import { useI18n } from '@/src/locales/client';
@@ -31,8 +31,7 @@ const Install: FC<Props> = ({ isModalOpen, title, onClose, onApply, image }) => 
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
         <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
+        <DialPrimaryButton
           label={t(ButtonsI18nKey.Install)}
           onClick={() => {
             onApply(image);

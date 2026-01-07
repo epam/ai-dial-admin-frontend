@@ -4,9 +4,9 @@ import { IconPlayerPause, IconPlayerPlay, IconPlus, IconTrashX } from '@tabler/i
 import { useRouter } from 'next/navigation';
 import {
   ButtonVariant,
-  DialButton,
   DialButtonDropdown,
   DialNeutralButton,
+  DialPrimaryButton,
   DialSwitch,
   DropdownItem,
 } from '@epam/ai-dial-ui-kit';
@@ -226,8 +226,7 @@ const HeaderButtons = <T extends Container>({
         {isChanged ? (
           <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
             <DialNeutralButton className={buttonsClassNames} label={t(ButtonsI18nKey.Discard)} onClick={onDiscard} />
-            <DialButton
-              variant={ButtonVariant.Primary}
+            <DialPrimaryButton
               className={buttonsClassNames}
               label={t(isRedeployRequired ? ButtonsI18nKey.SaveAndRedeploy : ButtonsI18nKey.Save)}
               onClick={onTryToSave}

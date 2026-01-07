@@ -2,9 +2,8 @@
 
 import {
   AlertVariant,
-  ButtonVariant,
   DialAlert,
-  DialButton,
+  DialPrimaryButton,
   DialLoader,
   DialNoDataContent,
   DialSwitch,
@@ -195,8 +194,7 @@ const ToolsView: FC<Props> = ({ selectedToolset, isAssetToolset, readonly, origi
                   onSelectFilter={onSelectFilter}
                 />
                 {!readonly && (
-                  <DialButton
-                    variant={ButtonVariant.Primary}
+                  <DialPrimaryButton
                     label={t(ButtonsI18nKey.Add)}
                     iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                     onClick={onOpenModal}

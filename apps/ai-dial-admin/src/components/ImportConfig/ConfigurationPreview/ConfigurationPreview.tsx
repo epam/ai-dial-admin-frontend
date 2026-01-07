@@ -2,7 +2,7 @@
 
 import { FC, useEffect, useRef, useState } from 'react';
 
-import { ButtonVariant, DialButton, DialLoader, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton, DialLoader, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
 import { IconDownload } from '@tabler/icons-react';
 
 import { previewJsonConfigs, previewZipConfig } from '@/src/app/[lang]/import-config/actions';
@@ -67,8 +67,7 @@ const ConfigurationPreview: FC<Props> = ({ files, importBody, fileType, onImport
     <div className="flex flex-col flex-1 min-h-0 rounded border border-primary py-4 px-6 mt-8">
       <div className="mb-2 flex flex-row justify-between">
         <h1>{t(ImportI18nKey.Configuration)}</h1>
-        <DialButton
-          variant={ButtonVariant.Primary}
+        <DialPrimaryButton
           label={t(ButtonsI18nKey.Import)}
           disabled={isLoading || !files}
           iconBefore={<IconDownload {...BASE_BUTTON_ICON_PROPS} />}

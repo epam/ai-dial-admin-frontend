@@ -1,9 +1,8 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ButtonVariant,
-  DialButton,
   DialNeutralButton,
   DialPopup,
+  DialPrimaryButton,
   DialRadioGroup,
   DialTextInputField,
   RadioButtonWithContent,
@@ -147,8 +146,7 @@ const DuplicateImageModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
       </div>
       <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
         <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialButton
-          variant={ButtonVariant.Primary}
+        <DialPrimaryButton
           label={t(ButtonsI18nKey.Duplicate)}
           onClick={() => {
             onApply(copyImage);

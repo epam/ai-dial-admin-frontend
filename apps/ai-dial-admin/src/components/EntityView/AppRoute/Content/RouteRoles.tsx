@@ -1,5 +1,6 @@
 'use client';
-import { ButtonVariant, DialButton, DialNeutralButton, DialNoDataContent, DialSwitch } from '@epam/ai-dial-ui-kit';
+
+import { DialNeutralButton, DialNoDataContent, DialSwitch } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconReplace } from '@tabler/icons-react';
 import { FC, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';

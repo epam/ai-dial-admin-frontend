@@ -2,7 +2,14 @@
 
 import { FC } from 'react';
 
-import { ButtonVariant, DialButton, DialNeutralButton, Step, StepStatus } from '@epam/ai-dial-ui-kit';
+import {
+  ButtonVariant,
+  DialButton,
+  DialNeutralButton,
+  DialPrimaryButton,
+  Step,
+  StepStatus,
+} from '@epam/ai-dial-ui-kit';
 import { IconArrowNarrowLeft } from '@tabler/icons-react';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
@@ -45,16 +52,14 @@ const FolderCreateModalButtons: FC<Props> = ({ steps, currentStep, setCurrentSte
       <div className="flex gap-2">
         <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         {currentStep?.id !== steps.at(-1)?.id && (
-          <DialButton
-            variant={ButtonVariant.Primary}
+          <DialPrimaryButton
             label={t(ButtonsI18nKey.Next)}
             onClick={onNextStep}
             disabled={currentStep?.status !== StepStatus.VALID}
           />
         )}
         {currentStep?.id === steps.at(-1)?.id && (
-          <DialButton
-            variant={ButtonVariant.Primary}
+          <DialPrimaryButton
             label={t(ButtonsI18nKey.Finish)}
             disabled={steps.some((s) => s.status !== StepStatus.VALID)}
             onClick={onFinishClick}

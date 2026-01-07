@@ -1,7 +1,13 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialConfirmationPopup, DialButton, DialTextAreaField, DialSwitch, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import {
+  DialPrimaryButton,
+  DialConfirmationPopup,
+  DialTextAreaField,
+  DialSwitch,
+  DialNeutralButton,
+} from '@epam/ai-dial-ui-kit';
 import { IconCircleX, IconWorldOff, IconWorldShare } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -78,16 +84,14 @@ const PublicationHeader: FC<Props> = ({ onApprove, onDecline, route, action, isJ
             iconBefore={<IconCircleX {...BASE_BUTTON_ICON_PROPS} />}
           />
           {action === ActionType.ADD ? (
-            <DialButton
-              variant={ButtonVariant.Primary}
+            <DialPrimaryButton
               className={classNames(buttonsClassName, approveButtonClassName)}
               label={t(ButtonsI18nKey.Publish)}
               onClick={() => setIsOpenApproveModal(true)}
               iconBefore={<IconWorldShare {...BASE_BUTTON_ICON_PROPS} />}
             />
           ) : (
-            <DialButton
-              variant={ButtonVariant.Primary}
+            <DialPrimaryButton
               className={classNames(buttonsClassName, approveButtonClassName)}
               label={t(ButtonsI18nKey.Unpublish)}
               onClick={() => setIsOpenApproveModal(true)}

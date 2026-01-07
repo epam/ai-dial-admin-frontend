@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { IconBlocks, IconPlus, IconTrashX } from '@tabler/icons-react';
-import { ButtonVariant, DialButton, DialNeutralButton, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialNeutralButton, DialPrimaryButton, DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -229,8 +229,7 @@ const HeaderButtons: FC<Props> = ({
               onClick={onOpenSaveNewVersionModal}
             />
             {allowEditing && !forceNewVersion && (
-              <DialButton
-                variant={ButtonVariant.Primary}
+              <DialPrimaryButton
                 className={buttonsClassNames}
                 label={t(ButtonsI18nKey.Save)}
                 onClick={onTryToSave}

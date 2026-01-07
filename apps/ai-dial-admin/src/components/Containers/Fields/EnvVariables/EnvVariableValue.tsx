@@ -1,7 +1,6 @@
 import { ChangeEvent, FC, memo, useCallback, useRef } from 'react';
 import { IconFileArrowRight, IconX } from '@tabler/icons-react';
 import {
-  ButtonVariant,
   DialButton,
   DialTextInputField,
   DialPasswordInputField,

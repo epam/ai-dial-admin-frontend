@@ -2,7 +2,7 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { IconPlus, IconReload } from '@tabler/icons-react';
 import { GridApi, GridReadyEvent, IRowNode } from 'ag-grid-community';
-import { DialSwitch, DialButton, ButtonVariant, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialSwitch, DialButton, ButtonVariant, DialPrimaryButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import Grid from '@/src/components/Grid/Grid';
 import { ButtonsI18nKey, EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
@@ -111,8 +111,7 @@ const RolesGrid: FC<Props> = ({
             />
           )}
           {!entity.isPublic && (
-            <DialButton
-              variant={ButtonVariant.Primary}
+            <DialPrimaryButton
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
               label={t(ButtonsI18nKey.Add)}
               onClick={onOpenAddModal}

@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { IconPlus, IconColumns2 } from '@tabler/icons-react';
 import { GridApi } from 'ag-grid-community';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 
 import { ApplicationRoute } from '@/src/types/routes';
 import { Image } from '@/src/models/deployments/images';
@@ -76,8 +76,7 @@ const HeaderButtons: FC<Props> = ({ toggleColumnsPanel, route, gridApi }) => {
           onClick={onToggleColumnsPanel}
         />
 
-        <DialButton
-          variant={ButtonVariant.Primary}
+        <DialPrimaryButton
           label={isTabletScreen ? '' : t(ButtonsI18nKey.Add)}
           iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
           onClick={() => handleModalOpen()}

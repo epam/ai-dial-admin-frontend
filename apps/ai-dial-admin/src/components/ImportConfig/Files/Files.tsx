@@ -3,9 +3,8 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { IconArrowNarrowRight } from '@tabler/icons-react';
 import {
-  ButtonVariant,
+  DialPrimaryButton,
   RadioButtonWithContent,
-  DialButton,
   DialRadioGroup,
   RadioGroupOrientation,
   DialLoadFileAreaField,
@@ -78,8 +77,7 @@ const Files: FC<Props> = ({
     <div className="flex flex-col flex-1 min-h-0 rounded border border-primary p-6 mt-8">
       <div className="mb-2 flex flex-row justify-between">
         <h1>{t(ImportI18nKey.Files)}</h1>
-        <DialButton
-          variant={ButtonVariant.Primary}
+        <DialPrimaryButton
           label={t(ButtonsI18nKey.Next)}
           disabled={!isFilesValid}
           iconAfter={<IconArrowNarrowRight {...BASE_BUTTON_ICON_PROPS} />}

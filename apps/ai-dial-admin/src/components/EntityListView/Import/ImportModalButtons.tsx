@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { ButtonVariant, DialButton, DialNeutralButton, Step, StepStatus } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton, DialNeutralButton, Step, StepStatus } from '@epam/ai-dial-ui-kit';
 import { IconArrowNarrowLeft, IconArrowNarrowRight } from '@tabler/icons-react';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
@@ -38,8 +38,7 @@ const ImportModalButtons: FC<Props> = ({ steps, currentStep, onChangeStep, onFin
         />
       )}
       {currentStep?.id !== steps.at(-1)?.id && (
-        <DialButton
-          variant={ButtonVariant.Primary}
+        <DialPrimaryButton
           label={t(ButtonsI18nKey.Next)}
           onClick={onNextStep}
           iconAfter={<IconArrowNarrowRight {...BASE_BUTTON_ICON_PROPS} />}
@@ -47,8 +46,7 @@ const ImportModalButtons: FC<Props> = ({ steps, currentStep, onChangeStep, onFin
         />
       )}
       {currentStep?.id === steps.at(-1)?.id && (
-        <DialButton
-          variant={ButtonVariant.Primary}
+        <DialPrimaryButton
           label={t(ButtonsI18nKey.Finish)}
           disabled={steps.some((s) => s.status !== StepStatus.VALID)}
           onClick={onFinishClick}

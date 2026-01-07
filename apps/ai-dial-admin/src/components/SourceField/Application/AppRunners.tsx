@@ -1,9 +1,9 @@
 'use client';
 
-import { ButtonVariant, DialButton, DialInputPopup, DialNeutralButton, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import { DialInputPopup, DialNeutralButton, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import classNames from 'classnames';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import Field from '@/src/components/Common/Field/Field';
 import { ButtonsI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';

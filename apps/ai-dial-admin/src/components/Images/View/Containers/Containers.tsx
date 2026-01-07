@@ -1,5 +1,5 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { ButtonVariant, DialButton } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 import { useI18n } from '@/src/locales/client';
@@ -98,7 +98,7 @@ const Containers: FC<Props> = ({ image, route, versions }) => {
         storageKey={`${route}/related`}
       >
         {installed && (
-          <DialButton variant={ButtonVariant.Primary} label={t(ButtonsI18nKey.Add)} onClick={handleModalOpen} />
+          <DialPrimaryButton label={t(ButtonsI18nKey.Add)} onClick={handleModalOpen} />
         )}
       </ListView>
       {isModalOpen &&

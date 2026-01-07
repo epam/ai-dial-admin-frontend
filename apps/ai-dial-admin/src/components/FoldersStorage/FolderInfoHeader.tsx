@@ -3,7 +3,7 @@
 import { FC, useEffect, useState } from 'react';
 
 import classNames from 'classnames';
-import { ButtonVariant, DialButton, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton, DialNeutralButton } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
@@ -35,8 +35,7 @@ const FolderInfoHeader: FC<Props> = ({ isChanged, isSaveDisable, title, save, di
       {isChanged && (
         <div className="flex flex-row gap-3 p-3 lg:p-0">
           <DialNeutralButton className={buttonsClassName} label={t(ButtonsI18nKey.Discard)} onClick={discard} />
-          <DialButton
-            variant={ButtonVariant.Primary}
+          <DialPrimaryButton
             className={buttonsClassName}
             label={t(ButtonsI18nKey.Save)}
             onClick={save}
