@@ -1,6 +1,6 @@
 import { ColDef } from 'ag-grid-community';
 
-import { ENTITY_BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { LIMIT_COLUMNS } from '@/src/components/EntityView/Roles/utils';
 import { NO_LIMITS_KEY } from '@/src/constants/role';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
@@ -19,7 +19,7 @@ import {
 import { DialAdapter } from '@/src/models/dial/adapter';
 
 export const ENTITY_COLUMNS = (t: (v: string) => string): ColDef[] => [
-  ...ENTITY_BASE_COLUMNS,
+  ...BASE_COLUMNS,
   {
     headerName: 'Type',
     field: 'type',

@@ -2,9 +2,13 @@ import { ColDef, ICellRendererParams } from 'ag-grid-community';
 
 import {
   KEYS_COLUMNS,
-  ENTITY_BASE_COLUMNS,
   LIST_RUNNER_COLUMNS,
   SIMPLE_ENTITY_COLUMNS,
+  BASE_COLUMNS,
+  DESCRIPTION_COLUMN,
+  NAME_COLUMN,
+  DISPLAY_NAME_COLUMN_WITH_SORT,
+  DISPLAY_VERSION_COLUMN,
 } from '@/src/constants/grid-columns/grid-columns';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
@@ -41,10 +45,15 @@ export const getActualColDefs = (
   t: (v: string) => string,
   remove?: (entity?: EntitiesGridData) => void,
 ): ColDef[] => {
-  let columns: ColDef[] = [...ENTITY_BASE_COLUMNS];
-  if (type === EntityType.MODEL || type === EntityType.APPLICATION) {
-    columns = [...ENTITY_BASE_COLUMNS];
+  let columns: ColDef[] = [...BASE_COLUMNS];
+  if (type === EntityType.MODEL) {
+    columns = [DISPLAY_NAME_COLUMN_WITH_SORT, DISPLAY_VERSION_COLUMN, DESCRIPTION_COLUMN, NAME_COLUMN];
   }
+
+  if (type === EntityType.APPLICATION) {
+    columns = [...BASE_COLUMNS];
+  }
+
   if (
     type === EntityType.ROLE ||
     type === EntityType.INTERCEPTOR ||
